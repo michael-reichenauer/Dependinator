@@ -31,6 +31,7 @@ class CanvasService : ICanvasService
     readonly IModelDb modelDb;
 
     Canvas canvas = null!;
+    string svgContentData = "";
 
     public CanvasService(IPanZoomService panZoomService, IModelService modelService, IModelDb modelDb)
     {
@@ -39,7 +40,7 @@ class CanvasService : ICanvasService
         this.modelDb = modelDb;
     }
 
-    public string SvgContent { get; private set; } = "";
+    public string SvgContent => GetSvgContent();
     public Rect SvgRect => panZoomService.SvgRect;
     public Pos Offset => panZoomService.Offset;
     public double Zoom => panZoomService.Zoom;
@@ -57,8 +58,8 @@ class CanvasService : ICanvasService
     {
         await panZoomService.CheckResizeAsync();
 
-        var (content, bounds) = await RefreshAsync(panZoomService.SvgRect, 1);
-        SvgContent = content;
+        var (content, bounds) = await RefreshAsync(panZoomService.Offset, 1);
+        SetSvgContent(content);
         panZoomService.PanZoomToFit(bounds);
         await canvas.TriggerStateHasChangedAsync();
     }
@@ -70,8 +71,8 @@ class CanvasService : ICanvasService
 
     public async void Refresh()
     {
-        var (content, bounds) = await RefreshAsync(panZoomService.SvgRect, 1);
-        SvgContent = content;
+        var (content, bounds) = await RefreshAsync(panZoomService.Offset, 1);
+        SetSvgContent(content);
         panZoomService.PanZoomToFit(bounds);
         await canvas.TriggerStateHasChangedAsync();
     }
@@ -82,16 +83,27 @@ class CanvasService : ICanvasService
         using (var model = modelDb.GetModel())
         {
             model.Clear();
-            SvgContent = "";
+            SetSvgContent("");
         }
 
         await canvas.TriggerStateHasChangedAsync();
     }
 
-    public async Task<(string, Rect)> RefreshAsync(Rect viewRect, double zoom)
+    public async Task<(string, Rect)> RefreshAsync(Pos offset, double zoom)
     {
         await modelService.RefreshAsync();
         using var model = modelDb.GetModel();
-        return model.GetSvg(viewRect, zoom);
+        return model.GetSvg(offset, zoom);
+    }
+
+    string GetSvgContent()
+    {
+        Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
+        return svgContentData;
+    }
+
+    void SetSvgContent(string svgContent)
+    {
+        svgContentData = svgContent;
     }
 }

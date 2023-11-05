@@ -30,9 +30,9 @@ class Node : NodeBase
     }
 
 
-    public string GetSvg(Rect parentCanvasBounds, double zoom)
+    public string GetSvg(Pos parentOffset, double zoom)
     {
-        var nodeCanvasBounds = GetCanvasBounds(parentCanvasBounds, zoom);
+        var nodeCanvasBounds = GetCanvasBounds(parentOffset, zoom);
         //if (nodeCanvasBounds.Width < 5 || nodeCanvasBounds.Height < 5) return "";   // Too small to be seen
 
         // Adjust bound to be intersection of parent and node bounds     #####
@@ -68,22 +68,23 @@ class Node : NodeBase
     {
         var childrenZoom = zoom * ContainerZoom;
 
-        var childrenCanvasBounds = new Rect(
-            nodeCanvasBounds.X,
-            nodeCanvasBounds.Y,
-            nodeCanvasBounds.Width / ContainerZoom,
-            nodeCanvasBounds.Height / ContainerZoom
-        );
+        // var childrenCanvasBounds = new Rect(
+        //     nodeCanvasBounds.X,
+        //     nodeCanvasBounds.Y,
+        //     nodeCanvasBounds.Width / ContainerZoom,
+        //     nodeCanvasBounds.Height / ContainerZoom
+        // );
+        var childrenOffset = new Pos(nodeCanvasBounds.X, nodeCanvasBounds.Y);
 
-        return Children.Select(n => n.GetSvg(childrenCanvasBounds, childrenZoom));
+        return Children.Select(n => n.GetSvg(childrenOffset, childrenZoom));
     }
 
-    Rect GetCanvasBounds(Rect parentCanvasBounds, double zoom)
+    Rect GetCanvasBounds(Pos parentOffset, double zoom)
     {
         var w = Boundary.Width * zoom;
         var h = Boundary.Height * zoom;
-        var x = parentCanvasBounds.X + Boundary.X * zoom;
-        var y = parentCanvasBounds.Y + Boundary.Y * zoom;
+        var x = parentOffset.X + Boundary.X * zoom;
+        var y = parentOffset.Y + Boundary.Y * zoom;
         return new Rect(x, y, w, h);
     }
 

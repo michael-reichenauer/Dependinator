@@ -31,10 +31,10 @@ class ModelBase
     public int LinkCount { get; internal set; } = 0;
 
 
-    internal (string, Rect) GetSvg(Rect boundary, double zoom)
+    internal (string, Rect) GetSvg(Pos offset, double zoom)
     {
         using var t = Timing.Start();
-        var svg = Root.GetSvg(boundary, zoom);
+        var svg = Root.GetSvg(offset, zoom);
         var totalBoundary = Root.TotalBoundary;
         return (svg, totalBoundary);
     }

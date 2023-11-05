@@ -1,19 +1,17 @@
-using System.Security.Cryptography.X509Certificates;
-
 namespace Dependinator.Models;
 
 record Pos(double X, double Y)
 {
     public static readonly Pos Zero = new(0, 0);
     public static readonly Pos None = new(Double.MinValue, Double.MinValue);
-    public override string ToString() => $"({X},{Y})";
+    public override string ToString() => $"({X:0.##},{Y:0.##})";
 }
 
 record Size(double Width, double Height)
 {
     public static readonly Size Zero = new(0, 0);
     public static readonly Size None = new(Double.MinValue, Double.MinValue);
-    public override string ToString() => $"({Width},{Height})";
+    public override string ToString() => $"({Width:0.##},{Height:0.##})";
 }
 
 record Rect(double X, double Y, double Width, double Height)
@@ -22,6 +20,7 @@ record Rect(double X, double Y, double Width, double Height)
     public static readonly Rect None = new(Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue);
     public override string ToString() => $"({X:0.##},{Y:0.##},{Width:0.##},{Height:0.##})";
 }
+
 
 record Color(int R, int G, int B)
 {

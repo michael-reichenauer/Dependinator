@@ -100,17 +100,14 @@ class PanZoomService : IPanZoomService
 
             var newZoom = Zoom * z;
 
-            double mouseX = mx - SvgRect.X;
-            double mouseY = my - SvgRect.Y;
-
-            double svgX = mouseX * Zoom + Offset.X;
-            double svgY = mouseY * Zoom + Offset.Y;
+            double svgX = mx * Zoom + Offset.X;
+            double svgY = my * Zoom + Offset.Y;
 
             var w = SvgRect.Width * newZoom;
             var h = SvgRect.Height * newZoom;
 
-            var x = svgX - mouseX / SvgRect.Width * w;
-            var y = svgY - mouseY / SvgRect.Height * h;
+            var x = svgX - mx / SvgRect.Width * w;
+            var y = svgY - my / SvgRect.Height * h;
 
             Offset = new Pos(x, y);
             Zoom = newZoom;
@@ -159,30 +156,31 @@ class PanZoomService : IPanZoomService
         // Get Svg position (width and height are unreliable)
         var svg = await jSInteropService.GetBoundingRectangle(canvas.Ref);
 
+        // Get window width and height
+        var windowWidth = Math.Floor(jSInteropService.BrowserSizeDetails.InnerWidth);
+        var windowHeight = Math.Floor(jSInteropService.BrowserSizeDetails.InnerHeight);
+
+        // Calculate the SVG size to fit the window (with some margin and x,y position)
+        var svgX = Math.Floor(svg.X);
+        var svgY = Math.Floor(svg.Y);
+        var svgWidth = windowWidth - svgX - SvgPageMargin * 2;
+        var svgHeight = windowHeight - svgY - SvgPageMargin * 2;
+        var newSwgRect = new Rect(0, 0, svgWidth, svgHeight);
+
+        var isChanged = false;
         lock (syncRoot)
         {
-            // Get window width and height
-            var ww = Math.Floor(jSInteropService.BrowserSizeDetails.InnerWidth);
-            var wh = Math.Floor(jSInteropService.BrowserSizeDetails.InnerHeight);
-
-            // Calculate the SVG size to fit the window (with some margin and x,y position)
-            var svgWidth = ww - svg.X - SvgPageMargin * 2;
-            var svgHeight = wh - svg.Y - SvgPageMargin * 2;
-
-            if (svgWidth != SvgRect.Width || svgHeight != SvgRect.Height)
-            {   // Svg size has changed, adjust svg to fit new window size window
-                var newSwgRect = new Rect(0, 0, svgWidth, svgHeight);
-
-                // Match the view rect size for the adjusted Svg size, but keep the zoom level
-                var vw = newSwgRect.Width * Zoom;
-                var vh = newSwgRect.Height * Zoom;
-
-                // Adjust SVG to fit the window
+            if (newSwgRect != SvgRect)
+            {   // Svg size has changed, adjust svg to fit new window size window and trigger update
                 SvgRect = newSwgRect;
-
-                Log.Info($"Resized: {SvgRect} {Zoom}");
-                canvas.TriggerStateHasChangedAsync().RunInBackground();
+                isChanged = true;
             }
+        }
+
+        if (isChanged)
+        {
+            canvas.TriggerStateHasChangedAsync().RunInBackground();
+            Log.Info($"Resized: {newSwgRect}");
         }
     }
 }
