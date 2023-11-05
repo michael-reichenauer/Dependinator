@@ -14,6 +14,7 @@ class Node : NodeBase
     public string LongName { get; }
     public string ShortName { get; }
     public double StrokeWidth { get; set; } = 1.0;
+    public string Icon { get; set; } = "DefaultIcon";
 
     public Rect Boundary { get; set; } = Rect.None;
     public Rect TotalBoundary => GetTotalBoundary();
@@ -55,13 +56,13 @@ class Node : NodeBase
         var (x, y) = nodeCanvasPos;
         var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
 
-        var (tx, ty) = (x + 2, y + h + 1);
+        var (tx, ty) = (x + w / 2, y + h);
         var fz = 8 * zoom;
 
         return
             $"""
-            <use href="#DefaultIcon" x="{x}" y="{y}" width="{w}" height="{h}" />
-            <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
+            <use href="#{Icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
+            <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{ShortName}</text>
             """;
     }
 
@@ -74,14 +75,16 @@ class Node : NodeBase
         var s = StrokeWidth * zoom;
         var (x, y) = nodeCanvasPos;
         var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
+        var (ix, iy, iw, ih) = (x, y + h + 1 * zoom, 8 * zoom, 8 * zoom);
 
-        var (tx, ty) = (x, y + h / 2);
+        var (tx, ty) = (x + 9 * zoom, y + h + 2 * zoom);
         var fz = 8 * zoom;
         var background = Background;
 
         return
             $"""
             <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{background}" fill-opacity="1" stroke="{StrokeColor}"/>
+            <use href="#{Icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
             <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
             """;
     }
