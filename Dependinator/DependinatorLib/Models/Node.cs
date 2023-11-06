@@ -8,6 +8,8 @@ class Node : NodeBase
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const double MinZoom = 0.1;
     const double MaxZoom = 5.0;
+    private const int SmallIconSize = 9;
+    private const int FontSize = 8;
 
     public string StrokeColor { get; set; } = "";
     public string Background { get; set; } = "green";
@@ -57,7 +59,7 @@ class Node : NodeBase
         var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
 
         var (tx, ty) = (x + w / 2, y + h);
-        var fz = 8 * zoom;
+        var fz = FontSize * zoom;
 
         return
             $"""
@@ -75,15 +77,14 @@ class Node : NodeBase
         var s = StrokeWidth * zoom;
         var (x, y) = nodeCanvasPos;
         var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
-        var (ix, iy, iw, ih) = (x, y + h + 1 * zoom, 8 * zoom, 8 * zoom);
+        var (ix, iy, iw, ih) = (x, y + h + 1 * zoom, SmallIconSize * zoom, SmallIconSize * zoom);
 
-        var (tx, ty) = (x + 9 * zoom, y + h + 2 * zoom);
-        var fz = 8 * zoom;
-        var background = Background;
+        var (tx, ty) = (x + (SmallIconSize + 1) * zoom, y + h + 2 * zoom);
+        var fz = FontSize * zoom;
 
         return
             $"""
-            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{background}" fill-opacity="1" stroke="{StrokeColor}"/>
+            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{Background}" fill-opacity="1" stroke="{StrokeColor}"/>
             <use href="#{Icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
             <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
             """;
