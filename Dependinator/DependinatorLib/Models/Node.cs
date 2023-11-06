@@ -6,7 +6,7 @@ class Node : NodeBase
     const double DefaultWidth = 100;
     const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
-    const double MinZoom = 0.1;
+    const double MinContainerZoom = 1.0;
     const double MaxZoom = 5.0;
     private const int SmallIconSize = 9;
     private const int FontSize = 8;
@@ -33,17 +33,33 @@ class Node : NodeBase
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
     }
 
+    class Svg
+    {
+        public double Zoom { get; set; } = 1.0;
+        public string Content { get; set; } = "";
+        public Rect Boundary { get; set; } = Rect.Zero;
+    }
+
+    class Svgs
+    {
+        List<Svg> svgs = new();
+
+    }
+
 
     public string GetSvg(Pos containerCanvasPos, double zoom)
     {
-        if (zoom < MinZoom) return "";  // Too small to be seen
-
         var nodeCanvasPos = GetNodeCanvasPos(containerCanvasPos, zoom);
-        if (zoom < 1) return GetIconSvg(nodeCanvasPos, zoom);   // No children can be seen
-
-        var containerSvg = GetContainerSvg(nodeCanvasPos, zoom);
-        var nodeSvg = GetChildrenSvgs(nodeCanvasPos, zoom).Prepend(containerSvg).Join("\n");
-        return nodeSvg;
+        if (zoom < MinContainerZoom && !IsRoot)
+        {
+            return GetIconSvg(nodeCanvasPos, zoom);   // No children can be seen
+        }
+        else
+        {
+            var containerSvg = GetContainerSvg(nodeCanvasPos, zoom);
+            var nodeSvg = GetChildrenSvgs(nodeCanvasPos, zoom).Prepend(containerSvg).Join("\n");
+            return nodeSvg;
+        }
     }
 
     Pos GetNodeCanvasPos(Pos containerCanvasPos, double zoom) => new(
