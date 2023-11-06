@@ -29,6 +29,6 @@ class Model : IDisposable
         Monitor.Exit(syncRoot);
     }
 
-    internal (string, Rect) GetSvg() => rootModel.GetSvg();
+    internal (Svgs, Rect) GetSvg() => rootModel.GetSvg();
 }
 

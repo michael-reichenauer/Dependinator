@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
-using Dependinator.Model.Parsing;
-using Dependinator.Model.Parsing.Solutions;
-using ICSharpCode.Decompiler.IL;
+using Dependinator.Parsing;
+using Dependinator.Parsing.Solutions;
+
 
 namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
 
@@ -11,16 +11,14 @@ public class SolutionParserServiceTest
     [Fact]
     public async Task ParserTest()
     {
-        var nodes = new List<Node>();
-        var links = new List<Link>();
-
         var parser = new SolutionParserService();
 
         var path = GetSolutionPath();
 
-        Assert.True(Try(await parser.ParseAsync(path, nodes.Add, links.Add)));
-        Assert.True(nodes.Any());
-        Assert.True(links.Any());
+        var channel = Channel.CreateUnbounded<IItem>();
+        Assert.True(Try(await parser.ParseAsync(path, channel.Writer)));
+        var list = await channel.Reader.ReadAllAsync().ToList();
+        Assert.True(list.Any());
     }
 
 
@@ -32,12 +30,13 @@ public class SolutionParserServiceTest
             Path.GetDirectoryName(
             Path.GetDirectoryName(
             Path.GetDirectoryName(sourceFilePath)))))!, "Dependinator.sln");
-
     }
 
     [Fact]
     public async Task Test()
     {
+        var x = Math.Pow(1 / 7.0, 2);
+
         int i = 0;
         await foreach (var item in Scan())
         {

@@ -1,5 +1,6 @@
-using Dependinator.Model.Parsing;
-using Dependinator.Model.Parsing.Assemblies;
+using System.Threading.Channels;
+using Dependinator.Parsing;
+using Dependinator.Parsing.Assemblies;
 
 namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
 
@@ -9,12 +10,13 @@ public class AssemblyFileParserServiceTest
     public async Task ParserTest()
     {
         var parser = new AssemblyParserService();
+        var channel = Channel.CreateUnbounded<IItem>();
 
-        var nodes = new List<Node>();
-        var links = new List<Link>();
-        Assert.True(Try(await parser.ParseAsync(Path.Combine(AppContext.BaseDirectory, "DependinatorLib.dll"), nodes.Add, links.Add)));
+        Assert.True(Try(await parser.ParseAsync(Path.Combine(AppContext.BaseDirectory, "DependinatorLib.dll"), channel)));
+        channel.Writer.Complete();
 
-        Assert.True(nodes.Any());
-        Assert.True(links.Any());
+        var list = await channel.Reader.ReadAllAsync().ToList();
+
+        Assert.True(list.Any());
     }
 }

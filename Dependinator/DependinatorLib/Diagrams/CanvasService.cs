@@ -31,7 +31,7 @@ class CanvasService : ICanvasService
     readonly IModelDb modelDb;
 
     Canvas canvas = null!;
-    string svgContentData = "";
+    Svgs svgContentData = new(new List<Level>());
 
     public CanvasService(IPanZoomService panZoomService, IModelService modelService, IModelDb modelDb)
     {
@@ -83,13 +83,13 @@ class CanvasService : ICanvasService
         using (var model = modelDb.GetModel())
         {
             model.Clear();
-            SetSvgContent("");
+            SetSvgContent(new Svgs(new List<Level>()));
         }
 
         await canvas.TriggerStateHasChangedAsync();
     }
 
-    public async Task<(string, Rect)> RefreshAsync()
+    public async Task<(Svgs, Rect)> RefreshAsync()
     {
         await modelService.RefreshAsync();
         using var model = modelDb.GetModel();
@@ -99,11 +99,11 @@ class CanvasService : ICanvasService
     string GetSvgContent()
     {
         //Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
-        return svgContentData;
+        return svgContentData.Get(panZoomService.Zoom);
     }
 
-    void SetSvgContent(string svgContent)
+    void SetSvgContent(Svgs svgs)
     {
-        svgContentData = svgContent;
+        svgContentData = svgs;
     }
 }

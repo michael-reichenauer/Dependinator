@@ -1,5 +1,7 @@
 namespace Dependinator.Models;
 
+
+
 class Node : NodeBase
 {
     const double DefaultContainerZoom = 1.0 / 7;
@@ -33,32 +35,20 @@ class Node : NodeBase
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
     }
 
-    class Svg
+
+
+    public string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
-        public double Zoom { get; set; } = 1.0;
-        public string Content { get; set; } = "";
-        public Rect Boundary { get; set; } = Rect.Zero;
-    }
-
-    class Svgs
-    {
-        List<Svg> svgs = new();
-
-    }
-
-
-    public string GetSvg(Pos containerCanvasPos, double zoom)
-    {
-        var nodeCanvasPos = GetNodeCanvasPos(containerCanvasPos, zoom);
-        if (zoom < MinContainerZoom && !IsRoot)
+        var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);
+        if (parentZoom < MinContainerZoom && !IsRoot)
         {
-            return GetIconSvg(nodeCanvasPos, zoom);   // No children can be seen
+            return GetIconSvg(nodeCanvasPos, parentZoom);   // No children can be seen
         }
         else
         {
-            var containerSvg = GetContainerSvg(nodeCanvasPos, zoom);
-            var nodeSvg = GetChildrenSvgs(nodeCanvasPos, zoom).Prepend(containerSvg).Join("\n");
-            return nodeSvg;
+            var containerSvg = GetContainerSvg(nodeCanvasPos, parentZoom);
+            var childrenZoom = parentZoom * ContainerZoom;
+            return Children.Select(n => n.GetSvg(nodeCanvasPos, childrenZoom)).Prepend(containerSvg).Join("\n");
         }
     }
 
@@ -69,8 +59,6 @@ class Node : NodeBase
 
     string GetIconSvg(Pos nodeCanvasPos, double zoom)
     {
-        if (IsRoot) return "";
-
         var (x, y) = nodeCanvasPos;
         var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
 
@@ -107,12 +95,6 @@ class Node : NodeBase
     }
 
 
-    IEnumerable<string> GetChildrenSvgs(Pos nodeCanvasPos, double zoom)
-    {
-        var childrenZoom = zoom * ContainerZoom;
-
-        return Children.Select(n => n.GetSvg(nodeCanvasPos, childrenZoom));
-    }
 
 
     Rect GetTotalBoundary()

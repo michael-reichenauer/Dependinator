@@ -21,6 +21,13 @@ public static class EnumerableExtensions
         }
     }
 
+    public static async Task<List<T>> ToList<T>(this IAsyncEnumerable<T> enumeration)
+    {
+        var list = new List<T>();
+        await enumeration.ForEachAsync(list.Add);
+        return list;
+    }
+
     // Calls acton for each item in the enumeration (includes index)
     public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T, int> action)
     {

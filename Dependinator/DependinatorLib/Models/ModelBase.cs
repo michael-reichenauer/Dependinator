@@ -1,5 +1,24 @@
 namespace Dependinator.Models;
 
+record Level(string Svg, double Zoom);
+
+record Svgs(IReadOnlyList<Level> levels)
+{
+    public string Get(double zoom)
+    {
+        if (levels.Count == 0) return "";
+
+        var level = levels[0];
+        for (int i = 1; i < levels.Count; i++)
+        {
+            if (zoom >= levels[i].Zoom) break;
+            level = levels[i];
+        }
+
+        return level.Svg;
+    }
+}
+
 class ModelBase
 {
     readonly object syncRoot = new();
@@ -31,12 +50,23 @@ class ModelBase
     public int LinkCount { get; internal set; } = 0;
 
 
-    internal (string, Rect) GetSvg()
+    internal (Svgs, Rect) GetSvg()
     {
         using var t = Timing.Start();
-        var svg = Root.GetSvg(Pos.Zero, 1.0);
+
+        var svgs = new List<Level>();
+
+        for (int i = 0; i < 100; i++)
+        {
+            var zoom = i == 0 ? 1 : Math.Pow(7, i);
+            var svg = Root.Children.Select(n => n.GetSvg(Pos.Zero, zoom)).Join("\n").Trim();
+            if (svg == "") break;
+            svgs.Add(new Level(svg, 1 / zoom));
+        }
+        Log.Info($"Levels: {svgs.Count}");
+
         var totalBoundary = Root.TotalBoundary;
-        return (svg, totalBoundary);
+        return (new Svgs(svgs), totalBoundary);
     }
 
 
