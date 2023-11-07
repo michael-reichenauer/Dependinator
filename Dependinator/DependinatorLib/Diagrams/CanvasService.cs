@@ -99,7 +99,16 @@ class CanvasService : ICanvasService
     string GetSvgContent()
     {
         //Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
-        return svgContentData.Get(panZoomService.Zoom);
+        var (svg, zoom) = svgContentData.Get(panZoomService.Zoom);
+
+        // Rezise the svg to fit the zoom it was created for
+        var (sw, sh) = (SvgRect.Width, SvgRect.Height);
+        var vw = sw / zoom;
+        var vh = sh / zoom;
+
+        var content = $"""<svg width="{sw}" height="{sh}" viewBox="0 0 {vw} {vh}" xmlns="http://www.w3.org/2000/svg">{svg}</svg>""";
+        return content;
+
     }
 
     void SetSvgContent(Svgs svgs)

@@ -4,9 +4,9 @@ record Level(string Svg, double Zoom);
 
 record Svgs(IReadOnlyList<Level> levels)
 {
-    public string Get(double zoom)
+    public (string, double) Get(double zoom)
     {
-        if (levels.Count == 0) return "";
+        if (levels.Count == 0) return ("", 1.0);
 
         var level = levels[0];
         for (int i = 1; i < levels.Count; i++)
@@ -15,7 +15,7 @@ record Svgs(IReadOnlyList<Level> levels)
             level = levels[i];
         }
 
-        return level.Svg;
+        return (level.Svg, level.Zoom);
     }
 }
 

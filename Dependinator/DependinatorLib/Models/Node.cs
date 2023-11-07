@@ -9,7 +9,7 @@ class Node : NodeBase
     const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const double MinContainerZoom = 1.0;
-    const double MaxZoom = 5.0;
+    const double MaxZoom = 7.5;
     private const int SmallIconSize = 9;
     private const int FontSize = 8;
 
