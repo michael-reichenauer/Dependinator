@@ -18,7 +18,7 @@ class Node : NodeBase
     public string LongName { get; }
     public string ShortName { get; }
     public double StrokeWidth { get; set; } = 1.0;
-    public string Icon { get; set; } = "DefaultIcon";
+    public string Icon => GetIconName();
 
     public Rect Boundary { get; set; } = Rect.None;
     public Rect TotalBoundary => GetTotalBoundary();
@@ -137,6 +137,18 @@ class Node : NodeBase
         }
 
         return Rect.None;
+    }
+
+    string GetIconName()
+    {
+        return Type switch
+        {
+            NodeType.Solution => "SolutionIcon",
+            NodeType.NameSpace => "NamespaceIcon",
+            NodeType.Type => "TypeIcon",
+            NodeType.Member => "MemberIcon",
+            _ => "DefaultIcon"
+        };
     }
 
 
