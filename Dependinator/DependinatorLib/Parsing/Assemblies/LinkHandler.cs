@@ -17,7 +17,7 @@ internal class LinkHandler
     public int LinksCount { get; private set; } = 0;
 
 
-    public Task AddLinkAsync(string source, string target, string targetType)
+    public Task AddLinkAsync(string source, string target, NodeType targetType)
     {
         return SendLinkAsync(source, target, targetType);
     }
@@ -36,7 +36,7 @@ internal class LinkHandler
 
         if (IsIgnoredTargetName(targetNodeName)) return;
 
-        await SendLinkAsync(sourceName, targetNodeName, NodeType.TypeType);
+        await SendLinkAsync(sourceName, targetNodeName, NodeType.Type);
     }
 
 
@@ -48,11 +48,11 @@ internal class LinkHandler
 
         if (IsIgnoredTargetName(targetNodeName)) return;
 
-        await SendLinkAsync(sourceName, targetNodeName, NodeType.MemberType);
+        await SendLinkAsync(sourceName, targetNodeName, NodeType.Member);
     }
 
 
-    private async Task SendLinkAsync(string source, string targetName, string targetType)
+    private async Task SendLinkAsync(string source, string targetName, NodeType targetType)
     {
         Link dataLink = new Link(source, targetName, targetType);
         await items.WriteAsync(dataLink);

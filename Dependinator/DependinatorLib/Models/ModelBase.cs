@@ -58,7 +58,7 @@ class ModelBase
 
         for (int i = 0; i < 100; i++)
         {
-            var zoom = i == 0 ? 1 : Math.Pow(7, i);
+            var zoom = i == 0 ? 1.0 : Math.Pow(2, i);
             var svg = Root.Children.Select(n => n.GetSvg(Pos.Zero, zoom)).Join("\n").Trim();
             if (svg == "") break;
             svgs.Add(new Level(svg, 1 / zoom));
@@ -184,11 +184,11 @@ class ModelBase
 
 
     static Parsing.Node DefaultParsingNode(string name) =>
-        new(name, Parsing.Node.ParseParentName(name), "", "");
+        new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.None, "");
 
     static Node DefaultRootNode(ModelBase model) => new("", null!, model)
     {
-        Type = NodeType.Root,
+        Type = Parsing.NodeType.Root,
         Boundary = new Rect(0, 0, 1000, 1000),
         ContainerZoom = 1
     };

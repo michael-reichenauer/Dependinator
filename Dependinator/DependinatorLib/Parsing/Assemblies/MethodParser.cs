@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Dependinator.Parsing;
+
 
 namespace Dependinator.Parsing.Assemblies;
 
@@ -142,7 +142,7 @@ internal class MethodParser
         string methodName = Name.GetMethodFullName(method);
         if (Name.IsCompilerGenerated(methodName)) return;
 
-        await linkHandler.AddLinkAsync(memberName, methodName, NodeType.MemberType);
+        await linkHandler.AddLinkAsync(memberName, methodName, NodeType.Member);
 
         TypeReference returnType = method.ReturnType;
         await linkHandler.AddLinkToTypeAsync(memberName, returnType);

@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 using Newtonsoft.Json;
 
 namespace Dependinator.Parsing.JsonDataFiles;
@@ -98,11 +97,11 @@ class JsonFileParserService : IParser
 
 
     static Node ToNodeData(JsonTypes.Node node) =>
-       new Node(node.Name, node.Parent, node.Type, node.Description);
+       new(node.Name, node.Parent, NodeTypeEx.ToNodeType(node.Type), node.Description);
 
 
     static Link ToLinkData(JsonTypes.Link link) =>
-       new Link(link.Source, link.Target, link.TargetType ?? JsonTypes.NodeType.Type);
+       new(link.Source, link.Target, NodeTypeEx.ToNodeType(link.TargetType));
 
 
     static void ValidateVersion(JsonReader reader)

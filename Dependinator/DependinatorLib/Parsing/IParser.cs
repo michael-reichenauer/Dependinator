@@ -1,5 +1,4 @@
-﻿using System.Security.Permissions;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 
 namespace Dependinator.Parsing;
 
@@ -18,9 +17,9 @@ interface IParser
 }
 
 interface IItem { }
-record Link(string Source, string Target, string TargetType) : IItem;
+record Link(string Source, string Target, NodeType TargetType) : IItem;
 
-record Node(string Name, string ParentName, string Type, string Description) : IItem
+record Node(string Name, string ParentName, NodeType Type, string Description) : IItem
 {
     static readonly char[] NamePartsSeparators = "./".ToCharArray();
 
@@ -34,16 +33,44 @@ record Node(string Name, string ParentName, string Type, string Description) : I
 
 record Source(string Path, string Text, int LineNumber);
 
-static class NodeType
+
+internal enum NodeType
 {
-    public const string SolutionType = "Solution";
-    public const string AssemblyType = "Assembly";
-    public const string GroupType = "Group";
-    public const string DllType = "Dll";
-    public const string ExeType = "Exe";
-    public const string NameSpaceType = "NameSpace";
-    public const string TypeType = "Type";
-    public const string MemberType = "Member";
-    public const string SolutionFolderType = "SolutionFolder";
+    None,
+    Root,
+    Solution,
+    Externals,
+    SolutionFolder,
+    Assembly,
+    Group,
+    Dll,
+    Exe,
+    Namespace,
+    Type,
+    Member,
+    PrivateMember
 }
+
+static class NodeTypeEx
+{
+    public static string ToText(NodeType type) => Enum.GetName(type) ?? "None";
+
+    public static NodeType ToNodeType(string text) => Enum.TryParse<NodeType>(text, out var type) ? type : NodeType.None;
+}
+
+
+
+// static class NodeType
+// {
+//     public const string SolutionType = "Solution";
+//     public const string AssemblyType = "Assembly";
+//     public const string Externals = "Externals";
+//     public const string GroupType = "Group";
+//     public const string DllType = "Dll";
+//     public const string ExeType = "Exe";
+//     public const string NamespaceType = "Namespace";
+//     public const string TypeType = "Type";
+//     public const string MemberType = "Member";
+//     public const string SolutionFolderType = "SolutionFolder";
+// }
 

@@ -9,7 +9,7 @@ class Node : NodeBase
     const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const double MinContainerZoom = 1.0;
-    const double MaxZoom = 7.5;
+    const double MaxZoom = 10;
     private const int SmallIconSize = 9;
     private const int FontSize = 8;
 
@@ -40,7 +40,7 @@ class Node : NodeBase
     public string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
         var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);
-        if (parentZoom < MinContainerZoom && !IsRoot)
+        if (parentZoom <= MinContainerZoom && !IsRoot)
         {
             return GetIconSvg(nodeCanvasPos, parentZoom);   // No children can be seen
         }
@@ -141,14 +141,22 @@ class Node : NodeBase
 
     string GetIconName()
     {
-        return Type switch
+        var x = Type switch
         {
-            NodeType.Solution => "SolutionIcon",
-            NodeType.NameSpace => "NamespaceIcon",
-            NodeType.Type => "TypeIcon",
-            NodeType.Member => "MemberIcon",
-            _ => "DefaultIcon"
+            Parsing.NodeType.Solution => "SolutionIcon",
+            Parsing.NodeType.Externals => "ExternalsIcon",
+            Parsing.NodeType.Assembly => "ModuleIcon",
+            Parsing.NodeType.Namespace => "NamespaceIcon",
+            Parsing.NodeType.Type => "TypeIcon",
+            Parsing.NodeType.Member => "MemberIcon",
+            _ => "ModuleIcon"
         };
+
+        if (x == "ModuleIcon")
+        {
+            Log.Info($"Unknown node type: {Type}");
+        }
+        return x;
     }
 
 

@@ -1,4 +1,3 @@
-
 namespace Dependinator.Models;
 
 abstract class NodeBase : IItem
@@ -7,7 +6,6 @@ abstract class NodeBase : IItem
     readonly List<Link> sourceLinks = new();
     readonly List<Link> targetLinks = new();
     protected readonly ModelBase model;
-    string typeName = "";
 
 
     public NodeBase(string name, Node parent, ModelBase model)
@@ -20,8 +18,8 @@ abstract class NodeBase : IItem
     public bool IsModified { get; protected set; } = true;
     public string Name { get; }
     public Node Parent { get; private set; }
-    public bool IsRoot => Type == NodeType.Root;
-    public NodeType Type { get; set; } = NodeType.None;
+    public bool IsRoot => Type == Parsing.NodeType.Root;
+    public Parsing.NodeType Type { get; set; } = Parsing.NodeType.None;
     public string Description { get; set; } = "";
 
     public IReadOnlyList<Node> Children => children;
@@ -63,8 +61,7 @@ abstract class NodeBase : IItem
             Parent.AddChild((Node)this);
         }
 
-        typeName = node.Type;
-        Type = ToNodeType(typeName);
+        Type = node.Type;
         Description = node.Description;
     }
 
@@ -80,26 +77,10 @@ abstract class NodeBase : IItem
     }
 
 
-
     bool IsEqual(Parsing.Node n) =>
         Parent.Name == n.ParentName &&
-        typeName == n.Type &&
+        Type == n.Type &&
         Description == n.Description;
 
-    static NodeType ToNodeType(string nodeTypeName) => nodeTypeName switch
-    {
-        "" => NodeType.None,
-        "Solution" => NodeType.Solution,
-        "SolutionFolder" => NodeType.SolutionFolder,
-        "Assembly" => NodeType.Assembly,
-        "Group" => NodeType.Group,
-        "Dll" => NodeType.Dll,
-        "Exe" => NodeType.Exe,
-        "NameSpace" => NodeType.NameSpace,
-        "Type" => NodeType.Type,
-        "Member" => NodeType.Member,
-        "PrivateMember" => NodeType.PrivateMember,
-        _ => throw Asserter.FailFast($"Unexpected type {nodeTypeName}")
-    };
 }
 

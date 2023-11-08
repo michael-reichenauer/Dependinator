@@ -80,7 +80,7 @@ internal class AssemblyParser : IDisposable
     {
         string nodeName = Name.GetModuleName(assembly.Value!);
         string assemblyDescription = GetAssemblyDescription(assembly.Value!);
-        var assemblyNode = new Node(nodeName, parentName, NodeType.AssemblyType, assemblyDescription);
+        var assemblyNode = new Node(nodeName, parentName, NodeType.Assembly, assemblyDescription);
 
         await items.WriteAsync(assemblyNode);
     }
@@ -107,8 +107,9 @@ internal class AssemblyParser : IDisposable
 
         // Add assembly type nodes (including inner type types)
         typeInfos = new List<TypeData>();
-        assemblyTypes.ForEach(async t => await typeParser.AddTypeAsync(assembly.Value, t)
-            .ForEachAsync(tt => typeInfos.Add(tt)));
+        assemblyTypes
+            .ForEach(async t => await typeParser.AddTypeAsync(assembly.Value, t)
+                .ForEachAsync(tt => typeInfos.Add(tt)));
     }
 
 
