@@ -1,3 +1,5 @@
+using Dependinator.Icons;
+
 namespace Dependinator.Models;
 
 
@@ -9,7 +11,7 @@ class Node : NodeBase
     const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const double MinContainerZoom = 1.0;
-    const double MaxZoom = 10;
+    const double MaxNodeZoom = 15;           // To large to be seen
     private const int SmallIconSize = 9;
     private const int FontSize = 8;
 
@@ -18,7 +20,7 @@ class Node : NodeBase
     public string LongName { get; }
     public string ShortName { get; }
     public double StrokeWidth { get; set; } = 1.0;
-    public string Icon => GetIconName();
+    public string IconName { get; set; } = "";
 
     public Rect Boundary { get; set; } = Rect.None;
     public Rect TotalBoundary => GetTotalBoundary();
@@ -64,10 +66,11 @@ class Node : NodeBase
 
         var (tx, ty) = (x + w / 2, y + h);
         var fz = FontSize * zoom;
+        var icon = GetIconSvg();
 
         return
             $"""
-            <use href="#{Icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
+            <use href="#{icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
             <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{ShortName}</text>
             """;
     }
@@ -76,7 +79,7 @@ class Node : NodeBase
     string GetContainerSvg(Pos nodeCanvasPos, double zoom)
     {
         if (IsRoot) return "";
-        if (zoom > MaxZoom) return "";  // To large to be seen
+        if (zoom > MaxNodeZoom) return "";  // To large to be seen
 
         var s = StrokeWidth * zoom;
         var (x, y) = nodeCanvasPos;
@@ -85,16 +88,22 @@ class Node : NodeBase
 
         var (tx, ty) = (x + (SmallIconSize + 1) * zoom, y + h + 2 * zoom);
         var fz = FontSize * zoom;
+        var icon = GetIconSvg();
 
         return
             $"""
             <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{Background}" fill-opacity="1" stroke="{StrokeColor}"/>
-            <use href="#{Icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
+            <use href="#{icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
             <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
             """;
     }
 
 
+    string GetIconSvg()
+    {
+        var icon = Icon.GetIconSvg(Type);
+        return icon;
+    }
 
 
     Rect GetTotalBoundary()
@@ -139,25 +148,7 @@ class Node : NodeBase
         return Rect.None;
     }
 
-    string GetIconName()
-    {
-        var x = Type switch
-        {
-            Parsing.NodeType.Solution => "SolutionIcon",
-            Parsing.NodeType.Externals => "ExternalsIcon",
-            Parsing.NodeType.Assembly => "ModuleIcon",
-            Parsing.NodeType.Namespace => "NamespaceIcon",
-            Parsing.NodeType.Type => "TypeIcon",
-            Parsing.NodeType.Member => "MemberIcon",
-            _ => "ModuleIcon"
-        };
 
-        if (x == "ModuleIcon")
-        {
-            Log.Info($"Unknown node type: {Type}");
-        }
-        return x;
-    }
 
 
     public override string ToString() => IsRoot ? "<root>" : LongName;

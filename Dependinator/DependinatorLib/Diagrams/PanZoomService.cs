@@ -20,6 +20,7 @@ interface IPanZoomService
 [Scoped]
 class PanZoomService : IPanZoomService
 {
+    const double MaxZoom = 5;
     const double Margin = 10;
     const double ZoomSpeed = 0.1;
     const int LeftMouseBtn = 1;
@@ -96,9 +97,11 @@ class PanZoomService : IPanZoomService
             var (mx, my) = (e.OffsetX, e.OffsetY);
 
             double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
-            if (e.DeltaY > 0) ZCount--; else ZCount++;
 
             var newZoom = Zoom * z;
+            if (newZoom > MaxZoom) return;
+
+            if (e.DeltaY > 0) ZCount--; else ZCount++;
 
             double svgX = mx * Zoom + Offset.X;
             double svgY = my * Zoom + Offset.Y;

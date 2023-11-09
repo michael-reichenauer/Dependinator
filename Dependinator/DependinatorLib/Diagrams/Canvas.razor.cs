@@ -1,3 +1,4 @@
+using Dependinator.Icons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
@@ -15,7 +16,7 @@ partial class Canvas : ComponentBase
     double Height => srv.SvgRect.Height;
     string viewBox => $"{srv.Offset.X} {srv.Offset.Y} {srv.SvgRect.Width * srv.Zoom} {srv.SvgRect.Height * srv.Zoom}";
 
-    static string IconDefs => Icons.IconDefs;
+    static string IconDefs => Icon.IconDefs;
 
     void OnMouse(MouseEventArgs e) => srv.OnMouse(e);
 

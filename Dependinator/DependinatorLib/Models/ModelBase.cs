@@ -62,6 +62,7 @@ class ModelBase
             var svg = Root.Children.Select(n => n.GetSvg(Pos.Zero, zoom)).Join("\n").Trim();
             if (svg == "") break;
             svgs.Add(new Level(svg, 1 / zoom));
+            Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
         }
         Log.Info($"Levels: {svgs.Count}");
 
@@ -139,6 +140,7 @@ class ModelBase
             var boundary = NodeLayout.GetNextChildRect(parent);
             node = new Node(parsedNode.Name, parent, this)
             {
+                Type = parsedNode.Type,
                 Description = parsedNode.Description,
                 Boundary = boundary,
             };
@@ -184,7 +186,7 @@ class ModelBase
 
 
     static Parsing.Node DefaultParsingNode(string name) =>
-        new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.None, "");
+        new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.Namespace, "");
 
     static Node DefaultRootNode(ModelBase model) => new("", null!, model)
     {
