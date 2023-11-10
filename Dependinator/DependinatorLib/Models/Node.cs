@@ -81,7 +81,7 @@ class Node : NodeBase
         if (IsRoot) return "";
         if (zoom > MaxNodeZoom) return "";  // To large to be seen
 
-        var s = StrokeWidth * zoom;
+        var s = StrokeWidth;
         var (x, y) = nodeCanvasPos;
         var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
         var (ix, iy, iw, ih) = (x, y + h + 1 * zoom, SmallIconSize * zoom, SmallIconSize * zoom);
