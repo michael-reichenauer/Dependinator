@@ -94,10 +94,20 @@ internal class MemberParser
         try
         {
             string memberName = Name.GetMemberFullName(memberInfo);
-            string parent = isPrivate ? $"{GetParentName(memberName)}.$private" : GetParentName(memberName);
+            string parentName = isPrivate ? $"{GetParentName(memberName)}.$private" : GetParentName(memberName);
             string description = xmlDocParser.GetDescription(memberName);
 
-            var memberNode = new Node(memberName, parent, NodeType.Member, description);
+            if (isPrivate)
+            {
+                if (!sentNodes.ContainsKey(parentName))
+                {
+                    var parentNode = new Node(parentName, GetParentName(parentName), NodeType.Private, description);
+                    sentNodes[parentName] = parentNode;
+                    await items.WriteAsync(parentNode);
+                }
+            }
+
+            var memberNode = new Node(memberName, parentName, NodeType.Member, description);
 
             if (!sentNodes.ContainsKey(memberNode.Name))
             {

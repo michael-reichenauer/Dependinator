@@ -38,6 +38,7 @@ internal enum NodeType
 {
     None,
     Root,
+    Parent,
     Solution,
     Externals,
     SolutionFolder,
@@ -48,7 +49,7 @@ internal enum NodeType
     Namespace,
     Type,
     Member,
-    PrivateMember
+    Private
 }
 
 static class NodeTypeEx
@@ -57,20 +58,4 @@ static class NodeTypeEx
 
     public static NodeType ToNodeType(string text) => Enum.TryParse<NodeType>(text, out var type) ? type : NodeType.None;
 }
-
-
-
-// static class NodeType
-// {
-//     public const string SolutionType = "Solution";
-//     public const string AssemblyType = "Assembly";
-//     public const string Externals = "Externals";
-//     public const string GroupType = "Group";
-//     public const string DllType = "Dll";
-//     public const string ExeType = "Exe";
-//     public const string NamespaceType = "Namespace";
-//     public const string TypeType = "Type";
-//     public const string MemberType = "Member";
-//     public const string SolutionFolderType = "SolutionFolder";
-// }
 

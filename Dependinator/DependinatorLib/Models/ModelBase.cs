@@ -62,7 +62,7 @@ class ModelBase
             var svg = Root.Children.Select(n => n.GetSvg(Pos.Zero, zoom)).Join("\n").Trim();
             if (svg == "") break;
             svgs.Add(new Level(svg, 1 / zoom));
-            Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
+            //Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
         }
         Log.Info($"Levels: {svgs.Count}");
 
@@ -120,6 +120,18 @@ class ModelBase
         return (Node)item;
     }
 
+    public Node GetOrCreateParent(string name)
+    {
+        if (!items.TryGetValue(name, out var item))
+        {
+            var parent = DefaultParentNode(name);
+            AddOrUpdateNode(parent);
+            return (Node)items[name];
+        }
+
+        return (Node)item;
+    }
+
     public void Clear()
     {
         itemsDictionary.Clear();
@@ -132,10 +144,14 @@ class ModelBase
 
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
+        if (parsedNode.Name.EndsWith("$private"))
+        {
+            Log.Info($"Node {parsedNode.ToJson()}");
+        }
         if (!TryGetNode(parsedNode.Name, out var node))
         {   // New node, add it to the model and parent
             var parentName = parsedNode.ParentName;
-            var parent = GetOrCreateNode(parentName);
+            var parent = GetOrCreateParent(parentName);
 
             var boundary = NodeLayout.GetNextChildRect(parent);
             node = new Node(parsedNode.Name, parent, this)
@@ -185,8 +201,10 @@ class ModelBase
     }
 
 
+    static Parsing.Node DefaultParentNode(string name) =>
+        new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.Parent, "");
     static Parsing.Node DefaultParsingNode(string name) =>
-        new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.Namespace, "");
+        new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.None, "");
 
     static Node DefaultRootNode(ModelBase model) => new("", null!, model)
     {
