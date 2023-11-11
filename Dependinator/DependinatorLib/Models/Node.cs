@@ -64,6 +64,8 @@ class Node : NodeBase
 
     string GetIconSvg(Pos nodeCanvasPos, double zoom)
     {
+        if (zoom > MaxNodeZoom) return "";  // To large to be seen
+
         var (x, y) = nodeCanvasPos;
         var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
 

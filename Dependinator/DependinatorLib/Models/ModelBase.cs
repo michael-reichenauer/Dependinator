@@ -4,18 +4,19 @@ record Level(string Svg, double Zoom);
 
 record Svgs(IReadOnlyList<Level> levels)
 {
-    public (string, double) Get(double zoom)
+    public (string, double, int) Get(double zoom)
     {
-        if (levels.Count == 0) return ("", 1.0);
+        if (levels.Count == 0) return ("", 1.0, 0);
 
-        var level = levels[0];
+        int level = 0;
+
         for (int i = 1; i < levels.Count; i++)
         {
             if (zoom >= levels[i].Zoom) break;
-            level = levels[i];
+            level = i;
         }
 
-        return (level.Svg, level.Zoom);
+        return (levels[level].Svg, levels[level].Zoom, level);
     }
 }
 
@@ -62,7 +63,7 @@ class ModelBase
             var svg = Root.Children.Select(n => n.GetSvg(Pos.Zero, zoom)).Join("\n").Trim();
             if (svg == "") break;
             svgs.Add(new Level(svg, 1 / zoom));
-            //Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
+            Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
         }
         Log.Info($"Levels: {svgs.Count}");
 

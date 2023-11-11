@@ -9,6 +9,7 @@ interface ICanvasService
     Task InitAsync(Canvas canvas);
 
     string SvgContent { get; }
+    int Level { get; }
     Rect SvgRect { get; }
     Pos Offset { get; }
     double Zoom { get; }
@@ -41,6 +42,7 @@ class CanvasService : ICanvasService
     }
 
     public string SvgContent => GetSvgContent();
+    public int Level { get; private set; }
     public Rect SvgRect => panZoomService.SvgRect;
     public Pos Offset => panZoomService.Offset;
     public double Zoom => panZoomService.Zoom;
@@ -99,7 +101,7 @@ class CanvasService : ICanvasService
     string GetSvgContent()
     {
         //Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
-        var (svg, zoom) = svgContentData.Get(panZoomService.Zoom);
+        var (svg, zoom, level) = svgContentData.Get(panZoomService.Zoom);
 
         // Rezise the svg to fit the zoom it was created for
         var (sw, sh) = (SvgRect.Width, SvgRect.Height);
@@ -107,6 +109,7 @@ class CanvasService : ICanvasService
         var vh = sh / zoom;
 
         var content = $"""<svg width="{sw}" height="{sh}" viewBox="0 0 {vw} {vh}" xmlns="http://www.w3.org/2000/svg">{svg}</svg>""";
+        Level = level;
         return content;
 
     }

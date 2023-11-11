@@ -10,7 +10,7 @@ partial class Canvas : ComponentBase
 
     public ElementReference Ref { get; private set; }
 
-    string Zoom => $"{srv.Zoom}, {srv.ZCount}";
+    string Info => $"Zoom: {srv.Zoom:E2}, Level: {srv.Level}, ViewBox: ({srv.Offset.X:0.##} {srv.Offset.Y:0.##} {srv.SvgRect.Width * srv.Zoom:0.##} {srv.SvgRect.Height * srv.Zoom:0.##})";
     string SvgContent => srv.SvgContent;
     double Width => srv.SvgRect.Width;
     double Height => srv.SvgRect.Height;
