@@ -95,7 +95,7 @@ class Node : NodeBase
 
         return
             $"""
-            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{Background}" fill-opacity="1" stroke="{StrokeColor}"/>
+            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{Background}" fill-opacity="1" stroke="{StrokeColor}"/>
             <use href="#{icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
             <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
             """;
