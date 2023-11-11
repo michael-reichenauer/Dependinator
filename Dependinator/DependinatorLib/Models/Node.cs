@@ -68,6 +68,7 @@ class Node : NodeBase
 
         var (x, y) = nodeCanvasPos;
         var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
+        var s = StrokeWidth;
 
         var (tx, ty) = (x + w / 2, y + h);
         var fz = FontSize * zoom;
@@ -76,6 +77,7 @@ class Node : NodeBase
         return
             $"""
             <use href="#{icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
+            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="2" fill="black" fill-opacity="0" stroke="none"/>
             <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{ShortName}</text>
             """;
     }

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Components.Web;
 
 namespace Dependinator.Diagrams;
 
+// https://css-tricks.com/use-and-reuse-everything-in-svg-even-animations/
+
 partial class Canvas : ComponentBase
 {
     [Inject] ICanvasService srv { get; init; } = null!;
