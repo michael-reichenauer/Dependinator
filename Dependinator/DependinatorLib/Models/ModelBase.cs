@@ -144,10 +144,6 @@ class ModelBase
 
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
-        if (parsedNode.Name.EndsWith("$private"))
-        {
-            Log.Info($"Node {parsedNode.ToJson()}");
-        }
         if (!TryGetNode(parsedNode.Name, out var node))
         {   // New node, add it to the model and parent
             var parentName = parsedNode.ParentName;

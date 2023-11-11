@@ -42,7 +42,10 @@ class Node : NodeBase
     public string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
         var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);
-        if (parentZoom <= MinContainerZoom && !IsRoot)
+
+        if ((parentZoom <= MinContainerZoom || // Too small to show children
+            Type == Parsing.NodeType.Member)  // Members do not have children
+            && !IsRoot)                       // Root have icon but can have children
         {
             return GetIconSvg(nodeCanvasPos, parentZoom);   // No children can be seen
         }
