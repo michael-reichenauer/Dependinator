@@ -8,6 +8,7 @@ interface IPanZoomService
     Rect SvgRect { get; }
     Pos Offset { get; }
     double Zoom { get; set; }
+    double SvgZoom { get; set; }
     int ZCount { get; }
 
     Task InitAsync(Canvas canvas);
@@ -38,6 +39,7 @@ class PanZoomService : IPanZoomService
     public Rect SvgRect { get; private set; } = Rect.Zero;
 
     public double Zoom { get; set; } = 1;
+    public double SvgZoom { get; set; } = 1;
 
 
     public PanZoomService(IJSInteropService jSInteropService)
@@ -95,6 +97,7 @@ class PanZoomService : IPanZoomService
         {
             if (e.DeltaY == 0) return;
             var (mx, my) = (e.OffsetX, e.OffsetY);
+            // var (mx, my) = (SvgRect.Width / 2, SvgRect.Height / 2);
 
             double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
 

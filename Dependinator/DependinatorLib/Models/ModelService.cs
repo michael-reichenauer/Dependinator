@@ -35,6 +35,7 @@ class ModelService : IModelService
         await Task.Run(async () =>
         {
             using var _ = Timing.Start();
+            AddSpecials();
 
             while (await reader.WaitToReadAsync())
             {
@@ -67,6 +68,23 @@ class ModelService : IModelService
                 case Parsing.Link parsedLink:
                     model.AddOrUpdateLink(parsedLink);
                     break;
+            }
+        }
+    }
+
+    public void AddSpecials()
+    {
+        using var model = modelDb.GetModel();
+
+        for (int j = 1; j < 20; j++)
+        {
+            var name = $"TestJ";
+            for (int i = 1; i < 15; i++)
+            {
+                var parentName = name;
+                name = $"{name}.Test-{j}-{i}";
+                var node = new Parsing.Node(name, parentName, Parsing.NodeType.Assembly, "");
+                model.AddOrUpdateNode(node);
             }
         }
     }

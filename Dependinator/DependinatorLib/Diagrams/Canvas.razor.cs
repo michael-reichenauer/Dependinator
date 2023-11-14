@@ -12,11 +12,11 @@ partial class Canvas : ComponentBase
 
     public ElementReference Ref { get; private set; }
 
-    string Info => $"Zoom: {srv.Zoom:E2}, Level: {srv.Level}, ViewBox: ({srv.Offset.X:0.##} {srv.Offset.Y:0.##} {srv.SvgRect.Width * srv.Zoom:0.##} {srv.SvgRect.Height * srv.Zoom:0.##})";
+    string Info => $"Zoom: {srv.Zoom:E2}, SvgZoom: {srv.SvgZoom:E2}, ViewZoom: {srv.ActualZoom:0.###} Level: {srv.Level}, ViewBox: ({ViewBox})";
     string SvgContent => srv.SvgContent;
     double Width => srv.SvgRect.Width;
     double Height => srv.SvgRect.Height;
-    string viewBox => $"{srv.Offset.X} {srv.Offset.Y} {srv.SvgRect.Width * srv.Zoom} {srv.SvgRect.Height * srv.Zoom}";
+    string ViewBox => srv.ViewBox;
 
     static string IconDefs => Icon.IconDefs;
 

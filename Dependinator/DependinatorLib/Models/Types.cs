@@ -24,7 +24,7 @@ record Rect(double X, double Y, double Width, double Height)
 
 record Color(int R, int G, int B)
 {
-    const int VeryDarkFactor = 10;
+    const int VeryDarkFactor = 8;
     const int Bright = 200;
     static readonly Random random = new();
 

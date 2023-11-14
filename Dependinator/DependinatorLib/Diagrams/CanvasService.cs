@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Dependinator.Models;
 
+
 namespace Dependinator.Diagrams;
 
 
@@ -13,7 +14,10 @@ interface ICanvasService
     Rect SvgRect { get; }
     Pos Offset { get; }
     double Zoom { get; }
+    double SvgZoom { get; }
+    double ActualZoom { get; }
     int ZCount { get; }
+    string ViewBox { get; }
 
     void OnMouse(MouseEventArgs e);
 
@@ -42,17 +46,23 @@ class CanvasService : ICanvasService
     }
 
     public string SvgContent => GetSvgContent();
-    public int Level { get; private set; }
+    public int Level { get; private set; } = -1;
+    public double SvgZoom { get; private set; } = 1;
+    public string Content { get; private set; } = "";
     public Rect SvgRect => panZoomService.SvgRect;
     public Pos Offset => panZoomService.Offset;
     public double Zoom => panZoomService.Zoom;
+    public double ActualZoom => Zoom / SvgZoom;
     public int ZCount => panZoomService.ZCount;
+
+    public string ViewBox => $"{Offset.X / SvgZoom} {Offset.Y / SvgZoom} {SvgRect.Width * Zoom / SvgZoom} {SvgRect.Height * Zoom / SvgZoom}";
 
     public async Task InitAsync(Canvas canvas)
     {
         this.canvas = canvas;
         await panZoomService.InitAsync(canvas);
     }
+
 
     public void OnMouse(MouseEventArgs e) => panZoomService.OnMouse(e);
 
@@ -101,16 +111,24 @@ class CanvasService : ICanvasService
     string GetSvgContent()
     {
         //Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
-        var (svg, zoom, level) = svgContentData.Get(panZoomService.Zoom);
-
+        var (svg, svgZoom, level) = svgContentData.Get(Zoom);
         // Rezise the svg to fit the zoom it was created for
-        var (sw, sh) = (SvgRect.Width, SvgRect.Height);
-        var vw = sw / zoom;
-        var vh = sh / zoom;
+        var (sw, sh) = (SvgRect.Width / svgZoom, SvgRect.Height / svgZoom);
+        var vw = sw;
+        var vh = sh;
 
         var content = $"""<svg width="{sw}" height="{sh}" viewBox="0 0 {vw} {vh}" xmlns="http://www.w3.org/2000/svg">{svg}</svg>""";
+        //var content = svg;
+        if (content == Content) return Content;  // No change
+        // Log.Info($"svg: {sw}x{sh} =>  (0 0 {vw} {vh})");
+        // Log.Info($"Content: Zoom: {Zoom}=>{svgZoom}, Level: {level}, SvgLength: {svg.Length} sub: (0 0 {vw} {vh})");
+        Content = content;
         Level = level;
-        return content;
+        SvgZoom = svgZoom;
+        panZoomService.SvgZoom = svgZoom;
+        canvas?.TriggerStateHasChangedAsync();
+
+        return Content;
 
     }
 

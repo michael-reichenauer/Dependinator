@@ -11,7 +11,7 @@ class Node : NodeBase
     const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const double MinContainerZoom = 1.0;
-    const double MaxNodeZoom = 15;           // To large to be seen
+    const double MaxNodeZoom = 30 * 1 / DefaultContainerZoom;           // To large to be seen
     private const int SmallIconSize = 9;
     private const int FontSize = 8;
 
@@ -77,7 +77,7 @@ class Node : NodeBase
         return
             $"""
             <use href="#{icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
-            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="2" fill="black" fill-opacity="0" stroke="none"><title>({x:0.##},{y:0.##},{w:0.##}, {h:0.##})</title></rect>
             <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{ShortName}</text>
             """;
     }
