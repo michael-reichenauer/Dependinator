@@ -156,8 +156,5 @@ class Node : NodeBase
     }
 
 
-
-
     public override string ToString() => IsRoot ? "<root>" : LongName;
 }
-

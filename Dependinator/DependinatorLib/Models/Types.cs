@@ -1,5 +1,11 @@
 namespace Dependinator.Models;
 
+interface IItem { }
+
+record Source(string Path, string Text, int LineNumber);
+
+record Link(Node Source, Node Target) : IItem;
+
 record Pos(double X, double Y)
 {
     public static readonly Pos Zero = new(0, 0);
@@ -44,6 +50,5 @@ record Color(int R, int G, int B)
 }
 
 
-interface IItem { }
-record Source(string Path, string Text, int LineNumber);
+
 

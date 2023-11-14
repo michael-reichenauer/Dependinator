@@ -1,3 +1,4 @@
+
 namespace Dependinator.Models;
 
 abstract class NodeBase : IItem
@@ -41,12 +42,20 @@ abstract class NodeBase : IItem
 
     public void AddSourceLink(Link link)
     {
-        if (!sourceLinks.Contains(link)) sourceLinks.Add(link);
+        if (sourceLinks.Contains(link)) return;
+
+        sourceLinks.Add(link);
+
+        AddLinesFromSourceToTarget(link);
     }
+
+
 
     public void AddTargetLink(Link link)
     {
-        if (!targetLinks.Contains(link)) targetLinks.Add(link);
+        if (targetLinks.Contains(link)) return;
+
+        targetLinks.Add(link);
     }
 
     public void Update(Parsing.Node node)
@@ -64,6 +73,19 @@ abstract class NodeBase : IItem
         Type = node.Type;
         Description = node.Description;
     }
+
+
+    void AddLinesFromSourceToTarget(Link link)
+    {
+        var sourceAncestors = Ancestors().ToList();
+        var targetAncestors = link.Target.Ancestors().ToList();
+
+        Node commonAncestor = Ancestors().First(targetAncestors.Contains);
+
+
+
+    }
+
 
 
     IEnumerable<Node> Ancestors()
