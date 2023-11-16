@@ -4,7 +4,29 @@ interface IItem { }
 
 record Source(string Path, string Text, int LineNumber);
 
-record Link(Node Source, Node Target) : IItem;
+class Link : IItem
+{
+    readonly List<Line> lines = new();
+    public Link(string Id, Node Source, Node Target)
+    {
+        this.Id = Id;
+        this.Source = Source;
+        this.Target = Target;
+    }
+
+    public string Id { get; }
+    public Node Source { get; }
+    public Node Target { get; }
+
+    public void AddLine(Line line)
+    {
+        if (lines.Contains(line)) return;
+        lines.Add(line);
+    }
+
+    public override string ToString() => $"{Source}->{Target} ({lines.Count})";
+}
+
 
 record Pos(double X, double Y)
 {
@@ -30,7 +52,7 @@ record Rect(double X, double Y, double Width, double Height)
 
 record Color(int R, int G, int B)
 {
-    const int VeryDarkFactor = 8;
+    const int VeryDarkFactor = 12;
     const int Bright = 200;
     static readonly Random random = new();
 

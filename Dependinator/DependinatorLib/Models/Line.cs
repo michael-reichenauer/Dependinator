@@ -3,6 +3,7 @@ namespace Dependinator.Models;
 class Line : IItem
 {
     readonly ModelBase model;
+    readonly Dictionary<string, Link> links = new();
 
     public Line(Node source, Node target, ModelBase model)
     {
@@ -17,6 +18,11 @@ class Line : IItem
     public string StrokeColor { get; set; } = "";
     public double StrokeWidth { get; set; } = 1.0;
 
+    internal void Add(Link link)
+    {
+        links[link.Id] = link;
+    }
+
 
     // public string GetSvg(Pos parentCanvasPos, double parentZoom)
     // {
@@ -30,5 +36,6 @@ class Line : IItem
     //         """;
     // }
 
+    public override string ToString() => $"{Source}->{Target} ({links.Count})";
 
 }

@@ -38,7 +38,6 @@ class Node : NodeBase
     }
 
 
-
     public string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
         var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);

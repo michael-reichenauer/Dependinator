@@ -6,6 +6,8 @@ abstract class NodeBase : IItem
     readonly List<Node> children = new();
     readonly List<Link> sourceLinks = new();
     readonly List<Link> targetLinks = new();
+    readonly List<Line> sourceLines = new();
+    readonly List<Line> targetLines = new();
     protected readonly ModelBase model;
 
 
@@ -43,20 +45,17 @@ abstract class NodeBase : IItem
     public void AddSourceLink(Link link)
     {
         if (sourceLinks.Contains(link)) return;
-
         sourceLinks.Add(link);
 
         AddLinesFromSourceToTarget(link);
     }
 
-
-
     public void AddTargetLink(Link link)
     {
         if (targetLinks.Contains(link)) return;
-
         targetLinks.Add(link);
     }
+
 
     public void Update(Parsing.Node node)
     {
@@ -77,15 +76,48 @@ abstract class NodeBase : IItem
 
     void AddLinesFromSourceToTarget(Link link)
     {
-        var sourceAncestors = Ancestors().ToList();
-        var targetAncestors = link.Target.Ancestors().ToList();
+        Node commonAncestor = GetCommonAncestor(link);
 
-        Node commonAncestor = Ancestors().First(targetAncestors.Contains);
+        // Add lines from source and target nodes upp to its parent for all ancestors until just before the common ancestor
+        var sourceAncestor = AddAncestorLines(link, link.Source, commonAncestor);
+        var targetAncestor = AddAncestorLines(link, link.Target, commonAncestor);
 
-
-
+        // Connect 'sibling' nodes that are ancestors to source and target (or are source/target if they are siblings)
+        AddDirectLine(sourceAncestor, targetAncestor, link);
     }
 
+    static Node GetCommonAncestor(Link link)
+    {
+        var targetAncestors = link.Target.Ancestors().ToList();
+        return link.Source.Ancestors().First(targetAncestors.Contains);
+    }
+
+    Node AddAncestorLines(Link link, Node source, Node commonAncestor)
+    {
+        // Add lines from source node upp to all ancestors until just before common ancestors
+        Node currentSource = source;
+        foreach (var parent in source.Ancestors())
+        {
+            if (parent == commonAncestor) break;
+            AddDirectLine(currentSource, parent, link);
+            currentSource = parent;
+        }
+
+        return currentSource;
+    }
+
+    void AddDirectLine(Node source, Node target, Link link)
+    {
+        var line = source.sourceLines.FirstOrDefault(l => l.Target == target);
+        if (line == null)
+        {   // First line between these source and target
+            line = new Line(source, target, model);
+            source.sourceLines.Add(line);
+        }
+
+        line.Add(link);
+        link.AddLine(line);
+    }
 
 
     IEnumerable<Node> Ancestors()

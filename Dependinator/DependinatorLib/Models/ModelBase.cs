@@ -176,7 +176,7 @@ class ModelBase
 
         var source = GetNode(parsedLink.Source);
         var target = GetNode(parsedLink.Target);
-        var link = new Link(source, target);
+        var link = new Link(linkId, source, target);
 
         AddLink(linkId, link);
         source.AddSourceLink(link);
