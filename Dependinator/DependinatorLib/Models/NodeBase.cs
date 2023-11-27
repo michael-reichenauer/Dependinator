@@ -113,6 +113,7 @@ abstract class NodeBase : IItem
         {   // First line between these source and target
             line = new Line(source, target, model);
             source.sourceLines.Add(line);
+            target.targetLines.Add(line);
         }
 
         line.Add(link);
