@@ -1,5 +1,7 @@
 namespace Dependinator.Models;
 
+record LinePos(double X1, double Y1, double X2, double Y2);
+
 class Line : IItem
 {
     const double DefaultContainerZoom = 1.0 / 7;
@@ -22,9 +24,9 @@ class Line : IItem
     {
         get
         {
-            var s = SourcePos;
-            var t = TargetPos;
-            return new Rect(Math.Min(s.X, t.X), Math.Min(s.Y, t.Y), Math.Max(s.X, t.X), Math.Max(s.Y, t.Y));
+            var (x1, y1, x2, y2) = GetPos();
+
+            return new Rect(Math.Min(x1, x2), Math.Min(y1, y2), Math.Max(x1, x2), Math.Max(y1, y2));
         }
     }
 
@@ -37,17 +39,13 @@ class Line : IItem
         links[link.Id] = link;
     }
 
-    Pos SourcePos => new(Source.Boundary.X, Source.Boundary.Y);
-    Pos TargetPos => new(Target.Boundary.X, Target.Boundary.Y);
 
 
     public string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
         if (parentZoom > MaxNodeZoom) return "";    // Too large to show
 
-
-        var (x1, y1) = SourcePos;
-        var (x2, y2) = TargetPos;
+        var (x1, y1, x2, y2) = GetPos();
 
         (x1, y1) = (parentCanvasPos.X + x1 * parentZoom, parentCanvasPos.Y + y1 * parentZoom);
         (x2, y2) = (parentCanvasPos.X + x2 * parentZoom, parentCanvasPos.Y + y2 * parentZoom);
@@ -58,6 +56,18 @@ class Line : IItem
             $"""
             <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{s}" stroke="{StrokeColor}"/>
             """;
+    }
+
+    LinePos GetPos()
+    {
+        var (s, t) = (Source.Boundary, Target.Boundary);
+
+        if (s.Y + s.Height <= t.Y)
+        {
+            return new LinePos(s.X + s.Width / 2, s.Y + s.Height, t.X + t.Width / 2, t.Y);
+        }
+
+        return new LinePos(s.X + s.Width, s.Y + s.Height / 2, t.X, t.Y + t.Height / 2);
     }
 
 
