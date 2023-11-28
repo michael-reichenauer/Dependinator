@@ -54,7 +54,7 @@ class Line : IItem
 
         return
             $"""
-            <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{s}" stroke="{StrokeColor}"/>
+            <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{s}" stroke="white" marker-end="url(#arrow)" />
             """;
     }
 
