@@ -35,7 +35,7 @@ class ModelService : IModelService
         await Task.Run(async () =>
         {
             using var _ = Timing.Start();
-            AddSpecials();
+            // AddSpecials();
 
             while (await reader.WaitToReadAsync())
             {

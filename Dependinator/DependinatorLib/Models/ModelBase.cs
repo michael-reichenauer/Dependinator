@@ -60,7 +60,7 @@ class ModelBase
         for (int i = 0; i < 100; i++)
         {
             var zoom = i == 0 ? 1.0 : Math.Pow(2, i);
-            var svg = Root.Children.Select(n => n.GetSvg(Pos.Zero, zoom)).Join("\n").Trim();
+            var svg = Root.GetSvg(Pos.Zero, zoom);
             if (svg == "") break;
             svgs.Add(new Level(svg, 1 / zoom));
             Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");

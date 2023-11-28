@@ -28,6 +28,25 @@ abstract class NodeBase : IItem
     public IReadOnlyList<Node> Children => children;
     public IReadOnlyList<Link> SourceLinks => sourceLinks;
     public IReadOnlyList<Link> TargetLinks => targetLinks;
+    public IReadOnlyList<Line> SourceLines => sourceLines;
+    public IReadOnlyList<Line> TargetLines => targetLines;
+
+    public abstract string GetSvg(Pos parentCanvasPos, double parentZoom);
+
+    public IEnumerable<IItem> AllItems()
+    {
+        foreach (var child in Children)
+        {
+            yield return child;
+        }
+        foreach (var child in Children)
+        {
+            foreach (var line in child.SourceLines)
+            {
+                yield return line;
+            }
+        }
+    }
 
     public void AddChild(Node child)
     {

@@ -1,5 +1,6 @@
 using Dependinator.Icons;
 
+
 namespace Dependinator.Models;
 
 
@@ -38,7 +39,7 @@ class Node : NodeBase
     }
 
 
-    public string GetSvg(Pos parentCanvasPos, double parentZoom)
+    public override string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
         var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);
 
@@ -52,7 +53,9 @@ class Node : NodeBase
         {
             var containerSvg = GetContainerSvg(nodeCanvasPos, parentZoom);
             var childrenZoom = parentZoom * ContainerZoom;
-            return Children.Select(n => n.GetSvg(nodeCanvasPos, childrenZoom)).Prepend(containerSvg).Join("\n");
+            return AllItems()
+                .Select(n => n.GetSvg(nodeCanvasPos, childrenZoom))
+                .Prepend(containerSvg).Join("\n");
         }
     }
 

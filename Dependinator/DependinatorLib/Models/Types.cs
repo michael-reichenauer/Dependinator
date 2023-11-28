@@ -1,6 +1,9 @@
 namespace Dependinator.Models;
 
-interface IItem { }
+interface IItem
+{
+    string GetSvg(Pos parentCanvasPos, double parentZoom);
+}
 
 record Source(string Path, string Text, int LineNumber);
 
@@ -23,6 +26,8 @@ class Link : IItem
         if (lines.Contains(line)) return;
         lines.Add(line);
     }
+
+    public string GetSvg(Pos parentCanvasPos, double parentZoom) => "";
 
     public override string ToString() => $"{Source}->{Target} ({lines.Count})";
 }
