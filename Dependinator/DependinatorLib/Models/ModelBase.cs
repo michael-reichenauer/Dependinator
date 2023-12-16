@@ -20,11 +20,12 @@ record Svgs(IReadOnlyList<Level> levels)
     }
 }
 
+
 class ModelBase
 {
     readonly object syncRoot = new();
-    readonly Dictionary<string, IItem> itemsDictionary = new();
-    Dictionary<string, IItem> items
+    readonly Dictionary<Id, IItem> itemsDictionary = new();
+    Dictionary<Id, IItem> items
     {
         get
         {
@@ -37,7 +38,7 @@ class ModelBase
     public ModelBase()
     {
         Root = DefaultRootNode(this);
-        itemsDictionary.Add(Root.Name, Root);
+        itemsDictionary.Add(Root.Id, Root);
         NodeCount = 1;
     }
 
@@ -46,9 +47,10 @@ class ModelBase
     public Node Root { get; internal set; }
     public Random Random { get; } = new Random();
     public bool IsModified { get; internal set; }
-    public IReadOnlyDictionary<string, IItem> Items => items;
+    public IReadOnlyDictionary<Id, IItem> Items => items;
     public int NodeCount { get; internal set; } = 0;
     public int LinkCount { get; internal set; } = 0;
+    public int LineCount { get; internal set; } = 0;
 
 
     internal (Svgs, Rect) GetSvg()
@@ -63,9 +65,9 @@ class ModelBase
             var svg = Root.GetSvg(Pos.Zero, zoom);
             if (svg == "") break;
             svgs.Add(new Level(svg, 1 / zoom));
-            Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
+            // Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
         }
-        Log.Info($"Levels: {svgs.Count}");
+        Log.Info($"Levels: {svgs.Count}, Nodes: {NodeCount}, Links: {LinkCount}, Lines: {LineCount}");
 
         var totalBoundary = Root.TotalBoundary;
         return (new Svgs(svgs), totalBoundary);
@@ -74,14 +76,15 @@ class ModelBase
 
     public void AddNode(Node node)
     {
-        if (!items.ContainsKey(node.Name)) NodeCount++;
-        items[node.Name] = node;
+        if (items.ContainsKey(node.Id)) return;
+        NodeCount++;
+        items[node.Id] = node;
     }
 
-    public Node GetNode(string name) => (Node)items[name];
-    public bool TryGetNode(string name, out Node node)
+    public Node GetNode(NodeId id) => (Node)items[id];
+    public bool TryGetNode(NodeId id, out Node node)
     {
-        if (!items.TryGetValue(name, out var item))
+        if (!items.TryGetValue(id, out var item))
         {
             node = null!;
             return false;
@@ -90,14 +93,15 @@ class ModelBase
         return true;
     }
 
-    public void AddLink(string id, Link link)
+    public void AddLink(Link link)
     {
-        if (!items.ContainsKey(id)) LinkCount++;
-        items[id] = link;
+        if (items.ContainsKey(link.Id)) return;
+        LinkCount++;
+        items[link.Id] = link;
     }
 
-    public Link Link(string id) => (Link)items[id];
-    public bool TryGetLink(string id, out Link link)
+    public Link GetLink(NodeId id) => (Link)items[id];
+    public bool TryGetLink(NodeId id, out Link link)
     {
         if (!items.TryGetValue(id, out var item))
         {
@@ -109,13 +113,22 @@ class ModelBase
     }
 
 
+    public void AddLine(Line line)
+    {
+        if (items.ContainsKey(line.Id)) return;
+        LineCount++;
+        items[line.Id] = line;
+    }
+
+
     public Node GetOrCreateNode(string name)
     {
-        if (!items.TryGetValue(name, out var item))
+        var nodeId = new NodeId(name);
+        if (!items.TryGetValue(nodeId, out var item))
         {
             var parent = DefaultParsingNode(name);
             AddOrUpdateNode(parent);
-            return (Node)items[name];
+            return (Node)items[nodeId];
         }
 
         return (Node)item;
@@ -123,11 +136,12 @@ class ModelBase
 
     public Node GetOrCreateParent(string name)
     {
-        if (!items.TryGetValue(name, out var item))
+        var nodeId = new NodeId(name);
+        if (!items.TryGetValue(nodeId, out var item))
         {
             var parent = DefaultParentNode(name);
             AddOrUpdateNode(parent);
-            return (Node)items[name];
+            return (Node)items[nodeId];
         }
 
         return (Node)item;
@@ -137,7 +151,7 @@ class ModelBase
     {
         itemsDictionary.Clear();
         Root = DefaultRootNode(this);
-        itemsDictionary.Add(Root.Name, Root);
+        itemsDictionary.Add(Root.Id, Root);
         NodeCount = 1;
         LinkCount = 0;
     }
@@ -145,7 +159,7 @@ class ModelBase
 
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
-        if (!TryGetNode(parsedNode.Name, out var node))
+        if (!TryGetNode(new NodeId(parsedNode.Name), out var node))
         {   // New node, add it to the model and parent
             var parentName = parsedNode.ParentName;
             var parent = GetOrCreateParent(parentName);
@@ -169,16 +183,16 @@ class ModelBase
 
     public void AddOrUpdateLink(Parsing.Link parsedLink)
     {
-        var linkId = parsedLink.Source + parsedLink.Target;
+        var linkId = new LinkId(parsedLink.SourceName, parsedLink.TargetName);
         if (items.ContainsKey(linkId)) return;
 
         EnsureSourceAndTargetExists(parsedLink);
 
-        var source = GetNode(parsedLink.Source);
-        var target = GetNode(parsedLink.Target);
-        var link = new Link(linkId, source, target);
+        var source = GetNode(new NodeId(parsedLink.SourceName));
+        var target = GetNode(new NodeId(parsedLink.TargetName));
+        var link = new Link(source, target);
 
-        AddLink(linkId, link);
+        AddLink(link);
         source.AddSourceLink(link);
         target.AddTargetLink(link);
         return;
@@ -186,14 +200,14 @@ class ModelBase
 
     void EnsureSourceAndTargetExists(Parsing.Link parsedLink)
     {
-        if (!items.ContainsKey(parsedLink.Source))
+        if (!items.ContainsKey(new NodeId(parsedLink.SourceName)))
         {
-            AddOrUpdateNode(DefaultParsingNode(parsedLink.Source));
+            AddOrUpdateNode(DefaultParsingNode(parsedLink.SourceName));
         }
 
-        if (!items.ContainsKey(parsedLink.Target))
+        if (!items.ContainsKey(new NodeId(parsedLink.TargetName)))
         {
-            AddOrUpdateNode(DefaultParsingNode(parsedLink.Target));
+            AddOrUpdateNode(DefaultParsingNode(parsedLink.TargetName));
         }
     }
 

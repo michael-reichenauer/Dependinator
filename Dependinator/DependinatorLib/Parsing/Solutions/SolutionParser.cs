@@ -42,7 +42,7 @@ internal class SolutionParser : IDisposable
         int ilCount = assemblyParsers.Sum(parser => parser.IlCount);
         int linksCount = assemblyParsers.Sum(parser => parser.LinksCount);
 
-        // Log.Debug($"Solution: {typeCount} types, {memberCount} members, {ilCount} il-instructions, {linksCount} links");
+        Log.Debug($"Solution: {typeCount} types, {memberCount} members, {ilCount} il-instructions, {linksCount} links");
         return R.Ok;
     }
 

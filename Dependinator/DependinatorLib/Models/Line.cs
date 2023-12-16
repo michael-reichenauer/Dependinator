@@ -8,16 +8,18 @@ class Line : IItem
     const double MaxNodeZoom = 30 * 1 / DefaultContainerZoom;           // To large to be seen
 
     readonly ModelBase model;
-    readonly Dictionary<string, Link> links = new();
+    readonly Dictionary<Id, Link> links = new();
 
     public Line(Node source, Node target, ModelBase model)
     {
         Source = source;
         Target = target;
+        Id = new LineId(source.Name, target.Name);
         this.model = model;
         StrokeColor = Color.BrightRandom().ToString();
     }
 
+    public LineId Id { get; }
     public Node Source { get; }
     public Node Target { get; }
     public Rect Boundary
@@ -47,7 +49,15 @@ class Line : IItem
 
         var (x1, y1, x2, y2) = GetPos();
 
-        (x1, y1) = (parentCanvasPos.X + x1 * parentZoom, parentCanvasPos.Y + y1 * parentZoom);
+        if (Source != Target.Parent)
+        {
+            (x1, y1) = (parentCanvasPos.X + x1 * parentZoom, parentCanvasPos.Y + y1 * parentZoom);
+        }
+        else
+        {
+            (x1, y1) = (parentCanvasPos.X + x1 * parentZoom, parentCanvasPos.Y + y1 * parentZoom);
+        }
+
         (x2, y2) = (parentCanvasPos.X + x2 * parentZoom, parentCanvasPos.Y + y2 * parentZoom);
 
         var s = StrokeWidth;
@@ -57,6 +67,7 @@ class Line : IItem
             <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{s}" stroke="white" marker-end="url(#arrow)" />
             """;
     }
+
 
     LinePos GetPos()
     {

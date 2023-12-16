@@ -30,14 +30,13 @@ class Node : NodeBase
     //public Pos ContainerOffset { get; set; } = Pos.Zero;
 
     public Node(string name, Node parent, ModelBase model)
-    : base(name, parent, model)
+    : base(new NodeId(name), name, parent, model)
     {
         var color = Color.BrightRandom();
         StrokeColor = color.ToString();
         Background = color.VeryDark().ToString();
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
     }
-
 
     public override string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
@@ -55,7 +54,8 @@ class Node : NodeBase
             var childrenZoom = parentZoom * ContainerZoom;
             return AllItems()
                 .Select(n => n.GetSvg(nodeCanvasPos, childrenZoom))
-                .Prepend(containerSvg).Join("\n");
+                .Prepend(containerSvg)
+                .Join("");
         }
     }
 

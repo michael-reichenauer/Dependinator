@@ -11,13 +11,16 @@ abstract class NodeBase : IItem
     protected readonly ModelBase model;
 
 
-    public NodeBase(string name, Node parent, ModelBase model)
+    protected NodeBase(NodeId id, string name, Node parent, ModelBase model)
     {
+        Id = id;
         Name = name;
         Parent = parent;
         this.model = model;
     }
 
+
+    public NodeId Id { get; }
     public bool IsModified { get; protected set; } = true;
     public string Name { get; }
     public Node Parent { get; private set; }
@@ -133,10 +136,13 @@ abstract class NodeBase : IItem
             line = new Line(source, target, model);
             source.sourceLines.Add(line);
             target.targetLines.Add(line);
+
+            model.AddLine(line);
         }
 
         line.Add(link);
         link.AddLine(line);
+
     }
 
 

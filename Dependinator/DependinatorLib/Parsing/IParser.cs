@@ -17,7 +17,7 @@ interface IParser
 }
 
 interface IItem { }
-record Link(string Source, string Target, NodeType TargetType) : IItem;
+record Link(string SourceName, string TargetName, NodeType TargetType) : IItem;
 
 record Node(string Name, string ParentName, NodeType Type, string Description) : IItem
 {
