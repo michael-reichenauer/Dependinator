@@ -79,8 +79,11 @@ class Node : NodeBase
         return
             $"""
             <use href="#{icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
-            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="2" fill="black" fill-opacity="0" stroke="none"><title>({x:0.##},{y:0.##},{w:0.##}, {h:0.##})</title></rect>
             <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{ShortName}</text>
+            <g class="hoverable">
+              <rect x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+            </g>
+            </rect>
             """;
     }
 
@@ -101,9 +104,12 @@ class Node : NodeBase
 
         return
             $"""
-            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{Background}" fill-opacity="1" stroke="{StrokeColor}"/>
+            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{Background}" fill-opacity="1" stroke="{StrokeColor}"/>      
             <use href="#{icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
             <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
+            <g class="hoverable">
+              <rect x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+            </g>
             """;
     }
 

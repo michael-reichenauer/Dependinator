@@ -8,6 +8,7 @@
     "devcontainers",
     "dotnettools",
     "Dtos",
+    "hoverable",
     "Hsts",
     "linejoin",
     "mhutchie",
@@ -18,5 +19,5 @@
     "Svgs",
     "uninstallation"
   ],
-  "dotnet-test-explorer.testProjectPath":"**/*Tests.@(csproj|vbproj|fsproj)"
+  "dotnet-test-explorer.testProjectPath": "**/*Tests.@(csproj|vbproj|fsproj)"
 }
