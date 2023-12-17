@@ -2,7 +2,8 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
 {
   "name": "C# (.NET)",
-  "image": "mcr.microsoft.com/devcontainers/dotnet:0-8.0",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:0-7.0",
+
   "customizations": {
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
@@ -13,8 +14,11 @@
       ]
     }
   },
+
   "postCreateCommand": "dotnet restore workload ./Dependinator/Dependinator/Dependinator.csproj && dotnet restore ./Dependinator/Dependinator/Dependinator.csproj",
+
   //"postCreateCommand": "dotnet restore ./Dependinator/Dependinator/Dependinator.csproj && dotnet restore ./DependinatorTes/gmdTest.csproj",
+
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "vscode"
 }
