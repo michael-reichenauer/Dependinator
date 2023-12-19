@@ -1,6 +1,7 @@
 using Dependinator.Models;
 using Microsoft.AspNetCore.Components.Web;
 
+
 namespace Dependinator.Diagrams;
 
 interface IPanZoomService
@@ -17,6 +18,7 @@ interface IPanZoomService
     Task CheckResizeAsync();
 }
 
+record MouseEvent(MouseEventArgs e, DateTime Time);
 
 [Scoped]
 class PanZoomService : IPanZoomService
@@ -26,13 +28,20 @@ class PanZoomService : IPanZoomService
     const double ZoomSpeed = 0.1;
     const int LeftMouseBtn = 1;
     const int SvgPageMargin = 2;
+    const int ClickDelay = 300;
 
     readonly IJSInteropService jSInteropService;
 
     readonly object syncRoot = new();
+
+    readonly Timer clickTimer;
+    bool timerRunning = false;
+
+
     Canvas canvas = null!;
-    Pos lastMouse = Pos.Zero;
-    bool isDrag = false;
+    MouseEvent firstLeftMouse = new(new MouseEventArgs(), DateTime.MinValue);
+    MouseEvent lastLeftMouse = new(new MouseEventArgs(), DateTime.MinValue);
+    MouseEvent clickLeftMouse = new(new MouseEventArgs(), DateTime.MinValue);
     public int ZCount { get; private set; } = 0;
 
     public Pos Offset { get; private set; } = Pos.Zero;
@@ -46,6 +55,7 @@ class PanZoomService : IPanZoomService
     {
         this.jSInteropService = jSInteropService;
         jSInteropService.OnResize += OnResize;
+        clickTimer = new Timer(OnClickTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     public async Task InitAsync(Canvas canvas)
@@ -122,13 +132,15 @@ class PanZoomService : IPanZoomService
 
     void OnMouseMove(MouseEventArgs e)
     {
-        var (mx, my) = (e.OffsetX, e.OffsetY);
+        //  Log.Info($"Mouse: {e.Type} ({e.OffsetX},{e.OffsetY})");
 
-        if (e.Buttons == LeftMouseBtn && isDrag)
+
+        if (e.Buttons == LeftMouseBtn)
         {
-            var dx = (mx - lastMouse.X) * Zoom;
-            var dy = (my - lastMouse.Y) * Zoom;
-            lastMouse = new Pos(mx, my);
+            var (mx, my) = (e.OffsetX, e.OffsetY);
+            var dx = (mx - lastLeftMouse.e.OffsetX) * Zoom;
+            var dy = (my - lastLeftMouse.e.OffsetY) * Zoom;
+            lastLeftMouse = new MouseEvent(e, DateTime.Now);
 
             Offset = new Pos(Offset.X - dx, Offset.Y - dy);
         }
@@ -136,22 +148,65 @@ class PanZoomService : IPanZoomService
 
     void OnMouseDown(MouseEventArgs e)
     {
-        var (mx, my) = (e.OffsetX, e.OffsetY);
-        // Log.Info($"Mouse: ({mx},{my}) Svg: {SvgRect}, View: {ViewRect}, Zoom: {Zoom}");
-        if (e.Buttons == LeftMouseBtn)
+
+        if (e.Button == 0)
         {
-            isDrag = true;
-            lastMouse = new Pos(mx, my);
+            // Log.Info($"Mouse down: {e.ToJson()}");
+            firstLeftMouse = new MouseEvent(e, DateTime.Now);
+            lastLeftMouse = firstLeftMouse;
         }
     }
 
     void OnMouseUp(MouseEventArgs e)
     {
-        if (e.Buttons == LeftMouseBtn)
+        //Log.Info($"Mouse up: {e.ToJson()}");
+        if (e.Button == 0)
         {
-            isDrag = false;
+            var (mx, my) = (e.OffsetX, e.OffsetY);
+            var (dx, dy) = (Math.Abs(mx - firstLeftMouse.e.OffsetX), Math.Abs(my - firstLeftMouse.e.OffsetY));
+            if (dx < 5 && dy < 5 && DateTime.Now - firstLeftMouse.Time < TimeSpan.FromMilliseconds(200))
+            {   // Clicked, not dragged
+                OnClickOrDoubleClick(e);
+            }
         }
     }
+
+    void OnClickOrDoubleClick(MouseEventArgs e)
+    {
+        clickLeftMouse = new MouseEvent(e, DateTime.Now);
+        if (!timerRunning)
+        {
+            // This is the first click, start the timer
+            timerRunning = true;
+            clickTimer.Change(ClickDelay, Timeout.Infinite);
+        }
+        else
+        {
+            // This is the second click, handle as double-click
+            timerRunning = false;
+            clickTimer.Change(Timeout.Infinite, Timeout.Infinite); // Stop the timer
+            OnDoubleClick(clickLeftMouse.e);
+        }
+    }
+
+
+    void OnClickTimer(object? state)
+    {
+        timerRunning = false;
+        OnClick(clickLeftMouse.e);
+    }
+
+
+    void OnClick(MouseEventArgs e)
+    {
+        Log.Info($"OnClick: {e.Type}");
+    }
+
+    void OnDoubleClick(MouseEventArgs e)
+    {
+        Log.Info($"OnDoubleClick: {e.Type}");
+    }
+
 
     void OnResize() => CheckResizeAsync().RunInBackground();
 

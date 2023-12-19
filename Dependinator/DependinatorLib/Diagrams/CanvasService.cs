@@ -66,6 +66,7 @@ class CanvasService : ICanvasService
 
     public void OnMouse(MouseEventArgs e) => panZoomService.OnMouse(e);
 
+
     public async void InitialShow()
     {
         await panZoomService.CheckResizeAsync();

@@ -34,18 +34,6 @@
             }
         </style>
         <defs>
-            <filter id="extra-border">
-                <feMorphology operator="dilate" radius="2" in="SourceAlpha" result="thicken" />
-                <feFlood flood-color="#ADD8E6" flood-opacity="1" result="color" />
-                <feComposite operator="in" in="color" in2="thicken" result="border" />
-                <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"
-                    result="borderWithAlpha" />
-                <feMerge>
-                    <feMergeNode in="borderWithAlpha" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
-
             <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6"
                 orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="white" />
