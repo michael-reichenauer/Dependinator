@@ -20,6 +20,8 @@ interface ICanvasService
     string ViewBox { get; }
 
     void OnMouse(MouseEventArgs e);
+    void OnClickEvent(MouseEventArgs e);
+    void OnDblClickEvent(MouseEventArgs e);
 
     void Refresh();
     void Clear();
@@ -31,9 +33,14 @@ interface ICanvasService
 [Scoped]
 class CanvasService : ICanvasService
 {
+    const int ClickDelay = 300;
+
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
     readonly IModelDb modelDb;
+    readonly Timer clickTimer;
+    bool timerRunning = false;
+    MouseEventArgs clickLeftMouse = new();
 
     Canvas canvas = null!;
     Svgs svgContentData = new(new List<Level>());
@@ -43,6 +50,7 @@ class CanvasService : ICanvasService
         this.panZoomService = panZoomService;
         this.modelService = modelService;
         this.modelDb = modelDb;
+        clickTimer = new Timer(OnClickTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     public string SvgContent => GetSvgContent();
@@ -65,6 +73,39 @@ class CanvasService : ICanvasService
 
 
     public void OnMouse(MouseEventArgs e) => panZoomService.OnMouse(e);
+
+    void OnClickTimer(object? state)
+    {
+        timerRunning = false;
+        OnClick(clickLeftMouse);
+    }
+
+    public void OnClickEvent(MouseEventArgs e)
+    {
+        clickLeftMouse = e;
+        if (!timerRunning)
+        {   // This is the first click, start the timer
+            timerRunning = true;
+            clickTimer.Change(ClickDelay, Timeout.Infinite);
+        }
+    }
+
+    public void OnDblClickEvent(MouseEventArgs e)
+    {
+        clickTimer.Change(Timeout.Infinite, Timeout.Infinite);
+        timerRunning = false;
+        OnDblClick(e);
+    }
+
+    public void OnClick(MouseEventArgs e)
+    {
+        Log.Info($"OnClick {e.Type}");
+    }
+
+    public void OnDblClick(MouseEventArgs e)
+    {
+        Log.Info($"OnDoubleClick {e.Type}");
+    }
 
 
     public async void InitialShow()
@@ -108,6 +149,43 @@ class CanvasService : ICanvasService
         using var model = modelDb.GetModel();
         return model.GetSvg();
     }
+
+    // void OnClickOrDoubleClick(MouseEventArgs e)
+    // {
+    //     clickLeftMouse = new MouseEvent(e, DateTime.Now);
+    //     if (!timerRunning)
+    //     {
+    //         // This is the first click, start the timer
+    //         timerRunning = true;
+    //         clickTimer.Change(ClickDelay, Timeout.Infinite);
+    //     }
+    //     else
+    //     {
+    //         // This is the second click, handle as double-click
+    //         timerRunning = false;
+    //         clickTimer.Change(Timeout.Infinite, Timeout.Infinite); // Stop the timer
+    //         OnDoubleClick(clickLeftMouse.e);
+    //     }
+    // }
+
+
+    // void OnClickTimer(object? state)
+    // {
+    //     timerRunning = false;
+    //     OnClick(clickLeftMouse.e);
+    // }
+
+
+    // void OnClick(MouseEventArgs e)
+    // {
+    //     Log.Info($"OnClick: {e.Type}");
+    // }
+
+    // void OnDoubleClick(MouseEventArgs e)
+    // {
+    //     Log.Info($"OnDoubleClick: {e.Type}");
+    // }
+
 
     string GetSvgContent()
     {

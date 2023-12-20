@@ -28,20 +28,15 @@ class PanZoomService : IPanZoomService
     const double ZoomSpeed = 0.1;
     const int LeftMouseBtn = 1;
     const int SvgPageMargin = 2;
-    const int ClickDelay = 300;
 
     readonly IJSInteropService jSInteropService;
 
     readonly object syncRoot = new();
 
-    readonly Timer clickTimer;
-    bool timerRunning = false;
-
 
     Canvas canvas = null!;
     MouseEvent firstLeftMouse = new(new MouseEventArgs(), DateTime.MinValue);
     MouseEvent lastLeftMouse = new(new MouseEventArgs(), DateTime.MinValue);
-    MouseEvent clickLeftMouse = new(new MouseEventArgs(), DateTime.MinValue);
     public int ZCount { get; private set; } = 0;
 
     public Pos Offset { get; private set; } = Pos.Zero;
@@ -55,7 +50,6 @@ class PanZoomService : IPanZoomService
     {
         this.jSInteropService = jSInteropService;
         jSInteropService.OnResize += OnResize;
-        clickTimer = new Timer(OnClickTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     public async Task InitAsync(Canvas canvas)
@@ -133,8 +127,6 @@ class PanZoomService : IPanZoomService
     void OnMouseMove(MouseEventArgs e)
     {
         //  Log.Info($"Mouse: {e.Type} ({e.OffsetX},{e.OffsetY})");
-
-
         if (e.Buttons == LeftMouseBtn)
         {
             var (mx, my) = (e.OffsetX, e.OffsetY);
@@ -162,50 +154,9 @@ class PanZoomService : IPanZoomService
         //Log.Info($"Mouse up: {e.ToJson()}");
         if (e.Button == 0)
         {
-            var (mx, my) = (e.OffsetX, e.OffsetY);
-            var (dx, dy) = (Math.Abs(mx - firstLeftMouse.e.OffsetX), Math.Abs(my - firstLeftMouse.e.OffsetY));
-            if (dx < 5 && dy < 5 && DateTime.Now - firstLeftMouse.Time < TimeSpan.FromMilliseconds(200))
-            {   // Clicked, not dragged
-                OnClickOrDoubleClick(e);
-            }
         }
     }
 
-    void OnClickOrDoubleClick(MouseEventArgs e)
-    {
-        clickLeftMouse = new MouseEvent(e, DateTime.Now);
-        if (!timerRunning)
-        {
-            // This is the first click, start the timer
-            timerRunning = true;
-            clickTimer.Change(ClickDelay, Timeout.Infinite);
-        }
-        else
-        {
-            // This is the second click, handle as double-click
-            timerRunning = false;
-            clickTimer.Change(Timeout.Infinite, Timeout.Infinite); // Stop the timer
-            OnDoubleClick(clickLeftMouse.e);
-        }
-    }
-
-
-    void OnClickTimer(object? state)
-    {
-        timerRunning = false;
-        OnClick(clickLeftMouse.e);
-    }
-
-
-    void OnClick(MouseEventArgs e)
-    {
-        Log.Info($"OnClick: {e.Type}");
-    }
-
-    void OnDoubleClick(MouseEventArgs e)
-    {
-        Log.Info($"OnDoubleClick: {e.Type}");
-    }
 
 
     void OnResize() => CheckResizeAsync().RunInBackground();
