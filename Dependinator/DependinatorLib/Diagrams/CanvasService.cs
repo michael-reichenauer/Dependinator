@@ -27,6 +27,7 @@ interface ICanvasService
     void Clear();
     void PanZoomToFit();
     void InitialShow();
+    void OnClickEvent2(MouseEventArgs e);
 }
 
 
@@ -80,6 +81,11 @@ class CanvasService : ICanvasService
         OnClick(clickLeftMouse);
     }
 
+    public void OnClickEvent2(MouseEventArgs e)
+    {
+        Log.Info($"OnClickEvent2: {e.Type}");
+    }
+
     public void OnClickEvent(MouseEventArgs e)
     {
         clickLeftMouse = e;
@@ -100,6 +106,16 @@ class CanvasService : ICanvasService
     public void OnClick(MouseEventArgs e)
     {
         Log.Info($"OnClick {e.Type}");
+        using var model = modelDb.GetModel();
+        var pos = new Pos(e.OffsetX, e.OffsetY);
+
+        if (!Try(out var node, model.FindNode(Offset, pos, Zoom)))
+        {
+            Log.Info($"No node found at {pos}");
+            return;
+        }
+        Log.Info($"Node clicked: {node}");
+
     }
 
     public void OnDblClick(MouseEventArgs e)
@@ -149,43 +165,6 @@ class CanvasService : ICanvasService
         using var model = modelDb.GetModel();
         return model.GetSvg();
     }
-
-    // void OnClickOrDoubleClick(MouseEventArgs e)
-    // {
-    //     clickLeftMouse = new MouseEvent(e, DateTime.Now);
-    //     if (!timerRunning)
-    //     {
-    //         // This is the first click, start the timer
-    //         timerRunning = true;
-    //         clickTimer.Change(ClickDelay, Timeout.Infinite);
-    //     }
-    //     else
-    //     {
-    //         // This is the second click, handle as double-click
-    //         timerRunning = false;
-    //         clickTimer.Change(Timeout.Infinite, Timeout.Infinite); // Stop the timer
-    //         OnDoubleClick(clickLeftMouse.e);
-    //     }
-    // }
-
-
-    // void OnClickTimer(object? state)
-    // {
-    //     timerRunning = false;
-    //     OnClick(clickLeftMouse.e);
-    // }
-
-
-    // void OnClick(MouseEventArgs e)
-    // {
-    //     Log.Info($"OnClick: {e.Type}");
-    // }
-
-    // void OnDoubleClick(MouseEventArgs e)
-    // {
-    //     Log.Info($"OnDoubleClick: {e.Type}");
-    // }
-
 
     string GetSvgContent()
     {

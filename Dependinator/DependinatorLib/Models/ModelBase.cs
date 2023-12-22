@@ -52,6 +52,13 @@ class ModelBase
     public int LinkCount { get; internal set; } = 0;
     public int LineCount { get; internal set; } = 0;
 
+    internal R<Node> FindNode(Pos offset, Pos point, double zoom)
+    {
+        // transform point to canvas coordinates
+        var canvasPoint = new Pos((point.X + offset.X) * zoom, (point.Y + offset.Y) * zoom);
+        return Root.FindNode(Pos.Zero, canvasPoint, zoom);
+    }
+
 
     internal (Svgs, Rect) GetSvg()
     {

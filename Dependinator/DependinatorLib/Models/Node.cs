@@ -38,6 +38,32 @@ class Node : NodeBase
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
     }
 
+
+    public R<Node> FindNode(Pos parentCanvasPos, Pos pointCanvasPos, double parentZoom)
+    {
+        var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);
+        var nodeCanvasRect = GetNodeCanvasRect(parentCanvasPos, parentZoom);
+
+        if (!IsRoot && !nodeCanvasRect.IsPosInside(pointCanvasPos)) return R.None;
+
+        if ((parentZoom <= MinContainerZoom || // Too small to show children
+            Type == Parsing.NodeType.Member)  // Members do not have children
+            && !IsRoot)                       // Root have icon but can have children
+        {
+            return this;
+        }
+
+        var childrenZoom = parentZoom * ContainerZoom;
+        foreach (var child in Children.Reverse())
+        {
+            if (!Try(out var node, child.FindNode(nodeCanvasPos, pointCanvasPos, childrenZoom))) continue;
+            return node;
+        }
+
+        if (IsRoot) return R.None;
+        return this;
+    }
+
     public override string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
         var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);
@@ -62,6 +88,12 @@ class Node : NodeBase
     Pos GetNodeCanvasPos(Pos containerCanvasPos, double zoom) => new(
         containerCanvasPos.X + Boundary.X * zoom,
         containerCanvasPos.Y + Boundary.Y * zoom);
+
+    Rect GetNodeCanvasRect(Pos containerCanvasPos, double zoom) => new(
+        containerCanvasPos.X + Boundary.X * zoom,
+        containerCanvasPos.Y + Boundary.Y * zoom,
+        Boundary.Width * zoom,
+        Boundary.Height * zoom);
 
 
     string GetIconSvg(Pos nodeCanvasPos, double zoom)

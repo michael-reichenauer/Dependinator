@@ -22,6 +22,7 @@ partial class Canvas : ComponentBase
 
     void OnMouse(MouseEventArgs e) => srv.OnMouse(e);
     void OnClick(MouseEventArgs e) => srv.OnClickEvent(e);
+    void OnClick2(MouseEventArgs e) => srv.OnClickEvent2(e);
     void OnDblClick(MouseEventArgs e) => srv.OnDblClickEvent(e);
 
     public Task TriggerStateHasChangedAsync() => InvokeAsync(StateHasChanged);

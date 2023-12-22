@@ -119,7 +119,8 @@ public class R
         resultException = e;
     }
 
-    public static R Ok = Error(NoError);
+    public static readonly R Ok = Error(NoError);
+    public static readonly Exception None = NoValueError;
 
     public static bool Try<T>(
      [NotNullWhen(true)] out T? value,

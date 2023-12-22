@@ -30,5 +30,6 @@ class Model : IDisposable
     }
 
     internal (Svgs, Rect) GetSvg() => rootModel.GetSvg();
+    internal R<Node> FindNode(Pos offset, Pos point, double zoom) => rootModel.FindNode(offset, point, zoom);
 }
 
