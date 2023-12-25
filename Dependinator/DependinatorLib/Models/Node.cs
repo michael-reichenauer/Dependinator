@@ -54,7 +54,7 @@ class Node : NodeBase
         }
 
         var childrenZoom = parentZoom * ContainerZoom;
-        foreach (var child in Children.Reverse())
+        foreach (var child in children.AsEnumerable().Reverse())
         {
             if (!Try(out var node, child.FindNode(nodeCanvasPos, pointCanvasPos, childrenZoom))) continue;
             return node;
@@ -157,7 +157,7 @@ class Node : NodeBase
     {
         (double x1, double y1, double x2, double y2) =
             (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
-        foreach (var child in Children)
+        foreach (var child in children)
         {
             var b = child.Boundary;
             x1 = Math.Min(x1, b.X);

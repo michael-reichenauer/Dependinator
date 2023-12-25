@@ -43,8 +43,5 @@ class ModelTransaction : IModel
         rootModel = null!;
         Monitor.Exit(syncRoot);
     }
-
-    public (Svgs, Rect) GetSvg() => rootModel.GetSvg();
-    public R<Node> FindNode(Pos offset, Pos point, double zoom) => rootModel.FindNode(offset, point, zoom);
 }
 

@@ -10,8 +10,8 @@ class NodeLayout
         var b = node.Boundary;
         int columns = (int)Math.Floor((b.Width / node.ContainerZoom) / (childSize.Width + margin));
 
-        var x = margin + (childSize.Width + margin) * (node.Children.Count % columns);
-        var y = margin + (childSize.Height + margin) * (node.Children.Count / columns);
+        var x = margin + (childSize.Width + margin) * (node.children.Count % columns);
+        var y = margin + (childSize.Height + margin) * (node.children.Count / columns);
         return new Rect(x, y, childSize.Width, childSize.Height);
 
         // while (true)

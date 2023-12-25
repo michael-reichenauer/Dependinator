@@ -11,75 +11,29 @@ interface IModel : IDisposable
     void AddLine(Line line);
     Node GetOrCreateNode(string name);
     void Clear();
-    (Svgs, Rect) GetSvg();
-    R<Node> FindNode(Pos offset, Pos point, double zoom);
 }
 
 
 class ModelBase : IModel
 {
     readonly object syncRoot = new();
-    readonly Dictionary<Id, IItem> itemsDictionary = new();
-    Dictionary<Id, IItem> items
-    {
-        get
-        {
-            if (!Monitor.IsEntered(SyncRoot)) throw Asserter.FailFast("Model access outside lock");
-            return itemsDictionary;
-        }
-    }
+    readonly Dictionary<Id, IItem> items = new();
 
 
     public ModelBase()
     {
         Root = DefaultRootNode(this);
-        itemsDictionary.Add(Root.Id, Root);
-        NodeCount = 1;
+        items.Add(Root.Id, Root);
     }
 
 
     public object SyncRoot => syncRoot;
     public Node Root { get; internal set; }
-    public Random Random { get; } = new Random();
-    public bool IsModified { get; internal set; }
-    public IReadOnlyDictionary<Id, IItem> Items => items;
-    public int NodeCount { get; internal set; } = 0;
-    public int LinkCount { get; internal set; } = 0;
-    public int LineCount { get; internal set; } = 0;
-
-    public R<Node> FindNode(Pos offset, Pos point, double zoom)
-    {
-        // transform point to canvas coordinates
-        var canvasPoint = new Pos((point.X + offset.X) * zoom, (point.Y + offset.Y) * zoom);
-        return Root.FindNode(Pos.Zero, canvasPoint, zoom);
-    }
-
-
-    public (Svgs, Rect) GetSvg()
-    {
-        using var t = Timing.Start();
-
-        var svgs = new List<Level>();
-
-        for (int i = 0; i < 100; i++)
-        {
-            var zoom = i == 0 ? 1.0 : Math.Pow(2, i);
-            var svg = Root.GetSvg(Pos.Zero, zoom);
-            if (svg == "") break;
-            svgs.Add(new Level(svg, 1 / zoom));
-            // Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
-        }
-        Log.Info($"Levels: {svgs.Count}, Nodes: {NodeCount}, Links: {LinkCount}, Lines: {LineCount}");
-
-        var totalBoundary = Root.TotalBoundary;
-        return (new Svgs(svgs), totalBoundary);
-    }
 
 
     public void AddNode(Node node)
     {
         if (items.ContainsKey(node.Id)) return;
-        NodeCount++;
         items[node.Id] = node;
     }
 
@@ -98,7 +52,6 @@ class ModelBase : IModel
     public void AddLink(Link link)
     {
         if (items.ContainsKey(link.Id)) return;
-        LinkCount++;
         items[link.Id] = link;
     }
 
@@ -118,7 +71,6 @@ class ModelBase : IModel
     public void AddLine(Line line)
     {
         if (items.ContainsKey(line.Id)) return;
-        LineCount++;
         items[line.Id] = line;
     }
 
@@ -151,11 +103,9 @@ class ModelBase : IModel
 
     public void Clear()
     {
-        itemsDictionary.Clear();
+        items.Clear();
         Root = DefaultRootNode(this);
-        itemsDictionary.Add(Root.Id, Root);
-        NodeCount = 1;
-        LinkCount = 0;
+        items.Add(Root.Id, Root);
     }
 
 
@@ -195,10 +145,65 @@ class ModelBase : IModel
         var link = new Link(source, target);
 
         AddLink(link);
-        source.AddSourceLink(link);
         target.AddTargetLink(link);
+        if (source.AddSourceLink(link))
+        {
+            AddLinesFromSourceToTarget(link);
+        }
         return;
     }
+
+
+    void AddLinesFromSourceToTarget(Link link)
+    {
+        Node commonAncestor = GetCommonAncestor(link);
+
+        // Add lines from source and target nodes upp to its parent for all ancestors until just before the common ancestor
+        var sourceAncestor = AddAncestorLines(link, link.Source, commonAncestor);
+        var targetAncestor = AddAncestorLines(link, link.Target, commonAncestor);
+
+        // Connect 'sibling' nodes that are ancestors to source and target (or are source/target if they are siblings)
+        AddDirectLine(sourceAncestor, targetAncestor, link);
+    }
+
+
+    static Node GetCommonAncestor(Link link)
+    {
+        var targetAncestors = link.Target.Ancestors().ToList();
+        return link.Source.Ancestors().First(targetAncestors.Contains);
+    }
+
+    Node AddAncestorLines(Link link, Node source, Node commonAncestor)
+    {
+        // Add lines from source node upp to all ancestors until just before common ancestors
+        Node currentSource = source;
+        foreach (var parent in source.Ancestors())
+        {
+            if (parent == commonAncestor) break;
+            AddDirectLine(currentSource, parent, link);
+            currentSource = parent;
+        }
+
+        return currentSource;
+    }
+
+
+    void AddDirectLine(Node source, Node target, Link link)
+    {
+        var line = source.sourceLines.FirstOrDefault(l => l.Target == target);
+        if (line == null)
+        {   // First line between these source and target
+            line = new Line(source, target);
+            source.sourceLines.Add(line);
+            target.targetLines.Add(line);
+
+            AddLine(line);
+        }
+
+        line.Add(link);
+        link.AddLine(line);
+    }
+
 
     void EnsureSourceAndTargetExists(Parsing.Link parsedLink)
     {

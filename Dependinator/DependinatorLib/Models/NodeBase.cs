@@ -3,11 +3,12 @@ namespace Dependinator.Models;
 
 abstract class NodeBase : IItem
 {
-    readonly List<Node> children = new();
-    readonly List<Link> sourceLinks = new();
-    readonly List<Link> targetLinks = new();
-    readonly List<Line> sourceLines = new();
-    readonly List<Line> targetLines = new();
+    public readonly List<Node> children = new();
+    public readonly List<Link> sourceLinks = new();
+    public readonly List<Link> targetLinks = new();
+    public readonly List<Line> sourceLines = new();
+    public readonly List<Line> targetLines = new();
+
     protected readonly IModel model;
 
 
@@ -28,23 +29,18 @@ abstract class NodeBase : IItem
     public Parsing.NodeType Type { get; set; } = Parsing.NodeType.None;
     public string Description { get; set; } = "";
 
-    public IReadOnlyList<Node> Children => children;
-    public IReadOnlyList<Link> SourceLinks => sourceLinks;
-    public IReadOnlyList<Link> TargetLinks => targetLinks;
-    public IReadOnlyList<Line> SourceLines => sourceLines;
-    public IReadOnlyList<Line> TargetLines => targetLines;
 
     public abstract string GetSvg(Pos parentCanvasPos, double parentZoom);
 
     public IEnumerable<IItem> AllItems()
     {
-        foreach (var child in Children)
+        foreach (var child in children)
         {
             yield return child;
         }
-        foreach (var child in Children)
+        foreach (var child in children)
         {
-            foreach (var line in child.SourceLines)
+            foreach (var line in child.sourceLines)
             {
                 yield return line;
             }
@@ -64,12 +60,11 @@ abstract class NodeBase : IItem
         child.Parent = null!;
     }
 
-    public void AddSourceLink(Link link)
+    public bool AddSourceLink(Link link)
     {
-        if (sourceLinks.Contains(link)) return;
+        if (sourceLinks.Contains(link)) return false;
         sourceLinks.Add(link);
-
-        AddLinesFromSourceToTarget(link);
+        return true;
     }
 
     public void AddTargetLink(Link link)
@@ -96,57 +91,9 @@ abstract class NodeBase : IItem
     }
 
 
-    void AddLinesFromSourceToTarget(Link link)
-    {
-        Node commonAncestor = GetCommonAncestor(link);
-
-        // Add lines from source and target nodes upp to its parent for all ancestors until just before the common ancestor
-        var sourceAncestor = AddAncestorLines(link, link.Source, commonAncestor);
-        var targetAncestor = AddAncestorLines(link, link.Target, commonAncestor);
-
-        // Connect 'sibling' nodes that are ancestors to source and target (or are source/target if they are siblings)
-        AddDirectLine(sourceAncestor, targetAncestor, link);
-    }
-
-    static Node GetCommonAncestor(Link link)
-    {
-        var targetAncestors = link.Target.Ancestors().ToList();
-        return link.Source.Ancestors().First(targetAncestors.Contains);
-    }
-
-    Node AddAncestorLines(Link link, Node source, Node commonAncestor)
-    {
-        // Add lines from source node upp to all ancestors until just before common ancestors
-        Node currentSource = source;
-        foreach (var parent in source.Ancestors())
-        {
-            if (parent == commonAncestor) break;
-            AddDirectLine(currentSource, parent, link);
-            currentSource = parent;
-        }
-
-        return currentSource;
-    }
-
-    void AddDirectLine(Node source, Node target, Link link)
-    {
-        var line = source.sourceLines.FirstOrDefault(l => l.Target == target);
-        if (line == null)
-        {   // First line between these source and target
-            line = new Line(source, target);
-            source.sourceLines.Add(line);
-            target.targetLines.Add(line);
-
-            model.AddLine(line);
-        }
-
-        line.Add(link);
-        link.AddLine(line);
-
-    }
 
 
-    IEnumerable<Node> Ancestors()
+    public IEnumerable<Node> Ancestors()
     {
         var node = this;
         while (node.Parent != null)
@@ -156,11 +103,9 @@ abstract class NodeBase : IItem
         }
     }
 
-
     bool IsEqual(Parsing.Node n) =>
         Parent.Name == n.ParentName &&
         Type == n.Type &&
         Description == n.Description;
-
 }
 
