@@ -8,6 +8,10 @@ namespace Dependinator.Models;
 interface IModelService
 {
     Task<R> RefreshAsync();
+    (Svgs, Rect) GetSvg();
+    R<Node> FindNode(Pos offset, Pos point, double zoom);
+    void Clear();
+
 }
 
 
@@ -25,7 +29,24 @@ class ModelService : IModelService
         this.modelDb = modelDb;
     }
 
+    public (Svgs, Rect) GetSvg()
+    {
+        using var model = modelDb.GetModel();
+        return model.GetSvg();
+    }
 
+    public R<Node> FindNode(Pos offset, Pos point, double zoom)
+    {
+        using var model = modelDb.GetModel();
+        return model.FindNode(offset, point, zoom);
+    }
+
+    public void Clear()
+    {
+        using var model = modelDb.GetModel();
+
+        model.Clear();
+    }
     public async Task<R> RefreshAsync()
     {
         var path = "/workspaces/Dependinator/Dependinator/Dependinator.sln";

@@ -29,7 +29,7 @@ class Node : NodeBase
     public Double ContainerZoom { get; set; } = DefaultContainerZoom;
     //public Pos ContainerOffset { get; set; } = Pos.Zero;
 
-    public Node(string name, Node parent, ModelBase model)
+    public Node(string name, Node parent, IModel model)
     : base(new NodeId(name), name, parent, model)
     {
         var color = Color.BrightRandom();

@@ -7,15 +7,13 @@ class Line : IItem
     const double DefaultContainerZoom = 1.0 / 7;
     const double MaxNodeZoom = 30 * 1 / DefaultContainerZoom;           // To large to be seen
 
-    readonly ModelBase model;
     readonly Dictionary<Id, Link> links = new();
 
-    public Line(Node source, Node target, ModelBase model)
+    public Line(Node source, Node target)
     {
         Source = source;
         Target = target;
         Id = new LineId(source.Name, target.Name);
-        this.model = model;
         StrokeColor = Color.BrightRandom().ToString();
     }
 

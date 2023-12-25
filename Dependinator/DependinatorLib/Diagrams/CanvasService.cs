@@ -38,7 +38,6 @@ class CanvasService : ICanvasService
 
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
-    readonly IModelDb modelDb;
     readonly Timer clickTimer;
     bool timerRunning = false;
     MouseEventArgs clickLeftMouse = new();
@@ -46,11 +45,10 @@ class CanvasService : ICanvasService
     Canvas canvas = null!;
     Svgs svgContentData = new(new List<Level>());
 
-    public CanvasService(IPanZoomService panZoomService, IModelService modelService, IModelDb modelDb)
+    public CanvasService(IPanZoomService panZoomService, IModelService modelService)
     {
         this.panZoomService = panZoomService;
         this.modelService = modelService;
-        this.modelDb = modelDb;
         clickTimer = new Timer(OnClickTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
@@ -106,10 +104,10 @@ class CanvasService : ICanvasService
     public void OnClick(MouseEventArgs e)
     {
         Log.Info($"OnClick {e.Type}");
-        using var model = modelDb.GetModel();
         var pos = new Pos(e.OffsetX, e.OffsetY);
 
-        if (!Try(out var node, model.FindNode(Offset, pos, Zoom)))
+
+        if (!Try(out var node, modelService.FindNode(Offset, pos, Zoom)))
         {
             Log.Info($"No node found at {pos}");
             return;
@@ -150,11 +148,8 @@ class CanvasService : ICanvasService
 
     public async void Clear()
     {
-        using (var model = modelDb.GetModel())
-        {
-            model.Clear();
-            SetSvgContent(new Svgs(new List<Level>()));
-        }
+        modelService.Clear();
+        SetSvgContent(new Svgs(new List<Level>()));
 
         await canvas.TriggerStateHasChangedAsync();
     }
@@ -162,8 +157,7 @@ class CanvasService : ICanvasService
     public async Task<(Svgs, Rect)> RefreshAsync()
     {
         await modelService.RefreshAsync();
-        using var model = modelDb.GetModel();
-        return model.GetSvg();
+        return modelService.GetSvg();
     }
 
     string GetSvgContent()

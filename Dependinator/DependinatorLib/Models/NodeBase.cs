@@ -8,10 +8,10 @@ abstract class NodeBase : IItem
     readonly List<Link> targetLinks = new();
     readonly List<Line> sourceLines = new();
     readonly List<Line> targetLines = new();
-    protected readonly ModelBase model;
+    protected readonly IModel model;
 
 
-    protected NodeBase(NodeId id, string name, Node parent, ModelBase model)
+    protected NodeBase(NodeId id, string name, Node parent, IModel model)
     {
         Id = id;
         Name = name;
@@ -133,7 +133,7 @@ abstract class NodeBase : IItem
         var line = source.sourceLines.FirstOrDefault(l => l.Target == target);
         if (line == null)
         {   // First line between these source and target
-            line = new Line(source, target, model);
+            line = new Line(source, target);
             source.sourceLines.Add(line);
             target.targetLines.Add(line);
 
