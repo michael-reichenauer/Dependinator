@@ -2,11 +2,14 @@ namespace Dependinator.Models;
 
 class NodeLayout
 {
+    const double DefaultWidth = 100;
+    const double DefaultHeight = 100;
+    public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const int margin = 10;
 
     public static Rect GetNextChildRect(Node node)
     {
-        var childSize = Node.DefaultSize;
+        var childSize = DefaultSize;
         var b = node.Boundary;
         int columns = (int)Math.Floor((b.Width / node.ContainerZoom) / (childSize.Width + margin));
 
