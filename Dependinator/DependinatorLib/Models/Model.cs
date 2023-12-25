@@ -117,7 +117,7 @@ class ModelBase : IModel
             var parent = GetOrCreateParent(parentName);
 
             var boundary = NodeLayout.GetNextChildRect(parent);
-            node = new Node(parsedNode.Name, parent, this)
+            node = new Node(parsedNode.Name, parent)
             {
                 Type = parsedNode.Type,
                 Description = parsedNode.Description,
@@ -130,7 +130,16 @@ class ModelBase : IModel
             return;
         }
 
-        node.Update(parsedNode);
+        if (node.Update(parsedNode))
+        {
+            var parentName = parsedNode.ParentName;
+            if (node.Parent.Name != parentName)
+            {   // The node has changed parent, remove it from the old parent and add it to the new parent
+                node.Parent.RemoveChild(node);
+                var parent = GetOrCreateNode(parentName);
+                parent.AddChild(node);
+            }
+        }
     }
 
     public void AddOrUpdateLink(Parsing.Link parsedLink)
@@ -224,7 +233,7 @@ class ModelBase : IModel
     static Parsing.Node DefaultParsingNode(string name) =>
         new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.None, "");
 
-    static Node DefaultRootNode(IModel model) => new("", null!, model)
+    static Node DefaultRootNode(IModel model) => new("", null!)
     {
         Type = Parsing.NodeType.Root,
         Boundary = new Rect(0, 0, 1000, 1000),

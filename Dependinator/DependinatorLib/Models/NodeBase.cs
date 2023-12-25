@@ -9,15 +9,11 @@ abstract class NodeBase : IItem
     public readonly List<Line> sourceLines = new();
     public readonly List<Line> targetLines = new();
 
-    protected readonly IModel model;
-
-
-    protected NodeBase(NodeId id, string name, Node parent, IModel model)
+    protected NodeBase(NodeId id, string name, Node parent)
     {
         Id = id;
         Name = name;
         Parent = parent;
-        this.model = model;
     }
 
 
@@ -74,23 +70,14 @@ abstract class NodeBase : IItem
     }
 
 
-    public void Update(Parsing.Node node)
+    public bool Update(Parsing.Node node)
     {
-        if (IsEqual(node)) return;
-
-        var parentName = node.ParentName;
-        if (Parent.Name != parentName)
-        {   // The node has changed parent, remove it from the old parent and add it to the new parent
-            Parent.RemoveChild((Node)this);
-            Parent = model.GetOrCreateNode(parentName);
-            Parent.AddChild((Node)this);
-        }
-
+        if (IsEqual(node)) return false;
         Type = node.Type;
         Description = node.Description;
+        return true;
+
     }
-
-
 
 
     public IEnumerable<Node> Ancestors()

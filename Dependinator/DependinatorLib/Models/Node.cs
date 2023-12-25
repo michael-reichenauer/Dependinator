@@ -29,8 +29,8 @@ class Node : NodeBase
     public Double ContainerZoom { get; set; } = DefaultContainerZoom;
     //public Pos ContainerOffset { get; set; } = Pos.Zero;
 
-    public Node(string name, Node parent, IModel model)
-    : base(new NodeId(name), name, parent, model)
+    public Node(string name, Node parent)
+    : base(new NodeId(name), name, parent)
     {
         var color = Color.BrightRandom();
         StrokeColor = color.ToString();
