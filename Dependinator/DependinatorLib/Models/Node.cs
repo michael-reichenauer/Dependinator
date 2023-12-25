@@ -19,63 +19,33 @@ class Node : IItem
     }
 
 
-
     public NodeId Id { get; }
     public string Name { get; }
+    public string LongName { get; }
+    public string ShortName { get; }
+    public string Description { get; set; } = "";
 
     public string StrokeColor { get; set; } = "";
     public string Background { get; set; } = "green";
-    public string LongName { get; }
-    public string ShortName { get; }
     public double StrokeWidth { get; set; } = 1.0;
     public string IconName { get; set; } = "";
 
     public Rect Boundary { get; set; } = Rect.None;
     public Rect TotalBoundary => GetTotalBoundary();
 
-    public List<Node> children { get; } = new();
-    public List<Link> sourceLinks { get; } = new();
-    public List<Link> targetLinks { get; } = new();
-    public List<Line> sourceLines { get; } = new();
-    public List<Line> targetLines { get; } = new();
+    public List<Node> Children { get; } = new();
+    public List<Link> SourceLinks { get; } = new();
+    public List<Link> TargetLinks { get; } = new();
+    public List<Line> SourceLines { get; } = new();
+    public List<Line> TargetLines { get; } = new();
 
     public const double DefaultContainerZoom = 1.0 / 7;
     public Double ContainerZoom { get; set; } = DefaultContainerZoom;
     //public Pos ContainerOffset { get; set; } = Pos.Zero;
 
-
     public Node Parent { get; private set; }
     public bool IsRoot => Type == Parsing.NodeType.Root;
     public Parsing.NodeType Type { get; set; } = Parsing.NodeType.None;
-    public string Description { get; set; } = "";
-
-
-
-    public void AddChild(Node child)
-    {
-        children.Add(child);
-        child.Parent = (Node)this;
-    }
-
-
-    public void RemoveChild(Node child)
-    {
-        children.Remove(child);
-        child.Parent = null!;
-    }
-
-    public bool AddSourceLink(Link link)
-    {
-        if (sourceLinks.Contains(link)) return false;
-        sourceLinks.Add(link);
-        return true;
-    }
-
-    public void AddTargetLink(Link link)
-    {
-        if (targetLinks.Contains(link)) return;
-        targetLinks.Add(link);
-    }
 
 
     public bool Update(Parsing.Node node)
@@ -84,7 +54,32 @@ class Node : IItem
         Type = node.Type;
         Description = node.Description;
         return true;
+    }
 
+    public void AddChild(Node child)
+    {
+        Children.Add(child);
+        child.Parent = this;
+    }
+
+
+    public void RemoveChild(Node child)
+    {
+        Children.Remove(child);
+        child.Parent = null!;
+    }
+
+    public bool AddSourceLink(Link link)
+    {
+        if (SourceLinks.Contains(link)) return false;
+        SourceLinks.Add(link);
+        return true;
+    }
+
+    public void AddTargetLink(Link link)
+    {
+        if (TargetLinks.Contains(link)) return;
+        TargetLinks.Add(link);
     }
 
 
@@ -97,13 +92,6 @@ class Node : IItem
             node = node.Parent;
         }
     }
-
-    bool IsEqual(Parsing.Node n) =>
-        Parent.Name == n.ParentName &&
-        Type == n.Type &&
-        Description == n.Description;
-
-
 
 
     public R<Node> FindNode(Pos parentCanvasPos, Pos pointCanvasPos, double parentZoom)
@@ -121,7 +109,7 @@ class Node : IItem
         }
 
         var childrenZoom = parentZoom * ContainerZoom;
-        foreach (var child in children.AsEnumerable().Reverse())
+        foreach (var child in Children.AsEnumerable().Reverse())
         {
             if (!Try(out var node, child.FindNode(nodeCanvasPos, pointCanvasPos, childrenZoom))) continue;
             return node;
@@ -137,13 +125,14 @@ class Node : IItem
 
     public IEnumerable<IItem> AllItems()
     {
-        foreach (var child in children)
+        foreach (var child in Children)
         {
             yield return child;
         }
-        foreach (var child in children)
+
+        foreach (var child in Children)
         {
-            foreach (var line in child.sourceLines)
+            foreach (var line in child.SourceLines)
             {
                 yield return line;
             }
@@ -162,13 +151,17 @@ class Node : IItem
 
 
 
+    bool IsEqual(Parsing.Node n) =>
+        Parent.Name == n.ParentName &&
+        Type == n.Type &&
+        Description == n.Description;
 
 
     Rect GetTotalBoundary()
     {
         (double x1, double y1, double x2, double y2) =
             (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
-        foreach (var child in children)
+        foreach (var child in Children)
         {
             var b = child.Boundary;
             x1 = Math.Min(x1, b.X);

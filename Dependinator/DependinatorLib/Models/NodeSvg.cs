@@ -17,37 +17,43 @@ class NodeSvg
         this.node = node;
     }
 
+    static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
+    static bool IsToSmallToShowChildren(double zoom) => zoom <= MinContainerZoom;
+    static bool CanHaveChildren(Node node) => node.Type != Parsing.NodeType.Member;
+
+
     public string GetSvg(Pos parentCanvasPos, double parentZoom)
+    {
+        if (node.IsRoot) return GetChildrenSvg(parentCanvasPos, parentZoom);
+
+        if (IsToLargeToBeSeen(parentZoom)) return "";
+
+        if (IsToSmallToShowChildren(parentZoom) || !CanHaveChildren(node))
+            return GetIconSvg(parentCanvasPos, parentZoom);
+
+        return GetContainerSvg(parentCanvasPos, parentZoom) +
+            GetChildrenSvg(parentCanvasPos, parentZoom);
+    }
+
+    string GetChildrenSvg(Pos parentCanvasPos, double parentZoom)
     {
         var nodeCanvasPos = node.GetNodeCanvasPos(parentCanvasPos, parentZoom);
 
-        if ((parentZoom <= MinContainerZoom || // Too small to show children
-            node.Type == Parsing.NodeType.Member)  // Members do not have children
-            && !node.IsRoot)                       // Root have icon but can have children
-        {
-            return GetIconSvg(nodeCanvasPos, parentZoom);   // No children can be seen
-        }
-        else
-        {
-            var containerSvg = GetContainerSvg(nodeCanvasPos, parentZoom);
-            var childrenZoom = parentZoom * node.ContainerZoom;
-            return node.AllItems()
-                .Select(n => n.GetSvg(nodeCanvasPos, childrenZoom))
-                .Prepend(containerSvg)
-                .Join("");
-        }
+        var childrenZoom = parentZoom * node.ContainerZoom;
+        return node.AllItems()
+            .Select(n => n.GetSvg(nodeCanvasPos, childrenZoom))
+            .Join("");
     }
 
-    string GetIconSvg(Pos nodeCanvasPos, double zoom)
+    string GetIconSvg(Pos parentCanvasPos, double parentZoom)
     {
-        if (zoom > MaxNodeZoom) return "";  // To large to be seen
+        var nodeCanvasPos = node.GetNodeCanvasPos(parentCanvasPos, parentZoom);
 
         var (x, y) = nodeCanvasPos;
-        var (w, h) = (node.Boundary.Width * zoom, node.Boundary.Height * zoom);
-        var s = node.StrokeWidth;
+        var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
 
         var (tx, ty) = (x + w / 2, y + h);
-        var fz = FontSize * zoom;
+        var fz = FontSize * parentZoom;
         var icon = GetIconSvg();
 
         return
@@ -62,18 +68,17 @@ class NodeSvg
     }
 
 
-    string GetContainerSvg(Pos nodeCanvasPos, double zoom)
+    string GetContainerSvg(Pos parentCanvasPos, double parentZoom)
     {
-        if (node.IsRoot) return "";
-        if (zoom > MaxNodeZoom) return "";  // To large to be seen
+        var nodeCanvasPos = node.GetNodeCanvasPos(parentCanvasPos, parentZoom);
 
         var s = node.StrokeWidth;
         var (x, y) = nodeCanvasPos;
-        var (w, h) = (node.Boundary.Width * zoom, node.Boundary.Height * zoom);
-        var (ix, iy, iw, ih) = (x, y + h + 1 * zoom, SmallIconSize * zoom, SmallIconSize * zoom);
+        var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
+        var (ix, iy, iw, ih) = (x, y + h + 1 * parentZoom, SmallIconSize * parentZoom, SmallIconSize * parentZoom);
 
-        var (tx, ty) = (x + (SmallIconSize + 1) * zoom, y + h + 2 * zoom);
-        var fz = FontSize * zoom;
+        var (tx, ty) = (x + (SmallIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
+        var fz = FontSize * parentZoom;
         var icon = GetIconSvg();
 
         return

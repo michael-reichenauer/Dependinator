@@ -199,12 +199,12 @@ class ModelBase : IModel
 
     void AddDirectLine(Node source, Node target, Link link)
     {
-        var line = source.sourceLines.FirstOrDefault(l => l.Target == target);
+        var line = source.SourceLines.FirstOrDefault(l => l.Target == target);
         if (line == null)
         {   // First line between these source and target
             line = new Line(source, target);
-            source.sourceLines.Add(line);
-            target.targetLines.Add(line);
+            source.SourceLines.Add(line);
+            target.TargetLines.Add(line);
 
             AddLine(line);
         }
