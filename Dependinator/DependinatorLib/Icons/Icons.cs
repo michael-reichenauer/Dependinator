@@ -83,26 +83,4 @@ static class Icon
         {MemberIcon}
         {ModuleIcon}
     """;
-
-    public static string GetIconSvg(Parsing.NodeType type)
-    {
-        var x = type switch
-        {
-            Parsing.NodeType.Solution => "SolutionIcon",
-            Parsing.NodeType.Externals => "ExternalsIcon",
-            Parsing.NodeType.Assembly => "ModuleIcon",
-            Parsing.NodeType.Namespace => "FilesIcon",
-            Parsing.NodeType.Private => "PrivateIcon",
-            Parsing.NodeType.Parent => "FilesIcon",
-            Parsing.NodeType.Type => "TypeIcon",
-            Parsing.NodeType.Member => "MemberIcon",
-            _ => "ModuleIcon"
-        };
-
-        // if (x == "ModuleIcon")
-        // {
-        //     Log.Info($"Unknown node type: {type}");
-        // }
-        return x;
-    }
 }

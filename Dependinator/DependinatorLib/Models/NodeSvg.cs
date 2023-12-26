@@ -19,7 +19,9 @@ class NodeSvg
 
     static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
     static bool IsToSmallToShowChildren(double zoom) => zoom <= MinContainerZoom;
-    static bool CanHaveChildren(Node node) => node.Type != Parsing.NodeType.Member;
+
+    public bool IsShowingChildren(double zoom) =>
+        node.Children.Any() && !IsToSmallToShowChildren(zoom);
 
 
     public string GetSvg(Pos parentCanvasPos, double parentZoom)
@@ -28,8 +30,7 @@ class NodeSvg
 
         if (IsToLargeToBeSeen(parentZoom)) return "";
 
-        if (IsToSmallToShowChildren(parentZoom) || !CanHaveChildren(node))
-            return GetIconSvg(parentCanvasPos, parentZoom);
+        if (!IsShowingChildren(parentZoom)) return GetIconSvg(parentCanvasPos, parentZoom);
 
         return GetContainerSvg(parentCanvasPos, parentZoom) +
             GetChildrenSvg(parentCanvasPos, parentZoom);
@@ -54,7 +55,7 @@ class NodeSvg
 
         var (tx, ty) = (x + w / 2, y + h);
         var fz = FontSize * parentZoom;
-        var icon = GetIconSvg();
+        var icon = node.Type.IconName;
 
         return
             $"""
@@ -79,7 +80,7 @@ class NodeSvg
 
         var (tx, ty) = (x + (SmallIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
         var fz = FontSize * parentZoom;
-        var icon = GetIconSvg();
+        var icon = node.Type.IconName;
 
         return
             $"""
@@ -91,12 +92,4 @@ class NodeSvg
             </g>
             """;
     }
-
-
-    string GetIconSvg()
-    {
-        var icon = Icon.GetIconSvg(node.Type);
-        return icon;
-    }
-
 }

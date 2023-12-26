@@ -235,7 +235,7 @@ class ModelBase : IModel
 
     static Node DefaultRootNode(IModel model) => new("", null!)
     {
-        Type = Parsing.NodeType.Root,
+        Type = NodeType.Root,
         Boundary = new Rect(0, 0, 1000, 1000),
         ContainerZoom = 1
     };

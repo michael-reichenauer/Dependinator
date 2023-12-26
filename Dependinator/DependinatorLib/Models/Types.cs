@@ -52,7 +52,3 @@ record Color(int R, int G, int B)
 
     public Color VeryDark() => new(R / VeryDarkFactor, G / VeryDarkFactor, B / VeryDarkFactor);
 }
-
-
-
-

@@ -44,8 +44,8 @@ class Node : IItem
     //public Pos ContainerOffset { get; set; } = Pos.Zero;
 
     public Node Parent { get; private set; }
-    public bool IsRoot => Type == Parsing.NodeType.Root;
-    public Parsing.NodeType Type { get; set; } = Parsing.NodeType.None;
+    public bool IsRoot => Type == NodeType.Root;
+    public NodeType Type { get; set; } = NodeType.None;
 
 
     public bool Update(Parsing.Node node)
@@ -97,26 +97,27 @@ class Node : IItem
     public R<Node> FindNode(Pos parentCanvasPos, Pos pointCanvasPos, double parentZoom)
     {
         var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);
+
+        if (IsRoot) return FindNodeInChildren(nodeCanvasPos, pointCanvasPos, parentZoom);
+
+
         var nodeCanvasRect = GetNodeCanvasRect(parentCanvasPos, parentZoom);
+        if (!nodeCanvasRect.IsPosInside(pointCanvasPos)) return R.None;
 
-        if (!IsRoot && !nodeCanvasRect.IsPosInside(pointCanvasPos)) return R.None;
+        if (svg.IsShowingChildren(parentZoom)) return this;
 
-        if ((parentZoom <= NodeSvg.MinContainerZoom || // Too small to show children
-            Type == Parsing.NodeType.Member)  // Members do not have children
-            && !IsRoot)                       // Root have icon but can have children
-        {
-            return this;
-        }
+        return FindNodeInChildren(nodeCanvasPos, pointCanvasPos, parentZoom);
+    }
 
+
+    R<Node> FindNodeInChildren(Pos nodeCanvasPos, Pos pointCanvasPos, double parentZoom)
+    {
         var childrenZoom = parentZoom * ContainerZoom;
-        foreach (var child in Children.AsEnumerable().Reverse())
-        {
-            if (!Try(out var node, child.FindNode(nodeCanvasPos, pointCanvasPos, childrenZoom))) continue;
-            return node;
-        }
 
-        if (IsRoot) return R.None;
-        return this;
+        var node = Children.AsEnumerable().Reverse()
+           .FirstOrDefault(child => child.FindNode(nodeCanvasPos, pointCanvasPos, childrenZoom));
+
+        return node != null ? node : R.None;
     }
 
 
