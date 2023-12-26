@@ -35,8 +35,6 @@ class PanZoomService : IPanZoomService
 
 
     Canvas canvas = null!;
-    MouseEvent firstLeftMouse = new(new MouseEventArgs(), DateTime.MinValue);
-    MouseEvent lastLeftMouse = new(new MouseEventArgs(), DateTime.MinValue);
     public int ZCount { get; private set; } = 0;
 
     public Pos Offset { get; private set; } = Pos.Zero;
@@ -52,7 +50,6 @@ class PanZoomService : IPanZoomService
         jSInteropService.OnResize += OnResize;
         mouseEventService.MouseWheel += OnMouseWheel;
         mouseEventService.MouseMove += OnMouseMove;
-        mouseEventService.MouseDown += OnMouseDown;
     }
 
     public async Task InitAsync(Canvas canvas)
@@ -118,25 +115,10 @@ class PanZoomService : IPanZoomService
 
     void OnMouseMove(MouseEventArgs e)
     {
-        //  Log.Info($"Mouse: {e.Type} ({e.OffsetX},{e.OffsetY})");
         if (e.Buttons == LeftMouseBtn)
         {
-            var (mx, my) = (e.OffsetX, e.OffsetY);
-            var dx = (mx - lastLeftMouse.e.OffsetX) * Zoom;
-            var dy = (my - lastLeftMouse.e.OffsetY) * Zoom;
-            lastLeftMouse = new MouseEvent(e, DateTime.Now);
-
+            var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
             Offset = new Pos(Offset.X - dx, Offset.Y - dy);
-        }
-    }
-
-    void OnMouseDown(MouseEventArgs e)
-    {
-        if (e.Button == 0)
-        {
-            // Log.Info($"Mouse down: {e.ToJson()}");
-            firstLeftMouse = new MouseEvent(e, DateTime.Now);
-            lastLeftMouse = firstLeftMouse;
         }
     }
 
