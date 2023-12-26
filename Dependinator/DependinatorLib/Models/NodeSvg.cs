@@ -1,6 +1,3 @@
-using Dependinator.Icons;
-
-
 namespace Dependinator.Models;
 
 class NodeSvg

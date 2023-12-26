@@ -97,11 +97,11 @@ class JsonFileParserService : IParser
 
 
     static Node ToNodeData(JsonTypes.Node node) =>
-       new(node.Name, node.Parent, NodeTypeEx.ToNodeType(node.Type), node.Description);
+       new(node.Name, node.Parent, new NodeType(node.Type), node.Description);
 
 
     static Link ToLinkData(JsonTypes.Link link) =>
-       new(link.Source, link.Target, NodeTypeEx.ToNodeType(link.TargetType));
+       new(link.Source, link.Target, new NodeType(link.TargetType));
 
 
     static void ValidateVersion(JsonReader reader)

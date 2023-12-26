@@ -34,28 +34,52 @@ record Node(string Name, string ParentName, NodeType Type, string Description) :
 record Source(string Path, string Text, int LineNumber);
 
 
-internal enum NodeType
+
+record NodeType(string Text)
 {
-    None,
-    Root,
-    Parent,
-    Solution,
-    Externals,
-    SolutionFolder,
-    Assembly,
-    Group,
-    Dll,
-    Exe,
-    Namespace,
-    Type,
-    Member,
-    Private
+    public static readonly NodeType None = new("None");
+    public static readonly NodeType Root = new("Root");
+    public static readonly NodeType Parent = new("Parent");
+    public static readonly NodeType Solution = new("Solution");
+    public static readonly NodeType Externals = new("Externals");
+    public static readonly NodeType SolutionFolder = new("SolutionFolder");
+    public static readonly NodeType Assembly = new("Assembly");
+    public static readonly NodeType Group = new("Group");
+    public static readonly NodeType Dll = new("Dll");
+    public static readonly NodeType Exe = new("Exe");
+    public static readonly NodeType Namespace = new("Namespace");
+    public static readonly NodeType Type = new("Type");
+    public static readonly NodeType Member = new("Member");
+    public static readonly NodeType Private = new("Private");
+
+    public override string ToString() => Text;
 }
 
-static class NodeTypeEx
-{
-    public static string ToText(NodeType type) => Enum.GetName(type) ?? "None";
 
-    public static NodeType ToNodeType(string text) => Enum.TryParse<NodeType>(text, out var type) ? type : NodeType.None;
-}
+
+
+// internal enum NodeType
+// {
+//     None,
+//     Root,
+//     Parent,
+//     Solution,
+//     Externals,
+//     SolutionFolder,
+//     Assembly,
+//     Group,
+//     Dll,
+//     Exe,
+//     Namespace,
+//     Type,
+//     Member,
+//     Private
+// }
+
+// static class NodeTypeEx
+// {
+//     public static string ToText(NodeType type) => Enum.GetName(type) ?? "None";
+
+//     public static NodeType ToNodeType(string text) => Enum.TryParse<NodeType>(text, out var type) ? type : NodeType.None;
+// }
 
