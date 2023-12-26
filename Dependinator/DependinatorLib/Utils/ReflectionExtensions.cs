@@ -16,6 +16,15 @@ internal static class Reflection
         return type;
     }
 
+    public static IEnumerable<T> GetPublicFieldValues<T>(Type type) =>
+        type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
+            .Select(f => f.GetValue(null))
+            .Cast<T>();
+
+    public static IEnumerable<string> GetPublicFieldNames<T>() => typeof(T)
+        .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
+        .Select(f => f.Name);
+
 
     // public static R<object> Create(Type type, params object[] parameters)
     // {

@@ -56,7 +56,10 @@ class ModelService : IModelService
         using var model = modelDb.GetModel();
 
         // transform point to canvas coordinates
-        var canvasPoint = new Pos((point.X + offset.X) * zoom, (point.Y + offset.Y) * zoom);
+        var canvasPoint = new Pos(
+            point.X * zoom + offset.X,
+            point.Y * zoom + offset.Y);
+
         return model.Root.FindNode(Pos.Zero, canvasPoint, zoom);
     }
 

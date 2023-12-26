@@ -97,16 +97,21 @@ class Node : IItem
     public R<Node> FindNode(Pos parentCanvasPos, Pos pointCanvasPos, double parentZoom)
     {
         var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);
+        var nodePoint = GetNodeCanvasPos(pointCanvasPos, parentZoom);
 
-        if (IsRoot) return FindNodeInChildren(nodeCanvasPos, pointCanvasPos, parentZoom);
+        if (IsRoot) return FindNodeInChildren(nodeCanvasPos, nodePoint, parentZoom);
 
 
         var nodeCanvasRect = GetNodeCanvasRect(parentCanvasPos, parentZoom);
-        if (!nodeCanvasRect.IsPosInside(pointCanvasPos)) return R.None;
+        if (!nodeCanvasRect.IsPosInside(nodePoint)) return R.None;
 
-        if (svg.IsShowingChildren(parentZoom)) return this;
+        if (svg.IsShowingChildren(parentZoom))
+        {
+            if (Try(out var child, FindNodeInChildren(nodeCanvasPos, nodePoint, parentZoom)))
+                return child;
+        }
 
-        return FindNodeInChildren(nodeCanvasPos, pointCanvasPos, parentZoom);
+        return this;
     }
 
 

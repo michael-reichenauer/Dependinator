@@ -19,37 +19,29 @@ interface ICanvasService
     int ZCount { get; }
     string ViewBox { get; }
 
-    void OnMouse(MouseEventArgs e);
-    void OnClickEvent(MouseEventArgs e);
-    void OnDblClickEvent(MouseEventArgs e);
-
     void Refresh();
     void Clear();
     void PanZoomToFit();
     void InitialShow();
-    void OnClickEvent2(MouseEventArgs e);
 }
+
 
 
 [Scoped]
 class CanvasService : ICanvasService
 {
-    const int ClickDelay = 300;
-
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
-    readonly Timer clickTimer;
-    bool timerRunning = false;
-    MouseEventArgs clickLeftMouse = new();
 
     Canvas canvas = null!;
     Svgs svgContentData = new(new List<Level>());
 
-    public CanvasService(IPanZoomService panZoomService, IModelService modelService)
+    public CanvasService(IMouseEventService mouseEventService, IPanZoomService panZoomService, IModelService modelService)
     {
         this.panZoomService = panZoomService;
         this.modelService = modelService;
-        clickTimer = new Timer(OnClickTimer, null, Timeout.Infinite, Timeout.Infinite);
+        mouseEventService.Click += OnClick;
+        mouseEventService.DblClick += OnDblClick;
     }
 
     public string SvgContent => GetSvgContent();
@@ -71,41 +63,10 @@ class CanvasService : ICanvasService
     }
 
 
-    public void OnMouse(MouseEventArgs e) => panZoomService.OnMouse(e);
-
-    void OnClickTimer(object? state)
-    {
-        timerRunning = false;
-        OnClick(clickLeftMouse);
-    }
-
-    public void OnClickEvent2(MouseEventArgs e)
-    {
-        Log.Info($"OnClickEvent2: {e.Type}");
-    }
-
-    public void OnClickEvent(MouseEventArgs e)
-    {
-        clickLeftMouse = e;
-        if (!timerRunning)
-        {   // This is the first click, start the timer
-            timerRunning = true;
-            clickTimer.Change(ClickDelay, Timeout.Infinite);
-        }
-    }
-
-    public void OnDblClickEvent(MouseEventArgs e)
-    {
-        clickTimer.Change(Timeout.Infinite, Timeout.Infinite);
-        timerRunning = false;
-        OnDblClick(e);
-    }
-
     public void OnClick(MouseEventArgs e)
     {
         Log.Info($"OnClick {e.Type}");
         var pos = new Pos(e.OffsetX, e.OffsetY);
-
 
         if (!Try(out var node, modelService.FindNode(Offset, pos, Zoom)))
         {

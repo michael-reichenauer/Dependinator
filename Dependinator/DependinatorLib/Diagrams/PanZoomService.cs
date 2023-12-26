@@ -13,7 +13,7 @@ interface IPanZoomService
     int ZCount { get; }
 
     Task InitAsync(Canvas canvas);
-    void OnMouse(MouseEventArgs e);
+
     void PanZoomToFit(Rect bounds);
     Task CheckResizeAsync();
 }
@@ -46,10 +46,13 @@ class PanZoomService : IPanZoomService
     public double SvgZoom { get; set; } = 1;
 
 
-    public PanZoomService(IJSInteropService jSInteropService)
+    public PanZoomService(IJSInteropService jSInteropService, IMouseEventService mouseEventService)
     {
         this.jSInteropService = jSInteropService;
         jSInteropService.OnResize += OnResize;
+        mouseEventService.MouseWheel += OnMouseWheel;
+        mouseEventService.MouseMove += OnMouseMove;
+        mouseEventService.MouseDown += OnMouseDown;
     }
 
     public async Task InitAsync(Canvas canvas)
@@ -58,17 +61,6 @@ class PanZoomService : IPanZoomService
         await this.jSInteropService.InitializeAsync();
     }
 
-    public void OnMouse(MouseEventArgs e)
-    {
-        switch (e.Type)
-        {
-            case "wheel": OnMouseWheel((WheelEventArgs)e); break;
-            case "mousemove": OnMouseMove(e); break;
-            case "mousedown": OnMouseDown(e); break;
-            case "mouseup": OnMouseUp(e); break;
-            default: throw Asserter.FailFast($"Unknown mouse event type: {e.Type}");
-        }
-    }
 
     public void PanZoomToFit(Rect totalBounds)
     {
@@ -140,7 +132,6 @@ class PanZoomService : IPanZoomService
 
     void OnMouseDown(MouseEventArgs e)
     {
-
         if (e.Button == 0)
         {
             // Log.Info($"Mouse down: {e.ToJson()}");
@@ -149,18 +140,8 @@ class PanZoomService : IPanZoomService
         }
     }
 
-    void OnMouseUp(MouseEventArgs e)
-    {
-        //Log.Info($"Mouse up: {e.ToJson()}");
-        if (e.Button == 0)
-        {
-        }
-    }
-
-
 
     void OnResize() => CheckResizeAsync().RunInBackground();
-
 
 
     public async Task CheckResizeAsync()
