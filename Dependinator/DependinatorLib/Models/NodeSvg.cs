@@ -13,31 +13,29 @@ class NodeSvg
     }
 
 
-    public string GetSvg(Pos parentCanvasPos, double parentZoom)
+    public string GetSvg(Pos parentCanvasPos, double zoom)
     {
-        if (node.IsRoot || Node.IsToLargeToBeSeen(parentZoom))
-            return GetChildrenSvg(parentCanvasPos, parentZoom);
+        var nodeCanvasPos = node.GetNodeCanvasPos(parentCanvasPos, zoom);
 
-        if (!node.IsShowingChildren(parentZoom)) return GetIconSvg(parentCanvasPos, parentZoom);
+        if (node.IsRoot || Node.IsToLargeToBeSeen(zoom))
+            return GetChildrenSvg(nodeCanvasPos, zoom);
 
-        return GetContainerSvg(parentCanvasPos, parentZoom) +
-            GetChildrenSvg(parentCanvasPos, parentZoom);
+        if (!node.IsShowingChildren(zoom)) return GetIconSvg(nodeCanvasPos, zoom);
+
+        return GetContainerSvg(nodeCanvasPos, zoom) +
+            GetChildrenSvg(nodeCanvasPos, zoom);
     }
 
-    string GetChildrenSvg(Pos parentCanvasPos, double parentZoom)
+    string GetChildrenSvg(Pos nodeCanvasPos, double zoom)
     {
-        var nodeCanvasPos = node.GetNodeCanvasPos(parentCanvasPos, parentZoom);
-
-        var childrenZoom = parentZoom * node.ContainerZoom;
+        var childrenZoom = zoom * node.ContainerZoom;
         return node.AllItems()
             .Select(n => n.GetSvg(nodeCanvasPos, childrenZoom))
             .Join("");
     }
 
-    string GetIconSvg(Pos parentCanvasPos, double parentZoom)
+    string GetIconSvg(Pos nodeCanvasPos, double parentZoom)
     {
-        var nodeCanvasPos = node.GetNodeCanvasPos(parentCanvasPos, parentZoom);
-
         var (x, y) = nodeCanvasPos;
         var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
 
@@ -57,10 +55,8 @@ class NodeSvg
     }
 
 
-    string GetContainerSvg(Pos parentCanvasPos, double parentZoom)
+    string GetContainerSvg(Pos nodeCanvasPos, double parentZoom)
     {
-        var nodeCanvasPos = node.GetNodeCanvasPos(parentCanvasPos, parentZoom);
-
         var s = node.StrokeWidth;
         var (x, y) = nodeCanvasPos;
         var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
