@@ -40,8 +40,8 @@ class CanvasService : ICanvasService
     {
         this.panZoomService = panZoomService;
         this.modelService = modelService;
-        mouseEventService.Click += OnClick;
-        mouseEventService.DblClick += OnDblClick;
+        mouseEventService.LeftClick += OnClick;
+        mouseEventService.LeftDblClick += OnDblClick;
     }
 
     public string SvgContent => GetSvgContent();

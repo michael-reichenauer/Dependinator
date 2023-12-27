@@ -9,8 +9,8 @@ interface IMouseEventService
     event Action<MouseEventArgs> MouseMove;
     event Action<MouseEventArgs> MouseDown;
     event Action<MouseEventArgs> MouseUp;
-    event Action<MouseEventArgs> Click;
-    event Action<MouseEventArgs> DblClick;
+    event Action<MouseEventArgs> LeftClick;
+    event Action<MouseEventArgs> LeftDblClick;
 
     void OnMouse(MouseEventArgs e);
 }
@@ -27,31 +27,35 @@ class MouseEventService : IMouseEventService
 
     public MouseEventService()
     {
-        clickTimer = new Timer(OnClickTimer, null, Timeout.Infinite, Timeout.Infinite);
+        clickTimer = new Timer(OnLeftClickTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     public event Action<WheelEventArgs> MouseWheel = null!;
     public event Action<MouseEventArgs> MouseMove = null!;
     public event Action<MouseEventArgs> MouseDown = null!;
     public event Action<MouseEventArgs> MouseUp = null!;
-    public event Action<MouseEventArgs> Click = null!;
-    public event Action<MouseEventArgs> DblClick = null!;
+    public event Action<MouseEventArgs> LeftClick = null!;
+    public event Action<MouseEventArgs> LeftDblClick = null!;
 
 
     public void OnMouse(MouseEventArgs e)
     {
         switch (e.Type)
         {
-            case "wheel": MouseWheel?.Invoke((WheelEventArgs)e); break;
-            case "mousemove": MouseMove?.Invoke(e); break;
-            case "mousedown": OnMouseDown(e); break;
-            case "mouseup": OnMouseUp(e); break;
+            case "wheel": OnMouseWheelEvent(e); break;
+            case "mousemove": OnMouseMoveEvent(e); break;
+            case "mousedown": OnMouseDownEvent(e); break;
+            case "mouseup": OnMouseUpEvent(e); break;
             default: throw Asserter.FailFast($"Unknown mouse event type: {e.Type}");
         }
     }
 
+    void OnMouseWheelEvent(MouseEventArgs e) => MouseWheel?.Invoke((WheelEventArgs)e);
 
-    void OnMouseDown(MouseEventArgs e)
+    void OnMouseMoveEvent(MouseEventArgs e) => MouseMove?.Invoke(e);
+
+
+    void OnMouseDownEvent(MouseEventArgs e)
     {
         MouseDown?.Invoke(e);
 
@@ -61,7 +65,7 @@ class MouseEventService : IMouseEventService
         }
     }
 
-    void OnMouseUp(MouseEventArgs e)
+    void OnMouseUpEvent(MouseEventArgs e)
     {
         MouseUp?.Invoke(e);
 
@@ -69,18 +73,17 @@ class MouseEventService : IMouseEventService
             Math.Abs(e.OffsetX - clickLeftMouse.OffsetX) < 5 &&
             Math.Abs(e.OffsetY - clickLeftMouse.OffsetY) < 5)
         {
-            OnClickEvent(e);
+            OnLeftClickEvent(e);
         }
     }
 
-    void OnClickTimer(object? state)
+    void OnLeftClickTimer(object? state)
     {
         timerRunning = false;
-        Click?.Invoke(clickLeftMouse);
+        LeftClick?.Invoke(clickLeftMouse);
     }
 
-
-    void OnClickEvent(MouseEventArgs e)
+    void OnLeftClickEvent(MouseEventArgs e)
     {
         clickLeftMouse = e;
         if (!timerRunning)
@@ -92,7 +95,7 @@ class MouseEventService : IMouseEventService
         {
             clickTimer.Change(Timeout.Infinite, Timeout.Infinite);
             timerRunning = false;
-            DblClick?.Invoke(e);
+            LeftDblClick?.Invoke(e);
         }
     }
 }
