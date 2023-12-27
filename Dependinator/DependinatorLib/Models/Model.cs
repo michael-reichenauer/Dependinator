@@ -14,13 +14,13 @@ interface IModel : IDisposable
 }
 
 
-class ModelBase : IModel
+class Model : IModel
 {
     readonly object syncRoot = new();
     readonly Dictionary<Id, IItem> items = new();
 
 
-    public ModelBase()
+    public Model()
     {
         Root = DefaultRootNode(this);
         items.Add(Root.Id, Root);

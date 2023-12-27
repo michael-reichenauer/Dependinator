@@ -1,15 +1,15 @@
 namespace Dependinator.Models;
 
-interface IModelDb
+interface IModelProvider
 {
     IModel GetModel();
 }
 
 
 [Singleton]
-class ModelDb : IModelDb
+class ModelProvider : IModelProvider
 {
-    readonly ModelBase model = new();
+    readonly Model model = new();
 
     public IModel GetModel() => new ModelTransaction(model);
 }
@@ -19,9 +19,9 @@ class ModelDb : IModelDb
 
 class ModelTransaction : IModel
 {
-    ModelBase rootModel;
+    Model rootModel;
 
-    public ModelTransaction(ModelBase rootModel)
+    public ModelTransaction(Model rootModel)
     {
         Monitor.Enter(rootModel.SyncRoot);
         this.rootModel = rootModel;

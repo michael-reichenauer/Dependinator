@@ -20,10 +20,10 @@ class ModelService : IModelService
 {
     const int BatchTimeMs = 300;
     readonly Parsing.IParserService parserService;
-    readonly IModelDb modelDb;
+    readonly IModelProvider modelDb;
 
 
-    public ModelService(Parsing.IParserService parserService, IModelDb modelDb)
+    public ModelService(Parsing.IParserService parserService, IModelProvider modelDb)
     {
         this.parserService = parserService;
         this.modelDb = modelDb;
