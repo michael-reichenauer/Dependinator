@@ -33,7 +33,7 @@ record NodeType
         "Private" => "PrivateIcon",
         "Parent" => "FilesIcon",
         "Type" => "TypeIcon",
-        "Member" => "Member",
+        "Member" => "MemberIcon",
         _ => "ModuleIcon"
     };
 

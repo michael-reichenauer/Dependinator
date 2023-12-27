@@ -15,9 +15,8 @@ class NodeSvg
 
     public string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
-        if (node.IsRoot) return GetChildrenSvg(parentCanvasPos, parentZoom);
-
-        if (Node.IsToLargeToBeSeen(parentZoom)) return "";
+        if (node.IsRoot || Node.IsToLargeToBeSeen(parentZoom))
+            return GetChildrenSvg(parentCanvasPos, parentZoom);
 
         if (!node.IsShowingChildren(parentZoom)) return GetIconSvg(parentCanvasPos, parentZoom);
 
