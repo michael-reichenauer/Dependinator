@@ -1,8 +1,12 @@
 namespace Dependinator.Models;
 
 
-record NodeType(string Text)
+record NodeType
 {
+    public string Text { get; init; }
+
+    private NodeType(string text) => Text = text;
+
     public static readonly NodeType None = new("None");
     public static readonly NodeType Root = new("Root");
     public static readonly NodeType Parent = new("Parent");

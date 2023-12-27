@@ -15,7 +15,7 @@ interface IModelService
 }
 
 
-[Scoped]
+[Singleton]
 class ModelService : IModelService
 {
     const int BatchTimeMs = 300;
