@@ -14,7 +14,7 @@ partial class Canvas : ComponentBase
 
     public ElementReference Ref { get; private set; }
 
-    string Info => $"Zoom: {srv.Zoom:E2}, SvgZoom: {srv.SvgZoom:E2}, ViewZoom: {srv.ActualZoom:0.###} Level: {srv.Level}";
+    string Info => $"Zoom: {srv.Zoom:0.#######}, SvgZoom: {srv.SvgZoom:E2}, ViewZoom: {srv.ActualZoom:0.###} Level: {srv.Level}";
     string SvgContent => srv.SvgContent;
     double Width => srv.SvgRect.Width;
     double Height => srv.SvgRect.Height;
