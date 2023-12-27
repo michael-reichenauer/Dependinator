@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Dependinator.Models;
+using Dependinator.Utils.UI;
 
 
 namespace Dependinator.Diagrams;

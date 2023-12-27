@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 
 
-namespace Dependinator.Diagrams;
+namespace Dependinator.Utils.UI;
 
 interface IMouseEventService
 {
