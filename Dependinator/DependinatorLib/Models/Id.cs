@@ -13,13 +13,16 @@ public record Id
 
     public Id(string value) => Value = GenerateBase62UniqueId(value);
 
-    private static string GenerateBase62UniqueId(string input, int length = 10)
+    public static implicit operator string(Id id) => id.Value;
+    public static implicit operator Id(string value) => new(value);
+
+    static string GenerateBase62UniqueId(string input, int length = 10)
     {
         byte[] bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
         return Base62Encode(bytes, length);
     }
 
-    private static string Base62Encode(byte[] bytes, int length)
+    static string Base62Encode(byte[] bytes, int length)
     {
         var chars = new char[length];
         for (int i = 0; i < length; i++)
@@ -29,9 +32,6 @@ public record Id
 
         return new string(chars);
     }
-
-    public static implicit operator string(Id id) => id.Value;
-    public static implicit operator Id(string value) => new Id(value);
 }
 
 public record NodeId(string name) : Id(name);

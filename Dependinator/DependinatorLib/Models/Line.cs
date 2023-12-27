@@ -4,9 +4,6 @@ record LinePos(double X1, double Y1, double X2, double Y2);
 
 class Line : IItem
 {
-    const double DefaultContainerZoom = 1.0 / 7;
-    const double MaxNodeZoom = 30 * 1 / DefaultContainerZoom;           // To large to be seen
-
     readonly Dictionary<Id, Link> links = new();
 
     public Line(Node source, Node target)
@@ -41,22 +38,22 @@ class Line : IItem
 
 
 
-    public string GetSvg(Pos parentCanvasPos, double parentZoom)
+    public string GetSvg(Pos parentCanvasPos, double zoom)
     {
-        if (parentZoom > MaxNodeZoom) return "";    // Too large to show
+        if (Node.IsToLargeToBeSeen(zoom)) return "";  
 
         var (x1, y1, x2, y2) = GetPos();
 
         if (Source != Target.Parent)
         {
-            (x1, y1) = (parentCanvasPos.X + x1 * parentZoom, parentCanvasPos.Y + y1 * parentZoom);
+            (x1, y1) = (parentCanvasPos.X + x1 * zoom, parentCanvasPos.Y + y1 * zoom);
         }
         else
         {
-            (x1, y1) = (parentCanvasPos.X + x1 * parentZoom, parentCanvasPos.Y + y1 * parentZoom);
+            (x1, y1) = (parentCanvasPos.X + x1 * zoom, parentCanvasPos.Y + y1 * zoom);
         }
 
-        (x2, y2) = (parentCanvasPos.X + x2 * parentZoom, parentCanvasPos.Y + y2 * parentZoom);
+        (x2, y2) = (parentCanvasPos.X + x2 * zoom, parentCanvasPos.Y + y2 * zoom);
 
         var s = StrokeWidth;
 

@@ -18,6 +18,9 @@ class Node : IItem
         svg = new NodeSvg(this);
     }
 
+    public const double MinContainerZoom = 1.0;
+    public const double MaxNodeZoom = 30 * 1 / Node.DefaultContainerZoom;           // To large to be seen
+    public const double DefaultContainerZoom = 1.0 / 7;
 
     public NodeId Id { get; }
     public string Name { get; }
@@ -39,9 +42,14 @@ class Node : IItem
     public List<Line> SourceLines { get; } = new();
     public List<Line> TargetLines { get; } = new();
 
-    public const double DefaultContainerZoom = 1.0 / 7;
     public Double ContainerZoom { get; set; } = DefaultContainerZoom;
     //public Pos ContainerOffset { get; set; } = Pos.Zero;
+
+    public static bool IsToLargeToBeSeen(double zoom) => zoom > Node.MaxNodeZoom;
+    public static bool IsToSmallToShowChildren(double zoom) => zoom <= MinContainerZoom;
+
+    public bool IsShowingChildren(double zoom) =>
+        Children.Any() && !Node.IsToSmallToShowChildren(zoom);
 
     public Node Parent { get; private set; }
     public bool IsRoot => Type == NodeType.Root;
@@ -105,7 +113,7 @@ class Node : IItem
         var nodeCanvasRect = GetNodeCanvasRect(parentCanvasPos, parentZoom);
         if (!nodeCanvasRect.IsPosInside(nodePoint)) return R.None;
 
-        if (svg.IsShowingChildren(parentZoom))
+        if (IsShowingChildren(parentZoom))
         {
             if (Try(out var child, FindNodeInChildren(nodeCanvasPos, nodePoint, parentZoom)))
                 return child;

@@ -2,8 +2,6 @@ namespace Dependinator.Models;
 
 class NodeSvg
 {
-    public const double MinContainerZoom = 1.0;
-    const double MaxNodeZoom = 30 * 1 / Node.DefaultContainerZoom;           // To large to be seen
     const int SmallIconSize = 9;
     const int FontSize = 8;
 
@@ -14,20 +12,14 @@ class NodeSvg
         this.node = node;
     }
 
-    static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
-    static bool IsToSmallToShowChildren(double zoom) => zoom <= MinContainerZoom;
-
-    public bool IsShowingChildren(double zoom) =>
-        node.Children.Any() && !IsToSmallToShowChildren(zoom);
-
 
     public string GetSvg(Pos parentCanvasPos, double parentZoom)
     {
         if (node.IsRoot) return GetChildrenSvg(parentCanvasPos, parentZoom);
 
-        if (IsToLargeToBeSeen(parentZoom)) return "";
+        if (Node.IsToLargeToBeSeen(parentZoom)) return "";
 
-        if (!IsShowingChildren(parentZoom)) return GetIconSvg(parentCanvasPos, parentZoom);
+        if (!node.IsShowingChildren(parentZoom)) return GetIconSvg(parentCanvasPos, parentZoom);
 
         return GetContainerSvg(parentCanvasPos, parentZoom) +
             GetChildrenSvg(parentCanvasPos, parentZoom);
