@@ -101,21 +101,28 @@ class Node : IItem
         }
     }
 
+    // (double x, double y) ToCanvasPos(Pos nodePos)
+    // {
+    //     if (IsRoot) return (0.0, 0.0);
 
-    public R<Node> FindNode(Pos parentCanvasPos, Pos pointCanvasPos, double parentZoom)
+    // }
+
+
+    public R<Node> FindNode(Pos canvasOffset, Pos targetPos, double zoom)
     {
-        var nodeCanvasPos = GetNodeCanvasPos(parentCanvasPos, parentZoom);
-        var nodePoint = GetNodeCanvasPos(pointCanvasPos, parentZoom);
+        var nodePos = new Pos(Boundary.X, Boundary.Y);
 
-        if (IsRoot) return FindNodeInChildren(nodeCanvasPos, nodePoint, parentZoom);
+        // var nodePos = GetNodeCanvasPos(parentNodePos, zoom);
+        // var nodeTargetPos = GetNodeCanvasPos(targetPos, zoom);
 
+        // if (IsRoot) return FindNodeInChildren(nodePos, nodeTargetPos, zoom);
 
-        var nodeCanvasRect = GetNodeCanvasRect(parentCanvasPos, parentZoom);
-        if (!nodeCanvasRect.IsPosInside(nodePoint)) return R.None;
+        // var nodeCanvasRect = GetNodeCanvasRect(parentNodePos, zoom);
+        // if (!nodeCanvasRect.IsPosInside(nodeTargetPos)) return R.None;
 
-        if (IsShowingChildren(parentZoom))
+        if (IsShowingChildren(zoom))
         {
-            if (Try(out var child, FindNodeInChildren(nodeCanvasPos, nodePoint, parentZoom)))
+            if (Try(out var child, FindNodeInChildren(canvasOffset, targetPos, zoom)))
                 return child;
         }
 
@@ -123,15 +130,47 @@ class Node : IItem
     }
 
 
-    R<Node> FindNodeInChildren(Pos nodeCanvasPos, Pos pointCanvasPos, double parentZoom)
+    R<Node> FindNodeInChildren(Pos nodeCanvasPos, Pos pointCanvasPos, double zoom)
     {
-        var childrenZoom = parentZoom * ContainerZoom;
+        var childrenZoom = zoom * ContainerZoom;
 
         var node = Children.AsEnumerable().Reverse()
            .FirstOrDefault(child => child.FindNode(nodeCanvasPos, pointCanvasPos, childrenZoom));
 
         return node != null ? node : R.None;
     }
+
+
+
+    // public R<Node> FindNode(Pos parentNodePos, Pos targetPos, double zoom)
+    // {
+    //     var nodePos = GetNodeCanvasPos(parentNodePos, zoom);
+    //     var nodeTargetPos = GetNodeCanvasPos(targetPos, zoom);
+
+    //     if (IsRoot) return FindNodeInChildren(nodePos, nodeTargetPos, zoom);
+
+    //     var nodeCanvasRect = GetNodeCanvasRect(parentNodePos, zoom);
+    //     if (!nodeCanvasRect.IsPosInside(nodeTargetPos)) return R.None;
+
+    //     if (IsShowingChildren(zoom))
+    //     {
+    //         if (Try(out var child, FindNodeInChildren(nodePos, nodeTargetPos, zoom)))
+    //             return child;
+    //     }
+
+    //     return this;
+    // }
+
+
+    // R<Node> FindNodeInChildren(Pos nodeCanvasPos, Pos pointCanvasPos, double parentZoom)
+    // {
+    //     var childrenZoom = parentZoom * ContainerZoom;
+
+    //     var node = Children.AsEnumerable().Reverse()
+    //        .FirstOrDefault(child => child.FindNode(nodeCanvasPos, pointCanvasPos, childrenZoom));
+
+    //     return node != null ? node : R.None;
+    // }
 
 
     public string GetSvg(Pos parentCanvasPos, double parentZoom) => svg.GetSvg(parentCanvasPos, parentZoom);

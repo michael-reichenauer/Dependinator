@@ -13,13 +13,12 @@ interface IPanZoomService
     double SvgZoom { get; set; }
     int ZCount { get; }
 
-    Task InitAsync(Canvas canvas);
+    Task InitAsync(IUIComponent component);
 
     void PanZoomToFit(Rect bounds);
     Task CheckResizeAsync();
 }
 
-record MouseEvent(MouseEventArgs e, DateTime Time);
 
 [Scoped]
 class PanZoomService : IPanZoomService
@@ -35,7 +34,7 @@ class PanZoomService : IPanZoomService
     readonly object syncRoot = new();
 
 
-    Canvas canvas = null!;
+    IUIComponent component = null!;
     public int ZCount { get; private set; } = 0;
 
     public Pos Offset { get; private set; } = Pos.Zero;
@@ -53,10 +52,10 @@ class PanZoomService : IPanZoomService
         mouseEventService.MouseMove += OnMouseMove;
     }
 
-    public async Task InitAsync(Canvas canvas)
+    public async Task InitAsync(IUIComponent component)
     {
-        this.canvas = canvas;
-        await this.jSInteropService.InitializeAsync();
+        await Task.CompletedTask;
+        this.component = component;
     }
 
 
@@ -85,7 +84,7 @@ class PanZoomService : IPanZoomService
         }
     }
 
-    void OnMouseWheel(WheelEventArgs e)
+    void OnMouseWheel(MouseEvent e)
     {
         lock (syncRoot)
         {
@@ -114,7 +113,7 @@ class PanZoomService : IPanZoomService
         }
     }
 
-    void OnMouseMove(MouseEventArgs e)
+    void OnMouseMove(MouseEvent e)
     {
         if (e.Buttons == LeftMouseBtn)
         {
@@ -130,7 +129,7 @@ class PanZoomService : IPanZoomService
     public async Task CheckResizeAsync()
     {
         // Get Svg position (width and height are unreliable)
-        var svg = await jSInteropService.GetBoundingRectangle(canvas.Ref);
+        var svg = await jSInteropService.GetBoundingRectangle(component.Ref);
 
         // Get window width and height
         var windowWidth = Math.Floor(jSInteropService.BrowserSizeDetails.InnerWidth);
@@ -155,7 +154,7 @@ class PanZoomService : IPanZoomService
 
         if (isChanged)
         {
-            canvas.TriggerStateHasChangedAsync().RunInBackground();
+            component.TriggerStateHasChangedAsync().RunInBackground();
             Log.Info($"Resized: {newSwgRect}");
         }
     }

@@ -48,7 +48,7 @@ class NodeSvg
             <use href="#{icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
             <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{node.ShortName}</text>
             <g class="hoverable">
-              <rect x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+              <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
             </g>
             </rect>
             """;
@@ -72,7 +72,7 @@ class NodeSvg
             <use href="#{icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
             <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{node.ShortName}</text>
             <g class="hoverable">
-              <rect x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+              <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
             </g>
             """;
     }

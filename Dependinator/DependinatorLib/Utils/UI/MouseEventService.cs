@@ -1,45 +1,61 @@
-using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 
 namespace Dependinator.Utils.UI;
 
 interface IMouseEventService
 {
-    event Action<WheelEventArgs> MouseWheel;
-    event Action<MouseEventArgs> MouseMove;
-    event Action<MouseEventArgs> MouseDown;
-    event Action<MouseEventArgs> MouseUp;
-    event Action<MouseEventArgs> LeftClick;
-    event Action<MouseEventArgs> LeftDblClick;
+    event Action<MouseEvent> MouseWheel;
+    event Action<MouseEvent> MouseMove;
+    event Action<MouseEvent> MouseDown;
+    event Action<MouseEvent> MouseUp;
+    event Action<MouseEvent> LeftClick;
+    event Action<MouseEvent> LeftDblClick;
 
-    void OnMouse(MouseEventArgs e);
+    Task InitAsync(IUIComponent component);
 }
 
 
 [Scoped]
 class MouseEventService : IMouseEventService
 {
+    readonly IJSInteropService jSInteropService;
+
     const int ClickDelay = 300;
 
+    IUIComponent component = null!;
     readonly Timer clickTimer;
     bool timerRunning = false;
-    MouseEventArgs clickLeftMouse = new();
+    MouseEvent clickLeftMouse = new();
 
-    public MouseEventService()
+    public MouseEventService(IJSInteropService jSInteropService)
     {
         clickTimer = new Timer(OnLeftClickTimer, null, Timeout.Infinite, Timeout.Infinite);
+        this.jSInteropService = jSInteropService;
     }
 
-    public event Action<WheelEventArgs> MouseWheel = null!;
-    public event Action<MouseEventArgs> MouseMove = null!;
-    public event Action<MouseEventArgs> MouseDown = null!;
-    public event Action<MouseEventArgs> MouseUp = null!;
-    public event Action<MouseEventArgs> LeftClick = null!;
-    public event Action<MouseEventArgs> LeftDblClick = null!;
+    public event Action<MouseEvent> MouseWheel = null!;
+    public event Action<MouseEvent> MouseMove = null!;
+    public event Action<MouseEvent> MouseDown = null!;
+    public event Action<MouseEvent> MouseUp = null!;
+    public event Action<MouseEvent> LeftClick = null!;
+    public event Action<MouseEvent> LeftDblClick = null!;
 
-
-    public void OnMouse(MouseEventArgs e)
+    public async Task InitAsync(IUIComponent component)
     {
+        this.component = component;
+        var objRef = DotNetObjectReference.Create(this);
+        await jSInteropService.AddMouseEventListener("svgcanvas", "wheel", objRef, "EventCallback");
+        await jSInteropService.AddMouseEventListener("svgcanvas", "mousemove", objRef, "EventCallback");
+        await jSInteropService.AddMouseEventListener("svgcanvas", "mousedown", objRef, "EventCallback");
+        await jSInteropService.AddMouseEventListener("svgcanvas", "mouseup", objRef, "EventCallback");
+    }
+
+
+    [JSInvokable]
+    public ValueTask EventCallback(MouseEvent e)
+    {
+        // Log.Info($"Clicked: '{e.ToJson()}'");
         switch (e.Type)
         {
             case "wheel": OnMouseWheelEvent(e); break;
@@ -48,14 +64,18 @@ class MouseEventService : IMouseEventService
             case "mouseup": OnMouseUpEvent(e); break;
             default: throw Asserter.FailFast($"Unknown mouse event type: {e.Type}");
         }
+
+        component.TriggerStateHasChangedAsync();
+        return ValueTask.CompletedTask;
     }
 
-    void OnMouseWheelEvent(MouseEventArgs e) => MouseWheel?.Invoke((WheelEventArgs)e);
 
-    void OnMouseMoveEvent(MouseEventArgs e) => MouseMove?.Invoke(e);
+    void OnMouseWheelEvent(MouseEvent e) => MouseWheel?.Invoke(e);
+
+    void OnMouseMoveEvent(MouseEvent e) => MouseMove?.Invoke(e);
 
 
-    void OnMouseDownEvent(MouseEventArgs e)
+    void OnMouseDownEvent(MouseEvent e)
     {
         MouseDown?.Invoke(e);
 
@@ -65,7 +85,7 @@ class MouseEventService : IMouseEventService
         }
     }
 
-    void OnMouseUpEvent(MouseEventArgs e)
+    void OnMouseUpEvent(MouseEvent e)
     {
         MouseUp?.Invoke(e);
 
@@ -83,7 +103,7 @@ class MouseEventService : IMouseEventService
         LeftClick?.Invoke(clickLeftMouse);
     }
 
-    void OnLeftClickEvent(MouseEventArgs e)
+    void OnLeftClickEvent(MouseEvent e)
     {
         clickLeftMouse = e;
         if (!timerRunning)

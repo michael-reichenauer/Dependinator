@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Components.Web;
 using Dependinator.Models;
 using Dependinator.Utils.UI;
 
@@ -8,7 +7,7 @@ namespace Dependinator.Diagrams;
 
 interface ICanvasService
 {
-    Task InitAsync(Canvas canvas);
+    Task InitAsync(IUIComponent component);
 
     string SvgContent { get; }
     int Level { get; }
@@ -34,7 +33,7 @@ class CanvasService : ICanvasService
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
 
-    Canvas canvas = null!;
+    IUIComponent component = null!;
     Svgs svgContentData = new(new List<Level>());
 
     public CanvasService(IMouseEventService mouseEventService, IPanZoomService panZoomService, IModelService modelService)
@@ -57,28 +56,28 @@ class CanvasService : ICanvasService
 
     public string ViewBox => $"{Offset.X / SvgZoom} {Offset.Y / SvgZoom} {SvgRect.Width * Zoom / SvgZoom} {SvgRect.Height * Zoom / SvgZoom}";
 
-    public async Task InitAsync(Canvas canvas)
+    public async Task InitAsync(IUIComponent component)
     {
-        this.canvas = canvas;
-        await panZoomService.InitAsync(canvas);
+        this.component = component;
+        await panZoomService.InitAsync(component);
     }
 
 
-    public void OnClick(MouseEventArgs e)
+    public void OnClick(MouseEvent e)
     {
         Log.Info($"OnClick {e.Type}");
-        var pos = new Pos(e.OffsetX, e.OffsetY);
+        // var pos = new Pos(e.OffsetX, e.OffsetY);
 
-        if (!Try(out var node, modelService.FindNode(Offset, pos, Zoom)))
-        {
-            Log.Info($"No node found at {pos}");
-            return;
-        }
-        Log.Info($"Node clicked: {node}");
+        // if (!Try(out var node, modelService.FindNode(Offset, pos, Zoom)))
+        // {
+        //     Log.Info($"No node found at {pos}");
+        //     return;
+        // }
+        // Log.Info($"Node clicked: {node}");
 
     }
 
-    public void OnDblClick(MouseEventArgs e)
+    public void OnDblClick(MouseEvent e)
     {
         Log.Info($"OnDoubleClick {e.Type}");
     }
@@ -91,7 +90,7 @@ class CanvasService : ICanvasService
         var (content, bounds) = await RefreshAsync();
         SetSvgContent(content);
         //panZoomService.PanZoomToFit(bounds);
-        await canvas.TriggerStateHasChangedAsync();
+        await component.TriggerStateHasChangedAsync();
     }
 
     public void PanZoomToFit()
@@ -104,7 +103,7 @@ class CanvasService : ICanvasService
         var (content, bounds) = await RefreshAsync();
         SetSvgContent(content);
         panZoomService.PanZoomToFit(bounds);
-        await canvas.TriggerStateHasChangedAsync();
+        await component.TriggerStateHasChangedAsync();
     }
 
 
@@ -113,7 +112,7 @@ class CanvasService : ICanvasService
         modelService.Clear();
         SetSvgContent(new Svgs(new List<Level>()));
 
-        await canvas.TriggerStateHasChangedAsync();
+        await component.TriggerStateHasChangedAsync();
     }
 
     public async Task<(Svgs, Rect)> RefreshAsync()
@@ -140,7 +139,7 @@ class CanvasService : ICanvasService
         Level = level;
         SvgZoom = svgZoom;
         panZoomService.SvgZoom = svgZoom;
-        canvas?.TriggerStateHasChangedAsync();
+        component?.TriggerStateHasChangedAsync();
 
         return Content;
 

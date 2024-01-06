@@ -3,7 +3,6 @@ export function showPrompt(message) {
 }
 
 export function listenToWindowResize(dotNetHelper) {
-
   function resizeEventHandler() {
     dotNetHelper.invokeMethodAsync('WindowResizeEvent');
   }
@@ -18,7 +17,6 @@ export function getBoundingRectangle(element, parm) {
 }
 
 export function getWindowSizeDetails(parm) {
-
   var e = window, a = 'inner';
 
   if (!('innerWidth' in window)) {
@@ -35,4 +33,34 @@ export function getWindowSizeDetails(parm) {
   };
 
   return windowSize;
+}
+
+export function addMouseEventListener(elementId, eventName, instance, functionName) {
+  function eventHandler(event) {
+    instance.invokeMethodAsync(functionName, {
+      Type: eventName,
+      TargetId: event.target.id,
+      OffsetX: event.offsetX,
+      OffsetY: event.offsetY,
+      ClientX: event.clientX,
+      ClientY: event.clientY,
+      ScreenX: event.screenX,
+      ScreenY: event.screenY,
+      PageX: event.pageX,
+      PageY: event.pageY,
+      MovementX: event.movementX,
+      MovementY: event.movementY,
+      Button: event.button,
+      Buttons: event.buttons,
+      ShiftKey: event.shiftKey,
+      CtrlKey: event.ctrlKey,
+      AltKey: event.altKey,
+      DeltaX: event.deltaX,
+      DeltaY: event.deltaY,
+      DeltaZ: event.deltaZ,
+      DeltaMode: event.deltaMode,
+    });
+  }
+
+  document.getElementById(elementId).addEventListener(eventName, eventHandler)
 }

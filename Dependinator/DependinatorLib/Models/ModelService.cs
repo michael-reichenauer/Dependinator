@@ -51,16 +51,16 @@ class ModelService : IModelService
         return (new Svgs(svgs), totalBoundary);
     }
 
-    public R<Node> FindNode(Pos offset, Pos point, double zoom)
+    public R<Node> FindNode(Pos canvasOffset, Pos targetCanvasPos, double zoom)
     {
         using var model = modelDb.GetModel();
 
         // transform point to canvas coordinates
-        var canvasPoint = new Pos(
-            point.X * zoom + offset.X,
-            point.Y * zoom + offset.Y);
+        // var nodeTargetPos = new Pos(
+        //     targetCanvasPos.X * zoom + canvasOffset.X,
+        //     targetCanvasPos.Y * zoom + canvasOffset.Y);
 
-        return model.Root.FindNode(Pos.Zero, canvasPoint, zoom);
+        return model.Root.FindNode(canvasOffset, targetCanvasPos, zoom);
     }
 
     public void Clear()

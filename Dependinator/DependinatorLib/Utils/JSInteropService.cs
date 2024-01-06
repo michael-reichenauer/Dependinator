@@ -33,6 +33,7 @@ public interface IJSInteropService
     ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference);
     BrowserSizeDetails BrowserSizeDetails { get; }
 
+    ValueTask AddMouseEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
     ValueTask<string> Prompt(string message);
 }
 
@@ -66,6 +67,12 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
         await module.InvokeVoidAsync(identifier: "listenToWindowResize", this.instanceRef);
 
         this.BrowserSizeDetails = await module.InvokeAsync<BrowserSizeDetails>(identifier: "getWindowSizeDetails");
+    }
+
+    public async ValueTask AddMouseEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        await module.InvokeVoidAsync(identifier: "addMouseEventListener", elementId, eventName, dotNetObjectReference, functionName);
     }
 
     public async ValueTask<BrowserSizeDetails> GetWindowSizeAsync()
