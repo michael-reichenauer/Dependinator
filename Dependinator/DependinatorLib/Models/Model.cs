@@ -7,16 +7,15 @@ interface IModel : IDisposable
 
     void AddOrUpdateLink(Parsing.Link parsedLink);
     void AddOrUpdateNode(Parsing.Node parsedNode);
-    void AddLine(Line line);
-    Node GetOrCreateNode(string name);
     void Clear();
 }
 
 
 class Model : IModel
 {
-
     readonly Dictionary<Id, IItem> items = new();
+
+    public Node Root { get; internal set; }
 
 
     public Model()
@@ -24,88 +23,6 @@ class Model : IModel
         Root = DefaultRootNode(this);
         items.Add(Root.Id, Root);
     }
-
-
-    public Node Root { get; internal set; }
-
-
-    public void AddNode(Node node)
-    {
-        if (items.ContainsKey(node.Id)) return;
-        items[node.Id] = node;
-    }
-
-    public Node GetNode(NodeId id) => (Node)items[id];
-    public bool TryGetNode(NodeId id, out Node node)
-    {
-        if (!items.TryGetValue(id, out var item))
-        {
-            node = null!;
-            return false;
-        }
-        node = (Node)item;
-        return true;
-    }
-
-    public void AddLink(Link link)
-    {
-        if (items.ContainsKey(link.Id)) return;
-        items[link.Id] = link;
-    }
-
-    public Link GetLink(NodeId id) => (Link)items[id];
-    public bool TryGetLink(NodeId id, out Link link)
-    {
-        if (!items.TryGetValue(id, out var item))
-        {
-            link = null!;
-            return false;
-        }
-        link = (Link)item;
-        return true;
-    }
-
-
-    public void AddLine(Line line)
-    {
-        if (items.ContainsKey(line.Id)) return;
-        items[line.Id] = line;
-    }
-
-
-    public Node GetOrCreateNode(string name)
-    {
-        var nodeId = new NodeId(name);
-        if (!items.TryGetValue(nodeId, out var item))
-        {
-            var parent = DefaultParsingNode(name);
-            AddOrUpdateNode(parent);
-            return (Node)items[nodeId];
-        }
-
-        return (Node)item;
-    }
-
-    public Node GetOrCreateParent(string name)
-    {
-        var nodeId = new NodeId(name);
-        if (!items.TryGetValue(nodeId, out var item))
-        {
-            var parent = DefaultParentNode(name);
-            AddOrUpdateNode(parent);
-            return (Node)items[nodeId];
-        }
-
-        return (Node)item;
-    }
-
-    public void Clear()
-    {
-        items.Clear();
-        Root = DefaultRootNode(this);
-        items.Add(Root.Id, Root);
-    }
-
 
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
@@ -160,6 +77,84 @@ class Model : IModel
         return;
     }
 
+    void AddNode(Node node)
+    {
+        if (items.ContainsKey(node.Id)) return;
+        items[node.Id] = node;
+    }
+
+    Node GetNode(NodeId id) => (Node)items[id];
+
+    bool TryGetNode(NodeId id, out Node node)
+    {
+        if (!items.TryGetValue(id, out var item))
+        {
+            node = null!;
+            return false;
+        }
+        node = (Node)item;
+        return true;
+    }
+
+    void AddLink(Link link)
+    {
+        if (items.ContainsKey(link.Id)) return;
+        items[link.Id] = link;
+    }
+
+    Link GetLink(NodeId id) => (Link)items[id];
+
+    bool TryGetLink(NodeId id, out Link link)
+    {
+        if (!items.TryGetValue(id, out var item))
+        {
+            link = null!;
+            return false;
+        }
+        link = (Link)item;
+        return true;
+    }
+
+
+    void AddLine(Line line)
+    {
+        if (items.ContainsKey(line.Id)) return;
+        items[line.Id] = line;
+    }
+
+
+    Node GetOrCreateNode(string name)
+    {
+        var nodeId = new NodeId(name);
+        if (!items.TryGetValue(nodeId, out var item))
+        {
+            var parent = DefaultParsingNode(name);
+            AddOrUpdateNode(parent);
+            return (Node)items[nodeId];
+        }
+
+        return (Node)item;
+    }
+
+    Node GetOrCreateParent(string name)
+    {
+        var nodeId = new NodeId(name);
+        if (!items.TryGetValue(nodeId, out var item))
+        {
+            var parent = DefaultParentNode(name);
+            AddOrUpdateNode(parent);
+            return (Node)items[nodeId];
+        }
+
+        return (Node)item;
+    }
+
+    public void Clear()
+    {
+        items.Clear();
+        Root = DefaultRootNode(this);
+        items.Add(Root.Id, Root);
+    }
 
     void AddLinesFromSourceToTarget(Link link)
     {
