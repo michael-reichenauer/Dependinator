@@ -9,9 +9,7 @@ interface IModelService
 {
     Task<R> RefreshAsync();
     (Svgs, Rect) GetSvg();
-    R<Node> FindNode(Pos offset, Pos point, double zoom);
     void Clear();
-
 }
 
 
@@ -20,56 +18,53 @@ class ModelService : IModelService
 {
     const int BatchTimeMs = 300;
     readonly Parsing.IParserService parserService;
-    readonly IModelProvider modelDb;
+    readonly Model model = new Model();
 
 
-    public ModelService(Parsing.IParserService parserService, IModelProvider modelDb)
+    public ModelService(Parsing.IParserService parserService)
     {
         this.parserService = parserService;
-        this.modelDb = modelDb;
     }
 
     public (Svgs, Rect) GetSvg()
     {
-        using var model = modelDb.GetModel();
-
-        using var t = Timing.Start();
-
-        var svgs = new List<Level>();
-
-        for (int i = 0; i < 100; i++)
+        lock (model)
         {
-            var zoom = i == 0 ? 1.0 : Math.Pow(2, i);
-            var svg = model.Root.GetSvg(Pos.Zero, zoom);
-            if (svg == "") break;
-            svgs.Add(new Level(svg, 1 / zoom));
-            // Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
+            using var t = Timing.Start();
+
+            var svgs = new List<Level>();
+
+            for (int i = 0; i < 100; i++)
+            {
+                var zoom = i == 0 ? 1.0 : Math.Pow(2, i);
+                var svg = model.Root.GetSvg(Pos.Zero, zoom);
+                if (svg == "") break;
+                svgs.Add(new Level(svg, 1 / zoom));
+                // Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
+            }
+            Log.Info($"Levels: {svgs.Count}");
+
+            var totalBoundary = model.Root.TotalBoundary;
+            return (new Svgs(svgs), totalBoundary);
         }
-        Log.Info($"Levels: {svgs.Count}");
-
-        var totalBoundary = model.Root.TotalBoundary;
-        return (new Svgs(svgs), totalBoundary);
     }
 
-    public R<Node> FindNode(Pos canvasOffset, Pos targetCanvasPos, double zoom)
-    {
-        using var model = modelDb.GetModel();
-
-        // transform point to canvas coordinates
-        // var nodeTargetPos = new Pos(
-        //     targetCanvasPos.X * zoom + canvasOffset.X,
-        //     targetCanvasPos.Y * zoom + canvasOffset.Y);
-
-        return model.Root.FindNode(canvasOffset, targetCanvasPos, zoom);
-    }
 
     public void Clear()
     {
-        using var model = modelDb.GetModel();
-
-        model.Clear();
+        lock (model)
+        {
+            model.Clear();
+        }
     }
+
     public async Task<R> RefreshAsync()
+    {
+        return await Parse();
+    }
+
+
+    async Task<R> Parse()
     {
         var path = "/workspaces/Dependinator/Dependinator/Dependinator.sln";
 
@@ -78,7 +73,6 @@ class ModelService : IModelService
         await Task.Run(async () =>
         {
             using var _ = Timing.Start();
-            // AddSpecials();
 
             while (await reader.WaitToReadAsync())
             {
@@ -96,43 +90,24 @@ class ModelService : IModelService
         return R.Ok;
     }
 
+
     void AddOrUpdate(IReadOnlyList<Parsing.IItem> parsedItems)
     {
-        using var model = modelDb.GetModel();
-
-        foreach (var parsedItem in parsedItems)
+        lock (model)
         {
-            switch (parsedItem)
+            foreach (var parsedItem in parsedItems)
             {
-                case Parsing.Node parsedNode:
-                    model.AddOrUpdateNode(parsedNode);
-                    break;
+                switch (parsedItem)
+                {
+                    case Parsing.Node parsedNode:
+                        model.AddOrUpdateNode(parsedNode);
+                        break;
 
-                case Parsing.Link parsedLink:
-                    model.AddOrUpdateLink(parsedLink);
-                    break;
+                    case Parsing.Link parsedLink:
+                        model.AddOrUpdateLink(parsedLink);
+                        break;
+                }
             }
         }
     }
-
-
-
-
-
-    // public void AddSpecials()
-    // {
-    //     using var model = modelDb.GetModel();
-
-    //     for (int j = 1; j < 20; j++)
-    //     {
-    //         var name = $"TestJ";
-    //         for (int i = 1; i < 15; i++)
-    //         {
-    //             var parentName = name;
-    //             name = $"{name}.Test-{j}-{i}";
-    //             var node = new Parsing.Node(name, parentName, Parsing.NodeType.Assembly, "");
-    //             model.AddOrUpdateNode(node);
-    //         }
-    //     }
-    // }
 }

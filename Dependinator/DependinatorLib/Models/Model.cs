@@ -4,7 +4,6 @@ namespace Dependinator.Models;
 interface IModel : IDisposable
 {
     Node Root { get; }
-    object SyncRoot { get; }
 
     void AddOrUpdateLink(Parsing.Link parsedLink);
     void AddOrUpdateNode(Parsing.Node parsedNode);
@@ -16,7 +15,7 @@ interface IModel : IDisposable
 
 class Model : IModel
 {
-    readonly object syncRoot = new();
+
     readonly Dictionary<Id, IItem> items = new();
 
 
@@ -27,7 +26,6 @@ class Model : IModel
     }
 
 
-    public object SyncRoot => syncRoot;
     public Node Root { get; internal set; }
 
 
