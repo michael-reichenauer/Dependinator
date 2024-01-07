@@ -4,11 +4,11 @@ using System.Diagnostics;
 namespace Dependinator.Models;
 
 
-
 interface IModelService
 {
     Task<R> RefreshAsync();
     (Svgs, Rect) GetSvg();
+    bool TryGetNode(string id, out Node node);
     void Clear();
 }
 
@@ -18,12 +18,20 @@ class ModelService : IModelService
 {
     const int BatchTimeMs = 300;
     readonly Parsing.IParserService parserService;
-    readonly Model model = new Model();
+    readonly IModel model = new Model();
 
 
     public ModelService(Parsing.IParserService parserService)
     {
         this.parserService = parserService;
+    }
+
+    public bool TryGetNode(string id, out Node node)
+    {
+        lock (model)
+        {
+            return model.TryGetNode(NodeId.FromId(id), out node);
+        }
     }
 
     public (Svgs, Rect) GetSvg()

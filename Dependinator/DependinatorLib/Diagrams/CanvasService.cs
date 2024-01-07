@@ -66,6 +66,14 @@ class CanvasService : ICanvasService
     public void OnClick(MouseEvent e)
     {
         Log.Info($"OnClick {e.Type} {e.TargetId}");
+        if (modelService.TryGetNode(e.TargetId, out var node))
+        {
+            Log.Info($"Node clicked: {node}");
+        }
+        else
+        {
+            Log.Info($"No node found at {e.OffsetX},{e.OffsetY}");
+        }
         // var pos = new Pos(e.OffsetX, e.OffsetY);
 
         // if (!Try(out var node, modelService.FindNode(Offset, pos, Zoom)))

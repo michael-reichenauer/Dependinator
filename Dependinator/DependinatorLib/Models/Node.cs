@@ -1,12 +1,14 @@
 namespace Dependinator.Models;
 
+
+
 class Node : IItem
 {
     readonly NodeSvg svg;
 
     public Node(string name, Node parent)
     {
-        Id = new NodeId(name);
+        Id = NodeId.FromName(name);
         Name = name;
         Parent = parent;
 

@@ -4,19 +4,15 @@ using System.Text;
 namespace Dependinator.Models;
 
 
-public record Id
+public record Id(string Value)
 {
     private static readonly char[] Base62Chars =
         "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
 
-    public string Value { get; init; }
+    // public static implicit operator string(Id id) => id.Value;
+    // public static implicit operator Id(string value) => new(value);
 
-    public Id(string value) => Value = GenerateBase62UniqueId(value);
-
-    public static implicit operator string(Id id) => id.Value;
-    public static implicit operator Id(string value) => new(value);
-
-    static string GenerateBase62UniqueId(string input, int length = 10)
+    protected static string ToId(string input, int length = 10)
     {
         byte[] bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
         return Base62Encode(bytes, length);
@@ -31,10 +27,17 @@ public record Id
         }
 
         return new string(chars);
+
     }
 }
 
-public record NodeId(string name) : Id(name);
-public record LinkId(string sourceName, string targetName) : Id($"{sourceName}->{targetName}");
-public record LineId(string sourceName, string targetName) : Id($"{sourceName}=>{targetName}");
+public record NodeId : Id
+{
+    private NodeId(string Value) : base(Value) { }
+    public static NodeId FromName(string name) => new(ToId(name));
+    public static NodeId FromId(string id) => new(id);
+}
+
+public record LinkId(string sourceName, string targetName) : Id(Id.ToId($"{sourceName}->{targetName}"));
+public record LineId(string sourceName, string targetName) : Id(Id.ToId($"{sourceName}=>{targetName}"));
 

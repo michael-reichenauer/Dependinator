@@ -1,12 +1,14 @@
 namespace Dependinator.Models;
 
 
-interface IModel : IDisposable
+interface IModel
 {
     Node Root { get; }
 
     void AddOrUpdateLink(Parsing.Link parsedLink);
     void AddOrUpdateNode(Parsing.Node parsedNode);
+    bool TryGetNode(NodeId id, out Node node);
+
     void Clear();
 }
 
@@ -21,12 +23,12 @@ class Model : IModel
     public Model()
     {
         Root = DefaultRootNode(this);
-        items.Add(Root.Id, Root);
+        items[Root.Id] = Root;
     }
 
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
-        if (!TryGetNode(new NodeId(parsedNode.Name), out var node))
+        if (!TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
         {   // New node, add it to the model and parent
             var parentName = parsedNode.ParentName;
             var parent = GetOrCreateParent(parentName);
@@ -64,8 +66,8 @@ class Model : IModel
 
         EnsureSourceAndTargetExists(parsedLink);
 
-        var source = GetNode(new NodeId(parsedLink.SourceName));
-        var target = GetNode(new NodeId(parsedLink.TargetName));
+        var source = GetNode(NodeId.FromName(parsedLink.SourceName));
+        var target = GetNode(NodeId.FromName(parsedLink.TargetName));
         var link = new Link(source, target);
 
         AddLink(link);
@@ -77,15 +79,7 @@ class Model : IModel
         return;
     }
 
-    void AddNode(Node node)
-    {
-        if (items.ContainsKey(node.Id)) return;
-        items[node.Id] = node;
-    }
-
-    Node GetNode(NodeId id) => (Node)items[id];
-
-    bool TryGetNode(NodeId id, out Node node)
+    public bool TryGetNode(NodeId id, out Node node)
     {
         if (!items.TryGetValue(id, out var item))
         {
@@ -95,6 +89,17 @@ class Model : IModel
         node = (Node)item;
         return true;
     }
+
+
+    void AddNode(Node node)
+    {
+        if (items.ContainsKey(node.Id)) return;
+        items[node.Id] = node;
+    }
+
+    Node GetNode(NodeId id) => (Node)items[id];
+
+
 
     void AddLink(Link link)
     {
@@ -125,7 +130,7 @@ class Model : IModel
 
     Node GetOrCreateNode(string name)
     {
-        var nodeId = new NodeId(name);
+        var nodeId = NodeId.FromName(name);
         if (!items.TryGetValue(nodeId, out var item))
         {
             var parent = DefaultParsingNode(name);
@@ -138,7 +143,7 @@ class Model : IModel
 
     Node GetOrCreateParent(string name)
     {
-        var nodeId = new NodeId(name);
+        var nodeId = NodeId.FromName(name);
         if (!items.TryGetValue(nodeId, out var item))
         {
             var parent = DefaultParentNode(name);
@@ -209,12 +214,12 @@ class Model : IModel
 
     void EnsureSourceAndTargetExists(Parsing.Link parsedLink)
     {
-        if (!items.ContainsKey(new NodeId(parsedLink.SourceName)))
+        if (!items.ContainsKey(NodeId.FromName(parsedLink.SourceName)))
         {
             AddOrUpdateNode(DefaultParsingNode(parsedLink.SourceName));
         }
 
-        if (!items.ContainsKey(new NodeId(parsedLink.TargetName)))
+        if (!items.ContainsKey(NodeId.FromName(parsedLink.TargetName)))
         {
             AddOrUpdateNode(DefaultParsingNode(parsedLink.TargetName));
         }
@@ -232,9 +237,4 @@ class Model : IModel
         Boundary = new Rect(0, 0, 1000, 1000),
         ContainerZoom = 1
     };
-
-    public void Dispose()
-    {
-        // Implemented in ModelTransaction
-    }
 }
