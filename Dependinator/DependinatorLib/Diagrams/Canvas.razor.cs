@@ -6,9 +6,6 @@ using Microsoft.JSInterop;
 namespace Dependinator.Diagrams;
 
 // https://css-tricks.com/use-and-reuse-everything-in-svg-even-animations/
-
-
-
 partial class Canvas : ComponentBase, IUIComponent
 {
     [Inject] ICanvasService srv { get; init; } = null!;
@@ -17,7 +14,7 @@ partial class Canvas : ComponentBase, IUIComponent
 
     public ElementReference Ref { get; private set; }
 
-    string Info => $"Zoom: {srv.Zoom:0.#######}, SvgZoom: {srv.SvgZoom:E2}, ViewZoom: {srv.ActualZoom:0.###} Level: {srv.Level}";
+    string Info => $"Zoom: ({srv.ZCount}, {1 / Math.Pow(1.1, srv.ZCount):0.#######}) {srv.Zoom:0.#######}, SvgZoom: {srv.SvgZoom:E2}, ViewZoom: {srv.ActualZoom:0.###} Level: {srv.Level}";
     string SvgContent => srv.SvgContent;
     double Width => srv.SvgRect.Width;
     double Height => srv.SvgRect.Height;

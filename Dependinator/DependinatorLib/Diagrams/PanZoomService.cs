@@ -92,12 +92,24 @@ class PanZoomService : IPanZoomService
             var (mx, my) = (e.OffsetX, e.OffsetY);
             // var (mx, my) = (SvgRect.Width / 2, SvgRect.Height / 2);
 
-            double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
-
-            var newZoom = Zoom * z;
-            if (newZoom > MaxZoom) return;
-
             if (e.DeltaY > 0) ZCount--; else ZCount++;
+
+            // double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
+
+
+            // var newZoom = Zoom * z;
+            // if (newZoom > MaxZoom) return;
+
+            double newZoom;
+            if (e.DeltaY > 0)
+            {
+                newZoom = Zoom * 1.1;
+            }
+            else
+            {
+                newZoom = Zoom * (1 / 1.1);
+            }
+
 
             double svgX = mx * Zoom + Offset.X;
             double svgY = my * Zoom + Offset.Y;

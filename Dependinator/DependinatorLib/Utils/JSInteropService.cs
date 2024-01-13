@@ -38,6 +38,7 @@ public interface IJSInteropService
 }
 
 // Inspired from https://stackoverflow.com/questions/75114524/getting-the-size-of-a-blazor-page-with-javascript
+// Note: All DotNetObjectReference.Create() in the program code should be disposed.
 [Scoped]
 public class JSInteropService : IJSInteropService, IAsyncDisposable
 {

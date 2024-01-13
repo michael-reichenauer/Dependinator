@@ -21,7 +21,7 @@ class Node : IItem
     }
 
     public const double MinContainerZoom = 1.0;
-    public const double MaxNodeZoom = 30 * 1 / Node.DefaultContainerZoom;           // To large to be seen
+    public const double MaxNodeZoom = 3 * 1 / Node.DefaultContainerZoom;           // To large to be seen
     public const double DefaultContainerZoom = 1.0 / 7;
 
     public NodeId Id { get; }
