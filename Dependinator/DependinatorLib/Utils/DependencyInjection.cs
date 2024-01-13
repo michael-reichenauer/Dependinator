@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 
 namespace Dependinator.Utils;
@@ -19,7 +18,7 @@ public static class DependencyInjection
 {
     public static void RegisterTypesInAssemblyOf<T>(this IServiceCollection services)
     {
-        services.Register<T>(t => t.HasAttribute<SingletonAttribute>(), (s, i, t) => s.TryAddScoped(i, t));
+        services.Register<T>(t => t.HasAttribute<SingletonAttribute>(), (s, i, t) => s.AddSingleton(i, t));
         services.Register<T>(t => t.HasAttribute<TransientAttribute>(), (s, i, t) => s.AddTransient(i, t));
         services.Register<T>(t => t.HasAttribute<ScopedAttribute>(), (s, i, t) => s.AddScoped(i, t));
         services.Register<T>(t =>

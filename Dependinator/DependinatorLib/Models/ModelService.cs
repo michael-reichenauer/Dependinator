@@ -13,22 +13,28 @@ interface IModelService
 }
 
 
-[Singleton]
+[Transient]
 class ModelService : IModelService
 {
     const int BatchTimeMs = 300;
+
+    readonly IModel model;
     readonly Parsing.IParserService parserService;
-    readonly IModel model = new Model();
+    readonly IModelStructureService modelStructureService;
 
-
-    public ModelService(Parsing.IParserService parserService)
+    public ModelService(
+        IModel model,
+        Parsing.IParserService parserService,
+        IModelStructureService modelStructureService)
     {
+        this.model = model;
         this.parserService = parserService;
+        this.modelStructureService = modelStructureService;
     }
 
     public bool TryGetNode(string id, out Node node)
     {
-        lock (model)
+        lock (model.SyncRoot)
         {
             return model.TryGetNode(NodeId.FromId(id), out node);
         }
@@ -36,7 +42,7 @@ class ModelService : IModelService
 
     public (Svgs, Rect) GetSvg()
     {
-        lock (model)
+        lock (model.SyncRoot)
         {
             using var t = Timing.Start();
 
@@ -60,7 +66,7 @@ class ModelService : IModelService
 
     public void Clear()
     {
-        lock (model)
+        lock (model.SyncRoot)
         {
             model.Clear();
         }
@@ -101,18 +107,18 @@ class ModelService : IModelService
 
     void AddOrUpdate(IReadOnlyList<Parsing.IItem> parsedItems)
     {
-        lock (model)
+        lock (model.SyncRoot)
         {
             foreach (var parsedItem in parsedItems)
             {
                 switch (parsedItem)
                 {
                     case Parsing.Node parsedNode:
-                        model.AddOrUpdateNode(parsedNode);
+                        modelStructureService.AddOrUpdateNode(parsedNode);
                         break;
 
                     case Parsing.Link parsedLink:
-                        model.AddOrUpdateLink(parsedLink);
+                        modelStructureService.AddOrUpdateLink(parsedLink);
                         break;
                 }
             }

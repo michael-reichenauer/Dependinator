@@ -18,7 +18,6 @@ class Node : IItem
         StrokeColor = color.ToString();
         Background = color.VeryDark().ToString();
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
-
     }
 
 
