@@ -12,15 +12,23 @@ class NodeSvg
         this.node = node;
     }
 
+    public const double MinContainerZoom = 1.0;
+    public const double MaxNodeZoom = 3 * 1 / Node.DefaultContainerZoom;           // To large to be seen
+
+    static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
+
+    public bool IsShowingChildren(double zoom) =>
+         node.Children.Any() && zoom > MinContainerZoom;
+
 
     public string GetSvg(Pos parentCanvasPos, double zoom)
     {
         var nodeCanvasPos = node.GetNodeCanvasPos(parentCanvasPos, zoom);
 
-        if (node.IsRoot || Node.IsToLargeToBeSeen(zoom))
+        if (node.IsRoot || IsToLargeToBeSeen(zoom))
             return GetChildrenSvg(nodeCanvasPos, zoom);
 
-        if (!node.IsShowingChildren(zoom)) return GetIconSvg(nodeCanvasPos, zoom);
+        if (!IsShowingChildren(zoom)) return GetIconSvg(nodeCanvasPos, zoom);
 
         return GetContainerSvg(nodeCanvasPos, zoom) +
             GetChildrenSvg(nodeCanvasPos, zoom);

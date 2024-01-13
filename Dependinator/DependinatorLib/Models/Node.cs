@@ -8,6 +8,8 @@ class Node : IItem
 
     public Node(string name, Node parent)
     {
+        svg = new NodeSvg(this);
+
         Id = NodeId.FromName(name);
         Name = name;
         Parent = parent;
@@ -17,19 +19,17 @@ class Node : IItem
         Background = color.VeryDark().ToString();
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
 
-        svg = new NodeSvg(this);
     }
 
-    public const double MinContainerZoom = 1.0;
-    public const double MaxNodeZoom = 3 * 1 / Node.DefaultContainerZoom;           // To large to be seen
+
     public const double DefaultContainerZoom = 1.0 / 7;
 
     public NodeId Id { get; }
     public string Name { get; }
-    public string LongName { get; }
-    public string ShortName { get; }
-    public string Description { get; set; } = "";
+    public Node Parent { get; private set; }
+    public NodeType Type { get; set; } = NodeType.None;
 
+    public string Description { get; set; } = "";
     public string StrokeColor { get; set; } = "";
     public string Background { get; set; } = "green";
     public double StrokeWidth { get; set; } = 1.0;
@@ -47,20 +47,15 @@ class Node : IItem
     public Double ContainerZoom { get; set; } = DefaultContainerZoom;
     //public Pos ContainerOffset { get; set; } = Pos.Zero;
 
-    public static bool IsToLargeToBeSeen(double zoom) => zoom > Node.MaxNodeZoom;
-    public static bool IsToSmallToShowChildren(double zoom) => zoom <= MinContainerZoom;
-
-    public bool IsShowingChildren(double zoom) =>
-        Children.Any() && !Node.IsToSmallToShowChildren(zoom);
-
-    public Node Parent { get; private set; }
     public bool IsRoot => Type == NodeType.Root;
-    public NodeType Type { get; set; } = NodeType.None;
+    public string LongName { get; }
+    public string ShortName { get; }
 
 
     public bool Update(Parsing.Node node)
     {
         if (IsEqual(node)) return false;
+
         Type = node.Type;
         Description = node.Description;
         return true;
@@ -71,7 +66,6 @@ class Node : IItem
         Children.Add(child);
         child.Parent = this;
     }
-
 
     public void RemoveChild(Node child)
     {

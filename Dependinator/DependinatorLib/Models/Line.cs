@@ -31,6 +31,8 @@ class Line : IItem
     public string StrokeColor { get; set; } = "red";
     public double StrokeWidth { get; set; } = 1.0;
 
+    static bool IsToLargeToBeSeen(double zoom) => zoom > NodeSvg.MaxNodeZoom;
+
     internal void Add(Link link)
     {
         links[link.Id] = link;
@@ -40,7 +42,7 @@ class Line : IItem
 
     public string GetSvg(Pos parentCanvasPos, double zoom)
     {
-        if (Node.IsToLargeToBeSeen(zoom)) return "";  
+        if (IsToLargeToBeSeen(zoom)) return "";
 
         var (x1, y1, x2, y2) = GetPos();
 
