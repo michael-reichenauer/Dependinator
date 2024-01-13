@@ -54,7 +54,7 @@ class ModelStructureService : IModelStructureService
     public void AddOrUpdateLink(Parsing.Link parsedLink)
     {
         var linkId = new LinkId(parsedLink.SourceName, parsedLink.TargetName);
-        if (model.Items.ContainsKey(linkId)) return;
+        if (model.ContainsKey(linkId)) return;
 
         EnsureSourceAndTargetExists(parsedLink);
 
@@ -74,27 +74,27 @@ class ModelStructureService : IModelStructureService
     Node GetOrCreateNode(string name)
     {
         var nodeId = NodeId.FromName(name);
-        if (!model.Items.TryGetValue(nodeId, out var item))
+        if (!model.TryGetNode(nodeId, out var item))
         {
             var parent = DefaultParsingNode(name);
             AddOrUpdateNode(parent);
-            return (Node)model.Items[nodeId];
+            return model.GetNode(nodeId);
         }
 
-        return (Node)item;
+        return item;
     }
 
     Node GetOrCreateParent(string name)
     {
         var nodeId = NodeId.FromName(name);
-        if (!model.Items.TryGetValue(nodeId, out var item))
+        if (!model.TryGetNode(nodeId, out var item))
         {
             var parent = DefaultParentNode(name);
             AddOrUpdateNode(parent);
-            return (Node)model.Items[nodeId];
+            return model.GetNode(nodeId);
         }
 
-        return (Node)item;
+        return item;
     }
 
 
@@ -152,12 +152,12 @@ class ModelStructureService : IModelStructureService
 
     void EnsureSourceAndTargetExists(Parsing.Link parsedLink)
     {
-        if (!model.Items.ContainsKey(NodeId.FromName(parsedLink.SourceName)))
+        if (!model.ContainsKey(NodeId.FromName(parsedLink.SourceName)))
         {
             AddOrUpdateNode(DefaultParsingNode(parsedLink.SourceName));
         }
 
-        if (!model.Items.ContainsKey(NodeId.FromName(parsedLink.TargetName)))
+        if (!model.ContainsKey(NodeId.FromName(parsedLink.TargetName)))
         {
             AddOrUpdateNode(DefaultParsingNode(parsedLink.TargetName));
         }

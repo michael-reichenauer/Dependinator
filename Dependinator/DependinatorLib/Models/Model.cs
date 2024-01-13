@@ -5,7 +5,6 @@ interface IModel
 {
     object SyncRoot { get; }
     Node Root { get; }
-    IDictionary<Id, IItem> Items { get; }
 
     bool TryGetNode(NodeId id, out Node node);
     void AddNode(Node node);
@@ -15,6 +14,7 @@ interface IModel
     bool TryGetLink(NodeId id, out Link link);
     void AddLine(Line line);
     void Clear();
+    bool ContainsKey(Id linkId);
 }
 
 
@@ -35,6 +35,7 @@ class Model : IModel
 
     public Node Root { get; private set; } = null!;
 
+    public bool ContainsKey(Id id) => Items.ContainsKey(id);
 
     public bool TryGetNode(NodeId id, out Node node)
     {
