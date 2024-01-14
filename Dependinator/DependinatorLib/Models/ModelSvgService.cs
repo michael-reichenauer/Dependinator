@@ -33,7 +33,7 @@ class ModelSvgService : IModelSvgService
         }
         Log.Info($"Levels: {svgs.Count}");
 
-        var totalBoundary = model.Root.TotalBoundary;
+        var totalBoundary = model.Root.GetTotalBoundary();
         return (new Svgs(svgs), totalBoundary);
     }
 }

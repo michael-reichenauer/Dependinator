@@ -35,7 +35,6 @@ class Node : IItem
     public string IconName { get; set; } = "";
 
     public Rect Boundary { get; set; } = Rect.None;
-    public Rect TotalBoundary => GetTotalBoundary();
 
     public List<Node> Children { get; } = new();
     public List<Link> SourceLinks { get; } = new();
@@ -127,14 +126,7 @@ class Node : IItem
         Boundary.Height * zoom);
 
 
-
-    bool IsEqual(Parsing.Node n) =>
-        Parent.Name == n.ParentName &&
-        Type == n.Type &&
-        Description == n.Description;
-
-
-    Rect GetTotalBoundary()
+    public Rect GetTotalBoundary()
     {
         (double x1, double y1, double x2, double y2) =
             (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
@@ -149,6 +141,12 @@ class Node : IItem
 
         return new Rect(x1, y1, x2 - x1, y2 - y1);
     }
+
+    bool IsEqual(Parsing.Node n) =>
+        Parent.Name == n.ParentName &&
+        Type == n.Type &&
+        Description == n.Description;
+
 
 
     static bool IsOverlap(Rect r1, Rect r2)
