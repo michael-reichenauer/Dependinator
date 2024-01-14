@@ -21,7 +21,7 @@ class Line : IItem
     {
         get
         {
-            var (x1, y1, x2, y2) = GetPos();
+            var (x1, y1, x2, y2) = GetLineEndpoints();
 
             return new Rect(Math.Min(x1, x2), Math.Min(y1, y2), Math.Max(x1, x2), Math.Max(y1, y2));
         }
@@ -39,12 +39,11 @@ class Line : IItem
     }
 
 
-
     public string GetSvg(Pos parentCanvasPos, double zoom)
     {
         if (IsToLargeToBeSeen(zoom)) return "";
 
-        var (x1, y1, x2, y2) = GetPos();
+        var (x1, y1, x2, y2) = GetLineEndpoints();
 
         if (Source != Target.Parent)
         {
@@ -68,7 +67,7 @@ class Line : IItem
     }
 
 
-    LinePos GetPos()
+    LinePos GetLineEndpoints()
     {
         var (s, t) = (Source.Boundary, Target.Boundary);
 

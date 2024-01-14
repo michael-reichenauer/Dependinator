@@ -25,7 +25,7 @@ class PanZoomService : IPanZoomService
 {
     const double MaxZoom = 5;
     const double Margin = 10;
-    const double ZoomSpeed = 0.1;
+    const double ZoomSpeed = 1.05;
     const int LeftMouseBtn = 1;
     const int SvgPageMargin = 2;
 
@@ -90,26 +90,10 @@ class PanZoomService : IPanZoomService
         {
             if (e.DeltaY == 0) return;
             var (mx, my) = (e.OffsetX, e.OffsetY);
-            // var (mx, my) = (SvgRect.Width / 2, SvgRect.Height / 2);
 
             if (e.DeltaY > 0) ZCount--; else ZCount++;
 
-            // double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
-
-
-            // var newZoom = Zoom * z;
-            // if (newZoom > MaxZoom) return;
-
-            double newZoom;
-            if (e.DeltaY > 0)
-            {
-                newZoom = Zoom * 1.1;
-            }
-            else
-            {
-                newZoom = Zoom * (1 / 1.1);
-            }
-
+            double newZoom = (e.DeltaY > 0) ? Zoom * ZoomSpeed : Zoom * (1 / ZoomSpeed);
 
             double svgX = mx * Zoom + Offset.X;
             double svgY = my * Zoom + Offset.Y;
