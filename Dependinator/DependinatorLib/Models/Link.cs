@@ -20,8 +20,6 @@ class Link : IItem
         lines.Add(line);
     }
 
-    public string GetSvg(Pos parentCanvasPos, double parentZoom) => "";
-
     public override string ToString() => $"{Source}->{Target} ({lines.Count})";
 }
 

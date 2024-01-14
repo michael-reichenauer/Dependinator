@@ -31,43 +31,13 @@ class Line : IItem
     public string StrokeColor { get; set; } = "red";
     public double StrokeWidth { get; set; } = 1.0;
 
-    static bool IsToLargeToBeSeen(double zoom) => zoom > NodeSvg.MaxNodeZoom;
 
-    internal void Add(Link link)
+    public void Add(Link link)
     {
         links[link.Id] = link;
     }
 
-
-    public string GetSvg(Pos parentCanvasPos, double zoom)
-    {
-        if (IsToLargeToBeSeen(zoom)) return "";
-
-        var (x1, y1, x2, y2) = GetLineEndpoints();
-
-        if (Source != Target.Parent)
-        {
-            (x1, y1) = (parentCanvasPos.X + x1 * zoom, parentCanvasPos.Y + y1 * zoom);
-        }
-        else
-        {
-            (x1, y1) = (parentCanvasPos.X + x1 * zoom, parentCanvasPos.Y + y1 * zoom);
-        }
-
-        (x2, y2) = (parentCanvasPos.X + x2 * zoom, parentCanvasPos.Y + y2 * zoom);
-
-        var s = StrokeWidth;
-
-        return
-            $"""
-            <g class="hoverable" >
-              <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{s}" stroke="white" marker-end="url(#arrow)" />
-            </g>
-            """;
-    }
-
-
-    LinePos GetLineEndpoints()
+    public LinePos GetLineEndpoints()
     {
         var (s, t) = (Source.Boundary, Target.Boundary);
 

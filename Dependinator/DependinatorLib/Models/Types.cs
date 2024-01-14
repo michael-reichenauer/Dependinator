@@ -2,7 +2,6 @@ namespace Dependinator.Models;
 
 interface IItem
 {
-    string GetSvg(Pos parentCanvasPos, double parentZoom);
 }
 
 record Source(string Path, string Text, int LineNumber);
