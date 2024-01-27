@@ -3,13 +3,15 @@ namespace Dependinator.Models;
 
 interface IModelSvgService
 {
-    (Svgs, Rect) GetSvg();
+    LevelSvg GetSvg(Rect viewRect, double zoom);
 }
 
 
 [Transient]
 class ModelSvgService : IModelSvgService
 {
+    static readonly double BatchSize = 1 * Math.Pow(10.0, 7);
+    //const int BatchSize = 0;
     const int SmallIconSize = 9;
     const int FontSize = 8;
 
@@ -23,48 +25,71 @@ class ModelSvgService : IModelSvgService
         this.model = model;
     }
 
+    static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 
-    public (Svgs, Rect) GetSvg()
+    static bool IsShowIcon(Node node, double zoom) =>
+        node.Type == NodeType.Member || zoom <= MinContainerZoom;
+
+    static Dictionary<int, LevelSvg> levels = new();
+
+    public LevelSvg GetSvg(Rect viewRect, double zoom)
     {
+        //Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
+        if (!model.Root.Children.Any()) return new LevelSvg(0, "", 1.0, Pos.Zero);
+
+        int e = (int)Math.Floor(Math.Log(1 / zoom) / Math.Log(2.0));
+        if (levels.TryGetValue(e, out var level))
+        {
+            Log.Info($"Reuse level {e}");
+            return level;
+        }
+
+        var z = Math.Pow(2.0, e);
+
+        Log.Info($"Level: {e} {z} {zoom} ");
+
+        var svg = GetModelSvg(viewRect, z);
+        Log.Info($"Svg: {svg.Length} chars");
+
+        levels[e] = new LevelSvg(0, svg, 1 / z, new Pos(viewRect.X, viewRect.Y));
+        return levels[e];
+
+        // if (!model.svgContentData.levels.Any())
+        // {
+        //     model.svgContentData = GetSvgLevels();
+        // }
+
+        // return model.svgContentData.Get(zoom);
+    }
+
+    Svgs GetSvgLevels()
+    {
+        // var maxDeep = model.Items.Values.OfType<Node>().Max(n => n.Ancestors().Count());
+        // Log.Info($"Max Deep: {maxDeep}");
+
         using var t = Timing.Start();
 
-        var svgs = new List<Level>();
+        var svgs = new List<LevelSvg>();
 
         for (int i = 0; i < 100; i++)
         {
-            var zoom = i == 0 ? 1.0 : Math.Pow(2, i);
-            var svg = GetNodeSvg(model.Root, Pos.Zero, zoom);
+            var zoom = Math.Pow(2.0, i);
+            var rect = new Rect(0, 0, 1000, 1000);
+            var svg = GetModelSvg(rect, zoom);
             if (svg == "") break;
-            svgs.Add(new Level(svg, 1 / zoom));
-            // Log.Info($"Level: #{i} zoom: {zoom} svg: {svg.Length} chars");
+            svgs.Add(new LevelSvg(i, svg, 1 / zoom, new Pos(rect.X, rect.Y)));
+            // Log.Info($"Level: #{i} zoom: {zoom}, {1 / zoom} svg: {svg.Length} chars");
         }
         Log.Info($"Levels: {svgs.Count}");
 
-        var totalBoundary = GetTotalBoundary(model.Root);
-        return (new Svgs(svgs), totalBoundary);
+        return new Svgs(svgs);
     }
 
-
-    static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
-
-    static bool IsShowingChildren(Node node, double zoom) =>
-        node.Children.Any() && zoom > MinContainerZoom;
-
-
-    static Rect GetTotalBoundary(Node node)
+    string GetModelSvg(Rect rect, double zoom)
     {
-        (double x1, double y1, double x2, double y2) =
-            (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
-        foreach (var child in node.Children)
-        {
-            var b = child.Boundary;
-            x1 = Math.Min(x1, b.X);
-            y1 = Math.Min(y1, b.Y);
-            x2 = Math.Max(x2, b.X + b.Width);
-            y2 = Math.Max(y2, b.Y + b.Height);
-        }
-
-        return new Rect(x1, y1, x2 - x1, y2 - y1);
+        using var t = Timing.Start($"GetModelSvg: {rect}, {zoom}");
+        var offset = new Pos(rect.X, rect.Y);
+        return GetNodeContentSvg(model.Root, offset, zoom);
     }
 
 
@@ -72,12 +97,22 @@ class ModelSvgService : IModelSvgService
     {
         var nodeCanvasPos = GetNodeCanvasPos(node, parentCanvasPos, zoom);
 
-        if (node.IsRoot || IsToLargeToBeSeen(zoom))
-            return GetNodeContentSvg(node, nodeCanvasPos, zoom);
+        // var nodeCanvasRect = GetNodeCanvasRect(node, parentCanvasPos, zoom);
 
-        if (!IsShowingChildren(node, zoom)) return GetNodeIconSvg(node, nodeCanvasPos, zoom);
+        // var batchCanvasRect = new Rect(0, 0, BatchSize, BatchSize);
 
-        return GetNodeContainerSvg(node, nodeCanvasPos, zoom) +
+        if (IsToLargeToBeSeen(zoom)) return GetNodeContentSvg(node, nodeCanvasPos, zoom);
+
+        // if (!IsOverlap(batchCanvasRect, nodeCanvasRect))
+        // {
+        //     IsOverlap(batchCanvasRect, nodeCanvasRect);
+        //     Log.Info($"{node.LongName}, #: {node.Ancestors().Count()}, {nodeCanvasRect}");
+        // }
+
+        if (IsShowIcon(node, zoom)) return GetNodeIconSvg(node, nodeCanvasPos, zoom);
+
+        return
+            GetNodeContainerSvg(node, nodeCanvasPos, zoom) +
             GetNodeContentSvg(node, nodeCanvasPos, zoom);
     }
 
@@ -86,26 +121,30 @@ class ModelSvgService : IModelSvgService
     {
         var childrenZoom = zoom * node.ContainerZoom;
 
-        return node.Children
-            .Select(n => GetNodeSvg(n, nodeCanvasPos, childrenZoom))
-            .Concat(AllNodeLines(node).Select(l => GetLineSvg(l, nodeCanvasPos, childrenZoom)))
+        return
+            node.Children.Select(n => GetNodeSvg(n, nodeCanvasPos, childrenZoom))
+            // .Concat(GetNodeLinesSvg(node, nodeCanvasPos, childrenZoom))
             .Join("");
     }
 
-    static IEnumerable<Line> AllNodeLines(Node node)
+
+    static IEnumerable<string> GetNodeLinesSvg(Node node, Pos nodeCanvasPos, double childrenZoom)
     {
+        // !!! Must also add parent to children lines
+
         foreach (var child in node.Children)
         {
             foreach (var line in child.SourceLines)
             {
-                yield return line;
+                yield return GetLineSvg(line, nodeCanvasPos, childrenZoom);
             }
         }
     }
 
-    static Pos GetNodeCanvasPos(Node node, Pos containerCanvasPos, double zoom) => new(
-       containerCanvasPos.X + node.Boundary.X * zoom,
-       containerCanvasPos.Y + node.Boundary.Y * zoom);
+    static Pos GetNodeCanvasPos(Node node, Pos parentCanvasPos, double zoom) => new(
+       parentCanvasPos.X + node.Boundary.X * zoom,
+       parentCanvasPos.Y + node.Boundary.Y * zoom);
+
 
     static Rect GetNodeCanvasRect(Node node, Pos containerCanvasPos, double zoom) => new(
        containerCanvasPos.X + node.Boundary.X * zoom,
@@ -140,6 +179,23 @@ class ModelSvgService : IModelSvgService
         return Rect.None;
     }
 
+    static Rect GetTotalBoundary(Node node)
+    {
+        (double x1, double y1, double x2, double y2) =
+            (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
+        foreach (var child in node.Children)
+        {
+            var b = child.Boundary;
+            x1 = Math.Min(x1, b.X);
+            y1 = Math.Min(y1, b.Y);
+            x2 = Math.Max(x2, b.X + b.Width);
+            y2 = Math.Max(y2, b.Y + b.Height);
+        }
+
+        return new Rect(x1, y1, x2 - x1, y2 - y1);
+    }
+
+
     static string GetNodeIconSvg(Node node, Pos nodeCanvasPos, double parentZoom)
     {
         var (x, y) = nodeCanvasPos;
@@ -171,6 +227,8 @@ class ModelSvgService : IModelSvgService
         var (tx, ty) = (x + (SmallIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
+
+        //Log.Info($"{node.ShortName} ({x:E4},{y:E4},{w},{h}) ,{node.Boundary} ");
 
         return
             $"""

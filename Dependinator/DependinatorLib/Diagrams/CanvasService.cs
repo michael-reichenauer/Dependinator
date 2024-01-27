@@ -10,14 +10,15 @@ interface ICanvasService
     Task InitAsync(IUIComponent component);
 
     string SvgContent { get; }
-    int Level { get; }
+    int LevelNbr { get; }
     Rect SvgRect { get; }
+    string LevelViewBox { get; }
     Pos Offset { get; }
     double Zoom { get; }
-    double SvgZoom { get; }
+    double LevelZoom { get; }
     double ActualZoom { get; }
     int ZCount { get; }
-    string ViewBox { get; }
+    string SvgViewBox { get; }
 
     void Refresh();
     void Clear();
@@ -34,7 +35,6 @@ class CanvasService : ICanvasService
     readonly IModelService modelService;
 
     IUIComponent component = null!;
-    Svgs svgContentData = new(new List<Level>());
 
     public CanvasService(IMouseEventService mouseEventService, IPanZoomService panZoomService, IModelService modelService)
     {
@@ -45,16 +45,18 @@ class CanvasService : ICanvasService
     }
 
     public string SvgContent => GetSvgContent();
-    public int Level { get; private set; } = -1;
-    public double SvgZoom { get; private set; } = 1;
+    public int LevelNbr { get; private set; } = -1;
+    public double LevelZoom { get; private set; } = 1;
+    public string LevelViewBox { get; private set; } = "";
     public string Content { get; private set; } = "";
+
     public Rect SvgRect => panZoomService.SvgRect;
     public Pos Offset => panZoomService.Offset;
     public double Zoom => panZoomService.Zoom;
-    public double ActualZoom => Zoom / SvgZoom;
+    public double ActualZoom => Zoom / LevelZoom;
     public int ZCount => panZoomService.ZCount;
 
-    public string ViewBox => $"{Offset.X / SvgZoom} {Offset.Y / SvgZoom} {SvgRect.Width * Zoom / SvgZoom} {SvgRect.Height * Zoom / SvgZoom}";
+    public string SvgViewBox => $"{Offset.X / LevelZoom} {Offset.Y / LevelZoom} {SvgRect.Width * Zoom / LevelZoom} {SvgRect.Height * Zoom / LevelZoom}";
 
     public async Task InitAsync(IUIComponent component)
     {
@@ -95,8 +97,8 @@ class CanvasService : ICanvasService
     {
         await panZoomService.CheckResizeAsync();
 
-        var (content, bounds) = await RefreshAsync();
-        SetSvgContent(content);
+        await RefreshAsync();
+
         //panZoomService.PanZoomToFit(bounds);
         await component.TriggerStateHasChangedAsync();
     }
@@ -108,9 +110,8 @@ class CanvasService : ICanvasService
 
     public async void Refresh()
     {
-        var (content, bounds) = await RefreshAsync();
-        SetSvgContent(content);
-        panZoomService.PanZoomToFit(bounds);
+        await RefreshAsync();
+        // panZoomService.PanZoomToFit(bounds);
         await component.TriggerStateHasChangedAsync();
     }
 
@@ -118,43 +119,43 @@ class CanvasService : ICanvasService
     public async void Clear()
     {
         modelService.Clear();
-        SetSvgContent(new Svgs(new List<Level>()));
 
         await component.TriggerStateHasChangedAsync();
     }
 
-    public async Task<(Svgs, Rect)> RefreshAsync()
+    public async Task RefreshAsync()
     {
         await modelService.RefreshAsync();
-        return modelService.GetSvg();
     }
 
     string GetSvgContent()
     {
         //Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
-        var (svg, svgZoom, level) = svgContentData.Get(Zoom);
-        // Rezise the svg to fit the zoom it was created for
-        var (sw, sh) = (SvgRect.Width / svgZoom, SvgRect.Height / svgZoom);
-        var vw = sw;
-        var vh = sh;
 
-        var content = $"""<svg width="{sw}" height="{sh}" viewBox="0 0 {vw} {vh}" xmlns="http://www.w3.org/2000/svg">{svg}</svg>""";
+        var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
+
+        var levelSvg = modelService.GetSvg(viewRect, Zoom);
+
+        var levelZoom = levelSvg.Zoom;
+        var (x, y) = (levelSvg.Offset.X, levelSvg.Offset.Y);
+        var (vw, vh) = (SvgRect.Width / levelZoom, SvgRect.Height / levelZoom);
+
+        var levelViewBox = $"{x} {y} {vw} {vh}";
+
+        var content = $"""<svg width="{vw}" height="{vh}" viewBox="{levelViewBox}" xmlns="http://www.w3.org/2000/svg">{levelSvg.Svg}</svg>""";
         //var content = svg;
         if (content == Content) return Content;  // No change
         // Log.Info($"svg: {sw}x{sh} =>  (0 0 {vw} {vh})");
         // Log.Info($"Content: Zoom: {Zoom}=>{svgZoom}, Level: {level}, SvgLength: {svg.Length} sub: (0 0 {vw} {vh})");
         Content = content;
-        Level = level;
-        SvgZoom = svgZoom;
-        panZoomService.SvgZoom = svgZoom;
+        LevelNbr = levelSvg.Level;
+
+        LevelZoom = levelZoom;
+        LevelViewBox = levelViewBox;
+
+        panZoomService.SvgZoom = levelZoom;
         component?.TriggerStateHasChangedAsync();
 
         return Content;
-
-    }
-
-    void SetSvgContent(Svgs svgs)
-    {
-        svgContentData = svgs;
     }
 }

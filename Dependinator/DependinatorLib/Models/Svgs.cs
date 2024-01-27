@@ -1,15 +1,15 @@
 namespace Dependinator.Models;
 
 
-record Level(string Svg, double Zoom);
+record LevelSvg(int Level, string Svg, double Zoom, Pos Offset);
 
 
 
-record Svgs(IReadOnlyList<Level> levels)
+record Svgs(IReadOnlyList<LevelSvg> levels)
 {
-    public (string, double, int) Get(double zoom)
+    public LevelSvg Get(double zoom)
     {
-        if (levels.Count == 0) return ("", 1.0, 0);
+        if (levels.Count == 0) return new LevelSvg(0, "", 1.0, Pos.Zero);
 
         int level = 0;
 
@@ -19,6 +19,6 @@ record Svgs(IReadOnlyList<Level> levels)
             level = i;
         }
 
-        return (levels[level].Svg, levels[level].Zoom, level);
+        return levels[level];
     }
 }

@@ -1,7 +1,6 @@
 using Dependinator.Icons;
 using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace Dependinator.Diagrams;
 
@@ -14,21 +13,20 @@ partial class Canvas : ComponentBase, IUIComponent
 
     public ElementReference Ref { get; private set; }
 
-    string Info => $"Zoom: ({srv.ZCount}, {1 / Math.Pow(1.1, srv.ZCount):0.#######}) {srv.Zoom:0.#######}, SvgZoom: {srv.SvgZoom:E2}, ViewZoom: {srv.ActualZoom:0.###} Level: {srv.Level}";
-    string SvgContent => srv.SvgContent;
+    // string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), Level: {srv.LevelNbr}, " +
+    //     $"LevelZoom: {srv.LevelZoom:E2}, LevelViewBox: {srv.LevelViewBox}, SvgZoom: {srv.Zoom / srv.LevelZoom:0.###} " +
+    //     $"SvgOffset: {srv.Offset}, SvgRect:{srv.SvgRect} SvgViewBox: {srv.SvgViewBox},";
+
+
+    string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), Level: {srv.LevelNbr}";
+
+
+    string Content => srv.SvgContent;
     double Width => srv.SvgRect.Width;
     double Height => srv.SvgRect.Height;
-    string ViewBox => srv.ViewBox;
-    DotNetObjectReference<Canvas> objRef = null!;
-
+    string ViewBox => srv.SvgViewBox;
     static string IconDefs => Icon.IconDefs;
 
-    protected override void OnInitialized()
-    {
-        objRef = DotNetObjectReference.Create(this);
-    }
-
-    // void OnMouse(MouseEventArgs e) => mouseEventService.OnMouse(e);
 
     public Task TriggerStateHasChangedAsync() => InvokeAsync(StateHasChanged);
 
@@ -40,7 +38,7 @@ partial class Canvas : ComponentBase, IUIComponent
         if (firstRender)
         {
             await srv.InitAsync(this);
-            await this.jSInteropService.InitializeAsync();
+            await this.jSInteropService.InitializeAsync(); // must be after srv.InitAsync, since triggered events need Ref
             await mouseEventService.InitAsync(this);
             await InvokeAsync(srv.InitialShow);
         }

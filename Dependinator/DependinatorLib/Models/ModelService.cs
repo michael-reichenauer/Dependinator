@@ -7,7 +7,7 @@ namespace Dependinator.Models;
 interface IModelService
 {
     Task<R> RefreshAsync();
-    (Svgs, Rect) GetSvg();
+    LevelSvg GetSvg(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     void Clear();
 }
@@ -43,11 +43,11 @@ class ModelService : IModelService
         }
     }
 
-    public (Svgs, Rect) GetSvg()
+    public LevelSvg GetSvg(Rect viewRect, double zoom)
     {
         lock (model.SyncRoot)
         {
-            return modelSvgService.GetSvg();
+            return modelSvgService.GetSvg(viewRect, zoom);
         }
     }
 
