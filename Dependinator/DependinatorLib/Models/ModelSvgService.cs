@@ -3,7 +3,7 @@ namespace Dependinator.Models;
 
 interface IModelSvgService
 {
-    LevelSvg GetSvg(Rect viewRect, double zoom);
+    SvgPart GetSvg(Rect viewRect, double zoom);
 }
 
 
@@ -30,60 +30,56 @@ class ModelSvgService : IModelSvgService
     static bool IsShowIcon(Node node, double zoom) =>
         node.Type == NodeType.Member || zoom <= MinContainerZoom;
 
-    static Dictionary<int, LevelSvg> levels = new();
 
-    public LevelSvg GetSvg(Rect viewRect, double zoom)
+
+    public SvgPart GetSvg(Rect viewRect, double zoom)
     {
         //Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
-        if (!model.Root.Children.Any()) return new LevelSvg(0, "", 1.0, Pos.Zero);
+        if (!model.Root.Children.Any()) return new SvgPart(new SvgKey(0), "", 1.0, Pos.Zero);
 
-        int e = (int)Math.Floor(Math.Log(1 / zoom) / Math.Log(2.0));
-        if (levels.TryGetValue(e, out var level))
+        // int level = (int)Math.Floor(Math.Log(1 / zoom) / Math.Log(2.0));
+
+        var key = SvgKey.From(viewRect, zoom);
+
+        if (model.SvgContentData.TryGet(key, out var svgPart))
         {
-            Log.Info($"Reuse level {e}");
-            return level;
+            return svgPart;
         }
 
-        var z = Math.Pow(2.0, e);
+        var levelZoom = key.Zoom();
 
-        Log.Info($"Level: {e} {z} {zoom} ");
+        Log.Info($"Level: {key.Level} {levelZoom} {zoom} ");
 
-        var svg = GetModelSvg(viewRect, z);
+        var svg = GetModelSvg(viewRect, 1 / levelZoom);
         Log.Info($"Svg: {svg.Length} chars");
 
-        levels[e] = new LevelSvg(0, svg, 1 / z, new Pos(viewRect.X, viewRect.Y));
-        return levels[e];
-
-        // if (!model.svgContentData.levels.Any())
-        // {
-        //     model.svgContentData = GetSvgLevels();
-        // }
-
-        // return model.svgContentData.Get(zoom);
+        svgPart = new SvgPart(key, svg, levelZoom, new Pos(viewRect.X, viewRect.Y));
+        model.SvgContentData.Set(svgPart);
+        return svgPart;
     }
 
-    Svgs GetSvgLevels()
-    {
-        // var maxDeep = model.Items.Values.OfType<Node>().Max(n => n.Ancestors().Count());
-        // Log.Info($"Max Deep: {maxDeep}");
+    // Svgs GetSvgLevels()
+    // {
+    //     // var maxDeep = model.Items.Values.OfType<Node>().Max(n => n.Ancestors().Count());
+    //     // Log.Info($"Max Deep: {maxDeep}");
 
-        using var t = Timing.Start();
+    //     using var t = Timing.Start();
 
-        var svgs = new List<LevelSvg>();
+    //     var svgs = new List<LevelSvg>();
 
-        for (int i = 0; i < 100; i++)
-        {
-            var zoom = Math.Pow(2.0, i);
-            var rect = new Rect(0, 0, 1000, 1000);
-            var svg = GetModelSvg(rect, zoom);
-            if (svg == "") break;
-            svgs.Add(new LevelSvg(i, svg, 1 / zoom, new Pos(rect.X, rect.Y)));
-            // Log.Info($"Level: #{i} zoom: {zoom}, {1 / zoom} svg: {svg.Length} chars");
-        }
-        Log.Info($"Levels: {svgs.Count}");
+    //     for (int i = 0; i < 100; i++)
+    //     {
+    //         var zoom = Math.Pow(2.0, i);
+    //         var rect = new Rect(0, 0, 1000, 1000);
+    //         var svg = GetModelSvg(rect, zoom);
+    //         if (svg == "") break;
+    //         svgs.Add(new LevelSvg(i, svg, 1 / zoom, new Pos(rect.X, rect.Y)));
+    //         // Log.Info($"Level: #{i} zoom: {zoom}, {1 / zoom} svg: {svg.Length} chars");
+    //     }
+    //     Log.Info($"Levels: {svgs.Count}");
 
-        return new Svgs(svgs);
-    }
+    //     return new Svgs(svgs);
+    // }
 
     string GetModelSvg(Rect rect, double zoom)
     {

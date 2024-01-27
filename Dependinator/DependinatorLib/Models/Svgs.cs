@@ -1,24 +1,39 @@
+
 namespace Dependinator.Models;
 
 
-record LevelSvg(int Level, string Svg, double Zoom, Pos Offset);
+record SvgPart(SvgKey Key, string Svg, double Zoom, Pos Offset);
 
-
-
-record Svgs(IReadOnlyList<LevelSvg> levels)
+record SvgKey(int Level)
 {
-    public LevelSvg Get(double zoom)
+    const double LevelFactor = 2.0;
+
+    public double Zoom() => Math.Pow(LevelFactor, Level);
+
+    public static SvgKey From(Rect rect, Double zoom)
     {
-        if (levels.Count == 0) return new LevelSvg(0, "", 1.0, Pos.Zero);
+        int level = (int)Math.Floor(Math.Log(zoom) / Math.Log(LevelFactor));
+        return new SvgKey(level);
+    }
+}
 
-        int level = 0;
 
-        for (int i = 1; i < levels.Count; i++)
-        {
-            if (zoom >= levels[i].Zoom) break;
-            level = i;
-        }
+class Svgs
+{
+    private readonly Dictionary<SvgKey, SvgPart> svgs = new();
 
-        return levels[level];
+    public bool TryGet(SvgKey key, out SvgPart svgPart)
+    {
+        return svgs.TryGetValue(key, out svgPart!);
+    }
+
+    public void Set(SvgPart svgPart)
+    {
+        svgs[svgPart.Key] = svgPart;
+    }
+
+    internal void Clear()
+    {
+        svgs.Clear();
     }
 }

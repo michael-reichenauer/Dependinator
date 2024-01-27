@@ -148,7 +148,7 @@ class CanvasService : ICanvasService
         // Log.Info($"svg: {sw}x{sh} =>  (0 0 {vw} {vh})");
         // Log.Info($"Content: Zoom: {Zoom}=>{svgZoom}, Level: {level}, SvgLength: {svg.Length} sub: (0 0 {vw} {vh})");
         Content = content;
-        LevelNbr = levelSvg.Level;
+        LevelNbr = levelSvg.Key.Level;
 
         LevelZoom = levelZoom;
         LevelViewBox = levelViewBox;
