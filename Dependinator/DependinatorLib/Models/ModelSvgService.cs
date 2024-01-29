@@ -1,19 +1,21 @@
+using System.Web;
+
 namespace Dependinator.Models;
 
 
 interface IModelSvgService
 {
-    SvgPart GetSvg(Rect viewRect, double zoom);
+    SvgTile GetSvg(Rect viewRect, double zoom);
 }
 
 
 [Transient]
 class ModelSvgService : IModelSvgService
 {
-    static readonly double BatchSize = 1 * Math.Pow(10.0, 7);
     //const int BatchSize = 0;
     const int SmallIconSize = 9;
     const int FontSize = 8;
+    static readonly Rect TileRect = new(0, 0, SvgKey.SizeFactor, SvgKey.SizeFactor);
 
     const double MinContainerZoom = 1.0;
     const double MaxNodeZoom = 3 * 1 / Node.DefaultContainerZoom;           // To large to be seen
@@ -32,30 +34,32 @@ class ModelSvgService : IModelSvgService
 
 
 
-    public SvgPart GetSvg(Rect viewRect, double zoom)
+    public SvgTile GetSvg(Rect viewRect, double zoom)
     {
-        //Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
-        if (!model.Root.Children.Any()) return new SvgPart(new SvgKey(0), "", 1.0, Pos.Zero);
+        Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
+        if (!model.Root.Children.Any()) return SvgTile.Empty;
 
-        // int level = (int)Math.Floor(Math.Log(1 / zoom) / Math.Log(2.0));
-
-        var key = SvgKey.From(viewRect, zoom);
-
-        if (model.SvgContentData.TryGet(key, out var svgPart))
+        var svgKey = SvgKey.From(viewRect, zoom);
+        if (model.Svgs.TryGetCached(svgKey, out var tile))
         {
-            return svgPart;
+            return tile;
         }
+        Log.Info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
 
-        var levelZoom = key.Zoom();
+        var levelZoom = svgKey.Zoom();
+        var levelRect = svgKey.Rect();
+        var levelOffset = new Pos(-levelRect.X, -levelRect.Y);
 
-        Log.Info($"Level: {key.Level} {levelZoom} {zoom} ");
+        Log.Info($"Key: {svgKey} {levelZoom} {zoom} ");
 
-        var svg = GetModelSvg(viewRect, 1 / levelZoom);
+        var svg = GetModelSvg(levelRect, 1 / levelZoom, levelOffset);
         Log.Info($"Svg: {svg.Length} chars");
 
-        svgPart = new SvgPart(key, svg, levelZoom, new Pos(viewRect.X, viewRect.Y));
-        model.SvgContentData.Set(svgPart);
-        return svgPart;
+        tile = new SvgTile(svgKey, svg, levelZoom, levelOffset);
+        model.Svgs.SetCached(tile);
+        Log.Info($"Svgs: {model.Svgs}");
+        return tile;
     }
 
     // Svgs GetSvgLevels()
@@ -81,10 +85,10 @@ class ModelSvgService : IModelSvgService
     //     return new Svgs(svgs);
     // }
 
-    string GetModelSvg(Rect rect, double zoom)
+    string GetModelSvg(Rect rect, double zoom, Pos offset)
     {
         using var t = Timing.Start($"GetModelSvg: {rect}, {zoom}");
-        var offset = new Pos(rect.X, rect.Y);
+        Log.Info($"GetModelSvg: o: {offset}, z: {zoom}");
         return GetNodeContentSvg(model.Root, offset, zoom);
     }
 
@@ -92,12 +96,17 @@ class ModelSvgService : IModelSvgService
     static string GetNodeSvg(Node node, Pos parentCanvasPos, double zoom)
     {
         var nodeCanvasPos = GetNodeCanvasPos(node, parentCanvasPos, zoom);
+        var nodeCanvasRect = GetNodeCanvasRect(node, parentCanvasPos, zoom);
+
+        //Log.Info($"{node.LongName}, np: {node.Boundary}, cp: {nodeCanvasPos}, Zoom: {zoom}");
 
         // var nodeCanvasRect = GetNodeCanvasRect(node, parentCanvasPos, zoom);
 
         // var batchCanvasRect = new Rect(0, 0, BatchSize, BatchSize);
 
         if (IsToLargeToBeSeen(zoom)) return GetNodeContentSvg(node, nodeCanvasPos, zoom);
+
+        // Log.Info($"{node.LongName}, np: {node.Boundary}, cp: {nodeCanvasPos}, Zoom: {zoom}, {nodeCanvasRect}");
 
         // if (!IsOverlap(batchCanvasRect, nodeCanvasRect))
         // {
@@ -140,7 +149,6 @@ class ModelSvgService : IModelSvgService
     static Pos GetNodeCanvasPos(Node node, Pos parentCanvasPos, double zoom) => new(
        parentCanvasPos.X + node.Boundary.X * zoom,
        parentCanvasPos.Y + node.Boundary.Y * zoom);
-
 
     static Rect GetNodeCanvasRect(Node node, Pos containerCanvasPos, double zoom) => new(
        containerCanvasPos.X + node.Boundary.X * zoom,
@@ -200,13 +208,18 @@ class ModelSvgService : IModelSvgService
         var (tx, ty) = (x + w / 2, y + h);
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
+        // Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
+        var name = HttpUtility.HtmlEncode(node.ShortName);
+        var toolTip = HttpUtility.HtmlEncode($"{node.LongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}");
 
         return
             $"""
             <use href="#{icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
-            <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{node.ShortName}</text>
+            <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{name}</text>
             <g class="hoverable">
-              <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+              <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
+                 <title>{toolTip}</title>
+              </rect>
             </g>
             </rect>
             """;
@@ -223,16 +236,20 @@ class ModelSvgService : IModelSvgService
         var (tx, ty) = (x + (SmallIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
+        var name = HttpUtility.HtmlEncode(node.ShortName);
 
-        //Log.Info($"{node.ShortName} ({x:E4},{y:E4},{w},{h}) ,{node.Boundary} ");
+        // Log.Info($"Container: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
+        var toolTip = HttpUtility.HtmlEncode($"{node.LongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}");
 
         return
             $"""
             <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{node.Background}" fill-opacity="1" stroke="{node.StrokeColor}"/>      
             <use href="#{icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
-            <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{node.ShortName}</text>
+            <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{name}</text>
             <g class="hoverable">
-              <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+              <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
+                 <title>{toolTip}</title>
+              </rect>
             </g>
             """;
     }

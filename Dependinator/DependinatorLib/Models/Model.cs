@@ -5,7 +5,7 @@ interface IModel
 {
     object SyncRoot { get; }
     Node Root { get; }
-    Svgs SvgContentData { get; }
+    Svgs Svgs { get; }
     IDictionary<Id, IItem> Items { get; }   // Ta bort
 
 
@@ -34,7 +34,7 @@ class Model : IModel
 
     public object SyncRoot => syncRoot;
 
-    public Svgs SvgContentData { get; } = new();
+    public Svgs Svgs { get; } = new();
 
     public IDictionary<Id, IItem> Items { get; } = new Dictionary<Id, IItem>();
 
@@ -94,7 +94,7 @@ class Model : IModel
     public void Clear()
     {
         Items.Clear();
-        SvgContentData.Clear();
+        Svgs.Clear();
 
         InitModel();
     }

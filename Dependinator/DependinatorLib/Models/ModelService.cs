@@ -7,7 +7,7 @@ namespace Dependinator.Models;
 interface IModelService
 {
     Task<R> RefreshAsync();
-    SvgPart GetSvg(Rect viewRect, double zoom);
+    SvgTile GetSvg(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     void Clear();
 }
@@ -43,7 +43,7 @@ class ModelService : IModelService
         }
     }
 
-    public SvgPart GetSvg(Rect viewRect, double zoom)
+    public SvgTile GetSvg(Rect viewRect, double zoom)
     {
         lock (model.SyncRoot)
         {
@@ -68,25 +68,22 @@ class ModelService : IModelService
 
     async Task<R> Parse()
     {
+        using var _ = Timing.Start();
         var path = "/workspaces/Dependinator/Dependinator/Dependinator.sln";
 
         if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 
         await Task.Run(async () =>
         {
-            using var _ = Timing.Start();
-
+            var batchItems = new List<Parsing.IItem>();
             while (await reader.WaitToReadAsync())
             {
-                var batchStart = Stopwatch.StartNew();
-                var batchItems = new List<Parsing.IItem>();
-                while (batchStart.ElapsedMilliseconds < BatchTimeMs && reader.TryRead(out var item))
+                while (reader.TryRead(out var item))
                 {
                     batchItems.Add(item);
                 }
-
-                AddOrUpdate(batchItems);
             }
+            AddOrUpdate(batchItems);
         });
 
         return R.Ok;

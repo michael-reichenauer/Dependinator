@@ -45,7 +45,6 @@ class Node : IItem
     public string LongName { get; }
     public string ShortName { get; }
 
-
     public bool Update(Parsing.Node node)
     {
         if (IsEqual(node)) return false;

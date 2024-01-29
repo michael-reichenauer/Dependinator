@@ -18,7 +18,7 @@ partial class Canvas : ComponentBase, IUIComponent
     //     $"SvgOffset: {srv.Offset}, SvgRect:{srv.SvgRect} SvgViewBox: {srv.SvgViewBox},";
 
 
-    string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), Level: {srv.LevelNbr}";
+    string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), SvgKey: {srv.SvgKey}, Offset: {srv.Offset}, LevelViewBox: {srv.LevelViewBox}, SvgViewBox: {srv.SvgViewBox}, Svg: {srv.SvgRect}";
 
 
     string Content => srv.SvgContent;

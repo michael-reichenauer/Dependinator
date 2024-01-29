@@ -10,7 +10,7 @@ interface ICanvasService
     Task InitAsync(IUIComponent component);
 
     string SvgContent { get; }
-    int LevelNbr { get; }
+    string SvgKey { get; }
     Rect SvgRect { get; }
     string LevelViewBox { get; }
     Pos Offset { get; }
@@ -45,7 +45,7 @@ class CanvasService : ICanvasService
     }
 
     public string SvgContent => GetSvgContent();
-    public int LevelNbr { get; private set; } = -1;
+    public string SvgKey { get; private set; } = "()";
     public double LevelZoom { get; private set; } = 1;
     public string LevelViewBox { get; private set; } = "";
     public string Content { get; private set; } = "";
@@ -67,7 +67,6 @@ class CanvasService : ICanvasService
 
     public void OnClick(MouseEvent e)
     {
-        Log.Info($"OnClick {e.Type} {e.TargetId}");
         if (modelService.TryGetNode(e.TargetId, out var node))
         {
             Log.Info($"Node clicked: {node}");
@@ -148,7 +147,7 @@ class CanvasService : ICanvasService
         // Log.Info($"svg: {sw}x{sh} =>  (0 0 {vw} {vh})");
         // Log.Info($"Content: Zoom: {Zoom}=>{svgZoom}, Level: {level}, SvgLength: {svg.Length} sub: (0 0 {vw} {vh})");
         Content = content;
-        LevelNbr = levelSvg.Key.Level;
+        SvgKey = levelSvg.Key.ToString();
 
         LevelZoom = levelZoom;
         LevelViewBox = levelViewBox;
