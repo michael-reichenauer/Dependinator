@@ -141,8 +141,8 @@ class CanvasService : ICanvasService
 
         //(double vw, double vh) = (SvgRect.Width / tileZoom, SvgRect.Height / tileZoom);
 
-        (double x, double y) = (-TileKey.SizeFactor, -TileKey.SizeFactor);
-        (double vw, double vh) = (TileKey.SizeFactor * 3, TileKey.SizeFactor * 3);
+        (double x, double y) = (-TileKey.TileSize, -TileKey.TileSize);
+        (double vw, double vh) = (TileKey.TileSize * 3, TileKey.TileSize * 3);
 
 
         var tileViewBox = $"{x} {y} {vw} {vh}";
@@ -152,7 +152,6 @@ class CanvasService : ICanvasService
 
         Log.Info($"New content {tile.Key} {tile.Offset} {tile.Zoom}");
 
-
         Content = content;
         TileKeyText = tile.Key.ToString();
         // TileContent = tile.Svg;
@@ -160,7 +159,6 @@ class CanvasService : ICanvasService
 
         LevelZoom = tileZoom;
         TileViewBox = tileViewBox;
-        Log.Info($"Tile Offset {tile.Offset}");
         TileOffset = new Pos(-tile.Offset.X + x, -tile.Offset.Y + y);
         panZoomService.SvgZoom = tileZoom;
 

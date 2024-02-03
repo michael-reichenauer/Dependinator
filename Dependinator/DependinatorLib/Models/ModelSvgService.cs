@@ -12,7 +12,8 @@ class ModelSvgService : IModelSvgService
 {
     const int SmallIconSize = 9;
     const int FontSize = 8;
-    static readonly Rect TileRect = new(0, 0, TileKey.SizeFactor, TileKey.SizeFactor);
+    static readonly long TileMargin = TileKey.TileSize / 2;
+    static readonly Rect TileLimitRect = new(-TileMargin, -TileMargin, TileKey.TileSize + TileMargin * 2, TileKey.TileSize + TileMargin * 2);
 
     const double MinContainerZoom = 1.0;
     const double MaxNodeZoom = 3 * 1 / Node.DefaultContainerZoom;           // To large to be seen
@@ -47,10 +48,6 @@ class ModelSvgService : IModelSvgService
         var tileZoom = tileKey.Zoom();
         var tileRect = tileKey.Rect();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
-        // var tileOffset = new Pos(0.0, 0.0);
-
-
-        Log.Info($"Key: {tileKey} {tileZoom} {zoom} ");
 
         var svg = GetModelTileSvg(tileRect, 1 / tileZoom, tileOffset);
         Log.Info($"Svg: {svg.Length} chars");
@@ -65,7 +62,6 @@ class ModelSvgService : IModelSvgService
     string GetModelTileSvg(Rect rect, double zoom, Pos offset)
     {
         using var t = Timing.Start($"GetModelSvg: {rect}, {zoom}");
-        Log.Info($"GetModelSvg: o: {offset}, z: {zoom}");
         return GetNodeContentSvg(model.Root, offset, zoom);
     }
 
@@ -75,21 +71,9 @@ class ModelSvgService : IModelSvgService
         var nodeCanvasPos = GetNodeCanvasPos(node, parentCanvasPos, zoom);
         var nodeCanvasRect = GetNodeCanvasRect(node, parentCanvasPos, zoom);
 
-        //Log.Info($"{node.LongName}, np: {node.Boundary}, cp: {nodeCanvasPos}, Zoom: {zoom}");
-
-        // var nodeCanvasRect = GetNodeCanvasRect(node, parentCanvasPos, zoom);
-
-        // var batchCanvasRect = new Rect(0, 0, BatchSize, BatchSize);
-
         if (IsToLargeToBeSeen(zoom)) return GetNodeContentSvg(node, nodeCanvasPos, zoom);
 
-        // Log.Info($"{node.LongName}, np: {node.Boundary}, cp: {nodeCanvasPos}, Zoom: {zoom}, {nodeCanvasRect}");
-
-        // if (!IsOverlap(batchCanvasRect, nodeCanvasRect))
-        // {
-        //     IsOverlap(batchCanvasRect, nodeCanvasRect);
-        //     Log.Info($"{node.LongName}, #: {node.Ancestors().Count()}, {nodeCanvasRect}");
-        // }
+        if (!IsOverlap(TileLimitRect, nodeCanvasRect)) return ""; // Outside the tile limit
 
         if (IsShowIcon(node, zoom)) return GetNodeIconSvg(node, nodeCanvasPos, zoom);
 
@@ -104,9 +88,10 @@ class ModelSvgService : IModelSvgService
         var childrenZoom = zoom * node.ContainerZoom;
 
         return
-            node.Children.Select(n => GetNodeSvg(n, nodeCanvasPos, childrenZoom))
-            // .Concat(GetNodeLinesSvg(node, nodeCanvasPos, childrenZoom))
-            .Join("");
+            node.Children
+                .Select(n => GetNodeSvg(n, nodeCanvasPos, childrenZoom))
+                .Concat(GetNodeLinesSvg(node, nodeCanvasPos, childrenZoom))
+                .Join("");
     }
 
 
@@ -185,7 +170,7 @@ class ModelSvgService : IModelSvgService
         var (tx, ty) = (x + w / 2, y + h);
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
-        // Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
+        //Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
         var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
 
         return
@@ -213,7 +198,7 @@ class ModelSvgService : IModelSvgService
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
 
-        // Log.Info($"Container: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
+        //Log.Info($"Container: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
         var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
 
         return

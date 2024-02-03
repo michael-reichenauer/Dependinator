@@ -16,8 +16,6 @@ interface IModelService
 [Transient]
 class ModelService : IModelService
 {
-    const int BatchTimeMs = 300;
-
     readonly IModel model;
     readonly Parsing.IParserService parserService;
     readonly IModelStructureService modelStructureService;
@@ -113,13 +111,13 @@ class ModelService : IModelService
 
     void AddSpecials()
     {
-        for (int j = 0; j < 20; j++)
+        for (int j = 1; j < 35; j++)
         {
-            var name = $"TestProject";
-            for (int level = 1; level < 20; level++)
+            var name = $"TestJ";
+            for (int i = 1; i < 20; i++)
             {
                 var parentName = name;
-                name = $"{name}.Test-{level}-{j}";
+                name = $"{name}.Test-{j}-{i}";
                 var node = new Parsing.Node(name, parentName, Parsing.NodeType.Assembly, "");
                 modelStructureService.AddOrUpdateNode(node);
             }

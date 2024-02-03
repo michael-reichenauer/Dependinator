@@ -11,10 +11,10 @@ record TileKey(int Level, long X, long Y)
 {
     public static TileKey Empty = new(0, 0L, 0L);
     const double LevelFactor = 2.0;
-    public const long SizeFactor = 10_000L;
+    public const long TileSize = 2000L;
 
     public double Zoom() => Math.Pow(LevelFactor, Level);
-    public Rect Rect() => new(X * SizeFactor, Y * SizeFactor, SizeFactor, SizeFactor);
+    public Rect Rect() => new(X * TileSize, Y * TileSize, TileSize, TileSize);
 
     public static TileKey From(Rect rect, Double zoom)
     {
@@ -24,11 +24,11 @@ record TileKey(int Level, long X, long Y)
         double lx = rect.X / levelZoom;
         double ly = rect.Y / levelZoom;
 
-        int x = (int)Math.Round(lx / SizeFactor);
-        int y = (int)Math.Round(ly / SizeFactor);
+        int x = (int)Math.Round(lx / TileSize);
+        int y = (int)Math.Round(ly / TileSize);
 
-        // long x = (int)Math.Floor(lx / SizeFactor);
-        // long y = (int)Math.Floor(ly / SizeFactor);
+        // long x = (int)Math.Floor(lx / TileSize);
+        // long y = (int)Math.Floor(ly / TileSize);
 
         return new TileKey(level, x, y);
     }
