@@ -1,21 +1,18 @@
-using System.Web;
-
 namespace Dependinator.Models;
 
 
 interface IModelSvgService
 {
-    SvgTile GetSvg(Rect viewRect, double zoom);
+    Tile GetSvg(Rect viewRect, double zoom);
 }
 
 
 [Transient]
 class ModelSvgService : IModelSvgService
 {
-    //const int BatchSize = 0;
     const int SmallIconSize = 9;
     const int FontSize = 8;
-    static readonly Rect TileRect = new(0, 0, SvgKey.SizeFactor, SvgKey.SizeFactor);
+    static readonly Rect TileRect = new(0, 0, TileKey.SizeFactor, TileKey.SizeFactor);
 
     const double MinContainerZoom = 1.0;
     const double MaxNodeZoom = 3 * 1 / Node.DefaultContainerZoom;           // To large to be seen
@@ -34,58 +31,38 @@ class ModelSvgService : IModelSvgService
 
 
 
-    public SvgTile GetSvg(Rect viewRect, double zoom)
+    public Tile GetSvg(Rect viewRect, double zoom)
     {
-        Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
-        if (!model.Root.Children.Any()) return SvgTile.Empty;
+        // Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
+        if (!model.Root.Children.Any()) return Tile.Empty;
 
-        var svgKey = SvgKey.From(viewRect, zoom);
-        if (model.Svgs.TryGetCached(svgKey, out var tile))
+        var tileKey = TileKey.From(viewRect, zoom);
+        if (model.Tiles.TryGetCached(tileKey, out var tile))
         {
             return tile;
         }
         Log.Info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
 
-        var levelZoom = svgKey.Zoom();
-        var levelRect = svgKey.Rect();
-        var levelOffset = new Pos(-levelRect.X, -levelRect.Y);
+        var tileZoom = tileKey.Zoom();
+        var tileRect = tileKey.Rect();
+        var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
+        // var tileOffset = new Pos(0.0, 0.0);
 
-        Log.Info($"Key: {svgKey} {levelZoom} {zoom} ");
 
-        var svg = GetModelSvg(levelRect, 1 / levelZoom, levelOffset);
+        Log.Info($"Key: {tileKey} {tileZoom} {zoom} ");
+
+        var svg = GetModelTileSvg(tileRect, 1 / tileZoom, tileOffset);
         Log.Info($"Svg: {svg.Length} chars");
 
-        tile = new SvgTile(svgKey, svg, levelZoom, levelOffset);
-        model.Svgs.SetCached(tile);
-        Log.Info($"Svgs: {model.Svgs}");
+        tile = new Tile(tileKey, svg, tileZoom, tileOffset);
+        model.Tiles.SetCached(tile);
+        Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}");
+        Log.Info($"Tiles: {model.Tiles}");
         return tile;
     }
 
-    // Svgs GetSvgLevels()
-    // {
-    //     // var maxDeep = model.Items.Values.OfType<Node>().Max(n => n.Ancestors().Count());
-    //     // Log.Info($"Max Deep: {maxDeep}");
-
-    //     using var t = Timing.Start();
-
-    //     var svgs = new List<LevelSvg>();
-
-    //     for (int i = 0; i < 100; i++)
-    //     {
-    //         var zoom = Math.Pow(2.0, i);
-    //         var rect = new Rect(0, 0, 1000, 1000);
-    //         var svg = GetModelSvg(rect, zoom);
-    //         if (svg == "") break;
-    //         svgs.Add(new LevelSvg(i, svg, 1 / zoom, new Pos(rect.X, rect.Y)));
-    //         // Log.Info($"Level: #{i} zoom: {zoom}, {1 / zoom} svg: {svg.Length} chars");
-    //     }
-    //     Log.Info($"Levels: {svgs.Count}");
-
-    //     return new Svgs(svgs);
-    // }
-
-    string GetModelSvg(Rect rect, double zoom, Pos offset)
+    string GetModelTileSvg(Rect rect, double zoom, Pos offset)
     {
         using var t = Timing.Start($"GetModelSvg: {rect}, {zoom}");
         Log.Info($"GetModelSvg: o: {offset}, z: {zoom}");
@@ -209,13 +186,12 @@ class ModelSvgService : IModelSvgService
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
         // Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
-        var name = HttpUtility.HtmlEncode(node.ShortName);
-        var toolTip = HttpUtility.HtmlEncode($"{node.LongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}");
+        var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
 
         return
             $"""
             <use href="#{icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
-            <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{name}</text>
+            <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{node.HtmlShortName}</text>
             <g class="hoverable">
               <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
                  <title>{toolTip}</title>
@@ -236,16 +212,15 @@ class ModelSvgService : IModelSvgService
         var (tx, ty) = (x + (SmallIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
-        var name = HttpUtility.HtmlEncode(node.ShortName);
 
         // Log.Info($"Container: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
-        var toolTip = HttpUtility.HtmlEncode($"{node.LongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}");
+        var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
 
         return
             $"""
             <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{node.Background}" fill-opacity="1" stroke="{node.StrokeColor}"/>      
             <use href="#{icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
-            <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{name}</text>
+            <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{node.HtmlShortName}</text>
             <g class="hoverable">
               <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
                  <title>{toolTip}</title>

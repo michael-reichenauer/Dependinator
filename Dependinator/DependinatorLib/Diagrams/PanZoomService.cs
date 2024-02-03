@@ -8,7 +8,7 @@ namespace Dependinator.Diagrams;
 interface IPanZoomService
 {
     Rect SvgRect { get; }
-    Pos Offset { get; }
+    Pos Offset { get; set; }
     double Zoom { get; set; }
     double SvgZoom { get; set; }
     int ZCount { get; }
@@ -37,7 +37,7 @@ class PanZoomService : IPanZoomService
     IUIComponent component = null!;
     public int ZCount { get; private set; } = 0;
 
-    public Pos Offset { get; private set; } = Pos.Zero;
+    public Pos Offset { get; set; } = Pos.Zero;
     public Rect SvgRect { get; private set; } = Rect.Zero;
 
     public double Zoom { get; set; } = 1;

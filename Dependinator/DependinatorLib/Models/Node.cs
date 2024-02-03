@@ -1,3 +1,5 @@
+using System.Web;
+
 namespace Dependinator.Models;
 
 
@@ -14,6 +16,8 @@ class Node : IItem
         StrokeColor = color.ToString();
         Background = color.VeryDark().ToString();
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
+        HtmlShortName = HttpUtility.HtmlEncode(ShortName);
+        HtmlLongName = HttpUtility.HtmlEncode(LongName);
     }
 
 
@@ -44,6 +48,8 @@ class Node : IItem
     public bool IsRoot => Type == NodeType.Root;
     public string LongName { get; }
     public string ShortName { get; }
+    public string HtmlShortName { get; }
+    public string HtmlLongName { get; }
 
     public bool Update(Parsing.Node node)
     {

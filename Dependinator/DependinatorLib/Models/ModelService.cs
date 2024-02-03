@@ -7,7 +7,7 @@ namespace Dependinator.Models;
 interface IModelService
 {
     Task<R> RefreshAsync();
-    SvgTile GetSvg(Rect viewRect, double zoom);
+    Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     void Clear();
 }
@@ -43,7 +43,7 @@ class ModelService : IModelService
         }
     }
 
-    public SvgTile GetSvg(Rect viewRect, double zoom)
+    public Tile GetTile(Rect viewRect, double zoom)
     {
         lock (model.SyncRoot)
         {
@@ -94,6 +94,7 @@ class ModelService : IModelService
     {
         lock (model.SyncRoot)
         {
+            // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {
                 switch (parsedItem)
@@ -106,6 +107,21 @@ class ModelService : IModelService
                         modelStructureService.AddOrUpdateLink(parsedLink);
                         break;
                 }
+            }
+        }
+    }
+
+    void AddSpecials()
+    {
+        for (int j = 0; j < 20; j++)
+        {
+            var name = $"TestProject";
+            for (int level = 1; level < 20; level++)
+            {
+                var parentName = name;
+                name = $"{name}.Test-{level}-{j}";
+                var node = new Parsing.Node(name, parentName, Parsing.NodeType.Assembly, "");
+                modelStructureService.AddOrUpdateNode(node);
             }
         }
     }
