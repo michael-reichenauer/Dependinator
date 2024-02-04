@@ -124,23 +124,17 @@ class CanvasService : ICanvasService
 
         var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
         var tile = modelService.GetTile(viewRect, Zoom);
-        var tileZoom = tile.Zoom;
-        var tileViewRect = tile.GetViewRect();
-        var (x, y, w, h) = tileViewRect;
 
-        var tileViewBox = $"{x} {y} {w} {h}";
-        var content = $"""<svg width="{w}" height="{h}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">{tile.Svg}</svg>""";
+        if (Content == tile.Svg) return Content;  // No change
 
-        if (content == Content) return Content;  // No change
+        Content = tile.Svg;
+        LevelZoom = tile.Zoom;
+        var tileViewRect = tile.Key.GetViewRect();
+        TileOffset = new Pos(-tile.Offset.X + tileViewRect.X, -tile.Offset.Y + tileViewRect.Y);
+        panZoomService.SvgZoom = tile.Zoom;
 
-        Log.Info($"New content {tile.Key} {tile.Offset} {tile.Zoom}");
-        Content = content;
-        LevelZoom = tileZoom;
-        TileOffset = new Pos(-tile.Offset.X + x, -tile.Offset.Y + y);
-        panZoomService.SvgZoom = tileZoom;
-
-        TileKeyText = tile.Key.ToString(); // info
-        TileViewBox = tileViewBox; // info
+        TileKeyText = $"{tile.Key}"; // Log info
+        TileViewBox = $"{tileViewRect}"; // Log info
 
         component?.TriggerStateHasChangedAsync();
         return Content;

@@ -45,7 +45,7 @@ class ModelService : IModelService
     {
         lock (model.SyncRoot)
         {
-            return modelSvgService.GetSvg(viewRect, zoom);
+            return modelSvgService.GetTile(viewRect, zoom);
         }
     }
 

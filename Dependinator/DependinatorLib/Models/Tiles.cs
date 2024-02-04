@@ -7,7 +7,7 @@ record Tile(TileKey Key, string Svg, double Zoom, Pos Offset)
     public const double ZoomFactor = 2.0;
     public static Tile Empty = new(TileKey.Empty, "", 1.0, Pos.Zero);
 
-    internal Rect GetViewRect() => new(-Key.TileSize * 2, -Key.TileSize * 2, Key.TileSize * 5, Key.TileSize * 5);
+
 }
 
 record TileKey(long X, long Y, int Z, int TileSize)
@@ -17,9 +17,9 @@ record TileKey(long X, long Y, int Z, int TileSize)
 
     public double GetTileZoom() => Math.Pow(Tile.ZoomFactor, -Z);
     public Rect GetTileRect() => new(X * TileSize, Y * TileSize, TileSize, TileSize);
+    public Rect GetViewRect() => new(-TileSize * 2, -TileSize * 2, TileSize * 5, TileSize * 5);
 
-
-    public readonly Rect GetTileWithMargin = new(-TileSize, -TileSize, TileSize * 3, TileSize * 3);
+    public Rect GetTileRectWithMargin() => new(-TileSize, -TileSize, TileSize * 3, TileSize * 3);
 
     public static TileKey From(Rect canvasRect, Double canvasZoom)
     {

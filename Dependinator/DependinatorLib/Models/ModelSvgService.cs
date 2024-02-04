@@ -3,7 +3,7 @@ namespace Dependinator.Models;
 
 interface IModelSvgService
 {
-    Tile GetSvg(Rect viewRect, double zoom);
+    Tile GetTile(Rect viewRect, double zoom);
 }
 
 
@@ -30,36 +30,39 @@ class ModelSvgService : IModelSvgService
 
 
 
-    public Tile GetSvg(Rect viewRect, double zoom)
+    public Tile GetTile(Rect viewRect, double zoom)
     {
         // Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
         if (!model.Root.Children.Any()) return Tile.Empty;
 
         var tileKey = TileKey.From(viewRect, zoom);
-        if (model.Tiles.TryGetCached(tileKey, out var tile))
-        {
-            return tile;
-        }
+        if (model.Tiles.TryGetCached(tileKey, out var tile)) return tile;
 
-        var tileZoom = tileKey.GetTileZoom();
-        var tileRect = tileKey.GetTileRect();
-        var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
-        var tileWithMargin = tileKey.GetTileWithMargin;
-
-        var svg = GetModelTileSvg(tileOffset, 1 / tileZoom, tileWithMargin);
-
-        tile = new Tile(tileKey, svg, tileZoom, tileOffset);
+        tile = GetModelTile(tileKey);
         model.Tiles.SetCached(tile);
 
         Log.Info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {svg.Length} chars, Tiles: {model.Tiles}");
+        Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars, Tiles: {model.Tiles}");
         return tile;
     }
 
-    string GetModelTileSvg(Pos offset, double zoom, Rect tileWithMargin)
+    Tile GetModelTile(TileKey tileKey)
     {
-        // using var t = Timing.Start($"GetModelSvg: {rect}, {zoom}");
-        return GetNodeContentSvg(model.Root, offset, zoom, tileWithMargin);
+        // using var t = Timing.Start($"GetModelSvg: {tileKey}");
+        var tileRect = tileKey.GetTileRect();
+        var tileZoom = tileKey.GetTileZoom();
+        var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
+        var tileWithMargin = tileKey.GetTileRectWithMargin();
+
+        var svgContent = GetNodeContentSvg(model.Root, tileOffset, 1 / tileZoom, tileWithMargin);
+
+        var tileViewRect = tileKey.GetViewRect();
+        var (x, y, w, h) = tileViewRect;
+
+        var tileViewBox = $"{x} {y} {w} {h}";
+        var tileSvg = $"""<svg width="{w}" height="{h}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">{svgContent}</svg>""";
+
+        return new Tile(tileKey, tileSvg, tileZoom, tileOffset);
     }
 
 
