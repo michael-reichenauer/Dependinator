@@ -132,21 +132,13 @@ class CanvasService : ICanvasService
 
         // if (TileKey == tile.Key && TileContent == tile.Svg) return Content;  // No change (!! but SvgRect handled included yet)
 
-
         var tileZoom = tile.Zoom;
 
-        // var (x, y) = (levelSvg.Offset.X, levelSvg.Offset.Y);
-        // (double x, double y) = (50, 50);
-        //(double vw, double vh) = (100, 100);
+        var tileViewRect = tile.GetViewRect();
+        var (x, y, w, h) = tileViewRect;
 
-        //(double vw, double vh) = (SvgRect.Width / tileZoom, SvgRect.Height / tileZoom);
-
-        (double x, double y) = (-TileKey.TileSize, -TileKey.TileSize);
-        (double vw, double vh) = (TileKey.TileSize * 3, TileKey.TileSize * 3);
-
-
-        var tileViewBox = $"{x} {y} {vw} {vh}";
-        var content = $"""<svg width="{vw}" height="{vh}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">{tile.Svg}</svg>""";
+        var tileViewBox = $"{x} {y} {w} {h}";
+        var content = $"""<svg width="{w}" height="{h}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">{tile.Svg}</svg>""";
 
         if (content == Content) return Content;  // No change
 

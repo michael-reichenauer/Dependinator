@@ -12,8 +12,6 @@ class ModelSvgService : IModelSvgService
 {
     const int SmallIconSize = 9;
     const int FontSize = 8;
-    static readonly long TileMargin = TileKey.TileSize / 2;
-    static readonly Rect TileLimitRect = new(-TileMargin, -TileMargin, TileKey.TileSize + TileMargin * 2, TileKey.TileSize + TileMargin * 2);
 
     const double MinContainerZoom = 1.0;
     const double MaxNodeZoom = 3 * 1 / Node.DefaultContainerZoom;           // To large to be seen
@@ -45,11 +43,12 @@ class ModelSvgService : IModelSvgService
         Log.Info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
 
-        var tileZoom = tileKey.Zoom();
-        var tileRect = tileKey.Rect();
+        var tileZoom = tileKey.GetTileZoom();
+        var tileRect = tileKey.GetTileRect();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
+        var tileWithMargin = tileKey.GetTileWithMargin;
 
-        var svg = GetModelTileSvg(tileRect, 1 / tileZoom, tileOffset);
+        var svg = GetModelTileSvg(tileRect, 1 / tileZoom, tileOffset, tileWithMargin);
         Log.Info($"Svg: {svg.Length} chars");
 
         tile = new Tile(tileKey, svg, tileZoom, tileOffset);
@@ -59,43 +58,43 @@ class ModelSvgService : IModelSvgService
         return tile;
     }
 
-    string GetModelTileSvg(Rect rect, double zoom, Pos offset)
+    string GetModelTileSvg(Rect rect, double zoom, Pos offset, Rect tileWithMargin)
     {
         using var t = Timing.Start($"GetModelSvg: {rect}, {zoom}");
-        return GetNodeContentSvg(model.Root, offset, zoom);
+        var containerRect = new Rect(offset.X, offset.Y, 0, 0);
+        return GetNodeContentSvg(model.Root, containerRect, zoom, tileWithMargin);
     }
 
 
-    static string GetNodeSvg(Node node, Pos parentCanvasPos, double zoom)
+    static string GetNodeSvg(Node node, Rect parentCanvasRect, double zoom, Rect tileWithMargin)
     {
-        var nodeCanvasPos = GetNodeCanvasPos(node, parentCanvasPos, zoom);
-        var nodeCanvasRect = GetNodeCanvasRect(node, parentCanvasPos, zoom);
+        var nodeCanvasRect = GetNodeCanvasRect(node, parentCanvasRect, zoom);
 
-        if (IsToLargeToBeSeen(zoom)) return GetNodeContentSvg(node, nodeCanvasPos, zoom);
+        if (!IsOverlap(tileWithMargin, nodeCanvasRect)) return ""; // Outside the tile limit
 
-        if (!IsOverlap(TileLimitRect, nodeCanvasRect)) return ""; // Outside the tile limit
+        if (IsToLargeToBeSeen(zoom)) return GetNodeContentSvg(node, nodeCanvasRect, zoom, tileWithMargin);
 
-        if (IsShowIcon(node, zoom)) return GetNodeIconSvg(node, nodeCanvasPos, zoom);
+        if (IsShowIcon(node, zoom)) return GetNodeIconSvg(node, nodeCanvasRect, zoom);
 
         return
-            GetNodeContainerSvg(node, nodeCanvasPos, zoom) +
-            GetNodeContentSvg(node, nodeCanvasPos, zoom);
+            GetNodeContainerSvg(node, nodeCanvasRect, zoom) +
+            GetNodeContentSvg(node, nodeCanvasRect, zoom, tileWithMargin);
     }
 
 
-    static string GetNodeContentSvg(Node node, Pos nodeCanvasPos, double zoom)
+    static string GetNodeContentSvg(Node node, Rect nodeCanvasRect, double zoom, Rect tileWithMargin)
     {
         var childrenZoom = zoom * node.ContainerZoom;
 
         return
             node.Children
-                .Select(n => GetNodeSvg(n, nodeCanvasPos, childrenZoom))
-                .Concat(GetNodeLinesSvg(node, nodeCanvasPos, childrenZoom))
+                .Select(n => GetNodeSvg(n, nodeCanvasRect, childrenZoom, tileWithMargin))
+                .Concat(GetNodeLinesSvg(node, nodeCanvasRect, childrenZoom))
                 .Join("");
     }
 
 
-    static IEnumerable<string> GetNodeLinesSvg(Node node, Pos nodeCanvasPos, double childrenZoom)
+    static IEnumerable<string> GetNodeLinesSvg(Node node, Rect nodeCanvasRect, double childrenZoom)
     {
         // !!! Must also add parent to children lines
 
@@ -103,16 +102,16 @@ class ModelSvgService : IModelSvgService
         {
             foreach (var line in child.SourceLines)
             {
-                yield return GetLineSvg(line, nodeCanvasPos, childrenZoom);
+                yield return GetLineSvg(line, nodeCanvasRect, childrenZoom);
             }
         }
     }
 
-    static Pos GetNodeCanvasPos(Node node, Pos parentCanvasPos, double zoom) => new(
-       parentCanvasPos.X + node.Boundary.X * zoom,
-       parentCanvasPos.Y + node.Boundary.Y * zoom);
+    // static Pos GetNodeCanvasPos(Node node, Pos parentCanvasPos, double zoom) => new(
+    //    parentCanvasPos.X + node.Boundary.X * zoom,
+    //    parentCanvasPos.Y + node.Boundary.Y * zoom);
 
-    static Rect GetNodeCanvasRect(Node node, Pos containerCanvasPos, double zoom) => new(
+    static Rect GetNodeCanvasRect(Node node, Rect containerCanvasPos, double zoom) => new(
        containerCanvasPos.X + node.Boundary.X * zoom,
        containerCanvasPos.Y + node.Boundary.Y * zoom,
        node.Boundary.Width * zoom,
@@ -162,9 +161,9 @@ class ModelSvgService : IModelSvgService
     }
 
 
-    static string GetNodeIconSvg(Node node, Pos nodeCanvasPos, double parentZoom)
+    static string GetNodeIconSvg(Node node, Rect parentCanvasRect, double parentZoom)
     {
-        var (x, y) = nodeCanvasPos;
+        var (x, y) = (parentCanvasRect.X, parentCanvasRect.Y);
         var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
 
         var (tx, ty) = (x + w / 2, y + h);
@@ -187,10 +186,10 @@ class ModelSvgService : IModelSvgService
     }
 
 
-    static string GetNodeContainerSvg(Node node, Pos nodeCanvasPos, double parentZoom)
+    static string GetNodeContainerSvg(Node node, Rect parentCanvasRect, double parentZoom)
     {
         var s = node.StrokeWidth;
-        var (x, y) = nodeCanvasPos;
+        var (x, y) = (parentCanvasRect.X, parentCanvasRect.Y);
         var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
         var (ix, iy, iw, ih) = (x, y + h + 1 * parentZoom, SmallIconSize * parentZoom, SmallIconSize * parentZoom);
 
@@ -214,7 +213,7 @@ class ModelSvgService : IModelSvgService
             """;
     }
 
-    static string GetLineSvg(Line line, Pos parentCanvasPos, double zoom)
+    static string GetLineSvg(Line line, Rect parentCanvasRect, double zoom)
     {
         if (IsToLargeToBeSeen(zoom)) return "";
 
@@ -223,14 +222,14 @@ class ModelSvgService : IModelSvgService
         // !!!!! Fel i koden, samma rad i if och else delen 
         if (line.Source != line.Target.Parent)
         {
-            (x1, y1) = (parentCanvasPos.X + x1 * zoom, parentCanvasPos.Y + y1 * zoom);
+            (x1, y1) = (parentCanvasRect.X + x1 * zoom, parentCanvasRect.Y + y1 * zoom);
         }
         else
         {
-            (x1, y1) = (parentCanvasPos.X + x1 * zoom, parentCanvasPos.Y + y1 * zoom);
+            (x1, y1) = (parentCanvasRect.X + x1 * zoom, parentCanvasRect.Y + y1 * zoom);
         }
 
-        (x2, y2) = (parentCanvasPos.X + x2 * zoom, parentCanvasPos.Y + y2 * zoom);
+        (x2, y2) = (parentCanvasRect.X + x2 * zoom, parentCanvasRect.Y + y2 * zoom);
 
         var s = line.StrokeWidth;
 

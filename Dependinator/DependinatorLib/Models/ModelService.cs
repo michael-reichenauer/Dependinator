@@ -92,7 +92,7 @@ class ModelService : IModelService
     {
         lock (model.SyncRoot)
         {
-            // AddSpecials();
+            AddSpecials();
             foreach (var parsedItem in parsedItems)
             {
                 switch (parsedItem)
