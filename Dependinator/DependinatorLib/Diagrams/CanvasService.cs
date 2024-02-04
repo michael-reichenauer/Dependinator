@@ -55,6 +55,8 @@ class CanvasService : ICanvasService
     public double ActualZoom => Zoom / LevelZoom;
     public int ZCount => panZoomService.ZCount;
 
+    string selectedNodeId = "";
+
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X} {Offset.Y / LevelZoom - TileOffset.Y} {SvgRect.Width * Zoom / LevelZoom} {SvgRect.Height * Zoom / LevelZoom}";
 
 
@@ -67,13 +69,28 @@ class CanvasService : ICanvasService
 
     public void OnClick(MouseEvent e)
     {
-        if (modelService.TryGetNode(e.TargetId, out var node))
+        if (selectedNodeId == e.TargetId) return;
+
+        if (modelService.TryUpdateNode(e.TargetId, node => node.IsSelected = true))
         {
-            Log.Info($"Node clicked: {node}");
+            Log.Info($"Node clicked: {e.TargetId}");
+            if (selectedNodeId != "")
+            {
+                modelService.TryUpdateNode(selectedNodeId, node => node.IsSelected = false);
+            }
+
+            selectedNodeId = e.TargetId;
+            this.component?.TriggerStateHasChangedAsync();
         }
         else
         {
             Log.Info($"No node found at {e.OffsetX},{e.OffsetY}");
+            if (selectedNodeId != "")
+            {
+                modelService.TryUpdateNode(selectedNodeId, node => node.IsSelected = false);
+                selectedNodeId = "";
+                this.component?.TriggerStateHasChangedAsync();
+            }
         }
     }
 

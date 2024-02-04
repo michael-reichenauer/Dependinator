@@ -14,7 +14,7 @@ class ModelSvgService : IModelSvgService
     const int FontSize = 8;
 
     const double MinContainerZoom = 1.0;
-    const double MaxNodeZoom = 3 * 1 / Node.DefaultContainerZoom;           // To large to be seen
+    const double MaxNodeZoom = 5 * 1 / Node.DefaultContainerZoom;           // To large to be seen
 
 
     public Tile GetTile(IModel model, Rect viewRect, double zoom)
@@ -156,15 +156,18 @@ class ModelSvgService : IModelSvgService
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
         //Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
-        var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
+        //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
 
+        var selectedSvg = node.IsSelected
+            ? $"""<rect x="{x - 3}" y="{y - 3}" width="{w + 6}" height="{h + 6}" stroke-width="3" rx="2" fill="none" stroke="yellow" />"""
+            : "";
         return
             $"""
+            {selectedSvg}
             <use href="#{icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
             <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{node.HtmlShortName}</text>
             <g class="hoverable">
               <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
-                 <title>{toolTip}</title>
               </rect>
             </g>
             </rect>
@@ -184,16 +187,19 @@ class ModelSvgService : IModelSvgService
         var icon = node.Type.IconName;
 
         //Log.Info($"Container: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
-        var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
+        //var toolTip = $"{node.HtmlLongName}, np: {node.Boundarsy}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
+        var selectedSvg = node.IsSelected
+            ? $"""<rect x="{x - 3}" y="{y - 3}" width="{w + 6}" height="{h + 6}" stroke-width="3" rx="2" fill="none" stroke="yellow" />"""
+            : "";
 
         return
             $"""
+            {selectedSvg}
             <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{node.Background}" fill-opacity="1" stroke="{node.StrokeColor}"/>      
             <use href="#{icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
             <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{node.HtmlShortName}</text>
             <g class="hoverable">
               <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
-                 <title>{toolTip}</title>
               </rect>
             </g>
             """;

@@ -17,6 +17,7 @@ interface IModel
     bool TryGetLink(NodeId id, out Link link);
     void AddLine(Line line);
     void Clear();
+    void ClearCachedSvg();
     bool ContainsKey(Id linkId);
 }
 
@@ -94,9 +95,14 @@ class Model : IModel
     public void Clear()
     {
         Items.Clear();
-        Tiles.Clear();
+        ClearCachedSvg();
 
         InitModel();
+    }
+
+    public void ClearCachedSvg()
+    {
+        Tiles.Clear();
     }
 
     void InitModel()

@@ -9,6 +9,7 @@ interface IModelService
     Task<R> RefreshAsync();
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
+    bool TryUpdateNode(string id, Action<Node> updateAction);
     void Clear();
 }
 
@@ -38,6 +39,18 @@ class ModelService : IModelService
         lock (model.SyncRoot)
         {
             return model.TryGetNode(NodeId.FromId(id), out node);
+        }
+    }
+
+    public bool TryUpdateNode(string id, Action<Node> updateAction)
+    {
+        lock (model.SyncRoot)
+        {
+            if (!model.TryGetNode(NodeId.FromId(id), out var node)) return false;
+
+            updateAction(node);
+            model.ClearCachedSvg();
+            return true;
         }
     }
 

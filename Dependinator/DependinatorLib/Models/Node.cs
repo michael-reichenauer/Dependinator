@@ -33,6 +33,7 @@ class Node : IItem
     public string Background { get; set; } = "green";
     public double StrokeWidth { get; set; } = 1.0;
     public string IconName { get; set; } = "";
+    public bool IsSelected { get; set; } = false;
 
     public Rect Boundary { get; set; } = Rect.None;
 
