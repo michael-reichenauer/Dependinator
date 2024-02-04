@@ -3,7 +3,7 @@ namespace Dependinator.Models;
 
 interface IModelSvgService
 {
-    Tile GetTile(Rect viewRect, double zoom);
+    Tile GetTile(IModel model, Rect viewRect, double zoom);
 }
 
 
@@ -16,21 +16,8 @@ class ModelSvgService : IModelSvgService
     const double MinContainerZoom = 1.0;
     const double MaxNodeZoom = 3 * 1 / Node.DefaultContainerZoom;           // To large to be seen
 
-    readonly IModel model;
 
-    public ModelSvgService(IModel model)
-    {
-        this.model = model;
-    }
-
-    static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
-
-    static bool IsShowIcon(Node node, double zoom) =>
-        node.Type == NodeType.Member || zoom <= MinContainerZoom;
-
-
-
-    public Tile GetTile(Rect viewRect, double zoom)
+    public Tile GetTile(IModel model, Rect viewRect, double zoom)
     {
         // Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
         if (!model.Root.Children.Any()) return Tile.Empty;
@@ -38,7 +25,7 @@ class ModelSvgService : IModelSvgService
         var tileKey = TileKey.From(viewRect, zoom);
         if (model.Tiles.TryGetCached(tileKey, out var tile)) return tile;
 
-        tile = GetModelTile(tileKey);
+        tile = GetModelTile(model, tileKey);
         model.Tiles.SetCached(tile);
 
         Log.Info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -46,18 +33,17 @@ class ModelSvgService : IModelSvgService
         return tile;
     }
 
-    Tile GetModelTile(TileKey tileKey)
+    Tile GetModelTile(IModel model, TileKey tileKey)
     {
         // using var t = Timing.Start($"GetModelSvg: {tileKey}");
         var tileRect = tileKey.GetTileRect();
-        var tileZoom = tileKey.GetTileZoom();
-        var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
         var tileWithMargin = tileKey.GetTileRectWithMargin();
+        var tileZoom = tileKey.GetTileZoom();
 
+        var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
         var svgContent = GetNodeContentSvg(model.Root, tileOffset, 1 / tileZoom, tileWithMargin);
 
-        var tileViewRect = tileKey.GetViewRect();
-        var (x, y, w, h) = tileViewRect;
+        var (x, y, w, h) = tileKey.GetViewRect();
 
         var tileViewBox = $"{x} {y} {w} {h}";
         var tileSvg = $"""<svg width="{w}" height="{h}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">{svgContent}</svg>""";
@@ -106,6 +92,11 @@ class ModelSvgService : IModelSvgService
             }
         }
     }
+
+    static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
+
+    static bool IsShowIcon(Node node, double zoom) =>
+        node.Type == NodeType.Member || zoom <= MinContainerZoom;
 
     static Pos GetNodeCanvasPos(Node node, Pos offset, double zoom) => new(
        offset.X + node.Boundary.X * zoom, offset.Y + node.Boundary.Y * zoom);
