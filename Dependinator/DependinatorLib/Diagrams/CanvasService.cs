@@ -15,8 +15,6 @@ interface ICanvasService
     string TileViewBox { get; }
     Pos Offset { get; }
     double Zoom { get; }
-    double LevelZoom { get; }
-    double ActualZoom { get; }
     int ZCount { get; }
     string SvgViewBox { get; }
 
@@ -58,8 +56,6 @@ class CanvasService : ICanvasService
     public int ZCount => panZoomService.ZCount;
 
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X} {Offset.Y / LevelZoom - TileOffset.Y} {SvgRect.Width * Zoom / LevelZoom} {SvgRect.Height * Zoom / LevelZoom}";
-
-    //public string SvgViewBox => $"{Offset.X / LevelZoom} {Offset.Y / LevelZoom} {SvgRect.Width * Zoom / LevelZoom} {SvgRect.Height * Zoom / LevelZoom}";
 
 
     public async Task InitAsync(IUIComponent component)
@@ -127,13 +123,8 @@ class CanvasService : ICanvasService
         //Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
 
         var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
-
         var tile = modelService.GetTile(viewRect, Zoom);
-
-        // if (TileKey == tile.Key && TileContent == tile.Svg) return Content;  // No change (!! but SvgRect handled included yet)
-
         var tileZoom = tile.Zoom;
-
         var tileViewRect = tile.GetViewRect();
         var (x, y, w, h) = tileViewRect;
 
@@ -143,19 +134,15 @@ class CanvasService : ICanvasService
         if (content == Content) return Content;  // No change
 
         Log.Info($"New content {tile.Key} {tile.Offset} {tile.Zoom}");
-
         Content = content;
-        TileKeyText = tile.Key.ToString();
-        // TileContent = tile.Svg;
-        // TileKey = tile.Key;
-
         LevelZoom = tileZoom;
-        TileViewBox = tileViewBox;
         TileOffset = new Pos(-tile.Offset.X + x, -tile.Offset.Y + y);
         panZoomService.SvgZoom = tileZoom;
 
-        component?.TriggerStateHasChangedAsync();
+        TileKeyText = tile.Key.ToString(); // info
+        TileViewBox = tileViewBox; // info
 
+        component?.TriggerStateHasChangedAsync();
         return Content;
     }
 }

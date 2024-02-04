@@ -15,7 +15,7 @@ record TileKey(long X, long Y, int Z, int TileSize)
     public const int XTileSize = 2000;
     public static TileKey Empty = new(0L, 0L, 0, 0);
 
-    public double GetTileZoom() => Math.Pow(Tile.ZoomFactor, Z);
+    public double GetTileZoom() => Math.Pow(Tile.ZoomFactor, -Z);
     public Rect GetTileRect() => new(X * TileSize, Y * TileSize, TileSize, TileSize);
 
 
@@ -24,8 +24,8 @@ record TileKey(long X, long Y, int Z, int TileSize)
     public static TileKey From(Rect canvasRect, Double canvasZoom)
     {
         var tileSize = (int)Math.Max(canvasRect.Width, canvasRect.Height);
-        int z = (int)Math.Floor(Math.Log(canvasZoom) / Math.Log(Tile.ZoomFactor));
-        double tileZoom = Math.Pow(Tile.ZoomFactor, z);
+        int z = -(int)Math.Floor(Math.Log(canvasZoom) / Math.Log(Tile.ZoomFactor));
+        double tileZoom = Math.Pow(Tile.ZoomFactor, -z);
 
         long x = (long)Math.Round(canvasRect.X / tileZoom / tileSize);
         long y = (long)Math.Round(canvasRect.Y / tileZoom / tileSize);
@@ -72,7 +72,7 @@ class Tiles
         maxSvgSize = 0;
     }
 
-    public override string ToString() => $"{tiles.Count} (max svg size: {maxSvgSize})";
+    public override string ToString() => $"{tiles.Count} (max: {maxSvgSize})";
 
     void ValidateTileSize(TileKey key)
     {
