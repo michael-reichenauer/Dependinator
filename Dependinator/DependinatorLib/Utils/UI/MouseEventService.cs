@@ -100,7 +100,6 @@ class MouseEventService : IMouseEventService
     void OnLeftClickTimer(object? state)
     {
         timerRunning = false;
-        LeftClick?.Invoke(clickLeftMouse);
     }
 
     void OnLeftClickEvent(MouseEvent e)
@@ -109,6 +108,7 @@ class MouseEventService : IMouseEventService
         if (!timerRunning)
         {   // This is the first click, start the timer
             timerRunning = true;
+            LeftClick?.Invoke(clickLeftMouse);
             clickTimer.Change(ClickDelay, Timeout.Infinite);
         }
         else

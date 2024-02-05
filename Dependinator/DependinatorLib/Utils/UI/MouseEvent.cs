@@ -3,6 +3,8 @@ namespace Dependinator.Utils.UI;
 // https://www.w3schools.com/jsref/obj_mouseevent.asp
 public class MouseEvent
 {
+    const int LeftMouseBtn = 1;
+
     public string Type { get; set; } = "";
     public string TargetId { get; set; } = "";
 
@@ -25,4 +27,6 @@ public class MouseEvent
     public int DeltaY { get; set; }
     public int DeltaZ { get; set; }
     public int DeltaMode { get; set; }
+
+    public bool IsLeftButton => Buttons == LeftMouseBtn;
 }

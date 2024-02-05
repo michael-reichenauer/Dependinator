@@ -40,6 +40,10 @@ class CanvasService : ICanvasService
         this.modelService = modelService;
         mouseEventService.LeftClick += OnClick;
         mouseEventService.LeftDblClick += OnDblClick;
+        mouseEventService.MouseWheel += OnMouseWheel;
+        mouseEventService.MouseMove += OnMouseMove;
+        mouseEventService.MouseDown += OnMouseDown;
+        mouseEventService.MouseUp += OnMouseUp;
     }
 
     public string SvgContent => GetSvgContent();
@@ -56,6 +60,7 @@ class CanvasService : ICanvasService
     public int ZCount => panZoomService.ZCount;
 
     string selectedNodeId = "";
+    string mouseDownId = "";
 
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X} {Offset.Y / LevelZoom - TileOffset.Y} {SvgRect.Width * Zoom / LevelZoom} {SvgRect.Height * Zoom / LevelZoom}";
 
@@ -69,13 +74,14 @@ class CanvasService : ICanvasService
 
     public void OnClick(MouseEvent e)
     {
-        if (selectedNodeId == e.TargetId) return;
+        Log.Info("mouse click", e.TargetId);
+        if (selectedNodeId == e.TargetId) return; // Clicked on same node again
 
         if (modelService.TryUpdateNode(e.TargetId, node => node.IsSelected = true))
         {
             Log.Info($"Node clicked: {e.TargetId}");
             if (selectedNodeId != "")
-            {
+            {   // Deselect previous node
                 modelService.TryUpdateNode(selectedNodeId, node => node.IsSelected = false);
             }
 
@@ -94,11 +100,49 @@ class CanvasService : ICanvasService
         }
     }
 
-    public void OnDblClick(MouseEvent e)
+    void OnDblClick(MouseEvent e)
     {
         Log.Info($"OnDoubleClick {e.Type}");
     }
 
+    void OnMouseWheel(MouseEvent e)
+    {
+        panZoomService.OnMouseWheel(e);
+    }
+
+    void OnMouseMove(MouseEvent e)
+    {
+        if (!e.IsLeftButton) return;
+        if (selectedNodeId != "" && selectedNodeId == mouseDownId)
+        {
+            moveSelectedNode(e);
+            return;
+        }
+
+        panZoomService.OnMouseMove(e);
+    }
+
+    void OnMouseDown(MouseEvent e)
+    {
+        Log.Info("mouse down", e.TargetId);
+        mouseDownId = e.TargetId;
+    }
+
+    void OnMouseUp(MouseEvent e)
+    {
+        Log.Info("mouse up", e.TargetId);
+        mouseDownId = "";
+    }
+
+    void moveSelectedNode(MouseEvent e)
+    {
+        var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
+
+        modelService.TryUpdateNode(mouseDownId, node =>
+        {
+            node.Boundary = new Rect(node.Boundary.X + dx, node.Boundary.Y + dy, node.Boundary.Width, node.Boundary.Height);
+        });
+    }
 
     public async void InitialShow()
     {
@@ -153,7 +197,7 @@ class CanvasService : ICanvasService
         TileKeyText = $"{tile.Key}"; // Log info
         TileViewBox = $"{tileViewRect}"; // Log info
 
-        component?.TriggerStateHasChangedAsync();
+        component?.TriggerStateHasChangedAsync(); // since panZoomService.SvgZoom has been adjusted
         return Content;
     }
 }

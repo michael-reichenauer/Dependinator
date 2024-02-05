@@ -1,6 +1,5 @@
 using Dependinator.Models;
 using Dependinator.Utils.UI;
-using Microsoft.AspNetCore.Components.Web;
 
 
 namespace Dependinator.Diagrams;
@@ -15,6 +14,8 @@ interface IPanZoomService
 
     Task InitAsync(IUIComponent component);
 
+    void OnMouseWheel(MouseEvent e);
+    void OnMouseMove(MouseEvent e);
     void PanZoomToFit(Rect bounds);
     Task CheckResizeAsync();
 }
@@ -26,7 +27,7 @@ class PanZoomService : IPanZoomService
     const double MaxZoom = 10;
     const double Margin = 10;
     const double ZoomSpeed = 1.05;
-    const int LeftMouseBtn = 1;
+
     const int SvgPageMargin = 2;
 
     readonly IJSInteropService jSInteropService;
@@ -44,12 +45,11 @@ class PanZoomService : IPanZoomService
     public double SvgZoom { get; set; } = 1;
 
 
-    public PanZoomService(IJSInteropService jSInteropService, IMouseEventService mouseEventService)
+    public PanZoomService(IJSInteropService jSInteropService)
     {
         this.jSInteropService = jSInteropService;
         jSInteropService.OnResize += OnResize;
-        mouseEventService.MouseWheel += OnMouseWheel;
-        mouseEventService.MouseMove += OnMouseMove;
+
     }
 
     public async Task InitAsync(IUIComponent component)
@@ -58,33 +58,7 @@ class PanZoomService : IPanZoomService
         this.component = component;
     }
 
-
-    public void PanZoomToFit(Rect totalBounds)
-    {
-        lock (syncRoot)
-        {
-            Rect b = totalBounds;
-            b = new Rect(b.X, b.Y, b.Width, b.Height);
-
-            // Determine the X or y zoom that best fits the bounds (including margin)
-            var zx = (b.Width + 2 * Margin) / SvgRect.Width;
-            var zy = (b.Height + 2 * Margin) / SvgRect.Height;
-            var newZoom = Math.Max(zx, zy);
-
-            // Zoom width and height to fit the bounds
-            var w = SvgRect.Width * newZoom;
-            var h = SvgRect.Height * newZoom;
-
-            // Pan to center the bounds
-            var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
-            var y = (b.Height < h) ? b.Y - (h - b.Height) / 2 : b.Y;
-
-            Offset = new Pos(x, y);
-            Zoom = newZoom;
-        }
-    }
-
-    void OnMouseWheel(MouseEvent e)
+    public void OnMouseWheel(MouseEvent e)
     {
         lock (syncRoot)
         {
@@ -110,12 +84,36 @@ class PanZoomService : IPanZoomService
         }
     }
 
-    void OnMouseMove(MouseEvent e)
+
+    public void OnMouseMove(MouseEvent e)
     {
-        if (e.Buttons == LeftMouseBtn)
+        var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
+        Offset = new Pos(Offset.X - dx, Offset.Y - dy);
+    }
+
+
+    public void PanZoomToFit(Rect totalBounds)
+    {
+        lock (syncRoot)
         {
-            var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
-            Offset = new Pos(Offset.X - dx, Offset.Y - dy);
+            Rect b = totalBounds;
+            b = new Rect(b.X, b.Y, b.Width, b.Height);
+
+            // Determine the X or y zoom that best fits the bounds (including margin)
+            var zx = (b.Width + 2 * Margin) / SvgRect.Width;
+            var zy = (b.Height + 2 * Margin) / SvgRect.Height;
+            var newZoom = Math.Max(zx, zy);
+
+            // Zoom width and height to fit the bounds
+            var w = SvgRect.Width * newZoom;
+            var h = SvgRect.Height * newZoom;
+
+            // Pan to center the bounds
+            var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
+            var y = (b.Height < h) ? b.Y - (h - b.Height) / 2 : b.Y;
+
+            Offset = new Pos(x, y);
+            Zoom = newZoom;
         }
     }
 
