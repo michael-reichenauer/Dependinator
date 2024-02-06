@@ -52,6 +52,13 @@ class Node : IItem
     public string HtmlShortName { get; }
     public string HtmlLongName { get; }
 
+    public double GetZoom()
+    {
+        var zoom = 1.0;
+        Ancestors().ForEach(n => zoom *= 1 / n.ContainerZoom);
+        return zoom;
+    }
+
     public bool Update(Parsing.Node node)
     {
         if (IsEqual(node)) return false;

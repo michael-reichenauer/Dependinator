@@ -136,10 +136,11 @@ class CanvasService : ICanvasService
 
     void moveSelectedNode(MouseEvent e)
     {
-        var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
-
         modelService.TryUpdateNode(mouseDownId, node =>
         {
+            var zoom = node.GetZoom() * Zoom;
+            var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
+
             node.Boundary = new Rect(node.Boundary.X + dx, node.Boundary.Y + dy, node.Boundary.Width, node.Boundary.Height);
         });
     }
