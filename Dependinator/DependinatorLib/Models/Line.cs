@@ -29,7 +29,7 @@ class Line : IItem
 
 
     public string StrokeColor { get; set; } = "red";
-    public double StrokeWidth { get; set; } = 1.0;
+    public double StrokeWidth { get; set; } = 2.0;
 
 
     public void Add(Link link)
@@ -40,11 +40,6 @@ class Line : IItem
     public LinePos GetLineEndpoints()
     {
         var (s, t) = (Source.Boundary, Target.Boundary);
-
-        if (s.Y + s.Height <= t.Y)
-        {
-            return new LinePos(s.X + s.Width / 2, s.Y + s.Height, t.X + t.Width / 2, t.Y);
-        }
 
         return new LinePos(s.X + s.Width, s.Y + s.Height / 2, t.X, t.Y + t.Height / 2);
     }

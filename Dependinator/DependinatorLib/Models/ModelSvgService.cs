@@ -13,7 +13,7 @@ class ModelSvgService : IModelSvgService
     const int SmallIconSize = 9;
     const int FontSize = 8;
 
-    const double MinContainerZoom = 1.0;
+    const double MinContainerZoom = 2.0;
     const double MaxNodeZoom = 5 * 1 / Node.DefaultContainerZoom;           // To large to be seen
 
 
@@ -75,20 +75,26 @@ class ModelSvgService : IModelSvgService
 
         return node.Children
             .Select(n => GetNodeSvg(n, nodeCanvasPos, childrenZoom, tileWithMargin))
-            .Concat(GetNodeLinesSvg(node, nodeCanvasPos, childrenZoom))
+            .Concat(GetNodeLinesSvg(node, nodeCanvasPos, zoom, childrenZoom))
             .Join("\n");
     }
 
 
-    static IEnumerable<string> GetNodeLinesSvg(Node node, Pos nodeCanvasPos, double childrenZoom)
+    static IEnumerable<string> GetNodeLinesSvg(Node node, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
     {
-        // !!! Must also add parent to children lines
+        var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
+        foreach (var line in parentToChildrenLines)
+        {
+            yield return GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
+        }
 
+        // All sibling lines and children to parent lines
         foreach (var child in node.Children)
         {
             foreach (var line in child.SourceLines)
             {
-                yield return GetLineSvg(line, nodeCanvasPos, childrenZoom);
+                if (line.Target.Parent == line.Source) continue;
+                yield return GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
             }
         }
     }
@@ -169,6 +175,7 @@ class ModelSvgService : IModelSvgService
             <g class="hoverable">
               <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
               </rect>
+              <title>{node.HtmlLongName}</title>
             </g>
             </rect>
             """;
@@ -201,34 +208,45 @@ class ModelSvgService : IModelSvgService
             <g class="hoverable">
               <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
               </rect>
+              <title>{node.HtmlLongName}</title>
             </g>
             """;
     }
 
-    static string GetLineSvg(Line line, Pos nodeCanvasPos, double zoom)
+    static string GetLineSvg(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
     {
-        if (IsToLargeToBeSeen(zoom)) return "";
+        if (IsToLargeToBeSeen(childrenZoom)) return "";
 
-        var (x1, y1, x2, y2) = line.GetLineEndpoints();
+        var sw = line.StrokeWidth;
+        var (s, t) = (line.Source.Boundary, line.Target.Boundary);
 
-        // !!!!! Fel i koden, samma rad i if och else delen 
-        if (line.Source != line.Target.Parent)
-        {
-            (x1, y1) = (nodeCanvasPos.X + x1 * zoom, nodeCanvasPos.Y + y1 * zoom);
+        var (x1, y1) = (s.X + s.Width, s.Y + s.Height / 2);
+        var (x2, y2) = (t.X, t.Y + t.Height / 2);
+
+        if (line.Source.Parent == line.Target)
+        {   // Child to parent (left of child to right of parent)
+            if (IsToLargeToBeSeen(parentZoom)) return "";
+            (x1, y1) = (nodeCanvasPos.X + x1 * childrenZoom, nodeCanvasPos.Y + y1 * childrenZoom);
+
+            (x2, y2) = (nodeCanvasPos.X + t.Width * parentZoom, nodeCanvasPos.Y + t.Height / 2 * parentZoom);
+        }
+        else if (line.Target.Parent == line.Source)
+        {   // parent to child (left of parent to right of child)
+            if (IsToLargeToBeSeen(parentZoom)) return "";
+            (x1, y1) = (nodeCanvasPos.X, nodeCanvasPos.Y + s.Height / 2 * parentZoom);
+            (x2, y2) = (nodeCanvasPos.X + x2 * childrenZoom, nodeCanvasPos.Y + y2 * childrenZoom);
         }
         else
-        {
-            (x1, y1) = (nodeCanvasPos.X + x1 * zoom, nodeCanvasPos.Y + y1 * zoom);
+        {   // Sibling to sibling (right of source to left of target)
+            (x1, y1) = (nodeCanvasPos.X + x1 * childrenZoom, nodeCanvasPos.Y + y1 * childrenZoom);
+            (x2, y2) = (nodeCanvasPos.X + x2 * childrenZoom, nodeCanvasPos.Y + y2 * childrenZoom);
         }
-
-        (x2, y2) = (nodeCanvasPos.X + x2 * zoom, nodeCanvasPos.Y + y2 * zoom);
-
-        var s = line.StrokeWidth;
 
         return
             $"""
             <g class="hoverable" >
-              <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{s}" stroke="white" marker-end="url(#arrow)" />
+              <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="white" marker-end="url(#arrow)" />
+              <title>{line.Source.HtmlLongName} {line.Target.HtmlLongName}</title>
             </g>
             """;
     }

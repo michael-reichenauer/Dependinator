@@ -105,7 +105,7 @@ class ModelStructureService : IModelStructureService
 
         // Add lines from source and target nodes upp to its parent for all ancestors until just before the common ancestor
         var sourceAncestor = AddAncestorLines(link, link.Source, commonAncestor);
-        var targetAncestor = AddAncestorLines(link, link.Target, commonAncestor);
+        var targetAncestor = AddDescendantLines(link, link.Target, commonAncestor);
 
         // Connect 'sibling' nodes that are ancestors to source and target (or are source/target if they are siblings)
         AddDirectLine(sourceAncestor, targetAncestor, link);
@@ -132,6 +132,19 @@ class ModelStructureService : IModelStructureService
         return currentSource;
     }
 
+    Node AddDescendantLines(Link link, Node target, Node commonAncestor)
+    {
+        // Add lines from just below commonAncestor node down to all descendants until target 
+        Node currentTarget = target;
+        foreach (var parent in target.Ancestors())
+        {
+            if (parent == commonAncestor) break;
+            AddDirectLine(parent, currentTarget, link);
+            currentTarget = parent;
+        }
+
+        return currentTarget;
+    }
 
     void AddDirectLine(Node source, Node target, Link link)
     {
