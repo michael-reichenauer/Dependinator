@@ -1,14 +1,14 @@
 namespace Dependinator.Models;
 
 
-interface IModelSvgService
+interface ISvgService
 {
     Tile GetTile(IModel model, Rect viewRect, double zoom);
 }
 
 
 [Transient]
-class ModelSvgService : IModelSvgService
+class SvgService : ISvgService
 {
     const int SmallIconSize = 9;
     const int FontSize = 8;

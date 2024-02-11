@@ -1,7 +1,7 @@
 namespace Dependinator.Models;
 
 
-interface IModelStructureService
+interface IStructureService
 {
     void AddOrUpdateNode(Parsing.Node parsedNode);
     void AddOrUpdateLink(Parsing.Link parsedLink);
@@ -9,11 +9,11 @@ interface IModelStructureService
 
 
 [Transient]
-class ModelStructureService : IModelStructureService
+class StructureService : IStructureService
 {
     readonly IModel model;
 
-    public ModelStructureService(IModel model)
+    public StructureService(IModel model)
     {
         this.model = model;
     }

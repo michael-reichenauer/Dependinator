@@ -20,7 +20,8 @@ partial class Canvas : ComponentBase, IUIComponent
 
     //string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), SvgKey: {srv.TileKeyText}, Offset: {srv.Offset}, TileViewBox: {srv.TileViewBox}, SvgViewBox: {srv.SvgViewBox}, Svg: {srv.SvgRect}";
 
-    string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#########}), SvgKey: {srv.TileKeyText}, Offset: {srv.Offset}";
+    // string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#########}), SvgKey: {srv.TileKeyText}";
+    string Info => $"Zoom: {1 / srv.Zoom * 100:#}%, {1 / srv.Zoom:0.#}x";
 
     string Content => srv.SvgContent;
     double Width => srv.SvgRect.Width;

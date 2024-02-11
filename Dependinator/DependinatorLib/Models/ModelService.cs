@@ -19,14 +19,14 @@ class ModelService : IModelService
 {
     readonly IModel model;
     readonly Parsing.IParserService parserService;
-    readonly IModelStructureService modelStructureService;
-    readonly IModelSvgService modelSvgService;
+    readonly IStructureService modelStructureService;
+    readonly ISvgService modelSvgService;
 
     public ModelService(
         IModel model,
         Parsing.IParserService parserService,
-        IModelStructureService modelStructureService,
-        IModelSvgService modelSvgService)
+        IStructureService modelStructureService,
+        ISvgService modelSvgService)
     {
         this.model = model;
         this.parserService = parserService;
@@ -105,7 +105,7 @@ class ModelService : IModelService
     {
         lock (model.SyncRoot)
         {
-            AddSpecials();
+            // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {
                 switch (parsedItem)
