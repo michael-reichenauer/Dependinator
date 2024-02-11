@@ -7,7 +7,7 @@ interface IModel
     Node Root { get; }
     Tiles Tiles { get; }
     IDictionary<Id, IItem> Items { get; }   // Ta bort
-
+    bool IsSaving { get; set; }
 
     bool TryGetNode(NodeId id, out Node node);
     void AddNode(Node node);
@@ -32,8 +32,8 @@ class Model : IModel
         InitModel();
     }
 
-
     public object SyncRoot => syncRoot;
+    public bool IsSaving { get; set; }
 
     public Tiles Tiles { get; } = new();
 

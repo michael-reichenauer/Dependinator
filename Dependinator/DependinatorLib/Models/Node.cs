@@ -12,8 +12,8 @@ class Node : IItem
         Name = name;
         Parent = parent;
 
-        var color = Color.BrightRandom();
-        StrokeColor = color.ToString();
+        var color = Models.Color.BrightRandom();
+        Color = color.ToString();
         Background = color.VeryDark().ToString();
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
         HtmlShortName = HttpUtility.HtmlEncode(ShortName);
@@ -29,10 +29,9 @@ class Node : IItem
     public NodeType Type { get; set; } = NodeType.None;
 
     public string Description { get; set; } = "";
-    public string StrokeColor { get; set; } = "";
+    public string Color { get; set; } = "";
     public string Background { get; set; } = "green";
     public double StrokeWidth { get; set; } = 1.0;
-    public string IconName { get; set; } = "";
     public bool IsSelected { get; set; } = false;
 
     public Rect Boundary { get; set; } = Rect.None;
@@ -59,13 +58,17 @@ class Node : IItem
         return zoom;
     }
 
-    public bool Update(Parsing.Node node)
+    public void Update(Parsing.Node node)
     {
-        if (IsEqual(node)) return false;
-
         Type = node.Type;
-        Description = node.Description;
-        return true;
+        Description = node.Description ?? Description;
+        var rect = node.X != null
+            ? new Rect(node.X.Value, node.Y!.Value, node.Width!.Value!, node.Height!.Value)
+            : Boundary;
+        Boundary = rect;
+        ContainerZoom = node.Zoom ?? ContainerZoom;
+        Color = node.Color ?? Color;
+        Background = node.Background ?? Background;
     }
 
     public void AddChild(Node child)
@@ -104,12 +107,6 @@ class Node : IItem
         }
     }
 
-
-
-    bool IsEqual(Parsing.Node n) =>
-        Parent.Name == n.ParentName &&
-        Type == n.Type &&
-        Description == n.Description;
 
 
     public override string ToString() => IsRoot ? "<root>" : LongName;

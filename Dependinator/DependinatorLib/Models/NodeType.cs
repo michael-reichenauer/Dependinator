@@ -22,7 +22,7 @@ record NodeType
     public static readonly NodeType Member = new("Member");
     public static readonly NodeType Private = new("Private");
 
-    public static implicit operator NodeType(Parsing.NodeType type) => new(type.ToString());
+    public static implicit operator NodeType(Parsing.NodeType type) => new(type.Text);
 
     public string IconName => Text switch
     {

@@ -149,7 +149,7 @@ class CanvasService : ICanvasService
     {
         await panZoomService.CheckResizeAsync();
 
-        await RefreshAsync();
+        await modelService.LoadAsync();
 
         //panZoomService.PanZoomToFit(bounds);
         await component.TriggerStateHasChangedAsync();
@@ -162,7 +162,7 @@ class CanvasService : ICanvasService
 
     public async void Refresh()
     {
-        await RefreshAsync();
+        await modelService.RefreshAsync();
         // panZoomService.PanZoomToFit(bounds);
         await component.TriggerStateHasChangedAsync();
     }
@@ -175,10 +175,7 @@ class CanvasService : ICanvasService
         await component.TriggerStateHasChangedAsync();
     }
 
-    public async Task RefreshAsync()
-    {
-        await modelService.RefreshAsync();
-    }
+
 
     string GetSvgContent()
     {

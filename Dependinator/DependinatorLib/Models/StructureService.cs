@@ -1,3 +1,5 @@
+using System.Threading.Channels;
+
 namespace Dependinator.Models;
 
 
@@ -20,18 +22,17 @@ class StructureService : IStructureService
 
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
+        var parentName = parsedNode.ParentName;
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
         {   // New node, add it to the model and parent
-            var parentName = parsedNode.ParentName;
             var parent = GetOrCreateParent(parentName);
 
-            var boundary = NodeLayout.GetNextChildRect(parent);
-            node = new Node(parsedNode.Name, parent)
+            node = new Node(parsedNode.Name, parent);
+            if (parsedNode.X == null)
             {
-                Type = parsedNode.Type,
-                Description = parsedNode.Description,
-                Boundary = boundary,
-            };
+                node.Boundary = NodeLayout.GetNextChildRect(parent);
+            }
+            node.Update(parsedNode);
 
             model.AddNode(node);
             parent.AddChild(node);
@@ -39,17 +40,17 @@ class StructureService : IStructureService
             return;
         }
 
-        if (node.Update(parsedNode))
-        {
-            var parentName = parsedNode.ParentName;
-            if (node.Parent.Name != parentName)
-            {   // The node has changed parent, remove it from the old parent and add it to the new parent
-                node.Parent.RemoveChild(node);
-                var parent = GetOrCreateNode(parentName);
-                parent.AddChild(node);
-            }
+        node.Update(parsedNode);
+
+        if (!node.IsRoot && node.Parent.Name != parentName)
+        {   // The node has changed parent, remove it from the old parent and add it to the new parent
+            node.Parent.RemoveChild(node);
+            var parent = GetOrCreateNode(parentName);
+            parent.AddChild(node);
         }
     }
+
+
 
     public void AddOrUpdateLink(Parsing.Link parsedLink)
     {
@@ -60,6 +61,7 @@ class StructureService : IStructureService
 
         var source = model.GetNode(NodeId.FromName(parsedLink.SourceName));
         var target = model.GetNode(NodeId.FromName(parsedLink.TargetName));
+
         var link = new Link(source, target);
 
         model.AddLink(link);

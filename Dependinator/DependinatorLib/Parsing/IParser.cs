@@ -17,11 +17,26 @@ interface IParser
 }
 
 interface IItem { }
+
+class Model
+{
+    public List<Node> Nodes { get; set; } = new();
+    public List<Link> Links { get; set; } = new();
+}
+
 record Link(string SourceName, string TargetName, NodeType TargetType) : IItem;
 
-record Node(string Name, string ParentName, NodeType Type, string Description) : IItem
+record Node(string Name, string ParentName, NodeType Type, string? Description) : IItem
 {
     static readonly char[] NamePartsSeparators = "./".ToCharArray();
+
+    public double? X { get; init; }
+    public double? Y { get; init; }
+    public double? Width { get; init; }
+    public double? Height { get; init; }
+    public double? Zoom { get; init; }
+    public string? Color { get; init; }
+    public string? Background { get; init; }
 
     static public string ParseParentName(string name)
     {
@@ -32,7 +47,6 @@ record Node(string Name, string ParentName, NodeType Type, string Description) :
 
 
 record Source(string Path, string Text, int LineNumber);
-
 
 
 record NodeType(string Text)

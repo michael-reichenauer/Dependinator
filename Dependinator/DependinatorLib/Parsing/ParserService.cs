@@ -145,48 +145,5 @@ class ParserService : IParserService
             throw new NotImplementedException();
         }
     }
-
-    // private static Item ToDataItem(Node node) => new Data(
-    //     (DataNodeName)node.Name,
-    //     node.Parent != null ? (DataNodeName)node.Parent : null,
-    //     ToNodeType(node.Type))
-    //     { Description = node.Description };
-
-
-    // private static IDataItem ToDataItem(LinkData link) => new DataLink(
-    //     (DataNodeName)link.Source,
-    //     (DataNodeName)link.Target,
-    //     ToNodeType(link.TargetType));
-
-
-
-    // private static NodeType ToNodeType(string nodeType)
-    // {
-    //     switch (nodeType)
-    //     {
-    //         case null:
-    //             return NodeType.None;
-    //         case NodeData.SolutionType:
-    //             return NodeType.Solution;
-    //         case NodeData.SolutionFolderType:
-    //             return NodeType.SolutionFolder;
-    //         case NodeData.AssemblyType:
-    //             return NodeType.Assembly;
-    //         case NodeData.GroupType:
-    //             return NodeType.Group;
-    //         case NodeData.DllType:
-    //             return NodeType.Dll;
-    //         case NodeData.ExeType:
-    //             return NodeType.Exe;
-    //         case NodeData.NameSpaceType:
-    //             return NodeType.NameSpace;
-    //         case NodeData.TypeType:
-    //             return NodeType.Type;
-    //         case NodeData.MemberType:
-    //             return NodeType.Member;
-    //         default:
-    //             throw Asserter.FailFast($"Unexpected type {nodeType}");
-    //     }
-    // }
 }
 

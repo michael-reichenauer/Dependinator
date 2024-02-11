@@ -94,7 +94,6 @@ public static class Result
             action();
             e = null;
             return true;
-
         }
         catch (Exception ex)
         {

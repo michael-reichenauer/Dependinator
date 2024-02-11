@@ -1,11 +1,9 @@
-using System.Diagnostics;
-
-
 namespace Dependinator.Models;
 
 
 interface IModelService
 {
+    Task<R> LoadAsync();
     Task<R> RefreshAsync();
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
@@ -21,17 +19,20 @@ class ModelService : IModelService
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
     readonly ISvgService modelSvgService;
+    readonly Parsing.IPersistenceService persistenceService;
 
     public ModelService(
         IModel model,
         Parsing.IParserService parserService,
         IStructureService modelStructureService,
-        ISvgService modelSvgService)
+        ISvgService modelSvgService,
+        Parsing.IPersistenceService persistenceService)
     {
         this.model = model;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
         this.modelSvgService = modelSvgService;
+        this.persistenceService = persistenceService;
     }
 
     public bool TryGetNode(string id, out Node node)
@@ -50,8 +51,10 @@ class ModelService : IModelService
 
             updateAction(node);
             model.ClearCachedSvg();
-            return true;
         }
+
+        TriggerSave();
+        return true;
     }
 
     public Tile GetTile(Rect viewRect, double zoom)
@@ -71,13 +74,25 @@ class ModelService : IModelService
         }
     }
 
+    public async Task<R> LoadAsync()
+    {
+        if (Try(out var model, out var e, await persistenceService.LoadAsync()))
+        {
+            await Task.Run(() => Load(model));
+        }
+
+        ParseAsync().RunInBackground();
+
+        return R.Ok;
+    }
+
     public async Task<R> RefreshAsync()
     {
-        return await Parse();
+        return await ParseAsync();
     }
 
 
-    async Task<R> Parse()
+    async Task<R> ParseAsync()
     {
         using var _ = Timing.Start();
         var path = "/workspaces/Dependinator/Dependinator/Dependinator.sln";
@@ -97,12 +112,46 @@ class ModelService : IModelService
             AddOrUpdate(batchItems);
         });
 
+        TriggerSave();
+
         return R.Ok;
     }
 
+    void TriggerSave()
+    {
+        lock (model.SyncRoot)
+        {
+            if (model.IsSaving) return;
+            model.IsSaving = true;
+        }
+
+        Task.Delay(1000).ContinueWith(_ => Task.Run(() => Save()).RunInBackground());
+    }
+
+    void Save()
+    {
+        Parsing.Model modelData;
+        lock (model.SyncRoot)
+        {
+            modelData = persistenceService.ModelToData(model);
+            model.IsSaving = false;
+        }
+
+        persistenceService.SaveAsync(modelData).RunInBackground();
+    }
+
+    private void Load(Parsing.Model modelData)
+    {
+        var batchItems = new List<Parsing.IItem>();
+        modelData.Nodes.ForEach(batchItems.Add);
+        modelData.Links.ForEach(batchItems.Add);
+
+        AddOrUpdate(batchItems);
+    }
 
     void AddOrUpdate(IReadOnlyList<Parsing.IItem> parsedItems)
     {
+        using var _ = Timing.Start();
         lock (model.SyncRoot)
         {
             // AddSpecials();
@@ -119,7 +168,11 @@ class ModelService : IModelService
                         break;
                 }
             }
+
+            model.ClearCachedSvg();
         }
+
+        Log.Info($"Added or updated {parsedItems.Count} items");
     }
 
     void AddSpecials()
