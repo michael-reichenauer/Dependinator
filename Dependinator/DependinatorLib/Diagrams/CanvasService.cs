@@ -31,13 +31,18 @@ class CanvasService : ICanvasService
 {
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
-
+    private readonly IUIService uiService;
     IUIComponent component = null!;
 
-    public CanvasService(IMouseEventService mouseEventService, IPanZoomService panZoomService, IModelService modelService)
+    public CanvasService(
+        IMouseEventService mouseEventService,
+        IPanZoomService panZoomService,
+        IModelService modelService,
+        IUIService uiService)
     {
         this.panZoomService = panZoomService;
         this.modelService = modelService;
+        this.uiService = uiService;
         mouseEventService.LeftClick += OnClick;
         mouseEventService.LeftDblClick += OnDblClick;
         mouseEventService.MouseWheel += OnMouseWheel;
@@ -86,7 +91,7 @@ class CanvasService : ICanvasService
             }
 
             selectedNodeId = e.TargetId;
-            this.component?.TriggerStateHasChangedAsync();
+            uiService.TriggerUIStateChange();
         }
         else
         {
@@ -95,7 +100,7 @@ class CanvasService : ICanvasService
             {
                 modelService.TryUpdateNode(selectedNodeId, node => node.IsSelected = false);
                 selectedNodeId = "";
-                this.component?.TriggerStateHasChangedAsync();
+                uiService.TriggerUIStateChange();
             }
         }
     }
@@ -152,7 +157,7 @@ class CanvasService : ICanvasService
         await modelService.LoadAsync();
 
         //panZoomService.PanZoomToFit(bounds);
-        await component.TriggerStateHasChangedAsync();
+        uiService.TriggerUIStateChange();
     }
 
     public void PanZoomToFit()
@@ -164,15 +169,15 @@ class CanvasService : ICanvasService
     {
         await modelService.RefreshAsync();
         // panZoomService.PanZoomToFit(bounds);
-        await component.TriggerStateHasChangedAsync();
+        uiService.TriggerUIStateChange();
     }
 
 
-    public async void Clear()
+    public void Clear()
     {
         modelService.Clear();
 
-        await component.TriggerStateHasChangedAsync();
+        uiService.TriggerUIStateChange();
     }
 
 
@@ -195,7 +200,7 @@ class CanvasService : ICanvasService
         TileKeyText = $"{tile.Key}"; // Log info
         TileViewBox = $"{tileViewRect}"; // Log info
 
-        component?.TriggerStateHasChangedAsync(); // since panZoomService.SvgZoom has been adjusted
+        uiService.TriggerUIStateChange();
         return Content;
     }
 }

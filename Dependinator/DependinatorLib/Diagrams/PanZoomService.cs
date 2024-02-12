@@ -31,7 +31,7 @@ class PanZoomService : IPanZoomService
     const int SvgPageMargin = 2;
 
     readonly IJSInteropService jSInteropService;
-
+    readonly IUIService uiService;
     readonly object syncRoot = new();
 
 
@@ -45,9 +45,10 @@ class PanZoomService : IPanZoomService
     public double SvgZoom { get; set; } = 1;
 
 
-    public PanZoomService(IJSInteropService jSInteropService)
+    public PanZoomService(IJSInteropService jSInteropService, IUIService uiService)
     {
         this.jSInteropService = jSInteropService;
+        this.uiService = uiService;
         jSInteropService.OnResize += OnResize;
 
     }
@@ -149,7 +150,7 @@ class PanZoomService : IPanZoomService
 
         if (isChanged)
         {
-            component.TriggerStateHasChangedAsync().RunInBackground();
+            uiService.TriggerUIStateChange();
             Log.Info($"Resized: {newSwgRect}");
         }
     }

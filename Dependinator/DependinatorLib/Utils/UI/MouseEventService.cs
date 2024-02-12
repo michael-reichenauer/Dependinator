@@ -1,3 +1,4 @@
+using Dependinator.Diagrams;
 using Microsoft.JSInterop;
 
 
@@ -20,7 +21,7 @@ interface IMouseEventService
 class MouseEventService : IMouseEventService
 {
     readonly IJSInteropService jSInteropService;
-
+    private readonly IUIService uiService;
     const int ClickDelay = 300;
 
     IUIComponent component = null!;
@@ -28,10 +29,13 @@ class MouseEventService : IMouseEventService
     bool timerRunning = false;
     MouseEvent clickLeftMouse = new();
 
-    public MouseEventService(IJSInteropService jSInteropService)
+    public MouseEventService(
+        IJSInteropService jSInteropService,
+        IUIService uiService)
     {
         clickTimer = new Timer(OnLeftClickTimer, null, Timeout.Infinite, Timeout.Infinite);
         this.jSInteropService = jSInteropService;
+        this.uiService = uiService;
     }
 
     public event Action<MouseEvent> MouseWheel = null!;
@@ -65,7 +69,7 @@ class MouseEventService : IMouseEventService
             default: throw Asserter.FailFast($"Unknown mouse event type: {e.Type}");
         }
 
-        component.TriggerStateHasChangedAsync();
+        uiService.TriggerUIStateChange();
         return ValueTask.CompletedTask;
     }
 

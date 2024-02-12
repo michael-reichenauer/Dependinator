@@ -1,3 +1,5 @@
+using Dependinator.Utils.UI;
+
 namespace Dependinator.Models;
 
 
@@ -20,19 +22,22 @@ class ModelService : IModelService
     readonly IStructureService modelStructureService;
     readonly ISvgService modelSvgService;
     readonly Parsing.IPersistenceService persistenceService;
+    readonly IUIService uiService;
 
     public ModelService(
         IModel model,
         Parsing.IParserService parserService,
         IStructureService modelStructureService,
         ISvgService modelSvgService,
-        Parsing.IPersistenceService persistenceService)
+        Parsing.IPersistenceService persistenceService,
+        IUIService uiService)
     {
         this.model = model;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
         this.modelSvgService = modelSvgService;
         this.persistenceService = persistenceService;
+        this.uiService = uiService;
     }
 
     public bool TryGetNode(string id, out Node node)
@@ -76,13 +81,17 @@ class ModelService : IModelService
 
     public async Task<R> LoadAsync()
     {
-        if (Try(out var model, out var e, await persistenceService.LoadAsync()))
+        // Try read cached model (with ui layout)
+        if (!Try(out var model, out var e, await persistenceService.LoadAsync()))
         {
-            await Task.Run(() => Load(model));
+            return await ParseAsync();
         }
 
-        ParseAsync().RunInBackground();
+        // Load the cached mode
+        await Task.Run(() => Load(model));
 
+        // Trigger parse to get latest data
+        ParseAsync().RunInBackground();
         return R.Ok;
     }
 
@@ -112,6 +121,8 @@ class ModelService : IModelService
             AddOrUpdate(batchItems);
         });
 
+        uiService.TriggerUIStateChange();
+
         TriggerSave();
 
         return R.Ok;
@@ -125,7 +136,8 @@ class ModelService : IModelService
             model.IsSaving = true;
         }
 
-        Task.Delay(1000).ContinueWith(_ => Task.Run(() => Save()).RunInBackground());
+        Task.Delay(TimeSpan.FromSeconds(1)).ContinueWith(_ =>
+            Task.Run(() => Save()).RunInBackground());
     }
 
     void Save()

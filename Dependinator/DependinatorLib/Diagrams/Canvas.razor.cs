@@ -10,6 +10,7 @@ partial class Canvas : ComponentBase, IUIComponent
     [Inject] ICanvasService srv { get; init; } = null!;
     [Inject] IMouseEventService mouseEventService { get; init; } = null!;
     [Inject] IJSInteropService jSInteropService { get; init; } = null!;
+    [Inject] IUIService uiService { get; init; } = null!;
 
     public ElementReference Ref { get; private set; }
 
@@ -30,15 +31,13 @@ partial class Canvas : ComponentBase, IUIComponent
     static string IconDefs => Icon.IconDefs;
 
 
-    public Task TriggerStateHasChangedAsync() => InvokeAsync(StateHasChanged);
-
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
 
         if (firstRender)
         {
+            uiService.OnUIStateChange += () => InvokeAsync(StateHasChanged);
             await srv.InitAsync(this);
             await this.jSInteropService.InitializeAsync(); // must be after srv.InitAsync, since triggered events need Ref
             await mouseEventService.InitAsync(this);
