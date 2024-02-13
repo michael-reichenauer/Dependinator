@@ -166,7 +166,7 @@ class ModelService : IModelService
         using var _ = Timing.Start();
         lock (model.SyncRoot)
         {
-            // AddSpecials();
+            AddSpecials();
             foreach (var parsedItem in parsedItems)
             {
                 switch (parsedItem)
@@ -189,13 +189,13 @@ class ModelService : IModelService
 
     void AddSpecials()
     {
-        for (int j = 1; j < 35; j++)
+        for (int j = 1; j < 2; j++)
         {
-            var name = $"TestJ";
+            var name = $"Test-1-1";
             for (int i = 1; i < 20; i++)
             {
                 var parentName = name;
-                name = $"{name}.Test-{j}-{i}";
+                name = $"{name}.Test-{j}-{i + 1}";
                 var node = new Parsing.Node(name, parentName, Parsing.NodeType.Assembly, "");
                 modelStructureService.AddOrUpdateNode(node);
             }
