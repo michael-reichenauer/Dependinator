@@ -64,8 +64,7 @@ class SvgService : ISvgService
         if (IsShowIcon(node, zoom)) return GetNodeIconSvg(node, nodeCanvasRect, zoom);
 
         return
-            GetNodeContainerSvg(node, nodeCanvasRect, zoom) + "\n" +
-            GetNodeContentSvg(node, nodeCanvasPos, zoom, tileWithMargin);
+            GetNodeContainerSvg(node, nodeCanvasRect, zoom, GetNodeContentSvg(node, Pos.Zero, zoom, tileWithMargin));
     }
 
 
@@ -170,10 +169,10 @@ class SvgService : ISvgService
         return
             $"""
             {selectedSvg}
-            <use href="#{icon}" x="{x}" y="{y}" width="{w}" height="{h}" />
-            <text x="{tx}" y="{ty}" class="iconName" font-size="{fz}px">{node.HtmlShortName}</text>
+            <use href="#{icon}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" />
+            <text x="{tx:0.##}" y="{ty:0.##}" class="iconName" font-size="{fz:0.##}px">{node.HtmlShortName}</text>
             <g class="hoverable">
-              <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
+              <rect id="{node.Id.Value}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
               </rect>
               <title>{node.HtmlLongName}</title>
             </g>
@@ -182,7 +181,7 @@ class SvgService : ISvgService
     }
 
 
-    static string GetNodeContainerSvg(Node node, Rect parentCanvasRect, double parentZoom)
+    static string GetNodeContainerSvg(Node node, Rect parentCanvasRect, double parentZoom, string childrenContent)
     {
         var s = node.StrokeWidth;
         var (x, y) = (parentCanvasRect.X, parentCanvasRect.Y);
@@ -202,14 +201,17 @@ class SvgService : ISvgService
         return
             $"""
             {selectedSvg}
-            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{node.Background}" fill-opacity="1" stroke="{node.Color}"/>      
-            <use href="#{icon}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" />
-            <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{node.HtmlShortName}</text>
-            <g class="hoverable">
-              <rect id="{node.Id.Value}" x="{x - 2}" y="{y - 2}" width="{w + 2}" height="{h + 2}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
-              </rect>
-              <title>{node.HtmlLongName}</title>
-            </g>
+            <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
+              <rect x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="{s}" rx="5" fill="{node.Background}" stroke="{node.Color}"/>
+              <g class="hoverable">
+                <rect id="{node.Id.Value}" x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
+                </rect>
+                <title>{node.HtmlLongName}</title>
+              </g>
+              {childrenContent}
+            </svg>
+            <use href="#{icon}" x="{ix:0.##}" y="{iy:0.##}" width="{iw:0.##}" height="{ih:0.##}" />
+            <text x="{tx:0.##}" y="{ty:0.##}" class="nodeName" font-size="{fz:0.##}px">{node.HtmlShortName}</text>
             """;
     }
 
