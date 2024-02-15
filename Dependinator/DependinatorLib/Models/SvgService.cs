@@ -267,8 +267,9 @@ class SvgService : ISvgService
 
         return
             $"""
+            <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="white" marker-end="url(#arrow)" />
             <g class="hoverable" >
-              <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="white" marker-end="url(#arrow)" />
+              <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw + 10}" stroke="black" stroke-opacity="0" />
               <title>{line.Source.HtmlLongName} {line.Target.HtmlLongName}</title>
             </g>
             """;
