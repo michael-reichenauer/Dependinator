@@ -30,7 +30,6 @@ partial class Canvas : ComponentBase, IUIComponent
     string ViewBox => srv.SvgViewBox;
     static string IconDefs => Icon.IconDefs;
 
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);

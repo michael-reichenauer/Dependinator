@@ -162,21 +162,17 @@ class SvgService : ISvgService
         var icon = node.Type.IconName;
         //Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
         //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
+        string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
 
-        var selectedSvg = node.IsSelected
-            ? $"""<rect x="{x - 3}" y="{y - 3}" width="{w + 6}" height="{h + 6}" stroke-width="3" rx="2" fill="none" stroke="yellow" />"""
-            : "";
         return
             $"""
-            {selectedSvg}
             <use href="#{icon}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" />
             <text x="{tx:0.##}" y="{ty:0.##}" class="iconName" font-size="{fz:0.##}px">{node.HtmlShortName}</text>
             <g class="hoverable">
-              <rect id="{node.Id.Value}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
-              </rect>
+              <rect id="{node.Id.Value}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
               <title>{node.HtmlLongName}</title>
             </g>
-            </rect>
+            {selectedSvg}
             """;
     }
 
@@ -194,26 +190,51 @@ class SvgService : ISvgService
 
         //Log.Info($"Container: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
         //var toolTip = $"{node.HtmlLongName}, np: {node.Boundarsy}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
-        var selectedSvg = node.IsSelected
-            ? $"""<rect x="{x - 3}" y="{y - 3}" width="{w + 6}" height="{h + 6}" stroke-width="3" rx="2" fill="none" stroke="yellow" />"""
-            : "";
+
+        string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
 
         return
             $"""
-            {selectedSvg}
             <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
               <rect x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="{s}" rx="5" fill="{node.Background}" stroke="{node.Color}"/>
               <g class="hoverable">
-                <rect id="{node.Id.Value}" x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none">
-                </rect>
+                <rect id="{node.Id.Value}" x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                 <title>{node.HtmlLongName}</title>
               </g>
               {childrenContent}
             </svg>
             <use href="#{icon}" x="{ix:0.##}" y="{iy:0.##}" width="{iw:0.##}" height="{ih:0.##}" />
             <text x="{tx:0.##}" y="{ty:0.##}" class="nodeName" font-size="{fz:0.##}px">{node.HtmlShortName}</text>
+            {selectedSvg}
             """;
     }
+
+    private static string SelectedNodeSvg(Node node, double x, double y, double w, double h)
+    {
+        string c = Color.Highlight;
+        const int s = 12;
+        const int m = 3;
+        const int mt = m + s;
+        const int ml = m + s;
+        const int mm = s / 2;
+        const int mr = m;
+        const int mb = m;
+        if (!node.IsSelected) return "";
+
+        return
+            $"""
+              <rect x="{x - ml}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
+              <rect x="{x + w / 2 - mm}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
+              <rect x="{x + w + mr}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
+              <rect x="{x - ml}" y="{y + h / 2}" width="{s}" height="{s}" fill="{c}" />
+              <rect x="{x + w + mr}" y="{y + h / 2}" width="{s}" height="{s}" fill="{c}" />    
+              <rect x="{x - ml}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
+              <rect x="{x + w / 2 - mm}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
+              <rect x="{x + w + mr}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
+            """
+           ;
+    }
+
 
     static string GetLineSvg(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
     {

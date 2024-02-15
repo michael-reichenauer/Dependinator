@@ -33,6 +33,8 @@ record Rect(double X, double Y, double Width, double Height)
 
 record Color(int R, int G, int B)
 {
+    public static readonly string Highlight = "#51b8fc";
+
     const int VeryDarkFactor = 12;
     const int Bright = 200;
     static readonly Random random = new();
