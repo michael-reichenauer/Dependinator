@@ -17,6 +17,7 @@ interface ICanvasService
     double Zoom { get; }
     int ZCount { get; }
     string SvgViewBox { get; }
+    string Cursor { get; }
 
     void Refresh();
     void Clear();
@@ -29,10 +30,14 @@ interface ICanvasService
 [Scoped]
 class CanvasService : ICanvasService
 {
+    const int MoveDelay = 300;
+
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
-    private readonly IUIService uiService;
-    IUIComponent component = null!;
+    readonly IUIService uiService;
+    readonly Timer moveTimer;
+    bool moveTimerRunning = false;
+    bool isMoving = false;
 
     public CanvasService(
         IMouseEventService mouseEventService,
@@ -49,6 +54,8 @@ class CanvasService : ICanvasService
         mouseEventService.MouseMove += OnMouseMove;
         mouseEventService.MouseDown += OnMouseDown;
         mouseEventService.MouseUp += OnMouseUp;
+
+        moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     public string SvgContent => GetSvgContent();
@@ -57,6 +64,7 @@ class CanvasService : ICanvasService
     public string TileViewBox { get; private set; } = "";
     public Pos TileOffset { get; private set; } = Pos.Zero;
     public string Content { get; private set; } = "";
+    public string Cursor { get; private set; } = "default";
 
     public Rect SvgRect => panZoomService.SvgRect;
     public Pos Offset => panZoomService.Offset;
@@ -72,7 +80,6 @@ class CanvasService : ICanvasService
 
     public async Task InitAsync(IUIComponent component)
     {
-        this.component = component;
         await panZoomService.InitAsync(component);
     }
 
@@ -117,7 +124,24 @@ class CanvasService : ICanvasService
 
     void OnMouseMove(MouseEvent e)
     {
-        if (!e.IsLeftButton) return;
+        if (!e.IsLeftButton)
+        {
+            if (isMoving)
+            {
+                Cursor = "default";
+                isMoving = false;
+            }
+            return;
+        };
+
+        if (!isMoving && selectedNodeId != "" && selectedNodeId == e.TargetId)
+        {
+
+            Log.Info("mouse move !!!!!!!!!!!!!!!!!!!", e.TargetId);
+            Cursor = "move";
+            isMoving = true;
+        }
+
         if (selectedNodeId != "" && selectedNodeId == mouseDownId)
         {
             moveSelectedNode(e);
@@ -130,6 +154,8 @@ class CanvasService : ICanvasService
     void OnMouseDown(MouseEvent e)
     {
         Log.Info("mouse down", e.TargetId);
+        moveTimerRunning = true;
+        moveTimer.Change(MoveDelay, Timeout.Infinite);
         mouseDownId = e.TargetId;
     }
 
@@ -137,7 +163,28 @@ class CanvasService : ICanvasService
     {
         Log.Info("mouse up", e.TargetId);
         mouseDownId = "";
+
+        if (moveTimerRunning)
+        {
+            moveTimerRunning = false;
+            moveTimer.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+
+        if (isMoving)
+        {
+            Cursor = "default";
+            isMoving = false;
+        }
     }
+
+    void OnMoveTimer(object? state)
+    {
+        moveTimerRunning = false;
+        Cursor = "move";
+        isMoving = true;
+        uiService.TriggerUIStateChange();
+    }
+
 
     void moveSelectedNode(MouseEvent e)
     {

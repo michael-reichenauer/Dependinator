@@ -30,6 +30,8 @@ partial class Canvas : ComponentBase, IUIComponent
     string ViewBox => srv.SvgViewBox;
     static string IconDefs => Icon.IconDefs;
 
+    string Cursor => srv.Cursor;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
@@ -39,7 +41,7 @@ partial class Canvas : ComponentBase, IUIComponent
             uiService.OnUIStateChange += () => InvokeAsync(StateHasChanged);
             await srv.InitAsync(this);
             await this.jSInteropService.InitializeAsync(); // must be after srv.InitAsync, since triggered events need Ref
-            await mouseEventService.InitAsync(this);
+            await mouseEventService.InitAsync();
             await InvokeAsync(srv.InitialShow);
         }
     }

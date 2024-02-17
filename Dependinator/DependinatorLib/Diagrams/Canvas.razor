@@ -8,7 +8,7 @@
     <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox">
         <style>
             svg {
-                cursor: default;
+                cursor: @Cursor;
             }
 
             .hoverable:hover * {
@@ -20,6 +20,7 @@
             .hoverline:hover * {
                 stroke: #51b8fc;
                 stroke-width: 6px;
+                stroke-opacity: 1;
             }
 
             .iconName {

@@ -223,16 +223,31 @@ class SvgService : ISvgService
 
         return
             $"""
+            <g class="hoverable">
               <rect x="{x - ml}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
+            </g>
+            <g class="hoverable">
               <rect x="{x + w / 2 - mm}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
+            </g>
+            <g class="hoverable">
               <rect x="{x + w + mr}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
+            </g>
+            <g class="hoverable">
               <rect x="{x - ml}" y="{y + h / 2}" width="{s}" height="{s}" fill="{c}" />
-              <rect x="{x + w + mr}" y="{y + h / 2}" width="{s}" height="{s}" fill="{c}" />    
+            </g>
+            <g class="hoverable">
+              <rect x="{x + w + mr}" y="{y + h / 2}" width="{s}" height="{s}" fill="{c}" />
+            </g>
+            <g class="hoverable">    
               <rect x="{x - ml}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
+            </g>
+            <g class="hoverable">
               <rect x="{x + w / 2 - mm}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
+            </g>
+            <g class="hoverable">
               <rect x="{x + w + mr}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
-            """
-           ;
+            </g>
+            """;
     }
 
 

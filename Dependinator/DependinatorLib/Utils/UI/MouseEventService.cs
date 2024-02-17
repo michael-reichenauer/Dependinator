@@ -13,7 +13,7 @@ interface IMouseEventService
     event Action<MouseEvent> LeftClick;
     event Action<MouseEvent> LeftDblClick;
 
-    Task InitAsync(IUIComponent component);
+    Task InitAsync();
 }
 
 
@@ -24,7 +24,6 @@ class MouseEventService : IMouseEventService
     private readonly IUIService uiService;
     const int ClickDelay = 300;
 
-    IUIComponent component = null!;
     readonly Timer clickTimer;
     bool timerRunning = false;
     MouseEvent clickLeftMouse = new();
@@ -45,9 +44,8 @@ class MouseEventService : IMouseEventService
     public event Action<MouseEvent> LeftClick = null!;
     public event Action<MouseEvent> LeftDblClick = null!;
 
-    public async Task InitAsync(IUIComponent component)
+    public async Task InitAsync()
     {
-        this.component = component;
         var objRef = DotNetObjectReference.Create(this);
         await jSInteropService.AddMouseEventListener("svgcanvas", "wheel", objRef, "EventCallback");
         await jSInteropService.AddMouseEventListener("svgcanvas", "mousemove", objRef, "EventCallback");
