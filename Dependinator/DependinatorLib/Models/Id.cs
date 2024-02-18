@@ -29,10 +29,20 @@ public record Id(string Value)
         return new string(chars);
 
     }
+
+    internal static (string id, string subId) ParseString(string targetId)
+    {
+        var parts = targetId.Split('.');
+
+        var id = parts[0];
+        var subId = parts.Length > 1 ? parts[1] : "";
+        return (id, subId);
+    }
 }
 
 public record NodeId : Id
 {
+    public static NodeId Empty = new("");
     private NodeId(string Value) : base(Value) { }
     public static NodeId FromName(string name) => new(ToId(name));
     public static NodeId FromId(string id) => new(id);

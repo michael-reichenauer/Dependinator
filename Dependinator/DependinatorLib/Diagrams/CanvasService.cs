@@ -72,8 +72,9 @@ class CanvasService : ICanvasService
     public double ActualZoom => Zoom / LevelZoom;
     public int ZCount => panZoomService.ZCount;
 
-    string selectedNodeId = "";
+    string selectedId = "";
     string mouseDownId = "";
+    string mouseDownSubId = "";
 
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";
 
@@ -87,26 +88,27 @@ class CanvasService : ICanvasService
     public void OnClick(MouseEvent e)
     {
         Log.Info("mouse click", e.TargetId);
-        if (selectedNodeId == e.TargetId) return; // Clicked on same node again
+        (string id, string subId) = NodeId.ParseString(e.TargetId);
+        if (selectedId == id) return; // Clicked on same node again
 
         if (modelService.TryUpdateNode(e.TargetId, node => node.IsSelected = true))
         {
             Log.Info($"Node clicked: {e.TargetId}");
-            if (selectedNodeId != "")
+            if (selectedId != "")
             {   // Deselect previous node
-                modelService.TryUpdateNode(selectedNodeId, node => node.IsSelected = false);
+                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
             }
 
-            selectedNodeId = e.TargetId;
+            selectedId = id;
             uiService.TriggerUIStateChange();
         }
         else
         {
             Log.Info($"No node found at {e.OffsetX},{e.OffsetY}");
-            if (selectedNodeId != "")
+            if (selectedId != "")
             {
-                modelService.TryUpdateNode(selectedNodeId, node => node.IsSelected = false);
-                selectedNodeId = "";
+                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
+                selectedId = "";
                 uiService.TriggerUIStateChange();
             }
         }
@@ -125,7 +127,7 @@ class CanvasService : ICanvasService
     void OnMouseMove(MouseEvent e)
     {
         if (!e.IsLeftButton)
-        {
+        {   // No left button, just moving mouse
             if (isMoving)
             {
                 Cursor = "default";
@@ -134,18 +136,26 @@ class CanvasService : ICanvasService
             return;
         };
 
-        if (!isMoving && selectedNodeId != "" && selectedNodeId == e.TargetId)
-        {
 
-            Log.Info("mouse move !!!!!!!!!!!!!!!!!!!", e.TargetId);
+        if (!isMoving && selectedId != "" && selectedId == mouseDownId)
+        {
             Cursor = "move";
             isMoving = true;
         }
 
-        if (selectedNodeId != "" && selectedNodeId == mouseDownId)
+        if (selectedId != "")
         {
-            moveSelectedNode(e);
-            return;
+            if (selectedId == mouseDownId && mouseDownSubId == "")
+            {
+                moveSelectedNode(e);
+                return;
+            }
+            if (selectedId == mouseDownId && mouseDownSubId != "")
+            {
+                Log.Info($"Move {mouseDownId}, {mouseDownSubId}");
+                resizeSelectedNode(e);
+                return;
+            }
         }
 
         panZoomService.OnMouseMove(e);
@@ -153,16 +163,17 @@ class CanvasService : ICanvasService
 
     void OnMouseDown(MouseEvent e)
     {
-        Log.Info("mouse down", e.TargetId);
         moveTimerRunning = true;
         moveTimer.Change(MoveDelay, Timeout.Infinite);
-        mouseDownId = e.TargetId;
+        (string id, string subId) = NodeId.ParseString(e.TargetId);
+        mouseDownId = id;
+        mouseDownSubId = subId;
     }
 
     void OnMouseUp(MouseEvent e)
     {
-        Log.Info("mouse up", e.TargetId);
         mouseDownId = "";
+        mouseDownSubId = "";
 
         if (moveTimerRunning)
         {
@@ -193,7 +204,34 @@ class CanvasService : ICanvasService
             var zoom = node.GetZoom() * Zoom;
             var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
 
-            node.Boundary = new Rect(node.Boundary.X + dx, node.Boundary.Y + dy, node.Boundary.Width, node.Boundary.Height);
+            node.Boundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
+        });
+    }
+
+    void resizeSelectedNode(MouseEvent e)
+    {
+        modelService.TryUpdateNode(mouseDownId, node =>
+        {
+            var zoom = node.GetZoom() * Zoom;
+            var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
+
+            Log.Info("Resize", mouseDownSubId);
+            node.Boundary = mouseDownSubId switch
+            {
+                "tl" => node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy, Width = node.Boundary.Width - dx, Height = node.Boundary.Height - dy },
+                "tm" => node.Boundary with { Y = node.Boundary.Y + dy, Height = node.Boundary.Height - dy },
+                "tr" => node.Boundary with { X = node.Boundary.X, Y = node.Boundary.Y + dy, Width = node.Boundary.Width + dx, Height = node.Boundary.Height - dy },
+
+                "ml" => node.Boundary with { X = node.Boundary.X + dx, Width = node.Boundary.Width - dx },
+                "mr" => node.Boundary with { X = node.Boundary.X, Width = node.Boundary.Width + dx },
+
+                "bl" => node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y, Width = node.Boundary.Width - dx, Height = node.Boundary.Height + dy },
+                "bm" => node.Boundary with { Y = node.Boundary.Y, Height = node.Boundary.Height + dy },
+                "br" => node.Boundary with { X = node.Boundary.X, Y = node.Boundary.Y, Width = node.Boundary.Width + dx, Height = node.Boundary.Height + dy },
+
+                _ => node.Boundary
+
+            };
         });
     }
 
@@ -231,8 +269,6 @@ class CanvasService : ICanvasService
 
     string GetSvgContent()
     {
-        //Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
-
         var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
         var tile = modelService.GetTile(viewRect, Zoom);
 

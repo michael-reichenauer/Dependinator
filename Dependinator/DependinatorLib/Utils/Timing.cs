@@ -39,7 +39,7 @@ public class Timing : IDisposable
     public void Dispose()
     {
         var text = msg != "" ? $"{msg} {ToString()}" : $"{msgMember} {ToString()}";
-        Logging.Log.Info(text, msgMember, msgSourceFilePath, msgSourceLineNumber);
+        Logging.Log.Info(text, Logging.Log.StopParameter.Empty, msgMember, msgSourceFilePath, msgSourceLineNumber);
     }
 
     public TimeSpan Stop()
@@ -88,7 +88,7 @@ public class Timing : IDisposable
         count++;
 
         Logging.Log.Info(
-             $"{count}: {message}: {this}", memberName, sourceFilePath, sourceLineNumber);
+             $"{count}: {message}: {this}", Logging.Log.StopParameter.Empty, memberName, sourceFilePath, sourceLineNumber);
     }
 
     public void Log(
@@ -99,7 +99,7 @@ public class Timing : IDisposable
     {
         count++;
 
-        Logging.Log.Info($"At {count}: {this}", memberName, sourceFilePath, sourceLineNumber);
+        Logging.Log.Info($"At {count}: {this}", Logging.Log.StopParameter.Empty, memberName, sourceFilePath, sourceLineNumber);
     }
 
 

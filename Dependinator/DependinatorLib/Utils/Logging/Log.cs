@@ -23,11 +23,48 @@ static class Log
 
     public static void Info(
         string msg,
+        StopParameter stop = StopParameter.Empty,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0)
     {
         Write(LevelInfo, msg, memberName, sourceFilePath, sourceLineNumber);
+    }
+
+    public static void Info(
+       string msg,
+       object p1,
+       StopParameter stop = StopParameter.Empty,
+       [CallerMemberName] string memberName = "",
+       [CallerFilePath] string sourceFilePath = "",
+       [CallerLineNumber] int sourceLineNumber = 0)
+    {
+        Write(LevelInfo, $"{msg} {p1}", memberName, sourceFilePath, sourceLineNumber);
+    }
+
+    public static void Info(
+      string msg,
+      object p1,
+      object p2,
+      StopParameter stop = StopParameter.Empty,
+      [CallerMemberName] string memberName = "",
+      [CallerFilePath] string sourceFilePath = "",
+      [CallerLineNumber] int sourceLineNumber = 0)
+    {
+        Write(LevelInfo, $"{msg} {p1} {p2}", memberName, sourceFilePath, sourceLineNumber);
+    }
+
+    public static void Info(
+        string msg,
+        object p1,
+        object p2,
+        object p3,
+        StopParameter stop = StopParameter.Empty,
+        [CallerMemberName] string memberName = "",
+        [CallerFilePath] string sourceFilePath = "",
+        [CallerLineNumber] int sourceLineNumber = 0)
+    {
+        Write(LevelInfo, $"{msg} {p1} {p2} {p3}", memberName, sourceFilePath, sourceLineNumber);
     }
 
     public static void Warn(
@@ -85,4 +122,11 @@ static class Log
     {
         ConfigLogger.Write(level, msg, memberName, sourceFilePath, sourceLineNumber);
     }
+
+    public class StopParameter
+    {
+        public const StopParameter Empty = default;
+    }
 }
+
+
