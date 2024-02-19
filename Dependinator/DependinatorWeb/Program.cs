@@ -1,6 +1,5 @@
-using DependinatorWeb.Data;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using Dependinator.Utils;
+using Dependinator.Utils.Logging;
 
 namespace DependinatorWeb
 {
@@ -8,12 +7,37 @@ namespace DependinatorWeb
     {
         public static void Main(string[] args)
         {
+            Log.Info($"Starting Dependinator ...");
+            ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
+
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
-            builder.Services.AddSingleton<WeatherForecastService>();
+
+            builder.Services.Scan(i =>
+                i.FromAssembliesOf(typeof(Dependinator.RootClass))
+                    .AddClasses(c => c.WithAttribute<SingletonAttribute>())
+                    .AsImplementedInterfaces()
+                    .WithSingletonLifetime()
+
+                    .AddClasses(c => c.WithAttribute<ScopedAttribute>())
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime()
+
+                    .AddClasses(c => c.WithAttribute<TransientAttribute>())
+                    .AsImplementedInterfaces()
+                    .WithTransientLifetime()
+
+            // .AddClasses(c => c.Where((Type t) =>
+            //     !t.HasAttribute<TransientAttribute>() &&
+            //     !t.HasAttribute<SingletonAttribute>() &&
+            //     !t.HasAttribute<ScopedAttribute>()))
+            // .AsImplementedInterfaces()
+            // .WithTransientLifetime()
+            );
+
 
             var app = builder.Build();
 
