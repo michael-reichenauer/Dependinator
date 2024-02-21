@@ -1,40 +1,65 @@
-# <img src="DependinatorVse/source.extension.ico" width="20"> Dependinator
+# Blazor Starter Application
 
-Dependinator visualizes code structure and dependencies in a map-like interface to make it easier to understand and refactor the architecture. Dependinator also provides functionality to explore these dependencies and make it easy to jump from one part of the system to another and even dive into the code, inline, or open external code editor.
+This template contains an example .NET 8 [Blazor WebAssembly](https://docs.microsoft.com/aspnet/core/blazor/?view=aspnetcore-6.0#blazor-webassembly) client application, a .NET 8 C# [Azure Functions](https://docs.microsoft.com/azure/azure-functions/functions-overview), and a C# class library with shared code.
 
-<img src="doc/resources/dependinator.gif" width="650">
+## Getting Started
 
-## Get Started
+1. Create a repository from the [GitHub template](https://docs.github.com/en/enterprise/2.22/user/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template) and then clone it locally to your machine.
 
-* **Download** Dependinator from the [latest release](https://github.com/michael-reichenauer/Dependinator/releases/latest).
-* **More information** is available in the [documentation](https://github.com/michael-reichenauer/Dependinator/wiki/Dependinator-Help).
+1. In the **Api** folder, copy `local.settings.example.json` to `local.settings.json`
 
-An example project is included in the application.
+1. Continue using either Visual Studio or Visual Studio Code.
 
-## About Dependinator
+### Visual Studio 2022
 
-Dependinator parses a data source like e.g. a .NET solution with assemblies and creates a model, which is visualized as a map-like interface similar to e.g. Google maps. Dependinator also supports integration with third-party parsers like e.g. the [Dependinator Go parser](https://github.com/michael-reichenauer/depgoparser).
+Once you clone the project, open the solution in the latest release of [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) with the Azure workload installed, and follow these steps:
 
-### The Model View
+1. Right-click on the solution and select **Configure Startup Projects...**.
 
-The first time, the view shows an overview of the top-level components and their references to external components. The user can then quickly zoom into the model to see more details within some node. All references from within one node to another are represented as one line.  
+1. Select **Multiple startup projects** and set the following actions for each project:
+    - *Api* - **Start**
+    - *Client* - **Start**
+    - *Shared* - None
 
-![Model View](doc/resources/model_view.png)
+1. Press **F5** to launch both the client application and the Functions API app.
 
-### Dependency Explorer
+### Visual Studio Code with Azure Static Web Apps CLI for a better development experience (Optional)
 
-References and dependencies between different parts of the code can be explored in detail by using the Dependency Explorer window. It makes it easier to investigate exactly what type or member within a node has a reference to some other type/member within some other node.
+1. Install (or update) the [Azure Static Web Apps CLI](https://www.npmjs.com/package/@azure/static-web-apps-cli) and [Azure Functions Core Tools CLI](https://www.npmjs.com/package/azure-functions-core-tools).
 
-![Dependency Explorer](doc/resources/de.png)
+1. Open the folder in Visual Studio Code.
 
-### Source Code View
+1. Delete file `Client/wwwroot/appsettings.Development.json`
 
-For types and members, it is possible to see the source code. Often, the actual source file can be shown and in some cases, Dependinator will show the decompiled code.
+1. In the VS Code terminal, run the following command to start the Static Web Apps CLI, along with the Blazor WebAssembly client application and the Functions API app:
 
-![Source Code](doc/resources/code.png)
+    In the Client folder, run:
+    ```bash
+    dotnet run
+    ```
 
-### Visual Studio Extension
+    In the API folder, run:
+    ```bash
+    func start
+    ```
 
-The Dependinator Visual Studio Extension (installed by default) supports integration between Dependinator and Visual Studio (VS). In the model view, it is possible to open the source file for a node in VS, and in VS, it is possible to trigger Dependinator to pan and zoom to show the node that corresponds to the active window in VS.
+    In another terminal, run:
+    ```bash
+    swa start http://localhost:5000 --api-location http://localhost:7071
+    ```
 
+    The Static Web Apps CLI (`swa`) starts a proxy on port 4280 that will forward static site requests to the Blazor server on port 5000 and requests to the `/api` endpoint to the Functions server. 
 
+1. Open a browser and navigate to the Static Web Apps CLI's address at `http://localhost:4280`. You'll be able to access both the client application and the Functions API app in this single address. When you navigate to the "Fetch Data" page, you'll see the data returned by the Functions API app.
+
+1. Enter Ctrl-C to stop the Static Web Apps CLI.
+
+## Template Structure
+
+- **Client**: The Blazor WebAssembly sample application
+- **Api**: A C# Azure Functions API, which the Blazor application will call
+- **Shared**: A C# class library with a shared data model between the Blazor and Functions application
+
+## Deploy to Azure Static Web Apps
+
+This application can be deployed to [Azure Static Web Apps](https://docs.microsoft.com/azure/static-web-apps), to learn how, check out [our quickstart guide](https://aka.ms/blazor-swa/quickstart).

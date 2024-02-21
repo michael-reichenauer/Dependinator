@@ -1,0 +1,26 @@
+#!/bin/bash
+echo ""
+echo "Update timezone to Europe/Stockholm"
+sudo rm -rf /etc/localtime
+sudo ln -s /usr/share/zoneinfo/Europe/Stockholm /etc/localtime
+date
+
+echo ""
+echo "Updating apt ..."
+sudo apt update -q -y
+echo ""
+echo "Installing mc ..."
+sudo apt install -q mc -y 1>/dev/null
+echo ""
+echo "Installing lnav ..."
+sudo apt install -q lnav -y 1>/dev/null
+echo ""
+echo "Installing xsel for copy selection ..."
+sudo apt-get install -y xsel 1>/dev/null
+
+echo ""
+echo "Install gmd ..."
+curl curl -sL https://raw.githubusercontent.com/michael-reichenauer/gmd/main/install.sh | bash
+
+echo ""
+echo "Done"
