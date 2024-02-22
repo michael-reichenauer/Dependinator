@@ -15,6 +15,7 @@
 
   <ItemGroup>
 	<ProjectReference Include="..\Shared\Shared.csproj" />
+	<ProjectReference Include="..\Dependinator\Dependinator.csproj" />
   </ItemGroup>
 
 </Project>

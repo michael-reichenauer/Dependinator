@@ -5,8 +5,8 @@ global using static Dependinator.Utils.Result;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("DependinatorWeb")]
-[assembly: InternalsVisibleTo("DependinatorLib.Tests")]
+[assembly: InternalsVisibleTo("Client")]
+[assembly: InternalsVisibleTo("Dependinator.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]  // DI access
 
 [assembly: AssemblyDescription("Dependinator is a tool for visualizing and exploring software dependencies.")]
