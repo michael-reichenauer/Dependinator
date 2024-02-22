@@ -1,7 +1,28 @@
 {
-    "azureFunctions.deploySubpath": "Api/bin/Release/net8.0/publish",
-    "azureFunctions.projectLanguage": "C#",
-    "azureFunctions.projectRuntime": "~4",
-    "debug.internalConsoleOptions": "neverOpen",
-    "azureFunctions.preDeployTask": "publish (functions)"
+  "azureFunctions.deploySubpath": "Api/bin/Release/net8.0/publish",
+  "azureFunctions.projectLanguage": "C#",
+  "azureFunctions.projectRuntime": "~4",
+  "debug.internalConsoleOptions": "neverOpen",
+  "azureFunctions.preDeployTask": "publish (functions)",
+  "cSpell.words": [
+    "Blazor",
+    "Decompile",
+    "Decompiled",
+    "Decompiler",
+    "Dependinator",
+    "devcontainers",
+    "dotnettools",
+    "Dtos",
+    "hoverable",
+    "Hsts",
+    "linejoin",
+    "mhutchie",
+    "mscorlib",
+    "Newtonsoft",
+    "polyline",
+    "Rezise",
+    "Svgs",
+    "uninstallation"
+  ],
+  "dotnet-test-explorer.testProjectPath": "**/*Tests.@(csproj|vbproj|fsproj)"
 }

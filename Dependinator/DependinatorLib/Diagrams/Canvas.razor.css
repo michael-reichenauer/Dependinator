@@ -1,0 +1,13 @@
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0px;
+    margin: 1px;
+}
+
+svg { /* The 100% width and height will make it take up the full space of its container */
+    border: 1px dashed rgb(56, 151, 246);
+}

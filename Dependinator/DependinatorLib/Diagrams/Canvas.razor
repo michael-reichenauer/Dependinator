@@ -1,0 +1,51 @@
+@namespace Dependinator.Diagrams
+
+<div>
+    <code>@Info</code>
+</div>
+
+<div>
+    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox">
+        <style>
+            svg {
+                cursor: @Cursor;
+            }
+
+            .hoverable:hover * {
+                stroke: #51b8fc;
+                stroke-width: 4px;
+                stroke-opacity: 1;
+            }
+
+            .hoverline:hover * {
+                stroke: #51b8fc;
+                stroke-width: 6px;
+                stroke-opacity: 1;
+            }
+
+            .iconName {
+                font: Verdana, Helvetica, Arial, sans-serif;
+                fill: white;
+                dominant-baseline: hanging;
+                text-anchor: middle;
+                pointer-events: none;
+            }
+
+            .nodeName {
+                font: Verdana, Helvetica, Arial, sans-serif;
+                fill: white;
+                dominant-baseline: hanging;
+                text-anchor: start;
+                pointer-events: none;
+            }
+        </style>
+        <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="white" />
+            </marker>
+            @((MarkupString)IconDefs)
+        </defs>
+
+        @((MarkupString)Content)
+    </svg>
+</div>
