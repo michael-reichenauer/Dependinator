@@ -3,7 +3,8 @@
   "azureFunctions.projectLanguage": "C#",
   "azureFunctions.projectRuntime": "~4",
   "debug.internalConsoleOptions": "neverOpen",
-  "azureFunctions.preDeployTask": "publish (functions)""cSpell.words": [
+  "azureFunctions.preDeployTask": "publish (functions)",
+  "cSpell.words": [
     "Blazor",
     "Decompile",
     "Decompiled",
