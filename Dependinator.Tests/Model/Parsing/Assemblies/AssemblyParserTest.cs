@@ -4,19 +4,21 @@ using Dependinator.Parsing.Assemblies;
 
 namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
 
-public class AssemblyFileParserServiceTest
+public class AssemblyParserTest
 {
     [Fact]
     public async Task ParserTest()
     {
-        var parser = new AssemblyParserService();
         var channel = Channel.CreateUnbounded<IItem>();
+        var parser = new AssemblyParser(
+            Path.Combine(AppContext.BaseDirectory, "Dependinator.dll"),
+            "",
+            "Dependinator",
+            channel.Writer,
+            true);
 
-        Assert.True(Try(await parser.ParseAsync(Path.Combine(AppContext.BaseDirectory, "DependinatorLib.dll"), channel)));
-        channel.Writer.Complete();
-
+        Assert.True(Try(await parser.ParseAsync()));
         var list = await channel.Reader.ReadAllAsync().ToList();
-
         Assert.True(list.Any());
     }
 }

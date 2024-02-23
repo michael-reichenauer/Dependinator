@@ -4,7 +4,7 @@ using Dependinator.Parsing;
 using Dependinator.Parsing.Solutions;
 
 
-namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
+namespace Dependinator.Tests.Model.Parsing.Assemblies;
 
 public class SolutionParserServiceTest
 {
