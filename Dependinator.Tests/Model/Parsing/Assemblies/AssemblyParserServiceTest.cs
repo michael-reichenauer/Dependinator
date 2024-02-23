@@ -12,7 +12,7 @@ public class AssemblyFileParserServiceTest
         var parser = new AssemblyParserService();
         var channel = Channel.CreateUnbounded<IItem>();
 
-        Assert.True(Try(await parser.ParseAsync(Path.Combine(AppContext.BaseDirectory, "DependinatorLib.dll"), channel)));
+        Assert.True(Try(await parser.ParseAsync(Path.Combine(AppContext.BaseDirectory, "Dependinator.dll"), channel)));
         channel.Writer.Complete();
 
         var list = await channel.Reader.ReadAllAsync().ToList();

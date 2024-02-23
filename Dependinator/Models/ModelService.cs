@@ -106,18 +106,18 @@ class ModelService : IModelService
         using var _ = Timing.Start();
         var path = "/workspaces/Dependinator/Dependinator/Dependinator.sln";
 
-        if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
+        // if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 
         await Task.Run(async () =>
         {
             var batchItems = new List<Parsing.IItem>();
-            while (await reader.WaitToReadAsync())
-            {
-                while (reader.TryRead(out var item))
-                {
-                    batchItems.Add(item);
-                }
-            }
+            // while (await reader.WaitToReadAsync())
+            // {
+            //     while (reader.TryRead(out var item))
+            //     {
+            //         batchItems.Add(item);
+            //     }
+            // }
             AddOrUpdate(batchItems);
         });
 

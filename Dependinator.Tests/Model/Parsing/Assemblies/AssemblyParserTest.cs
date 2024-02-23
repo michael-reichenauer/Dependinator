@@ -11,7 +11,7 @@ public class AssemblyParserTest
     {
         var channel = Channel.CreateUnbounded<IItem>();
         var parser = new AssemblyParser(
-            Path.Combine(AppContext.BaseDirectory, "DependinatorLib.dll"),
+            Path.Combine(AppContext.BaseDirectory, "Dependinator.dll"),
             "",
             "Dependinator",
             channel.Writer,
