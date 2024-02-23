@@ -6,7 +6,7 @@ namespace Dependinator.Utils;
 
 
 // Handles unhandled exceptions top ensure they are logged and program is restarted or shut down
-internal static class ExceptionHandling
+static class ExceptionHandling
 {
     private static readonly TimeSpan MinTimeBeforeAutoRestart = TimeSpan.FromSeconds(10);
 

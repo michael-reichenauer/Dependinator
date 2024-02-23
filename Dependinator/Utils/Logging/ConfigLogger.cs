@@ -35,6 +35,7 @@ static class ConfigLogger
             .RunInBackground();
         // string path = $"{Environment.GetFolderPath(SpecialFolder.UserProfile)}/gmd.log";
         string path = Path.Join(GetFolderPath(SpecialFolder.UserProfile), LogFileName);
+        // var path = "/workspaces/Dependinator/Dependinator.log";
         Init(path);
     }
 
@@ -181,7 +182,7 @@ static class ConfigLogger
     }
 
 
-    private static void WriteToFile(IReadOnlyCollection<string> text)
+    private static void WriteToFile(IReadOnlyCollection<string> textLines)
     {
         if (LogPath == null)
         {
@@ -195,7 +196,8 @@ static class ConfigLogger
             {
                 try
                 {
-                    File.AppendAllLines(LogPath, text);
+                    Console.WriteLine(textLines.Join("\n"));
+                    File.AppendAllLines(LogPath, textLines);
 
                     long length = new FileInfo(LogPath).Length;
 

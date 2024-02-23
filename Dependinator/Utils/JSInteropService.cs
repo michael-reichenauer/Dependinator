@@ -50,7 +50,7 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
     public JSInteropService(IJSRuntime jsRuntime)
     {
         this.moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
-            identifier: "import", args: "./_content/DependinatorLib/jsInterop.js").AsTask());
+            identifier: "import", args: "./_content/Dependinator/jsInterop.js").AsTask());
 
         this.resizeTimer = new System.Timers.Timer(interval: 25);
         this.resizeTimer.Elapsed += async (sender, elapsedEventArgs) => await DimensionsChanged(sender!, elapsedEventArgs);
