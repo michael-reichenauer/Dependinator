@@ -8,6 +8,7 @@
     margin: 1px;
 }
 
-svg { /* The 100% width and height will make it take up the full space of its container */
-    border: 1px dashed rgb(56, 151, 246);
+svg {
+    /* The 100% width and height will make it take up the full space of its container */
+    /* border: 1px dashed rgb(56, 151, 246); */
 }
