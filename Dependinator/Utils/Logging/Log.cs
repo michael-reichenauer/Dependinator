@@ -39,7 +39,7 @@ static class Log
        [CallerFilePath] string sourceFilePath = "",
        [CallerLineNumber] int sourceLineNumber = 0)
     {
-        Write(LevelInfo, $"{msg} {p1}", memberName, sourceFilePath, sourceLineNumber);
+        Write(LevelInfo, $"{msg} {toText(p1)}", memberName, sourceFilePath, sourceLineNumber);
     }
 
     public static void Info(
@@ -51,7 +51,7 @@ static class Log
       [CallerFilePath] string sourceFilePath = "",
       [CallerLineNumber] int sourceLineNumber = 0)
     {
-        Write(LevelInfo, $"{msg} {p1} {p2}", memberName, sourceFilePath, sourceLineNumber);
+        Write(LevelInfo, $"{msg} {toText(p1)} {toText(p2)}", memberName, sourceFilePath, sourceLineNumber);
     }
 
     public static void Info(
@@ -64,7 +64,7 @@ static class Log
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0)
     {
-        Write(LevelInfo, $"{msg} {p1} {p2} {p3}", memberName, sourceFilePath, sourceLineNumber);
+        Write(LevelInfo, $"{msg} {toText(p1)} {toText(p2)} {toText(p3)}", memberName, sourceFilePath, sourceLineNumber);
     }
 
     public static void Warn(
@@ -113,7 +113,7 @@ static class Log
         throw new Exception("Assertion does not implement ReferenceEquals, use Ensure or Require");
     }
 
-    private static void Write(
+    static void Write(
         string level,
         string msg,
         string memberName,
@@ -121,6 +121,28 @@ static class Log
         int sourceLineNumber)
     {
         ConfigLogger.Write(level, msg, memberName, sourceFilePath, sourceLineNumber);
+    }
+
+    static string toText(object obj)
+    {
+        if (obj == null) return "<null>";
+        var t = obj.GetType();
+
+        if (t.IsPrimitive || t == typeof(Decimal) || t == typeof(String) || t == typeof(DateTime) ||
+            t == typeof(TimeSpan) || t == typeof(Guid) || t == typeof(DateTimeOffset) ||
+            t == typeof(Uri) || t == typeof(Version) || t == typeof(DBNull))
+        {
+            return obj.ToString() ?? "";
+        }
+
+        try
+        {
+            return obj.ToJson();
+        }
+        catch
+        {
+            return obj.ToString() ?? "";
+        }
     }
 
     public class StopParameter

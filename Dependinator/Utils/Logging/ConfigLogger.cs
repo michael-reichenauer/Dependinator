@@ -196,7 +196,7 @@ static class ConfigLogger
             {
                 try
                 {
-                    Console.WriteLine(textLines.Join("\n"));
+                    Console.WriteLine(textLines.Select(l => l.Length > 24 ? l[24..] : l).Join("\n"));
                     File.AppendAllLines(LogPath, textLines);
 
                     long length = new FileInfo(LogPath).Length;

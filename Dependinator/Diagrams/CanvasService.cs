@@ -85,7 +85,7 @@ class CanvasService : ICanvasService
     }
 
 
-    public void OnClick(MouseEvent e)
+    void OnClick(MouseEvent e)
     {
         Log.Info("mouse click", e.TargetId);
         (string id, string subId) = NodeId.ParseString(e.TargetId);
