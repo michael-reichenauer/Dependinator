@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="HandheldFriendly" content="true" />
+
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" /> -->
     <title>Dependinator</title>
     <base href="/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
@@ -27,6 +30,18 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        // Prevent default touch events (scrolling, zooming, etc.), handled by the app
+        document.addEventListener('touchstart', function (e) {
+            e.preventDefault();
+        }, { passive: false });
+        document.addEventListener('touchmove', function (e) {
+            e.preventDefault();
+        }, { passive: false });
+        document.addEventListener('touchend', function (e) {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
 </body>
 
 </html>

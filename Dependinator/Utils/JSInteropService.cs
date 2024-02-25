@@ -34,6 +34,7 @@ public interface IJSInteropService
     BrowserSizeDetails BrowserSizeDetails { get; }
 
     ValueTask AddMouseEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
+    ValueTask AddTouchEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
     ValueTask<string> Prompt(string message);
 }
 
@@ -49,8 +50,11 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
 
     public JSInteropService(IJSRuntime jsRuntime)
     {
+        //var version = $"{DateTime.UtcNow.Ticks}";  // Vesion is needed to avoid cached js file (dev)
+        var version = "1.2";                          // Vesion is needed to avoid cached js file (prod) 
+
         this.moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
-            identifier: "import", args: "./_content/Dependinator/jsInterop.js").AsTask());
+            identifier: "import", args: $"./_content/Dependinator/jsInterop.js?v={version}").AsTask());
 
         this.resizeTimer = new System.Timers.Timer(interval: 25);
         this.resizeTimer.Elapsed += async (sender, elapsedEventArgs) => await DimensionsChanged(sender!, elapsedEventArgs);
@@ -74,6 +78,12 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
     {
         IJSObjectReference module = await GetModuleAsync();
         await module.InvokeVoidAsync(identifier: "addMouseEventListener", elementId, eventName, dotNetObjectReference, functionName);
+    }
+
+    public async ValueTask AddTouchEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        await module.InvokeVoidAsync(identifier: "addTouchEventListener", elementId, eventName, dotNetObjectReference, functionName);
     }
 
     public async ValueTask<BrowserSizeDetails> GetWindowSizeAsync()

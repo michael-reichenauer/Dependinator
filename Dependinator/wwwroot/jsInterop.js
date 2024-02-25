@@ -64,3 +64,31 @@ export function addMouseEventListener(elementId, eventName, instance, functionNa
 
   document.getElementById(elementId).addEventListener(eventName, eventHandler)
 }
+
+export function addTouchEventListener(elementId, eventName, instance, functionName) {
+  function eventHandler(event) {
+    let touches = Array.from(event.touches, touch => ({
+      Identifier: touch.identifier,
+      TargetId: touch.target.id,
+      ClientX: touch.clientX,
+      ClientY: touch.clientY,
+      ScreenX: touch.screenX,
+      ScreenY: touch.screenY,
+      PageX: touch.pageX,
+      PageY: touch.pageY,
+    }));
+
+    instance.invokeMethodAsync(functionName, {
+      Type: eventName,
+      TargetId: event.target.id,
+      Touches: touches,
+      CtrlKey: event.ctrlKey,
+      ShiftKey: event.shiftKey,
+      AltKey: event.altKey,
+      MetaKey: event.metaKey,
+    });
+  }
+
+  document.getElementById(elementId).addEventListener(eventName, eventHandler)
+}
+
