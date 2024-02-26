@@ -59,3 +59,21 @@ public record TouchPoint
     public double PageX { get; init; }
     public double PageY { get; init; }
 }
+
+public record HammerEvent
+{
+    public string Type { get; init; } = "";
+    public string TargetId { get; init; } = "";
+    public HammerPoint Center { get; init; } = null!;
+    public HammerPoint[] Pointers { get; init; } = Array.Empty<HammerPoint>();
+    public double DeltaX { get; init; }
+    public double DeltaY { get; init; }
+    public double Rotation { get; init; }
+    public bool IsFinal { get; init; }
+}
+
+public record HammerPoint
+{
+    public double X { get; init; }
+    public double Y { get; init; }
+}
