@@ -26,7 +26,8 @@ class PanZoomService : IPanZoomService
 {
     const double MaxZoom = 10;
     const double Margin = 10;
-    const double ZoomSpeed = 1.05;
+    const double WheelZoomSpeed = 1.1;
+    const double PinchZoomSpeed = 1.02;
 
     const int SvgPageMargin = 2;
 
@@ -68,7 +69,8 @@ class PanZoomService : IPanZoomService
 
             if (e.DeltaY > 0) ZCount--; else ZCount++;
 
-            double newZoom = (e.DeltaY > 0) ? Zoom * ZoomSpeed : Zoom * (1 / ZoomSpeed);
+            var speed = e.Type == "wheel" ? WheelZoomSpeed : PinchZoomSpeed;
+            double newZoom = (e.DeltaY > 0) ? Zoom * speed : Zoom * (1 / speed);
             if (newZoom > MaxZoom) newZoom = MaxZoom;
 
             double svgX = mx * Zoom + Offset.X;

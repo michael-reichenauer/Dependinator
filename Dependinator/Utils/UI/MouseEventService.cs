@@ -31,6 +31,7 @@ class MouseEventService : IMouseEventService
     MouseEvent leftMouseDown = new();
     DateTime leftMouseDownTime = DateTime.MinValue;
     HammerEvent panLatest = new();
+    HammerEvent pinchLatest = new();
 
     public MouseEventService(
         IJSInteropService jSInteropService,
@@ -109,7 +110,8 @@ class MouseEventService : IMouseEventService
             case "panstart": OnPanStartEvent(e); break;
             case "panmove": OnPanMoveEvent(e); break;
             case "panend": OnPanEndEvent(e); break;
-            // case "touchenter": Log.Info("", e); break;
+            case "pinchmove": OnPinchMoveEvent(e); break;
+            case "pinchstart": OnPinchStartEvent(e); break;
             // case "touchleave": Log.Info("", e); break;
             // case "touchcancel": Log.Info("", e); break;
             default: throw Asserter.FailFast($"Unknown mouse event type: {e.Type}");
@@ -117,6 +119,54 @@ class MouseEventService : IMouseEventService
 
         uiService.TriggerUIStateChange();
         return ValueTask.CompletedTask;
+    }
+
+    private void OnPinchStartEvent(HammerEvent e)
+    {
+        pinchLatest = e;
+        // Log.Info($"OnPinchStartEvent {e.Center}");
+    }
+
+    private void OnPinchMoveEvent(HammerEvent e)
+    {
+        var distance = Math.Sqrt(
+         Math.Pow(e.Pointers[0].X - e.Pointers[1].X, 2) +
+         Math.Pow(e.Pointers[0].Y - e.Pointers[1].Y, 2));
+
+        var distanceLatest = Math.Sqrt(
+             Math.Pow(pinchLatest.Pointers[0].X - pinchLatest.Pointers[1].X, 2) +
+             Math.Pow(pinchLatest.Pointers[0].Y - pinchLatest.Pointers[1].Y, 2));
+
+        var deltaY = (distanceLatest - distance);
+
+        var mouseEvent = new MouseEvent
+        {
+            Type = "pinch",
+            TargetId = e.TargetId,
+            OffsetX = e.Center.X,
+            OffsetY = e.Center.Y,
+            ClientX = 0,
+            ClientY = 0,
+            ScreenX = 0,
+            ScreenY = 0,
+            PageX = 0,
+            PageY = 0,
+            MovementX = 0,
+            MovementY = 0,
+            Button = 0,
+            Buttons = 1,
+            ShiftKey = false,
+            CtrlKey = false,
+            AltKey = false,
+            DeltaX = 0,
+            DeltaY = deltaY,
+            DeltaZ = 0,
+            DeltaMode = 0,
+        };
+        pinchLatest = e;
+
+        // Log.Info($"OnPinchMoveEvent {e.Center} [{distance}] ({e.Pointers[0]}) ({e.Pointers[1]})");
+        OnMouseWheelEvent(mouseEvent);
     }
 
     void OnPanStartEvent(HammerEvent e)

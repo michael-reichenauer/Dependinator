@@ -111,7 +111,7 @@ export function addHammerListener(elementId, instance, functionName) {
   });
 
   // Listen for pinch in and out
-  hammer.on("pinchmove", function (ev) {
+  hammer.on("pinchmove pinchstart", function (ev) {
     instance.invokeMethodAsync(functionName, getEventDetails(ev));
   });
 
