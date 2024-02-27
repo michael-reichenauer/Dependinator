@@ -24,11 +24,13 @@ class MouseEventService : IMouseEventService
     readonly IJSInteropService jSInteropService;
     private readonly IUIService uiService;
     const int ClickDelay = 300;
+    const int ClickTimeout = 500;
 
     readonly Timer clickTimer;
     bool timerRunning = false;
     MouseEvent leftMouseDown = new();
-    MouseEvent leftMouseLatest = new();
+    DateTime leftMouseDownTime = DateTime.MinValue;
+    HammerEvent panLatest = new();
 
     public MouseEventService(
         IJSInteropService jSInteropService,
@@ -50,16 +52,11 @@ class MouseEventService : IMouseEventService
     {
         var objRef = DotNetObjectReference.Create(this);
         await jSInteropService.AddMouseEventListener("svgcanvas", "wheel", objRef, "MouseEventCallback");
-        await jSInteropService.AddMouseEventListener("svgcanvas", "mousemove", objRef, "MouseEventCallback");
+        // await jSInteropService.AddMouseEventListener("svgcanvas", "mousemove", objRef, "MouseEventCallback");
         await jSInteropService.AddMouseEventListener("svgcanvas", "mousedown", objRef, "MouseEventCallback");
         await jSInteropService.AddMouseEventListener("svgcanvas", "mouseup", objRef, "MouseEventCallback");
 
-        await jSInteropService.AddTouchEventListener("svgcanvas", "touchstart", objRef, "TouchEventCallback");
-        await jSInteropService.AddTouchEventListener("svgcanvas", "touchmove", objRef, "TouchEventCallback");
-        await jSInteropService.AddTouchEventListener("svgcanvas", "touchend", objRef, "TouchEventCallback");
-        // await jSInteropService.AddTouchEventListener("svgcanvas", "touchenter", objRef, "TouchEventCallback");
-        // await jSInteropService.AddTouchEventListener("svgcanvas", "touchleave", objRef, "TouchEventCallback");
-        // await jSInteropService.AddTouchEventListener("svgcanvas", "touchcancel", objRef, "TouchEventCallback");
+        await jSInteropService.AddHammerListener("svgcanvas", objRef, "HammerEventCallback");
     }
 
 
@@ -80,17 +77,38 @@ class MouseEventService : IMouseEventService
         return ValueTask.CompletedTask;
     }
 
+    // [JSInvokable]
+    // public ValueTask TouchEventCallback(TouchEvent e)
+    // {
+    //     Log.Info("TouchEventCallback", e.Type, e.TargetId, e.Touches.Length);
+
+    //     // // Log.Info($"Clicked: '{e.ToJson()}'");
+    //     switch (e.Type)
+    //     {
+    //         case "touchstart": OnTouchDownEvent(e); break;
+    //         case "touchmove": OnTouchMoveEvent(e); break;
+    //         case "touchend": OnTouchEndEvent(e); break;
+    //         // case "touchenter": Log.Info("", e); break;
+    //         // case "touchleave": Log.Info("", e); break;
+    //         // case "touchcancel": Log.Info("", e); break;
+    //         default: throw Asserter.FailFast($"Unknown mouse event type: {e.Type}");
+    //     }
+
+    //     uiService.TriggerUIStateChange();
+    //     return ValueTask.CompletedTask;
+    // }
+
     [JSInvokable]
-    public ValueTask TouchEventCallback(TouchEvent e)
+    public ValueTask HammerEventCallback(HammerEvent e)
     {
-        // Log.Info("TouchEventCallback", e.Type, e.TargetId, e.Touches.Length);
+        // Log.Info("HammerEventCallback", e.Type);
 
         // // Log.Info($"Clicked: '{e.ToJson()}'");
         switch (e.Type)
         {
-            case "touchstart": OnTouchDownEvent(e); break;
-            case "touchmove": OnTouchMoveEvent(e); break;
-            case "touchend": OnTouchEndEvent(e); break;
+            case "panstart": OnPanStartEvent(e); break;
+            case "panmove": OnPanMoveEvent(e); break;
+            case "panend": OnPanEndEvent(e); break;
             // case "touchenter": Log.Info("", e); break;
             // case "touchleave": Log.Info("", e); break;
             // case "touchcancel": Log.Info("", e); break;
@@ -101,89 +119,108 @@ class MouseEventService : IMouseEventService
         return ValueTask.CompletedTask;
     }
 
-    void OnTouchDownEvent(TouchEvent e)
+    void OnPanStartEvent(HammerEvent e)
     {
-        if (e.Touches.Length == 1)
-        {
-            var mouseEvent = new MouseEvent
-            {
-                Type = "mouseup",
-                TargetId = e.TargetId,
-                OffsetX = e.Touches[0].ClientX,
-                OffsetY = e.Touches[0].ClientY,
-                ClientX = e.Touches[0].ClientX,
-                ClientY = e.Touches[0].ClientY,
-                ScreenX = e.Touches[0].ScreenX,
-                ScreenY = e.Touches[0].ScreenY,
-                PageX = e.Touches[0].PageX,
-                PageY = e.Touches[0].PageY,
-                MovementX = 0,
-                MovementY = 0,
-                Button = 0,
-                Buttons = 1,
-                ShiftKey = e.ShiftKey,
-                CtrlKey = e.CtrlKey,
-                AltKey = e.AltKey,
-                DeltaX = 0,
-                DeltaY = 0,
-                DeltaZ = 0,
-                DeltaMode = 0,
-            };
+        // Log.Info("OnPanStartEvent", e.Type, e.TargetId);
+        if (e.Pointers.Length != 1) return;
 
-            OnMouseDownEvent(mouseEvent);
-        }
+        var mouseEvent = new MouseEvent
+        {
+            Type = "mousedown",
+            TargetId = e.TargetId,
+            OffsetX = e.Pointers[0].X,
+            OffsetY = e.Pointers[0].Y,
+            ClientX = 0,
+            ClientY = 0,
+            ScreenX = 0,
+            ScreenY = 0,
+            PageX = 0,
+            PageY = 0,
+            MovementX = 0,
+            MovementY = 0,
+            Button = 0,
+            Buttons = 1,
+            ShiftKey = false,
+            CtrlKey = false,
+            AltKey = false,
+            DeltaX = 0,
+            DeltaY = 0,
+            DeltaZ = 0,
+            DeltaMode = 0,
+        };
+        panLatest = e;
+
+        OnMouseDownEvent(mouseEvent);
     }
 
-    void OnTouchMoveEvent(TouchEvent e)
+    void OnPanMoveEvent(HammerEvent e)
     {
-        if (e.Touches.Length == 1)
+        // Log.Info("OnPanMoveEvent", e);
+        if (e.Pointers.Length != 1) return;
+
+        var mouseEvent = new MouseEvent
         {
-            var movementX = e.Touches[0].ClientX - leftMouseLatest.ClientX;
-            var movementY = e.Touches[0].ClientY - leftMouseLatest.ClientY;
-            // Log.Info("touchmove", movementX, movementY);
+            Type = "mousemove",
+            TargetId = e.TargetId,
+            OffsetX = e.Pointers[0].X,
+            OffsetY = e.Pointers[0].Y,
+            ClientX = 0,
+            ClientY = 0,
+            ScreenX = 0,
+            ScreenY = 0,
+            PageX = 0,
+            PageY = 0,
+            MovementX = e.Pointers[0].X - panLatest.Pointers[0].X,
+            MovementY = e.Pointers[0].Y - panLatest.Pointers[0].Y,
+            Button = 0,
+            Buttons = 1,
+            ShiftKey = false,
+            CtrlKey = false,
+            AltKey = false,
+            DeltaX = 0,
+            DeltaY = 0,
+            DeltaZ = 0,
+            DeltaMode = 0,
+        };
+        panLatest = e;
 
-            var mouseEvent = new MouseEvent
-            {
-                Type = "mousemove",
-                TargetId = leftMouseDown.TargetId,
-                OffsetX = e.Touches[0].ClientX,
-                OffsetY = e.Touches[0].ClientY,
-                ClientX = e.Touches[0].ClientX,
-                ClientY = e.Touches[0].ClientY,
-                ScreenX = e.Touches[0].ScreenX,
-                ScreenY = e.Touches[0].ScreenY,
-                PageX = e.Touches[0].PageX,
-                PageY = e.Touches[0].PageY,
-                MovementX = movementX,
-                MovementY = movementY,
-                Button = 0,
-                Buttons = 1,
-                ShiftKey = e.ShiftKey,
-                CtrlKey = e.CtrlKey,
-                AltKey = e.AltKey,
-                DeltaX = 0,
-                DeltaY = 0,
-                DeltaZ = 0,
-                DeltaMode = 0,
-            };
-
-            OnMouseMoveEvent(mouseEvent);
-        }
+        OnMouseMoveEvent(mouseEvent);
     }
 
-    void OnTouchEndEvent(TouchEvent e)
+    void OnPanEndEvent(HammerEvent e)
     {
-        if (e.Touches.Length == 0)
-        {
-            var mouseEvent = leftMouseLatest with { Type = "mouseup" };
-            OnMouseUpEvent(mouseEvent);
-        }
-    }
+        // Log.Info("OnPanEndEvent", e.Type);
 
+        var mouseEvent = new MouseEvent
+        {
+            Type = "mouseup",
+            TargetId = e.TargetId,
+            OffsetX = e.Center.X,
+            OffsetY = e.Center.Y,
+            ClientX = 0,
+            ClientY = 0,
+            ScreenX = 0,
+            ScreenY = 0,
+            PageX = 0,
+            PageY = 0,
+            MovementX = 0,
+            MovementY = 0,
+            Button = 0,
+            Buttons = 1,
+            ShiftKey = false,
+            CtrlKey = false,
+            AltKey = false,
+            DeltaX = 0,
+            DeltaY = 0,
+            DeltaZ = 0,
+            DeltaMode = 0,
+        };
+        panLatest = e;
+
+        OnMouseUpEvent(mouseEvent);
+    }
 
     void OnMouseWheelEvent(MouseEvent e) => MouseWheel?.Invoke(e);
-
-
 
     void OnMouseDownEvent(MouseEvent e)
     {
@@ -191,14 +228,13 @@ class MouseEventService : IMouseEventService
 
         if (e.Button == 0)
         {
+            leftMouseDownTime = DateTime.UtcNow;
             leftMouseDown = e;
-            leftMouseLatest = e;
         }
     }
 
     void OnMouseMoveEvent(MouseEvent e)
     {
-        leftMouseLatest = e;
         MouseMove?.Invoke(e);
     }
 
@@ -208,7 +244,8 @@ class MouseEventService : IMouseEventService
 
         if (e.Button == 0 &&
             Math.Abs(e.OffsetX - leftMouseDown.OffsetX) < 5 &&
-            Math.Abs(e.OffsetY - leftMouseDown.OffsetY) < 5)
+            Math.Abs(e.OffsetY - leftMouseDown.OffsetY) < 5
+            && (DateTime.UtcNow - leftMouseDownTime).TotalMilliseconds < ClickTimeout)
         {
             OnLeftClickEvent(e);
         }

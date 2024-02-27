@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="HandheldFriendly" content="true" />
 
     <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" /> -->
@@ -30,17 +31,18 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <script>
-        // Prevent default touch events (scrolling, zooming, etc.), handled by the app
-        document.addEventListener('touchstart', function (e) {
-            e.preventDefault();
-        }, { passive: false });
-        document.addEventListener('touchmove', function (e) {
-            e.preventDefault();
-        }, { passive: false });
-        document.addEventListener('touchend', function (e) {
-            e.preventDefault();
-        }, { passive: false });
+        // // Prevent default touch events (scrolling, zooming, etc.), handled by the app
+        // document.addEventListener('touchstart', function (e) {
+        //     e.preventDefault();
+        // }, { passive: false });
+        // document.addEventListener('touchmove', function (e) {
+        //     e.preventDefault();
+        // }, { passive: false });
+        // document.addEventListener('touchend', function (e) {
+        //     e.preventDefault();
+        // }, { passive: false });
     </script>
 </body>
 

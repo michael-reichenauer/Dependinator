@@ -67,6 +67,11 @@ export function addMouseEventListener(elementId, eventName, instance, functionNa
 
 export function addTouchEventListener(elementId, eventName, instance, functionName) {
   function eventHandler(event) {
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
     let touches = Array.from(event.touches, touch => ({
       Identifier: touch.identifier,
       TargetId: touch.target.id,
@@ -89,6 +94,40 @@ export function addTouchEventListener(elementId, eventName, instance, functionNa
     });
   }
 
-  document.getElementById(elementId).addEventListener(eventName, eventHandler)
+  window.addEventListener(eventName, eventHandler, { passive: false })
+}
+
+export function addHammerListener(elementId, instance, functionName) {
+  var element = document.getElementById(elementId);
+  var hammer = new Hammer(element);
+
+  // Enable pinch and pan
+  hammer.get('pinch').set({ enable: true });
+  hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+
+  // Listen for pan start, pan move, and pan end
+  hammer.on("panstart panmove panend", function (ev) {
+    instance.invokeMethodAsync(functionName, getEventDetails(ev));
+  });
+
+  // Listen for pinch in and out
+  hammer.on("pinchmove", function (ev) {
+    instance.invokeMethodAsync(functionName, getEventDetails(ev));
+  });
+
+  // hammer.on('tap', function (ev) {
+  //   instance.invokeMethodAsync(functionName, getEventDetails(ev));
+  // });
+}
+
+function getEventDetails(ev) {
+  return {
+    Type: ev.type, TargetId: ev.target.id,
+    Center: { X: ev.center.x, Y: ev.center.y },
+    Pointers: ev.pointers.map(p => ({ X: p.clientX, Y: p.clientY })),
+    DeltaX: ev.deltaX, DeltaY: ev.deltaY, VelocityX: ev.velocityX, VelocityY: ev.velocityY,
+    Scale: ev.scale, Rotation: ev.rotation,
+    IsFirst: ev.isFirst, IsFinal: ev.isFinal
+  }
 }
 
