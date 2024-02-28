@@ -104,7 +104,7 @@ class ModelService : IModelService
     async Task<R> ParseAsync()
     {
         using var _ = Timing.Start();
-        // var path = "/workspaces/Dependinator/Dependinator/Dependinator.sln";
+        // var path = "/workspaces/Dependinator/Dependinator.sln";
 
         // if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 

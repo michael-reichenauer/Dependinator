@@ -112,6 +112,7 @@ class MouseEventService : IMouseEventService
             case "panend": OnPanEndEvent(e); break;
             case "pinchmove": OnPinchMoveEvent(e); break;
             case "pinchstart": OnPinchStartEvent(e); break;
+            case "pinchend": OnPinchEndEvent(e); break;
             // case "touchleave": Log.Info("", e); break;
             // case "touchcancel": Log.Info("", e); break;
             default: throw Asserter.FailFast($"Unknown mouse event type: {e.Type}");
@@ -124,7 +125,12 @@ class MouseEventService : IMouseEventService
     private void OnPinchStartEvent(HammerEvent e)
     {
         pinchLatest = e;
-        // Log.Info($"OnPinchStartEvent {e.Center}");
+        Log.Info($"OnPinchStartEvent {e.Center}");
+    }
+
+    private void OnPinchEndEvent(HammerEvent e)
+    {
+        Log.Info("OnPinchEndEvent", e.Type);
     }
 
     private void OnPinchMoveEvent(HammerEvent e)
