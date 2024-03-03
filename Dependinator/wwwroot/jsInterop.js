@@ -81,6 +81,7 @@ export function addPointerEventListener(elementId, eventName, instance, function
 
     instance.invokeMethodAsync(functionName, {
       Type: eventName,
+      Time: Date.now(),
       PointerId: event.pointerId,
       PointerType: event.pointerType,
       TargetId: event.target.id,
