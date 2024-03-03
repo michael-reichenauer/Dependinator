@@ -34,10 +34,8 @@ public interface IJSInteropService
     BrowserSizeDetails BrowserSizeDetails { get; }
 
     ValueTask AddMouseEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
-    ValueTask AddTouchEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
     ValueTask AddPointerEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
 
-    ValueTask AddHammerListener(string elementId, object dotNetObjectReference, string functionName);
     ValueTask<string> Prompt(string message);
 }
 
@@ -53,8 +51,8 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
 
     public JSInteropService(IJSRuntime jsRuntime)
     {
-        var version = $"{DateTime.UtcNow.Ticks}";  // Vesion is needed to avoid cached js file (dev)
-        //var version = "1.2";                          // Vesion is needed to avoid cached js file (prod) 
+        // var version = $"{DateTime.UtcNow.Ticks}";  // Vesion is needed to avoid cached js file (dev)
+        var version = "1.4";                          // Vesion is needed to avoid cached js file (prod) 
 
         this.moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
             identifier: "import", args: $"./_content/Dependinator/jsInterop.js?v={version}").AsTask());
@@ -83,22 +81,10 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
         await module.InvokeVoidAsync(identifier: "addMouseEventListener", elementId, eventName, dotNetObjectReference, functionName);
     }
 
-    public async ValueTask AddTouchEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName)
-    {
-        IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "addTouchEventListener", elementId, eventName, dotNetObjectReference, functionName);
-    }
-
     public async ValueTask AddPointerEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName)
     {
         IJSObjectReference module = await GetModuleAsync();
         await module.InvokeVoidAsync(identifier: "addPointerEventListener", elementId, eventName, dotNetObjectReference, functionName);
-    }
-
-    public async ValueTask AddHammerListener(string elementId, object dotNetObjectReference, string functionName)
-    {
-        IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "addHammerListener", elementId, dotNetObjectReference, functionName);
     }
 
     public async ValueTask<BrowserSizeDetails> GetWindowSizeAsync()

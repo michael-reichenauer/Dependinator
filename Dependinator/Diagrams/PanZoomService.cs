@@ -27,7 +27,7 @@ class PanZoomService : IPanZoomService
     const double MaxZoom = 10;
     const double Margin = 10;
     const double WheelZoomSpeed = 1.1;
-    const double PinchZoomSpeed = 1.02;
+    const double PinchZoomSpeed = 1.04;
 
     const int SvgPageMargin = 2;
 
@@ -69,7 +69,7 @@ class PanZoomService : IPanZoomService
 
             if (e.DeltaY > 0) ZCount--; else ZCount++;
 
-            var speed = e.PointerType != "touch" ? WheelZoomSpeed : PinchZoomSpeed;
+            var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
             double newZoom = (e.DeltaY > 0) ? Zoom * speed : Zoom * (1 / speed);
             if (newZoom > MaxZoom) newZoom = MaxZoom;
 
