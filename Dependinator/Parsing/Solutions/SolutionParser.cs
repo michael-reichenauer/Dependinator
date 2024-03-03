@@ -29,6 +29,7 @@ internal class SolutionParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
+        Log.Info("Parsing solution");
         parentNodesToSend.Add(CreateSolutionNode());
 
         if (!Try(out var e, CreateAssemblyParsers())) return e;

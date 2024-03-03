@@ -69,7 +69,7 @@ class PanZoomService : IPanZoomService
 
             if (e.DeltaY > 0) ZCount--; else ZCount++;
 
-            var speed = e.Type == "wheel" ? WheelZoomSpeed : PinchZoomSpeed;
+            var speed = e.PointerType != "touch" ? WheelZoomSpeed : PinchZoomSpeed;
             double newZoom = (e.DeltaY > 0) ? Zoom * speed : Zoom * (1 / speed);
             if (newZoom > MaxZoom) newZoom = MaxZoom;
 
