@@ -52,7 +52,7 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
     public JSInteropService(IJSRuntime jsRuntime)
     {
         // var version = $"{DateTime.UtcNow.Ticks}";  // Vesion is needed to avoid cached js file (dev)
-        var version = "1.3";                          // Vesion is needed to avoid cached js file (prod) 
+        var version = "1.4";                          // Vesion is needed to avoid cached js file (prod) 
 
         this.moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
             identifier: "import", args: $"./_content/Dependinator/jsInterop.js?v={version}").AsTask());

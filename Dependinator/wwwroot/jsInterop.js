@@ -75,6 +75,9 @@ export function addPointerEventListener(elementId, eventName, instance, function
     if (eventName == "pointerup") {
       event.target.releasePointerCapture(event.pointerId);
     }
+    if (eventName == "pointercancel") {
+      event.target.releasePointerCapture(event.pointerId);
+    }
 
     instance.invokeMethodAsync(functionName, {
       Type: eventName,

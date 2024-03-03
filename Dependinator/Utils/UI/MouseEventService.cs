@@ -57,6 +57,7 @@ class MouseEventService : IMouseEventService
         await jSInteropService.AddPointerEventListener("svgcanvas", "pointerdown", objRef, "PointerEventCallback");
         await jSInteropService.AddPointerEventListener("svgcanvas", "pointermove", objRef, "PointerEventCallback");
         await jSInteropService.AddPointerEventListener("svgcanvas", "pointerup", objRef, "PointerEventCallback");
+        await jSInteropService.AddPointerEventListener("svgcanvas", "pointercancel", objRef, "PointerEventCallback");
     }
 
 
@@ -83,6 +84,7 @@ class MouseEventService : IMouseEventService
             case "pointerdown": OnPointerDownEvent(e); break;
             case "pointermove": OnPointerMoveEvent(e); break;
             case "pointerup": OnPoinerUpEvent(e); break;
+            case "pointercancel": OnPoinerUpEvent(e); break;
         }
 
         uiService.TriggerUIStateChange();
@@ -145,7 +147,6 @@ class MouseEventService : IMouseEventService
     void OnPoinerUpEvent(MouseEvent e)
     {
         activePointers.Remove(e.PointerId);
-        Log.Info("Pointerdown", activePointers.Count);
 
         MouseUp?.Invoke(e);
 
@@ -154,7 +155,7 @@ class MouseEventService : IMouseEventService
             Math.Abs(e.OffsetY - leftMouseDown.OffsetY) < 5
             && (DateTime.UtcNow - leftMouseDownTime).TotalMilliseconds < ClickTimeout)
         {
-            Log.Info("on  click");
+            Log.Info("on click");
             OnLeftClickEvent(e);
         }
     }
