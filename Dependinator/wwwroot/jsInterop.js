@@ -37,8 +37,49 @@ export function getWindowSizeDetails(parm) {
 
 export function addMouseEventListener(elementId, eventName, instance, functionName) {
   function eventHandler(event) {
+    // console.log("mouse", event);
     instance.invokeMethodAsync(functionName, {
       Type: eventName,
+      TargetId: event.target.id,
+      OffsetX: event.offsetX,
+      OffsetY: event.offsetY,
+      ClientX: event.clientX,
+      ClientY: event.clientY,
+      ScreenX: event.screenX,
+      ScreenY: event.screenY,
+      PageX: event.pageX,
+      PageY: event.pageY,
+      MovementX: event.movementX,
+      MovementY: event.movementY,
+      Button: event.button,
+      Buttons: event.buttons,
+      ShiftKey: event.shiftKey,
+      CtrlKey: event.ctrlKey,
+      AltKey: event.altKey,
+      DeltaX: event.deltaX,
+      DeltaY: event.deltaY,
+      DeltaZ: event.deltaZ,
+      DeltaMode: event.deltaMode,
+    });
+  }
+
+  document.getElementById(elementId).addEventListener(eventName, eventHandler)
+}
+
+export function addPointerEventListener(elementId, eventName, instance, functionName) {
+  function eventHandler(event) {
+
+    if (eventName == "pointerdown") {
+      event.target.setPointerCapture(event.pointerId);
+    }
+    if (eventName == "pointerup") {
+      event.target.releasePointerCapture(event.pointerId);
+    }
+
+    instance.invokeMethodAsync(functionName, {
+      Type: eventName,
+      PointerId: event.pointerId,
+      PointerType: event.pointerType,
       TargetId: event.target.id,
       OffsetX: event.offsetX,
       OffsetY: event.offsetY,
@@ -68,13 +109,17 @@ export function addMouseEventListener(elementId, eventName, instance, functionNa
 export function addTouchEventListener(elementId, eventName, instance, functionName) {
   function eventHandler(event) {
 
+    if (!((event.touches.length == 2 && (eventName == "touchstart" || eventName == "touchmove")) ||
+      (event.touches.length == 0 && eventName == "touchend"))) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
 
     let touches = Array.from(event.touches, touch => ({
       Identifier: touch.identifier,
-      TargetId: touch.target.id,
       ClientX: touch.clientX,
       ClientY: touch.clientY,
       ScreenX: touch.screenX,
@@ -83,16 +128,44 @@ export function addTouchEventListener(elementId, eventName, instance, functionNa
       PageY: touch.pageY,
     }));
 
+
+    // let changedTouches = Array.from(event.changedTouches, touch => ({
+    //   Identifier: touch.identifier,
+    //   //    TargetId: touch.target.id,
+    //   ClientX: touch.clientX,
+    //   ClientY: touch.clientY,
+    //   ScreenX: touch.screenX,
+    //   ScreenY: touch.screenY,
+    //   PageX: touch.pageX,
+    //   PageY: touch.pageY,
+    // }));
+
+    // let targetTouches = Array.from(event.targetTouches, touch => ({
+    //   Identifier: touch.identifier,
+    //   //  TargetId: touch.target.id,
+    //   ClientX: touch.clientX,
+    //   ClientY: touch.clientY,
+    //   ScreenX: touch.screenX,
+    //   ScreenY: touch.screenY,
+    //   PageX: touch.pageX,
+    //   PageY: touch.pageY,
+    // }));
+
+
     instance.invokeMethodAsync(functionName, {
       Type: eventName,
       TargetId: event.target.id,
       Touches: touches,
+      // ChangedTouches: changedTouches,
+      // TargetTouches: targetTouches,
       CtrlKey: event.ctrlKey,
       ShiftKey: event.shiftKey,
       AltKey: event.altKey,
       MetaKey: event.metaKey,
     });
   }
+
+  //document.getElementById(elementId).addEventListener(eventName, eventHandler)
 
   window.addEventListener(eventName, eventHandler, { passive: false })
 }
@@ -110,10 +183,14 @@ export function addHammerListener(elementId, instance, functionName) {
     instance.invokeMethodAsync(functionName, getEventDetails(ev));
   });
 
-  // Listen for pinch in and out
-  hammer.on("pinchmove pinchstart", function (ev) {
+  hammer.on("tap", function (ev) {
     instance.invokeMethodAsync(functionName, getEventDetails(ev));
   });
+
+  // // Listen for pinch in and out
+  // hammer.on("pinchmove pinchstart pinchend", function (ev) {
+  //   instance.invokeMethodAsync(functionName, getEventDetails(ev));
+  // });
 
   // hammer.on('tap', function (ev) {
   //   instance.invokeMethodAsync(functionName, getEventDetails(ev));

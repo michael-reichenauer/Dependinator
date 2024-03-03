@@ -44,6 +44,7 @@ class ParserService : IParserService
         if (!Try(out var parser, out var e, GetParser(path)))
             return R.Error($"File not supported: {path}", e);
 
+        Log.Info("Start parsing...", parser);
         Task.Run(async () =>
         {
             using var t = Timing.Start();
