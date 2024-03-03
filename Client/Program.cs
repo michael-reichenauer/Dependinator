@@ -9,6 +9,7 @@ internal class Program
 {
     public static async Task Main(string[] args)
     {
+        Dependinator.Utils.Logging.ConfigLogger.Enable(isFileLog: false, isConsoleLog: true);
         Log.Info($"Starting Dependinator ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 

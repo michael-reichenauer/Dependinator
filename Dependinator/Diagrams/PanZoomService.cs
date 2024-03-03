@@ -26,7 +26,7 @@ class PanZoomService : IPanZoomService
 {
     const double MaxZoom = 10;
     const double Margin = 10;
-    const double WheelZoomSpeed = 1.1;
+    const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
 
     const int SvgPageMargin = 2;
