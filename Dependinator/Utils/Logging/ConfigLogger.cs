@@ -25,9 +25,16 @@ static class ConfigLogger
     static readonly object syncRoot = new object();
     static int prefixLength = 0;
     static string LogPath = LogFileName;
+    static bool isFileLog = false;
+    static bool isConsoleLog = false;
 
     static TaskCompletionSource doneTask = new TaskCompletionSource();
 
+    public static void Enable(bool isFileLog, bool isConsoleLog)
+    {
+        ConfigLogger.isFileLog = isFileLog;
+        ConfigLogger.isConsoleLog = isConsoleLog;
+    }
 
     static ConfigLogger()
     {
@@ -196,8 +203,8 @@ static class ConfigLogger
             {
                 try
                 {
-                    Console.WriteLine(textLines.Select(l => l.Length > 24 ? l[24..] : l).Join("\n"));
-                    //  File.AppendAllLines(LogPath, textLines);
+                    if (isConsoleLog) Console.WriteLine(textLines.Select(l => l.Length > 24 ? l[24..] : l).Join("\n"));
+                    if (isFileLog) File.AppendAllLines(LogPath, textLines);
 
                     long length = new FileInfo(LogPath).Length;
 

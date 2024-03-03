@@ -7,6 +7,7 @@ namespace DependinatorWeb
     {
         public static void Main(string[] args)
         {
+            Dependinator.Utils.Logging.ConfigLogger.Enable(isFileLog: true, isConsoleLog: false);
             Log.Info($"Starting Dependinator ...");
             ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 
