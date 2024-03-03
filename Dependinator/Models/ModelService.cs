@@ -81,10 +81,19 @@ class ModelService : IModelService
 
     public async Task<R> LoadAsync()
     {
+        var path = "Example.exe";
+
         // Try read cached model (with ui layout)
-        if (!Try(out var model, out var e, await persistenceService.LoadAsync()))
+        if (!Try(out var model, out var e, await persistenceService.LoadAsync("")))
         {
-            return await ParseAsync();
+            if (path == "Example.exe")
+            {
+                if (!Try(out model, out e, await persistenceService.LoadAsync(path))) return e;
+            }
+            else
+            {
+                return await ParseAsync();
+            }
         }
 
         // Load the cached mode
@@ -104,7 +113,8 @@ class ModelService : IModelService
     async Task<R> ParseAsync()
     {
         using var _ = Timing.Start();
-        // var path = "/workspaces/Dependinator/Dependinator.sln";
+        //var path = "/workspaces/Dependinator/Dependinator.sln";
+
 
         // if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 
@@ -168,7 +178,7 @@ class ModelService : IModelService
         using var _ = Timing.Start();
         lock (model.SyncRoot)
         {
-            AddSpecials();
+            // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {
                 switch (parsedItem)

@@ -8,7 +8,7 @@ interface IPersistenceService
 {
     Model ModelToData(Models.IModel node);
     Task<R> SaveAsync(Model model);
-    Task<R<Model>> LoadAsync();
+    Task<R<Model>> LoadAsync(string path);
 }
 
 
@@ -41,16 +41,23 @@ class PersistenceService : IPersistenceService
         });
     }
 
-    public Task<R<Model>> LoadAsync()
+    public Task<R<Model>> LoadAsync(string path)
     {
         return Task.Run<R<Model>>(() =>
         {
             using var t = Timing.Start("Load model from file");
 
-            var path = GetModelFilePath();
-            if (!Try(out var json, out var e, () => File.ReadAllText(path))) return e;
+            path = path == "" ? GetModelFilePath() : path;
+            var json = ExampleModel.Model;
 
-            if (!Try(out var model, out e, () => JsonSerializer.Deserialize<Model>(json))) return e;
+            Log.Info("Read persistance", path);
+            if (path != "Example.exe")
+            {
+                if (!Try(out json, out var e, () => File.ReadAllText(path))) return e;
+            }
+            Log.Info("Read json", json.Length, "bytes");
+
+            if (!Try(out var model, out var ee, () => JsonSerializer.Deserialize<Model>(json))) return ee;
 
             return model;
         });
