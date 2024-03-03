@@ -7,6 +7,8 @@ public record MouseEvent
 
     public string Type { get; init; } = "";
     public string TargetId { get; init; } = "";
+    public int PointerId { get; init; }
+    public string PointerType { get; init; } = "";
 
     public double OffsetX { get; init; }
     public double OffsetY { get; init; }

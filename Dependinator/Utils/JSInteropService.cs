@@ -35,6 +35,8 @@ public interface IJSInteropService
 
     ValueTask AddMouseEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
     ValueTask AddTouchEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
+    ValueTask AddPointerEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
+
     ValueTask AddHammerListener(string elementId, object dotNetObjectReference, string functionName);
     ValueTask<string> Prompt(string message);
 }
@@ -85,6 +87,12 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
     {
         IJSObjectReference module = await GetModuleAsync();
         await module.InvokeVoidAsync(identifier: "addTouchEventListener", elementId, eventName, dotNetObjectReference, functionName);
+    }
+
+    public async ValueTask AddPointerEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        await module.InvokeVoidAsync(identifier: "addPointerEventListener", elementId, eventName, dotNetObjectReference, functionName);
     }
 
     public async ValueTask AddHammerListener(string elementId, object dotNetObjectReference, string functionName)
