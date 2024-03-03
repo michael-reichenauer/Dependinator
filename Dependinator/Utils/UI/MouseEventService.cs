@@ -179,6 +179,7 @@ class MouseEventService : IMouseEventService
             clickTimer.Change(Timeout.Infinite, Timeout.Infinite);
             timerRunning = false;
             LeftDblClick?.Invoke(e);
+            activePointers.Clear();
         }
     }
 }
