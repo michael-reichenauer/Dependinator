@@ -95,14 +95,22 @@ class MouseEventService : IMouseEventService
 
     void OnPointerDownEvent(MouseEvent e)
     {
-        activePointers[e.PointerId] = e;
-        Log.Info("Pointerdown", activePointers.Count, e.PointerType);
-        if (activePointers.Count > 2)
+        if (activePointers.Count == 1 && e.PointerId != activePointers.Keys.First())
         {
-            var oldest = activePointers.Values.MinBy(e => e.Time);
-            activePointers.Remove(oldest!.PointerId);
+            var p1 = activePointers.Values.First();
+            if (e.Time - p1.Time > 1000)
+            {
+                activePointers.Clear();
+            }
         }
 
+        activePointers[e.PointerId] = e;
+
+        if (activePointers.Count > 2)
+        {
+            activePointers.Clear();
+            activePointers[e.PointerId] = e;
+        }
 
         MouseDown?.Invoke(e);
 
@@ -133,13 +141,6 @@ class MouseEventService : IMouseEventService
             activePointers[e.PointerId] = e;
             p1 = activePointers.Values.ElementAt(0);
             p2 = activePointers.Values.ElementAt(1);
-
-            if (p1.Time - p2.Time > 1000)
-            {   // Seems to be a bug on IOS where pointer sometiems is lost
-                var oldest = activePointers.Values.MinBy(e => e.Time);
-                activePointers.Remove(oldest!.PointerId);
-                return;
-            }
 
             dx = p1.OffsetX - p2.OffsetX;
             dy = p1.OffsetY - p2.OffsetY;
