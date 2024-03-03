@@ -6,6 +6,7 @@ public record MouseEvent
     const int LeftMouseBtn = 1;
 
     public string Type { get; init; } = "";
+    public long Time { get; init; }
     public string TargetId { get; init; } = "";
     public int PointerId { get; init; }
     public string PointerType { get; init; } = "";
