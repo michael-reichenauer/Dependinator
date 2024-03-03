@@ -78,7 +78,7 @@ class MouseEventService : IMouseEventService
     [JSInvokable]
     public ValueTask PointerEventCallback(MouseEvent e)
     {
-        // Log.Info($"PointerEventCallback: '{e.Type} {e.PointerId} {e.PointerType} on {e.TargetId}'");
+        // Log.Info($"PointerEventCallback: {e.Time} {e.Type} {e.PointerId} {e.PointerType} on {e.TargetId}'");
         switch (e.Type)
         {
             case "pointerdown": OnPointerDownEvent(e); break;
@@ -95,8 +95,22 @@ class MouseEventService : IMouseEventService
 
     void OnPointerDownEvent(MouseEvent e)
     {
+        if (activePointers.Count == 1 && e.PointerId != activePointers.Keys.First())
+        {
+            var p1 = activePointers.Values.First();
+            if (e.Time - p1.Time > 1000)
+            {
+                activePointers.Clear();
+            }
+        }
+
         activePointers[e.PointerId] = e;
-        Log.Info("Pointerdown", activePointers.Count, e.PointerType);
+
+        if (activePointers.Count > 2)
+        {
+            activePointers.Clear();
+            activePointers[e.PointerId] = e;
+        }
 
         MouseDown?.Invoke(e);
 
@@ -179,6 +193,7 @@ class MouseEventService : IMouseEventService
             clickTimer.Change(Timeout.Infinite, Timeout.Infinite);
             timerRunning = false;
             LeftDblClick?.Invoke(e);
+            activePointers.Clear();
         }
     }
 }
