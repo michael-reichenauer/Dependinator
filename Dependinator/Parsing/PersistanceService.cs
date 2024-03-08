@@ -1,5 +1,6 @@
 
 using System.Text.Json;
+using Dependinator.Models;
 
 namespace Dependinator.Parsing;
 
@@ -16,7 +17,13 @@ interface IPersistenceService
 class PersistenceService : IPersistenceService
 {
     static readonly JsonSerializerOptions indented = new() { WriteIndented = true };
+    private readonly IDatabase database;
     const string modelName = "DependinatorModel.json";
+
+    public PersistenceService(IDatabase database)
+    {
+        this.database = database;
+    }
 
     public Model ModelToData(Models.IModel model)
     {
@@ -29,13 +36,14 @@ class PersistenceService : IPersistenceService
 
     public Task<R> SaveAsync(Model model)
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
         {
-            using var t = Timing.Start("Save model to file");
-            string json = JsonSerializer.Serialize(model, indented);
+            using var t = Timing.Start("Save model to file xd");
 
-            var path = GetModelFilePath();
-            if (!Try(out var e, () => File.WriteAllText(path, json))) return e;
+            await database.SetAsync(modelName, model);
+
+            // var path = GetModelFilePath();
+            // if (!Try(out var e, () => File.WriteAllText(path, json))) return e;
 
             return R.Ok;
         });
@@ -43,23 +51,44 @@ class PersistenceService : IPersistenceService
 
     public Task<R<Model>> LoadAsync(string path)
     {
-        return Task.Run<R<Model>>(() =>
+        return Task.Run<R<Model>>(async () =>
         {
+            Log.Info("Loading value ...", path);
             using var t = Timing.Start("Load model from file");
 
-            path = path == "" ? GetModelFilePath() : path;
-            var json = ExampleModel.Model;
-
-            Log.Info("Read persistance", path);
-            if (path != "Example.exe")
+            if (!Try(out var model, out var e, await database.GetAsync<Model>(modelName)))
             {
-                if (!Try(out json, out var e, () => File.ReadAllText(path))) return e;
-            }
-            Log.Info("Read json", json.Length, "bytes");
+                if (e.IsNone)
+                {
+                    var json = ExampleModel.Model;
+                    Log.Info("Read example json", json.Length, "bytes", t.ToString());
 
-            if (!Try(out var model, out var ee, () => JsonSerializer.Deserialize<Model>(json))) return ee;
+                    if (!Try(out model, out var ee, () => JsonSerializer.Deserialize<Model>(json))) return ee;
+                    Log.Info("Parsed json", json.Length, "bytes", t.ToString());
+                    return model;
+                }
+
+                return e;
+            }
 
             return model;
+
+            //  return R.Error("Failed to load model");
+
+            // path = path == "" ? GetModelFilePath() : path;
+            // var json = ExampleModel.Model;
+
+            // // Log.Info("Read persistance", path);
+            // // if (path != "Example.exe")
+            // // {
+            // //     if (!Try(out json, out var e, () => File.ReadAllText(path))) return e;
+            // // }
+            // Log.Info("Read json", json.Length, "bytes", t.ToString());
+
+            // if (!Try(out var model, out var ee, () => JsonSerializer.Deserialize<Model>(json))) return ee;
+            // Log.Info("Parsed json", json.Length, "bytes", t.ToString());
+
+            // return model;
         });
     }
 

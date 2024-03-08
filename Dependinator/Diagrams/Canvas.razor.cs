@@ -11,6 +11,7 @@ partial class Canvas : ComponentBase, IUIComponent
     [Inject] IMouseEventService mouseEventService { get; init; } = null!;
     [Inject] IJSInteropService jSInteropService { get; init; } = null!;
     [Inject] IUIService uiService { get; init; } = null!;
+    [Inject] IDatabase database { get; init; } = null!;
 
     public ElementReference Ref { get; private set; }
 
@@ -41,6 +42,7 @@ partial class Canvas : ComponentBase, IUIComponent
             uiService.OnUIStateChange += () => InvokeAsync(StateHasChanged);
             await srv.InitAsync(this);
             await this.jSInteropService.InitializeAsync(); // must be after srv.InitAsync, since triggered events need Ref
+            await database.Init();
             await mouseEventService.InitAsync();
             await InvokeAsync(srv.InitialShow);
         }
