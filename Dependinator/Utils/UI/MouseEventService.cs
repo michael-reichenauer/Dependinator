@@ -52,12 +52,12 @@ class MouseEventService : IMouseEventService
     public async Task InitAsync()
     {
         var objRef = DotNetObjectReference.Create(this);
-        await jSInteropService.AddMouseEventListener("svgcanvas", "wheel", objRef, "MouseEventCallback");
+        await jSInteropService.AddMouseEventListenerAsync("svgcanvas", "wheel", objRef, "MouseEventCallback");
 
-        await jSInteropService.AddPointerEventListener("svgcanvas", "pointerdown", objRef, "PointerEventCallback");
-        await jSInteropService.AddPointerEventListener("svgcanvas", "pointermove", objRef, "PointerEventCallback");
-        await jSInteropService.AddPointerEventListener("svgcanvas", "pointerup", objRef, "PointerEventCallback");
-        await jSInteropService.AddPointerEventListener("svgcanvas", "pointercancel", objRef, "PointerEventCallback");
+        await jSInteropService.AddPointerEventListenerAsync("svgcanvas", "pointerdown", objRef, "PointerEventCallback");
+        await jSInteropService.AddPointerEventListenerAsync("svgcanvas", "pointermove", objRef, "PointerEventCallback");
+        await jSInteropService.AddPointerEventListenerAsync("svgcanvas", "pointerup", objRef, "PointerEventCallback");
+        await jSInteropService.AddPointerEventListenerAsync("svgcanvas", "pointercancel", objRef, "PointerEventCallback");
     }
 
 

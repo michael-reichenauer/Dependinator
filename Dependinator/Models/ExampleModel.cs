@@ -1,7 +1,9 @@
+namespace Dependinator.Models;
+
 static class ExampleModel
 {
 
-    public static string Model =
+  public static string Model =
 """
 {
   "Nodes": [

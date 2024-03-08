@@ -1,3 +1,7 @@
+using System.Collections.Specialized;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -23,6 +27,20 @@ public class BrowserSizeDetails
     public int ScreenHeight { get; set; }
 }
 
+// This class is used when a javascript function returns a value that could larger than 30k
+class ValueHandler
+{
+    readonly StringBuilder sb = new();
+
+    public string GetValue() => sb.ToString();
+
+    [JSInvokable]
+    public ValueTask OnValue(string value)
+    {
+        sb.Append(value);
+        return ValueTask.CompletedTask;
+    }
+}
 
 public interface IJSInteropService
 {
@@ -33,8 +51,13 @@ public interface IJSInteropService
     ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference);
     BrowserSizeDetails BrowserSizeDetails { get; }
 
-    ValueTask AddMouseEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
-    ValueTask AddPointerEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName);
+    ValueTask AddMouseEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
+    ValueTask AddPointerEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
+
+    ValueTask InitializeDatabaseAsync(string databaseName, int currentVersion, string collectionName);
+    ValueTask SetDatabaseValueAsync<T>(string databaseName, int currentVersion, string collectionName, T value);
+    ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, int currentVersion, string collectionName, string id);
+    ValueTask DeleteDatabaseValueAsync(string databaseName, int currentVersion, string collectionName, string id);
 
     ValueTask<string> Prompt(string message);
 }
@@ -44,10 +67,11 @@ public interface IJSInteropService
 [Scoped]
 public class JSInteropService : IJSInteropService, IAsyncDisposable
 {
-    private readonly Lazy<Task<IJSObjectReference>> moduleTask;
-    private DotNetObjectReference<JSInteropService> instanceRef = null!;
-    private bool isResizing = false;
-    private System.Timers.Timer resizeTimer;
+    readonly Lazy<Task<IJSObjectReference>> moduleTask;
+    DotNetObjectReference<JSInteropService> instanceRef = null!;
+    bool isResizing = false;
+    System.Timers.Timer resizeTimer;
+    static JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
 
     public JSInteropService(IJSRuntime jsRuntime)
     {
@@ -75,13 +99,13 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
         this.BrowserSizeDetails = await module.InvokeAsync<BrowserSizeDetails>(identifier: "getWindowSizeDetails");
     }
 
-    public async ValueTask AddMouseEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName)
+    public async ValueTask AddMouseEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName)
     {
         IJSObjectReference module = await GetModuleAsync();
         await module.InvokeVoidAsync(identifier: "addMouseEventListener", elementId, eventName, dotNetObjectReference, functionName);
     }
 
-    public async ValueTask AddPointerEventListener(string elementId, string eventName, object dotNetObjectReference, string functionName)
+    public async ValueTask AddPointerEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName)
     {
         IJSObjectReference module = await GetModuleAsync();
         await module.InvokeVoidAsync(identifier: "addPointerEventListener", elementId, eventName, dotNetObjectReference, functionName);
@@ -97,6 +121,39 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
     {
         IJSObjectReference module = await GetModuleAsync();
         return await module.InvokeAsync<ElementBoundingRectangle>(identifier: "getBoundingRectangle", elementReference);
+    }
+
+    public async ValueTask InitializeDatabaseAsync(string databaseName, int currentVersion, string collectionName)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        await module.InvokeVoidAsync(identifier: "initializeDatabase", databaseName, currentVersion, collectionName);
+    }
+
+    public async ValueTask SetDatabaseValueAsync<T>(string databaseName, int currentVersion, string collectionName, T value)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        await module.InvokeVoidAsync(identifier: "setDatabaseValue", databaseName, currentVersion, collectionName, value);
+    }
+
+    public async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, int currentVersion, string collectionName, string id)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+
+        var valueHandler = new ValueHandler();
+        var valueHandlerRef = DotNetObjectReference.Create(valueHandler);
+
+        var result = await module.InvokeAsync<bool>(identifier: "getDatabaseValue", databaseName, currentVersion, collectionName, id, valueHandlerRef, "OnValue");
+        if (!result) return R.None;
+
+        var valueText = valueHandler.GetValue();
+        var value = JsonSerializer.Deserialize<T>(valueText, options);
+        return value!;
+    }
+
+    public async ValueTask DeleteDatabaseValueAsync(string databaseName, int currentVersion, string collectionName, string id)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        await module.InvokeVoidAsync(identifier: "deleteDatabaseValue", databaseName, currentVersion, collectionName, id);
     }
 
     [JSInvokable]
