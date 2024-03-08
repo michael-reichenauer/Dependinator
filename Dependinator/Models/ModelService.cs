@@ -148,7 +148,7 @@ class ModelService : IModelService
             model.IsSaving = true;
         }
 
-        Task.Delay(TimeSpan.FromSeconds(1)).ContinueWith(_ =>
+        Task.Delay(TimeSpan.FromSeconds(60)).ContinueWith(_ =>
             Task.Run(() => Save()).RunInBackground());
     }
 
@@ -166,6 +166,8 @@ class ModelService : IModelService
 
     private void Load(Parsing.Model modelData)
     {
+        Log.Info("Loading model ...", modelData.Nodes.Count, modelData.Links.Count);
+
         var batchItems = new List<Parsing.IItem>();
         modelData.Nodes.ForEach(batchItems.Add);
         modelData.Links.ForEach(batchItems.Add);

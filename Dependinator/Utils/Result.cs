@@ -121,6 +121,8 @@ public class R
     public static readonly R Ok = Error(NoError);
     public static readonly Exception None = NoValueError;
 
+    public bool IsNone => resultException == NoValueError;
+
     public static bool Try<T>(
      [NotNullWhen(true)] out T? value,
      [NotNullWhen(false)] out ErrorResult? e,
