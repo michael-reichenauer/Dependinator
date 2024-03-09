@@ -1,6 +1,8 @@
 using Dependinator.Icons;
 using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 
 namespace Dependinator.Diagrams;
 
@@ -13,6 +15,8 @@ partial class Canvas : ComponentBase, IUIComponent
     [Inject] IUIService uiService { get; init; } = null!;
     [Inject] IDatabase database { get; init; } = null!;
 
+    public ElementReference dropZoneElement { get; private set; }
+    public InputFile inputFile { get; private set; } = null!;
     public ElementReference Ref { get; private set; }
 
     // string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), Level: {srv.LevelNbr}, " +
@@ -42,9 +46,48 @@ partial class Canvas : ComponentBase, IUIComponent
             uiService.OnUIStateChange += () => InvokeAsync(StateHasChanged);
             await srv.InitAsync(this);
             await this.jSInteropService.InitializeAsync(); // must be after srv.InitAsync, since triggered events need Ref
+            var objRef = DotNetObjectReference.Create(this);
+            // await this.jSInteropService.InitializeFileDropZone(dropZoneElement, objRef, "DropPasteEventCallback");
+            await this.jSInteropService.InitializeFileDropZone(dropZoneElement, inputFile.Element);
             await database.Init();
             await mouseEventService.InitAsync();
             await InvokeAsync(srv.InitialShow);
+        }
+    }
+
+    private List<IBrowserFile> loadedFiles = new();
+    private long maxFileSize = 1024 * 1024 * 15;
+    private int maxAllowedFiles = 20;
+
+
+    [JSInvokable]
+    public ValueTask DropPasteEventCallback(string[] fileNames)
+    {
+        Log.Info($"DropPasteEventCallback: files", fileNames);
+        return ValueTask.CompletedTask;
+    }
+
+
+    protected async void LoadFiles(InputFileChangeEventArgs e)
+    {
+        loadedFiles.Clear();
+
+        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
+        {
+            try
+            {
+                using var memoryStream = new MemoryStream();
+                using var stream = file.OpenReadStream(maxFileSize);
+                await stream.CopyToAsync(memoryStream);
+                var fileContent = memoryStream.ToArray();
+
+                Log.Info($"Loading file: {file.Name} {fileContent.Length} bytes", file.LastModified, file.Size, file.ContentType);
+                loadedFiles.Add(file);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"File: {file.Name} Error: {ex.Message}");
+            }
         }
     }
 }

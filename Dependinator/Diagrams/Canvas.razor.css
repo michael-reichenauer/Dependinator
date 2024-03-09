@@ -12,3 +12,13 @@ svg {
     /* The 100% width and height will make it take up the full space of its container */
     /* border: 1px dashed rgb(56, 151, 246); */
 }
+
+.drop-zone {
+    border: 2px solid #0088f711;
+}
+
+.drop-zone.hover {
+    border: 2px solid #0087F7;
+    background-color: #0088f711;
+}
+
