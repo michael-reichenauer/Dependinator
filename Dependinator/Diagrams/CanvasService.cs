@@ -7,7 +7,7 @@ namespace Dependinator.Diagrams;
 
 interface ICanvasService
 {
-    Task InitAsync(IUIComponent component);
+    Task InitAsync(Canvas canvas);
 
     string SvgContent { get; }
     string TileKeyText { get; }
@@ -19,6 +19,7 @@ interface ICanvasService
     string SvgViewBox { get; }
     string Cursor { get; }
 
+    void OpenFiles();
     void Refresh();
     void Clear();
     void PanZoomToFit();
@@ -31,10 +32,11 @@ interface ICanvasService
 class CanvasService : ICanvasService
 {
     const int MoveDelay = 300;
-
-    readonly IPanZoomService panZoomService;
+    private readonly IMouseEventService mouseEventService;
+    IPanZoomService panZoomService;
     readonly IModelService modelService;
     readonly IUIService uiService;
+    readonly IJSInteropService jSInteropService;
     readonly Timer moveTimer;
     bool moveTimerRunning = false;
     bool isMoving = false;
@@ -43,11 +45,14 @@ class CanvasService : ICanvasService
         IMouseEventService mouseEventService,
         IPanZoomService panZoomService,
         IModelService modelService,
-        IUIService uiService)
+        IUIService uiService,
+        IJSInteropService jSInteropService)
     {
+        this.mouseEventService = mouseEventService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
         this.uiService = uiService;
+        this.jSInteropService = jSInteropService;
         mouseEventService.LeftClick += OnClick;
         mouseEventService.LeftDblClick += OnDblClick;
         mouseEventService.MouseWheel += OnMouseWheel;
@@ -75,13 +80,21 @@ class CanvasService : ICanvasService
     string selectedId = "";
     string mouseDownId = "";
     string mouseDownSubId = "";
+    Canvas canvas = null!;
 
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";
 
 
-    public async Task InitAsync(IUIComponent component)
+    public async Task InitAsync(Canvas canvas)
     {
-        await panZoomService.InitAsync(component);
+        this.canvas = canvas;
+        await panZoomService.InitAsync(canvas);
+    }
+
+
+    public async void OpenFiles()
+    {
+        await jSInteropService.ClickElement(canvas.inputFile.Element);
     }
 
 
