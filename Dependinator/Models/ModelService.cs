@@ -17,6 +17,9 @@ interface IModelService
 [Transient]
 class ModelService : IModelService
 {
+    static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
+    static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10) - SaveDelay;
+
     readonly IModel model;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
@@ -81,14 +84,15 @@ class ModelService : IModelService
 
     public async Task<R> LoadAsync()
     {
+        using var _ = Timing.Start("Load model");
         var path = "Example.exe";
 
         // Try read cached model (with ui layout)
-        if (!Try(out var model, out var e, await persistenceService.LoadAsync("")))
+        if (!Try(out var model, out var e, await persistenceService.ReadAsync("")))
         {
             if (path == "Example.exe")
             {
-                if (!Try(out model, out e, await persistenceService.LoadAsync(path))) return e;
+                if (!Try(out model, out e, await persistenceService.ReadAsync(path))) return e;
             }
             else
             {
@@ -100,7 +104,7 @@ class ModelService : IModelService
         await Task.Run(() => Load(model));
 
         // Trigger parse to get latest data
-        ParseAsync().RunInBackground();
+        // ParseAsync().RunInBackground();
         return R.Ok;
     }
 
@@ -140,20 +144,39 @@ class ModelService : IModelService
         return R.Ok;
     }
 
+
     void TriggerSave()
     {
+        CancellationToken ct;
         lock (model.SyncRoot)
         {
-            if (model.IsSaving) return;
-            model.IsSaving = true;
+            if (!model.IsSaving)
+            {
+                model.IsSaving = true;
+                model.ModifiedTime = DateTime.Now;
+                model.SaveCancelSource = new CancellationTokenSource();
+                ct = model.SaveCancelSource.Token;
+            }
+            else
+            {
+                if (DateTime.Now - model.ModifiedTime > MaxSaveDelay) return; // Time to save (not postoning more)
+
+                model.SaveCancelSource.Cancel(); // Pospone the save a bit more
+                model.SaveCancelSource = new CancellationTokenSource();
+                ct = model.SaveCancelSource.Token;
+            }
         }
 
-        Task.Delay(TimeSpan.FromSeconds(60)).ContinueWith(_ =>
-            Task.Run(() => Save()).RunInBackground());
+        Task.Delay(SaveDelay, ct).ContinueWith(t =>
+        {
+            if (!t.IsCanceled) Task.Run(() => Save(ct)).RunInBackground();
+        });
     }
 
-    void Save()
+    void Save(CancellationToken ct)
     {
+        if (ct.IsCancellationRequested) return;
+
         Parsing.Model modelData;
         lock (model.SyncRoot)
         {
@@ -161,13 +184,11 @@ class ModelService : IModelService
             model.IsSaving = false;
         }
 
-        persistenceService.SaveAsync(modelData).RunInBackground();
+        persistenceService.WriteAsync(modelData).RunInBackground();
     }
 
     private void Load(Parsing.Model modelData)
     {
-        Log.Info("Loading model ...", modelData.Nodes.Count, modelData.Links.Count);
-
         var batchItems = new List<Parsing.IItem>();
         modelData.Nodes.ForEach(batchItems.Add);
         modelData.Links.ForEach(batchItems.Add);
@@ -197,8 +218,6 @@ class ModelService : IModelService
 
             model.ClearCachedSvg();
         }
-
-        Log.Info($"Added or updated {parsedItems.Count} items");
     }
 
     void AddSpecials()
