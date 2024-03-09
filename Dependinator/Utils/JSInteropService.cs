@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Utils;
@@ -60,6 +61,8 @@ public interface IJSInteropService
     ValueTask DeleteDatabaseValueAsync(string databaseName, int currentVersion, string collectionName, string id);
 
     ValueTask<string> Prompt(string message);
+    ValueTask InitializeFileDropZone(ElementReference? dropZoneElement, ElementReference? inputFileElement);
+    ValueTask ClickElement(ElementReference? element);
 }
 
 // Inspired from https://stackoverflow.com/questions/75114524/getting-the-size-of-a-blazor-page-with-javascript
@@ -154,6 +157,19 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
     {
         IJSObjectReference module = await GetModuleAsync();
         await module.InvokeVoidAsync(identifier: "deleteDatabaseValue", databaseName, currentVersion, collectionName, id);
+    }
+
+
+    public async ValueTask InitializeFileDropZone(ElementReference? dropZoneElement, ElementReference? inputFileElement)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        await module.InvokeVoidAsync(identifier: "initializeFileDropZone", dropZoneElement, inputFileElement);
+    }
+
+    public async ValueTask ClickElement(ElementReference? element)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        await module.InvokeVoidAsync(identifier: "clickElement", element);
     }
 
     [JSInvokable]

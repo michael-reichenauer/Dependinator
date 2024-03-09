@@ -3,9 +3,10 @@
 @inject ICanvasService canvasService
 
 <div class="my-top-row">
-    <button @onclick=@canvasService.Refresh>Refresh</button>
+    @* <button @onclick=@canvasService.Refresh>Refresh</button>
     <button @onclick=@canvasService.Clear>Clear</button>
-    <button @onclick=@canvasService.PanZoomToFit>PZ</button>
+    <button @onclick=@canvasService.PanZoomToFit>PZ</button> *@
+    <button @onclick=@canvasService.OpenFiles>Open ...</button>
 </div>
 
 <div class="my-main">

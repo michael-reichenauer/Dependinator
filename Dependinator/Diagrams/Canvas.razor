@@ -1,4 +1,5 @@
 @namespace Dependinator.Diagrams
+@using Microsoft.AspNetCore.Components.Forms
 
 <div>
     <code>@Info</code>
@@ -8,7 +9,8 @@
 How to use event.PreventDefault in Blazor - Meziantou's blog
 https://www.meziantou.net/how-to-use-event-preventdefault-in-blazor.htm
 *@
-<div>
+<div @ref="dropZoneElement" class="drop-zone">
+    <InputFile hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
     <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox">
         <style>
             svg {

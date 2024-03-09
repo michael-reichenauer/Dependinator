@@ -188,3 +188,44 @@ export async function deleteDatabaseValue(databaseName, currentVersion, collecti
 
   await request;
 }
+
+export function initializeFileDropZone(dropZoneElement, inputFileElement) {
+  function onDragHover(e) {
+    e.preventDefault();
+    dropZoneElement.classList.add("hover");
+  }
+
+  function onDragLeave(e) {
+    e.preventDefault();
+    dropZoneElement.classList.remove("hover");
+  }
+
+
+  // Handle the paste and drop events
+  function onDrop(e) {
+    e.preventDefault();
+    dropZoneElement.classList.remove("hover");
+
+    // Set the files property of the input element and raise the change event
+    inputFileElement.files = e.dataTransfer.files;
+    const event = new Event('change', { bubbles: true });
+    inputFileElement.dispatchEvent(event);
+  }
+
+  function onPaste(e) {
+    // Set the files property of the input element and raise the change event
+    inputFileElement.files = e.clipboardData.files;
+    const event = new Event('change', { bubbles: true });
+    inputFileElement.dispatchEvent(event);
+  }
+
+  dropZoneElement.addEventListener("dragenter", onDragHover);
+  dropZoneElement.addEventListener("dragover", onDragHover);
+  dropZoneElement.addEventListener("dragleave", onDragLeave);
+  dropZoneElement.addEventListener("drop", onDrop);
+  dropZoneElement.addEventListener('paste', onPaste);
+}
+
+export function clickElement(element) {
+  element.click();
+}
