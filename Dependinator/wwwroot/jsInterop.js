@@ -120,7 +120,6 @@ export function initializeDatabase(databaseName, currentVersion, collectionName)
 }
 
 export async function setDatabaseValue(databaseName, currentVersion, collectionName, value) {
-  console.log("Setting databaseValue ...", value.id);
   let request = new Promise((resolve) => {
     const db = indexedDB.open(databaseName, currentVersion);
 
@@ -130,7 +129,6 @@ export async function setDatabaseValue(databaseName, currentVersion, collectionN
 
       const result = collection.put(value);
       result.onsuccess = function () {
-        console.log("Set databaseValue", value.id);
         resolve(true);
       }
     }
@@ -140,7 +138,6 @@ export async function setDatabaseValue(databaseName, currentVersion, collectionN
 }
 
 export async function getDatabaseValue(databaseName, currentVersion, collectionName, id, instance, functionName) {
-  console.log("Getting databaseValue ...", id);
   let request = new Promise((resolve) => {
     const db = indexedDB.open(databaseName, currentVersion);
     db.onsuccess = function () {
@@ -152,7 +149,6 @@ export async function getDatabaseValue(databaseName, currentVersion, collectionN
         const value = result.result;
 
         if (value == null) {
-          console.log("Got databaseValue null", id);
           resolve(false);
           return;
         }
@@ -167,7 +163,6 @@ export async function getDatabaseValue(databaseName, currentVersion, collectionN
           count++;
         }
 
-        console.log("Got databaseValue", value.id);
         resolve(true);
       }
     }

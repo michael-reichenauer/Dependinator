@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-	<RootNamespace>BlazorApp.Client</RootNamespace>
+	  <RootNamespace>BlazorApp.Client</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,7 +12,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.0" PrivateAssets="all" />
     <PackageReference Include="Scrutor" Version="4.2.2" />
   </ItemGroup>
-
 
   <ItemGroup>
 	<ProjectReference Include="..\Shared\Shared.csproj" />
