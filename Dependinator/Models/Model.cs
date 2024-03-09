@@ -8,6 +8,8 @@ interface IModel
     Tiles Tiles { get; }
     IDictionary<Id, IItem> Items { get; }   // Ta bort
     bool IsSaving { get; set; }
+    DateTime ModifiedTime { get; set; }
+    CancellationTokenSource SaveCancelSource { get; set; }
 
     bool TryGetNode(NodeId id, out Node node);
     void AddNode(Node node);
@@ -33,13 +35,15 @@ class Model : IModel
     }
 
     public object SyncRoot => syncRoot;
-    public bool IsSaving { get; set; }
+    public bool IsSaving { get; set; } = false;
 
     public Tiles Tiles { get; } = new();
 
     public IDictionary<Id, IItem> Items { get; } = new Dictionary<Id, IItem>();
 
     public Node Root { get; private set; } = null!;
+    public DateTime ModifiedTime { get; set; } = DateTime.MinValue;
+    public CancellationTokenSource SaveCancelSource { get; set; } = new();
 
     public bool ContainsKey(Id id) => Items.ContainsKey(id);
 

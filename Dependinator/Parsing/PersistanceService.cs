@@ -8,8 +8,8 @@ namespace Dependinator.Parsing;
 interface IPersistenceService
 {
     Model ModelToData(Models.IModel node);
-    Task<R> SaveAsync(Model model);
-    Task<R<Model>> LoadAsync(string path);
+    Task<R> WriteAsync(Model model);
+    Task<R<Model>> ReadAsync(string path);
 }
 
 
@@ -27,18 +27,17 @@ class PersistenceService : IPersistenceService
 
     public Model ModelToData(Models.IModel model)
     {
-        using var t = Timing.Start();
         var data = new Model();
         data.Nodes.AddRange(model.Items.Values.OfType<Models.Node>().Select(ToNode));
         data.Links.AddRange(model.Items.Values.OfType<Models.Link>().Select(ToLink));
         return data;
     }
 
-    public Task<R> SaveAsync(Model model)
+    public Task<R> WriteAsync(Model model)
     {
         return Task.Run(async () =>
         {
-            using var t = Timing.Start("Save model to file xd");
+            using var t = Timing.Start("Write model");
 
             await database.SetAsync(modelName, model);
 
@@ -49,12 +48,11 @@ class PersistenceService : IPersistenceService
         });
     }
 
-    public Task<R<Model>> LoadAsync(string path)
+    public Task<R<Model>> ReadAsync(string path)
     {
         return Task.Run<R<Model>>(async () =>
         {
-            Log.Info("Loading value ...", path);
-            using var t = Timing.Start("Load model from file");
+            using var t = Timing.Start("Read model");
 
             if (!Try(out var model, out var e, await database.GetAsync<Model>(modelName)))
             {
@@ -64,7 +62,6 @@ class PersistenceService : IPersistenceService
                     Log.Info("Read example json", json.Length, "bytes", t.ToString());
 
                     if (!Try(out model, out var ee, () => JsonSerializer.Deserialize<Model>(json))) return ee;
-                    Log.Info("Parsed json", json.Length, "bytes", t.ToString());
                     return model;
                 }
 

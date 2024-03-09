@@ -6,8 +6,6 @@ record Tile(TileKey Key, string Svg, double Zoom, Pos Offset)
 {
     public const double ZoomFactor = 2.0;
     public static Tile Empty = new(TileKey.Empty, "", 1.0, Pos.Zero);
-
-
 }
 
 record TileKey(long X, long Y, int Z, int TileSize)
@@ -29,9 +27,6 @@ record TileKey(long X, long Y, int Z, int TileSize)
 
         long x = (long)Math.Round(canvasRect.X / tileZoom / tileSize);
         long y = (long)Math.Round(canvasRect.Y / tileZoom / tileSize);
-
-        // long x = (long)Math.Floor(canvasRect.X / tileZoom / TileSize);
-        // long y = (long)Math.Floor(canvasRect.Y / tileZoom / TileSize);
 
         return new TileKey(x, y, z, tileSize);
     }
@@ -61,7 +56,6 @@ class Tiles
         if (tile.Svg.Length > maxSvgSize)
         {
             maxSvgSize = tile.Svg.Length;
-            Log.Info($"Max svg size: {maxSvgSize}");
         }
     }
 
