@@ -16,13 +16,12 @@ interface IPersistenceService
 [Transient]
 class PersistenceService : IPersistenceService
 {
-    static readonly JsonSerializerOptions indented = new() { WriteIndented = true };
-    private readonly IDatabase database;
+    readonly IFileService fileService;
     const string modelName = "DependinatorModel.json";
 
-    public PersistenceService(IDatabase database)
+    public PersistenceService(IFileService fileService)
     {
-        this.database = database;
+        this.fileService = fileService;
     }
 
     public Model ModelToData(Models.IModel model)
@@ -39,7 +38,7 @@ class PersistenceService : IPersistenceService
         {
             using var t = Timing.Start("Write model");
 
-            await database.SetAsync(modelName, model);
+            await fileService.WriteAsync(modelName, model);
 
             // var path = GetModelFilePath();
             // if (!Try(out var e, () => File.WriteAllText(path, json))) return e;
@@ -54,7 +53,7 @@ class PersistenceService : IPersistenceService
         {
             using var t = Timing.Start("Read model");
 
-            if (!Try(out var model, out var e, await database.GetAsync<Model>(modelName)))
+            if (!Try(out var model, out var e, await fileService.ReadAsync<Model>(modelName)))
             {
                 if (e.IsNone)
                 {
