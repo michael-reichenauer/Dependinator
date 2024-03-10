@@ -3,6 +3,7 @@ namespace Dependinator.Models;
 
 interface IModel
 {
+    string Path { get; set; }
     object SyncRoot { get; }
     Node Root { get; }
     Tiles Tiles { get; }
@@ -34,6 +35,7 @@ class Model : IModel
         InitModel();
     }
 
+    public string Path { get; set; } = "";
     public object SyncRoot => syncRoot;
     public bool IsSaving { get; set; } = false;
 

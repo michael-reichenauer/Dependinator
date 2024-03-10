@@ -18,10 +18,11 @@ interface IParser
 
 interface IItem { }
 
-class Model
+record Model
 {
-    public List<Node> Nodes { get; set; } = new();
-    public List<Link> Links { get; set; } = new();
+    public required string Path { get; init; }
+    public required IReadOnlyList<Node> Nodes { get; init; }
+    public required IReadOnlyList<Link> Links { get; init; }
 }
 
 record Link(string SourceName, string TargetName, NodeType TargetType) : IItem;

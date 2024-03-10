@@ -85,19 +85,12 @@ class ModelService : IModelService
     public async Task<R> LoadAsync()
     {
         using var _ = Timing.Start("Load model");
-        var path = "Example.exe";
+        var path = "";
 
         // Try read cached model (with ui layout)
-        if (!Try(out var model, out var e, await persistenceService.ReadAsync("")))
+        if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
         {
-            if (path == "Example.exe")
-            {
-                if (!Try(out model, out e, await persistenceService.ReadAsync(path))) return e;
-            }
-            else
-            {
-                return await ParseAsync();
-            }
+            return await ParseAsync();
         }
 
         // Load the cached mode
@@ -117,7 +110,7 @@ class ModelService : IModelService
     async Task<R> ParseAsync()
     {
         using var _ = Timing.Start();
-        //var path = "/workspaces/Dependinator/Dependinator.sln";
+        var path = "/workspaces/Dependinator/Dependinator.sln";
 
 
         // if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
@@ -134,7 +127,7 @@ class ModelService : IModelService
             //         batchItems.Add(item);
             //     }
             // }
-            AddOrUpdate(batchItems);
+            AddOrUpdate(path, batchItems);
         });
 
         uiService.TriggerUIStateChange();
@@ -193,14 +186,15 @@ class ModelService : IModelService
         modelData.Nodes.ForEach(batchItems.Add);
         modelData.Links.ForEach(batchItems.Add);
 
-        AddOrUpdate(batchItems);
+        AddOrUpdate(modelData.Path, batchItems);
     }
 
-    void AddOrUpdate(IReadOnlyList<Parsing.IItem> parsedItems)
+    void AddOrUpdate(string path, IReadOnlyList<Parsing.IItem> parsedItems)
     {
         using var _ = Timing.Start();
         lock (model.SyncRoot)
         {
+            model.Path = path;
             // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {
