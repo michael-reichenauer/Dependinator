@@ -2,10 +2,12 @@ namespace Dependinator.Models;
 
 static class ExampleModel
 {
+  public static readonly string Path = "ExampleModel.json";
 
   public static string Model =
 """
 {
+  "Path": "ExampleModel.json",
   "Nodes": [
     {
       "Name": "",

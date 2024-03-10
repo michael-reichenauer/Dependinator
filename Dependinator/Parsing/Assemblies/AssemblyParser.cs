@@ -16,7 +16,7 @@ internal class AssemblyParser : IDisposable
     readonly Decompiler decompiler = new Decompiler();
 
     readonly ChannelWriter<IItem> items;
-
+    readonly IFileService fileService;
     readonly MemberParser memberParser;
     readonly string parentName;
     readonly ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
@@ -29,13 +29,14 @@ internal class AssemblyParser : IDisposable
         string projectPath,
         string parentName,
         ChannelWriter<IItem> items,
-        bool isReadSymbols)
+        bool isReadSymbols,
+        IFileService fileService)
     {
         ProjectPath = projectPath;
         this.assemblyPath = assemblyPath;
         this.parentName = parentName;
         this.items = items;
-
+        this.fileService = fileService;
         XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
         linkHandler = new LinkHandler(items);
 
@@ -64,7 +65,7 @@ internal class AssemblyParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        if (!File.Exists(assemblyPath)) return R.Error($"No file at '{assemblyPath}'");
+        if (!fileService.Exists(assemblyPath)) return R.Error($"No file at '{assemblyPath}'");
 
         return await Task.Run(async () =>
         {
@@ -144,7 +145,8 @@ internal class AssemblyParser : IDisposable
                 ReadSymbols = isSymbols
             };
 
-            return AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
+            if (!Try(out var stream, out var e, fileService.ReadStram(assemblyPath))) return null;
+            return AssemblyDefinition.ReadAssembly(stream, parameters);
         }
         catch (SymbolsNotFoundException)
         {

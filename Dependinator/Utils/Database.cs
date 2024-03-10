@@ -3,9 +3,9 @@ namespace Dependinator.Utils;
 interface IDatabase
 {
     Task Init();
-    Task SetAsync<T>(string id, T value);
+    Task<R> SetAsync<T>(string id, T value);
     Task<R<T>> GetAsync<T>(string id);
-    Task DeleteAsync(string id);
+    Task<R> DeleteAsync(string id);
 }
 
 public record Pair<T>(string Id, T Value);
@@ -31,10 +31,11 @@ class Database : IDatabase
         await jSInteropService.InitializeDatabaseAsync(DatabaseName, CurrentVersion, CollectionName);
     }
 
-    public async Task SetAsync<T>(string id, T value)
+    public async Task<R> SetAsync<T>(string id, T value)
     {
         var pair = new Pair<T>(id, value);
         await jSInteropService.SetDatabaseValueAsync(DatabaseName, CurrentVersion, CollectionName, pair);
+        return R.Ok;
     }
 
     public async Task<R<T>> GetAsync<T>(string id)
@@ -44,8 +45,9 @@ class Database : IDatabase
         return pair.Value;
     }
 
-    public async Task DeleteAsync(string id)
+    public async Task<R> DeleteAsync(string id)
     {
         await jSInteropService.DeleteDatabaseValueAsync(DatabaseName, CurrentVersion, CollectionName, id);
+        return R.Ok;
     }
 }

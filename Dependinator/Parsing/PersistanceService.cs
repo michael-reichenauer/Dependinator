@@ -16,20 +16,23 @@ interface IPersistenceService
 [Transient]
 class PersistenceService : IPersistenceService
 {
-    static readonly JsonSerializerOptions indented = new() { WriteIndented = true };
-    private readonly IDatabase database;
+    readonly IFileService fileService;
     const string modelName = "DependinatorModel.json";
 
-    public PersistenceService(IDatabase database)
+    public PersistenceService(IFileService fileService)
     {
-        this.database = database;
+        this.fileService = fileService;
     }
 
     public Model ModelToData(Models.IModel model)
     {
-        var data = new Model();
-        data.Nodes.AddRange(model.Items.Values.OfType<Models.Node>().Select(ToNode));
-        data.Links.AddRange(model.Items.Values.OfType<Models.Link>().Select(ToLink));
+        var data = new Model
+        {
+            Path = model.Path,
+            Nodes = model.Items.Values.OfType<Models.Node>().Select(ToNode).ToList(),
+            Links = model.Items.Values.OfType<Models.Link>().Select(ToLink).ToList(),
+        };
+
         return data;
     }
 
@@ -37,9 +40,9 @@ class PersistenceService : IPersistenceService
     {
         return Task.Run(async () =>
         {
-            using var t = Timing.Start("Write model");
+            using var t = Timing.Start($"Write model '{model.Path}'");
 
-            await database.SetAsync(modelName, model);
+            await fileService.WriteAsync(model.Path, model);
 
             // var path = GetModelFilePath();
             // if (!Try(out var e, () => File.WriteAllText(path, json))) return e;
@@ -52,40 +55,22 @@ class PersistenceService : IPersistenceService
     {
         return Task.Run<R<Model>>(async () =>
         {
-            using var t = Timing.Start("Read model");
+            path = path == "" ? ExampleModel.Path : path;
+            using var t = Timing.Start($"Read model '{path}'");
 
-            if (!Try(out var model, out var e, await database.GetAsync<Model>(modelName)))
+            if (path == ExampleModel.Path)
             {
-                if (e.IsNone)
+                if (!Try(out var model, out var e, await fileService.ReadAsync<Model>(path)))
                 {
                     var json = ExampleModel.Model;
-                    Log.Info("Read example json", json.Length, "bytes", t.ToString());
-
-                    if (!Try(out model, out var ee, () => JsonSerializer.Deserialize<Model>(json))) return ee;
-                    return model;
+                    if (!Try(out model, out e, () => JsonSerializer.Deserialize<Model>(json))) return e;
                 }
 
-                return e;
+                return model;
             }
 
-            return model;
-
-            //  return R.Error("Failed to load model");
-
-            // path = path == "" ? GetModelFilePath() : path;
-            // var json = ExampleModel.Model;
-
-            // // Log.Info("Read persistance", path);
-            // // if (path != "Example.exe")
-            // // {
-            // //     if (!Try(out json, out var e, () => File.ReadAllText(path))) return e;
-            // // }
-            // Log.Info("Read json", json.Length, "bytes", t.ToString());
-
-            // if (!Try(out var model, out var ee, () => JsonSerializer.Deserialize<Model>(json))) return ee;
-            // Log.Info("Parsed json", json.Length, "bytes", t.ToString());
-
-            // return model;
+            if (!Try(out var model2, out var e2, await fileService.ReadAsync<Model>(path))) return e2;
+            return model2;
         });
     }
 
@@ -104,7 +89,7 @@ class PersistenceService : IPersistenceService
 
 
     static Link ToLink(Models.Link link) =>
-     new(link.Source.Name, link.Target.Name, new NodeType(link.Target.Type.Text));
+        new(link.Source.Name, link.Target.Name, new NodeType(link.Target.Type.Text));
 
     static string GetModelFilePath() =>
         Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), modelName);
