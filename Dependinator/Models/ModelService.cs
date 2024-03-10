@@ -5,8 +5,8 @@ namespace Dependinator.Models;
 
 interface IModelService
 {
-    Task<R> LoadAsync();
-    Task<R> RefreshAsync();
+    Task<R> LoadAsync(string path);
+    Task<R> RefreshAsync(string path);
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool TryUpdateNode(string id, Action<Node> updateAction);
@@ -82,15 +82,16 @@ class ModelService : IModelService
         }
     }
 
-    public async Task<R> LoadAsync()
+    public async Task<R> LoadAsync(string path)
     {
-        using var _ = Timing.Start("Load model");
-        var path = "";
+        Clear();
+
+        using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
         {
-            return await ParseAsync();
+            return await ParseAsync(path);
         }
 
         // Load the cached mode
@@ -101,32 +102,30 @@ class ModelService : IModelService
         return R.Ok;
     }
 
-    public async Task<R> RefreshAsync()
+    public async Task<R> RefreshAsync(string path)
     {
-        return await ParseAsync();
+        return await ParseAsync(path);
     }
 
 
-    async Task<R> ParseAsync()
+    async Task<R> ParseAsync(string path)
     {
         using var _ = Timing.Start();
-        var path = "/workspaces/Dependinator/Dependinator.sln";
+        //var path = "/workspaces/Dependinator/Dependinator.sln";
 
 
-        // if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
+        if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 
         await Task.Run(async () =>
         {
-            await Task.CompletedTask;
-
             var batchItems = new List<Parsing.IItem>();
-            // while (await reader.WaitToReadAsync())
-            // {
-            //     while (reader.TryRead(out var item))
-            //     {
-            //         batchItems.Add(item);
-            //     }
-            // }
+            while (await reader.WaitToReadAsync())
+            {
+                while (reader.TryRead(out var item))
+                {
+                    batchItems.Add(item);
+                }
+            }
             AddOrUpdate(path, batchItems);
         });
 
@@ -191,7 +190,7 @@ class ModelService : IModelService
 
     void AddOrUpdate(string path, IReadOnlyList<Parsing.IItem> parsedItems)
     {
-        using var _ = Timing.Start();
+        using var _ = Timing.Start($"Add {parsedItems.Count} items for {path}");
         lock (model.SyncRoot)
         {
             model.Path = path;

@@ -101,6 +101,9 @@ class Model : IModel
     public void Clear()
     {
         Items.Clear();
+        Path = "";
+        IsSaving = false;
+        ModifiedTime = DateTime.MinValue;
         ClearCachedSvg();
 
         InitModel();

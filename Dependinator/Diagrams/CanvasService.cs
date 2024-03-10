@@ -1,5 +1,7 @@
 using Dependinator.Models;
+using Dependinator.Parsing;
 using Dependinator.Utils.UI;
+using Microsoft.AspNetCore.Components.Forms;
 
 
 namespace Dependinator.Diagrams;
@@ -24,6 +26,7 @@ interface ICanvasService
     void Clear();
     void PanZoomToFit();
     void InitialShow();
+    Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles);
 }
 
 
@@ -37,6 +40,7 @@ class CanvasService : ICanvasService
     readonly IModelService modelService;
     readonly IUIService uiService;
     readonly IJSInteropService jSInteropService;
+    readonly IFileService fileService;
     readonly Timer moveTimer;
     bool moveTimerRunning = false;
     bool isMoving = false;
@@ -46,13 +50,15 @@ class CanvasService : ICanvasService
         IPanZoomService panZoomService,
         IModelService modelService,
         IUIService uiService,
-        IJSInteropService jSInteropService)
+        IJSInteropService jSInteropService,
+        IFileService fileService)
     {
         this.mouseEventService = mouseEventService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
         this.uiService = uiService;
         this.jSInteropService = jSInteropService;
+        this.fileService = fileService;
         mouseEventService.LeftClick += OnClick;
         mouseEventService.LeftDblClick += OnDblClick;
         mouseEventService.MouseWheel += OnMouseWheel;
@@ -91,6 +97,14 @@ class CanvasService : ICanvasService
         await panZoomService.InitAsync(canvas);
     }
 
+
+    public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
+    {
+        await fileService.AddAsync(browserFiles);
+
+        await modelService.LoadAsync(browserFiles.First().Name);
+        uiService.TriggerUIStateChange();
+    }
 
     public async void OpenFiles()
     {
@@ -252,7 +266,7 @@ class CanvasService : ICanvasService
     {
         await panZoomService.CheckResizeAsync();
 
-        await modelService.LoadAsync();
+        await modelService.LoadAsync("");
 
         //panZoomService.PanZoomToFit(bounds);
         uiService.TriggerUIStateChange();
@@ -265,7 +279,7 @@ class CanvasService : ICanvasService
 
     public async void Refresh()
     {
-        await modelService.RefreshAsync();
+        await modelService.RefreshAsync("");
         // panZoomService.PanZoomToFit(bounds);
         uiService.TriggerUIStateChange();
     }
