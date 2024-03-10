@@ -2,12 +2,10 @@ name: Dependinator CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [main, dev]
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    branches:
-      - main
+    branches: [main, dev]
 
 jobs:
   build_and_deploy_job:
@@ -15,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout branch 
+        uses: actions/checkout@v3
         with:
           submodules: true
           lfs: false
@@ -32,6 +31,7 @@ jobs:
           api_location: "Api" # Api source code path - optional
           output_location: "wwwroot" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
+          production_branch: "main"
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
