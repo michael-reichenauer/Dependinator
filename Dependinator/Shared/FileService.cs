@@ -1,7 +1,6 @@
-using ICSharpCode.Decompiler.CSharp.Transforms;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace Dependinator.Parsing;
+namespace Dependinator.Shared;
 
 interface IFileService
 {

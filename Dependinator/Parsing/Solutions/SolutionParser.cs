@@ -1,5 +1,6 @@
 ﻿using System.Threading.Channels;
 using Dependinator.Parsing.Assemblies;
+using Dependinator.Shared;
 
 namespace Dependinator.Parsing.Solutions;
 

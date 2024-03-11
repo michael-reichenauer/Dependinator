@@ -1,5 +1,5 @@
 using Dependinator.Models;
-using Dependinator.Parsing;
+using Dependinator.Shared;
 using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components.Forms;
 

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Dependinator.Shared;
 
 namespace Dependinator.Parsing.Solutions;
 
