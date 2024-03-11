@@ -1,3 +1,4 @@
+using Dependinator.Shared;
 using Dependinator.Utils.UI;
 
 namespace Dependinator.Models;
@@ -26,6 +27,7 @@ class ModelService : IModelService
     readonly ISvgService modelSvgService;
     readonly Parsing.IPersistenceService persistenceService;
     readonly IUIService uiService;
+    readonly IConfigService configService;
 
     public ModelService(
         IModel model,
@@ -33,7 +35,8 @@ class ModelService : IModelService
         IStructureService modelStructureService,
         ISvgService modelSvgService,
         Parsing.IPersistenceService persistenceService,
-        IUIService uiService)
+        IUIService uiService,
+        IConfigService configService)
     {
         this.model = model;
         this.parserService = parserService;
@@ -41,6 +44,7 @@ class ModelService : IModelService
         this.modelSvgService = modelSvgService;
         this.persistenceService = persistenceService;
         this.uiService = uiService;
+        this.configService = configService;
     }
 
     public bool TryGetNode(string id, out Node node)
@@ -85,7 +89,13 @@ class ModelService : IModelService
     public async Task<R> LoadAsync(string path)
     {
         Clear();
+        if (path == "")
+        {
+            path = (await configService.GetAsync()).LastUsedPath;
+            path = path == "" ? ExampleModel.Path : path;
+        }
 
+        await configService.SetAsync(c => c.LastUsedPath = path);
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
@@ -97,8 +107,10 @@ class ModelService : IModelService
         // Load the cached mode
         await Task.Run(() => Load(model));
 
+        if (path == ExampleModel.Path) return R.Ok;
+
         // Trigger parse to get latest data
-        // ParseAsync().RunInBackground();
+        ParseAsync(model.Path).RunInBackground();
         return R.Ok;
     }
 

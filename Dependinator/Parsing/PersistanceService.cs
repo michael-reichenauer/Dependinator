@@ -55,7 +55,6 @@ class PersistenceService : IPersistenceService
     {
         return Task.Run<R<Model>>(async () =>
         {
-            path = path == "" ? ExampleModel.Path : path;
             using var t = Timing.Start($"Read model '{path}'");
 
             if (path == ExampleModel.Path)
