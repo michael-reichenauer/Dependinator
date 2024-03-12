@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Dependinator.Models;
 
 namespace Dependinator.Parsing;
 
@@ -21,6 +22,8 @@ interface IItem { }
 record Model
 {
     public required string Path { get; init; }
+    public double Zoom { get; init; } = 0;
+    public Rect ViewRect { get; init; } = Rect.Zero;
     public required IReadOnlyList<Node> Nodes { get; init; }
     public required IReadOnlyList<Link> Links { get; init; }
 }

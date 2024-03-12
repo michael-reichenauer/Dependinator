@@ -267,6 +267,14 @@ class CanvasService : ICanvasService
         await panZoomService.CheckResizeAsync();
 
         await modelService.LoadAsync("");
+        var (viewRect, zoom) = modelService.GetLatestView();
+
+        if (zoom != 0)
+        {
+            panZoomService.Offset = new Pos(viewRect.X, viewRect.Y);
+            panZoomService.Zoom = zoom;
+        }
+        Log.Info($"InitialShow:", viewRect, zoom);
 
         //panZoomService.PanZoomToFit(bounds);
         uiService.TriggerUIStateChange();
@@ -296,6 +304,7 @@ class CanvasService : ICanvasService
 
     string GetSvgContent()
     {
+        // Log.Info($"GetSvgContent:", Offset, Zoom);
         var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
         var tile = modelService.GetTile(viewRect, Zoom);
 

@@ -8,6 +8,13 @@ static class ExampleModel
 """
 {
   "Path": "ExampleModel.json",
+  "Zoom": 1,
+  "ViewRext": {
+    "X": 0,
+    "Y": 0,
+    "Width": 1000,
+    "Height": 1000
+  },
   "Nodes": [
     {
       "Name": "",

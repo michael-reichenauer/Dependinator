@@ -7,11 +7,13 @@ namespace Dependinator.Models;
 interface IModelService
 {
     Task<R> LoadAsync(string path);
+    (Rect, double) GetLatestView();
     Task<R> RefreshAsync(string path);
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool TryUpdateNode(string id, Action<Node> updateAction);
     void Clear();
+    void TriggerSave();
 }
 
 
@@ -71,12 +73,25 @@ class ModelService : IModelService
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
+        //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
         lock (model.SyncRoot)
         {
+            if (model.Root.Children.Any())
+            {
+                model.ViewRect = viewRect;
+                model.Zoom = zoom;
+            }
             return modelSvgService.GetTile(model, viewRect, zoom);
         }
     }
 
+    public (Rect, double) GetLatestView()
+    {
+        lock (model.SyncRoot)
+        {
+            return (model.ViewRect, model.Zoom);
+        }
+    }
 
     public void Clear()
     {
@@ -101,7 +116,7 @@ class ModelService : IModelService
         // Try read cached model (with ui layout)
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
         {
-            return await ParseAsync(path);
+            return await ParseAsync(path, Rect.Zero, 0);
         }
 
         // Load the cached mode
@@ -110,17 +125,18 @@ class ModelService : IModelService
         if (path == ExampleModel.Path) return R.Ok;
 
         // Trigger parse to get latest data
-        ParseAsync(model.Path).RunInBackground();
+        ParseAsync(model.Path, model.ViewRect, model.Zoom).RunInBackground();
         return R.Ok;
     }
 
     public async Task<R> RefreshAsync(string path)
     {
-        return await ParseAsync(path);
+        (Rect viewRect, double zoom) = GetLatestView();
+        return await ParseAsync(path, viewRect, zoom);
     }
 
 
-    async Task<R> ParseAsync(string path)
+    async Task<R> ParseAsync(string path, Rect viewRect, double zoom)
     {
         using var _ = Timing.Start();
         //var path = "/workspaces/Dependinator/Dependinator.sln";
@@ -138,7 +154,7 @@ class ModelService : IModelService
                     batchItems.Add(item);
                 }
             }
-            AddOrUpdate(path, batchItems);
+            AddOrUpdate(path, viewRect, zoom, batchItems);
         });
 
         uiService.TriggerUIStateChange();
@@ -149,7 +165,7 @@ class ModelService : IModelService
     }
 
 
-    void TriggerSave()
+    public void TriggerSave()
     {
         CancellationToken ct;
         lock (model.SyncRoot)
@@ -197,15 +213,17 @@ class ModelService : IModelService
         modelData.Nodes.ForEach(batchItems.Add);
         modelData.Links.ForEach(batchItems.Add);
 
-        AddOrUpdate(modelData.Path, batchItems);
+        AddOrUpdate(modelData.Path, modelData.ViewRect, modelData.Zoom, batchItems);
     }
 
-    void AddOrUpdate(string path, IReadOnlyList<Parsing.IItem> parsedItems)
+    void AddOrUpdate(string path, Rect viewRect, double zoom, IReadOnlyList<Parsing.IItem> parsedItems)
     {
         using var _ = Timing.Start($"Add {parsedItems.Count} items for {path}");
         lock (model.SyncRoot)
         {
             model.Path = path;
+            model.ViewRect = viewRect;
+            model.Zoom = zoom;
             // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {

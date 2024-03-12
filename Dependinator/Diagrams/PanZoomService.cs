@@ -33,6 +33,7 @@ class PanZoomService : IPanZoomService
 
     readonly IJSInteropService jSInteropService;
     readonly IUIService uiService;
+    readonly IModelService modelService;
     readonly object syncRoot = new();
 
 
@@ -46,10 +47,11 @@ class PanZoomService : IPanZoomService
     public double SvgZoom { get; set; } = 1;
 
 
-    public PanZoomService(IJSInteropService jSInteropService, IUIService uiService)
+    public PanZoomService(IJSInteropService jSInteropService, IUIService uiService, IModelService modelService)
     {
         this.jSInteropService = jSInteropService;
         this.uiService = uiService;
+        this.modelService = modelService;
         jSInteropService.OnResize += OnResize;
 
     }
@@ -84,6 +86,7 @@ class PanZoomService : IPanZoomService
 
             Offset = new Pos(x, y);
             Zoom = newZoom;
+            modelService.TriggerSave();
         }
     }
 
@@ -92,6 +95,7 @@ class PanZoomService : IPanZoomService
     {
         var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
         Offset = new Pos(Offset.X - dx, Offset.Y - dy);
+        modelService.TriggerSave();
     }
 
 
@@ -117,6 +121,7 @@ class PanZoomService : IPanZoomService
 
             Offset = new Pos(x, y);
             Zoom = newZoom;
+            modelService.TriggerSave();
         }
     }
 
@@ -153,6 +158,7 @@ class PanZoomService : IPanZoomService
         if (isChanged)
         {
             uiService.TriggerUIStateChange();
+            modelService.TriggerSave();
             Log.Info($"Resized: {newSwgRect}");
         }
     }

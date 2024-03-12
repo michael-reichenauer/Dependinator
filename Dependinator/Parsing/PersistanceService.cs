@@ -29,6 +29,8 @@ class PersistenceService : IPersistenceService
         var data = new Model
         {
             Path = model.Path,
+            Zoom = model.Zoom,
+            ViewRect = model.ViewRect,
             Nodes = model.Items.Values.OfType<Models.Node>().Select(ToNode).ToList(),
             Links = model.Items.Values.OfType<Models.Link>().Select(ToLink).ToList(),
         };
