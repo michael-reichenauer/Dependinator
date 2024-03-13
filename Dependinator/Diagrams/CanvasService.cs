@@ -269,26 +269,30 @@ class CanvasService : ICanvasService
         await modelService.LoadAsync("");
         var (viewRect, zoom) = modelService.GetLatestView();
 
-        if (zoom != 0)
+        if (viewRect != Rect.Zero)
         {
             panZoomService.Offset = new Pos(viewRect.X, viewRect.Y);
             panZoomService.Zoom = zoom;
         }
-        Log.Info($"InitialShow:", viewRect, zoom);
+        else
+        {
+            var bound = modelService.GetBounds();
+            panZoomService.PanZoomToFit(bound);
+        }
 
-        //panZoomService.PanZoomToFit(bounds);
         uiService.TriggerUIStateChange();
     }
 
     public void PanZoomToFit()
     {
-
+        var bound = modelService.GetBounds();
+        panZoomService.PanZoomToFit(bound, Math.Min(1, Zoom));
+        uiService.TriggerUIStateChange();
     }
 
     public async void Refresh()
     {
-        await modelService.RefreshAsync("");
-        // panZoomService.PanZoomToFit(bounds);
+        await modelService.RefreshAsync();
         uiService.TriggerUIStateChange();
     }
 

@@ -16,7 +16,7 @@ interface IPanZoomService
 
     void OnMouseWheel(MouseEvent e);
     void OnMouseMove(MouseEvent e);
-    void PanZoomToFit(Rect bounds);
+    void PanZoomToFit(Rect bounds, double maxZoom = 1);
     Task CheckResizeAsync();
 }
 
@@ -99,7 +99,7 @@ class PanZoomService : IPanZoomService
     }
 
 
-    public void PanZoomToFit(Rect totalBounds)
+    public void PanZoomToFit(Rect totalBounds, double maxZoom = 1)
     {
         lock (syncRoot)
         {
@@ -109,7 +109,7 @@ class PanZoomService : IPanZoomService
             // Determine the X or y zoom that best fits the bounds (including margin)
             var zx = (b.Width + 2 * Margin) / SvgRect.Width;
             var zy = (b.Height + 2 * Margin) / SvgRect.Height;
-            var newZoom = Math.Max(zx, zy);
+            var newZoom = Math.Max(maxZoom, Math.Max(zx, zy));
 
             // Zoom width and height to fit the bounds
             var w = SvgRect.Width * newZoom;

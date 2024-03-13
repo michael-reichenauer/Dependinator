@@ -8,12 +8,13 @@ interface IModelService
 {
     Task<R> LoadAsync(string path);
     (Rect, double) GetLatestView();
-    Task<R> RefreshAsync(string path);
+    Task<R> RefreshAsync();
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool TryUpdateNode(string id, Action<Node> updateAction);
     void Clear();
     void TriggerSave();
+    Rect GetBounds();
 }
 
 
@@ -49,9 +50,17 @@ class ModelService : IModelService
         this.configService = configService;
     }
 
+    public Rect GetBounds()
+    {
+        lock (model.Lock)
+        {
+            return model.Root.GetTotalBounds();
+        }
+    }
+
     public bool TryGetNode(string id, out Node node)
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             return model.TryGetNode(NodeId.FromId(id), out node);
         }
@@ -59,7 +68,7 @@ class ModelService : IModelService
 
     public bool TryUpdateNode(string id, Action<Node> updateAction)
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             if (!model.TryGetNode(NodeId.FromId(id), out var node)) return false;
 
@@ -74,7 +83,7 @@ class ModelService : IModelService
     public Tile GetTile(Rect viewRect, double zoom)
     {
         //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             if (model.Root.Children.Any())
             {
@@ -87,7 +96,7 @@ class ModelService : IModelService
 
     public (Rect, double) GetLatestView()
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             return (model.ViewRect, model.Zoom);
         }
@@ -95,7 +104,7 @@ class ModelService : IModelService
 
     public void Clear()
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             model.Clear();
         }
@@ -129,8 +138,11 @@ class ModelService : IModelService
         return R.Ok;
     }
 
-    public async Task<R> RefreshAsync(string path)
+    public async Task<R> RefreshAsync()
     {
+        var path = "";
+        lock (model.Lock) path = model.Path;
+
         (Rect viewRect, double zoom) = GetLatestView();
         return await ParseAsync(path, viewRect, zoom);
     }
@@ -168,7 +180,7 @@ class ModelService : IModelService
     public void TriggerSave()
     {
         CancellationToken ct;
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             if (!model.IsSaving)
             {
@@ -198,7 +210,7 @@ class ModelService : IModelService
         if (ct.IsCancellationRequested) return;
 
         Parsing.Model modelData;
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             modelData = persistenceService.ModelToData(model);
             model.IsSaving = false;
@@ -219,7 +231,7 @@ class ModelService : IModelService
     void AddOrUpdate(string path, Rect viewRect, double zoom, IReadOnlyList<Parsing.IItem> parsedItems)
     {
         using var _ = Timing.Start($"Add {parsedItems.Count} items for {path}");
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             model.Path = path;
             model.ViewRect = viewRect;

@@ -4,7 +4,7 @@ namespace Dependinator.Models;
 interface IModel
 {
     string Path { get; set; }
-    object SyncRoot { get; }
+    object Lock { get; }
     Node Root { get; }
     Rect ViewRect { get; set; }
     double Zoom { get; set; }
@@ -38,7 +38,7 @@ class Model : IModel
     }
 
     public string Path { get; set; } = "";
-    public object SyncRoot => syncRoot;
+    public object Lock => syncRoot;
     public bool IsSaving { get; set; } = false;
 
     public Rect ViewRect { get; set; } = Rect.Zero;
