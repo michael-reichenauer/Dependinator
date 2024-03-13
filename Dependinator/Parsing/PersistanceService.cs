@@ -1,6 +1,6 @@
-
 using System.Text.Json;
 using Dependinator.Models;
+using Dependinator.Shared;
 
 namespace Dependinator.Parsing;
 
@@ -29,6 +29,8 @@ class PersistenceService : IPersistenceService
         var data = new Model
         {
             Path = model.Path,
+            Zoom = model.Zoom,
+            ViewRect = model.ViewRect,
             Nodes = model.Items.Values.OfType<Models.Node>().Select(ToNode).ToList(),
             Links = model.Items.Values.OfType<Models.Link>().Select(ToLink).ToList(),
         };
@@ -55,7 +57,6 @@ class PersistenceService : IPersistenceService
     {
         return Task.Run<R<Model>>(async () =>
         {
-            path = path == "" ? ExampleModel.Path : path;
             using var t = Timing.Start($"Read model '{path}'");
 
             if (path == ExampleModel.Path)

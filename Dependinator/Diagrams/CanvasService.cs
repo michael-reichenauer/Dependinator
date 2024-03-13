@@ -1,5 +1,5 @@
 using Dependinator.Models;
-using Dependinator.Parsing;
+using Dependinator.Shared;
 using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -267,20 +267,32 @@ class CanvasService : ICanvasService
         await panZoomService.CheckResizeAsync();
 
         await modelService.LoadAsync("");
+        var (viewRect, zoom) = modelService.GetLatestView();
 
-        //panZoomService.PanZoomToFit(bounds);
+        if (viewRect != Rect.Zero)
+        {
+            panZoomService.Offset = new Pos(viewRect.X, viewRect.Y);
+            panZoomService.Zoom = zoom;
+        }
+        else
+        {
+            var bound = modelService.GetBounds();
+            panZoomService.PanZoomToFit(bound);
+        }
+
         uiService.TriggerUIStateChange();
     }
 
     public void PanZoomToFit()
     {
-
+        var bound = modelService.GetBounds();
+        panZoomService.PanZoomToFit(bound, Math.Min(1, Zoom));
+        uiService.TriggerUIStateChange();
     }
 
     public async void Refresh()
     {
-        await modelService.RefreshAsync("");
-        // panZoomService.PanZoomToFit(bounds);
+        await modelService.RefreshAsync();
         uiService.TriggerUIStateChange();
     }
 
@@ -296,6 +308,7 @@ class CanvasService : ICanvasService
 
     string GetSvgContent()
     {
+        // Log.Info($"GetSvgContent:", Offset, Zoom);
         var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
         var tile = modelService.GetTile(viewRect, Zoom);
 

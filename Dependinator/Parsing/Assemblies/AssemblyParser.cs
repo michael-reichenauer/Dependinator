@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text;
 using System.Threading.Channels;
+using Dependinator.Shared;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;

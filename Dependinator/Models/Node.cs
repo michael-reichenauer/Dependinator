@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Web;
 
 namespace Dependinator.Models;
@@ -56,6 +57,22 @@ class Node : IItem
         var zoom = 1.0;
         Ancestors().ForEach(n => zoom *= 1 / n.ContainerZoom);
         return zoom;
+    }
+
+    internal Rect GetTotalBounds()
+    {
+        // Calculate the total bounds of the children
+        (double x1, double y1, double x2, double y2) = Children.Aggregate(
+            (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue),
+            (bounds, child) =>
+            {
+                var (x1, y1, x2, y2) = bounds;
+                var cb = child.Boundary;
+                var (cx1, cy1, cx2, cy2) = (cb.X, cb.Y, cb.X + cb.Width, cb.Y + cb.Height);
+                return (Math.Min(x1, cx1), Math.Min(y1, cy1), Math.Max(x2, cx2), Math.Max(y2, cy2));
+            });
+
+        return new Rect(x1, y1, x2 - x1, y2 - y1);
     }
 
     public void Update(Parsing.Node node)

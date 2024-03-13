@@ -1,3 +1,4 @@
+using Dependinator.Shared;
 using Dependinator.Utils.UI;
 
 namespace Dependinator.Models;
@@ -6,11 +7,14 @@ namespace Dependinator.Models;
 interface IModelService
 {
     Task<R> LoadAsync(string path);
-    Task<R> RefreshAsync(string path);
+    (Rect, double) GetLatestView();
+    Task<R> RefreshAsync();
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool TryUpdateNode(string id, Action<Node> updateAction);
     void Clear();
+    void TriggerSave();
+    Rect GetBounds();
 }
 
 
@@ -26,6 +30,7 @@ class ModelService : IModelService
     readonly ISvgService modelSvgService;
     readonly Parsing.IPersistenceService persistenceService;
     readonly IUIService uiService;
+    readonly IConfigService configService;
 
     public ModelService(
         IModel model,
@@ -33,7 +38,8 @@ class ModelService : IModelService
         IStructureService modelStructureService,
         ISvgService modelSvgService,
         Parsing.IPersistenceService persistenceService,
-        IUIService uiService)
+        IUIService uiService,
+        IConfigService configService)
     {
         this.model = model;
         this.parserService = parserService;
@@ -41,11 +47,20 @@ class ModelService : IModelService
         this.modelSvgService = modelSvgService;
         this.persistenceService = persistenceService;
         this.uiService = uiService;
+        this.configService = configService;
+    }
+
+    public Rect GetBounds()
+    {
+        lock (model.Lock)
+        {
+            return model.Root.GetTotalBounds();
+        }
     }
 
     public bool TryGetNode(string id, out Node node)
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             return model.TryGetNode(NodeId.FromId(id), out node);
         }
@@ -53,7 +68,7 @@ class ModelService : IModelService
 
     public bool TryUpdateNode(string id, Action<Node> updateAction)
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             if (!model.TryGetNode(NodeId.FromId(id), out var node)) return false;
 
@@ -67,16 +82,29 @@ class ModelService : IModelService
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
-        lock (model.SyncRoot)
+        //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
+        lock (model.Lock)
         {
+            if (model.Root.Children.Any())
+            {
+                model.ViewRect = viewRect;
+                model.Zoom = zoom;
+            }
             return modelSvgService.GetTile(model, viewRect, zoom);
         }
     }
 
+    public (Rect, double) GetLatestView()
+    {
+        lock (model.Lock)
+        {
+            return (model.ViewRect, model.Zoom);
+        }
+    }
 
     public void Clear()
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             model.Clear();
         }
@@ -85,30 +113,42 @@ class ModelService : IModelService
     public async Task<R> LoadAsync(string path)
     {
         Clear();
+        if (path == "")
+        {
+            path = (await configService.GetAsync()).LastUsedPath;
+            path = path == "" ? ExampleModel.Path : path;
+        }
 
+        await configService.SetAsync(c => c.LastUsedPath = path);
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
         {
-            return await ParseAsync(path);
+            return await ParseAsync(path, Rect.Zero, 0);
         }
 
         // Load the cached mode
         await Task.Run(() => Load(model));
 
+        if (path == ExampleModel.Path) return R.Ok;
+
         // Trigger parse to get latest data
-        // ParseAsync().RunInBackground();
+        ParseAsync(model.Path, model.ViewRect, model.Zoom).RunInBackground();
         return R.Ok;
     }
 
-    public async Task<R> RefreshAsync(string path)
+    public async Task<R> RefreshAsync()
     {
-        return await ParseAsync(path);
+        var path = "";
+        lock (model.Lock) path = model.Path;
+
+        (Rect viewRect, double zoom) = GetLatestView();
+        return await ParseAsync(path, viewRect, zoom);
     }
 
 
-    async Task<R> ParseAsync(string path)
+    async Task<R> ParseAsync(string path, Rect viewRect, double zoom)
     {
         using var _ = Timing.Start();
         //var path = "/workspaces/Dependinator/Dependinator.sln";
@@ -126,7 +166,7 @@ class ModelService : IModelService
                     batchItems.Add(item);
                 }
             }
-            AddOrUpdate(path, batchItems);
+            AddOrUpdate(path, viewRect, zoom, batchItems);
         });
 
         uiService.TriggerUIStateChange();
@@ -137,10 +177,10 @@ class ModelService : IModelService
     }
 
 
-    void TriggerSave()
+    public void TriggerSave()
     {
         CancellationToken ct;
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             if (!model.IsSaving)
             {
@@ -170,7 +210,7 @@ class ModelService : IModelService
         if (ct.IsCancellationRequested) return;
 
         Parsing.Model modelData;
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             modelData = persistenceService.ModelToData(model);
             model.IsSaving = false;
@@ -185,15 +225,17 @@ class ModelService : IModelService
         modelData.Nodes.ForEach(batchItems.Add);
         modelData.Links.ForEach(batchItems.Add);
 
-        AddOrUpdate(modelData.Path, batchItems);
+        AddOrUpdate(modelData.Path, modelData.ViewRect, modelData.Zoom, batchItems);
     }
 
-    void AddOrUpdate(string path, IReadOnlyList<Parsing.IItem> parsedItems)
+    void AddOrUpdate(string path, Rect viewRect, double zoom, IReadOnlyList<Parsing.IItem> parsedItems)
     {
         using var _ = Timing.Start($"Add {parsedItems.Count} items for {path}");
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             model.Path = path;
+            model.ViewRect = viewRect;
+            model.Zoom = zoom;
             // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {

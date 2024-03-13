@@ -4,8 +4,10 @@ namespace Dependinator.Models;
 interface IModel
 {
     string Path { get; set; }
-    object SyncRoot { get; }
+    object Lock { get; }
     Node Root { get; }
+    Rect ViewRect { get; set; }
+    double Zoom { get; set; }
     Tiles Tiles { get; }
     IDictionary<Id, IItem> Items { get; }   // Ta bort
     bool IsSaving { get; set; }
@@ -36,8 +38,11 @@ class Model : IModel
     }
 
     public string Path { get; set; } = "";
-    public object SyncRoot => syncRoot;
+    public object Lock => syncRoot;
     public bool IsSaving { get; set; } = false;
+
+    public Rect ViewRect { get; set; } = Rect.Zero;
+    public double Zoom { get; set; } = 0;
 
     public Tiles Tiles { get; } = new();
 
@@ -104,6 +109,8 @@ class Model : IModel
         Path = "";
         IsSaving = false;
         ModifiedTime = DateTime.MinValue;
+        ViewRect = Rect.Zero;
+        Zoom = 0;
         ClearCachedSvg();
 
         InitModel();
