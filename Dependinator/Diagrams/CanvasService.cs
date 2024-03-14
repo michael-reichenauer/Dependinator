@@ -271,8 +271,9 @@ class CanvasService : ICanvasService
 
         if (viewRect != Rect.Zero)
         {
-            panZoomService.Offset = new Pos(viewRect.X, viewRect.Y);
-            panZoomService.Zoom = zoom;
+
+            panZoomService.PanZoom(viewRect, zoom);
+
         }
         else
         {

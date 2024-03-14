@@ -18,6 +18,7 @@ interface IPanZoomService
     void OnMouseMove(MouseEvent e);
     void PanZoomToFit(Rect bounds, double maxZoom = 1);
     Task CheckResizeAsync();
+    void PanZoom(Rect viewRect, double zoom);
 }
 
 
@@ -98,6 +99,11 @@ class PanZoomService : IPanZoomService
         modelService.TriggerSave();
     }
 
+    public void PanZoom(Rect viewRect, double zoom)
+    {
+        Offset = new Pos(viewRect.X, viewRect.Y);
+        Zoom = zoom;
+    }
 
     public void PanZoomToFit(Rect totalBounds, double maxZoom = 1)
     {
