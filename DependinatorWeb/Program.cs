@@ -1,5 +1,6 @@
 using Dependinator.Utils;
 using Dependinator.Utils.Logging;
+using MudBlazor.Services;
 
 namespace DependinatorWeb
 {
@@ -16,6 +17,7 @@ namespace DependinatorWeb
             // Add services to the container.
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
+            builder.Services.AddMudServices();
 
             builder.Services.Scan(i =>
                 i.FromAssembliesOf(typeof(Dependinator.RootClass))

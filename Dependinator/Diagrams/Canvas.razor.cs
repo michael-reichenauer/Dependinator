@@ -1,4 +1,4 @@
-using Dependinator.Icons;
+using Dependinator.DiagramIcons;
 using Dependinator.Utils.UI;
 using ICSharpCode.Decompiler.IL;
 using Microsoft.AspNetCore.Components;

@@ -1,4 +1,4 @@
-namespace Dependinator.Icons;
+namespace Dependinator.DiagramIcons;
 
 static class Icon
 {
