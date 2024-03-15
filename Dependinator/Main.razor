@@ -2,14 +2,32 @@
 
 @inject ICanvasService canvasService
 
+
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Dense="true">
+        Dependinator
+    </MudAppBar>
+
+    <MudMainContent>
+        <Canvas />
+    </MudMainContent>
+</MudLayout>
+
+@*
 <div class="my-top-row">
-    <button @onclick=@canvasService.Refresh>Refresh</button>
-    <button @onclick=@canvasService.PanZoomToFit>Pan/Zoom to Fit</button>
-    <button @onclick=@canvasService.OpenFiles>Open ...</button>
-    @*<button @onclick=@canvasService.Clear>Clear</button>
-    *@
+<button @onclick=@canvasService.Refresh>Refresh</button>
+<button @onclick=@canvasService.PanZoomToFit>Pan/Zoom to Fit</button>
+<button @onclick=@canvasService.OpenFiles>Open ...</button>
+<button @onclick=@canvasService.Clear>Clear</button>
+
 </div>
 
 <div class="my-main">
-    <Canvas />
+<Canvas />
 </div>
+*@
