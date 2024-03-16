@@ -2,14 +2,39 @@
 
 @inject ICanvasService canvasService
 
+
+
+<MudThemeProvider Theme="DependinatorTheme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<Canvas />
+
+@code {
+    string TitleInfo => canvasService.TitleInfo;
+
+    MudTheme DependinatorTheme = new MudTheme
+        {
+            Palette = new PaletteLight()
+            {
+                AppbarBackground = Colors.DeepPurple.Accent4,
+                Background = Colors.DeepPurple.Lighten4,
+                Surface = Colors.DeepPurple.Lighten4,
+
+            },
+        };
+}
+
+@*
 <div class="my-top-row">
-    <button @onclick=@canvasService.Refresh>Refresh</button>
-    <button @onclick=@canvasService.PanZoomToFit>Pan/Zoom to Fit</button>
-    <button @onclick=@canvasService.OpenFiles>Open ...</button>
-    @*<button @onclick=@canvasService.Clear>Clear</button>
-    *@
+<button @onclick=@canvasService.Refresh>Refresh</button>
+<button @onclick=@canvasService.PanZoomToFit>Pan/Zoom to Fit</button>
+<button @onclick=@canvasService.OpenFiles>Open ...</button>
+<button @onclick=@canvasService.Clear>Clear</button>
+
 </div>
 
 <div class="my-main">
-    <Canvas />
+<Canvas />
 </div>
+*@

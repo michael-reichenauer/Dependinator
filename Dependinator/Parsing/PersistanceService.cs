@@ -59,6 +59,14 @@ class PersistenceService : IPersistenceService
         {
             using var t = Timing.Start($"Read model '{path}'");
 
+            if (!Build.IsWebAssembly)
+            {
+                await Task.CompletedTask;
+                var json = ExampleModel.Model;
+                if (!Try(out var model, out var e, () => JsonSerializer.Deserialize<Model>(json))) return e;
+                return model;
+            }
+
             if (path == ExampleModel.Path)
             {
                 if (!Try(out var model, out var e, await fileService.ReadAsync<Model>(path)))

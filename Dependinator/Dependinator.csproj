@@ -13,9 +13,10 @@
 
   <ItemGroup>
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.1.1.7464" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.3" />
     <PackageReference Include="Microsoft.Build" Version="17.7.2" />
     <PackageReference Include="Mono.Cecil" Version="0.11.5" />
+    <PackageReference Include="MudBlazor" Version="6.17.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 

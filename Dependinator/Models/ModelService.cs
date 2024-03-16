@@ -6,6 +6,8 @@ namespace Dependinator.Models;
 
 interface IModelService
 {
+    string ModelName { get; }
+
     Task<R> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
@@ -48,6 +50,17 @@ class ModelService : IModelService
         this.persistenceService = persistenceService;
         this.uiService = uiService;
         this.configService = configService;
+    }
+
+    public string ModelName => ReadModel(m => Path.GetFileNameWithoutExtension(m.Path));
+
+
+    T ReadModel<T>(Func<IModel, T> readFunc)
+    {
+        lock (model.Lock)
+        {
+            return readFunc(model);
+        }
     }
 
     public Rect GetBounds()

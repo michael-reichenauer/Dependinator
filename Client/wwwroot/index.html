@@ -10,10 +10,16 @@
     <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" /> -->
     <title>Dependinator</title>
     <base href="/" />
-    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="Client.styles.css" rel="stylesheet" />
+    <style>
+        body {
+            overflow: hidden;
+        }
+    </style>
 </head>
 
 <body oncontextmenu="return false;" style="background-color:#000000;">
@@ -31,17 +37,18 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script>
         // Prevent default touch events (scrolling, zooming, etc.), handled by the app
-        document.addEventListener('touchstart', function (e) {
-            e.preventDefault();
-        }, { passive: false });
-        document.addEventListener('touchmove', function (e) {
-            e.preventDefault();
-        }, { passive: false });
-        document.addEventListener('touchend', function (e) {
-            e.preventDefault();
-        }, { passive: false });
+        // document.addEventListener('touchstart', function (e) {
+        //     e.preventDefault();
+        // }, { passive: false });
+        // document.addEventListener('touchmove', function (e) {
+        //     e.preventDefault();
+        // }, { passive: false });
+        // document.addEventListener('touchend', function (e) {
+        //     e.preventDefault();
+        // }, { passive: false });
     </script>
 </body>
 
