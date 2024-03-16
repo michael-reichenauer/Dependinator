@@ -1,9 +1,8 @@
 using Dependinator.DiagramIcons;
 using Dependinator.Utils.UI;
-using ICSharpCode.Decompiler.IL;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.JSInterop;
+
 
 namespace Dependinator.Diagrams;
 
@@ -28,7 +27,8 @@ partial class Canvas : ComponentBase, IUIComponent
     //string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), SvgKey: {srv.TileKeyText}, Offset: {srv.Offset}, TileViewBox: {srv.TileViewBox}, SvgViewBox: {srv.SvgViewBox}, Svg: {srv.SvgRect}";
 
     // string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#########}), SvgKey: {srv.TileKeyText}";
-    string Info => $"Zoom: {1 / srv.Zoom * 100:#}%, {1 / srv.Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(srv.Zoom) / Math.Log(7)) + 1}";
+    string Info => $"{1 / srv.Zoom * 100:#}%, L: {-(int)Math.Ceiling(Math.Log(srv.Zoom) / Math.Log(7)) + 1}";
+    string DiagramName => srv.DiagramName;
 
     string Content => srv.SvgContent;
     double Width => srv.SvgRect.Width;

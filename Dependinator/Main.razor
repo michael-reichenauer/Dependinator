@@ -4,21 +4,26 @@
 
 
 
-<MudThemeProvider />
+<MudThemeProvider Theme="DependinatorTheme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout>
-    <MudAppBar Dense="true">
-        <MudText Typo="Typo.h5" Class="ml-3">Dependinator</MudText>
-        <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
-    </MudAppBar>
+<Canvas />
 
-    <MudMainContent>
-        <Canvas />
-    </MudMainContent>
-</MudLayout>
+@code {
+    string TitleInfo => canvasService.TitleInfo;
+
+    MudTheme DependinatorTheme = new MudTheme
+        {
+            Palette = new PaletteLight()
+            {
+                AppbarBackground = Colors.DeepPurple.Accent4,
+                Background = Colors.DeepPurple.Lighten4,
+                Surface = Colors.DeepPurple.Lighten4,
+
+            },
+        };
+}
 
 @*
 <div class="my-top-row">

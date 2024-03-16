@@ -20,6 +20,8 @@ interface ICanvasService
     int ZCount { get; }
     string SvgViewBox { get; }
     string Cursor { get; }
+    string TitleInfo { get; }
+    string DiagramName { get; }
 
     void OpenFiles();
     void Refresh();
@@ -69,6 +71,8 @@ class CanvasService : ICanvasService
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
+    public string DiagramName => modelService.ModelName;
+    public string TitleInfo => $"Zoom: {1 / Zoom * 100:#}%, {1 / Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(Zoom) / Math.Log(7)) + 1}";
     public string SvgContent => GetSvgContent();
     public string TileKeyText { get; private set; } = "()";
     public double LevelZoom { get; private set; } = 1;
