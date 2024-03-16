@@ -7,6 +7,18 @@ export function listenToWindowResize(dotNetHelper) {
     dotNetHelper.invokeMethodAsync('WindowResizeEvent');
   }
 
+  // Prevent default touch events(scrolling, zooming, etc.), handled by the app
+  const elementId = "svgcanvas";
+  document.getElementById(elementId).addEventListener('touchstart', function (e) {
+    e.preventDefault();
+  }, { passive: false });
+  document.getElementById(elementId).addEventListener('touchmove', function (e) {
+    e.preventDefault();
+  }, { passive: false });
+  document.getElementById(elementId).addEventListener('touchend', function (e) {
+    e.preventDefault();
+  }, { passive: false });
+
   window.addEventListener("resize", resizeEventHandler);
 
   dotNetHelper.invokeMethodAsync('WindowResizeEvent');
