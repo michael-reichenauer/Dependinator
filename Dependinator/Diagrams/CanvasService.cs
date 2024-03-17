@@ -40,6 +40,7 @@ interface ICanvasService
 class CanvasService : ICanvasService
 {
     const int recentCount = 5;
+    const double MinSelectableZoom = 0.12;
 
     const int MoveDelay = 300;
     private readonly IMouseEventService mouseEventService;
@@ -153,7 +154,15 @@ class CanvasService : ICanvasService
         (string id, string subId) = NodeId.ParseString(e.TargetId);
         if (selectedId == id) return; // Clicked on same node again
 
-        if (modelService.TryUpdateNode(e.TargetId, node => node.IsSelected = true))
+        var isSelected = false;
+        if (modelService.TryUpdateNode(e.TargetId, node =>
+        {
+            if (Zoom * node.GetZoom() > MinSelectableZoom)
+            {
+                node.IsSelected = true;
+                isSelected = true;
+            }
+        }))
         {
             Log.Info($"Node clicked: {e.TargetId}");
             if (selectedId != "")
@@ -161,7 +170,7 @@ class CanvasService : ICanvasService
                 modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
             }
 
-            selectedId = id;
+            selectedId = isSelected ? id : "";
             uiService.TriggerUIStateChange();
         }
         else
