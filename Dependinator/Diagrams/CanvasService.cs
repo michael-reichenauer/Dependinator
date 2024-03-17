@@ -40,7 +40,7 @@ interface ICanvasService
 class CanvasService : ICanvasService
 {
     const int recentCount = 5;
-    const double MinSelectableZoom = 0.12;
+    const double MinSelectableZoom = 0.15;
 
     const int MoveDelay = 300;
     private readonly IMouseEventService mouseEventService;
