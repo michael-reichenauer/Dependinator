@@ -4,7 +4,7 @@ namespace Dependinator.Shared;
 class Config
 {
     public string LastUsedPath { get; set; } = "";
-
+    public List<string> RecentPaths { get; set; } = [];
 }
 
 interface IConfigService
@@ -17,7 +17,7 @@ interface IConfigService
 [Transient]
 class ConfigService : IConfigService
 {
-    const string configPath = "DependinatorConfig.json";
+    const string configPath = "/settings/DependinatorConfig.json";
 
     readonly IFileService fileService;
 

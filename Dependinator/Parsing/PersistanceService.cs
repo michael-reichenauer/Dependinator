@@ -42,9 +42,10 @@ class PersistenceService : IPersistenceService
     {
         return Task.Run(async () =>
         {
-            using var t = Timing.Start($"Write model '{model.Path}'");
+            var filePath = $"/models/{model.Path}";
+            using var t = Timing.Start($"Write model '{filePath}'");
 
-            await fileService.WriteAsync(model.Path, model);
+            await fileService.WriteAsync(filePath, model);
 
             // var path = GetModelFilePath();
             // if (!Try(out var e, () => File.WriteAllText(path, json))) return e;
@@ -53,11 +54,12 @@ class PersistenceService : IPersistenceService
         });
     }
 
-    public Task<R<Model>> ReadAsync(string path)
+    public Task<R<Model>> ReadAsync(string modelPath)
     {
         return Task.Run<R<Model>>(async () =>
         {
-            using var t = Timing.Start($"Read model '{path}'");
+            var filePath = $"/models/{modelPath}";
+            using var t = Timing.Start($"Read model '{filePath}'");
 
             if (!Build.IsWebAssembly)
             {
@@ -67,9 +69,9 @@ class PersistenceService : IPersistenceService
                 return model;
             }
 
-            if (path == ExampleModel.Path)
+            if (modelPath == ExampleModel.Path)
             {
-                if (!Try(out var model, out var e, await fileService.ReadAsync<Model>(path)))
+                if (!Try(out var model, out var e, await fileService.ReadAsync<Model>(filePath)))
                 {
                     var json = ExampleModel.Model;
                     if (!Try(out model, out e, () => JsonSerializer.Deserialize<Model>(json))) return e;
@@ -78,7 +80,7 @@ class PersistenceService : IPersistenceService
                 return model;
             }
 
-            if (!Try(out var model2, out var e2, await fileService.ReadAsync<Model>(path))) return e2;
+            if (!Try(out var model2, out var e2, await fileService.ReadAsync<Model>(filePath))) return e2;
             return model2;
         });
     }

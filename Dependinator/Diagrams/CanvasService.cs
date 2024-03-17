@@ -22,13 +22,16 @@ interface ICanvasService
     string Cursor { get; }
     string TitleInfo { get; }
     string DiagramName { get; }
+    IReadOnlyList<string> ModelPaths { get; }
 
     void OpenFiles();
     void Refresh();
     void Clear();
     void PanZoomToFit();
     void InitialShow();
+    Task LoadAsync(string modelPath);
     Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles);
+    Task<IReadOnlyList<string>> GetModelPaths();
 }
 
 
@@ -36,6 +39,8 @@ interface ICanvasService
 [Scoped]
 class CanvasService : ICanvasService
 {
+    const int recentCount = 5;
+
     const int MoveDelay = 300;
     private readonly IMouseEventService mouseEventService;
     IPanZoomService panZoomService;
@@ -43,6 +48,7 @@ class CanvasService : ICanvasService
     readonly IUIService uiService;
     readonly IJSInteropService jSInteropService;
     readonly IFileService fileService;
+    readonly IConfigService configService;
     readonly Timer moveTimer;
     bool moveTimerRunning = false;
     bool isMoving = false;
@@ -53,7 +59,8 @@ class CanvasService : ICanvasService
         IModelService modelService,
         IUIService uiService,
         IJSInteropService jSInteropService,
-        IFileService fileService)
+        IFileService fileService,
+        IConfigService configService)
     {
         this.mouseEventService = mouseEventService;
         this.panZoomService = panZoomService;
@@ -61,6 +68,7 @@ class CanvasService : ICanvasService
         this.uiService = uiService;
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
+        this.configService = configService;
         mouseEventService.LeftClick += OnClick;
         mouseEventService.LeftDblClick += OnDblClick;
         mouseEventService.MouseWheel += OnMouseWheel;
@@ -70,6 +78,8 @@ class CanvasService : ICanvasService
 
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
+
+    public IReadOnlyList<string> ModelPaths { get; set; } = [];
 
     public string DiagramName => modelService.ModelName;
     public string TitleInfo => $"Zoom: {1 / Zoom * 100:#}%, {1 / Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(Zoom) / Math.Log(7)) + 1}";
@@ -101,12 +111,27 @@ class CanvasService : ICanvasService
         await panZoomService.InitAsync(canvas);
     }
 
+    public async Task LoadAsync(string modelPath)
+    {
+        if (!Try(out var path, out var e, await modelService.LoadAsync(modelPath))) return;
+
+        await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(path).Distinct().Take(recentCount).ToList());
+        ModelPaths = (await configService.GetAsync()).RecentPaths;
+
+        PanZoomModel();
+        uiService.TriggerUIStateChange();
+    }
 
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
         await fileService.AddAsync(browserFiles);
 
-        await modelService.LoadAsync(browserFiles.First().Name);
+        if (!Try(out var path, out var e, await modelService.LoadAsync(browserFiles.First().Name))) return;
+
+        await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(path).Distinct().Take(recentCount).ToList());
+        ModelPaths = (await configService.GetAsync()).RecentPaths;
+
+        PanZoomModel();
         uiService.TriggerUIStateChange();
     }
 
@@ -115,6 +140,12 @@ class CanvasService : ICanvasService
         await jSInteropService.ClickElement(canvas.inputFile.Element);
     }
 
+    public async Task<IReadOnlyList<string>> GetModelPaths()
+    {
+        if (!Try(out var paths, out var eee, await fileService.GetFilePathsAsync())) return [];
+
+        return paths.Where(p => Path.GetDirectoryName(p) == "/models").ToList();
+    }
 
     void OnClick(MouseEvent e)
     {
@@ -270,22 +301,29 @@ class CanvasService : ICanvasService
     {
         await panZoomService.CheckResizeAsync();
 
-        await modelService.LoadAsync("");
+        if (!Try(out var path, out var e, await modelService.LoadAsync(""))) return;
+
+        await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(path).Distinct().Take(recentCount).ToList());
+        ModelPaths = (await configService.GetAsync()).RecentPaths;
+
+        PanZoomModel();
+
+        uiService.TriggerUIStateChange();
+    }
+
+    void PanZoomModel()
+    {
         var (viewRect, zoom) = modelService.GetLatestView();
 
         if (viewRect != Rect.Zero)
         {
-
             panZoomService.PanZoom(viewRect, zoom);
-
         }
         else
         {
             var bound = modelService.GetBounds();
             panZoomService.PanZoomToFit(bound);
         }
-
-        uiService.TriggerUIStateChange();
     }
 
     public void PanZoomToFit()

@@ -123,17 +123,19 @@ export function addPointerEventListener(elementId, eventName, instance, function
 }
 
 
-export function initializeDatabase(databaseName, currentVersion, collectionName) {
+export function initializeDatabase(databaseName, currentVersion, collectionNames) {
   const db = indexedDB.open(databaseName, currentVersion);
 
   db.onupgradeneeded = function () {
-    db.result.createObjectStore(collectionName, { keyPath: "id" });
+    collectionNames.forEach(collectionName => {
+      db.result.createObjectStore(collectionName, { keyPath: "id" });
+    });
   }
 }
 
-export async function setDatabaseValue(databaseName, currentVersion, collectionName, value) {
+export async function setDatabaseValue(databaseName, collectionName, value) {
   let request = new Promise((resolve) => {
-    const db = indexedDB.open(databaseName, currentVersion);
+    const db = indexedDB.open(databaseName);
 
     db.onsuccess = function () {
       const transaction = db.result.transaction(collectionName, "readwrite");
@@ -149,9 +151,9 @@ export async function setDatabaseValue(databaseName, currentVersion, collectionN
   await request;
 }
 
-export async function getDatabaseValue(databaseName, currentVersion, collectionName, id, instance, functionName) {
+export async function getDatabaseValue(databaseName, collectionName, id, instance, functionName) {
   let request = new Promise((resolve) => {
-    const db = indexedDB.open(databaseName, currentVersion);
+    const db = indexedDB.open(databaseName);
     db.onsuccess = function () {
       const transaction = db.result.transaction(collectionName, "readonly");
       const collection = transaction.objectStore(collectionName);
@@ -182,10 +184,9 @@ export async function getDatabaseValue(databaseName, currentVersion, collectionN
 
   return await request;
 }
-
-export async function deleteDatabaseValue(databaseName, currentVersion, collectionName, id) {
+export async function deleteDatabaseValue(databaseName, collectionName, id) {
   let request = new Promise((resolve) => {
-    let db = indexedDB.open(databaseName, currentVersion);
+    let db = indexedDB.open(databaseName);
 
     db.onsuccess = function () {
       let transaction = db.result.transaction(collectionName, "readwrite");
@@ -199,6 +200,24 @@ export async function deleteDatabaseValue(databaseName, currentVersion, collecti
   });
 
   await request;
+}
+
+export async function getDatabaseAllKeys(databaseName, collectionName) {
+  let requestX = new Promise((resolve) => {
+    let db = indexedDB.open(databaseName);
+
+    db.onsuccess = function (event) {
+      let transaction = db.result.transaction([collectionName], 'readonly');
+      let objectStore = transaction.objectStore(collectionName);
+      let keysRequest = objectStore.getAllKeys();
+
+      keysRequest.onsuccess = function () {
+        resolve(keysRequest.result);
+      };
+    };
+  });
+
+  return await requestX;
 }
 
 export function initializeFileDropZone(dropZoneElement, inputFileElement) {
