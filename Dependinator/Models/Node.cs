@@ -32,7 +32,7 @@ class Node : IItem
     public string Description { get; set; } = "";
     public string Color { get; set; } = "";
     public string Background { get; set; } = "green";
-    public double StrokeWidth { get; set; } = 1.0;
+    public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
 
     public Rect Boundary { get; set; } = Rect.None;

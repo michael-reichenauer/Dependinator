@@ -4,7 +4,7 @@ namespace Dependinator.Models;
 
 record Tile(TileKey Key, string Svg, double Zoom, Pos Offset)
 {
-    public const double ZoomFactor = 2.0;
+    public const double ZoomFactor = 1.1;
     public static Tile Empty = new(TileKey.Empty, "", 1.0, Pos.Zero);
 }
 
