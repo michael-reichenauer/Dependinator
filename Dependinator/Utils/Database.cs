@@ -17,7 +17,7 @@ public record Pair<T>(string Id, T Value);
 [Scoped]
 class Database : IDatabase
 {
-    const int CurrentVersion = 1;
+    const int CurrentVersion = 2;
     const string DatabaseName = "Dependinator";
 
 
