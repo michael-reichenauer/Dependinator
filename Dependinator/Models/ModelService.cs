@@ -8,7 +8,7 @@ interface IModelService
 {
     string ModelName { get; }
 
-    Task<R> LoadAsync(string path);
+    Task<R<string>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
     Tile GetTile(Rect viewRect, double zoom);
@@ -123,7 +123,7 @@ class ModelService : IModelService
         }
     }
 
-    public async Task<R> LoadAsync(string path)
+    public async Task<R<string>> LoadAsync(string path)
     {
         Clear();
         if (path == "")
@@ -144,12 +144,15 @@ class ModelService : IModelService
         // Load the cached mode
         await Task.Run(() => Load(model));
 
-        if (path == ExampleModel.Path) return R.Ok;
+        if (path == ExampleModel.Path) return path;
 
         // Trigger parse to get latest data
         ParseAsync(model.Path, model.ViewRect, model.Zoom).RunInBackground();
-        return R.Ok;
+
+        return model.Path;
     }
+
+
 
     public async Task<R> RefreshAsync()
     {
@@ -161,7 +164,7 @@ class ModelService : IModelService
     }
 
 
-    async Task<R> ParseAsync(string path, Rect viewRect, double zoom)
+    async Task<R<string>> ParseAsync(string path, Rect viewRect, double zoom)
     {
         using var _ = Timing.Start();
         //var path = "/workspaces/Dependinator/Dependinator.sln";
@@ -186,7 +189,7 @@ class ModelService : IModelService
 
         TriggerSave();
 
-        return R.Ok;
+        return path;
     }
 
 
@@ -228,6 +231,7 @@ class ModelService : IModelService
             modelData = persistenceService.ModelToData(model);
             model.IsSaving = false;
         }
+        if (model.Path == "") return;
 
         persistenceService.WriteAsync(modelData).RunInBackground();
     }

@@ -5,22 +5,30 @@
     <MudAppBar Dense="true" Elevation="5">
 
         <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="mr-5"
-            AnchorOrigin="Origin.BottomCenter">
+            OnOpening="OnMenuOpeningAsync" AnchorOrigin="Origin.BottomCenter">
             <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.FitScreen"
                 OnClick="srv.PanZoomToFit" OnTouch="srv.PanZoomToFit">Fit
                 to
                 Screen</MudMenuItem>
-            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.FileOpen"
-                OnClick="srv.OpenFiles" OnTouch="srv.OpenFiles">Open
-                Files</MudMenuItem>
+            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.OpenInBrowser"
+                OnClick="srv.OpenFiles" OnTouch="srv.OpenFiles">Browse Files ...</MudMenuItem>
+
+            @{
+                foreach (var path in ModelPaths)
+                {
+                    <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.Schema"
+                        OnClick="()=> srv.LoadAsync(path)" OnTouch="()=> srv.LoadAsync(path)">
+                        @Path.GetFileNameWithoutExtension(path)
+                    </MudMenuItem>
+                }
+            }
+
         </MudMenu>
 
         <MudTooltip Text="Pand and zoom diagram to fit screen">
             <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Color="Color.Inherit" OnClick="srv.PanZoomToFit" />
         </MudTooltip>
-        <MudTooltip Text="Open files to show">
-            <MudIconButton Icon="@Icons.Material.Outlined.FileOpen" Color="Color.Inherit" OnClick="srv.OpenFiles" />
-        </MudTooltip>
+
         <MudText Typo="Typo.h6" Class="ml-6">@DiagramName</MudText>
 
     </MudAppBar>

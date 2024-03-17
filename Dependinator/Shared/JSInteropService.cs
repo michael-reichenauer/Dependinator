@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 
-namespace Dependinator.Utils;
+namespace Dependinator.Shared;
 
 public class ElementBoundingRectangle
 {
@@ -55,11 +55,11 @@ public interface IJSInteropService
     ValueTask AddMouseEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
     ValueTask AddPointerEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
 
-    ValueTask InitializeDatabaseAsync(string databaseName, int currentVersion, string collectionName);
-    ValueTask SetDatabaseValueAsync<T>(string databaseName, int currentVersion, string collectionName, T value);
-    ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, int currentVersion, string collectionName, string id);
-    ValueTask DeleteDatabaseValueAsync(string databaseName, int currentVersion, string collectionName, string id);
-
+    ValueTask InitializeDatabaseAsync(string databaseName, int currentVersion, string[] collectionNames);
+    ValueTask SetDatabaseValueAsync<T>(string databaseName, string collectionName, T value);
+    ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id);
+    ValueTask DeleteDatabaseValueAsync(string databaseName, string collectionName, string id);
+    ValueTask<R<IReadOnlyList<string>>> GetDatabaseKeysAsync(string databaseName, string collectionName);
     ValueTask<string> Prompt(string message);
     ValueTask InitializeFileDropZone(ElementReference? dropZoneElement, ElementReference? inputFileElement);
     ValueTask ClickElement(ElementReference? element);
@@ -126,26 +126,26 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
         return await module.InvokeAsync<ElementBoundingRectangle>(identifier: "getBoundingRectangle", elementReference);
     }
 
-    public async ValueTask InitializeDatabaseAsync(string databaseName, int currentVersion, string collectionName)
+    public async ValueTask InitializeDatabaseAsync(string databaseName, int currentVersion, string[] collectionNames)
     {
         IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "initializeDatabase", databaseName, currentVersion, collectionName);
+        await module.InvokeVoidAsync(identifier: "initializeDatabase", databaseName, currentVersion, collectionNames);
     }
 
-    public async ValueTask SetDatabaseValueAsync<T>(string databaseName, int currentVersion, string collectionName, T value)
+    public async ValueTask SetDatabaseValueAsync<T>(string databaseName, string collectionName, T value)
     {
         IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "setDatabaseValue", databaseName, currentVersion, collectionName, value);
+        await module.InvokeVoidAsync(identifier: "setDatabaseValue", databaseName, collectionName, value);
     }
 
-    public async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, int currentVersion, string collectionName, string id)
+    public async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
     {
         IJSObjectReference module = await GetModuleAsync();
 
         var valueHandler = new ValueHandler();
         var valueHandlerRef = DotNetObjectReference.Create(valueHandler);
 
-        var result = await module.InvokeAsync<bool>(identifier: "getDatabaseValue", databaseName, currentVersion, collectionName, id, valueHandlerRef, "OnValue");
+        var result = await module.InvokeAsync<bool>(identifier: "getDatabaseValue", databaseName, collectionName, id, valueHandlerRef, "OnValue");
         if (!result) return R.None;
 
         var valueText = valueHandler.GetValue();
@@ -153,10 +153,18 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
         return value!;
     }
 
-    public async ValueTask DeleteDatabaseValueAsync(string databaseName, int currentVersion, string collectionName, string id)
+    public async ValueTask DeleteDatabaseValueAsync(string databaseName, string collectionName, string id)
     {
         IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "deleteDatabaseValue", databaseName, currentVersion, collectionName, id);
+        await module.InvokeVoidAsync(identifier: "deleteDatabaseValue", databaseName, collectionName, id);
+    }
+
+    public async ValueTask<R<IReadOnlyList<string>>> GetDatabaseKeysAsync(string databaseName, string collectionName)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        var result = await module.InvokeAsync<string[]>(identifier: "getDatabaseAllKeys", databaseName, collectionName);
+        if (result == null) return new string[0];
+        return result;
     }
 
 

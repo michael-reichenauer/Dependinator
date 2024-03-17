@@ -1,4 +1,5 @@
 using Dependinator.DiagramIcons;
+using Dependinator.Shared;
 using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -37,6 +38,7 @@ partial class Canvas : ComponentBase, IUIComponent
     static string IconDefs => Icon.IconDefs;
 
     string Cursor => srv.Cursor;
+    IReadOnlyList<string> ModelPaths => srv.ModelPaths;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -48,7 +50,7 @@ partial class Canvas : ComponentBase, IUIComponent
             await srv.InitAsync(this);
             await this.jSInteropService.InitializeAsync(); // must be after srv.InitAsync, since triggered events need Ref     
             await this.jSInteropService.InitializeFileDropZone(dropZoneElement, inputFile.Element);
-            await database.Init();
+            await database.Init([FileService.DBCollectionName]);
             await mouseEventService.InitAsync();
             await InvokeAsync(srv.InitialShow);
         }

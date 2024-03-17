@@ -10,11 +10,15 @@ interface IFileService
     Task AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
     R<Stream> ReadStram(string path);
     bool Exists(string assemblyPath);
+
+    Task<R<IReadOnlyList<string>>> GetFilePathsAsync();
 }
 
 [Scoped]
 class FileService : IFileService
 {
+    public static readonly string DBCollectionName = "Files";
+
     const long maxFileSize = 1024 * 1024 * 10; // 10 MB
     Dictionary<string, Stream> streamsByName = new();
     readonly IDatabase database;
@@ -24,10 +28,14 @@ class FileService : IFileService
         this.database = database;
     }
 
+    public async Task<R<IReadOnlyList<string>>> GetFilePathsAsync()
+    {
+        return await database.GetKeysAsync(DBCollectionName);
+    }
 
     public async Task<R> WriteAsync<T>(string path, T content)
     {
-        return await database.SetAsync(path, content);
+        return await database.SetAsync(DBCollectionName, path, content);
     }
 
     public R<Stream> ReadStram(string path)
@@ -39,12 +47,12 @@ class FileService : IFileService
 
     public async Task<R<T>> ReadAsync<T>(string path)
     {
-        return await database.GetAsync<T>(path);
+        return await database.GetAsync<T>(DBCollectionName, path);
     }
 
     public async Task<R> Deletesync<T>(string path)
     {
-        return await database.DeleteAsync(path);
+        return await database.DeleteAsync(DBCollectionName, path);
     }
 
     public async Task AddAsync(IReadOnlyList<IBrowserFile> browserFiles)
