@@ -143,9 +143,10 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
         IJSObjectReference module = await GetModuleAsync();
 
         var valueHandler = new ValueHandler();
-        var valueHandlerRef = DotNetObjectReference.Create(valueHandler);
+        using var valueHandlerRef = DotNetObjectReference.Create(valueHandler);
 
         var result = await module.InvokeAsync<bool>(identifier: "getDatabaseValue", databaseName, collectionName, id, valueHandlerRef, "OnValue");
+
         if (!result) return R.None;
 
         var valueText = valueHandler.GetValue();

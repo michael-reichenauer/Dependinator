@@ -159,7 +159,7 @@ export async function getDatabaseValue(databaseName, collectionName, id, instanc
       const collection = transaction.objectStore(collectionName);
       const result = collection.get(id);
 
-      result.onsuccess = function (e) {
+      result.onsuccess = async function (e) {
         const value = result.result;
 
         if (value == null) {
@@ -168,12 +168,12 @@ export async function getDatabaseValue(databaseName, collectionName, id, instanc
         }
 
         // The value needs to sent as chunks if larger than packet size limit, which seems to be 30k
-        const chunkSize = 30000;
+        const chunkSize = 20000;
         const text = JSON.stringify(value);
         var count = 0;
         for (let i = 0; i < text.length; i += chunkSize) {
           const chunk = text.substring(i, i + chunkSize);
-          instance.invokeMethodAsync(functionName, chunk);
+          await instance.invokeMethodAsync(functionName, chunk);
           count++;
         }
 
@@ -184,6 +184,7 @@ export async function getDatabaseValue(databaseName, collectionName, id, instanc
 
   return await request;
 }
+
 export async function deleteDatabaseValue(databaseName, collectionName, id) {
   let request = new Promise((resolve) => {
     let db = indexedDB.open(databaseName);
