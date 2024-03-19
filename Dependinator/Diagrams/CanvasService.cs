@@ -82,7 +82,7 @@ class CanvasService : ICanvasService
 
     public IReadOnlyList<string> ModelPaths { get; set; } = [];
 
-    public string DiagramName => modelService.ModelName;
+    public string DiagramName { get; set; } = "Loading ...";
     public string TitleInfo => $"Zoom: {1 / Zoom * 100:#}%, {1 / Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(Zoom) / Math.Log(7)) + 1}";
     public string SvgContent => GetSvgContent();
     public string TileKeyText { get; private set; } = "()";
@@ -114,17 +114,23 @@ class CanvasService : ICanvasService
 
     public async Task LoadAsync(string modelPath)
     {
+        DiagramName = "Loading ...";
+        uiService.TriggerUIStateChange();
         if (!Try(out var path, out var e, await modelService.LoadAsync(modelPath))) return;
 
         await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(path).Distinct().Take(recentCount).ToList());
         ModelPaths = (await configService.GetAsync()).RecentPaths;
 
         PanZoomModel();
+
+        DiagramName = modelService.ModelName;
         uiService.TriggerUIStateChange();
     }
 
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
+        DiagramName = "Loading ...";
+        uiService.TriggerUIStateChange();
         await fileService.AddAsync(browserFiles);
 
         if (!Try(out var path, out var e, await modelService.LoadAsync(browserFiles.First().Name))) return;
@@ -133,6 +139,7 @@ class CanvasService : ICanvasService
         ModelPaths = (await configService.GetAsync()).RecentPaths;
 
         PanZoomModel();
+        DiagramName = modelService.ModelName;
         uiService.TriggerUIStateChange();
     }
 
@@ -308,6 +315,9 @@ class CanvasService : ICanvasService
 
     public async void InitialShow()
     {
+        DiagramName = "Loading ...";
+        uiService.TriggerUIStateChange();
+
         await panZoomService.CheckResizeAsync();
 
         if (!Try(out var path, out var e, await modelService.LoadAsync(""))) return;
@@ -317,6 +327,7 @@ class CanvasService : ICanvasService
 
         PanZoomModel();
 
+        DiagramName = modelService.ModelName;
         uiService.TriggerUIStateChange();
     }
 
