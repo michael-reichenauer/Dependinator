@@ -159,7 +159,6 @@ class CanvasService : ICanvasService
     {
         Log.Info("mouse click", e.TargetId);
         (string id, string subId) = NodeId.ParseString(e.TargetId);
-        if (selectedId == id) return; // Clicked on same node again
 
         var isSelected = false;
         if (modelService.TryUpdateNode(e.TargetId, node =>
