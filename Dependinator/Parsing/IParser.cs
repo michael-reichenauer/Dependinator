@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Dependinator.Models;
 
 namespace Dependinator.Parsing;
 
@@ -18,10 +19,13 @@ interface IParser
 
 interface IItem { }
 
-class Model
+record Model
 {
-    public List<Node> Nodes { get; set; } = new();
-    public List<Link> Links { get; set; } = new();
+    public required string Path { get; init; }
+    public double Zoom { get; init; } = 0;
+    public Rect ViewRect { get; init; } = Rect.Zero;
+    public required IReadOnlyList<Node> Nodes { get; init; }
+    public required IReadOnlyList<Link> Links { get; init; }
 }
 
 record Link(string SourceName, string TargetName, NodeType TargetType) : IItem;

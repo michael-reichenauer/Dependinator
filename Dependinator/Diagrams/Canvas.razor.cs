@@ -1,8 +1,9 @@
-using Dependinator.Icons;
+using Dependinator.DiagramIcons;
+using Dependinator.Shared;
 using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.JSInterop;
+
 
 namespace Dependinator.Diagrams;
 
@@ -27,7 +28,8 @@ partial class Canvas : ComponentBase, IUIComponent
     //string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), SvgKey: {srv.TileKeyText}, Offset: {srv.Offset}, TileViewBox: {srv.TileViewBox}, SvgViewBox: {srv.SvgViewBox}, Svg: {srv.SvgRect}";
 
     // string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#########}), SvgKey: {srv.TileKeyText}";
-    string Info => $"Zoom: {1 / srv.Zoom * 100:#}%, {1 / srv.Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(srv.Zoom) / Math.Log(7)) + 1}";
+    string Info => $"{1 / srv.Zoom * 100:#}%, L: {-(int)Math.Ceiling(Math.Log(srv.Zoom) / Math.Log(7)) + 1}";
+    string DiagramName => srv.DiagramName;
 
     string Content => srv.SvgContent;
     double Width => srv.SvgRect.Width;
@@ -36,6 +38,7 @@ partial class Canvas : ComponentBase, IUIComponent
     static string IconDefs => Icon.IconDefs;
 
     string Cursor => srv.Cursor;
+    IReadOnlyList<string> ModelPaths => srv.ModelPaths;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -45,50 +48,18 @@ partial class Canvas : ComponentBase, IUIComponent
         {
             uiService.OnUIStateChange += () => InvokeAsync(StateHasChanged);
             await srv.InitAsync(this);
-            await this.jSInteropService.InitializeAsync(); // must be after srv.InitAsync, since triggered events need Ref
-            var objRef = DotNetObjectReference.Create(this);
-            // await this.jSInteropService.InitializeFileDropZone(dropZoneElement, objRef, "DropPasteEventCallback");
+            await this.jSInteropService.InitializeAsync(); // must be after srv.InitAsync, since triggered events need Ref     
             await this.jSInteropService.InitializeFileDropZone(dropZoneElement, inputFile.Element);
-            await database.Init();
+            await database.Init([FileService.DBCollectionName]);
             await mouseEventService.InitAsync();
             await InvokeAsync(srv.InitialShow);
         }
     }
 
-    private List<IBrowserFile> loadedFiles = new();
-    private long maxFileSize = 1024 * 1024 * 15;
-    private int maxAllowedFiles = 20;
-
-
-    [JSInvokable]
-    public ValueTask DropPasteEventCallback(string[] fileNames)
-    {
-        Log.Info($"DropPasteEventCallback: files", fileNames);
-        return ValueTask.CompletedTask;
-    }
-
 
     protected async void LoadFiles(InputFileChangeEventArgs e)
     {
-        loadedFiles.Clear();
-
-        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
-        {
-            try
-            {
-                using var memoryStream = new MemoryStream();
-                using var stream = file.OpenReadStream(maxFileSize);
-                await stream.CopyToAsync(memoryStream);
-                var fileContent = memoryStream.ToArray();
-
-                Log.Info($"Loading file: {file.Name} {fileContent.Length} bytes", file.LastModified, file.Size, file.ContentType);
-                loadedFiles.Add(file);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"File: {file.Name} Error: {ex.Message}");
-            }
-        }
+        await srv.LoadFilesAsync(e.GetMultipleFiles(1000));
     }
 }
 

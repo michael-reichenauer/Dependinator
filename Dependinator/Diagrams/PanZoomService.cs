@@ -1,4 +1,5 @@
 using Dependinator.Models;
+using Dependinator.Shared;
 using Dependinator.Utils.UI;
 
 
@@ -16,8 +17,9 @@ interface IPanZoomService
 
     void OnMouseWheel(MouseEvent e);
     void OnMouseMove(MouseEvent e);
-    void PanZoomToFit(Rect bounds);
+    void PanZoomToFit(Rect bounds, double maxZoom = 1);
     Task CheckResizeAsync();
+    void PanZoom(Rect viewRect, double zoom);
 }
 
 
@@ -33,6 +35,7 @@ class PanZoomService : IPanZoomService
 
     readonly IJSInteropService jSInteropService;
     readonly IUIService uiService;
+    readonly IModelService modelService;
     readonly object syncRoot = new();
 
 
@@ -46,10 +49,11 @@ class PanZoomService : IPanZoomService
     public double SvgZoom { get; set; } = 1;
 
 
-    public PanZoomService(IJSInteropService jSInteropService, IUIService uiService)
+    public PanZoomService(IJSInteropService jSInteropService, IUIService uiService, IModelService modelService)
     {
         this.jSInteropService = jSInteropService;
         this.uiService = uiService;
+        this.modelService = modelService;
         jSInteropService.OnResize += OnResize;
 
     }
@@ -84,6 +88,7 @@ class PanZoomService : IPanZoomService
 
             Offset = new Pos(x, y);
             Zoom = newZoom;
+            modelService.TriggerSave();
         }
     }
 
@@ -92,10 +97,16 @@ class PanZoomService : IPanZoomService
     {
         var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
         Offset = new Pos(Offset.X - dx, Offset.Y - dy);
+        modelService.TriggerSave();
     }
 
+    public void PanZoom(Rect viewRect, double zoom)
+    {
+        Offset = new Pos(viewRect.X, viewRect.Y);
+        Zoom = zoom;
+    }
 
-    public void PanZoomToFit(Rect totalBounds)
+    public void PanZoomToFit(Rect totalBounds, double maxZoom = 1)
     {
         lock (syncRoot)
         {
@@ -105,7 +116,7 @@ class PanZoomService : IPanZoomService
             // Determine the X or y zoom that best fits the bounds (including margin)
             var zx = (b.Width + 2 * Margin) / SvgRect.Width;
             var zy = (b.Height + 2 * Margin) / SvgRect.Height;
-            var newZoom = Math.Max(zx, zy);
+            var newZoom = Math.Max(maxZoom, Math.Max(zx, zy));
 
             // Zoom width and height to fit the bounds
             var w = SvgRect.Width * newZoom;
@@ -117,6 +128,7 @@ class PanZoomService : IPanZoomService
 
             Offset = new Pos(x, y);
             Zoom = newZoom;
+            modelService.TriggerSave();
         }
     }
 
@@ -153,6 +165,7 @@ class PanZoomService : IPanZoomService
         if (isChanged)
         {
             uiService.TriggerUIStateChange();
+            modelService.TriggerSave();
             Log.Info($"Resized: {newSwgRect}");
         }
     }

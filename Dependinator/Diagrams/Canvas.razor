@@ -1,57 +1,86 @@
 @namespace Dependinator.Diagrams
 @using Microsoft.AspNetCore.Components.Forms
 
-<div>
-    <code>@Info</code>
-</div>
+<MudLayout>
+    <MudAppBar Dense="true" Elevation="5">
 
-@*
-How to use event.PreventDefault in Blazor - Meziantou's blog
-https://www.meziantou.net/how-to-use-event-preventdefault-in-blazor.htm
-*@
-<div @ref="dropZoneElement" class="drop-zone">
-    <InputFile hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
-    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox">
-        <style>
-            svg {
-                cursor: @Cursor;
+        <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3 mr-5"
+            OnOpening="OnMenuOpeningAsync" AnchorOrigin="Origin.BottomCenter">
+            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.FitScreen"
+                OnClick="srv.PanZoomToFit" OnTouch="srv.PanZoomToFit">Fit
+                to
+                Screen</MudMenuItem>
+            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.OpenInBrowser"
+                OnClick="srv.OpenFiles" OnTouch="srv.OpenFiles">Browse Files ...</MudMenuItem>
+
+            @{
+                foreach (var path in ModelPaths)
+                {
+                    <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.Schema"
+                        OnClick="()=> srv.LoadAsync(path)" OnTouch="()=> srv.LoadAsync(path)">
+                        @Path.GetFileNameWithoutExtension(path)
+                    </MudMenuItem>
+                }
             }
 
-            .hoverable:hover * {
-                stroke: #51b8fc;
-                stroke-width: 4px;
-                stroke-opacity: 1;
-            }
+        </MudMenu>
 
-            .hoverline:hover * {
-                stroke: #51b8fc;
-                stroke-width: 6px;
-                stroke-opacity: 1;
-            }
+        <MudTooltip Text="Pand and zoom diagram to fit screen">
+            <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Color="Color.Inherit" OnClick="srv.PanZoomToFit" />
+        </MudTooltip>
 
-            .iconName {
-                font: Verdana, Helvetica, Arial, sans-serif;
-                fill: white;
-                dominant-baseline: hanging;
-                text-anchor: middle;
-                pointer-events: none;
-            }
+        <MudText Typo="Typo.h6" Class="ml-6">@DiagramName</MudText>
 
-            .nodeName {
-                font: Verdana, Helvetica, Arial, sans-serif;
-                fill: white;
-                dominant-baseline: hanging;
-                text-anchor: start;
-                pointer-events: none;
-            }
-        </style>
-        <defs>
-            <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-                <polygon points="0 0, 10 3.5, 0 7" fill="white" />
-            </marker>
-            @((MarkupString)IconDefs)
-        </defs>
+    </MudAppBar>
 
-        @((MarkupString)Content)
-    </svg>
-</div>
+    <MudMainContent>
+        <div @ref="dropZoneElement" class="drop-zone">
+            <InputFile hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
+            <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height"
+                viewBox="@ViewBox">
+                <style>
+                    svg {
+                        cursor: @Cursor;
+                    }
+
+                    .hoverable:hover * {
+                        stroke: #51b8fc;
+                        stroke-width: 4px;
+                        stroke-opacity: 1;
+                    }
+
+                    .hoverline:hover * {
+                        stroke: #51b8fc;
+                        stroke-width: 6px;
+                        stroke-opacity: 1;
+                    }
+
+                    .iconName {
+                        font: Verdana, Helvetica, Arial, sans-serif;
+                        fill: #D1C4E9;
+                        dominant-baseline: hanging;
+                        text-anchor: middle;
+                        pointer-events: none;
+                    }
+
+                    .nodeName {
+                        font: Verdana, Helvetica, Arial, sans-serif;
+                        fill: #D1C4E9;
+                        dominant-baseline: hanging;
+                        text-anchor: start;
+                        pointer-events: none;
+                    }
+                </style>
+                <defs>
+                    <marker id="arrow" markerWidth="5" markerHeight="4" refX="5" refY="2" orient="auto">
+                        <polygon points="0 0, 5 2, 0 4" fill="#D1C4E9" />
+                    </marker>
+                    @((MarkupString)IconDefs)
+                </defs>
+
+                @((MarkupString)Content)
+            </svg>
+        </div>
+
+    </MudMainContent>
+</MudLayout>

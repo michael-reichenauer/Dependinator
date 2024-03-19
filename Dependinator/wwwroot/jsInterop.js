@@ -7,6 +7,18 @@ export function listenToWindowResize(dotNetHelper) {
     dotNetHelper.invokeMethodAsync('WindowResizeEvent');
   }
 
+  // Prevent default touch events(scrolling, zooming, etc.), handled by the app
+  const elementId = "svgcanvas";
+  document.getElementById(elementId).addEventListener('touchstart', function (e) {
+    e.preventDefault();
+  }, { passive: false });
+  document.getElementById(elementId).addEventListener('touchmove', function (e) {
+    e.preventDefault();
+  }, { passive: false });
+  document.getElementById(elementId).addEventListener('touchend', function (e) {
+    e.preventDefault();
+  }, { passive: false });
+
   window.addEventListener("resize", resizeEventHandler);
 
   dotNetHelper.invokeMethodAsync('WindowResizeEvent');
@@ -111,17 +123,19 @@ export function addPointerEventListener(elementId, eventName, instance, function
 }
 
 
-export function initializeDatabase(databaseName, currentVersion, collectionName) {
+export function initializeDatabase(databaseName, currentVersion, collectionNames) {
   const db = indexedDB.open(databaseName, currentVersion);
 
   db.onupgradeneeded = function () {
-    db.result.createObjectStore(collectionName, { keyPath: "id" });
+    collectionNames.forEach(collectionName => {
+      db.result.createObjectStore(collectionName, { keyPath: "id" });
+    });
   }
 }
 
-export async function setDatabaseValue(databaseName, currentVersion, collectionName, value) {
+export async function setDatabaseValue(databaseName, collectionName, value) {
   let request = new Promise((resolve) => {
-    const db = indexedDB.open(databaseName, currentVersion);
+    const db = indexedDB.open(databaseName);
 
     db.onsuccess = function () {
       const transaction = db.result.transaction(collectionName, "readwrite");
@@ -137,15 +151,15 @@ export async function setDatabaseValue(databaseName, currentVersion, collectionN
   await request;
 }
 
-export async function getDatabaseValue(databaseName, currentVersion, collectionName, id, instance, functionName) {
+export async function getDatabaseValue(databaseName, collectionName, id, instance, functionName) {
   let request = new Promise((resolve) => {
-    const db = indexedDB.open(databaseName, currentVersion);
+    const db = indexedDB.open(databaseName);
     db.onsuccess = function () {
       const transaction = db.result.transaction(collectionName, "readonly");
       const collection = transaction.objectStore(collectionName);
       const result = collection.get(id);
 
-      result.onsuccess = function (e) {
+      result.onsuccess = async function (e) {
         const value = result.result;
 
         if (value == null) {
@@ -154,12 +168,12 @@ export async function getDatabaseValue(databaseName, currentVersion, collectionN
         }
 
         // The value needs to sent as chunks if larger than packet size limit, which seems to be 30k
-        const chunkSize = 30000;
+        const chunkSize = 20000;
         const text = JSON.stringify(value);
         var count = 0;
         for (let i = 0; i < text.length; i += chunkSize) {
           const chunk = text.substring(i, i + chunkSize);
-          instance.invokeMethodAsync(functionName, chunk);
+          await instance.invokeMethodAsync(functionName, chunk);
           count++;
         }
 
@@ -171,9 +185,9 @@ export async function getDatabaseValue(databaseName, currentVersion, collectionN
   return await request;
 }
 
-export async function deleteDatabaseValue(databaseName, currentVersion, collectionName, id) {
+export async function deleteDatabaseValue(databaseName, collectionName, id) {
   let request = new Promise((resolve) => {
-    let db = indexedDB.open(databaseName, currentVersion);
+    let db = indexedDB.open(databaseName);
 
     db.onsuccess = function () {
       let transaction = db.result.transaction(collectionName, "readwrite");
@@ -187,6 +201,24 @@ export async function deleteDatabaseValue(databaseName, currentVersion, collecti
   });
 
   await request;
+}
+
+export async function getDatabaseAllKeys(databaseName, collectionName) {
+  let requestX = new Promise((resolve) => {
+    let db = indexedDB.open(databaseName);
+
+    db.onsuccess = function (event) {
+      let transaction = db.result.transaction([collectionName], 'readonly');
+      let objectStore = transaction.objectStore(collectionName);
+      let keysRequest = objectStore.getAllKeys();
+
+      keysRequest.onsuccess = function () {
+        resolve(keysRequest.result);
+      };
+    };
+  });
+
+  return await requestX;
 }
 
 export function initializeFileDropZone(dropZoneElement, inputFileElement) {

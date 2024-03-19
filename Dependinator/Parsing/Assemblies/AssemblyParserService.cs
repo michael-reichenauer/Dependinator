@@ -1,10 +1,18 @@
 ﻿using System.Threading.Channels;
+using Dependinator.Shared;
 
 namespace Dependinator.Parsing.Assemblies;
 
 [Transient]
 internal class AssemblyParserService : IParser
 {
+    readonly IFileService fileService;
+
+    public AssemblyParserService(IFileService fileService)
+    {
+        this.fileService = fileService;
+    }
+
     public bool CanSupport(string path) =>
         Path.GetExtension(path).IsSameIc(".exe") ||
         Path.GetExtension(path).IsSameIc(".dll");
@@ -15,13 +23,13 @@ internal class AssemblyParserService : IParser
         Node assemblyNode = CreateAssemblyNode(path);
         await items.WriteAsync(assemblyNode);
 
-        using var parser = new AssemblyParser(path, "", assemblyNode.Name, items, false);
+        using var parser = new AssemblyParser(path, "", assemblyNode.Name, items, false, fileService);
         return await parser.ParseAsync();
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        using var parser = new AssemblyParser(path, "", "", null!, true);
+        using var parser = new AssemblyParser(path, "", "", null!, true, fileService);
         return await Task.Run(() => parser.TryGetSource(nodeName));
     }
 

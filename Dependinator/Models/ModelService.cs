@@ -1,3 +1,4 @@
+using Dependinator.Shared;
 using Dependinator.Utils.UI;
 
 namespace Dependinator.Models;
@@ -5,12 +6,17 @@ namespace Dependinator.Models;
 
 interface IModelService
 {
-    Task<R> LoadAsync();
+    string ModelName { get; }
+
+    Task<R<string>> LoadAsync(string path);
+    (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool TryUpdateNode(string id, Action<Node> updateAction);
     void Clear();
+    void TriggerSave();
+    Rect GetBounds();
 }
 
 
@@ -26,6 +32,7 @@ class ModelService : IModelService
     readonly ISvgService modelSvgService;
     readonly Parsing.IPersistenceService persistenceService;
     readonly IUIService uiService;
+    readonly IConfigService configService;
 
     public ModelService(
         IModel model,
@@ -33,7 +40,8 @@ class ModelService : IModelService
         IStructureService modelStructureService,
         ISvgService modelSvgService,
         Parsing.IPersistenceService persistenceService,
-        IUIService uiService)
+        IUIService uiService,
+        IConfigService configService)
     {
         this.model = model;
         this.parserService = parserService;
@@ -41,11 +49,31 @@ class ModelService : IModelService
         this.modelSvgService = modelSvgService;
         this.persistenceService = persistenceService;
         this.uiService = uiService;
+        this.configService = configService;
+    }
+
+    public string ModelName => ReadModel(m => Path.GetFileNameWithoutExtension(m.Path));
+
+
+    T ReadModel<T>(Func<IModel, T> readFunc)
+    {
+        lock (model.Lock)
+        {
+            return readFunc(model);
+        }
+    }
+
+    public Rect GetBounds()
+    {
+        lock (model.Lock)
+        {
+            return model.Root.GetTotalBounds();
+        }
     }
 
     public bool TryGetNode(string id, out Node node)
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             return model.TryGetNode(NodeId.FromId(id), out node);
         }
@@ -53,7 +81,7 @@ class ModelService : IModelService
 
     public bool TryUpdateNode(string id, Action<Node> updateAction)
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             if (!model.TryGetNode(NodeId.FromId(id), out var node)) return false;
 
@@ -67,88 +95,108 @@ class ModelService : IModelService
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
-        lock (model.SyncRoot)
+        //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
+        lock (model.Lock)
         {
+            if (model.Root.Children.Any())
+            {
+                model.ViewRect = viewRect;
+                model.Zoom = zoom;
+            }
             return modelSvgService.GetTile(model, viewRect, zoom);
         }
     }
 
+    public (Rect, double) GetLatestView()
+    {
+        lock (model.Lock)
+        {
+            return (model.ViewRect, model.Zoom);
+        }
+    }
 
     public void Clear()
     {
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             model.Clear();
         }
     }
 
-    public async Task<R> LoadAsync()
+    public async Task<R<string>> LoadAsync(string path)
     {
-        using var _ = Timing.Start("Load model");
-        var path = "Example.exe";
+        Clear();
+        if (path == "")
+        {
+            path = (await configService.GetAsync()).LastUsedPath;
+            path = path == "" ? ExampleModel.Path : path;
+        }
+
+        await configService.SetAsync(c => c.LastUsedPath = path);
+        using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
-        if (!Try(out var model, out var e, await persistenceService.ReadAsync("")))
+        if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
         {
-            if (path == "Example.exe")
-            {
-                if (!Try(out model, out e, await persistenceService.ReadAsync(path))) return e;
-            }
-            else
-            {
-                return await ParseAsync();
-            }
+            return await ParseAsync(path, Rect.Zero, 0);
         }
 
         // Load the cached mode
         await Task.Run(() => Load(model));
 
+        if (path == ExampleModel.Path) return path;
+
         // Trigger parse to get latest data
-        // ParseAsync().RunInBackground();
-        return R.Ok;
+        ParseAsync(model.Path, model.ViewRect, model.Zoom).RunInBackground();
+
+        return model.Path;
     }
+
+
 
     public async Task<R> RefreshAsync()
     {
-        return await ParseAsync();
+        var path = "";
+        lock (model.Lock) path = model.Path;
+
+        (Rect viewRect, double zoom) = GetLatestView();
+        return await ParseAsync(path, viewRect, zoom);
     }
 
 
-    async Task<R> ParseAsync()
+    async Task<R<string>> ParseAsync(string path, Rect viewRect, double zoom)
     {
         using var _ = Timing.Start();
         //var path = "/workspaces/Dependinator/Dependinator.sln";
 
 
-        // if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
+        if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 
         await Task.Run(async () =>
         {
-            await Task.CompletedTask;
-
             var batchItems = new List<Parsing.IItem>();
-            // while (await reader.WaitToReadAsync())
-            // {
-            //     while (reader.TryRead(out var item))
-            //     {
-            //         batchItems.Add(item);
-            //     }
-            // }
-            AddOrUpdate(batchItems);
+            while (await reader.WaitToReadAsync())
+            {
+                while (reader.TryRead(out var item))
+                {
+                    batchItems.Add(item);
+                }
+            }
+            AddOrUpdate(path, viewRect, zoom, batchItems);
         });
 
         uiService.TriggerUIStateChange();
 
         TriggerSave();
 
-        return R.Ok;
+        return path;
     }
 
 
-    void TriggerSave()
+    public void TriggerSave()
     {
         CancellationToken ct;
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             if (!model.IsSaving)
             {
@@ -178,11 +226,12 @@ class ModelService : IModelService
         if (ct.IsCancellationRequested) return;
 
         Parsing.Model modelData;
-        lock (model.SyncRoot)
+        lock (model.Lock)
         {
             modelData = persistenceService.ModelToData(model);
             model.IsSaving = false;
         }
+        if (model.Path == "") return;
 
         persistenceService.WriteAsync(modelData).RunInBackground();
     }
@@ -193,14 +242,17 @@ class ModelService : IModelService
         modelData.Nodes.ForEach(batchItems.Add);
         modelData.Links.ForEach(batchItems.Add);
 
-        AddOrUpdate(batchItems);
+        AddOrUpdate(modelData.Path, modelData.ViewRect, modelData.Zoom, batchItems);
     }
 
-    void AddOrUpdate(IReadOnlyList<Parsing.IItem> parsedItems)
+    void AddOrUpdate(string path, Rect viewRect, double zoom, IReadOnlyList<Parsing.IItem> parsedItems)
     {
-        using var _ = Timing.Start();
-        lock (model.SyncRoot)
+        using var _ = Timing.Start($"Add {parsedItems.Count} items for {path}");
+        lock (model.Lock)
         {
+            model.Path = path;
+            model.ViewRect = viewRect;
+            model.Zoom = zoom;
             // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {
