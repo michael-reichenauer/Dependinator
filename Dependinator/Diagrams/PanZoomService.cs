@@ -104,6 +104,7 @@ class PanZoomService : IPanZoomService
     {
         Offset = new Pos(viewRect.X, viewRect.Y);
         Zoom = zoom;
+        modelService.TriggerSave();
     }
 
     public void PanZoomToFit(Rect totalBounds, double maxZoom = 1)
