@@ -138,7 +138,7 @@ class ModelService : IModelService
         // Try read cached model (with ui layout)
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
         {
-            return await ParseAsync(path, Rect.Zero, 0);
+            return await ParseAsync(path, Rect.None, 0);
         }
 
         // Load the cached mode

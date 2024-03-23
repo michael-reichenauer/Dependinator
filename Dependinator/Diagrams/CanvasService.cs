@@ -334,7 +334,7 @@ class CanvasService : ICanvasService
     {
         var (viewRect, zoom) = modelService.GetLatestView();
 
-        if (viewRect != Rect.Zero)
+        if (viewRect != Rect.None)
         {
             panZoomService.PanZoom(viewRect, zoom);
         }

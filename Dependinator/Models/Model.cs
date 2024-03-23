@@ -41,7 +41,7 @@ class Model : IModel
     public object Lock => syncRoot;
     public bool IsSaving { get; set; } = false;
 
-    public Rect ViewRect { get; set; } = Rect.Zero;
+    public Rect ViewRect { get; set; } = Rect.None;
     public double Zoom { get; set; } = 0;
 
     public Tiles Tiles { get; } = new();
@@ -109,7 +109,7 @@ class Model : IModel
         Path = "";
         IsSaving = false;
         ModifiedTime = DateTime.MinValue;
-        ViewRect = Rect.Zero;
+        ViewRect = Rect.None;
         Zoom = 0;
         ClearCachedSvg();
 
