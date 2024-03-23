@@ -24,6 +24,8 @@ class NodeLayout
     {
         parent.IsChildrenLayoutRequired = false;
 
+        Sorter.Sort(parent.Children, CompareChilren);
+
         var childrenCount = parent.Children.Count;
         parent.ContainerZoom = childrenCount switch
         {
@@ -71,5 +73,24 @@ class NodeLayout
         var y = row * (DefaultHeight + marginY) + marginY;
         child.Boundary = new Rect(x, y, DefaultWidth, DefaultHeight);
     }
-}
 
+    static int CompareChilren(Node c1, Node c2)
+    {
+        // c1->c2
+        if (c1.SourceLines.ContainsBy(l => l.Target == c2) && !c2.SourceLines.ContainsBy(l => l.Target == c1)) return -1;
+        // c2->c1
+        if (!c1.SourceLines.ContainsBy(l => l.Target == c2) && c2.SourceLines.ContainsBy(l => l.Target == c1)) return 1;
+
+        // Parent->c1 but not Parent->c2
+        if (c1.TargetLines.ContainsBy(l => l.Source == c1.Parent) && !c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)) return -1;
+        // Not Parent->c1 but Parent->c2
+        if (!c1.TargetLines.ContainsBy(l => l.Source == c1.Parent) && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)) return 1;
+
+        // c1->Parent but not c2->Parent
+        if (c1.SourceLines.ContainsBy(l => l.Target == c1.Parent) && !c2.SourceLines.ContainsBy(l => l.Target == c2.Parent)) return -1;
+        // Not c1->Parent but c2->Parent
+        if (!c1.TargetLines.ContainsBy(l => l.Source == c1.Parent) && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)) return 1;
+
+        return 0;
+    }
+}
