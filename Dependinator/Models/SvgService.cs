@@ -70,6 +70,8 @@ class SvgService : ISvgService
 
   static string GetNodeContentSvg(Node node, Pos nodeCanvasPos, double zoom, Rect tileWithMargin)
   {
+    if (node.IsChildrenLayoutRequired) NodeLayout.AdjustChildren(node);
+
     var childrenZoom = zoom * node.ContainerZoom;
 
     return node.Children
