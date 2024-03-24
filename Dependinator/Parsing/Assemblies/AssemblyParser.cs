@@ -66,7 +66,7 @@ internal class AssemblyParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        if (!fileService.Exists(assemblyPath)) return R.Error($"No file at '{assemblyPath}'");
+        if (!fileService.ExistsStream(assemblyPath)) return R.Error($"No file at '{assemblyPath}'");
 
         return await Task.Run(async () =>
         {

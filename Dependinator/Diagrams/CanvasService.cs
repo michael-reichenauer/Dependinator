@@ -22,9 +22,10 @@ interface ICanvasService
     string Cursor { get; }
     string TitleInfo { get; }
     string DiagramName { get; }
-    IReadOnlyList<string> ModelPaths { get; }
+    IReadOnlyList<string> RecentModelPaths { get; }
 
     void OpenFiles();
+    public void Remove();
     void Refresh();
     void Clear();
     void PanZoomToFit();
@@ -39,7 +40,7 @@ interface ICanvasService
 [Scoped]
 class CanvasService : ICanvasService
 {
-    const int recentCount = 5;
+
     const double MinSelectableZoom = 0.15;
 
     const int MoveDelay = 300;
@@ -50,6 +51,7 @@ class CanvasService : ICanvasService
     readonly IJSInteropService jSInteropService;
     readonly IFileService fileService;
     readonly IConfigService configService;
+    readonly IRecentModelsService recentModelsService;
     readonly Timer moveTimer;
     bool moveTimerRunning = false;
     bool isMoving = false;
@@ -61,7 +63,8 @@ class CanvasService : ICanvasService
         IUIService uiService,
         IJSInteropService jSInteropService,
         IFileService fileService,
-        IConfigService configService)
+        IConfigService configService,
+        IRecentModelsService recentModelsService)
     {
         this.mouseEventService = mouseEventService;
         this.panZoomService = panZoomService;
@@ -70,6 +73,7 @@ class CanvasService : ICanvasService
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
         this.configService = configService;
+        this.recentModelsService = recentModelsService;
         mouseEventService.LeftClick += OnClick;
         mouseEventService.LeftDblClick += OnDblClick;
         mouseEventService.MouseWheel += OnMouseWheel;
@@ -80,7 +84,7 @@ class CanvasService : ICanvasService
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
-    public IReadOnlyList<string> ModelPaths { get; set; } = [];
+    public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
 
     public string DiagramName { get; set; } = "Loading ...";
     public string TitleInfo => $"Zoom: {1 / Zoom * 100:#}%, {1 / Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(Zoom) / Math.Log(7)) + 1}";
@@ -110,62 +114,38 @@ class CanvasService : ICanvasService
     {
         this.canvas = canvas;
         await panZoomService.InitAsync(canvas);
+        await recentModelsService.InitAsync();
     }
 
 
     public async void InitialShow()
     {
-        DiagramName = "Loading ...";
-        uiService.TriggerUIStateChange();
-
         await panZoomService.CheckResizeAsync();
-
-        var path = (await configService.GetAsync()).LastUsedPath;
-        path = path == "" ? ExampleModel.Path : path;
-
-        await configService.SetAsync(c => c.LastUsedPath = path);
-
-        if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(path))) return;
-        DiagramName = modelService.ModelName;
-        PanZoomModel(modelInfo);
-
-        await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(modelInfo.Path).Distinct().Take(recentCount).ToList());
-        ModelPaths = (await configService.GetAsync()).RecentPaths;
-
-        uiService.TriggerUIStateChange();
+        await LoadAsync(recentModelsService.LastUsedPath);
     }
 
 
     public async Task LoadAsync(string modelPath)
     {
-        DiagramName = "Loading ...";
+        DiagramName = $"Loading {modelPath} ...";
         uiService.TriggerUIStateChange();
 
         if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath))) return;
+
         DiagramName = modelService.ModelName;
         PanZoomModel(modelInfo);
 
-        await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(modelInfo.Path).Distinct().Take(recentCount).ToList());
-        ModelPaths = (await configService.GetAsync()).RecentPaths;
-
+        await recentModelsService.AddModelAsync(modelInfo.Path);
         uiService.TriggerUIStateChange();
     }
 
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
-        DiagramName = "Loading ...";
-        uiService.TriggerUIStateChange();
         await fileService.AddAsync(browserFiles);
-
-        if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(browserFiles.First().Name))) return;
-        DiagramName = modelService.ModelName;
-        PanZoomModel(modelInfo);
-
-        await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(modelInfo.Path).Distinct().Take(recentCount).ToList());
-        ModelPaths = (await configService.GetAsync()).RecentPaths;
-
-        uiService.TriggerUIStateChange();
+        var modelPath = browserFiles.First().Name;
+        await LoadAsync(modelPath);
     }
+
 
     void PanZoomModel(ModelInfo modelInfo)
     {
@@ -178,6 +158,14 @@ class CanvasService : ICanvasService
             var bound = modelService.GetBounds();
             panZoomService.PanZoomToFit(bound);
         }
+    }
+
+    public async void Remove()
+    {
+        var path = recentModelsService.LastUsedPath;
+        await fileService.DeleteAsync(path);
+        await recentModelsService.RemoveModelAsync(path);
+        await LoadAsync(recentModelsService.LastUsedPath);
     }
 
     public async void OpenFiles()
