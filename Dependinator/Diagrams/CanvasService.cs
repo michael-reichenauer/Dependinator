@@ -25,6 +25,7 @@ interface ICanvasService
     IReadOnlyList<string> RecentModelPaths { get; }
 
     void OpenFiles();
+    public void Remove();
     void Refresh();
     void Clear();
     void PanZoomToFit();
@@ -145,6 +146,7 @@ class CanvasService : ICanvasService
         await LoadAsync(modelPath);
     }
 
+
     void PanZoomModel(ModelInfo modelInfo)
     {
         if (modelInfo.ViewRect != Rect.None)
@@ -156,6 +158,14 @@ class CanvasService : ICanvasService
             var bound = modelService.GetBounds();
             panZoomService.PanZoomToFit(bound);
         }
+    }
+
+    public async void Remove()
+    {
+        var path = recentModelsService.LastUsedPath;
+        await fileService.DeleteAsync(path);
+        await recentModelsService.RemoveModelAsync(path);
+        await LoadAsync(recentModelsService.LastUsedPath);
     }
 
     public async void OpenFiles()

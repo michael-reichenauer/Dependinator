@@ -15,6 +15,12 @@
 
             <MudDivider />
 
+            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever"
+                OnClick="@OnRemove" OnTouch="srv.Remove">Remove Model</MudMenuItem>
+
+            <MudDivider />
+
+
             @{
                 foreach (var path in RecentModelPaths)
                 {
@@ -34,6 +40,16 @@
         <MudText Typo="Typo.h6" Class="ml-6">@DiagramName</MudText>
 
     </MudAppBar>
+
+    <MudMessageBox @ref="mbox" Title="Remove Model" CancelText="Cancel">
+        <MessageContent>
+            Do you want to remove model?
+        </MessageContent>
+        <YesButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">
+                Remove</MudButton>
+        </YesButton>
+    </MudMessageBox>
 
     <MudMainContent>
         <div @ref="dropZoneElement" class="drop-zone">
@@ -86,3 +102,14 @@
 
     </MudMainContent>
 </MudLayout>
+
+@code
+{
+    MudMessageBox mbox { get; set; } = null!;
+
+    private async void OnRemove()
+    {
+        if (await mbox.Show() != true) return;
+        srv.Remove();
+    }
+}

@@ -7,7 +7,7 @@ interface IFileService
     Task<bool> Exists(string path);
     Task<R> WriteAsync<T>(string path, T content);
     Task<R<T>> ReadAsync<T>(string path);
-    Task<R> Deletesync<T>(string path);
+    Task<R> DeleteAsync(string path);
     Task AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
 
     R<Stream> ReadStram(string path);
@@ -52,7 +52,7 @@ class FileService : IFileService
         return await database.GetAsync<T>(DBCollectionName, path);
     }
 
-    public async Task<R> Deletesync<T>(string path)
+    public async Task<R> DeleteAsync(string path)
     {
         return await database.DeleteAsync(DBCollectionName, path);
     }
