@@ -128,13 +128,7 @@ class ModelService : IModelService
     public async Task<R<ModelInfo>> LoadAsync(string path)
     {
         Clear();
-        if (path == "")
-        {
-            path = (await configService.GetAsync()).LastUsedPath;
-            path = path == "" ? ExampleModel.Path : path;
-        }
 
-        await configService.SetAsync(c => c.LastUsedPath = path);
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
@@ -173,7 +167,6 @@ class ModelService : IModelService
         using var _ = Timing.Start();
         //var path = "/workspaces/Dependinator/Dependinator.sln";
 
-
         if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 
         var modelInfo = await Task.Run(async () =>
@@ -189,8 +182,6 @@ class ModelService : IModelService
             return AddOrUpdate(path, viewRect, zoom, batchItems);
         });
 
-        TriggerSave();
-
         return modelInfo;
     }
 
@@ -200,6 +191,8 @@ class ModelService : IModelService
         CancellationToken ct;
         lock (model.Lock)
         {
+            if (model.Items.Count == 1) return;
+
             if (!model.IsSaving)
             {
                 model.IsSaving = true;

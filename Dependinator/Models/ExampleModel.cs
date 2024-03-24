@@ -8,13 +8,6 @@ static class ExampleModel
 """
 {
   "Path": "ExampleModel.json",
-  "Zoom": 1,
-  "ViewRext": {
-    "X": 0,
-    "Y": 0,
-    "Width": 1000,
-    "Height": 1000
-  },
   "Nodes": [
     {
       "Name": "",
@@ -28,83 +21,32 @@ static class ExampleModel
       "Width": 1000,
       "Height": 1000,
       "Zoom": 1,
-      "Color": "#2b46f0",
-      "Background": "#030514"
+      "Color": "#9cf8d5",
+      "Background": "#0d1411"
     },
     {
-      "Name": "Dependinator*sln",
+      "Name": "Dependinator*dll",
       "ParentName": "",
       "Type": {
-        "Text": "Solution"
+        "Text": "Assembly"
       },
-      "Description": "Solution file",
+      "Description": "Assembly file",
       "X": 10,
       "Y": 10,
       "Width": 100,
       "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a140e9",
-      "Background": "#0d0513"
-    },
-    {
-      "Name": "Api",
-      "ParentName": "Dependinator*sln",
-      "Type": {
-        "Text": "Assembly"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dea293",
-      "Background": "#120d0c"
-    },
-    {
-      "Name": "Client",
-      "ParentName": "Dependinator*sln",
-      "Type": {
-        "Text": "Assembly"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#27fc81",
-      "Background": "#03150a"
-    },
-    {
-      "Name": "Shared",
-      "ParentName": "Dependinator*sln",
-      "Type": {
-        "Text": "Assembly"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#23f0ef",
-      "Background": "#021413"
+      "Color": "#9cfe6c",
+      "Background": "#0d1509"
     },
     {
       "Name": "Dependinator",
-      "ParentName": "Dependinator*sln",
+      "ParentName": "Dependinator*dll",
       "Type": {
         "Text": "Assembly"
       },
       "Description": "Dependinator is a tool for visualizing and exploring software dependencies.",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0b3ec9",
-      "Background": "#000510"
+      "Color": "#f82c35",
+      "Background": "#140304"
     },
     {
       "Name": "$Externals",
@@ -117,39 +59,8 @@ static class ExampleModel
       "Y": 10,
       "Width": 100,
       "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eca472",
-      "Background": "#130d09"
-    },
-    {
-      "Name": "netstandard",
-      "ParentName": "$Externals",
-      "Type": {
-        "Text": "Assembly"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e5585a",
-      "Background": "#130707"
-    },
-    {
-      "Name": "Scrutor",
-      "ParentName": "$Externals",
-      "Type": {
-        "Text": "Assembly"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eba411",
-      "Background": "#130d01"
+      "Color": "#99ee73",
+      "Background": "#0c1309"
     },
     {
       "Name": "$Externals.Newtonsoft",
@@ -158,13 +69,8 @@ static class ExampleModel
         "Text": "Group"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1957e7",
-      "Background": "#020713"
+      "Color": "#b1dd5e",
+      "Background": "#0e1207"
     },
     {
       "Name": "Newtonsoft*Json",
@@ -173,13 +79,8 @@ static class ExampleModel
         "Text": "Assembly"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#68eb87",
-      "Background": "#08130b"
+      "Color": "#d087b4",
+      "Background": "#110b0f"
     },
     {
       "Name": "$Externals.Mono",
@@ -188,13 +89,8 @@ static class ExampleModel
         "Text": "Group"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3685f0",
-      "Background": "#040b14"
+      "Color": "#63c1fd",
+      "Background": "#081015"
     },
     {
       "Name": "Mono*Cecil",
@@ -203,13 +99,8 @@ static class ExampleModel
         "Text": "Assembly"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2390cc",
-      "Background": "#020c11"
+      "Color": "#ca1929",
+      "Background": "#100203"
     },
     {
       "Name": "$Externals.ICSharpCode",
@@ -218,13 +109,8 @@ static class ExampleModel
         "Text": "Group"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#03fe35",
-      "Background": "#001504"
+      "Color": "#ed44ce",
+      "Background": "#130511"
     },
     {
       "Name": "ICSharpCode*Decompiler",
@@ -233,58 +119,8 @@ static class ExampleModel
         "Text": "Assembly"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f9786f",
-      "Background": "#140a09"
-    },
-    {
-      "Name": "Shared.BlazorApp",
-      "ParentName": "Shared",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3f9cd2",
-      "Background": "#050d11"
-    },
-    {
-      "Name": "Shared.BlazorApp.Shared",
-      "ParentName": "Shared.BlazorApp",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e31eae",
-      "Background": "#12020e"
-    },
-    {
-      "Name": "Shared.BlazorApp.Shared.WeatherForecast",
-      "ParentName": "Shared.BlazorApp.Shared",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eb6924",
-      "Background": "#130803"
+      "Color": "#aef9cd",
+      "Background": "#0e1411"
     },
     {
       "Name": "Dependinator.System",
@@ -293,13 +129,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a93eca",
-      "Background": "#0e0510"
+      "Color": "#2ff4f7",
+      "Background": "#031414"
     },
     {
       "Name": "Dependinator.System.FatalExceptionEventArgs",
@@ -308,43 +139,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fce475",
-      "Background": "#151309"
-    },
-    {
-      "Name": "Api.Program",
-      "ParentName": "Api",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce2c25",
-      "Background": "#110303"
-    },
-    {
-      "Name": "Client.Program",
-      "ParentName": "Client",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da6566",
-      "Background": "#120808"
+      "Color": "#00a3fd",
+      "Background": "#000d15"
     },
     {
       "Name": "Dependinator.System.FatalExceptionsExtensions",
@@ -353,13 +149,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#be72e4",
-      "Background": "#0f0913"
+      "Color": "#ef943b",
+      "Background": "#130c04"
     },
     {
       "Name": "Dependinator.System.Threading",
@@ -368,13 +159,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ff4a06",
-      "Background": "#150600"
+      "Color": "#e050d5",
+      "Background": "#120611"
     },
     {
       "Name": "Dependinator.System.Threading.Tasks",
@@ -383,13 +169,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#95e427",
-      "Background": "#0c1303"
+      "Color": "#3250f8",
+      "Background": "#040614"
     },
     {
       "Name": "Dependinator.System.Threading.Tasks.TaskExtensions",
@@ -398,133 +179,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c6b6d8",
-      "Background": "#100f12"
-    },
-    {
-      "Name": "Api.Api",
-      "ParentName": "Api",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2ab2e3",
-      "Background": "#030e12"
-    },
-    {
-      "Name": "Api.Api.HttpTrigger",
-      "ParentName": "Api.Api",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#68ed2f",
-      "Background": "#081303"
-    },
-    {
-      "Name": "Api.Api.GeneratedFunctionMetadataProvider",
-      "ParentName": "Api.Api",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7ce940",
-      "Background": "#0a1305"
-    },
-    {
-      "Name": "Api.Api.WorkerHostBuilderFunctionMetadataProviderExtension",
-      "ParentName": "Api.Api",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#71e578",
-      "Background": "#09130a"
-    },
-    {
-      "Name": "Api.Api.FunctionMetadataProviderAutoStartup",
-      "ParentName": "Api.Api",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#641cf3",
-      "Background": "#080214"
-    },
-    {
-      "Name": "Client.BlazorApp",
-      "ParentName": "Client",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e3a60c",
-      "Background": "#120d01"
-    },
-    {
-      "Name": "Client.BlazorApp.Client",
-      "ParentName": "Client.BlazorApp",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a3f275",
-      "Background": "#0d1409"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.App",
-      "ParentName": "Client.BlazorApp.Client",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7639f7",
-      "Background": "#090414"
+      "Color": "#8bfccb",
+      "Background": "#0b1510"
     },
     {
       "Name": "Dependinator.System.Linq",
@@ -533,13 +189,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#accf37",
-      "Background": "#0e1104"
+      "Color": "#e1a50d",
+      "Background": "#120d01"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions",
@@ -548,13 +199,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f40b4a",
-      "Background": "#140006"
+      "Color": "#c4a7e6",
+      "Background": "#100d13"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.$private",
@@ -563,13 +209,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb1048",
-      "Background": "#140106"
+      "Color": "#ccfa75",
+      "Background": "#111409"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions/DistinctComparer\u00601",
@@ -578,13 +219,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f7a1d2",
-      "Background": "#140d11"
+      "Color": "#0d9ed8",
+      "Background": "#010d12"
     },
     {
       "Name": "Dependinator.Dependinator",
@@ -593,13 +229,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f0406d",
-      "Background": "#140509"
+      "Color": "#7cb7e2",
+      "Background": "#0a0f12"
     },
     {
       "Name": "Dependinator.Dependinator.RootClass",
@@ -608,13 +239,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e2dcc0",
-      "Background": "#121210"
+      "Color": "#53d108",
+      "Background": "#061100"
     },
     {
       "Name": "Dependinator.Dependinator._Imports",
@@ -623,13 +249,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9975d0",
-      "Background": "#0c0911"
+      "Color": "#f96123",
+      "Background": "#140802"
     },
     {
       "Name": "Dependinator.Dependinator.Main",
@@ -638,13 +259,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#960ced",
-      "Background": "#0c0113"
+      "Color": "#ab30ce",
+      "Background": "#0e0411"
     },
     {
       "Name": "Dependinator.Dependinator.Utils",
@@ -653,13 +269,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#916dd3",
-      "Background": "#0c0911"
+      "Color": "#dd8ad0",
+      "Background": "#120b11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.AsserterEventArgs",
@@ -668,13 +279,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#febaa7",
-      "Background": "#150f0d"
+      "Color": "#315cd4",
+      "Background": "#040711"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter",
@@ -683,28 +289,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#12f82b",
-      "Background": "#011403"
-    },
-    {
-      "Name": "Client.BlazorApp.Client._Imports",
-      "ParentName": "Client.BlazorApp.Client",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e7d84f",
-      "Background": "#131206"
+      "Color": "#6c2bca",
+      "Background": "#090310"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.AsyncLazy\u00601",
@@ -713,13 +299,48 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7ec1dd",
-      "Background": "#0a1012"
+      "Color": "#b7e9bf",
+      "Background": "#0f130f"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Build",
+      "ParentName": "Dependinator.Dependinator.Utils",
+      "Type": {
+        "Text": "Type"
+      },
+      "Description": "",
+      "Color": "#53e646",
+      "Background": "#061305"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.IDatabase",
+      "ParentName": "Dependinator.Dependinator.Utils",
+      "Type": {
+        "Text": "Type"
+      },
+      "Description": "",
+      "Color": "#9d6bf2",
+      "Background": "#0d0814"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "ParentName": "Dependinator.Dependinator.Utils",
+      "Type": {
+        "Text": "Type"
+      },
+      "Description": "",
+      "Color": "#ce78a6",
+      "Background": "#110a0d"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database",
+      "ParentName": "Dependinator.Dependinator.Utils",
+      "Type": {
+        "Text": "Type"
+      },
+      "Description": "",
+      "Color": "#0521f5",
+      "Background": "#000214"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.SingletonAttribute",
@@ -728,13 +349,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3ff481",
-      "Background": "#05140a"
+      "Color": "#863ffc",
+      "Background": "#0b0515"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ScopedAttribute",
@@ -743,13 +359,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#13b3f5",
-      "Background": "#010e14"
+      "Color": "#8e71e8",
+      "Background": "#0b0913"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.TransientAttribute",
@@ -758,13 +369,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0570c9",
-      "Background": "#000910"
+      "Color": "#d763ed",
+      "Background": "#110813"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.DependencyInjection",
@@ -773,118 +379,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#73ee57",
-      "Background": "#091307"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout",
-      "ParentName": "Client.BlazorApp.Client",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb3c05",
-      "Background": "#140500"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.MainLayout",
-      "ParentName": "Client.BlazorApp.Client.Layout",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8208c9",
-      "Background": "#0a0010"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.NavMenu",
-      "ParentName": "Client.BlazorApp.Client.Layout",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#90e603",
-      "Background": "#0c1300"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages",
-      "ParentName": "Client.BlazorApp.Client",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8d56f3",
-      "Background": "#0b0714"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.Counter",
-      "ParentName": "Client.BlazorApp.Client.Pages",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3ecf96",
-      "Background": "#05110c"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.FetchData",
-      "ParentName": "Client.BlazorApp.Client.Pages",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ece48",
-      "Background": "#071106"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.Home",
-      "ParentName": "Client.BlazorApp.Client.Pages",
-      "Type": {
-        "Text": "Type"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fd8b3e",
-      "Background": "#150b05"
+      "Color": "#9b19e1",
+      "Background": "#0c0212"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Disposable",
@@ -893,13 +389,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d9175e",
-      "Background": "#120107"
+      "Color": "#46eda6",
+      "Background": "#05130d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IEquatable",
@@ -908,13 +399,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#38e666",
-      "Background": "#041308"
+      "Color": "#e2ca55",
+      "Background": "#121007"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601",
@@ -923,13 +409,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#df7449",
-      "Background": "#120906"
+      "Color": "#e051ee",
+      "Background": "#120613"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable",
@@ -938,13 +419,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de554f",
-      "Background": "#120706"
+      "Color": "#b263d6",
+      "Background": "#0e0811"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling",
@@ -953,13 +429,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e8d706",
-      "Background": "#131100"
+      "Color": "#1d9ad6",
+      "Background": "#020c11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle",
@@ -968,13 +439,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8ac8ee",
-      "Background": "#0b1013"
+      "Color": "#d41499",
+      "Background": "#11010c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.BrowserSizeDetails",
@@ -983,13 +449,18 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dd63cb",
-      "Background": "#120810"
+      "Color": "#fb30af",
+      "Background": "#14040e"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.ValueHandler",
+      "ParentName": "Dependinator.Dependinator.Utils",
+      "Type": {
+        "Text": "Type"
+      },
+      "Description": "",
+      "Color": "#c4de7d",
+      "Background": "#10120a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService",
@@ -998,13 +469,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1bd86b",
-      "Background": "#021208"
+      "Color": "#e878ea",
+      "Background": "#130a13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService",
@@ -1013,13 +479,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f9b83b",
-      "Background": "#140f04"
+      "Color": "#17a7dc",
+      "Background": "#010d12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Reflection",
@@ -1028,13 +489,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d33587",
-      "Background": "#11040b"
+      "Color": "#74ef62",
+      "Background": "#091308"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Result",
@@ -1043,13 +499,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d6ac8c",
-      "Background": "#110e0b"
+      "Color": "#df9422",
+      "Background": "#120c02"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R",
@@ -1058,13 +509,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1e3b1",
-      "Background": "#11120e"
+      "Color": "#f3f1ca",
+      "Background": "#141410"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601",
@@ -1073,13 +519,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3ca8e9",
-      "Background": "#050e13"
+      "Color": "#34cd1d",
+      "Background": "#041102"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ErrorResult",
@@ -1088,13 +529,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3946f8",
-      "Background": "#040514"
+      "Color": "#3942ea",
+      "Background": "#040513"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.StringExtensions",
@@ -1103,13 +539,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bed74a",
-      "Background": "#0f1106"
+      "Color": "#2475f2",
+      "Background": "#030914"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading",
@@ -1118,13 +549,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e0146f",
-      "Background": "#120109"
+      "Color": "#53d5c2",
+      "Background": "#061110"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing",
@@ -1133,13 +559,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2d29e0",
-      "Background": "#030312"
+      "Color": "#eb0749",
+      "Background": "#130006"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing/StopParameter",
@@ -1148,13 +569,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e26373",
-      "Background": "#120809"
+      "Color": "#edc331",
+      "Background": "#131004"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Utils",
@@ -1163,13 +579,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ce0e9",
-      "Background": "#071213"
+      "Color": "#58cc2d",
+      "Background": "#071103"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI",
@@ -1178,13 +589,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d5ad17",
-      "Background": "#110e01"
+      "Color": "#6049ed",
+      "Background": "#080613"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IUIComponent",
@@ -1193,13 +599,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e04d21",
-      "Background": "#120602"
+      "Color": "#d4901a",
+      "Background": "#110c02"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent",
@@ -1208,13 +609,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#07f495",
-      "Background": "#00140c"
+      "Color": "#4fcecb",
+      "Background": "#061110"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent",
@@ -1223,13 +619,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#afed3c",
-      "Background": "#0e1305"
+      "Color": "#2aa6f3",
+      "Background": "#030d14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint",
@@ -1238,13 +629,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c389e0",
-      "Background": "#100b12"
+      "Color": "#c4de14",
+      "Background": "#101201"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent",
@@ -1253,13 +639,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0f52e2",
-      "Background": "#010612"
+      "Color": "#1ebdcd",
+      "Background": "#020f11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint",
@@ -1268,13 +649,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2b74cf",
-      "Background": "#030911"
+      "Color": "#8901f6",
+      "Background": "#0b0014"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService",
@@ -1283,13 +659,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d6b793",
-      "Background": "#110f0c"
+      "Color": "#febb39",
+      "Background": "#150f04"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService",
@@ -1298,13 +669,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ddbd66",
-      "Background": "#120f08"
+      "Color": "#f1b2f9",
+      "Background": "#140e14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IUIService",
@@ -1313,13 +679,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c56ddd",
-      "Background": "#100912"
+      "Color": "#33dedd",
+      "Background": "#041212"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.UIService",
@@ -1328,13 +689,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f719da",
-      "Background": "#140212"
+      "Color": "#2924ec",
+      "Background": "#030313"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging",
@@ -1343,13 +699,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 230,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#61ffd9",
-      "Background": "#081512"
+      "Color": "#c1dbc9",
+      "Background": "#101210"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger",
@@ -1358,13 +709,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#275cf4",
-      "Background": "#030714"
+      "Color": "#6526f5",
+      "Background": "#080314"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.$private",
@@ -1373,13 +719,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2078da",
-      "Background": "#020a12"
+      "Color": "#ea0add",
+      "Background": "#130012"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg",
@@ -1388,13 +729,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0f143",
-      "Background": "#111405"
+      "Color": "#d1d492",
+      "Background": "#11110c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log",
@@ -1403,13 +739,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#16cb49",
-      "Background": "#011006"
+      "Color": "#d9aaf8",
+      "Background": "#120e14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log/StopParameter",
@@ -1418,13 +749,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9df451",
-      "Background": "#0d1406"
+      "Color": "#8dfc4c",
+      "Background": "#0b1506"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing",
@@ -1433,13 +759,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3c77f5",
-      "Background": "#050914"
+      "Color": "#a919ec",
+      "Background": "#0e0213"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParser",
@@ -1448,13 +769,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6be976",
-      "Background": "#081309"
+      "Color": "#0bd505",
+      "Background": "#001100"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IItem",
@@ -1463,13 +779,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#16f8e2",
-      "Background": "#011412"
+      "Color": "#53cc38",
+      "Background": "#061104"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Model",
@@ -1478,13 +789,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cbf240",
-      "Background": "#101405"
+      "Color": "#cee73d",
+      "Background": "#111305"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link",
@@ -1493,13 +799,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#82f55c",
-      "Background": "#0a1407"
+      "Color": "#1be725",
+      "Background": "#021303"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node",
@@ -1508,13 +809,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e48cc7",
-      "Background": "#130b10"
+      "Color": "#ea453a",
+      "Background": "#130504"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source",
@@ -1523,13 +819,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec18cd",
-      "Background": "#130211"
+      "Color": "#5ace76",
+      "Background": "#071109"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType",
@@ -1538,13 +829,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8efd36",
-      "Background": "#0b1504"
+      "Color": "#3f48d4",
+      "Background": "#050611"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName",
@@ -1553,13 +839,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3ffc5c",
-      "Background": "#051507"
+      "Color": "#d96d7b",
+      "Background": "#12090a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.$private",
@@ -1568,13 +849,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f999d7",
-      "Background": "#140c11"
+      "Color": "#2418dd",
+      "Background": "#030212"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts",
@@ -1583,13 +859,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#03f7a9",
-      "Background": "#00140e"
+      "Color": "#ed66f1",
+      "Background": "#130814"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths",
@@ -1598,13 +869,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a1d219",
-      "Background": "#0d1102"
+      "Color": "#0eddda",
+      "Background": "#011212"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParserService",
@@ -1613,13 +879,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3abce3",
-      "Background": "#040f12"
+      "Color": "#04d587",
+      "Background": "#00110b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService",
@@ -1628,13 +889,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#926ff9",
-      "Background": "#0c0914"
+      "Color": "#dc8578",
+      "Background": "#120b0a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService.$private",
@@ -1643,13 +899,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e41f55",
-      "Background": "#130207"
+      "Color": "#4372dd",
+      "Background": "#050912"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService/CustomParser",
@@ -1658,13 +909,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#64d67f",
-      "Background": "#08110a"
+      "Color": "#d120db",
+      "Background": "#110212"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IPersistenceService",
@@ -1673,13 +919,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#096ef4",
-      "Background": "#000914"
+      "Color": "#ffa646",
+      "Background": "#150d05"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService",
@@ -1688,13 +929,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce5ced",
-      "Background": "#110713"
+      "Color": "#45e20d",
+      "Background": "#051201"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions",
@@ -1703,13 +939,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#48d2ba",
-      "Background": "#06110f"
+      "Color": "#95d9ad",
+      "Background": "#0c120e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project",
@@ -1718,13 +949,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9e21d3",
-      "Background": "#0d0211"
+      "Color": "#ff9ca0",
+      "Background": "#150d0d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution",
@@ -1733,13 +959,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7251e3",
-      "Background": "#090612"
+      "Color": "#ffd2e7",
+      "Background": "#151113"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser",
@@ -1748,13 +969,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7b06cd",
-      "Background": "#0a0011"
+      "Color": "#ee1aa1",
+      "Background": "#13020d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParserService",
@@ -1763,13 +979,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#77f5f4",
-      "Background": "#091414"
+      "Color": "#d7e77a",
+      "Background": "#11130a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles",
@@ -1778,13 +989,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#81fcc4",
-      "Background": "#0a1510"
+      "Color": "#db7211",
+      "Background": "#120901"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService",
@@ -1793,13 +999,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e87c1b",
-      "Background": "#130a02"
+      "Color": "#40ccfd",
+      "Background": "#051115"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes",
@@ -1808,13 +1009,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cd2af8",
-      "Background": "#110314"
+      "Color": "#61d80d",
+      "Background": "#081201"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Model",
@@ -1823,13 +1019,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef18c3",
-      "Background": "#130210"
+      "Color": "#5cce01",
+      "Background": "#071100"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Item",
@@ -1838,13 +1029,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c2caad",
-      "Background": "#10100e"
+      "Color": "#ee88b3",
+      "Background": "#130b0e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Node",
@@ -1853,13 +1039,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb1339",
-      "Background": "#140104"
+      "Color": "#0df079",
+      "Background": "#01140a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Link",
@@ -1868,13 +1049,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7687ed",
-      "Background": "#090b13"
+      "Color": "#bbdead",
+      "Background": "#0f120e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType",
@@ -1883,13 +1059,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d3c436",
-      "Background": "#111004"
+      "Color": "#cda810",
+      "Background": "#110e01"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies",
@@ -1898,13 +1069,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ef246",
-      "Background": "#071405"
+      "Color": "#efb2fd",
+      "Background": "#130e15"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser",
@@ -1913,13 +1079,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a4cb48",
-      "Background": "#0d1006"
+      "Color": "#3597f4",
+      "Background": "#040c14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParserService",
@@ -1928,13 +1089,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#72cd38",
-      "Background": "#091104"
+      "Color": "#89ff51",
+      "Background": "#0b1506"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser",
@@ -1943,13 +1099,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fdbedc",
-      "Background": "#150f12"
+      "Color": "#1a36d3",
+      "Background": "#020411"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler",
@@ -1958,13 +1109,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#febcfe",
-      "Background": "#150f15"
+      "Color": "#751ece",
+      "Background": "#090211"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.IgnoredTypes",
@@ -1973,13 +1119,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#17e5f2",
-      "Background": "#011314"
+      "Color": "#81c8e9",
+      "Background": "#0a1013"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler",
@@ -1988,13 +1129,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c9e206",
-      "Background": "#101200"
+      "Color": "#f47478",
+      "Background": "#14090a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser",
@@ -2003,13 +1139,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b3fd38",
-      "Background": "#0e1504"
+      "Color": "#d3c6a2",
+      "Background": "#11100d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser",
@@ -2018,13 +1149,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1728a",
-      "Background": "#14090b"
+      "Color": "#ef7c39",
+      "Background": "#130a04"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.$private",
@@ -2033,13 +1159,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3bf873",
-      "Background": "#041409"
+      "Color": "#d39efc",
+      "Background": "#110d15"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode",
@@ -2048,13 +1169,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ecbe1",
-      "Background": "#091012"
+      "Color": "#e35e3c",
+      "Background": "#120705"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name",
@@ -2063,13 +1179,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#670dfa",
-      "Background": "#080114"
+      "Color": "#515be7",
+      "Background": "#060713"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.ParsingAssemblyResolver",
@@ -2078,13 +1189,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#79df5e",
-      "Background": "#0a1207"
+      "Color": "#585ef0",
+      "Background": "#070714"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData",
@@ -2093,13 +1199,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#03eb09",
-      "Background": "#001300"
+      "Color": "#dc3005",
+      "Background": "#120400"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser",
@@ -2108,13 +1209,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dbd179",
-      "Background": "#12110a"
+      "Color": "#99fb07",
+      "Background": "#0c1400"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser",
@@ -2123,13 +1219,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e9eb65",
-      "Background": "#131308"
+      "Color": "#5c4fed",
+      "Background": "#070613"
     },
     {
       "Name": "Dependinator.Dependinator.Models",
@@ -2138,13 +1229,18 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dfc981",
-      "Background": "#12100a"
+      "Color": "#314ad6",
+      "Background": "#040611"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Models.ExampleModel",
+      "ParentName": "Dependinator.Dependinator.Models",
+      "Type": {
+        "Text": "Type"
+      },
+      "Description": "",
+      "Color": "#f80697",
+      "Background": "#14000c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id",
@@ -2153,13 +1249,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#93aed8",
-      "Background": "#0c0e12"
+      "Color": "#d881f0",
+      "Background": "#120a14"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId",
@@ -2168,13 +1259,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5def8c",
-      "Background": "#07130b"
+      "Color": "#000bef",
+      "Background": "#000013"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId",
@@ -2183,13 +1269,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4d49ff",
-      "Background": "#060615"
+      "Color": "#28f9fe",
+      "Background": "#031415"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId",
@@ -2198,13 +1279,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cf8222",
-      "Background": "#110a02"
+      "Color": "#dc2da3",
+      "Background": "#12030d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos",
@@ -2213,13 +1289,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f0cc78",
-      "Background": "#14110a"
+      "Color": "#bf44e4",
+      "Background": "#0f0513"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line",
@@ -2228,13 +1299,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d6f11c",
-      "Background": "#111402"
+      "Color": "#f7dcab",
+      "Background": "#14120e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Link",
@@ -2243,13 +1309,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7fef27",
-      "Background": "#0a1303"
+      "Color": "#0fece0",
+      "Background": "#011312"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel",
@@ -2258,13 +1319,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#54c9ed",
-      "Background": "#071013"
+      "Color": "#42ddf8",
+      "Background": "#051214"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model",
@@ -2273,13 +1329,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ed518c",
-      "Background": "#13060b"
+      "Color": "#dead68",
+      "Background": "#120e08"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModelService",
@@ -2288,13 +1339,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dfcda8",
-      "Background": "#12110e"
+      "Color": "#b6aed7",
+      "Background": "#0f0e11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService",
@@ -2303,13 +1349,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#76ff60",
-      "Background": "#091508"
+      "Color": "#d42639",
+      "Background": "#110304"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node",
@@ -2318,13 +1359,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#78fc98",
-      "Background": "#0a150c"
+      "Color": "#ee281b",
+      "Background": "#130302"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeLayout",
@@ -2333,13 +1369,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e9ecd6",
-      "Background": "#131311"
+      "Color": "#42eaf3",
+      "Background": "#051314"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeName",
@@ -2348,13 +1379,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d9e9e9",
-      "Background": "#121313"
+      "Color": "#46ca38",
+      "Background": "#051004"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType",
@@ -2363,13 +1389,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6edba4",
-      "Background": "#09120d"
+      "Color": "#2cd8fe",
+      "Background": "#031215"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IStructureService",
@@ -2378,13 +1399,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee24a8",
-      "Background": "#13030e"
+      "Color": "#24f78d",
+      "Background": "#03140b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService",
@@ -2393,13 +1409,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d40dc2",
-      "Background": "#110110"
+      "Color": "#d6d830",
+      "Background": "#111204"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ISvgService",
@@ -2408,13 +1419,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fadb24",
-      "Background": "#141203"
+      "Color": "#b567cd",
+      "Background": "#0f0811"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService",
@@ -2423,13 +1429,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d98f2c",
-      "Background": "#120b03"
+      "Color": "#e3215b",
+      "Background": "#120207"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile",
@@ -2438,13 +1439,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f32132",
-      "Background": "#140204"
+      "Color": "#f97c2f",
+      "Background": "#140a03"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey",
@@ -2453,13 +1449,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#31cdf5",
-      "Background": "#041114"
+      "Color": "#e2a52e",
+      "Background": "#120d03"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles",
@@ -2468,13 +1459,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eb6472",
-      "Background": "#130809"
+      "Color": "#ecb428",
+      "Background": "#130f03"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IItem",
@@ -2483,13 +1469,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3bff52",
-      "Background": "#041506"
+      "Color": "#fad2ab",
+      "Background": "#14110e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source",
@@ -2498,13 +1479,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 560,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c8debd",
-      "Background": "#10120f"
+      "Color": "#9be8ea",
+      "Background": "#0c1313"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos",
@@ -2513,13 +1489,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fd459a",
-      "Background": "#15050c"
+      "Color": "#32d353",
+      "Background": "#041106"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size",
@@ -2528,13 +1499,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#67e2d3",
-      "Background": "#081211"
+      "Color": "#e485a6",
+      "Background": "#130b0d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect",
@@ -2543,13 +1509,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f05df6",
-      "Background": "#140714"
+      "Color": "#0beb73",
+      "Background": "#001309"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color",
@@ -2558,13 +1519,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b0c4f6",
-      "Background": "#0e1014"
+      "Color": "#aed901",
+      "Background": "#0e1200"
     },
     {
       "Name": "Dependinator.Dependinator.Icons",
@@ -2573,13 +1529,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e0e47e",
-      "Background": "#12130a"
+      "Color": "#a6e8d1",
+      "Background": "#0d1311"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon",
@@ -2588,13 +1539,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#05fa7e",
-      "Background": "#00140a"
+      "Color": "#23e92d",
+      "Background": "#021303"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams",
@@ -2603,13 +1549,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c1eb84",
-      "Background": "#10130b"
+      "Color": "#b332d8",
+      "Background": "#0e0412"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas",
@@ -2618,13 +1559,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f275d1",
-      "Background": "#140911"
+      "Color": "#9264eb",
+      "Background": "#0c0813"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService",
@@ -2633,13 +1569,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9992e7",
-      "Background": "#0c0c13"
+      "Color": "#52f324",
+      "Background": "#061403"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService",
@@ -2648,13 +1579,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e3340e",
-      "Background": "#120401"
+      "Color": "#a385d7",
+      "Background": "#0d0b11"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService",
@@ -2663,13 +1589,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cf60ef",
-      "Background": "#110813"
+      "Color": "#4107c9",
+      "Background": "#050010"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService",
@@ -2678,13 +1599,8 @@ static class ExampleModel
         "Text": "Type"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c8dad2",
-      "Background": "#101211"
+      "Color": "#dc1152",
+      "Background": "#120106"
     },
     {
       "Name": "Mono*Cecil.Mono",
@@ -2693,13 +1609,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d31f62",
-      "Background": "#110208"
+      "Color": "#a9cde9",
+      "Background": "#0e1113"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil",
@@ -2708,13 +1619,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dfa706",
-      "Background": "#120d00"
+      "Color": "#fabcda",
+      "Background": "#140f12"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.DefaultAssemblyResolver",
@@ -2723,73 +1629,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#99e634",
-      "Background": "#0c1304"
-    },
-    {
-      "Name": "Api.Program.$private",
-      "ParentName": "Api.Program",
-      "Type": {
-        "Text": "Private"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#24aed5",
-      "Background": "#030e11"
-    },
-    {
-      "Name": "Client.Program.Main(String)",
-      "ParentName": "Client.Program",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0cb3d4",
-      "Background": "#010e11"
-    },
-    {
-      "Name": "Api.Program.\u003CMain\u003E$(String)",
-      "ParentName": "Api.Program.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#19f429",
-      "Background": "#021403"
-    },
-    {
-      "Name": "Shared.BlazorApp.Shared.WeatherForecast.Date",
-      "ParentName": "Shared.BlazorApp.Shared.WeatherForecast",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ea4af6",
-      "Background": "#130614"
+      "Color": "#d3fa1d",
+      "Background": "#111402"
     },
     {
       "Name": "Dependinator.System.FatalExceptionEventArgs.Message",
@@ -2798,43 +1639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#22eef4",
-      "Background": "#021314"
-    },
-    {
-      "Name": "netstandard.System",
-      "ParentName": "netstandard",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cf6cf7",
-      "Background": "#110914"
-    },
-    {
-      "Name": "netstandard.System.DateTime",
-      "ParentName": "netstandard.System",
-      "Type": {
-        "Text": "None"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cf5551",
-      "Background": "#110706"
+      "Color": "#7586f2",
+      "Background": "#090b14"
     },
     {
       "Name": "Dependinator.System.FatalExceptionEventArgs.Exception",
@@ -2843,88 +1649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f404b4",
-      "Background": "#14000f"
-    },
-    {
-      "Name": "Shared.BlazorApp.Shared.WeatherForecast.TemperatureC",
-      "ParentName": "Shared.BlazorApp.Shared.WeatherForecast",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2d08db",
-      "Background": "#030012"
-    },
-    {
-      "Name": "netstandard.System.Int32",
-      "ParentName": "netstandard.System",
-      "Type": {
-        "Text": "None"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#86d600",
-      "Background": "#0b1100"
-    },
-    {
-      "Name": "Shared.BlazorApp.Shared.WeatherForecast.Summary",
-      "ParentName": "Shared.BlazorApp.Shared.WeatherForecast",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d862ce",
-      "Background": "#120811"
-    },
-    {
-      "Name": "netstandard.System.String",
-      "ParentName": "netstandard.System",
-      "Type": {
-        "Text": "None"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d5dde2",
-      "Background": "#111212"
-    },
-    {
-      "Name": "Shared.BlazorApp.Shared.WeatherForecast.TemperatureF",
-      "ParentName": "Shared.BlazorApp.Shared.WeatherForecast",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c87bd0",
-      "Background": "#100a11"
+      "Color": "#ae7bec",
+      "Background": "#0e0a13"
     },
     {
       "Name": "Dependinator.System.FatalExceptionEventArgs.ctor(String,Exception)",
@@ -2933,148 +1659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5bd80e",
-      "Background": "#071201"
-    },
-    {
-      "Name": "Shared.BlazorApp.Shared.WeatherForecast.ctor()",
-      "ParentName": "Shared.BlazorApp.Shared.WeatherForecast",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fa96b0",
-      "Background": "#140c0e"
-    },
-    {
-      "Name": "Client.Program.ctor()",
-      "ParentName": "Client.Program",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e157ce",
-      "Background": "#120711"
-    },
-    {
-      "Name": "Api.Program.ctor()",
-      "ParentName": "Api.Program",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee9b5d",
-      "Background": "#130c07"
-    },
-    {
-      "Name": "Client.Program.$private",
-      "ParentName": "Client.Program",
-      "Type": {
-        "Text": "Private"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4fca49",
-      "Background": "#061006"
-    },
-    {
-      "Name": "Client.Program.\u003CMain\u003E(String)",
-      "ParentName": "Client.Program.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1adfe2",
-      "Background": "#021212"
-    },
-    {
-      "Name": "Api.Api.HttpTrigger.$private",
-      "ParentName": "Api.Api.HttpTrigger",
-      "Type": {
-        "Text": "Private"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e46186",
-      "Background": "#13080b"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.App.BuildRenderTree(RenderTreeBuilder)",
-      "ParentName": "Client.BlazorApp.Client.App",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ffa30",
-      "Background": "#071404"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.App.ctor()",
-      "ParentName": "Client.BlazorApp.Client.App",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#94f365",
-      "Background": "#0c1408"
-    },
-    {
-      "Name": "Api.Api.HttpTrigger._logger",
-      "ParentName": "Api.Api.HttpTrigger.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e323a2",
-      "Background": "#12020d"
+      "Color": "#1483dc",
+      "Background": "#010a12"
     },
     {
       "Name": "Dependinator.System.FatalExceptionsExtensions.$private",
@@ -3083,13 +1669,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d4e101",
-      "Background": "#111200"
+      "Color": "#a531f6",
+      "Background": "#0d0414"
     },
     {
       "Name": "Dependinator.System.FatalExceptionsExtensions.FatalTypes",
@@ -3098,73 +1679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0feb5e",
-      "Background": "#011307"
-    },
-    {
-      "Name": "Client.BlazorApp.Client._Imports.BuildRenderTree(RenderTreeBuilder)",
-      "ParentName": "Client.BlazorApp.Client._Imports",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f24c03",
-      "Background": "#140600"
-    },
-    {
-      "Name": "Client.BlazorApp.Client._Imports.ctor()",
-      "ParentName": "Client.BlazorApp.Client._Imports",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7eda4a",
-      "Background": "#0a1206"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.MainLayout.BuildRenderTree(RenderTreeBuilder)",
-      "ParentName": "Client.BlazorApp.Client.Layout.MainLayout",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9db8e8",
-      "Background": "#0d0f13"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.MainLayout.ctor()",
-      "ParentName": "Client.BlazorApp.Client.Layout.MainLayout",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3a55fb",
-      "Background": "#040714"
+      "Color": "#da9295",
+      "Background": "#120c0c"
     },
     {
       "Name": "Dependinator.System.FatalExceptionsExtensions.FatalException",
@@ -3173,418 +1689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee5a0f",
-      "Background": "#130701"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.NavMenu.$private",
-      "ParentName": "Client.BlazorApp.Client.Layout.NavMenu",
-      "Type": {
-        "Text": "Private"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0718e7",
-      "Background": "#000213"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.NavMenu.collapseNavMenu",
-      "ParentName": "Client.BlazorApp.Client.Layout.NavMenu.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6765dd",
-      "Background": "#080812"
-    },
-    {
-      "Name": "Api.Api.HttpTrigger.ctor(ILoggerFactory)",
-      "ParentName": "Api.Api.HttpTrigger",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d07913",
-      "Background": "#110a01"
-    },
-    {
-      "Name": "Api.Api.HttpTrigger.Run(HttpRequestData)",
-      "ParentName": "Api.Api.HttpTrigger",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2d7aff",
-      "Background": "#030a15"
-    },
-    {
-      "Name": "Api.Api.HttpTrigger.GetSummary(Int32)",
-      "ParentName": "Api.Api.HttpTrigger.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce8011",
-      "Background": "#110a01"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.NavMenu.NavMenuCssClass",
-      "ParentName": "Client.BlazorApp.Client.Layout.NavMenu.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de3cde",
-      "Background": "#120512"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.NavMenu.BuildRenderTree(RenderTreeBuilder)",
-      "ParentName": "Client.BlazorApp.Client.Layout.NavMenu",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#71b5e7",
-      "Background": "#090f13"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.NavMenu.ToggleNavMenu()",
-      "ParentName": "Client.BlazorApp.Client.Layout.NavMenu.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da528d",
-      "Background": "#12060b"
-    },
-    {
-      "Name": "Api.Api.GeneratedFunctionMetadataProvider.GetFunctionMetadataAsync(String)",
-      "ParentName": "Api.Api.GeneratedFunctionMetadataProvider",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a17cdb",
-      "Background": "#0d0a12"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Layout.NavMenu.ctor()",
-      "ParentName": "Client.BlazorApp.Client.Layout.NavMenu",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f06ca5",
-      "Background": "#14090d"
-    },
-    {
-      "Name": "Api.Api.GeneratedFunctionMetadataProvider.ctor()",
-      "ParentName": "Api.Api.GeneratedFunctionMetadataProvider",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eb596a",
-      "Background": "#130708"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.Counter.$private",
-      "ParentName": "Client.BlazorApp.Client.Pages.Counter",
-      "Type": {
-        "Text": "Private"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a355ed",
-      "Background": "#0d0713"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.Counter.currentCount",
-      "ParentName": "Client.BlazorApp.Client.Pages.Counter.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e6b2a4",
-      "Background": "#130e0d"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.Counter.BuildRenderTree(RenderTreeBuilder)",
-      "ParentName": "Client.BlazorApp.Client.Pages.Counter",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f47d12",
-      "Background": "#140a01"
-    },
-    {
-      "Name": "Api.Api.WorkerHostBuilderFunctionMetadataProviderExtension.ConfigureGeneratedFunctionMetadataProvider(IHostBuilder)",
-      "ParentName": "Api.Api.WorkerHostBuilderFunctionMetadataProviderExtension",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2e09f3",
-      "Background": "#030014"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.Counter.IncrementCount()",
-      "ParentName": "Client.BlazorApp.Client.Pages.Counter.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a388cf",
-      "Background": "#0d0b11"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.Counter.ctor()",
-      "ParentName": "Client.BlazorApp.Client.Pages.Counter",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0386e3",
-      "Background": "#000b12"
-    },
-    {
-      "Name": "Api.Api.FunctionMetadataProviderAutoStartup.Configure(IHostBuilder)",
-      "ParentName": "Api.Api.FunctionMetadataProviderAutoStartup",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9999ec",
-      "Background": "#0c0c13"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.FetchData.$private",
-      "ParentName": "Client.BlazorApp.Client.Pages.FetchData",
-      "Type": {
-        "Text": "Private"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a195fd",
-      "Background": "#0d0c15"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.FetchData.forecasts",
-      "ParentName": "Client.BlazorApp.Client.Pages.FetchData.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#734ff6",
-      "Background": "#090614"
-    },
-    {
-      "Name": "Api.Api.FunctionMetadataProviderAutoStartup.ctor()",
-      "ParentName": "Api.Api.FunctionMetadataProviderAutoStartup",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e17600",
-      "Background": "#120900"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.FetchData.Http",
-      "ParentName": "Client.BlazorApp.Client.Pages.FetchData.$private",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f2c76e",
-      "Background": "#141009"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.FetchData.BuildRenderTree(RenderTreeBuilder)",
-      "ParentName": "Client.BlazorApp.Client.Pages.FetchData",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4dc8fe",
-      "Background": "#061015"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.FetchData.OnInitializedAsync()",
-      "ParentName": "Client.BlazorApp.Client.Pages.FetchData",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4cf83d",
-      "Background": "#061405"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.FetchData.ctor()",
-      "ParentName": "Client.BlazorApp.Client.Pages.FetchData",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bfd722",
-      "Background": "#0f1102"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.Home.BuildRenderTree(RenderTreeBuilder)",
-      "ParentName": "Client.BlazorApp.Client.Pages.Home",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e953c4",
-      "Background": "#130610"
-    },
-    {
-      "Name": "Client.BlazorApp.Client.Pages.Home.ctor()",
-      "ParentName": "Client.BlazorApp.Client.Pages.Home",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aad2ff",
-      "Background": "#0e1115"
+      "Color": "#fd04a9",
+      "Background": "#15000e"
     },
     {
       "Name": "Dependinator.System.FatalExceptionsExtensions.add_FatalException(EventHandler\u00601)",
@@ -3593,13 +1699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb77dd",
-      "Background": "#140912"
+      "Color": "#a019d4",
+      "Background": "#0d0211"
     },
     {
       "Name": "Dependinator.System.FatalExceptionsExtensions.remove_FatalException(EventHandler\u00601)",
@@ -3608,13 +1709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f28e36",
-      "Background": "#140b04"
+      "Color": "#7cbef5",
+      "Background": "#0a0f14"
     },
     {
       "Name": "Dependinator.System.FatalExceptionsExtensions.IsNotFatal(Exception)",
@@ -3623,13 +1719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e4f2b7",
-      "Background": "#13140f"
+      "Color": "#f4bea0",
+      "Background": "#140f0d"
     },
     {
       "Name": "Dependinator.System.FatalExceptionsExtensions.cctor()",
@@ -3638,13 +1729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#14b5f7",
-      "Background": "#010f14"
+      "Color": "#1aefba",
+      "Background": "#02130f"
     },
     {
       "Name": "Dependinator.System.Threading.Tasks.TaskExtensions.WithCancellation\u00601(Task\u00601,CancellationToken)",
@@ -3653,13 +1739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fcde36",
-      "Background": "#151204"
+      "Color": "#37a5f7",
+      "Background": "#040d14"
     },
     {
       "Name": "Dependinator.System.Threading.Tasks.TaskExtensions.WithCancellation(Task,CancellationToken)",
@@ -3668,13 +1749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#59b7f1",
-      "Background": "#070f14"
+      "Color": "#e3bd21",
+      "Background": "#120f02"
     },
     {
       "Name": "Dependinator.System.Threading.Tasks.TaskExtensions.RunInBackground(Task)",
@@ -3683,13 +1759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d31346",
-      "Background": "#110105"
+      "Color": "#fb68b4",
+      "Background": "#14080f"
     },
     {
       "Name": "Dependinator.System.Threading.Tasks.TaskExtensions.RunInBackground(ValueTask)",
@@ -3698,13 +1769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2900e8",
-      "Background": "#030013"
+      "Color": "#b4e709",
+      "Background": "#0f1300"
     },
     {
       "Name": "Dependinator.System.Threading.Tasks.TaskExtensions.$private",
@@ -3713,13 +1779,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e85abd",
-      "Background": "#13070f"
+      "Color": "#e08789",
+      "Background": "#120b0b"
     },
     {
       "Name": "Dependinator.System.Threading.Tasks.TaskExtensions.FailedBackgroundTask(Task)",
@@ -3728,13 +1789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de000b",
-      "Background": "#120000"
+      "Color": "#d494e2",
+      "Background": "#110c12"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.ForEach\u00601(IEnumerable\u00601,Action\u00601)",
@@ -3743,13 +1799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a181fa",
-      "Background": "#0d0a14"
+      "Color": "#39e4a1",
+      "Background": "#04130d"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.ForEachAsync\u00601(IAsyncEnumerable\u00601,Action\u00601)",
@@ -3758,13 +1809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d2098e",
-      "Background": "#11000b"
+      "Color": "#63e56a",
+      "Background": "#081308"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.ToList\u00601(IAsyncEnumerable\u00601)",
@@ -3773,13 +1819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d15171",
-      "Background": "#110609"
+      "Color": "#e88cc8",
+      "Background": "#130b10"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.ForEach\u00601(IEnumerable\u00601,Action\u00602)",
@@ -3788,13 +1829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a201de",
-      "Background": "#0d0012"
+      "Color": "#51ccf3",
+      "Background": "#061114"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.Join(IEnumerable\u00601,String)",
@@ -3803,13 +1839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4add57",
-      "Background": "#061207"
+      "Color": "#2ce879",
+      "Background": "#03130a"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.JoinBy\u00601(IEnumerable\u00601,Func\u00602,String)",
@@ -3818,13 +1849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#05c5e9",
-      "Background": "#001013"
+      "Color": "#6944dc",
+      "Background": "#080512"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.Join(IEnumerable\u00601,Char)",
@@ -3833,13 +1859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f0a0ab",
-      "Background": "#140d0e"
+      "Color": "#6127e8",
+      "Background": "#080313"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.Join\u00601(IEnumerable\u00601,Func\u00602,Char)",
@@ -3848,13 +1869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e4f2e3",
-      "Background": "#131412"
+      "Color": "#d46fab",
+      "Background": "#11090e"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.TryAdd\u00601(List\u00601,TSource)",
@@ -3863,13 +1879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dd38ff",
-      "Background": "#120415"
+      "Color": "#dc54b7",
+      "Background": "#12070f"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.TryAddAll\u00601(List\u00601,IEnumerable\u00601)",
@@ -3878,13 +1889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e0eb5d",
-      "Background": "#121307"
+      "Color": "#5724da",
+      "Background": "#070312"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.TryAddBy\u00601(List\u00601,Func\u00602,TSource)",
@@ -3893,13 +1899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fce4e3",
-      "Background": "#151312"
+      "Color": "#35d1aa",
+      "Background": "#04110e"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.ContainsBy\u00601(IEnumerable\u00601,Func\u00602)",
@@ -3908,13 +1909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d5b783",
-      "Background": "#110f0a"
+      "Color": "#1af6ae",
+      "Background": "#02140e"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.FindIndexBy\u00601(IEnumerable\u00601,Func\u00602)",
@@ -3923,13 +1919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#75d3cc",
-      "Background": "#091111"
+      "Color": "#a34cef",
+      "Background": "#0d0613"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.FindLastIndexBy\u00601(IEnumerable\u00601,Func\u00602)",
@@ -3938,13 +1929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d99a3e",
-      "Background": "#120c05"
+      "Color": "#db8e81",
+      "Background": "#120b0a"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.Add\u00601(IEnumerable\u00601,Array)",
@@ -3953,13 +1939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e0332c",
-      "Background": "#120403"
+      "Color": "#e308c4",
+      "Background": "#120010"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions.DistinctBy\u00601(IEnumerable\u00601,Func\u00603)",
@@ -3968,13 +1949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8dd12c",
-      "Background": "#0b1103"
+      "Color": "#ce1273",
+      "Background": "#110109"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions/DistinctComparer\u00601.$private",
@@ -3983,13 +1959,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1afa95",
-      "Background": "#02140c"
+      "Color": "#24d4be",
+      "Background": "#03110f"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions/DistinctComparer\u00601.comparer",
@@ -3998,13 +1969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cdf563",
-      "Background": "#111408"
+      "Color": "#a7b9ee",
+      "Background": "#0d0f13"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions/DistinctComparer\u00601.ctor(Func\u00603)",
@@ -4013,13 +1979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da149c",
-      "Background": "#12010d"
+      "Color": "#da6aeb",
+      "Background": "#120813"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions/DistinctComparer\u00601.Equals(TSource,TSource)",
@@ -4028,13 +1989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5138f4",
-      "Background": "#060414"
+      "Color": "#2f4cf9",
+      "Background": "#030614"
     },
     {
       "Name": "Dependinator.System.Linq.EnumerableExtensions/DistinctComparer\u00601.GetHashCode(TSource)",
@@ -4043,13 +1999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a1ff05",
-      "Background": "#0d1500"
+      "Color": "#d3253e",
+      "Background": "#110305"
     },
     {
       "Name": "Dependinator.Dependinator.RootClass.ctor()",
@@ -4058,13 +2009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c4f7fe",
-      "Background": "#101415"
+      "Color": "#ef8fa6",
+      "Background": "#130b0d"
     },
     {
       "Name": "Dependinator.Dependinator._Imports.BuildRenderTree(RenderTreeBuilder)",
@@ -4073,13 +2019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0048e3",
-      "Background": "#000612"
+      "Color": "#9568f8",
+      "Background": "#0c0814"
     },
     {
       "Name": "Dependinator.Dependinator._Imports.ctor()",
@@ -4088,13 +2029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eb01f1",
-      "Background": "#130014"
+      "Color": "#31e3db",
+      "Background": "#041212"
     },
     {
       "Name": "Dependinator.Dependinator.Main.$private",
@@ -4103,13 +2039,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0fcf4b",
-      "Background": "#011106"
+      "Color": "#cd8629",
+      "Background": "#110b03"
     },
     {
       "Name": "Dependinator.Dependinator.Main.canvasService",
@@ -4118,13 +2049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d396eb",
-      "Background": "#110c13"
+      "Color": "#d31387",
+      "Background": "#11010b"
     },
     {
       "Name": "Dependinator.Dependinator.Main.BuildRenderTree(RenderTreeBuilder)",
@@ -4133,13 +2059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0c2afb",
-      "Background": "#010314"
+      "Color": "#ea8d86",
+      "Background": "#130b0b"
     },
     {
       "Name": "Dependinator.Dependinator.Main.ctor()",
@@ -4148,13 +2069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ef101",
-      "Background": "#071400"
+      "Color": "#a999cc",
+      "Background": "#0e0c11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.AsserterEventArgs.Exception",
@@ -4163,13 +2079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#44d901",
-      "Background": "#051200"
+      "Color": "#54fa2c",
+      "Background": "#071403"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.AsserterEventArgs.ctor(Exception)",
@@ -4178,13 +2089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d9d711",
-      "Background": "#121101"
+      "Color": "#5100fb",
+      "Background": "#060014"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter.$private",
@@ -4193,13 +2099,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f04a20",
-      "Background": "#140602"
+      "Color": "#f85aec",
+      "Background": "#140713"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter.AssertOccurred",
@@ -4208,13 +2109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aa4ee6",
-      "Background": "#0e0613"
+      "Color": "#ed0b91",
+      "Background": "#13000c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter.add_AssertOccurred(EventHandler\u00601)",
@@ -4223,13 +2119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e6dc14",
-      "Background": "#131201"
+      "Color": "#f38dc4",
+      "Background": "#140b10"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter.remove_AssertOccurred(EventHandler\u00601)",
@@ -4238,13 +2129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#12d9d1",
-      "Background": "#011211"
+      "Color": "#9f62d2",
+      "Background": "#0d0811"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter.NotNull(Object,String,String,Int32)",
@@ -4253,13 +2139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee932b",
-      "Background": "#130c03"
+      "Color": "#cf01d3",
+      "Background": "#110011"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter.Requires(Boolean,String,String,Int32)",
@@ -4268,13 +2149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b9d99e",
-      "Background": "#0f120d"
+      "Color": "#28bbf7",
+      "Background": "#030f14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter.FailFast(String,String,String,Int32)",
@@ -4283,13 +2159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e96b48",
-      "Background": "#130806"
+      "Color": "#f12f72",
+      "Background": "#140309"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter.FailFast(Exception,String,String,Int32)",
@@ -4298,13 +2169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f6668e",
-      "Background": "#14080b"
+      "Color": "#9bf2cd",
+      "Background": "#0c1411"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Asserter.Fail(String,String,String,Int32)",
@@ -4313,13 +2179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1fca09",
-      "Background": "#021000"
+      "Color": "#dbbeb3",
+      "Background": "#120f0e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.AsyncLazy\u00601.ctor(Func\u00601)",
@@ -4328,13 +2189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bf5ce6",
-      "Background": "#0f0713"
+      "Color": "#d54921",
+      "Background": "#110602"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.AsyncLazy\u00601.GetAwaiter()",
@@ -4343,13 +2199,308 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7e27d8",
-      "Background": "#0a0312"
+      "Color": "#a806fc",
+      "Background": "#0e0015"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Build.Version",
+      "ParentName": "Dependinator.Dependinator.Utils.Build",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#a36dde",
+      "Background": "#0d0912"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Build.IsWebAssembly",
+      "ParentName": "Dependinator.Dependinator.Utils.Build",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#3effef",
+      "Background": "#051513"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.IDatabase.Init()",
+      "ParentName": "Dependinator.Dependinator.Utils.IDatabase",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#96fa87",
+      "Background": "#0c140b"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.IDatabase.SetAsync\u00601(String,T)",
+      "ParentName": "Dependinator.Dependinator.Utils.IDatabase",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#97ea71",
+      "Background": "#0c1309"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.IDatabase.GetAsync\u00601(String)",
+      "ParentName": "Dependinator.Dependinator.Utils.IDatabase",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#4ad7be",
+      "Background": "#06110f"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.IDatabase.DeleteAsync(String)",
+      "ParentName": "Dependinator.Dependinator.Utils.IDatabase",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#6a3bed",
+      "Background": "#080413"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.EqualityContract",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#afa5fa",
+      "Background": "#0e0d14"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.Id",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#74a1c9",
+      "Background": "#090d10"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.Value",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#7793db",
+      "Background": "#090c12"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.ctor(String,T)",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#39b6e0",
+      "Background": "#040f12"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.ToString()",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#ebb10d",
+      "Background": "#130e01"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.PrintMembers(StringBuilder)",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#e00a29",
+      "Background": "#120003"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.op_Inequality(Pair\u00601,Pair\u00601)",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#aacc68",
+      "Background": "#0e1108"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.op_Equality(Pair\u00601,Pair\u00601)",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#d2161f",
+      "Background": "#110102"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.GetHashCode()",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#d3476b",
+      "Background": "#110508"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.Equals(Object)",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#c1c4ed",
+      "Background": "#101013"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.Equals(Pair\u00601)",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#0385dc",
+      "Background": "#000b12"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.\u003CClone\u003E$()",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#3f4cf6",
+      "Background": "#050614"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.ctor(Pair\u00601)",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#1742f2",
+      "Background": "#010514"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Pair\u00601.Deconstruct(String,T)",
+      "ParentName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#c960a2",
+      "Background": "#10080d"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.$private",
+      "ParentName": "Dependinator.Dependinator.Utils.Database",
+      "Type": {
+        "Text": "Private"
+      },
+      "Description": "",
+      "Color": "#07a6f9",
+      "Background": "#000d14"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.CurrentVersion",
+      "ParentName": "Dependinator.Dependinator.Utils.Database.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#82dfcd",
+      "Background": "#0a1211"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.DatabaseName",
+      "ParentName": "Dependinator.Dependinator.Utils.Database.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#4cdc90",
+      "Background": "#06120c"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.CollectionName",
+      "ParentName": "Dependinator.Dependinator.Utils.Database.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#cd7c40",
+      "Background": "#110a05"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.jSInteropService",
+      "ParentName": "Dependinator.Dependinator.Utils.Database.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#f861f0",
+      "Background": "#140814"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.ctor(IJSInteropService)",
+      "ParentName": "Dependinator.Dependinator.Utils.Database",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#21b4ce",
+      "Background": "#020f11"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.Init()",
+      "ParentName": "Dependinator.Dependinator.Utils.Database",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#ad74ec",
+      "Background": "#0e0913"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.SetAsync\u00601(String,T)",
+      "ParentName": "Dependinator.Dependinator.Utils.Database",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#fa534f",
+      "Background": "#140606"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.GetAsync\u00601(String)",
+      "ParentName": "Dependinator.Dependinator.Utils.Database",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#f2f84f",
+      "Background": "#141406"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Database.DeleteAsync(String)",
+      "ParentName": "Dependinator.Dependinator.Utils.Database",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#f047ae",
+      "Background": "#14050e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.SingletonAttribute.ctor()",
@@ -4358,13 +2509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bd33f8",
-      "Background": "#0f0414"
+      "Color": "#829dca",
+      "Background": "#0a0d10"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ScopedAttribute.ctor()",
@@ -4373,13 +2519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7cddfd",
-      "Background": "#0a1215"
+      "Color": "#5596e4",
+      "Background": "#070c13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.TransientAttribute.ctor()",
@@ -4388,13 +2529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#63ca36",
-      "Background": "#081004"
+      "Color": "#8bc8fd",
+      "Background": "#0b1015"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.DependencyInjection.RegisterTypesInAssemblyOf\u00601(IServiceCollection)",
@@ -4403,13 +2539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e00db4",
-      "Background": "#12010f"
+      "Color": "#8bc0dc",
+      "Background": "#0b1012"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.DependencyInjection.$private",
@@ -4418,13 +2549,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#62ef29",
-      "Background": "#081303"
+      "Color": "#c90413",
+      "Background": "#100001"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.DependencyInjection.HasAttribute(Type,Type)",
@@ -4433,13 +2559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d3c792",
-      "Background": "#11100c"
+      "Color": "#99cca2",
+      "Background": "#0c110d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.DependencyInjection.HasAttribute\u00601(Type)",
@@ -4448,13 +2569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2073d7",
-      "Background": "#020911"
+      "Color": "#a40ce8",
+      "Background": "#0d0113"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.DependencyInjection.Register\u00601(IServiceCollection,Func\u00602,Action\u00603)",
@@ -4463,13 +2579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4002ed",
-      "Background": "#050013"
+      "Color": "#5b06f1",
+      "Background": "#070014"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.DependencyInjection.IsNonAbstractClass(Type)",
@@ -4478,13 +2589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#56f4d7",
-      "Background": "#071411"
+      "Color": "#6fd8dd",
+      "Background": "#091212"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.DependencyInjection.GetBaseTypes(Type)",
@@ -4493,13 +2599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9b17fb",
-      "Background": "#0c0114"
+      "Color": "#3de67b",
+      "Background": "#05130a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Disposable.$private",
@@ -4508,13 +2609,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e60964",
-      "Background": "#130008"
+      "Color": "#26a7d1",
+      "Background": "#030d11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Disposable.action",
@@ -4523,13 +2619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f887fe",
-      "Background": "#140b15"
+      "Color": "#9e09dc",
+      "Background": "#0d0012"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Disposable.ctor(Action)",
@@ -4538,13 +2629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#efc005",
-      "Background": "#131000"
+      "Color": "#efb79f",
+      "Background": "#130f0d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Disposable.Dispose()",
@@ -4553,13 +2639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee1bc7",
-      "Background": "#130210"
+      "Color": "#09d4dd",
+      "Background": "#001112"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.$private",
@@ -4568,13 +2649,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a6ca84",
-      "Background": "#0d100b"
+      "Color": "#53cc09",
+      "Background": "#061100"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.eqValue1",
@@ -4583,13 +2659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b790e0",
-      "Background": "#0f0c12"
+      "Color": "#1012d3",
+      "Background": "#010111"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.eqValue2",
@@ -4598,13 +2669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f5b2d6",
-      "Background": "#140e11"
+      "Color": "#26d556",
+      "Background": "#031107"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.eqValue3",
@@ -4613,13 +2679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1635c9",
-      "Background": "#010410"
+      "Color": "#db1e00",
+      "Background": "#120200"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.hashCode",
@@ -4628,13 +2689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#28a8dc",
-      "Background": "#030e12"
+      "Color": "#dc833b",
+      "Background": "#120a04"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.isEqualFunc",
@@ -4643,13 +2699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb895e",
-      "Background": "#140b07"
+      "Color": "#cd16ca",
+      "Background": "#110110"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.Equals(T)",
@@ -4658,13 +2709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ba8bcd",
-      "Background": "#0f0b11"
+      "Color": "#20ec22",
+      "Background": "#021302"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.IsEqualWhenSame(Object)",
@@ -4673,13 +2719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e6e321",
-      "Background": "#131202"
+      "Color": "#54e962",
+      "Background": "#071308"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.IsEqualWhenSame(Object,Object)",
@@ -4688,13 +2729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e40688",
-      "Background": "#13000b"
+      "Color": "#dfb5d2",
+      "Background": "#120f11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.IsEqualWhenSame(Object,Object,Object)",
@@ -4703,13 +2739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#63c9b5",
-      "Background": "#08100f"
+      "Color": "#6f58f8",
+      "Background": "#090714"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.IsEqualWhen(Func\u00602,Object,Object)",
@@ -4718,13 +2749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f4b669",
-      "Background": "#140f08"
+      "Color": "#b461e8",
+      "Background": "#0f0813"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.GetHashCode()",
@@ -4733,13 +2759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b1cef1",
-      "Background": "#0e1114"
+      "Color": "#9217f7",
+      "Background": "#0c0114"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.Equals(Object)",
@@ -4748,13 +2769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ff5867",
-      "Background": "#150708"
+      "Color": "#ebe748",
+      "Background": "#131306"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.op_Equality(Equatable\u00601,Equatable\u00601)",
@@ -4763,13 +2779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f52f53",
-      "Background": "#140306"
+      "Color": "#d57137",
+      "Background": "#110904"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.op_Inequality(Equatable\u00601,Equatable\u00601)",
@@ -4778,13 +2789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4bdacd",
-      "Background": "#061211"
+      "Color": "#dcdd7f",
+      "Background": "#12120a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.GetHashFor(Object,Object)",
@@ -4793,13 +2799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#57e27d",
-      "Background": "#07120a"
+      "Color": "#d535c3",
+      "Background": "#110410"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable\u00601.ctor()",
@@ -4808,13 +2809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da2740",
-      "Background": "#120305"
+      "Color": "#ea911d",
+      "Background": "#130c02"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable.IsEqual\u00601(T,T,Func\u00603)",
@@ -4823,13 +2819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e40bdb",
-      "Background": "#130012"
+      "Color": "#89dddb",
+      "Background": "#0b1212"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable.IsEqual\u00601(IEquatable\u00601,IEquatable\u00601)",
@@ -4838,13 +2829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b0fffb",
-      "Background": "#0e1514"
+      "Color": "#a3f82e",
+      "Background": "#0d1403"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Equatable.ctor()",
@@ -4853,13 +2839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dbb568",
-      "Background": "#120f08"
+      "Color": "#d77600",
+      "Background": "#110900"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.$private",
@@ -4868,13 +2849,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5e19d6",
-      "Background": "#070211"
+      "Color": "#afcab7",
+      "Background": "#0e100f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.MinTimeBeforeAutoRestart",
@@ -4883,13 +2859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d76133",
-      "Background": "#110804"
+      "Color": "#e97774",
+      "Background": "#130909"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.hasDisplayedErrorMessageBox",
@@ -4898,13 +2869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4dd1f9",
-      "Background": "#061114"
+      "Color": "#efc1df",
+      "Background": "#131012"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.hasFailed",
@@ -4913,13 +2879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dd2d78",
-      "Background": "#12030a"
+      "Color": "#f1ef87",
+      "Background": "#14130b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.hasShutdown",
@@ -4928,13 +2889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8c63df",
-      "Background": "#0b0812"
+      "Color": "#aecfa1",
+      "Background": "#0e110d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.StartTime",
@@ -4943,13 +2899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e02f4d",
-      "Background": "#120306"
+      "Color": "#5eeb09",
+      "Background": "#071300"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.shutdown",
@@ -4958,13 +2909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f0fc02",
-      "Background": "#141500"
+      "Color": "#e454c3",
+      "Background": "#130710"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.HandleUnhandledExceptions(Action)",
@@ -4973,13 +2919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#13df8a",
-      "Background": "#01120b"
+      "Color": "#b4dbc0",
+      "Background": "#0f1210"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.OnBackgroundTaskException(Exception)",
@@ -4988,13 +2929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cc3726",
-      "Background": "#110403"
+      "Color": "#92a4e4",
+      "Background": "#0c0d13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.HandleException(String,Exception)",
@@ -5003,13 +2939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#84bef1",
-      "Background": "#0b0f14"
+      "Color": "#db7bc0",
+      "Background": "#120a10"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.Shutdown(String,Exception)",
@@ -5018,13 +2949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#42db8a",
-      "Background": "#05120b"
+      "Color": "#eca33d",
+      "Background": "#130d05"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.ShowExceptionDialog(Exception)",
@@ -5033,13 +2959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#75e822",
-      "Background": "#091302"
+      "Color": "#45a1d3",
+      "Background": "#050d11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ExceptionHandling.cctor()",
@@ -5048,13 +2969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f54dd8",
-      "Background": "#140612"
+      "Color": "#409bec",
+      "Background": "#050c13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle.X",
@@ -5063,13 +2979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3a20ea",
-      "Background": "#040213"
+      "Color": "#b0d583",
+      "Background": "#0e110a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle.Y",
@@ -5078,13 +2989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#adb7fc",
-      "Background": "#0e0f15"
+      "Color": "#52d537",
+      "Background": "#061104"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle.Width",
@@ -5093,13 +2999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e7016d",
-      "Background": "#130009"
+      "Color": "#2d45ca",
+      "Background": "#030510"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle.Height",
@@ -5108,13 +3009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb610d",
-      "Background": "#140801"
+      "Color": "#92f42b",
+      "Background": "#0c1403"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle.Top",
@@ -5123,13 +3019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb8c40",
-      "Background": "#140b05"
+      "Color": "#dcf21f",
+      "Background": "#121402"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle.Right",
@@ -5138,13 +3029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f508c8",
-      "Background": "#140010"
+      "Color": "#b4fb0b",
+      "Background": "#0f1400"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle.Bottom",
@@ -5153,13 +3039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1cd10a",
-      "Background": "#021100"
+      "Color": "#95e1ab",
+      "Background": "#0c120e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle.Left",
@@ -5168,13 +3049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d8582c",
-      "Background": "#120703"
+      "Color": "#dc3d60",
+      "Background": "#120508"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ElementBoundingRectangle.ctor()",
@@ -5183,13 +3059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#39e058",
-      "Background": "#041207"
+      "Color": "#8d8ecb",
+      "Background": "#0b0b10"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.BrowserSizeDetails.InnerWidth",
@@ -5198,13 +3069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc26e2",
-      "Background": "#150312"
+      "Color": "#ef490d",
+      "Background": "#130601"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.BrowserSizeDetails.InnerHeight",
@@ -5213,13 +3079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e2af6c",
-      "Background": "#120e09"
+      "Color": "#c6eb4b",
+      "Background": "#101306"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.BrowserSizeDetails.ScreenWidth",
@@ -5228,13 +3089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e771c3",
-      "Background": "#130910"
+      "Color": "#efcce3",
+      "Background": "#131112"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.BrowserSizeDetails.ScreenHeight",
@@ -5243,13 +3099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d47c7d",
-      "Background": "#110a0a"
+      "Color": "#e411c0",
+      "Background": "#130110"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.BrowserSizeDetails.ctor()",
@@ -5258,13 +3109,58 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b0ca66",
-      "Background": "#0e1008"
+      "Color": "#32fa94",
+      "Background": "#04140c"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.ValueHandler.$private",
+      "ParentName": "Dependinator.Dependinator.Utils.ValueHandler",
+      "Type": {
+        "Text": "Private"
+      },
+      "Description": "",
+      "Color": "#dcbf06",
+      "Background": "#120f00"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.ValueHandler.sb",
+      "ParentName": "Dependinator.Dependinator.Utils.ValueHandler.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#f1fa38",
+      "Background": "#141404"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.ValueHandler.GetValue()",
+      "ParentName": "Dependinator.Dependinator.Utils.ValueHandler",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#4b0be6",
+      "Background": "#060013"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.ValueHandler.OnValue(String)",
+      "ParentName": "Dependinator.Dependinator.Utils.ValueHandler",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#d751ca",
+      "Background": "#110610"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.ValueHandler.ctor()",
+      "ParentName": "Dependinator.Dependinator.Utils.ValueHandler",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#1fd461",
+      "Background": "#021108"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.OnResizing",
@@ -5273,13 +3169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e16b02",
-      "Background": "#120800"
+      "Color": "#7df9ff",
+      "Background": "#0a1415"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.OnResize",
@@ -5288,13 +3179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fd7459",
-      "Background": "#150907"
+      "Color": "#df549c",
+      "Background": "#12070d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.BrowserSizeDetails",
@@ -5303,13 +3189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#72d2ad",
-      "Background": "#09110e"
+      "Color": "#f7cb3a",
+      "Background": "#141004"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.add_OnResizing(Action\u00601)",
@@ -5318,13 +3199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e6a44d",
-      "Background": "#130d06"
+      "Color": "#e9d748",
+      "Background": "#131106"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.remove_OnResizing(Action\u00601)",
@@ -5333,13 +3209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e3ace0",
-      "Background": "#120e12"
+      "Color": "#68deee",
+      "Background": "#081213"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.add_OnResize(Action)",
@@ -5348,13 +3219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#540cf7",
-      "Background": "#070114"
+      "Color": "#f7ca45",
+      "Background": "#141005"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.remove_OnResize(Action)",
@@ -5363,43 +3229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d15813",
-      "Background": "#110701"
-    },
-    {
-      "Name": "netstandard.System.Object",
-      "ParentName": "netstandard.System",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f2daef",
-      "Background": "#141213"
-    },
-    {
-      "Name": "netstandard.System.Object.ctor()",
-      "ParentName": "netstandard.System.Object",
-      "Type": {
-        "Text": "None"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bdcdc8",
-      "Background": "#0f1110"
+      "Color": "#a1d0e4",
+      "Background": "#0d1113"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.InitializeAsync()",
@@ -5408,13 +3239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec3c11",
-      "Background": "#130501"
+      "Color": "#57d01c",
+      "Background": "#071102"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.GetWindowSizeAsync()",
@@ -5423,13 +3249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9fcaae",
-      "Background": "#0d100e"
+      "Color": "#fee272",
+      "Background": "#151209"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.GetBoundingRectangle(ElementReference)",
@@ -5438,43 +3259,68 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#68c96e",
-      "Background": "#081009"
+      "Color": "#9f46da",
+      "Background": "#0d0512"
     },
     {
-      "Name": "Dependinator.Dependinator.Utils.IJSInteropService.AddMouseEventListener(String,String,Object,String)",
+      "Name": "Dependinator.Dependinator.Utils.IJSInteropService.AddMouseEventListenerAsync(String,String,Object,String)",
       "ParentName": "Dependinator.Dependinator.Utils.IJSInteropService",
       "Type": {
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#37ee6c",
-      "Background": "#041309"
+      "Color": "#3ff194",
+      "Background": "#05140c"
     },
     {
-      "Name": "Dependinator.Dependinator.Utils.IJSInteropService.AddPointerEventListener(String,String,Object,String)",
+      "Name": "Dependinator.Dependinator.Utils.IJSInteropService.AddPointerEventListenerAsync(String,String,Object,String)",
       "ParentName": "Dependinator.Dependinator.Utils.IJSInteropService",
       "Type": {
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f421b7",
-      "Background": "#14020f"
+      "Color": "#4dde9c",
+      "Background": "#06120d"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.IJSInteropService.InitializeDatabaseAsync(String,Int32,String)",
+      "ParentName": "Dependinator.Dependinator.Utils.IJSInteropService",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#e90422",
+      "Background": "#130002"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.IJSInteropService.SetDatabaseValueAsync\u00601(String,Int32,String,T)",
+      "ParentName": "Dependinator.Dependinator.Utils.IJSInteropService",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#17ed20",
+      "Background": "#011302"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.IJSInteropService.GetDatabaseValueAsync\u00601(String,Int32,String,String)",
+      "ParentName": "Dependinator.Dependinator.Utils.IJSInteropService",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#df1f1d",
+      "Background": "#120202"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.IJSInteropService.DeleteDatabaseValueAsync(String,Int32,String,String)",
+      "ParentName": "Dependinator.Dependinator.Utils.IJSInteropService",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#62fc4e",
+      "Background": "#081506"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.IJSInteropService.Prompt(String)",
@@ -5483,13 +3329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a006ff",
-      "Background": "#0d0015"
+      "Color": "#69d6df",
+      "Background": "#081112"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.$private",
@@ -5498,13 +3339,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8bece1",
-      "Background": "#0b1312"
+      "Color": "#f5a800",
+      "Background": "#140e00"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.moduleTask",
@@ -5513,13 +3349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ddaec",
-      "Background": "#061213"
+      "Color": "#d14828",
+      "Background": "#110603"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.instanceRef",
@@ -5528,13 +3359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0bfa13",
-      "Background": "#001401"
+      "Color": "#d2eb64",
+      "Background": "#111308"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.isResizing",
@@ -5543,13 +3369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#79d325",
-      "Background": "#0a1103"
+      "Color": "#c8f3a2",
+      "Background": "#10140d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.resizeTimer",
@@ -5558,13 +3379,18 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7add6e",
-      "Background": "#0a1209"
+      "Color": "#ec7558",
+      "Background": "#130907"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.JSInteropService.options",
+      "ParentName": "Dependinator.Dependinator.Utils.JSInteropService.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#7914e8",
+      "Background": "#0a0113"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.OnResizing",
@@ -5573,13 +3399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d36028",
-      "Background": "#110803"
+      "Color": "#854ccb",
+      "Background": "#0b0610"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.OnResize",
@@ -5588,13 +3409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#81eeba",
-      "Background": "#0a130f"
+      "Color": "#50aecf",
+      "Background": "#060e11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.BrowserSizeDetails",
@@ -5603,13 +3419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f037d9",
-      "Background": "#140412"
+      "Color": "#d40954",
+      "Background": "#110007"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.ctor(IJSRuntime)",
@@ -5618,13 +3429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3d5aef",
-      "Background": "#050713"
+      "Color": "#d1ebbe",
+      "Background": "#11130f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.add_OnResizing(Action\u00601)",
@@ -5633,13 +3439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c987b9",
-      "Background": "#100b0f"
+      "Color": "#95e8f1",
+      "Background": "#0c1314"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.remove_OnResizing(Action\u00601)",
@@ -5648,13 +3449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#add64b",
-      "Background": "#0e1106"
+      "Color": "#9dd5e4",
+      "Background": "#0d1113"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.add_OnResize(Action)",
@@ -5663,13 +3459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8c0acd",
-      "Background": "#0b0011"
+      "Color": "#dbc284",
+      "Background": "#12100b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.remove_OnResize(Action)",
@@ -5678,13 +3469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fa69cc",
-      "Background": "#140811"
+      "Color": "#bb28da",
+      "Background": "#0f0312"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.InitializeAsync()",
@@ -5693,43 +3479,28 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e068ad",
-      "Background": "#12080e"
+      "Color": "#1cf99d",
+      "Background": "#02140d"
     },
     {
-      "Name": "Dependinator.Dependinator.Utils.JSInteropService.AddMouseEventListener(String,String,Object,String)",
+      "Name": "Dependinator.Dependinator.Utils.JSInteropService.AddMouseEventListenerAsync(String,String,Object,String)",
       "ParentName": "Dependinator.Dependinator.Utils.JSInteropService",
       "Type": {
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#44f047",
-      "Background": "#051405"
+      "Color": "#57cd40",
+      "Background": "#071105"
     },
     {
-      "Name": "Dependinator.Dependinator.Utils.JSInteropService.AddPointerEventListener(String,String,Object,String)",
+      "Name": "Dependinator.Dependinator.Utils.JSInteropService.AddPointerEventListenerAsync(String,String,Object,String)",
       "ParentName": "Dependinator.Dependinator.Utils.JSInteropService",
       "Type": {
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de5aba",
-      "Background": "#12070f"
+      "Color": "#d5a064",
+      "Background": "#110d08"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.GetWindowSizeAsync()",
@@ -5738,13 +3509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f6d0f8",
-      "Background": "#141114"
+      "Color": "#dbbf81",
+      "Background": "#120f0a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.GetBoundingRectangle(ElementReference)",
@@ -5753,13 +3519,48 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#95d50d",
-      "Background": "#0c1101"
+      "Color": "#ca68bb",
+      "Background": "#10080f"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.JSInteropService.InitializeDatabaseAsync(String,Int32,String)",
+      "ParentName": "Dependinator.Dependinator.Utils.JSInteropService",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#59d7e8",
+      "Background": "#071113"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.JSInteropService.SetDatabaseValueAsync\u00601(String,Int32,String,T)",
+      "ParentName": "Dependinator.Dependinator.Utils.JSInteropService",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#fc4482",
+      "Background": "#15050a"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.JSInteropService.GetDatabaseValueAsync\u00601(String,Int32,String,String)",
+      "ParentName": "Dependinator.Dependinator.Utils.JSInteropService",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#dae842",
+      "Background": "#121305"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.JSInteropService.DeleteDatabaseValueAsync(String,Int32,String,String)",
+      "ParentName": "Dependinator.Dependinator.Utils.JSInteropService",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#33fe2e",
+      "Background": "#041503"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.WindowResizeEvent()",
@@ -5768,13 +3569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d6075f",
-      "Background": "#110007"
+      "Color": "#d74868",
+      "Background": "#110608"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.Prompt(String)",
@@ -5783,13 +3579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c840ec",
-      "Background": "#100513"
+      "Color": "#8f3ede",
+      "Background": "#0b0512"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.DebounceResizeEvent()",
@@ -5798,13 +3589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ff3a3",
-      "Background": "#06140d"
+      "Color": "#d17da3",
+      "Background": "#110a0d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.DimensionsChanged(Object,ElapsedEventArgs)",
@@ -5813,13 +3599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9769e2",
-      "Background": "#0c0812"
+      "Color": "#c84dfb",
+      "Background": "#100614"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.DisposeAsync()",
@@ -5828,13 +3609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#77e22f",
-      "Background": "#091203"
+      "Color": "#6704e4",
+      "Background": "#080013"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.JSInteropService.GetModuleAsync()",
@@ -5843,13 +3619,18 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cc6777",
-      "Background": "#110809"
+      "Color": "#beed9e",
+      "Background": "#0f130d"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.JSInteropService.cctor()",
+      "ParentName": "Dependinator.Dependinator.Utils.JSInteropService.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#1119df",
+      "Background": "#010212"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Reflection.GetType(Assembly,String)",
@@ -5858,13 +3639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f9425c",
-      "Background": "#140507"
+      "Color": "#f7fb18",
+      "Background": "#141402"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Reflection.GetPublicFieldValues\u00601(Type)",
@@ -5873,13 +3649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec3ef6",
-      "Background": "#130514"
+      "Color": "#42cd1e",
+      "Background": "#051102"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Reflection.GetPublicFieldNames\u00601()",
@@ -5888,13 +3659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3169e2",
-      "Background": "#040812"
+      "Color": "#d32ad9",
+      "Background": "#110312"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Result.Try\u00601(T,ErrorResult,R\u00601)",
@@ -5903,13 +3669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#68d8e4",
-      "Background": "#081213"
+      "Color": "#89afed",
+      "Background": "#0b0e13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Result.Try(ErrorResult,R)",
@@ -5918,13 +3679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#88fe02",
-      "Background": "#0b1500"
+      "Color": "#d21145",
+      "Background": "#110105"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Result.Try\u00601(T,R\u00601)",
@@ -5933,13 +3689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ccab81",
-      "Background": "#110e0a"
+      "Color": "#57b7ed",
+      "Background": "#070f13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Result.Try(R)",
@@ -5948,13 +3699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cba531",
-      "Background": "#100d04"
+      "Color": "#7cfa68",
+      "Background": "#0a1408"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Result.Try\u00601(T,ErrorResult,Func\u00601)",
@@ -5963,13 +3709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e02021",
-      "Background": "#120202"
+      "Color": "#67d428",
+      "Background": "#081103"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Result.Try(ErrorResult,Action)",
@@ -5978,13 +3719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2d37e5",
-      "Background": "#030413"
+      "Color": "#9e90cf",
+      "Background": "#0d0c11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.NoError",
@@ -5993,13 +3729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e15de7",
-      "Background": "#120713"
+      "Color": "#fb403c",
+      "Background": "#140505"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.NoValueError",
@@ -6008,13 +3739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e09793",
-      "Background": "#120c0c"
+      "Color": "#fce4bd",
+      "Background": "#15130f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Ok",
@@ -6023,13 +3749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#43e951",
-      "Background": "#051306"
+      "Color": "#61f54e",
+      "Background": "#081406"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.None",
@@ -6038,13 +3759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb390a",
-      "Background": "#140400"
+      "Color": "#f68f24",
+      "Background": "#140b03"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.resultException",
@@ -6053,13 +3769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b9eb51",
-      "Background": "#0f1306"
+      "Color": "#3f61f2",
+      "Background": "#050814"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.isErrorChecked",
@@ -6068,13 +3779,18 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e08626",
-      "Background": "#120b03"
+      "Color": "#4ee806",
+      "Background": "#061300"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.R.IsNone",
+      "ParentName": "Dependinator.Dependinator.Utils.R",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#b84fee",
+      "Background": "#0f0613"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.$private",
@@ -6083,13 +3799,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ef105",
-      "Background": "#071400"
+      "Color": "#64f497",
+      "Background": "#08140c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.ErrorMessage",
@@ -6098,13 +3809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0af2d9",
-      "Background": "#001412"
+      "Color": "#0de3be",
+      "Background": "#01120f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.IsResultError",
@@ -6113,13 +3819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#951bec",
-      "Background": "#0c0213"
+      "Color": "#2d30e0",
+      "Background": "#030412"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.IsOk",
@@ -6128,13 +3829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#73ebe1",
-      "Background": "#091312"
+      "Color": "#dfb5e0",
+      "Background": "#120f12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.ctor(Exception)",
@@ -6143,13 +3839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2addf5",
-      "Background": "#031214"
+      "Color": "#e42149",
+      "Background": "#130206"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Try\u00601(T,ErrorResult,R\u00601)",
@@ -6158,13 +3849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9dec82",
-      "Background": "#0d130a"
+      "Color": "#07a4eb",
+      "Background": "#000d13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Try\u00601(T,R\u00601)",
@@ -6173,13 +3859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de9a85",
-      "Background": "#120c0b"
+      "Color": "#e7fa6f",
+      "Background": "#131409"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Try(ErrorResult,R)",
@@ -6188,13 +3869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5419f8",
-      "Background": "#070214"
+      "Color": "#c7cc57",
+      "Background": "#101107"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Try(R)",
@@ -6203,13 +3879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#19add9",
-      "Background": "#020e12"
+      "Color": "#f45c36",
+      "Background": "#140704"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Error(String,String,String,Int32)",
@@ -6218,13 +3889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#37f185",
-      "Background": "#04140b"
+      "Color": "#3edeb8",
+      "Background": "#05120f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Error(String,Exception,String,String,Int32)",
@@ -6233,13 +3899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b34ed3",
-      "Background": "#0e0611"
+      "Color": "#dc5aa8",
+      "Background": "#12070e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Error(String,R,String,String,Int32)",
@@ -6248,13 +3909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#95fede",
-      "Background": "#0c1512"
+      "Color": "#83d467",
+      "Background": "#0a1108"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Error(R,String,String,Int32)",
@@ -6263,13 +3919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec9b22",
-      "Background": "#130c02"
+      "Color": "#cf5acc",
+      "Background": "#110711"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.Error(Exception,String,String,Int32)",
@@ -6278,13 +3929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bcb0d9",
-      "Background": "#0f0e12"
+      "Color": "#1ad11c",
+      "Background": "#021102"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.GetResultError()",
@@ -6293,13 +3939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1ae88f",
-      "Background": "#02130b"
+      "Color": "#b33bf0",
+      "Background": "#0e0414"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.GetResultException()",
@@ -6308,13 +3949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#22eeaf",
-      "Background": "#02130e"
+      "Color": "#eeea7a",
+      "Background": "#13130a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.op_Implicit(Exception)",
@@ -6323,13 +3959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f63765",
-      "Background": "#140408"
+      "Color": "#6b6fde",
+      "Background": "#080912"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.op_Implicit(R)",
@@ -6338,13 +3969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f79e8c",
-      "Background": "#140d0b"
+      "Color": "#fb754f",
+      "Background": "#140906"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.ToString()",
@@ -6353,13 +3979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fd6d1d",
-      "Background": "#150902"
+      "Color": "#9b0ff1",
+      "Background": "#0c0114"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.ToString(Boolean)",
@@ -6368,13 +3989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d8f1c4",
-      "Background": "#121410"
+      "Color": "#d59daa",
+      "Background": "#110d0e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.AllErrorMessages()",
@@ -6383,13 +3999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a612c9",
-      "Background": "#0d0110"
+      "Color": "#e877bb",
+      "Background": "#13090f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.AllMessageLines()",
@@ -6398,13 +4009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2895fa",
-      "Background": "#030c14"
+      "Color": "#3ecc6b",
+      "Background": "#051108"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R.cctor()",
@@ -6413,13 +4019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d4128e",
-      "Background": "#11010b"
+      "Color": "#a7f33b",
+      "Background": "#0d1404"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.$private",
@@ -6428,13 +4029,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#93e056",
-      "Background": "#0c1207"
+      "Color": "#aec9fe",
+      "Background": "#0e1015"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.storedValue",
@@ -6443,13 +4039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9b18f8",
-      "Background": "#0c0214"
+      "Color": "#ced4f1",
+      "Background": "#111114"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.ctor(T)",
@@ -6458,43 +4049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cb0fcc",
-      "Background": "#100111"
-    },
-    {
-      "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Log",
-      "ParentName": "Dependinator.Dependinator.Utils.Logging.Log",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1a75cb",
-      "Background": "#020910"
-    },
-    {
-      "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Log/StopParameter,String,String,Int32)",
-      "ParentName": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Log",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#133af1",
-      "Background": "#010414"
+      "Color": "#dbbbd4",
+      "Background": "#120f11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.ctor(Exception)",
@@ -6503,13 +4059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef9aa9",
-      "Background": "#130c0e"
+      "Color": "#8c7ced",
+      "Background": "#0b0a13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.GetResultValue()",
@@ -6518,13 +4069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e4ce7a",
-      "Background": "#13110a"
+      "Color": "#7afc7f",
+      "Background": "#0a150a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.Or(T)",
@@ -6533,13 +4079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ed042f",
-      "Background": "#130003"
+      "Color": "#2bf2d1",
+      "Background": "#031411"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.ToString()",
@@ -6548,13 +4089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#330ce0",
-      "Background": "#040112"
+      "Color": "#f3c568",
+      "Background": "#141008"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.op_Implicit(Exception)",
@@ -6563,13 +4099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#00e4e2",
-      "Background": "#001312"
+      "Color": "#f8bf16",
+      "Background": "#140f01"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.op_Implicit(ErrorResult)",
@@ -6578,13 +4109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb3ecd",
-      "Background": "#140511"
+      "Color": "#ffd3f9",
+      "Background": "#151114"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.op_Implicit(R\u00601)",
@@ -6593,13 +4119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b1df92",
-      "Background": "#0e120c"
+      "Color": "#39fcf3",
+      "Background": "#041514"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.op_Implicit(T)",
@@ -6608,13 +4129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5984cb",
-      "Background": "#070b10"
+      "Color": "#0af855",
+      "Background": "#001407"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.R\u00601.From(T)",
@@ -6623,13 +4139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8fe5c4",
-      "Background": "#0b1310"
+      "Color": "#6482f0",
+      "Background": "#080a14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ErrorResult.$private",
@@ -6638,13 +4149,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9b19e7",
-      "Background": "#0c0213"
+      "Color": "#a1dd25",
+      "Background": "#0d1203"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ErrorResult.ctor(Exception,String,String,Int32)",
@@ -6653,13 +4159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#42efcf",
-      "Background": "#051311"
+      "Color": "#8b12fb",
+      "Background": "#0b0114"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ErrorResult.ctor(Exception,String)",
@@ -6668,13 +4169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e3ba25",
-      "Background": "#120f03"
+      "Color": "#bfc966",
+      "Background": "#0f1008"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ErrorResult.ToStackTrace(String,String,Int32)",
@@ -6683,13 +4179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#56dc05",
-      "Background": "#071200"
+      "Color": "#c1ee70",
+      "Background": "#101309"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.ErrorResult.AddStackTrace(Exception,String)",
@@ -6698,13 +4189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98fd61",
-      "Background": "#0c1508"
+      "Color": "#e0c59a",
+      "Background": "#12100c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.StringExtensions.Max(String,Int32,Boolean)",
@@ -6713,13 +4199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9be483",
-      "Background": "#0c130a"
+      "Color": "#0fe0c3",
+      "Background": "#011210"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.StringExtensions.TrimPrefix(String,String)",
@@ -6728,13 +4209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e5ac60",
-      "Background": "#130e08"
+      "Color": "#d15fc1",
+      "Background": "#110710"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.StringExtensions.TrimSuffix(String,String)",
@@ -6743,13 +4219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1b87f8",
-      "Background": "#020b14"
+      "Color": "#f15401",
+      "Background": "#140700"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.StringExtensions.ToJson(Object)",
@@ -6758,13 +4229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#feb2d1",
-      "Background": "#150e11"
+      "Color": "#22bfcc",
+      "Background": "#020f11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.StringExtensions.ToSha2(String)",
@@ -6773,13 +4239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b1ed90",
-      "Background": "#0e130c"
+      "Color": "#d6640e",
+      "Background": "#110801"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.StringExtensions.Txt(Version)",
@@ -6788,13 +4249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc0d46",
-      "Background": "#150105"
+      "Color": "#68fc87",
+      "Background": "#08150b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.StringExtensions.IsSameIc(String,String)",
@@ -6803,13 +4259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e58e20",
-      "Background": "#130b02"
+      "Color": "#dbc753",
+      "Background": "#121006"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.StringExtensions.StartsWithIc(String,String)",
@@ -6818,13 +4269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d5fcb5",
-      "Background": "#11150f"
+      "Color": "#f1b2bf",
+      "Background": "#140e0f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading.$private",
@@ -6833,13 +4279,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8e51e6",
-      "Background": "#0b0613"
+      "Color": "#8287de",
+      "Background": "#0a0b12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading.mainThreadId",
@@ -6848,13 +4289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#70e389",
-      "Background": "#09120b"
+      "Color": "#5ed881",
+      "Background": "#07120a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading.context",
@@ -6863,13 +4299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#687cfe",
-      "Background": "#080a15"
+      "Color": "#f7f556",
+      "Background": "#141407"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading.CurrentId",
@@ -6878,13 +4309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#24de66",
-      "Background": "#031208"
+      "Color": "#a56cda",
+      "Background": "#0d0912"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading.SetUp()",
@@ -6893,13 +4319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#06d677",
-      "Background": "#001109"
+      "Color": "#da6353",
+      "Background": "#120806"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading.PostOnMain(Action)",
@@ -6908,13 +4329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f41722",
-      "Background": "#140102"
+      "Color": "#6ae07e",
+      "Background": "#08120a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading.AssertIsMainThread()",
@@ -6923,13 +4339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0cf537",
-      "Background": "#011404"
+      "Color": "#a9bdea",
+      "Background": "#0e0f13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading.AssertIsOtherThread()",
@@ -6938,13 +4349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dcc160",
-      "Background": "#121008"
+      "Color": "#1acbbf",
+      "Background": "#02100f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Threading.cctor()",
@@ -6953,13 +4359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d5bb47",
-      "Background": "#110f05"
+      "Color": "#f092e4",
+      "Background": "#140c13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.$private",
@@ -6968,13 +4369,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1aee68",
-      "Background": "#021308"
+      "Color": "#6ee0f3",
+      "Background": "#091214"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.stopwatch",
@@ -6983,13 +4379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ad48d0",
-      "Background": "#0e0611"
+      "Color": "#5964de",
+      "Background": "#070812"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.msg",
@@ -6998,13 +4389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef57e9",
-      "Background": "#130713"
+      "Color": "#eb8cd4",
+      "Background": "#130b11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.msgMember",
@@ -7013,13 +4399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c1f2a0",
-      "Background": "#10140d"
+      "Color": "#8152e1",
+      "Background": "#0a0612"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.msgSourceFilePath",
@@ -7028,13 +4409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#19fc42",
-      "Background": "#021505"
+      "Color": "#d35171",
+      "Background": "#110609"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.msgSourceLineNumber",
@@ -7043,13 +4419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9571dd",
-      "Background": "#0c0912"
+      "Color": "#89e594",
+      "Background": "#0b130c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.lastTimeSpan",
@@ -7058,13 +4429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#caec33",
-      "Background": "#101304"
+      "Color": "#e06bdf",
+      "Background": "#120812"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.count",
@@ -7073,13 +4439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#52f6b0",
-      "Background": "#06140e"
+      "Color": "#f6b126",
+      "Background": "#140e03"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.Elapsed",
@@ -7088,43 +4449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aace50",
-      "Background": "#0e1106"
-    },
-    {
-      "Name": "Scrutor.Scrutor",
-      "ParentName": "Scrutor",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef9a30",
-      "Background": "#130c04"
-    },
-    {
-      "Name": "Scrutor.Scrutor.ITypeSourceSelector",
-      "ParentName": "Scrutor.Scrutor",
-      "Type": {
-        "Text": "None"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#caa3d6",
-      "Background": "#100d11"
+      "Color": "#872de1",
+      "Background": "#0b0312"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.ElapsedMs",
@@ -7133,13 +4459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dc823e",
-      "Background": "#120a05"
+      "Color": "#fca68a",
+      "Background": "#150d0b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.ElapsedText",
@@ -7148,13 +4469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2e27d6",
-      "Background": "#030311"
+      "Color": "#07f017",
+      "Background": "#001401"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.Diff",
@@ -7163,13 +4479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e33556",
-      "Background": "#120407"
+      "Color": "#58c6dd",
+      "Background": "#071012"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.DiffMs",
@@ -7178,13 +4489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0bfbd4",
-      "Background": "#001411"
+      "Color": "#e051be",
+      "Background": "#12060f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.ctor(String,String,String,Int32)",
@@ -7193,88 +4499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb3d7d",
-      "Background": "#14050a"
-    },
-    {
-      "Name": "Scrutor.Microsoft",
-      "ParentName": "Scrutor",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ccb619",
-      "Background": "#110f02"
-    },
-    {
-      "Name": "Scrutor.Microsoft.Extensions",
-      "ParentName": "Scrutor.Microsoft",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7eefd0",
-      "Background": "#0a1311"
-    },
-    {
-      "Name": "Scrutor.Microsoft.Extensions.DependencyInjection",
-      "ParentName": "Scrutor.Microsoft.Extensions",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ffdef",
-      "Background": "#071513"
-    },
-    {
-      "Name": "Scrutor.Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions",
-      "ParentName": "Scrutor.Microsoft.Extensions.DependencyInjection",
-      "Type": {
-        "Text": "Parent"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d550d4",
-      "Background": "#110611"
-    },
-    {
-      "Name": "Scrutor.Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.Scan(IServiceCollection,Action\u00601)",
-      "ParentName": "Scrutor.Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions",
-      "Type": {
-        "Text": "None"
-      },
-      "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dfb507",
-      "Background": "#120f00"
+      "Color": "#3ac0d0",
+      "Background": "#041011"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.Start(String,String,String,Int32)",
@@ -7283,13 +4509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#edb438",
-      "Background": "#130f04"
+      "Color": "#bbc92a",
+      "Background": "#0f1003"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.Dispose()",
@@ -7298,13 +4519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e726c2",
-      "Background": "#130310"
+      "Color": "#dc5210",
+      "Background": "#120601"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.Stop()",
@@ -7313,13 +4529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f0abd8",
-      "Background": "#140e12"
+      "Color": "#4d20e2",
+      "Background": "#060212"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.Log(String,Timing",
@@ -7328,13 +4539,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f4e91b",
-      "Background": "#141302"
+      "Color": "#e34011",
+      "Background": "#120501"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.Log(String,Timing/StopParameter,String,String,Int32)",
@@ -7343,13 +4549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d48082",
-      "Background": "#110a0a"
+      "Color": "#5bd010",
+      "Background": "#071101"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.Log(Timing",
@@ -7358,13 +4559,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fe1a63",
-      "Background": "#150208"
+      "Color": "#1769e1",
+      "Background": "#010812"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.Log(Timing/StopParameter,String,String,Int32)",
@@ -7373,13 +4569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f5f779",
-      "Background": "#14140a"
+      "Color": "#ed67d8",
+      "Background": "#130812"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Timing.ToString()",
@@ -7388,13 +4579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d20f94",
-      "Background": "#11010c"
+      "Color": "#40d995",
+      "Background": "#05120c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IUIComponent.Ref",
@@ -7403,13 +4589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fd39fd",
-      "Background": "#150415"
+      "Color": "#fe13e6",
+      "Background": "#150113"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.$private",
@@ -7418,13 +4599,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0659c9",
-      "Background": "#000710"
+      "Color": "#c2f587",
+      "Background": "#10140b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.LeftMouseBtn",
@@ -7433,13 +4609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#590ceb",
-      "Background": "#070113"
+      "Color": "#c42ae8",
+      "Background": "#100313"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.EqualityContract",
@@ -7448,13 +4619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ceb114",
-      "Background": "#110e01"
+      "Color": "#51b6ea",
+      "Background": "#060f13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.Type",
@@ -7463,13 +4629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc1a6b",
-      "Background": "#150208"
+      "Color": "#6f38e8",
+      "Background": "#090413"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.Time",
@@ -7478,13 +4639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4446ff",
-      "Background": "#050515"
+      "Color": "#6bcd90",
+      "Background": "#08110c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.TargetId",
@@ -7493,13 +4649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e020de",
-      "Background": "#120212"
+      "Color": "#9fcf02",
+      "Background": "#0d1100"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.PointerId",
@@ -7508,13 +4659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8e1ed8",
-      "Background": "#0b0212"
+      "Color": "#e3b477",
+      "Background": "#120f09"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.PointerType",
@@ -7523,13 +4669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f9b491",
-      "Background": "#140f0c"
+      "Color": "#cb6685",
+      "Background": "#10080b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.OffsetX",
@@ -7538,13 +4679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#753bc9",
-      "Background": "#090410"
+      "Color": "#11d345",
+      "Background": "#011105"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.OffsetY",
@@ -7553,13 +4689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#08ca79",
-      "Background": "#00100a"
+      "Color": "#da34e0",
+      "Background": "#120412"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.ClientX",
@@ -7568,13 +4699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a6eb81",
-      "Background": "#0d130a"
+      "Color": "#8910cd",
+      "Background": "#0b0111"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.ClientY",
@@ -7583,13 +4709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c9a111",
-      "Background": "#100d01"
+      "Color": "#7ff70b",
+      "Background": "#0a1400"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.ScreenX",
@@ -7598,13 +4719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cfc6f8",
-      "Background": "#111014"
+      "Color": "#a88ff8",
+      "Background": "#0e0b14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.ScreenY",
@@ -7613,13 +4729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#19dfe7",
-      "Background": "#021213"
+      "Color": "#8cfc1e",
+      "Background": "#0b1502"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.PageX",
@@ -7628,13 +4739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fced46",
-      "Background": "#151305"
+      "Color": "#4ed9bd",
+      "Background": "#06120f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.PageY",
@@ -7643,13 +4749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a4ddad",
-      "Background": "#0d120e"
+      "Color": "#1162ee",
+      "Background": "#010813"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.MovementX",
@@ -7658,13 +4759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2ddca3",
-      "Background": "#03120d"
+      "Color": "#7ad9a4",
+      "Background": "#0a120d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.MovementY",
@@ -7673,13 +4769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3fe3d4",
-      "Background": "#051211"
+      "Color": "#b253e9",
+      "Background": "#0e0613"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.Button",
@@ -7688,13 +4779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#09c9ba",
-      "Background": "#00100f"
+      "Color": "#a63df1",
+      "Background": "#0d0514"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.Buttons",
@@ -7703,13 +4789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#79e2b0",
-      "Background": "#0a120e"
+      "Color": "#37c8e2",
+      "Background": "#041012"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.ShiftKey",
@@ -7718,13 +4799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#25fba5",
-      "Background": "#03140d"
+      "Color": "#3034ee",
+      "Background": "#040413"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.CtrlKey",
@@ -7733,13 +4809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8cb2e3",
-      "Background": "#0b0e12"
+      "Color": "#1490c9",
+      "Background": "#010c10"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.AltKey",
@@ -7748,13 +4819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fd0990",
-      "Background": "#15000c"
+      "Color": "#f004b5",
+      "Background": "#14000f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.DeltaX",
@@ -7763,13 +4829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#35d396",
-      "Background": "#04110c"
+      "Color": "#b8fe9c",
+      "Background": "#0f150d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.DeltaY",
@@ -7778,13 +4839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#caf063",
-      "Background": "#101408"
+      "Color": "#8eb6e0",
+      "Background": "#0b0f12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.DeltaZ",
@@ -7793,13 +4849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#57a5ec",
-      "Background": "#070d13"
+      "Color": "#90d92e",
+      "Background": "#0c1203"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.DeltaMode",
@@ -7808,13 +4859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e632b6",
-      "Background": "#13040f"
+      "Color": "#cd2c76",
+      "Background": "#110309"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.IsLeftButton",
@@ -7823,13 +4869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0838c",
-      "Background": "#110a0b"
+      "Color": "#82e5ff",
+      "Background": "#0a1315"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.ToString()",
@@ -7838,13 +4879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3bedb4",
-      "Background": "#04130f"
+      "Color": "#47e185",
+      "Background": "#05120b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.PrintMembers(StringBuilder)",
@@ -7853,13 +4889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c6e0b7",
-      "Background": "#10120f"
+      "Color": "#cc29d3",
+      "Background": "#110311"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.op_Inequality(MouseEvent,MouseEvent)",
@@ -7868,13 +4899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0df606",
-      "Background": "#011400"
+      "Color": "#029ae8",
+      "Background": "#000c13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.op_Equality(MouseEvent,MouseEvent)",
@@ -7883,13 +4909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fe1ea2",
-      "Background": "#15020d"
+      "Color": "#cb04e9",
+      "Background": "#100013"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.GetHashCode()",
@@ -7898,13 +4919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e18767",
-      "Background": "#120b08"
+      "Color": "#0919f4",
+      "Background": "#000214"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.Equals(Object)",
@@ -7913,13 +4929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eb63c4",
-      "Background": "#130810"
+      "Color": "#d0c9ae",
+      "Background": "#11100e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.Equals(MouseEvent)",
@@ -7928,13 +4939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#90e5ab",
-      "Background": "#0c130e"
+      "Color": "#de7cd2",
+      "Background": "#120a11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.\u003CClone\u003E$()",
@@ -7943,13 +4949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef4e2f",
-      "Background": "#130603"
+      "Color": "#f49962",
+      "Background": "#140c08"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.ctor(MouseEvent)",
@@ -7958,13 +4959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6a66f6",
-      "Background": "#080814"
+      "Color": "#325de5",
+      "Background": "#040713"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEvent.ctor()",
@@ -7973,13 +4969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 670,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1b8bf0",
-      "Background": "#020b14"
+      "Color": "#b265d9",
+      "Background": "#0e0812"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.EqualityContract",
@@ -7988,13 +4979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c1cf00",
-      "Background": "#101100"
+      "Color": "#9a2feb",
+      "Background": "#0c0313"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.Type",
@@ -8003,13 +4989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e32466",
-      "Background": "#120308"
+      "Color": "#f6906f",
+      "Background": "#140c09"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.TargetId",
@@ -8018,13 +4999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#682deb",
-      "Background": "#080313"
+      "Color": "#d99d17",
+      "Background": "#120d01"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.Detail",
@@ -8033,13 +5009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#68eaaa",
-      "Background": "#08130e"
+      "Color": "#36b5e9",
+      "Background": "#040f13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.Touches",
@@ -8048,13 +5019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#afcda4",
-      "Background": "#0e110d"
+      "Color": "#dbc582",
+      "Background": "#12100a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.TargetTouches",
@@ -8063,13 +5029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e89213",
-      "Background": "#130c01"
+      "Color": "#da5f07",
+      "Background": "#120700"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.ChangedTouches",
@@ -8078,13 +5039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9a39f6",
-      "Background": "#0c0414"
+      "Color": "#16d807",
+      "Background": "#011200"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.CtrlKey",
@@ -8093,13 +5049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9ab7fe",
-      "Background": "#0c0f15"
+      "Color": "#64e78b",
+      "Background": "#08130b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.ShiftKey",
@@ -8108,13 +5059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e32b56",
-      "Background": "#120307"
+      "Color": "#add2e9",
+      "Background": "#0e1113"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.AltKey",
@@ -8123,13 +5069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0ed9bb",
-      "Background": "#01120f"
+      "Color": "#dbc38a",
+      "Background": "#12100b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.MetaKey",
@@ -8138,13 +5079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#48e59b",
-      "Background": "#06130c"
+      "Color": "#df90de",
+      "Background": "#120c12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.ToString()",
@@ -8153,13 +5089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fefab4",
-      "Background": "#15140f"
+      "Color": "#f78d98",
+      "Background": "#140b0c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.PrintMembers(StringBuilder)",
@@ -8168,13 +5099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2dda5d",
-      "Background": "#031207"
+      "Color": "#37d0a4",
+      "Background": "#04110d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.op_Inequality(TouchEvent,TouchEvent)",
@@ -8183,13 +5109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d4ea58",
-      "Background": "#111307"
+      "Color": "#140bc9",
+      "Background": "#010010"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.op_Equality(TouchEvent,TouchEvent)",
@@ -8198,13 +5119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a2db6d",
-      "Background": "#0d1209"
+      "Color": "#f8d204",
+      "Background": "#141100"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.GetHashCode()",
@@ -8213,13 +5129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5064c9",
-      "Background": "#060810"
+      "Color": "#c20ecd",
+      "Background": "#100111"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.Equals(Object)",
@@ -8228,13 +5139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ffcbc8",
-      "Background": "#151010"
+      "Color": "#19e706",
+      "Background": "#021300"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.Equals(TouchEvent)",
@@ -8243,13 +5149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#24effb",
-      "Background": "#031314"
+      "Color": "#bcb0f5",
+      "Background": "#0f0e14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.\u003CClone\u003E$()",
@@ -8258,13 +5159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#79fb74",
-      "Background": "#0a1409"
+      "Color": "#2cd1cc",
+      "Background": "#031111"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.ctor(TouchEvent)",
@@ -8273,13 +5169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#06cf7b",
-      "Background": "#00110a"
+      "Color": "#67b9dc",
+      "Background": "#080f12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchEvent.ctor()",
@@ -8288,13 +5179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a295fa",
-      "Background": "#0d0c14"
+      "Color": "#7e30f8",
+      "Background": "#0a0414"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.EqualityContract",
@@ -8303,13 +5189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#132ddd",
-      "Background": "#010312"
+      "Color": "#71f736",
+      "Background": "#091404"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.Identifier",
@@ -8318,13 +5199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e775b0",
-      "Background": "#13090e"
+      "Color": "#3ef5d5",
+      "Background": "#051411"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.ScreenX",
@@ -8333,13 +5209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1cf73",
-      "Background": "#111109"
+      "Color": "#cb6116",
+      "Background": "#100801"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.ScreenY",
@@ -8348,13 +5219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e62d6f",
-      "Background": "#130309"
+      "Color": "#43dfd5",
+      "Background": "#051211"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.ClientX",
@@ -8363,13 +5229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ef8e9",
-      "Background": "#061413"
+      "Color": "#f8ac1a",
+      "Background": "#140e02"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.ClientY",
@@ -8378,13 +5239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#30d83f",
-      "Background": "#041205"
+      "Color": "#43dae0",
+      "Background": "#051212"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.PageX",
@@ -8393,13 +5249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d87feb",
-      "Background": "#120a13"
+      "Color": "#35e06b",
+      "Background": "#041208"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.PageY",
@@ -8408,13 +5259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ccab21",
-      "Background": "#110e02"
+      "Color": "#d509be",
+      "Background": "#11000f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.ToString()",
@@ -8423,13 +5269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#72cc30",
-      "Background": "#091104"
+      "Color": "#fbe3e7",
+      "Background": "#141213"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.PrintMembers(StringBuilder)",
@@ -8438,13 +5279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#53e5ff",
-      "Background": "#061315"
+      "Color": "#6df3d3",
+      "Background": "#091411"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.op_Inequality(TouchPoint,TouchPoint)",
@@ -8453,13 +5289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1e33f9",
-      "Background": "#020414"
+      "Color": "#8da7ea",
+      "Background": "#0b0d13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.op_Equality(TouchPoint,TouchPoint)",
@@ -8468,13 +5299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#50e41c",
-      "Background": "#061302"
+      "Color": "#07d949",
+      "Background": "#001206"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.GetHashCode()",
@@ -8483,13 +5309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aaa2d1",
-      "Background": "#0e0d11"
+      "Color": "#f3e506",
+      "Background": "#141300"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.Equals(Object)",
@@ -8498,13 +5319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5d204",
-      "Background": "#101100"
+      "Color": "#bf79df",
+      "Background": "#0f0a12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.Equals(TouchPoint)",
@@ -8513,13 +5329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f32400",
-      "Background": "#140300"
+      "Color": "#cb7273",
+      "Background": "#100909"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.\u003CClone\u003E$()",
@@ -8528,13 +5339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#75dd83",
-      "Background": "#09120a"
+      "Color": "#8ccdc5",
+      "Background": "#0b1110"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.ctor(TouchPoint)",
@@ -8543,13 +5349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9e91fd",
-      "Background": "#0d0c15"
+      "Color": "#7fb5ed",
+      "Background": "#0a0f13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.TouchPoint.ctor()",
@@ -8558,13 +5359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e2fbe0",
-      "Background": "#121412"
+      "Color": "#dd4b4f",
+      "Background": "#120606"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.EqualityContract",
@@ -8573,13 +5369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d30aaa",
-      "Background": "#11000e"
+      "Color": "#4060d8",
+      "Background": "#050812"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.Type",
@@ -8588,13 +5379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cc83f9",
-      "Background": "#110a14"
+      "Color": "#f9968a",
+      "Background": "#140c0b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.TargetId",
@@ -8603,13 +5389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#53fad6",
-      "Background": "#061411"
+      "Color": "#7dcf3e",
+      "Background": "#0a1105"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.Center",
@@ -8618,13 +5399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#46fdcc",
-      "Background": "#051511"
+      "Color": "#95abfd",
+      "Background": "#0c0e15"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.Pointers",
@@ -8633,13 +5409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6d4ee5",
-      "Background": "#090613"
+      "Color": "#e0ed57",
+      "Background": "#121307"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.DeltaX",
@@ -8648,13 +5419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#778cda",
-      "Background": "#090b12"
+      "Color": "#eece2b",
+      "Background": "#131103"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.DeltaY",
@@ -8663,13 +5429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#53d143",
-      "Background": "#061105"
+      "Color": "#3fce28",
+      "Background": "#051103"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.Rotation",
@@ -8678,13 +5439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#73ca3d",
-      "Background": "#091005"
+      "Color": "#e946d4",
+      "Background": "#130511"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.IsFinal",
@@ -8693,13 +5449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d19b39",
-      "Background": "#110c04"
+      "Color": "#fdf0ef",
+      "Background": "#151413"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.ToString()",
@@ -8708,13 +5459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2efd75",
-      "Background": "#031509"
+      "Color": "#70dfdc",
+      "Background": "#091212"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.PrintMembers(StringBuilder)",
@@ -8723,13 +5469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5f53d8",
-      "Background": "#070612"
+      "Color": "#d0b0e6",
+      "Background": "#110e13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.op_Inequality(HammerEvent,HammerEvent)",
@@ -8738,13 +5479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3ce304",
-      "Background": "#051200"
+      "Color": "#072eea",
+      "Background": "#000313"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.op_Equality(HammerEvent,HammerEvent)",
@@ -8753,13 +5489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c227d6",
-      "Background": "#100311"
+      "Color": "#eeb823",
+      "Background": "#130f02"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.GetHashCode()",
@@ -8768,13 +5499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#70e91d",
-      "Background": "#091302"
+      "Color": "#d0d824",
+      "Background": "#111203"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.Equals(Object)",
@@ -8783,13 +5509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1b4c7",
-      "Background": "#140f10"
+      "Color": "#d3e2b9",
+      "Background": "#11120f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.Equals(HammerEvent)",
@@ -8798,13 +5519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b1ddf6",
-      "Background": "#0e1214"
+      "Color": "#73fab3",
+      "Background": "#09140e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.\u003CClone\u003E$()",
@@ -8813,13 +5529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d599ba",
-      "Background": "#110c0f"
+      "Color": "#d3faef",
+      "Background": "#111413"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.ctor(HammerEvent)",
@@ -8828,13 +5539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a835d1",
-      "Background": "#0e0411"
+      "Color": "#f8b7e7",
+      "Background": "#140f13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerEvent.ctor()",
@@ -8843,13 +5549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb719e",
-      "Background": "#14090d"
+      "Color": "#33db35",
+      "Background": "#041204"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.EqualityContract",
@@ -8858,13 +5559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9fd7aa",
-      "Background": "#0d110e"
+      "Color": "#8bd489",
+      "Background": "#0b110b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.X",
@@ -8873,13 +5569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2b77cc",
-      "Background": "#030911"
+      "Color": "#cf3df7",
+      "Background": "#110514"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.Y",
@@ -8888,13 +5579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1da06",
-      "Background": "#141200"
+      "Color": "#aacd2a",
+      "Background": "#0e1103"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.ToString()",
@@ -8903,13 +5589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f99855",
-      "Background": "#140c07"
+      "Color": "#c8efd7",
+      "Background": "#101311"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.PrintMembers(StringBuilder)",
@@ -8918,13 +5599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#01fb4d",
-      "Background": "#001406"
+      "Color": "#58e877",
+      "Background": "#071309"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.op_Inequality(HammerPoint,HammerPoint)",
@@ -8933,13 +5609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f28e8e",
-      "Background": "#140b0b"
+      "Color": "#efd5d3",
+      "Background": "#131111"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.op_Equality(HammerPoint,HammerPoint)",
@@ -8948,13 +5619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#010cfe",
-      "Background": "#000115"
+      "Color": "#90cd71",
+      "Background": "#0c1109"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.GetHashCode()",
@@ -8963,13 +5629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9ccdde",
-      "Background": "#0d1112"
+      "Color": "#40db3a",
+      "Background": "#051204"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.Equals(Object)",
@@ -8978,13 +5639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2ae4b0",
-      "Background": "#03130e"
+      "Color": "#88b1d8",
+      "Background": "#0b0e12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.Equals(HammerPoint)",
@@ -8993,13 +5649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#09dfb0",
-      "Background": "#00120e"
+      "Color": "#0d45de",
+      "Background": "#010512"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.\u003CClone\u003E$()",
@@ -9008,13 +5659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#02e74e",
-      "Background": "#001306"
+      "Color": "#dbda3c",
+      "Background": "#121205"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.ctor(HammerPoint)",
@@ -9023,13 +5669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d99738",
-      "Background": "#120c04"
+      "Color": "#12c2dc",
+      "Background": "#011012"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.HammerPoint.ctor()",
@@ -9038,13 +5679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f4d425",
-      "Background": "#141103"
+      "Color": "#6bec43",
+      "Background": "#081305"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.MouseWheel",
@@ -9053,13 +5689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d16872",
-      "Background": "#110809"
+      "Color": "#3cf2ce",
+      "Background": "#051411"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.MouseMove",
@@ -9068,13 +5699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec86fc",
-      "Background": "#130b15"
+      "Color": "#d3f6c9",
+      "Background": "#111410"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.MouseDown",
@@ -9083,13 +5709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6db2d5",
-      "Background": "#090e11"
+      "Color": "#df520d",
+      "Background": "#120601"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.MouseUp",
@@ -9098,13 +5719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5df9b1",
-      "Background": "#07140e"
+      "Color": "#f94e85",
+      "Background": "#14060b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.LeftClick",
@@ -9113,13 +5729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fe249c",
-      "Background": "#15030d"
+      "Color": "#fc7e53",
+      "Background": "#150a06"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.LeftDblClick",
@@ -9128,13 +5739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d03a9f",
-      "Background": "#11040d"
+      "Color": "#76e562",
+      "Background": "#091308"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.add_MouseWheel(Action\u00601)",
@@ -9143,13 +5749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#76edec",
-      "Background": "#091313"
+      "Color": "#dd9edb",
+      "Background": "#120d12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.remove_MouseWheel(Action\u00601)",
@@ -9158,13 +5759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1f189",
-      "Background": "#11140b"
+      "Color": "#8430dd",
+      "Background": "#0b0412"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.add_MouseMove(Action\u00601)",
@@ -9173,13 +5769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cb917b",
-      "Background": "#100c0a"
+      "Color": "#7293fe",
+      "Background": "#090c15"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.remove_MouseMove(Action\u00601)",
@@ -9188,13 +5779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5606de",
-      "Background": "#070012"
+      "Color": "#d55221",
+      "Background": "#110602"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.add_MouseDown(Action\u00601)",
@@ -9203,13 +5789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f3b809",
-      "Background": "#140f00"
+      "Color": "#f5ee9f",
+      "Background": "#14130d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.remove_MouseDown(Action\u00601)",
@@ -9218,13 +5799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#78b9d9",
-      "Background": "#0a0f12"
+      "Color": "#ea567f",
+      "Background": "#13070a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.add_MouseUp(Action\u00601)",
@@ -9233,13 +5809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d8dee3",
-      "Background": "#121212"
+      "Color": "#1add7a",
+      "Background": "#02120a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.remove_MouseUp(Action\u00601)",
@@ -9248,13 +5819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#76a8cf",
-      "Background": "#090e11"
+      "Color": "#7d32f9",
+      "Background": "#0a0414"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.add_LeftClick(Action\u00601)",
@@ -9263,13 +5829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5eb28",
-      "Background": "#101303"
+      "Color": "#de3164",
+      "Background": "#120408"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.remove_LeftClick(Action\u00601)",
@@ -9278,13 +5839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c124ed",
-      "Background": "#100313"
+      "Color": "#aefd13",
+      "Background": "#0e1501"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.add_LeftDblClick(Action\u00601)",
@@ -9293,13 +5849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d7be22",
-      "Background": "#110f02"
+      "Color": "#c01dff",
+      "Background": "#100215"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.remove_LeftDblClick(Action\u00601)",
@@ -9308,13 +5859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b0bdde",
-      "Background": "#0e0f12"
+      "Color": "#ad42d7",
+      "Background": "#0e0511"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IMouseEventService.InitAsync()",
@@ -9323,13 +5869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fe1da8",
-      "Background": "#15020e"
+      "Color": "#3cf470",
+      "Background": "#051409"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.$private",
@@ -9338,13 +5879,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#48f4ef",
-      "Background": "#061413"
+      "Color": "#9b23d0",
+      "Background": "#0c0211"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.jSInteropService",
@@ -9353,13 +5889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ef89c",
-      "Background": "#07140d"
+      "Color": "#e54043",
+      "Background": "#130505"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.uiService",
@@ -9368,13 +5899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ca5340",
-      "Background": "#100605"
+      "Color": "#f54ef0",
+      "Background": "#140614"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.ClickDelay",
@@ -9383,13 +5909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e86b55",
-      "Background": "#130807"
+      "Color": "#4ae031",
+      "Background": "#061204"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.ClickTimeout",
@@ -9398,13 +5919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#48c0fc",
-      "Background": "#061015"
+      "Color": "#8c6ff4",
+      "Background": "#0b0914"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.clickTimer",
@@ -9413,13 +5929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef918b",
-      "Background": "#130c0b"
+      "Color": "#eacfa7",
+      "Background": "#13110d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.timerRunning",
@@ -9428,13 +5939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d8ef3f",
-      "Background": "#121305"
+      "Color": "#8c45f9",
+      "Background": "#0b0514"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.leftMouseDown",
@@ -9443,13 +5949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2ef3bd",
-      "Background": "#03140f"
+      "Color": "#b33af1",
+      "Background": "#0e0414"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.leftMouseDownTime",
@@ -9458,13 +5959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7cd18f",
-      "Background": "#0a110b"
+      "Color": "#7d09e7",
+      "Background": "#0a0013"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.activePointers",
@@ -9473,13 +5969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f593b1",
-      "Background": "#140c0e"
+      "Color": "#efd94b",
+      "Background": "#131206"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.MouseWheel",
@@ -9488,13 +5979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e80820",
-      "Background": "#130002"
+      "Color": "#7cf41a",
+      "Background": "#0a1402"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.MouseMove",
@@ -9503,13 +5989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#89de63",
-      "Background": "#0b1208"
+      "Color": "#5a66df",
+      "Background": "#070812"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.MouseDown",
@@ -9518,13 +5999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2b8dce",
-      "Background": "#030b11"
+      "Color": "#ef71ec",
+      "Background": "#130913"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.MouseUp",
@@ -9533,13 +6009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#10dfe4",
-      "Background": "#011213"
+      "Color": "#b082f0",
+      "Background": "#0e0a14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.LeftClick",
@@ -9548,13 +6019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cd6483",
-      "Background": "#11080a"
+      "Color": "#b823d7",
+      "Background": "#0f0211"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.LeftDblClick",
@@ -9563,13 +6029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c2ecab",
-      "Background": "#10130e"
+      "Color": "#83e6d2",
+      "Background": "#0a1311"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.ctor(IJSInteropService,IUIService)",
@@ -9578,13 +6039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eab98c",
-      "Background": "#130f0b"
+      "Color": "#370cd8",
+      "Background": "#040112"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.add_MouseWheel(Action\u00601)",
@@ -9593,13 +6049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#46d48d",
-      "Background": "#05110b"
+      "Color": "#a701ef",
+      "Background": "#0d0013"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.remove_MouseWheel(Action\u00601)",
@@ -9608,13 +6059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6dd41a",
-      "Background": "#091102"
+      "Color": "#3ae5e1",
+      "Background": "#041312"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.add_MouseMove(Action\u00601)",
@@ -9623,13 +6069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bfabee",
-      "Background": "#0f0e13"
+      "Color": "#f47a00",
+      "Background": "#140a00"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.remove_MouseMove(Action\u00601)",
@@ -9638,13 +6079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dacd9c",
-      "Background": "#12110d"
+      "Color": "#3c09df",
+      "Background": "#050012"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.add_MouseDown(Action\u00601)",
@@ -9653,13 +6089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ad808",
-      "Background": "#061200"
+      "Color": "#b5a5fd",
+      "Background": "#0f0d15"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.remove_MouseDown(Action\u00601)",
@@ -9668,13 +6099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e53648",
-      "Background": "#130406"
+      "Color": "#dda6ad",
+      "Background": "#120d0e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.add_MouseUp(Action\u00601)",
@@ -9683,13 +6109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#85f721",
-      "Background": "#0b1402"
+      "Color": "#67d630",
+      "Background": "#081104"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.remove_MouseUp(Action\u00601)",
@@ -9698,13 +6119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee35f9",
-      "Background": "#130414"
+      "Color": "#f6d3c2",
+      "Background": "#141110"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.add_LeftClick(Action\u00601)",
@@ -9713,13 +6129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#52afec",
-      "Background": "#060e13"
+      "Color": "#74ff25",
+      "Background": "#091503"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.remove_LeftClick(Action\u00601)",
@@ -9728,13 +6139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ae79f4",
-      "Background": "#0e0a14"
+      "Color": "#aaf1f8",
+      "Background": "#0e1414"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.add_LeftDblClick(Action\u00601)",
@@ -9743,13 +6149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f96f3a",
-      "Background": "#140904"
+      "Color": "#35c8e4",
+      "Background": "#041013"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.remove_LeftDblClick(Action\u00601)",
@@ -9758,13 +6159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#175ed8",
-      "Background": "#010712"
+      "Color": "#84c5fe",
+      "Background": "#0b1015"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.InitAsync()",
@@ -9773,13 +6169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d2c5b8",
-      "Background": "#11100f"
+      "Color": "#a3d194",
+      "Background": "#0d110c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.MouseEventCallback(MouseEvent)",
@@ -9788,13 +6179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cf7642",
-      "Background": "#110905"
+      "Color": "#f3e704",
+      "Background": "#141300"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.PointerEventCallback(MouseEvent)",
@@ -9803,13 +6189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee2dc9",
-      "Background": "#130310"
+      "Color": "#c4edb6",
+      "Background": "#10130f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.OnMouseWheelEvent(MouseEvent)",
@@ -9818,13 +6199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5bf097",
-      "Background": "#07140c"
+      "Color": "#3809c9",
+      "Background": "#040010"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.OnPointerDownEvent(MouseEvent)",
@@ -9833,13 +6209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#01dbe7",
-      "Background": "#001213"
+      "Color": "#c3c967",
+      "Background": "#101008"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.OnPointerMoveEvent(MouseEvent)",
@@ -9848,13 +6219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ab46f4",
-      "Background": "#0e0514"
+      "Color": "#6b53f9",
+      "Background": "#080614"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.OnPoinerUpEvent(MouseEvent)",
@@ -9863,13 +6229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#04d640",
-      "Background": "#001105"
+      "Color": "#acaef5",
+      "Background": "#0e0e14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.OnLeftClickTimer(Object)",
@@ -9878,13 +6239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce15b0",
-      "Background": "#11010e"
+      "Color": "#963cd1",
+      "Background": "#0c0511"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.MouseEventService.OnLeftClickEvent(MouseEvent)",
@@ -9893,13 +6249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee3c65",
-      "Background": "#130508"
+      "Color": "#92ace1",
+      "Background": "#0c0e12"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IUIService.OnUIStateChange",
@@ -9908,13 +6259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#423cd9",
-      "Background": "#050512"
+      "Color": "#62d663",
+      "Background": "#081108"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IUIService.add_OnUIStateChange(Action)",
@@ -9923,13 +6269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#33f59c",
-      "Background": "#04140d"
+      "Color": "#d97963",
+      "Background": "#120a08"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IUIService.remove_OnUIStateChange(Action)",
@@ -9938,13 +6279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8a87ed",
-      "Background": "#0b0b13"
+      "Color": "#7efa20",
+      "Background": "#0a1402"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.IUIService.TriggerUIStateChange()",
@@ -9953,13 +6289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#96e479",
-      "Background": "#0c130a"
+      "Color": "#c2e8c6",
+      "Background": "#101310"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.UIService.$private",
@@ -9968,13 +6299,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#00d9a4",
-      "Background": "#00120d"
+      "Color": "#ddb4e9",
+      "Background": "#120f13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.UIService.OnUIStateChange",
@@ -9983,13 +6309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#26cdcb",
-      "Background": "#031110"
+      "Color": "#60ef6f",
+      "Background": "#081309"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.UIService.add_OnUIStateChange(Action)",
@@ -9998,13 +6319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e8c066",
-      "Background": "#131008"
+      "Color": "#deed6d",
+      "Background": "#121309"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.UIService.remove_OnUIStateChange(Action)",
@@ -10013,13 +6329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b700e5",
-      "Background": "#0f0013"
+      "Color": "#e34ed0",
+      "Background": "#120611"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.UIService.TriggerUIStateChange()",
@@ -10028,13 +6339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#72e32a",
-      "Background": "#091203"
+      "Color": "#88ca90",
+      "Background": "#0b100c"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.UI.UIService.ctor()",
@@ -10043,13 +6349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#408ad6",
-      "Background": "#050b11"
+      "Color": "#d6e166",
+      "Background": "#111208"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.LogFileName",
@@ -10058,13 +6359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e75b50",
-      "Background": "#130706"
+      "Color": "#1ff551",
+      "Background": "#021406"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.LevelInfo",
@@ -10073,13 +6369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#10ce31",
-      "Background": "#011104"
+      "Color": "#32cb59",
+      "Background": "#041007"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.MaxLogFileSize",
@@ -10088,13 +6379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5aaf4",
-      "Background": "#100e14"
+      "Color": "#35ccb2",
+      "Background": "#04110e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.logMessages",
@@ -10103,13 +6389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b4fbfb",
-      "Background": "#0f1414"
+      "Color": "#cfdf10",
+      "Background": "#111201"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.reader",
@@ -10118,13 +6399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#97d072",
-      "Background": "#0c1109"
+      "Color": "#49e1b0",
+      "Background": "#06120e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.syncRoot",
@@ -10133,13 +6409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e01332",
-      "Background": "#120104"
+      "Color": "#8a0ed7",
+      "Background": "#0b0111"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.prefixLength",
@@ -10148,13 +6419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0bfbe7",
-      "Background": "#001413"
+      "Color": "#f88dc0",
+      "Background": "#140b10"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.LogPath",
@@ -10163,13 +6429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#28dbcd",
-      "Background": "#031211"
+      "Color": "#9f0bd3",
+      "Background": "#0d0011"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.isFileLog",
@@ -10178,13 +6439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#beed83",
-      "Background": "#0f130a"
+      "Color": "#4fd0e5",
+      "Background": "#061113"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.isConsoleLog",
@@ -10193,13 +6449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f944f6",
-      "Background": "#140514"
+      "Color": "#ddf9e3",
+      "Background": "#121412"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.doneTask",
@@ -10208,13 +6459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1cc0d3",
-      "Background": "#021011"
+      "Color": "#514dfb",
+      "Background": "#060614"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.Enable(Boolean,Boolean)",
@@ -10223,13 +6469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bd7fdc",
-      "Background": "#0f0a12"
+      "Color": "#6e1bd2",
+      "Background": "#090211"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.cctor()",
@@ -10238,13 +6479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1edaca",
-      "Background": "#021210"
+      "Color": "#07d067",
+      "Background": "#001108"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.CloseAsync()",
@@ -10253,13 +6489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c0e0df",
-      "Background": "#101212"
+      "Color": "#eae5d1",
+      "Background": "#131311"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.Write(String,String,String,String,Int32)",
@@ -10268,13 +6499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#90db84",
-      "Background": "#0c120b"
+      "Color": "#7793ea",
+      "Background": "#090c13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.Init(String,String)",
@@ -10283,13 +6509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#40d819",
-      "Background": "#051202"
+      "Color": "#97f82a",
+      "Background": "#0c1403"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.LogDone(String,String,String,Int32)",
@@ -10298,13 +6519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d04c3c",
-      "Background": "#110605"
+      "Color": "#acef13",
+      "Background": "#0e1301"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.ProcessLogsAsync()",
@@ -10313,13 +6529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4433f9",
-      "Background": "#050414"
+      "Color": "#0520ec",
+      "Background": "#000213"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.ToRelativeFilePath(String)",
@@ -10328,13 +6539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#86c902",
-      "Background": "#0b1000"
+      "Color": "#fc7fa2",
+      "Background": "#150a0d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.ToLogLine(String,String,String,String,Int32)",
@@ -10343,13 +6549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4587f8",
-      "Background": "#050b14"
+      "Color": "#46b1ff",
+      "Background": "#050e15"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.QueueLogMessage(ConfigLogger",
@@ -10358,13 +6559,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8fefb5",
-      "Background": "#0b130f"
+      "Color": "#48d016",
+      "Background": "#061101"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.QueueLogMessage(ConfigLogger.$private",
@@ -10373,13 +6569,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f2fde5",
-      "Background": "#141513"
+      "Color": "#cecacc",
+      "Background": "#111011"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.QueueLogMessage(ConfigLogger/LogMsg)",
@@ -10388,13 +6579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#31dcd3",
-      "Background": "#041211"
+      "Color": "#dc0d75",
+      "Background": "#120109"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.WriteToFile(IReadOnlyCollection\u00601)",
@@ -10403,13 +6589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc4b82",
-      "Background": "#15060a"
+      "Color": "#f8c479",
+      "Background": "#14100a"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger.MoveLargeLogFile()",
@@ -10418,13 +6599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#27f1e2",
-      "Background": "#031412"
+      "Color": "#a6a4ef",
+      "Background": "#0d0d13"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.EqualityContract",
@@ -10433,13 +6609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#659ee6",
-      "Background": "#080d13"
+      "Color": "#0ff089",
+      "Background": "#01140b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.Level",
@@ -10448,13 +6619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#65a5dd",
-      "Background": "#080d12"
+      "Color": "#bedd34",
+      "Background": "#0f1204"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.Msg",
@@ -10463,13 +6629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f742dd",
-      "Background": "#140512"
+      "Color": "#38ee29",
+      "Background": "#041303"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.MemberName",
@@ -10478,13 +6639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e69d53",
-      "Background": "#130d06"
+      "Color": "#d97cc1",
+      "Background": "#120a10"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.SourceFilePath",
@@ -10493,13 +6649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ea6560",
-      "Background": "#130808"
+      "Color": "#9c71e7",
+      "Background": "#0d0913"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.SourceLineNumber",
@@ -10508,13 +6659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a4e0d8",
-      "Background": "#0d1212"
+      "Color": "#f466f0",
+      "Background": "#140814"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.ctor(String,String,String,String,Int32)",
@@ -10523,13 +6669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#80e2b6",
-      "Background": "#0a120f"
+      "Color": "#30b3f4",
+      "Background": "#040e14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.ToString()",
@@ -10538,13 +6679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#faad84",
-      "Background": "#140e0b"
+      "Color": "#1f58e2",
+      "Background": "#020712"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.PrintMembers(StringBuilder)",
@@ -10553,13 +6689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5a8e9",
-      "Background": "#100e13"
+      "Color": "#fdc7ac",
+      "Background": "#15100e"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.op_Inequality(ConfigLogger",
@@ -10568,13 +6699,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d198c8",
-      "Background": "#110c10"
+      "Color": "#3d6ef2",
+      "Background": "#050914"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.op_Inequality(ConfigLogger/LogMsg,ConfigLogger",
@@ -10583,13 +6709,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#76d07a",
-      "Background": "#09110a"
+      "Color": "#e92684",
+      "Background": "#13030b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.op_Inequality(ConfigLogger/LogMsg,ConfigLogger/LogMsg)",
@@ -10598,13 +6719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b4f338",
-      "Background": "#0f1404"
+      "Color": "#e37b58",
+      "Background": "#120a07"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.op_Equality(ConfigLogger",
@@ -10613,13 +6729,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4a77cd",
-      "Background": "#060911"
+      "Color": "#f452d6",
+      "Background": "#140611"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.op_Equality(ConfigLogger/LogMsg,ConfigLogger",
@@ -10628,13 +6739,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9696e3",
-      "Background": "#0c0c12"
+      "Color": "#67fe4a",
+      "Background": "#081506"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.op_Equality(ConfigLogger/LogMsg,ConfigLogger/LogMsg)",
@@ -10643,13 +6749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b227c9",
-      "Background": "#0e0310"
+      "Color": "#ed63c5",
+      "Background": "#130810"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.GetHashCode()",
@@ -10658,13 +6759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0eebcb",
-      "Background": "#011310"
+      "Color": "#e70b05",
+      "Background": "#130000"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.Equals(Object)",
@@ -10673,13 +6769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#51de2f",
-      "Background": "#061203"
+      "Color": "#e2168c",
+      "Background": "#12010b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.Equals(ConfigLogger",
@@ -10688,13 +6779,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f121bc",
-      "Background": "#14020f"
+      "Color": "#23d656",
+      "Background": "#021107"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.Equals(ConfigLogger/LogMsg)",
@@ -10703,13 +6789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#21f9cd",
-      "Background": "#021411"
+      "Color": "#eccbb6",
+      "Background": "#13100f"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.\u003CClone\u003E$()",
@@ -10718,13 +6799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#abf477",
-      "Background": "#0e1409"
+      "Color": "#839cf4",
+      "Background": "#0a0d14"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.ctor(ConfigLogger",
@@ -10733,13 +6809,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef0ad1",
-      "Background": "#130011"
+      "Color": "#3bd4c6",
+      "Background": "#041110"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.ctor(ConfigLogger/LogMsg)",
@@ -10748,13 +6819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#92de43",
-      "Background": "#0c1205"
+      "Color": "#4c9bd4",
+      "Background": "#060c11"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.ConfigLogger/LogMsg.Deconstruct(String,String,String,String,Int32)",
@@ -10763,13 +6829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#21dd3b",
-      "Background": "#021204"
+      "Color": "#cc60f2",
+      "Background": "#110814"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.$private",
@@ -10778,13 +6839,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f39f45",
-      "Background": "#140d05"
+      "Color": "#dc6fc3",
+      "Background": "#120910"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.LevelDebug",
@@ -10793,13 +6849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d17292",
-      "Background": "#11090c"
+      "Color": "#bbd12b",
+      "Background": "#0f1103"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.LevelInfo",
@@ -10808,13 +6859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#29faaf",
-      "Background": "#03140e"
+      "Color": "#63eacb",
+      "Background": "#081310"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.LevelWarn",
@@ -10823,13 +6869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc4c40",
-      "Background": "#150605"
+      "Color": "#9ee825",
+      "Background": "#0d1303"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.LevelError",
@@ -10838,13 +6879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#465de6",
-      "Background": "#050713"
+      "Color": "#85dd55",
+      "Background": "#0b1207"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Debug(String,String,String,Int32)",
@@ -10853,13 +6889,28 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7dace6",
-      "Background": "#0a0e13"
+      "Color": "#b1cc21",
+      "Background": "#0e1102"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Log",
+      "ParentName": "Dependinator.Dependinator.Utils.Logging.Log",
+      "Type": {
+        "Text": "Parent"
+      },
+      "Description": "",
+      "Color": "#77d5d5",
+      "Background": "#091111"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Log/StopParameter,String,String,Int32)",
+      "ParentName": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Log",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#d704f9",
+      "Background": "#110014"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Object,Log",
@@ -10868,13 +6919,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e02f9d",
-      "Background": "#12030d"
+      "Color": "#0dede8",
+      "Background": "#011313"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Object,Log/StopParameter,String,String,Int32)",
@@ -10883,13 +6929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d03525",
-      "Background": "#110403"
+      "Color": "#17e51f",
+      "Background": "#011302"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Object,Object,Log",
@@ -10898,13 +6939,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c3bef1",
-      "Background": "#100f14"
+      "Color": "#a14cff",
+      "Background": "#0d0615"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Object,Object,Log/StopParameter,String,String,Int32)",
@@ -10913,13 +6949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#11d338",
-      "Background": "#011104"
+      "Color": "#02e4a0",
+      "Background": "#00130d"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Object,Object,Object,Log",
@@ -10928,13 +6959,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4e0dff",
-      "Background": "#060115"
+      "Color": "#37ec1f",
+      "Background": "#041302"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Object,Object,Object,Log/StopParameter,String,String,Int32)",
@@ -10943,13 +6969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1d98e4",
-      "Background": "#020c13"
+      "Color": "#e58a4f",
+      "Background": "#130b06"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Warn(String,String,String,Int32)",
@@ -10958,13 +6979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f55dbe",
-      "Background": "#14070f"
+      "Color": "#e67973",
+      "Background": "#130a09"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Error(String,String,String,Int32)",
@@ -10973,13 +6989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6cd180",
-      "Background": "#09110a"
+      "Color": "#4ed1fa",
+      "Background": "#061114"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Exception(Exception,String,String,String,Int32)",
@@ -10988,13 +6999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9ac2d4",
-      "Background": "#0c1011"
+      "Color": "#f67752",
+      "Background": "#140906"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Exception(Exception,Int32,String,String,Int32)",
@@ -11003,13 +7009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#73b3e5",
-      "Background": "#090e13"
+      "Color": "#c08bff",
+      "Background": "#100b15"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.ReferenceEquals(Object,Object)",
@@ -11018,13 +7019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a4aef3",
-      "Background": "#0d0e14"
+      "Color": "#98d28d",
+      "Background": "#0c110b"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.Write(String,String,String,String,Int32)",
@@ -11033,13 +7029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3f02e9",
-      "Background": "#050013"
+      "Color": "#b1ed4d",
+      "Background": "#0e1306"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.toText(Object)",
@@ -11048,13 +7039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e00204",
-      "Background": "#120000"
+      "Color": "#fe5e3f",
+      "Background": "#150705"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log.cctor()",
@@ -11063,13 +7049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cc6810",
-      "Background": "#110801"
+      "Color": "#8421f4",
+      "Background": "#0b0214"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log/StopParameter.Empty",
@@ -11078,13 +7059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d272dc",
-      "Background": "#110912"
+      "Color": "#9de3e5",
+      "Background": "#0d1213"
     },
     {
       "Name": "Dependinator.Dependinator.Utils.Logging.Log/StopParameter.ctor()",
@@ -11093,13 +7069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f71cd1",
-      "Background": "#140211"
+      "Color": "#5cc970",
+      "Background": "#071009"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParser.CanSupport(String)",
@@ -11108,13 +7079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fce22a",
-      "Background": "#151203"
+      "Color": "#fdbc34",
+      "Background": "#150f04"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParser.ParseAsync(String,ChannelWriter\u00601)",
@@ -11123,13 +7089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f3baf7",
-      "Background": "#140f14"
+      "Color": "#9c2cfa",
+      "Background": "#0d0314"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParser.GetSourceAsync(String,String)",
@@ -11138,13 +7099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e0fdb5",
-      "Background": "#12150f"
+      "Color": "#0bd236",
+      "Background": "#001104"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParser.GetNodeAsync(String,Source)",
@@ -11153,13 +7109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8fec20",
-      "Background": "#0b1302"
+      "Color": "#fbd979",
+      "Background": "#14120a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParser.GetDataTime(String)",
@@ -11168,13 +7119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#91ca80",
-      "Background": "#0c100a"
+      "Color": "#f40356",
+      "Background": "#140007"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Model.Nodes",
@@ -11183,13 +7129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ce3f8",
-      "Background": "#091214"
+      "Color": "#fb8fad",
+      "Background": "#140b0e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Model.Links",
@@ -11198,13 +7139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee8e3b",
-      "Background": "#130b04"
+      "Color": "#cafe7c",
+      "Background": "#10150a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Model.ctor()",
@@ -11213,13 +7149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e8e126",
-      "Background": "#131203"
+      "Color": "#d0c5f6",
+      "Background": "#111014"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.EqualityContract",
@@ -11228,13 +7159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9c16cb",
-      "Background": "#0d0110"
+      "Color": "#7ae5ea",
+      "Background": "#0a1313"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.SourceName",
@@ -11243,13 +7169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cf3b95",
-      "Background": "#11040c"
+      "Color": "#ef2dcc",
+      "Background": "#130311"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.TargetName",
@@ -11258,13 +7179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b7ca57",
-      "Background": "#0f1007"
+      "Color": "#dc34de",
+      "Background": "#120412"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.TargetType",
@@ -11273,13 +7189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#25c0fb",
-      "Background": "#031014"
+      "Color": "#d6315a",
+      "Background": "#110407"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.ctor(String,String,NodeType)",
@@ -11288,13 +7199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#83b8e9",
-      "Background": "#0a0f13"
+      "Color": "#16b0ea",
+      "Background": "#010e13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.ToString()",
@@ -11303,13 +7209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d7295c",
-      "Background": "#110307"
+      "Color": "#fb5e65",
+      "Background": "#140708"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.PrintMembers(StringBuilder)",
@@ -11318,13 +7219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da6b95",
-      "Background": "#12080c"
+      "Color": "#7611e8",
+      "Background": "#090113"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.op_Inequality(Link,Link)",
@@ -11333,13 +7229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e7e8f7",
-      "Background": "#131314"
+      "Color": "#1be7b3",
+      "Background": "#02130e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.op_Equality(Link,Link)",
@@ -11348,13 +7239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f60123",
-      "Background": "#140002"
+      "Color": "#8c1ee9",
+      "Background": "#0b0213"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.GetHashCode()",
@@ -11363,13 +7249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a6dfb0",
-      "Background": "#0d120e"
+      "Color": "#23ed62",
+      "Background": "#021308"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.Equals(Object)",
@@ -11378,13 +7259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2f5dd2",
-      "Background": "#030711"
+      "Color": "#e7a21e",
+      "Background": "#130d02"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.Equals(Link)",
@@ -11393,13 +7269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ad00fe",
-      "Background": "#0e0015"
+      "Color": "#abcac3",
+      "Background": "#0e1010"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.\u003CClone\u003E$()",
@@ -11408,13 +7279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc94cf",
-      "Background": "#150c11"
+      "Color": "#93f204",
+      "Background": "#0c1400"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.ctor(Link)",
@@ -11423,13 +7289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ede285",
-      "Background": "#13120b"
+      "Color": "#c90f2a",
+      "Background": "#100103"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Link.Deconstruct(String,String,NodeType)",
@@ -11438,13 +7299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c9117c",
-      "Background": "#10010a"
+      "Color": "#a80aeb",
+      "Background": "#0e0013"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.$private",
@@ -11453,13 +7309,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d92706",
-      "Background": "#120300"
+      "Color": "#43d41c",
+      "Background": "#051102"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.NamePartsSeparators",
@@ -11468,13 +7319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#03d47c",
-      "Background": "#00110a"
+      "Color": "#3bd96a",
+      "Background": "#041208"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.EqualityContract",
@@ -11483,13 +7329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2a33f3",
-      "Background": "#030414"
+      "Color": "#a51ae1",
+      "Background": "#0d0212"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Name",
@@ -11498,13 +7339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e381ff",
-      "Background": "#120a15"
+      "Color": "#83b7ec",
+      "Background": "#0a0f13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.ParentName",
@@ -11513,13 +7349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d11789",
-      "Background": "#11010b"
+      "Color": "#58b5f4",
+      "Background": "#070f14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Type",
@@ -11528,13 +7359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6fb4ed",
-      "Background": "#090f13"
+      "Color": "#2cca22",
+      "Background": "#031002"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Description",
@@ -11543,13 +7369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#74dd3a",
-      "Background": "#091204"
+      "Color": "#08daeb",
+      "Background": "#001213"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.X",
@@ -11558,13 +7379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee0163",
-      "Background": "#130008"
+      "Color": "#7bf039",
+      "Background": "#0a1404"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Y",
@@ -11573,13 +7389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb1a23",
-      "Background": "#140202"
+      "Color": "#75e730",
+      "Background": "#091304"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Width",
@@ -11588,13 +7399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#59c6e6",
-      "Background": "#071013"
+      "Color": "#b7d900",
+      "Background": "#0f1200"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Height",
@@ -11603,13 +7409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4e98d7",
-      "Background": "#060c11"
+      "Color": "#c4cf01",
+      "Background": "#101100"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Zoom",
@@ -11618,13 +7419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e2ed58",
-      "Background": "#121307"
+      "Color": "#dececa",
+      "Background": "#121110"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Color",
@@ -11633,13 +7429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f3d334",
-      "Background": "#141104"
+      "Color": "#eb1aeb",
+      "Background": "#130213"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Background",
@@ -11648,13 +7439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2918f8",
-      "Background": "#030214"
+      "Color": "#e481ec",
+      "Background": "#130a13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.ctor(String,String,NodeType,String)",
@@ -11663,13 +7449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#50f322",
-      "Background": "#061402"
+      "Color": "#d09bf6",
+      "Background": "#110c14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.ParseParentName(String)",
@@ -11678,13 +7459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e178be",
-      "Background": "#120a0f"
+      "Color": "#10e013",
+      "Background": "#011201"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.ToString()",
@@ -11693,13 +7469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e98166",
-      "Background": "#130a08"
+      "Color": "#25aff2",
+      "Background": "#030e14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.PrintMembers(StringBuilder)",
@@ -11708,13 +7479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#23f436",
-      "Background": "#021404"
+      "Color": "#ec0bf3",
+      "Background": "#130014"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.op_Inequality(Node,Node)",
@@ -11723,13 +7489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98e710",
-      "Background": "#0c1301"
+      "Color": "#2def97",
+      "Background": "#03130c"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.op_Equality(Node,Node)",
@@ -11738,13 +7499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e84098",
-      "Background": "#13050c"
+      "Color": "#cadd66",
+      "Background": "#101208"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.GetHashCode()",
@@ -11753,13 +7509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ddf6bd",
-      "Background": "#12140f"
+      "Color": "#fca03a",
+      "Background": "#150d04"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Equals(Object)",
@@ -11768,13 +7519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e69504",
-      "Background": "#130c00"
+      "Color": "#e55da2",
+      "Background": "#13070d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Equals(Node)",
@@ -11783,13 +7529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#000ed9",
-      "Background": "#000112"
+      "Color": "#df107d",
+      "Background": "#12010a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.\u003CClone\u003E$()",
@@ -11798,13 +7539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e1fe52",
-      "Background": "#121506"
+      "Color": "#e2a954",
+      "Background": "#120e07"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.ctor(Node)",
@@ -11813,13 +7549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d92ba1",
-      "Background": "#12030d"
+      "Color": "#c036ef",
+      "Background": "#100413"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.Deconstruct(String,String,NodeType,String)",
@@ -11828,13 +7559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#71fb78",
-      "Background": "#09140a"
+      "Color": "#e11c2a",
+      "Background": "#120203"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Node.cctor()",
@@ -11843,13 +7569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7fff64",
-      "Background": "#0a1508"
+      "Color": "#293bf4",
+      "Background": "#030414"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.EqualityContract",
@@ -11858,13 +7579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e6bf3e",
-      "Background": "#130f05"
+      "Color": "#d39660",
+      "Background": "#110c08"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.Path",
@@ -11873,13 +7589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#06e09b",
-      "Background": "#00120c"
+      "Color": "#7b5bf8",
+      "Background": "#0a0714"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.Text",
@@ -11888,13 +7599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b4febf",
-      "Background": "#0f150f"
+      "Color": "#8882f6",
+      "Background": "#0b0a14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.LineNumber",
@@ -11903,13 +7609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fe754e",
-      "Background": "#150906"
+      "Color": "#e94da0",
+      "Background": "#13060d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.ctor(String,String,Int32)",
@@ -11918,13 +7619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#15ce67",
-      "Background": "#011108"
+      "Color": "#6664ea",
+      "Background": "#080813"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.ToString()",
@@ -11933,13 +7629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#05f3dd",
-      "Background": "#001412"
+      "Color": "#e9c069",
+      "Background": "#131008"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.PrintMembers(StringBuilder)",
@@ -11948,13 +7639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a553d0",
-      "Background": "#0d0611"
+      "Color": "#e0415f",
+      "Background": "#120507"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.op_Inequality(Source,Source)",
@@ -11963,13 +7649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6648d1",
-      "Background": "#080611"
+      "Color": "#678af2",
+      "Background": "#080b14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.op_Equality(Source,Source)",
@@ -11978,13 +7659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5d88d6",
-      "Background": "#070b11"
+      "Color": "#3ee797",
+      "Background": "#05130c"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.GetHashCode()",
@@ -11993,13 +7669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8349ee",
-      "Background": "#0a0613"
+      "Color": "#6c6df0",
+      "Background": "#090914"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.Equals(Object)",
@@ -12008,13 +7679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7fda77",
-      "Background": "#0a1209"
+      "Color": "#e7a9d8",
+      "Background": "#130e12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.Equals(Source)",
@@ -12023,13 +7689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2dcdf9",
-      "Background": "#031114"
+      "Color": "#f01a10",
+      "Background": "#140201"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.\u003CClone\u003E$()",
@@ -12038,13 +7699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a978ce",
-      "Background": "#0e0a11"
+      "Color": "#66e80d",
+      "Background": "#081301"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.ctor(Source)",
@@ -12053,13 +7709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d491f2",
-      "Background": "#110c14"
+      "Color": "#77ff80",
+      "Background": "#09150a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Source.Deconstruct(String,String,Int32)",
@@ -12068,13 +7719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7789cf",
-      "Background": "#090b11"
+      "Color": "#fa2784",
+      "Background": "#14030b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.None",
@@ -12083,13 +7729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5719da",
-      "Background": "#070212"
+      "Color": "#d510b4",
+      "Background": "#11010f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Root",
@@ -12098,13 +7739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d6f859",
-      "Background": "#111407"
+      "Color": "#3a0fe3",
+      "Background": "#040112"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Parent",
@@ -12113,13 +7749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#190de0",
-      "Background": "#020112"
+      "Color": "#0985f4",
+      "Background": "#000b14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Solution",
@@ -12128,13 +7759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ee9db",
-      "Background": "#091312"
+      "Color": "#b8f600",
+      "Background": "#0f1400"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Externals",
@@ -12143,13 +7769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ae2e8",
-      "Background": "#061213"
+      "Color": "#bcf06c",
+      "Background": "#0f1409"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.SolutionFolder",
@@ -12158,13 +7779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#db125c",
-      "Background": "#120107"
+      "Color": "#16fca8",
+      "Background": "#01150e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Assembly",
@@ -12173,13 +7789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fd9a10",
-      "Background": "#150c01"
+      "Color": "#82c5e3",
+      "Background": "#0a1012"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Group",
@@ -12188,13 +7799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eecd53",
-      "Background": "#131106"
+      "Color": "#541aff",
+      "Background": "#070215"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Dll",
@@ -12203,13 +7809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9238cd",
-      "Background": "#0c0411"
+      "Color": "#f96d21",
+      "Background": "#140902"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Exe",
@@ -12218,13 +7819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#167dde",
-      "Background": "#010a12"
+      "Color": "#7c5be2",
+      "Background": "#0a0712"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Namespace",
@@ -12233,13 +7829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9623eb",
-      "Background": "#0c0213"
+      "Color": "#e76bf1",
+      "Background": "#130814"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Type",
@@ -12248,13 +7839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9b8ed8",
-      "Background": "#0c0b12"
+      "Color": "#0a2ed2",
+      "Background": "#000311"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Member",
@@ -12263,13 +7849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e3dce5",
-      "Background": "#121213"
+      "Color": "#a2bed7",
+      "Background": "#0d0f11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Private",
@@ -12278,13 +7859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d6f062",
-      "Background": "#111408"
+      "Color": "#38d8d2",
+      "Background": "#041211"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.EqualityContract",
@@ -12293,13 +7869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f53620",
-      "Background": "#140402"
+      "Color": "#33f41a",
+      "Background": "#041402"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Text",
@@ -12308,13 +7879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f991ad",
-      "Background": "#140c0e"
+      "Color": "#2137e4",
+      "Background": "#020413"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.ctor(String)",
@@ -12323,13 +7889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c4e84b",
-      "Background": "#101306"
+      "Color": "#2fe3f3",
+      "Background": "#031214"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.ToString()",
@@ -12338,13 +7899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c377e3",
-      "Background": "#100912"
+      "Color": "#85f89b",
+      "Background": "#0b140c"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.PrintMembers(StringBuilder)",
@@ -12353,13 +7909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#760ece",
-      "Background": "#090111"
+      "Color": "#821dff",
+      "Background": "#0a0215"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.op_Inequality(NodeType,NodeType)",
@@ -12368,13 +7919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e0f637",
-      "Background": "#121404"
+      "Color": "#0548e8",
+      "Background": "#000613"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.op_Equality(NodeType,NodeType)",
@@ -12383,13 +7929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de8901",
-      "Background": "#120b00"
+      "Color": "#2b13eb",
+      "Background": "#030113"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.GetHashCode()",
@@ -12398,13 +7939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aed1f1",
-      "Background": "#0e1114"
+      "Color": "#e89489",
+      "Background": "#130c0b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Equals(Object)",
@@ -12413,13 +7949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#afd03a",
-      "Background": "#0e1104"
+      "Color": "#e7ad2e",
+      "Background": "#130e03"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Equals(NodeType)",
@@ -12428,13 +7959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce6ad9",
-      "Background": "#110812"
+      "Color": "#3fccb9",
+      "Background": "#05110f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.\u003CClone\u003E$()",
@@ -12443,13 +7969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1ef3a",
-      "Background": "#111304"
+      "Color": "#da2458",
+      "Background": "#120307"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.ctor(NodeType)",
@@ -12458,13 +7979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0680ef",
-      "Background": "#000a13"
+      "Color": "#bfde7e",
+      "Background": "#0f120a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.Deconstruct(String)",
@@ -12473,13 +7989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d48b05",
-      "Background": "#110b00"
+      "Color": "#36d8b8",
+      "Background": "#04120f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.$private",
@@ -12488,13 +7999,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 340,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f794ff",
-      "Background": "#140c15"
+      "Color": "#82e76a",
+      "Background": "#0a1308"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeType.cctor()",
@@ -12503,13 +8009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ded462",
-      "Background": "#121108"
+      "Color": "#7cf114",
+      "Background": "#0a1401"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.Root",
@@ -12518,13 +8019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#19fa8b",
-      "Background": "#02140b"
+      "Color": "#33f9c8",
+      "Background": "#041410"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.PartsSeparators",
@@ -12533,13 +8029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ddd002",
-      "Background": "#121100"
+      "Color": "#2bdb05",
+      "Background": "#031200"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.displayParts",
@@ -12548,13 +8039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#02f23e",
-      "Background": "#001405"
+      "Color": "#f48693",
+      "Background": "#140b0c"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.parentName",
@@ -12563,13 +8049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e0a489",
-      "Background": "#120d0b"
+      "Color": "#e58db3",
+      "Background": "#130b0e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.FullName",
@@ -12578,13 +8059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cabc09",
-      "Background": "#100f00"
+      "Color": "#f7125f",
+      "Background": "#140107"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.ParentName",
@@ -12593,13 +8069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eefd38",
-      "Background": "#131504"
+      "Color": "#ec0405",
+      "Background": "#130000"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.DisplayShortName",
@@ -12608,13 +8079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#04d688",
-      "Background": "#00110b"
+      "Color": "#ae42d4",
+      "Background": "#0e0511"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.DisplayLongName",
@@ -12623,13 +8089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#03ed30",
-      "Background": "#001304"
+      "Color": "#7bcfc2",
+      "Background": "#0a1110"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.ctor(String)",
@@ -12638,13 +8099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e9c29c",
-      "Background": "#13100d"
+      "Color": "#9bd13f",
+      "Background": "#0c1105"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.From(String)",
@@ -12653,13 +8109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#403bd1",
-      "Background": "#050411"
+      "Color": "#e5acff",
+      "Background": "#130e15"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.IsSame(String)",
@@ -12668,13 +8119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3be829",
-      "Background": "#041303"
+      "Color": "#ccecb5",
+      "Background": "#11130f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.ToString()",
@@ -12683,13 +8129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dbf486",
-      "Background": "#12140b"
+      "Color": "#f28ae3",
+      "Background": "#140b12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.GetParentName()",
@@ -12698,13 +8139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c93e4f",
-      "Background": "#100506"
+      "Color": "#cc53d5",
+      "Background": "#110611"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.GetDisplayParts()",
@@ -12713,13 +8149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e0ce2b",
-      "Background": "#121103"
+      "Color": "#e30262",
+      "Background": "#120008"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.ToNiceParameters(String)",
@@ -12728,13 +8159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3ef496",
-      "Background": "#05140c"
+      "Color": "#23a3dc",
+      "Background": "#020d12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.ToNiceText(String)",
@@ -12743,13 +8169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#00cd20",
-      "Background": "#001102"
+      "Color": "#e87025",
+      "Background": "#130903"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName.cctor()",
@@ -12758,13 +8179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f18f38",
-      "Background": "#140b04"
+      "Color": "#cedfac",
+      "Background": "#11120e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.EqualityContract",
@@ -12773,13 +8189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ccaef6",
-      "Background": "#110e14"
+      "Color": "#f544aa",
+      "Background": "#14050e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.ShortName",
@@ -12788,13 +8199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#26de8f",
-      "Background": "#03120b"
+      "Color": "#3af1b3",
+      "Background": "#04140e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.LongName",
@@ -12803,13 +8209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e20786",
-      "Background": "#12000b"
+      "Color": "#004bf6",
+      "Background": "#000614"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.ctor(String,String)",
@@ -12818,13 +8219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a4f395",
-      "Background": "#0d140c"
+      "Color": "#dc8e23",
+      "Background": "#120b02"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.ToString()",
@@ -12833,13 +8229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#73d4d1",
-      "Background": "#091111"
+      "Color": "#dcc694",
+      "Background": "#12100c"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.PrintMembers(StringBuilder)",
@@ -12848,13 +8239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ff3f1b",
-      "Background": "#150502"
+      "Color": "#ba73d4",
+      "Background": "#0f0911"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.op_Inequality(NodeName",
@@ -12863,13 +8249,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#33ca67",
-      "Background": "#041008"
+      "Color": "#5d28d7",
+      "Background": "#070311"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.op_Inequality(NodeName/DisplayParts,NodeName",
@@ -12878,13 +8259,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2492dd",
-      "Background": "#030c12"
+      "Color": "#c973fb",
+      "Background": "#100914"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.op_Inequality(NodeName/DisplayParts,NodeName/DisplayParts)",
@@ -12893,13 +8269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f86079",
-      "Background": "#14080a"
+      "Color": "#5e48fb",
+      "Background": "#070614"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.op_Equality(NodeName",
@@ -12908,13 +8279,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1ce47",
-      "Background": "#111105"
+      "Color": "#0dfdc4",
+      "Background": "#011510"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.op_Equality(NodeName/DisplayParts,NodeName",
@@ -12923,13 +8289,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3eebb5",
-      "Background": "#05130f"
+      "Color": "#ca47a1",
+      "Background": "#10050d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.op_Equality(NodeName/DisplayParts,NodeName/DisplayParts)",
@@ -12938,13 +8299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#97fbd9",
-      "Background": "#0c1412"
+      "Color": "#a8bce4",
+      "Background": "#0e0f13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.GetHashCode()",
@@ -12953,13 +8309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bb30e6",
-      "Background": "#0f0413"
+      "Color": "#9cf68c",
+      "Background": "#0d140b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.Equals(Object)",
@@ -12968,13 +8319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6c79f1",
-      "Background": "#090a14"
+      "Color": "#95f638",
+      "Background": "#0c1404"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.Equals(NodeName",
@@ -12983,13 +8329,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4bd878",
-      "Background": "#06120a"
+      "Color": "#5763ef",
+      "Background": "#070813"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.Equals(NodeName/DisplayParts)",
@@ -12998,13 +8339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8dfef1",
-      "Background": "#0b1514"
+      "Color": "#07d020",
+      "Background": "#001102"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.\u003CClone\u003E$()",
@@ -13013,13 +8349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e18b31",
-      "Background": "#120b04"
+      "Color": "#66ffbe",
+      "Background": "#08150f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.ctor(NodeName",
@@ -13028,13 +8359,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c429d5",
-      "Background": "#100311"
+      "Color": "#f39ecc",
+      "Background": "#140d11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.ctor(NodeName/DisplayParts)",
@@ -13043,13 +8369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#46c5e3",
-      "Background": "#051012"
+      "Color": "#6443f2",
+      "Background": "#080514"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.NodeName/DisplayParts.Deconstruct(String,String)",
@@ -13058,13 +8379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0bd35a",
-      "Background": "#001107"
+      "Color": "#e69e74",
+      "Background": "#130d09"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.EqualityContract",
@@ -13073,13 +8389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e89a51",
-      "Background": "#130c06"
+      "Color": "#c8da83",
+      "Background": "#10120a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.ModelPath",
@@ -13088,13 +8399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b6dd06",
-      "Background": "#0f1200"
+      "Color": "#a5ffff",
+      "Background": "#0d1515"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.WorkFolderPath",
@@ -13103,13 +8409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cacd05",
-      "Background": "#101100"
+      "Color": "#4fcd66",
+      "Background": "#061108"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.ctor(String,String)",
@@ -13118,13 +8419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d9678b",
-      "Background": "#12080b"
+      "Color": "#e6a8f6",
+      "Background": "#130e14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.ToString()",
@@ -13133,13 +8429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f631f7",
-      "Background": "#140414"
+      "Color": "#f667e6",
+      "Background": "#140813"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.PrintMembers(StringBuilder)",
@@ -13148,13 +8439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bbd730",
-      "Background": "#0f1104"
+      "Color": "#effdec",
+      "Background": "#131513"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.op_Inequality(ModelPaths,ModelPaths)",
@@ -13163,13 +8449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d8810a",
-      "Background": "#120a00"
+      "Color": "#f10d79",
+      "Background": "#14010a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.op_Equality(ModelPaths,ModelPaths)",
@@ -13178,13 +8459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b5f5d5",
-      "Background": "#0f1411"
+      "Color": "#40e40f",
+      "Background": "#051301"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.GetHashCode()",
@@ -13193,13 +8469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2661cc",
-      "Background": "#030811"
+      "Color": "#dffe16",
+      "Background": "#121501"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.Equals(Object)",
@@ -13208,13 +8479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#74b5f3",
-      "Background": "#090f14"
+      "Color": "#83ef71",
+      "Background": "#0a1309"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.Equals(ModelPaths)",
@@ -13223,13 +8489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#edb417",
-      "Background": "#130f01"
+      "Color": "#8fe2a8",
+      "Background": "#0b120e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.\u003CClone\u003E$()",
@@ -13238,13 +8499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c7e0da",
-      "Background": "#101212"
+      "Color": "#f7c75b",
+      "Background": "#141007"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.ctor(ModelPaths)",
@@ -13253,13 +8509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eb365a",
-      "Background": "#130407"
+      "Color": "#cf6857",
+      "Background": "#110807"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ModelPaths.Deconstruct(String,String)",
@@ -13268,13 +8519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0d8deb",
-      "Background": "#010b13"
+      "Color": "#e02f43",
+      "Background": "#120305"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParserService.GetDataTime(String)",
@@ -13283,13 +8529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cc393c",
-      "Background": "#110405"
+      "Color": "#d79bcd",
+      "Background": "#110c11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParserService.Parse(String)",
@@ -13298,13 +8539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#59f92c",
-      "Background": "#071403"
+      "Color": "#fc700f",
+      "Background": "#150901"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParserService.GetSourceAsync(String,String)",
@@ -13313,13 +8549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a2bccb",
-      "Background": "#0d0f10"
+      "Color": "#f1d84a",
+      "Background": "#141206"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IParserService.TryGetNodeAsync(String,Source)",
@@ -13328,13 +8559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f97293",
-      "Background": "#14090c"
+      "Color": "#073df2",
+      "Background": "#000514"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService.parsers",
@@ -13343,13 +8569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98c8fa",
-      "Background": "#0c1014"
+      "Color": "#bbe7f0",
+      "Background": "#0f1314"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService.ctor(IEnumerable\u00601)",
@@ -13358,13 +8579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#27a3e6",
-      "Background": "#030d13"
+      "Color": "#6cf2a5",
+      "Background": "#09140d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService.GetDataTime(String)",
@@ -13373,13 +8589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de505c",
-      "Background": "#120607"
+      "Color": "#9abdeb",
+      "Background": "#0c0f13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService.Parse(String)",
@@ -13388,13 +8599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ddaaad",
-      "Background": "#120e0e"
+      "Color": "#534cf1",
+      "Background": "#060614"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService.GetSourceAsync(String,String)",
@@ -13403,13 +8609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc488f",
-      "Background": "#15060b"
+      "Color": "#d23165",
+      "Background": "#110408"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService.TryGetNodeAsync(String,Source)",
@@ -13418,13 +8619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98ce60",
-      "Background": "#0c1108"
+      "Color": "#f6bedc",
+      "Background": "#140f12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService.GetParser(String)",
@@ -13433,13 +8629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#08da4a",
-      "Background": "#001206"
+      "Color": "#87d071",
+      "Background": "#0b1109"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService/CustomParser.CanSupport(String)",
@@ -13448,13 +8639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0014fc",
-      "Background": "#000115"
+      "Color": "#9b03ff",
+      "Background": "#0c0015"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService/CustomParser.ParseAsync(String,ChannelWriter\u00601)",
@@ -13463,13 +8649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9486d1",
-      "Background": "#0c0b11"
+      "Color": "#5fecf1",
+      "Background": "#071314"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService/CustomParser.GetSourceAsync(String,String)",
@@ -13478,13 +8659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d62923",
-      "Background": "#110302"
+      "Color": "#318dfd",
+      "Background": "#040b15"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService/CustomParser.GetNodeAsync(String,Source)",
@@ -13493,13 +8669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c4f1c9",
-      "Background": "#101410"
+      "Color": "#80f870",
+      "Background": "#0a1409"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService/CustomParser.GetDataTime(String)",
@@ -13508,13 +8679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#43b5d7",
-      "Background": "#050f11"
+      "Color": "#21d0e9",
+      "Background": "#021113"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.ParserService/CustomParser.ctor()",
@@ -13523,13 +8689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#075eea",
-      "Background": "#000713"
+      "Color": "#fe02d4",
+      "Background": "#150011"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IPersistenceService.ModelToData(IModel)",
@@ -13538,13 +8699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7ae796",
-      "Background": "#0a130c"
+      "Color": "#2300e6",
+      "Background": "#020013"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.IPersistenceService.SaveAsync(Model)",
@@ -13553,28 +8709,18 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2efdb5",
-      "Background": "#03150f"
+      "Color": "#6af8e2",
+      "Background": "#081412"
     },
     {
-      "Name": "Dependinator.Dependinator.Parsing.IPersistenceService.LoadAsync()",
+      "Name": "Dependinator.Dependinator.Parsing.IPersistenceService.LoadAsync(String)",
       "ParentName": "Dependinator.Dependinator.Parsing.IPersistenceService",
       "Type": {
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fa039c",
-      "Background": "#14000d"
+      "Color": "#d463c8",
+      "Background": "#110810"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService.$private",
@@ -13583,13 +8729,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#81b1d9",
-      "Background": "#0a0e12"
+      "Color": "#efd3af",
+      "Background": "#13110e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService.indented",
@@ -13598,13 +8739,18 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fe5e29",
-      "Background": "#150703"
+      "Color": "#f41f9a",
+      "Background": "#14020c"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Parsing.PersistenceService.database",
+      "ParentName": "Dependinator.Dependinator.Parsing.PersistenceService.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#e1d15a",
+      "Background": "#121107"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService.modelName",
@@ -13613,13 +8759,18 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e65c5f",
-      "Background": "#130707"
+      "Color": "#83cd9d",
+      "Background": "#0a110d"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Parsing.PersistenceService.ctor(IDatabase)",
+      "ParentName": "Dependinator.Dependinator.Parsing.PersistenceService",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#7ffb55",
+      "Background": "#0a1407"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService.ModelToData(IModel)",
@@ -13628,13 +8779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dbce04",
-      "Background": "#121100"
+      "Color": "#019bfc",
+      "Background": "#000c15"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService.SaveAsync(Model)",
@@ -13643,28 +8789,18 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#22eb78",
-      "Background": "#02130a"
+      "Color": "#eec7c9",
+      "Background": "#131010"
     },
     {
-      "Name": "Dependinator.Dependinator.Parsing.PersistenceService.LoadAsync()",
+      "Name": "Dependinator.Dependinator.Parsing.PersistenceService.LoadAsync(String)",
       "ParentName": "Dependinator.Dependinator.Parsing.PersistenceService",
       "Type": {
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bb83cf",
-      "Background": "#0f0a11"
+      "Color": "#f37439",
+      "Background": "#140904"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService.ToNode(Node)",
@@ -13673,13 +8809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a1cece",
-      "Background": "#0d1111"
+      "Color": "#eb1716",
+      "Background": "#130101"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService.ToLink(Link)",
@@ -13688,13 +8819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d84be8",
-      "Background": "#120613"
+      "Color": "#09ebb5",
+      "Background": "#00130f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService.GetModelFilePath()",
@@ -13703,28 +8829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d47bea",
-      "Background": "#110a13"
-    },
-    {
-      "Name": "Dependinator.Dependinator.Parsing.PersistenceService.ctor()",
-      "ParentName": "Dependinator.Dependinator.Parsing.PersistenceService",
-      "Type": {
-        "Text": "Member"
-      },
-      "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9357de",
-      "Background": "#0c0712"
+      "Color": "#a3fabb",
+      "Background": "#0d140f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.PersistenceService.cctor()",
@@ -13733,13 +8839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3add92",
-      "Background": "#04120c"
+      "Color": "#2e99e3",
+      "Background": "#030c12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.$private",
@@ -13748,13 +8849,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f96217",
-      "Background": "#140801"
+      "Color": "#e5e1d7",
+      "Background": "#131211"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.projectInSolution",
@@ -13763,13 +8859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f0710c",
-      "Background": "#140901"
+      "Color": "#bacfbe",
+      "Background": "#0f110f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.solutionDirectory",
@@ -13778,13 +8869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#84a3cf",
-      "Background": "#0b0d11"
+      "Color": "#f8276f",
+      "Background": "#140309"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.ProjectFilePath",
@@ -13793,13 +8879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#57ff92",
-      "Background": "#07150c"
+      "Color": "#ff50d6",
+      "Background": "#150611"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.RelativePath",
@@ -13808,13 +8889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b2beef",
-      "Background": "#0e0f13"
+      "Color": "#7742e4",
+      "Background": "#090513"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.ProjectName",
@@ -13823,13 +8899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#858dd6",
-      "Background": "#0b0b11"
+      "Color": "#38a0e4",
+      "Background": "#040d13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.ProjectFullName",
@@ -13838,13 +8909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1ddbf7",
-      "Background": "#021214"
+      "Color": "#bedeb7",
+      "Background": "#0f120f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.RelativeProjectDirectory",
@@ -13853,13 +8919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dbdf44",
-      "Background": "#121205"
+      "Color": "#b7fc40",
+      "Background": "#0f1505"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.ProjectDirectory",
@@ -13868,13 +8929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ed5e9",
-      "Background": "#071113"
+      "Color": "#19f469",
+      "Background": "#021408"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.ctor(ProjectInSolution,String)",
@@ -13883,13 +8939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3df236",
-      "Background": "#051404"
+      "Color": "#27f323",
+      "Background": "#031402"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.GetOutputPath()",
@@ -13898,13 +8949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dd6851",
-      "Background": "#120806"
+      "Color": "#b6e6c3",
+      "Background": "#0f1310"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.ToString()",
@@ -13913,13 +8959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f9c2f0",
-      "Background": "#141014"
+      "Color": "#17cdc0",
+      "Background": "#011110"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.IsAssembly(String)",
@@ -13928,13 +8969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#81fe85",
-      "Background": "#0a150b"
+      "Color": "#82aefb",
+      "Background": "#0a0e14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.GetBuildTime(String)",
@@ -13943,13 +8979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dcada9",
-      "Background": "#120e0e"
+      "Color": "#7f23d6",
+      "Background": "#0a0211"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Project.HasExtension(String,String)",
@@ -13958,13 +8989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a7c4cb",
-      "Background": "#0d1010"
+      "Color": "#4ea9d9",
+      "Background": "#060e12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.$private",
@@ -13973,13 +8999,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3758e4",
-      "Background": "#040713"
+      "Color": "#5ad220",
+      "Background": "#071102"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.projects",
@@ -13988,13 +9009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f69805",
-      "Background": "#140c00"
+      "Color": "#37e4ac",
+      "Background": "#04130e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.SolutionFilePath",
@@ -14003,13 +9019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8259c9",
-      "Background": "#0a0710"
+      "Color": "#d111dd",
+      "Background": "#110112"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.SolutionDirectory",
@@ -14018,13 +9029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#500ed2",
-      "Background": "#060111"
+      "Color": "#5784e8",
+      "Background": "#070b13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.ctor(String)",
@@ -14033,13 +9039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ced79d",
-      "Background": "#11110d"
+      "Color": "#c898e2",
+      "Background": "#100c12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.GetDataFilePaths()",
@@ -14048,13 +9049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f48854",
-      "Background": "#140b07"
+      "Color": "#f2e864",
+      "Background": "#141308"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.GetSolutionProjects()",
@@ -14063,13 +9059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da1821",
-      "Background": "#120202"
+      "Color": "#6ed03a",
+      "Background": "#091104"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.ToString()",
@@ -14078,13 +9069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4bcaac",
-      "Background": "#06100e"
+      "Color": "#ed4ca2",
+      "Background": "#13060d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.GetProjects()",
@@ -14093,13 +9079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2ff806",
-      "Background": "#031400"
+      "Color": "#d031d1",
+      "Background": "#110411"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.Solution.IsTestProject(Project)",
@@ -14108,13 +9089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9df20e",
-      "Background": "#0d1401"
+      "Color": "#fabd4f",
+      "Background": "#140f06"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.$private",
@@ -14123,13 +9099,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a41ce4",
-      "Background": "#0d0213"
+      "Color": "#dc8e05",
+      "Background": "#120b00"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.PartsSeparators",
@@ -14138,13 +9109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1fc4ca",
-      "Background": "#021010"
+      "Color": "#42d573",
+      "Background": "#051109"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.assemblyParsers",
@@ -14153,13 +9119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#37cf4b",
-      "Background": "#041106"
+      "Color": "#a149d7",
+      "Background": "#0d0611"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.isReadSymbols",
@@ -14168,13 +9129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d4a202",
-      "Background": "#110d00"
+      "Color": "#2fde1e",
+      "Background": "#031202"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.parentNodesToSend",
@@ -14183,13 +9139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#26c0ed",
-      "Background": "#031013"
+      "Color": "#23cd0a",
+      "Background": "#021100"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.solutionFilePath",
@@ -14198,13 +9149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a1ca92",
-      "Background": "#0d100c"
+      "Color": "#ef98f3",
+      "Background": "#130c14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.items",
@@ -14213,13 +9159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1ea5ef",
-      "Background": "#020d13"
+      "Color": "#b1e0cf",
+      "Background": "#0e1211"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.SolutionNodeName",
@@ -14228,13 +9169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6580cb",
-      "Background": "#080a10"
+      "Color": "#fc0f78",
+      "Background": "#15010a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.ctor(String,ChannelWriter\u00601,Boolean)",
@@ -14243,13 +9179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#70dac9",
-      "Background": "#091210"
+      "Color": "#582ef0",
+      "Background": "#070314"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.Dispose()",
@@ -14258,13 +9189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d7c331",
-      "Background": "#111004"
+      "Color": "#ad80e7",
+      "Background": "#0e0a13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.ParseAsync()",
@@ -14273,13 +9199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cda05b",
-      "Background": "#110d07"
+      "Color": "#88f84b",
+      "Background": "#0b1406"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.TryGetSourceAsync(String)",
@@ -14288,13 +9209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d051d5",
-      "Background": "#110611"
+      "Color": "#38d729",
+      "Background": "#041103"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.TryGetNodeAsync(Source)",
@@ -14303,13 +9219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#09ace0",
-      "Background": "#000e12"
+      "Color": "#13e7d9",
+      "Background": "#011312"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.GetDataFilePaths(String)",
@@ -14318,13 +9229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b151d3",
-      "Background": "#0e0611"
+      "Color": "#e22c9e",
+      "Background": "#12030d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.CreateSolutionNode()",
@@ -14333,13 +9239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f4a66c",
-      "Background": "#140d09"
+      "Color": "#3815f3",
+      "Background": "#040114"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.CreateAssemblyParsers(Boolean)",
@@ -14348,13 +9249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ab40dc",
-      "Background": "#0e0512"
+      "Color": "#50fcab",
+      "Background": "#06150e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.GetProjectParentName(String,Project)",
@@ -14363,13 +9259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#df083a",
-      "Background": "#120004"
+      "Color": "#dd0564",
+      "Background": "#120008"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.GetModuleName(String)",
@@ -14378,13 +9269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e77ec1",
-      "Background": "#130a10"
+      "Color": "#f4bdd7",
+      "Background": "#140f11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.GetParentName(String)",
@@ -14393,13 +9279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a438f3",
-      "Background": "#0d0414"
+      "Color": "#ee8b4c",
+      "Background": "#130b06"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.TryGetFilePath(String,String)",
@@ -14408,13 +9289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#61e52f",
-      "Background": "#081303"
+      "Color": "#e4c920",
+      "Background": "#131002"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.GetShortName(String)",
@@ -14423,13 +9299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee83db",
-      "Background": "#130a12"
+      "Color": "#b1fdb3",
+      "Background": "#0e150e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.ParseSolutionAssembliesAsync()",
@@ -14438,13 +9309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#96cb83",
-      "Background": "#0c100a"
+      "Color": "#efc5eb",
+      "Background": "#131013"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.GetParallelOptions()",
@@ -14453,13 +9319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#26fd76",
-      "Background": "#031509"
+      "Color": "#d22706",
+      "Background": "#110300"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParser.cctor()",
@@ -14468,13 +9329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7a90dd",
-      "Background": "#0a0c12"
+      "Color": "#69dc52",
+      "Background": "#081206"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParserService.CanSupport(String)",
@@ -14483,13 +9339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#80b2ce",
-      "Background": "#0a0e11"
+      "Color": "#39dd63",
+      "Background": "#041208"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParserService.ParseAsync(String,ChannelWriter\u00601)",
@@ -14498,13 +9349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cf4eca",
-      "Background": "#110610"
+      "Color": "#6c02de",
+      "Background": "#090012"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParserService.GetSourceAsync(String,String)",
@@ -14513,13 +9359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#55b7f5",
-      "Background": "#070f14"
+      "Color": "#3d95df",
+      "Background": "#050c12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParserService.GetNodeAsync(String,Source)",
@@ -14528,13 +9369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#81df44",
-      "Background": "#0a1205"
+      "Color": "#e75b32",
+      "Background": "#130704"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParserService.GetDataTime(String)",
@@ -14543,13 +9379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ea08e3",
-      "Background": "#130012"
+      "Color": "#bcf475",
+      "Background": "#0f1409"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Solutions.SolutionParserService.ctor()",
@@ -14558,13 +9389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0bfca",
-      "Background": "#110f10"
+      "Color": "#1ef2bd",
+      "Background": "#02140f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.$private",
@@ -14573,13 +9399,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#df2e16",
-      "Background": "#120301"
+      "Color": "#ea94a8",
+      "Background": "#130c0e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.Serializer",
@@ -14588,13 +9409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1529d7",
-      "Background": "#010311"
+      "Color": "#ce0c70",
+      "Background": "#110109"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft",
@@ -14603,13 +9419,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#59acfe",
-      "Background": "#070e15"
+      "Color": "#e80acb",
+      "Background": "#130010"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json",
@@ -14618,13 +9429,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#07b6dd",
-      "Background": "#000f12"
+      "Color": "#c6ebd3",
+      "Background": "#101311"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonSerializer",
@@ -14633,13 +9439,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f5c4e2",
-      "Background": "#141012"
+      "Color": "#5ceb5b",
+      "Background": "#071307"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.CanSupport(String)",
@@ -14648,13 +9449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e3e946",
-      "Background": "#121305"
+      "Color": "#b2d146",
+      "Background": "#0e1105"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ParseAsync(String,ChannelWriter\u00601)",
@@ -14663,13 +9459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e7c65d",
-      "Background": "#131007"
+      "Color": "#d35785",
+      "Background": "#11070b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.GetSourceAsync(String,String)",
@@ -14678,13 +9469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3af3a1",
-      "Background": "#04140d"
+      "Color": "#95fc3e",
+      "Background": "#0c1505"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.GetNodeAsync(String,Source)",
@@ -14693,13 +9479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ca04f6",
-      "Background": "#100014"
+      "Color": "#aefd2d",
+      "Background": "#0e1503"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.GetDataTime(String)",
@@ -14708,13 +9489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1c255",
-      "Background": "#141007"
+      "Color": "#1cd3d8",
+      "Background": "#021112"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.SkipToItemsStart(JsonReader)",
@@ -14723,13 +9499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5a94f3",
-      "Background": "#070c14"
+      "Color": "#f9dd59",
+      "Background": "#141207"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonReader",
@@ -14738,13 +9509,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#efe1ef",
-      "Background": "#131213"
+      "Color": "#d8c3d0",
+      "Background": "#121011"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ReadItemsAsync(JsonReader,ChannelWriter\u00601)",
@@ -14753,13 +9519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9f08ed",
-      "Background": "#0d0013"
+      "Color": "#04e675",
+      "Background": "#001309"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ToNodeData(JsonTypes",
@@ -14768,13 +9529,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5a9fd0",
-      "Background": "#070d11"
+      "Color": "#432ad6",
+      "Background": "#050311"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ToNodeData(JsonTypes.$private",
@@ -14783,13 +9539,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c9265a",
-      "Background": "#100307"
+      "Color": "#66c946",
+      "Background": "#081005"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ToNodeData(JsonTypes/Node)",
@@ -14798,13 +9549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3b00f2",
-      "Background": "#040014"
+      "Color": "#96b2cc",
+      "Background": "#0c0e11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ToLinkData(JsonTypes",
@@ -14813,13 +9559,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fad749",
-      "Background": "#141106"
+      "Color": "#dd993d",
+      "Background": "#120c05"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ToLinkData(JsonTypes.$private",
@@ -14828,13 +9569,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b5a3e0",
-      "Background": "#0f0d12"
+      "Color": "#91d837",
+      "Background": "#0c1204"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ToLinkData(JsonTypes/Link)",
@@ -14843,13 +9579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9fe0d4",
-      "Background": "#0d1211"
+      "Color": "#18fe19",
+      "Background": "#021502"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ValidateVersion(JsonReader)",
@@ -14858,13 +9589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aed0b4",
-      "Background": "#0e110f"
+      "Color": "#e641f3",
+      "Background": "#130514"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.ctor()",
@@ -14873,13 +9599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#59bdcc",
-      "Background": "#070f11"
+      "Color": "#e35228",
+      "Background": "#120603"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonFileParserService.cctor()",
@@ -14888,13 +9609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e2d862",
-      "Background": "#121208"
+      "Color": "#c2e5ea",
+      "Background": "#101313"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes.Version",
@@ -14903,13 +9619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#03aace",
-      "Background": "#000e11"
+      "Color": "#b395f8",
+      "Background": "#0e0c14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes.$private",
@@ -14918,13 +9629,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a7a8e1",
-      "Background": "#0d0e12"
+      "Color": "#f59779",
+      "Background": "#140c0a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes.cctor()",
@@ -14933,13 +9639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d278c6",
-      "Background": "#110a10"
+      "Color": "#9509e1",
+      "Background": "#0c0012"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Model.FormatVersion",
@@ -14948,13 +9649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a9d6fa",
-      "Background": "#0e1114"
+      "Color": "#6cd11b",
+      "Background": "#091102"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Model.Items",
@@ -14963,13 +9659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5880e7",
-      "Background": "#070a13"
+      "Color": "#9fefc7",
+      "Background": "#0d1310"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Model.ctor()",
@@ -14978,13 +9669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e83a05",
-      "Background": "#130400"
+      "Color": "#55dfe5",
+      "Background": "#071213"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Item.Node",
@@ -14993,13 +9679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4e2ed6",
-      "Background": "#060311"
+      "Color": "#d9656b",
+      "Background": "#120808"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Item.Link",
@@ -15008,13 +9689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#38fa69",
-      "Background": "#041408"
+      "Color": "#e4d121",
+      "Background": "#131102"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Item.ctor()",
@@ -15023,13 +9699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f8c8ff",
-      "Background": "#141015"
+      "Color": "#eb434e",
+      "Background": "#130506"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Node.Name",
@@ -15038,13 +9709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fbb554",
-      "Background": "#140f07"
+      "Color": "#184bf2",
+      "Background": "#020614"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Node.Parent",
@@ -15053,13 +9719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#38b5ec",
-      "Background": "#040f13"
+      "Color": "#50dcc5",
+      "Background": "#061210"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Node.Type",
@@ -15068,13 +9729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4133d7",
-      "Background": "#050411"
+      "Color": "#6af148",
+      "Background": "#081406"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Node.Description",
@@ -15083,13 +9739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5b01d6",
-      "Background": "#070011"
+      "Color": "#e8121f",
+      "Background": "#130102"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Node.ctor()",
@@ -15098,13 +9749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#38ec0d",
-      "Background": "#041301"
+      "Color": "#9ed98b",
+      "Background": "#0d120b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Link.Source",
@@ -15113,13 +9759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fcb9b8",
-      "Background": "#150f0f"
+      "Color": "#0afb1e",
+      "Background": "#001402"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Link.Target",
@@ -15128,13 +9769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a9eead",
-      "Background": "#0e130e"
+      "Color": "#8df58d",
+      "Background": "#0b140b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Link.TargetType",
@@ -15143,13 +9779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#be79f6",
-      "Background": "#0f0a14"
+      "Color": "#6069ef",
+      "Background": "#080813"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/Link.ctor()",
@@ -15158,13 +9789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b146f5",
-      "Background": "#0e0514"
+      "Color": "#ae1de7",
+      "Background": "#0e0213"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType.Solution",
@@ -15173,13 +9799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2bc992",
-      "Background": "#03100c"
+      "Color": "#22f40f",
+      "Background": "#021401"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType.Assembly",
@@ -15188,13 +9809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9ad123",
-      "Background": "#0c1102"
+      "Color": "#1dea9c",
+      "Background": "#02130d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType.Group",
@@ -15203,13 +9819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0edb07",
-      "Background": "#011200"
+      "Color": "#d3ffb9",
+      "Background": "#11150f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType.Dll",
@@ -15218,13 +9829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d68380",
-      "Background": "#110a0a"
+      "Color": "#f6a084",
+      "Background": "#140d0b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType.Exe",
@@ -15233,13 +9839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f46eab",
-      "Background": "#14090e"
+      "Color": "#8aec3b",
+      "Background": "#0b1304"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType.NameSpace",
@@ -15248,13 +9849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#90aacd",
-      "Background": "#0c0e11"
+      "Color": "#8efc75",
+      "Background": "#0b1509"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType.Type",
@@ -15263,13 +9859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e9e1c8",
-      "Background": "#131210"
+      "Color": "#2891d5",
+      "Background": "#030c11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType.Member",
@@ -15278,13 +9869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ebef73",
-      "Background": "#131309"
+      "Color": "#4ac1f7",
+      "Background": "#061014"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.JsonDataFiles.JsonTypes/NodeType.SolutionFolder",
@@ -15293,13 +9879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#41faed",
-      "Background": "#051413"
+      "Color": "#faf851",
+      "Background": "#141406"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.$private",
@@ -15308,13 +9889,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1b5d0",
-      "Background": "#140f11"
+      "Color": "#eebe30",
+      "Background": "#130f04"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.assembly",
@@ -15323,13 +9899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#88fe1a",
-      "Background": "#0b1502"
+      "Color": "#ef26cd",
+      "Background": "#130311"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.AssemblyDefinition",
@@ -15338,13 +9909,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f39c7c",
-      "Background": "#140d0a"
+      "Color": "#c8ee4c",
+      "Background": "#101306"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.assemblyPath",
@@ -15353,13 +9919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#00fff3",
-      "Background": "#001514"
+      "Color": "#55ef54",
+      "Background": "#071307"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.assemblyReferencesParser",
@@ -15368,13 +9929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#41e67d",
-      "Background": "#05130a"
+      "Color": "#e28448",
+      "Background": "#120b06"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.decompiler",
@@ -15383,13 +9939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b0d596",
-      "Background": "#0e110c"
+      "Color": "#11f457",
+      "Background": "#011407"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.items",
@@ -15398,13 +9949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7cf5b8",
-      "Background": "#0a140f"
+      "Color": "#63d878",
+      "Background": "#08120a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.memberParser",
@@ -15413,13 +9959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c9b46c",
-      "Background": "#100f09"
+      "Color": "#c6f68a",
+      "Background": "#10140b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.parentName",
@@ -15428,13 +9969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#66b9ff",
-      "Background": "#080f15"
+      "Color": "#d3a922",
+      "Background": "#110e02"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.resolver",
@@ -15443,13 +9979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0a94d6",
-      "Background": "#000c11"
+      "Color": "#3f05d1",
+      "Background": "#050011"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.typeParser",
@@ -15458,13 +9989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e4f15c",
-      "Background": "#131407"
+      "Color": "#aae03e",
+      "Background": "#0e1205"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.linkHandler",
@@ -15473,13 +9999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#39d87e",
-      "Background": "#04120a"
+      "Color": "#e413eb",
+      "Background": "#130113"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.typeInfos",
@@ -15488,13 +10009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0ca4e",
-      "Background": "#111006"
+      "Color": "#e9ef15",
+      "Background": "#131301"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.ProjectPath",
@@ -15503,13 +10019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d44d29",
-      "Background": "#110603"
+      "Color": "#9098d9",
+      "Background": "#0c0c12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.ModuleName",
@@ -15518,13 +10029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f173ae",
-      "Background": "#14090e"
+      "Color": "#ce19fd",
+      "Background": "#110215"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.TypeCount",
@@ -15533,13 +10039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f85466",
-      "Background": "#140708"
+      "Color": "#2feea8",
+      "Background": "#03130e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.MemberCount",
@@ -15548,13 +10049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e1423a",
-      "Background": "#120504"
+      "Color": "#6aeb07",
+      "Background": "#081300"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.IlCount",
@@ -15563,13 +10059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3650f4",
-      "Background": "#040614"
+      "Color": "#df3d0b",
+      "Background": "#120500"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.LinksCount",
@@ -15578,13 +10069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fa8177",
-      "Background": "#140a09"
+      "Color": "#d4ccff",
+      "Background": "#111115"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.ctor(String,String,String,ChannelWriter\u00601,Boolean)",
@@ -15593,13 +10079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e1c5bf",
-      "Background": "#12100f"
+      "Color": "#10e919",
+      "Background": "#011302"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.Dispose()",
@@ -15608,13 +10089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#80cb52",
-      "Background": "#0a1006"
+      "Color": "#a784d4",
+      "Background": "#0d0b11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.ParseAsync()",
@@ -15623,13 +10099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cf5f57",
-      "Background": "#110707"
+      "Color": "#f9f2bd",
+      "Background": "#14140f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.ParseAssemblyModuleAsync()",
@@ -15638,13 +10109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aee20d",
-      "Background": "#0e1201"
+      "Color": "#ea0b54",
+      "Background": "#130007"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.ParseAssemblyReferencesAsync(IReadOnlyList\u00601)",
@@ -15653,13 +10119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#80e2d4",
-      "Background": "#0a1211"
+      "Color": "#187ed5",
+      "Background": "#020a11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.GetReferencePaths(IReadOnlyList\u00601)",
@@ -15668,13 +10129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cd1e2f",
-      "Background": "#110203"
+      "Color": "#b591e6",
+      "Background": "#0f0c13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.ParseTypes()",
@@ -15683,13 +10139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9dcaa0",
-      "Background": "#0d100d"
+      "Color": "#dbdba8",
+      "Background": "#12120e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.ParseTypeMembersAsync()",
@@ -15698,13 +10149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1305a",
-      "Background": "#140407"
+      "Color": "#fe8c77",
+      "Background": "#150b09"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.TryGetSource(String)",
@@ -15713,13 +10159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e46dc2",
-      "Background": "#130910"
+      "Color": "#6ee50e",
+      "Background": "#091301"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.TryGetNode(String,String)",
@@ -15728,13 +10169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#03b3ea",
-      "Background": "#000e13"
+      "Color": "#bb70f0",
+      "Background": "#0f0914"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.GetAssembly(Boolean)",
@@ -15743,13 +10179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9889f2",
-      "Background": "#0c0b14"
+      "Color": "#09f169",
+      "Background": "#001408"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.GetAssemblyTypes()",
@@ -15758,13 +10189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#221aec",
-      "Background": "#020213"
+      "Color": "#b5ede2",
+      "Background": "#0f1312"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeDefinition",
@@ -15773,13 +10199,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1589f",
-      "Background": "#11070d"
+      "Color": "#d2cd7b",
+      "Background": "#11110a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParser.GetAssemblyDescription(AssemblyDefinition)",
@@ -15788,13 +10209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2278f4",
-      "Background": "#020a14"
+      "Color": "#52e8c3",
+      "Background": "#061310"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParserService.CanSupport(String)",
@@ -15803,13 +10219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ecf11a",
-      "Background": "#131402"
+      "Color": "#f7cd22",
+      "Background": "#141102"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParserService.ParseAsync(String,ChannelWriter\u00601)",
@@ -15818,13 +10229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#700fd8",
-      "Background": "#090112"
+      "Color": "#ff238e",
+      "Background": "#15020b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParserService.GetSourceAsync(String,String)",
@@ -15833,13 +10239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98ff2f",
-      "Background": "#0c1503"
+      "Color": "#c003fa",
+      "Background": "#100014"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParserService.GetNodeAsync(String,Source)",
@@ -15848,13 +10249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#33c946",
-      "Background": "#041005"
+      "Color": "#e53ac1",
+      "Background": "#130410"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParserService.GetDataTime(String)",
@@ -15863,13 +10259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ed27c",
-      "Background": "#07110a"
+      "Color": "#f26c66",
+      "Background": "#140908"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParserService.$private",
@@ -15878,13 +10269,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6f4cfb",
-      "Background": "#090614"
+      "Color": "#c712da",
+      "Background": "#100112"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParserService.CreateAssemblyNode(String)",
@@ -15893,13 +10279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a749ca",
-      "Background": "#0d0610"
+      "Color": "#f37022",
+      "Background": "#140902"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyParserService.ctor()",
@@ -15908,13 +10289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d33aab",
-      "Background": "#11040e"
+      "Color": "#1c66db",
+      "Background": "#020812"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.$private",
@@ -15923,13 +10299,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dd2c94",
-      "Background": "#12030c"
+      "Color": "#e464ab",
+      "Background": "#13080e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.linkHandler",
@@ -15938,13 +10309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b6efdd",
-      "Background": "#0f1312"
+      "Color": "#a8e6f3",
+      "Background": "#0e1314"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.items",
@@ -15953,13 +10319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9ef344",
-      "Background": "#0d1405"
+      "Color": "#32da37",
+      "Background": "#041204"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.ctor(LinkHandler,ChannelWriter\u00601)",
@@ -15968,13 +10329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c99f80",
-      "Background": "#100d0a"
+      "Color": "#f24d4b",
+      "Background": "#140606"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.AddReferencesAsync(AssemblyDefinition,IReadOnlyList\u00601)",
@@ -15983,13 +10339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef404a",
-      "Background": "#130506"
+      "Color": "#0adb29",
+      "Background": "#001203"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.GetReferencesPaths(String,AssemblyDefinition,IReadOnlyList\u00601)",
@@ -15998,13 +10349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d25de3",
-      "Background": "#110712"
+      "Color": "#ac7ed6",
+      "Background": "#0e0a11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.AssemblyFileName(AssemblyNameReference,String)",
@@ -16013,13 +10359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9346d5",
-      "Background": "#0c0511"
+      "Color": "#a645e1",
+      "Background": "#0d0512"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.AssemblyNameReference",
@@ -16028,13 +10369,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a5f5a3",
-      "Background": "#0d140d"
+      "Color": "#f21eab",
+      "Background": "#14020e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.GetAssemblyName(AssemblyNameReference)",
@@ -16043,13 +10379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#21d1ab",
-      "Background": "#02110e"
+      "Color": "#5bd471",
+      "Background": "#071109"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.SendReferencesRootNodeAsync()",
@@ -16058,13 +10389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#71c1e7",
-      "Background": "#091013"
+      "Color": "#dcd474",
+      "Background": "#121109"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.GetReferenceParentAsync(String,String)",
@@ -16073,13 +10399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1c9c6",
-      "Background": "#111010"
+      "Color": "#d9fdd5",
+      "Background": "#121511"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.AssemblyReferencesParser.GetExternalAssemblyReferences(AssemblyDefinition,IReadOnlyList\u00601)",
@@ -16088,13 +10409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6e5cdb",
-      "Background": "#090712"
+      "Color": "#7fd393",
+      "Background": "#0a110c"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetSource(ModuleDefinition,String)",
@@ -16103,13 +10419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d39f2a",
-      "Background": "#110d03"
+      "Color": "#65d088",
+      "Background": "#08110b"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ModuleDefinition",
@@ -16118,13 +10429,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4efb24",
-      "Background": "#061403"
+      "Color": "#2c8fe1",
+      "Background": "#030b12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetNodeNameForSourceFile(ModuleDefinition,IEnumerable\u00601,String,String)",
@@ -16133,13 +10439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8833c9",
-      "Background": "#0b0410"
+      "Color": "#faf980",
+      "Background": "#14140a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.$private",
@@ -16148,13 +10449,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fbfe23",
-      "Background": "#141502"
+      "Color": "#e2f009",
+      "Background": "#121400"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetType(ModuleDefinition,String,TypeDefinition)",
@@ -16163,13 +10459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7eb0e0",
-      "Background": "#0a0e12"
+      "Color": "#a21bf0",
+      "Background": "#0d0214"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetMember(ModuleDefinition,String,IMemberDefinition)",
@@ -16178,13 +10469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e16578",
-      "Background": "#12080a"
+      "Color": "#fca44e",
+      "Background": "#150d06"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.IMemberDefinition",
@@ -16193,13 +10479,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#646ae6",
-      "Background": "#080813"
+      "Color": "#f0088a",
+      "Background": "#14000b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetMember(TypeDefinition,String,IMemberDefinition)",
@@ -16208,13 +10489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3bcdfd",
-      "Background": "#041115"
+      "Color": "#fa2069",
+      "Background": "#140208"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetMethod(TypeDefinition,String,IMemberDefinition)",
@@ -16223,13 +10499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98fdeb",
-      "Background": "#0c1513"
+      "Color": "#5dd467",
+      "Background": "#071108"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetProperty(TypeDefinition,String,IMemberDefinition)",
@@ -16238,13 +10509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4d24e9",
-      "Background": "#060313"
+      "Color": "#e178ac",
+      "Background": "#120a0e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetField(TypeDefinition,String,IMemberDefinition)",
@@ -16253,13 +10519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cd1e37",
-      "Background": "#110204"
+      "Color": "#c9381d",
+      "Background": "#100402"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.GetDecompiledText(ModuleDefinition,TypeDefinition)",
@@ -16268,13 +10529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#04db30",
-      "Background": "#001204"
+      "Color": "#34cff6",
+      "Background": "#041114"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.GetDecompiledText(ModuleDefinition,IMemberDefinition)",
@@ -16283,13 +10539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2ad4e6",
-      "Background": "#031113"
+      "Color": "#dc8595",
+      "Background": "#120b0c"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetFilePath(TypeDefinition,Source)",
@@ -16298,13 +10549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#75e89d",
-      "Background": "#09130d"
+      "Color": "#e048a6",
+      "Background": "#12060d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.TryGetFilePath(IMemberDefinition,Source)",
@@ -16313,13 +10559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a9de29",
-      "Background": "#0e1203"
+      "Color": "#03d25b",
+      "Background": "#001107"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.ToFileLocation(SequencePoint)",
@@ -16328,13 +10569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7980e9",
-      "Background": "#0a0a13"
+      "Color": "#d1aaeb",
+      "Background": "#110e13"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil",
@@ -16343,13 +10579,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b4d294",
-      "Background": "#0f110c"
+      "Color": "#1ed1a9",
+      "Background": "#02110e"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.SequencePoint",
@@ -16358,13 +10589,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dd9dfc",
-      "Background": "#120d15"
+      "Color": "#a7f819",
+      "Background": "#0d1402"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.GetDecompiler(ModuleDefinition)",
@@ -16373,13 +10599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fffe10",
-      "Background": "#151501"
+      "Color": "#8ce61e",
+      "Background": "#0b1302"
     },
     {
       "Name": "ICSharpCode*Decompiler.ICSharpCode",
@@ -16388,13 +10609,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5de33b",
-      "Background": "#071204"
+      "Color": "#5073ec",
+      "Background": "#060913"
     },
     {
       "Name": "ICSharpCode*Decompiler.ICSharpCode.Decompiler",
@@ -16403,13 +10619,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7b46ee",
-      "Background": "#0a0513"
+      "Color": "#1f8be4",
+      "Background": "#020b13"
     },
     {
       "Name": "ICSharpCode*Decompiler.ICSharpCode.Decompiler.CSharp",
@@ -16418,13 +10629,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ff388",
-      "Background": "#09140b"
+      "Color": "#c75ffa",
+      "Background": "#100714"
     },
     {
       "Name": "ICSharpCode*Decompiler.ICSharpCode.Decompiler.CSharp.CSharpDecompiler",
@@ -16433,13 +10639,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ea1102",
-      "Background": "#130100"
+      "Color": "#22dc15",
+      "Background": "#021201"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Decompiler.ctor()",
@@ -16448,13 +10649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ddea37",
-      "Background": "#121304"
+      "Color": "#eccbad",
+      "Background": "#13100e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.IgnoredTypes.IsIgnoredSystemType(TypeReference)",
@@ -16463,13 +10659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb789a",
-      "Background": "#140a0c"
+      "Color": "#f22b34",
+      "Background": "#140304"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeReference",
@@ -16478,13 +10669,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#41c2e9",
-      "Background": "#051013"
+      "Color": "#85e943",
+      "Background": "#0b1305"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.IgnoredTypes.IsSystemIgnoredModuleName(String)",
@@ -16493,13 +10679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e55e16",
-      "Background": "#130701"
+      "Color": "#fbdbc8",
+      "Background": "#141210"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.IgnoredTypes.ctor()",
@@ -16508,13 +10689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d41534",
-      "Background": "#110104"
+      "Color": "#a5acca",
+      "Background": "#0d0e10"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.$private",
@@ -16523,13 +10699,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d4d449",
-      "Background": "#111106"
+      "Color": "#2ef327",
+      "Background": "#031403"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.items",
@@ -16538,13 +10709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bdfe1f",
-      "Background": "#0f1502"
+      "Color": "#ead39e",
+      "Background": "#13110d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.LinksCount",
@@ -16553,13 +10719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2bcbd8",
-      "Background": "#031012"
+      "Color": "#f25e55",
+      "Background": "#140707"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.ctor(ChannelWriter\u00601)",
@@ -16568,13 +10729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#60f131",
-      "Background": "#081404"
+      "Color": "#f014f7",
+      "Background": "#140114"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.AddLinkAsync(String,String,NodeType)",
@@ -16583,13 +10739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#50e76c",
-      "Background": "#061309"
+      "Color": "#2d6ade",
+      "Background": "#030812"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.AddLinkToTypeAsync(String,TypeReference)",
@@ -16598,13 +10749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f75db3",
-      "Background": "#14070e"
+      "Color": "#a7f379",
+      "Background": "#0d140a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.AddLinkToMemberAsync(String,IMemberDefinition)",
@@ -16613,13 +10759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98f061",
-      "Background": "#0c1408"
+      "Color": "#f7fe3d",
+      "Background": "#141505"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.SendLinkAsync(String,String,NodeType)",
@@ -16628,13 +10769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bd14ed",
-      "Background": "#0f0113"
+      "Color": "#e265db",
+      "Background": "#120812"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.IsIgnoredTargetMember(IMemberDefinition)",
@@ -16643,13 +10779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d9d1f1",
-      "Background": "#121114"
+      "Color": "#07e289",
+      "Background": "#00120b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.IsIgnoredTargetName(String)",
@@ -16658,13 +10789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d3b3c9",
-      "Background": "#110e10"
+      "Color": "#0c5fd8",
+      "Background": "#010712"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.IsIgnoredReference(TypeReference)",
@@ -16673,13 +10799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f808bb",
-      "Background": "#14000f"
+      "Color": "#fab6ec",
+      "Background": "#140f13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.LinkHandler.IsGenericTypeArgument(MemberReference)",
@@ -16688,13 +10809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d2c04c",
-      "Background": "#111006"
+      "Color": "#d23987",
+      "Background": "#11040b"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MemberReference",
@@ -16703,13 +10819,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e7f7ad",
-      "Background": "#13140e"
+      "Color": "#4850f3",
+      "Background": "#060614"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.$private",
@@ -16718,13 +10829,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ed643",
-      "Background": "#091105"
+      "Color": "#2f5efb",
+      "Background": "#030714"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.PartsSeparators",
@@ -16733,13 +10839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cbe16d",
-      "Background": "#101209"
+      "Color": "#30a2f8",
+      "Background": "#040d14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.linkHandler",
@@ -16748,13 +10849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f293b6",
-      "Background": "#140c0f"
+      "Color": "#48ece7",
+      "Background": "#061313"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.methodParser",
@@ -16763,13 +10859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d26473",
-      "Background": "#110809"
+      "Color": "#79ca6b",
+      "Background": "#0a1008"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.sentNodes",
@@ -16778,13 +10869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d4314a",
-      "Background": "#110406"
+      "Color": "#77e55a",
+      "Background": "#091307"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.xmlDocParser",
@@ -16793,13 +10879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec1937",
-      "Background": "#130204"
+      "Color": "#efff1d",
+      "Background": "#131502"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.items",
@@ -16808,13 +10889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2864ce",
-      "Background": "#030811"
+      "Color": "#075ad5",
+      "Background": "#000711"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.IlCount",
@@ -16823,13 +10899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ebc682",
-      "Background": "#13100a"
+      "Color": "#d1b63c",
+      "Background": "#110f05"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.MembersCount",
@@ -16838,13 +10909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dfc096",
-      "Background": "#12100c"
+      "Color": "#d36851",
+      "Background": "#110806"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.ctor(LinkHandler,XmlDocParser,ChannelWriter\u00601)",
@@ -16853,13 +10919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1f18b",
-      "Background": "#14140b"
+      "Color": "#d1ce32",
+      "Background": "#111104"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.AddTypesMembersAsync(IEnumerable\u00601)",
@@ -16868,13 +10929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dc7ec1",
-      "Background": "#120a10"
+      "Color": "#fd310a",
+      "Background": "#150400"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.AddTypeMembersAsync(TypeData)",
@@ -16883,13 +10939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b4a9d5",
-      "Background": "#0f0e11"
+      "Color": "#e411af",
+      "Background": "#13010e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.AddMemberAsync(IMemberDefinition,Node,Boolean)",
@@ -16898,13 +10949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#13f35d",
-      "Background": "#011407"
+      "Color": "#f6d36a",
+      "Background": "#141108"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.AddCompilerGeneratedMemberAsync(MethodDefinition,Node,TypeDefinition)",
@@ -16913,13 +10959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c9bfe0",
-      "Background": "#100f12"
+      "Color": "#cb673f",
+      "Background": "#100805"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodDefinition",
@@ -16928,13 +10969,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#92ff50",
-      "Background": "#0c1506"
+      "Color": "#95f9a4",
+      "Background": "#0c140d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.AddMemberLinksAsync(String,IMemberDefinition)",
@@ -16943,13 +10979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e5c65b",
-      "Background": "#131007"
+      "Color": "#8878ea",
+      "Background": "#0b0a13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.GetParentName(String)",
@@ -16958,13 +10989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ebef4",
-      "Background": "#070f14"
+      "Color": "#ef56a2",
+      "Background": "#13070d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MemberParser.cctor()",
@@ -16973,13 +10999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#33f38c",
-      "Background": "#04140b"
+      "Color": "#8ea3d4",
+      "Background": "#0b0d11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.asyncStates",
@@ -16988,13 +11009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce5b83",
-      "Background": "#11070a"
+      "Color": "#45e20b",
+      "Background": "#051200"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.linkHandler",
@@ -17003,13 +11019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c1f1dd",
-      "Background": "#101412"
+      "Color": "#4145ec",
+      "Background": "#050513"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.methodBodyNodes",
@@ -17018,13 +11029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#05f8b2",
-      "Background": "#00140e"
+      "Color": "#6a92e9",
+      "Background": "#080c13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.IlCount",
@@ -17033,13 +11039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#71d67a",
-      "Background": "#09110a"
+      "Color": "#f71ef2",
+      "Background": "#140214"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.ctor(LinkHandler)",
@@ -17048,13 +11049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c97aa8",
-      "Background": "#100a0e"
+      "Color": "#e1a841",
+      "Background": "#120e05"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddAsyncStateType(TypeData)",
@@ -17063,13 +11059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eae417",
-      "Background": "#131301"
+      "Color": "#80d4c6",
+      "Background": "#0a1110"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddMethodLinksAsync(String,MethodDefinition)",
@@ -17078,13 +11069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f7877a",
-      "Background": "#140b0a"
+      "Color": "#ecd52b",
+      "Background": "#131103"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddMethodBodyLink(String,MethodDefinition)",
@@ -17093,13 +11079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cd5d10",
-      "Background": "#110701"
+      "Color": "#ff88b5",
+      "Background": "#150b0f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddAllMethodBodyLinksAsync()",
@@ -17108,13 +11089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#186ed4",
-      "Background": "#020911"
+      "Color": "#c3f378",
+      "Background": "#10140a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddMethodBodyLinksAsync(MethodParser",
@@ -17123,13 +11099,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6fde58",
-      "Background": "#091207"
+      "Color": "#8527ef",
+      "Background": "#0b0313"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddMethodBodyLinksAsync(MethodParser.$private",
@@ -17138,13 +11109,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#15a1d9",
-      "Background": "#010d12"
+      "Color": "#f6ba36",
+      "Background": "#140f04"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddMethodBodyLinksAsync(MethodParser/MethodBodyNode)",
@@ -17153,13 +11119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0b0fde",
-      "Background": "#000112"
+      "Color": "#12e662",
+      "Background": "#011308"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddLinkToMethodVariableAsync(String,VariableDefinition,Boolean)",
@@ -17168,13 +11129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#34d536",
-      "Background": "#041104"
+      "Color": "#f0cbc4",
+      "Background": "#141010"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.VariableDefinition",
@@ -17183,13 +11139,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e16e2b",
-      "Background": "#120903"
+      "Color": "#dc39aa",
+      "Background": "#12040e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddAsyncStateLinksAsync(String,TypeDefinition)",
@@ -17198,13 +11149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef8e7e",
-      "Background": "#130b0a"
+      "Color": "#9c30cd",
+      "Background": "#0d0411"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser.AddLinkToCallMethodAsync(String,MethodReference)",
@@ -17213,13 +11159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d853e9",
-      "Background": "#120613"
+      "Color": "#f7c79c",
+      "Background": "#14100d"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodReference",
@@ -17228,13 +11169,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc3a85",
-      "Background": "#15040b"
+      "Color": "#ae9bfd",
+      "Background": "#0e0c15"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.EqualityContract",
@@ -17243,13 +11179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e79373",
-      "Background": "#130c09"
+      "Color": "#df99b7",
+      "Background": "#120c0f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.MemberName",
@@ -17258,13 +11189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f79171",
-      "Background": "#140c09"
+      "Color": "#2ecf01",
+      "Background": "#031100"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.Method",
@@ -17273,13 +11199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d3fcd4",
-      "Background": "#111511"
+      "Color": "#c8fba7",
+      "Background": "#10140d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.IsMoveNext",
@@ -17288,13 +11209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da8a44",
-      "Background": "#120b05"
+      "Color": "#2899f5",
+      "Background": "#030c14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.ctor(String,MethodDefinition,Boolean)",
@@ -17303,13 +11219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f3f208",
-      "Background": "#141400"
+      "Color": "#e5a208",
+      "Background": "#130d00"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.ToString()",
@@ -17318,13 +11229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e58254",
-      "Background": "#130a07"
+      "Color": "#34f591",
+      "Background": "#04140c"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.PrintMembers(StringBuilder)",
@@ -17333,13 +11239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0514b",
-      "Background": "#110606"
+      "Color": "#1bec86",
+      "Background": "#02130b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.op_Inequality(MethodParser",
@@ -17348,13 +11249,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c481cb",
-      "Background": "#100a10"
+      "Color": "#f25544",
+      "Background": "#140705"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.op_Inequality(MethodParser/MethodBodyNode,MethodParser",
@@ -17363,13 +11259,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f3ad1e",
-      "Background": "#140e02"
+      "Color": "#66a9ca",
+      "Background": "#080e10"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.op_Inequality(MethodParser/MethodBodyNode,MethodParser/MethodBodyNode)",
@@ -17378,13 +11269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#77ef0d",
-      "Background": "#091301"
+      "Color": "#ee064b",
+      "Background": "#130006"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.op_Equality(MethodParser",
@@ -17393,13 +11279,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e6c451",
-      "Background": "#131006"
+      "Color": "#3c7dce",
+      "Background": "#050a11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.op_Equality(MethodParser/MethodBodyNode,MethodParser",
@@ -17408,13 +11289,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dcb64f",
-      "Background": "#120f06"
+      "Color": "#82d127",
+      "Background": "#0a1103"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.op_Equality(MethodParser/MethodBodyNode,MethodParser/MethodBodyNode)",
@@ -17423,13 +11299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ae5af7",
-      "Background": "#0e0714"
+      "Color": "#7dce6d",
+      "Background": "#0a1109"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.GetHashCode()",
@@ -17438,13 +11309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ef091",
-      "Background": "#09140c"
+      "Color": "#7ef54e",
+      "Background": "#0a1406"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.Equals(Object)",
@@ -17453,13 +11319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#63ecbb",
-      "Background": "#08130f"
+      "Color": "#f3626b",
+      "Background": "#140808"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.Equals(MethodParser",
@@ -17468,13 +11329,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cbdad8",
-      "Background": "#101212"
+      "Color": "#fa4f73",
+      "Background": "#140609"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.Equals(MethodParser/MethodBodyNode)",
@@ -17483,13 +11339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e32740",
-      "Background": "#120305"
+      "Color": "#e82544",
+      "Background": "#130305"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.\u003CClone\u003E$()",
@@ -17498,13 +11349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dda86f",
-      "Background": "#120e09"
+      "Color": "#89cf15",
+      "Background": "#0b1101"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.ctor(MethodParser",
@@ -17513,13 +11359,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cec7bf",
-      "Background": "#11100f"
+      "Color": "#5ed582",
+      "Background": "#07110a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.ctor(MethodParser/MethodBodyNode)",
@@ -17528,13 +11369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9feeca",
-      "Background": "#0d1310"
+      "Color": "#35cd2d",
+      "Background": "#041103"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.MethodParser/MethodBodyNode.Deconstruct(String,MethodDefinition,Boolean)",
@@ -17543,13 +11379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eeb48e",
-      "Background": "#130f0b"
+      "Color": "#c725f4",
+      "Background": "#100314"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.IsCompilerGenerated(String)",
@@ -17558,13 +11389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f7d56d",
-      "Background": "#141109"
+      "Color": "#c2f5dc",
+      "Background": "#101412"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetModuleName(AssemblyDefinition)",
@@ -17573,13 +11399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d38ed9",
-      "Background": "#110b12"
+      "Color": "#9190db",
+      "Background": "#0c0c12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetModuleName(AssemblyNameReference)",
@@ -17588,13 +11409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6e3ce0",
-      "Background": "#090512"
+      "Color": "#93e49f",
+      "Background": "#0c130d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetTypeFullName(TypeReference)",
@@ -17603,13 +11419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8ec3e0",
-      "Background": "#0b1012"
+      "Color": "#5aa6f9",
+      "Background": "#070d14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetTypeNamespaceFullName(TypeDefinition)",
@@ -17618,13 +11429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d77fcd",
-      "Background": "#110a11"
+      "Color": "#5fec1d",
+      "Background": "#071302"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetMemberFullName(IMemberDefinition)",
@@ -17633,13 +11439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#69dcd2",
-      "Background": "#081211"
+      "Color": "#4bd8b0",
+      "Background": "#06120e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetMethodFullName(MethodReference)",
@@ -17648,13 +11449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5accde",
-      "Background": "#071112"
+      "Color": "#7deee1",
+      "Background": "#0a1312"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.$private",
@@ -17663,13 +11459,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#075efa",
-      "Background": "#000714"
+      "Color": "#c1df32",
+      "Background": "#101204"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetModuleNameImpl(AssemblyDefinition)",
@@ -17678,13 +11469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#16bcdc",
-      "Background": "#010f12"
+      "Color": "#3dec04",
+      "Background": "#051300"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetModuleNameImpl(AssemblyNameReference)",
@@ -17693,13 +11479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8bf6fa",
-      "Background": "#0b1414"
+      "Color": "#121cde",
+      "Background": "#010212"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetTypeFullNameImpl(TypeReference)",
@@ -17708,13 +11489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0961ce",
-      "Background": "#000811"
+      "Color": "#f0a4ca",
+      "Background": "#140d10"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetTypeNamespaceFullNameImpl(TypeDefinition)",
@@ -17723,13 +11499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#49e756",
-      "Background": "#061307"
+      "Color": "#b299d4",
+      "Background": "#0e0c11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetMemberFullNameImpl(IMemberDefinition)",
@@ -17738,13 +11509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98d88f",
-      "Background": "#0c120b"
+      "Color": "#e52ee9",
+      "Background": "#130313"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetMethodFullNameImpl(MethodReference)",
@@ -17753,13 +11519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d3b600",
-      "Background": "#110f00"
+      "Color": "#a6fa98",
+      "Background": "#0d140c"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetMethodFullNameImpl(GenericInstanceMethod)",
@@ -17768,13 +11529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ed598",
-      "Background": "#09110c"
+      "Color": "#1c47de",
+      "Background": "#020512"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.GenericInstanceMethod",
@@ -17783,13 +11539,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#00ce8a",
-      "Background": "#00110b"
+      "Color": "#e09e8f",
+      "Background": "#120d0b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetMethodName(MethodReference)",
@@ -17798,13 +11549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da070d",
-      "Background": "#120001"
+      "Color": "#d52955",
+      "Background": "#110307"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetTypeName(TypeReference)",
@@ -17813,13 +11559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d5ce18",
-      "Background": "#111102"
+      "Color": "#64dda3",
+      "Background": "#08120d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetParametersText(MethodReference)",
@@ -17828,13 +11569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9c8ad0",
-      "Background": "#0d0b11"
+      "Color": "#66cd88",
+      "Background": "#08110b"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetParameterTypeName(ParameterDefinition)",
@@ -17843,13 +11579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5375fe",
-      "Background": "#060915"
+      "Color": "#fffa12",
+      "Background": "#151401"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ParameterDefinition",
@@ -17858,13 +11589,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e86754",
-      "Background": "#130807"
+      "Color": "#ec05ec",
+      "Background": "#130013"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetModuleName(TypeReference)",
@@ -17873,13 +11599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c90c44",
-      "Background": "#100105"
+      "Color": "#9dcd47",
+      "Background": "#0d1105"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.Name.GetAdjustedName(String)",
@@ -17888,13 +11609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cda736",
-      "Background": "#110d04"
+      "Color": "#7083cf",
+      "Background": "#090a11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.ParsingAssemblyResolver.Resolve(AssemblyNameReference)",
@@ -17903,13 +11619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#70f3ef",
-      "Background": "#091413"
+      "Color": "#d677c4",
+      "Background": "#110910"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.ParsingAssemblyResolver.Resolve(AssemblyNameReference,ReaderParameters)",
@@ -17918,13 +11629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#84f056",
-      "Background": "#0b1407"
+      "Color": "#e2df32",
+      "Background": "#121204"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ReaderParameters",
@@ -17933,13 +11639,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e74616",
-      "Background": "#130501"
+      "Color": "#f22d9e",
+      "Background": "#14030d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.ParsingAssemblyResolver.ctor()",
@@ -17948,13 +11649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#039cdb",
-      "Background": "#000d12"
+      "Color": "#fc5337",
+      "Background": "#150604"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.EqualityContract",
@@ -17963,13 +11659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#13d019",
-      "Background": "#011102"
+      "Color": "#f1fd78",
+      "Background": "#14150a"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.Type",
@@ -17978,13 +11669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e293e9",
-      "Background": "#120c13"
+      "Color": "#9b22d5",
+      "Background": "#0c0211"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.Node",
@@ -17993,13 +11679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b2da6d",
-      "Background": "#0e1209"
+      "Color": "#8436f6",
+      "Background": "#0b0414"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.IsAsyncStateType",
@@ -18008,13 +11689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f75ff7",
-      "Background": "#140714"
+      "Color": "#b863e2",
+      "Background": "#0f0812"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.ctor(TypeDefinition,Node,Boolean)",
@@ -18023,13 +11699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d58a41",
-      "Background": "#110b05"
+      "Color": "#29f076",
+      "Background": "#031409"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.ToString()",
@@ -18038,13 +11709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb4fb3",
-      "Background": "#14060e"
+      "Color": "#e5bed3",
+      "Background": "#130f11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.PrintMembers(StringBuilder)",
@@ -18053,13 +11719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#11d7d6",
-      "Background": "#011111"
+      "Color": "#1ce8ea",
+      "Background": "#021313"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.op_Inequality(TypeData,TypeData)",
@@ -18068,13 +11729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cac183",
-      "Background": "#10100a"
+      "Color": "#2378d8",
+      "Background": "#020a12"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.op_Equality(TypeData,TypeData)",
@@ -18083,13 +11739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e18d69",
-      "Background": "#120b08"
+      "Color": "#b158db",
+      "Background": "#0e0712"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.GetHashCode()",
@@ -18098,13 +11749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cc7b4d",
-      "Background": "#110a06"
+      "Color": "#9d1ee6",
+      "Background": "#0d0213"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.Equals(Object)",
@@ -18113,13 +11759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b2de59",
-      "Background": "#0e1207"
+      "Color": "#eb5723",
+      "Background": "#130702"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.Equals(TypeData)",
@@ -18128,13 +11769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c1a8f2",
-      "Background": "#100e14"
+      "Color": "#e4686d",
+      "Background": "#130809"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.\u003CClone\u003E$()",
@@ -18143,13 +11779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#51f508",
-      "Background": "#061400"
+      "Color": "#dce91e",
+      "Background": "#121302"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.ctor(TypeData)",
@@ -18158,13 +11789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5fb6e",
-      "Background": "#101409"
+      "Color": "#91c2f1",
+      "Background": "#0c1014"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeData.Deconstruct(TypeDefinition,Node,Boolean)",
@@ -18173,13 +11799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e5660d",
-      "Background": "#130801"
+      "Color": "#1dd80e",
+      "Background": "#021201"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser.$private",
@@ -18188,13 +11809,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2728eb",
-      "Background": "#030313"
+      "Color": "#43b1d6",
+      "Background": "#050e11"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser.linkHandler",
@@ -18203,13 +11819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e226e7",
-      "Background": "#120313"
+      "Color": "#95de11",
+      "Background": "#0c1201"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser.xmlDockParser",
@@ -18218,13 +11829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2ba5f3",
-      "Background": "#030d14"
+      "Color": "#bdd951",
+      "Background": "#0f1206"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser.items",
@@ -18233,13 +11839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7386cb",
-      "Background": "#090b10"
+      "Color": "#fb6eac",
+      "Background": "#14090e"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser.ctor(LinkHandler,XmlDocParser,ChannelWriter\u00601)",
@@ -18248,13 +11849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e26f32",
-      "Background": "#120904"
+      "Color": "#e3a828",
+      "Background": "#120e03"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser.AddTypeAsync(AssemblyDefinition,TypeDefinition)",
@@ -18263,13 +11859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f91160",
-      "Background": "#140108"
+      "Color": "#b72df5",
+      "Background": "#0f0314"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser.IsNameSpaceDocTypeAsync(TypeDefinition,String)",
@@ -18278,13 +11869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c569de",
-      "Background": "#100812"
+      "Color": "#f7a2f3",
+      "Background": "#140d14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser.AddTypesLinksAsync(IEnumerable\u00601)",
@@ -18293,13 +11879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#df22ef",
-      "Background": "#120213"
+      "Color": "#e51830",
+      "Background": "#130204"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.TypeParser.AddLinksToBaseTypesAsync(TypeData)",
@@ -18308,13 +11889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#85c3fe",
-      "Background": "#0b1015"
+      "Color": "#d780ea",
+      "Background": "#110a13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.$private",
@@ -18323,13 +11899,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de6664",
-      "Background": "#120808"
+      "Color": "#86f263",
+      "Background": "#0b1408"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.assemblyPath",
@@ -18338,13 +11909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fdb904",
-      "Background": "#150f00"
+      "Color": "#fcb03f",
+      "Background": "#150e05"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.descriptions",
@@ -18353,13 +11919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f96fdc",
-      "Background": "#140912"
+      "Color": "#f2fca0",
+      "Background": "#14150d"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.ParameterSeparator",
@@ -18368,13 +11929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3d4ada",
-      "Background": "#050612"
+      "Color": "#be18ea",
+      "Background": "#0f0213"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.ctor(String)",
@@ -18383,13 +11939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#03b4e8",
-      "Background": "#000f13"
+      "Color": "#1ef265",
+      "Background": "#021408"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.GetDescription(String)",
@@ -18398,13 +11949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#06ff9a",
-      "Background": "#00150c"
+      "Color": "#76f2b4",
+      "Background": "#09140f"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.GetDescriptions()",
@@ -18413,13 +11959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a8d458",
-      "Background": "#0e1107"
+      "Color": "#a7cb08",
+      "Background": "#0d1000"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.Add(IDictionary\u00602,String,String,String)",
@@ -18428,13 +11969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7cde10",
-      "Background": "#0a1201"
+      "Color": "#d33a28",
+      "Background": "#110403"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.ToShortTypeName(String)",
@@ -18443,13 +11979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0cca19",
-      "Background": "#011002"
+      "Color": "#938bfa",
+      "Background": "#0c0b14"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.GetSummary(XElement)",
@@ -18458,13 +11989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ba33d1",
-      "Background": "#0f0411"
+      "Color": "#d8a7e6",
+      "Background": "#120d13"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.GetMemberName(XElement)",
@@ -18473,13 +11999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1ce0e",
-      "Background": "#141101"
+      "Color": "#b3e167",
+      "Background": "#0e1208"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.GetAssemblyName(XDocument)",
@@ -18488,13 +12009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f6652a",
-      "Background": "#140803"
+      "Color": "#63d65b",
+      "Background": "#081107"
     },
     {
       "Name": "Dependinator.Dependinator.Parsing.Assemblies.XmlDocParser.cctor()",
@@ -18503,13 +12019,38 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6eaff5",
-      "Background": "#090e14"
+      "Color": "#7b55ea",
+      "Background": "#0a0713"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Models.ExampleModel.Model",
+      "ParentName": "Dependinator.Dependinator.Models.ExampleModel",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#42e5ba",
+      "Background": "#05130f"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Models.ExampleModel.$private",
+      "ParentName": "Dependinator.Dependinator.Models.ExampleModel",
+      "Type": {
+        "Text": "Private"
+      },
+      "Description": "",
+      "Color": "#3632fc",
+      "Background": "#040415"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Models.ExampleModel.cctor()",
+      "ParentName": "Dependinator.Dependinator.Models.ExampleModel.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#8cf555",
+      "Background": "#0b1407"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.$private",
@@ -18518,13 +12059,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#387dca",
-      "Background": "#040a10"
+      "Color": "#a5b4f4",
+      "Background": "#0d0f14"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.Base62Chars",
@@ -18533,13 +12069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9132d5",
-      "Background": "#0c0411"
+      "Color": "#07d1cc",
+      "Background": "#001111"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.EqualityContract",
@@ -18548,13 +12079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#760fcc",
-      "Background": "#090111"
+      "Color": "#67c8cc",
+      "Background": "#081011"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.Value",
@@ -18563,13 +12089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b2edf2",
-      "Background": "#0e1314"
+      "Color": "#8acbdb",
+      "Background": "#0b1012"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.ctor(String)",
@@ -18578,13 +12099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#48ce02",
-      "Background": "#061100"
+      "Color": "#e96f12",
+      "Background": "#130901"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.ToId(String,Int32)",
@@ -18593,13 +12109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e4ac59",
-      "Background": "#130e07"
+      "Color": "#8306f3",
+      "Background": "#0a0014"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.Base62Encode(Byte,Int32)",
@@ -18608,13 +12119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cea3b8",
-      "Background": "#110d0f"
+      "Color": "#ec45a2",
+      "Background": "#13050d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.ParseString(String)",
@@ -18623,13 +12129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#772fe7",
-      "Background": "#090313"
+      "Color": "#d7b124",
+      "Background": "#110e03"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.ToString()",
@@ -18638,13 +12139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eaa3be",
-      "Background": "#130d0f"
+      "Color": "#f88c43",
+      "Background": "#140b05"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.PrintMembers(StringBuilder)",
@@ -18653,13 +12149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e7d9dc",
-      "Background": "#131212"
+      "Color": "#1efc96",
+      "Background": "#02150c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.op_Inequality(Id,Id)",
@@ -18668,13 +12159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0ed5de",
-      "Background": "#011112"
+      "Color": "#e52d98",
+      "Background": "#13030c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.op_Equality(Id,Id)",
@@ -18683,13 +12169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7deec5",
-      "Background": "#0a1310"
+      "Color": "#f17575",
+      "Background": "#140909"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.GetHashCode()",
@@ -18698,13 +12179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7c12d0",
-      "Background": "#0a0111"
+      "Color": "#80d24b",
+      "Background": "#0a1106"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.Equals(Object)",
@@ -18713,13 +12189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#abd2b2",
-      "Background": "#0e110e"
+      "Color": "#11e14c",
+      "Background": "#011206"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.Equals(Id)",
@@ -18728,13 +12199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#89d0a8",
-      "Background": "#0b110e"
+      "Color": "#37f449",
+      "Background": "#041406"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.\u003CClone\u003E$()",
@@ -18743,13 +12209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a204f0",
-      "Background": "#0d0014"
+      "Color": "#9ffb26",
+      "Background": "#0d1403"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.ctor(Id)",
@@ -18758,13 +12219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2bf957",
-      "Background": "#031407"
+      "Color": "#cf64ba",
+      "Background": "#11080f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.Deconstruct(String)",
@@ -18773,13 +12229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d87f42",
-      "Background": "#120a05"
+      "Color": "#0a5af6",
+      "Background": "#000714"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Id.cctor()",
@@ -18788,13 +12239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5df477",
-      "Background": "#071409"
+      "Color": "#46c8ed",
+      "Background": "#051013"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.Empty",
@@ -18803,13 +12249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e68a16",
-      "Background": "#130b01"
+      "Color": "#ef01aa",
+      "Background": "#13000e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.EqualityContract",
@@ -18818,13 +12259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#02f454",
-      "Background": "#001407"
+      "Color": "#95e275",
+      "Background": "#0c1209"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.$private",
@@ -18833,13 +12269,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#edbf24",
-      "Background": "#130f03"
+      "Color": "#fa1be5",
+      "Background": "#140213"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.ctor(String)",
@@ -18848,13 +12279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e2a2f0",
-      "Background": "#120d14"
+      "Color": "#c5eb6d",
+      "Background": "#101309"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.FromName(String)",
@@ -18863,13 +12289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#68fbee",
-      "Background": "#081413"
+      "Color": "#bae042",
+      "Background": "#0f1205"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.FromId(String)",
@@ -18878,13 +12299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c27dd8",
-      "Background": "#100a12"
+      "Color": "#e3c1e4",
+      "Background": "#121013"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.ToString()",
@@ -18893,13 +12309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#be39e0",
-      "Background": "#0f0412"
+      "Color": "#ef9d3a",
+      "Background": "#130d04"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.PrintMembers(StringBuilder)",
@@ -18908,13 +12319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#10ffe9",
-      "Background": "#011513"
+      "Color": "#17e0d3",
+      "Background": "#011211"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.op_Inequality(NodeId,NodeId)",
@@ -18923,13 +12329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e45218",
-      "Background": "#130602"
+      "Color": "#6b2ff8",
+      "Background": "#080314"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.op_Equality(NodeId,NodeId)",
@@ -18938,13 +12339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#92f812",
-      "Background": "#0c1401"
+      "Color": "#dcf4a4",
+      "Background": "#12140d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.GetHashCode()",
@@ -18953,13 +12349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#69ed06",
-      "Background": "#081300"
+      "Color": "#f95b64",
+      "Background": "#140708"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.Equals(Object)",
@@ -18968,13 +12359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b388dc",
-      "Background": "#0e0b12"
+      "Color": "#d7c39a",
+      "Background": "#11100c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.Equals(Id)",
@@ -18983,13 +12369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f38476",
-      "Background": "#140b09"
+      "Color": "#39d903",
+      "Background": "#041200"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.Equals(NodeId)",
@@ -18998,13 +12379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d3c5eb",
-      "Background": "#111013"
+      "Color": "#c7ce4a",
+      "Background": "#101106"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.\u003CClone\u003E$()",
@@ -19013,13 +12389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7d63ed",
-      "Background": "#0a0813"
+      "Color": "#05debe",
+      "Background": "#00120f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.ctor(NodeId)",
@@ -19028,13 +12399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d82cc4",
-      "Background": "#120310"
+      "Color": "#21eb4a",
+      "Background": "#021306"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeId.cctor()",
@@ -19043,13 +12409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec8a25",
-      "Background": "#130b03"
+      "Color": "#e5f342",
+      "Background": "#131405"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.EqualityContract",
@@ -19058,13 +12419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fff5ae",
-      "Background": "#15140e"
+      "Color": "#6c62d1",
+      "Background": "#090811"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.sourceName",
@@ -19073,13 +12429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ae41b",
-      "Background": "#061302"
+      "Color": "#d797e5",
+      "Background": "#110c13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.targetName",
@@ -19088,13 +12439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a626f7",
-      "Background": "#0d0314"
+      "Color": "#753be9",
+      "Background": "#090413"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.ctor(String,String)",
@@ -19103,13 +12449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f3da72",
-      "Background": "#141209"
+      "Color": "#89d561",
+      "Background": "#0b1108"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.ToString()",
@@ -19118,13 +12459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#89cc2c",
-      "Background": "#0b1103"
+      "Color": "#66d39d",
+      "Background": "#08110d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.PrintMembers(StringBuilder)",
@@ -19133,13 +12469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#86e718",
-      "Background": "#0b1302"
+      "Color": "#fb4cb9",
+      "Background": "#14060f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.op_Inequality(LinkId,LinkId)",
@@ -19148,13 +12479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#197cee",
-      "Background": "#020a13"
+      "Color": "#69cfa8",
+      "Background": "#08110e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.op_Equality(LinkId,LinkId)",
@@ -19163,13 +12489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f8246a",
-      "Background": "#140308"
+      "Color": "#fc9411",
+      "Background": "#150c01"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.GetHashCode()",
@@ -19178,13 +12499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#44f369",
-      "Background": "#051408"
+      "Color": "#463dea",
+      "Background": "#050513"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.Equals(Object)",
@@ -19193,13 +12509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dcbe04",
-      "Background": "#120f00"
+      "Color": "#5ee99f",
+      "Background": "#07130d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.Equals(Id)",
@@ -19208,13 +12519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d00ad1",
-      "Background": "#110011"
+      "Color": "#f1646d",
+      "Background": "#140809"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.Equals(LinkId)",
@@ -19223,13 +12529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#19d501",
-      "Background": "#021100"
+      "Color": "#7063fd",
+      "Background": "#090815"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.\u003CClone\u003E$()",
@@ -19238,13 +12539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fec893",
-      "Background": "#15100c"
+      "Color": "#e43a69",
+      "Background": "#130408"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.ctor(LinkId)",
@@ -19253,13 +12549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fec71c",
-      "Background": "#151002"
+      "Color": "#edb7a2",
+      "Background": "#130f0d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinkId.Deconstruct(String,String)",
@@ -19268,13 +12559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#76bfcb",
-      "Background": "#090f10"
+      "Color": "#e57ad5",
+      "Background": "#130a11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.EqualityContract",
@@ -19283,13 +12569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee0ca5",
-      "Background": "#13010d"
+      "Color": "#6af9f5",
+      "Background": "#081414"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.sourceName",
@@ -19298,13 +12579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ca566b",
-      "Background": "#100708"
+      "Color": "#e134cd",
+      "Background": "#120411"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.targetName",
@@ -19313,13 +12589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bb74cb",
-      "Background": "#0f0910"
+      "Color": "#06fa62",
+      "Background": "#001408"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.ctor(String,String)",
@@ -19328,13 +12599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f15083",
-      "Background": "#14060a"
+      "Color": "#4847f6",
+      "Background": "#060514"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.ToString()",
@@ -19343,13 +12609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#22cd61",
-      "Background": "#021108"
+      "Color": "#ddcab4",
+      "Background": "#12100f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.PrintMembers(StringBuilder)",
@@ -19358,13 +12619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da19fb",
-      "Background": "#120214"
+      "Color": "#faa907",
+      "Background": "#140e00"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.op_Inequality(LineId,LineId)",
@@ -19373,13 +12629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dbe504",
-      "Background": "#121300"
+      "Color": "#9df8b0",
+      "Background": "#0d140e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.op_Equality(LineId,LineId)",
@@ -19388,13 +12639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d30cb5",
-      "Background": "#11010f"
+      "Color": "#30eb5c",
+      "Background": "#041307"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.GetHashCode()",
@@ -19403,13 +12649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d282bd",
-      "Background": "#110a0f"
+      "Color": "#d029bf",
+      "Background": "#11030f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.Equals(Object)",
@@ -19418,13 +12659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cd0ab4",
-      "Background": "#11000f"
+      "Color": "#b064ce",
+      "Background": "#0e0811"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.Equals(Id)",
@@ -19433,13 +12669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8460ee",
-      "Background": "#0b0813"
+      "Color": "#d12246",
+      "Background": "#110205"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.Equals(LineId)",
@@ -19448,13 +12679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ecb2b",
-      "Background": "#061003"
+      "Color": "#23cd62",
+      "Background": "#021108"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.\u003CClone\u003E$()",
@@ -19463,13 +12689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ae2c0",
-      "Background": "#061210"
+      "Color": "#666bfd",
+      "Background": "#080815"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.ctor(LineId)",
@@ -19478,13 +12699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#573bcc",
-      "Background": "#070411"
+      "Color": "#e9ea4c",
+      "Background": "#131306"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LineId.Deconstruct(String,String)",
@@ -19493,13 +12709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#54f0fc",
-      "Background": "#071415"
+      "Color": "#d451c2",
+      "Background": "#110610"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.EqualityContract",
@@ -19508,13 +12719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#abc92d",
-      "Background": "#0e1003"
+      "Color": "#d2a77d",
+      "Background": "#110d0a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.X1",
@@ -19523,13 +12729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7d9ed8",
-      "Background": "#0a0d12"
+      "Color": "#ecc5e2",
+      "Background": "#131012"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.Y1",
@@ -19538,13 +12739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d9046a",
-      "Background": "#120008"
+      "Color": "#f93175",
+      "Background": "#140409"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.X2",
@@ -19553,13 +12749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cec8f6",
-      "Background": "#111014"
+      "Color": "#f094cd",
+      "Background": "#140c11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.Y2",
@@ -19568,13 +12759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#db22e6",
-      "Background": "#120213"
+      "Color": "#cade8f",
+      "Background": "#10120b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.ctor(Double,Double,Double,Double)",
@@ -19583,13 +12769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6c8df1",
-      "Background": "#090b14"
+      "Color": "#f1956e",
+      "Background": "#140c09"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.ToString()",
@@ -19598,13 +12779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c2c7e2",
-      "Background": "#101012"
+      "Color": "#0d81f6",
+      "Background": "#010a14"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.PrintMembers(StringBuilder)",
@@ -19613,13 +12789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fbb573",
-      "Background": "#140f09"
+      "Color": "#b81ed7",
+      "Background": "#0f0211"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.op_Inequality(LinePos,LinePos)",
@@ -19628,13 +12799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8269e5",
-      "Background": "#0a0813"
+      "Color": "#9712f4",
+      "Background": "#0c0114"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.op_Equality(LinePos,LinePos)",
@@ -19643,13 +12809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e96a55",
-      "Background": "#130807"
+      "Color": "#77dbc1",
+      "Background": "#091210"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.GetHashCode()",
@@ -19658,13 +12819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2af925",
-      "Background": "#031403"
+      "Color": "#d49cd6",
+      "Background": "#110d11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.Equals(Object)",
@@ -19673,13 +12829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dd01be",
-      "Background": "#12000f"
+      "Color": "#7e29e3",
+      "Background": "#0a0312"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.Equals(LinePos)",
@@ -19688,13 +12839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5637d0",
-      "Background": "#070411"
+      "Color": "#3eefb6",
+      "Background": "#05130f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.\u003CClone\u003E$()",
@@ -19703,13 +12849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#53fcd6",
-      "Background": "#061511"
+      "Color": "#2277d0",
+      "Background": "#020911"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.ctor(LinePos)",
@@ -19718,13 +12859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#54bce3",
-      "Background": "#070f12"
+      "Color": "#ed1561",
+      "Background": "#130108"
     },
     {
       "Name": "Dependinator.Dependinator.Models.LinePos.Deconstruct(Double,Double,Double,Double)",
@@ -19733,13 +12869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#038fe2",
-      "Background": "#000b12"
+      "Color": "#99ce14",
+      "Background": "#0c1101"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.$private",
@@ -19748,13 +12879,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eea868",
-      "Background": "#130e08"
+      "Color": "#f69bd9",
+      "Background": "#140c12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.links",
@@ -19763,13 +12889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ea41de",
-      "Background": "#130512"
+      "Color": "#aad2a3",
+      "Background": "#0e110d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.Id",
@@ -19778,13 +12899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b9bfcc",
-      "Background": "#0f0f11"
+      "Color": "#05b9d6",
+      "Background": "#000f11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.Source",
@@ -19793,13 +12909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9e65d1",
-      "Background": "#0d0811"
+      "Color": "#cd85eb",
+      "Background": "#110b13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.Target",
@@ -19808,13 +12919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6cbbfc",
-      "Background": "#090f15"
+      "Color": "#95f603",
+      "Background": "#0c1400"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.Boundary",
@@ -19823,13 +12929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#30f650",
-      "Background": "#041406"
+      "Color": "#bbe7ac",
+      "Background": "#0f130e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.StrokeColor",
@@ -19838,13 +12939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d212cd",
-      "Background": "#110111"
+      "Color": "#15ed98",
+      "Background": "#01130c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.StrokeWidth",
@@ -19853,13 +12949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9b1bcf",
-      "Background": "#0c0211"
+      "Color": "#f5de7b",
+      "Background": "#14120a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.ctor(Node,Node)",
@@ -19868,13 +12959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f7bd7b",
-      "Background": "#140f0a"
+      "Color": "#fb57a0",
+      "Background": "#14070d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.Add(Link)",
@@ -19883,13 +12969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fa2010",
-      "Background": "#140201"
+      "Color": "#de7efe",
+      "Background": "#120a15"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.GetLineEndpoints()",
@@ -19898,13 +12979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#25a7cf",
-      "Background": "#030d11"
+      "Color": "#da041f",
+      "Background": "#120002"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Line.ToString()",
@@ -19913,13 +12989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b6b5e8",
-      "Background": "#0f0f13"
+      "Color": "#92d401",
+      "Background": "#0c1100"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Link.$private",
@@ -19928,13 +12999,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ed60bc",
-      "Background": "#13080f"
+      "Color": "#f85ca7",
+      "Background": "#14070d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Link.lines",
@@ -19943,13 +13009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e170e3",
-      "Background": "#120912"
+      "Color": "#d77e19",
+      "Background": "#110a02"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Link.Id",
@@ -19958,13 +13019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#45f4f0",
-      "Background": "#051414"
+      "Color": "#75d2ac",
+      "Background": "#09110e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Link.Source",
@@ -19973,13 +13029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#73fe25",
-      "Background": "#091503"
+      "Color": "#3d0ee0",
+      "Background": "#050112"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Link.Target",
@@ -19988,13 +13039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b1dd65",
-      "Background": "#0e1208"
+      "Color": "#ee4529",
+      "Background": "#130503"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Link.ctor(Node,Node)",
@@ -20003,13 +13049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f0ff6d",
-      "Background": "#141509"
+      "Color": "#7021da",
+      "Background": "#090212"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Link.AddLine(Line)",
@@ -20018,13 +13059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#91ce84",
-      "Background": "#0c110b"
+      "Color": "#ddf6df",
+      "Background": "#121412"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Link.ToString()",
@@ -20033,13 +13069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c033fc",
-      "Background": "#100415"
+      "Color": "#fac02c",
+      "Background": "#141003"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.SyncRoot",
@@ -20048,13 +13079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f686a7",
-      "Background": "#140b0d"
+      "Color": "#f283e5",
+      "Background": "#140a13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.Root",
@@ -20063,13 +13089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f93d5d",
-      "Background": "#140507"
+      "Color": "#99dc01",
+      "Background": "#0c1200"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.Tiles",
@@ -20078,13 +13099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a6d900",
-      "Background": "#0d1200"
+      "Color": "#f0998a",
+      "Background": "#140c0b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.Items",
@@ -20093,13 +13109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f0f016",
-      "Background": "#141401"
+      "Color": "#57c9cf",
+      "Background": "#071011"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.IsSaving",
@@ -20108,13 +13119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cbe10a",
-      "Background": "#101200"
+      "Color": "#2ff076",
+      "Background": "#031409"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.TryGetNode(NodeId,Node)",
@@ -20123,13 +13129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d24fb1",
-      "Background": "#11060e"
+      "Color": "#48b5ce",
+      "Background": "#060f11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.AddNode(Node)",
@@ -20138,13 +13139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#06cc48",
-      "Background": "#001106"
+      "Color": "#51b2f2",
+      "Background": "#060e14"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.GetNode(NodeId)",
@@ -20153,13 +13149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9be1cc",
-      "Background": "#0c1211"
+      "Color": "#d37304",
+      "Background": "#110900"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.AddLink(Link)",
@@ -20168,13 +13159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#43d8d7",
-      "Background": "#051211"
+      "Color": "#8950ea",
+      "Background": "#0b0613"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.GetLink(NodeId)",
@@ -20183,13 +13169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7254e0",
-      "Background": "#090712"
+      "Color": "#5d1cd1",
+      "Background": "#070211"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.TryGetLink(NodeId,Link)",
@@ -20198,13 +13179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fe9fd2",
-      "Background": "#150d11"
+      "Color": "#401fd6",
+      "Background": "#050211"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.AddLine(Line)",
@@ -20213,13 +13189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ca599e",
-      "Background": "#10070d"
+      "Color": "#36a0ef",
+      "Background": "#040d13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.Clear()",
@@ -20228,13 +13199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6c42fe",
-      "Background": "#090515"
+      "Color": "#904af6",
+      "Background": "#0c0614"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.ClearCachedSvg()",
@@ -20243,13 +13209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aefd68",
-      "Background": "#0e1508"
+      "Color": "#63ef4d",
+      "Background": "#081306"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModel.ContainsKey(Id)",
@@ -20258,13 +13219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f507b7",
-      "Background": "#14000f"
+      "Color": "#bf1de3",
+      "Background": "#0f0212"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.$private",
@@ -20273,13 +13229,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9907ff",
-      "Background": "#0c0015"
+      "Color": "#d21722",
+      "Background": "#110102"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.syncRoot",
@@ -20288,13 +13239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fd0a2d",
-      "Background": "#150003"
+      "Color": "#c778de",
+      "Background": "#100a12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.SyncRoot",
@@ -20303,13 +13249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dc3ebe",
-      "Background": "#12050f"
+      "Color": "#2088df",
+      "Background": "#020b12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.IsSaving",
@@ -20318,13 +13259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e859dc",
-      "Background": "#130712"
+      "Color": "#24f012",
+      "Background": "#031401"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.Tiles",
@@ -20333,13 +13269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#72cb6e",
-      "Background": "#091009"
+      "Color": "#da2d96",
+      "Background": "#12030c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.Items",
@@ -20348,13 +13279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#df0373",
-      "Background": "#120009"
+      "Color": "#9636da",
+      "Background": "#0c0412"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.Root",
@@ -20363,13 +13289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eddfcf",
-      "Background": "#131211"
+      "Color": "#a0f518",
+      "Background": "#0d1402"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.ctor()",
@@ -20378,13 +13299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0ad4ea",
-      "Background": "#001113"
+      "Color": "#351bd2",
+      "Background": "#040211"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.ContainsKey(Id)",
@@ -20393,13 +13309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#73cba1",
-      "Background": "#09100d"
+      "Color": "#d3f505",
+      "Background": "#111400"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.TryGetNode(NodeId,Node)",
@@ -20408,13 +13319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6593d3",
-      "Background": "#080c11"
+      "Color": "#fbf76f",
+      "Background": "#141409"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.AddNode(Node)",
@@ -20423,13 +13329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f3995e",
-      "Background": "#140c07"
+      "Color": "#dc78d7",
+      "Background": "#120a11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.GetNode(NodeId)",
@@ -20438,13 +13339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#abe881",
-      "Background": "#0e130a"
+      "Color": "#4310e3",
+      "Background": "#050112"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.AddLink(Link)",
@@ -20453,13 +13349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1ce2e4",
-      "Background": "#021213"
+      "Color": "#1dc8da",
+      "Background": "#021012"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.GetLink(NodeId)",
@@ -20468,13 +13359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#45e15f",
-      "Background": "#051207"
+      "Color": "#18ff9d",
+      "Background": "#02150d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.TryGetLink(NodeId,Link)",
@@ -20483,13 +13369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fdb77f",
-      "Background": "#150f0a"
+      "Color": "#df0504",
+      "Background": "#120000"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.AddLine(Line)",
@@ -20498,13 +13379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6fd861",
-      "Background": "#091208"
+      "Color": "#cbb995",
+      "Background": "#100f0c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.Clear()",
@@ -20513,13 +13389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b2d56f",
-      "Background": "#0e1109"
+      "Color": "#04dc68",
+      "Background": "#001208"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.ClearCachedSvg()",
@@ -20528,13 +13399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d29b02",
-      "Background": "#110c00"
+      "Color": "#5bd6bf",
+      "Background": "#07110f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.InitModel()",
@@ -20543,13 +13409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#48ce1a",
-      "Background": "#061102"
+      "Color": "#6dea76",
+      "Background": "#091309"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Model.DefaultRootNode()",
@@ -20558,13 +13419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ede63",
-      "Background": "#091208"
+      "Color": "#2648fb",
+      "Background": "#030614"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModelService.LoadAsync()",
@@ -20573,13 +13429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bd96fa",
-      "Background": "#0f0c14"
+      "Color": "#ea986d",
+      "Background": "#130c09"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModelService.RefreshAsync()",
@@ -20588,13 +13439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ea2c19",
-      "Background": "#130302"
+      "Color": "#6bfc10",
+      "Background": "#081501"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModelService.GetTile(Rect,Double)",
@@ -20603,13 +13449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#270df9",
-      "Background": "#030114"
+      "Color": "#63ddc4",
+      "Background": "#081210"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModelService.TryGetNode(String,Node)",
@@ -20618,13 +13459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#02cb4d",
-      "Background": "#001006"
+      "Color": "#4026d2",
+      "Background": "#050311"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModelService.TryUpdateNode(String,Action\u00601)",
@@ -20633,13 +13469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1f98c",
-      "Background": "#14140b"
+      "Color": "#35d95c",
+      "Background": "#041207"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IModelService.Clear()",
@@ -20648,13 +13479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#79e5c2",
-      "Background": "#0a1310"
+      "Color": "#ca2e63",
+      "Background": "#100308"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.$private",
@@ -20663,13 +13489,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#be52de",
-      "Background": "#0f0612"
+      "Color": "#5919c9",
+      "Background": "#070210"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.model",
@@ -20678,13 +13499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5a0bf8",
-      "Background": "#070014"
+      "Color": "#31dc0b",
+      "Background": "#041200"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.parserService",
@@ -20693,13 +13509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1dd699",
-      "Background": "#02110c"
+      "Color": "#74de96",
+      "Background": "#09120c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.modelStructureService",
@@ -20708,13 +13519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#01c1ee",
-      "Background": "#001013"
+      "Color": "#31e178",
+      "Background": "#04120a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.modelSvgService",
@@ -20723,13 +13529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d997a6",
-      "Background": "#120c0d"
+      "Color": "#d4d13f",
+      "Background": "#111105"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.persistenceService",
@@ -20738,13 +13539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f9b089",
-      "Background": "#140e0b"
+      "Color": "#b2e1fb",
+      "Background": "#0e1214"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.uiService",
@@ -20753,13 +13549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d7f22d",
-      "Background": "#111403"
+      "Color": "#12c9dd",
+      "Background": "#011012"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.ctor(IModel,IParserService,IStructureService,ISvgService,IPersistenceService,IUIService)",
@@ -20768,13 +13559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bef133",
-      "Background": "#0f1404"
+      "Color": "#5035eb",
+      "Background": "#060413"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.TryGetNode(String,Node)",
@@ -20783,13 +13569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce4e5f",
-      "Background": "#110607"
+      "Color": "#1dda89",
+      "Background": "#02120b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.TryUpdateNode(String,Action\u00601)",
@@ -20798,13 +13579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#feb252",
-      "Background": "#150e06"
+      "Color": "#3ae152",
+      "Background": "#041206"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.GetTile(Rect,Double)",
@@ -20813,13 +13589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4041ca",
-      "Background": "#050510"
+      "Color": "#87d656",
+      "Background": "#0b1107"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.Clear()",
@@ -20828,13 +13599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#05c7fb",
-      "Background": "#001014"
+      "Color": "#da4c7d",
+      "Background": "#12060a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.LoadAsync()",
@@ -20843,13 +13609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5b2df",
-      "Background": "#100e12"
+      "Color": "#0aeafd",
+      "Background": "#001315"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.RefreshAsync()",
@@ -20858,13 +13619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef6934",
-      "Background": "#130804"
+      "Color": "#00f2af",
+      "Background": "#00140e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
@@ -20873,13 +13629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2bcfba",
-      "Background": "#03110f"
+      "Color": "#d44a9a",
+      "Background": "#11060c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.TriggerSave()",
@@ -20888,13 +13639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cffb42",
-      "Background": "#111405"
+      "Color": "#4d46eb",
+      "Background": "#060513"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.Save()",
@@ -20903,13 +13649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1ae81",
-      "Background": "#110e0a"
+      "Color": "#e53202",
+      "Background": "#130400"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.Load(Model)",
@@ -20918,13 +13659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#64ee49",
-      "Background": "#081306"
+      "Color": "#c16dfc",
+      "Background": "#100915"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.AddOrUpdate(IReadOnlyList\u00601)",
@@ -20933,13 +13669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#66fd2c",
-      "Background": "#081503"
+      "Color": "#909ee5",
+      "Background": "#0c0d13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ModelService.AddSpecials()",
@@ -20948,13 +13679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ccbdc9",
-      "Background": "#110f10"
+      "Color": "#33adc9",
+      "Background": "#040e10"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.DefaultContainerZoom",
@@ -20963,13 +13689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bbe411",
-      "Background": "#0f1301"
+      "Color": "#3aeefb",
+      "Background": "#041314"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Id",
@@ -20978,13 +13699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#900fe3",
-      "Background": "#0c0112"
+      "Color": "#e131fb",
+      "Background": "#120414"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Name",
@@ -20993,13 +13709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e7f9f3",
-      "Background": "#131414"
+      "Color": "#49a3d4",
+      "Background": "#060d11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Parent",
@@ -21008,13 +13719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2ec0eb",
-      "Background": "#031013"
+      "Color": "#e7af70",
+      "Background": "#130e09"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Type",
@@ -21023,13 +13729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d816e7",
-      "Background": "#120113"
+      "Color": "#fa293b",
+      "Background": "#140304"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Description",
@@ -21038,13 +13739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce7405",
-      "Background": "#110900"
+      "Color": "#df06de",
+      "Background": "#120012"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Color",
@@ -21053,13 +13749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0d20f0",
-      "Background": "#010214"
+      "Color": "#d2b9fc",
+      "Background": "#110f15"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Background",
@@ -21068,13 +13759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#905df8",
-      "Background": "#0c0714"
+      "Color": "#36f38f",
+      "Background": "#04140b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.StrokeWidth",
@@ -21083,13 +13769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce0341",
-      "Background": "#110005"
+      "Color": "#c27fed",
+      "Background": "#100a13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.IsSelected",
@@ -21098,13 +13779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da7e13",
-      "Background": "#120a01"
+      "Color": "#f10440",
+      "Background": "#140005"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Boundary",
@@ -21113,13 +13789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f90892",
-      "Background": "#14000c"
+      "Color": "#da8235",
+      "Background": "#120a04"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Children",
@@ -21128,13 +13799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d7d1e3",
-      "Background": "#111112"
+      "Color": "#45e21a",
+      "Background": "#051202"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.SourceLinks",
@@ -21143,13 +13809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#efa087",
-      "Background": "#130d0b"
+      "Color": "#3f9dd6",
+      "Background": "#050d11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.TargetLinks",
@@ -21158,13 +13819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e89548",
-      "Background": "#130c06"
+      "Color": "#4a78cf",
+      "Background": "#060a11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.SourceLines",
@@ -21173,13 +13829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f467fe",
-      "Background": "#140815"
+      "Color": "#c8f9ea",
+      "Background": "#101413"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.TargetLines",
@@ -21188,13 +13839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#32d4a0",
-      "Background": "#04110d"
+      "Color": "#e8923b",
+      "Background": "#130c04"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.ContainerZoom",
@@ -21203,13 +13849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee439e",
-      "Background": "#13050d"
+      "Color": "#fdcfe6",
+      "Background": "#151113"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.IsRoot",
@@ -21218,13 +13859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bf42d9",
-      "Background": "#0f0512"
+      "Color": "#7b5cdb",
+      "Background": "#0a0712"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.LongName",
@@ -21233,13 +13869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#61df3f",
-      "Background": "#081205"
+      "Color": "#203ef5",
+      "Background": "#020514"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.ShortName",
@@ -21248,13 +13879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#13cc0e",
-      "Background": "#011101"
+      "Color": "#e14ff7",
+      "Background": "#120614"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.HtmlShortName",
@@ -21263,13 +13889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5620f2",
-      "Background": "#070214"
+      "Color": "#6fdd4e",
+      "Background": "#091206"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.HtmlLongName",
@@ -21278,13 +13899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2fc932",
-      "Background": "#031004"
+      "Color": "#a187fe",
+      "Background": "#0d0b15"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.ctor(String,Node)",
@@ -21293,13 +13909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5cf837",
-      "Background": "#071404"
+      "Color": "#d9bdd7",
+      "Background": "#120f11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.$private",
@@ -21308,13 +13919,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 560,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e47ec6",
-      "Background": "#130a10"
+      "Color": "#1aa8cb",
+      "Background": "#020e10"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.GetZoom()",
@@ -21323,13 +13929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7df391",
-      "Background": "#0a140c"
+      "Color": "#6e31e7",
+      "Background": "#090413"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Update(Node)",
@@ -21338,13 +13939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d62464",
-      "Background": "#110308"
+      "Color": "#0c93da",
+      "Background": "#010c12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.AddChild(Node)",
@@ -21353,13 +13949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3146cf",
-      "Background": "#040511"
+      "Color": "#7de1e2",
+      "Background": "#0a1212"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.RemoveChild(Node)",
@@ -21368,13 +13959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d98259",
-      "Background": "#120a07"
+      "Color": "#f99a80",
+      "Background": "#140c0a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.AddSourceLink(Link)",
@@ -21383,13 +13969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#38cb0e",
-      "Background": "#041001"
+      "Color": "#2f54d9",
+      "Background": "#030712"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.AddTargetLink(Link)",
@@ -21398,13 +13979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#081df0",
-      "Background": "#000214"
+      "Color": "#337ee8",
+      "Background": "#040a13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.Ancestors()",
@@ -21413,13 +13989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d6528e",
-      "Background": "#11060b"
+      "Color": "#b213d5",
+      "Background": "#0e0111"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Node.ToString()",
@@ -21428,13 +13999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5ccc2",
-      "Background": "#101110"
+      "Color": "#d99326",
+      "Background": "#120c03"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeLayout.$private",
@@ -21443,13 +14009,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8ed927",
-      "Background": "#0b1203"
+      "Color": "#f9eb74",
+      "Background": "#141309"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeLayout.DefaultWidth",
@@ -21458,13 +14019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#61ea27",
-      "Background": "#081303"
+      "Color": "#e7d441",
+      "Background": "#131105"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeLayout.DefaultHeight",
@@ -21473,13 +14029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#deb59d",
-      "Background": "#120f0d"
+      "Color": "#e7d04f",
+      "Background": "#131106"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeLayout.DefaultSize",
@@ -21488,13 +14039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#feb453",
-      "Background": "#150f06"
+      "Color": "#cc7adf",
+      "Background": "#110a12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeLayout.margin",
@@ -21503,13 +14049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#95eadd",
-      "Background": "#0c1312"
+      "Color": "#ef3502",
+      "Background": "#130400"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeLayout.GetNextChildRect(Node)",
@@ -21518,13 +14059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5bcd6",
-      "Background": "#100f11"
+      "Color": "#e78d29",
+      "Background": "#130b03"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeLayout.ctor()",
@@ -21533,13 +14069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e7a8b7",
-      "Background": "#130e0f"
+      "Color": "#4a14cd",
+      "Background": "#060111"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeLayout.cctor()",
@@ -21548,13 +14079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aafecd",
-      "Background": "#0e1511"
+      "Color": "#1dff7e",
+      "Background": "#02150a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeName.$private",
@@ -21563,13 +14089,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#df2ed8",
-      "Background": "#120312"
+      "Color": "#90e8e6",
+      "Background": "#0c1313"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeName.PartsSeparators",
@@ -21578,13 +14099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b0f207",
-      "Background": "#0e1400"
+      "Color": "#fa3292",
+      "Background": "#14040c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeName.GetDisplayNames(String)",
@@ -21593,13 +14109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d02ad9",
-      "Background": "#110312"
+      "Color": "#b6d1fb",
+      "Background": "#0f1114"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeName.ToNiceParameters(String)",
@@ -21608,13 +14119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb0303",
-      "Background": "#140000"
+      "Color": "#cdc94a",
+      "Background": "#111006"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeName.ToNiceText(String)",
@@ -21623,13 +14129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ee61e3",
-      "Background": "#130812"
+      "Color": "#65e862",
+      "Background": "#081308"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeName.ctor()",
@@ -21638,13 +14139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b6cd3d",
-      "Background": "#0f1105"
+      "Color": "#a71beb",
+      "Background": "#0d0213"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeName.cctor()",
@@ -21653,13 +14149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d24eca",
-      "Background": "#110610"
+      "Color": "#ff23e6",
+      "Background": "#150213"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.None",
@@ -21668,13 +14159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d3c5a1",
-      "Background": "#11100d"
+      "Color": "#40a5e7",
+      "Background": "#050d13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Root",
@@ -21683,13 +14169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b4fad8",
-      "Background": "#0f1412"
+      "Color": "#4dc92c",
+      "Background": "#061003"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Parent",
@@ -21698,13 +14179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e4b9c6",
-      "Background": "#130f10"
+      "Color": "#e1f3c9",
+      "Background": "#121410"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Solution",
@@ -21713,13 +14189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ca2a5b",
-      "Background": "#100307"
+      "Color": "#18bfca",
+      "Background": "#020f10"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Externals",
@@ -21728,13 +14199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7e24d1",
-      "Background": "#0a0311"
+      "Color": "#67f653",
+      "Background": "#081406"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.SolutionFolder",
@@ -21743,13 +14209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e1fa62",
-      "Background": "#121408"
+      "Color": "#f0182a",
+      "Background": "#140203"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Assembly",
@@ -21758,13 +14219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#37e9c6",
-      "Background": "#041310"
+      "Color": "#5bf278",
+      "Background": "#07140a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Group",
@@ -21773,13 +14229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2bf99a",
-      "Background": "#03140c"
+      "Color": "#22f038",
+      "Background": "#021404"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Dll",
@@ -21788,13 +14239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f17ef7",
-      "Background": "#140a14"
+      "Color": "#14f0f5",
+      "Background": "#011414"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Exe",
@@ -21803,13 +14249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0e4ef6",
-      "Background": "#010614"
+      "Color": "#dfa7aa",
+      "Background": "#120d0e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Namespace",
@@ -21818,13 +14259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#342ce0",
-      "Background": "#040312"
+      "Color": "#ec491c",
+      "Background": "#130602"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Type",
@@ -21833,13 +14269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ff1caf",
-      "Background": "#15020e"
+      "Color": "#79cef9",
+      "Background": "#0a1114"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Member",
@@ -21848,13 +14279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6145d0",
-      "Background": "#080511"
+      "Color": "#f3acdb",
+      "Background": "#140e12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Private",
@@ -21863,13 +14289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#92bef7",
-      "Background": "#0c0f14"
+      "Color": "#e4421a",
+      "Background": "#130502"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.EqualityContract",
@@ -21878,13 +14299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#edc648",
-      "Background": "#131006"
+      "Color": "#c9fdef",
+      "Background": "#101513"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Text",
@@ -21893,13 +14309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e05686",
-      "Background": "#12070b"
+      "Color": "#d99ae5",
+      "Background": "#120c13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.IconName",
@@ -21908,13 +14319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#87e37d",
-      "Background": "#0b120a"
+      "Color": "#d13358",
+      "Background": "#110407"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.$private",
@@ -21923,13 +14329,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9ec5fb",
-      "Background": "#0d1014"
+      "Color": "#bee0b8",
+      "Background": "#0f120f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.ctor(String)",
@@ -21938,13 +14339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#425ef5",
-      "Background": "#050714"
+      "Color": "#f13403",
+      "Background": "#140400"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.op_Implicit(NodeType)",
@@ -21953,13 +14349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0da43",
-      "Background": "#111205"
+      "Color": "#fcbd40",
+      "Background": "#150f05"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.ToString()",
@@ -21968,13 +14359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#04f675",
-      "Background": "#001409"
+      "Color": "#14cc04",
+      "Background": "#011100"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.PrintMembers(StringBuilder)",
@@ -21983,13 +14369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0a153",
-      "Background": "#110d06"
+      "Color": "#8ff3c4",
+      "Background": "#0b1410"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.op_Inequality(NodeType,NodeType)",
@@ -21998,13 +14379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#928bd7",
-      "Background": "#0c0b11"
+      "Color": "#df2715",
+      "Background": "#120301"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.op_Equality(NodeType,NodeType)",
@@ -22013,13 +14389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#47f898",
-      "Background": "#05140c"
+      "Color": "#cac755",
+      "Background": "#101007"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.GetHashCode()",
@@ -22028,13 +14399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d876f4",
-      "Background": "#120914"
+      "Color": "#b59ecf",
+      "Background": "#0f0d11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Equals(Object)",
@@ -22043,13 +14409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0bc5e6",
-      "Background": "#001013"
+      "Color": "#a37cf2",
+      "Background": "#0d0a14"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.Equals(NodeType)",
@@ -22058,13 +14419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#760eed",
-      "Background": "#090113"
+      "Color": "#d41dfa",
+      "Background": "#110214"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.\u003CClone\u003E$()",
@@ -22073,13 +14429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2a56f6",
-      "Background": "#030714"
+      "Color": "#87a4ce",
+      "Background": "#0b0d11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.ctor(NodeType)",
@@ -22088,13 +14439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c91607",
-      "Background": "#100100"
+      "Color": "#ecaf4a",
+      "Background": "#130e06"
     },
     {
       "Name": "Dependinator.Dependinator.Models.NodeType.cctor()",
@@ -22103,13 +14449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f512c0",
-      "Background": "#140110"
+      "Color": "#e15937",
+      "Background": "#120704"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IStructureService.AddOrUpdateNode(Node)",
@@ -22118,13 +14459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a9bee7",
-      "Background": "#0e0f13"
+      "Color": "#98d2c3",
+      "Background": "#0c1110"
     },
     {
       "Name": "Dependinator.Dependinator.Models.IStructureService.AddOrUpdateLink(Link)",
@@ -22133,13 +14469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#56cc78",
-      "Background": "#07110a"
+      "Color": "#a4ede9",
+      "Background": "#0d1313"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.$private",
@@ -22148,13 +14479,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4266eb",
-      "Background": "#050813"
+      "Color": "#9df53c",
+      "Background": "#0d1405"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.model",
@@ -22163,13 +14489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9bd53a",
-      "Background": "#0c1104"
+      "Color": "#e85937",
+      "Background": "#130704"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.ctor(IModel)",
@@ -22178,13 +14499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a43fea",
-      "Background": "#0d0513"
+      "Color": "#d654ca",
+      "Background": "#110710"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.AddOrUpdateNode(Node)",
@@ -22193,13 +14509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d5ad82",
-      "Background": "#110e0a"
+      "Color": "#04c993",
+      "Background": "#00100c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.AddOrUpdateLink(Link)",
@@ -22208,13 +14519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9f39e2",
-      "Background": "#0d0412"
+      "Color": "#0823f8",
+      "Background": "#000214"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.GetOrCreateNode(String)",
@@ -22223,13 +14529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ad16de",
-      "Background": "#0e0112"
+      "Color": "#b4f214",
+      "Background": "#0f1401"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.GetOrCreateParent(String)",
@@ -22238,13 +14539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e4d542",
-      "Background": "#131105"
+      "Color": "#f3241a",
+      "Background": "#140302"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.AddLinesFromSourceToTarget(Link)",
@@ -22253,13 +14549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f4ad94",
-      "Background": "#140e0c"
+      "Color": "#f62629",
+      "Background": "#140303"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.GetCommonAncestor(Link)",
@@ -22268,13 +14559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e3a661",
-      "Background": "#120d08"
+      "Color": "#ec5ad1",
+      "Background": "#130711"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.AddAncestorLines(Link,Node,Node)",
@@ -22283,13 +14569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#044efa",
-      "Background": "#000614"
+      "Color": "#75f9be",
+      "Background": "#09140f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.AddDescendantLines(Link,Node,Node)",
@@ -22298,13 +14579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7eef68",
-      "Background": "#0a1308"
+      "Color": "#cd9738",
+      "Background": "#110c04"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.AddDirectLine(Node,Node,Link)",
@@ -22313,13 +14589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#54e34f",
-      "Background": "#071206"
+      "Color": "#30ff72",
+      "Background": "#041509"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.EnsureSourceAndTargetExists(Link)",
@@ -22328,13 +14599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d9f113",
-      "Background": "#121401"
+      "Color": "#42c5ef",
+      "Background": "#051013"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.DefaultParentNode(String)",
@@ -22343,13 +14609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cceebf",
-      "Background": "#11130f"
+      "Color": "#fca9ba",
+      "Background": "#150e0f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.StructureService.DefaultParsingNode(String)",
@@ -22358,13 +14619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#133ecd",
-      "Background": "#010511"
+      "Color": "#da8440",
+      "Background": "#120b05"
     },
     {
       "Name": "Dependinator.Dependinator.Models.ISvgService.GetTile(IModel,Rect,Double)",
@@ -22373,13 +14629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e02276",
-      "Background": "#120209"
+      "Color": "#1a79ed",
+      "Background": "#020a13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.$private",
@@ -22388,13 +14639,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c7dd60",
-      "Background": "#101208"
+      "Color": "#cf1e04",
+      "Background": "#110200"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.SmallIconSize",
@@ -22403,13 +14649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a7cc47",
-      "Background": "#0d1105"
+      "Color": "#f467e8",
+      "Background": "#140813"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.FontSize",
@@ -22418,13 +14659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ff4cf9",
-      "Background": "#150614"
+      "Color": "#c4ff3b",
+      "Background": "#101504"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.MinContainerZoom",
@@ -22433,13 +14669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fcad0f",
-      "Background": "#150e01"
+      "Color": "#beff9d",
+      "Background": "#0f150d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.MaxNodeZoom",
@@ -22448,13 +14679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#13d19e",
-      "Background": "#01110d"
+      "Color": "#30fef4",
+      "Background": "#041514"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetTile(IModel,Rect,Double)",
@@ -22463,13 +14689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0ce941",
-      "Background": "#011305"
+      "Color": "#f1f7e8",
+      "Background": "#141413"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetModelTile(IModel,TileKey)",
@@ -22478,13 +14699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e42955",
-      "Background": "#130307"
+      "Color": "#d574fd",
+      "Background": "#110915"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetNodeSvg(Node,Pos,Double,Rect)",
@@ -22493,13 +14709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6aa3e5",
-      "Background": "#080d13"
+      "Color": "#377fd2",
+      "Background": "#040a11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetNodeContentSvg(Node,Pos,Double,Rect)",
@@ -22508,13 +14719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e76e59",
-      "Background": "#130907"
+      "Color": "#27f7cd",
+      "Background": "#031411"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetNodeLinesSvg(Node,Pos,Double,Double)",
@@ -22523,13 +14729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1d37a",
-      "Background": "#14110a"
+      "Color": "#e8b282",
+      "Background": "#130e0a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.IsToLargeToBeSeen(Double)",
@@ -22538,13 +14739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#19d62f",
-      "Background": "#021103"
+      "Color": "#6371d3",
+      "Background": "#080911"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.IsShowIcon(Node,Double)",
@@ -22553,13 +14749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1c3d1",
-      "Background": "#111011"
+      "Color": "#ec890a",
+      "Background": "#130b00"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetNodeCanvasPos(Node,Pos,Double)",
@@ -22568,13 +14759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#acd140",
-      "Background": "#0e1105"
+      "Color": "#eb1c69",
+      "Background": "#130208"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetNodeCanvasRect(Node,Pos,Double)",
@@ -22583,13 +14769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a936e8",
-      "Background": "#0e0413"
+      "Color": "#ca2673",
+      "Background": "#100309"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.IsOverlap(Rect,Rect)",
@@ -22598,13 +14779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#30e0b7",
-      "Background": "#04120f"
+      "Color": "#b3ff9c",
+      "Background": "#0e150d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetIntersection(Rect,Rect)",
@@ -22613,13 +14789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8cf8c6",
-      "Background": "#0b1410"
+      "Color": "#14f2c2",
+      "Background": "#011410"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetTotalBoundary(Node)",
@@ -22628,13 +14799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e123cc",
-      "Background": "#120211"
+      "Color": "#91f631",
+      "Background": "#0c1404"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetNodeIconSvg(Node,Rect,Double)",
@@ -22643,13 +14809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e695fc",
-      "Background": "#130c15"
+      "Color": "#da36cd",
+      "Background": "#120411"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetNodeContainerSvg(Node,Rect,Double,String)",
@@ -22658,13 +14819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8884f1",
-      "Background": "#0b0b14"
+      "Color": "#5db3df",
+      "Background": "#070e12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.SelectedNodeSvg(Node,Double,Double,Double,Double)",
@@ -22673,13 +14829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dd8866",
-      "Background": "#120b08"
+      "Color": "#f4a85c",
+      "Background": "#140e07"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.GetLineSvg(Line,Pos,Double,Double)",
@@ -22688,13 +14839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d8f723",
-      "Background": "#121402"
+      "Color": "#32dd5a",
+      "Background": "#041207"
     },
     {
       "Name": "Dependinator.Dependinator.Models.SvgService.ctor()",
@@ -22703,13 +14849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1b55c",
-      "Background": "#140f07"
+      "Color": "#e1e7c6",
+      "Background": "#121310"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.ZoomFactor",
@@ -22718,13 +14859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e486a9",
-      "Background": "#130b0e"
+      "Color": "#bbf3aa",
+      "Background": "#0f140e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.Empty",
@@ -22733,13 +14869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9f37f6",
-      "Background": "#0d0414"
+      "Color": "#e14045",
+      "Background": "#120505"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.EqualityContract",
@@ -22748,13 +14879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de062b",
-      "Background": "#120003"
+      "Color": "#9c58d9",
+      "Background": "#0d0712"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.Key",
@@ -22763,13 +14889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7fe053",
-      "Background": "#0a1206"
+      "Color": "#d682c9",
+      "Background": "#110a10"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.Svg",
@@ -22778,13 +14899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#65cc81",
-      "Background": "#08110a"
+      "Color": "#2346cb",
+      "Background": "#020510"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.Zoom",
@@ -22793,13 +14909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d98bdc",
-      "Background": "#120b12"
+      "Color": "#a1f268",
+      "Background": "#0d1408"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.Offset",
@@ -22808,13 +14919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5893fd",
-      "Background": "#070c15"
+      "Color": "#f23621",
+      "Background": "#140402"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.ctor(TileKey,String,Double,Pos)",
@@ -22823,13 +14929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f676f0",
-      "Background": "#140914"
+      "Color": "#f776c0",
+      "Background": "#140910"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.ToString()",
@@ -22838,13 +14939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1322f3",
-      "Background": "#010214"
+      "Color": "#f674ca",
+      "Background": "#140910"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.PrintMembers(StringBuilder)",
@@ -22853,13 +14949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#62e9e7",
-      "Background": "#081313"
+      "Color": "#9366f7",
+      "Background": "#0c0814"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.op_Inequality(Tile,Tile)",
@@ -22868,13 +14959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c9a224",
-      "Background": "#100d03"
+      "Color": "#ef605a",
+      "Background": "#130807"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.op_Equality(Tile,Tile)",
@@ -22883,13 +14969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d86b24",
-      "Background": "#120803"
+      "Color": "#f3a961",
+      "Background": "#140e08"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.GetHashCode()",
@@ -22898,13 +14979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#85fc2a",
-      "Background": "#0b1503"
+      "Color": "#74ffc1",
+      "Background": "#091510"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.Equals(Object)",
@@ -22913,13 +14989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#efa07a",
-      "Background": "#130d0a"
+      "Color": "#bb47e5",
+      "Background": "#0f0513"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.Equals(Tile)",
@@ -22928,13 +14999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#05adee",
-      "Background": "#000e13"
+      "Color": "#8968dd",
+      "Background": "#0b0812"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.\u003CClone\u003E$()",
@@ -22943,13 +15009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#48ff38",
-      "Background": "#061504"
+      "Color": "#4678e5",
+      "Background": "#050a13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.ctor(Tile)",
@@ -22958,13 +15019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cf46f9",
-      "Background": "#110514"
+      "Color": "#cb7c2f",
+      "Background": "#100a03"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.Deconstruct(TileKey,String,Double,Pos)",
@@ -22973,13 +15029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b3d2b4",
-      "Background": "#0e110f"
+      "Color": "#12a2de",
+      "Background": "#010d12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.$private",
@@ -22988,13 +15039,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f97c67",
-      "Background": "#140a08"
+      "Color": "#b8e6b3",
+      "Background": "#0f130e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tile.cctor()",
@@ -23003,13 +15049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d6133a",
-      "Background": "#110104"
+      "Color": "#48cf54",
+      "Background": "#061107"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.XTileSize",
@@ -23018,13 +15059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f5c40a",
-      "Background": "#141000"
+      "Color": "#f2c140",
+      "Background": "#141005"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.Empty",
@@ -23033,13 +15069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cfe1d8",
-      "Background": "#111212"
+      "Color": "#39d5c1",
+      "Background": "#041110"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.EqualityContract",
@@ -23048,13 +15079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fa869f",
-      "Background": "#140b0d"
+      "Color": "#d6c07c",
+      "Background": "#11100a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.X",
@@ -23063,13 +15089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ceb178",
-      "Background": "#110e0a"
+      "Color": "#6065c9",
+      "Background": "#080810"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.Y",
@@ -23078,13 +15099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1d72d1",
-      "Background": "#020911"
+      "Color": "#f66dc7",
+      "Background": "#140910"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.Z",
@@ -23093,13 +15109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f92e43",
-      "Background": "#140305"
+      "Color": "#6ce780",
+      "Background": "#09130a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.TileSize",
@@ -23108,13 +15119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2c58dd",
-      "Background": "#030712"
+      "Color": "#c3d164",
+      "Background": "#101108"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.ctor(Int64,Int64,Int32,Int32)",
@@ -23123,13 +15129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9534f0",
-      "Background": "#0c0414"
+      "Color": "#d55518",
+      "Background": "#110702"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.GetTileZoom()",
@@ -23138,13 +15139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f43142",
-      "Background": "#140405"
+      "Color": "#d07290",
+      "Background": "#11090c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.GetTileRect()",
@@ -23153,13 +15149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f51ce0",
-      "Background": "#140212"
+      "Color": "#e807f9",
+      "Background": "#130014"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.GetViewRect()",
@@ -23168,13 +15159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb1ac2",
-      "Background": "#140210"
+      "Color": "#fb2bf8",
+      "Background": "#140314"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.GetTileRectWithMargin()",
@@ -23183,13 +15169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d24056",
-      "Background": "#110507"
+      "Color": "#d77b10",
+      "Background": "#110a01"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.From(Rect,Double)",
@@ -23198,13 +15179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#db1d3b",
-      "Background": "#120204"
+      "Color": "#3cd361",
+      "Background": "#051108"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.ToString()",
@@ -23213,13 +15189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#12fcb7",
-      "Background": "#01150f"
+      "Color": "#d5884c",
+      "Background": "#110b06"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.PrintMembers(StringBuilder)",
@@ -23228,13 +15199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dfd56b",
-      "Background": "#121108"
+      "Color": "#a438e9",
+      "Background": "#0d0413"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.op_Inequality(TileKey,TileKey)",
@@ -23243,13 +15209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#02d37a",
-      "Background": "#00110a"
+      "Color": "#08f672",
+      "Background": "#001409"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.op_Equality(TileKey,TileKey)",
@@ -23258,13 +15219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f69b43",
-      "Background": "#140c05"
+      "Color": "#ead8b3",
+      "Background": "#13120e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.GetHashCode()",
@@ -23273,13 +15229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ace779",
-      "Background": "#0e130a"
+      "Color": "#f23e99",
+      "Background": "#14050c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.Equals(Object)",
@@ -23288,13 +15239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1ae7ca",
-      "Background": "#021310"
+      "Color": "#67da67",
+      "Background": "#081208"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.Equals(TileKey)",
@@ -23303,13 +15249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#683be5",
-      "Background": "#080413"
+      "Color": "#b7f944",
+      "Background": "#0f1405"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.\u003CClone\u003E$()",
@@ -23318,13 +15259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4f2de8",
-      "Background": "#060313"
+      "Color": "#dd97dc",
+      "Background": "#120c12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.ctor(TileKey)",
@@ -23333,13 +15269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4890fe",
-      "Background": "#060c15"
+      "Color": "#95f1f9",
+      "Background": "#0c1414"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.Deconstruct(Int64,Int64,Int32,Int32)",
@@ -23348,13 +15279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8be371",
-      "Background": "#0b1209"
+      "Color": "#906fcb",
+      "Background": "#0c0910"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.$private",
@@ -23363,13 +15289,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 560,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cc5f5e",
-      "Background": "#110707"
+      "Color": "#a966d4",
+      "Background": "#0e0811"
     },
     {
       "Name": "Dependinator.Dependinator.Models.TileKey.cctor()",
@@ -23378,13 +15299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1c8ded",
-      "Background": "#020b13"
+      "Color": "#cd8835",
+      "Background": "#110b04"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.$private",
@@ -23393,13 +15309,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9ce97f",
-      "Background": "#0d130a"
+      "Color": "#f4f485",
+      "Background": "#14140b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.tiles",
@@ -23408,13 +15319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#57ea5d",
-      "Background": "#071307"
+      "Color": "#24ec0c",
+      "Background": "#031301"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.tileSize",
@@ -23423,13 +15329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a6ce2c",
-      "Background": "#0d1103"
+      "Color": "#0afe7b",
+      "Background": "#00150a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.maxSvgSize",
@@ -23438,13 +15339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c63ae9",
-      "Background": "#100413"
+      "Color": "#50d351",
+      "Background": "#061106"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.TryGetCached(TileKey,Tile)",
@@ -23453,13 +15349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#89cd1c",
-      "Background": "#0b1102"
+      "Color": "#90a6e4",
+      "Background": "#0c0d13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.SetCached(Tile)",
@@ -23468,13 +15359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d8e9c4",
-      "Background": "#121310"
+      "Color": "#2ff56c",
+      "Background": "#031409"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.Clear()",
@@ -23483,13 +15369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d7e765",
-      "Background": "#111308"
+      "Color": "#f9fae9",
+      "Background": "#141413"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.ToString()",
@@ -23498,13 +15379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#44caf3",
-      "Background": "#051014"
+      "Color": "#19fb01",
+      "Background": "#021400"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.ValidateTileSize(TileKey)",
@@ -23513,13 +15389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#71e137",
-      "Background": "#091204"
+      "Color": "#ccc885",
+      "Background": "#11100b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Tiles.ctor()",
@@ -23528,13 +15399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f5c79f",
-      "Background": "#14100d"
+      "Color": "#a222f1",
+      "Background": "#0d0214"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.EqualityContract",
@@ -23543,13 +15409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5cc33",
-      "Background": "#101104"
+      "Color": "#e3a2de",
+      "Background": "#120d12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.Path",
@@ -23558,13 +15419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#edac22",
-      "Background": "#130e02"
+      "Color": "#318cf4",
+      "Background": "#040b14"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.Text",
@@ -23573,13 +15429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0ce17a",
-      "Background": "#01120a"
+      "Color": "#65e5ff",
+      "Background": "#081315"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.LineNumber",
@@ -23588,13 +15439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9485e7",
-      "Background": "#0c0b13"
+      "Color": "#e74c92",
+      "Background": "#13060c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.ctor(String,String,Int32)",
@@ -23603,13 +15449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8c4fcb",
-      "Background": "#0b0610"
+      "Color": "#b542e6",
+      "Background": "#0f0513"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.ToString()",
@@ -23618,13 +15459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0fd3fa",
-      "Background": "#011114"
+      "Color": "#fc39ca",
+      "Background": "#150410"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.PrintMembers(StringBuilder)",
@@ -23633,13 +15469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e4fe6f",
-      "Background": "#131509"
+      "Color": "#09dea8",
+      "Background": "#00120e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.op_Inequality(Source,Source)",
@@ -23648,13 +15479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fb3ce3",
-      "Background": "#140512"
+      "Color": "#beeb84",
+      "Background": "#0f130b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.op_Equality(Source,Source)",
@@ -23663,13 +15489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#77d784",
-      "Background": "#09110b"
+      "Color": "#a2bddf",
+      "Background": "#0d0f12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.GetHashCode()",
@@ -23678,13 +15499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de9923",
-      "Background": "#120c02"
+      "Color": "#7c86e2",
+      "Background": "#0a0b12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.Equals(Object)",
@@ -23693,13 +15509,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1d53e",
-      "Background": "#111105"
+      "Color": "#22ecdd",
+      "Background": "#021312"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.Equals(Source)",
@@ -23708,13 +15519,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#89f4cd",
-      "Background": "#0b1411"
+      "Color": "#d1e914",
+      "Background": "#111301"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.\u003CClone\u003E$()",
@@ -23723,13 +15529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0000f3",
-      "Background": "#000014"
+      "Color": "#f15af0",
+      "Background": "#140714"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.ctor(Source)",
@@ -23738,13 +15539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8ce230",
-      "Background": "#0b1204"
+      "Color": "#23c5ce",
+      "Background": "#021011"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Source.Deconstruct(String,String,Int32)",
@@ -23753,13 +15549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d8540a",
-      "Background": "#120700"
+      "Color": "#c7ea2e",
+      "Background": "#101303"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.Zero",
@@ -23768,13 +15559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dea6ae",
-      "Background": "#120d0e"
+      "Color": "#e67b4b",
+      "Background": "#130a06"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.None",
@@ -23783,13 +15569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2dffc7",
-      "Background": "#031510"
+      "Color": "#8da3ed",
+      "Background": "#0b0d13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.EqualityContract",
@@ -23798,13 +15579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cc1011",
-      "Background": "#110101"
+      "Color": "#df6aae",
+      "Background": "#12080e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.X",
@@ -23813,13 +15589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e2366f",
-      "Background": "#120409"
+      "Color": "#3dd2ac",
+      "Background": "#05110e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.Y",
@@ -23828,13 +15599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1ccd7",
-      "Background": "#111111"
+      "Color": "#f66dc8",
+      "Background": "#140910"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.ctor(Double,Double)",
@@ -23843,13 +15609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3d99d7",
-      "Background": "#050c11"
+      "Color": "#8cf4f4",
+      "Background": "#0b1414"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.ToString()",
@@ -23858,13 +15619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1a98e8",
-      "Background": "#020c13"
+      "Color": "#e27bfa",
+      "Background": "#120a14"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.PrintMembers(StringBuilder)",
@@ -23873,13 +15629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c85fde",
-      "Background": "#100712"
+      "Color": "#fcfabc",
+      "Background": "#15140f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.op_Inequality(Pos,Pos)",
@@ -23888,13 +15639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f08469",
-      "Background": "#140b08"
+      "Color": "#cbb4c2",
+      "Background": "#100f10"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.op_Equality(Pos,Pos)",
@@ -23903,13 +15649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#34f1bd",
-      "Background": "#04140f"
+      "Color": "#f09cbd",
+      "Background": "#140d0f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.GetHashCode()",
@@ -23918,13 +15659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#15f260",
-      "Background": "#011408"
+      "Color": "#0792d8",
+      "Background": "#000c12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.Equals(Object)",
@@ -23933,13 +15669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cef195",
-      "Background": "#11140c"
+      "Color": "#4ed33f",
+      "Background": "#061105"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.Equals(Pos)",
@@ -23948,13 +15679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7aadcf",
-      "Background": "#0a0e11"
+      "Color": "#ec1b04",
+      "Background": "#130200"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.\u003CClone\u003E$()",
@@ -23963,13 +15689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1ebce9",
-      "Background": "#020f13"
+      "Color": "#e9831f",
+      "Background": "#130a02"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.ctor(Pos)",
@@ -23978,13 +15699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0a07db",
-      "Background": "#000012"
+      "Color": "#5b9fcc",
+      "Background": "#070d11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.Deconstruct(Double,Double)",
@@ -23993,13 +15709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef979b",
-      "Background": "#130c0c"
+      "Color": "#e439b5",
+      "Background": "#13040f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.$private",
@@ -24008,13 +15719,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f4028d",
-      "Background": "#14000b"
+      "Color": "#dd20df",
+      "Background": "#120212"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Pos.cctor()",
@@ -24023,13 +15729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e5e22a",
-      "Background": "#131203"
+      "Color": "#e5f6af",
+      "Background": "#13140e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.Zero",
@@ -24038,13 +15739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a244e0",
-      "Background": "#0d0512"
+      "Color": "#1cd4fc",
+      "Background": "#021115"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.None",
@@ -24053,13 +15749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2cf103",
-      "Background": "#031400"
+      "Color": "#9963fc",
+      "Background": "#0c0815"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.EqualityContract",
@@ -24068,13 +15759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d4f4c3",
-      "Background": "#111410"
+      "Color": "#7cd5e9",
+      "Background": "#0a1113"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.Width",
@@ -24083,13 +15769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d1ba0c",
-      "Background": "#110f01"
+      "Color": "#d80a0a",
+      "Background": "#120000"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.Height",
@@ -24098,13 +15779,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#68df33",
-      "Background": "#081204"
+      "Color": "#7911f2",
+      "Background": "#0a0114"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.ctor(Double,Double)",
@@ -24113,13 +15789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#79f836",
-      "Background": "#0a1404"
+      "Color": "#90fb0d",
+      "Background": "#0c1401"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.ToString()",
@@ -24128,13 +15799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#06b6d6",
-      "Background": "#000f11"
+      "Color": "#c3ca50",
+      "Background": "#101006"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.PrintMembers(StringBuilder)",
@@ -24143,13 +15809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b1fcf9",
-      "Background": "#0e1514"
+      "Color": "#40f583",
+      "Background": "#05140a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.op_Inequality(Size,Size)",
@@ -24158,13 +15819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a906fa",
-      "Background": "#0e0014"
+      "Color": "#ec32a6",
+      "Background": "#13040d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.op_Equality(Size,Size)",
@@ -24173,13 +15829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b630f3",
-      "Background": "#0f0414"
+      "Color": "#076ffe",
+      "Background": "#000915"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.GetHashCode()",
@@ -24188,13 +15839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#65dafa",
-      "Background": "#081214"
+      "Color": "#1dcd3d",
+      "Background": "#021105"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.Equals(Object)",
@@ -24203,13 +15849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7c1fea",
-      "Background": "#0a0213"
+      "Color": "#7a46e5",
+      "Background": "#0a0513"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.Equals(Size)",
@@ -24218,13 +15859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f58193",
-      "Background": "#140a0c"
+      "Color": "#f1130c",
+      "Background": "#140101"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.\u003CClone\u003E$()",
@@ -24233,13 +15869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#99b6f0",
-      "Background": "#0c0f14"
+      "Color": "#90eb30",
+      "Background": "#0c1304"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.ctor(Size)",
@@ -24248,13 +15879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#93f261",
-      "Background": "#0c1408"
+      "Color": "#8ad3df",
+      "Background": "#0b1112"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.Deconstruct(Double,Double)",
@@ -24263,13 +15889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4bedd1",
-      "Background": "#061311"
+      "Color": "#cc0a17",
+      "Background": "#110001"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.$private",
@@ -24278,13 +15899,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1f07f0",
-      "Background": "#020014"
+      "Color": "#61f576",
+      "Background": "#081409"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Size.cctor()",
@@ -24293,13 +15909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dc726d",
-      "Background": "#120909"
+      "Color": "#d26d8f",
+      "Background": "#11090b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.Zero",
@@ -24308,13 +15919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8cfe01",
-      "Background": "#0b1500"
+      "Color": "#f03b79",
+      "Background": "#14040a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.None",
@@ -24323,13 +15929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f07b54",
-      "Background": "#140a07"
+      "Color": "#45c2e8",
+      "Background": "#051013"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.EqualityContract",
@@ -24338,13 +15939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#edcc70",
-      "Background": "#131109"
+      "Color": "#52e3b3",
+      "Background": "#06120e"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.X",
@@ -24353,13 +15949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#33e330",
-      "Background": "#041204"
+      "Color": "#20ff54",
+      "Background": "#021507"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.Y",
@@ -24368,13 +15959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#43e751",
-      "Background": "#051306"
+      "Color": "#5ad740",
+      "Background": "#071105"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.Width",
@@ -24383,13 +15969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4c99cb",
-      "Background": "#060c10"
+      "Color": "#84cc84",
+      "Background": "#0b110b"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.Height",
@@ -24398,13 +15979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce9bea",
-      "Background": "#110c13"
+      "Color": "#cc2b2f",
+      "Background": "#110303"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.ctor(Double,Double,Double,Double)",
@@ -24413,13 +15989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fa27d3",
-      "Background": "#140311"
+      "Color": "#8d57e5",
+      "Background": "#0b0713"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.ToString()",
@@ -24428,13 +15999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e51cea",
-      "Background": "#130213"
+      "Color": "#ff4c25",
+      "Background": "#150603"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.IsPosInside(Pos)",
@@ -24443,13 +16009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#95c0f6",
-      "Background": "#0c1014"
+      "Color": "#ec1d9b",
+      "Background": "#13020c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.PrintMembers(StringBuilder)",
@@ -24458,13 +16019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fa8f26",
-      "Background": "#140b03"
+      "Color": "#da70a3",
+      "Background": "#12090d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.op_Inequality(Rect,Rect)",
@@ -24473,13 +16029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8611fa",
-      "Background": "#0b0114"
+      "Color": "#d50acc",
+      "Background": "#110011"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.op_Equality(Rect,Rect)",
@@ -24488,13 +16039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4e5df7",
-      "Background": "#060714"
+      "Color": "#f5d7c9",
+      "Background": "#141110"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.GetHashCode()",
@@ -24503,13 +16049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7bd882",
-      "Background": "#0a120a"
+      "Color": "#4752fd",
+      "Background": "#050615"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.Equals(Object)",
@@ -24518,13 +16059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f96b72",
-      "Background": "#140809"
+      "Color": "#fd967b",
+      "Background": "#150c0a"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.Equals(Rect)",
@@ -24533,13 +16069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5569da",
-      "Background": "#070812"
+      "Color": "#fcc974",
+      "Background": "#151009"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.\u003CClone\u003E$()",
@@ -24548,13 +16079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f890f2",
-      "Background": "#140c14"
+      "Color": "#48d333",
+      "Background": "#061104"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.ctor(Rect)",
@@ -24563,13 +16089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3c8afe",
-      "Background": "#050b15"
+      "Color": "#d2901a",
+      "Background": "#110c02"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.Deconstruct(Double,Double,Double,Double)",
@@ -24578,13 +16099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#79a8e1",
-      "Background": "#0a0e12"
+      "Color": "#a051de",
+      "Background": "#0d0612"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.$private",
@@ -24593,13 +16109,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d104eb",
-      "Background": "#110013"
+      "Color": "#c10def",
+      "Background": "#100113"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Rect.cctor()",
@@ -24608,13 +16119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7b11c9",
-      "Background": "#0a0110"
+      "Color": "#d6f49c",
+      "Background": "#11140d"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.Highlight",
@@ -24623,13 +16129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc20b5",
-      "Background": "#15020f"
+      "Color": "#0b8fd1",
+      "Background": "#000b11"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.$private",
@@ -24638,13 +16139,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#323df8",
-      "Background": "#040514"
+      "Color": "#e9e12d",
+      "Background": "#131203"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.VeryDarkFactor",
@@ -24653,13 +16149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f56888",
-      "Background": "#14080b"
+      "Color": "#dd84bc",
+      "Background": "#120b0f"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.Bright",
@@ -24668,13 +16159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f97b34",
-      "Background": "#140a04"
+      "Color": "#e05396",
+      "Background": "#12060c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.random",
@@ -24683,13 +16169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2321f7",
-      "Background": "#020214"
+      "Color": "#c7cf38",
+      "Background": "#101104"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.Zero",
@@ -24698,13 +16179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#567fce",
-      "Background": "#070a11"
+      "Color": "#d1e5d2",
+      "Background": "#111311"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.EqualityContract",
@@ -24713,13 +16189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#af1ad4",
-      "Background": "#0e0211"
+      "Color": "#cb2ee2",
+      "Background": "#100312"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.R",
@@ -24728,13 +16199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#52d6bb",
-      "Background": "#06110f"
+      "Color": "#f00104",
+      "Background": "#140000"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.G",
@@ -24743,13 +16209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5daff9",
-      "Background": "#070e14"
+      "Color": "#cee72f",
+      "Background": "#111303"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.B",
@@ -24758,13 +16219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d30ab7",
-      "Background": "#11000f"
+      "Color": "#d783e4",
+      "Background": "#110a13"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.ctor(Int32,Int32,Int32)",
@@ -24773,13 +16229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#de9ccb",
-      "Background": "#120d10"
+      "Color": "#4137d5",
+      "Background": "#050411"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.ToString()",
@@ -24788,13 +16239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e2334e",
-      "Background": "#120406"
+      "Color": "#84efda",
+      "Background": "#0b1312"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.BrightRandom()",
@@ -24803,13 +16249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2aedd3",
-      "Background": "#031311"
+      "Color": "#ac20ee",
+      "Background": "#0e0213"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.VeryDark()",
@@ -24818,13 +16259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1811e2",
-      "Background": "#020112"
+      "Color": "#e99ee2",
+      "Background": "#130d12"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.PrintMembers(StringBuilder)",
@@ -24833,13 +16269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fabd3d",
-      "Background": "#140f05"
+      "Color": "#a1d7f1",
+      "Background": "#0d1114"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.op_Inequality(Color,Color)",
@@ -24848,13 +16279,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e84728",
-      "Background": "#130503"
+      "Color": "#1de29b",
+      "Background": "#02120c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.op_Equality(Color,Color)",
@@ -24863,13 +16289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ee7a5",
-      "Background": "#09130d"
+      "Color": "#bd11cc",
+      "Background": "#0f0111"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.GetHashCode()",
@@ -24878,13 +16299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#faaa72",
-      "Background": "#140e09"
+      "Color": "#dee012",
+      "Background": "#121201"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.Equals(Object)",
@@ -24893,13 +16309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b360e1",
-      "Background": "#0e0812"
+      "Color": "#424be6",
+      "Background": "#050613"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.Equals(Color)",
@@ -24908,13 +16319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2711e8",
-      "Background": "#030113"
+      "Color": "#967ff9",
+      "Background": "#0c0a14"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.\u003CClone\u003E$()",
@@ -24923,13 +16329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ef970",
-      "Background": "#061409"
+      "Color": "#efc111",
+      "Background": "#131001"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.ctor(Color)",
@@ -24938,13 +16339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ed4973",
-      "Background": "#130609"
+      "Color": "#c3ea1d",
+      "Background": "#101302"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.Deconstruct(Int32,Int32,Int32)",
@@ -24953,13 +16349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6fcb11",
-      "Background": "#091001"
+      "Color": "#fca097",
+      "Background": "#150d0c"
     },
     {
       "Name": "Dependinator.Dependinator.Models.Color.cctor()",
@@ -24968,13 +16359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#caef3f",
-      "Background": "#101305"
+      "Color": "#d8498d",
+      "Background": "#12060b"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.$private",
@@ -24983,13 +16369,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#39f245",
-      "Background": "#041405"
+      "Color": "#19f58a",
+      "Background": "#02140b"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.ModuleIcon",
@@ -24998,13 +16379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a72ffe",
-      "Background": "#0d0315"
+      "Color": "#7f5bec",
+      "Background": "#0a0713"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.ExternalsIcon",
@@ -25013,13 +16389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#60d822",
-      "Background": "#081202"
+      "Color": "#a3d4d4",
+      "Background": "#0d1111"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.PrivateIcon",
@@ -25028,13 +16399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#df9311",
-      "Background": "#120c01"
+      "Color": "#4fc9dd",
+      "Background": "#061012"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.FilesIcon",
@@ -25043,13 +16409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8459da",
-      "Background": "#0b0712"
+      "Color": "#ebb39c",
+      "Background": "#130e0d"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.TypeIcon",
@@ -25058,13 +16419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#baca23",
-      "Background": "#0f1002"
+      "Color": "#04e5d7",
+      "Background": "#001311"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.SolutionIcon",
@@ -25073,13 +16429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#06f412",
-      "Background": "#001401"
+      "Color": "#7f77e8",
+      "Background": "#0a0913"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.MemberIcon",
@@ -25088,13 +16439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec869f",
-      "Background": "#130b0d"
+      "Color": "#2027e3",
+      "Background": "#020312"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.IconDefs",
@@ -25103,13 +16449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#24fe73",
-      "Background": "#031509"
+      "Color": "#b74ecd",
+      "Background": "#0f0611"
     },
     {
       "Name": "Dependinator.Dependinator.Icons.Icon.cctor()",
@@ -25118,13 +16459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f6d725",
-      "Background": "#141103"
+      "Color": "#ecf1d5",
+      "Background": "#131411"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.$private",
@@ -25133,13 +16469,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc359b",
-      "Background": "#15040c"
+      "Color": "#f65512",
+      "Background": "#140701"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.srv",
@@ -25148,13 +16479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c6d48a",
-      "Background": "#10110b"
+      "Color": "#b4df52",
+      "Background": "#0f1206"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.mouseEventService",
@@ -25163,13 +16489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7af68f",
-      "Background": "#0a140b"
+      "Color": "#fb2917",
+      "Background": "#140301"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.jSInteropService",
@@ -25178,13 +16499,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1a3fe0",
-      "Background": "#020512"
+      "Color": "#00ddb7",
+      "Background": "#00120f"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.uiService",
@@ -25193,13 +16509,18 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a740fe",
-      "Background": "#0d0515"
+      "Color": "#dd4e32",
+      "Background": "#120604"
+    },
+    {
+      "Name": "Dependinator.Dependinator.Diagrams.Canvas.database",
+      "ParentName": "Dependinator.Dependinator.Diagrams.Canvas.$private",
+      "Type": {
+        "Text": "Member"
+      },
+      "Description": "",
+      "Color": "#0d0cea",
+      "Background": "#010113"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.Ref",
@@ -25208,13 +16529,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6bbcde",
-      "Background": "#080f12"
+      "Color": "#156dec",
+      "Background": "#010913"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.Info",
@@ -25223,13 +16539,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cd7d11",
-      "Background": "#110a01"
+      "Color": "#98d0d0",
+      "Background": "#0c1111"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.Content",
@@ -25238,13 +16549,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e6fd29",
-      "Background": "#131503"
+      "Color": "#27e399",
+      "Background": "#03120c"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.Width",
@@ -25253,13 +16559,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#455de6",
-      "Background": "#050713"
+      "Color": "#e39cd6",
+      "Background": "#120d11"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.Height",
@@ -25268,13 +16569,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0af361",
-      "Background": "#001408"
+      "Color": "#c1d771",
+      "Background": "#101109"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.ViewBox",
@@ -25283,13 +16579,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eee4d2",
-      "Background": "#131311"
+      "Color": "#11abfb",
+      "Background": "#010e14"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.IconDefs",
@@ -25298,13 +16589,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#529bee",
-      "Background": "#060c13"
+      "Color": "#d35e5b",
+      "Background": "#110707"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.Cursor",
@@ -25313,13 +16599,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#efb314",
-      "Background": "#130e01"
+      "Color": "#5233e4",
+      "Background": "#060413"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.OnAfterRenderAsync(Boolean)",
@@ -25328,13 +16609,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1a82fd",
-      "Background": "#020a15"
+      "Color": "#b4b7ca",
+      "Background": "#0f0f10"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.BuildRenderTree(RenderTreeBuilder)",
@@ -25343,13 +16619,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6258d6",
-      "Background": "#080711"
+      "Color": "#d4e73a",
+      "Background": "#111304"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.Canvas.ctor()",
@@ -25358,13 +16629,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5805e7",
-      "Background": "#070013"
+      "Color": "#1380d1",
+      "Background": "#010a11"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.SvgContent",
@@ -25373,13 +16639,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fc9d0e",
-      "Background": "#150d01"
+      "Color": "#f28e54",
+      "Background": "#140b07"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.TileKeyText",
@@ -25388,13 +16649,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e75663",
-      "Background": "#130708"
+      "Color": "#80cdec",
+      "Background": "#0a1113"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.SvgRect",
@@ -25403,13 +16659,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d35fe8",
-      "Background": "#110713"
+      "Color": "#fdd318",
+      "Background": "#151102"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.TileViewBox",
@@ -25418,13 +16669,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f78353",
-      "Background": "#140a06"
+      "Color": "#ef5a0c",
+      "Background": "#130701"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.Offset",
@@ -25433,13 +16679,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0fa48",
-      "Background": "#111406"
+      "Color": "#c93401",
+      "Background": "#100400"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.Zoom",
@@ -25448,13 +16689,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#82d1f8",
-      "Background": "#0a1114"
+      "Color": "#9f4cdd",
+      "Background": "#0d0612"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.ZCount",
@@ -25463,13 +16699,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#99dbe1",
-      "Background": "#0c1212"
+      "Color": "#05e3d4",
+      "Background": "#001211"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.SvgViewBox",
@@ -25478,13 +16709,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e505c3",
-      "Background": "#130010"
+      "Color": "#8dce2e",
+      "Background": "#0b1103"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.Cursor",
@@ -25493,13 +16719,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ad3dda",
-      "Background": "#0e0512"
+      "Color": "#55eec0",
+      "Background": "#071310"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.InitAsync(IUIComponent)",
@@ -25508,13 +16729,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#baf6f1",
-      "Background": "#0f1414"
+      "Color": "#edbd9a",
+      "Background": "#130f0c"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.Refresh()",
@@ -25523,13 +16739,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c2d07b",
-      "Background": "#10110a"
+      "Color": "#8018e8",
+      "Background": "#0a0213"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.Clear()",
@@ -25538,13 +16749,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef15f5",
-      "Background": "#130114"
+      "Color": "#67eb77",
+      "Background": "#081309"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.PanZoomToFit()",
@@ -25553,13 +16759,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#25e8bc",
-      "Background": "#03130f"
+      "Color": "#0babe2",
+      "Background": "#000e12"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.ICanvasService.InitialShow()",
@@ -25568,13 +16769,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ae4b4",
-      "Background": "#06130f"
+      "Color": "#f6ff49",
+      "Background": "#141506"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.$private",
@@ -25583,13 +16779,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8065e6",
-      "Background": "#0a0813"
+      "Color": "#52f6bb",
+      "Background": "#06140f"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.MoveDelay",
@@ -25598,13 +16789,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2491f3",
-      "Background": "#030c14"
+      "Color": "#52ea50",
+      "Background": "#061306"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.panZoomService",
@@ -25613,13 +16799,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c8e0bd",
-      "Background": "#10120f"
+      "Color": "#aa17ed",
+      "Background": "#0e0113"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.modelService",
@@ -25628,13 +16809,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e43517",
-      "Background": "#130401"
+      "Color": "#d4527d",
+      "Background": "#11060a"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.uiService",
@@ -25643,13 +16819,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e28793",
-      "Background": "#120b0c"
+      "Color": "#d693a7",
+      "Background": "#110c0d"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.moveTimer",
@@ -25658,13 +16829,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3fb6e2",
-      "Background": "#050f12"
+      "Color": "#cda524",
+      "Background": "#110d03"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.moveTimerRunning",
@@ -25673,13 +16839,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fe203d",
-      "Background": "#150205"
+      "Color": "#c93789",
+      "Background": "#10040b"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.isMoving",
@@ -25688,13 +16849,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#72b9ee",
-      "Background": "#090f13"
+      "Color": "#6797f4",
+      "Background": "#080c14"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.selectedId",
@@ -25703,13 +16859,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d4b6e9",
-      "Background": "#110f13"
+      "Color": "#efb323",
+      "Background": "#130e02"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.mouseDownId",
@@ -25718,13 +16869,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#50ccb3",
-      "Background": "#06110e"
+      "Color": "#f5d662",
+      "Background": "#141108"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.mouseDownSubId",
@@ -25733,13 +16879,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6fdf96",
-      "Background": "#09120c"
+      "Color": "#80d8f8",
+      "Background": "#0a1214"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.SvgContent",
@@ -25748,13 +16889,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dd51bb",
-      "Background": "#12060f"
+      "Color": "#d3c023",
+      "Background": "#111002"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.TileKeyText",
@@ -25763,13 +16899,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fcfac5",
-      "Background": "#151410"
+      "Color": "#157bd5",
+      "Background": "#010a11"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.LevelZoom",
@@ -25778,13 +16909,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fa9cfb",
-      "Background": "#140d14"
+      "Color": "#db08c0",
+      "Background": "#120010"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.TileViewBox",
@@ -25793,13 +16919,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ed0f94",
-      "Background": "#13010c"
+      "Color": "#a626ec",
+      "Background": "#0d0313"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.TileOffset",
@@ -25808,13 +16929,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0884d8",
-      "Background": "#000b12"
+      "Color": "#9573e2",
+      "Background": "#0c0912"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.Content",
@@ -25823,13 +16939,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7e8ae8",
-      "Background": "#0a0b13"
+      "Color": "#2b00db",
+      "Background": "#030012"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.Cursor",
@@ -25838,13 +16949,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e38cec",
-      "Background": "#120b13"
+      "Color": "#de3021",
+      "Background": "#120402"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.SvgRect",
@@ -25853,13 +16959,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7aca45",
-      "Background": "#0a1005"
+      "Color": "#c444ee",
+      "Background": "#100513"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.Offset",
@@ -25868,13 +16969,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2007f8",
-      "Background": "#020014"
+      "Color": "#166bec",
+      "Background": "#010813"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.Zoom",
@@ -25883,13 +16979,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3ffc9d",
-      "Background": "#05150d"
+      "Color": "#590def",
+      "Background": "#070113"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.ActualZoom",
@@ -25898,13 +16989,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d17234",
-      "Background": "#110904"
+      "Color": "#0bf242",
+      "Background": "#001405"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.ZCount",
@@ -25913,13 +16999,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f35db5",
-      "Background": "#14070f"
+      "Color": "#76aff3",
+      "Background": "#090e14"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.SvgViewBox",
@@ -25928,13 +17009,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d8d76f",
-      "Background": "#121109"
+      "Color": "#4a22f9",
+      "Background": "#060214"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.ctor(IMouseEventService,IPanZoomService,IModelService,IUIService)",
@@ -25943,13 +17019,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b3cc68",
-      "Background": "#0e1108"
+      "Color": "#3af405",
+      "Background": "#041400"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.InitAsync(IUIComponent)",
@@ -25958,13 +17029,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d9fa0e",
-      "Background": "#121401"
+      "Color": "#8fc9b8",
+      "Background": "#0b100f"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.OnClick(MouseEvent)",
@@ -25973,13 +17039,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#39fb60",
-      "Background": "#041408"
+      "Color": "#9a1df2",
+      "Background": "#0c0214"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.OnDblClick(MouseEvent)",
@@ -25988,13 +17049,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#fe59f2",
-      "Background": "#150714"
+      "Color": "#dc127f",
+      "Background": "#12010a"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.OnMouseWheel(MouseEvent)",
@@ -26003,13 +17059,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#daad33",
-      "Background": "#120e04"
+      "Color": "#9defb9",
+      "Background": "#0d130f"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.OnMouseMove(MouseEvent)",
@@ -26018,13 +17069,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eacfda",
-      "Background": "#131112"
+      "Color": "#e0212e",
+      "Background": "#120203"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.OnMouseDown(MouseEvent)",
@@ -26033,13 +17079,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#78d4b4",
-      "Background": "#0a110f"
+      "Color": "#74ec6c",
+      "Background": "#091309"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.OnMouseUp(MouseEvent)",
@@ -26048,13 +17089,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e7cbeb",
-      "Background": "#131013"
+      "Color": "#f4fbb2",
+      "Background": "#14140e"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.OnMoveTimer(Object)",
@@ -26063,13 +17099,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#20fc18",
-      "Background": "#021502"
+      "Color": "#e65fc2",
+      "Background": "#130710"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.moveSelectedNode(MouseEvent)",
@@ -26078,13 +17109,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f011cb",
-      "Background": "#140110"
+      "Color": "#76dfdd",
+      "Background": "#091212"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.resizeSelectedNode(MouseEvent)",
@@ -26093,13 +17119,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c2f9aa",
-      "Background": "#10140e"
+      "Color": "#a4dc9a",
+      "Background": "#0d120c"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.InitialShow()",
@@ -26108,13 +17129,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d30c2e",
-      "Background": "#110103"
+      "Color": "#61f9a1",
+      "Background": "#08140d"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.PanZoomToFit()",
@@ -26123,13 +17139,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#47a2e7",
-      "Background": "#050d13"
+      "Color": "#a3c7cb",
+      "Background": "#0d1010"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.Refresh()",
@@ -26138,13 +17149,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eeae50",
-      "Background": "#130e06"
+      "Color": "#8e68d5",
+      "Background": "#0b0811"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.Clear()",
@@ -26153,13 +17159,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f75a6b",
-      "Background": "#140708"
+      "Color": "#b6ace8",
+      "Background": "#0f0e13"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.CanvasService.GetSvgContent()",
@@ -26168,13 +17169,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#24d8fd",
-      "Background": "#031215"
+      "Color": "#e20123",
+      "Background": "#120002"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.SvgRect",
@@ -26183,13 +17179,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#68ce9f",
-      "Background": "#08110d"
+      "Color": "#1dc7f8",
+      "Background": "#021014"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.Offset",
@@ -26198,13 +17189,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2311ee",
-      "Background": "#020113"
+      "Color": "#eef4df",
+      "Background": "#131412"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.Zoom",
@@ -26213,13 +17199,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f9055c",
-      "Background": "#140007"
+      "Color": "#a2f316",
+      "Background": "#0d1401"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.SvgZoom",
@@ -26228,13 +17209,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e9b336",
-      "Background": "#130e04"
+      "Color": "#fe393b",
+      "Background": "#150404"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.ZCount",
@@ -26243,13 +17219,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b634dc",
-      "Background": "#0f0412"
+      "Color": "#786ff8",
+      "Background": "#0a0914"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.InitAsync(IUIComponent)",
@@ -26258,13 +17229,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2117cc",
-      "Background": "#020111"
+      "Color": "#3560f8",
+      "Background": "#040814"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.OnMouseWheel(MouseEvent)",
@@ -26273,13 +17239,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cda681",
-      "Background": "#110d0a"
+      "Color": "#fd83ed",
+      "Background": "#150a13"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.OnMouseMove(MouseEvent)",
@@ -26288,13 +17249,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f8a2e9",
-      "Background": "#140d13"
+      "Color": "#59cb26",
+      "Background": "#071003"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.PanZoomToFit(Rect)",
@@ -26303,13 +17259,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c4cc9f",
-      "Background": "#10110d"
+      "Color": "#e289f3",
+      "Background": "#120b14"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.IPanZoomService.CheckResizeAsync()",
@@ -26318,13 +17269,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef19c9",
-      "Background": "#130210"
+      "Color": "#b2df1d",
+      "Background": "#0e1202"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.$private",
@@ -26333,13 +17279,8 @@ static class ExampleModel
         "Text": "Private"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c1cff2",
-      "Background": "#101114"
+      "Color": "#5d90d9",
+      "Background": "#070c12"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.MaxZoom",
@@ -26348,13 +17289,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f1dd62",
-      "Background": "#141208"
+      "Color": "#45c6cb",
+      "Background": "#051010"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.Margin",
@@ -26363,13 +17299,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1bb3dd",
-      "Background": "#020e12"
+      "Color": "#ff8140",
+      "Background": "#150a05"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.WheelZoomSpeed",
@@ -26378,13 +17309,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ee796",
-      "Background": "#07130c"
+      "Color": "#c9fd78",
+      "Background": "#10150a"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.PinchZoomSpeed",
@@ -26393,13 +17319,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2d23cf",
-      "Background": "#030211"
+      "Color": "#c2e908",
+      "Background": "#101300"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.SvgPageMargin",
@@ -26408,13 +17329,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a1d82a",
-      "Background": "#0d1203"
+      "Color": "#bdd365",
+      "Background": "#0f1108"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.jSInteropService",
@@ -26423,13 +17339,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5cd008",
-      "Background": "#071100"
+      "Color": "#81edd5",
+      "Background": "#0a1311"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.uiService",
@@ -26438,13 +17349,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#84d3a9",
-      "Background": "#0b110e"
+      "Color": "#38f906",
+      "Background": "#041400"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.syncRoot",
@@ -26453,13 +17359,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b5b1f8",
-      "Background": "#0f0e14"
+      "Color": "#67ff90",
+      "Background": "#08150c"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.component",
@@ -26468,13 +17369,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e0dc26",
-      "Background": "#121203"
+      "Color": "#0cf04f",
+      "Background": "#011406"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.ZCount",
@@ -26483,13 +17379,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2548ca",
-      "Background": "#030610"
+      "Color": "#3cf2a3",
+      "Background": "#05140d"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.Offset",
@@ -26498,13 +17389,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7a7ff8",
-      "Background": "#0a0a14"
+      "Color": "#e02a17",
+      "Background": "#120301"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.SvgRect",
@@ -26513,13 +17399,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#95d40f",
-      "Background": "#0c1101"
+      "Color": "#94de1c",
+      "Background": "#0c1202"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.Zoom",
@@ -26528,13 +17409,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#acef64",
-      "Background": "#0e1308"
+      "Color": "#50fd95",
+      "Background": "#06150c"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.SvgZoom",
@@ -26543,13 +17419,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4ad014",
-      "Background": "#061101"
+      "Color": "#20f3d8",
+      "Background": "#021412"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.ctor(IJSInteropService,IUIService)",
@@ -26558,13 +17429,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#19d0e2",
-      "Background": "#021112"
+      "Color": "#03ff89",
+      "Background": "#00150b"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.InitAsync(IUIComponent)",
@@ -26573,13 +17439,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 120,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#eb9712",
-      "Background": "#130c01"
+      "Color": "#33f687",
+      "Background": "#04140b"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.OnMouseWheel(MouseEvent)",
@@ -26588,13 +17449,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 230,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a7e2ba",
-      "Background": "#0d120f"
+      "Color": "#e415eb",
+      "Background": "#130113"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.OnMouseMove(MouseEvent)",
@@ -26603,13 +17459,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98dc32",
-      "Background": "#0c1204"
+      "Color": "#87f67a",
+      "Background": "#0b140a"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.PanZoomToFit(Rect)",
@@ -26618,13 +17469,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 450,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ef0eb6",
-      "Background": "#13010f"
+      "Color": "#4e3fd1",
+      "Background": "#060511"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.OnResize()",
@@ -26633,13 +17479,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 340,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c9fb7f",
-      "Background": "#10140a"
+      "Color": "#44cc55",
+      "Background": "#051107"
     },
     {
       "Name": "Dependinator.Dependinator.Diagrams.PanZoomService.CheckResizeAsync()",
@@ -26648,13 +17489,8 @@ static class ExampleModel
         "Text": "Member"
       },
       "Description": "",
-      "X": 560,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#85ece3",
-      "Background": "#0b1312"
+      "Color": "#30e699",
+      "Background": "#04130c"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonReader.Read()",
@@ -26663,13 +17499,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#8ccc81",
-      "Background": "#0b110a"
+      "Color": "#9f4fd4",
+      "Background": "#0d0611"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonReader.TokenType",
@@ -26678,13 +17509,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b590e0",
-      "Background": "#0f0c12"
+      "Color": "#8f2fed",
+      "Background": "#0b0313"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonToken",
@@ -26693,13 +17519,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#55a0fb",
-      "Background": "#070d14"
+      "Color": "#39d7e4",
+      "Background": "#041113"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonSerializer.Deserialize\u00601(JsonReader)",
@@ -26708,13 +17529,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#1df0ee",
-      "Background": "#021413"
+      "Color": "#db9a35",
+      "Background": "#120c04"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonReader.Value",
@@ -26723,13 +17539,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#75df7e",
-      "Background": "#09120a"
+      "Color": "#6d6bd9",
+      "Background": "#090812"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonSerializer.ctor()",
@@ -26738,13 +17549,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#27cfdf",
-      "Background": "#031112"
+      "Color": "#8697f9",
+      "Background": "#0b0c14"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonSerializer.Formatting",
@@ -26753,13 +17559,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#40eeec",
-      "Background": "#051313"
+      "Color": "#f7e5b7",
+      "Background": "#14130f"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.Formatting",
@@ -26768,13 +17569,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#25fbc3",
-      "Background": "#031410"
+      "Color": "#cb59df",
+      "Background": "#100712"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonSerializer.ObjectCreationHandling",
@@ -26783,13 +17579,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#40e72b",
-      "Background": "#051303"
+      "Color": "#4f6dd9",
+      "Background": "#060912"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.ObjectCreationHandling",
@@ -26798,13 +17589,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5066f6",
-      "Background": "#060814"
+      "Color": "#21d038",
+      "Background": "#021104"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonSerializer.NullValueHandling",
@@ -26813,13 +17599,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#40ee73",
-      "Background": "#051309"
+      "Color": "#e48bdb",
+      "Background": "#130b12"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.NullValueHandling",
@@ -26828,13 +17609,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e63060",
-      "Background": "#130408"
+      "Color": "#8a33cc",
+      "Background": "#0b0411"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.JsonSerializer.DefaultValueHandling",
@@ -26843,13 +17619,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#44e19d",
-      "Background": "#05120d"
+      "Color": "#0296ff",
+      "Background": "#000c15"
     },
     {
       "Name": "Newtonsoft*Json.Newtonsoft.Json.DefaultValueHandling",
@@ -26858,13 +17629,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#484bcd",
-      "Background": "#060611"
+      "Color": "#68d2cd",
+      "Background": "#081111"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.AssemblyDefinition.Dispose()",
@@ -26873,13 +17639,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e36492",
-      "Background": "#12080c"
+      "Color": "#250ef8",
+      "Background": "#030114"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.AssemblyDefinition.MainModule",
@@ -26888,13 +17649,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2180ce",
-      "Background": "#020a11"
+      "Color": "#265ed5",
+      "Background": "#030711"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ReaderParameters.ctor()",
@@ -26903,13 +17659,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#40a5e7",
-      "Background": "#050d13"
+      "Color": "#e4976c",
+      "Background": "#130c09"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ReaderParameters.AssemblyResolver",
@@ -26918,13 +17669,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9ad5f7",
-      "Background": "#0c1114"
+      "Color": "#c152f4",
+      "Background": "#100614"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.IAssemblyResolver",
@@ -26933,13 +17679,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d73e5e",
-      "Background": "#110507"
+      "Color": "#f058ca",
+      "Background": "#140710"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ReaderParameters.ReadSymbols",
@@ -26948,13 +17689,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f22628",
-      "Background": "#140303"
+      "Color": "#7289fc",
+      "Background": "#090b15"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.AssemblyDefinition.ReadAssembly(String,ReaderParameters)",
@@ -26963,13 +17699,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f37528",
-      "Background": "#140903"
+      "Color": "#aee201",
+      "Background": "#0e1200"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ModuleDefinition.Types",
@@ -26978,13 +17709,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#98d8b0",
-      "Background": "#0c120e"
+      "Color": "#3c8cf2",
+      "Background": "#050b14"
     },
     {
       "Name": "Mono*Cecil.Mono.Collections",
@@ -26993,13 +17719,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#4c2df1",
-      "Background": "#060314"
+      "Color": "#d908be",
+      "Background": "#12000f"
     },
     {
       "Name": "Mono*Cecil.Mono.Collections.Generic",
@@ -27008,13 +17729,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0f336",
-      "Background": "#111404"
+      "Color": "#e16979",
+      "Background": "#12080a"
     },
     {
       "Name": "Mono*Cecil.Mono.Collections.Generic.Collection\u00601",
@@ -27023,13 +17739,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b2f89e",
-      "Background": "#0e140d"
+      "Color": "#2532d0",
+      "Background": "#030411"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.CustomAttribute",
@@ -27038,13 +17749,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f6ac94",
-      "Background": "#140e0c"
+      "Color": "#f19c8e",
+      "Background": "#140d0b"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.CustomAttributeArgument",
@@ -27053,13 +17759,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9c3bd2",
-      "Background": "#0d0411"
+      "Color": "#b2d925",
+      "Background": "#0e1203"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.AssemblyDefinition.CustomAttributes",
@@ -27068,13 +17769,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#af37ce",
-      "Background": "#0e0411"
+      "Color": "#27d180",
+      "Background": "#03110a"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.CustomAttribute.ConstructorArguments",
@@ -27083,13 +17779,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#32f53a",
-      "Background": "#041404"
+      "Color": "#ffa1ef",
+      "Background": "#150d13"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.CustomAttributeArgument.Value",
@@ -27098,13 +17789,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ce6a8d",
-      "Background": "#11080b"
+      "Color": "#ca743f",
+      "Background": "#100905"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ModuleDefinition.AssemblyReferences",
@@ -27113,13 +17799,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#23f715",
-      "Background": "#021401"
+      "Color": "#46e284",
+      "Background": "#05120b"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ModuleDefinition.GetType(String)",
@@ -27128,13 +17809,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a950d5",
-      "Background": "#0e0611"
+      "Color": "#3dcfea",
+      "Background": "#051113"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeDefinition.Methods",
@@ -27143,13 +17819,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ffd62",
-      "Background": "#091508"
+      "Color": "#d5307c",
+      "Background": "#11040a"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeDefinition.Properties",
@@ -27158,13 +17829,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f4b555",
-      "Background": "#140f07"
+      "Color": "#c2a9e3",
+      "Background": "#100e12"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.PropertyDefinition",
@@ -27173,13 +17839,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 560,
-      "Y": 230,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5ad21d",
-      "Background": "#071102"
+      "Color": "#51e3ea",
+      "Background": "#061213"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeDefinition.Fields",
@@ -27188,13 +17849,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cd668f",
-      "Background": "#11080b"
+      "Color": "#0c1ed3",
+      "Background": "#010211"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.FieldDefinition",
@@ -27203,13 +17859,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e80d00",
-      "Background": "#130100"
+      "Color": "#11eaff",
+      "Background": "#011315"
     },
     {
       "Name": "Mono*Cecil.Mono.Collections.Generic.Collection\u00601/Enumerator",
@@ -27218,13 +17869,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dfe288",
-      "Background": "#12120b"
+      "Color": "#ee182c",
+      "Background": "#130203"
     },
     {
       "Name": "Mono*Cecil.Mono.Collections.Generic.Collection\u00601.GetEnumerator()",
@@ -27233,13 +17879,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e44769",
-      "Background": "#130508"
+      "Color": "#3a90f4",
+      "Background": "#040c14"
     },
     {
       "Name": "Mono*Cecil.Mono.Collections.Generic.Collection\u00601/Enumerator.Current",
@@ -27248,13 +17889,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e387b1",
-      "Background": "#120b0e"
+      "Color": "#2983fe",
+      "Background": "#030a15"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodDefinition.DebugInformation",
@@ -27263,13 +17899,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c6fd0e",
-      "Background": "#101501"
+      "Color": "#d6ce25",
+      "Background": "#111103"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.MethodDebugInformation",
@@ -27278,13 +17909,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#638eda",
-      "Background": "#080b12"
+      "Color": "#7e61d7",
+      "Background": "#0a0811"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.MethodDebugInformation.SequencePoints",
@@ -27293,13 +17919,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#da540d",
-      "Background": "#120701"
+      "Color": "#3184db",
+      "Background": "#040b12"
     },
     {
       "Name": "Mono*Cecil.Mono.Collections.Generic.Collection\u00601/Enumerator.MoveNext()",
@@ -27308,13 +17929,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7ee909",
-      "Background": "#0a1300"
+      "Color": "#f173ad",
+      "Background": "#14090e"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.IMemberDefinition.DeclaringType",
@@ -27323,13 +17939,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f70a27",
-      "Background": "#140003"
+      "Color": "#d1f63d",
+      "Background": "#111405"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.SequencePoint.Document",
@@ -27338,13 +17949,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9f0cf0",
-      "Background": "#0d0114"
+      "Color": "#f707d7",
+      "Background": "#140011"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.Document",
@@ -27353,13 +17959,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#af94f5",
-      "Background": "#0e0c14"
+      "Color": "#f41f9a",
+      "Background": "#14020c"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.Document.Url",
@@ -27368,13 +17969,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#9bf475",
-      "Background": "#0c1409"
+      "Color": "#f6a791",
+      "Background": "#140d0c"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.SequencePoint.StartLine",
@@ -27383,13 +17979,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3acfd5",
-      "Background": "#041111"
+      "Color": "#a4aaf8",
+      "Background": "#0d0e14"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ModuleDefinition.FileName",
@@ -27398,13 +17989,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ff8e90",
-      "Background": "#150b0c"
+      "Color": "#859ace",
+      "Background": "#0b0c11"
     },
     {
       "Name": "ICSharpCode*Decompiler.ICSharpCode.Decompiler.DecompilerSettings",
@@ -27413,13 +17999,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e1bd39",
-      "Background": "#120f04"
+      "Color": "#3574fe",
+      "Background": "#040915"
     },
     {
       "Name": "ICSharpCode*Decompiler.ICSharpCode.Decompiler.DecompilerSettings.ctor(LanguageVersion)",
@@ -27428,13 +18009,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#81ee53",
-      "Background": "#0a1306"
+      "Color": "#871eee",
+      "Background": "#0b0213"
     },
     {
       "Name": "ICSharpCode*Decompiler.ICSharpCode.Decompiler.CSharp.LanguageVersion",
@@ -27443,13 +18019,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#49db37",
-      "Background": "#061204"
+      "Color": "#f09ad3",
+      "Background": "#140c11"
     },
     {
       "Name": "ICSharpCode*Decompiler.ICSharpCode.Decompiler.CSharp.CSharpDecompiler.ctor(String,DecompilerSettings)",
@@ -27458,13 +18029,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c5d0c8",
-      "Background": "#101110"
+      "Color": "#bcf72e",
+      "Background": "#0f1403"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeReference.Scope",
@@ -27473,13 +18039,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ddd303",
-      "Background": "#121100"
+      "Color": "#d64c0b",
+      "Background": "#110600"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.IMetadataScope",
@@ -27488,13 +18049,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d01aa3",
-      "Background": "#11020d"
+      "Color": "#10e6ae",
+      "Background": "#01130e"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.IMetadataScope.Name",
@@ -27503,13 +18059,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7ce4c9",
-      "Background": "#0a1310"
+      "Color": "#abade4",
+      "Background": "#0e0e13"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.GenericInstanceType",
@@ -27518,13 +18069,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f32f3f",
-      "Background": "#140305"
+      "Color": "#36d758",
+      "Background": "#041107"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.GenericInstanceType.GenericArguments",
@@ -27533,13 +18079,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec9ce7",
-      "Background": "#130d13"
+      "Color": "#06cd99",
+      "Background": "#00110c"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ByReferenceType",
@@ -27548,13 +18089,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f9aa81",
-      "Background": "#140e0a"
+      "Color": "#2d14d3",
+      "Background": "#030111"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MemberReference.FullName",
@@ -27563,13 +18099,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d0cdae",
-      "Background": "#11110e"
+      "Color": "#eea3f5",
+      "Background": "#130d14"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeReference.IsGenericParameter",
@@ -27578,13 +18109,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#53d51a",
-      "Background": "#061102"
+      "Color": "#dcbba2",
+      "Background": "#120f0d"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeSpecification",
@@ -27593,13 +18119,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 450,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f159c1",
-      "Background": "#140710"
+      "Color": "#28ee1a",
+      "Background": "#031302"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeSpecification.ElementType",
@@ -27608,13 +18129,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#32f0e4",
-      "Background": "#041413"
+      "Color": "#b6dafa",
+      "Background": "#0f1214"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MemberReference.DeclaringType",
@@ -27623,13 +18139,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6ad600",
-      "Background": "#081100"
+      "Color": "#dd02b7",
+      "Background": "#12000f"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeDefinition.Events",
@@ -27638,13 +18149,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#5cf5f8",
-      "Background": "#071414"
+      "Color": "#dcd0f0",
+      "Background": "#121114"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.EventDefinition",
@@ -27653,13 +18159,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 560,
-      "Y": 340,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c8e763",
-      "Background": "#101308"
+      "Color": "#c619f8",
+      "Background": "#100214"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.FieldReference",
@@ -27668,13 +18169,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7d14f0",
-      "Background": "#0a0114"
+      "Color": "#bdedee",
+      "Background": "#0f1313"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.FieldReference.FieldType",
@@ -27683,13 +18179,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec6218",
-      "Background": "#130802"
+      "Color": "#edcefb",
+      "Background": "#131114"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.PropertyReference",
@@ -27698,13 +18189,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 120,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b200f5",
-      "Background": "#0e0014"
+      "Color": "#1c98cb",
+      "Background": "#020c10"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.PropertyReference.PropertyType",
@@ -27713,13 +18199,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#01dff7",
-      "Background": "#001214"
+      "Color": "#fc0202",
+      "Background": "#150000"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.EventReference",
@@ -27728,13 +18209,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 230,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#61ffc6",
-      "Background": "#081510"
+      "Color": "#e50f69",
+      "Background": "#130108"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.EventReference.EventType",
@@ -27743,13 +18219,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bb32cb",
-      "Background": "#0f0410"
+      "Color": "#f5048c",
+      "Background": "#14000b"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.IMemberDefinition.Name",
@@ -27758,13 +18229,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#66ea75",
-      "Background": "#081309"
+      "Color": "#3ca5ed",
+      "Background": "#050d13"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodDefinition.IsConstructor",
@@ -27773,13 +18239,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f39b64",
-      "Background": "#140c08"
+      "Color": "#6c49eb",
+      "Background": "#090613"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodReference.ReturnType",
@@ -27788,13 +18249,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ddb561",
-      "Background": "#120f08"
+      "Color": "#e40a21",
+      "Background": "#130002"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodReference.Parameters",
@@ -27803,13 +18259,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#80b5d7",
-      "Background": "#0a0f11"
+      "Color": "#eefbe9",
+      "Background": "#131413"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodDefinition.DeclaringType",
@@ -27818,13 +18269,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#227eff",
-      "Background": "#020a15"
+      "Color": "#93eb6c",
+      "Background": "#0c1309"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeDefinition.IsInterface",
@@ -27833,13 +18279,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#2733e0",
-      "Background": "#030412"
+      "Color": "#83e0c8",
+      "Background": "#0a1210"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodDefinition.HasBody",
@@ -27848,13 +18289,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ec1359",
-      "Background": "#130107"
+      "Color": "#18d900",
+      "Background": "#021200"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodDefinition.Body",
@@ -27863,13 +18299,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ecdebc",
-      "Background": "#13120f"
+      "Color": "#59d4c1",
+      "Background": "#071110"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.MethodBody",
@@ -27878,13 +18309,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b6b2d9",
-      "Background": "#0f0e12"
+      "Color": "#e16e4f",
+      "Background": "#120906"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.MethodBody.Variables",
@@ -27893,13 +18319,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#21d441",
-      "Background": "#021105"
+      "Color": "#f17fd9",
+      "Background": "#140a12"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.MethodBody.Instructions",
@@ -27908,13 +18329,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#aed556",
-      "Background": "#0e1107"
+      "Color": "#67e5d8",
+      "Background": "#081312"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.Instruction",
@@ -27923,13 +18339,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b3dc72",
-      "Background": "#0e1209"
+      "Color": "#d77bb8",
+      "Background": "#110a0f"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.Instruction.Operand",
@@ -27938,13 +18349,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#db87b6",
-      "Background": "#120b0f"
+      "Color": "#ffa487",
+      "Background": "#150d0b"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.VariableReference",
@@ -27953,13 +18359,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7bb9d9",
-      "Background": "#0a0f12"
+      "Color": "#ce3901",
+      "Background": "#110400"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.Cil.VariableReference.VariableType",
@@ -27968,13 +18369,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#bad117",
-      "Background": "#0f1101"
+      "Color": "#3cf801",
+      "Background": "#051400"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeReference.IsNested",
@@ -27983,13 +18379,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#abf71c",
-      "Background": "#0e1402"
+      "Color": "#71ed1f",
+      "Background": "#091302"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.GenericInstanceMethod.GenericArguments",
@@ -27998,13 +18389,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ecf23d",
-      "Background": "#131405"
+      "Color": "#cbca82",
+      "Background": "#10100a"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.AssemblyDefinition.Name",
@@ -28013,13 +18399,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#375aee",
-      "Background": "#040713"
+      "Color": "#fa61f4",
+      "Background": "#140814"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.AssemblyNameDefinition",
@@ -28028,13 +18409,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#c1e575",
-      "Background": "#101309"
+      "Color": "#8def37",
+      "Background": "#0b1304"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.AssemblyNameReference.Name",
@@ -28043,13 +18419,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#dfc67a",
-      "Background": "#12100a"
+      "Color": "#70d0e4",
+      "Background": "#091113"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeReference.Namespace",
@@ -28058,13 +18429,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#a1d649",
-      "Background": "#0d1106"
+      "Color": "#fbb472",
+      "Background": "#140f09"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodReference.HasGenericParameters",
@@ -28073,13 +18439,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d338f2",
-      "Background": "#110414"
+      "Color": "#eaf74d",
+      "Background": "#131406"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MethodReference.GenericParameters",
@@ -28088,13 +18449,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 340,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d46f43",
-      "Background": "#110905"
+      "Color": "#df3b2f",
+      "Background": "#120403"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.GenericParameter",
@@ -28103,13 +18459,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e212c6",
-      "Background": "#120110"
+      "Color": "#54aacf",
+      "Background": "#070e11"
     },
     {
       "Name": "Mono*Cecil.Mono.Collections.Generic.Collection\u00601.Count",
@@ -28118,13 +18469,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#cd5432",
-      "Background": "#110704"
+      "Color": "#92c3d0",
+      "Background": "#0c1011"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.MemberReference.Name",
@@ -28133,13 +18479,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 230,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#d6e92f",
-      "Background": "#111303"
+      "Color": "#91e942",
+      "Background": "#0c1305"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ParameterReference",
@@ -28148,13 +18489,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 560,
-      "Y": 450,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f2d90c",
-      "Background": "#141201"
+      "Color": "#fdaecb",
+      "Background": "#150e10"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ParameterReference.ParameterType",
@@ -28163,13 +18499,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#68f1b4",
-      "Background": "#08140f"
+      "Color": "#27db83",
+      "Background": "#03120a"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.ModuleDefinition.Assembly",
@@ -28178,13 +18509,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 450,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#b3e763",
-      "Background": "#0e1308"
+      "Color": "#86fe12",
+      "Background": "#0b1501"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.DefaultAssemblyResolver.Resolve(AssemblyNameReference)",
@@ -28193,13 +18519,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#3361d6",
-      "Background": "#040811"
+      "Color": "#ccfba5",
+      "Background": "#11140d"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.BaseAssemblyResolver",
@@ -28208,13 +18529,8 @@ static class ExampleModel
         "Text": "Parent"
       },
       "Description": "",
-      "X": 10,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#6fb2e7",
-      "Background": "#090e13"
+      "Color": "#37c99c",
+      "Background": "#04100d"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.BaseAssemblyResolver.Resolve(AssemblyNameReference,ReaderParameters)",
@@ -28223,13 +18539,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#0fd8b0",
-      "Background": "#01120e"
+      "Color": "#c5c9a6",
+      "Background": "#10100d"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.DefaultAssemblyResolver.ctor()",
@@ -28238,13 +18549,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#f6cd7f",
-      "Background": "#14110a"
+      "Color": "#1e53e0",
+      "Background": "#020612"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeDefinition.BaseType",
@@ -28253,13 +18559,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 560,
-      "Y": 10,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#e542bf",
-      "Background": "#13050f"
+      "Color": "#f79854",
+      "Background": "#140c07"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.TypeDefinition.Interfaces",
@@ -28268,13 +18569,8 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 10,
-      "Y": 120,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#ecf3eb",
-      "Background": "#131413"
+      "Color": "#adcbfc",
+      "Background": "#0e1015"
     },
     {
       "Name": "Mono*Cecil.Mono.Cecil.InterfaceImplementation",
@@ -28283,30 +18579,11 @@ static class ExampleModel
         "Text": "None"
       },
       "Description": "",
-      "X": 120,
-      "Y": 560,
-      "Width": 100,
-      "Height": 100,
-      "Zoom": 0.14285714285714285,
-      "Color": "#7fe210",
-      "Background": "#0a1201"
+      "Color": "#fe7bdc",
+      "Background": "#150a12"
     }
   ],
   "Links": [
-    {
-      "SourceName": "Client",
-      "TargetName": "Scrutor",
-      "TargetType": {
-        "Text": "Assembly"
-      }
-    },
-    {
-      "SourceName": "Shared",
-      "TargetName": "netstandard",
-      "TargetType": {
-        "Text": "Assembly"
-      }
-    },
     {
       "SourceName": "Dependinator",
       "TargetName": "Newtonsoft*Json",
@@ -28326,6 +18603,20 @@ static class ExampleModel
       "TargetName": "ICSharpCode*Decompiler",
       "TargetType": {
         "Text": "Assembly"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database",
+      "TargetName": "Dependinator.Dependinator.Utils.IDatabase",
+      "TargetType": {
+        "Text": "Type"
       }
     },
     {
@@ -28728,43 +19019,8 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Shared.BlazorApp.Shared.WeatherForecast.Date",
-      "TargetName": "netstandard.System.DateTime",
-      "TargetType": {
-        "Text": "None"
-      }
-    },
-    {
-      "SourceName": "Shared.BlazorApp.Shared.WeatherForecast.TemperatureC",
-      "TargetName": "netstandard.System.Int32",
-      "TargetType": {
-        "Text": "None"
-      }
-    },
-    {
-      "SourceName": "Shared.BlazorApp.Shared.WeatherForecast.Summary",
-      "TargetName": "netstandard.System.String",
-      "TargetType": {
-        "Text": "None"
-      }
-    },
-    {
-      "SourceName": "Shared.BlazorApp.Shared.WeatherForecast.TemperatureF",
-      "TargetName": "netstandard.System.Int32",
-      "TargetType": {
-        "Text": "None"
-      }
-    },
-    {
       "SourceName": "Dependinator.System.FatalExceptionsExtensions.FatalException",
       "TargetName": "Dependinator.System.FatalExceptionEventArgs",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.forecasts",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast",
       "TargetType": {
         "Text": "Type"
       }
@@ -28812,6 +19068,69 @@ static class ExampleModel
       }
     },
     {
+      "SourceName": "Dependinator.Dependinator.Utils.IDatabase.GetAsync\u00601(String)",
+      "TargetName": "Dependinator.Dependinator.Utils.R\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.op_Inequality(Pair\u00601,Pair\u00601)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.op_Equality(Pair\u00601,Pair\u00601)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.Equals(Pair\u00601)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.\u003CClone\u003E$()",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.ctor(Pair\u00601)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.jSInteropService",
+      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.ctor(IJSInteropService)",
+      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.GetAsync\u00601(String)",
+      "TargetName": "Dependinator.Dependinator.Utils.R\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
       "SourceName": "Dependinator.Dependinator.Utils.Equatable\u00601.op_Equality(Equatable\u00601,Equatable\u00601)",
       "TargetName": "Dependinator.Dependinator.Utils.Equatable\u00601",
       "TargetType": {
@@ -28826,24 +19145,10 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Shared.BlazorApp.Shared.WeatherForecast.TemperatureF",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast.TemperatureC",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
       "SourceName": "Dependinator.Dependinator.Utils.IJSInteropService.BrowserSizeDetails",
       "TargetName": "Dependinator.Dependinator.Utils.BrowserSizeDetails",
       "TargetType": {
         "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Shared.BlazorApp.Shared.WeatherForecast.ctor()",
-      "TargetName": "netstandard.System.Object.ctor()",
-      "TargetType": {
-        "Text": "None"
       }
     },
     {
@@ -28856,6 +19161,13 @@ static class ExampleModel
     {
       "SourceName": "Dependinator.Dependinator.Utils.IJSInteropService.GetBoundingRectangle(ElementReference)",
       "TargetName": "Dependinator.Dependinator.Utils.ElementBoundingRectangle",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.IJSInteropService.GetDatabaseValueAsync\u00601(String,Int32,String,String)",
+      "TargetName": "Dependinator.Dependinator.Utils.R\u00601",
       "TargetType": {
         "Text": "Type"
       }
@@ -28875,13 +19187,6 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Api.Api.HttpTrigger.ctor(ILoggerFactory)",
-      "TargetName": "Api.Api.HttpTrigger",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
       "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.GetWindowSizeAsync()",
       "TargetName": "Dependinator.Dependinator.Utils.BrowserSizeDetails",
       "TargetType": {
@@ -28896,15 +19201,8 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Api.Api.HttpTrigger.ctor(ILoggerFactory)",
-      "TargetName": "Api.Api.HttpTrigger._logger",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Api.Api.HttpTrigger.Run(HttpRequestData)",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast",
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.GetDatabaseValueAsync\u00601(String,Int32,String,String)",
+      "TargetName": "Dependinator.Dependinator.Utils.R\u00601",
       "TargetType": {
         "Text": "Type"
       }
@@ -28912,13 +19210,6 @@ static class ExampleModel
     {
       "SourceName": "Dependinator.Dependinator.Utils.Reflection.GetType(Assembly,String)",
       "TargetName": "Dependinator.Dependinator.Utils.R\u00601",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Api.Api.HttpTrigger.Run(HttpRequestData)",
-      "TargetName": "Api.Api.HttpTrigger",
       "TargetType": {
         "Text": "Type"
       }
@@ -29029,13 +19320,6 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Api.Api.FunctionMetadataProviderAutoStartup.Configure(IHostBuilder)",
-      "TargetName": "Api.Api.WorkerHostBuilderFunctionMetadataProviderExtension.ConfigureGeneratedFunctionMetadataProvider(IHostBuilder)",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
       "SourceName": "Dependinator.Dependinator.Utils.R.Error(String,String,String,Int32)",
       "TargetName": "Dependinator.Dependinator.Utils.ErrorResult",
       "TargetType": {
@@ -29106,13 +19390,6 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Client.Program.Main(String)",
-      "TargetName": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Log/StopParameter,String,String,Int32)",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
       "SourceName": "Dependinator.Dependinator.Utils.R\u00601.op_Implicit(Exception)",
       "TargetName": "Dependinator.Dependinator.Utils.R\u00601",
       "TargetType": {
@@ -29155,41 +19432,6 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Client.Program.Main(String)",
-      "TargetName": "Dependinator.Dependinator.Utils.Logging.Log/StopParameter",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Client.Program.Main(String)",
-      "TargetName": "Dependinator.Dependinator.Utils.ExceptionHandling.HandleUnhandledExceptions(Action)",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.Program.Main(String)",
-      "TargetName": "Client.BlazorApp.Client.App",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Client.Program.Main(String)",
-      "TargetName": "Scrutor.Scrutor.ITypeSourceSelector",
-      "TargetType": {
-        "Text": "None"
-      }
-    },
-    {
-      "SourceName": "Client.Program.Main(String)",
-      "TargetName": "Scrutor.Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.Scan(IServiceCollection,Action\u00601)",
-      "TargetType": {
-        "Text": "None"
-      }
-    },
-    {
       "SourceName": "Dependinator.Dependinator.Utils.Timing.Start(String,String,String,Int32)",
       "TargetName": "Dependinator.Dependinator.Utils.Timing",
       "TargetType": {
@@ -29208,76 +19450,6 @@ static class ExampleModel
       "TargetName": "Dependinator.Dependinator.Utils.Timing/StopParameter",
       "TargetType": {
         "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Client.Program.\u003CMain\u003E(String)",
-      "TargetName": "Client.Program.Main(String)",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Layout.NavMenu.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Client.BlazorApp.Client.Layout.NavMenu.ToggleNavMenu()",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Layout.NavMenu.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Client.BlazorApp.Client.Layout.NavMenu.NavMenuCssClass",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Layout.NavMenu.NavMenuCssClass",
-      "TargetName": "Client.BlazorApp.Client.Layout.NavMenu.collapseNavMenu",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Layout.NavMenu.ToggleNavMenu()",
-      "TargetName": "Client.BlazorApp.Client.Layout.NavMenu.collapseNavMenu",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Layout.NavMenu.ctor()",
-      "TargetName": "Client.BlazorApp.Client.Layout.NavMenu.collapseNavMenu",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.Counter.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Client.BlazorApp.Client.Pages.Counter.currentCount",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.Counter.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Client.BlazorApp.Client.Pages.Counter.IncrementCount()",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.Counter.IncrementCount()",
-      "TargetName": "Client.BlazorApp.Client.Pages.Counter.currentCount",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.Counter.ctor()",
-      "TargetName": "Client.BlazorApp.Client.Pages.Counter.currentCount",
-      "TargetType": {
-        "Text": "Member"
       }
     },
     {
@@ -29316,13 +19488,6 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
       "SourceName": "Dependinator.Dependinator.Utils.UI.TouchEvent.Touches",
       "TargetName": "Dependinator.Dependinator.Utils.UI.TouchPoint",
       "TargetType": {
@@ -29341,41 +19506,6 @@ static class ExampleModel
       "TargetName": "Dependinator.Dependinator.Utils.UI.TouchPoint",
       "TargetType": {
         "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Client.BlazorApp.Client.Pages.FetchData.forecasts",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast.Date",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast.TemperatureC",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast.TemperatureF",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast.Summary",
-      "TargetType": {
-        "Text": "Member"
       }
     },
     {
@@ -29414,27 +19544,6 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.OnInitializedAsync()",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.OnInitializedAsync()",
-      "TargetName": "Client.BlazorApp.Client.Pages.FetchData",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.OnInitializedAsync()",
-      "TargetName": "Client.BlazorApp.Client.Pages.FetchData.Http",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
       "SourceName": "Dependinator.Dependinator.Utils.UI.TouchPoint.op_Inequality(TouchPoint,TouchPoint)",
       "TargetName": "Dependinator.Dependinator.Utils.UI.TouchPoint",
       "TargetType": {
@@ -29470,13 +19579,6 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.OnInitializedAsync()",
-      "TargetName": "Client.BlazorApp.Client.Pages.FetchData.forecasts",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
       "SourceName": "Dependinator.Dependinator.Utils.UI.HammerEvent.Center",
       "TargetName": "Dependinator.Dependinator.Utils.UI.HammerPoint",
       "TargetType": {
@@ -29486,27 +19588,6 @@ static class ExampleModel
     {
       "SourceName": "Dependinator.Dependinator.Utils.UI.HammerEvent.Pointers",
       "TargetName": "Dependinator.Dependinator.Utils.UI.HammerPoint",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.ctor()",
-      "TargetName": "Shared.BlazorApp.Shared.WeatherForecast",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.FetchData.ctor()",
-      "TargetName": "Client.BlazorApp.Client.Pages.FetchData.forecasts",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Client.BlazorApp.Client.Pages.Home.BuildRenderTree(RenderTreeBuilder)",
-      "TargetName": "Dependinator.Dependinator.Main",
       "TargetType": {
         "Text": "Type"
       }
@@ -30653,15 +20734,29 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Dependinator.Dependinator.Parsing.IPersistenceService.LoadAsync()",
+      "SourceName": "Dependinator.Dependinator.Parsing.IPersistenceService.LoadAsync(String)",
       "TargetName": "Dependinator.Dependinator.Parsing.Model",
       "TargetType": {
         "Text": "Type"
       }
     },
     {
-      "SourceName": "Dependinator.Dependinator.Parsing.IPersistenceService.LoadAsync()",
+      "SourceName": "Dependinator.Dependinator.Parsing.IPersistenceService.LoadAsync(String)",
       "TargetName": "Dependinator.Dependinator.Utils.R\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.database",
+      "TargetName": "Dependinator.Dependinator.Utils.IDatabase",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.ctor(IDatabase)",
+      "TargetName": "Dependinator.Dependinator.Utils.IDatabase",
       "TargetType": {
         "Text": "Type"
       }
@@ -30695,14 +20790,14 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.LoadAsync()",
+      "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.LoadAsync(String)",
       "TargetName": "Dependinator.Dependinator.Parsing.Model",
       "TargetType": {
         "Text": "Type"
       }
     },
     {
-      "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.LoadAsync()",
+      "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.LoadAsync(String)",
       "TargetName": "Dependinator.Dependinator.Utils.R\u00601",
       "TargetType": {
         "Text": "Type"
@@ -33971,6 +24066,13 @@ static class ExampleModel
       }
     },
     {
+      "SourceName": "Dependinator.Dependinator.Diagrams.Canvas.database",
+      "TargetName": "Dependinator.Dependinator.Utils.IDatabase",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
       "SourceName": "Dependinator.Dependinator.Diagrams.ICanvasService.SvgRect",
       "TargetName": "Dependinator.Dependinator.Models.Rect",
       "TargetType": {
@@ -34426,6 +24528,153 @@ static class ExampleModel
       }
     },
     {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.ToString()",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.PrintMembers(StringBuilder)",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.PrintMembers(StringBuilder)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.Id",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.PrintMembers(StringBuilder)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.Value",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.op_Inequality(Pair\u00601,Pair\u00601)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.op_Equality(Pair\u00601,Pair\u00601)",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.op_Equality(Pair\u00601,Pair\u00601)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.Equals(Pair\u00601)",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.GetHashCode()",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.EqualityContract",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.Equals(Object)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.Equals(Pair\u00601)",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.Equals(Object)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.Equals(Pair\u00601)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.EqualityContract",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.\u003CClone\u003E$()",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.ctor(Pair\u00601)",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.Deconstruct(String,T)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.Id",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Pair\u00601.Deconstruct(String,T)",
+      "TargetName": "Dependinator.Dependinator.Utils.Pair\u00601.Value",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.ctor(IJSInteropService)",
+      "TargetName": "Dependinator.Dependinator.Utils.Database.jSInteropService",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.Init()",
+      "TargetName": "Dependinator.Dependinator.Utils.Database",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.Init()",
+      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.Init()",
+      "TargetName": "Dependinator.Dependinator.Utils.Database.jSInteropService",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.Init()",
+      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService.InitializeDatabaseAsync(String,Int32,String)",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.DeleteAsync(String)",
+      "TargetName": "Dependinator.Dependinator.Utils.Database",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.DeleteAsync(String)",
+      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.DeleteAsync(String)",
+      "TargetName": "Dependinator.Dependinator.Utils.Database.jSInteropService",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.Database.DeleteAsync(String)",
+      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService.DeleteDatabaseValueAsync(String,Int32,String,String)",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
       "SourceName": "Dependinator.Dependinator.Utils.DependencyInjection.RegisterTypesInAssemblyOf\u00601(IServiceCollection)",
       "TargetName": "Dependinator.Dependinator.Utils.DependencyInjection.Register\u00601(IServiceCollection,Func\u00602,Action\u00603)",
       "TargetType": {
@@ -34650,6 +24899,27 @@ static class ExampleModel
       }
     },
     {
+      "SourceName": "Dependinator.Dependinator.Utils.ValueHandler.GetValue()",
+      "TargetName": "Dependinator.Dependinator.Utils.ValueHandler.sb",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.ValueHandler.OnValue(String)",
+      "TargetName": "Dependinator.Dependinator.Utils.ValueHandler.sb",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.ValueHandler.ctor()",
+      "TargetName": "Dependinator.Dependinator.Utils.ValueHandler.sb",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
       "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.ctor(IJSRuntime)",
       "TargetName": "Dependinator.Dependinator.Utils.JSInteropService",
       "TargetType": {
@@ -34762,28 +25032,28 @@ static class ExampleModel
       }
     },
     {
-      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.AddMouseEventListener(String,String,Object,String)",
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.AddMouseEventListenerAsync(String,String,Object,String)",
       "TargetName": "Dependinator.Dependinator.Utils.JSInteropService",
       "TargetType": {
         "Text": "Type"
       }
     },
     {
-      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.AddMouseEventListener(String,String,Object,String)",
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.AddMouseEventListenerAsync(String,String,Object,String)",
       "TargetName": "Dependinator.Dependinator.Utils.JSInteropService.GetModuleAsync()",
       "TargetType": {
         "Text": "Member"
       }
     },
     {
-      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.AddPointerEventListener(String,String,Object,String)",
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.AddPointerEventListenerAsync(String,String,Object,String)",
       "TargetName": "Dependinator.Dependinator.Utils.JSInteropService",
       "TargetType": {
         "Text": "Type"
       }
     },
     {
-      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.AddPointerEventListener(String,String,Object,String)",
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.AddPointerEventListenerAsync(String,String,Object,String)",
       "TargetName": "Dependinator.Dependinator.Utils.JSInteropService.GetModuleAsync()",
       "TargetType": {
         "Text": "Member"
@@ -34812,6 +25082,34 @@ static class ExampleModel
     },
     {
       "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.GetBoundingRectangle(ElementReference)",
+      "TargetName": "Dependinator.Dependinator.Utils.JSInteropService.GetModuleAsync()",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.InitializeDatabaseAsync(String,Int32,String)",
+      "TargetName": "Dependinator.Dependinator.Utils.JSInteropService",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.InitializeDatabaseAsync(String,Int32,String)",
+      "TargetName": "Dependinator.Dependinator.Utils.JSInteropService.GetModuleAsync()",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.DeleteDatabaseValueAsync(String,Int32,String,String)",
+      "TargetName": "Dependinator.Dependinator.Utils.JSInteropService",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.DeleteDatabaseValueAsync(String,Int32,String,String)",
       "TargetName": "Dependinator.Dependinator.Utils.JSInteropService.GetModuleAsync()",
       "TargetType": {
         "Text": "Member"
@@ -34951,6 +25249,13 @@ static class ExampleModel
       }
     },
     {
+      "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.cctor()",
+      "TargetName": "Dependinator.Dependinator.Utils.JSInteropService.options",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
       "SourceName": "Dependinator.Dependinator.Utils.JSInteropService.DebounceResizeEvent()",
       "TargetName": "Dependinator.Dependinator.Utils.BrowserSizeDetails",
       "TargetType": {
@@ -35079,6 +25384,20 @@ static class ExampleModel
     {
       "SourceName": "Dependinator.Dependinator.Utils.R.ctor(Exception)",
       "TargetName": "Dependinator.Dependinator.Utils.R.resultException",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.R.IsNone",
+      "TargetName": "Dependinator.Dependinator.Utils.R.resultException",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Utils.R.IsNone",
+      "TargetName": "Dependinator.Dependinator.Utils.R.NoValueError",
       "TargetType": {
         "Text": "Member"
       }
@@ -36835,14 +27154,14 @@ static class ExampleModel
     },
     {
       "SourceName": "Dependinator.Dependinator.Utils.UI.MouseEventService.InitAsync()",
-      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService.AddMouseEventListener(String,String,Object,String)",
+      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService.AddMouseEventListenerAsync(String,String,Object,String)",
       "TargetType": {
         "Text": "Member"
       }
     },
     {
       "SourceName": "Dependinator.Dependinator.Utils.UI.MouseEventService.InitAsync()",
-      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService.AddPointerEventListener(String,String,Object,String)",
+      "TargetName": "Dependinator.Dependinator.Utils.IJSInteropService.AddPointerEventListenerAsync(String,String,Object,String)",
       "TargetType": {
         "Text": "Member"
       }
@@ -39256,6 +29575,13 @@ static class ExampleModel
       }
     },
     {
+      "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.ctor(IDatabase)",
+      "TargetName": "Dependinator.Dependinator.Parsing.PersistenceService.database",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
       "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.ModelToData(IModel)",
       "TargetName": "Dependinator.Dependinator.Utils.Timing",
       "TargetType": {
@@ -39351,6 +29677,20 @@ static class ExampleModel
       "TargetName": "Dependinator.Dependinator.Parsing.PersistenceService.ToLink(Link)",
       "TargetType": {
         "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.SaveAsync(Model)",
+      "TargetName": "Dependinator.Dependinator.Parsing.PersistenceService",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Parsing.PersistenceService.LoadAsync(String)",
+      "TargetName": "Dependinator.Dependinator.Parsing.PersistenceService",
+      "TargetType": {
+        "Text": "Type"
       }
     },
     {
@@ -45619,6 +35959,13 @@ static class ExampleModel
       }
     },
     {
+      "SourceName": "Dependinator.Dependinator.Models.ExampleModel.cctor()",
+      "TargetName": "Dependinator.Dependinator.Models.ExampleModel.Model",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
       "SourceName": "Dependinator.Dependinator.Models.Id.ToId(String,Int32)",
       "TargetName": "Dependinator.Dependinator.Models.Id.Base62Encode(Byte,Int32)",
       "TargetType": {
@@ -47188,7 +37535,7 @@ static class ExampleModel
     },
     {
       "SourceName": "Dependinator.Dependinator.Models.ModelService.LoadAsync()",
-      "TargetName": "Dependinator.Dependinator.Parsing.IPersistenceService.LoadAsync()",
+      "TargetName": "Dependinator.Dependinator.Parsing.IPersistenceService.LoadAsync(String)",
       "TargetType": {
         "Text": "Member"
       }
@@ -47244,13 +37591,6 @@ static class ExampleModel
     },
     {
       "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
-      "TargetName": "Dependinator.Dependinator.Models.ModelService",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
       "TargetName": "Dependinator.Dependinator.Utils.Timing.Start(String,String,String,Int32)",
       "TargetType": {
         "Text": "Member"
@@ -47265,51 +37605,9 @@ static class ExampleModel
     },
     {
       "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
-      "TargetName": "Dependinator.Dependinator.Parsing.IItem",
+      "TargetName": "Dependinator.Dependinator.Models.ModelService",
       "TargetType": {
         "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
-      "TargetName": "Dependinator.Dependinator.Utils.ErrorResult",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
-      "TargetName": "Dependinator.Dependinator.Parsing.IParserService",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
-      "TargetName": "Dependinator.Dependinator.Models.ModelService.parserService",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
-      "TargetName": "Dependinator.Dependinator.Parsing.IParserService.Parse(String)",
-      "TargetType": {
-        "Text": "Member"
-      }
-    },
-    {
-      "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
-      "TargetName": "Dependinator.Dependinator.Utils.R\u00601",
-      "TargetType": {
-        "Text": "Type"
-      }
-    },
-    {
-      "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
-      "TargetName": "Dependinator.Dependinator.Utils.Result.Try\u00601(T,ErrorResult,R\u00601)",
-      "TargetType": {
-        "Text": "Member"
       }
     },
     {
@@ -47489,6 +37787,20 @@ static class ExampleModel
     },
     {
       "SourceName": "Dependinator.Dependinator.Models.ModelService.Load(Model)",
+      "TargetName": "Dependinator.Dependinator.Utils.Logging.Log.Info(String,Object,Object,Log/StopParameter,String,String,Int32)",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Models.ModelService.Load(Model)",
+      "TargetName": "Dependinator.Dependinator.Utils.Logging.Log/StopParameter",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Models.ModelService.Load(Model)",
       "TargetName": "Dependinator.Dependinator.Models.ModelService.AddOrUpdate(IReadOnlyList\u00601)",
       "TargetType": {
         "Text": "Member"
@@ -47637,6 +37949,20 @@ static class ExampleModel
     {
       "SourceName": "Dependinator.Dependinator.Models.ModelService.AddSpecials()",
       "TargetName": "Dependinator.Dependinator.Models.IStructureService.AddOrUpdateNode(Node)",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
+      "TargetName": "Dependinator.Dependinator.Parsing.IItem",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Models.ModelService.ParseAsync()",
+      "TargetName": "Dependinator.Dependinator.Models.ModelService.AddOrUpdate(IReadOnlyList\u00601)",
       "TargetType": {
         "Text": "Member"
       }
@@ -51654,6 +41980,27 @@ static class ExampleModel
     },
     {
       "SourceName": "Dependinator.Dependinator.Diagrams.Canvas.OnAfterRenderAsync(Boolean)",
+      "TargetName": "Dependinator.Dependinator.Diagrams.Canvas.database",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Diagrams.Canvas.OnAfterRenderAsync(Boolean)",
+      "TargetName": "Dependinator.Dependinator.Utils.IDatabase",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Diagrams.Canvas.OnAfterRenderAsync(Boolean)",
+      "TargetName": "Dependinator.Dependinator.Utils.IDatabase.Init()",
+      "TargetType": {
+        "Text": "Member"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Diagrams.Canvas.OnAfterRenderAsync(Boolean)",
       "TargetName": "Dependinator.Dependinator.Diagrams.Canvas.mouseEventService",
       "TargetType": {
         "Text": "Member"
@@ -51753,6 +42100,13 @@ static class ExampleModel
     {
       "SourceName": "Dependinator.Dependinator.Diagrams.Canvas.ctor()",
       "TargetName": "Dependinator.Dependinator.Utils.UI.IUIService",
+      "TargetType": {
+        "Text": "Type"
+      }
+    },
+    {
+      "SourceName": "Dependinator.Dependinator.Diagrams.Canvas.ctor()",
+      "TargetName": "Dependinator.Dependinator.Utils.IDatabase",
       "TargetType": {
         "Text": "Type"
       }

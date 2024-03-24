@@ -120,7 +120,12 @@ class CanvasService : ICanvasService
 
         await panZoomService.CheckResizeAsync();
 
-        if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(""))) return;
+        var path = (await configService.GetAsync()).LastUsedPath;
+        path = path == "" ? ExampleModel.Path : path;
+
+        await configService.SetAsync(c => c.LastUsedPath = path);
+
+        if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(path))) return;
         DiagramName = modelService.ModelName;
         PanZoomModel(modelInfo);
 
@@ -166,12 +171,10 @@ class CanvasService : ICanvasService
     {
         if (modelInfo.ViewRect != Rect.None)
         {
-            Log.Info("PanZoom", modelInfo);
             panZoomService.PanZoom(modelInfo.ViewRect, modelInfo.Zoom);
         }
         else
         {
-            Log.Info("PanZoomToFit", modelInfo);
             var bound = modelService.GetBounds();
             panZoomService.PanZoomToFit(bound);
         }

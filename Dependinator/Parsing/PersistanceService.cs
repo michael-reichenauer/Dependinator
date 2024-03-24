@@ -47,8 +47,17 @@ class PersistenceService : IPersistenceService
 
             await fileService.WriteAsync(filePath, model);
 
-            // var path = GetModelFilePath();
-            // if (!Try(out var e, () => File.WriteAllText(path, json))) return e;
+            // if (!Build.IsWebAssembly)
+            // {
+            //     var json = JsonSerializer.Serialize(model,
+            //     new JsonSerializerOptions
+            //     {
+            //         WriteIndented = true,
+            //         IgnoreNullValues = true
+            //     });
+            //     var path = GetModelFilePath();
+            //     if (!Try(out var e, () => File.WriteAllText(path, json))) return e;
+            // }
 
             return R.Ok;
         });
