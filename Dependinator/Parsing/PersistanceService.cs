@@ -42,7 +42,7 @@ class PersistenceService : IPersistenceService
     {
         return Task.Run(async () =>
         {
-            var filePath = $"/models/{model.Path}";
+            var filePath = model.Path;
             using var t = Timing.Start($"Write model '{filePath}'");
 
             await fileService.WriteAsync(filePath, model);
@@ -67,7 +67,7 @@ class PersistenceService : IPersistenceService
     {
         return Task.Run<R<Model>>(async () =>
         {
-            var filePath = $"/models/{modelPath}";
+            var filePath = modelPath;
             using var t = Timing.Start($"Read model '{filePath}'");
 
             if (modelPath == ExampleModel.Path)

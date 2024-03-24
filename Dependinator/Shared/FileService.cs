@@ -4,12 +4,14 @@ namespace Dependinator.Shared;
 
 interface IFileService
 {
+    Task<bool> Exists(string path);
     Task<R> WriteAsync<T>(string path, T content);
     Task<R<T>> ReadAsync<T>(string path);
     Task<R> Deletesync<T>(string path);
     Task AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
+
     R<Stream> ReadStram(string path);
-    bool Exists(string assemblyPath);
+    bool ExistsStream(string assemblyPath);
 
     Task<R<IReadOnlyList<string>>> GetFilePathsAsync();
 }
@@ -28,6 +30,12 @@ class FileService : IFileService
         this.database = database;
     }
 
+    public async Task<bool> Exists(string path)
+    {
+        if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName))) return false;
+        return paths.Contains(path);
+    }
+
     public async Task<R<IReadOnlyList<string>>> GetFilePathsAsync()
     {
         return await database.GetKeysAsync(DBCollectionName);
@@ -38,12 +46,6 @@ class FileService : IFileService
         return await database.SetAsync(DBCollectionName, path, content);
     }
 
-    public R<Stream> ReadStram(string path)
-    {
-        if (!streamsByName.TryGetValue(path, out var stream)) return R.None;
-
-        return stream;
-    }
 
     public async Task<R<T>> ReadAsync<T>(string path)
     {
@@ -79,7 +81,14 @@ class FileService : IFileService
         }
     }
 
-    public bool Exists(string assemblyPath)
+    public R<Stream> ReadStram(string path)
+    {
+        if (!streamsByName.TryGetValue(path, out var stream)) return R.None;
+
+        return stream;
+    }
+
+    public bool ExistsStream(string assemblyPath)
     {
         return streamsByName.ContainsKey(assemblyPath);
     }

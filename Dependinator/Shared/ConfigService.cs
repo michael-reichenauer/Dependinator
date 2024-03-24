@@ -3,7 +3,6 @@ namespace Dependinator.Shared;
 
 class Config
 {
-    public string LastUsedPath { get; set; } = "";
     public List<string> RecentPaths { get; set; } = [];
 }
 

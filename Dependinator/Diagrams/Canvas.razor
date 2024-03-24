@@ -13,8 +13,10 @@
             <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.OpenInBrowser"
                 OnClick="srv.OpenFiles" OnTouch="srv.OpenFiles">Browse Files ...</MudMenuItem>
 
+            <MudDivider />
+
             @{
-                foreach (var path in ModelPaths)
+                foreach (var path in RecentModelPaths)
                 {
                     <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.Schema"
                         OnClick="()=> srv.LoadAsync(path)" OnTouch="()=> srv.LoadAsync(path)">
