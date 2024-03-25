@@ -180,6 +180,9 @@ class CanvasService : ICanvasService
         return paths.Where(p => Path.GetDirectoryName(p) == "/models").ToList();
     }
 
+    bool IsAdjustable(Node node) => Zoom * node.GetZoom() > MinSelectableZoom;
+
+
     void OnClick(MouseEvent e)
     {
         Log.Info("mouse click", e.TargetId);
@@ -188,7 +191,7 @@ class CanvasService : ICanvasService
         var isSelected = false;
         if (modelService.TryUpdateNode(e.TargetId, node =>
         {
-            if (Zoom * node.GetZoom() > MinSelectableZoom)
+            if (IsAdjustable(node))
             {
                 node.IsSelected = true;
                 isSelected = true;
@@ -303,6 +306,7 @@ class CanvasService : ICanvasService
     {
         modelService.TryUpdateNode(mouseDownId, node =>
         {
+            if (!IsAdjustable(node)) return;
             var zoom = node.GetZoom() * Zoom;
             var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
 
@@ -314,6 +318,7 @@ class CanvasService : ICanvasService
     {
         modelService.TryUpdateNode(mouseDownId, node =>
         {
+            if (!IsAdjustable(node)) return;
             var zoom = node.GetZoom() * Zoom;
             var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
 
