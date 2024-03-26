@@ -73,6 +73,15 @@ class ModelService : IModelService
         }
     }
 
+     public bool TryNode(string id, out Node node)
+    {
+        lock (model.Lock)
+        {
+            return model.TryGetNode(NodeId.FromId(id), out node);
+        }
+    }
+
+
     public bool TryGetNode(string id, out Node node)
     {
         lock (model.Lock)

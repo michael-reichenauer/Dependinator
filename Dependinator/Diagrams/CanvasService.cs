@@ -42,6 +42,7 @@ class CanvasService : ICanvasService
 {
 
     const double MinSelectableZoom = 0.15;
+    const double MaxCover = 0.5;
 
     const int MoveDelay = 300;
     private readonly IMouseEventService mouseEventService;
@@ -180,39 +181,52 @@ class CanvasService : ICanvasService
         return paths.Where(p => Path.GetDirectoryName(p) == "/models").ToList();
     }
 
+
+    bool IsNodeAdjustable(string id)
+    {
+        if (!modelService.TryGetNode(id, out var node)) return false;
+
+        var v = SvgRect;
+        var nodeZoom = (1 / node.GetZoom());
+        var vx = (node.Boundary.Width * nodeZoom) / (v.Width * Zoom);
+        var vy = (node.Boundary.Height * nodeZoom) / (v.Height * Zoom);
+        var covers = Math.Max(vx, vy);
+
+        return covers < MaxCover;
+    }
+
+
     void OnClick(MouseEvent e)
     {
         Log.Info("mouse click", e.TargetId);
-        (string id, string subId) = NodeId.ParseString(e.TargetId);
+        (string nodeId, string subId) = NodeId.ParseString(e.TargetId);
 
-        var isSelected = false;
-        if (modelService.TryUpdateNode(e.TargetId, node =>
-        {
-            if (Zoom * node.GetZoom() > MinSelectableZoom)
-            {
-                node.IsSelected = true;
-                isSelected = true;
-            }
-        }))
-        {
-            Log.Info($"Node clicked: {e.TargetId}");
-            if (selectedId != "")
-            {   // Deselect previous node
-                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
-            }
-
-            selectedId = isSelected ? id : "";
-            uiService.TriggerUIStateChange();
-        }
-        else
-        {
-            Log.Info($"No node found at {e.OffsetX},{e.OffsetY}");
+        if (!IsNodeAdjustable(nodeId))
+        {   // Node node at click or node not adjustable 
             if (selectedId != "")
             {
                 modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
                 selectedId = "";
                 uiService.TriggerUIStateChange();
             }
+            return;
+        }
+
+        if (selectedId != nodeId && selectedId != "")
+        {   // click on other node
+            modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
+            selectedId = "";
+            uiService.TriggerUIStateChange();
+        }
+
+        if (modelService.TryUpdateNode(e.TargetId, node =>
+        {
+            node.IsSelected = true;
+        }))
+        {
+            Log.Info($"Node clicked: {e.TargetId}");
+            selectedId = nodeId;
+            uiService.TriggerUIStateChange();
         }
     }
 
@@ -301,8 +315,20 @@ class CanvasService : ICanvasService
 
     void moveSelectedNode(MouseEvent e)
     {
+        if (!IsNodeAdjustable(mouseDownId))
+        {
+            if (selectedId != "")
+            {
+                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
+                selectedId = "";
+                uiService.TriggerUIStateChange();
+            }
+
+            return;
+        }
         modelService.TryUpdateNode(mouseDownId, node =>
         {
+
             var zoom = node.GetZoom() * Zoom;
             var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
 
@@ -312,6 +338,18 @@ class CanvasService : ICanvasService
 
     void resizeSelectedNode(MouseEvent e)
     {
+        if (!IsNodeAdjustable(mouseDownId))
+        {
+            if (selectedId != "")
+            {
+                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
+                selectedId = "";
+                uiService.TriggerUIStateChange();
+            }
+
+            return;
+        }
+
         modelService.TryUpdateNode(mouseDownId, node =>
         {
             var zoom = node.GetZoom() * Zoom;

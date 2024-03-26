@@ -6,12 +6,13 @@
 
         <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3 mr-5"
             OnOpening="OnMenuOpeningAsync" AnchorOrigin="Origin.BottomCenter">
-            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.FitScreen"
+            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
                 OnClick="srv.PanZoomToFit" OnTouch="srv.PanZoomToFit">Fit
                 to
                 Screen</MudMenuItem>
-            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.OpenInBrowser"
-                OnClick="srv.OpenFiles" OnTouch="srv.OpenFiles">Browse Files ...</MudMenuItem>
+            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary"
+                Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.OpenFiles" OnTouch="srv.OpenFiles">Browse
+                Files ...</MudMenuItem>
 
             <MudDivider />
 
@@ -24,7 +25,7 @@
             @{
                 foreach (var path in RecentModelPaths)
                 {
-                    <MudMenuItem IconSize="Size.Medium" IconColor="Color.Primary" Icon="@Icons.Material.Outlined.Schema"
+                    <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Schema"
                         OnClick="()=> srv.LoadAsync(path)" OnTouch="()=> srv.LoadAsync(path)">
                         @Path.GetFileNameWithoutExtension(path)
                     </MudMenuItem>
