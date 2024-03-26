@@ -4,11 +4,13 @@ using Dependinator.Utils.UI;
 namespace Dependinator.Models;
 
 
+record ModelInfo(string Path, Rect ViewRect, double Zoom);
+
 interface IModelService
 {
     string ModelName { get; }
 
-    Task<R<string>> LoadAsync(string path);
+    Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
     Tile GetTile(Rect viewRect, double zoom);
@@ -71,6 +73,15 @@ class ModelService : IModelService
         }
     }
 
+     public bool TryNode(string id, out Node node)
+    {
+        lock (model.Lock)
+        {
+            return model.TryGetNode(NodeId.FromId(id), out node);
+        }
+    }
+
+
     public bool TryGetNode(string id, out Node node)
     {
         lock (model.Lock)
@@ -123,33 +134,29 @@ class ModelService : IModelService
         }
     }
 
-    public async Task<R<string>> LoadAsync(string path)
+    public async Task<R<ModelInfo>> LoadAsync(string path)
     {
         Clear();
-        if (path == "")
-        {
-            path = (await configService.GetAsync()).LastUsedPath;
-            path = path == "" ? ExampleModel.Path : path;
-        }
 
-        await configService.SetAsync(c => c.LastUsedPath = path);
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
         {
-            return await ParseAsync(path, Rect.Zero, 0);
+            return await ParseAsync(path, Rect.None, 0);
         }
 
         // Load the cached mode
-        await Task.Run(() => Load(model));
+        var modelInfo = await Task.Run(() => Load(model));
 
-        if (path == ExampleModel.Path) return path;
+        if (path == ExampleModel.Path) return modelInfo;
 
         // Trigger parse to get latest data
-        ParseAsync(model.Path, model.ViewRect, model.Zoom).RunInBackground();
+        ParseAsync(model.Path, model.ViewRect, model.Zoom)
+            .ContinueWith(t => uiService.TriggerUIStateChange())
+            .RunInBackground();
 
-        return model.Path;
+        return modelInfo;
     }
 
 
@@ -164,15 +171,14 @@ class ModelService : IModelService
     }
 
 
-    async Task<R<string>> ParseAsync(string path, Rect viewRect, double zoom)
+    async Task<R<ModelInfo>> ParseAsync(string path, Rect viewRect, double zoom)
     {
         using var _ = Timing.Start();
         //var path = "/workspaces/Dependinator/Dependinator.sln";
 
-
         if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 
-        await Task.Run(async () =>
+        var modelInfo = await Task.Run(async () =>
         {
             var batchItems = new List<Parsing.IItem>();
             while (await reader.WaitToReadAsync())
@@ -182,14 +188,10 @@ class ModelService : IModelService
                     batchItems.Add(item);
                 }
             }
-            AddOrUpdate(path, viewRect, zoom, batchItems);
+            return AddOrUpdate(path, viewRect, zoom, batchItems);
         });
 
-        uiService.TriggerUIStateChange();
-
-        TriggerSave();
-
-        return path;
+        return modelInfo;
     }
 
 
@@ -198,6 +200,8 @@ class ModelService : IModelService
         CancellationToken ct;
         lock (model.Lock)
         {
+            if (model.Items.Count == 1) return;
+
             if (!model.IsSaving)
             {
                 model.IsSaving = true;
@@ -236,16 +240,16 @@ class ModelService : IModelService
         persistenceService.WriteAsync(modelData).RunInBackground();
     }
 
-    private void Load(Parsing.Model modelData)
+    private ModelInfo Load(Parsing.Model modelData)
     {
         var batchItems = new List<Parsing.IItem>();
         modelData.Nodes.ForEach(batchItems.Add);
         modelData.Links.ForEach(batchItems.Add);
 
-        AddOrUpdate(modelData.Path, modelData.ViewRect, modelData.Zoom, batchItems);
+        return AddOrUpdate(modelData.Path, modelData.ViewRect, modelData.Zoom, batchItems);
     }
 
-    void AddOrUpdate(string path, Rect viewRect, double zoom, IReadOnlyList<Parsing.IItem> parsedItems)
+    ModelInfo AddOrUpdate(string path, Rect viewRect, double zoom, IReadOnlyList<Parsing.IItem> parsedItems)
     {
         using var _ = Timing.Start($"Add {parsedItems.Count} items for {path}");
         lock (model.Lock)
@@ -269,6 +273,7 @@ class ModelService : IModelService
             }
 
             model.ClearCachedSvg();
+            return new ModelInfo(path, viewRect, zoom);
         }
     }
 

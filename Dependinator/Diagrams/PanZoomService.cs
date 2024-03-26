@@ -42,8 +42,8 @@ class PanZoomService : IPanZoomService
     IUIComponent component = null!;
     public int ZCount { get; private set; } = 0;
 
-    public Pos Offset { get; set; } = Pos.Zero;
-    public Rect SvgRect { get; private set; } = Rect.Zero;
+    public Pos Offset { get; set; } = Pos.None;
+    public Rect SvgRect { get; private set; } = Rect.None;
 
     public double Zoom { get; set; } = 1;
     public double SvgZoom { get; set; } = 1;
@@ -104,6 +104,7 @@ class PanZoomService : IPanZoomService
     {
         Offset = new Pos(viewRect.X, viewRect.Y);
         Zoom = zoom;
+        modelService.TriggerSave();
     }
 
     public void PanZoomToFit(Rect totalBounds, double maxZoom = 1)

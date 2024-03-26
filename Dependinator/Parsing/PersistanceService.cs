@@ -42,13 +42,22 @@ class PersistenceService : IPersistenceService
     {
         return Task.Run(async () =>
         {
-            var filePath = $"/models/{model.Path}";
+            var filePath = model.Path;
             using var t = Timing.Start($"Write model '{filePath}'");
 
             await fileService.WriteAsync(filePath, model);
 
-            // var path = GetModelFilePath();
-            // if (!Try(out var e, () => File.WriteAllText(path, json))) return e;
+            // if (!Build.IsWebAssembly)
+            // {
+            //     var json = JsonSerializer.Serialize(model,
+            //     new JsonSerializerOptions
+            //     {
+            //         WriteIndented = true,
+            //         IgnoreNullValues = true
+            //     });
+            //     var path = GetModelFilePath();
+            //     if (!Try(out var e, () => File.WriteAllText(path, json))) return e;
+            // }
 
             return R.Ok;
         });
@@ -58,7 +67,7 @@ class PersistenceService : IPersistenceService
     {
         return Task.Run<R<Model>>(async () =>
         {
-            var filePath = $"/models/{modelPath}";
+            var filePath = modelPath;
             using var t = Timing.Start($"Read model '{filePath}'");
 
             if (modelPath == ExampleModel.Path)
@@ -81,11 +90,11 @@ class PersistenceService : IPersistenceService
     static Node ToNode(Models.Node node) =>
         new(node.Name, node.Parent?.Name ?? "", new NodeType(node.Type.Text), node.Description)
         {
-            X = node.Boundary.X,
-            Y = node.Boundary.Y,
-            Width = node.Boundary.Width,
-            Height = node.Boundary.Height,
-            Zoom = node.ContainerZoom,
+            X = node.Boundary != Rect.None ? node.Boundary.X : null,
+            Y = node.Boundary != Rect.None ? node.Boundary.Y : null,
+            Width = node.Boundary != Rect.None ? node.Boundary.Width : null,
+            Height = node.Boundary != Rect.None ? node.Boundary.Height : null,
+            Zoom = node.ContainerZoom != Models.Node.DefaultContainerZoom ? node.ContainerZoom : null,
             Color = node.Color,
             Background = node.Background,
         };

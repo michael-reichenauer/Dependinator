@@ -3,14 +3,14 @@
 @inject ICanvasService canvasService
 
 
-
-<MudThemeProvider Theme="DependinatorTheme" />
+<MudThemeProvider Theme="DependinatorTheme" @bind-IsDarkMode="@_isDarkMode" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <Canvas />
 
 @code {
+    private bool _isDarkMode = true;
     string TitleInfo => canvasService.TitleInfo;
 
     MudTheme DependinatorTheme = new MudTheme
@@ -18,23 +18,13 @@
             Palette = new PaletteLight()
             {
                 AppbarBackground = Colors.DeepPurple.Accent4,
-                Background = Colors.DeepPurple.Lighten4,
-                Surface = Colors.DeepPurple.Lighten4,
-
+                AppbarText = Colors.DeepPurple.Lighten5,
+            },
+            PaletteDark = new PaletteDark()
+            {
+                AppbarBackground = Colors.DeepPurple.Accent4,
+                AppbarText = Colors.DeepPurple.Lighten5,
+                Secondary = Colors.DeepPurple.Lighten4,
             },
         };
 }
-
-@*
-<div class="my-top-row">
-<button @onclick=@canvasService.Refresh>Refresh</button>
-<button @onclick=@canvasService.PanZoomToFit>Pan/Zoom to Fit</button>
-<button @onclick=@canvasService.OpenFiles>Open ...</button>
-<button @onclick=@canvasService.Clear>Clear</button>
-
-</div>
-
-<div class="my-main">
-<Canvas />
-</div>
-*@

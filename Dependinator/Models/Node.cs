@@ -22,7 +22,7 @@ class Node : IItem
     }
 
 
-    public const double DefaultContainerZoom = 1.0 / 7;
+    public const double DefaultContainerZoom = 1.0 / 8;
 
     public NodeId Id { get; }
     public string Name { get; }
@@ -34,6 +34,7 @@ class Node : IItem
     public string Background { get; set; } = "green";
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
+    public bool IsChildrenLayoutRequired { get; set; } = false;
 
     public Rect Boundary { get; set; } = Rect.None;
 
@@ -51,6 +52,8 @@ class Node : IItem
     public string ShortName { get; }
     public string HtmlShortName { get; }
     public string HtmlLongName { get; }
+
+
 
     public double GetZoom()
     {
@@ -90,6 +93,11 @@ class Node : IItem
 
     public void AddChild(Node child)
     {
+        if (child.Boundary == Rect.None)
+        {
+            IsChildrenLayoutRequired = true;
+        }
+
         Children.Add(child);
         child.Parent = this;
     }

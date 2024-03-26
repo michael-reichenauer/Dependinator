@@ -22,9 +22,10 @@ interface ICanvasService
     string Cursor { get; }
     string TitleInfo { get; }
     string DiagramName { get; }
-    IReadOnlyList<string> ModelPaths { get; }
+    IReadOnlyList<string> RecentModelPaths { get; }
 
     void OpenFiles();
+    public void Remove();
     void Refresh();
     void Clear();
     void PanZoomToFit();
@@ -39,8 +40,9 @@ interface ICanvasService
 [Scoped]
 class CanvasService : ICanvasService
 {
-    const int recentCount = 5;
+
     const double MinSelectableZoom = 0.15;
+    const double MaxCover = 0.5;
 
     const int MoveDelay = 300;
     private readonly IMouseEventService mouseEventService;
@@ -50,6 +52,7 @@ class CanvasService : ICanvasService
     readonly IJSInteropService jSInteropService;
     readonly IFileService fileService;
     readonly IConfigService configService;
+    readonly IRecentModelsService recentModelsService;
     readonly Timer moveTimer;
     bool moveTimerRunning = false;
     bool isMoving = false;
@@ -61,7 +64,8 @@ class CanvasService : ICanvasService
         IUIService uiService,
         IJSInteropService jSInteropService,
         IFileService fileService,
-        IConfigService configService)
+        IConfigService configService,
+        IRecentModelsService recentModelsService)
     {
         this.mouseEventService = mouseEventService;
         this.panZoomService = panZoomService;
@@ -70,6 +74,7 @@ class CanvasService : ICanvasService
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
         this.configService = configService;
+        this.recentModelsService = recentModelsService;
         mouseEventService.LeftClick += OnClick;
         mouseEventService.LeftDblClick += OnDblClick;
         mouseEventService.MouseWheel += OnMouseWheel;
@@ -80,7 +85,7 @@ class CanvasService : ICanvasService
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
-    public IReadOnlyList<string> ModelPaths { get; set; } = [];
+    public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
 
     public string DiagramName { get; set; } = "Loading ...";
     public string TitleInfo => $"Zoom: {1 / Zoom * 100:#}%, {1 / Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(Zoom) / Math.Log(7)) + 1}";
@@ -110,37 +115,58 @@ class CanvasService : ICanvasService
     {
         this.canvas = canvas;
         await panZoomService.InitAsync(canvas);
+        await recentModelsService.InitAsync();
     }
+
+
+    public async void InitialShow()
+    {
+        await panZoomService.CheckResizeAsync();
+        await LoadAsync(recentModelsService.LastUsedPath);
+    }
+
 
     public async Task LoadAsync(string modelPath)
     {
-        DiagramName = "Loading ...";
+        DiagramName = $"Loading {modelPath} ...";
         uiService.TriggerUIStateChange();
-        if (!Try(out var path, out var e, await modelService.LoadAsync(modelPath))) return;
 
-        await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(path).Distinct().Take(recentCount).ToList());
-        ModelPaths = (await configService.GetAsync()).RecentPaths;
-
-        PanZoomModel();
+        if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath))) return;
 
         DiagramName = modelService.ModelName;
+        PanZoomModel(modelInfo);
+
+        await recentModelsService.AddModelAsync(modelInfo.Path);
         uiService.TriggerUIStateChange();
     }
 
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
-        DiagramName = "Loading ...";
-        uiService.TriggerUIStateChange();
         await fileService.AddAsync(browserFiles);
+        var modelPath = browserFiles.First().Name;
+        await LoadAsync(modelPath);
+    }
 
-        if (!Try(out var path, out var e, await modelService.LoadAsync(browserFiles.First().Name))) return;
 
-        await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(path).Distinct().Take(recentCount).ToList());
-        ModelPaths = (await configService.GetAsync()).RecentPaths;
+    void PanZoomModel(ModelInfo modelInfo)
+    {
+        if (modelInfo.ViewRect != Rect.None)
+        {
+            panZoomService.PanZoom(modelInfo.ViewRect, modelInfo.Zoom);
+        }
+        else
+        {
+            var bound = modelService.GetBounds();
+            panZoomService.PanZoomToFit(bound);
+        }
+    }
 
-        PanZoomModel();
-        DiagramName = modelService.ModelName;
-        uiService.TriggerUIStateChange();
+    public async void Remove()
+    {
+        var path = recentModelsService.LastUsedPath;
+        await fileService.DeleteAsync(path);
+        await recentModelsService.RemoveModelAsync(path);
+        await LoadAsync(recentModelsService.LastUsedPath);
     }
 
     public async void OpenFiles()
@@ -155,39 +181,52 @@ class CanvasService : ICanvasService
         return paths.Where(p => Path.GetDirectoryName(p) == "/models").ToList();
     }
 
+
+    bool IsNodeAdjustable(string id)
+    {
+        if (!modelService.TryGetNode(id, out var node)) return false;
+
+        var v = SvgRect;
+        var nodeZoom = (1 / node.GetZoom());
+        var vx = (node.Boundary.Width * nodeZoom) / (v.Width * Zoom);
+        var vy = (node.Boundary.Height * nodeZoom) / (v.Height * Zoom);
+        var covers = Math.Max(vx, vy);
+
+        return covers < MaxCover;
+    }
+
+
     void OnClick(MouseEvent e)
     {
         Log.Info("mouse click", e.TargetId);
-        (string id, string subId) = NodeId.ParseString(e.TargetId);
+        (string nodeId, string subId) = NodeId.ParseString(e.TargetId);
 
-        var isSelected = false;
-        if (modelService.TryUpdateNode(e.TargetId, node =>
-        {
-            if (Zoom * node.GetZoom() > MinSelectableZoom)
-            {
-                node.IsSelected = true;
-                isSelected = true;
-            }
-        }))
-        {
-            Log.Info($"Node clicked: {e.TargetId}");
-            if (selectedId != "")
-            {   // Deselect previous node
-                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
-            }
-
-            selectedId = isSelected ? id : "";
-            uiService.TriggerUIStateChange();
-        }
-        else
-        {
-            Log.Info($"No node found at {e.OffsetX},{e.OffsetY}");
+        if (!IsNodeAdjustable(nodeId))
+        {   // Node node at click or node not adjustable 
             if (selectedId != "")
             {
                 modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
                 selectedId = "";
                 uiService.TriggerUIStateChange();
             }
+            return;
+        }
+
+        if (selectedId != nodeId && selectedId != "")
+        {   // click on other node
+            modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
+            selectedId = "";
+            uiService.TriggerUIStateChange();
+        }
+
+        if (modelService.TryUpdateNode(e.TargetId, node =>
+        {
+            node.IsSelected = true;
+        }))
+        {
+            Log.Info($"Node clicked: {e.TargetId}");
+            selectedId = nodeId;
+            uiService.TriggerUIStateChange();
         }
     }
 
@@ -276,8 +315,20 @@ class CanvasService : ICanvasService
 
     void moveSelectedNode(MouseEvent e)
     {
+        if (!IsNodeAdjustable(mouseDownId))
+        {
+            if (selectedId != "")
+            {
+                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
+                selectedId = "";
+                uiService.TriggerUIStateChange();
+            }
+
+            return;
+        }
         modelService.TryUpdateNode(mouseDownId, node =>
         {
+
             var zoom = node.GetZoom() * Zoom;
             var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
 
@@ -287,6 +338,18 @@ class CanvasService : ICanvasService
 
     void resizeSelectedNode(MouseEvent e)
     {
+        if (!IsNodeAdjustable(mouseDownId))
+        {
+            if (selectedId != "")
+            {
+                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
+                selectedId = "";
+                uiService.TriggerUIStateChange();
+            }
+
+            return;
+        }
+
         modelService.TryUpdateNode(mouseDownId, node =>
         {
             var zoom = node.GetZoom() * Zoom;
@@ -312,38 +375,7 @@ class CanvasService : ICanvasService
         });
     }
 
-    public async void InitialShow()
-    {
-        DiagramName = "Loading ...";
-        uiService.TriggerUIStateChange();
 
-        await panZoomService.CheckResizeAsync();
-
-        if (!Try(out var path, out var e, await modelService.LoadAsync(""))) return;
-
-        await configService.SetAsync(c => c.RecentPaths = c.RecentPaths.Prepend(path).Distinct().Take(recentCount).ToList());
-        ModelPaths = (await configService.GetAsync()).RecentPaths;
-
-        PanZoomModel();
-
-        DiagramName = modelService.ModelName;
-        uiService.TriggerUIStateChange();
-    }
-
-    void PanZoomModel()
-    {
-        var (viewRect, zoom) = modelService.GetLatestView();
-
-        if (viewRect != Rect.Zero)
-        {
-            panZoomService.PanZoom(viewRect, zoom);
-        }
-        else
-        {
-            var bound = modelService.GetBounds();
-            panZoomService.PanZoomToFit(bound);
-        }
-    }
 
     public void PanZoomToFit()
     {

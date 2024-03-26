@@ -23,7 +23,7 @@ record Model
 {
     public required string Path { get; init; }
     public double Zoom { get; init; } = 0;
-    public Rect ViewRect { get; init; } = Rect.Zero;
+    public Rect ViewRect { get; init; } = Rect.None;
     public required IReadOnlyList<Node> Nodes { get; init; }
     public required IReadOnlyList<Link> Links { get; init; }
 }
