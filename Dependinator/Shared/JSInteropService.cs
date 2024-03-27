@@ -1,9 +1,6 @@
-using System.Collections.Specialized;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;
@@ -28,7 +25,7 @@ public class BrowserSizeDetails
     public int ScreenHeight { get; set; }
 }
 
-// This class is used when a javascript function returns a value that could larger than 30k
+// This class is used when a javascript function returns a value that could larger than 20k
 class ValueHandler
 {
     readonly StringBuilder sb = new();
@@ -45,12 +42,10 @@ class ValueHandler
 
 public interface IJSInteropService
 {
-    event Action<bool> OnResizing;
-    event Action OnResize;
-    ValueTask InitAsync();
     ValueTask<BrowserSizeDetails> GetWindowSizeAsync();
     ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference);
-    BrowserSizeDetails BrowserSizeDetails { get; }
+
+    ValueTask AddWindoResizeEventListenerAsync(object dotNetObjectReference, string functionName);
 
     ValueTask AddMouseEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
     ValueTask AddPointerEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
@@ -60,46 +55,33 @@ public interface IJSInteropService
     ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id);
     ValueTask DeleteDatabaseValueAsync(string databaseName, string collectionName, string id);
     ValueTask<R<IReadOnlyList<string>>> GetDatabaseKeysAsync(string databaseName, string collectionName);
-    ValueTask<string> Prompt(string message);
     ValueTask InitializeFileDropZone(ElementReference? dropZoneElement, ElementReference? inputFileElement);
     ValueTask ClickElement(string elementId);
 }
 
-// Inspired from https://stackoverflow.com/questions/75114524/getting-the-size-of-a-blazor-page-with-javascript
+
 // Note: All DotNetObjectReference.Create() in the program code should be disposed.
 [Scoped]
 public class JSInteropService : IJSInteropService, IAsyncDisposable
 {
     readonly Lazy<Task<IJSObjectReference>> moduleTask;
-    DotNetObjectReference<JSInteropService> instanceRef = null!;
-    bool isResizing = false;
-    System.Timers.Timer resizeTimer;
+
     static JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
 
     public JSInteropService(IJSRuntime jsRuntime)
     {
+        // var version = "1.4";                    // Version is needed to avoid cached js file (prod) 
         var version = $"{DateTime.UtcNow.Ticks}";  // Vesion is needed to avoid cached js file (dev)
-        //var version = "1.4";                          // Vesion is needed to avoid cached js file (prod) 
 
         this.moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
             identifier: "import", args: $"./_content/Dependinator/jsInterop.js?v={version}").AsTask());
-
-        this.resizeTimer = new System.Timers.Timer(interval: 25);
-        this.resizeTimer.Elapsed += async (sender, elapsedEventArgs) => await DimensionsChanged(sender!, elapsedEventArgs);
     }
 
-    public event Action<bool>? OnResizing;
-    public event Action? OnResize;
 
-    public async ValueTask InitAsync()
+    public async ValueTask AddWindoResizeEventListenerAsync(object dotNetObjectReference, string functionName)
     {
         IJSObjectReference module = await GetModuleAsync();
-
-        this.instanceRef = DotNetObjectReference.Create(this);
-
-        await module.InvokeVoidAsync(identifier: "listenToWindowResize", this.instanceRef);
-
-        this.BrowserSizeDetails = await module.InvokeAsync<BrowserSizeDetails>(identifier: "getWindowSizeDetails");
+        await module.InvokeVoidAsync(identifier: "listenToWindowResize", dotNetObjectReference, functionName);
     }
 
     public async ValueTask AddMouseEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName)
@@ -168,7 +150,6 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
         return result;
     }
 
-
     public async ValueTask InitializeFileDropZone(ElementReference? dropZoneElement, ElementReference? inputFileElement)
     {
         IJSObjectReference module = await GetModuleAsync();
@@ -179,51 +160,6 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
     {
         IJSObjectReference module = await GetModuleAsync();
         await module.InvokeVoidAsync(identifier: "clickElement", elementId);
-    }
-
-    [JSInvokable]
-    public ValueTask WindowResizeEvent()
-    {
-        if (this.isResizing is not true)
-        {
-            this.isResizing = true;
-            OnResizing?.Invoke(this.isResizing);
-        }
-        DebounceResizeEvent();
-        return ValueTask.CompletedTask;
-    }
-
-    public BrowserSizeDetails BrowserSizeDetails { get; private set; } = new BrowserSizeDetails();
-
-    public async ValueTask<string> Prompt(string message)
-    {
-        var module = await moduleTask.Value;
-        return await module.InvokeAsync<string>("showPrompt", message);
-    }
-
-    private void DebounceResizeEvent()
-    {
-        if (this.resizeTimer.Enabled is false)
-        {
-            Task.Run(async () =>
-            {
-                this.BrowserSizeDetails = await GetWindowSizeAsync();
-                isResizing = false;
-                OnResizing?.Invoke(this.isResizing);
-                OnResize?.Invoke();
-            });
-            this.resizeTimer.Stop();
-            this.resizeTimer.Start();
-        }
-    }
-
-    private async ValueTask DimensionsChanged(object sender, System.Timers.ElapsedEventArgs e)
-    {
-        this.resizeTimer.Stop();
-        this.BrowserSizeDetails = await GetWindowSizeAsync();
-        isResizing = false;
-        OnResizing?.Invoke(this.isResizing);
-        OnResize?.Invoke();
     }
 
     public async ValueTask DisposeAsync()

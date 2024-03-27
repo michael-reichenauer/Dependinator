@@ -40,7 +40,6 @@ class InitService : IInitService
         await screenService.InitAsync(component);
         await mouseEventService.InitAsync();
         await recentModelsService.InitAsync();
-        await jSInteropService.InitAsync();
         await database.Init([FileService.DBCollectionName]);
     }
 }

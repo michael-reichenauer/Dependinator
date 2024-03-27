@@ -2,9 +2,9 @@ export function showPrompt(message) {
   return prompt(message, 'Type anything here');
 }
 
-export function listenToWindowResize(dotNetHelper) {
+export function listenToWindowResize(instance, functionName) {
   function resizeEventHandler() {
-    dotNetHelper.invokeMethodAsync('WindowResizeEvent');
+    instance.invokeMethodAsync(functionName);
   }
 
   // Prevent default touch events(scrolling, zooming, etc.), handled by the app
@@ -21,7 +21,7 @@ export function listenToWindowResize(dotNetHelper) {
 
   window.addEventListener("resize", resizeEventHandler);
 
-  dotNetHelper.invokeMethodAsync('WindowResizeEvent');
+  instance.invokeMethodAsync(functionName);
 }
 
 export function getBoundingRectangle(element, parm) {
