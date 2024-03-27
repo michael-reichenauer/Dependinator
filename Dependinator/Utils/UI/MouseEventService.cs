@@ -54,7 +54,7 @@ class MouseEventService : IMouseEventService
     {
         await jSInterop.Call("preventDefaultTouchEvents", "svgcanvas");
 
-        var objRef = jSInterop.Instance(this);
+        var objRef = jSInterop.Reference(this);
         await jSInterop.Call("addMouseEventListener", "svgcanvas", "wheel", objRef, nameof(MouseEventCallback));
         await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointerdown", objRef, nameof(PointerEventCallback));
         await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointermove", objRef, nameof(PointerEventCallback));

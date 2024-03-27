@@ -108,7 +108,7 @@ class ScreenService : IScreenService
         => await jSInterop.Call<ElementBoundingRectangle>("getBoundingRectangle", "svgcanvas");
 
     async Task RegisterWindowResizeEvents() =>
-          await jSInterop.Call("listenToWindowResize", "svgcanvas", jSInterop.Instance(this), nameof(OnWindowResized));
+          await jSInterop.Call("listenToWindowResize", "svgcanvas", jSInterop.Reference(this), nameof(OnWindowResized));
 
     async Task<BrowserSizeDetails> GetBrowserSizeDetails() =>
         await jSInterop.Call<BrowserSizeDetails>("getWindowSizeDetails");

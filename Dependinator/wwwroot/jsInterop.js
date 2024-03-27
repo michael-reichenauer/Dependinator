@@ -23,6 +23,9 @@ export function preventDefaultTouchEvents(elementId) {
   }, { passive: false });
 }
 
+export function clickElement(elementId) {
+  document.getElementById(elementId).click();
+}
 
 export function getBoundingRectangle(elementId) {
   return document.getElementById(elementId).getBoundingClientRect();
@@ -256,8 +259,4 @@ export function initializeFileDropZone(dropZoneElement, inputFileElement) {
   dropZoneElement.addEventListener("dragleave", onDragLeave);
   dropZoneElement.addEventListener("drop", onDrop);
   dropZoneElement.addEventListener('paste', onPaste);
-}
-
-export function clickElement(elementId) {
-  document.getElementById(elementId).click();
 }
