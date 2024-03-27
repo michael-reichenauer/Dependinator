@@ -6,6 +6,13 @@ using Microsoft.JSInterop;
 
 namespace Dependinator.Diagrams;
 
+public class BrowserSizeDetails
+{
+    public double InnerWidth { get; set; }
+    public double InnerHeight { get; set; }
+    public int ScreenWidth { get; set; }
+    public int ScreenHeight { get; set; }
+}
 
 interface IScreenService
 {
@@ -21,7 +28,7 @@ class ScreenService : IScreenService
 {
     const int SvgPageMargin = 2;
     readonly IApplicationEvents applicationEvents;
-    readonly IJSInteropService jSInteropService;
+    readonly IJSInterop jSInterop;
     IUIComponent component = null!;
     bool isResizing = false;
     System.Timers.Timer resizeTimer;
@@ -29,10 +36,10 @@ class ScreenService : IScreenService
     readonly object syncRoot = new();
     BrowserSizeDetails browserSizeDetails = new BrowserSizeDetails();
 
-    public ScreenService(IApplicationEvents applicationEvents, IJSInteropService jSInteropService)
+    public ScreenService(IApplicationEvents applicationEvents, IJSInterop jSInteropService)
     {
         this.applicationEvents = applicationEvents;
-        this.jSInteropService = jSInteropService;
+        this.jSInterop = jSInteropService;
 
         this.resizeTimer = new System.Timers.Timer(interval: 25);
         this.resizeTimer.Elapsed += async (sender, elapsedEventArgs) => await DimensionsChanged(sender!, elapsedEventArgs);
@@ -44,18 +51,16 @@ class ScreenService : IScreenService
     public async Task InitAsync(IUIComponent component)
     {
         this.component = component;
-        var objRef = DotNetObjectReference.Create(this);
 
-        this.browserSizeDetails = await jSInteropService.GetWindowSizeAsync();
-        await jSInteropService.AddWindoResizeEventListenerAsync(objRef, nameof(WindowResizeEvent));
-        await Task.CompletedTask;
+        this.browserSizeDetails = await GetBrowserSizeDetails();
+        await RegisterWindowResizeEvents();
     }
 
 
     public async Task CheckResizeAsync()
     {
         // Get Svg position (width and height are unreliable)
-        var svg = await jSInteropService.GetBoundingRectangle(component.Ref);
+        var svg = await jSInterop.GetBoundingRectangle(component.Ref);
 
         // Get window width and height
         var windowWidth = Math.Floor(browserSizeDetails.InnerWidth);
@@ -86,11 +91,16 @@ class ScreenService : IScreenService
         }
     }
 
+    async Task RegisterWindowResizeEvents() =>
+          await jSInterop.Call("listenToWindowResize", jSInterop.Instance(this), nameof(OnWindowResized));
+
+    async Task<BrowserSizeDetails> GetBrowserSizeDetails() =>
+        await jSInterop.Call<BrowserSizeDetails>("getWindowSizeDetails");
 
     void OnResize() => CheckResizeAsync().RunInBackground();
 
     [JSInvokable]
-    public ValueTask WindowResizeEvent()
+    public ValueTask OnWindowResized()
     {
         if (this.isResizing is not true)
         {
@@ -106,7 +116,7 @@ class ScreenService : IScreenService
         {
             Task.Run(async () =>
             {
-                this.browserSizeDetails = await jSInteropService.GetWindowSizeAsync();
+                this.browserSizeDetails = await GetBrowserSizeDetails();
                 isResizing = false;
 
                 OnResize();
@@ -119,7 +129,7 @@ class ScreenService : IScreenService
     private async ValueTask DimensionsChanged(object sender, System.Timers.ElapsedEventArgs e)
     {
         this.resizeTimer.Stop();
-        this.browserSizeDetails = await jSInteropService.GetWindowSizeAsync();
+        this.browserSizeDetails = await GetBrowserSizeDetails();
         isResizing = false;
         OnResize();
     }

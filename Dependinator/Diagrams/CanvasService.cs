@@ -43,7 +43,7 @@ class CanvasService : ICanvasService
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
     readonly IApplicationEvents applicationEvents;
-    readonly IJSInteropService jSInteropService;
+    readonly IJSInterop jSInteropService;
     readonly IFileService fileService;
     readonly IRecentModelsService recentModelsService;
     readonly Timer moveTimer;
@@ -56,7 +56,7 @@ class CanvasService : ICanvasService
         IPanZoomService panZoomService,
         IModelService modelService,
         IApplicationEvents applicationEvents,
-        IJSInteropService jSInteropService,
+        IJSInterop jSInteropService,
         IFileService fileService,
         IRecentModelsService recentModelsService)
     {

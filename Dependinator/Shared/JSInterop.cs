@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
@@ -17,13 +18,7 @@ public class ElementBoundingRectangle
     public double Left { get; set; }
 }
 
-public class BrowserSizeDetails
-{
-    public double InnerWidth { get; set; }
-    public double InnerHeight { get; set; }
-    public int ScreenWidth { get; set; }
-    public int ScreenHeight { get; set; }
-}
+
 
 // This class is used when a javascript function returns a value that could larger than 20k
 class ValueHandler
@@ -40,12 +35,13 @@ class ValueHandler
     }
 }
 
-public interface IJSInteropService
+public interface IJSInterop
 {
-    ValueTask<BrowserSizeDetails> GetWindowSizeAsync();
-    ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference);
+    ValueTask Call(string functionName, params object?[]? args);
+    ValueTask<T> Call<T>(string functionName, params object?[]? args);
+    DotNetObjectReference<TValue> Instance<TValue>(TValue value) where TValue : class;
 
-    ValueTask AddWindoResizeEventListenerAsync(object dotNetObjectReference, string functionName);
+    ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference);
 
     ValueTask AddMouseEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
     ValueTask AddPointerEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
@@ -62,13 +58,14 @@ public interface IJSInteropService
 
 // Note: All DotNetObjectReference.Create() in the program code should be disposed.
 [Scoped]
-public class JSInteropService : IJSInteropService, IAsyncDisposable
+public class JSInterop : IJSInterop, IAsyncDisposable
 {
+
     readonly Lazy<Task<IJSObjectReference>> moduleTask;
 
     static JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
 
-    public JSInteropService(IJSRuntime jsRuntime)
+    public JSInterop(IJSRuntime jsRuntime)
     {
         // var version = "1.4";                    // Version is needed to avoid cached js file (prod) 
         var version = $"{DateTime.UtcNow.Ticks}";  // Vesion is needed to avoid cached js file (dev)
@@ -77,11 +74,22 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
             identifier: "import", args: $"./_content/Dependinator/jsInterop.js?v={version}").AsTask());
     }
 
-
-    public async ValueTask AddWindoResizeEventListenerAsync(object dotNetObjectReference, string functionName)
+    public async ValueTask Call(string functionName, params object?[]? args)
     {
         IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "listenToWindowResize", dotNetObjectReference, functionName);
+        await module.InvokeVoidAsync(functionName, args);
+    }
+
+    public async ValueTask<T> Call<T>(string functionName, params object?[]? args)
+    {
+        IJSObjectReference module = await GetModuleAsync();
+        return await module.InvokeAsync<T>(functionName, args);
+    }
+
+    public DotNetObjectReference<TValue> Instance<TValue>(TValue value) where TValue : class
+    {
+        // Save all instances to be disposed !!!!!
+        return DotNetObjectReference.Create(value);
     }
 
     public async ValueTask AddMouseEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName)
@@ -96,11 +104,6 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
         await module.InvokeVoidAsync(identifier: "addPointerEventListener", elementId, eventName, dotNetObjectReference, functionName);
     }
 
-    public async ValueTask<BrowserSizeDetails> GetWindowSizeAsync()
-    {
-        IJSObjectReference module = await GetModuleAsync();
-        return await module.InvokeAsync<BrowserSizeDetails>(identifier: "getWindowSizeDetails");
-    }
 
     public async ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference)
     {

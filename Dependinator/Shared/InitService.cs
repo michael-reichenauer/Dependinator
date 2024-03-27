@@ -16,7 +16,7 @@ class InitService : IInitService
     readonly IScreenService screenService;
     readonly IMouseEventService mouseEventService;
     readonly IRecentModelsService recentModelsService;
-    readonly IJSInteropService jSInteropService;
+    readonly IJSInterop jSInteropService;
     readonly IDatabase database;
 
 
@@ -24,7 +24,7 @@ class InitService : IInitService
         IScreenService screenService,
         IMouseEventService mouseEventService,
         IRecentModelsService recentModelsService,
-        IJSInteropService jSInteropService,
+        IJSInterop jSInteropService,
         IDatabase database)
     {
         this.screenService = screenService;

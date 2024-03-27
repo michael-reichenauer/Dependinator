@@ -21,9 +21,9 @@ class Database : IDatabase
     const string DatabaseName = "Dependinator";
 
 
-    readonly IJSInteropService jSInteropService;
+    readonly IJSInterop jSInteropService;
 
-    public Database(IJSInteropService jSInteropService)
+    public Database(IJSInterop jSInteropService)
     {
         this.jSInteropService = jSInteropService;
     }

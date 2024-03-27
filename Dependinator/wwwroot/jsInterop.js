@@ -20,8 +20,6 @@ export function listenToWindowResize(instance, functionName) {
   }, { passive: false });
 
   window.addEventListener("resize", resizeEventHandler);
-
-  instance.invokeMethodAsync(functionName);
 }
 
 export function getBoundingRectangle(element, parm) {

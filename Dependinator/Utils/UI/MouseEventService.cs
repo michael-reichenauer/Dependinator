@@ -21,7 +21,7 @@ interface IMouseEventService
 [Scoped]
 class MouseEventService : IMouseEventService
 {
-    readonly IJSInteropService jSInteropService;
+    readonly IJSInterop jSInteropService;
     private readonly IApplicationEvents applicationEvents;
     const int ClickDelay = 300;
     const int ClickTimeout = 500;
@@ -35,7 +35,7 @@ class MouseEventService : IMouseEventService
 
 
     public MouseEventService(
-        IJSInteropService jSInteropService,
+        IJSInterop jSInteropService,
         IApplicationEvents applicationEvents)
     {
         clickTimer = new Timer(OnLeftClickTimer, null, Timeout.Infinite, Timeout.Infinite);
