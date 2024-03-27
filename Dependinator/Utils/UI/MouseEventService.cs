@@ -21,8 +21,8 @@ interface IMouseEventService
 [Scoped]
 class MouseEventService : IMouseEventService
 {
-    readonly IJSInteropService jSInteropService;
-    private readonly IUIService uiService;
+    readonly IJSInterop jSInterop;
+    private readonly IApplicationEvents applicationEvents;
     const int ClickDelay = 300;
     const int ClickTimeout = 500;
 
@@ -35,12 +35,12 @@ class MouseEventService : IMouseEventService
 
 
     public MouseEventService(
-        IJSInteropService jSInteropService,
-        IUIService uiService)
+        IJSInterop jSInterop,
+        IApplicationEvents applicationEvents)
     {
         clickTimer = new Timer(OnLeftClickTimer, null, Timeout.Infinite, Timeout.Infinite);
-        this.jSInteropService = jSInteropService;
-        this.uiService = uiService;
+        this.jSInterop = jSInterop;
+        this.applicationEvents = applicationEvents;
     }
 
     public event Action<MouseEvent> MouseWheel = null!;
@@ -52,13 +52,14 @@ class MouseEventService : IMouseEventService
 
     public async Task InitAsync()
     {
-        var objRef = DotNetObjectReference.Create(this);
-        await jSInteropService.AddMouseEventListenerAsync("svgcanvas", "wheel", objRef, "MouseEventCallback");
+        await jSInterop.Call("preventDefaultTouchEvents", "svgcanvas");
 
-        await jSInteropService.AddPointerEventListenerAsync("svgcanvas", "pointerdown", objRef, "PointerEventCallback");
-        await jSInteropService.AddPointerEventListenerAsync("svgcanvas", "pointermove", objRef, "PointerEventCallback");
-        await jSInteropService.AddPointerEventListenerAsync("svgcanvas", "pointerup", objRef, "PointerEventCallback");
-        await jSInteropService.AddPointerEventListenerAsync("svgcanvas", "pointercancel", objRef, "PointerEventCallback");
+        var objRef = jSInterop.Reference(this);
+        await jSInterop.Call("addMouseEventListener", "svgcanvas", "wheel", objRef, nameof(MouseEventCallback));
+        await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointerdown", objRef, nameof(PointerEventCallback));
+        await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointermove", objRef, nameof(PointerEventCallback));
+        await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointerup", objRef, nameof(PointerEventCallback));
+        await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointercancel", objRef, nameof(PointerEventCallback));
     }
 
 
@@ -71,7 +72,7 @@ class MouseEventService : IMouseEventService
             case "wheel": OnMouseWheelEvent(e); break;
         }
 
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
         return ValueTask.CompletedTask;
     }
 
@@ -88,7 +89,7 @@ class MouseEventService : IMouseEventService
             case "pointercancel": OnPoinerUpEvent(e); break;
         }
 
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
         return ValueTask.CompletedTask;
     }
 

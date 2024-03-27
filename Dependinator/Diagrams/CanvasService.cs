@@ -3,21 +3,17 @@ using Dependinator.Shared;
 using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components.Forms;
 
-
 namespace Dependinator.Diagrams;
 
 
 interface ICanvasService
 {
-    Task InitAsync(Canvas canvas);
-
     string SvgContent { get; }
     string TileKeyText { get; }
     Rect SvgRect { get; }
     string TileViewBox { get; }
     Pos Offset { get; }
     double Zoom { get; }
-    int ZCount { get; }
     string SvgViewBox { get; }
     string Cursor { get; }
     string TitleInfo { get; }
@@ -36,22 +32,19 @@ interface ICanvasService
 }
 
 
-
 [Scoped]
 class CanvasService : ICanvasService
 {
-
-    const double MinSelectableZoom = 0.15;
-    const double MaxCover = 0.5;
-
+    const double MinCover = 0.5;
+    const double MaxCover = 0.8;
     const int MoveDelay = 300;
-    private readonly IMouseEventService mouseEventService;
-    IPanZoomService panZoomService;
+
+    readonly IScreenService screenService;
+    readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
-    readonly IUIService uiService;
-    readonly IJSInteropService jSInteropService;
+    readonly IApplicationEvents applicationEvents;
+    readonly IJSInterop jSInteropService;
     readonly IFileService fileService;
-    readonly IConfigService configService;
     readonly IRecentModelsService recentModelsService;
     readonly Timer moveTimer;
     bool moveTimerRunning = false;
@@ -59,21 +52,20 @@ class CanvasService : ICanvasService
 
     public CanvasService(
         IMouseEventService mouseEventService,
+        IScreenService screenService,
         IPanZoomService panZoomService,
         IModelService modelService,
-        IUIService uiService,
-        IJSInteropService jSInteropService,
+        IApplicationEvents applicationEvents,
+        IJSInterop jSInteropService,
         IFileService fileService,
-        IConfigService configService,
         IRecentModelsService recentModelsService)
     {
-        this.mouseEventService = mouseEventService;
+        this.screenService = screenService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
-        this.uiService = uiService;
+        this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
-        this.configService = configService;
         this.recentModelsService = recentModelsService;
         mouseEventService.LeftClick += OnClick;
         mouseEventService.LeftDblClick += OnDblClick;
@@ -97,31 +89,22 @@ class CanvasService : ICanvasService
     public string Content { get; private set; } = "";
     public string Cursor { get; private set; } = "default";
 
-    public Rect SvgRect => panZoomService.SvgRect;
+    public Rect SvgRect => screenService.SvgRect;
     public Pos Offset => panZoomService.Offset;
     public double Zoom => panZoomService.Zoom;
     public double ActualZoom => Zoom / LevelZoom;
-    public int ZCount => panZoomService.ZCount;
 
     string selectedId = "";
     string mouseDownId = "";
     string mouseDownSubId = "";
-    Canvas canvas = null!;
+
 
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";
 
 
-    public async Task InitAsync(Canvas canvas)
-    {
-        this.canvas = canvas;
-        await panZoomService.InitAsync(canvas);
-        await recentModelsService.InitAsync();
-    }
-
-
     public async void InitialShow()
     {
-        await panZoomService.CheckResizeAsync();
+        await screenService.CheckResizeAsync();
         await LoadAsync(recentModelsService.LastUsedPath);
     }
 
@@ -129,7 +112,7 @@ class CanvasService : ICanvasService
     public async Task LoadAsync(string modelPath)
     {
         DiagramName = $"Loading {modelPath} ...";
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
 
         if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath))) return;
 
@@ -137,7 +120,7 @@ class CanvasService : ICanvasService
         PanZoomModel(modelInfo);
 
         await recentModelsService.AddModelAsync(modelInfo.Path);
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
@@ -171,7 +154,7 @@ class CanvasService : ICanvasService
 
     public async void OpenFiles()
     {
-        await jSInteropService.ClickElement(canvas.inputFile.Element);
+        await jSInteropService.Call("clickElement", "inputfile");
     }
 
     public async Task<IReadOnlyList<string>> GetModelPaths()
@@ -190,9 +173,10 @@ class CanvasService : ICanvasService
         var nodeZoom = (1 / node.GetZoom());
         var vx = (node.Boundary.Width * nodeZoom) / (v.Width * Zoom);
         var vy = (node.Boundary.Height * nodeZoom) / (v.Height * Zoom);
-        var covers = Math.Max(vx, vy);
+        var maxCovers = Math.Max(vx, vy);
+        var minCovers = Math.Min(vx, vy);
 
-        return covers < MaxCover;
+        return minCovers < MinCover && maxCovers < MaxCover;
     }
 
 
@@ -207,7 +191,7 @@ class CanvasService : ICanvasService
             {
                 modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
                 selectedId = "";
-                uiService.TriggerUIStateChange();
+                applicationEvents.TriggerUIStateChanged();
             }
             return;
         }
@@ -216,7 +200,7 @@ class CanvasService : ICanvasService
         {   // click on other node
             modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
             selectedId = "";
-            uiService.TriggerUIStateChange();
+            applicationEvents.TriggerUIStateChanged();
         }
 
         if (modelService.TryUpdateNode(e.TargetId, node =>
@@ -226,7 +210,7 @@ class CanvasService : ICanvasService
         {
             Log.Info($"Node clicked: {e.TargetId}");
             selectedId = nodeId;
-            uiService.TriggerUIStateChange();
+            applicationEvents.TriggerUIStateChanged();
         }
     }
 
@@ -309,7 +293,7 @@ class CanvasService : ICanvasService
         moveTimerRunning = false;
         Cursor = "move";
         isMoving = true;
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
 
@@ -321,14 +305,13 @@ class CanvasService : ICanvasService
             {
                 modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
                 selectedId = "";
-                uiService.TriggerUIStateChange();
+                applicationEvents.TriggerUIStateChanged();
             }
 
             return;
         }
         modelService.TryUpdateNode(mouseDownId, node =>
         {
-
             var zoom = node.GetZoom() * Zoom;
             var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
 
@@ -344,7 +327,7 @@ class CanvasService : ICanvasService
             {
                 modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
                 selectedId = "";
-                uiService.TriggerUIStateChange();
+                applicationEvents.TriggerUIStateChanged();
             }
 
             return;
@@ -381,13 +364,13 @@ class CanvasService : ICanvasService
     {
         var bound = modelService.GetBounds();
         panZoomService.PanZoomToFit(bound, Math.Min(1, Zoom));
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public async void Refresh()
     {
         await modelService.RefreshAsync();
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
 
@@ -395,7 +378,7 @@ class CanvasService : ICanvasService
     {
         modelService.Clear();
 
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
 
@@ -417,7 +400,7 @@ class CanvasService : ICanvasService
         TileKeyText = $"{tile.Key}"; // Log info
         TileViewBox = $"{tileViewRect}"; // Log info
 
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
         return Content;
     }
 }

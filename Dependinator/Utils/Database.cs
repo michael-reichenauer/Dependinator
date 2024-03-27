@@ -1,4 +1,7 @@
+using System.Text;
+using System.Text.Json;
 using Dependinator.Shared;
+using Microsoft.JSInterop;
 
 namespace Dependinator.Utils;
 
@@ -11,51 +14,79 @@ interface IDatabase
     Task<R<IReadOnlyList<string>>> GetKeysAsync(string collectionName);
 }
 
-public record Pair<T>(string Id, T Value);
-
 
 [Scoped]
 class Database : IDatabase
 {
     const int CurrentVersion = 2;
     const string DatabaseName = "Dependinator";
+    static readonly JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
+    record Pair<T>(string Id, T Value);
 
+    readonly IJSInterop jSInterop;
 
-    readonly IJSInteropService jSInteropService;
-
-    public Database(IJSInteropService jSInteropService)
+    public Database(IJSInterop jSInterop)
     {
-        this.jSInteropService = jSInteropService;
+        this.jSInterop = jSInterop;
     }
 
     public async Task Init(string[] collectionNames)
     {
-        await jSInteropService.InitializeDatabaseAsync(DatabaseName, CurrentVersion, collectionNames);
+        await jSInterop.Call("initializeDatabase", DatabaseName, CurrentVersion, collectionNames);
     }
 
     public async Task<R<IReadOnlyList<string>>> GetKeysAsync(string collectionName)
     {
-        if (!Try(out var keys, out var e, await jSInteropService.GetDatabaseKeysAsync(DatabaseName, collectionName))) return e;
-        return keys.ToList();
+        var keys = await jSInterop.Call<IReadOnlyList<string>>("getDatabaseAllKeys", DatabaseName, collectionName);
+        return keys?.ToList() ?? [];
     }
 
     public async Task<R> SetAsync<T>(string collectionName, string id, T value)
     {
         var pair = new Pair<T>(id, value);
-        await jSInteropService.SetDatabaseValueAsync(DatabaseName, collectionName, pair);
+        await jSInterop.Call("setDatabaseValue", DatabaseName, collectionName, pair);
         return R.Ok;
     }
 
     public async Task<R<T>> GetAsync<T>(string collectionName, string id)
     {
-        if (!Try(out var pair, out var e, await jSInteropService.GetDatabaseValueAsync<Pair<T>>(DatabaseName, collectionName, id))) return e;
-
+        if (!Try(out var pair, out var e, await GetDatabaseValueAsync<Pair<T>>(DatabaseName, collectionName, id))) return e;
         return pair.Value;
     }
 
     public async Task<R> DeleteAsync(string collectionName, string id)
     {
-        await jSInteropService.DeleteDatabaseValueAsync(DatabaseName, collectionName, id);
+        await jSInterop.Call("deleteDatabaseValue", DatabaseName, collectionName, id);
         return R.Ok;
+    }
+
+    private async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
+    {
+        // For big values, the normal JSInterop call canot handle big return values,
+        // so we use a value handler, where values are returned in chunks using callback from js
+        var valueHandler = new ValueHandler();
+        using var valueHandlerRef = jSInterop.Reference(valueHandler);
+
+        var result = await jSInterop.Call<bool>("getDatabaseValue",
+            databaseName, collectionName, id, valueHandlerRef, nameof(valueHandler.OnValue));
+        if (!result) return R.None;
+
+        var valueText = valueHandler.GetValue();
+        var value = JsonSerializer.Deserialize<T>(valueText, options);
+        return value!;
+    }
+
+    // This class is used when a javascript function returns a value that could larger than 20k
+    class ValueHandler
+    {
+        readonly StringBuilder sb = new();
+        public string GetValue() => sb.ToString();
+
+        [JSInvokable]
+        public ValueTask OnValue(string value)
+        {
+            sb.Append(value);
+            return ValueTask.CompletedTask;
+        }
     }
 }
