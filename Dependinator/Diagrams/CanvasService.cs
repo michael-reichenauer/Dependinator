@@ -8,8 +8,6 @@ namespace Dependinator.Diagrams;
 
 interface ICanvasService
 {
-    Task InitAsync(Canvas canvas);
-
     string SvgContent { get; }
     string TileKeyText { get; }
     Rect SvgRect { get; }
@@ -99,17 +97,9 @@ class CanvasService : ICanvasService
     string selectedId = "";
     string mouseDownId = "";
     string mouseDownSubId = "";
-    Canvas canvas = null!;
+
 
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";
-
-
-    public async Task InitAsync(Canvas canvas)
-    {
-        this.canvas = canvas;
-        await screenService.InitAsync(canvas);
-        await recentModelsService.InitAsync();
-    }
 
 
     public async void InitialShow()
@@ -164,7 +154,7 @@ class CanvasService : ICanvasService
 
     public async void OpenFiles()
     {
-        await jSInteropService.ClickElement(canvas.inputFile.Element);
+        await jSInteropService.ClickElement("inputfile");
     }
 
     public async Task<IReadOnlyList<string>> GetModelPaths()

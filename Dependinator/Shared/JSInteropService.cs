@@ -47,7 +47,7 @@ public interface IJSInteropService
 {
     event Action<bool> OnResizing;
     event Action OnResize;
-    ValueTask InitializeAsync();
+    ValueTask InitAsync();
     ValueTask<BrowserSizeDetails> GetWindowSizeAsync();
     ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference);
     BrowserSizeDetails BrowserSizeDetails { get; }
@@ -62,7 +62,7 @@ public interface IJSInteropService
     ValueTask<R<IReadOnlyList<string>>> GetDatabaseKeysAsync(string databaseName, string collectionName);
     ValueTask<string> Prompt(string message);
     ValueTask InitializeFileDropZone(ElementReference? dropZoneElement, ElementReference? inputFileElement);
-    ValueTask ClickElement(ElementReference? element);
+    ValueTask ClickElement(string elementId);
 }
 
 // Inspired from https://stackoverflow.com/questions/75114524/getting-the-size-of-a-blazor-page-with-javascript
@@ -91,7 +91,7 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
     public event Action<bool>? OnResizing;
     public event Action? OnResize;
 
-    public async ValueTask InitializeAsync()
+    public async ValueTask InitAsync()
     {
         IJSObjectReference module = await GetModuleAsync();
 
@@ -175,10 +175,10 @@ public class JSInteropService : IJSInteropService, IAsyncDisposable
         await module.InvokeVoidAsync(identifier: "initializeFileDropZone", dropZoneElement, inputFileElement);
     }
 
-    public async ValueTask ClickElement(ElementReference? element)
+    public async ValueTask ClickElement(string elementId)
     {
         IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "clickElement", element);
+        await module.InvokeVoidAsync(identifier: "clickElement", elementId);
     }
 
     [JSInvokable]

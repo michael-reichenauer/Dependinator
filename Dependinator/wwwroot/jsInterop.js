@@ -258,6 +258,6 @@ export function initializeFileDropZone(dropZoneElement, inputFileElement) {
   dropZoneElement.addEventListener('paste', onPaste);
 }
 
-export function clickElement(element) {
-  element.click();
+export function clickElement(elementId) {
+  document.getElementById(elementId).click();
 }

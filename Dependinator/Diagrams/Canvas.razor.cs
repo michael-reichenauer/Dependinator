@@ -15,6 +15,7 @@ partial class Canvas : ComponentBase, IUIComponent
     [Inject] IJSInteropService jSInteropService { get; init; } = null!;
     [Inject] IApplicationEvents applicationEvents { get; init; } = null!;
     [Inject] IDatabase database { get; init; } = null!;
+    [Inject] IInitService initService { get; init; } = null!;
 
     public ElementReference dropZoneElement { get; private set; }
     public InputFile inputFile { get; private set; } = null!;
@@ -46,12 +47,11 @@ partial class Canvas : ComponentBase, IUIComponent
 
         if (firstRender)
         {
-            applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
-            await srv.InitAsync(this);
-            await this.jSInteropService.InitializeAsync(); // must be after srv.InitAsync, since triggered events need Ref     
+            await initService.InitAsync(this);
+
             await this.jSInteropService.InitializeFileDropZone(dropZoneElement, inputFile.Element);
-            await database.Init([FileService.DBCollectionName]);
-            await mouseEventService.InitAsync();
+
+            applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
             await InvokeAsync(srv.InitialShow);
         }
     }
