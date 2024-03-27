@@ -9,7 +9,6 @@ interface IPanZoomService
     Pos Offset { get; set; }
     double Zoom { get; set; }
     double SvgZoom { get; set; }
-    int ZCount { get; }
 
     void OnMouseWheel(MouseEvent e);
     void OnMouseMove(MouseEvent e);
@@ -39,7 +38,6 @@ class PanZoomService : IPanZoomService
     }
 
 
-    public int ZCount { get; private set; } = 0;
     public Pos Offset { get; set; } = Pos.None;
     public double Zoom { get; set; } = 1;
     public double SvgZoom { get; set; } = 1;
@@ -51,8 +49,6 @@ class PanZoomService : IPanZoomService
         {
             if (e.DeltaY == 0) return;
             var (mx, my) = (e.OffsetX, e.OffsetY);
-
-            if (e.DeltaY > 0) ZCount--; else ZCount++;
 
             var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
             double newZoom = (e.DeltaY > 0) ? Zoom * speed : Zoom * (1 / speed);

@@ -3,7 +3,6 @@ using Dependinator.Shared;
 using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components.Forms;
 
-
 namespace Dependinator.Diagrams;
 
 
@@ -17,7 +16,6 @@ interface ICanvasService
     string TileViewBox { get; }
     Pos Offset { get; }
     double Zoom { get; }
-    int ZCount { get; }
     string SvgViewBox { get; }
     string Cursor { get; }
     string TitleInfo { get; }
@@ -36,22 +34,19 @@ interface ICanvasService
 }
 
 
-
 [Scoped]
 class CanvasService : ICanvasService
 {
     const double MinCover = 0.5;
     const double MaxCover = 0.8;
-
     const int MoveDelay = 300;
-    readonly IMouseEventService mouseEventService;
+
     readonly IScreenService screenService;
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInteropService jSInteropService;
     readonly IFileService fileService;
-    readonly IConfigService configService;
     readonly IRecentModelsService recentModelsService;
     readonly Timer moveTimer;
     bool moveTimerRunning = false;
@@ -65,17 +60,14 @@ class CanvasService : ICanvasService
         IApplicationEvents applicationEvents,
         IJSInteropService jSInteropService,
         IFileService fileService,
-        IConfigService configService,
         IRecentModelsService recentModelsService)
     {
-        this.mouseEventService = mouseEventService;
         this.screenService = screenService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
-        this.configService = configService;
         this.recentModelsService = recentModelsService;
         mouseEventService.LeftClick += OnClick;
         mouseEventService.LeftDblClick += OnDblClick;
@@ -103,7 +95,6 @@ class CanvasService : ICanvasService
     public Pos Offset => panZoomService.Offset;
     public double Zoom => panZoomService.Zoom;
     public double ActualZoom => Zoom / LevelZoom;
-    public int ZCount => panZoomService.ZCount;
 
     string selectedId = "";
     string mouseDownId = "";
