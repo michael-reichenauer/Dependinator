@@ -44,8 +44,9 @@ class CanvasService : ICanvasService
     const double MaxCover = 0.8;
 
     const int MoveDelay = 300;
-    private readonly IMouseEventService mouseEventService;
-    IPanZoomService panZoomService;
+    readonly IMouseEventService mouseEventService;
+    readonly IScreenService screenService;
+    readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
     readonly IUIService uiService;
     readonly IJSInteropService jSInteropService;
@@ -58,6 +59,7 @@ class CanvasService : ICanvasService
 
     public CanvasService(
         IMouseEventService mouseEventService,
+        IScreenService screenService,
         IPanZoomService panZoomService,
         IModelService modelService,
         IUIService uiService,
@@ -67,6 +69,7 @@ class CanvasService : ICanvasService
         IRecentModelsService recentModelsService)
     {
         this.mouseEventService = mouseEventService;
+        this.screenService = screenService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
         this.uiService = uiService;
@@ -96,7 +99,7 @@ class CanvasService : ICanvasService
     public string Content { get; private set; } = "";
     public string Cursor { get; private set; } = "default";
 
-    public Rect SvgRect => panZoomService.SvgRect;
+    public Rect SvgRect => screenService.SvgRect;
     public Pos Offset => panZoomService.Offset;
     public double Zoom => panZoomService.Zoom;
     public double ActualZoom => Zoom / LevelZoom;
@@ -113,14 +116,14 @@ class CanvasService : ICanvasService
     public async Task InitAsync(Canvas canvas)
     {
         this.canvas = canvas;
-        await panZoomService.InitAsync(canvas);
+        await screenService.InitAsync(canvas);
         await recentModelsService.InitAsync();
     }
 
 
     public async void InitialShow()
     {
-        await panZoomService.CheckResizeAsync();
+        await screenService.CheckResizeAsync();
         await LoadAsync(recentModelsService.LastUsedPath);
     }
 

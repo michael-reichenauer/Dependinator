@@ -1,24 +1,19 @@
 using Dependinator.Models;
-using Dependinator.Shared;
 using Dependinator.Utils.UI;
-
 
 namespace Dependinator.Diagrams;
 
+
 interface IPanZoomService
 {
-    Rect SvgRect { get; }
     Pos Offset { get; set; }
     double Zoom { get; set; }
     double SvgZoom { get; set; }
     int ZCount { get; }
 
-    Task InitAsync(IUIComponent component);
-
     void OnMouseWheel(MouseEvent e);
     void OnMouseMove(MouseEvent e);
     void PanZoomToFit(Rect bounds, double maxZoom = 1);
-    Task CheckResizeAsync();
     void PanZoom(Rect viewRect, double zoom);
 }
 
@@ -31,38 +26,25 @@ class PanZoomService : IPanZoomService
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
 
-    const int SvgPageMargin = 2;
-
-    readonly IJSInteropService jSInteropService;
-    readonly IUIService uiService;
     readonly IModelService modelService;
+    readonly IScreenService screenService;
+
     readonly object syncRoot = new();
+    private Rect SvgRect => screenService.SvgRect;
 
 
-    IUIComponent component = null!;
+    public PanZoomService(IModelService modelService, IScreenService screenService)
+    {
+        this.modelService = modelService;
+        this.screenService = screenService;
+    }
+
+
     public int ZCount { get; private set; } = 0;
-
     public Pos Offset { get; set; } = Pos.None;
-    public Rect SvgRect { get; private set; } = Rect.None;
-
     public double Zoom { get; set; } = 1;
     public double SvgZoom { get; set; } = 1;
 
-
-    public PanZoomService(IJSInteropService jSInteropService, IUIService uiService, IModelService modelService)
-    {
-        this.jSInteropService = jSInteropService;
-        this.uiService = uiService;
-        this.modelService = modelService;
-        jSInteropService.OnResize += OnResize;
-
-    }
-
-    public async Task InitAsync(IUIComponent component)
-    {
-        await Task.CompletedTask;
-        this.component = component;
-    }
 
     public void OnMouseWheel(MouseEvent e)
     {
@@ -88,24 +70,35 @@ class PanZoomService : IPanZoomService
 
             Offset = new Pos(x, y);
             Zoom = newZoom;
-            modelService.TriggerSave();
         }
+
+        modelService.TriggerSave();
     }
 
 
     public void OnMouseMove(MouseEvent e)
     {
-        var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
-        Offset = new Pos(Offset.X - dx, Offset.Y - dy);
+        lock (syncRoot)
+        {
+            var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
+            Offset = new Pos(Offset.X - dx, Offset.Y - dy);
+        }
+
         modelService.TriggerSave();
     }
 
+
     public void PanZoom(Rect viewRect, double zoom)
     {
-        Offset = new Pos(viewRect.X, viewRect.Y);
-        Zoom = zoom;
+        lock (syncRoot)
+        {
+            Offset = new Pos(viewRect.X, viewRect.Y);
+            Zoom = zoom;
+        }
+
         modelService.TriggerSave();
     }
+
 
     public void PanZoomToFit(Rect totalBounds, double maxZoom = 1)
     {
@@ -129,46 +122,9 @@ class PanZoomService : IPanZoomService
 
             Offset = new Pos(x, y);
             Zoom = newZoom;
-            modelService.TriggerSave();
-        }
-    }
-
-
-    void OnResize() => CheckResizeAsync().RunInBackground();
-
-
-    public async Task CheckResizeAsync()
-    {
-        // Get Svg position (width and height are unreliable)
-        var svg = await jSInteropService.GetBoundingRectangle(component.Ref);
-
-        // Get window width and height
-        var windowWidth = Math.Floor(jSInteropService.BrowserSizeDetails.InnerWidth);
-        var windowHeight = Math.Floor(jSInteropService.BrowserSizeDetails.InnerHeight);
-
-        // Calculate the SVG size to fit the window (with some margin and x,y position)
-        var svgX = Math.Floor(svg.X);
-        var svgY = Math.Floor(svg.Y);
-        var svgWidth = windowWidth - svgX - SvgPageMargin * 2;
-        var svgHeight = windowHeight - svgY - SvgPageMargin * 2;
-        var newSwgRect = new Rect(0, 0, svgWidth, svgHeight);
-
-        var isChanged = false;
-        lock (syncRoot)
-        {
-            if (newSwgRect != SvgRect)
-            {   // Svg size has changed, adjust svg to fit new window size window and trigger update
-                SvgRect = newSwgRect;
-                isChanged = true;
-            }
         }
 
-        if (isChanged)
-        {
-            uiService.TriggerUIStateChange();
-            modelService.TriggerSave();
-            Log.Info($"Resized: {newSwgRect}");
-        }
+        modelService.TriggerSave();
     }
 }
 
