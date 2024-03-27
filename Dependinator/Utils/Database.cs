@@ -14,8 +14,6 @@ interface IDatabase
     Task<R<IReadOnlyList<string>>> GetKeysAsync(string collectionName);
 }
 
-public record Pair<T>(string Id, T Value);
-
 
 [Scoped]
 class Database : IDatabase
@@ -23,6 +21,7 @@ class Database : IDatabase
     const int CurrentVersion = 2;
     const string DatabaseName = "Dependinator";
     static readonly JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
+    record Pair<T>(string Id, T Value);
 
     readonly IJSInterop jSInterop;
 

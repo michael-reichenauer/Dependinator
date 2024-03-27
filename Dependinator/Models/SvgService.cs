@@ -214,7 +214,7 @@ class SvgService : ISvgService
   private static string SelectedNodeSvg(Node node, double x, double y, double w, double h)
   {
     string c = Color.Highlight;
-    const int s = 12;
+    const int s = 8;
     const int m = 3;
     const int mt = m + s;
     const int ml = m + s;
@@ -222,7 +222,8 @@ class SvgService : ISvgService
     const int mr = m;
     const int mb = m;
 
-    const int t = s * 3;
+    const int tt = 12;
+    const int t = tt * 3;
 
     if (!node.IsSelected) return "";
 
@@ -230,35 +231,35 @@ class SvgService : ISvgService
         $"""
         <g class="hoverable">
           <rect id="{node.Id.Value}.tl" x="{x - ml}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.tl" x="{x - ml - s}" y="{y - mt - s}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.tl" x="{x - ml - tt}" y="{y - mt - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
         <g class="hoverable">
           <rect id="{node.Id.Value}.tm" x="{x + w / 2 - mm}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.tm" x="{x + w / 2 - mm - s}" y="{y - mt - s}" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
+          <rect id="{node.Id.Value}.tm" x="{x + w / 2 - mm - tt}" y="{y - mt - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
         </g>
         <g class="hoverable">
           <rect id="{node.Id.Value}.tr" x="{x + w + mr}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.tr" x="{x + w + mr - s}" y="{y - mt - s}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.tr" x="{x + w + mr - tt}" y="{y - mt - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
         <g class="hoverable">
           <rect id="{node.Id.Value}.ml" x="{x - ml}" y="{y + h / 2}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.ml" x="{x - ml - s}" y="{y + h / 2 - s}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.ml" x="{x - ml - tt}" y="{y + h / 2 - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
         <g class="hoverable">
           <rect id="{node.Id.Value}.mr" x="{x + w + mr}" y="{y + h / 2}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.mr" x="{x + w + mr - s}" y="{y + h / 2 - s}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.mr" x="{x + w + mr - tt}" y="{y + h / 2 - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
         <g class="hoverable">    
           <rect id="{node.Id.Value}.bl" x="{x - ml}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.bl" x="{x - ml - s}" y="{y + h + mb - s}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.bl" x="{x - ml - tt}" y="{y + h + mb - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
         <g class="hoverable">
           <rect id="{node.Id.Value}.bm" x="{x + w / 2 - mm}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.bm" x="{x + w / 2 - mm - s}" y="{y + h + mb - s}" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
+          <rect id="{node.Id.Value}.bm" x="{x + w / 2 - mm - tt}" y="{y + h + mb - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
         </g>
         <g class="hoverable">
           <rect id="{node.Id.Value}.br" x="{x + w + mr}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.br" x="{x + w + mr - s}" y="{y + h + mb - s}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.br" x="{x + w + mr - tt}" y="{y + h + mb - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
         """;
   }
