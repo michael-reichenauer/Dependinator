@@ -40,9 +40,8 @@ interface ICanvasService
 [Scoped]
 class CanvasService : ICanvasService
 {
-
-    const double MinSelectableZoom = 0.15;
-    const double MaxCover = 0.5;
+    const double MinCover = 0.5;
+    const double MaxCover = 0.8;
 
     const int MoveDelay = 300;
     private readonly IMouseEventService mouseEventService;
@@ -190,9 +189,10 @@ class CanvasService : ICanvasService
         var nodeZoom = (1 / node.GetZoom());
         var vx = (node.Boundary.Width * nodeZoom) / (v.Width * Zoom);
         var vy = (node.Boundary.Height * nodeZoom) / (v.Height * Zoom);
-        var covers = Math.Max(vx, vy);
+        var maxCovers = Math.Max(vx, vy);
+        var minCovers = Math.Min(vx, vy);
 
-        return covers < MaxCover;
+        return minCovers < MinCover && maxCovers < MaxCover;
     }
 
 
@@ -328,7 +328,6 @@ class CanvasService : ICanvasService
         }
         modelService.TryUpdateNode(mouseDownId, node =>
         {
-
             var zoom = node.GetZoom() * Zoom;
             var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
 
