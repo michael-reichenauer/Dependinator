@@ -19,17 +19,15 @@ interface IScreenService
 class ScreenService : IScreenService
 {
     const int SvgPageMargin = 2;
-    readonly IModelService modelService;
-    readonly IUIService uiService;
+    readonly IApplicationEvents applicationEvents;
     readonly IJSInteropService jSInteropService;
     IUIComponent component = null!;
 
     readonly object syncRoot = new();
 
-    public ScreenService(IModelService modelService, IUIService uiService, IJSInteropService jSInteropService)
+    public ScreenService(IApplicationEvents applicationEvents, IJSInteropService jSInteropService)
     {
-        this.modelService = modelService;
-        this.uiService = uiService;
+        this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
         jSInteropService.OnResize += OnResize;
     }
@@ -72,8 +70,8 @@ class ScreenService : IScreenService
 
         if (isChanged)
         {
-            uiService.TriggerUIStateChange();
-            modelService.TriggerSave();
+            applicationEvents.TriggerUIStateChanged();
+            applicationEvents.TriggerSaveNeeded();
             Log.Info($"Resized: {newSwgRect}");
         }
     }

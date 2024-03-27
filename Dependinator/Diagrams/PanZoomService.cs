@@ -26,17 +26,16 @@ class PanZoomService : IPanZoomService
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
 
-    readonly IModelService modelService;
     readonly IScreenService screenService;
-
+    private readonly IApplicationEvents applicationEvents;
     readonly object syncRoot = new();
     private Rect SvgRect => screenService.SvgRect;
 
 
-    public PanZoomService(IModelService modelService, IScreenService screenService)
+    public PanZoomService(IScreenService screenService, IApplicationEvents applicationEvents)
     {
-        this.modelService = modelService;
         this.screenService = screenService;
+        this.applicationEvents = applicationEvents;
     }
 
 
@@ -72,7 +71,7 @@ class PanZoomService : IPanZoomService
             Zoom = newZoom;
         }
 
-        modelService.TriggerSave();
+        applicationEvents.TriggerSaveNeeded();
     }
 
 
@@ -84,7 +83,7 @@ class PanZoomService : IPanZoomService
             Offset = new Pos(Offset.X - dx, Offset.Y - dy);
         }
 
-        modelService.TriggerSave();
+        applicationEvents.TriggerSaveNeeded();
     }
 
 
@@ -96,7 +95,7 @@ class PanZoomService : IPanZoomService
             Zoom = zoom;
         }
 
-        modelService.TriggerSave();
+        applicationEvents.TriggerSaveNeeded();
     }
 
 
@@ -124,7 +123,7 @@ class PanZoomService : IPanZoomService
             Zoom = newZoom;
         }
 
-        modelService.TriggerSave();
+        applicationEvents.TriggerSaveNeeded();
     }
 }
 

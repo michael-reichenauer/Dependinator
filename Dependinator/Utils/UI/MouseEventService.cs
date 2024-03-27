@@ -22,7 +22,7 @@ interface IMouseEventService
 class MouseEventService : IMouseEventService
 {
     readonly IJSInteropService jSInteropService;
-    private readonly IUIService uiService;
+    private readonly IApplicationEvents applicationEvents;
     const int ClickDelay = 300;
     const int ClickTimeout = 500;
 
@@ -36,11 +36,11 @@ class MouseEventService : IMouseEventService
 
     public MouseEventService(
         IJSInteropService jSInteropService,
-        IUIService uiService)
+        IApplicationEvents applicationEvents)
     {
         clickTimer = new Timer(OnLeftClickTimer, null, Timeout.Infinite, Timeout.Infinite);
         this.jSInteropService = jSInteropService;
-        this.uiService = uiService;
+        this.applicationEvents = applicationEvents;
     }
 
     public event Action<MouseEvent> MouseWheel = null!;
@@ -71,7 +71,7 @@ class MouseEventService : IMouseEventService
             case "wheel": OnMouseWheelEvent(e); break;
         }
 
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
         return ValueTask.CompletedTask;
     }
 
@@ -88,7 +88,7 @@ class MouseEventService : IMouseEventService
             case "pointercancel": OnPoinerUpEvent(e); break;
         }
 
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
         return ValueTask.CompletedTask;
     }
 

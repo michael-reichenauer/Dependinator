@@ -48,7 +48,7 @@ class CanvasService : ICanvasService
     readonly IScreenService screenService;
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
-    readonly IUIService uiService;
+    readonly IApplicationEvents applicationEvents;
     readonly IJSInteropService jSInteropService;
     readonly IFileService fileService;
     readonly IConfigService configService;
@@ -62,7 +62,7 @@ class CanvasService : ICanvasService
         IScreenService screenService,
         IPanZoomService panZoomService,
         IModelService modelService,
-        IUIService uiService,
+        IApplicationEvents applicationEvents,
         IJSInteropService jSInteropService,
         IFileService fileService,
         IConfigService configService,
@@ -72,7 +72,7 @@ class CanvasService : ICanvasService
         this.screenService = screenService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
-        this.uiService = uiService;
+        this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
         this.configService = configService;
@@ -131,7 +131,7 @@ class CanvasService : ICanvasService
     public async Task LoadAsync(string modelPath)
     {
         DiagramName = $"Loading {modelPath} ...";
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
 
         if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath))) return;
 
@@ -139,7 +139,7 @@ class CanvasService : ICanvasService
         PanZoomModel(modelInfo);
 
         await recentModelsService.AddModelAsync(modelInfo.Path);
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
@@ -210,7 +210,7 @@ class CanvasService : ICanvasService
             {
                 modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
                 selectedId = "";
-                uiService.TriggerUIStateChange();
+                applicationEvents.TriggerUIStateChanged();
             }
             return;
         }
@@ -219,7 +219,7 @@ class CanvasService : ICanvasService
         {   // click on other node
             modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
             selectedId = "";
-            uiService.TriggerUIStateChange();
+            applicationEvents.TriggerUIStateChanged();
         }
 
         if (modelService.TryUpdateNode(e.TargetId, node =>
@@ -229,7 +229,7 @@ class CanvasService : ICanvasService
         {
             Log.Info($"Node clicked: {e.TargetId}");
             selectedId = nodeId;
-            uiService.TriggerUIStateChange();
+            applicationEvents.TriggerUIStateChanged();
         }
     }
 
@@ -312,7 +312,7 @@ class CanvasService : ICanvasService
         moveTimerRunning = false;
         Cursor = "move";
         isMoving = true;
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
 
@@ -324,7 +324,7 @@ class CanvasService : ICanvasService
             {
                 modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
                 selectedId = "";
-                uiService.TriggerUIStateChange();
+                applicationEvents.TriggerUIStateChanged();
             }
 
             return;
@@ -346,7 +346,7 @@ class CanvasService : ICanvasService
             {
                 modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
                 selectedId = "";
-                uiService.TriggerUIStateChange();
+                applicationEvents.TriggerUIStateChanged();
             }
 
             return;
@@ -383,13 +383,13 @@ class CanvasService : ICanvasService
     {
         var bound = modelService.GetBounds();
         panZoomService.PanZoomToFit(bound, Math.Min(1, Zoom));
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public async void Refresh()
     {
         await modelService.RefreshAsync();
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
 
@@ -397,7 +397,7 @@ class CanvasService : ICanvasService
     {
         modelService.Clear();
 
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
     }
 
 
@@ -419,7 +419,7 @@ class CanvasService : ICanvasService
         TileKeyText = $"{tile.Key}"; // Log info
         TileViewBox = $"{tileViewRect}"; // Log info
 
-        uiService.TriggerUIStateChange();
+        applicationEvents.TriggerUIStateChanged();
         return Content;
     }
 }
