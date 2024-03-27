@@ -14,6 +14,19 @@ public class BrowserSizeDetails
     public int ScreenHeight { get; set; }
 }
 
+public class ElementBoundingRectangle
+{
+    public double X { get; set; }
+    public double Y { get; set; }
+    public double Width { get; set; }
+    public double Height { get; set; }
+    public double Top { get; set; }
+    public double Right { get; set; }
+    public double Bottom { get; set; }
+    public double Left { get; set; }
+}
+
+
 interface IScreenService
 {
     Rect SvgRect { get; }
@@ -60,7 +73,7 @@ class ScreenService : IScreenService
     public async Task CheckResizeAsync()
     {
         // Get Svg position (width and height are unreliable)
-        var svg = await jSInterop.GetBoundingRectangle(component.Ref);
+        var svg = await GetBoundingRectangle();
 
         // Get window width and height
         var windowWidth = Math.Floor(browserSizeDetails.InnerWidth);
@@ -90,6 +103,9 @@ class ScreenService : IScreenService
             Log.Info($"Resized: {newSwgRect}");
         }
     }
+
+    async Task<ElementBoundingRectangle> GetBoundingRectangle()
+        => await jSInterop.Call<ElementBoundingRectangle>("getBoundingRectangle", "svgcanvas");
 
     async Task RegisterWindowResizeEvents() =>
           await jSInterop.Call("listenToWindowResize", "svgcanvas", jSInterop.Instance(this), nameof(OnWindowResized));

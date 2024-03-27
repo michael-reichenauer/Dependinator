@@ -6,17 +6,6 @@ using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;
 
-public class ElementBoundingRectangle
-{
-    public double X { get; set; }
-    public double Y { get; set; }
-    public double Width { get; set; }
-    public double Height { get; set; }
-    public double Top { get; set; }
-    public double Right { get; set; }
-    public double Bottom { get; set; }
-    public double Left { get; set; }
-}
 
 
 
@@ -41,15 +30,11 @@ public interface IJSInterop
     ValueTask<T> Call<T>(string functionName, params object?[]? args);
     DotNetObjectReference<TValue> Instance<TValue>(TValue value) where TValue : class;
 
-    ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference);
-
     ValueTask InitializeDatabaseAsync(string databaseName, int currentVersion, string[] collectionNames);
     ValueTask SetDatabaseValueAsync<T>(string databaseName, string collectionName, T value);
     ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id);
     ValueTask DeleteDatabaseValueAsync(string databaseName, string collectionName, string id);
     ValueTask<R<IReadOnlyList<string>>> GetDatabaseKeysAsync(string databaseName, string collectionName);
-    ValueTask InitializeFileDropZone(ElementReference? dropZoneElement, ElementReference? inputFileElement);
-    ValueTask ClickElement(string elementId);
 }
 
 
@@ -89,11 +74,6 @@ public class JSInterop : IJSInterop, IAsyncDisposable
         return DotNetObjectReference.Create(value);
     }
 
-    public async ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference)
-    {
-        IJSObjectReference module = await GetModuleAsync();
-        return await module.InvokeAsync<ElementBoundingRectangle>(identifier: "getBoundingRectangle", elementReference);
-    }
 
     public async ValueTask InitializeDatabaseAsync(string databaseName, int currentVersion, string[] collectionNames)
     {
@@ -137,17 +117,6 @@ public class JSInterop : IJSInterop, IAsyncDisposable
         return result;
     }
 
-    public async ValueTask InitializeFileDropZone(ElementReference? dropZoneElement, ElementReference? inputFileElement)
-    {
-        IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "initializeFileDropZone", dropZoneElement, inputFileElement);
-    }
-
-    public async ValueTask ClickElement(string elementId)
-    {
-        IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "clickElement", elementId);
-    }
 
     public async ValueTask DisposeAsync()
     {

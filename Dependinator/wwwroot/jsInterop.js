@@ -24,8 +24,8 @@ export function preventDefaultTouchEvents(elementId) {
 }
 
 
-export function getBoundingRectangle(element, parm) {
-  return element.getBoundingClientRect();
+export function getBoundingRectangle(elementId) {
+  return document.getElementById(elementId).getBoundingClientRect();
 }
 
 export function getWindowSizeDetails(parm) {

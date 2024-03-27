@@ -154,7 +154,7 @@ class CanvasService : ICanvasService
 
     public async void OpenFiles()
     {
-        await jSInteropService.ClickElement("inputfile");
+        await jSInteropService.Call("clickElement", "inputfile");
     }
 
     public async Task<IReadOnlyList<string>> GetModelPaths()

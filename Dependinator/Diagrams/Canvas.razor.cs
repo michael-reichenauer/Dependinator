@@ -12,7 +12,7 @@ partial class Canvas : ComponentBase, IUIComponent
 {
     [Inject] ICanvasService srv { get; init; } = null!;
     [Inject] IMouseEventService mouseEventService { get; init; } = null!;
-    [Inject] IJSInterop jSInteropService { get; init; } = null!;
+    [Inject] IJSInterop jSInterop { get; init; } = null!;
     [Inject] IApplicationEvents applicationEvents { get; init; } = null!;
     [Inject] IDatabase database { get; init; } = null!;
     [Inject] IInitService initService { get; init; } = null!;
@@ -49,7 +49,7 @@ partial class Canvas : ComponentBase, IUIComponent
         {
             await initService.InitAsync(this);
 
-            await this.jSInteropService.InitializeFileDropZone(dropZoneElement, inputFile.Element);
+            await jSInterop.Call("initializeFileDropZone", dropZoneElement, inputFile.Element);
 
             applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
             await InvokeAsync(srv.InitialShow);
