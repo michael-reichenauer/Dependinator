@@ -43,9 +43,6 @@ public interface IJSInterop
 
     ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference);
 
-    ValueTask AddMouseEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
-    ValueTask AddPointerEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName);
-
     ValueTask InitializeDatabaseAsync(string databaseName, int currentVersion, string[] collectionNames);
     ValueTask SetDatabaseValueAsync<T>(string databaseName, string collectionName, T value);
     ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id);
@@ -91,19 +88,6 @@ public class JSInterop : IJSInterop, IAsyncDisposable
         // Save all instances to be disposed !!!!!
         return DotNetObjectReference.Create(value);
     }
-
-    public async ValueTask AddMouseEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName)
-    {
-        IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "addMouseEventListener", elementId, eventName, dotNetObjectReference, functionName);
-    }
-
-    public async ValueTask AddPointerEventListenerAsync(string elementId, string eventName, object dotNetObjectReference, string functionName)
-    {
-        IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(identifier: "addPointerEventListener", elementId, eventName, dotNetObjectReference, functionName);
-    }
-
 
     public async ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference)
     {

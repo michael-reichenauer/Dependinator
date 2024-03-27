@@ -2,13 +2,16 @@ export function showPrompt(message) {
   return prompt(message, 'Type anything here');
 }
 
-export function listenToWindowResize(instance, functionName) {
+export function listenToWindowResize(elementId, instance, functionName) {
   function resizeEventHandler() {
     instance.invokeMethodAsync(functionName);
   }
 
+  window.addEventListener("resize", resizeEventHandler);
+}
+
+export function preventDefaultTouchEvents(elementId) {
   // Prevent default touch events(scrolling, zooming, etc.), handled by the app
-  const elementId = "svgcanvas";
   document.getElementById(elementId).addEventListener('touchstart', function (e) {
     e.preventDefault();
   }, { passive: false });
@@ -18,9 +21,8 @@ export function listenToWindowResize(instance, functionName) {
   document.getElementById(elementId).addEventListener('touchend', function (e) {
     e.preventDefault();
   }, { passive: false });
-
-  window.addEventListener("resize", resizeEventHandler);
 }
+
 
 export function getBoundingRectangle(element, parm) {
   return element.getBoundingClientRect();
