@@ -17,7 +17,6 @@ interface IModelService
     bool TryGetNode(string id, out Node node);
     bool TryUpdateNode(string id, Action<Node> updateAction);
     void Clear();
-    void TriggerSave();
     Rect GetBounds();
 }
 
@@ -33,8 +32,8 @@ class ModelService : IModelService
     readonly IStructureService modelStructureService;
     readonly ISvgService modelSvgService;
     readonly Parsing.IPersistenceService persistenceService;
-    readonly IUIService uiService;
-    readonly IConfigService configService;
+    readonly IApplicationEvents applicationEvents;
+
 
     public ModelService(
         IModel model,
@@ -42,16 +41,16 @@ class ModelService : IModelService
         IStructureService modelStructureService,
         ISvgService modelSvgService,
         Parsing.IPersistenceService persistenceService,
-        IUIService uiService,
-        IConfigService configService)
+        IApplicationEvents applicationEvents)
     {
         this.model = model;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
         this.modelSvgService = modelSvgService;
         this.persistenceService = persistenceService;
-        this.uiService = uiService;
-        this.configService = configService;
+        this.applicationEvents = applicationEvents;
+
+        this.applicationEvents.SaveNeeded += TriggerSave;
     }
 
     public string ModelName => ReadModel(m => Path.GetFileNameWithoutExtension(m.Path));
@@ -73,7 +72,7 @@ class ModelService : IModelService
         }
     }
 
-     public bool TryNode(string id, out Node node)
+    public bool TryNode(string id, out Node node)
     {
         lock (model.Lock)
         {
@@ -153,7 +152,7 @@ class ModelService : IModelService
 
         // Trigger parse to get latest data
         ParseAsync(model.Path, model.ViewRect, model.Zoom)
-            .ContinueWith(t => uiService.TriggerUIStateChange())
+            .ContinueWith(t => applicationEvents.TriggerUIStateChanged())
             .RunInBackground();
 
         return modelInfo;

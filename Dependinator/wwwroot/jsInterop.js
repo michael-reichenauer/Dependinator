@@ -2,13 +2,16 @@ export function showPrompt(message) {
   return prompt(message, 'Type anything here');
 }
 
-export function listenToWindowResize(dotNetHelper) {
+export function listenToWindowResize(elementId, instance, functionName) {
   function resizeEventHandler() {
-    dotNetHelper.invokeMethodAsync('WindowResizeEvent');
+    instance.invokeMethodAsync(functionName);
   }
 
+  window.addEventListener("resize", resizeEventHandler);
+}
+
+export function preventDefaultTouchEvents(elementId) {
   // Prevent default touch events(scrolling, zooming, etc.), handled by the app
-  const elementId = "svgcanvas";
   document.getElementById(elementId).addEventListener('touchstart', function (e) {
     e.preventDefault();
   }, { passive: false });
@@ -18,14 +21,14 @@ export function listenToWindowResize(dotNetHelper) {
   document.getElementById(elementId).addEventListener('touchend', function (e) {
     e.preventDefault();
   }, { passive: false });
-
-  window.addEventListener("resize", resizeEventHandler);
-
-  dotNetHelper.invokeMethodAsync('WindowResizeEvent');
 }
 
-export function getBoundingRectangle(element, parm) {
-  return element.getBoundingClientRect();
+export function clickElement(elementId) {
+  document.getElementById(elementId).click();
+}
+
+export function getBoundingRectangle(elementId) {
+  return document.getElementById(elementId).getBoundingClientRect();
 }
 
 export function getWindowSizeDetails(parm) {
@@ -256,8 +259,4 @@ export function initializeFileDropZone(dropZoneElement, inputFileElement) {
   dropZoneElement.addEventListener("dragleave", onDragLeave);
   dropZoneElement.addEventListener("drop", onDrop);
   dropZoneElement.addEventListener('paste', onPaste);
-}
-
-export function clickElement(element) {
-  element.click();
 }
