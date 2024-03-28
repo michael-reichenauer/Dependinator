@@ -16,22 +16,21 @@ class InitService : IInitService
     readonly IScreenService screenService;
     readonly IMouseEventService mouseEventService;
     readonly IRecentModelsService recentModelsService;
-    readonly IJSInterop jSInteropService;
     readonly IDatabase database;
-
+    readonly ICanvasService canvasService;
 
     public InitService(
         IScreenService screenService,
         IMouseEventService mouseEventService,
         IRecentModelsService recentModelsService,
-        IJSInterop jSInteropService,
-        IDatabase database)
+        IDatabase database,
+        ICanvasService canvasService)
     {
         this.screenService = screenService;
         this.mouseEventService = mouseEventService;
         this.recentModelsService = recentModelsService;
-        this.jSInteropService = jSInteropService;
         this.database = database;
+        this.canvasService = canvasService;
     }
 
 
@@ -41,5 +40,6 @@ class InitService : IInitService
         await mouseEventService.InitAsync();
         await recentModelsService.InitAsync();
         await database.Init([FileService.DBCollectionName]);
+        await canvasService.InitAsync();
     }
 }

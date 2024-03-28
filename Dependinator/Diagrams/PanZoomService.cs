@@ -10,8 +10,7 @@ interface IPanZoomService
     double Zoom { get; set; }
     double SvgZoom { get; set; }
 
-    void OnMouseWheel(MouseEvent e);
-    void OnMouseMove(MouseEvent e);
+    Task InitAsync();
     void PanZoomToFit(Rect bounds, double maxZoom = 1);
     void PanZoom(Rect viewRect, double zoom);
 }
@@ -26,15 +25,23 @@ class PanZoomService : IPanZoomService
     const double PinchZoomSpeed = 1.04;
 
     readonly IScreenService screenService;
-    private readonly IApplicationEvents applicationEvents;
+    readonly IApplicationEvents applicationEvents;
+    readonly IMouseEventService mouseEventService;
+    readonly ISelectionService selectionService;
     readonly object syncRoot = new();
     private Rect SvgRect => screenService.SvgRect;
 
 
-    public PanZoomService(IScreenService screenService, IApplicationEvents applicationEvents)
+    public PanZoomService(
+        IScreenService screenService,
+        IApplicationEvents applicationEvents,
+        IMouseEventService mouseEventService,
+        ISelectionService selectionService)
     {
         this.screenService = screenService;
         this.applicationEvents = applicationEvents;
+        this.mouseEventService = mouseEventService;
+        this.selectionService = selectionService;
     }
 
 
@@ -42,8 +49,16 @@ class PanZoomService : IPanZoomService
     public double Zoom { get; set; } = 1;
     public double SvgZoom { get; set; } = 1;
 
+    public Task InitAsync()
+    {
+        mouseEventService.MouseWheel += OnMouseWheel;
+        mouseEventService.MouseMove += OnMouseMove;
 
-    public void OnMouseWheel(MouseEvent e)
+        return Task.CompletedTask;
+    }
+
+
+    private void OnMouseWheel(MouseEvent e)
     {
         lock (syncRoot)
         {
@@ -73,6 +88,8 @@ class PanZoomService : IPanZoomService
 
     public void OnMouseMove(MouseEvent e)
     {
+        if (!e.IsLeftButton || selectionService.IsSelected) return;
+
         lock (syncRoot)
         {
             var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
