@@ -1,3 +1,5 @@
+using System.Reflection.Metadata.Ecma335;
+
 namespace Dependinator.Models;
 
 
@@ -184,7 +186,8 @@ class SvgService : ISvgService
     var s = node.StrokeWidth;
     var (x, y) = (parentCanvasRect.X, parentCanvasRect.Y);
     var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
-    var (ix, iy, iw, ih) = (x, y + h + 1 * parentZoom, SmallIconSize * parentZoom, SmallIconSize * parentZoom);
+    var iSize = SmallIconSize * parentZoom;
+    var (ix, iy, iw, ih) = (x, y + h + 1 * parentZoom, iSize, iSize);
 
     var (tx, ty) = (x + (SmallIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
     var fz = FontSize * parentZoom;
@@ -211,7 +214,35 @@ class SvgService : ISvgService
             """;
   }
 
-  private static string SelectedNodeSvg(Node node, double x, double y, double w, double h)
+  static string SelectedNodeSvg(Node node, double x, double y, double w, double h)
+  {
+    if (!node.IsSelected) return "";
+
+    return
+      ToolBar(node, x, y, w, y) + "\n" +
+      SelectedResizeSvg(node, x, y, w, h);
+  }
+
+  private static string ToolBar(Node node, double x, double y, double w, double h)
+  {
+    var icon = node.Type.IconName;
+    var iSize = 28;
+    var (ix, iy, iw, ih) = (x + 10, y - 50, iSize, iSize);
+    var ic = Color.ToolBarIcon;
+    var ib = Color.ToolBarIconBorder;
+    var iBack = Color.ToolBarIconBackground;
+    var m = 2;
+
+    return
+    $"""
+      <rect x="{ix - m}" y="{iy - m}" width="{iw:0.##}" height="{ih:0.##}" stroke-width="1" rx="2" fill="{iBack}" stroke="{ib}"/>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="{ic}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" viewBox="0 0 {iw} {ih}"> 
+        {MudBlazor.Icons.Material.Outlined.Menu}
+      </svg>
+    """;
+  }
+
+  static string SelectedResizeSvg(Node node, double x, double y, double w, double h)
   {
     string c = Color.Highlight;
     const int s = 8;
@@ -224,8 +255,6 @@ class SvgService : ISvgService
 
     const int tt = 12;
     const int t = tt * 3;
-
-    if (!node.IsSelected) return "";
 
     return
         $"""
@@ -263,6 +292,7 @@ class SvgService : ISvgService
         </g>
         """;
   }
+
 
 
   static string GetLineSvg(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
