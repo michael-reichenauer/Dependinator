@@ -171,7 +171,7 @@ class NodeEditService : INodeEditService
             var zoom = node.GetZoom() * Zoom;
             var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
 
-            Log.Info("Resize", mouseDownSubId);
+            var oldBoundary = node.Boundary;
             node.Boundary = mouseDownSubId switch
             {
                 "tl" => node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy, Width = node.Boundary.Width - dx, Height = node.Boundary.Height - dy },
@@ -186,7 +186,14 @@ class NodeEditService : INodeEditService
                 "br" => node.Boundary with { X = node.Boundary.X, Y = node.Boundary.Y, Width = node.Boundary.Width + dx, Height = node.Boundary.Height + dy },
 
                 _ => node.Boundary
+            };
+            var newBoundary = node.Boundary;
 
+            // Adjust container offest to ensure that children stay in place
+            node.ContainerOffset = node.ContainerOffset with
+            {
+                X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
+                Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y)
             };
         });
     }

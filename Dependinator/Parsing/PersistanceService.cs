@@ -92,6 +92,8 @@ class PersistenceService : IPersistenceService
         {
             X = node.Boundary != Rect.None ? node.Boundary.X : null,
             Y = node.Boundary != Rect.None ? node.Boundary.Y : null,
+            OffsetX = node.ContainerOffset != Pos.None ? node.ContainerOffset.X : null,
+            OffsetY = node.ContainerOffset != Pos.None ? node.ContainerOffset.Y : null,
             Width = node.Boundary != Rect.None ? node.Boundary.Width : null,
             Height = node.Boundary != Rect.None ? node.Boundary.Height : null,
             Zoom = node.ContainerZoom != Models.Node.DefaultContainerZoom ? node.ContainerZoom : null,

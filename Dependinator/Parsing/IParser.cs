@@ -39,6 +39,8 @@ record Node(string Name, string ParentName, NodeType Type, string? Description) 
     public double? Width { get; init; }
     public double? Height { get; init; }
     public double? Zoom { get; init; }
+    public double? OffsetX { get; init; }
+    public double? OffsetY { get; init; }
     public string? Color { get; init; }
     public string? Background { get; init; }
 
