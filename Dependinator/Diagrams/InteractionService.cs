@@ -13,7 +13,7 @@ interface IInteractionService
 [Scoped]
 class InteractionService : IInteractionService
 {
-    readonly IMouseEventService mouseEventService;
+    readonly IPointerEventService mouseEventService;
     readonly IPanZoomService panZoomService;
     readonly INodeEditService nodeEditService;
     readonly IApplicationEvents applicationEvents;
@@ -32,7 +32,7 @@ class InteractionService : IInteractionService
 
 
     public InteractionService(
-        IMouseEventService mouseEventService,
+        IPointerEventService mouseEventService,
         IPanZoomService panZoomService,
         INodeEditService nodeEditService,
         IApplicationEvents applicationEvents,
@@ -53,22 +53,22 @@ class InteractionService : IInteractionService
 
     public Task InitAsync()
     {
-        mouseEventService.LeftClick += OnClick;
-        mouseEventService.LeftDblClick += OnDblClick;
-        mouseEventService.MouseMove += OnMouseMove;
-        mouseEventService.MouseDown += OnMouseDown;
-        mouseEventService.MouseUp += OnMouseUp;
-        mouseEventService.MouseWheel += OnMouseWheel;
+        mouseEventService.Click += OnClick;
+        mouseEventService.DblClick += OnDblClick;
+        mouseEventService.PointerMove += OnMouseMove;
+        mouseEventService.PointerDown += OnMouseDown;
+        mouseEventService.PointerUp += OnMouseUp;
+        mouseEventService.Wheel += OnMouseWheel;
 
         return Task.CompletedTask;
     }
 
-    void OnMouseWheel(MouseEvent e)
+    void OnMouseWheel(PointerEvent e)
     {
         panZoomService.Zoom(e);
     }
 
-    void OnClick(MouseEvent e)
+    void OnClick(PointerEvent e)
     {
         Log.Info("mouse click", e.TargetId);
         (string nodeId, string subId) = NodeId.ParseString(e.TargetId);
@@ -76,13 +76,13 @@ class InteractionService : IInteractionService
         selectionService.Select(nodeId);
     }
 
-    void OnDblClick(MouseEvent e)
+    void OnDblClick(PointerEvent e)
     {
         Log.Info($"OnDoubleClick {e.Type}");
     }
 
 
-    void OnMouseDown(MouseEvent e)
+    void OnMouseDown(PointerEvent e)
     {
         moveTimerRunning = true;
         moveTimer.Change(MoveDelay, Timeout.Infinite);
@@ -92,7 +92,7 @@ class InteractionService : IInteractionService
     }
 
 
-    void OnMouseMove(MouseEvent e)
+    void OnMouseMove(PointerEvent e)
     {
         if (!e.IsLeftButton) return;
 
@@ -112,7 +112,7 @@ class InteractionService : IInteractionService
     }
 
 
-    void OnMouseUp(MouseEvent e)
+    void OnMouseUp(PointerEvent e)
     {
         mouseDownId = "";
         mouseDownSubId = "";

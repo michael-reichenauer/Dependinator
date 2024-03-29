@@ -8,8 +8,8 @@ interface IPanZoomService
 {
     void PanZoomToFit(Rect bounds, double maxZoom = 1);
     void PanZoom(Rect viewRect, double zoom);
-    void Zoom(MouseEvent e);
-    void Pan(MouseEvent e);
+    void Zoom(PointerEvent e);
+    void Pan(PointerEvent e);
 }
 
 
@@ -38,7 +38,7 @@ class PanZoomService : IPanZoomService
     }
 
 
-    public void Zoom(MouseEvent e)
+    public void Zoom(PointerEvent e)
     {
         modelService.UpdateMode(m =>
         {
@@ -64,7 +64,7 @@ class PanZoomService : IPanZoomService
     }
 
 
-    public void Pan(MouseEvent e)
+    public void Pan(PointerEvent e)
     {
         modelService.UpdateMode(m =>
        {

@@ -4,37 +4,36 @@ using Microsoft.JSInterop;
 
 namespace Dependinator.Utils.UI;
 
-interface IMouseEventService
+interface IPointerEventService
 {
-
-    event Action<MouseEvent> MouseWheel;
-    event Action<MouseEvent> MouseMove;
-    event Action<MouseEvent> MouseDown;
-    event Action<MouseEvent> MouseUp;
-    event Action<MouseEvent> LeftClick;
-    event Action<MouseEvent> LeftDblClick;
+    event Action<PointerEvent> Wheel;
+    event Action<PointerEvent> PointerMove;
+    event Action<PointerEvent> PointerDown;
+    event Action<PointerEvent> PointerUp;
+    event Action<PointerEvent> Click;
+    event Action<PointerEvent> DblClick;
 
     Task InitAsync();
 }
 
 
 [Scoped]
-class MouseEventService : IMouseEventService
+class PointerEventService : IPointerEventService
 {
+    readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInterop;
-    private readonly IApplicationEvents applicationEvents;
+
     const int ClickDelay = 300;
     const int ClickTimeout = 500;
 
     readonly Timer clickTimer;
+    readonly Dictionary<int, PointerEvent> activePointers = [];
     bool timerRunning = false;
-    MouseEvent leftMouseDown = new();
-    DateTime leftMouseDownTime = DateTime.MinValue;
-
-    Dictionary<int, MouseEvent> activePointers = [];
+    PointerEvent pointerDown = new();
+    DateTime pointerDownTime = DateTime.MinValue;
 
 
-    public MouseEventService(
+    public PointerEventService(
         IJSInterop jSInterop,
         IApplicationEvents applicationEvents)
     {
@@ -43,12 +42,14 @@ class MouseEventService : IMouseEventService
         this.applicationEvents = applicationEvents;
     }
 
-    public event Action<MouseEvent> MouseWheel = null!;
-    public event Action<MouseEvent> MouseMove = null!;
-    public event Action<MouseEvent> MouseDown = null!;
-    public event Action<MouseEvent> MouseUp = null!;
-    public event Action<MouseEvent> LeftClick = null!;
-    public event Action<MouseEvent> LeftDblClick = null!;
+
+    public event Action<PointerEvent> Wheel = null!;
+    public event Action<PointerEvent> PointerMove = null!;
+    public event Action<PointerEvent> PointerDown = null!;
+    public event Action<PointerEvent> PointerUp = null!;
+    public event Action<PointerEvent> Click = null!;
+    public event Action<PointerEvent> DblClick = null!;
+
 
     public async Task InitAsync()
     {
@@ -64,7 +65,7 @@ class MouseEventService : IMouseEventService
 
 
     [JSInvokable]
-    public ValueTask MouseEventCallback(MouseEvent e)
+    public ValueTask MouseEventCallback(PointerEvent e)
     {
         // Log.Info($"MouseEventCallback: '{e.ToJson()}'");
         switch (e.Type)
@@ -78,7 +79,7 @@ class MouseEventService : IMouseEventService
 
 
     [JSInvokable]
-    public ValueTask PointerEventCallback(MouseEvent e)
+    public ValueTask PointerEventCallback(PointerEvent e)
     {
         // Log.Info($"PointerEventCallback: {e.Time} {e.Type} {e.PointerId} {e.PointerType} on {e.TargetId}'");
         switch (e.Type)
@@ -93,9 +94,9 @@ class MouseEventService : IMouseEventService
         return ValueTask.CompletedTask;
     }
 
-    void OnMouseWheelEvent(MouseEvent e) => MouseWheel?.Invoke(e);
+    void OnMouseWheelEvent(PointerEvent e) => Wheel?.Invoke(e);
 
-    void OnPointerDownEvent(MouseEvent e)
+    void OnPointerDownEvent(PointerEvent e)
     {
         if (activePointers.Count == 1 && e.PointerId != activePointers.Keys.First())
         {
@@ -114,22 +115,22 @@ class MouseEventService : IMouseEventService
             activePointers[e.PointerId] = e;
         }
 
-        MouseDown?.Invoke(e);
+        PointerDown?.Invoke(e);
 
         if (e.Button == 0)
         {
-            leftMouseDownTime = DateTime.UtcNow;
-            leftMouseDown = e;
+            pointerDownTime = DateTime.UtcNow;
+            pointerDown = e;
         }
     }
 
-    void OnPointerMoveEvent(MouseEvent e)
+    void OnPointerMoveEvent(PointerEvent e)
     {
         // Log.Info("Pointermove", pointerDowns.Count, e.Button, e.Type);
 
         if (activePointers.Count == 1)
         {
-            MouseMove?.Invoke(e);
+            PointerMove?.Invoke(e);
         }
         else if (activePointers.Count == 2)
         {
@@ -155,21 +156,21 @@ class MouseEventService : IMouseEventService
 
             var weelEvent = e with { Type = "wheel", DeltaY = delta, OffsetX = centerX, OffsetY = centerY };
 
-            MouseWheel?.Invoke(weelEvent);
+            Wheel?.Invoke(weelEvent);
         }
     }
 
 
-    void OnPoinerUpEvent(MouseEvent e)
+    void OnPoinerUpEvent(PointerEvent e)
     {
         activePointers.Remove(e.PointerId);
 
-        MouseUp?.Invoke(e);
+        PointerUp?.Invoke(e);
 
         if (e.Button == 0 &&
-            Math.Abs(e.OffsetX - leftMouseDown.OffsetX) < 5 &&
-            Math.Abs(e.OffsetY - leftMouseDown.OffsetY) < 5
-            && (DateTime.UtcNow - leftMouseDownTime).TotalMilliseconds < ClickTimeout)
+            Math.Abs(e.OffsetX - pointerDown.OffsetX) < 5 &&
+            Math.Abs(e.OffsetY - pointerDown.OffsetY) < 5
+            && (DateTime.UtcNow - pointerDownTime).TotalMilliseconds < ClickTimeout)
         {
             Log.Info("on click");
             OnLeftClickEvent(e);
@@ -181,20 +182,20 @@ class MouseEventService : IMouseEventService
         timerRunning = false;
     }
 
-    void OnLeftClickEvent(MouseEvent e)
+    void OnLeftClickEvent(PointerEvent e)
     {
-        leftMouseDown = e;
+        pointerDown = e;
         if (!timerRunning)
         {   // This is the first click, start the timer
             timerRunning = true;
-            LeftClick?.Invoke(leftMouseDown);
+            Click?.Invoke(pointerDown);
             clickTimer.Change(ClickDelay, Timeout.Infinite);
         }
         else
         {
             clickTimer.Change(Timeout.Infinite, Timeout.Infinite);
             timerRunning = false;
-            LeftDblClick?.Invoke(e);
+            DblClick?.Invoke(e);
             activePointers.Clear();
         }
     }

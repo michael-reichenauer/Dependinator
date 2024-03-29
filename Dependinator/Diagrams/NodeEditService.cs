@@ -5,8 +5,8 @@ namespace Dependinator.Diagrams;
 
 interface INodeEditService
 {
-    void MoveSelectedNode(MouseEvent e, double zoom, string mouseDownId);
-    void ResizeSelectedNode(MouseEvent e, double zoom, string mouseDownId, string mouseDownSubId);
+    void MoveSelectedNode(PointerEvent e, double zoom, string mouseDownId);
+    void ResizeSelectedNode(PointerEvent e, double zoom, string mouseDownId, string mouseDownSubId);
 }
 
 [Scoped]
@@ -19,7 +19,7 @@ class NodeEditService : INodeEditService
         this.modelService = modelService;
     }
 
-    public void MoveSelectedNode(MouseEvent e, double zoom, string mouseDownId)
+    public void MoveSelectedNode(PointerEvent e, double zoom, string mouseDownId)
     {
         modelService.TryUpdateNode(mouseDownId, node =>
         {
@@ -30,7 +30,7 @@ class NodeEditService : INodeEditService
         });
     }
 
-    public void ResizeSelectedNode(MouseEvent e, double zoom, string mouseDownId, string mouseDownSubId)
+    public void ResizeSelectedNode(PointerEvent e, double zoom, string mouseDownId, string mouseDownSubId)
     {
         modelService.TryUpdateNode(mouseDownId, node =>
         {

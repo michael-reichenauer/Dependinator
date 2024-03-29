@@ -14,14 +14,14 @@ interface IInitService
 class InitService : IInitService
 {
     readonly IScreenService screenService;
-    readonly IMouseEventService mouseEventService;
+    readonly IPointerEventService mouseEventService;
     readonly IRecentModelsService recentModelsService;
     readonly IDatabase database;
     readonly ICanvasService canvasService;
 
     public InitService(
         IScreenService screenService,
-        IMouseEventService mouseEventService,
+        IPointerEventService mouseEventService,
         IRecentModelsService recentModelsService,
         IDatabase database,
         ICanvasService canvasService)
