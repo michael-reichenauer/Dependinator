@@ -19,8 +19,9 @@ echo "Installing xsel for copy selection ..."
 sudo apt-get install -y xsel 1>/dev/null
 
 echo ""
-echo "Install gmd ..."
+echo "Installing gmd ..."
 curl curl -sL https://raw.githubusercontent.com/michael-reichenauer/gmd/main/install.sh | bash
 
 echo ""
+echo "Please restart container to enable gmd"
 echo "Done"

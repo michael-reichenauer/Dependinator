@@ -30,6 +30,7 @@ class PersistenceService : IPersistenceService
         {
             Path = model.Path,
             Zoom = model.Zoom,
+            Offset = model.Offset,
             ViewRect = model.ViewRect,
             Nodes = model.Items.Values.OfType<Models.Node>().Select(ToNode).ToList(),
             Links = model.Items.Values.OfType<Models.Link>().Select(ToLink).ToList(),

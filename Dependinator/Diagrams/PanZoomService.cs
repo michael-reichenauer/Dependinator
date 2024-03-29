@@ -6,71 +6,51 @@ namespace Dependinator.Diagrams;
 
 interface IPanZoomService
 {
-    Pos Offset { get; set; }
-    double Zoom { get; set; }
-    double SvgZoom { get; set; }
-
-    Task InitAsync();
     void PanZoomToFit(Rect bounds, double maxZoom = 1);
     void PanZoom(Rect viewRect, double zoom);
+    void Zoom(PointerEvent e);
+    void Pan(PointerEvent e);
 }
 
 
 [Scoped]
 class PanZoomService : IPanZoomService
 {
+    readonly IScreenService screenService;
+    readonly IApplicationEvents applicationEvents;
+    readonly IModelService modelService;
+    private Rect SvgRect => screenService.SvgRect;
+
     const double MaxZoom = 10;
     const double Margin = 10;
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
 
-    readonly IScreenService screenService;
-    readonly IApplicationEvents applicationEvents;
-    readonly IMouseEventService mouseEventService;
-    readonly ISelectionService selectionService;
-    readonly object syncRoot = new();
-    private Rect SvgRect => screenService.SvgRect;
-
 
     public PanZoomService(
         IScreenService screenService,
         IApplicationEvents applicationEvents,
-        IMouseEventService mouseEventService,
-        ISelectionService selectionService)
+        IModelService modelService)
     {
         this.screenService = screenService;
         this.applicationEvents = applicationEvents;
-        this.mouseEventService = mouseEventService;
-        this.selectionService = selectionService;
+        this.modelService = modelService;
     }
 
 
-    public Pos Offset { get; set; } = Pos.None;
-    public double Zoom { get; set; } = 1;
-    public double SvgZoom { get; set; } = 1;
-
-    public Task InitAsync()
+    public void Zoom(PointerEvent e)
     {
-        mouseEventService.MouseWheel += OnMouseWheel;
-        mouseEventService.MouseMove += OnMouseMove;
-
-        return Task.CompletedTask;
-    }
-
-
-    private void OnMouseWheel(MouseEvent e)
-    {
-        lock (syncRoot)
+        modelService.UpdateMode(m =>
         {
             if (e.DeltaY == 0) return;
             var (mx, my) = (e.OffsetX, e.OffsetY);
 
             var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
-            double newZoom = (e.DeltaY > 0) ? Zoom * speed : Zoom * (1 / speed);
+            double newZoom = (e.DeltaY > 0) ? m.Zoom * speed : m.Zoom * (1 / speed);
             if (newZoom > MaxZoom) newZoom = MaxZoom;
 
-            double svgX = mx * Zoom + Offset.X;
-            double svgY = my * Zoom + Offset.Y;
+            double svgX = mx * m.Zoom + m.Offset.X;
+            double svgY = my * m.Zoom + m.Offset.Y;
 
             var w = SvgRect.Width * newZoom;
             var h = SvgRect.Height * newZoom;
@@ -78,43 +58,35 @@ class PanZoomService : IPanZoomService
             var x = svgX - mx / SvgRect.Width * w;
             var y = svgY - my / SvgRect.Height * h;
 
-            Offset = new Pos(x, y);
-            Zoom = newZoom;
-        }
-
-        applicationEvents.TriggerSaveNeeded();
+            m.Offset = new Pos(x, y);
+            m.Zoom = newZoom;
+        });
     }
 
 
-    public void OnMouseMove(MouseEvent e)
+    public void Pan(PointerEvent e)
     {
-        if (!e.IsLeftButton || selectionService.IsSelected) return;
-
-        lock (syncRoot)
-        {
-            var (dx, dy) = (e.MovementX * Zoom, e.MovementY * Zoom);
-            Offset = new Pos(Offset.X - dx, Offset.Y - dy);
-        }
-
-        applicationEvents.TriggerSaveNeeded();
+        modelService.UpdateMode(m =>
+       {
+           var (dx, dy) = (e.MovementX * m.Zoom, e.MovementY * m.Zoom);
+           m.Offset = new Pos(m.Offset.X - dx, m.Offset.Y - dy);
+       });
     }
 
 
     public void PanZoom(Rect viewRect, double zoom)
     {
-        lock (syncRoot)
+        modelService.UpdateMode(m =>
         {
-            Offset = new Pos(viewRect.X, viewRect.Y);
-            Zoom = zoom;
-        }
-
-        applicationEvents.TriggerSaveNeeded();
+            m.Offset = new Pos(viewRect.X, viewRect.Y);
+            m.Zoom = zoom;
+        });
     }
 
 
     public void PanZoomToFit(Rect totalBounds, double maxZoom = 1)
     {
-        lock (syncRoot)
+        modelService.UpdateMode(m =>
         {
             Rect b = totalBounds;
             b = new Rect(b.X, b.Y, b.Width, b.Height);
@@ -132,12 +104,8 @@ class PanZoomService : IPanZoomService
             var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
             var y = (b.Height < h) ? b.Y - (h - b.Height) / 2 : b.Y;
 
-            Offset = new Pos(x, y);
-            Zoom = newZoom;
-        }
-
-        applicationEvents.TriggerSaveNeeded();
+            m.Offset = new Pos(x, y);
+            m.Zoom = newZoom;
+        });
     }
 }
-
-

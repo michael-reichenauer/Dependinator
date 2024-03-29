@@ -11,7 +11,7 @@ namespace Dependinator.Diagrams;
 partial class Canvas : ComponentBase, IUIComponent
 {
     [Inject] ICanvasService srv { get; init; } = null!;
-    [Inject] IMouseEventService mouseEventService { get; init; } = null!;
+    [Inject] IPointerEventService mouseEventService { get; init; } = null!;
     [Inject] IJSInterop jSInterop { get; init; } = null!;
     [Inject] IApplicationEvents applicationEvents { get; init; } = null!;
     [Inject] IDatabase database { get; init; } = null!;
@@ -59,7 +59,10 @@ partial class Canvas : ComponentBase, IUIComponent
 
     protected async void LoadFiles(InputFileChangeEventArgs e)
     {
-        await srv.LoadFilesAsync(e.GetMultipleFiles(1000));
+        var files = e.GetMultipleFiles(1000);
+        if (!files.Any()) return;
+
+        await srv.LoadFilesAsync(files);
     }
 }
 
