@@ -10,6 +10,21 @@ interface IInteractionService
     Task InitAsync();
 }
 
+record PointerId(string Id, string SubId)
+{
+    public static readonly PointerId Empty = new("", "");
+
+    internal static PointerId Parse(string targetId)
+    {
+        var parts = targetId.Split('.');
+
+        var id = parts[0];
+        var subId = parts.Length > 1 ? parts[1] : "";
+        return new(id, subId);
+    }
+}
+
+
 [Scoped]
 class InteractionService : IInteractionService
 {
@@ -25,8 +40,7 @@ class InteractionService : IInteractionService
     readonly Timer moveTimer;
     bool moveTimerRunning = false;
     bool isMoving = false;
-    string mouseDownId = "";
-    string mouseDownSubId = "";
+    PointerId mouseDownId = PointerId.Empty;
 
     double Zoom => modelService.Zoom;
 
@@ -38,7 +52,6 @@ class InteractionService : IInteractionService
         IApplicationEvents applicationEvents,
         ISelectionService selectionService,
         IModelService modelService)
-
     {
         this.mouseEventService = mouseEventService;
         this.panZoomService = panZoomService;
@@ -49,7 +62,9 @@ class InteractionService : IInteractionService
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
+
     public string Cursor { get; private set; } = "default";
+
 
     public Task InitAsync()
     {
@@ -63,17 +78,19 @@ class InteractionService : IInteractionService
         return Task.CompletedTask;
     }
 
+
     void OnMouseWheel(PointerEvent e)
     {
         panZoomService.Zoom(e);
     }
 
+
     void OnClick(PointerEvent e)
     {
         Log.Info("mouse click", e.TargetId);
-        (string nodeId, string subId) = NodeId.ParseString(e.TargetId);
+        var targetId = PointerId.Parse(e.TargetId);
 
-        selectionService.Select(nodeId);
+        selectionService.Select(targetId);
     }
 
     void OnDblClick(PointerEvent e)
@@ -86,9 +103,7 @@ class InteractionService : IInteractionService
     {
         moveTimerRunning = true;
         moveTimer.Change(MoveDelay, Timeout.Infinite);
-        (string id, string subId) = NodeId.ParseString(e.TargetId);
-        mouseDownId = id;
-        mouseDownSubId = subId;
+        mouseDownId = PointerId.Parse(e.TargetId);
     }
 
 
@@ -96,13 +111,13 @@ class InteractionService : IInteractionService
     {
         if (!e.IsLeftButton) return;
 
-        if (mouseDownId != "" && mouseDownSubId != "")
+        if (mouseDownId != PointerId.Empty && mouseDownId.SubId != "")
         {
-            nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId, mouseDownSubId);
+            nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
             return;
         }
 
-        if (mouseDownId == selectionService.SelectedId && selectionService.IsNodeMovable(Zoom) && mouseDownSubId == "")
+        if (mouseDownId == selectionService.SelectedId && selectionService.IsNodeMovable(Zoom) && mouseDownId.SubId == "")
         {
             nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
             return;
@@ -114,8 +129,7 @@ class InteractionService : IInteractionService
 
     void OnMouseUp(PointerEvent e)
     {
-        mouseDownId = "";
-        mouseDownSubId = "";
+        mouseDownId = PointerId.Empty;
 
         if (moveTimerRunning)
         {

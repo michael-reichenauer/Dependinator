@@ -8,11 +8,11 @@ namespace Dependinator;
 interface ISelectionService
 {
     bool IsSelected { get; }
-    string SelectedId { get; }
+    PointerId SelectedId { get; }
 
     bool IsNodeMovable(double zoom);
     bool IsNodeSelected(string mouseDownId);
-    void Select(string nodeId);
+    void Select(PointerId targetId);
     void Unselect();
 }
 
@@ -27,7 +27,7 @@ class SelectionService : ISelectionService
     readonly IApplicationEvents applicationEvents;
     readonly IScreenService screenService;
 
-    string selectedId = "";
+    PointerId selectedId = PointerId.Empty;
 
     public SelectionService(
         IModelService modelService,
@@ -39,20 +39,20 @@ class SelectionService : ISelectionService
         this.screenService = screenService;
     }
 
-    public string SelectedId => selectedId;
-    public bool IsSelected => selectedId != "";
+    public PointerId SelectedId => selectedId;
+    public bool IsSelected => selectedId != PointerId.Empty;
 
-    public bool IsNodeSelected(string nodeId) => IsSelected && selectedId == nodeId;
+    public bool IsNodeSelected(string nodeId) => IsSelected && selectedId.Id == nodeId;
 
-    public void Select(string nodeId)
+    public void Select(PointerId targetId)
     {
-        if (selectedId == nodeId) return;
+        if (IsSelected && selectedId.Id == targetId.Id) return;
 
-        if (selectedId != "") Unselect(); // Clicked on some other node
+        if (IsSelected) Unselect(); // Clicked on some other node
 
-        if (modelService.TryUpdateNode(nodeId, node => node.IsSelected = true))
+        if (modelService.TryUpdateNode(targetId.Id, node => node.IsSelected = true))
         {
-            selectedId = nodeId;
+            selectedId = targetId;
             applicationEvents.TriggerUIStateChanged();
         }
     }
@@ -61,18 +61,18 @@ class SelectionService : ISelectionService
     {
         if (!IsSelected) return;
 
-        modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
-        selectedId = "";
+        modelService.TryUpdateNode(selectedId.Id, node => node.IsSelected = false);
+        selectedId = PointerId.Empty;
         applicationEvents.TriggerUIStateChanged();
     }
 
     public bool IsNodeMovable(double zoom)
     {
-        if (selectedId == "") return false;
-        if (!modelService.TryGetNode(selectedId, out var node)) return false;
+        if (!IsSelected) return false;
+        if (!modelService.TryGetNode(selectedId.Id, out var node)) return false;
 
         var v = screenService.SvgRect;
-        var nodeZoom = (1 / node.GetZoom());
+        var nodeZoom = 1 / node.GetZoom();
         var vx = (node.Boundary.Width * nodeZoom) / (v.Width * zoom);
         var vy = (node.Boundary.Height * nodeZoom) / (v.Height * zoom);
         var maxCovers = Math.Max(vx, vy);

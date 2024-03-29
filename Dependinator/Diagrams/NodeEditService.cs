@@ -5,8 +5,8 @@ namespace Dependinator.Diagrams;
 
 interface INodeEditService
 {
-    void MoveSelectedNode(PointerEvent e, double zoom, string mouseDownId);
-    void ResizeSelectedNode(PointerEvent e, double zoom, string mouseDownId, string mouseDownSubId);
+    void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
+    void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
 }
 
 [Scoped]
@@ -19,9 +19,9 @@ class NodeEditService : INodeEditService
         this.modelService = modelService;
     }
 
-    public void MoveSelectedNode(PointerEvent e, double zoom, string mouseDownId)
+    public void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
-        modelService.TryUpdateNode(mouseDownId, node =>
+        modelService.TryUpdateNode(pointerId.Id, node =>
         {
             var nodeZoom = node.GetZoom() * zoom;
             var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
@@ -30,15 +30,15 @@ class NodeEditService : INodeEditService
         });
     }
 
-    public void ResizeSelectedNode(PointerEvent e, double zoom, string mouseDownId, string mouseDownSubId)
+    public void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
-        modelService.TryUpdateNode(mouseDownId, node =>
+        modelService.TryUpdateNode(pointerId.Id, node =>
         {
             var nodeZoom = node.GetZoom() * zoom;
             var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
 
             var oldBoundary = node.Boundary;
-            node.Boundary = mouseDownSubId switch
+            node.Boundary = pointerId.SubId switch
             {
                 "tl" => node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy, Width = node.Boundary.Width - dx, Height = node.Boundary.Height - dy },
                 "tm" => node.Boundary with { Y = node.Boundary.Y + dy, Height = node.Boundary.Height - dy },
