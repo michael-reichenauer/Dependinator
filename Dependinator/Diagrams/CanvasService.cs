@@ -19,6 +19,9 @@ interface ICanvasService
     string TitleInfo { get; }
     string DiagramName { get; }
     IReadOnlyList<string> RecentModelPaths { get; }
+    bool IsNodeSelected { get; }
+
+    Pos SelectedNodePosition { get; }
 
     Task InitAsync();
     void OpenFiles();
@@ -43,7 +46,7 @@ class CanvasService : ICanvasService
     readonly IJSInterop jSInteropService;
     readonly IFileService fileService;
     readonly IRecentModelsService recentModelsService;
-    private readonly INodeEditService nodeEditService;
+    readonly IInteractionService interactionService;
 
     public CanvasService(
         IScreenService screenService,
@@ -53,7 +56,7 @@ class CanvasService : ICanvasService
         IJSInterop jSInteropService,
         IFileService fileService,
         IRecentModelsService recentModelsService,
-        INodeEditService nodeEditService)
+        IInteractionService interactionService)
     {
         this.screenService = screenService;
         this.panZoomService = panZoomService;
@@ -62,7 +65,7 @@ class CanvasService : ICanvasService
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
         this.recentModelsService = recentModelsService;
-        this.nodeEditService = nodeEditService;
+        this.interactionService = interactionService;
     }
 
     public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
@@ -75,20 +78,21 @@ class CanvasService : ICanvasService
     public string TileViewBox { get; private set; } = "";
     public Pos TileOffset { get; private set; } = Pos.Zero;
     public string Content { get; private set; } = "";
-    public string Cursor => nodeEditService.Cursor;
+    public string Cursor => interactionService.Cursor;
 
     public Rect SvgRect => screenService.SvgRect;
-    public Pos Offset => panZoomService.Offset;
-    public double Zoom => panZoomService.Zoom;
+    public Pos Offset => modelService.Offset;
+    public double Zoom => modelService.Zoom;
     public double ActualZoom => Zoom / LevelZoom;
+    public bool IsNodeSelected => interactionService.IsNodeSelected;
+    public Pos SelectedNodePosition => interactionService.SelectedNodePosition;
 
 
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";
 
     public async Task InitAsync()
     {
-        await nodeEditService.InitAsync();
-        await panZoomService.InitAsync();
+        await interactionService.InitAsync();
     }
 
     public async void InitialShow()
@@ -188,7 +192,6 @@ class CanvasService : ICanvasService
         LevelZoom = tile.Zoom;
         var tileViewRect = tile.Key.GetViewRect();
         TileOffset = new Pos(-tile.Offset.X + tileViewRect.X, -tile.Offset.Y + tileViewRect.Y);
-        panZoomService.SvgZoom = tile.Zoom;
 
         TileKeyText = $"{tile.Key}"; // Log info
         TileViewBox = $"{tileViewRect}"; // Log info

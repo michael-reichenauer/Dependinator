@@ -8,6 +8,7 @@ interface IModel
     Node Root { get; }
     Rect ViewRect { get; set; }
     double Zoom { get; set; }
+    Pos Offset { get; set; }
     Tiles Tiles { get; }
     IDictionary<Id, IItem> Items { get; }   // Ta bort
     bool IsSaving { get; set; }
@@ -43,6 +44,7 @@ class Model : IModel
 
     public Rect ViewRect { get; set; } = Rect.None;
     public double Zoom { get; set; } = 0;
+    public Pos Offset { get; set; } = Pos.None;
 
     public Tiles Tiles { get; } = new();
 

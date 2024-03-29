@@ -11,7 +11,7 @@ namespace Dependinator.Diagrams;
 partial class Canvas : ComponentBase, IUIComponent
 {
     [Inject] ICanvasService srv { get; init; } = null!;
-    [Inject] IMouseEventService mouseEventService { get; init; } = null!;
+    [Inject] IPointerEventService mouseEventService { get; init; } = null!;
     [Inject] IJSInterop jSInterop { get; init; } = null!;
     [Inject] IApplicationEvents applicationEvents { get; init; } = null!;
     [Inject] IDatabase database { get; init; } = null!;
@@ -38,6 +38,11 @@ partial class Canvas : ComponentBase, IUIComponent
     string ViewBox => srv.SvgViewBox;
     static string IconDefs => Icon.IconDefs;
 
+    string NodeToolBarVisible => srv.IsNodeSelected ? "visible" : "invisible";
+    string NodeToolBarPosition => srv.IsNodeSelected ?
+        $"Position: fixed; left:{srv.SelectedNodePosition.X}px; top:{srv.SelectedNodePosition.Y - 55}px" :
+        "Position: fixed; left:0px; top:0px";
+
     string Cursor => srv.Cursor;
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
 
@@ -59,7 +64,10 @@ partial class Canvas : ComponentBase, IUIComponent
 
     protected async void LoadFiles(InputFileChangeEventArgs e)
     {
-        await srv.LoadFilesAsync(e.GetMultipleFiles(1000));
+        var files = e.GetMultipleFiles(1000);
+        if (!files.Any()) return;
+
+        await srv.LoadFilesAsync(files);
     }
 }
 

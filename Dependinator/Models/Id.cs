@@ -29,15 +29,6 @@ public record Id(string Value)
         return new string(chars);
 
     }
-
-    internal static (string id, string subId) ParseString(string targetId)
-    {
-        var parts = targetId.Split('.');
-
-        var id = parts[0];
-        var subId = parts.Length > 1 ? parts[1] : "";
-        return (id, subId);
-    }
 }
 
 public record NodeId : Id

@@ -42,17 +42,29 @@
 
     </MudAppBar>
 
-    <MudMessageBox @ref="mbox" Title="Remove Model" CancelText="Cancel">
-        <MessageContent>
-            Do you want to remove model?
-        </MessageContent>
-        <YesButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">
-                Remove</MudButton>
-        </YesButton>
-    </MudMessageBox>
 
     <MudMainContent>
+
+        <MudMessageBox @ref="mbox" Title="Remove Model" CancelText="Cancel">
+            <MessageContent>
+                Do you want to remove model?
+            </MessageContent>
+            <YesButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error"
+                    StartIcon="@Icons.Material.Filled.DeleteForever">
+                    Remove</MudButton>
+            </YesButton>
+        </MudMessageBox>
+
+        <MudButtonGroup Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined" Class="@NodeToolBarVisible"
+            Style="@NodeToolBarPosition">
+            <MudIconButton Icon="@Icons.Material.Outlined.Menu" />
+            <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" />
+            <MudToggleIconButton Icon="@Icons.Material.Outlined.Edit" Color="@Color.Primary"
+                ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Error" />
+        </MudButtonGroup>
+
+
         <div @ref="dropZoneElement" class="drop-zone">
             <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
             <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height"
@@ -67,6 +79,13 @@
                         stroke-width: 4px;
                         stroke-opacity: 1;
                     }
+
+                    .selectpoint:hover * {
+                        fill: #51b8fc;
+                        stroke-width: 1px;
+                        fill-opacity: 0.3;
+                    }
+
 
                     .hoverline:hover * {
                         stroke: #51b8fc;
