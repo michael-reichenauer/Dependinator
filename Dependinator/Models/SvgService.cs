@@ -1,3 +1,5 @@
+using System.Reflection.Metadata.Ecma335;
+
 namespace Dependinator.Models;
 
 
@@ -51,6 +53,19 @@ class SvgService : ISvgService
     return new Tile(tileKey, tileSvg, tileZoom, tileOffset);
   }
 
+  static string GetNodeContentSvg(Node node, Pos nodeCanvasPos, double zoom, Rect tileWithMargin)
+  {
+    if (node.IsChildrenLayoutRequired) NodeLayout.AdjustChildren(node);
+
+    var childrenZoom = zoom * node.ContainerZoom;
+
+    var childrenPos = new Pos(nodeCanvasPos.X + node.ContainerOffset.X * zoom, nodeCanvasPos.Y + node.ContainerOffset.Y * zoom);
+
+    return node.Children
+        .Select(n => GetNodeSvg(n, childrenPos, childrenZoom, tileWithMargin))
+        .Concat(GetNodeLinesSvg(node, childrenPos, zoom, childrenZoom))
+        .Join("\n");
+  }
 
   static string GetNodeSvg(Node node, Pos offset, double zoom, Rect tileWithMargin)
   {
@@ -65,19 +80,6 @@ class SvgService : ISvgService
 
     return
         GetNodeContainerSvg(node, nodeCanvasRect, zoom, GetNodeContentSvg(node, Pos.Zero, zoom, tileWithMargin));
-  }
-
-
-  static string GetNodeContentSvg(Node node, Pos nodeCanvasPos, double zoom, Rect tileWithMargin)
-  {
-    if (node.IsChildrenLayoutRequired) NodeLayout.AdjustChildren(node);
-
-    var childrenZoom = zoom * node.ContainerZoom;
-
-    return node.Children
-        .Select(n => GetNodeSvg(n, nodeCanvasPos, childrenZoom, tileWithMargin))
-        .Concat(GetNodeLinesSvg(node, nodeCanvasPos, zoom, childrenZoom))
-        .Join("\n");
   }
 
 
@@ -184,7 +186,8 @@ class SvgService : ISvgService
     var s = node.StrokeWidth;
     var (x, y) = (parentCanvasRect.X, parentCanvasRect.Y);
     var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
-    var (ix, iy, iw, ih) = (x, y + h + 1 * parentZoom, SmallIconSize * parentZoom, SmallIconSize * parentZoom);
+    var iSize = SmallIconSize * parentZoom;
+    var (ix, iy, iw, ih) = (x, y + h + 1 * parentZoom, iSize, iSize);
 
     var (tx, ty) = (x + (SmallIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
     var fz = FontSize * parentZoom;
@@ -211,7 +214,35 @@ class SvgService : ISvgService
             """;
   }
 
-  private static string SelectedNodeSvg(Node node, double x, double y, double w, double h)
+  static string SelectedNodeSvg(Node node, double x, double y, double w, double h)
+  {
+    if (!node.IsSelected) return "";
+
+    return
+      ToolBar(node, x, y, w, y) + "\n" +
+      SelectedResizeSvg(node, x, y, w, h);
+  }
+
+  private static string ToolBar(Node node, double x, double y, double w, double h)
+  {
+    var icon = node.Type.IconName;
+    var iSize = 28;
+    var (ix, iy, iw, ih) = (x + 10, y - 50, iSize, iSize);
+    var ic = Color.ToolBarIcon;
+    var ib = Color.ToolBarIconBorder;
+    var iBack = Color.ToolBarIconBackground;
+    var m = 2;
+
+    return
+    $"""
+      <rect x="{ix - m}" y="{iy - m}" width="{iw:0.##}" height="{ih:0.##}" stroke-width="1" rx="2" fill="{iBack}" stroke="{ib}"/>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="{ic}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" viewBox="0 0 {iw} {ih}"> 
+        {MudBlazor.Icons.Material.Outlined.Menu}
+      </svg>
+    """;
+  }
+
+  static string SelectedResizeSvg(Node node, double x, double y, double w, double h)
   {
     string c = Color.Highlight;
     const int s = 8;
@@ -224,8 +255,6 @@ class SvgService : ISvgService
 
     const int tt = 12;
     const int t = tt * 3;
-
-    if (!node.IsSelected) return "";
 
     return
         $"""
@@ -265,6 +294,7 @@ class SvgService : ISvgService
   }
 
 
+
   static string GetLineSvg(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
   {
     if (IsToLargeToBeSeen(childrenZoom)) return "";
@@ -275,21 +305,25 @@ class SvgService : ISvgService
     var (x1, y1) = (s.X + s.Width, s.Y + s.Height / 2);
     var (x2, y2) = (t.X, t.Y + t.Height / 2);
 
-    if (line.Source.Parent == line.Target)
-    {   // Child to parent (left of child to right of parent)
+    if (line.Target.Parent == line.Source)
+    {   // Parent source to child target (left of parent to right of child)
       if (IsToLargeToBeSeen(parentZoom)) return "";
-      (x1, y1) = (nodeCanvasPos.X + x1 * childrenZoom, nodeCanvasPos.Y + y1 * childrenZoom);
-
-      (x2, y2) = (nodeCanvasPos.X + t.Width * parentZoom, nodeCanvasPos.Y + t.Height / 2 * parentZoom);
-    }
-    else if (line.Target.Parent == line.Source)
-    {   // parent to child (left of parent to right of child)
-      if (IsToLargeToBeSeen(parentZoom)) return "";
-      (x1, y1) = (nodeCanvasPos.X, nodeCanvasPos.Y + s.Height / 2 * parentZoom);
+      var parent = line.Source;
+      (x1, y1) = (nodeCanvasPos.X - parent.ContainerOffset.X * parentZoom,
+        nodeCanvasPos.Y + s.Height / 2 * parentZoom - parent.ContainerOffset.Y * parentZoom);
       (x2, y2) = (nodeCanvasPos.X + x2 * childrenZoom, nodeCanvasPos.Y + y2 * childrenZoom);
     }
+    else if (line.Source.Parent == line.Target)
+    {   // Child source to parent target (left of child to right of parent)
+      if (IsToLargeToBeSeen(parentZoom)) return "";
+      var parent = line.Target;
+      (x1, y1) = (nodeCanvasPos.X + x1 * childrenZoom, nodeCanvasPos.Y + y1 * childrenZoom);
+
+      (x2, y2) = (nodeCanvasPos.X + t.Width * parentZoom - parent.ContainerOffset.X * parentZoom,
+      nodeCanvasPos.Y + t.Height / 2 * parentZoom - parent.ContainerOffset.Y * parentZoom);
+    }
     else
-    {   // Sibling to sibling (right of source to left of target)
+    {   // Sibling source to sibling target (right of source to left of target)
       (x1, y1) = (nodeCanvasPos.X + x1 * childrenZoom, nodeCanvasPos.Y + y1 * childrenZoom);
       (x2, y2) = (nodeCanvasPos.X + x2 * childrenZoom, nodeCanvasPos.Y + y2 * childrenZoom);
     }

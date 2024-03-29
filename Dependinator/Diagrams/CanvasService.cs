@@ -20,6 +20,7 @@ interface ICanvasService
     string DiagramName { get; }
     IReadOnlyList<string> RecentModelPaths { get; }
 
+    Task InitAsync();
     void OpenFiles();
     public void Remove();
     void Refresh();
@@ -35,10 +36,6 @@ interface ICanvasService
 [Scoped]
 class CanvasService : ICanvasService
 {
-    const double MinCover = 0.5;
-    const double MaxCover = 0.8;
-    const int MoveDelay = 300;
-
     readonly IScreenService screenService;
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
@@ -46,19 +43,17 @@ class CanvasService : ICanvasService
     readonly IJSInterop jSInteropService;
     readonly IFileService fileService;
     readonly IRecentModelsService recentModelsService;
-    readonly Timer moveTimer;
-    bool moveTimerRunning = false;
-    bool isMoving = false;
+    private readonly INodeEditService nodeEditService;
 
     public CanvasService(
-        IMouseEventService mouseEventService,
         IScreenService screenService,
         IPanZoomService panZoomService,
         IModelService modelService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
         IFileService fileService,
-        IRecentModelsService recentModelsService)
+        IRecentModelsService recentModelsService,
+        INodeEditService nodeEditService)
     {
         this.screenService = screenService;
         this.panZoomService = panZoomService;
@@ -67,14 +62,7 @@ class CanvasService : ICanvasService
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
         this.recentModelsService = recentModelsService;
-        mouseEventService.LeftClick += OnClick;
-        mouseEventService.LeftDblClick += OnDblClick;
-        mouseEventService.MouseWheel += OnMouseWheel;
-        mouseEventService.MouseMove += OnMouseMove;
-        mouseEventService.MouseDown += OnMouseDown;
-        mouseEventService.MouseUp += OnMouseUp;
-
-        moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
+        this.nodeEditService = nodeEditService;
     }
 
     public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
@@ -87,20 +75,21 @@ class CanvasService : ICanvasService
     public string TileViewBox { get; private set; } = "";
     public Pos TileOffset { get; private set; } = Pos.Zero;
     public string Content { get; private set; } = "";
-    public string Cursor { get; private set; } = "default";
+    public string Cursor => nodeEditService.Cursor;
 
     public Rect SvgRect => screenService.SvgRect;
     public Pos Offset => panZoomService.Offset;
     public double Zoom => panZoomService.Zoom;
     public double ActualZoom => Zoom / LevelZoom;
 
-    string selectedId = "";
-    string mouseDownId = "";
-    string mouseDownSubId = "";
-
 
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";
 
+    public async Task InitAsync()
+    {
+        await nodeEditService.InitAsync();
+        await panZoomService.InitAsync();
+    }
 
     public async void InitialShow()
     {
@@ -165,201 +154,6 @@ class CanvasService : ICanvasService
     }
 
 
-    bool IsNodeAdjustable(string id)
-    {
-        if (!modelService.TryGetNode(id, out var node)) return false;
-
-        var v = SvgRect;
-        var nodeZoom = (1 / node.GetZoom());
-        var vx = (node.Boundary.Width * nodeZoom) / (v.Width * Zoom);
-        var vy = (node.Boundary.Height * nodeZoom) / (v.Height * Zoom);
-        var maxCovers = Math.Max(vx, vy);
-        var minCovers = Math.Min(vx, vy);
-
-        return minCovers < MinCover && maxCovers < MaxCover;
-    }
-
-
-    void OnClick(MouseEvent e)
-    {
-        Log.Info("mouse click", e.TargetId);
-        (string nodeId, string subId) = NodeId.ParseString(e.TargetId);
-
-        if (!IsNodeAdjustable(nodeId))
-        {   // Node node at click or node not adjustable 
-            if (selectedId != "")
-            {
-                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
-                selectedId = "";
-                applicationEvents.TriggerUIStateChanged();
-            }
-            return;
-        }
-
-        if (selectedId != nodeId && selectedId != "")
-        {   // click on other node
-            modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
-            selectedId = "";
-            applicationEvents.TriggerUIStateChanged();
-        }
-
-        if (modelService.TryUpdateNode(e.TargetId, node =>
-        {
-            node.IsSelected = true;
-        }))
-        {
-            Log.Info($"Node clicked: {e.TargetId}");
-            selectedId = nodeId;
-            applicationEvents.TriggerUIStateChanged();
-        }
-    }
-
-    void OnDblClick(MouseEvent e)
-    {
-        Log.Info($"OnDoubleClick {e.Type}");
-    }
-
-    void OnMouseWheel(MouseEvent e)
-    {
-        panZoomService.OnMouseWheel(e);
-    }
-
-    void OnMouseMove(MouseEvent e)
-    {
-        if (!e.IsLeftButton)
-        {   // No left button, just moving mouse
-            if (isMoving)
-            {
-                Cursor = "default";
-                isMoving = false;
-            }
-            return;
-        };
-
-
-        if (!isMoving && selectedId != "" && selectedId == mouseDownId)
-        {
-            Cursor = "move";
-            isMoving = true;
-        }
-
-        if (selectedId != "")
-        {
-            if (selectedId == mouseDownId && mouseDownSubId == "")
-            {
-                moveSelectedNode(e);
-                return;
-            }
-            if (selectedId == mouseDownId && mouseDownSubId != "")
-            {
-                Log.Info($"Move {mouseDownId}, {mouseDownSubId}");
-                resizeSelectedNode(e);
-                return;
-            }
-        }
-
-        panZoomService.OnMouseMove(e);
-    }
-
-    void OnMouseDown(MouseEvent e)
-    {
-        moveTimerRunning = true;
-        moveTimer.Change(MoveDelay, Timeout.Infinite);
-        (string id, string subId) = NodeId.ParseString(e.TargetId);
-        mouseDownId = id;
-        mouseDownSubId = subId;
-    }
-
-    void OnMouseUp(MouseEvent e)
-    {
-        mouseDownId = "";
-        mouseDownSubId = "";
-
-        if (moveTimerRunning)
-        {
-            moveTimerRunning = false;
-            moveTimer.Change(Timeout.Infinite, Timeout.Infinite);
-        }
-
-        if (isMoving)
-        {
-            Cursor = "default";
-            isMoving = false;
-        }
-    }
-
-    void OnMoveTimer(object? state)
-    {
-        moveTimerRunning = false;
-        Cursor = "move";
-        isMoving = true;
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-
-    void moveSelectedNode(MouseEvent e)
-    {
-        if (!IsNodeAdjustable(mouseDownId))
-        {
-            if (selectedId != "")
-            {
-                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
-                selectedId = "";
-                applicationEvents.TriggerUIStateChanged();
-            }
-
-            return;
-        }
-        modelService.TryUpdateNode(mouseDownId, node =>
-        {
-            var zoom = node.GetZoom() * Zoom;
-            var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
-
-            node.Boundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
-        });
-    }
-
-    void resizeSelectedNode(MouseEvent e)
-    {
-        if (!IsNodeAdjustable(mouseDownId))
-        {
-            if (selectedId != "")
-            {
-                modelService.TryUpdateNode(selectedId, node => node.IsSelected = false);
-                selectedId = "";
-                applicationEvents.TriggerUIStateChanged();
-            }
-
-            return;
-        }
-
-        modelService.TryUpdateNode(mouseDownId, node =>
-        {
-            var zoom = node.GetZoom() * Zoom;
-            var (dx, dy) = (e.MovementX * zoom, e.MovementY * zoom);
-
-            Log.Info("Resize", mouseDownSubId);
-            node.Boundary = mouseDownSubId switch
-            {
-                "tl" => node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy, Width = node.Boundary.Width - dx, Height = node.Boundary.Height - dy },
-                "tm" => node.Boundary with { Y = node.Boundary.Y + dy, Height = node.Boundary.Height - dy },
-                "tr" => node.Boundary with { X = node.Boundary.X, Y = node.Boundary.Y + dy, Width = node.Boundary.Width + dx, Height = node.Boundary.Height - dy },
-
-                "ml" => node.Boundary with { X = node.Boundary.X + dx, Width = node.Boundary.Width - dx },
-                "mr" => node.Boundary with { X = node.Boundary.X, Width = node.Boundary.Width + dx },
-
-                "bl" => node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y, Width = node.Boundary.Width - dx, Height = node.Boundary.Height + dy },
-                "bm" => node.Boundary with { Y = node.Boundary.Y, Height = node.Boundary.Height + dy },
-                "br" => node.Boundary with { X = node.Boundary.X, Y = node.Boundary.Y, Width = node.Boundary.Width + dx, Height = node.Boundary.Height + dy },
-
-                _ => node.Boundary
-
-            };
-        });
-    }
-
-
-
     public void PanZoomToFit()
     {
         var bound = modelService.GetBounds();
@@ -380,7 +174,6 @@ class CanvasService : ICanvasService
 
         applicationEvents.TriggerUIStateChanged();
     }
-
 
 
     string GetSvgContent()

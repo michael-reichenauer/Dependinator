@@ -44,7 +44,7 @@ class Node : IItem
     public List<Line> TargetLines { get; } = new();
 
     public Double ContainerZoom { get; set; } = DefaultContainerZoom;
-    //public Pos ContainerOffset { get; set; } = Pos.Zero;
+    public Pos ContainerOffset { get; set; } = Pos.None;
 
     public bool IsRoot => Type == NodeType.Root;
     public string LongName { get; }
@@ -84,7 +84,11 @@ class Node : IItem
         var rect = node.X != null
             ? new Rect(node.X.Value, node.Y!.Value, node.Width!.Value!, node.Height!.Value)
             : Boundary;
+        var offset = node.OffsetX != null
+            ? new Pos(node.OffsetX.Value, node.OffsetY!.Value)
+            : ContainerOffset;
         Boundary = rect;
+        ContainerOffset = offset;
         ContainerZoom = node.Zoom ?? ContainerZoom;
         Color = node.Color ?? Color;
         Background = node.Background ?? Background;
