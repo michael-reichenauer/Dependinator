@@ -19,6 +19,9 @@ interface ICanvasService
     string TitleInfo { get; }
     string DiagramName { get; }
     IReadOnlyList<string> RecentModelPaths { get; }
+    bool IsNodeSelected { get; }
+
+    Pos SelectedNodePosition { get; }
 
     Task InitAsync();
     void OpenFiles();
@@ -81,6 +84,8 @@ class CanvasService : ICanvasService
     public Pos Offset => modelService.Offset;
     public double Zoom => modelService.Zoom;
     public double ActualZoom => Zoom / LevelZoom;
+    public bool IsNodeSelected => interactionService.IsNodeSelected;
+    public Pos SelectedNodePosition => interactionService.SelectedNodePosition;
 
 
     public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";

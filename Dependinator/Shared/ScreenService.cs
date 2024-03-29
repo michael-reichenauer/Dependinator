@@ -32,6 +32,7 @@ interface IScreenService
     Rect SvgRect { get; }
 
     Task InitAsync(IUIComponent component);
+    Task<ElementBoundingRectangle> GetBoundingRectangle(string elementId);
     Task CheckResizeAsync();
 }
 
@@ -73,7 +74,7 @@ class ScreenService : IScreenService
     public async Task CheckResizeAsync()
     {
         // Get Svg position (width and height are unreliable)
-        var svg = await GetBoundingRectangle();
+        var svg = await GetBoundingRectangle("svgcanvas");
 
         // Get window width and height
         var windowWidth = Math.Floor(browserSizeDetails.InnerWidth);
@@ -104,8 +105,8 @@ class ScreenService : IScreenService
         }
     }
 
-    async Task<ElementBoundingRectangle> GetBoundingRectangle()
-        => await jSInterop.Call<ElementBoundingRectangle>("getBoundingRectangle", "svgcanvas");
+    public async Task<ElementBoundingRectangle> GetBoundingRectangle(string elementId)
+        => await jSInterop.Call<ElementBoundingRectangle>("getBoundingRectangle", elementId);
 
     async Task RegisterWindowResizeEvents() =>
           await jSInterop.Call("listenToWindowResize", "svgcanvas", jSInterop.Reference(this), nameof(OnWindowResized));
