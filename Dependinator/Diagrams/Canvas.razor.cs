@@ -59,7 +59,10 @@ partial class Canvas : ComponentBase, IUIComponent
 
     protected async void LoadFiles(InputFileChangeEventArgs e)
     {
-        await srv.LoadFilesAsync(e.GetMultipleFiles(1000));
+        var files = e.GetMultipleFiles(1000);
+        if (!files.Any()) return;
+
+        await srv.LoadFilesAsync(files);
     }
 }
 
