@@ -219,7 +219,7 @@ class SvgService : ISvgService
     if (!node.IsSelected) return "";
 
     return
-      ToolBar(node, x, y, w, y) + "\n" +
+      // ToolBar(node, x, y, w, y) + "\n" +
       SelectedResizeSvg(node, x, y, w, h);
   }
 
@@ -254,41 +254,41 @@ class SvgService : ISvgService
     const int mb = m;
 
     const int tt = 12;
-    const int t = tt * 3;
+    const int t = 10 * 3 + 1;
 
     return
         $"""
-        <g class="hoverable">
+        <g class="selectpoint">
           <rect id="{node.Id.Value}.tl" x="{x - ml}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.tl" x="{x - ml - tt}" y="{y - mt - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.tl" x="{x - ml - tt}" y="{y - mt - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
-        <g class="hoverable">
+        <g class="selectpoint">
           <rect id="{node.Id.Value}.tm" x="{x + w / 2 - mm}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.tm" x="{x + w / 2 - mm - tt}" y="{y - mt - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
+          <rect id="{node.Id.Value}.tm" x="{x + w / 2 - mm - tt}" y="{y - mt - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
         </g>
-        <g class="hoverable">
+        <g class="selectpoint">
           <rect id="{node.Id.Value}.tr" x="{x + w + mr}" y="{y - mt}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.tr" x="{x + w + mr - tt}" y="{y - mt - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.tr" x="{x + w + mr - tt}" y="{y - mt - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
-        <g class="hoverable">
+        <g class="selectpoint">
           <rect id="{node.Id.Value}.ml" x="{x - ml}" y="{y + h / 2}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.ml" x="{x - ml - tt}" y="{y + h / 2 - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.ml" x="{x - ml - tt}" y="{y + h / 2 - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
-        <g class="hoverable">
+        <g class="selectpoint">
           <rect id="{node.Id.Value}.mr" x="{x + w + mr}" y="{y + h / 2}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.mr" x="{x + w + mr - tt}" y="{y + h / 2 - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.mr" x="{x + w + mr - tt}" y="{y + h / 2 - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
-        <g class="hoverable">    
+        <g class="selectpoint">    
           <rect id="{node.Id.Value}.bl" x="{x - ml}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.bl" x="{x - ml - tt}" y="{y + h + mb - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.bl" x="{x - ml - tt}" y="{y + h + mb - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
-        <g class="hoverable">
+        <g class="selectpoint">
           <rect id="{node.Id.Value}.bm" x="{x + w / 2 - mm}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.bm" x="{x + w / 2 - mm - tt}" y="{y + h + mb - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
+          <rect id="{node.Id.Value}.bm" x="{x + w / 2 - mm - tt}" y="{y + h + mb - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
         </g>
-        <g class="hoverable">
+        <g class="selectpoint">
           <rect id="{node.Id.Value}.br" x="{x + w + mr}" y="{y + h + mb}" width="{s}" height="{s}" fill="{c}" />
-          <rect id="{node.Id.Value}.br" x="{x + w + mr - tt}" y="{y + h + mb - tt}" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+          <rect id="{node.Id.Value}.br" x="{x + w + mr - tt}" y="{y + h + mb - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
         </g>
         """;
   }

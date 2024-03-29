@@ -6,22 +6,10 @@ namespace Dependinator.Diagrams;
 interface IInteractionService
 {
     string Cursor { get; }
+    bool IsNodeSelected { get; }
+    Pos SelectedNodePosition { get; }
 
     Task InitAsync();
-}
-
-record PointerId(string Id, string SubId)
-{
-    public static readonly PointerId Empty = new("", "");
-
-    internal static PointerId Parse(string targetId)
-    {
-        var parts = targetId.Split('.');
-
-        var id = parts[0];
-        var subId = parts.Length > 1 ? parts[1] : "";
-        return new(id, subId);
-    }
 }
 
 
@@ -33,6 +21,7 @@ class InteractionService : IInteractionService
     readonly INodeEditService nodeEditService;
     readonly IApplicationEvents applicationEvents;
     readonly ISelectionService selectionService;
+    readonly IScreenService screenService;
     readonly IModelService modelService;
 
     const int MoveDelay = 300;
@@ -41,7 +30,6 @@ class InteractionService : IInteractionService
     bool moveTimerRunning = false;
     bool isMoving = false;
     PointerId mouseDownId = PointerId.Empty;
-
     double Zoom => modelService.Zoom;
 
 
@@ -51,6 +39,7 @@ class InteractionService : IInteractionService
         INodeEditService nodeEditService,
         IApplicationEvents applicationEvents,
         ISelectionService selectionService,
+        IScreenService screenService,
         IModelService modelService)
     {
         this.mouseEventService = mouseEventService;
@@ -58,12 +47,15 @@ class InteractionService : IInteractionService
         this.nodeEditService = nodeEditService;
         this.applicationEvents = applicationEvents;
         this.selectionService = selectionService;
+        this.screenService = screenService;
         this.modelService = modelService;
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
     }
 
 
     public string Cursor { get; private set; } = "default";
+    public bool IsNodeSelected => selectionService.IsSelected;
+    public Pos SelectedNodePosition { get; set; } = Pos.None;
 
 
     public Task InitAsync()
@@ -85,12 +77,18 @@ class InteractionService : IInteractionService
     }
 
 
-    void OnClick(PointerEvent e)
+    async void OnClick(PointerEvent e)
     {
         Log.Info("mouse click", e.TargetId);
         var targetId = PointerId.Parse(e.TargetId);
 
         selectionService.Select(targetId);
+        if (selectionService.IsSelected)
+        {
+            var bound = await screenService.GetBoundingRectangle(targetId.Id);
+            SelectedNodePosition = new Pos(bound.X, bound.Y);
+            applicationEvents.TriggerUIStateChanged();
+        }
     }
 
     void OnDblClick(PointerEvent e)
@@ -120,10 +118,17 @@ class InteractionService : IInteractionService
         if (mouseDownId == selectionService.SelectedId && selectionService.IsNodeMovable(Zoom) && mouseDownId.SubId == "")
         {
             nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
+            var (dx, dy) = (e.MovementX, e.MovementY);
+            SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
             return;
         }
 
         panZoomService.Pan(e);
+        if (selectionService.IsSelected)
+        {
+            var (dx, dy) = (e.MovementX, e.MovementY);
+            SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
+        }
     }
 
 
