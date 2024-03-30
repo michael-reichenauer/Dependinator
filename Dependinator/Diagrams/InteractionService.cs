@@ -131,7 +131,7 @@ class InteractionService : IInteractionService
         if (!e.IsLeftButton) return;
         if (selectionService.IsEditMode)
         {
-            nodeEditService.PanSelectedNode(e, Zoom, mouseDownId);
+            nodeEditService.PanSelectedNode(e, Zoom, selectionService.SelectedId);
             return;
         }
 
