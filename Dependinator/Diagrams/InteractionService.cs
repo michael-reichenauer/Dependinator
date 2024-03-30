@@ -123,35 +123,43 @@ class InteractionService : IInteractionService
         if (mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
-            var (dx, dy) = mouseDownId.SubId switch
-            {
-                "tl" => (e.MovementX, e.MovementY),
-                "tm" => (0, e.MovementY),
-                "tr" => (0, e.MovementY),
-                "ml" => (e.MovementX, 0),
-                "bl" => (e.MovementX, 0),
-                _ => (0, 0)
-            };
-            SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
+            ResizedMoveToolbar(e);
             return;
         }
 
         if (mouseDownId == selectionService.SelectedId && selectionService.IsNodeMovable(Zoom) && mouseDownId.IsNode)
         {
             nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
-            var (dx, dy) = (e.MovementX, e.MovementY);
-            SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
+            PanedMoveToolbar(e);
             return;
         }
 
         panZoomService.Pan(e);
+        PanedMoveToolbar(e);
+    }
+
+    void ResizedMoveToolbar(PointerEvent e)
+    {
+        var (dx, dy) = mouseDownId.SubId switch
+        {
+            "tl" => (e.MovementX, e.MovementY),
+            "tm" => (0, e.MovementY),
+            "tr" => (0, e.MovementY),
+            "ml" => (e.MovementX, 0),
+            "bl" => (e.MovementX, 0),
+            _ => (0, 0)
+        };
+        SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
+    }
+
+    void PanedMoveToolbar(PointerEvent e)
+    {
         if (selectionService.IsSelected)
         {
             var (dx, dy) = (e.MovementX, e.MovementY);
             SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
         }
     }
-
 
     void OnMouseUp(PointerEvent e)
     {
