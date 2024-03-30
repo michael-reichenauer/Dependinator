@@ -17,7 +17,6 @@ interface IPanZoomService
 class PanZoomService : IPanZoomService
 {
     readonly IScreenService screenService;
-    readonly IApplicationEvents applicationEvents;
     readonly IModelService modelService;
     private Rect SvgRect => screenService.SvgRect;
 
@@ -33,7 +32,6 @@ class PanZoomService : IPanZoomService
         IModelService modelService)
     {
         this.screenService = screenService;
-        this.applicationEvents = applicationEvents;
         this.modelService = modelService;
     }
 

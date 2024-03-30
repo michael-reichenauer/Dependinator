@@ -81,7 +81,11 @@ class InteractionService : IInteractionService
 
     async void OnMouseWheel(PointerEvent e)
     {
-        if (selectionService.IsEditMode) return;
+        if (selectionService.IsEditMode)
+        {
+            nodeEditService.ZoomSelectedNode(e, selectionService.SelectedId);
+            return;
+        }
 
         panZoomService.Zoom(e);
 
@@ -125,7 +129,11 @@ class InteractionService : IInteractionService
     void OnMouseMove(PointerEvent e)
     {
         if (!e.IsLeftButton) return;
-        if (selectionService.IsEditMode) return;
+        if (selectionService.IsEditMode)
+        {
+            nodeEditService.PanSelectedNode(e, Zoom, mouseDownId);
+            return;
+        }
 
         if (mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {
