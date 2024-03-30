@@ -40,7 +40,7 @@ class PanZoomService : IPanZoomService
 
     public void Zoom(PointerEvent e)
     {
-        modelService.UpdateMode(m =>
+        modelService.Use(m =>
         {
             if (e.DeltaY == 0) return;
             var (mx, my) = (e.OffsetX, e.OffsetY);
@@ -66,7 +66,7 @@ class PanZoomService : IPanZoomService
 
     public void Pan(PointerEvent e)
     {
-        modelService.UpdateMode(m =>
+        modelService.Use(m =>
        {
            var (dx, dy) = (e.MovementX * m.Zoom, e.MovementY * m.Zoom);
            m.Offset = new Pos(m.Offset.X - dx, m.Offset.Y - dy);
@@ -76,7 +76,7 @@ class PanZoomService : IPanZoomService
 
     public void PanZoom(Rect viewRect, double zoom)
     {
-        modelService.UpdateMode(m =>
+        modelService.Use(m =>
         {
             m.Offset = new Pos(viewRect.X, viewRect.Y);
             m.Zoom = zoom;
@@ -86,7 +86,7 @@ class PanZoomService : IPanZoomService
 
     public void PanZoomToFit(Rect totalBounds, double maxZoom = 1)
     {
-        modelService.UpdateMode(m =>
+        modelService.Use(m =>
         {
             Rect b = totalBounds;
             b = new Rect(b.X, b.Y, b.Width, b.Height);

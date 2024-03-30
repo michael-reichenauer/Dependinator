@@ -11,7 +11,8 @@ interface IModelService
     Pos Offset { get; }
     double Zoom { get; }
 
-    void UpdateMode(Action<IModel> updateAction);
+    T Use<T>(Func<IModel, T> useFunc);
+    void Use(Action<IModel> useAction);
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
@@ -55,11 +56,11 @@ class ModelService : IModelService
         this.applicationEvents.SaveNeeded += TriggerSave;
     }
 
-    public Pos Offset => ReadModel(m => m.Offset);
-    public double Zoom => ReadModel(m => m.Zoom);
-    public string ModelName => ReadModel(m => Path.GetFileNameWithoutExtension(m.Path));
+    public Pos Offset => Use(m => m.Offset);
+    public double Zoom => Use(m => m.Zoom);
+    public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
 
-    public void UpdateMode(Action<IModel> updateAction)
+    public void Use(Action<IModel> updateAction)
     {
         lock (model.Lock)
         {
@@ -70,7 +71,7 @@ class ModelService : IModelService
         TriggerSave();
     }
 
-    T ReadModel<T>(Func<IModel, T> readFunc)
+    public T Use<T>(Func<IModel, T> readFunc)
     {
         lock (model.Lock)
         {

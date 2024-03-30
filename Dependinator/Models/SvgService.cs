@@ -15,9 +15,6 @@ class SvgService : ISvgService
   const int SmallIconSize = 9;
   const int FontSize = 8;
 
-  const double MinContainerZoom = 2.0;
-  const double MaxNodeZoom = 5 * 1 / Node.DefaultContainerZoom;           // To large to be seen
-
 
   public Tile GetTile(IModel model, Rect viewRect, double zoom)
   {
@@ -74,9 +71,9 @@ class SvgService : ISvgService
 
     if (!IsOverlap(tileWithMargin, nodeCanvasRect)) return ""; // Outside the tile limit
 
-    if (IsToLargeToBeSeen(zoom)) return GetNodeContentSvg(node, nodeCanvasPos, zoom, tileWithMargin);
+    if (Node.IsToLargeToBeSeen(zoom)) return GetNodeContentSvg(node, nodeCanvasPos, zoom, tileWithMargin);
 
-    if (IsShowIcon(node, zoom)) return GetNodeIconSvg(node, nodeCanvasRect, zoom);
+    if (node.IsShowIcon(zoom)) return GetNodeIconSvg(node, nodeCanvasRect, zoom);
 
     return
         GetNodeContainerSvg(node, nodeCanvasRect, zoom, GetNodeContentSvg(node, Pos.Zero, zoom, tileWithMargin));
@@ -102,10 +99,7 @@ class SvgService : ISvgService
     }
   }
 
-  static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 
-  static bool IsShowIcon(Node node, double zoom) =>
-      node.Type == NodeType.Member || zoom <= MinContainerZoom;
 
   static Pos GetNodeCanvasPos(Node node, Pos offset, double zoom) => new(
      offset.X + node.Boundary.X * zoom, offset.Y + node.Boundary.Y * zoom);
@@ -172,8 +166,8 @@ class SvgService : ISvgService
         $"""
             <use href="#{icon}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" />
             <text x="{tx:0.##}" y="{ty:0.##}" class="iconName" font-size="{fz:0.##}px">{node.HtmlShortName}</text>
-            <g class="hoverable">
-              <rect id="{node.Id.Value}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+            <g class="hoverable" id="{node.Id.Value}">
+              <rect id="{node.Id.Value}.i" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
               <title>{node.HtmlLongName}</title>
             </g>
             {selectedSvg}
@@ -202,8 +196,8 @@ class SvgService : ISvgService
         $"""
             <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
               <rect x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="{s}" rx="5" fill="{node.Background}" stroke="{node.Color}"/>
-              <g class="hoverable">
-                <rect id="{node.Id.Value}" x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+              <g class="hoverable" id="{node.Id.Value}">
+                <rect id="{node.Id.Value}.c" x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                 <title>{node.HtmlLongName}</title>
               </g>
               {childrenContent}
@@ -218,29 +212,9 @@ class SvgService : ISvgService
   {
     if (!node.IsSelected) return "";
 
-    return
-      // ToolBar(node, x, y, w, y) + "\n" +
-      SelectedResizeSvg(node, x, y, w, h);
+    return SelectedResizeSvg(node, x, y, w, h);
   }
 
-  private static string ToolBar(Node node, double x, double y, double w, double h)
-  {
-    var icon = node.Type.IconName;
-    var iSize = 28;
-    var (ix, iy, iw, ih) = (x + 10, y - 50, iSize, iSize);
-    var ic = Color.ToolBarIcon;
-    var ib = Color.ToolBarIconBorder;
-    var iBack = Color.ToolBarIconBackground;
-    var m = 2;
-
-    return
-    $"""
-      <rect x="{ix - m}" y="{iy - m}" width="{iw:0.##}" height="{ih:0.##}" stroke-width="1" rx="2" fill="{iBack}" stroke="{ib}"/>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="{ic}" x="{ix}" y="{iy}" width="{iw}" height="{ih}" viewBox="0 0 {iw} {ih}"> 
-        {MudBlazor.Icons.Material.Outlined.Menu}
-      </svg>
-    """;
-  }
 
   static string SelectedResizeSvg(Node node, double x, double y, double w, double h)
   {
@@ -297,7 +271,7 @@ class SvgService : ISvgService
 
   static string GetLineSvg(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
   {
-    if (IsToLargeToBeSeen(childrenZoom)) return "";
+    if (Node.IsToLargeToBeSeen(childrenZoom)) return "";
 
     var sw = line.StrokeWidth;
     var (s, t) = (line.Source.Boundary, line.Target.Boundary);
@@ -307,7 +281,7 @@ class SvgService : ISvgService
 
     if (line.Target.Parent == line.Source)
     {   // Parent source to child target (left of parent to right of child)
-      if (IsToLargeToBeSeen(parentZoom)) return "";
+      if (Node.IsToLargeToBeSeen(parentZoom)) return "";
       var parent = line.Source;
       (x1, y1) = (nodeCanvasPos.X - parent.ContainerOffset.X * parentZoom,
         nodeCanvasPos.Y + s.Height / 2 * parentZoom - parent.ContainerOffset.Y * parentZoom);
@@ -315,7 +289,7 @@ class SvgService : ISvgService
     }
     else if (line.Source.Parent == line.Target)
     {   // Child source to parent target (left of child to right of parent)
-      if (IsToLargeToBeSeen(parentZoom)) return "";
+      if (Node.IsToLargeToBeSeen(parentZoom)) return "";
       var parent = line.Target;
       (x1, y1) = (nodeCanvasPos.X + x1 * childrenZoom, nodeCanvasPos.Y + y1 * childrenZoom);
 

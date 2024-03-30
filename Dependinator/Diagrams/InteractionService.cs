@@ -6,7 +6,7 @@ namespace Dependinator.Diagrams;
 interface IInteractionService
 {
     string Cursor { get; }
-    bool IsNodeSelected { get; }
+    bool IsShowNodeToolbar();
     Pos SelectedNodePosition { get; }
 
     Task InitAsync();
@@ -54,7 +54,11 @@ class InteractionService : IInteractionService
 
 
     public string Cursor { get; private set; } = "default";
-    public bool IsNodeSelected => selectionService.IsSelected;
+    public bool IsShowNodeToolbar()
+    {
+        return selectionService.IsSelected;
+    }
+
     public Pos SelectedNodePosition { get; set; } = Pos.None;
 
 
@@ -71,9 +75,16 @@ class InteractionService : IInteractionService
     }
 
 
-    void OnMouseWheel(PointerEvent e)
+    async void OnMouseWheel(PointerEvent e)
     {
         panZoomService.Zoom(e);
+
+        if (selectionService.IsSelected)
+        {
+            var bound = await screenService.GetBoundingRectangle(selectionService.SelectedId.Id);
+            SelectedNodePosition = new Pos(bound.X, bound.Y);
+            applicationEvents.TriggerUIStateChanged();
+        }
     }
 
 
@@ -109,13 +120,23 @@ class InteractionService : IInteractionService
     {
         if (!e.IsLeftButton) return;
 
-        if (mouseDownId != PointerId.Empty && mouseDownId.SubId != "")
+        if (mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
+            var (dx, dy) = mouseDownId.SubId switch
+            {
+                "tl" => (e.MovementX, e.MovementY),
+                "tm" => (0, e.MovementY),
+                "tr" => (0, e.MovementY),
+                "ml" => (e.MovementX, 0),
+                "bl" => (e.MovementX, 0),
+                _ => (0, 0)
+            };
+            SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
             return;
         }
 
-        if (mouseDownId == selectionService.SelectedId && selectionService.IsNodeMovable(Zoom) && mouseDownId.SubId == "")
+        if (mouseDownId == selectionService.SelectedId && selectionService.IsNodeMovable(Zoom) && mouseDownId.IsNode)
         {
             nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
             var (dx, dy) = (e.MovementX, e.MovementY);
