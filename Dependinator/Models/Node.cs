@@ -36,6 +36,7 @@ class Node : IItem
     public string Background { get; set; } = "green";
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
+    public bool IsEditMode { get; set; } = false;
     public bool IsChildrenLayoutRequired { get; set; } = false;
 
     public Rect Boundary { get; set; } = Rect.None;

@@ -1,6 +1,5 @@
 ﻿using Dependinator.Diagrams;
 using Dependinator.Models;
-using Dependinator.Utils.UI;
 
 namespace Dependinator;
 
@@ -8,11 +7,12 @@ namespace Dependinator;
 interface ISelectionService
 {
     bool IsSelected { get; }
+    bool IsEditMode { get; }
     PointerId SelectedId { get; }
 
     bool IsNodeMovable(double zoom);
-    bool IsNodeSelected(string mouseDownId);
-    void Select(PointerId targetId);
+    void Select(PointerId pointerId);
+    void SetEditMode(bool isEditMode);
     void Unselect();
 }
 
@@ -28,6 +28,7 @@ class SelectionService : ISelectionService
     readonly IScreenService screenService;
 
     PointerId selectedId = PointerId.Empty;
+    bool isEditMode = false;
 
     public SelectionService(
         IModelService modelService,
@@ -42,17 +43,36 @@ class SelectionService : ISelectionService
     public PointerId SelectedId => selectedId;
     public bool IsSelected => selectedId != PointerId.Empty;
 
-    public bool IsNodeSelected(string nodeId) => IsSelected && selectedId.Id == nodeId;
+    public bool IsEditMode => isEditMode;
 
-    public void Select(PointerId targetId)
+
+    public void SetEditMode(bool isEditMode)
     {
-        if (IsSelected && selectedId.Id == targetId.Id) return;
+        if (!IsSelected) return;
+
+        modelService.UseNode(selectedId.Id, node =>
+        {
+            node.IsEditMode = isEditMode;
+        });
+        this.isEditMode = isEditMode;
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+
+    public void Select(PointerId pointerId)
+    {
+        if (IsSelected && selectedId.Id == pointerId.Id) return;
 
         if (IsSelected) Unselect(); // Clicked on some other node
 
-        if (modelService.TryUpdateNode(targetId.Id, node => node.IsSelected = true))
+        if (modelService.UseNode(pointerId.Id, node =>
         {
-            selectedId = targetId;
+            node.IsSelected = true;
+            node.IsEditMode = false;
+        }))
+        {
+            selectedId = pointerId;
+            this.isEditMode = false;
             applicationEvents.TriggerUIStateChanged();
         }
     }
@@ -61,14 +81,19 @@ class SelectionService : ISelectionService
     {
         if (!IsSelected) return;
 
-        modelService.TryUpdateNode(selectedId.Id, node => node.IsSelected = false);
+        modelService.UseNode(selectedId.Id, node =>
+        {
+            node.IsSelected = false;
+            node.IsEditMode = false;
+        });
         selectedId = PointerId.Empty;
+        this.isEditMode = false;
         applicationEvents.TriggerUIStateChanged();
     }
 
     public bool IsNodeMovable(double zoom)
     {
-        if (!IsSelected) return false;
+        if (!IsSelected || IsEditMode) return false;
         if (!modelService.TryGetNode(selectedId.Id, out var node)) return false;
 
         var v = screenService.SvgRect;

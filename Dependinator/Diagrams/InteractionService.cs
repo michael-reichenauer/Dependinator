@@ -6,7 +6,8 @@ namespace Dependinator.Diagrams;
 interface IInteractionService
 {
     string Cursor { get; }
-    bool IsShowNodeToolbar();
+    bool IsShowNodeToolbar { get; }
+    bool IsEditNodeMode { get; set; }
     Pos SelectedNodePosition { get; }
 
     Task InitAsync();
@@ -54,12 +55,15 @@ class InteractionService : IInteractionService
 
 
     public string Cursor { get; private set; } = "default";
-    public bool IsShowNodeToolbar()
-    {
-        return selectionService.IsSelected;
-    }
+    public bool IsShowNodeToolbar => selectionService.IsSelected;
 
     public Pos SelectedNodePosition { get; set; } = Pos.None;
+
+    public bool IsEditNodeMode
+    {
+        get => selectionService.IsEditMode;
+        set => selectionService.SetEditMode(value);
+    }
 
 
     public Task InitAsync()
@@ -77,6 +81,8 @@ class InteractionService : IInteractionService
 
     async void OnMouseWheel(PointerEvent e)
     {
+        if (selectionService.IsEditMode) return;
+
         panZoomService.Zoom(e);
 
         if (selectionService.IsSelected)
@@ -119,6 +125,7 @@ class InteractionService : IInteractionService
     void OnMouseMove(PointerEvent e)
     {
         if (!e.IsLeftButton) return;
+        if (selectionService.IsEditMode) return;
 
         if (mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {

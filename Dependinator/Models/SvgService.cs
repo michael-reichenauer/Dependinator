@@ -190,11 +190,15 @@ class SvgService : ISvgService
 
     string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
 
+    var cl = node.IsEditMode ? "hoverableedit" : "hoverable";
+    var c = node.IsEditMode ? Color.EditNode : node.Color;
+    var back = node.IsEditMode ? Color.EditNodeBack : node.Background;
+
     return
         $"""
             <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
-              <rect x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="{s}" rx="5" fill="{node.Background}" stroke="{node.Color}"/>
-              <g class="hoverable" id="{node.Id.Value}">
+              <rect x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="{s}" rx="5" fill="{back}" stroke="{c}"/>
+              <g class="{cl}" id="{node.Id.Value}">
                 <rect id="{node.Id.Value}.c" x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                 <title>{node.HtmlLongName}</title>
               </g>

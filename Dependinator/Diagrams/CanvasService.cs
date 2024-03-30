@@ -1,6 +1,4 @@
 using Dependinator.Models;
-using Dependinator.Shared;
-using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Diagrams;
@@ -19,7 +17,6 @@ interface ICanvasService
     string TitleInfo { get; }
     string DiagramName { get; }
     IReadOnlyList<string> RecentModelPaths { get; }
-    bool IsShowNodeToolbar { get; }
 
     Pos SelectedNodePosition { get; }
 
@@ -84,7 +81,6 @@ class CanvasService : ICanvasService
     public Pos Offset => modelService.Offset;
     public double Zoom => modelService.Zoom;
     public double ActualZoom => Zoom / LevelZoom;
-    public bool IsShowNodeToolbar => interactionService.IsShowNodeToolbar();
     public Pos SelectedNodePosition => interactionService.SelectedNodePosition;
 
 

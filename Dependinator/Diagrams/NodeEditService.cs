@@ -21,7 +21,7 @@ class NodeEditService : INodeEditService
 
     public void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
-        modelService.TryUpdateNode(pointerId.Id, node =>
+        modelService.UseNode(pointerId.Id, node =>
         {
             var nodeZoom = node.GetZoom() * zoom;
             var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
@@ -32,7 +32,7 @@ class NodeEditService : INodeEditService
 
     public void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
-        modelService.TryUpdateNode(pointerId.Id, node =>
+        modelService.UseNode(pointerId.Id, node =>
         {
             var nodeZoom = node.GetZoom() * zoom;
             var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);

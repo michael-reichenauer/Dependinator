@@ -18,7 +18,7 @@ interface IModelService
     Task<R> RefreshAsync();
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
-    bool TryUpdateNode(string id, Action<Node> updateAction);
+    bool UseNode(string id, Action<Node> useAction);
     void Clear();
     Rect GetBounds();
 }
@@ -104,7 +104,7 @@ class ModelService : IModelService
         }
     }
 
-    public bool TryUpdateNode(string id, Action<Node> updateAction)
+    public bool UseNode(string id, Action<Node> updateAction)
     {
         lock (model.Lock)
         {
