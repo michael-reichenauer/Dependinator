@@ -1,5 +1,3 @@
-using Dependinator.Utils.UI;
-
 namespace Dependinator.Models;
 
 
@@ -11,13 +9,14 @@ interface IModelService
     Pos Offset { get; }
     double Zoom { get; }
 
-    void UpdateMode(Action<IModel> updateAction);
+    IModel UseModel();
+
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
-    bool TryUpdateNode(string id, Action<Node> updateAction);
+    bool UseNode(string id, Action<Node> useAction);
     void Clear();
     Rect GetBounds();
 }
@@ -55,22 +54,17 @@ class ModelService : IModelService
         this.applicationEvents.SaveNeeded += TriggerSave;
     }
 
-    public Pos Offset => ReadModel(m => m.Offset);
-    public double Zoom => ReadModel(m => m.Zoom);
-    public string ModelName => ReadModel(m => Path.GetFileNameWithoutExtension(m.Path));
+    public Pos Offset => Use(m => m.Offset);
+    public double Zoom => Use(m => m.Zoom);
+    public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
 
-    public void UpdateMode(Action<IModel> updateAction)
+    public IModel UseModel()
     {
-        lock (model.Lock)
-        {
-            updateAction(model);
-            model.ClearCachedSvg();
-        }
-
-        TriggerSave();
+        Monitor.Enter(model.Lock);
+        return model;
     }
 
-    T ReadModel<T>(Func<IModel, T> readFunc)
+    T Use<T>(Func<IModel, T> readFunc)
     {
         lock (model.Lock)
         {
@@ -103,7 +97,7 @@ class ModelService : IModelService
         }
     }
 
-    public bool TryUpdateNode(string id, Action<Node> updateAction)
+    public bool UseNode(string id, Action<Node> updateAction)
     {
         lock (model.Lock)
         {

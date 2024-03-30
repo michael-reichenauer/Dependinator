@@ -6,6 +6,9 @@ namespace Dependinator.Models;
 
 class Node : IItem
 {
+    const double MinContainerZoom = 2.0;
+    const double MaxNodeZoom = 5 * 1 / Node.DefaultContainerZoom;           // To large to be seen
+
     public Node(string name, Node parent)
     {
         Id = NodeId.FromName(name);
@@ -33,6 +36,7 @@ class Node : IItem
     public string Background { get; set; } = "green";
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
+    public bool IsEditMode { get; set; } = false;
     public bool IsChildrenLayoutRequired { get; set; } = false;
 
     public Rect Boundary { get; set; } = Rect.None;
@@ -52,7 +56,10 @@ class Node : IItem
     public string HtmlShortName { get; }
     public string HtmlLongName { get; }
 
+    public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 
+    public bool IsShowIcon(double zoom) =>
+        Type == NodeType.Member || zoom <= MinContainerZoom;
 
     public double GetZoom()
     {

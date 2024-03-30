@@ -1,5 +1,4 @@
 using Dependinator.DiagramIcons;
-using Dependinator.Shared;
 using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -37,11 +36,6 @@ partial class Canvas : ComponentBase, IUIComponent
     double Height => srv.SvgRect.Height;
     string ViewBox => srv.SvgViewBox;
     static string IconDefs => Icon.IconDefs;
-
-    string NodeToolBarVisible => srv.IsNodeSelected ? "visible" : "invisible";
-    string NodeToolBarPosition => srv.IsNodeSelected ?
-        $"Position: fixed; left:{srv.SelectedNodePosition.X}px; top:{srv.SelectedNodePosition.Y - 55}px" :
-        "Position: fixed; left:0px; top:0px";
 
     string Cursor => srv.Cursor;
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;

@@ -1,5 +1,6 @@
 global using Dependinator.Utils;
 global using Dependinator.Utils.Logging;
+global using Dependinator.Shared;
 global using static Dependinator.Utils.Result;
 
 using System.Reflection;
