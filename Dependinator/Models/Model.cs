@@ -1,7 +1,7 @@
 namespace Dependinator.Models;
 
 
-interface IModel
+interface IModel : IDisposable
 {
     string Path { get; set; }
     object Lock { get; }
@@ -15,6 +15,7 @@ interface IModel
     DateTime ModifiedTime { get; set; }
     CancellationTokenSource SaveCancelSource { get; set; }
 
+    bool TryGetNode(string id, out Node node);
     bool TryGetNode(NodeId id, out Node node);
     void AddNode(Node node);
     Node GetNode(NodeId id);
@@ -54,7 +55,17 @@ class Model : IModel
     public DateTime ModifiedTime { get; set; } = DateTime.MinValue;
     public CancellationTokenSource SaveCancelSource { get; set; } = new();
 
+    public void Dispose()
+    {
+        Monitor.Exit(Lock);
+    }
+
     public bool ContainsKey(Id id) => Items.ContainsKey(id);
+
+    public bool TryGetNode(string id, out Node node)
+    {
+        return TryGetNode(NodeId.FromId(id), out node);
+    }
 
     public bool TryGetNode(NodeId id, out Node node)
     {
