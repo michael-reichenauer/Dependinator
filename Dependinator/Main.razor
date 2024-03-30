@@ -1,17 +1,18 @@
-﻿@using Dependinator.Diagrams
-
-@inject ICanvasService canvasService
-
+﻿@using Dependinator.App
 
 <MudThemeProvider Theme="DependinatorTheme" @bind-IsDarkMode="@_isDarkMode" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<Canvas />
+<MudLayout>
+    <AppBar />
+    <MudMainContent>
+        <Canvas />
+    </MudMainContent>
+</MudLayout>
 
 @code {
-    private bool _isDarkMode = true;
-    string TitleInfo => canvasService.TitleInfo;
+    bool _isDarkMode = true;
 
     MudTheme DependinatorTheme = new MudTheme
         {
@@ -25,7 +26,8 @@
                 AppbarBackground = Colors.DeepPurple.Darken4,
                 AppbarText = Colors.DeepPurple.Lighten5,
                 Secondary = Colors.DeepPurple.Lighten4,
-                Primary = Colors.DeepPurple.Accent2,
+                Primary = Colors.DeepPurple.Lighten5,
+                Tertiary = Colors.DeepPurple.Darken4,
             },
         };
 }

@@ -1,5 +1,5 @@
 
-namespace Dependinator.Utils.UI;
+namespace Dependinator.Shared;
 
 interface IApplicationEvents
 {
