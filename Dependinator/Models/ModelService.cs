@@ -1,5 +1,3 @@
-using Dependinator.Utils.UI;
-
 namespace Dependinator.Models;
 
 
@@ -11,8 +9,8 @@ interface IModelService
     Pos Offset { get; }
     double Zoom { get; }
 
-    T Use<T>(Func<IModel, T> useFunc);
-    void Use(Action<IModel> useAction);
+    IModel UseModel();
+
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
@@ -60,18 +58,13 @@ class ModelService : IModelService
     public double Zoom => Use(m => m.Zoom);
     public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
 
-    public void Use(Action<IModel> updateAction)
+    public IModel UseModel()
     {
-        lock (model.Lock)
-        {
-            updateAction(model);
-            model.ClearCachedSvg();
-        }
-
-        TriggerSave();
+        Monitor.Enter(model.Lock);
+        return model;
     }
 
-    public T Use<T>(Func<IModel, T> readFunc)
+    T Use<T>(Func<IModel, T> readFunc)
     {
         lock (model.Lock)
         {

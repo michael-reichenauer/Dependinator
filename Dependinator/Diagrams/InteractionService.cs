@@ -83,8 +83,30 @@ class InteractionService : IInteractionService
     {
         if (selectionService.IsEditMode)
         {
-            nodeEditService.ZoomSelectedNode(e, selectionService.SelectedId);
-            return;
+            // Node is in edit mode
+            var targetId = PointerId.Parse(e.TargetId);
+            if (targetId.Id != selectionService.SelectedId.Id)
+            {
+                // Node is in edit mode, check if mouse down is inside the selected node, if so trate as selected node
+                var selectId = NodeId.FromId(selectionService.SelectedId.Id);
+
+                using (var model = modelService.UseModel())
+                {
+                    if (model.TryGetNode(targetId.Id, out var node))
+                    {
+                        var ancestor = node.Ancestors().FirstOrDefault(n => n.Id == selectId);
+                        if (ancestor != null)
+                        {
+                            targetId = selectionService.SelectedId;
+                        }
+                    }
+                }
+            }
+            if (targetId.Id == selectionService.SelectedId.Id)
+            {
+                nodeEditService.ZoomSelectedNode(e, selectionService.SelectedId);
+                return;
+            }
         }
 
         panZoomService.Zoom(e);
@@ -123,15 +145,28 @@ class InteractionService : IInteractionService
         moveTimerRunning = true;
         moveTimer.Change(MoveDelay, Timeout.Infinite);
         mouseDownId = PointerId.Parse(e.TargetId);
+
+        if (mouseDownId.Id == selectionService.SelectedId.Id) return;
+        if (!selectionService.IsEditMode) return;
+
+        // Node is in edit mode, check if mouse down is inside the selected node, if so trate as selected node
+        var downId = NodeId.FromId(mouseDownId.Id);
+        var selectId = NodeId.FromId(selectionService.SelectedId.Id);
+
+        using var model = modelService.UseModel();
+        if (!model.TryGetNode(downId, out var node)) return;
+        var ancestorId = node.Ancestors().FirstOrDefault(n => n.Id == selectId && !n.IsRoot);
+        if (ancestorId == null) return;
+        mouseDownId = selectionService.SelectedId;
     }
 
 
     void OnMouseMove(PointerEvent e)
     {
         if (!e.IsLeftButton) return;
-        if (selectionService.IsEditMode)
+        if (selectionService.IsEditMode && mouseDownId.Id == selectionService.SelectedId.Id)
         {
-            nodeEditService.PanSelectedNode(e, Zoom, selectionService.SelectedId);
+            nodeEditService.PanSelectedNode(e, Zoom, mouseDownId);
             return;
         }
 
