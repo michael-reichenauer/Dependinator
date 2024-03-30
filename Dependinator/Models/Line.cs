@@ -11,7 +11,7 @@ class Line : IItem
         Source = source;
         Target = target;
         Id = new LineId(source.Name, target.Name);
-        StrokeColor = Color.BrightRandom().ToString();
+        // Color = Models.Color.BrightRandom().ToString();
     }
 
     public LineId Id { get; }
@@ -28,7 +28,7 @@ class Line : IItem
     }
 
 
-    public string StrokeColor { get; set; } = "red";
+    public string Color { get; set; } = "red";
     public double StrokeWidth { get; set; } = 2.0;
 
 

@@ -1,5 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
-
 namespace Dependinator.Models;
 
 
@@ -302,9 +300,10 @@ class SvgService : ISvgService
       (x2, y2) = (nodeCanvasPos.X + x2 * childrenZoom, nodeCanvasPos.Y + y2 * childrenZoom);
     }
 
+    var c = "#B388FF";
     return
         $"""
-            <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="#D1C4E9" marker-end="url(#arrow)" />
+            <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="{c}" marker-end="url(#arrow)" />
             <g class="hoverable" >
               <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw + 10}" stroke="black" stroke-opacity="0" />
               <title>{line.Source.HtmlLongName} {line.Target.HtmlLongName}</title>

@@ -1,17 +1,93 @@
 ﻿@using Dependinator.Diagrams
+@using Dependinator.Utils.UI;
 
-@inject ICanvasService canvasService
+@inject ICanvasService srv
+@inject IApplicationEvents applicationEvents
 
 
 <MudThemeProvider Theme="DependinatorTheme" @bind-IsDarkMode="@_isDarkMode" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<Canvas />
+<MudLayout>
+    <MudAppBar Dense="true" Elevation="5">
+
+        <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3 mr-5"
+            AnchorOrigin="Origin.BottomCenter">
+            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
+                OnClick="srv.PanZoomToFit" OnTouch="srv.PanZoomToFit">Fit
+                to
+                Screen</MudMenuItem>
+            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary"
+                Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.OpenFiles" OnTouch="srv.OpenFiles">Browse
+                Files ...</MudMenuItem>
+
+            <MudDivider />
+
+            <MudMenuItem IconSize="Size.Medium" IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever"
+                OnClick="@OnRemove" OnTouch="srv.Remove">Remove Model</MudMenuItem>
+
+            <MudDivider />
+
+            @{
+                foreach (var path in RecentModelPaths)
+                {
+                    <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Schema"
+                        OnClick="()=> srv.LoadAsync(path)" OnTouch="()=> srv.LoadAsync(path)">
+                        @Path.GetFileNameWithoutExtension(path)
+                    </MudMenuItem>
+                }
+            }
+
+        </MudMenu>
+
+        <MudTooltip Text="Pand and zoom diagram to fit screen">
+            <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Color="Color.Inherit" OnClick="srv.PanZoomToFit" />
+        </MudTooltip>
+
+        <MudText Typo="Typo.h6" Class="ml-6">@DiagramName</MudText>
+
+    </MudAppBar>
+
+    <MudMainContent>
+        <MudMessageBox @ref="mbox" Title="Remove Model" CancelText="Cancel">
+            <MessageContent>
+                Do you want to remove model?
+            </MessageContent>
+            <YesButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error"
+                    StartIcon="@Icons.Material.Filled.DeleteForever">
+                    Remove</MudButton>
+            </YesButton>
+        </MudMessageBox>
+
+        <Canvas />
+
+    </MudMainContent>
+</MudLayout>
 
 @code {
-    private bool _isDarkMode = true;
-    string TitleInfo => canvasService.TitleInfo;
+    bool _isDarkMode = true;
+    MudMessageBox mbox { get; set; } = null!;
+    string TitleInfo => srv.TitleInfo;
+    string DiagramName => srv.DiagramName;
+    IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
+
+    private async void OnRemove()
+    {
+        if (await mbox.Show() != true) return;
+        srv.Remove();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
+        }
+    }
 
     MudTheme DependinatorTheme = new MudTheme
         {

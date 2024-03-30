@@ -1,0 +1,27 @@
+﻿@inject ICanvasService srv
+@inject IApplicationEvents applicationEvents
+
+
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@NodeToolBarVisible"
+    Style="@NodeToolBarPosition">
+    <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
+        <MudDivider />
+    </MudMenu>
+    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" />
+    <MudToggleIconButton Icon="@Icons.Material.Outlined.Edit" ToggledIcon="@Icons.Material.Filled.Edit"
+        ToggledColor="@Color.Error" />
+</MudButtonGroup>
+
+
+@code {
+    string NodeToolBarVisible => srv.IsShowNodeToolbar ? "visible" : "invisible";
+    string NodeToolBarPosition => srv.IsShowNodeToolbar ?
+    $"Position: fixed; left:{srv.SelectedNodePosition.X}px; top:{srv.SelectedNodePosition.Y - 55}px" :
+    "Position: fixed; left:0px; top:0px";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender) applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
+    }
+}
