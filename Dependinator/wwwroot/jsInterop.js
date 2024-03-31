@@ -28,7 +28,11 @@ export function clickElement(elementId) {
 }
 
 export function getBoundingRectangle(elementId) {
-  return document.getElementById(elementId).getBoundingClientRect();
+  var element = document.getElementById(elementId);
+  if (element == null) {
+    return null;
+  }
+  return element.getBoundingClientRect();
 }
 
 export function getWindowSizeDetails(parm) {
