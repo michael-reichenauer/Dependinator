@@ -1,4 +1,4 @@
-namespace Dependinator.Utils.UI;
+namespace Dependinator.Shared;
 
 // https://www.w3schools.com/jsref/obj_mouseevent.asp
 public record PointerEvent
