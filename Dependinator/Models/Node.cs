@@ -15,7 +15,7 @@ class Node : IItem
         Name = name;
         Parent = parent;
 
-        var color = Models.Color.BrightRandom();
+        var color = Coloring.BrightRandom();
         Color = color.ToString();
         Background = color.VeryDark().ToString();
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
