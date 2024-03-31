@@ -32,6 +32,7 @@ class InteractionService : IInteractionService
     bool isMoving = false;
     PointerId mouseDownId = PointerId.Empty;
     double Zoom => modelService.Zoom;
+    readonly Debouncer zoomToolbarDebouncer = new();
 
 
     public InteractionService(
@@ -79,7 +80,7 @@ class InteractionService : IInteractionService
     }
 
 
-    async void OnMouseWheel(PointerEvent e)
+    void OnMouseWheel(PointerEvent e)
     {
         if (selectionService.IsEditMode)
         {
@@ -113,9 +114,12 @@ class InteractionService : IInteractionService
 
         if (selectionService.IsSelected)
         {
-            var bound = await screenService.GetBoundingRectangle(selectionService.SelectedId.Id);
-            SelectedNodePosition = new Pos(bound.X, bound.Y);
-            applicationEvents.TriggerUIStateChanged();
+            zoomToolbarDebouncer.Debounce(50, async () =>
+            {
+                if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(selectionService.SelectedId.Id))) return;
+                SelectedNodePosition = new Pos(bound.X, bound.Y);
+                applicationEvents.TriggerUIStateChanged();
+            });
         }
     }
 
@@ -128,7 +132,7 @@ class InteractionService : IInteractionService
         selectionService.Select(targetId);
         if (selectionService.IsSelected)
         {
-            var bound = await screenService.GetBoundingRectangle(targetId.Id);
+            if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(targetId.Id))) return;
             SelectedNodePosition = new Pos(bound.X, bound.Y);
             applicationEvents.TriggerUIStateChanged();
         }
