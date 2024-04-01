@@ -1,5 +1,6 @@
 ﻿@inject ICanvasService srv
 @inject IApplicationEvents applicationEvents
+@inject Dependinator.Models.IModelService modelService
 
 <MudAppBar Dense="true" Elevation="5">
 
@@ -18,7 +19,7 @@
         <MudDivider />
 
         <MudMenuItem IconSize="Size.Medium" IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever"
-            OnClick="@OnRemove" OnTouch="srv.Remove">Remove Model</MudMenuItem>
+            OnClick="@OnRemove" OnTouch="@OnRemove">Remove Model</MudMenuItem>
 
         <MudDivider />
 
@@ -33,6 +34,12 @@
         }
 
     </MudMenu>
+
+    <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="Color.Inherit" Disabled="@(!modelService.CanUndo)"
+        OnClick="modelService.Undo" />
+
+    <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="Color.Inherit" Disabled="@(!modelService.CanRedo)"
+        OnClick="modelService.Redo" />
 
     <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Color="Color.Inherit" OnClick="srv.PanZoomToFit" />
 

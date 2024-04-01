@@ -175,7 +175,7 @@ class SvgService : ISvgService
 
   static string GetNodeContainerSvg(Node node, Rect parentCanvasRect, double parentZoom, string childrenContent)
   {
-    var s = node.StrokeWidth;
+    var s = node.IsEditMode ? 10 : node.StrokeWidth;
     var (x, y) = (parentCanvasRect.X, parentCanvasRect.Y);
     var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
     var iSize = SmallIconSize * parentZoom;
@@ -191,8 +191,8 @@ class SvgService : ISvgService
     string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
 
     var cl = node.IsEditMode ? "hoverableedit" : "hoverable";
-    var c = node.IsEditMode ? Color.EditNode : node.Color;
-    var back = node.IsEditMode ? Color.EditNodeBack : node.Background;
+    var c = node.IsEditMode ? Coloring.EditNode : node.Color;
+    var back = node.IsEditMode ? Coloring.EditNodeBack : node.Background;
 
     return
         $"""
@@ -220,7 +220,7 @@ class SvgService : ISvgService
 
   static string SelectedResizeSvg(Node node, double x, double y, double w, double h)
   {
-    string c = Color.Highlight;
+    string c = Coloring.Highlight;
     const int s = 8;
     const int m = 3;
     const int mt = m + s;

@@ -1,12 +1,11 @@
 using Dependinator.Models;
-using Dependinator.Utils.UI;
 
 namespace Dependinator.Diagrams;
 
 
 interface IPanZoomService
 {
-    void PanZoomToFit(Rect bounds, double maxZoom = 1);
+    void PanZoomToFit(Rect bounds, double maxZoom = 1, bool noCommand = false);
     void PanZoom(Rect viewRect, double zoom);
     void Zoom(PointerEvent e);
     void Pan(PointerEvent e);
@@ -56,8 +55,13 @@ class PanZoomService : IPanZoomService
         var x = svgX - mx / SvgRect.Width * w;
         var y = svgY - my / SvgRect.Height * h;
 
-        model.Offset = new Pos(x, y);
-        model.Zoom = newZoom;
+        var newOffset = new Pos(x, y);
+
+        modelService.Do(new ModelEditCommand()
+        {
+            Offset = newOffset,
+            Zoom = newZoom
+        });
     }
 
 
@@ -66,20 +70,24 @@ class PanZoomService : IPanZoomService
         using var model = modelService.UseModel();
 
         var (dx, dy) = (e.MovementX * model.Zoom, e.MovementY * model.Zoom);
-        model.Offset = new Pos(model.Offset.X - dx, model.Offset.Y - dy);
+        var newOffset = new Pos(model.Offset.X - dx, model.Offset.Y - dy);
+
+        modelService.Do(new ModelEditCommand() { Offset = newOffset, });
     }
 
 
-    public void PanZoom(Rect viewRect, double zoom)
+    public void PanZoom(Rect viewRect, double newZoom)
     {
         using var model = modelService.UseModel();
 
-        model.Offset = new Pos(viewRect.X, viewRect.Y);
-        model.Zoom = zoom;
+        var newOffset = new Pos(viewRect.X, viewRect.Y);
+
+        model.Offset = newOffset;
+        model.Zoom = newZoom;
     }
 
 
-    public void PanZoomToFit(Rect totalBounds, double maxZoom = 1)
+    public void PanZoomToFit(Rect totalBounds, double maxZoom = 1, bool noCommand = false)
     {
         using var model = modelService.UseModel();
 
@@ -99,7 +107,19 @@ class PanZoomService : IPanZoomService
         var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
         var y = (b.Height < h) ? b.Y - (h - b.Height) / 2 : b.Y;
 
-        model.Offset = new Pos(x, y);
-        model.Zoom = newZoom;
+        var newOffset = new Pos(x, y);
+
+        if (noCommand)
+        {
+            model.Offset = newOffset;
+            model.Zoom = newZoom;
+            return;
+        }
+
+        modelService.Do(new ModelEditCommand()
+        {
+            Offset = newOffset,
+            Zoom = newZoom
+        });
     }
 }

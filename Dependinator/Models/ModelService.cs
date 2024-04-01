@@ -9,6 +9,12 @@ interface IModelService
     Pos Offset { get; }
     double Zoom { get; }
 
+    void Do(Command command);
+    bool CanUndo { get; }
+    bool CanRedo { get; }
+    void Undo();
+    void Redo();
+
     IModel UseModel();
 
     Task<R<ModelInfo>> LoadAsync(string path);
@@ -20,6 +26,7 @@ interface IModelService
     void Clear();
     Rect GetBounds();
 }
+
 
 
 [Transient]
@@ -34,7 +41,7 @@ class ModelService : IModelService
     readonly ISvgService modelSvgService;
     readonly Parsing.IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
-
+    readonly ICommandService commandService;
 
     public ModelService(
         IModel model,
@@ -42,7 +49,8 @@ class ModelService : IModelService
         IStructureService modelStructureService,
         ISvgService modelSvgService,
         Parsing.IPersistenceService persistenceService,
-        IApplicationEvents applicationEvents)
+        IApplicationEvents applicationEvents,
+        ICommandService commandService)
     {
         this.model = model;
         this.parserService = parserService;
@@ -50,13 +58,44 @@ class ModelService : IModelService
         this.modelSvgService = modelSvgService;
         this.persistenceService = persistenceService;
         this.applicationEvents = applicationEvents;
-
+        this.commandService = commandService;
         this.applicationEvents.SaveNeeded += TriggerSave;
     }
 
+
+    public bool CanUndo => commandService.CanUndo;
+    public bool CanRedo => commandService.CanRedo;
     public Pos Offset => Use(m => m.Offset);
     public double Zoom => Use(m => m.Zoom);
     public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
+
+
+    public void Do(Command command)
+    {
+        using (var model = UseModel())
+        {
+            commandService.Do(model, command);
+            model.ClearCachedSvg();
+        }
+
+        applicationEvents.TriggerUIStateChanged();
+        TriggerSave();
+    }
+
+
+    public void Undo()
+    {
+        commandService.Undo(UseModel);
+        TriggerSave();
+    }
+
+
+    public void Redo()
+    {
+        commandService.Redo(UseModel);
+        TriggerSave();
+    }
+
 
     public IModel UseModel()
     {

@@ -15,7 +15,7 @@ class Node : IItem
         Name = name;
         Parent = parent;
 
-        var color = Models.Color.BrightRandom();
+        var color = Coloring.BrightRandom();
         Color = color.ToString();
         Background = color.VeryDark().ToString();
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
@@ -40,6 +40,8 @@ class Node : IItem
     public bool IsChildrenLayoutRequired { get; set; } = false;
 
     public Rect Boundary { get; set; } = Rect.None;
+    public Double ContainerZoom { get; set; } = DefaultContainerZoom;
+    public Pos ContainerOffset { get; set; } = Pos.None;
 
     public List<Node> Children { get; } = new();
     public List<Link> SourceLinks { get; } = new();
@@ -47,8 +49,6 @@ class Node : IItem
     public List<Line> SourceLines { get; } = new();
     public List<Line> TargetLines { get; } = new();
 
-    public Double ContainerZoom { get; set; } = DefaultContainerZoom;
-    public Pos ContainerOffset { get; set; } = Pos.None;
 
     public bool IsRoot => Type == NodeType.Root;
     public string LongName { get; }
