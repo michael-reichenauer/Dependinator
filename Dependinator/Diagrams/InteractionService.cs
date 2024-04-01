@@ -52,7 +52,7 @@ class InteractionService : IInteractionService
         this.modelService = modelService;
 
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
-        this.applicationEvents.Unselected += selectionService.Unselect;
+        this.applicationEvents.UndoneRedone += UpdateToolbar;
     }
 
 
@@ -112,15 +112,19 @@ class InteractionService : IInteractionService
         }
 
         panZoomService.Zoom(e);
+        UpdateToolbar();
+    }
 
+    void UpdateToolbar()
+    {
         if (selectionService.IsSelected)
         {
-            zoomToolbarDebouncer.Debounce(50, async () =>
-            {
-                if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(selectionService.SelectedId.Id))) return;
-                SelectedNodePosition = new Pos(bound.X, bound.Y);
-                applicationEvents.TriggerUIStateChanged();
-            });
+            zoomToolbarDebouncer.Debounce(20, async () =>
+                {
+                    if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(selectionService.SelectedId.Id))) return;
+                    SelectedNodePosition = new Pos(bound.X, bound.Y);
+                    applicationEvents.TriggerUIStateChanged();
+                });
         }
     }
 

@@ -13,7 +13,8 @@ interface INodeEditService
 [Scoped]
 class NodeEditService(IModelService modelService) : INodeEditService
 {
-    const double MaxZoom = 10;
+    const double MaxZoom = 1.0;
+    const double MinZoom = 1.0 / 10.0;
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
 
@@ -35,8 +36,9 @@ class NodeEditService(IModelService modelService) : INodeEditService
         {
             var nodeZoom = node.GetZoom() * zoom;
             var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
+            var newContainerOffset = node.ContainerOffset with { X = node.ContainerOffset.X + dx, Y = node.ContainerOffset.Y + dy };
 
-            node.ContainerOffset = node.ContainerOffset with { X = node.ContainerOffset.X + dx, Y = node.ContainerOffset.Y + dy };
+            modelService.Do(new NodeEditCommand(node.Id) { ContainerOffset = newContainerOffset });
         });
     }
 
@@ -48,7 +50,7 @@ class NodeEditService(IModelService modelService) : INodeEditService
             var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
 
             var oldBoundary = node.Boundary;
-            node.Boundary = pointerId.SubId switch
+            var newBoundary = pointerId.SubId switch
             {
                 "tl" => node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy, Width = node.Boundary.Width - dx, Height = node.Boundary.Height - dy },
                 "tm" => node.Boundary with { Y = node.Boundary.Y + dy, Height = node.Boundary.Height - dy },
@@ -63,14 +65,20 @@ class NodeEditService(IModelService modelService) : INodeEditService
 
                 _ => node.Boundary
             };
-            var newBoundary = node.Boundary;
+
 
             // Adjust container offest to ensure that children stay in place
-            node.ContainerOffset = node.ContainerOffset with
+            var newContainerOffset = node.ContainerOffset with
             {
                 X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
                 Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y)
             };
+
+            modelService.Do(new NodeEditCommand(node.Id)
+            {
+                Boundary = newBoundary,
+                ContainerOffset = newContainerOffset
+            });
         });
     }
 
@@ -85,7 +93,8 @@ class NodeEditService(IModelService modelService) : INodeEditService
 
            var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
            double newZoom = (e.DeltaY < 0) ? node.ContainerZoom * speed : node.ContainerZoom * (1 / speed);
-           //if (newZoom > MaxZoom) newZoom = MaxZoom;
+           if (newZoom < MinZoom) newZoom = MinZoom;
+           if (newZoom > MaxZoom) newZoom = MaxZoom;
 
            double svgX = mx * node.ContainerZoom + node.ContainerOffset.X;
            double svgY = my * node.ContainerZoom + node.ContainerOffset.Y;
@@ -96,8 +105,13 @@ class NodeEditService(IModelService modelService) : INodeEditService
            var x = svgX - mx / node.Boundary.Width * w;
            var y = svgY - my / node.Boundary.Height * h;
 
-           node.ContainerOffset = new Pos(x, y);
-           node.ContainerZoom = newZoom;
+           var newContainerOffset = new Pos(x, y);
+
+           modelService.Do(new NodeEditCommand(node.Id)
+           {
+               ContainerOffset = newContainerOffset,
+               ContainerZoom = newZoom
+           });
        });
     }
 }

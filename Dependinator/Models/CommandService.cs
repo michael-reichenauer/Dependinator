@@ -32,7 +32,7 @@ class CommandService : ICommandService
     {
         command.Execute(model);
 
-        // Check if command can be combined with previous command
+        // Check if command can be combined with previous command (e.g. multiple edits in a row)
         if (undoStack.Any())
         {
             var previous = undoStack.Peek();

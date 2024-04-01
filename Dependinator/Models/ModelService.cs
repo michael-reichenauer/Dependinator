@@ -79,6 +79,7 @@ class ModelService : IModelService
         }
 
         applicationEvents.TriggerUIStateChanged();
+        TriggerSave();
     }
 
 
@@ -91,8 +92,9 @@ class ModelService : IModelService
             model.ClearCachedSvg();
         }
 
-        applicationEvents.TriggerUnselected();
+        applicationEvents.TriggerUndoneRedone();
         applicationEvents.TriggerUIStateChanged();
+        TriggerSave();
     }
 
 
@@ -105,7 +107,9 @@ class ModelService : IModelService
             model.ClearCachedSvg();
         }
 
+        applicationEvents.TriggerUndoneRedone();
         applicationEvents.TriggerUIStateChanged();
+        TriggerSave();
     }
 
 
