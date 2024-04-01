@@ -1,5 +1,4 @@
 using Dependinator.Models;
-using Dependinator.Utils.UI;
 
 namespace Dependinator.Diagrams;
 
@@ -12,18 +11,11 @@ interface INodeEditService
 }
 
 [Scoped]
-class NodeEditService : INodeEditService
+class NodeEditService(IModelService modelService) : INodeEditService
 {
-    readonly IModelService modelService;
-
     const double MaxZoom = 10;
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
-
-    public NodeEditService(IModelService modelService)
-    {
-        this.modelService = modelService;
-    }
 
     public void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
@@ -31,8 +23,9 @@ class NodeEditService : INodeEditService
         {
             var nodeZoom = node.GetZoom() * zoom;
             var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
+            var newBoundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
 
-            node.Boundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
+            modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
         });
     }
 

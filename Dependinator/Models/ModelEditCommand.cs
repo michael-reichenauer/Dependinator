@@ -1,23 +1,24 @@
-
-
 namespace Dependinator.Models;
 
-class ModelEditCommand : ICommand
-{
-    double? Zoom { get; set; }
-    double? ZoomCopy { get; set; }
-    Pos? Offset { get; set; }
-    Pos? OffsetCopy { get; set; }
 
-    public void Execute(IModel model)
+class ModelEditCommand : Command
+{
+    public double? Zoom { get; set; }
+    public double? ZoomCopy { get; set; }
+    public Pos? Offset { get; set; }
+    public Pos? OffsetCopy { get; set; }
+
+
+    public override void Execute(IModel model)
     {
         if (Zoom != null) (ZoomCopy, model.Zoom) = (model.Zoom, (double)Zoom);
         if (Offset != null) (OffsetCopy, model.Offset) = (model.Offset, Offset);
     }
 
-    public void Unexecute(IModel model)
+
+    public override void Unexecute(IModel model)
     {
-        if (ZoomCopy != null) (Zoom, model.Zoom) = (model.Zoom, (double)ZoomCopy);
-        if (OffsetCopy != null) (Offset, model.Offset) = (model.Offset, OffsetCopy);
+        if (ZoomCopy != null) (Zoom, model.Zoom, ZoomCopy) = (model.Zoom, (double)ZoomCopy, null);
+        if (OffsetCopy != null) (Offset, model.Offset, OffsetCopy) = (model.Offset, OffsetCopy, null);
     }
 }

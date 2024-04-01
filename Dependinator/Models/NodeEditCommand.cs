@@ -1,37 +1,40 @@
-﻿
-
-namespace Dependinator.Models;
+﻿namespace Dependinator.Models;
 
 
-class NodeEditCommand : ICommand
+class NodeEditCommand : Command
 {
     readonly NodeId nodeId;
 
-    public Rect? Bounds { get; set; }
-    public Rect? BoundsCopy { get; set; }
+    public Rect? Boundary { get; set; }
+    public Rect? BoundaryCopy { get; set; }
     public Double? ContainerZoom { get; set; }
     public Double? ContainerZoomCopy { get; set; }
     public Pos? ContainerOffset { get; set; }
     public Pos? ContainerOffsetCopy { get; set; }
+
 
     public NodeEditCommand(NodeId nodeId)
     {
         this.nodeId = nodeId;
     }
 
-    public void Execute(IModel model)
+
+    public override void Execute(IModel model)
     {
-        if (model.TryGetNode(nodeId, out var node)) return;
-        if (Bounds != null) (BoundsCopy, node.Boundary) = (node.Boundary, Bounds);
+        if (!model.TryGetNode(nodeId, out var node)) return;
+
+        if (Boundary != null) (BoundaryCopy, node.Boundary) = (node.Boundary, Boundary);
         if (ContainerZoom != null) (ContainerZoomCopy, node.ContainerZoom) = (node.ContainerZoom, (double)ContainerZoom);
         if (ContainerOffset != null) (ContainerOffsetCopy, node.ContainerOffset) = (node.ContainerOffset, ContainerOffset);
     }
 
-    public void Unexecute(IModel model)
+
+    public override void Unexecute(IModel model)
     {
-        if (model.TryGetNode(nodeId, out var node)) return;
-        if (BoundsCopy != null) (Bounds, node.Boundary) = (node.Boundary, BoundsCopy);
-        if (ContainerZoomCopy != null) (ContainerZoom, node.ContainerZoom) = (node.ContainerZoom, (double)ContainerZoomCopy);
-        if (ContainerOffsetCopy != null) (ContainerOffset, node.ContainerOffset) = (node.ContainerOffset, ContainerOffsetCopy);
+        if (!model.TryGetNode(nodeId, out var node)) return;
+
+        if (BoundaryCopy != null) (Boundary, node.Boundary, BoundaryCopy) = (node.Boundary, BoundaryCopy, null);
+        if (ContainerZoomCopy != null) (ContainerZoom, node.ContainerZoom, ContainerZoomCopy) = (node.ContainerZoom, (double)ContainerZoomCopy, null);
+        if (ContainerOffsetCopy != null) (ContainerOffset, node.ContainerOffset, ContainerOffsetCopy) = (node.ContainerOffset, ContainerOffsetCopy, null);
     }
 }

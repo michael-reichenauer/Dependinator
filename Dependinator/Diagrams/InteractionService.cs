@@ -1,5 +1,4 @@
 ﻿using Dependinator.Models;
-using Dependinator.Utils.UI;
 
 namespace Dependinator.Diagrams;
 
@@ -51,7 +50,9 @@ class InteractionService : IInteractionService
         this.selectionService = selectionService;
         this.screenService = screenService;
         this.modelService = modelService;
+
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
+        this.applicationEvents.Unselected += selectionService.Unselect;
     }
 
 
