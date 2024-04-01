@@ -7,20 +7,21 @@ interface ICommandService
     bool CanRedo { get; }
 
     void Do(IModel model, Command command);
-    void Undo(IModel model);
-    void Redo(IModel model);
+    void Redo(Func<IModel> useModel);
+    void Undo(Func<IModel> useModel);
 }
 
 
 [Singleton]
 class CommandService : ICommandService
 {
+    readonly IApplicationEvents applicationEvents;
     readonly Stack<Command> undoStack = [];
     readonly Stack<Command> redoStack = [];
 
-
-    public CommandService()
+    public CommandService(IApplicationEvents applicationEvents)
     {
+        this.applicationEvents = applicationEvents;
     }
 
 
@@ -57,22 +58,85 @@ class CommandService : ICommandService
     }
 
 
-    public void Undo(IModel model)
+    public void Undo(Func<IModel> useModel)
     {
-        if (!undoStack.Any()) return;
+        if (!CanUndo) return;
 
+        if (undoStack.Peek() is CompositeCommand composite)
+        {
+            UndoComposite(useModel, composite);
+            return;
+        }
         var command = undoStack.Pop();
         redoStack.Push(command);
-        command.Unexecute(model);
+
+        using (var model = useModel())
+        {
+            command.Unexecute(model);
+            model.ClearCachedSvg();
+        }
+        applicationEvents.TriggerUndoneRedone();
+        applicationEvents.TriggerUIStateChanged();
     }
 
-
-    public void Redo(IModel model)
+    public void Redo(Func<IModel> useModel)
     {
-        if (!redoStack.Any()) return;
+        if (!CanRedo) return;
+
+        if (redoStack.Peek() is CompositeCommand composite)
+        {
+            RedoComposite(useModel, composite);
+            return;
+        }
 
         var command = redoStack.Pop();
         undoStack.Push(command);
-        command.Execute(model);
+        using (var model = useModel())
+        {
+            command.Execute(model);
+        }
+
+        applicationEvents.TriggerUndoneRedone();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+
+    async void UndoComposite(Func<IModel> useModel, CompositeCommand composite)
+    {
+        foreach (var subCommand in composite.commands.AsEnumerable().Reverse())
+        {
+            using (var model = useModel())
+            {
+                subCommand.Unexecute(model);
+                model.ClearCachedSvg();
+            }
+
+            applicationEvents.TriggerUndoneRedone();
+            applicationEvents.TriggerUIStateChanged();
+            await Task.Delay(2);
+        }
+
+        var command = undoStack.Pop();
+        redoStack.Push(command);
+    }
+
+
+    async void RedoComposite(Func<IModel> useModel, CompositeCommand composite)
+    {
+        foreach (var subCommand in composite.commands)
+        {
+            using (var model = useModel())
+            {
+                subCommand.Execute(model);
+                model.ClearCachedSvg();
+            }
+
+            applicationEvents.TriggerUndoneRedone();
+            applicationEvents.TriggerUIStateChanged();
+            await Task.Delay(2);
+        }
+
+        var command = redoStack.Pop();
+        undoStack.Push(command);
     }
 }

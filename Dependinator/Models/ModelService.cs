@@ -85,30 +85,14 @@ class ModelService : IModelService
 
     public void Undo()
     {
-        if (!commandService.CanUndo) return;
-        using (var model = UseModel())
-        {
-            commandService.Undo(model);
-            model.ClearCachedSvg();
-        }
-
-        applicationEvents.TriggerUndoneRedone();
-        applicationEvents.TriggerUIStateChanged();
+        commandService.Undo(UseModel);
         TriggerSave();
     }
 
 
     public void Redo()
     {
-        if (!commandService.CanRedo) return;
-        using (var model = UseModel())
-        {
-            commandService.Redo(model);
-            model.ClearCachedSvg();
-        }
-
-        applicationEvents.TriggerUndoneRedone();
-        applicationEvents.TriggerUIStateChanged();
+        commandService.Redo(UseModel);
         TriggerSave();
     }
 

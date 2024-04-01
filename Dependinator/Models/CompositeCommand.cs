@@ -2,7 +2,7 @@ namespace Dependinator.Models;
 
 class CompositeCommand : Command
 {
-    readonly List<Command> commands = [];
+    public readonly List<Command> commands = [];
     readonly string typeName;
     DateTime timeStamp;
 

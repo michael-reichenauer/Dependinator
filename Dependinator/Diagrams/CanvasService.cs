@@ -129,7 +129,7 @@ class CanvasService : ICanvasService
         else
         {
             var bound = modelService.GetBounds();
-            panZoomService.PanZoomToFit(bound);
+            panZoomService.PanZoomToFit(bound, 1, true);
         }
     }
 
