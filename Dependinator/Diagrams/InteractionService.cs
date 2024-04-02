@@ -57,13 +57,36 @@ class InteractionService : IInteractionService
 
 
     public string Cursor { get; private set; } = "default";
-    public bool IsShowNodeToolbar => selectionService.IsSelected;
+    public bool IsShowNodeToolbar
+    {
+        get
+        {
+            if (!selectionService.IsSelected) return false;
+            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node)) return false;
+            var nodeZoom = 1 / (node.GetZoom() * Zoom);
+            return !Node.IsToLargeToBeSeen(nodeZoom) && !node.IsShowIcon(nodeZoom);
+        }
+    }
+
 
     public Pos SelectedNodePosition { get; set; } = Pos.None;
 
     public bool IsEditNodeMode
     {
-        get => selectionService.IsEditMode;
+        get
+        {
+            if (!selectionService.IsEditMode) return false;
+            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node)) return false;
+            var nodeZoom = 1 / (node.GetZoom() * Zoom);
+            if (!Node.IsToLargeToBeSeen(nodeZoom) && !node.IsShowIcon(nodeZoom))
+            {   // No longer in edit mode if node is to large to be seen or has an icon
+                return true;
+            }
+
+            selectionService.SetEditMode(false);
+            return false;
+        }
+
         set => selectionService.SetEditMode(value);
     }
 
@@ -83,7 +106,7 @@ class InteractionService : IInteractionService
 
     void OnMouseWheel(PointerEvent e)
     {
-        if (selectionService.IsEditMode)
+        if (IsEditNodeMode)
         {
             // Node is in edit mode
             var targetId = PointerId.Parse(e.TargetId);
@@ -156,7 +179,7 @@ class InteractionService : IInteractionService
         mouseDownId = PointerId.Parse(e.TargetId);
 
         if (mouseDownId.Id == selectionService.SelectedId.Id) return;
-        if (!selectionService.IsEditMode) return;
+        if (!IsEditNodeMode) return;
 
         // Node is in edit mode, check if mouse down is inside the selected node, if so trate as selected node
         var downId = NodeId.FromId(mouseDownId.Id);
@@ -173,7 +196,7 @@ class InteractionService : IInteractionService
     void OnMouseMove(PointerEvent e)
     {
         if (!e.IsLeftButton) return;
-        if (selectionService.IsEditMode && mouseDownId.Id == selectionService.SelectedId.Id)
+        if (IsEditNodeMode && mouseDownId.Id == selectionService.SelectedId.Id)
         {
             nodeEditService.PanSelectedNode(e, Zoom, mouseDownId);
             return;
