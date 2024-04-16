@@ -10,6 +10,7 @@ interface IInteractionService
     Pos SelectedNodePosition { get; }
 
     Task InitAsync();
+    void NodePanZoomToFit();
 }
 
 
@@ -90,6 +91,11 @@ class InteractionService : IInteractionService
         set => selectionService.SetEditMode(value);
     }
 
+    public void NodePanZoomToFit()
+    {
+        if (!selectionService.IsSelected) return;
+        nodeEditService.PanZoomToFit(selectionService.SelectedId);
+    }
 
     public Task InitAsync()
     {

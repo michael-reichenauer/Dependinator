@@ -8,6 +8,7 @@ interface INodeEditService
     void PanSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void ZoomSelectedNode(PointerEvent e, PointerId pointerId);
+    void PanZoomToFit(PointerId pointerId);
 }
 
 [Scoped]
@@ -15,6 +16,7 @@ class NodeEditService(IModelService modelService) : INodeEditService
 {
     const double MaxZoom = 1.0;
     const double MinZoom = 1.0 / 10.0;
+    const double Margin = 10;
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
 
@@ -113,5 +115,43 @@ class NodeEditService(IModelService modelService) : INodeEditService
                ContainerZoom = newZoom
            });
        });
+    }
+
+    public void PanZoomToFit(PointerId pointerId)
+    {
+        modelService.UseNode(pointerId.Id, node =>
+      {
+          using var model = modelService.UseModel();
+
+          Rect b = node.GetTotalBounds();
+
+          // Determine the X or y zoom that best fits the bounds (including margin)
+          var zx = (b.Width + 2 * Margin) / node.Boundary.Width;
+          var zy = (b.Height + 2 * Margin) / node.Boundary.Height;
+          var newZoom = 1 / Math.Max(zx, zy);
+
+          var wx = node.Boundary.Width * newZoom;
+          var wy = node.Boundary.Height / newZoom;
+
+          // Zoom width and height to fit the bounds
+          var nw = (b.Width + 2 * Margin) * newZoom;
+          var nh = (b.Height + 2 * Margin) * newZoom;
+          var w = node.Boundary.Width * newZoom;
+          var h = node.Boundary.Height * newZoom;
+
+          // Pan to center the bounds
+          var mx = Margin;
+          var my = Margin;
+          var x = -(b.X - mx) * newZoom;
+          var y = -(b.Y - my) * newZoom;
+
+          var newOffset = new Pos(x, y);
+
+          modelService.Do(new NodeEditCommand(node.Id)
+          {
+              ContainerOffset = newOffset,
+              ContainerZoom = newZoom
+          });
+      });
     }
 }
