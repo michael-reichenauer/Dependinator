@@ -5,7 +5,7 @@ namespace Dependinator.Diagrams;
 interface IInteractionService
 {
     string Cursor { get; }
-    bool IsShowNodeToolbar { get; }
+    bool IsContainer { get; }
     bool IsEditNodeMode { get; set; }
     Pos SelectedNodePosition { get; }
 
@@ -58,7 +58,7 @@ class InteractionService : IInteractionService
 
 
     public string Cursor { get; private set; } = "default";
-    public bool IsShowNodeToolbar
+    public bool IsContainer
     {
         get
         {
