@@ -1,0 +1,21 @@
+@inject IApplicationEvents applicationEvents
+@inject IDependenciesService srv
+
+<MudPopover Open="@srv.IsShowExplorer" Fixed="true" Class="px-4 pt-4" AnchorOrigin="Origin.BottomLeft"
+    TransformOrigin="Origin.BottomLeft">
+    <div class="d-flex flex-column">
+        <MudText>Content of the popover can be anything.</MudText>
+        <MudButton OnClick="srv.HideExplorer" Class="ml-auto mr-n3 mb-1" Color="Color.Error">Close
+        </MudButton>
+    </div>
+</MudPopover>
+
+
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender) applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
+    }
+}
