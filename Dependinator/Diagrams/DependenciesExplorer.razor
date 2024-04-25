@@ -14,16 +14,79 @@
         </MudStack>
 
         <MudDivider />
-
-        <div class="d-flex flex-column">
-            <MudText>Content of the popover can be anything.</MudText>
-        </div>
+        <MudPaper MinWidth="350px" MaxHeight="500px" Class="overflow-y-auto" Elevation="0">
+            <MudTreeView Dense="true" Items="@TreeItems" ServerData="LoadServerData" Hover="true" Width="100%">
+                <ItemTemplate>
+                    <MudTreeViewItem Value="@context" Icon="@context.Icon" CanExpand="@context.CanExpand"
+                        LoadingIconColor="Color.Info">
+                        <BodyContent Context="item">
+                            <div
+                                style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                                <MudText Style="justify-self: start;">@context.Title</MudText>
+                                <div style="justify-self: end;">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                        Color="Color.Inherit" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                        Color="Color.Inherit" />
+                                </div>
+                            </div>
+                        </BodyContent>
+                    </MudTreeViewItem>
+                </ItemTemplate>
+            </MudTreeView>
+        </MudPaper>
     </MudStack>
 </MudPopover>
 
 
 
 @code {
+    private HashSet<TreeItemData> TreeItems { get; set; } = new HashSet<TreeItemData>();
+
+    public class TreeItemData
+    {
+        public string Title { get; set; }
+
+        public string Icon { get; set; }
+
+        public int? Number { get; set; }
+
+        public bool CanExpand => TreeItems?.Any() ?? false;
+
+        public HashSet<TreeItemData> TreeItems { get; set; }
+
+        public TreeItemData(string title, string icon, int? number = null)
+        {
+            Title = title;
+            Icon = icon;
+            Number = number;
+        }
+    }
+
+    public async Task<HashSet<TreeItemData>> LoadServerData(TreeItemData parentNode)
+    {
+        await Task.Delay(500);
+        return parentNode.TreeItems;
+    }
+
+    protected override void OnInitialized()
+    {
+        TreeItems.Add(new TreeItemData("All Mail", Icons.Material.Filled.Email));
+        TreeItems.Add(new TreeItemData("Trash", Icons.Material.Filled.Delete));
+        TreeItems.Add(new TreeItemData("Categories", Icons.Material.Filled.Label)
+            {
+                TreeItems = new HashSet<TreeItemData>()
+{
+new TreeItemData("Social", Icons.Material.Filled.Group, 90),
+new TreeItemData("Updates", Icons.Material.Filled.Info, 2294),
+new TreeItemData("Forums", Icons.Material.Filled.QuestionAnswer, 3566),
+new TreeItemData("Promotions", Icons.Material.Filled.LocalOffer, 733)
+}
+            });
+        TreeItems.Add(new TreeItemData("History", Icons.Material.Filled.Label, null));
+    }
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
