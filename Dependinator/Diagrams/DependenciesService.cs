@@ -3,11 +3,14 @@ using MudBlazor;
 namespace Dependinator.Diagrams;
 
 
+public enum TreeSide { Left, Right }
+
 public class TreeItem
 {
     public string Title { get; set; }
     public string Icon { get; set; }
     public bool CanExpand => TreeItems.Any();
+    public bool IsExpanded { get; set; }
     public HashSet<TreeItem> TreeItems { get; set; } = new();
 
     public TreeItem(string title, string icon)
@@ -17,17 +20,21 @@ public class TreeItem
     }
 }
 
+public class TreeData
+{
+    public HashSet<TreeItem> TreeItems { get; set; } = new();
+    public TreeItem Selected { get; set; } = null!;
+}
+
+
+
 interface IDependenciesService
 {
     bool IsShowExplorer { get; }
 
-    TreeItem LeftSelected { get; set; }
-    HashSet<TreeItem> LeftTreeItems { get; }
-    Task<HashSet<TreeItem>> LeftLoad(TreeItem parentNode);
+    TreeData TreeData(TreeSide side);
 
-    TreeItem RightSelected { get; set; }
-    HashSet<TreeItem> RightTreeItems { get; }
-    Task<HashSet<TreeItem>> RightLoad(TreeItem parentNode);
+    Task<HashSet<TreeItem>> LoadSubTreeAsync(TreeItem parentNode);
 
     void ShowExplorer();
     void HideExplorer();
@@ -39,6 +46,10 @@ class DependenciesService : IDependenciesService
 {
     readonly IApplicationEvents applicationEvents;
 
+
+    TreeData LeftTreeData { get; } = new();
+    TreeData RightTreeData { get; } = new();
+
     public DependenciesService(IApplicationEvents applicationEvents)
     {
         this.applicationEvents = applicationEvents;
@@ -46,21 +57,14 @@ class DependenciesService : IDependenciesService
 
     public bool IsShowExplorer { get; private set; }
 
-    public HashSet<TreeItem> LeftTreeItems { get; } = new();
-    public TreeItem LeftSelected { get; set; } = null!;
-
-
-    public async Task<HashSet<TreeItem>> LeftLoad(TreeItem parentNode)
+    public TreeData TreeData(TreeSide side)
     {
-        await Task.Delay(500);
-        return parentNode.TreeItems;
+        if (side == TreeSide.Left) return LeftTreeData;
+        return RightTreeData;
     }
 
-    public HashSet<TreeItem> RightTreeItems { get; } = new();
-    public TreeItem RightSelected { get; set; } = null!;
 
-
-    public async Task<HashSet<TreeItem>> RightLoad(TreeItem parentNode)
+    public async Task<HashSet<TreeItem>> LoadSubTreeAsync(TreeItem parentNode)
     {
         await Task.Delay(500);
         return parentNode.TreeItems;
@@ -73,9 +77,9 @@ class DependenciesService : IDependenciesService
         Log.Info("ShowExplorer");
         IsShowExplorer = true;
 
-        LeftTreeItems.Add(new TreeItem("All Mail", Icons.Material.Filled.Email));
-        LeftTreeItems.Add(new TreeItem("Trash", Icons.Material.Filled.Delete));
-        LeftTreeItems.Add(new TreeItem("Categories", Icons.Material.Filled.Label)
+        LeftTreeData.TreeItems.Add(new TreeItem("All Mail", Icons.Material.Filled.Email));
+        LeftTreeData.TreeItems.Add(new TreeItem("Trash", Icons.Material.Filled.Delete));
+        LeftTreeData.TreeItems.Add(new TreeItem("Categories", Icons.Material.Filled.Label)
         {
             TreeItems =
             [
@@ -85,11 +89,13 @@ class DependenciesService : IDependenciesService
                 new("Promotions", Icons.Material.Filled.LocalOffer)
             ]
         });
-        LeftTreeItems.Add(new TreeItem("History", Icons.Material.Filled.Label));
 
-        RightTreeItems.Add(new TreeItem("All Mail", Icons.Material.Filled.Email));
-        RightTreeItems.Add(new TreeItem("Trash", Icons.Material.Filled.Delete));
-        RightTreeItems.Add(new TreeItem("Categories", Icons.Material.Filled.Label)
+        LeftTreeData.TreeItems.Add(new TreeItem("History", Icons.Material.Filled.Label));
+
+
+        RightTreeData.TreeItems.Add(new TreeItem("All Mail", Icons.Material.Filled.Email));
+        RightTreeData.TreeItems.Add(new TreeItem("Trash", Icons.Material.Filled.Delete));
+        RightTreeData.TreeItems.Add(new TreeItem("Categories", Icons.Material.Filled.Label)
         {
             TreeItems =
             [
@@ -99,7 +105,7 @@ class DependenciesService : IDependenciesService
                 new("Promotions", Icons.Material.Filled.LocalOffer)
             ]
         });
-        RightTreeItems.Add(new TreeItem("History", Icons.Material.Filled.Label));
+        RightTreeData.TreeItems.Add(new TreeItem("History", Icons.Material.Filled.Label));
 
         applicationEvents.TriggerUIStateChanged();
     }
@@ -108,7 +114,8 @@ class DependenciesService : IDependenciesService
     {
         Log.Info("HideExplorer");
         IsShowExplorer = false;
-        LeftTreeItems.Clear();
+        LeftTreeData.TreeItems.Clear();
+        RightTreeData.TreeItems.Clear();
 
         applicationEvents.TriggerUIStateChanged();
     }

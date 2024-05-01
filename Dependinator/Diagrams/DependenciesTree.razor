@@ -1,0 +1,34 @@
+@inject IApplicationEvents applicationEvents
+@inject IDependenciesService srv
+
+
+<MudTreeView Items="@srv.TreeData(Side).TreeItems" ServerData="srv.LoadSubTreeAsync"
+    @bind-SelectedValue="srv.TreeData(Side).Selected" Hover="true" Dense="true" Width="100%">
+    <ItemTemplate>
+        <MudTreeViewItem Value="@context" Icon="@context.Icon" CanExpand="@context.CanExpand"
+            @bind-Expanded="@context.IsExpanded" LoadingIconColor="Color.Info">
+            <BodyContent Context="item">
+                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                    <MudText Style="justify-self: start;">
+                        @context.Title
+                    </MudText>
+                    <div style="justify-self: end;">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Inherit" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Inherit" />
+                    </div>
+                </div>
+            </BodyContent>
+        </MudTreeViewItem>
+    </ItemTemplate>
+</MudTreeView>
+
+@code {
+    [Parameter]
+    public TreeSide Side { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender) applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
+    }
+}

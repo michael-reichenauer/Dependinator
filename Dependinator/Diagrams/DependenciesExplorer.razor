@@ -16,49 +16,9 @@
         <MudDivider />
         <MudPaper MinWidth="350px" MaxHeight="500px" Class="overflow-y-auto" Elevation="0">
             <MudStack Row="true">
-                <MudTreeView Items="@srv.LeftTreeItems" ServerData="srv.LeftLoad" @bind-SelectedValue="srv.LeftSelected"
-                    Hover="true" Dense="true" Width="100%">
-                    <ItemTemplate>
-                        <MudTreeViewItem Value="@context" Icon="@context.Icon" CanExpand="@context.CanExpand"
-                            LoadingIconColor="Color.Info">
-                            <BodyContent Context="item">
-                                <div
-                                    style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                    <MudText Style="justify-self: start;">@context.Title</MudText>
-                                    <div style="justify-self: end;">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
-                                            Color="Color.Inherit" />
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                            Color="Color.Inherit" />
-                                    </div>
-                                </div>
-                            </BodyContent>
-                        </MudTreeViewItem>
-                    </ItemTemplate>
-                </MudTreeView>
 
-
-                <MudTreeView Items="@srv.RightTreeItems" ServerData="srv.RightLoad"
-                    @bind-SelectedValue="srv.RightSelected" Hover="true" Dense="true" Width="100%">
-                    <ItemTemplate>
-                        <MudTreeViewItem Value="@context" Icon="@context.Icon" CanExpand="@context.CanExpand"
-                            LoadingIconColor="Color.Info">
-                            <BodyContent Context="item">
-                                <div
-                                    style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                    <MudText Style="justify-self: start;">@context.Title</MudText>
-                                    <div style="justify-self: end;">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
-                                            Color="Color.Inherit" />
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
-                                            Color="Color.Inherit" />
-                                    </div>
-                                </div>
-                            </BodyContent>
-                        </MudTreeViewItem>
-                    </ItemTemplate>
-                </MudTreeView>
-
+                <DependenciesTree Side="TreeSide.Left" />
+                <DependenciesTree Side="TreeSide.Right" />
             </MudStack>
         </MudPaper>
     </MudStack>
