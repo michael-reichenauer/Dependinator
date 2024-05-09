@@ -14,11 +14,14 @@
         </MudStack>
 
         <MudDivider />
-        <MudPaper MinWidth="350px" MaxHeight="500px" Class="overflow-y-auto" Elevation="0">
+        <MudPaper MinWidth="350px" MaxHeight="550px" Class="overflow-y-auto" Elevation="0">
             <MudStack Row="true">
-
-                <DependenciesTree Side="TreeSide.Left" />
-                <DependenciesTree Side="TreeSide.Right" />
+                <div  Class="overflow-y-auto" MaxHeight="500px">
+                     <DependenciesTree Side="TreeSide.Left" />
+                </div>
+                <div  Class="overflow-y-auto" MaxHeight="500px">
+                    <DependenciesTree Side="TreeSide.Right" />
+                </div>
             </MudStack>
         </MudPaper>
     </MudStack>

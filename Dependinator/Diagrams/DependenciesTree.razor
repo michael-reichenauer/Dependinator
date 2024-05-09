@@ -2,8 +2,8 @@
 @inject IDependenciesService srv
 
 
-<MudTreeView Items="@srv.TreeData(Side).TreeItems" ServerData="srv.LoadSubTreeAsync"
-    @bind-SelectedValue="srv.TreeData(Side).Selected" Hover="true" Dense="true" Width="100%">
+<MudTreeView Items="@TreeData.Items" ServerData="srv.LoadSubTreeAsync" @bind-SelectedValue="TreeData.Selected"
+    Hover="true" Dense="true" Width="100%">
     <ItemTemplate>
         <MudTreeViewItem Value="@context" Icon="@context.Icon" CanExpand="@context.CanExpand"
             @bind-Expanded="@context.IsExpanded" LoadingIconColor="Color.Info">
@@ -13,8 +13,10 @@
                         @context.Title
                     </MudText>
                     <div style="justify-self: end;">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Inherit" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Inherit" />
+                        <MudIconButton Icon="@Icons.Material.Filled.LocationSearching" Size="Size.Small"
+                            Color="Color.Inherit" />
+                        <MudIconButton Icon="@Icons.Material.Filled.LinearScale" Size="Size.Small"
+                            Color="Color.Inherit" />
                     </div>
                 </div>
             </BodyContent>
@@ -25,6 +27,9 @@
 @code {
     [Parameter]
     public TreeSide Side { get; set; }
+
+    TreeData TreeData => srv.TreeData(Side);
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

@@ -1,3 +1,4 @@
+using Dependinator.Models;
 using MudBlazor;
 
 namespace Dependinator.Diagrams;
@@ -5,26 +6,33 @@ namespace Dependinator.Diagrams;
 
 public enum TreeSide { Left, Right }
 
-public class TreeItem
+internal class TreeItem
 {
-    public string Title { get; set; }
-    public string Icon { get; set; }
-    public bool CanExpand => TreeItems.Any();
+    public string Title { get; set; } = "";
+    public string Icon { get; set; } = Icons.Material.Filled.Folder;
+    public bool CanExpand => Items.Any();
     public bool IsExpanded { get; set; }
-    public HashSet<TreeItem> TreeItems { get; set; } = new();
+    public HashSet<TreeItem> Items { get; set; } = [];
+    public TreeItem? Parent { get; set; }
+    public Node Node { get; set; } = null!;
 
-    public TreeItem(string title, string icon)
+    public IEnumerable<TreeItem> Ancestors()
     {
-        Title = title;
-        Icon = icon;
+        var current = this;
+        while (current.Parent != null)
+        {
+            yield return current.Parent;
+            current = current.Parent;
+        }
     }
 }
 
-public class TreeData
+internal class TreeData
 {
-    public HashSet<TreeItem> TreeItems { get; set; } = new();
+    public HashSet<TreeItem> Items { get; set; } = new();
     public TreeItem Selected { get; set; } = null!;
 }
+
 
 
 
@@ -42,82 +50,121 @@ interface IDependenciesService
 
 
 [Scoped]
-class DependenciesService : IDependenciesService
+class DependenciesService(
+    ISelectionService selectionService,
+    IApplicationEvents applicationEvents,
+    IModelService modelService) : IDependenciesService
 {
-    readonly IApplicationEvents applicationEvents;
-
-
-    TreeData LeftTreeData { get; } = new();
-    TreeData RightTreeData { get; } = new();
-
-    public DependenciesService(IApplicationEvents applicationEvents)
-    {
-        this.applicationEvents = applicationEvents;
-    }
+    TreeData left = new();
+    TreeData right = new();
 
     public bool IsShowExplorer { get; private set; }
 
     public TreeData TreeData(TreeSide side)
     {
-        if (side == TreeSide.Left) return LeftTreeData;
-        return RightTreeData;
+        if (side == TreeSide.Left) return left;
+        return right;
     }
 
 
     public async Task<HashSet<TreeItem>> LoadSubTreeAsync(TreeItem parentNode)
     {
-        await Task.Delay(500);
-        return parentNode.TreeItems;
+        await Task.CompletedTask;
+        return parentNode.Items;
     }
 
 
 
     public void ShowExplorer()
     {
-        Log.Info("ShowExplorer");
+        var selectedId = selectionService.SelectedId.Id;
+
+        left = new();
+        right = new();
+
+        using (var model = modelService.UseModel())
+        {
+            if (!model.TryGetNode(selectedId, out var node)) return;
+
+            var leftRoot = ToItem(model.Root);
+            var rightRoot = ToItem(model.Root);
+            left.Items.Add(leftRoot);
+            right.Items.Add(rightRoot);
+
+            AddNode(leftRoot, node);
+            node.SourceLinks.ForEach(l => AddNode(rightRoot, l.Target));
+
+            SelectNode(left, node);
+        }
+
         IsShowExplorer = true;
-
-        LeftTreeData.TreeItems.Add(new TreeItem("All Mail", Icons.Material.Filled.Email));
-        LeftTreeData.TreeItems.Add(new TreeItem("Trash", Icons.Material.Filled.Delete));
-        LeftTreeData.TreeItems.Add(new TreeItem("Categories", Icons.Material.Filled.Label)
-        {
-            TreeItems =
-            [
-                new("Social", Icons.Material.Filled.Group),
-                new("Updates", Icons.Material.Filled.Info),
-                new("Forums", Icons.Material.Filled.QuestionAnswer),
-                new("Promotions", Icons.Material.Filled.LocalOffer)
-            ]
-        });
-
-        LeftTreeData.TreeItems.Add(new TreeItem("History", Icons.Material.Filled.Label));
-
-
-        RightTreeData.TreeItems.Add(new TreeItem("All Mail", Icons.Material.Filled.Email));
-        RightTreeData.TreeItems.Add(new TreeItem("Trash", Icons.Material.Filled.Delete));
-        RightTreeData.TreeItems.Add(new TreeItem("Categories", Icons.Material.Filled.Label)
-        {
-            TreeItems =
-            [
-                new("Social", Icons.Material.Filled.Group),
-                new("Updates", Icons.Material.Filled.Info),
-                new("Forums", Icons.Material.Filled.QuestionAnswer),
-                new("Promotions", Icons.Material.Filled.LocalOffer)
-            ]
-        });
-        RightTreeData.TreeItems.Add(new TreeItem("History", Icons.Material.Filled.Label));
-
         applicationEvents.TriggerUIStateChanged();
+    }
+
+
+    private void SelectNode(TreeData left, Node node)
+    {
+        var item = FindItemWithNode(left.Items.First(), node);
+        if (item == null) return;
+
+        left.Selected = item;
+
+        foreach (var parent in item.Ancestors())
+        {
+            parent.IsExpanded = true;
+        }
+    }
+
+    public TreeItem? FindItemWithNode(TreeItem root, Node node)
+    {
+        if (root.Node == node) return root;
+
+        return root.Items
+            .Select(child => FindItemWithNode(child, node))
+            .FirstOrDefault(result => result != null);
+    }
+
+    private void AddNode(TreeItem parent, Node node)
+    {
+        // Start from root, but skip root
+        var ancestors = node.Ancestors().Reverse().Skip(1);
+        var current = parent;
+
+        foreach (var ancestor in ancestors)
+        {
+            var ancestorItem = current.Items.FirstOrDefault(n => n.Node.Name == ancestor.Name);
+            if (ancestorItem != null)
+            {   // Ancestor already added
+                current = ancestorItem;
+                continue;
+            }
+
+            // Add ancestor node to tree
+            ancestorItem = ToItem(ancestor);
+            ancestorItem.Parent = current;
+            current.Items.Add(ancestorItem);
+            current = ancestorItem;
+        }
+
+        // Add ancestor node to tree
+        var nodeItem = ToItem(node);
+        nodeItem.Parent = current;
+        current.Items.Add(nodeItem);
     }
 
     public void HideExplorer()
     {
         Log.Info("HideExplorer");
         IsShowExplorer = false;
-        LeftTreeData.TreeItems.Clear();
-        RightTreeData.TreeItems.Clear();
+        left = new();
+        right = new();
 
         applicationEvents.TriggerUIStateChanged();
     }
-}
 
+    TreeItem ToItem(Node node)
+    {
+        var name = node.IsRoot ? "<all>" : node.ShortName;
+        return new TreeItem { Title = name, Icon = Icons.Material.Filled.Folder, Node = node };
+    }
+}

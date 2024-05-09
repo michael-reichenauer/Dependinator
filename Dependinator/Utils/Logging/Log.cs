@@ -67,6 +67,20 @@ static class Log
         Write(LevelInfo, $"{msg} {toText(p1)} {toText(p2)} {toText(p3)}", memberName, sourceFilePath, sourceLineNumber);
     }
 
+    public static void Info(
+        string msg,
+        object p1,
+        object p2,
+        object p3,
+        object p4,
+        StopParameter stop = StopParameter.Empty,
+        [CallerMemberName] string memberName = "",
+        [CallerFilePath] string sourceFilePath = "",
+        [CallerLineNumber] int sourceLineNumber = 0)
+    {
+        Write(LevelInfo, $"{msg} {toText(p1)} {toText(p2)} {toText(p3)} {toText(p4)}", memberName, sourceFilePath, sourceLineNumber);
+    }
+
     public static void Warn(
         string msg,
         [CallerMemberName] string memberName = "",
