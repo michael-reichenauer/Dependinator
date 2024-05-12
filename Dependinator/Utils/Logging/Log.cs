@@ -33,7 +33,7 @@ static class Log
 
     public static void Info(
        string msg,
-       object p1,
+       object? p1,
        StopParameter stop = StopParameter.Empty,
        [CallerMemberName] string memberName = "",
        [CallerFilePath] string sourceFilePath = "",
@@ -44,8 +44,8 @@ static class Log
 
     public static void Info(
       string msg,
-      object p1,
-      object p2,
+      object? p1,
+      object? p2,
       StopParameter stop = StopParameter.Empty,
       [CallerMemberName] string memberName = "",
       [CallerFilePath] string sourceFilePath = "",
@@ -56,9 +56,9 @@ static class Log
 
     public static void Info(
         string msg,
-        object p1,
-        object p2,
-        object p3,
+        object? p1,
+        object? p2,
+        object? p3,
         StopParameter stop = StopParameter.Empty,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
@@ -69,10 +69,10 @@ static class Log
 
     public static void Info(
         string msg,
-        object p1,
-        object p2,
-        object p3,
-        object p4,
+        object? p1,
+        object? p2,
+        object? p3,
+        object? p4,
         StopParameter stop = StopParameter.Empty,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
@@ -137,7 +137,7 @@ static class Log
         ConfigLogger.Write(level, msg, memberName, sourceFilePath, sourceLineNumber);
     }
 
-    static string toText(object obj)
+    static string toText(object? obj)
     {
         if (obj == null) return "<null>";
         var t = obj.GetType();

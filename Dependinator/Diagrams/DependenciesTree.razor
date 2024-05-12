@@ -2,19 +2,19 @@
 @inject IDependenciesService srv
 
 
-<MudTreeView Items="@TreeData.Items" ServerData="srv.LoadSubTreeAsync" @bind-SelectedValue="TreeData.Selected"
-    Hover="true" Dense="true" Width="100%">
+<MudTreeView @ref="treeViewElement" Color="Color.Warning" Items="@TreeData.Items"
+    @bind-SelectedValue="TreeData.Selected" Hover="true" Dense="true" Width="100%">
     <ItemTemplate>
-        <MudTreeViewItem Value="@context" Icon="@context.Icon" CanExpand="@context.CanExpand"
-            @bind-Expanded="@context.IsExpanded" LoadingIconColor="Color.Info">
+        <MudTreeViewItem Value="@context" Icon="@context.Icon" @bind-Expanded="@context.IsExpanded"
+            ExpandedIcon="@context.ExpandIcon" Items="@context.Items">
             <BodyContent Context="item">
                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                    <MudText Style="justify-self: start;">
+                    <MudText Style="justify-self: start;" Color="@(context.IsSelected? Color.Warning : Color.Inherit)">
                         @context.Title
                     </MudText>
                     <div style="justify-self: end;">
-                        <MudIconButton Icon="@Icons.Material.Filled.LocationSearching" Size="Size.Small"
-                            Color="Color.Inherit" />
+                        <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
+                            Color="Color.Inherit" Class="ml-3" />
                         <MudIconButton Icon="@Icons.Material.Filled.LinearScale" Size="Size.Small"
                             Color="Color.Inherit" />
                     </div>
@@ -27,6 +27,8 @@
 @code {
     [Parameter]
     public TreeSide Side { get; set; }
+
+    internal MudTreeView<TreeItem> treeViewElement { get; private set; } = null!;
 
     TreeData TreeData => srv.TreeData(Side);
 
