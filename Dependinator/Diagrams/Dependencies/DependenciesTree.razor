@@ -2,8 +2,8 @@
 @inject IDependenciesService srv
 
 
-<MudTreeView @ref="treeViewElement" Color="Color.Warning" Items="@TreeData.Items"
-    @bind-SelectedValue="TreeData.Selected" Hover="true" Dense="true" Width="100%">
+<MudTreeView Color="Color.Warning" Items="@Tree.Items" @bind-SelectedValue="Tree.Selected" Hover="true" Dense="true"
+    Width="100%">
     <ItemTemplate>
         <MudTreeViewItem Value="@context" Icon="@context.Icon" @bind-Expanded="@context.IsExpanded"
             ExpandedIcon="@context.ExpandIcon" Items="@context.Items">
@@ -28,9 +28,7 @@
     [Parameter]
     public TreeSide Side { get; set; }
 
-    internal MudTreeView<TreeItem> treeViewElement { get; private set; } = null!;
-
-    TreeData TreeData => srv.TreeData(Side);
+    Tree Tree => srv.TreeData(Side);
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

@@ -4,87 +4,11 @@ using MudBlazor;
 namespace Dependinator.Diagrams;
 
 
-public enum TreeSide { Left, Right }
-
-internal class TreeItem(DependenciesService service)
-{
-    bool isExpanded;
-
-    public string Title { get; set; } = "";
-    public string Icon { get; set; } = Icons.Material.Filled.Folder;
-
-    public string ExpandIcon => HasAllItems ? Icons.Material.Filled.ArrowRight :
-        isExpanded ? Icons.Material.Filled.ArrowDropUp : Icons.Material.Filled.ArrowRight;
-
-
-    public bool IsExpanded
-    {
-        get => isExpanded;
-
-        set
-        {
-            Log.Info("Set IsExpanded", Title, value);
-            if (!HasAllItems)
-            {
-                service.SetAllItems(this);
-                HasAllItems = true;
-                if (value) isExpanded = true;
-                return;
-            }
-
-            isExpanded = value;
-        }
-    }
-
-    public bool HasAllItems { get; set; }
-    public bool IsSelected { get; set; }
-    public HashSet<TreeItem> Items { get; set; } = [];
-
-
-    public TreeItem? Parent { get; set; }
-    public required NodeId NodeId { get; init; } = NodeId.Empty;
-
-    public IEnumerable<TreeItem> Ancestors()
-    {
-        var current = this;
-        while (current.Parent != null)
-        {
-            yield return current.Parent;
-            current = current.Parent;
-        }
-    }
-
-    internal void SetIsExpanded(bool isExpanded) => this.isExpanded = isExpanded;
-}
-
-internal class TreeData
-{
-    TreeItem selected = null!;
-
-    public HashSet<TreeItem> Items { get; set; } = new();
-    public TreeItem Selected
-    {
-        get => selected;
-        set
-        {
-            Log.Info("Selected", value?.Title);
-            if (value == null || value == selected) return;
-            if (selected != null) selected.IsSelected = false;
-            selected = value;
-            selected.IsSelected = true;
-            //selected.Items.ForEach(item => { item.Items.Clear(); item.IsExpanded = false; });
-        }
-    }
-}
-
-
-
-
 interface IDependenciesService
 {
     bool IsShowExplorer { get; }
 
-    TreeData TreeData(TreeSide side);
+    Tree TreeData(TreeSide side);
 
     Task<HashSet<TreeItem>> LoadSubTreeAsync(TreeItem parentNode);
 
@@ -99,12 +23,12 @@ class DependenciesService(
     IApplicationEvents applicationEvents,
     IModelService modelService) : IDependenciesService
 {
-    TreeData left = new();
-    TreeData right = new();
+    Tree left = new();
+    Tree right = new();
 
     public bool IsShowExplorer { get; private set; }
 
-    public TreeData TreeData(TreeSide side)
+    public Tree TreeData(TreeSide side)
     {
         if (side == TreeSide.Left) return left;
         return right;
@@ -160,7 +84,7 @@ class DependenciesService(
         }
     }
 
-    private void SelectNode(TreeData tree, Node node)
+    private void SelectNode(Tree tree, Node node)
     {
         var item = FindItemWithNode(tree.Items.First(), node);
         if (item == null) return;
