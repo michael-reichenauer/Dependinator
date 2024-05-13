@@ -15,9 +15,9 @@ internal class Tree
         set
         {
             if (value == null || value == selected) return;
-            if (selected != null) selected.IsSelected = false;
+            if (selected != null) selected.SetIsSelected(false);
             selected = value;
-            selected.IsSelected = true;
+            selected.SetIsSelected(true);
         }
     }
 }

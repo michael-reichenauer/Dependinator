@@ -31,12 +31,30 @@ internal class TreeItem(DependenciesService service)
                 return;
             }
 
+            if (IsParentSelected && !value) return;  // Dont allow parents of selected to be closed
+
             isExpanded = value;
         }
     }
 
     public bool HasAllItems { get; set; }
     public bool IsSelected { get; set; }
+    public bool IsParentSelected { get; set; }
+
+    public Color TextColor => IsSelected ? Color.Warning : IsParentSelected ? Color.Info : Color.Inherit;
+
+    public void SetIsSelected(bool isSelected)
+    {
+        IsSelected = isSelected;
+        Parent?.SetIsParentSelected(isSelected);
+    }
+
+    void SetIsParentSelected(bool isSelected)
+    {
+        IsParentSelected = isSelected;
+        Parent?.SetIsParentSelected(isSelected);
+    }
+
     public HashSet<TreeItem> Items
     {
         get

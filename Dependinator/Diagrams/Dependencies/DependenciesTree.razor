@@ -9,7 +9,7 @@
             ExpandedIcon="@context.ExpandIcon" Items="@context.Items">
             <BodyContent Context="item">
                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                    <MudText Style="justify-self: start;" Color="@(context.IsSelected? Color.Warning : Color.Inherit)">
+                    <MudText Style="justify-self: start;" Color="@context.TextColor">
                         @context.Title
                     </MudText>
                     <div style="justify-self: end;">
