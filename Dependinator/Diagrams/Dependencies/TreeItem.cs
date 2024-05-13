@@ -6,6 +6,8 @@ namespace Dependinator.Diagrams;
 internal class TreeItem(DependenciesService service)
 {
     bool isExpanded;
+    HashSet<TreeItem> items = [];
+    HashSet<TreeItem> emptyItems = [];
 
     public string Title { get; set; } = "";
     public string Icon { get; set; } = Icons.Material.Filled.Folder;
@@ -35,11 +37,32 @@ internal class TreeItem(DependenciesService service)
 
     public bool HasAllItems { get; set; }
     public bool IsSelected { get; set; }
-    public HashSet<TreeItem> Items { get; set; } = [];
+    public HashSet<TreeItem> Items
+    {
+        get
+        {
+            if (NodeChildrenCount > 0 && items.Count == 0)
+            {
+                if (emptyItems.Count == 0)
+                {
+                    emptyItems = [new(service) { Title = "...", Icon = @Icons.Material.Filled.Crop32, NodeId = NodeId.Empty }];
+                }
+                return emptyItems;
+
+            }
+            return items;
+        }
+
+        set => items = value;
+    }
+
+    public void AddItem(TreeItem item) => items.Add(item);
+
 
 
     public TreeItem? Parent { get; set; }
     public required NodeId NodeId { get; init; } = NodeId.Empty;
+    public int NodeChildrenCount { get; internal set; }
 
     public IEnumerable<TreeItem> Ancestors()
     {

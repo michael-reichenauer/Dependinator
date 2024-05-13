@@ -23,15 +23,15 @@ class DependenciesService(
     IApplicationEvents applicationEvents,
     IModelService modelService) : IDependenciesService
 {
-    Tree left = new();
-    Tree right = new();
+    Tree leftTree = new();
+    Tree rightTree = new();
 
     public bool IsShowExplorer { get; private set; }
 
     public Tree TreeData(TreeSide side)
     {
-        if (side == TreeSide.Left) return left;
-        return right;
+        if (side == TreeSide.Left) return leftTree;
+        return rightTree;
     }
 
 
@@ -42,27 +42,26 @@ class DependenciesService(
     }
 
 
-
     public void ShowExplorer()
     {
         var selectedId = selectionService.SelectedId.Id;
 
-        left = new();
-        right = new();
+        leftTree = new();
+        rightTree = new();
 
         using (var model = modelService.UseModel())
         {
             if (!model.TryGetNode(selectedId, out var node)) return;
 
-            var leftRoot = ToItem(model.Root, false);
-            var rightRoot = ToItem(model.Root, false);
-            left.Items.Add(leftRoot);
-            right.Items.Add(rightRoot);
+            var leftRoot = ToItem(model.Root);
+            var rightRoot = ToItem(model.Root);
+            leftTree.Items.Add(leftRoot);
+            rightTree.Items.Add(rightRoot);
 
             AddDecendantNode(leftRoot, node);
             node.SourceLinks.ForEach(l => AddDecendantNode(rightRoot, l.Target));
 
-            SelectNode(left, node);
+            SelectNode(leftTree, node);
         }
 
         IsShowExplorer = true;
@@ -75,8 +74,7 @@ class DependenciesService(
         using var model = modelService.UseModel();
         if (model.TryGetNode(treeItem.NodeId, out var node))
         {
-            treeItem.Items.Clear();
-            node.Children.ForEach(child => AddChildNode(treeItem, child, true));
+            node.Children.ForEach(child => AddChildNode(treeItem, child));
         }
         else
         {
@@ -104,21 +102,25 @@ class DependenciesService(
     }
 
 
-    TreeItem AddChildNode(TreeItem parent, Node node, bool addExandable)
+    TreeItem AddChildNode(TreeItem parent, Node node)
     {
-        var nodeItem = ToItem(node, addExandable);
+        // Check if node already added
+        var item = parent.Items.FirstOrDefault(n => n.NodeId == node.Id);
+        if (item != null) return item;
+
+        var nodeItem = ToItem(node);
         nodeItem.Parent = parent;
-        parent.Items.Add(nodeItem);
+        parent.AddItem(nodeItem);
         return nodeItem;
     }
 
 
-    void AddDecendantNode(TreeItem rootItem, Node node)
+    TreeItem AddDecendantNode(TreeItem rootItem, Node node)
     {
+        // Add Ancestors to the node
         // Start from root, but skip root
         var ancestors = node.Ancestors().Reverse().Skip(1);
         var current = rootItem;
-
         foreach (var ancestor in ancestors)
         {
             var ancestorItem = current.Items.FirstOrDefault(n => n.NodeId == ancestor.Id);
@@ -129,35 +131,35 @@ class DependenciesService(
             }
 
             // Add ancestor node to tree
-            current = AddChildNode(current, ancestor, false);
+            current = AddChildNode(current, ancestor);
         }
 
         // Add node to its parent
-        AddChildNode(current, node, true);
+        return AddChildNode(current, node);
     }
 
     public void HideExplorer()
     {
         Log.Info("HideExplorer");
         IsShowExplorer = false;
-        left = new();
-        right = new();
+        leftTree = new();
+        rightTree = new();
 
         applicationEvents.TriggerUIStateChanged();
     }
 
-    TreeItem ToItem(Node node, bool addExandable)
+
+    TreeItem ToItem(Node node)
     {
         var name = node.IsRoot ? "<all>" : node.ShortName;
-        var expandableItems = addExandable && node.Children.Any()
-            ? [new TreeItem(this) { Title = "...", Icon = @Icons.Material.Filled.Crop32, NodeId = NodeId.Empty }]
-            : new HashSet<TreeItem>();
+        var nodeChildrenCount = node.Children.Count();
+
         return new TreeItem(this)
         {
             Title = name,
             Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),
             NodeId = node.Id,
-            Items = expandableItems
+            NodeChildrenCount = nodeChildrenCount,
         };
     }
 }
