@@ -1,5 +1,4 @@
 using Dependinator.Models;
-using MudBlazor;
 
 namespace Dependinator.Diagrams;
 
@@ -10,21 +9,31 @@ interface IDependenciesService
 
     Tree TreeData(TreeSide side);
 
-    Task<HashSet<TreeItem>> LoadSubTreeAsync(TreeItem parentNode);
-
     void ShowExplorer();
     void HideExplorer();
 }
 
 
 [Scoped]
-class DependenciesService(
-    ISelectionService selectionService,
-    IApplicationEvents applicationEvents,
-    IModelService modelService) : IDependenciesService
+class DependenciesService : IDependenciesService
 {
-    Tree leftTree = new();
-    Tree rightTree = new();
+    readonly ISelectionService selectionService;
+    readonly IApplicationEvents applicationEvents;
+    readonly IModelService modelService;
+
+    Tree leftTree = null!;
+    Tree rightTree = null!;
+
+    public DependenciesService(
+        ISelectionService selectionService,
+        IApplicationEvents applicationEvents,
+        IModelService modelService)
+    {
+        this.selectionService = selectionService;
+        this.applicationEvents = applicationEvents;
+        this.modelService = modelService;
+    }
+
 
     public bool IsShowExplorer { get; private set; }
 
@@ -35,131 +44,96 @@ class DependenciesService(
     }
 
 
-    public async Task<HashSet<TreeItem>> LoadSubTreeAsync(TreeItem parentNode)
-    {
-        await Task.CompletedTask;
-        return parentNode.Items;
-    }
-
-
     public void ShowExplorer()
     {
         var selectedId = selectionService.SelectedId.Id;
 
-        leftTree = new();
-        rightTree = new();
-
         using (var model = modelService.UseModel())
         {
+            leftTree = new(TreeSide.Left, this, model.Root);
+            rightTree = new(TreeSide.Right, this, model.Root);
+
             if (!model.TryGetNode(selectedId, out var node)) return;
 
-            var leftRoot = ToItem(model.Root);
-            var rightRoot = ToItem(model.Root);
-            leftTree.Items.Add(leftRoot);
-            rightTree.Items.Add(rightRoot);
-
-            AddDecendantNode(leftRoot, node);
-            node.SourceLinks.ForEach(l => AddDecendantNode(rightRoot, l.Target));
-
-            SelectNode(leftTree, node);
+            var nodeItem = leftTree.AddNode(node);
+            nodeItem.ExpandAncestors();
+            leftTree.Selected = nodeItem;
         }
 
         IsShowExplorer = true;
         applicationEvents.TriggerUIStateChanged();
     }
 
-    internal void SetAllItems(TreeItem treeItem)
+    public void ItemSelected(TreeItem item)
     {
-        Log.Info("SetAllItems", treeItem.Title);
+        if (item == null) return;
+
+        if (item.Side == TreeSide.Left) LeftItemSelected(item);
+        if (item.Side == TreeSide.Right) RightItemSelected(item);
+
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    void LeftItemSelected(TreeItem item)
+    {
+        Log.Info("Left item selected", item.Title);
+        leftTree.Selected?.SetIsSelected(false);
+        item.SetIsSelected(true);
+
+        using var model = modelService.UseModel();
+        rightTree = new(TreeSide.Right, this, model.Root);
+        if (!model.TryGetNode(item.NodeId, out var node)) return;
+
+        Log.Info("Reference from", node.Name);
+        node.SourceLines.Select(l => l.Target).ForEach(n =>
+       {
+           Log.Info("  to", n.Name);
+           var item = rightTree.AddNode(n);
+           item.ExpandAncestors();
+       });
+    }
+
+    void RightItemSelected(TreeItem item)
+    {
+        Log.Info("Right item selected", item.Title);
+        rightTree.Selected?.SetIsSelected(false);
+        item.SetIsSelected(true);
+
+        using var model = modelService.UseModel();
+        leftTree = new(TreeSide.Right, this, model.Root);
+
+        if (!model.TryGetNode(item.NodeId, out var node)) return;
+
+        Log.Info("Reference to", node.Name);
+        node.TargetLines.Select(l => l.Source).ForEach(n =>
+        {
+            Log.Info("  from", n.Name);
+            var item = leftTree.AddNode(n);
+            item.ExpandAncestors();
+        });
+    }
+
+    internal void SetChildrenItems(TreeItem treeItem)
+    {
         using var model = modelService.UseModel();
         if (model.TryGetNode(treeItem.NodeId, out var node))
         {
-            node.Children.ForEach(child => AddChildNode(treeItem, child));
-        }
-        else
-        {
-            Log.Info("Node not found", treeItem.NodeId);
+            node.Children.ForEach(child => treeItem.AddChildNode(child));
         }
     }
 
-    private void SelectNode(Tree tree, Node node)
-    {
-        var item = FindItemWithNode(tree.Items.First(), node);
-        if (item == null) return;
-        Log.Info("SelectNode", item.Title);
-
-        tree.Selected = item;
-        item.Ancestors().ForEach(a => a.SetIsExpanded(true));
-    }
-
-    public TreeItem? FindItemWithNode(TreeItem root, Node node)
-    {
-        if (root.NodeId == node.Id) return root;
-
-        return root.Items
-            .Select(child => FindItemWithNode(child, node))
-            .FirstOrDefault(result => result != null);
-    }
-
-
-    TreeItem AddChildNode(TreeItem parent, Node node)
-    {
-        // Check if node already added
-        var item = parent.Items.FirstOrDefault(n => n.NodeId == node.Id);
-        if (item != null) return item;
-
-        var nodeItem = ToItem(node);
-        nodeItem.Parent = parent;
-        parent.AddItem(nodeItem);
-        return nodeItem;
-    }
-
-
-    TreeItem AddDecendantNode(TreeItem rootItem, Node node)
-    {
-        // Add Ancestors to the node
-        // Start from root, but skip root
-        var ancestors = node.Ancestors().Reverse().Skip(1);
-        var current = rootItem;
-        foreach (var ancestor in ancestors)
-        {
-            var ancestorItem = current.Items.FirstOrDefault(n => n.NodeId == ancestor.Id);
-            if (ancestorItem != null)
-            {   // Ancestor already added
-                current = ancestorItem;
-                continue;
-            }
-
-            // Add ancestor node to tree
-            current = AddChildNode(current, ancestor);
-        }
-
-        // Add node to its parent
-        return AddChildNode(current, node);
-    }
 
     public void HideExplorer()
     {
         Log.Info("HideExplorer");
         IsShowExplorer = false;
-        leftTree = new();
-        rightTree = new();
+
+        using (var model = modelService.UseModel())
+        {
+            leftTree = new(TreeSide.Left, this, model.Root);
+            rightTree = new(TreeSide.Right, this, model.Root);
+        }
 
         applicationEvents.TriggerUIStateChanged();
-    }
-
-
-    TreeItem ToItem(Node node)
-    {
-        var name = node.IsRoot ? "<all>" : node.ShortName;
-        var nodeChildrenCount = node.Children.Count();
-
-        return new TreeItem(this)
-        {
-            Title = name,
-            Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),
-            NodeId = node.Id,
-            NodeChildrenCount = nodeChildrenCount,
-        };
     }
 }

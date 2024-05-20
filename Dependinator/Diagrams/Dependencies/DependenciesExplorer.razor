@@ -5,24 +5,42 @@
     TransformOrigin="Origin.BottomLeft">
 
     <MudStack>
+
         <MudStack Row="true">
+
             <MudIcon Icon="@Icons.Material.Outlined.Polyline" Class="my-n2" />
-            <MudText Typo="Typo.subtitle2" Class="my-n2 ml-n2">Dependencies Explorer</MudText>
-            <MudSpacer />
+            <MudGrid Spacing="1" Justify="Justify.Center" Class="my-n2">
+                <MudItem xs="5">
+                    <MudText Class="align-content-end">@(srv.TreeData(TreeSide.Left).Selected?.Title ?? "<all>")
+                    </MudText>
+                </MudItem>
+                <MudItem xs="2" Class="mx-n5">
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowRightAlt" Size="Size.Large" Class="my-n5" />
+                </MudItem>
+                <MudItem xs="5">
+                    <MudText>@(srv.TreeData(TreeSide.Right).Selected?.Title ?? "<all>")</MudText>
+                </MudItem>
+            </MudGrid>
+
             <MudIconButton Icon="@Icons.Material.Outlined.Close" Size="Size.Small" Class="my-n2"
                 OnClick="srv.HideExplorer" />
+
         </MudStack>
 
         <MudDivider />
-        <MudPaper MinWidth="350px" MaxHeight="550px" Class="overflow-y-auto" Elevation="0">
-            <MudStack Row="true">
-                <div Class="overflow-y-auto" MaxHeight="500px">
-                    <DependenciesTree Side="TreeSide.Left" />
-                </div>
-                <div Class="overflow-y-auto" MaxHeight="500px">
-                    <DependenciesTree Side="TreeSide.Right" />
-                </div>
-            </MudStack>
+        <MudPaper Width="700px" Height="550px" Class="overflow-y-auto" Elevation="0">
+            <MudGrid pacing="1" Justify="Justify.Center">
+                <MudItem xs="6">
+                    <div Class="overflow-y-auto" MaxHeight="500px">
+                        <DependenciesTree Side="TreeSide.Left" />
+                    </div>
+                </MudItem>
+                <MudItem xs="6">
+                    <div Class="overflow-y-auto" MaxHeight="500px">
+                        <DependenciesTree Side="TreeSide.Right" />
+                    </div>
+                </MudItem>
+            </MudGrid>
         </MudPaper>
     </MudStack>
 </MudPopover>
