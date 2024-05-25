@@ -35,7 +35,7 @@ internal class SolutionParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        Log.Info("Parsing solution");
+        Log.Info("Parsing solution", solutionFilePath);
         parentNodesToSend.Add(CreateSolutionNode());
 
         if (!Try(out var e, CreateAssemblyParsers())) return e;
@@ -116,10 +116,8 @@ internal class SolutionParser : IDisposable
     R CreateAssemblyParsers(bool includeReferences = false)
     {
         string solutionName = SolutionNodeName;
-
         Solution solution = new Solution(solutionFilePath);
         IReadOnlyList<Project> projects = solution.GetSolutionProjects();
-
         foreach (Project project in projects)
         {
             string assemblyPath = project.GetOutputPath();

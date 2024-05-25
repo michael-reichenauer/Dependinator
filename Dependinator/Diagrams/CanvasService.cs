@@ -114,8 +114,9 @@ class CanvasService : ICanvasService
 
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
-        await fileService.AddAsync(browserFiles);
-        var modelPath = browserFiles.First().Name;
+        var paths = await fileService.AddAsync(browserFiles);
+
+        var modelPath = paths.First();
         await LoadAsync(modelPath);
     }
 
