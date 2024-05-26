@@ -21,7 +21,7 @@ record TileKey(long X, long Y, int Z, int TileSize)
 
     public static TileKey From(Rect canvasRect, Double canvasZoom)
     {
-        var tileSize = (int)Math.Max(canvasRect.Width, canvasRect.Height);
+        var tileSize = (int)Math.Max(canvasRect.Width * 2, canvasRect.Height * 2);
         int z = -(int)Math.Floor(Math.Log(canvasZoom) / Math.Log(Tile.ZoomFactor));
         double tileZoom = Math.Pow(Tile.ZoomFactor, -z);
 
