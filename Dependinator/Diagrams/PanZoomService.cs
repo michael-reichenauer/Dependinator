@@ -92,7 +92,6 @@ class PanZoomService : IPanZoomService
         using var model = modelService.UseModel();
 
         Rect b = totalBounds;
-        b = new Rect(b.X, b.Y, b.Width, b.Height);
 
         // Determine the X or y zoom that best fits the bounds (including margin)
         var zx = (b.Width + 2 * Margin) / SvgRect.Width;
