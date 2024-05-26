@@ -7,7 +7,7 @@ namespace Dependinator.Models;
 class Node : IItem
 {
     const double MinContainerZoom = 1.0;
-    const double MaxNodeZoom = 10 * 1 / Node.DefaultContainerZoom;           // To large to be seen
+    const double MaxNodeZoom = 100 * 1 / Node.DefaultContainerZoom;           // To large to be seen
 
     public Node(string name, Node parent)
     {
