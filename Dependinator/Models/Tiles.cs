@@ -17,7 +17,7 @@ record TileKey(long X, long Y, int Z, int TileSize)
     public Rect GetTileRect() => new(X * TileSize, Y * TileSize, TileSize, TileSize);
     public Rect GetViewRect() => new(-TileSize * 2, -TileSize * 2, TileSize * 5, TileSize * 5);
 
-    public Rect GetTileRectWithMargin() => new(-TileSize, -TileSize, TileSize * 5, TileSize * 5);
+    public Rect GetTileRectWithMargin() => new(-TileSize, -TileSize, TileSize * 3, TileSize * 3);
 
     public static TileKey From(Rect canvasRect, Double canvasZoom)
     {
