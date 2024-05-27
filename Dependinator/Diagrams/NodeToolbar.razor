@@ -9,7 +9,7 @@
         <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
             OnClick="ShowProperties" OnTouch="ShowProperties">Properties ...</MudMenuItem>
     </MudMenu>
-    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Disabled="@(!interactionService.IsEditNodeMode)" />
+    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit"/>
     <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit"
         ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
 </MudButtonGroup>
