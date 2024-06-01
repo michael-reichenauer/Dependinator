@@ -91,6 +91,11 @@ class DependenciesService : IDependenciesService
            var item = rightTree.AddNode(n);
            item.ExpandAncestors();
        });
+
+        rightTree.SelectedTargets = [];
+        node.SourceLines
+            .SelectMany(l => l.Links.Select(link => link.Target))
+            .ForEach(n => rightTree.SelectedTargets[n.Id] = n);
     }
 
     void RightItemSelected(TreeItem item)

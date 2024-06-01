@@ -43,6 +43,8 @@ internal record Tree
     }
 
 
+    public Dictionary<NodeId, Node> SelectedTargets { get; internal set; } = [];
+
     public TreeItem AddNode(Node node)
     {
         // Add Ancestors to the node
