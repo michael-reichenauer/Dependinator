@@ -25,7 +25,7 @@ internal class Tree
     public HashSet<TreeItem> Items { get; } = [];
     public TreeItem Root { get; }
     public bool IsSelected { get; set; }
-    public HashSet<NodeId> SelectedPeers { get; set; } = [];
+    public HashSet<NodeId> SelectedPeers { get; } = [];
 
 
     // Set by the UI, when a tree item is selected. When starting to show dialog, null is sometimes set.
@@ -40,7 +40,7 @@ internal class Tree
         }
     }
 
-    public TreeItem AddNode(Node node)
+    public void AddNode(Node node, bool isSelected = false)
     {
         // Add Ancestors to the node
         // Start from root, but skip root
@@ -60,7 +60,9 @@ internal class Tree
         }
 
         // Add node to its parent
-        return current.AddChildNode(node);
+        var item = current.AddChildNode(node);
+        item.ExpandAncestors();
+        if (isSelected) Selected = item;
     }
 
     TreeItem CreateRootItem(Node root)

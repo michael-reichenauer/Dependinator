@@ -6,7 +6,7 @@ namespace Dependinator.Diagrams;
 internal class TreeItem
 {
     bool isExpanded;
-    HashSet<TreeItem> items = [];
+    readonly HashSet<TreeItem> items = [];
     readonly Lazy<HashSet<TreeItem>> emptyItems;
 
     public readonly Tree Tree;
@@ -20,10 +20,10 @@ internal class TreeItem
 
     public required string Title { get; init; }
     public required string Icon { get; init; }
-    public TreeSide Side => Tree.Side;
     public required TreeItem? Parent { get; set; }
-    public required NodeId NodeId { get; init; } = NodeId.Empty;
+    public required NodeId NodeId { get; init; }
     public int NodeChildrenCount { get; internal set; }
+    public TreeSide Side => Tree.Side;
 
     public string ExpandIcon => HasAllItems ? Icons.Material.Filled.ArrowRight :
         isExpanded ? Icons.Material.Filled.ArrowDropUp : Icons.Material.Filled.ArrowRight;
@@ -55,6 +55,17 @@ internal class TreeItem
 
     public Color TextColor => IsSelected || IsParentSelected ? Color.Info : Color.Inherit;
 
+
+    public HashSet<TreeItem> Items
+    {
+        get
+        {
+            if (NodeChildrenCount > 0 && items.Count == 0) return emptyItems.Value;
+
+            return items;
+        }
+    }
+
     public void SetIsSelected(bool isSelected)
     {
         IsSelected = isSelected;
@@ -67,24 +78,7 @@ internal class TreeItem
         Parent?.SetIsParentSelected(isSelected);
     }
 
-    public HashSet<TreeItem> Items
-    {
-        get
-        {
-            if (NodeChildrenCount > 0 && items.Count == 0) return emptyItems.Value;
-
-            return items;
-        }
-
-        set => items = value;
-    }
-
-
-    public void ExpandAncestors()
-    {
-        this.Ancestors().ForEach(a => a.SetIsExpanded(true));
-    }
-
+    public void ExpandAncestors() => this.Ancestors().ForEach(a => a.SetIsExpanded(true));
 
     public TreeItem AddChildNode(Node node)
     {
@@ -92,12 +86,10 @@ internal class TreeItem
         var item = items.FirstOrDefault(n => n.NodeId == node.Id);
         if (item != null) return item;
 
-        var nodeItem = ToItem(node, this, Tree);
+        var nodeItem = CreateTreeItem(node, this, Tree);
         items.Add(nodeItem);
         return nodeItem;
     }
-
-
 
     public IEnumerable<TreeItem> Ancestors()
     {
@@ -111,7 +103,7 @@ internal class TreeItem
 
     internal void SetIsExpanded(bool isExpanded) => this.isExpanded = isExpanded;
 
-    static TreeItem ToItem(Node node, TreeItem parent, Tree tree) => new(tree)
+    static TreeItem CreateTreeItem(Node node, TreeItem parent, Tree tree) => new(tree)
     {
         Title = node.ShortName,
         Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),

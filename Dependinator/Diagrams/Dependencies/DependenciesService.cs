@@ -56,9 +56,7 @@ class DependenciesService : IDependenciesService
             if (!model.TryGetNode(selectedId, out var node)) return;
 
             leftTree.IsSelected = true;
-            var nodeItem = leftTree.AddNode(node);
-            nodeItem.ExpandAncestors();
-            leftTree.Selected = nodeItem;
+            leftTree.AddNode(node, true);
         }
 
         IsShowExplorer = true;
@@ -108,8 +106,7 @@ class DependenciesService : IDependenciesService
                     return;
                 }
 
-                var item = rightTree.AddNode(n);
-                item.ExpandAncestors();
+                rightTree.AddNode(n);
             });
     }
 
@@ -138,8 +135,7 @@ class DependenciesService : IDependenciesService
                 AddAncestorSources(leftTree, node, n);
                 return;
             }
-            var item = leftTree.AddNode(n);
-            item.ExpandAncestors();
+            leftTree.AddNode(n);
         });
 
     }
@@ -154,8 +150,7 @@ class DependenciesService : IDependenciesService
                 return;
             }
 
-            var item = rightTree.AddNode(n);
-            item.ExpandAncestors();
+            rightTree.AddNode(n);
         });
     }
 
@@ -169,8 +164,7 @@ class DependenciesService : IDependenciesService
                 return;
             }
 
-            var item = leftTree.AddNode(n);
-            item.ExpandAncestors();
+            leftTree.AddNode(n);
         });
     }
 
