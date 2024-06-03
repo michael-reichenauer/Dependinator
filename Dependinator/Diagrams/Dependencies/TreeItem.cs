@@ -7,25 +7,26 @@ internal class TreeItem
 {
     bool isExpanded;
     HashSet<TreeItem> items = [];
-    HashSet<TreeItem> emptyItems = [];
+    readonly Lazy<HashSet<TreeItem>> emptyItems;
 
-    readonly Tree tree;
+    public readonly Tree Tree;
 
     public TreeItem(Tree tree)
     {
-        this.tree = tree;
+        this.Tree = tree;
+        emptyItems = new Lazy<HashSet<TreeItem>>(() =>
+            [new(this.Tree) { Title = "...", Parent = null, Icon = @Icons.Material.Filled.Crop32, NodeId = NodeId.Empty }]);
     }
 
-    public TreeSide Side => tree.Side;
-    public string Title { get; set; } = "";
-    public string Icon { get; set; } = Icons.Material.Filled.Folder;
-    public TreeItem? Parent { get; set; }
+    public required string Title { get; init; }
+    public required string Icon { get; init; }
+    public TreeSide Side => Tree.Side;
+    public required TreeItem? Parent { get; set; }
     public required NodeId NodeId { get; init; } = NodeId.Empty;
     public int NodeChildrenCount { get; internal set; }
 
     public string ExpandIcon => HasAllItems ? Icons.Material.Filled.ArrowRight :
         isExpanded ? Icons.Material.Filled.ArrowDropUp : Icons.Material.Filled.ArrowRight;
-
 
 
     public bool IsExpanded
@@ -36,7 +37,7 @@ internal class TreeItem
         {
             if (!HasAllItems)
             {
-                tree.Service.SetChildrenItems(this);
+                Tree.Service.SetChildrenItems(this);
                 HasAllItems = true;
                 if (value) isExpanded = true;
                 return;
@@ -70,15 +71,8 @@ internal class TreeItem
     {
         get
         {
-            if (NodeChildrenCount > 0 && items.Count == 0)
-            {
-                if (emptyItems.Count == 0)
-                {
-                    emptyItems = [new(tree) { Title = "...", Icon = @Icons.Material.Filled.Crop32, NodeId = NodeId.Empty }];
-                }
-                return emptyItems;
+            if (NodeChildrenCount > 0 && items.Count == 0) return emptyItems.Value;
 
-            }
             return items;
         }
 
@@ -92,16 +86,13 @@ internal class TreeItem
     }
 
 
-
-
     public TreeItem AddChildNode(Node node)
     {
         // Check if node already added
         var item = items.FirstOrDefault(n => n.NodeId == node.Id);
         if (item != null) return item;
 
-        var nodeItem = ToItem(node, tree);
-        nodeItem.Parent = this;
+        var nodeItem = ToItem(node, this, Tree);
         items.Add(nodeItem);
         return nodeItem;
     }
@@ -120,11 +111,13 @@ internal class TreeItem
 
     internal void SetIsExpanded(bool isExpanded) => this.isExpanded = isExpanded;
 
-    static TreeItem ToItem(Node node, Tree tree) => new(tree)
+    static TreeItem ToItem(Node node, TreeItem parent, Tree tree) => new(tree)
     {
         Title = node.ShortName,
         Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),
         NodeId = node.Id,
-        NodeChildrenCount = node.Children.Count(),
+        NodeChildrenCount = tree.IsSelected ? node.Children.Count :
+        node.Children.Count(n => tree.SelectedPeers.Contains(n.Id)),
+        Parent = parent,
     };
 }

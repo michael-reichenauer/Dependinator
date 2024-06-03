@@ -7,30 +7,28 @@ namespace Dependinator.Diagrams;
 public enum TreeSide { Left, Right }
 
 
-internal record Tree
+internal class Tree
 {
     TreeItem selected = null!;
 
-    public Tree(TreeSide side, DependenciesService service, Node root)
+    public Tree(DependenciesService service, TreeSide side, Node root)
     {
         Side = side;
         Service = service;
-        Root = new TreeItem(this)
-        {
-            Title = "<all>",
-            Icon = Dependinator.DiagramIcons.Icon.GetIcon(root.Type.Text),
-            NodeId = root.Id,
-            NodeChildrenCount = root.Children.Count,
-        };
+        Root = CreateRootItem(root);
         Items.Add(Root);
     }
 
+
     public TreeSide Side { get; }
     public DependenciesService Service { get; }
-    public HashSet<TreeItem> Items { get; set; } = [];
+    public HashSet<TreeItem> Items { get; } = [];
     public TreeItem Root { get; }
+    public bool IsSelected { get; set; }
+    public HashSet<NodeId> SelectedPeers { get; set; } = [];
 
 
+    // Set by the UI, when a tree item is selected. When starting to show dialog, null is sometimes set.
     public TreeItem Selected
     {
         get => selected;
@@ -41,9 +39,6 @@ internal record Tree
             selected = value;
         }
     }
-
-
-    public Dictionary<NodeId, Node> SelectedTargets { get; internal set; } = [];
 
     public TreeItem AddNode(Node node)
     {
@@ -66,5 +61,17 @@ internal record Tree
 
         // Add node to its parent
         return current.AddChildNode(node);
+    }
+
+    TreeItem CreateRootItem(Node root)
+    {
+        return new TreeItem(this)
+        {
+            Title = "<all>",
+            Icon = Dependinator.DiagramIcons.Icon.GetIcon(root.Type.Text),
+            NodeId = root.Id,
+            NodeChildrenCount = root.Children.Count,
+            Parent = null,
+        };
     }
 }
