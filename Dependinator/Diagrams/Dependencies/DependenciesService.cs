@@ -14,6 +14,9 @@ interface IDependenciesService
 }
 
 
+
+
+
 [Scoped]
 class DependenciesService : IDependenciesService
 {
@@ -56,7 +59,8 @@ class DependenciesService : IDependenciesService
             if (!model.TryGetNode(selectedId, out var node)) return;
 
             leftTree.IsSelected = true;
-            leftTree.AddNode(node, true);
+            var item = leftTree.AddNode(node);
+            leftTree.Selected = item;
         }
 
         IsShowExplorer = true;

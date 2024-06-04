@@ -3,6 +3,8 @@ using MudBlazor;
 
 namespace Dependinator.Diagrams;
 
+
+
 internal class TreeItem
 {
     bool isExpanded;
@@ -78,7 +80,6 @@ internal class TreeItem
         Parent?.SetIsParentSelected(isSelected);
     }
 
-    public void ExpandAncestors() => this.Ancestors().ForEach(a => a.SetIsExpanded(true));
 
     public TreeItem AddChildNode(Node node)
     {
@@ -88,10 +89,13 @@ internal class TreeItem
 
         var nodeItem = CreateTreeItem(node, this, Tree);
         items.Add(nodeItem);
+
         return nodeItem;
     }
 
-    public IEnumerable<TreeItem> Ancestors()
+    public void ShowTreeItem() => this.Ancestors().ForEach(a => a.isExpanded = true);
+
+    IEnumerable<TreeItem> Ancestors()
     {
         var current = this;
         while (current.Parent != null)
@@ -101,7 +105,6 @@ internal class TreeItem
         }
     }
 
-    internal void SetIsExpanded(bool isExpanded) => this.isExpanded = isExpanded;
 
     static TreeItem CreateTreeItem(Node node, TreeItem parent, Tree tree) => new(tree)
     {

@@ -40,30 +40,30 @@ internal class Tree
         }
     }
 
-    public void AddNode(Node node, bool isSelected = false)
+    public TreeItem AddNode(Node node)
     {
-        // Add Ancestors to the node
+        // First add Ancestors to the node, so the node can be added in the correct place
         // Start from root, but skip root
         var ancestors = node.Ancestors().Reverse().Skip(1);
         var current = Root;
         foreach (var ancestor in ancestors)
         {
+            // Check if ancestor is already added
             var ancestorItem = current.Items.FirstOrDefault(n => n.NodeId == ancestor.Id);
-            if (ancestorItem != null)
-            {   // Ancestor already added
-                current = ancestorItem;
-                continue;
+            if (ancestorItem == null)
+            {   // Not yet added, add ancestor node to tree
+                ancestorItem = current.AddChildNode(ancestor);
             }
 
-            // Add ancestor node to tree
-            current = current.AddChildNode(ancestor);
+            current = ancestorItem;
         }
 
         // Add node to its parent
         var item = current.AddChildNode(node);
-        item.ExpandAncestors();
-        if (isSelected) Selected = item;
+        item.ShowTreeItem();
+        return item;
     }
+
 
     TreeItem CreateRootItem(Node root)
     {
