@@ -14,9 +14,6 @@ interface IDependenciesService
 }
 
 
-
-
-
 [Scoped]
 class DependenciesService : IDependenciesService
 {
@@ -172,22 +169,17 @@ class DependenciesService : IDependenciesService
         });
     }
 
-    internal void SetChildrenItems(TreeItem treeItem)
+    internal IReadOnlyList<Node> GetChildren(NodeId nodeId)
     {
-        Log.Info("SetChildrenItems", treeItem.Title);
         using var model = modelService.UseModel();
-        if (model.TryGetNode(treeItem.NodeId, out var node))
-        {
-            node.Children
-                .Where(n => treeItem.Tree.IsSelected || treeItem.Tree.SelectedPeers.Contains(n.Id))
-                .ForEach(child => treeItem.AddChildNode(child));
-        }
+        if (!model.TryGetNode(nodeId, out var node)) return [];
+
+        return node.Children;
     }
 
 
     public void HideExplorer()
     {
-        Log.Info("HideExplorer");
         IsShowExplorer = false;
 
         using (var model = modelService.UseModel())
