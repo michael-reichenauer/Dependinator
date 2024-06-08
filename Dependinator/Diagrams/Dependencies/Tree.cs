@@ -1,4 +1,3 @@
-
 using Dependinator.Models;
 
 namespace Dependinator.Diagrams;
@@ -9,7 +8,7 @@ public enum TreeSide { Left, Right }
 
 internal class Tree
 {
-    readonly TreeItem rootItem;
+    TreeItem rootItem;
     TreeItem selected = null!;
 
     public Tree(DependenciesService service, TreeSide side, Node root)
@@ -27,6 +26,8 @@ internal class Tree
     public bool IsSelected { get; set; }
     public HashSet<NodeId> SelectedPeers { get; } = [];
 
+    public Tree OtherTree => Side == TreeSide.Left ? Service.TreeData(TreeSide.Right) : Service.TreeData(TreeSide.Left);
+
 
     // Set by the UI, when a tree item is selected. When starting to show dialog, null is sometimes set.
     public TreeItem Selected
@@ -35,9 +36,31 @@ internal class Tree
         set
         {
             if (value == null || value == selected) return;
+
             Service.ItemSelected(value);
             selected = value;
         }
+    }
+
+    public void EmptyTo(Node root)
+    {
+        ClearSelection();
+        Items.Clear();
+        SelectedPeers.Clear();
+        rootItem = TreeItem.CreateTreeItem(root, null, this);
+        Items.Add(rootItem);
+    }
+
+    public void ClearSelection()
+    {
+        Selected?.SetIsSelected(false);
+        IsSelected = false;
+    }
+
+    public void SetSelectedItem(TreeItem item)
+    {
+        item.SetIsSelected(true);
+        IsSelected = true;
     }
 
     public TreeItem AddNode(Node node)

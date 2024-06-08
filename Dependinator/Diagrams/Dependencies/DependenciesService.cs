@@ -71,102 +71,76 @@ class DependenciesService : IDependenciesService
         using var model = modelService.UseModel();
         if (!model.TryGetNode(item.NodeId, out var node)) return;
 
-        leftTree.Selected?.SetIsSelected(false);
-        rightTree.Selected?.SetIsSelected(false);
-        leftTree.IsSelected = false;
-        rightTree.IsSelected = false;
+        leftTree.ClearSelection();
+        rightTree.ClearSelection();
 
-        item.SetIsSelected(true);
+        item.Tree.SetSelectedItem(item);
 
-        if (item.Side == TreeSide.Left) LeftItemSelected(item, node, model.Root);
-        if (item.Side == TreeSide.Right) RightItemSelected(item, node, model.Root);
+        SetOtherSideItems(item, node, model.Root);
 
         applicationEvents.TriggerUIStateChanged();
     }
 
-    void LeftItemSelected(TreeItem item, Node node, Node root)
+    void SetOtherSideItems(TreeItem item, Node node, Node root)
     {
-        Log.Info("Left item selected", item.Title);
-        leftTree.IsSelected = true;
+        Log.Info("Item selected", item.Title);
+        var otherTree = item.Tree.OtherTree;
 
-        rightTree = new(this, TreeSide.Right, root);
-        node.SourceLines
-           .SelectMany(l => l.Links.Select(link => link.Target))
-           .ForEach(n =>
-            {
-                rightTree.SelectedPeers.Add(n.Id);
-                n.Ancestors().ForEach(a => rightTree.SelectedPeers.Add(a.Id));
-            });
-
-        node.SourceLines.Select(l => l.Target)
-            .ForEach(n =>
-            {
-                if (node.Parent == n)
-                {
-                    AddAncestorTargets(rightTree, node, n);
-                    return;
-                }
-
-                rightTree.AddNode(n);
-            });
-    }
-
-
-    void RightItemSelected(TreeItem item, Node node, Node root)
-    {
-        Log.Info("Right item selected", item.Title);
-        rightTree.IsSelected = true;
-
-        leftTree = new(this, TreeSide.Right, root);
-
-        node.TargetLines
-            .SelectMany(l => l.Links.Select(link => link.Source))
-            .ForEach(n =>
-            {
-                leftTree.SelectedPeers.Add(n.Id);
-                n.Ancestors().ForEach(a => leftTree.SelectedPeers.Add(a.Id));
-            });
-
-        Log.Info("Reference to", node.Name);
-        node.TargetLines.Select(l => l.Source).ForEach(n =>
+        otherTree.EmptyTo(root);
+        LinkNodes(item.Tree, node).ForEach(n =>
         {
-            Log.Info("  from", n.Name);
+            otherTree.SelectedPeers.Add(n.Id);
+            n.Ancestors().ForEach(a => otherTree.SelectedPeers.Add(a.Id));
+        });
+
+        HashSet<NodeId> addedNodes = [];
+        LineNodes(item.Tree, node).ForEach(n =>
+        {
+            addedNodes.Add(n.Id);
             if (node.Parent == n)
             {
-                AddAncestorSources(leftTree, node, n);
-                return;
-            }
-            leftTree.AddNode(n);
-        });
-
-    }
-
-    void AddAncestorTargets(Tree rightTree, Node node, Node otherNode)
-    {
-        otherNode.SourceLines.Select(l => l.Target).ForEach(n =>
-        {
-            if (node.Ancestors().Contains(n))
-            {
-                AddAncestorTargets(rightTree, node, n);
+                SetOtherAncestorSideItems(item, node, n, addedNodes);
                 return;
             }
 
-            rightTree.AddNode(n);
+            otherTree.AddNode(n);
         });
     }
 
-    void AddAncestorSources(Tree leftTree, Node node, Node otherNode)
+    void SetOtherAncestorSideItems(TreeItem item, Node node, Node otherNode, HashSet<NodeId> addedNodes)
     {
-        otherNode.TargetLines.Select(l => l.Source).ForEach(n =>
+        var otherTree = item.Tree.OtherTree;
+        LineNodes(item.Tree, otherNode).ForEach(n =>
         {
+            if (!otherTree.IsNodeIncluded(n)) return;
+            if (addedNodes.Contains(n.Id)) return;
+            addedNodes.Add(n.Id);
+
             if (node.Ancestors().Contains(n))
             {
-                AddAncestorSources(leftTree, node, n);
+                SetOtherAncestorSideItems(item, node, n, addedNodes);
                 return;
             }
 
-            leftTree.AddNode(n);
+            otherTree.AddNode(n);
         });
+    }
+
+    IEnumerable<Node> LineNodes(Tree tree, Node node)
+    {
+        if (tree.Side == TreeSide.Left)
+            return node.SourceLines.Select(l => l.Target);
+
+        return node.TargetLines.Select(l => l.Source);
+    }
+
+
+    IEnumerable<Node> LinkNodes(Tree tree, Node node)
+    {
+        if (tree.Side == TreeSide.Left)
+            return node.SourceLines.SelectMany(l => l.Links.Select(link => link.Target));
+
+        return node.TargetLines.SelectMany(l => l.Links.Select(link => link.Source));
     }
 
     internal IReadOnlyList<Node> GetChildren(NodeId nodeId)

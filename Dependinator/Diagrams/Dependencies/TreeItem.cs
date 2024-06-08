@@ -4,7 +4,6 @@ using MudBlazor;
 namespace Dependinator.Diagrams;
 
 
-
 internal class TreeItem(Tree tree)
 {
     readonly HashSet<TreeItem> items = [];
@@ -13,7 +12,7 @@ internal class TreeItem(Tree tree)
 
     bool isExpanded;
 
-
+    public Tree Tree => tree;
     public required string Title { get; init; }
     public required string Icon { get; init; }
     public required TreeItem? Parent { get; set; }
