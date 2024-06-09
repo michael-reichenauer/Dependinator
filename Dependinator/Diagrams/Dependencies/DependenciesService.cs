@@ -6,10 +6,11 @@ namespace Dependinator.Diagrams;
 interface IDependenciesService
 {
     bool IsShowExplorer { get; }
+    string Icon { get; }
 
     Tree TreeData(TreeSide side);
 
-    void ShowExplorer();
+    void ShowExplorer(TreeSide selectedSide);
     void HideExplorer();
 }
 
@@ -20,10 +21,17 @@ class DependenciesService(
     IApplicationEvents applicationEvents,
     IModelService modelService) : IDependenciesService
 {
+    public const string Dependencies = MudBlazor.Icons.Material.Outlined.Polyline;
+    public const string References = "<g><rect fill=\"none\" height=\"24\" width=\"24\"/></g><g transform=\"rotate(180,12,12)\"><path d=\"M15,16v1.26l-6-3v-3.17L11.7,8H16V2h-6v4.9L7.3,10H3v6h5l7,3.5V22h6v-6H15z M12,4h2v2h-2V4z M7,14H5v-2h2V14z M19,20h-2v-2 h2V20z\"/></g>";
+
+
     Tree leftTree = null!;
     Tree rightTree = null!;
 
     public bool IsShowExplorer { get; private set; }
+
+    public string Icon => leftTree?.IsSelected == true ? Dependencies : References;
+
 
     public Tree TreeData(TreeSide side)
     {
@@ -32,7 +40,7 @@ class DependenciesService(
     }
 
 
-    public void ShowExplorer()
+    public void ShowExplorer(TreeSide selectedSide)
     {
         var selectedId = selectionService.SelectedId.Id;
 
@@ -43,9 +51,11 @@ class DependenciesService(
 
             if (!model.TryGetNode(selectedId, out var selectedNode)) return;
 
-            leftTree.IsSelected = true;
-            var selectedItem = leftTree.AddNode(selectedNode);
-            leftTree.Selected = selectedItem;
+            var tree = selectedSide == TreeSide.Left ? leftTree : rightTree;
+
+            tree.IsSelected = true;
+            var selectedItem = tree.AddNode(selectedNode);
+            tree.Selected = selectedItem;
         }
 
         IsShowExplorer = true;

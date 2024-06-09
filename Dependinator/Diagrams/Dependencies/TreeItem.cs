@@ -84,7 +84,7 @@ internal class TreeItem(Tree tree)
         var nodeItem = CreateTreeItem(node, this, tree);
         items.Add(nodeItem);
 
-        if (node.Parent.Children.Count == items.Count)
+        if ((node.Parent?.Children?.Count ?? 0) == items.Count)
         {
             IsChildrenIntitialized = true;
         }
