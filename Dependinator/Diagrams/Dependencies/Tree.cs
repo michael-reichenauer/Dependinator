@@ -26,6 +26,8 @@ internal class Tree
     public bool IsSelected { get; set; }
     public HashSet<NodeId> SelectedPeers { get; } = [];
 
+    public string Title => IsSelected ? Selected.Title : "<all>";
+
     public Tree OtherTree => Side == TreeSide.Left ? Service.TreeData(TreeSide.Right) : Service.TreeData(TreeSide.Left);
 
 
@@ -37,8 +39,7 @@ internal class Tree
         {
             if (value == null || value == selected) return;
 
-            Service.ItemSelected(value);
-            selected = value;
+            selected = Service.ItemSelected(value);
         }
     }
 

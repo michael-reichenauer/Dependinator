@@ -11,14 +11,14 @@
             <MudIcon Icon="@Icons.Material.Outlined.Polyline" Class="my-n2" />
             <MudGrid Spacing="1" Justify="Justify.Center" Class="my-n2">
                 <MudItem xs="5">
-                    <MudText Class="align-content-end">@(srv.TreeData(TreeSide.Left).Selected?.Title ?? "<all>")
+                    <MudText Class="align-content-end">@(srv.TreeData(TreeSide.Left)?.Title)
                     </MudText>
                 </MudItem>
                 <MudItem xs="2" Class="mx-n5">
                     <MudIconButton Icon="@Icons.Material.Outlined.ArrowRightAlt" Size="Size.Large" Class="my-n5" />
                 </MudItem>
                 <MudItem xs="5">
-                    <MudText>@(srv.TreeData(TreeSide.Right).Selected?.Title ?? "<all>")</MudText>
+                    <MudText>@(srv.TreeData(TreeSide.Right)?.Title)</MudText>
                 </MudItem>
             </MudGrid>
 

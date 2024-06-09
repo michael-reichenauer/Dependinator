@@ -15,25 +15,13 @@ interface IDependenciesService
 
 
 [Scoped]
-class DependenciesService : IDependenciesService
+class DependenciesService(
+    ISelectionService selectionService,
+    IApplicationEvents applicationEvents,
+    IModelService modelService) : IDependenciesService
 {
-    readonly ISelectionService selectionService;
-    readonly IApplicationEvents applicationEvents;
-    readonly IModelService modelService;
-
     Tree leftTree = null!;
     Tree rightTree = null!;
-
-    public DependenciesService(
-        ISelectionService selectionService,
-        IApplicationEvents applicationEvents,
-        IModelService modelService)
-    {
-        this.selectionService = selectionService;
-        this.applicationEvents = applicationEvents;
-        this.modelService = modelService;
-    }
-
 
     public bool IsShowExplorer { get; private set; }
 
@@ -53,53 +41,68 @@ class DependenciesService : IDependenciesService
             leftTree = new(this, TreeSide.Left, model.Root);
             rightTree = new(this, TreeSide.Right, model.Root);
 
-            if (!model.TryGetNode(selectedId, out var node)) return;
+            if (!model.TryGetNode(selectedId, out var selectedNode)) return;
 
             leftTree.IsSelected = true;
-            var item = leftTree.AddNode(node);
-            leftTree.Selected = item;
+            var selectedItem = leftTree.AddNode(selectedNode);
+            leftTree.Selected = selectedItem;
         }
 
         IsShowExplorer = true;
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public void ItemSelected(TreeItem item)
+    public TreeItem ItemSelected(TreeItem selectedItem)
     {
-        if (item == null) return;
-
         using var model = modelService.UseModel();
-        if (!model.TryGetNode(item.NodeId, out var node)) return;
+        if (!model.TryGetNode(selectedItem.NodeId, out var selectedNode)) return selectedItem;
+
+        var isSwitchSide = !selectedItem.Tree.IsSelected;
 
         leftTree.ClearSelection();
         rightTree.ClearSelection();
 
-        item.Tree.SetSelectedItem(item);
+        if (isSwitchSide)
+        {   // Switching side, lets refresh new selected side items.
+            selectedItem = SetSelectedSideItems(selectedItem, selectedNode, model.Root);
+        }
 
-        SetOtherSideItems(item, node, model.Root);
+        selectedItem.Tree.SetSelectedItem(selectedItem);
+
+        SetOtherSideItems(selectedItem, selectedNode, model.Root);
 
         applicationEvents.TriggerUIStateChanged();
+        return selectedItem;
     }
 
-    void SetOtherSideItems(TreeItem item, Node node, Node root)
+    static TreeItem SetSelectedSideItems(TreeItem selectedItem, Node selectedNode, Node root)
     {
-        Log.Info("Item selected", item.Title);
-        var otherTree = item.Tree.OtherTree;
+        var thisTree = selectedItem.Tree;
+        thisTree.EmptyTo(root);
+        selectedItem.Tree.IsSelected = true;
 
+        return thisTree.AddNode(selectedNode);
+    }
+
+    static void SetOtherSideItems(TreeItem selectedItem, Node selectedNode, Node root)
+    {
+        var otherTree = selectedItem.Tree.OtherTree;
         otherTree.EmptyTo(root);
-        LinkNodes(item.Tree, node).ForEach(n =>
+
+        // Get all peer noded for seleced node, SelectedPeers 
+        LinkNodes(selectedItem.Tree, selectedNode).ForEach(n =>
         {
             otherTree.SelectedPeers.Add(n.Id);
             n.Ancestors().ForEach(a => otherTree.SelectedPeers.Add(a.Id));
         });
 
         HashSet<NodeId> addedNodes = [];
-        LineNodes(item.Tree, node).ForEach(n =>
+        LineNodes(selectedItem.Tree, selectedNode).ForEach(n =>
         {
             addedNodes.Add(n.Id);
-            if (node.Parent == n)
+            if (selectedNode.Parent == n)
             {
-                SetOtherAncestorSideItems(item, node, n, addedNodes);
+                SetOtherAncestorSideItems(selectedItem, selectedNode, n, addedNodes);
                 return;
             }
 
@@ -107,18 +110,18 @@ class DependenciesService : IDependenciesService
         });
     }
 
-    void SetOtherAncestorSideItems(TreeItem item, Node node, Node otherNode, HashSet<NodeId> addedNodes)
+    static void SetOtherAncestorSideItems(TreeItem selectedItem, Node selectedNode, Node otherNode, HashSet<NodeId> addedNodes)
     {
-        var otherTree = item.Tree.OtherTree;
-        LineNodes(item.Tree, otherNode).ForEach(n =>
+        var otherTree = selectedItem.Tree.OtherTree;
+        LineNodes(selectedItem.Tree, otherNode).ForEach(n =>
         {
             if (!otherTree.IsNodeIncluded(n)) return;
             if (addedNodes.Contains(n.Id)) return;
             addedNodes.Add(n.Id);
 
-            if (node.Ancestors().Contains(n))
+            if (selectedNode.Ancestors().Contains(n))
             {
-                SetOtherAncestorSideItems(item, node, n, addedNodes);
+                SetOtherAncestorSideItems(selectedItem, selectedNode, n, addedNodes);
                 return;
             }
 
@@ -126,7 +129,7 @@ class DependenciesService : IDependenciesService
         });
     }
 
-    IEnumerable<Node> LineNodes(Tree tree, Node node)
+    static IEnumerable<Node> LineNodes(Tree tree, Node node)
     {
         if (tree.Side == TreeSide.Left)
             return node.SourceLines.Select(l => l.Target);
@@ -134,8 +137,7 @@ class DependenciesService : IDependenciesService
         return node.TargetLines.Select(l => l.Source);
     }
 
-
-    IEnumerable<Node> LinkNodes(Tree tree, Node node)
+    static IEnumerable<Node> LinkNodes(Tree tree, Node node)
     {
         if (tree.Side == TreeSide.Left)
             return node.SourceLines.SelectMany(l => l.Links.Select(link => link.Target));
