@@ -8,10 +8,10 @@ interface IFileService
     Task<R> WriteAsync<T>(string path, T content);
     Task<R<T>> ReadAsync<T>(string path);
     Task<R> DeleteAsync(string path);
-    Task AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
+    Task<IReadOnlyList<string>> AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
 
     R<Stream> ReadStram(string path);
-    bool ExistsStream(string assemblyPath);
+    bool ExistsStream(string path);
 
     Task<R<IReadOnlyList<string>>> GetFilePathsAsync();
 }
@@ -19,10 +19,12 @@ interface IFileService
 [Scoped]
 class FileService : IFileService
 {
+    static readonly string WebFilesPrefix = "/.dependinator/web-files/";
+
     public static readonly string DBCollectionName = "Files";
 
-    const long maxFileSize = 1024 * 1024 * 10; // 10 MB
-    Dictionary<string, Stream> streamsByName = new();
+    const long MaxFileSize = 1024 * 1024 * 10; // 10 MB
+    Dictionary<string, Stream> streamsByName = [];
     readonly IDatabase database;
 
     public FileService(IDatabase database)
@@ -46,7 +48,6 @@ class FileService : IFileService
         return await database.SetAsync(DBCollectionName, path, content);
     }
 
-
     public async Task<R<T>> ReadAsync<T>(string path)
     {
         return await database.GetAsync<T>(DBCollectionName, path);
@@ -57,39 +58,54 @@ class FileService : IFileService
         return await database.DeleteAsync(DBCollectionName, path);
     }
 
-    public async Task AddAsync(IReadOnlyList<IBrowserFile> browserFiles)
+    public async Task<IReadOnlyList<string>> AddAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
         using var _ = Timing.Start($"Added {browserFiles.Count} files");
 
         streamsByName.Clear();
+
+        List<string> paths = new();
 
         foreach (var file in browserFiles)
         {
             try
             {
                 Log.Info($"Adding file: {file.Name} {file.Size}");
-                using var stream = file.OpenReadStream(maxFileSize);
+                using var stream = file.OpenReadStream(MaxFileSize);
                 var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
-                streamsByName[file.Name] = memoryStream;
-                memoryStream.Seek(0, SeekOrigin.Begin);
+                var streamPath = $"{WebFilesPrefix}{file.Name}";
+                streamsByName[streamPath] = memoryStream;
+                paths.Add(streamPath);
             }
             catch (Exception ex)
             {
                 Log.Error($"File: {file.Name} Error: {ex.Message}");
             }
         }
+
+        return paths;
     }
 
     public R<Stream> ReadStram(string path)
     {
-        if (!streamsByName.TryGetValue(path, out var stream)) return R.None;
+        Log.Info("ReadStram:", path);
+        if (path.StartsWith(WebFilesPrefix))
+        {
+            Log.Info("Reading Web File:", path);
+            if (!streamsByName.TryGetValue(path, out var webFileStream)) return R.None;
 
-        return stream;
+            streamsByName.Remove(path);
+            webFileStream.Seek(0, SeekOrigin.Begin);
+            return webFileStream;
+        }
+
+        if (!Try(out var fileStream, out var e, () => File.OpenRead(path))) return e;
+        return fileStream;
     }
 
-    public bool ExistsStream(string assemblyPath)
+    public bool ExistsStream(string path)
     {
-        return streamsByName.ContainsKey(assemblyPath);
+        return streamsByName.ContainsKey(path);
     }
 }

@@ -69,20 +69,24 @@ class PersistenceService : IPersistenceService
         return Task.Run<R<Model>>(async () =>
         {
             var filePath = modelPath;
-            using var t = Timing.Start($"Read model '{filePath}'");
+            using var t = Timing.Start();
 
             if (modelPath == ExampleModel.Path)
             {
+                Log.Info("Reading cached example model ...", modelPath);
                 if (!Try(out var model, out var e, await fileService.ReadAsync<Model>(filePath)))
                 {
+                    Log.Info("Example model not cached, use built in model", modelPath);
                     var json = ExampleModel.Model;
                     if (!Try(out model, out e, () => JsonSerializer.Deserialize<Model>(json))) return e;
                 }
 
+                Log.Info("Read cached example model", modelPath);
                 return model;
             }
 
             if (!Try(out var model2, out var e2, await fileService.ReadAsync<Model>(filePath))) return e2;
+            Log.Info("Read cached model", modelPath);
             return model2;
         });
     }

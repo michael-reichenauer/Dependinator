@@ -1,0 +1,57 @@
+@inject IApplicationEvents applicationEvents
+@inject IDependenciesService srv
+
+<MudPopover Open="@srv.IsShowExplorer" Fixed="true" Class="px-4 pt-4 ml-1" AnchorOrigin="Origin.BottomLeft"
+    TransformOrigin="Origin.BottomLeft">
+
+    <MudStack>
+
+        <MudStack Row="true">
+
+            <MudIcon Icon="@srv.Icon" Class="my-n2" />
+            <MudGrid Spacing="1" Justify="Justify.Center" Class="my-n2">
+                <MudItem xs="5">
+                    <MudText Class="align-content-end">@(srv.TreeData(TreeSide.Left)?.Title)
+                    </MudText>
+                </MudItem>
+                <MudItem xs="2" Class="mx-n5">
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowRightAlt" Size="Size.Large" Class="my-n5" />
+                </MudItem>
+                <MudItem xs="5">
+                    <MudText>@(srv.TreeData(TreeSide.Right)?.Title)</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudIconButton Icon="@Icons.Material.Outlined.Close" Size="Size.Small" Class="my-n2"
+                OnClick="srv.HideExplorer" />
+
+        </MudStack>
+
+        <MudDivider />
+        <MudPaper Width="700px" Height="550px" Class="overflow-y-auto" Elevation="0">
+            <MudGrid pacing="1" Justify="Justify.Center">
+                <MudItem xs="6">
+                    <div Class="overflow-y-auto" MaxHeight="500px">
+                        <DependenciesTree Side="TreeSide.Left" />
+                    </div>
+                </MudItem>
+                <MudItem xs="6">
+                    <div Class="overflow-y-auto" MaxHeight="500px">
+                        <DependenciesTree Side="TreeSide.Right" />
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudStack>
+</MudPopover>
+
+
+
+@code {
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender) applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
+    }
+}

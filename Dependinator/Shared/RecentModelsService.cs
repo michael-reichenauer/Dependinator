@@ -17,7 +17,7 @@ interface IRecentModelsService
 [Scoped]
 class RecentModelsService : IRecentModelsService
 {
-    const int recentCount = 5;
+    const int RecentCount = 5;
 
     readonly IConfigService configService;
     readonly IFileService fileService;
@@ -43,13 +43,13 @@ class RecentModelsService : IRecentModelsService
 
     public async Task AddModelAsync(string path)
     {
-        modelPaths = (await GetExistingRecentFilePathsAsync()).Prepend(path).Distinct().Take(recentCount).ToList();
+        modelPaths = (await GetExistingRecentFilePathsAsync()).Prepend(path).Distinct().Take(RecentCount).ToList();
         await configService.SetAsync(c => c.RecentPaths = modelPaths);
     }
 
     public async Task RemoveModelAsync(string path)
     {
-        modelPaths = (await GetExistingRecentFilePathsAsync()).Where(rp => rp != path).Distinct().Take(recentCount).ToList();
+        modelPaths = (await GetExistingRecentFilePathsAsync()).Where(rp => rp != path).Distinct().Take(RecentCount).ToList();
         await configService.SetAsync(c => c.RecentPaths = modelPaths);
     }
 

@@ -1,27 +1,32 @@
 ﻿@inject IApplicationEvents applicationEvents
 @inject IInteractionService interactionService
 @inject IDialogService DialogService
+@inject IDependenciesService dependenciesService
 
 
-<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@NodeToolBarVisible"
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled"
     Style="@NodeToolBarPosition">
     <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
         <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
             OnClick="ShowProperties" OnTouch="ShowProperties">Properties ...</MudMenuItem>
     </MudMenu>
-    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit"/>
-    <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit"
+    
+    <MudIconButton Icon="@DependenciesService.Dependencies" OnClick="()=> dependenciesService.ShowExplorer(TreeSide.Left)"  />
+    <MudIconButton Icon="@DependenciesService.References" OnClick="()=> dependenciesService.ShowExplorer(TreeSide.Right)"  />
+
+    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" Disabled="@isIcon"/>
+    <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit" Disabled="@isIcon"
         ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
 </MudButtonGroup>
 
 
+
 @code {
-    string NodeToolBarVisible => interactionService.IsShowNodeToolbar ? "visible" : "invisible";
-    string NodeToolBarPosition => interactionService.IsShowNodeToolbar ?
-    $"Position: fixed; left:{interactionService.SelectedNodePosition.X}px; top:{interactionService.SelectedNodePosition.Y - 55}px" :
-    "Position: fixed; left:0px; top:0px";
-
-
+    bool isIcon => !interactionService.IsContainer;
+    string NodeToolBarPosition => 
+        $"Position: fixed; left:{interactionService.SelectedNodePosition.X}px; top:{interactionService.SelectedNodePosition.Y - 55}px";
+  
+  
     private void ShowProperties()
     {
         var options = new DialogOptions { CloseOnEscapeKey = true };

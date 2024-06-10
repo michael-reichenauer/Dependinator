@@ -1,8 +1,11 @@
 @namespace Dependinator.Diagrams
+@using Dependinator.Diagrams.Dependencies
 @using Microsoft.AspNetCore.Components.Forms
 
 
 <NodeToolbar />
+<DependenciesExplorer />
+
 
 <div @ref="dropZoneElement" class="drop-zone">
     <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
