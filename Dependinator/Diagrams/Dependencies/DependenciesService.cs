@@ -11,6 +11,7 @@ interface IDependenciesService
     Tree TreeData(TreeSide side);
 
     void ShowExplorer(TreeSide selectedSide);
+    void SwitchSides();
     void HideExplorer();
 }
 
@@ -39,11 +40,25 @@ class DependenciesService(
         return rightTree;
     }
 
+    public void SwitchSides()
+    {
+        var tree = leftTree.IsSelected ? leftTree : rightTree;
+        var selectedItem = tree.Selected;
+
+        var selectedId = selectedItem.NodeId;
+        var otherTreeSide = tree.OtherTree.Side;
+        ShowNodeExplorer(otherTreeSide, selectedId.Value);
+    }
 
     public void ShowExplorer(TreeSide selectedSide)
     {
         var selectedId = selectionService.SelectedId.Id;
 
+        ShowNodeExplorer(selectedSide, selectedId);
+    }
+
+    void ShowNodeExplorer(TreeSide selectedSide, string selectedId)
+    {
         using (var model = modelService.UseModel())
         {
             leftTree = new(this, TreeSide.Left, model.Root);
