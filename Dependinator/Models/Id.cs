@@ -27,7 +27,6 @@ public record Id(string Value)
         }
 
         return new string(chars);
-
     }
 }
 

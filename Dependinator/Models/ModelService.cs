@@ -183,13 +183,21 @@ class ModelService : IModelService
     public async Task<R<ModelInfo>> LoadAsync(string path)
     {
         Clear();
+        if (!Build.IsWebAssembly && path == ExampleModel.Path)
+        {
+            path = "/workspaces/Dependinator/Dependinator.sln";
+        }
 
+        Log.Info("Loading", path);
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
         {
-            return await ParseAsync(path, Rect.None, 0, Pos.None);
+            Log.Info("Failed to read cached model", e.ErrorMessage);
+            var parsedModelInfo = await ParseAsync(path, Rect.None, 0, Pos.None);
+            TriggerSave();
+            return parsedModelInfo;
         }
 
         // Load the cached mode
@@ -199,7 +207,11 @@ class ModelService : IModelService
 
         // Trigger parse to get latest data
         ParseAsync(model.Path, model.ViewRect, model.Zoom, model.Offset)
-            .ContinueWith(t => applicationEvents.TriggerUIStateChanged())
+            .ContinueWith(t =>
+            {
+                TriggerSave();
+                applicationEvents.TriggerUIStateChanged();
+            })
             .RunInBackground();
 
         return modelInfo;
@@ -221,7 +233,7 @@ class ModelService : IModelService
 
     async Task<R<ModelInfo>> ParseAsync(string path, Rect viewRect, double zoom, Pos offset)
     {
-        using var _ = Timing.Start();
+        using var _ = Timing.Start($"Parsed and added model items {path}");
         //var path = "/workspaces/Dependinator/Dependinator.sln";
 
         if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
@@ -299,7 +311,7 @@ class ModelService : IModelService
 
     ModelInfo AddOrUpdate(string path, Rect viewRect, double zoom, Pos offset, IReadOnlyList<Parsing.IItem> parsedItems)
     {
-        using var _ = Timing.Start($"Add {parsedItems.Count} items for {path}");
+        using var _ = Timing.Start($"Added {parsedItems.Count} items for {path}");
         lock (model.Lock)
         {
             model.Path = path;

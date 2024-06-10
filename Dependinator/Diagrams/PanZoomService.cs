@@ -13,27 +13,16 @@ interface IPanZoomService
 
 
 [Scoped]
-class PanZoomService : IPanZoomService
+class PanZoomService(
+    IScreenService screenService,
+    IModelService modelService) : IPanZoomService
 {
-    readonly IScreenService screenService;
-    readonly IModelService modelService;
     private Rect SvgRect => screenService.SvgRect;
 
     const double MaxZoom = 10;
     const double Margin = 10;
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
-
-
-    public PanZoomService(
-        IScreenService screenService,
-        IApplicationEvents applicationEvents,
-        IModelService modelService)
-    {
-        this.screenService = screenService;
-        this.modelService = modelService;
-    }
-
 
     public void Zoom(PointerEvent e)
     {

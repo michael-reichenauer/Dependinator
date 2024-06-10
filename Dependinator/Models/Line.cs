@@ -14,6 +14,7 @@ class Line : IItem
         // Color = Models.Color.BrightRandom().ToString();
     }
 
+    public ICollection<Link> Links => links.Values;
     public LineId Id { get; }
     public Node Source { get; }
     public Node Target { get; }

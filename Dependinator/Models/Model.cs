@@ -57,7 +57,14 @@ class Model : IModel
 
     public void Dispose()
     {
-        Monitor.Exit(Lock);
+        try
+        {
+            Monitor.Exit(Lock);
+        }
+        catch
+        {
+            // Ignore, already released (when shutting down and DI calls dispose)
+        }
     }
 
     public bool ContainsKey(Id id) => Items.ContainsKey(id);
