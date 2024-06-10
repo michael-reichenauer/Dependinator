@@ -15,7 +15,8 @@
                     </MudText>
                 </MudItem>
                 <MudItem xs="2" Class="mx-n5">
-                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowRightAlt" Size="Size.Large" Class="my-n5" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.ArrowRightAlt" Size="Size.Large" Class="my-n5"
+                        OnClick="srv.SwitchSides" />
                 </MudItem>
                 <MudItem xs="5">
                     <MudText>@(srv.TreeData(TreeSide.Right)?.Title)</MudText>
