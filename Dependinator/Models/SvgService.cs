@@ -66,14 +66,10 @@ class SvgService : ISvgService
   {
     var nodeCanvasPos = GetNodeCanvasPos(node, offset, zoom);
     var nodeCanvasRect = GetNodeCanvasRect(node, nodeCanvasPos, zoom);
-    Log.Info($"Node: {node.LongName} ({nodeCanvasPos.X},{nodeCanvasPos.Y},{nodeCanvasRect.Width},{nodeCanvasRect.Height}) ,{node.Boundary}, Z: {zoom}");
-    Log.Info("TilesWithMargin", tileWithMargin);
     if (!IsOverlap(tileWithMargin, nodeCanvasRect)) return ""; // Outside the tile limit
-    Log.Info("Within margin");
 
     if (Node.IsToLargeToBeSeen(zoom)) return GetNodeContentSvg(node, nodeCanvasPos, zoom, tileWithMargin);
 
-    Log.Info("To be shown");
     if (node.IsShowIcon(zoom)) return GetNodeIconSvg(node, nodeCanvasRect, zoom);
 
     return
