@@ -66,7 +66,6 @@ class SvgService : ISvgService
   {
     var nodeCanvasPos = GetNodeCanvasPos(node, offset, zoom);
     var nodeCanvasRect = GetNodeCanvasRect(node, nodeCanvasPos, zoom);
-
     if (!IsOverlap(tileWithMargin, nodeCanvasRect)) return ""; // Outside the tile limit
 
     if (Node.IsToLargeToBeSeen(zoom)) return GetNodeContentSvg(node, nodeCanvasPos, zoom, tileWithMargin);

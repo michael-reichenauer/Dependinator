@@ -164,6 +164,15 @@ class InteractionService : IInteractionService
         var targetId = PointerId.Parse(e.TargetId);
 
         selectionService.Select(targetId);
+
+        if (!selectionService.IsNodeMovable(Zoom))
+        {
+            selectionService.Unselect();
+            SelectedNodePosition = Pos.None;
+            applicationEvents.TriggerUIStateChanged();
+            return;
+        }
+
         if (selectionService.IsSelected)
         {
             if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(targetId.Id))) return;
@@ -225,6 +234,8 @@ class InteractionService : IInteractionService
         panZoomService.Pan(e);
         PanedMoveToolbar(e);
     }
+
+
 
     void ResizedMoveToolbar(PointerEvent e)
     {

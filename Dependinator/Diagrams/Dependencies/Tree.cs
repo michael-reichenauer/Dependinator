@@ -26,7 +26,7 @@ internal class Tree
     public bool IsSelected { get; set; }
     public HashSet<NodeId> SelectedPeers { get; } = [];
 
-    public string Title => IsSelected ? Selected.Title : "<all>";
+    public string Title => IsSelected ? Selected.Title : "";
 
     public Tree OtherTree => Side == TreeSide.Left ? Service.TreeData(TreeSide.Right) : Service.TreeData(TreeSide.Left);
 
