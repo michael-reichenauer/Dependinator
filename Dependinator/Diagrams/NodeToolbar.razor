@@ -4,7 +4,7 @@
 @inject IDependenciesService dependenciesService
 
 
-<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled"
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show"
     Style="@NodeToolBarPosition">
     <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
         <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
@@ -22,6 +22,7 @@
 
 
 @code {
+    string show => interactionService.SelectedNodePosition != Models.Pos.None ? "visible" : "hidden";
     bool isIcon => !interactionService.IsContainer;
     string NodeToolBarPosition => 
         $"Position: fixed; left:{interactionService.SelectedNodePosition.X}px; top:{interactionService.SelectedNodePosition.Y - 55}px";
