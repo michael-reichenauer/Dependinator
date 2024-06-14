@@ -7,6 +7,8 @@ namespace Dependinator.Utils;
 
 public static class StringExtensions
 {
+    private static readonly JsonSerializerOptions JsonIndented = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonOneLine = new() { WriteIndented = false };
     // Method that limits the length of text to a defined length and can fill the rest with spaces
     public static string Max(this string source, int maxLength, bool isFill = false)
     {
@@ -48,7 +50,19 @@ public static class StringExtensions
     {
         if (source == null) return "";
 
-        if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, new JsonSerializerOptions { WriteIndented = true })))
+        if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, JsonIndented)))
+        {
+            return $"<Error: {e}>";
+        }
+
+        return json;
+    }
+
+    public static string ToJsonOneLine(this object? source)
+    {
+        if (source == null) return "";
+
+        if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, JsonOneLine)))
         {
             return $"<Error: {e}>";
         }

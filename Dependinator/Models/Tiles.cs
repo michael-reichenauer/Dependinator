@@ -8,27 +8,33 @@ record Tile(TileKey Key, string Svg, double Zoom, Pos Offset)
     public static Tile Empty = new(TileKey.Empty, "", 1.0, Pos.None);
 }
 
-record TileKey(long X, long Y, int Z, int TileSize)
+record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
 {
-    public const int XTileSize = 2000;
-    public static TileKey Empty = new(0L, 0L, 0, 0);
+    private const double Margin = 0.1;
+    public static TileKey Empty = new(0L, 0L, 0, 0, 0);
 
     public double GetTileZoom() => Math.Pow(Tile.ZoomFactor, -Z);
-    public Rect GetTileRect() => new(X * TileSize, Y * TileSize, TileSize, TileSize);
-    public Rect GetViewRect() => new(-TileSize * 2, -TileSize * 2, TileSize * 5, TileSize * 5);
+    public Rect GetTileRect() => new(X * TileWidth, Y * TileHeight, TileWidth, TileHeight);
+    public Rect GetViewRect() => new(-TileWidth * 2, -TileHeight * 2, TileWidth * 5, TileHeight * 5);
 
-    public Rect GetTileRectWithMargin() => new(-TileSize * 3, -TileSize * 3, TileSize * 9, TileSize * 9);
+    public Rect GetTileRectWithMargin() => new(
+        -TileWidth * Margin,
+        -TileHeight * Margin,
+        TileWidth + 2 * (TileWidth * Margin),
+        TileHeight + 2 * (TileHeight * Margin));
 
     public static TileKey From(Rect canvasRect, Double canvasZoom)
     {
-        var tileSize = (int)Math.Max(canvasRect.Width, canvasRect.Height);
+        var tileWidth = (int)Math.Ceiling(canvasRect.Width);
+        var tileHeight = (int)Math.Ceiling(canvasRect.Height);
+
         int z = -(int)Math.Floor(Math.Log(canvasZoom) / Math.Log(Tile.ZoomFactor));
         double tileZoom = Math.Pow(Tile.ZoomFactor, -z);
 
-        long x = (long)Math.Round(canvasRect.X / tileZoom / tileSize);
-        long y = (long)Math.Round(canvasRect.Y / tileZoom / tileSize);
+        long x = (long)Math.Round(canvasRect.X / tileZoom / tileWidth);
+        long y = (long)Math.Round(canvasRect.Y / tileZoom / tileHeight);
 
-        return new TileKey(x, y, z, tileSize);
+        return new TileKey(x, y, z, tileWidth, tileHeight);
     }
 
     public override string ToString() => $"(({X},{Y},{Z}))";
@@ -37,8 +43,9 @@ record TileKey(long X, long Y, int Z, int TileSize)
 
 class Tiles
 {
-    readonly Dictionary<TileKey, Tile> tiles = new();
-    int tileSize = 0;
+    readonly Dictionary<TileKey, Tile> tiles = [];
+    int tileWidth = 0;
+    int tileHeight = 0;
     int maxSvgSize = 0;
 
     public bool TryGetCached(TileKey key, out Tile tile)
@@ -51,7 +58,8 @@ class Tiles
     {
         ValidateTileSize(tile.Key);
         tiles[tile.Key] = tile;
-        tileSize = tile.Key.TileSize;
+        tileWidth = tile.Key.TileWidth;
+        tileHeight = tile.Key.TileHeight;
 
         if (tile.Svg.Length > maxSvgSize)
         {
@@ -62,7 +70,8 @@ class Tiles
     public void Clear()
     {
         tiles.Clear();
-        tileSize = 0;
+        tileWidth = 0;
+        tileHeight = 0;
         maxSvgSize = 0;
     }
 
@@ -70,7 +79,7 @@ class Tiles
 
     void ValidateTileSize(TileKey key)
     {
-        if (tileSize != key.TileSize)
+        if (tileWidth != key.TileWidth || tileHeight != key.TileHeight)
         {   // Tile sizes have been changed, invalidate all tiles.
             Clear();
         }

@@ -151,7 +151,7 @@ static class Log
 
         try
         {
-            return obj.ToJson();
+            return obj.ToJsonOneLine();
         }
         catch
         {
