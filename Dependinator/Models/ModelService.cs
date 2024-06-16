@@ -9,7 +9,7 @@ interface IModelService
     Pos Offset { get; }
     double Zoom { get; }
 
-    void Do(Command command);
+    void Do(Command command, bool isClearCache = true);
     bool CanUndo { get; }
     bool CanRedo { get; }
     void Undo();
@@ -70,12 +70,12 @@ class ModelService : IModelService
     public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
 
 
-    public void Do(Command command)
+    public void Do(Command command, bool isClearCache = true)
     {
         using (var model = UseModel())
         {
             commandService.Do(model, command);
-            model.ClearCachedSvg();
+            if (isClearCache) model.ClearCachedSvg();
         }
 
         applicationEvents.TriggerUIStateChanged();

@@ -50,7 +50,7 @@ class PanZoomService(
         {
             Offset = newOffset,
             Zoom = newZoom
-        });
+        }, false);
     }
 
 
@@ -61,7 +61,7 @@ class PanZoomService(
         var (dx, dy) = (e.MovementX * model.Zoom, e.MovementY * model.Zoom);
         var newOffset = new Pos(model.Offset.X - dx, model.Offset.Y - dy);
 
-        modelService.Do(new ModelEditCommand() { Offset = newOffset, });
+        modelService.Do(new ModelEditCommand() { Offset = newOffset, }, false);
     }
 
 
