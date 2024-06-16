@@ -23,13 +23,13 @@ class SvgService : ISvgService
     var tileKey = TileKey.From(viewRect, zoom);
     //Log.Info($"Try Cached {tileKey}");
     if (model.Tiles.TryGetCached(tileKey, out var tile)) return tile;
-    Log.Info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-    Log.Info($"Not Cached {tileKey}, for viewRect {viewRect} viewZoom: {zoom}, Tile:{tileKey.GetTileRect()}");
+    // Log.Info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+    // Log.Info($"Not Cached {tileKey}, for viewRect {viewRect} viewZoom: {zoom}, Tile:{tileKey.GetTileRect()}");
 
     tile = GetModelTile(model, tileKey);
     model.Tiles.SetCached(tile);
 
-    Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars, Tiles: {model.Tiles}");
+    // Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars, Tiles: {model.Tiles}");
     return tile;
   }
 
@@ -39,90 +39,60 @@ class SvgService : ISvgService
     var tileRect = tileKey.GetTileRect();
     var tileWithMargin = tileKey.GetTileRectWithMargin();
     var tileZoom = tileKey.GetTileZoom();
-    Log.Info($"TileZoom {tileZoom} ({1 / tileZoom})");
     var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
-    Log.Info("TitileOffset", tileOffset.ToString());
-    var off = new Pos(0, 0);
 
-    var svgContent = GetNodeContentSvg(model.Root, tileOffset, 1 / tileZoom, tileWithMargin, new Pos(0, 0), tileOffset);
+    var rootContentSvg = GetNodeContentSvg(model.Root, tileOffset, 1 / tileZoom, tileWithMargin, new Pos(0, 0));
+
+    var tileBorderSvg = $"""<rect x="{0}" y="{0}" width="{tileRect.Width:0.##}" height="{tileRect.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="red"/>""";
+    var tileMarginBorderSvg = $"""<rect x="{tileWithMargin.X}" y="{tileWithMargin.Y}" width="{tileWithMargin.Width:0.##}" height="{tileWithMargin.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="green"/>""";
 
     var (x, y, w, h) = tileKey.GetViewRect();
-
-    var rect = $"""<rect x="{0}" y="{0}" width="{tileRect.Width:0.##}" height="{tileRect.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="red"/>""";
-    var rectM = $"""<rect x="{tileWithMargin.X}" y="{tileWithMargin.Y}" width="{tileWithMargin.Width:0.##}" height="{tileWithMargin.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="green"/>""";
-
     var tileViewBox = $"{x} {y} {w} {h}";
-    var tileSvg = $"""<svg width="{w}" height="{h}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">{svgContent}{rect}{rectM}</svg>""";
+    var tileSvg =
+      $"""
+      <svg width="{w}" height="{h}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">
+        {rootContentSvg}
+        {tileBorderSvg}
+        {tileMarginBorderSvg}
+      </svg>
+      """;
 
     return new Tile(tileKey, tileSvg, tileZoom, tileOffset);
   }
 
-  static string GetNodeContentSvg(Node node, Pos nodeCanvasPos, double zoom, Rect tileWithMargin, Pos nodeRealPos, Pos moff)
+  static string GetNodeContentSvg(Node node, Pos nodeCanvasPos, double zoom, Rect tileWithMargin, Pos nodeRealPos)
   {
-    Log.Info($"GetNodeContentSvg '{node.Name}', nodeRealPos: {nodeRealPos}, Z:{zoom}");
+    // Log.Info($"GetNodeContentSvg '{node.Name}', nodeRealPos: {nodeRealPos}, Z:{zoom}");
     if (node.IsChildrenLayoutRequired) NodeLayout.AdjustChildren(node);
 
     var childrenPos = new Pos(nodeCanvasPos.X + node.ContainerOffset.X * zoom, nodeCanvasPos.Y + node.ContainerOffset.Y * zoom);
     var childrenZoom = zoom * node.ContainerZoom;
 
     return node.Children
-        .Select(n => GetNodeSvg(n, childrenPos, childrenZoom, tileWithMargin, nodeRealPos, moff))
+        .Select(n => GetNodeSvg(n, childrenPos, childrenZoom, tileWithMargin, nodeRealPos))
         .Concat(GetNodeLinesSvg(node, childrenPos, zoom, childrenZoom))
         .Join("\n");
   }
 
-  static string GetNodeSvg(Node node, Pos offset, double zoom, Rect tileWithMargin, Pos parentRealPos, Pos moff)
+  static string GetNodeSvg(Node node, Pos offset, double zoom, Rect tileWithMargin, Pos parentTilePos)
   {
-    Log.Info("---------------------------------------------");
-    Log.Info($"GetNodeSvg '{node.Name}', offset: {offset}, Z:{zoom}, ParentRealPos: {parentRealPos}");
-    var nodeCanvasPos = GetNodeCanvasPos(node, offset, zoom);
+    // Log.Info("---------------------------------------------");
+    // Log.Info($"GetNodeSvg '{node.Name}', offset: {offset}, Z:{zoom}, ParentRealPos: {parentRealPos}");
+    var nodeSvgPos = GetNodeSvgPos(node, offset, zoom);
+    var nodeSvgRect = GetNodeSvgRect(node, nodeSvgPos, zoom);
+    var nodeTilePos = GetNodeTilePos(node, parentTilePos, offset, zoom);
 
-    var nodeCanvasRect = GetNodeCanvasRect(node, nodeCanvasPos, zoom);
-    var nodeRealPos = new Pos(
-        parentRealPos.X + node.Boundary.X * zoom + offset.X,
-        parentRealPos.Y + node.Boundary.Y * zoom + offset.Y);
-    var nodeRealRect = new Rect(
-        nodeRealPos.X,
-        nodeRealPos.Y,
-        node.Boundary.Width * zoom,
-        node.Boundary.Height * zoom);
+    if (!IsInsideTile(node, nodeTilePos, zoom, tileWithMargin)) return "";
 
-    Log.Info("NodeRealect", node.Name, nodeRealRect.ToString(), tileWithMargin.ToString());
-    Log.Info("Node Bound", node.Name, node.Boundary.ToString(), zoom, offset.ToString());
-    Log.Info("Node canvas", node.Name, nodeCanvasRect.ToString());
+    if (node.IsShowIcon(zoom)) return GetNodeIconSvg(node, nodeSvgRect, zoom);
 
-    // if (node.Name == "Dependinator.Dependinator.ISelectionService"
-    //   || node.Name == "Dependinator.Dependinator"
-    //   || node.Name == "Dependinator.Dependinator.SelectionService")
-    // {
-    //   Log.Info("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-    //   Log.Info(node.Name, nodeCanvasRect.ToString(), tileWithMargin.ToString());
-    //   Log.Info(node.Name, node.Boundary.ToString());
-    //   Log.Info(node.Name, marginRect.ToString(), zoom);
-    //   Log.Info(node.Name, "offset", offset.ToString());
-    // }
+    var nodeContentContentSvg = GetNodeContentSvg(node, Pos.Zero, zoom, tileWithMargin, nodeTilePos);
 
-    if (!IsOverlap(tileWithMargin, nodeRealRect))
-    {
-      Log.Info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-      Log.Info("   Outside", node.Name, nodeRealRect.ToString(), tileWithMargin.ToString());
-      Log.Info("   Outside node", node.Name, node.Boundary.ToString(), offset.ToString(), zoom);
-      return "";
-    }// Outside the tile limit
+    if (Node.IsToLargeToBeSeen(zoom)) return GetToLargeNodeContainerSvg(nodeSvgRect, nodeContentContentSvg);
 
-    if (Node.IsToLargeToBeSeen(zoom))
-    {
-      Log.Info(node.Name, ">>>>>>>>>>>>>>>>>>>>>>>> IsToLargeToBeSeen", zoom);
-      var nodeContentContentSvg2 = GetNodeContentSvg(node, Pos.Zero, zoom, tileWithMargin, nodeRealPos, moff);
-      return GetToLargeNodeContainerSvg(node, nodeCanvasRect, zoom, nodeContentContentSvg2);
-    }
-
-    if (node.IsShowIcon(zoom)) return GetNodeIconSvg(node, nodeCanvasRect, zoom);
-
-    var nodeContentContentSvg = GetNodeContentSvg(node, Pos.Zero, zoom, tileWithMargin, nodeRealPos, moff);
-
-    return GetNodeContainerSvg(node, nodeCanvasRect, zoom, nodeContentContentSvg);
+    return GetNodeContainerSvg(node, nodeSvgRect, zoom, nodeContentContentSvg);
   }
+
 
 
   static IEnumerable<string> GetNodeLinesSvg(Node node, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
@@ -144,14 +114,21 @@ class SvgService : ISvgService
     }
   }
 
-
-
-  static Pos GetNodeCanvasPos(Node node, Pos offset, double zoom) => new(
+  static Pos GetNodeSvgPos(Node node, Pos offset, double zoom) => new(
      offset.X + node.Boundary.X * zoom, offset.Y + node.Boundary.Y * zoom);
 
-  static Rect GetNodeCanvasRect(Node node, Pos nodeCanvasPos, double zoom) => new(
+  static Rect GetNodeSvgRect(Node node, Pos nodeCanvasPos, double zoom) => new(
      nodeCanvasPos.X, nodeCanvasPos.Y, node.Boundary.Width * zoom, node.Boundary.Height * zoom);
 
+  static Pos GetNodeTilePos(Node node, Pos parentTilePos, Pos offset, double zoom) => new(
+         parentTilePos.X + node.Boundary.X * zoom + offset.X,
+         parentTilePos.Y + node.Boundary.Y * zoom + offset.Y);
+
+  static bool IsInsideTile(Node node, Pos nodeRealPos, double zoom, Rect tileWithMargin)
+  {
+    var nodeTileRect = new Rect(nodeRealPos.X, nodeRealPos.Y, node.Boundary.Width * zoom, node.Boundary.Height * zoom);
+    return IsOverlap(tileWithMargin, nodeTileRect);
+  }
 
   static bool IsOverlap(Rect r1, Rect r2)
   {
@@ -161,39 +138,6 @@ class SvgService : ISvgService
     if (r1.Y + r1.Height <= r2.Y || r2.Y + r2.Height <= r1.Y) return false;
 
     return true;
-  }
-
-
-  static Rect GetIntersection(Rect rect1, Rect rect2)
-  {
-    double x1 = Math.Max(rect1.X, rect2.X);
-    double y1 = Math.Max(rect1.Y, rect2.Y);
-    double x2 = Math.Min(rect1.X + rect1.Width, rect2.X + rect2.Width);
-    double y2 = Math.Min(rect1.Y + rect1.Height, rect2.Y + rect2.Height);
-
-    // Check if there is a valid intersection
-    if (x1 < x2 && y1 < y2)
-    {
-      return new Rect(x1, y1, x2 - x1, y2 - y1);
-    }
-
-    return Rect.None;
-  }
-
-  static Rect GetTotalBoundary(Node node)
-  {
-    (double x1, double y1, double x2, double y2) =
-        (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
-    foreach (var child in node.Children)
-    {
-      var b = child.Boundary;
-      x1 = Math.Min(x1, b.X);
-      y1 = Math.Min(y1, b.Y);
-      x2 = Math.Max(x2, b.X + b.Width);
-      y2 = Math.Max(y2, b.Y + b.Height);
-    }
-
-    return new Rect(x1, y1, x2 - x1, y2 - y1);
   }
 
 
@@ -261,16 +205,16 @@ class SvgService : ISvgService
             """;
   }
 
-  static string GetToLargeNodeContainerSvg(Node node, Rect nodeCanvasRect, double parentZoom, string childrenContent)
+  static string GetToLargeNodeContainerSvg(Rect nodeCanvasRect, string childrenContent)
   {
     //Log.Info("Draw", node.Name, nodeCanvasRect.ToString());
     var (x, y, w, h) = (nodeCanvasRect.X, nodeCanvasRect.Y, nodeCanvasRect.Width, nodeCanvasRect.Height);
     return
         $"""
-            <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
-                {childrenContent}
-            </svg>
-            """;
+          <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
+            {childrenContent}
+          </svg>
+        """;
   }
 
   static string SelectedNodeSvg(Node node, double x, double y, double w, double h)
