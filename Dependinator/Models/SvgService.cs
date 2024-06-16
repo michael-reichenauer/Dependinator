@@ -16,18 +16,19 @@ class SvgService : ISvgService
 
   public Tile GetTile(IModel model, Rect viewRect, double zoom)
   {
-    //Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
-    if (!model.Root.Children.Any()) return Tile.Empty;
+    // Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
+    if (model.Root.Children.Count == 0) return Tile.Empty;
     if (viewRect.Width == 0 || viewRect.Height == 0) return Tile.Empty;
 
+    if (model.Tiles.TryGetLastUsed(viewRect, zoom, out var tile)) return tile;  // Same tile as last call
+
     var tileKey = TileKey.From(viewRect, zoom);
-    //Log.Info($"Try Cached {tileKey}");
-    if (model.Tiles.TryGetCached(tileKey, out var tile)) return tile;
-    // Log.Info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+    if (model.Tiles.TryGetCached(tileKey, viewRect, zoom, out tile)) return tile;
+    // Log.Info("/n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     // Log.Info($"Not Cached {tileKey}, for viewRect {viewRect} viewZoom: {zoom}, Tile:{tileKey.GetTileRect()}");
 
     tile = GetModelTile(model, tileKey);
-    model.Tiles.SetCached(tile);
+    model.Tiles.SetCached(tile, viewRect, zoom);
 
     // Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars, Tiles: {model.Tiles}");
     return tile;
@@ -43,8 +44,9 @@ class SvgService : ISvgService
 
     var rootContentSvg = GetNodeContentSvg(model.Root, tileOffset, 1 / tileZoom, tileWithMargin, new Pos(0, 0));
 
-    var tileBorderSvg = $"""<rect x="{0}" y="{0}" width="{tileRect.Width:0.##}" height="{tileRect.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="red"/>""";
-    var tileMarginBorderSvg = $"""<rect x="{tileWithMargin.X}" y="{tileWithMargin.Y}" width="{tileWithMargin.Width:0.##}" height="{tileWithMargin.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="green"/>""";
+    // Enable this if need to show tile border and/or tile with marghin border
+    // var tileBorderSvg = $"""<rect x="{0}" y="{0}" width="{tileRect.Width:0.##}" height="{tileRect.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="red"/>""";
+    // var tileMarginBorderSvg = $"""<rect x="{tileWithMargin.X}" y="{tileWithMargin.Y}" width="{tileWithMargin.Width:0.##}" height="{tileWithMargin.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="green"/>""";
 
     var (x, y, w, h) = tileKey.GetViewRect();
     var tileViewBox = $"{x} {y} {w} {h}";
@@ -52,8 +54,6 @@ class SvgService : ISvgService
       $"""
       <svg width="{w}" height="{h}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">
         {rootContentSvg}
-        {tileBorderSvg}
-        {tileMarginBorderSvg}
       </svg>
       """;
 
@@ -92,7 +92,6 @@ class SvgService : ISvgService
 
     return GetNodeContainerSvg(node, nodeSvgRect, zoom, nodeContentContentSvg);
   }
-
 
 
   static IEnumerable<string> GetNodeLinesSvg(Node node, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
