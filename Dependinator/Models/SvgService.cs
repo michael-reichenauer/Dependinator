@@ -112,8 +112,9 @@ class SvgService : ISvgService
 
     if (Node.IsToLargeToBeSeen(zoom))
     {
-      Log.Info(node.Name, ">>> IsToLargeToBeSeen", zoom);
-      return GetNodeContentSvg(node, nodeCanvasPos, zoom, tileWithMargin, nodeRealPos, moff);
+      Log.Info(node.Name, ">>>>>>>>>>>>>>>>>>>>>>>> IsToLargeToBeSeen", zoom);
+      var nodeContentContentSvg2 = GetNodeContentSvg(node, Pos.Zero, zoom, tileWithMargin, nodeRealPos, moff);
+      return GetToLargeNodeContainerSvg(node, nodeCanvasRect, zoom, nodeContentContentSvg2);
     }
 
     if (node.IsShowIcon(zoom)) return GetNodeIconSvg(node, nodeCanvasRect, zoom);
@@ -257,6 +258,18 @@ class SvgService : ISvgService
             <use href="#{icon}" x="{ix:0.##}" y="{iy:0.##}" width="{iw:0.##}" height="{ih:0.##}" />
             <text x="{tx:0.##}" y="{ty:0.##}" class="nodeName" font-size="{fz:0.##}px">{node.HtmlShortName}</text>
             {selectedSvg}
+            """;
+  }
+
+  static string GetToLargeNodeContainerSvg(Node node, Rect nodeCanvasRect, double parentZoom, string childrenContent)
+  {
+    //Log.Info("Draw", node.Name, nodeCanvasRect.ToString());
+    var (x, y, w, h) = (nodeCanvasRect.X, nodeCanvasRect.Y, nodeCanvasRect.Width, nodeCanvasRect.Height);
+    return
+        $"""
+            <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
+                {childrenContent}
+            </svg>
             """;
   }
 
