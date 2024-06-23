@@ -23,6 +23,7 @@ interface IModelService
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool UseNode(string id, Action<Node> useAction);
+    bool UseNodeN(NodeId id, Action<Node> updateAction);
     void Clear();
     Rect GetBounds();
 }
@@ -72,6 +73,7 @@ class ModelService : IModelService
 
     public void Do(Command command, bool isClearCache = true)
     {
+        Log.Info("Do", command, isClearCache);
         using (var model = UseModel())
         {
             commandService.Do(model, command);
@@ -136,11 +138,11 @@ class ModelService : IModelService
         }
     }
 
-    public bool UseNode(string id, Action<Node> updateAction)
+    public bool UseNodeN(NodeId id, Action<Node> updateAction)
     {
         lock (model.Lock)
         {
-            if (!model.TryGetNode(NodeId.FromId(id), out var node)) return false;
+            if (!model.TryGetNode(id, out var node)) return false;
 
             updateAction(node);
             model.ClearCachedSvg();
@@ -149,6 +151,9 @@ class ModelService : IModelService
         TriggerSave();
         return true;
     }
+
+    public bool UseNode(string id, Action<Node> updateAction) => UseNodeN(NodeId.FromId(id), updateAction);
+
 
     public Tile GetTile(Rect viewRect, double zoom)
     {

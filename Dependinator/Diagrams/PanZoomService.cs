@@ -17,8 +17,6 @@ class PanZoomService(
     IScreenService screenService,
     IModelService modelService) : IPanZoomService
 {
-    private Rect SvgRect => screenService.SvgRect;
-
     const double MaxZoom = 10;
     const double Margin = 10;
     const double WheelZoomSpeed = 1.2;
@@ -38,11 +36,12 @@ class PanZoomService(
         double svgX = mx * model.Zoom + model.Offset.X;
         double svgY = my * model.Zoom + model.Offset.Y;
 
-        var w = SvgRect.Width * newZoom;
-        var h = SvgRect.Height * newZoom;
+        var svgRect = screenService.SvgRect;
+        var w = svgRect.Width * newZoom;
+        var h = svgRect.Height * newZoom;
 
-        var x = svgX - mx / SvgRect.Width * w;
-        var y = svgY - my / SvgRect.Height * h;
+        var x = svgX - mx / svgRect.Width * w;
+        var y = svgY - my / svgRect.Height * h;
 
         var newOffset = new Pos(x, y);
 
@@ -65,14 +64,27 @@ class PanZoomService(
     }
 
 
-    public void PanZoom(Rect viewRect, double newZoom)
+    public void PanZoom(Rect viewRect, double zoom)
     {
+        //var newOffset = new Pos(viewRect.X, viewRect.Y);
+        var svgRect = screenService.SvgRect;
+
+        // Calculate the ratio of the width and height of the svgRect and viewRect
+        var widthRatio = svgRect.Width / viewRect.Width;
+        var heightRatio = svgRect.Height / viewRect.Height;
+
+        // The newZoom should be the smaller of the two ratios, so that the entire viewRect fits within the svgRect
+        var newZoom = zoom * Math.Min(widthRatio, heightRatio);
+
+        // Calculate the newOffset so that the viewRect is centered within the svgRect
+        var newOffsetX = (svgRect.Width - (viewRect.Width * newZoom)) / 2;
+        var newOffsetY = (svgRect.Height - (viewRect.Height * newZoom)) / 2;
+        var newOffset = new Pos(newOffsetX, newOffsetY);
+
+        // Apply the newZoom and newOffset to the viewRect
         using var model = modelService.UseModel();
-
-        var newOffset = new Pos(viewRect.X, viewRect.Y);
-
         model.Offset = newOffset;
-        model.Zoom = newZoom;
+        model.Zoom = zoom * 0.5;
     }
 
 
@@ -81,15 +93,16 @@ class PanZoomService(
         using var model = modelService.UseModel();
 
         Rect b = totalBounds;
+        var svgRect = screenService.SvgRect;
 
         // Determine the X or y zoom that best fits the bounds (including margin)
-        var zx = (b.Width + 2 * Margin) / SvgRect.Width;
-        var zy = (b.Height + 2 * Margin) / SvgRect.Height;
+        var zx = (b.Width + 2 * Margin) / svgRect.Width;
+        var zy = (b.Height + 2 * Margin) / svgRect.Height;
         var newZoom = Math.Max(maxZoom, Math.Max(zx, zy));
 
         // Zoom width and height to fit the bounds
-        var w = SvgRect.Width * newZoom;
-        var h = SvgRect.Height * newZoom;
+        var w = svgRect.Width * newZoom;
+        var h = svgRect.Height * newZoom;
 
         // Pan to center the bounds
         var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
