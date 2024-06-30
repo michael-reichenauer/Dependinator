@@ -93,6 +93,8 @@ class CanvasService : ICanvasService
 
     public async void InitialShow()
     {
+        Log.Info("####################################################################");
+        Log.Info("####################################################################");
         await screenService.CheckResizeAsync();
         await LoadAsync(recentModelsService.LastUsedPath);
     }
@@ -100,6 +102,8 @@ class CanvasService : ICanvasService
 
     public async Task LoadAsync(string modelPath)
     {
+        Log.Info($"LoadAsync: {modelPath}");
+
         DiagramName = $"Loading {modelPath} ...";
         applicationEvents.TriggerUIStateChanged();
 
@@ -123,8 +127,10 @@ class CanvasService : ICanvasService
 
     void PanZoomModel(ModelInfo modelInfo)
     {
+        Log.Info($"PanZoomModel: {modelInfo.Path}, {modelInfo.ViewRect}, {modelInfo.Zoom}");
         if (modelInfo.ViewRect != Rect.None)
         {
+            Log.Info("PanZoomModel: PanZoom using model rect and zoom");
             panZoomService.PanZoom(modelInfo.ViewRect, modelInfo.Zoom);
         }
         else

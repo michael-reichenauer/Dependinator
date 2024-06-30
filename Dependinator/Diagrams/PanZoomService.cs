@@ -64,27 +64,38 @@ class PanZoomService(
     }
 
 
+    public void PanZoomOrg(Rect viewRect, double zoom)
+    {
+        var newOffset = new Pos(viewRect.X, viewRect.Y);
+        var newZoom = zoom;
+
+        // Apply the newZoom and newOffset to the viewRect
+        using var model = modelService.UseModel();
+        model.Offset = newOffset;
+        model.Zoom = newZoom;
+        Log.Info($"PanZoom newOffset={newOffset} newZoom={newZoom}");
+    }
+
+
     public void PanZoom(Rect viewRect, double zoom)
     {
-        //var newOffset = new Pos(viewRect.X, viewRect.Y);
         var svgRect = screenService.SvgRect;
+        Log.Info($"PanZoom viewRect={viewRect} svgRect={svgRect} zoom={zoom}");
 
         // Calculate the ratio of the width and height of the svgRect and viewRect
         var widthRatio = svgRect.Width / viewRect.Width;
         var heightRatio = svgRect.Height / viewRect.Height;
 
         // The newZoom should be the smaller of the two ratios, so that the entire viewRect fits within the svgRect
-        var newZoom = zoom * Math.Min(widthRatio, heightRatio);
+        var newZoom = zoom / Math.Min(widthRatio, heightRatio);
 
-        // Calculate the newOffset so that the viewRect is centered within the svgRect
-        var newOffsetX = (svgRect.Width - (viewRect.Width * newZoom)) / 2;
-        var newOffsetY = (svgRect.Height - (viewRect.Height * newZoom)) / 2;
-        var newOffset = new Pos(newOffsetX, newOffsetY);
+        var newOffset = new Pos(viewRect.X, viewRect.Y);
 
         // Apply the newZoom and newOffset to the viewRect
         using var model = modelService.UseModel();
         model.Offset = newOffset;
-        model.Zoom = zoom * 0.5;
+        model.Zoom = newZoom;
+        Log.Info($"PanZoom newOffset={newOffset} newZoom={newZoom}");
     }
 
 

@@ -12,7 +12,7 @@ interface ICommandService
 }
 
 
-[Singleton]
+[Scoped]
 class CommandService : ICommandService
 {
     readonly IApplicationEvents applicationEvents;

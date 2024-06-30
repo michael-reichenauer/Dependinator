@@ -13,7 +13,7 @@ interface IApplicationEvents
 }
 
 
-[Singleton]
+[Scoped]
 class ApplicationEvents : IApplicationEvents
 {
     public event Action UIStateChanged = null!;
