@@ -7,6 +7,7 @@ interface IPanZoomService
 {
     void PanZoomToFit(Rect bounds, double maxZoom = 1, bool noCommand = false);
     void PanZoom(Rect viewRect, double zoom);
+    void PanZoomTo(Pos pos, double zoom);
     void Zoom(PointerEvent e);
     void Pan(PointerEvent e);
 }
@@ -76,6 +77,19 @@ class PanZoomService(
         Log.Info($"PanZoom newOffset={newOffset} newZoom={newZoom}");
     }
 
+    public void PanZoomTo(Pos pos, double zoom)
+    {
+        var svgRect = screenService.SvgRect;
+        var x = pos.X - svgRect.Width / 2 * zoom;
+        var y = pos.Y - svgRect.Height / 2 * zoom;
+        var offset = new Pos(x, y);
+
+        modelService.Do(new ModelEditCommand()
+        {
+            Offset = offset,
+            Zoom = zoom
+        }, false);
+    }
 
     public void PanZoom(Rect viewRect, double zoom)
     {

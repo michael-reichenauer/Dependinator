@@ -130,7 +130,6 @@ class CanvasService : ICanvasService
         Log.Info($"PanZoomModel: {modelInfo.Path}, {modelInfo.ViewRect}, {modelInfo.Zoom}");
         if (modelInfo.ViewRect != Rect.None)
         {
-            Log.Info("PanZoomModel: PanZoom using model rect and zoom");
             panZoomService.PanZoom(modelInfo.ViewRect, modelInfo.Zoom);
         }
         else
