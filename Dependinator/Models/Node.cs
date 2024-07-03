@@ -86,14 +86,14 @@ class Node : IItem
 
     public (Pos pos, double zoom) GetPosAndZoom()
     {
-        if (IsRoot) return (new Pos(0,0), 1.0);
+        if (IsRoot) return (new Pos(0, 0), 1.0);
 
-        var (parenetPos, parentZoom) = Parent.GetPosAndZoom();
+        var (parentPos, parentZoom) = Parent.GetPosAndZoom();
 
         var zoom = Parent.ContainerZoom * parentZoom;
 
-        var x = parenetPos.X +(Parent.ContainerOffset.X + Boundary.X) * zoom;
-        var y = parenetPos.Y +(Parent.ContainerOffset.Y + Boundary.Y) * zoom;
+        var x = parentPos.X + Boundary.X * zoom + Parent.ContainerOffset.X * parentZoom;
+        var y = parentPos.Y + Boundary.Y * zoom + Parent.ContainerOffset.Y * parentZoom;
         var pos = new Pos(x, y);
 
         return (pos, zoom);
@@ -101,12 +101,12 @@ class Node : IItem
 
     public (Pos pos, double zoom) GetCenterPosAndZoom()
     {
-        if (IsRoot) return (new Pos(0,0), 1.0);
+        if (IsRoot) return (new Pos(0, 0), 1.0);
 
         var (pos, zoom) = GetPosAndZoom();
 
-        var x = pos.X + Boundary.Width/2 * zoom;
-        var y = pos.Y + Boundary.Height/2 * zoom;
+        var x = pos.X + Boundary.Width / 2 * zoom;
+        var y = pos.Y + Boundary.Height / 2 * zoom;
         var centerPos = new Pos(x, y);
 
         return (centerPos, zoom);

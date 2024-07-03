@@ -83,6 +83,7 @@ class PanZoomService(
         var x = pos.X - svgRect.Width / 2 * zoom;
         var y = pos.Y - svgRect.Height / 2 * zoom;
         var offset = new Pos(x, y);
+        Log.Info($"Pos:{pos}, z:{zoom}, Off:{offset}, svgR:{svgRect}");
 
         modelService.Do(new ModelEditCommand()
         {
