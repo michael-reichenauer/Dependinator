@@ -171,7 +171,6 @@ class PointerEventService : IPointerEventService
             Math.Abs(e.OffsetY - pointerDown.OffsetY) < 5
             && (DateTime.UtcNow - pointerDownTime).TotalMilliseconds < ClickTimeout)
         {
-            Log.Info("on click");
             OnLeftClickEvent(e);
         }
     }

@@ -21,12 +21,9 @@ class ShowService(
         if (!modelService.UseNodeN(nodeId, node =>
         {
             (pos, zoom) = node.GetCenterPosAndZoom();
-            Log.Info($"Show node {node.LongName} at {pos} zoom {zoom}");
-
-
         })) return;
 
-        panZoomService.PanZoomTo(pos, zoom);
+        panZoomService.PanZoomToAsync(pos, zoom).RunInBackground();
 
     }
 }

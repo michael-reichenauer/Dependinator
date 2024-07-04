@@ -55,6 +55,8 @@ class CommandService : ICommandService
 
         undoStack.Push(command);
         redoStack.Clear();
+        applicationEvents.TriggerUndoneRedone();
+        applicationEvents.TriggerUIStateChanged();
     }
 
 
