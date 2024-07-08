@@ -10,6 +10,7 @@
         <MudStack Row="true">
 
             <MudIcon Icon="@srv.Icon" Class="my-n2" />
+
             <MudGrid Spacing="1" Justify="Justify.Center" Class="my-n2">
                 <MudItem xs="5">
                     <MudText Class="align-content-end" Color="Color.Info"><b>@(srv.TreeData(TreeSide.Left)?.Title)</b>
@@ -23,6 +24,8 @@
                     <MudText Color="Color.Info"><b>@(srv.TreeData(TreeSide.Right)?.Title)</b></MudText>
                 </MudItem>
             </MudGrid>
+
+            <MudIconButton Icon="@ShowIcon" Size="Size.Small" Class="my-n2" OnClick="srv.ToggleShowTrees" />
 
             <MudIconButton Icon="@Icons.Material.Outlined.Close" Size="Size.Small" Class="my-n2"
                 OnClick="srv.HideExplorer" />
@@ -60,6 +63,9 @@
     int MaxWidth => (int)screenService.SvgRect.Width - 20;
 
     int Columns => screenService.SvgRect.Width > 600 ? 6 : 12;
+    string ShowIcon => srv.IsShowTrees ?
+    Icons.Material.Outlined.KeyboardArrowDown :
+    Icons.Material.Outlined.KeyboardArrowUp;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

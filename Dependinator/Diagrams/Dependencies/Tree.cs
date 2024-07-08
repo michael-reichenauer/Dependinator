@@ -10,19 +10,20 @@ internal class Tree
 {
     TreeItem rootItem;
     TreeItem selected = null!;
+    readonly HashSet<TreeItem> items = [];
 
     public Tree(DependenciesService service, TreeSide side, Node root)
     {
         Side = side;
         Service = service;
         rootItem = TreeItem.CreateTreeItem(root, null, this);
-        Items.Add(rootItem);
+        items.Add(rootItem);
     }
 
 
     public TreeSide Side { get; }
     public DependenciesService Service { get; }
-    public HashSet<TreeItem> Items { get; } = [];
+    public HashSet<TreeItem> Items { get => Service.IsShowTrees ? items : []; }
     public bool IsSelected { get; set; }
     public HashSet<NodeId> SelectedPeers { get; } = [];
 
@@ -46,10 +47,10 @@ internal class Tree
     public void EmptyTo(Node root)
     {
         ClearSelection();
-        Items.Clear();
+        items.Clear();
         SelectedPeers.Clear();
         rootItem = TreeItem.CreateTreeItem(root, null, this);
-        Items.Add(rootItem);
+        items.Add(rootItem);
     }
 
     public void ClearSelection()
@@ -91,5 +92,4 @@ internal class Tree
 
         return ancestorItem;
     }
-
 }

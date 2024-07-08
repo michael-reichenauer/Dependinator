@@ -70,7 +70,12 @@ class InteractionService : IInteractionService
     }
 
 
-    public Pos SelectedNodePosition { get; set; } = Pos.None;
+    Pos selectedNodePosition = Pos.None;
+    public Pos SelectedNodePosition
+    {
+        get => selectionService.IsSelected ? selectedNodePosition : Pos.None;
+        set => selectedNodePosition = value;
+    }
 
     public bool IsEditNodeMode
     {

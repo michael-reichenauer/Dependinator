@@ -115,10 +115,6 @@ class PanZoomService(
 
         GoTo(targetPos, currentZoom);
 
-
-        Log.Info($"Start  pos:{startPos}, z:{startZoom} vr:{startViewRect}");
-        Log.Info($"Target Pos:{targetPos}, z:{targetZoom} vr:{targetViewRect}");
-
         // Zoom until pos
         while (currentZoom > targetZoom)
         {
