@@ -36,10 +36,10 @@ class InitService : IInitService
 
     public async Task InitAsync(IUIComponent component)
     {
+        await database.Init([FileService.DBCollectionName]);
         await screenService.InitAsync(component);
         await mouseEventService.InitAsync();
         await recentModelsService.InitAsync();
-        await database.Init([FileService.DBCollectionName]);
         await canvasService.InitAsync();
     }
 }
