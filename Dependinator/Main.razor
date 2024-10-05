@@ -1,6 +1,7 @@
 ﻿@using Dependinator.App
 
 <MudThemeProvider Theme="DependinatorTheme" @bind-IsDarkMode="@_isDarkMode" />
+<MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
@@ -16,7 +17,7 @@
 
     MudTheme DependinatorTheme = new MudTheme
         {
-            Palette = new PaletteLight()
+            PaletteLight = new PaletteLight()
             {
                 AppbarBackground = Colors.DeepPurple.Accent4,
                 AppbarText = Colors.DeepPurple.Lighten5,

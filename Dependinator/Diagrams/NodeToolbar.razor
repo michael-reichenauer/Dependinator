@@ -8,7 +8,7 @@
     Style="@NodeToolBarPosition">
     <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
         <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
-            OnClick="ShowProperties" OnTouch="ShowProperties">Properties ...</MudMenuItem>
+            OnClick="ShowProperties">Properties ...</MudMenuItem>
     </MudMenu>
     
     <MudIconButton Icon="@DependenciesService.Dependencies" OnClick="()=> dependenciesService.ShowExplorer(TreeSide.Left)"  />
@@ -30,8 +30,8 @@
   
     private void ShowProperties()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true };
-        DialogService.Show<NodeProperties>("Node Properties", options);
+        //var options = new DialogOptions { CloseOnEscapeKey = true };
+        // DialogService.Show<NodeProperties>("Node Properties", options); 
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

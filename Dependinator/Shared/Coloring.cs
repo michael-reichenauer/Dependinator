@@ -16,7 +16,7 @@ record Coloring(int R, int G, int B)
     public override string ToString() => $"#{R:x2}{G:x2}{B:x2}";
 
     //public static readonly string EditNodeBack = new Color(0xFB / EditFactor, 0xC0 / EditFactor, 0x2D / EditFactor).ToString();
-    public static readonly string EditNodeBack = MudBlazor.Colors.Grey.Darken4;
+    public static readonly string EditNodeBack = MudBlazor.Colors.Gray.Darken4;
     public static Coloring BrightRandom()
     {
         while (true)

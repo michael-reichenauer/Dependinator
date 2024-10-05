@@ -4,21 +4,29 @@ using MudBlazor;
 namespace Dependinator.Diagrams;
 
 
-internal class TreeItem(Tree tree)
+internal class TreeItem : TreeItemData<TreeItem>
 {
-    readonly HashSet<TreeItem> items = [];
-    readonly Lazy<HashSet<TreeItem>> hasChildrenItems = new(() =>
-        [new(null!) { Title = "", Parent = null, Icon = "", NodeId = NodeId.Empty }]);
+    readonly List<TreeItemData<TreeItem>> items = [];
+    readonly Lazy<List<TreeItemData<TreeItem>>> hasChildrenItems = new(() =>
+        [new TreeItem(null!) { Text = "", Parent = null, Icon = "", NodeId = NodeId.Empty }]);
 
+    readonly Tree tree;
     bool isExpanded;
 
+    public TreeItem(Tree tree)
+    {
+        this.tree = tree;
+        this.Value = this;
+    }
+
     public Tree Tree => tree;
-    public required string Title { get; init; }
-    public required string Icon { get; init; }
+    public required override string? Text { get; set; }
+    public required override string? Icon { get; set; }
     public required TreeItem? Parent { get; set; }
     public required NodeId NodeId { get; init; }
     public bool HasNodeChildren { get; internal set; }
     public TreeSide Side => tree.Side;
+
 
     // Normally, the expand icon is an right array, which the MudTreeView will rotate to down when expanded
     // But if children are not yet initialized, we need to compensate and thus show an upp arrow
@@ -28,7 +36,7 @@ internal class TreeItem(Tree tree)
         : Icons.Material.Filled.ArrowRight;
 
 
-    public bool IsExpanded
+    public override bool Expanded
     {
         get => isExpanded;
 
@@ -46,13 +54,13 @@ internal class TreeItem(Tree tree)
 
 
     public bool IsChildrenIntitialized { get; set; }
-    public bool IsSelected { get; set; }
+    public override bool Selected { get; set; }
     public bool IsParentSelected { get; set; }
 
-    public Color TextColor => IsSelected || IsParentSelected ? Color.Info : Color.Inherit;
+    public Color TextColor => Selected || IsParentSelected ? Color.Info : Color.Inherit;
 
 
-    public HashSet<TreeItem> Items
+    public override List<TreeItemData<TreeItem>> Children
     {
         get
         {
@@ -64,7 +72,7 @@ internal class TreeItem(Tree tree)
 
     public void SetIsSelected(bool isSelected)
     {
-        IsSelected = isSelected;
+        Selected = isSelected;
         Parent?.SetIsParentSelected(isSelected);
     }
 
@@ -78,8 +86,8 @@ internal class TreeItem(Tree tree)
     public TreeItem AddChildNode(Node node)
     {
         // Check if node already added
-        var item = items.FirstOrDefault(n => n.NodeId == node.Id);
-        if (item != null) return item;
+        var item = items.FirstOrDefault(n => n.Value!.NodeId == node.Id);
+        if (item != null) return item.Value!;
 
         var nodeItem = CreateTreeItem(node, this, tree);
         items.Add(nodeItem);
@@ -96,7 +104,7 @@ internal class TreeItem(Tree tree)
 
     public static TreeItem CreateTreeItem(Node node, TreeItem? parent, Tree tree) => new(tree)
     {
-        Title = node.IsRoot ? "<all>" : node.ShortName,
+        Text = node.IsRoot ? "<all>" : node.ShortName,
         Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),
         NodeId = node.Id,
         HasNodeChildren = tree.HasNodeChildren(node),

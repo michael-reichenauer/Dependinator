@@ -2,34 +2,34 @@
 @inject IDependenciesService srv
 
 
-<MudTreeView Color="Color.Info" Items="@Tree.Items" @bind-SelectedValue="Tree.Selected" Hover="true" Dense="true"
-    Width="100%">
-    <ItemTemplate>
-        <MudTreeViewItem Value="@context" Icon="@context.Icon" @bind-Expanded="@context.IsExpanded"
-            ExpandedIcon="@context.ExpandIcon" Items="@context.Items">
-            <BodyContent Context="item">
-                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                    @if (context.IsSelected)
-                    {
-                        <MudText Style="justify-self: start;" Color="@context.TextColor">
-                            <b>@context.Title</b>
-                        </MudText>
-                    }
-                    else
-                    {
-                        <MudText Style="justify-self: start;" Color="@context.TextColor">
-                            @context.Title
-                        </MudText>
-                    }
-                    <div style="justify-self: end;">
-                        <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
-                            Color="Color.Inherit" Class="ml-3" />
-                    </div>
-                </div>
-            </BodyContent>
-        </MudTreeViewItem>
-    </ItemTemplate>
-</MudTreeView>
+@* <MudTreeView Color="Color.Info" Items="@Tree.TreeItems" @bind-SelectedValue="Tree.Selected" Hover="true" Dense="true"
+Width="100%">
+<ItemTemplate>
+<MudTreeViewItem Value="@context" Icon="@context.Value.Icon" @bind-Expanded="@context.Expanded"
+ExpandedIcon="@context.Value!.ExpandIcon" Items="@context.Children">
+<BodyContent Context="item">
+<div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+@if (context.IsSelected)
+{
+<MudText Style="justify-self: start;" Color="@context.TextColor">
+<b>@context.Text</b>
+</MudText>
+}
+else
+{
+<MudText Style="justify-self: start;" Color="@context.TextColor">
+@context.Text
+</MudText>
+}
+<div style="justify-self: end;">
+<MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
+Color="Color.Inherit" Class="ml-3" />
+</div>
+</div>
+</BodyContent>
+</MudTreeViewItem>
+</ItemTemplate>
+</MudTreeView> *@
 
 @code {
     [Parameter]

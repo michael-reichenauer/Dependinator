@@ -45,7 +45,7 @@ class DependenciesService(
         var tree = leftTree.IsSelected ? leftTree : rightTree;
         var selectedItem = tree.Selected;
 
-        var selectedId = selectedItem.NodeId;
+        var selectedId = selectedItem.Value!.NodeId;
         var otherTreeSide = tree.OtherTree.Side;
         ShowNodeExplorer(otherTreeSide, selectedId.Value);
     }
@@ -77,12 +77,12 @@ class DependenciesService(
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public TreeItem ItemSelected(TreeItem selectedItem)
+    public MudBlazor.TreeItemData<TreeItem> ItemSelected(MudBlazor.TreeItemData<TreeItem> selectedItem)
     {
         using var model = modelService.UseModel();
-        if (!model.TryGetNode(selectedItem.NodeId, out var selectedNode)) return selectedItem;
+        if (!model.TryGetNode(selectedItem.Value!.NodeId, out var selectedNode)) return selectedItem;
 
-        var isSwitchSide = !selectedItem.Tree.IsSelected;
+        var isSwitchSide = !selectedItem.Value.Tree.IsSelected;
 
         leftTree.ClearSelection();
         rightTree.ClearSelection();
@@ -92,7 +92,7 @@ class DependenciesService(
             selectedItem = SetSelectedSideItems(selectedItem, selectedNode, model.Root);
         }
 
-        selectedItem.Tree.SetSelectedItem(selectedItem);
+        selectedItem.Value!.Tree.SetSelectedItem(selectedItem);
 
         SetOtherSideItems(selectedItem, selectedNode, model.Root);
 
@@ -100,29 +100,29 @@ class DependenciesService(
         return selectedItem;
     }
 
-    static TreeItem SetSelectedSideItems(TreeItem selectedItem, Node selectedNode, Node root)
+    static MudBlazor.TreeItemData<TreeItem> SetSelectedSideItems(MudBlazor.TreeItemData<TreeItem> selectedItem, Node selectedNode, Node root)
     {
-        var thisTree = selectedItem.Tree;
+        var thisTree = selectedItem.Value!.Tree;
         thisTree.EmptyTo(root);
-        selectedItem.Tree.IsSelected = true;
+        selectedItem.Value!.Tree.IsSelected = true;
 
         return thisTree.AddNode(selectedNode);
     }
 
-    static void SetOtherSideItems(TreeItem selectedItem, Node selectedNode, Node root)
+    static void SetOtherSideItems(MudBlazor.TreeItemData<TreeItem> selectedItem, Node selectedNode, Node root)
     {
-        var otherTree = selectedItem.Tree.OtherTree;
+        var otherTree = selectedItem.Value!.Tree.OtherTree;
         otherTree.EmptyTo(root);
 
         // Get all peer noded for seleced node, SelectedPeers 
-        LinkNodes(selectedItem.Tree, selectedNode).ForEach(n =>
+        LinkNodes(selectedItem.Value.Tree, selectedNode).ForEach(n =>
         {
             otherTree.SelectedPeers.Add(n.Id);
             n.Ancestors().ForEach(a => otherTree.SelectedPeers.Add(a.Id));
         });
 
         HashSet<NodeId> addedNodes = [];
-        LineNodes(selectedItem.Tree, selectedNode).ForEach(n =>
+        LineNodes(selectedItem.Value.Tree, selectedNode).ForEach(n =>
         {
             addedNodes.Add(n.Id);
             if (selectedNode.Parent == n)
@@ -135,10 +135,10 @@ class DependenciesService(
         });
     }
 
-    static void SetOtherAncestorSideItems(TreeItem selectedItem, Node selectedNode, Node otherNode, HashSet<NodeId> addedNodes)
+    static void SetOtherAncestorSideItems(MudBlazor.TreeItemData<TreeItem> selectedItem, Node selectedNode, Node otherNode, HashSet<NodeId> addedNodes)
     {
-        var otherTree = selectedItem.Tree.OtherTree;
-        LineNodes(selectedItem.Tree, otherNode).ForEach(n =>
+        var otherTree = selectedItem.Value!.Tree.OtherTree;
+        LineNodes(selectedItem.Value!.Tree, otherNode).ForEach(n =>
         {
             if (!otherTree.IsNodeIncluded(n)) return;
             if (addedNodes.Contains(n.Id)) return;
