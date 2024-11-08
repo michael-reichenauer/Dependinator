@@ -30,8 +30,8 @@
   
     private void ShowProperties()
     {
-        //var options = new DialogOptions { CloseOnEscapeKey = true };
-        // DialogService.Show<NodeProperties>("Node Properties", options); 
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+         DialogService.Show<NodeProperties>("Node Properties", options); 
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
