@@ -63,6 +63,7 @@ class DependenciesService(
         {
             leftTree = new(this, TreeSide.Left, model.Root);
             rightTree = new(this, TreeSide.Right, model.Root);
+            Log.Info($"ShowNodeExplorer: {selectedSide} {selectedId}", selectedSide, selectedId);
 
             if (!model.TryGetNode(selectedId, out var selectedNode)) return;
 

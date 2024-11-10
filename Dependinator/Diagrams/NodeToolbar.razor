@@ -6,13 +6,14 @@
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show"
     Style="@NodeToolBarPosition">
+
     <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
         <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
             OnClick="ShowProperties">Properties ...</MudMenuItem>
     </MudMenu>
     
-    <MudIconButton Icon="@DependenciesService.Dependencies" OnClick="()=> dependenciesService.ShowExplorer(TreeSide.Left)"  />
-    <MudIconButton Icon="@DependenciesService.References" OnClick="()=> dependenciesService.ShowExplorer(TreeSide.Right)"  />
+    <MudIconButton Icon="@DependenciesService.Dependencies" OnClick="ShowLeftDependencies"  />
+    <MudIconButton Icon="@DependenciesService.References" OnClick="ShowRightDependencies"  />
 
     <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" Disabled="@isIcon"/>
     <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit" Disabled="@isIcon"
@@ -20,19 +21,17 @@
 </MudButtonGroup>
 
 
-
 @code {
     string show => interactionService.SelectedNodePosition != Models.Pos.None ? "visible" : "hidden";
     bool isIcon => !interactionService.IsContainer;
     string NodeToolBarPosition => 
         $"Position: fixed; left:{interactionService.SelectedNodePosition.X}px; top:{interactionService.SelectedNodePosition.Y - 55}px";
-  
-  
-    private void ShowProperties()
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true };
-         DialogService.Show<NodeProperties>("Node Properties", options); 
-    }
+    
+    void ShowProperties()  =>
+        DialogService.Show<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
+
+    void ShowLeftDependencies() => dependenciesService.ShowExplorer(TreeSide.Left);
+    void ShowRightDependencies() => dependenciesService.ShowExplorer(TreeSide.Right);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
