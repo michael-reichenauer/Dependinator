@@ -63,22 +63,22 @@ class DependenciesService(
         {
             leftTree = new(this, TreeSide.Left, model.Root);
             rightTree = new(this, TreeSide.Right, model.Root);
-            Log.Info($"ShowNodeExplorer: {selectedSide} {selectedId}", selectedSide, selectedId);
 
             if (!model.TryGetNode(selectedId, out var selectedNode)) return;
 
-            var tree = selectedSide == TreeSide.Left ? leftTree : rightTree;
+            var activeTree = GetActiveTree(selectedSide);
 
-            tree.IsSelected = true;
-            var selectedItem = tree.AddNode(selectedNode);
-            tree.Selected = selectedItem;
+            activeTree.IsSelected = true;
+            var selectedItem = activeTree.AddNode(selectedNode);
+            activeTree.Selected = selectedItem;
         }
 
         IsShowExplorer = true;
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public MudBlazor.TreeItemData<TreeItem> ItemSelected(MudBlazor.TreeItemData<TreeItem> selectedItem)
+
+    public TreeItem ItemSelected(TreeItem selectedItem)
     {
         using var model = modelService.UseModel();
         if (!model.TryGetNode(selectedItem.Value!.NodeId, out var selectedNode)) return selectedItem;
@@ -101,7 +101,10 @@ class DependenciesService(
         return selectedItem;
     }
 
-    static MudBlazor.TreeItemData<TreeItem> SetSelectedSideItems(MudBlazor.TreeItemData<TreeItem> selectedItem, Node selectedNode, Node root)
+    Tree GetActiveTree(TreeSide selectedSide) =>
+         selectedSide == TreeSide.Left ? leftTree : rightTree;
+
+    static TreeItem SetSelectedSideItems(TreeItem selectedItem, Node selectedNode, Node root)
     {
         var thisTree = selectedItem.Value!.Tree;
         thisTree.EmptyTo(root);

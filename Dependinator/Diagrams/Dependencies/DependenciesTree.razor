@@ -1,11 +1,12 @@
 @inject IApplicationEvents applicationEvents
 @inject IDependenciesService srv
 
+@* Color="Color.Info" *@
 
-@* <MudTreeView Color="Color.Info" Items="@Tree.TreeItems" @bind-SelectedValue="Tree.Selected" Hover="true" Dense="true"
+@* <MudTreeView Items="@Tree.TreeItems" @bind-SelectedValue="Tree.Selected" Hover="true" Dense="true"
 Width="100%">
 <ItemTemplate>
-<MudTreeViewItem Value="@context" Icon="@context.Value.Icon" @bind-Expanded="@context.Expanded"
+<MudTreeViewItem Value="context" Icon="@context.Value.Icon" @bind-Expanded="@context.Expanded"
 ExpandedIcon="@context.Value!.ExpandIcon" Items="@context.Children">
 <BodyContent Context="item">
 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
@@ -31,7 +32,64 @@ Color="Color.Inherit" Class="ml-3" />
 </ItemTemplate>
 </MudTreeView> *@
 
+<MudTreeView Items="@Tree.TreeItems" Hover="true" Dense="true" @bind-SelectedValue="Tree.Selected">
+    <ItemTemplate Context="item">
+        <MudTreeViewItem Items="@item.Children" Icon="@item.Icon" ExpandButtonIcon="@item.Value!.ExpandIcon">
+            <BodyContent>
+                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                    <MudText Style="justify-self: start;">@item.Text</MudText>
+                    <div style="justify-self: end;">
+                        <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
+                            Color="Color.Inherit" Class="ml-3" />
+                    </div>
+                </div>
+            </BodyContent>
+        </MudTreeViewItem>
+    </ItemTemplate>
+</MudTreeView>
+
 @code {
+    private TreeItem SelectedValue = null!;
+
+    private List<TreeItemData<string>> TreeItems { get; set; } = [];
+
+    public class TreeItemData : TreeItemData<string>
+    {
+        public TreeItemData(string text, string icon) : base(text)
+        {
+            Text = text;
+            Icon = icon;
+        }
+    }
+    protected override void OnInitialized()
+    {
+        TreeItems.Add(new TreeItemData(".github", Icons.Custom.Brands.GitHub));
+        TreeItems.Add(new TreeItemData(".vscode", Icons.Custom.Brands.MicrosoftVisualStudio));
+        TreeItems.Add(new TreeItemData("content", Icons.Custom.FileFormats.FileDocument));
+        TreeItems.Add(new TreeItemData("src", Icons.Custom.FileFormats.FileCode)
+            {
+                Children = [
+            new TreeItemData("MudBlazor", Icons.Custom.Brands.MudBlazor),
+new TreeItemData("MudBlazor.Docs", Icons.Custom.FileFormats.FileDocument) {
+Children = [
+new TreeItemData("_Imports.razor", Icons.Material.Filled.AlternateEmail),
+new TreeItemData("compilerconfig.json", Icons.Custom.FileFormats.FileImage),
+new TreeItemData("MudBlazor.Docs.csproj", Icons.Custom.Brands.MicrosoftVisualStudio),
+new TreeItemData("NewFilesToBuild.txt", Icons.Custom.FileFormats.FileDocument)
+]
+},
+
+new TreeItemData("MudBlazor.Docs.Client", Icons.Material.Filled.Folder),
+new TreeItemData("MudBlazor.Docs.Compiler", Icons.Material.Filled.Folder),
+new TreeItemData("MudBlazor.Docs.Server", Icons.Material.Filled.Folder),
+new TreeItemData("MudBlazor.UnitTests", Icons.Material.Filled.Folder),
+new TreeItemData(".editorconfig", Icons.Custom.FileFormats.FileCode),
+new TreeItemData("MudBlazor.sln", Icons.Custom.Brands.MicrosoftVisualStudio)
+            ]
+            });
+        TreeItems.Add(new TreeItemData("History", Icons.Material.Filled.Folder));
+    }
+
     [Parameter]
     public TreeSide Side { get; set; }
 

@@ -8,39 +8,39 @@ public enum TreeSide { Left, Right }
 
 internal class Tree
 {
-    MudBlazor.TreeItemData<TreeItem> rootItem;
-    MudBlazor.TreeItemData<TreeItem> selected = null!;
-    List<MudBlazor.TreeItemData<TreeItem>> Items { get; } = [];
+    TreeItem rootItem;
+    TreeItem selected = null!;
+    List<TreeItem> Items { get; } = [];
 
     public Tree(DependenciesService service, TreeSide side, Node root)
     {
         Side = side;
         Service = service;
-        rootItem = TreeItem.CreateTreeItem(root, null, this);
+        rootItem = TreeItem.CreateTreeItem(this, null, root);
         Items.Add(rootItem);
     }
 
 
     public TreeSide Side { get; }
     public DependenciesService Service { get; }
-    public IReadOnlyCollection<MudBlazor.TreeItemData<TreeItem>> TreeItems => Items;
+    public List<TreeItem> TreeItems => Items;
     public bool IsSelected { get; set; }
     public HashSet<NodeId> SelectedPeers { get; } = [];
 
-    public string Title => IsSelected ? Selected.Text! : "";
+    public string Title => IsSelected ? Selected?.Text! ?? "" : "";
 
     public Tree OtherTree => Side == TreeSide.Left ? Service.TreeData(TreeSide.Right) : Service.TreeData(TreeSide.Left);
 
 
     // Set by the UI, when a tree item is selected. When starting to show dialog, null is sometimes set.
-    public MudBlazor.TreeItemData<TreeItem> Selected
+    public TreeItem Selected
     {
-        get => selected;
+        get => null!;
         set
         {
             if (value == null || value == selected) return;
-
-            selected = Service.ItemSelected(value);
+            selected = value;
+            //selected = Service.ItemSelected(value);
         }
     }
 
@@ -49,7 +49,7 @@ internal class Tree
         ClearSelection();
         Items.Clear();
         SelectedPeers.Clear();
-        rootItem = TreeItem.CreateTreeItem(root, null, this);
+        rootItem = TreeItem.CreateTreeItem(this, null, root);
         Items.Add(rootItem);
     }
 
@@ -68,9 +68,9 @@ internal class Tree
     public TreeItem AddNode(Node node)
     {
         // First add Ancestor items, so the node can be added to its parent item
-        var parenItem = AddAncestors(node);
+        var parentItem = AddAncestors(node);
 
-        var item = parenItem.Value!.AddChildNode(node);
+        var item = parentItem.Value!.AddChildNode(node);
         item.ShowTreeItem();
         return item;
     }
@@ -79,18 +79,23 @@ internal class Tree
 
     public bool HasNodeChildren(Node node) => IsSelected || node.Children.Any(n => SelectedPeers.Contains(n.Id));
 
-    MudBlazor.TreeItemData<TreeItem> AddAncestors(Node node)
+    TreeItem AddAncestors(Node node)
     {
-        // Start from root, but skip root
+        // Start from root, but skip root, since it is already added by default
         var ancestors = node.Ancestors().Reverse().Skip(1);
+
         var ancestorItem = rootItem;
         foreach (var ancestor in ancestors)
         {   // Add ancestor item if not already added
-            ancestorItem = ancestorItem!.Children?.FirstOrDefault(n => n.Value!.NodeId == ancestor.Id)!.Value
-               ?? ancestorItem.Value!.AddChildNode(ancestor).Value;
+            var item = ancestorItem.ChildItems.FirstOrDefault(n => n.Value!.NodeId == ancestor.Id);
+            if (item == null)
+            {
+                item = ancestorItem.Value!.AddChildNode(ancestor).Value;
+            };
+
+            ancestorItem = item!;
         }
 
         return ancestorItem!;
     }
-
 }
