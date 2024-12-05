@@ -1,7 +1,10 @@
-﻿@inject IApplicationEvents applicationEvents
+﻿@using Dependinator.Diagrams.Dependencies
+
+@inject IApplicationEvents applicationEvents
 @inject IInteractionService interactionService
 @inject IDialogService DialogService
 @inject IDependenciesService dependenciesService
+
 
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show"

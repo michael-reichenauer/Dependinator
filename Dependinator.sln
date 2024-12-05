@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator", "Dependinato
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Tests", "Dependinator.Tests\Dependinator.Tests.csproj", "{D38AC12B-5844-4EED-8EFC-07C532B65ACE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependinatorWeb", "DependinatorWeb\DependinatorWeb.csproj", "{4CAFD59F-88D5-4FE3-8F01-CCA96F0136BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{D38AC12B-5844-4EED-8EFC-07C532B65ACE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D38AC12B-5844-4EED-8EFC-07C532B65ACE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D38AC12B-5844-4EED-8EFC-07C532B65ACE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CAFD59F-88D5-4FE3-8F01-CCA96F0136BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CAFD59F-88D5-4FE3-8F01-CCA96F0136BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CAFD59F-88D5-4FE3-8F01-CCA96F0136BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CAFD59F-88D5-4FE3-8F01-CCA96F0136BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

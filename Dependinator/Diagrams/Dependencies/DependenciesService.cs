@@ -1,6 +1,6 @@
 using Dependinator.Models;
 
-namespace Dependinator.Diagrams;
+namespace Dependinator.Diagrams.Dependencies;
 
 
 interface IDependenciesService
@@ -40,21 +40,34 @@ class DependenciesService(
         return rightTree;
     }
 
-    public void SwitchSides()
-    {
-        var tree = leftTree.IsSelected ? leftTree : rightTree;
-        var selectedItem = tree.Selected;
-
-        var selectedId = selectedItem.Value!.NodeId;
-        var otherTreeSide = tree.OtherTree.Side;
-        ShowNodeExplorer(otherTreeSide, selectedId.Value);
-    }
-
     public void ShowExplorer(TreeSide selectedSide)
     {
         var selectedId = selectionService.SelectedId.Id;
 
         ShowNodeExplorer(selectedSide, selectedId);
+    }
+
+    public void HideExplorer()
+    {
+        IsShowExplorer = false;
+
+        using (var model = modelService.UseModel())
+        {
+            leftTree = new(this, TreeSide.Left, model.Root);
+            rightTree = new(this, TreeSide.Right, model.Root);
+        }
+
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public void SwitchSides()
+    {
+        var tree = leftTree.IsSelected ? leftTree : rightTree;
+        var selectedItem = tree.SelectedItem;
+
+        var selectedId = selectedItem.NodeId;
+        var otherTreeSide = tree.OtherTree.Side;
+        ShowNodeExplorer(otherTreeSide, selectedId.Value);
     }
 
     void ShowNodeExplorer(TreeSide selectedSide, string selectedId)
@@ -70,7 +83,7 @@ class DependenciesService(
 
             activeTree.IsSelected = true;
             var selectedItem = activeTree.AddNode(selectedNode);
-            activeTree.Selected = selectedItem;
+            activeTree.SelectedItem = selectedItem;
         }
 
         IsShowExplorer = true;
@@ -81,9 +94,9 @@ class DependenciesService(
     public TreeItem ItemSelected(TreeItem selectedItem)
     {
         using var model = modelService.UseModel();
-        if (!model.TryGetNode(selectedItem.Value!.NodeId, out var selectedNode)) return selectedItem;
+        if (!model.TryGetNode(selectedItem.NodeId, out var selectedNode)) return selectedItem;
 
-        var isSwitchSide = !selectedItem.Value.Tree.IsSelected;
+        var isSwitchSide = !selectedItem.Tree.IsSelected;
 
         leftTree.ClearSelection();
         rightTree.ClearSelection();
@@ -93,7 +106,7 @@ class DependenciesService(
             selectedItem = SetSelectedSideItems(selectedItem, selectedNode, model.Root);
         }
 
-        selectedItem.Value!.Tree.SetSelectedItem(selectedItem);
+        selectedItem.Tree.SetSelectedItem(selectedItem);
 
         SetOtherSideItems(selectedItem, selectedNode, model.Root);
 
@@ -106,27 +119,27 @@ class DependenciesService(
 
     static TreeItem SetSelectedSideItems(TreeItem selectedItem, Node selectedNode, Node root)
     {
-        var thisTree = selectedItem.Value!.Tree;
+        var thisTree = selectedItem.Tree;
         thisTree.EmptyTo(root);
-        selectedItem.Value!.Tree.IsSelected = true;
+        selectedItem.Tree.IsSelected = true;
 
         return thisTree.AddNode(selectedNode);
     }
 
-    static void SetOtherSideItems(MudBlazor.TreeItemData<TreeItem> selectedItem, Node selectedNode, Node root)
+    static void SetOtherSideItems(TreeItem selectedItem, Node selectedNode, Node root)
     {
-        var otherTree = selectedItem.Value!.Tree.OtherTree;
+        var otherTree = selectedItem.Tree.OtherTree;
         otherTree.EmptyTo(root);
 
         // Get all peer noded for seleced node, SelectedPeers 
-        LinkNodes(selectedItem.Value.Tree, selectedNode).ForEach(n =>
+        LinkNodes(selectedItem.Tree, selectedNode).ForEach(n =>
         {
             otherTree.SelectedPeers.Add(n.Id);
             n.Ancestors().ForEach(a => otherTree.SelectedPeers.Add(a.Id));
         });
 
         HashSet<NodeId> addedNodes = [];
-        LineNodes(selectedItem.Value.Tree, selectedNode).ForEach(n =>
+        LineNodes(selectedItem.Tree, selectedNode).ForEach(n =>
         {
             addedNodes.Add(n.Id);
             if (selectedNode.Parent == n)
@@ -139,10 +152,10 @@ class DependenciesService(
         });
     }
 
-    static void SetOtherAncestorSideItems(MudBlazor.TreeItemData<TreeItem> selectedItem, Node selectedNode, Node otherNode, HashSet<NodeId> addedNodes)
+    static void SetOtherAncestorSideItems(TreeItem selectedItem, Node selectedNode, Node otherNode, HashSet<NodeId> addedNodes)
     {
-        var otherTree = selectedItem.Value!.Tree.OtherTree;
-        LineNodes(selectedItem.Value!.Tree, otherNode).ForEach(n =>
+        var otherTree = selectedItem.Tree.OtherTree;
+        LineNodes(selectedItem.Tree, otherNode).ForEach(n =>
         {
             if (!otherTree.IsNodeIncluded(n)) return;
             if (addedNodes.Contains(n.Id)) return;
@@ -180,19 +193,5 @@ class DependenciesService(
         if (!model.TryGetNode(nodeId, out var node)) return [];
 
         return node.Children;
-    }
-
-
-    public void HideExplorer()
-    {
-        IsShowExplorer = false;
-
-        using (var model = modelService.UseModel())
-        {
-            leftTree = new(this, TreeSide.Left, model.Root);
-            rightTree = new(this, TreeSide.Right, model.Root);
-        }
-
-        applicationEvents.TriggerUIStateChanged();
     }
 }

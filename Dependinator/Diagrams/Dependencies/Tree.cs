@@ -1,6 +1,6 @@
 using Dependinator.Models;
 
-namespace Dependinator.Diagrams;
+namespace Dependinator.Diagrams.Dependencies;
 
 
 public enum TreeSide { Left, Right }
@@ -27,20 +27,20 @@ internal class Tree
     public bool IsSelected { get; set; }
     public HashSet<NodeId> SelectedPeers { get; } = [];
 
-    public string Title => IsSelected ? Selected?.Text! ?? "" : "";
+    public string Title => IsSelected ? SelectedItem?.Text! ?? "" : "";
 
     public Tree OtherTree => Side == TreeSide.Left ? Service.TreeData(TreeSide.Right) : Service.TreeData(TreeSide.Left);
 
 
     // Set by the UI, when a tree item is selected. When starting to show dialog, null is sometimes set.
-    public TreeItem Selected
+    public TreeItem SelectedItem
     {
-        get => null!;
+        get => selected!;
         set
         {
+            Log.Info("Selected item: " + value?.Text);
             if (value == null || value == selected) return;
-            selected = value;
-            //selected = Service.ItemSelected(value);
+            selected = Service.ItemSelected(value);
         }
     }
 
@@ -55,13 +55,13 @@ internal class Tree
 
     public void ClearSelection()
     {
-        Selected?.Value!.SetIsSelected(false);
+        SelectedItem?.SetIsSelected(false);
         IsSelected = false;
     }
 
-    public void SetSelectedItem(MudBlazor.TreeItemData<TreeItem> item)
+    public void SetSelectedItem(TreeItem item)
     {
-        item.Value!.SetIsSelected(true);
+        item.SetIsSelected(true);
         IsSelected = true;
     }
 
@@ -70,14 +70,16 @@ internal class Tree
         // First add Ancestor items, so the node can be added to its parent item
         var parentItem = AddAncestors(node);
 
-        var item = parentItem.Value!.AddChildNode(node);
+        var item = parentItem.AddChildNode(node);
         item.ShowTreeItem();
         return item;
     }
 
     public bool IsNodeIncluded(Node node) => IsSelected || SelectedPeers.Contains(node.Id);
 
-    public bool HasNodeChildren(Node node) => IsSelected || node.Children.Any(n => SelectedPeers.Contains(n.Id));
+    public bool HasTreeItemChildren(Node node) => IsSelected && node.Children.Any() || node.Children.Any(n => SelectedPeers.Contains(n.Id));
+
+    // public bool HasNodeChildren(NodeId nodeId) => IsSelected || node.Children.Any(n => SelectedPeers.Contains(n.Id));
 
     TreeItem AddAncestors(Node node)
     {
@@ -87,10 +89,10 @@ internal class Tree
         var ancestorItem = rootItem;
         foreach (var ancestor in ancestors)
         {   // Add ancestor item if not already added
-            var item = ancestorItem.ChildItems.FirstOrDefault(n => n.Value!.NodeId == ancestor.Id);
+            var item = ancestorItem.ChildItems.FirstOrDefault(n => n.NodeId == ancestor.Id);
             if (item == null)
             {
-                item = ancestorItem.Value!.AddChildNode(ancestor).Value;
+                item = ancestorItem.AddChildNode(ancestor);
             };
 
             ancestorItem = item!;
