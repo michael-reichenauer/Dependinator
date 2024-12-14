@@ -19,6 +19,10 @@ echo "Installing xsel for copy selection ..."
 sudo apt-get install -y xsel 1>/dev/null
 
 echo ""
+echo "setting working foler as safe in git confi ..."
+git config --global --add safe.directory /workspaces/Dependinator
+
+echo ""
 echo "Installing gmd ..."
 curl curl -sL https://raw.githubusercontent.com/michael-reichenauer/gmd/main/install.sh | bash
 
