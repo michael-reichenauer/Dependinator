@@ -12,17 +12,23 @@
     <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox">
         <style>
             svg {
-                cursor: @Cursor;
+                cursor:
+            @Cursor
+                ;
             }
 
             .hoverable:hover * {
-                stroke: @Coloring.Highlight;
+                stroke:
+            @Coloring.Highlight
+                ;
                 stroke-width: 4px;
                 stroke-opacity: 1;
             }
 
             .hoverableedit:hover * {
-                stroke: @Coloring.EditNode;
+                stroke:
+            @Coloring.EditNode
+                ;
                 stroke-width: 4px;
                 stroke-opacity: 1;
             }

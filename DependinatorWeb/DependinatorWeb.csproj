@@ -1,18 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+    <PackageReference Include="MudBlazor" />
+    <PackageReference Include="Scrutor" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MudBlazor" Version="6.20.0" />
-    <PackageReference Include="Scrutor" Version="4.2.2" />
+    <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
   </ItemGroup>
 
 </Project>

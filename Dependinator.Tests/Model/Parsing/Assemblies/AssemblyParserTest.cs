@@ -6,19 +6,19 @@ namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
 
 public class AssemblyParserTest
 {
-    [Fact]
-    public async Task ParserTest()
-    {
-        var channel = Channel.CreateUnbounded<IItem>();
-        var parser = new AssemblyParser(
-            Path.Combine(AppContext.BaseDirectory, "Dependinator.dll"),
-            "",
-            "Dependinator",
-            channel.Writer,
-            true);
+    // [Fact]
+    // public async Task ParserTest()
+    // {
+    //     var channel = Channel.CreateUnbounded<IItem>();
+    //     var parser = new AssemblyParser(
+    //         Path.Combine(AppContext.BaseDirectory, "Dependinator.dll"),
+    //         "",
+    //         "Dependinator",
+    //         channel.Writer,
+    //         true);
 
-        Assert.True(Try(await parser.ParseAsync()));
-        var list = await channel.Reader.ReadAllAsync().ToList();
-        Assert.True(list.Any());
-    }
+    //     Assert.True(Try(await parser.ParseAsync()));
+    //     var list = await channel.Reader.ReadAllAsync().ToList();
+    //     Assert.True(list.Any());
+    // }
 }

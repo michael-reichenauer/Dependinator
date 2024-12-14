@@ -2,24 +2,22 @@
 @inject IDependenciesService srv
 
 
-<MudTreeView Color="Color.Info" Items="@Tree.Items" @bind-SelectedValue="Tree.Selected" Hover="true" Dense="true"
-    Width="100%">
-    <ItemTemplate>
-        <MudTreeViewItem Value="@context" Icon="@context.Icon" @bind-Expanded="@context.IsExpanded"
-            ExpandedIcon="@context.ExpandIcon" Items="@context.Items">
-            <BodyContent Context="item">
+<MudTreeView Items="@Tree.TreeItems" Hover="true" Dense="true" Width="100%">
+    <ItemTemplate Context="treeItem">
+        @{
+            var item = (TreeItem)treeItem;
+        }
+        <MudTreeViewItem Items="@item.Children" Icon="@item.Icon" ExpandButtonIcon="@item.ExpandIcon"
+            OnClick="item.ItemClicked" @bind-Expanded="@item.Expanded">
+            <BodyContent>
                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                    @if (context.IsSelected)
+                    @if (item.IsSelected)
                     {
-                        <MudText Style="justify-self: start;" Color="@context.TextColor">
-                            <b>@context.Title</b>
-                        </MudText>
+                        <MudText Style="justify-self: start;background:#3e2b5c">@treeItem.Text</MudText>
                     }
                     else
                     {
-                        <MudText Style="justify-self: start;" Color="@context.TextColor">
-                            @context.Title
-                        </MudText>
+                        <MudText Style="justify-self: start;">@item.Text</MudText>
                     }
                     <div style="justify-self: end;">
                         <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
@@ -37,10 +35,39 @@
 
     Tree Tree => srv.TreeData(Side);
 
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
         if (firstRender) applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
     }
 }
+
+
+@* <MudTreeView Items="@Tree.TreeItems" @bind-SelectedValue="Tree.Selected" Hover="true" Dense="true"
+Width="100%">
+<ItemTemplate>
+<MudTreeViewItem Value="context" Icon="@context.Value.Icon" @bind-Expanded="@context.Expanded"
+ExpandedIcon="@context.Value!.ExpandIcon" Items="@context.Children">
+<BodyContent Context="item">
+<div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+@if (context.IsSelected)
+{
+<MudText Style="justify-self: start;" Color="@context.TextColor">
+<b>@context.Text</b>
+</MudText>
+}
+else
+{
+<MudText Style="justify-self: start;" Color="@context.TextColor">
+@context.Text
+</MudText>
+}
+<div style="justify-self: end;">
+<MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
+Color="Color.Inherit" Class="ml-3" />
+</div>
+</div>
+</BodyContent>
+</MudTreeViewItem>
+</ItemTemplate>
+</MudTreeView> *@

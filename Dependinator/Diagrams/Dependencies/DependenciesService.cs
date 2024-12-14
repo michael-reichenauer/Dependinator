@@ -1,6 +1,6 @@
 using Dependinator.Models;
 
-namespace Dependinator.Diagrams;
+namespace Dependinator.Diagrams.Dependencies;
 
 
 interface IDependenciesService
@@ -40,21 +40,34 @@ class DependenciesService(
         return rightTree;
     }
 
-    public void SwitchSides()
-    {
-        var tree = leftTree.IsSelected ? leftTree : rightTree;
-        var selectedItem = tree.Selected;
-
-        var selectedId = selectedItem.NodeId;
-        var otherTreeSide = tree.OtherTree.Side;
-        ShowNodeExplorer(otherTreeSide, selectedId.Value);
-    }
-
     public void ShowExplorer(TreeSide selectedSide)
     {
         var selectedId = selectionService.SelectedId.Id;
 
         ShowNodeExplorer(selectedSide, selectedId);
+    }
+
+    public void HideExplorer()
+    {
+        IsShowExplorer = false;
+
+        using (var model = modelService.UseModel())
+        {
+            leftTree = new(this, TreeSide.Left, model.Root);
+            rightTree = new(this, TreeSide.Right, model.Root);
+        }
+
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public void SwitchSides()
+    {
+        var tree = leftTree.IsSelected ? leftTree : rightTree;
+        var selectedItem = tree.SelectedItem;
+
+        var selectedId = selectedItem.NodeId;
+        var otherTreeSide = tree.OtherTree.Side;
+        ShowNodeExplorer(otherTreeSide, selectedId.Value);
     }
 
     void ShowNodeExplorer(TreeSide selectedSide, string selectedId)
@@ -66,16 +79,17 @@ class DependenciesService(
 
             if (!model.TryGetNode(selectedId, out var selectedNode)) return;
 
-            var tree = selectedSide == TreeSide.Left ? leftTree : rightTree;
+            var activeTree = GetActiveTree(selectedSide);
 
-            tree.IsSelected = true;
-            var selectedItem = tree.AddNode(selectedNode);
-            tree.Selected = selectedItem;
+            activeTree.IsSelected = true;
+            var selectedItem = activeTree.AddNode(selectedNode);
+            activeTree.SelectedItem = selectedItem;
         }
 
         IsShowExplorer = true;
         applicationEvents.TriggerUIStateChanged();
     }
+
 
     public TreeItem ItemSelected(TreeItem selectedItem)
     {
@@ -99,6 +113,9 @@ class DependenciesService(
         applicationEvents.TriggerUIStateChanged();
         return selectedItem;
     }
+
+    Tree GetActiveTree(TreeSide selectedSide) =>
+         selectedSide == TreeSide.Left ? leftTree : rightTree;
 
     static TreeItem SetSelectedSideItems(TreeItem selectedItem, Node selectedNode, Node root)
     {
@@ -176,19 +193,5 @@ class DependenciesService(
         if (!model.TryGetNode(nodeId, out var node)) return [];
 
         return node.Children;
-    }
-
-
-    public void HideExplorer()
-    {
-        IsShowExplorer = false;
-
-        using (var model = modelService.UseModel())
-        {
-            leftTree = new(this, TreeSide.Left, model.Root);
-            rightTree = new(this, TreeSide.Right, model.Root);
-        }
-
-        applicationEvents.TriggerUIStateChanged();
     }
 }
