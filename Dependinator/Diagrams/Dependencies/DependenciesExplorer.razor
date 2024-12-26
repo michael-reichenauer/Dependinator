@@ -12,7 +12,7 @@
             <MudIcon Icon="@srv.Icon" Class="my-n2" />
             <MudGrid Spacing="1" Justify="Justify.Center" Class="my-n2">
                 <MudItem xs="5">
-                    <MudText Class="align-content-end" Color="Color.Info"><b>@(srv.TreeData(TreeSide.Left)?.Title)</b>
+                    <MudText Class="align-content-end" Color="Color.Info"><b>X@(srv.TreeData(TreeSide.Left)?.Title)</b>
                     </MudText>
                 </MudItem>
                 <MudItem xs="2" Class="mx-n5">
@@ -40,7 +40,7 @@
 
                 @if (Columns == 12)
                 {
-                    <MudDivider />
+                        <MudDivider />
                 }
 
                 <MudItem xs="@Columns">
