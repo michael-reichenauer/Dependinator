@@ -2,6 +2,16 @@
 @inject IDependenciesService srv
 
 
+<style>
+    .hover-button {
+        visibility: hidden;
+    }
+
+    .hover-element:hover .hover-button {
+        visibility: visible;
+    }
+</style>
+
 <MudTreeView Items="@Tree.TreeItems" Hover="true" Dense="true" Width="100%">
     <ItemTemplate Context="treeItem">
         @{
@@ -10,7 +20,8 @@
         <MudTreeViewItem Items="@item.Children" Icon="@item.Icon" ExpandButtonIcon="@item.ExpandIcon"
             OnClick="item.ItemClicked" @bind-Expanded="@item.Expanded">
             <BodyContent>
-                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
+                    class="hover-element">
                     @if (item.IsSelected)
                     {
                         <MudText Style="justify-self: start;background:#3e2b5c">@treeItem.Text</MudText>
@@ -21,7 +32,7 @@
                     }
                     <div style="justify-self: end;">
                         <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
-                            Color="Color.Inherit" Class="ml-3" />
+                            Color="Color.Inherit" Class="ml-3 hover-button" OnClick="()=>srv.ShowNode(item.NodeId)" />
                     </div>
                 </div>
             </BodyContent>

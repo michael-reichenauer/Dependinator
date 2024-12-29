@@ -23,7 +23,7 @@ internal class Tree
 
     public TreeSide Side { get; }
     public DependenciesService Service { get; }
-    public List<TreeItem> TreeItems => Items;
+    public List<TreeItem> TreeItems => Service.IsShowTrees ? Items : [];
     public bool IsSelected { get; set; }
     public HashSet<NodeId> SelectedPeers { get; } = [];
 

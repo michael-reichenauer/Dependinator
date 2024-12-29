@@ -6,13 +6,16 @@ namespace Dependinator.Diagrams.Dependencies;
 interface IDependenciesService
 {
     bool IsShowExplorer { get; }
+    bool IsShowTrees { get; }
     string Icon { get; }
 
     Tree TreeData(TreeSide side);
 
     void ShowExplorer(TreeSide selectedSide);
+    void ToggleShowTrees();
     void SwitchSides();
     void HideExplorer();
+    void ShowNode(NodeId nodeId);
 }
 
 
@@ -20,7 +23,8 @@ interface IDependenciesService
 class DependenciesService(
     ISelectionService selectionService,
     IApplicationEvents applicationEvents,
-    IModelService modelService) : IDependenciesService
+    IModelService modelService,
+    IPanZoomService panZoomService) : IDependenciesService
 {
     public const string Dependencies = MudBlazor.Icons.Material.Outlined.Polyline;
     public const string References = "<g><rect fill=\"none\" height=\"24\" width=\"24\"/></g><g transform=\"rotate(180,12,12)\"><path d=\"M15,16v1.26l-6-3v-3.17L11.7,8H16V2h-6v4.9L7.3,10H3v6h5l7,3.5V22h6v-6H15z M12,4h2v2h-2V4z M7,14H5v-2h2V14z M19,20h-2v-2 h2V20z\"/></g>";
@@ -30,6 +34,7 @@ class DependenciesService(
     Tree rightTree = null!;
 
     public bool IsShowExplorer { get; private set; }
+    public bool IsShowTrees { get; private set; } = true;
 
     public string Icon => leftTree?.IsSelected == true ? Dependencies : References;
 
@@ -40,11 +45,33 @@ class DependenciesService(
         return rightTree;
     }
 
+    public void ShowNode(NodeId nodeId)
+    {
+        // IsShowTrees = false;
+        // selectionService.Unselect();
+        // applicationEvents.TriggerUIStateChanged();
+
+        // Pos pos = Pos.None;
+        // double zoom = 0;
+        // if (!modelService.UseNodeN(nodeId, node =>
+        // {
+        //     (pos, zoom) = node.GetCenterPosAndZoom();
+        // })) return;
+
+        // panZoomService.PanZoomToAsync(pos, zoom).RunInBackground();
+    }
+
     public void ShowExplorer(TreeSide selectedSide)
     {
         var selectedId = selectionService.SelectedId.Id;
 
         ShowNodeExplorer(selectedSide, selectedId);
+    }
+
+    public void ToggleShowTrees()
+    {
+        IsShowTrees = !IsShowTrees;
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public void HideExplorer()
@@ -67,6 +94,7 @@ class DependenciesService(
 
         var selectedId = selectedItem.NodeId;
         var otherTreeSide = tree.OtherTree.Side;
+        IsShowTrees = true;
         ShowNodeExplorer(otherTreeSide, selectedId.Value);
     }
 
