@@ -47,18 +47,18 @@ class DependenciesService(
 
     public void ShowNode(NodeId nodeId)
     {
-        // IsShowTrees = false;
-        // selectionService.Unselect();
-        // applicationEvents.TriggerUIStateChanged();
+        IsShowTrees = false;
+        selectionService.Unselect();
+        applicationEvents.TriggerUIStateChanged();
 
-        // Pos pos = Pos.None;
-        // double zoom = 0;
-        // if (!modelService.UseNodeN(nodeId, node =>
-        // {
-        //     (pos, zoom) = node.GetCenterPosAndZoom();
-        // })) return;
+        Pos pos = Pos.None;
+        double zoom = 0;
+        if (!modelService.UseNodeN(nodeId, node =>
+        {
+            (pos, zoom) = node.GetCenterPosAndZoom();
+        })) return;
 
-        // panZoomService.PanZoomToAsync(pos, zoom).RunInBackground();
+        panZoomService.PanZoomToAsync(pos, zoom).RunInBackground();
     }
 
     public void ShowExplorer(TreeSide selectedSide)
@@ -115,6 +115,7 @@ class DependenciesService(
         }
 
         IsShowExplorer = true;
+        IsShowTrees = true;
         applicationEvents.TriggerUIStateChanged();
     }
 

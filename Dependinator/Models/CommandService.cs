@@ -12,7 +12,7 @@ interface ICommandService
 }
 
 
-[Singleton]
+[Scoped]
 class CommandService : ICommandService
 {
     readonly IApplicationEvents applicationEvents;
@@ -55,6 +55,8 @@ class CommandService : ICommandService
 
         undoStack.Push(command);
         redoStack.Clear();
+        applicationEvents.TriggerUndoneRedone();
+        applicationEvents.TriggerUIStateChanged();
     }
 
 

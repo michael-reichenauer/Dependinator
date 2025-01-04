@@ -34,7 +34,7 @@ class SvgService : ISvgService
     return tile;
   }
 
-  Tile GetModelTile(IModel model, TileKey tileKey)
+  static Tile GetModelTile(IModel model, TileKey tileKey)
   {
     // using var t = Timing.Start($"GetModelSvg: {tileKey}");
     var tileRect = tileKey.GetTileRect();

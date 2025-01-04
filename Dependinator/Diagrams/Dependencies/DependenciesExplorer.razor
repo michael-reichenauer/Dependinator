@@ -15,7 +15,7 @@
                     <MudText Class="align-content-end" Color="Color.Info"><b>X@(srv.TreeData(TreeSide.Left)?.Title)</b>
                     </MudText>
                 </MudItem>
-                <MudItem xs="2" Class="mx-n5">
+                <MudItem xs="2">
                     <MudIconButton Icon="@Icons.Material.Outlined.ArrowRightAlt" Size="Size.Large" Class="my-n5"
                         OnClick="srv.SwitchSides" />
                 </MudItem>
@@ -25,6 +25,7 @@
             </MudGrid>
 
             <MudIconButton Icon="@ShowIcon" Size="Size.Small" Class="my-n2" OnClick="srv.ToggleShowTrees" />
+
             <MudIconButton Icon="@Icons.Material.Outlined.Close" Size="Size.Small" Class="my-n2"
                 OnClick="srv.HideExplorer" />
 
