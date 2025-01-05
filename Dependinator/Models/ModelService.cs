@@ -23,6 +23,7 @@ interface IModelService
     Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool UseNode(string id, Action<Node> useAction);
+    bool UseNodeN(NodeId id, Action<Node> updateAction);
     void Clear();
     Rect GetBounds();
 }
@@ -136,11 +137,11 @@ class ModelService : IModelService
         }
     }
 
-    public bool UseNode(string id, Action<Node> updateAction)
+    public bool UseNodeN(NodeId id, Action<Node> updateAction)
     {
         lock (model.Lock)
         {
-            if (!model.TryGetNode(NodeId.FromId(id), out var node)) return false;
+            if (!model.TryGetNode(id, out var node)) return false;
 
             updateAction(node);
             model.ClearCachedSvg();
@@ -149,6 +150,8 @@ class ModelService : IModelService
         TriggerSave();
         return true;
     }
+
+    public bool UseNode(string id, Action<Node> updateAction) => UseNodeN(NodeId.FromId(id), updateAction);
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
@@ -192,53 +195,63 @@ class ModelService : IModelService
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
-        if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
+        if (!Try(out var modelInfo, out var e, await ReadCachedModelAsync(path)))
         {
             Log.Info("Failed to read cached model", e.ErrorMessage);
-            var parsedModelInfo = await ParseAsync(path, Rect.None, 0, Pos.None);
+            var parsedModelInfo = await ParseNewModelAsync(path);
             TriggerSave();
+            applicationEvents.TriggerUIStateChanged();
             return parsedModelInfo;
         }
+        return modelInfo;
 
-        // Load the cached mode
-        var modelInfo = await Task.Run(() => Load(model));
 
-        if (path == ExampleModel.Path) return modelInfo;
 
-        // Trigger parse to get latest data
-        ParseAsync(model.Path, model.ViewRect, model.Zoom, model.Offset)
-            .ContinueWith(t =>
-            {
-                TriggerSave();
-                applicationEvents.TriggerUIStateChanged();
-            })
-            .RunInBackground();
+    }
+    async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
+    {
+        if (!Try(out var model, out var e, await persistenceService.ReadAsync(path))) return e;
+
+        var modelInfo = await LoadCachedModelDataAsync(model);
+
+        // if (path != ExampleModel.Path) Util.Trigger(RefreshAsync);
 
         return modelInfo;
     }
 
 
-
     public async Task<R> RefreshAsync()
     {
         var path = "";
-        var offset = Pos.None;
-        lock (model.Lock) path = model.Path;
-        lock (model.Lock) offset = model.Offset;
+        lock (model.Lock) { path = model.Path; }
 
-        (Rect viewRect, double zoom) = GetLatestView();
-        return await ParseAsync(path, viewRect, zoom, offset);
+        if (!Try(out var e, await ParseAsync(path))) return e;
+
+        TriggerSave();
+        applicationEvents.TriggerUIStateChanged();
+        return R.Ok;
+    }
+    async Task<R<ModelInfo>> ParseNewModelAsync(string path)
+    {
+        if (!Try(out var e, await ParseAsync(path))) return e;
+
+        lock (model.Lock)
+        {
+            model.Path = path;
+        }
+
+        return new ModelInfo(path, Rect.None, 0);
     }
 
 
-    async Task<R<ModelInfo>> ParseAsync(string path, Rect viewRect, double zoom, Pos offset)
+    async Task<R> ParseAsync(string path)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
         //var path = "/workspaces/Dependinator/Dependinator.sln";
 
         if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 
-        var modelInfo = await Task.Run(async () =>
+        await Task.Run(async () =>
         {
             var batchItems = new List<Parsing.IItem>();
             while (await reader.WaitToReadAsync())
@@ -248,10 +261,10 @@ class ModelService : IModelService
                     batchItems.Add(item);
                 }
             }
-            return AddOrUpdate(path, viewRect, zoom, offset, batchItems);
+            AddOrUpdateItems(batchItems);
         });
 
-        return modelInfo;
+        return R.Ok;
     }
 
 
@@ -300,24 +313,31 @@ class ModelService : IModelService
         persistenceService.WriteAsync(modelData).RunInBackground();
     }
 
-    private ModelInfo Load(Parsing.Model modelData)
+    async Task<ModelInfo> LoadCachedModelDataAsync(Parsing.Model modelData)
     {
         var batchItems = new List<Parsing.IItem>();
         modelData.Nodes.ForEach(batchItems.Add);
         modelData.Links.ForEach(batchItems.Add);
 
-        return AddOrUpdate(modelData.Path, modelData.ViewRect, modelData.Zoom, model.Offset, batchItems);
-    }
-
-    ModelInfo AddOrUpdate(string path, Rect viewRect, double zoom, Pos offset, IReadOnlyList<Parsing.IItem> parsedItems)
-    {
-        using var _ = Timing.Start($"Added {parsedItems.Count} items for {path}");
         lock (model.Lock)
         {
-            model.Path = path;
-            model.ViewRect = viewRect;
-            model.Zoom = zoom;
-            model.Offset = offset;
+            model.Path = modelData.Path;
+            model.ViewRect = modelData.ViewRect;
+            model.Zoom = modelData.Zoom;
+            model.Offset = modelData.Offset;
+        }
+
+        await Task.Run(() => AddOrUpdateItems(batchItems));
+        return new ModelInfo(modelData.Path, modelData.ViewRect, modelData.Zoom);
+    }
+
+    void AddOrUpdateItems(IReadOnlyList<Parsing.IItem> parsedItems)
+    {
+        using var _ = Timing.Start($"Added {parsedItems.Count} items");
+        lock (model.Lock)
+        {
+            model.ClearCachedSvg();
+
             // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {
@@ -332,9 +352,6 @@ class ModelService : IModelService
                         break;
                 }
             }
-
-            model.ClearCachedSvg();
-            return new ModelInfo(path, viewRect, zoom);
         }
     }
 

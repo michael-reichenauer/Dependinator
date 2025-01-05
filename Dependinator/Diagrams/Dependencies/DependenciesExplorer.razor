@@ -2,7 +2,7 @@
 @inject IDependenciesService srv
 @inject IScreenService screenService
 
-<MudPopover Open="@srv.IsShowExplorer" Fixed="true" Class="px-4 pt-4 ml-1" AnchorOrigin="Origin.BottomLeft"
+<MudPopover Open="IsShowExplorer" Fixed="true" Class="px-4 pt-4 ml-1" AnchorOrigin="Origin.BottomLeft"
     TransformOrigin="Origin.BottomLeft" MaxHeight="MaxHeight">
 
     <MudStack>
@@ -15,7 +15,7 @@
                     <MudText Class="align-content-end" Color="Color.Info"><b>X@(srv.TreeData(TreeSide.Left)?.Title)</b>
                     </MudText>
                 </MudItem>
-                <MudItem xs="2" Class="mx-n5">
+                <MudItem xs="2">
                     <MudIconButton Icon="@Icons.Material.Outlined.ArrowRightAlt" Size="Size.Large" Class="my-n5"
                         OnClick="srv.SwitchSides" />
                 </MudItem>
@@ -23,6 +23,8 @@
                     <MudText Color="Color.Info"><b>@(srv.TreeData(TreeSide.Right)?.Title)</b></MudText>
                 </MudItem>
             </MudGrid>
+
+            <MudIconButton Icon="@ShowIcon" Size="Size.Small" Class="my-n2" OnClick="srv.ToggleShowTrees" />
 
             <MudIconButton Icon="@Icons.Material.Outlined.Close" Size="Size.Small" Class="my-n2"
                 OnClick="srv.HideExplorer" />
@@ -40,7 +42,7 @@
 
                 @if (Columns == 12)
                 {
-                        <MudDivider />
+                    <MudDivider />
                 }
 
                 <MudItem xs="@Columns">
@@ -56,8 +58,13 @@
 
 
 @code {
+    bool IsShowExplorer => srv.IsShowExplorer;
     int MaxHeight => (int)screenService.SvgRect.Height - 5;
     int MaxWidth => (int)screenService.SvgRect.Width - 20;
+
+    string ShowIcon => srv.IsShowTrees ?
+    Icons.Material.Outlined.KeyboardArrowDown :
+    Icons.Material.Outlined.KeyboardArrowUp;
 
     int Columns => screenService.SvgRect.Width > 600 ? 6 : 12;
 
