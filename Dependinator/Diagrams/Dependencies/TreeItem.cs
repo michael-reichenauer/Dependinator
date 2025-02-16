@@ -47,7 +47,7 @@ class TreeItem : TreeItemData<TreeItem>
 
     public override List<TreeItemData<TreeItem>>? Children => !IsChildrenIntitialized && !ChildItems.Any()
         ? hasUnitializedChildrenItems
-        : ChildItems.Cast<TreeItemData<TreeItem>>().ToList();
+        : [.. ChildItems];
 
     public override bool Expanded
     {

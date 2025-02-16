@@ -1,3 +1,4 @@
+using Dependinator;
 using Dependinator.Utils;
 using Dependinator.Utils.Logging;
 using MudBlazor.Services;
@@ -10,7 +11,7 @@ public class Program
     public static void Main(string[] args)
     {
         Dependinator.Utils.Logging.ConfigLogger.Enable(isFileLog: true, isConsoleLog: false);
-        Log.Info($"Starting Dependinator ...");
+        Log.Info($"Starting Dependinator {Build.ProductVersion}, {Build.Time}, ({Build.CommitSid}) ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 
         var builder = WebApplication.CreateBuilder(args);
@@ -30,13 +31,15 @@ public class Program
 
         builder.Services.Scan(i =>
             i.FromAssembliesOf(typeof(Dependinator.RootClass))
-                .AddClasses(c => c.WithAttribute<SingletonAttribute>())
+                .AddClasses(c => c.WithAttribute<SingletonAttribute>(), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithSingletonLifetime()
-                .AddClasses(c => c.WithAttribute<ScopedAttribute>())
+
+                .AddClasses(c => c.WithAttribute<ScopedAttribute>(), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
-                .AddClasses(c => c.WithAttribute<TransientAttribute>())
+
+                .AddClasses(c => c.WithAttribute<TransientAttribute>(), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithTransientLifetime()
         );
