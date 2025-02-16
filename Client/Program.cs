@@ -22,15 +22,15 @@ internal class Program
 
         builder.Services.Scan(i =>
                 i.FromAssembliesOf(typeof(Dependinator.RootClass))
-                    .AddClasses(c => c.WithAttribute<SingletonAttribute>())
+                    .AddClasses(c => c.WithAttribute<SingletonAttribute>(), publicOnly: false)
                     .AsImplementedInterfaces()
                     .WithSingletonLifetime()
 
-                    .AddClasses(c => c.WithAttribute<ScopedAttribute>())
+                    .AddClasses(c => c.WithAttribute<ScopedAttribute>(), publicOnly: false)
                     .AsImplementedInterfaces()
                     .WithScopedLifetime()
 
-                    .AddClasses(c => c.WithAttribute<TransientAttribute>())
+                    .AddClasses(c => c.WithAttribute<TransientAttribute>(), publicOnly: false)
                     .AsImplementedInterfaces()
                     .WithTransientLifetime()
         );
