@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Dependinator</RootNamespace>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <AssemblyVersion>0.5.*</AssemblyVersion>
+    <Deterministic>false</Deterministic>
   </PropertyGroup>
 
   <ItemGroup>

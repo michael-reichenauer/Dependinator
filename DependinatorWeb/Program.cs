@@ -1,3 +1,4 @@
+using Dependinator;
 using Dependinator.Utils;
 using Dependinator.Utils.Logging;
 using MudBlazor.Services;
@@ -10,7 +11,7 @@ public class Program
     public static void Main(string[] args)
     {
         Dependinator.Utils.Logging.ConfigLogger.Enable(isFileLog: true, isConsoleLog: false);
-        Log.Info($"Starting Dependinator ...");
+        Log.Info($"Starting Dependinator {Build.ProductVersion}, {Build.Time}, ({Build.CommitSid}) ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 
         var builder = WebApplication.CreateBuilder(args);
