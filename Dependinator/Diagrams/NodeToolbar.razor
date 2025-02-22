@@ -11,7 +11,7 @@
     Style="@NodeToolBarPosition">
 
     <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
-        <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
             OnClick="ShowProperties">Properties ...</MudMenuItem>
     </MudMenu>
     
@@ -31,7 +31,7 @@
         $"Position: fixed; left:{interactionService.SelectedNodePosition.X}px; top:{interactionService.SelectedNodePosition.Y - 55}px";
     
     void ShowProperties()  =>
-        DialogService.Show<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
+        DialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
 
     void ShowLeftDependencies() => dependenciesService.ShowExplorer(TreeSide.Left);
     void ShowRightDependencies() => dependenciesService.ShowExplorer(TreeSide.Right);

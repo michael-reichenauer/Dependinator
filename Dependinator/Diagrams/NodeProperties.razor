@@ -1,6 +1,6 @@
 ﻿<MudDialog>
     <DialogContent>
-        Some information about the node
+        @contentText
     </DialogContent>
     <DialogActions>
         <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
@@ -8,7 +8,8 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    string contentText = $"Version: {Build.Version}, {Build.Time} ({Build.CommitSid})";
 
     void Submit() => MudDialog.Close(DialogResult.Ok(true));
 }
