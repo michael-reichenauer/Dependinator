@@ -24,4 +24,10 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <!-- If you already have NoWarn, just add 7035 or CS7035 to it: -->
+    <NoWarn>$(NoWarn);7035</NoWarn>
+  </PropertyGroup>
+
 </Project>
