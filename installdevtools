@@ -9,10 +9,10 @@ echo ""
 echo "Updating apt ..."
 sudo apt update -q -y
 echo ""
-echo "Installing mc ..."
+echo "Installing mc for file browsning support ..."
 sudo apt install -q mc -y 1>/dev/null
 echo ""
-echo "Installing lnav ..."
+echo "Installing lnav for log view support ..."
 sudo apt install -q lnav -y 1>/dev/null
 echo ""
 echo "Installing xsel for copy selection ..."
@@ -21,6 +21,12 @@ sudo apt-get install -y xsel 1>/dev/null
 echo ""
 echo "setting working foler as safe in git confi ..."
 git config --global --add safe.directory /workspaces/Dependinator
+
+echo ""
+echo "Adding dotnet tools to PATH ..."
+if ! grep -qxF 'export PATH="$PATH:$HOME/.dotnet/tools"' ~/.profile; then
+  echo 'export PATH="$PATH:$HOME/.dotnet/tools"' >> ~/.profile
+fi
 
 echo ""
 echo "Installing gmd ..."
