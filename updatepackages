@@ -47,6 +47,10 @@ echo "==========================================================================
 echo "Listing all outdated packages in $PWD"
 dotnet outdated
 echo 
+echo "================================================================================="
+echo "Checking for vulnerable packages in $PWD"
+dotnet list package --vulnerable
+echo 
 echo "---------------------------------------------------------------------------------"
 echo "Use option '-u' to update non-major outdated packages"
 echo "Use option '-m' to update all outdated packages including major versions"
