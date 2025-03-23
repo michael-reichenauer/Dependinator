@@ -2,32 +2,26 @@ using Dependinator.Models;
 
 namespace Dependinator.Diagrams.Dependencies;
 
-public enum TreeSide { Left, Right }
-
 internal class Tree
 {
     TreeItem rootItem;
     TreeItem selected = null!;
-    List<TreeItem> Items { get; } = [];
 
-    public Tree(DependenciesService service, TreeSide side, Node root)
+    public Tree(DependenciesService service, Node root)
     {
-        Side = side;
         Service = service;
         rootItem = TreeItem.CreateTreeItem(this, null, root);
-        Items.Add(rootItem);
+        TreeItems.Add(rootItem);
     }
 
 
-    public TreeSide Side { get; }
     public DependenciesService Service { get; }
-    public List<TreeItem> TreeItems => Service.IsShowTrees ? Items : [];
+    public List<TreeItem> TreeItems { get; } = [];
     public bool IsSelected { get; set; }
     public HashSet<NodeId> SelectedPeers { get; } = [];
 
     public string Title => IsSelected ? SelectedItem?.Text! ?? "" : "";
 
-    public Tree OtherTree => Side == TreeSide.Left ? Service.TreeData(TreeSide.Right) : Service.TreeData(TreeSide.Left);
 
 
     // Set by the UI, when a tree item is selected. When starting to show dialog, null is sometimes set.
@@ -45,10 +39,10 @@ internal class Tree
     public void EmptyTo(Node root)
     {
         ClearSelection();
-        Items.Clear();
+        TreeItems.Clear();
         SelectedPeers.Clear();
         rootItem = TreeItem.CreateTreeItem(this, null, root);
-        Items.Add(rootItem);
+        TreeItems.Add(rootItem);
     }
 
     public void ClearSelection()

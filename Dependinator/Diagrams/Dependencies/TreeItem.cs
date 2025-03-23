@@ -42,7 +42,6 @@ class TreeItem : TreeItemData<TreeItem>
 
     public TreeItem? Parent { get; init; }
     public NodeId NodeId { get; init; }
-    public TreeSide Side => tree.Side;
 
     public override List<TreeItemData<TreeItem>>? Children => !IsChildrenIntitialized && !ChildItems.Any()
         ? hasUnitializedChildrenItems

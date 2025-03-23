@@ -33,8 +33,15 @@
     void ShowProperties()  =>
         DialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
 
-    void ShowLeftDependencies() => dependenciesService.ShowExplorer(TreeSide.Left);
-    void ShowRightDependencies() => dependenciesService.ShowExplorer(TreeSide.Right);
+
+    void ShowLeftDependencies() => 
+        DialogService.ShowAsync<DependenciesTree>(null, new DialogOptions() 
+            {  NoHeader = true, CloseOnEscapeKey = true, Position = DialogPosition.Custom });
+    void ShowRightDependencies() =>  
+        DialogService.ShowAsync<DependenciesTree>(null, new DialogOptions() 
+            {  NoHeader = true, CloseOnEscapeKey = true, Position = DialogPosition.Center });
+    @* void ShowLeftDependencies() => dependenciesService.ShowExplorer(TreeSide.Left);
+    void ShowRightDependencies() => dependenciesService.ShowExplorer(TreeSide.Right); *@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
