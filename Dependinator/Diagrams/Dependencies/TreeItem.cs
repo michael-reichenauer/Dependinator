@@ -3,17 +3,17 @@ using MudBlazor;
 
 namespace Dependinator.Diagrams.Dependencies;
 
-class TreeItem2 : TreeItemData<TreeItem2>
+class TreeItem : TreeItemData<TreeItem>
 {
-    static readonly List<TreeItemData<TreeItem2>> hasUnitializedChildrenItems =
-        [new TreeItem2(null!, null, null) { Text = "xx", Icon = "" }];
+    static readonly List<TreeItemData<TreeItem>> hasUnitializedChildrenItems =
+        [new TreeItem(null!, null, null) { Text = "xx", Icon = "" }];
 
-    readonly Tree2 tree;
+    readonly Tree tree;
     bool isExpanded;
     bool HasTreeItemChildren;
     bool IsChildrenIntitialized;
 
-    public TreeItem2(Tree2 tree, TreeItem2? parent, Node? node)
+    public TreeItem(Tree tree, TreeItem? parent, Node? node)
     {
         this.tree = tree;
         Parent = parent;
@@ -31,20 +31,20 @@ class TreeItem2 : TreeItemData<TreeItem2>
     }
 
 
-    public List<TreeItem2> ChildItems { get; private set; } = [];
+    public List<TreeItem> ChildItems { get; private set; } = [];
 
     public bool IsSelected { get; private set; }
     public bool IsChildSelected { get; private set; }
 
     public override string? Text { get; set; }
     public override string? Icon { get; set; }
-    public Tree2 Tree => tree;
+    public Tree Tree => tree;
 
-    public TreeItem2? Parent { get; init; }
+    public TreeItem? Parent { get; init; }
     public NodeId NodeId { get; init; }
     public TreeSide Side => tree.Side;
 
-    public override List<TreeItemData<TreeItem2>>? Children => !IsChildrenIntitialized && !ChildItems.Any()
+    public override List<TreeItemData<TreeItem>>? Children => !IsChildrenIntitialized && !ChildItems.Any()
         ? hasUnitializedChildrenItems
         : [.. ChildItems];
 
@@ -96,7 +96,7 @@ class TreeItem2 : TreeItemData<TreeItem2>
     }
 
 
-    public TreeItem2 AddChildNode(Node node)
+    public TreeItem AddChildNode(Node node)
     {
         // Check if node already added
         var existingChildItem = FindChildItem(node.Id);
@@ -113,11 +113,11 @@ class TreeItem2 : TreeItemData<TreeItem2>
         return newChildItem;
     }
 
-    private TreeItem2? FindChildItem(NodeId nodeId) => ChildItems.FirstOrDefault(n => n.NodeId == nodeId);
+    private TreeItem? FindChildItem(NodeId nodeId) => ChildItems.FirstOrDefault(n => n.NodeId == nodeId);
 
     public void ShowTreeItem() => this.Ancestors().ForEach(a => a.isExpanded = true);
 
-    public static TreeItem2 CreateTreeItem(Tree2 tree, TreeItem2? parent, Node node) => new(tree, parent, node)
+    public static TreeItem CreateTreeItem(Tree tree, TreeItem? parent, Node node) => new(tree, parent, node)
     {
         Text = node.IsRoot ? "<all>" : node.ShortName,
         Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),
@@ -133,7 +133,7 @@ class TreeItem2 : TreeItemData<TreeItem2>
         IsChildrenIntitialized = true;
     }
 
-    IEnumerable<TreeItem2> Ancestors()
+    IEnumerable<TreeItem> Ancestors()
     {
         var current = this;
         while (current.Parent != null)

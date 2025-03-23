@@ -3,7 +3,7 @@
 @inject IApplicationEvents applicationEvents
 @inject IInteractionService interactionService
 @inject IDialogService DialogService
-@inject IDependenciesService2 dependenciesService
+@inject IDependenciesService dependenciesService
 
 
 
@@ -15,8 +15,8 @@
             OnClick="ShowProperties">Properties ...</MudMenuItem>
     </MudMenu>
     
-    <MudIconButton Icon="@DependenciesService2.Dependencies" OnClick="ShowLeftDependencies"  />
-    <MudIconButton Icon="@DependenciesService2.References" OnClick="ShowRightDependencies"  />
+    <MudIconButton Icon="@DependenciesService.Dependencies" OnClick="ShowLeftDependencies"  />
+    <MudIconButton Icon="@DependenciesService.References" OnClick="ShowRightDependencies"  />
 
     <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" Disabled="@isIcon"/>
     <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit" Disabled="@isIcon"
