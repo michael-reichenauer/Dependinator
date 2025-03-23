@@ -2,6 +2,8 @@ using Dependinator.Models;
 
 namespace Dependinator.Diagrams.Dependencies;
 
+public enum TreeSide { Left, Right }
+
 internal class Tree2
 {
     TreeItem2 rootItem;
