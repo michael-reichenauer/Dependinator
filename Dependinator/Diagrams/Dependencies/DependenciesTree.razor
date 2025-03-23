@@ -1,5 +1,5 @@
 @inject IApplicationEvents applicationEvents
-@inject IDependenciesService srv
+@inject IDependenciesService2 srv
 
 
 <style>
@@ -15,7 +15,7 @@
 <MudTreeView Items="@Tree.TreeItems" Hover="true" Dense="true" Width="100%">
     <ItemTemplate Context="treeItem">
         @{
-            var item = (TreeItem)treeItem;
+            var item = (TreeItem2)treeItem;
         }
         <MudTreeViewItem Items="@item.Children" Icon="@item.Icon" ExpandButtonIcon="@item.ExpandIcon"
             OnClick="item.ItemClicked" @bind-Expanded="@item.Expanded">
@@ -32,7 +32,7 @@
                     }
                     <div style="justify-self: end;">
                         <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
-                            Color="Color.Inherit" Class="ml-3 hover-button" OnClick="()=>srv.ShowNode(item.NodeId)" />
+                            Color="Color.Inherit" Class="ml-3 hover-button" OnClick="() => srv.ShowNode(item.NodeId)" />
                     </div>
                 </div>
             </BodyContent>
@@ -44,7 +44,7 @@
     [Parameter]
     public TreeSide Side { get; set; }
 
-    Tree Tree => srv.TreeData(Side);
+    Tree2 Tree => srv.TreeData(Side);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
