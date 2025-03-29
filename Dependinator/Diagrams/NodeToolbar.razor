@@ -15,9 +15,9 @@
             OnClick="ShowProperties">Properties ...</MudMenuItem>
     </MudMenu>
     
-    <MudIconButton Icon="@DependenciesService.Dependencies" OnClick="ShowLeftDependencies"  />
-    <MudIconButton Icon="@DependenciesService.References" OnClick="ShowRightDependencies"  />
-
+    <MudIconButton Icon="@DependenciesService.References" OnClick="ShowReferences"  />
+    <MudIconButton Icon="@DependenciesService.Dependencies" OnClick="ShowDependencies"  />
+   
     <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" Disabled="@isIcon"/>
     <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit" Disabled="@isIcon"
         ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
@@ -33,15 +33,11 @@
     void ShowProperties()  =>
         DialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
 
-
-    void ShowLeftDependencies() => 
-        DialogService.ShowAsync<DependenciesTree>(null, new DialogOptions() 
-            {  NoHeader = true, CloseOnEscapeKey = true, Position = DialogPosition.Custom });
-    void ShowRightDependencies() =>  
-        DialogService.ShowAsync<DependenciesTree>(null, new DialogOptions() 
-            {  NoHeader = true, CloseOnEscapeKey = true, Position = DialogPosition.Center });
-    @* void ShowLeftDependencies() => dependenciesService.ShowExplorer(TreeSide.Left);
-    void ShowRightDependencies() => dependenciesService.ShowExplorer(TreeSide.Right); *@
+    void ShowReferences() =>  
+        DialogService.ShowAsync<DependenciesTree>(null, DependenciesTree.ReferencesOptions); 
+    void ShowDependencies() => 
+        DialogService.ShowAsync<DependenciesTree>(null, DependenciesTree.DependenciesOptions);
+  
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

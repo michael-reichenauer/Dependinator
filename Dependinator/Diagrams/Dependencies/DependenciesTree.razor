@@ -22,7 +22,7 @@
                         @{
                             var item = (TreeItem)treeItem;
                         }
-                        <MudTreeViewItem Items="@item.Children" Icon="@item.Icon" ExpandButtonIcon="@item.ExpandIcon"
+                        <MudTreeViewItem Items="@item.Children" Icon="@item.Icon"
                             OnClick="item.ItemClicked" @bind-Expanded="@item.Expanded">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
@@ -54,6 +54,11 @@
 
 
 @code {
+    public static DialogOptions ReferencesOptions = new () 
+        {  NoHeader = true, CloseOnEscapeKey = true, Position = DialogPosition.Custom };
+    public static DialogOptions DependenciesOptions = new () 
+        {  NoHeader = true, CloseOnEscapeKey = true, Position = DialogPosition.Custom };
+   
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
     string NodeToolBarPosition => 

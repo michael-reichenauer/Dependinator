@@ -5,46 +5,28 @@ namespace Dependinator.Diagrams.Dependencies;
 
 class TreeItem : TreeItemData<TreeItem>
 {
-    static readonly List<TreeItemData<TreeItem>> hasUnitializedChildrenItems =
-        [new TreeItem(null!, null, null) { Text = "xx", Icon = "" }];
+    static readonly TreeItemData<TreeItem> uninitializedChild = new TreeItem(null!, null, null, false);
+    static readonly List<TreeItemData<TreeItem>> unitializedChildren = [uninitializedChild];
 
-    readonly Tree tree;
     bool isExpanded;
     bool HasTreeItemChildren;
-    bool IsChildrenIntitialized;
-
-    public TreeItem(Tree tree, TreeItem? parent, Node? node)
-    {
-        this.tree = tree;
-        Parent = parent;
-        if (node == null)
-        {
-            NodeId = NodeId.Empty;
-            HasTreeItemChildren = false;
-            IsChildrenIntitialized = true;
-            return;
-        }
-
-        NodeId = node.Id;
-        HasTreeItemChildren = tree.HasTreeItemChildren(node);
-        IsChildrenIntitialized = !HasTreeItemChildren;
-    }
+    bool IsChildrenInitialized;
 
 
     public List<TreeItem> ChildItems { get; private set; } = [];
 
     public bool IsSelected { get; private set; }
-    public bool IsChildSelected { get; private set; }
+    public bool isChildSelected { get; private set; }
 
     public override string? Text { get; set; }
     public override string? Icon { get; set; }
-    public Tree Tree => tree;
+    public Tree Tree { get; private set; } = null!;
 
     public TreeItem? Parent { get; init; }
     public NodeId NodeId { get; init; }
 
-    public override List<TreeItemData<TreeItem>>? Children => !IsChildrenIntitialized && !ChildItems.Any()
-        ? hasUnitializedChildrenItems
+    public override List<TreeItemData<TreeItem>>? Children => !IsChildrenInitialized && !ChildItems.Any()
+        ? unitializedChildren
         : [.. ChildItems];
 
     public override bool Expanded
@@ -52,9 +34,9 @@ class TreeItem : TreeItemData<TreeItem>
         get => isExpanded;
         set
         {
-            if (!IsChildrenIntitialized)
+            if (!IsChildrenInitialized)
             {
-                IntializeChildrenItems();
+                InitializeChildrenItems();
                 if (!value) return;  // Do not collapse if children where not yet initialized
             }
 
@@ -62,36 +44,30 @@ class TreeItem : TreeItemData<TreeItem>
         }
     }
 
-    //  public virtual bool Expandable { get; set; } = true; // Is this needed???
-    //  public virtual bool Visible { get; set; } = true; // Is this needed???
+    public TreeItem(Tree tree, TreeItem? parent, Node? node, bool hasChildren)
+    {
+        Tree = tree;
+        Parent = parent;
+        if (node == null)
+        {
+            NodeId = NodeId.Empty;
+            HasTreeItemChildren = false;
+            IsChildrenInitialized = true;
+            return;
+        }
 
+        NodeId = node.Id;
+        HasTreeItemChildren = hasChildren; //tree.HasTreeItemChildren(node);
+        IsChildrenInitialized = !HasTreeItemChildren;
+    }
 
-    public void ItemClicked() => tree.SelectedItem = this;
+    public void ItemClicked() => Tree.SelectedItem = this;
 
-
-    // Normally, the expand icon is an right array, which the MudTreeView will rotate to down when expanded
-    // But if children are not yet initialized, we need to compensate and thus show an upp arrow
-    // which is rotated to right icon if exanded 
-    public string ExpandIcon => !IsChildrenIntitialized && isExpanded
-        ? Icons.Material.Filled.ArrowDropUp
-        : Icons.Material.Filled.ArrowRight;
-
-
-    public bool IsParentSelected { get; set; }
-
-    public Color TextColor => Selected || IsParentSelected ? Color.Info : Color.Inherit;
 
 
     public void SetIsSelected(bool isSelected)
     {
         Selected = isSelected;
-        Parent?.SetIsParentSelected(isSelected);
-    }
-
-    void SetIsParentSelected(bool isSelected)
-    {
-        IsParentSelected = isSelected;
-        Parent?.SetIsParentSelected(isSelected);
     }
 
 
@@ -106,7 +82,7 @@ class TreeItem : TreeItemData<TreeItem>
 
         if ((node.Parent?.Children?.Count ?? 0) == ChildItems.Count)
         {
-            IsChildrenIntitialized = true;
+            IsChildrenInitialized = true;
         }
 
         return newChildItem;
@@ -116,20 +92,24 @@ class TreeItem : TreeItemData<TreeItem>
 
     public void ShowTreeItem() => this.Ancestors().ForEach(a => a.isExpanded = true);
 
-    public static TreeItem CreateTreeItem(Tree tree, TreeItem? parent, Node node) => new(tree, parent, node)
+    public static TreeItem CreateTreeItem(Tree tree, TreeItem? parent, Node node)
     {
-        Text = node.IsRoot ? "<all>" : node.ShortName,
-        Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),
-    };
+        var hasChildren = node.Children.Any();
+        return new(tree, parent, node, hasChildren)
+        {
+            Text = node.IsRoot ? "<all>" : node.ShortName,
+            Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),
+        };
+    }
 
-    void IntializeChildrenItems()
+    void InitializeChildrenItems()
     {
         Log.Info($"IntializeChildrenItems: {NodeId}, ");
         ChildItems = [];
-        tree.Service.GetChildren(NodeId)
-            .Where(tree.IsNodeIncluded)
+        Tree.Service.GetChildren(NodeId)
+            .Where(Tree.IsNodeIncluded)
             .ForEach(child => AddChildNode(child));
-        IsChildrenIntitialized = true;
+        IsChildrenInitialized = true;
     }
 
     IEnumerable<TreeItem> Ancestors()
