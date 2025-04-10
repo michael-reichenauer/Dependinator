@@ -10,7 +10,6 @@ internal class NodeName : Equatable<NodeName>
 
     readonly Lazy<NodeName> parentName;
 
-
     NodeName(string fullName)
     {
         FullName = fullName;
@@ -21,18 +20,15 @@ internal class NodeName : Equatable<NodeName>
         IsEqualWhenSame(fullName);
     }
 
-
     public string FullName { get; }
     public NodeName ParentName => parentName.Value;
     public string DisplayShortName => displayParts.Value.ShortName;
     public string DisplayLongName => displayParts.Value.LongName;
 
-
     public static NodeName From(string fullName)
     {
         return new NodeName(fullName);
     }
-
 
     public bool IsSame(string nameText) => nameText == FullName;
 
@@ -49,7 +45,6 @@ internal class NodeName : Equatable<NodeName>
 
         return index > -1 ? From(FullName[..index]) : Root;
     }
-
 
     DisplayParts GetDisplayParts()
     {
@@ -70,10 +65,8 @@ internal class NodeName : Equatable<NodeName>
 
         name = ToNiceText(name);
 
-
         var subParts = FullName.StartsWith("$") ? parts : parts.Skip(1);
-        string fullName = string.Join(".", subParts
-            .Where(part => !part.StartsWith("?")));
+        string fullName = string.Join(".", subParts.Where(part => !part.StartsWith("?")));
 
         if (string.IsNullOrEmpty(fullName))
         {
@@ -88,7 +81,6 @@ internal class NodeName : Equatable<NodeName>
         return new DisplayParts(name, fullName);
     }
 
-
     static string ToNiceParameters(string fullName)
     {
         int index1 = fullName.IndexOf('(');
@@ -100,15 +92,13 @@ internal class NodeName : Equatable<NodeName>
             string[] parametersParts = parameters.Split(",".ToCharArray());
 
             // Simplify parameter types to just get last part of each type
-            parameters = string.Join(",", parametersParts
-                .Select(part => part.Split(".".ToCharArray()).Last()));
+            parameters = string.Join(",", parametersParts.Select(part => part.Split(".".ToCharArray()).Last()));
 
             fullName = $"{fullName.Substring(0, index1)}({parameters})";
         }
 
         return fullName;
     }
-
 
     static string ToNiceText(string name)
     {
@@ -127,4 +117,3 @@ internal class NodeName : Equatable<NodeName>
             .Replace("op_Inequality", "!=");
     }
 }
-

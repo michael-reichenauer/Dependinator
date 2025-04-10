@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-
 namespace Dependinator.Utils;
 
 public class AsserterEventArgs : EventArgs
@@ -20,17 +19,18 @@ public static class Asserter
         object instance,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0)
+        [CallerLineNumber] int sourceLineNumber = 0
+    )
     {
         Requires(instance != null, memberName, sourceFilePath, sourceLineNumber);
     }
-
 
     public static void Requires(
         bool predicate,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0)
+        [CallerLineNumber] int sourceLineNumber = 0
+    )
     {
         if (!predicate)
         {
@@ -42,29 +42,27 @@ public static class Asserter
         string errorMessage,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0)
+        [CallerLineNumber] int sourceLineNumber = 0
+    )
     {
         return Fail(errorMessage, memberName, sourceFilePath, sourceLineNumber);
     }
-
 
     public static Exception FailFast(
         Exception error,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0)
+        [CallerLineNumber] int sourceLineNumber = 0
+    )
     {
         return Fail(error.Message, memberName, sourceFilePath, sourceLineNumber);
     }
 
-
-    private static Exception Fail(
-         string error, string memberName, string sourceFilePath, int sourceLineNumber)
+    private static Exception Fail(string error, string memberName, string sourceFilePath, int sourceLineNumber)
     {
         StackTrace stackTrace = new StackTrace(true);
 
-        string message =
-            $"Fail {error} at\n{sourceFilePath}({sourceLineNumber}) {memberName}\n\n{stackTrace}";
+        string message = $"Fail {error} at\n{sourceFilePath}({sourceLineNumber}) {memberName}\n\n{stackTrace}";
 
         Exception exception = new InvalidOperationException(message);
 
@@ -72,4 +70,3 @@ public static class Asserter
         return exception;
     }
 }
-

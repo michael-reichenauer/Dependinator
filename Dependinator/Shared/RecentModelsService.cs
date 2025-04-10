@@ -40,7 +40,6 @@ class RecentModelsService : IRecentModelsService
 
     public string LastUsedPath => modelPaths.Any() ? modelPaths[0] : ExampleModel.Path;
 
-
     public async Task AddModelAsync(string path)
     {
         modelPaths = (await GetExistingRecentFilePathsAsync()).Prepend(path).Distinct().Take(RecentCount).ToList();
@@ -49,13 +48,18 @@ class RecentModelsService : IRecentModelsService
 
     public async Task RemoveModelAsync(string path)
     {
-        modelPaths = (await GetExistingRecentFilePathsAsync()).Where(rp => rp != path).Distinct().Take(RecentCount).ToList();
+        modelPaths = (await GetExistingRecentFilePathsAsync())
+            .Where(rp => rp != path)
+            .Distinct()
+            .Take(RecentCount)
+            .ToList();
         await configService.SetAsync(c => c.RecentPaths = modelPaths);
     }
 
     async Task<IReadOnlyList<string>> GetExistingRecentFilePathsAsync()
     {
-        if (!Try(out var paths, out var e, await fileService.GetFilePathsAsync())) return [];
+        if (!Try(out var paths, out var e, await fileService.GetFilePathsAsync()))
+            return [];
         var recentPaths = (await configService.GetAsync()).RecentPaths;
         return recentPaths.Where(rp => paths.Contains(rp) || rp == ExampleModel.Path).ToList();
     }

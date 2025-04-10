@@ -3,12 +3,10 @@ using Dependinator.Utils.UI;
 
 namespace Dependinator.Shared;
 
-
 interface IInitService
 {
     Task InitAsync(IUIComponent component);
 }
-
 
 [Scoped]
 class InitService : IInitService
@@ -24,7 +22,8 @@ class InitService : IInitService
         IPointerEventService mouseEventService,
         IRecentModelsService recentModelsService,
         IDatabase database,
-        ICanvasService canvasService)
+        ICanvasService canvasService
+    )
     {
         this.screenService = screenService;
         this.mouseEventService = mouseEventService;
@@ -32,7 +31,6 @@ class InitService : IInitService
         this.database = database;
         this.canvasService = canvasService;
     }
-
 
     public async Task InitAsync(IUIComponent component)
     {

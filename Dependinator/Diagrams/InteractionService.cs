@@ -13,7 +13,6 @@ interface IInteractionService
     void NodePanZoomToFit();
 }
 
-
 [Scoped]
 class InteractionService : IInteractionService
 {
@@ -34,7 +33,6 @@ class InteractionService : IInteractionService
     double Zoom => modelService.Zoom;
     readonly Debouncer zoomToolbarDebouncer = new();
 
-
     public InteractionService(
         IPointerEventService mouseEventService,
         IPanZoomService panZoomService,
@@ -42,7 +40,8 @@ class InteractionService : IInteractionService
         IApplicationEvents applicationEvents,
         ISelectionService selectionService,
         IScreenService screenService,
-        IModelService modelService)
+        IModelService modelService
+    )
     {
         this.mouseEventService = mouseEventService;
         this.panZoomService = panZoomService;
@@ -56,19 +55,19 @@ class InteractionService : IInteractionService
         this.applicationEvents.UndoneRedone += UpdateToolbar;
     }
 
-
     public string Cursor { get; private set; } = "default";
     public bool IsContainer
     {
         get
         {
-            if (!selectionService.IsSelected) return false;
-            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node)) return false;
+            if (!selectionService.IsSelected)
+                return false;
+            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
+                return false;
             var nodeZoom = 1 / (node.GetZoom() * Zoom);
             return !Node.IsToLargeToBeSeen(nodeZoom) && !node.IsShowIcon(nodeZoom);
         }
     }
-
 
     Pos selectedNodePosition = Pos.None;
     public Pos SelectedNodePosition
@@ -81,24 +80,26 @@ class InteractionService : IInteractionService
     {
         get
         {
-            if (!selectionService.IsEditMode) return false;
-            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node)) return false;
+            if (!selectionService.IsEditMode)
+                return false;
+            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
+                return false;
             var nodeZoom = 1 / (node.GetZoom() * Zoom);
             if (!Node.IsToLargeToBeSeen(nodeZoom) && !node.IsShowIcon(nodeZoom))
-            {   // No longer in edit mode if node is to large to be seen or has an icon
+            { // No longer in edit mode if node is to large to be seen or has an icon
                 return true;
             }
 
             selectionService.SetEditMode(false);
             return false;
         }
-
         set => selectionService.SetEditMode(value);
     }
 
     public void NodePanZoomToFit()
     {
-        if (!selectionService.IsSelected) return;
+        if (!selectionService.IsSelected)
+            return;
         nodeEditService.PanZoomToFit(selectionService.SelectedId);
     }
 
@@ -113,7 +114,6 @@ class InteractionService : IInteractionService
 
         return Task.CompletedTask;
     }
-
 
     void OnMouseWheel(PointerEvent e)
     {
@@ -153,15 +153,24 @@ class InteractionService : IInteractionService
     {
         if (selectionService.IsSelected)
         {
-            zoomToolbarDebouncer.Debounce(20, async () =>
+            zoomToolbarDebouncer.Debounce(
+                20,
+                async () =>
                 {
-                    if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(selectionService.SelectedId.Id))) return;
+                    if (
+                        !Try(
+                            out var bound,
+                            out var _,
+                            await screenService.GetBoundingRectangle(selectionService.SelectedId.Id)
+                        )
+                    )
+                        return;
                     SelectedNodePosition = new Pos(bound.X, bound.Y);
                     applicationEvents.TriggerUIStateChanged();
-                });
+                }
+            );
         }
     }
-
 
     async void OnClick(PointerEvent e)
     {
@@ -180,7 +189,8 @@ class InteractionService : IInteractionService
 
         if (selectionService.IsSelected)
         {
-            if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(targetId.Id))) return;
+            if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(targetId.Id)))
+                return;
             SelectedNodePosition = new Pos(bound.X, bound.Y);
             applicationEvents.TriggerUIStateChanged();
         }
@@ -191,31 +201,34 @@ class InteractionService : IInteractionService
         Log.Info($"OnDoubleClick {e.Type}");
     }
 
-
     void OnMouseDown(PointerEvent e)
     {
         moveTimerRunning = true;
         moveTimer.Change(MoveDelay, Timeout.Infinite);
         mouseDownId = PointerId.Parse(e.TargetId);
 
-        if (mouseDownId.Id == selectionService.SelectedId.Id) return;
-        if (!IsEditNodeMode) return;
+        if (mouseDownId.Id == selectionService.SelectedId.Id)
+            return;
+        if (!IsEditNodeMode)
+            return;
 
         // Node is in edit mode, check if mouse down is inside the selected node, if so trate as selected node
         var downId = NodeId.FromId(mouseDownId.Id);
         var selectId = NodeId.FromId(selectionService.SelectedId.Id);
 
         using var model = modelService.UseModel();
-        if (!model.TryGetNode(downId, out var node)) return;
+        if (!model.TryGetNode(downId, out var node))
+            return;
         var ancestorId = node.Ancestors().FirstOrDefault(n => n.Id == selectId && !n.IsRoot);
-        if (ancestorId == null) return;
+        if (ancestorId == null)
+            return;
         mouseDownId = selectionService.SelectedId;
     }
 
-
     void OnMouseMove(PointerEvent e)
     {
-        if (!e.IsLeftButton) return;
+        if (!e.IsLeftButton)
+            return;
         if (IsEditNodeMode && mouseDownId.Id == selectionService.SelectedId.Id)
         {
             nodeEditService.PanSelectedNode(e, Zoom, mouseDownId);
@@ -240,8 +253,6 @@ class InteractionService : IInteractionService
         PanedMoveToolbar(e);
     }
 
-
-
     void ResizedMoveToolbar(PointerEvent e)
     {
         var (dx, dy) = mouseDownId.SubId switch
@@ -251,7 +262,7 @@ class InteractionService : IInteractionService
             "tr" => (0, e.MovementY),
             "ml" => (e.MovementX, 0),
             "bl" => (e.MovementX, 0),
-            _ => (0, 0)
+            _ => (0, 0),
         };
         SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
     }

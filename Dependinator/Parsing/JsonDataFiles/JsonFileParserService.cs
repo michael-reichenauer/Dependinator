@@ -11,12 +11,10 @@ class JsonFileParserService : IParser
         Formatting = Formatting.Indented,
         ObjectCreationHandling = ObjectCreationHandling.Replace,
         NullValueHandling = NullValueHandling.Ignore,
-        DefaultValueHandling = DefaultValueHandling.Ignore
+        DefaultValueHandling = DefaultValueHandling.Ignore,
     };
 
-
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".json");
-
 
     public Task<R> ParseAsync(string path, ChannelWriter<IItem> items)
     {
@@ -47,26 +45,18 @@ class JsonFileParserService : IParser
         });
     }
 
-
     public Task<R<Source>> GetSourceAsync(string path, string nodeName) =>
         Task.FromResult((R<Source>)new Source(path, "", 0));
 
-
-    public Task<R<string>> GetNodeAsync(string path, Source source) =>
-        Task.FromResult((R<string>)"");
-
+    public Task<R<string>> GetNodeAsync(string path, Source source) => Task.FromResult((R<string>)"");
 
     public DateTime GetDataTime(string path) => File.GetLastWriteTime(path);
-
 
     static void SkipToItemsStart(JsonReader reader)
     {
         // Skip until start of array
-        while (reader.Read() && reader.TokenType != JsonToken.StartArray)
-        {
-        }
+        while (reader.Read() && reader.TokenType != JsonToken.StartArray) { }
     }
-
 
     static async Task<int> ReadItemsAsync(JsonReader reader, ChannelWriter<IItem> items)
     {
@@ -95,22 +85,17 @@ class JsonFileParserService : IParser
         return itemCount;
     }
 
-
     static Node ToNodeData(JsonTypes.Node node) =>
-       new(node.Name, node.Parent, new NodeType(node.Type), node.Description);
+        new(node.Name, node.Parent, new NodeType(node.Type), node.Description);
 
-
-    static Link ToLinkData(JsonTypes.Link link) =>
-       new(link.Source, link.Target, new NodeType(link.TargetType));
-
+    static Link ToLinkData(JsonTypes.Link link) => new(link.Source, link.Target, new NodeType(link.TargetType));
 
     static void ValidateVersion(JsonReader reader)
     {
         // Look for first property "FormatVersion" and verify that the expected version is found
         if (reader.Read() && reader.TokenType == JsonToken.StartObject)
         {
-            if (reader.Read() && reader.TokenType == JsonToken.PropertyName &&
-                (string?)reader.Value == "FormatVersion")
+            if (reader.Read() && reader.TokenType == JsonToken.PropertyName && (string?)reader.Value == "FormatVersion")
             {
                 if (reader.Read() && reader.TokenType == JsonToken.String)
                 {
@@ -128,4 +113,3 @@ class JsonFileParserService : IParser
         throw new FormatException("Failed to read format version");
     }
 }
-

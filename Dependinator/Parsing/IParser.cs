@@ -3,7 +3,6 @@ using Dependinator.Models;
 
 namespace Dependinator.Parsing;
 
-
 interface IParser
 {
     bool CanSupport(string path);
@@ -45,16 +44,14 @@ record Node(string Name, string ParentName, NodeType Type, string? Description) 
     public string? Color { get; init; }
     public string? Background { get; init; }
 
-    static public string ParseParentName(string name)
+    public static string ParseParentName(string name)
     {
         int index = name.LastIndexOfAny(NamePartsSeparators);
         return index > -1 ? name[..index] : "";
     }
 }
 
-
 record Source(string Path, string Text, int LineNumber);
-
 
 record NodeType(string Text)
 {
@@ -103,4 +100,3 @@ record NodeType(string Text)
 
 //     public static NodeType ToNodeType(string text) => Enum.TryParse<NodeType>(text, out var type) ? type : NodeType.None;
 // }
-

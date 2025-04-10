@@ -2,7 +2,6 @@ using Dependinator.Models;
 
 namespace Dependinator.Diagrams;
 
-
 interface IPanZoomService
 {
     void PanZoomToFit(Rect bounds, double maxZoom = 1, bool noCommand = false);
@@ -12,14 +11,9 @@ interface IPanZoomService
     void Pan(PointerEvent e);
 }
 
-
 [Scoped]
-class PanZoomService(
-    IScreenService screenService,
-    IModelService modelService) : IPanZoomService
+class PanZoomService(IScreenService screenService, IModelService modelService) : IPanZoomService
 {
-
-
     const double MaxZoom = 10;
     const double Margin = 10;
     const double WheelZoomSpeed = 1.2;
@@ -32,12 +26,14 @@ class PanZoomService(
     {
         using var model = modelService.UseModel();
 
-        if (e.DeltaY == 0) return;
+        if (e.DeltaY == 0)
+            return;
         var (mx, my) = (e.OffsetX, e.OffsetY);
 
         var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
         double newZoom = (e.DeltaY > 0) ? model.Zoom * speed : model.Zoom * (1 / speed);
-        if (newZoom > MaxZoom) newZoom = MaxZoom;
+        if (newZoom > MaxZoom)
+            newZoom = MaxZoom;
 
         double svgX = mx * model.Zoom + model.Offset.X;
         double svgY = my * model.Zoom + model.Offset.Y;
@@ -51,13 +47,8 @@ class PanZoomService(
 
         var newOffset = new Pos(x, y);
 
-        modelService.Do(new ModelEditCommand()
-        {
-            Offset = newOffset,
-            Zoom = newZoom
-        }, false);
+        modelService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom }, false);
     }
-
 
     public void Pan(PointerEvent e)
     {
@@ -66,9 +57,8 @@ class PanZoomService(
         var (dx, dy) = (e.MovementX * model.Zoom, e.MovementY * model.Zoom);
         var newOffset = new Pos(model.Offset.X - dx, model.Offset.Y - dy);
 
-        modelService.Do(new ModelEditCommand() { Offset = newOffset, }, false);
+        modelService.Do(new ModelEditCommand() { Offset = newOffset }, false);
     }
-
 
     public void PanZoomOrg(Rect viewRect, double zoom)
     {
@@ -129,28 +119,21 @@ class PanZoomService(
 
     bool RectWithin(Rect r1, Rect r2)
     {
-        return r1.X >= r2.X &&
-               r1.X + r1.Width <= r2.X + r2.Width &&
-               r1.Y >= r2.Y &&
-               r1.Y + r1.Height <= r2.Y + r2.Height;
+        return r1.X >= r2.X
+            && r1.X + r1.Width <= r2.X + r2.Width
+            && r1.Y >= r2.Y
+            && r1.Y + r1.Height <= r2.Y + r2.Height;
     }
 
     bool RectOverLaps(Rect r1, Rect r2)
     {
-        return r1.X < r2.X + r2.Width &&
-               r1.X + r1.Width > r2.X &&
-               r1.Y < r2.Y + r2.Height &&
-               r1.Y + r1.Height > r2.Y;
+        return r1.X < r2.X + r2.Width && r1.X + r1.Width > r2.X && r1.Y < r2.Y + r2.Height && r1.Y + r1.Height > r2.Y;
     }
 
     void GoTo(Pos pos, double zoom)
     {
         var offset = ToOffset(pos, zoom);
-        modelService.Do(new ModelEditCommand()
-        {
-            Offset = offset,
-            Zoom = zoom
-        }, false);
+        modelService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
     }
 
     (Pos, double) GetPosAndZoom()
@@ -171,7 +154,6 @@ class PanZoomService(
         var height = svgRect.Height * zoom;
         return new Rect(x, y, width, height);
     }
-
 
     Pos ToPos(Pos offset, double zoom)
     {
@@ -210,7 +192,6 @@ class PanZoomService(
         Log.Info($"PanZoom newOffset={newOffset} newZoom={newZoom}");
     }
 
-
     public void PanZoomToFit(Rect totalBounds, double maxZoom = 1, bool noCommand = false)
     {
         using var model = modelService.UseModel();
@@ -240,10 +221,6 @@ class PanZoomService(
             return;
         }
 
-        modelService.Do(new ModelEditCommand()
-        {
-            Offset = newOffset,
-            Zoom = newZoom
-        });
+        modelService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom });
     }
 }

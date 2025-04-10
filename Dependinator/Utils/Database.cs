@@ -14,13 +14,13 @@ interface IDatabase
     Task<R<IReadOnlyList<string>>> GetKeysAsync(string collectionName);
 }
 
-
 [Scoped]
 class Database : IDatabase
 {
     const int CurrentVersion = 2;
     const string DatabaseName = "Dependinator";
     static readonly JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
+
     record Pair<T>(string Id, T Value);
 
     readonly IJSInterop jSInterop;
@@ -50,7 +50,8 @@ class Database : IDatabase
 
     public async Task<R<T>> GetAsync<T>(string collectionName, string id)
     {
-        if (!Try(out var pair, out var e, await GetDatabaseValueAsync<Pair<T>>(DatabaseName, collectionName, id))) return e;
+        if (!Try(out var pair, out var e, await GetDatabaseValueAsync<Pair<T>>(DatabaseName, collectionName, id)))
+            return e;
         return pair.Value;
     }
 
@@ -67,9 +68,16 @@ class Database : IDatabase
         var valueHandler = new ValueHandler();
         using var valueHandlerRef = jSInterop.Reference(valueHandler);
 
-        var result = await jSInterop.Call<bool>("getDatabaseValue",
-            databaseName, collectionName, id, valueHandlerRef, nameof(valueHandler.OnValue));
-        if (!result) return R.None;
+        var result = await jSInterop.Call<bool>(
+            "getDatabaseValue",
+            databaseName,
+            collectionName,
+            id,
+            valueHandlerRef,
+            nameof(valueHandler.OnValue)
+        );
+        if (!result)
+            return R.None;
 
         var valueText = valueHandler.GetValue();
         var value = JsonSerializer.Deserialize<T>(valueText, options);
@@ -80,6 +88,7 @@ class Database : IDatabase
     class ValueHandler
     {
         readonly StringBuilder sb = new();
+
         public string GetValue() => sb.ToString();
 
         [JSInvokable]

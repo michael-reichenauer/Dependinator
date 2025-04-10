@@ -3,6 +3,7 @@ namespace Dependinator.Models;
 class Link : IItem
 {
     readonly List<Line> lines = new();
+
     public Link(Node Source, Node Target)
     {
         this.Source = Source;
@@ -16,13 +17,10 @@ class Link : IItem
 
     public void AddLine(Line line)
     {
-        if (lines.Contains(line)) return;
+        if (lines.Contains(line))
+            return;
         lines.Add(line);
     }
 
     public override string ToString() => $"{Source}->{Target} ({lines.Count})";
 }
-
-
-
-

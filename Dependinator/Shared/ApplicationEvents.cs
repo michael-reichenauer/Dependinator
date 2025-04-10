@@ -1,4 +1,3 @@
-
 namespace Dependinator.Shared;
 
 interface IApplicationEvents
@@ -12,7 +11,6 @@ interface IApplicationEvents
     void TriggerUndoneRedone();
 }
 
-
 [Scoped]
 class ApplicationEvents : IApplicationEvents
 {
@@ -21,6 +19,8 @@ class ApplicationEvents : IApplicationEvents
     public event Action UndoneRedone = null!;
 
     public void TriggerUIStateChanged() => UIStateChanged?.Invoke();
+
     public void TriggerSaveNeeded() => SaveNeeded?.Invoke();
+
     public void TriggerUndoneRedone() => UndoneRedone?.Invoke();
 }

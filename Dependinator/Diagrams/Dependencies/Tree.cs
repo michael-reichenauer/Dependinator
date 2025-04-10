@@ -2,7 +2,6 @@ using Dependinator.Models;
 
 namespace Dependinator.Diagrams.Dependencies;
 
-
 // internal class Tree
 // {
 //     TreeItem rootItem;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-
 namespace Dependinator.Parsing.JsonDataFiles;
 
 public static class JsonTypes
@@ -27,7 +26,6 @@ public static class JsonTypes
         public Link Link { get; set; } = default!;
     }
 
-
     // A node
     [Serializable]
     public class Node
@@ -40,7 +38,6 @@ public static class JsonTypes
         public string Type { get; set; } = "";
         public string Description { get; set; } = "";
     }
-
 
     // Link between two nodes
     [Serializable]
@@ -56,7 +53,6 @@ public static class JsonTypes
         public string TargetType { get; set; } = "";
     }
 
-
     internal static class NodeType
     {
         public const string Solution = "Solution";
@@ -70,4 +66,3 @@ public static class JsonTypes
         public const string SolutionFolder = "SolutionFolder";
     }
 }
-

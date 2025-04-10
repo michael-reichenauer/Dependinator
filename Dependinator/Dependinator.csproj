@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CSharpier.MsBuild">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="ICSharpCode.Decompiler" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
     <PackageReference Include="Microsoft.Build" />

@@ -1,6 +1,5 @@
 namespace Dependinator.Models;
 
-
 record NodeType
 {
     public string Text { get; init; }
@@ -24,19 +23,19 @@ record NodeType
 
     public static implicit operator NodeType(Parsing.NodeType type) => new(type.Text);
 
-    public string IconName => Text switch
-    {
-        "Solution" => "SolutionIcon",
-        "Externals" => "ExternalsIcon",
-        "Assembly" => "ModuleIcon",
-        "Namespace" => "FilesIcon",
-        "Private" => "PrivateIcon",
-        "Parent" => "FilesIcon",
-        "Type" => "TypeIcon",
-        "Member" => "MemberIcon",
-        _ => "ModuleIcon"
-    };
+    public string IconName =>
+        Text switch
+        {
+            "Solution" => "SolutionIcon",
+            "Externals" => "ExternalsIcon",
+            "Assembly" => "ModuleIcon",
+            "Namespace" => "FilesIcon",
+            "Private" => "PrivateIcon",
+            "Parent" => "FilesIcon",
+            "Type" => "TypeIcon",
+            "Member" => "MemberIcon",
+            _ => "ModuleIcon",
+        };
 
     public override string ToString() => Text;
 }
-

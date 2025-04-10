@@ -34,7 +34,8 @@ class FileService : IFileService
 
     public async Task<bool> Exists(string path)
     {
-        if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName))) return false;
+        if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName)))
+            return false;
         return paths.Contains(path);
     }
 
@@ -93,14 +94,16 @@ class FileService : IFileService
         if (path.StartsWith(WebFilesPrefix))
         {
             Log.Info("Reading Web File:", path);
-            if (!streamsByName.TryGetValue(path, out var webFileStream)) return R.None;
+            if (!streamsByName.TryGetValue(path, out var webFileStream))
+                return R.None;
 
             streamsByName.Remove(path);
             webFileStream.Seek(0, SeekOrigin.Begin);
             return webFileStream;
         }
 
-        if (!Try(out var fileStream, out var e, () => File.OpenRead(path))) return e;
+        if (!Try(out var fileStream, out var e, () => File.OpenRead(path)))
+            return e;
         return fileStream;
     }
 

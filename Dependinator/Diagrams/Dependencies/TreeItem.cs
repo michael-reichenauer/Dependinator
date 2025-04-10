@@ -16,9 +16,8 @@ class TreeItem : TreeItemData<TreeItem>
     public TreeItem? Parent { get; init; }
     public NodeId NodeId { get; init; } = NodeId.Empty!;
 
-    public override List<TreeItemData<TreeItem>>? Children => !areChildrenInitialized && !ChildItems.Any()
-        ? uninitializedChildren
-        : [.. ChildItems];
+    public override List<TreeItemData<TreeItem>>? Children =>
+        !areChildrenInitialized && !ChildItems.Any() ? uninitializedChildren : [.. ChildItems];
 
     public override bool Expanded
     {
@@ -35,10 +34,11 @@ class TreeItem : TreeItemData<TreeItem>
 
     public TreeItem(
         IDependenciesService service,
-         TreeItem? parent,
-         Node node,
-         bool hasChildren,
-         Func<TreeItem, IReadOnlyList<TreeItem>> getChildren)
+        TreeItem? parent,
+        Node node,
+        bool hasChildren,
+        Func<TreeItem, IReadOnlyList<TreeItem>> getChildren
+    )
     {
         Value = this;
         this.service = service;
@@ -48,12 +48,12 @@ class TreeItem : TreeItemData<TreeItem>
         areChildrenInitialized = !hasChildren;
     }
 
-
     public TreeItem AddChildNode(Node node)
     {
         // Check if node already added
         var existingChildItem = FindChildItem(node.Id);
-        if (existingChildItem is not null) return existingChildItem;
+        if (existingChildItem is not null)
+            return existingChildItem;
 
         var newChildItem = CreateTreeItem(service, this, node);
         ChildItems.Add(newChildItem);

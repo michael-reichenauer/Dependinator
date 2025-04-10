@@ -2,10 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-
 namespace Dependinator;
-
-
 
 public static class Build
 {
@@ -18,7 +15,6 @@ public static class Build
     public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
     public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
     public static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-
 
     public static Version GetVersion() => typeof(Build).Assembly.GetName().Version!;
 
@@ -47,8 +43,7 @@ public static class Build
 
     public static string GetCommitId()
     {
-        var attribute = Assembly.GetEntryAssembly()!
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        var attribute = Assembly.GetEntryAssembly()!.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
 
         if (attribute?.InformationalVersion != null)
         {
