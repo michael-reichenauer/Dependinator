@@ -1,8 +1,9 @@
-﻿@using Dependinator.Diagrams.Dependencies
+﻿@using Dependinator.DiagramIcons
+@using Dependinator.Diagrams.Dependencies
 
 @inject IApplicationEvents applicationEvents
 @inject IInteractionService interactionService
-@inject IDialogService DialogService
+@inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
 
 
@@ -15,8 +16,8 @@
             OnClick="ShowProperties">Properties ...</MudMenuItem>
     </MudMenu>
     
-    <MudIconButton Icon="@DependenciesService.References" OnClick="ShowReferences"  />
-    <MudIconButton Icon="@DependenciesService.Dependencies" OnClick="ShowDependencies"  />
+    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences"  />
+    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies"  />
    
     <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" Disabled="@isIcon"/>
     <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit" Disabled="@isIcon"
@@ -31,14 +32,11 @@
         $"Position: fixed; left:{interactionService.SelectedNodePosition.X}px; top:{interactionService.SelectedNodePosition.Y - 55}px";
     
     void ShowProperties()  =>
-        DialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
+        dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
 
-    void ShowReferences() =>  
-        DialogService.ShowAsync<DependenciesTree>(null, DependenciesTree.ReferencesOptions); 
-    void ShowDependencies() => 
-        DialogService.ShowAsync<DependenciesTree>(null, DependenciesTree.DependenciesOptions);
-  
-
+    void ShowReferences() => dependenciesService.ShowReferences();
+    void ShowDependencies() => dependenciesService.ShowDependencies();
+      
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);

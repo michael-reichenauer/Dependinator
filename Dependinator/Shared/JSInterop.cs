@@ -54,7 +54,14 @@ public class JSInterop : IJSInterop, IAsyncDisposable
         if (moduleTask.IsValueCreated)
         {
             IJSObjectReference module = await GetModuleAsync();
-            await module.DisposeAsync();
+            try
+            {
+                await module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Ignore exception when the browser is closed
+            }
         }
     }
 

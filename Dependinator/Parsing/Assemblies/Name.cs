@@ -81,7 +81,12 @@ internal static class Name
 
     static string GetModuleNameImpl(AssemblyDefinition assembly)
     {
-        return GetAdjustedName(assembly.Name.Name);
+        // var name = assembly.MainModule?.FileName is not null
+        //     ? Path.GetFileName(assembly.MainModule.FileName)
+        //     : assembly.Name.Name;
+        string name = assembly.Name.Name;
+
+        return GetAdjustedName(name);
     }
 
 

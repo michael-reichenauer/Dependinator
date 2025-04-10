@@ -17,24 +17,19 @@
     <DialogContent>
         <MudStack>
             <MudPaper Class="overflow-y-auto ml-n8" Elevation="0" MaxWidth="MaxWidth" MaxHeight="500px">
-                <MudTreeView Items="@Tree.TreeItems" Hover="true" Dense="true" Width="100%">
+                <MudTreeView Items="@srv.TreeItems" Hover="true" Dense="true" Width="100%">
                     <ItemTemplate Context="treeItem">
                         @{
                             var item = (TreeItem)treeItem;
                         }
                         <MudTreeViewItem Items="@item.Children" Icon="@item.Icon"
-                            OnClick="item.ItemClicked" @bind-Expanded="@item.Expanded">
+                            OnClick="() => srv.SetSelected(item.Value!)" @bind-Expanded="@item.Expanded">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
                                     class="hover-element">
-                                    @if (item.IsSelected)
-                                    {
-                                        <MudText Style="justify-self: start;background:#3e2b5c">@treeItem.Text</MudText>
-                                    }
-                                    else
-                                    {
-                                        <MudText Style="justify-self: start;">@item.Text</MudText>
-                                    }
+         
+                                    <MudText Style="justify-self: start;">@item.Text</MudText>
+                                    
                                     <div style="justify-self: end;">
                                         <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
                                             Color="Color.Inherit" Class="ml-3 hover-button"
@@ -54,21 +49,13 @@
 
 
 @code {
-    public static DialogOptions ReferencesOptions = new () 
-        {  NoHeader = true, CloseOnEscapeKey = true, Position = DialogPosition.Custom };
-    public static DialogOptions DependenciesOptions = new () 
-        {  NoHeader = true, CloseOnEscapeKey = true, Position = DialogPosition.Custom };
-   
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
-
+   
     string NodeToolBarPosition => 
         $"Position: fixed; left:{interactionService.SelectedNodePosition.X + 40}px; top:{interactionService.SelectedNodePosition.Y - 20}px";
     
-
     int MaxHeight => (int)screenService.SvgRect.Height - 5;
     int MaxWidth => (int)screenService.SvgRect.Width - 20;
-
-    Tree Tree => srv.TreeData();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

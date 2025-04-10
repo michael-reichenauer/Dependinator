@@ -30,6 +30,7 @@ class Node : IItem
     public string Name { get; }
     public Node Parent { get; private set; }
     public NodeType Type { get; set; } = NodeType.None;
+    public string Icon => Type.Text;
 
     public string Description { get; set; } = "";
     public string Color { get; set; } = "";

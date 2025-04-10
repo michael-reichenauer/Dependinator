@@ -5,28 +5,19 @@ namespace Dependinator.Diagrams.Dependencies;
 
 class TreeItem : TreeItemData<TreeItem>
 {
-    static readonly TreeItemData<TreeItem> uninitializedChild = new TreeItem(null!, null, null, false);
-    static readonly List<TreeItemData<TreeItem>> unitializedChildren = [uninitializedChild];
-
+    static readonly List<TreeItemData<TreeItem>> uninitializedChildren = [new TreeItem()];
+    private readonly IDependenciesService service;
+    private readonly Func<TreeItem, IReadOnlyList<TreeItem>> getChildren;
     bool isExpanded;
-    bool HasTreeItemChildren;
-    bool IsChildrenInitialized;
+    bool areChildrenInitialized = true;
 
-
-    public List<TreeItem> ChildItems { get; private set; } = [];
-
-    public bool IsSelected { get; private set; }
-    public bool isChildSelected { get; private set; }
-
-    public override string? Text { get; set; }
-    public override string? Icon { get; set; }
-    public Tree Tree { get; private set; } = null!;
+    public IReadOnlyList<TreeItem> ChildItems { get; private set; } = [];
 
     public TreeItem? Parent { get; init; }
-    public NodeId NodeId { get; init; }
+    public NodeId NodeId { get; init; } = NodeId.Empty!;
 
-    public override List<TreeItemData<TreeItem>>? Children => !IsChildrenInitialized && !ChildItems.Any()
-        ? unitializedChildren
+    public override List<TreeItemData<TreeItem>>? Children => !areChildrenInitialized && !ChildItems.Any()
+        ? uninitializedChildren
         : [.. ChildItems];
 
     public override bool Expanded
@@ -34,40 +25,27 @@ class TreeItem : TreeItemData<TreeItem>
         get => isExpanded;
         set
         {
-            if (!IsChildrenInitialized)
-            {
-                InitializeChildrenItems();
-                if (!value) return;  // Do not collapse if children where not yet initialized
-            }
-
             isExpanded = value;
+            if (isExpanded && !areChildrenInitialized)
+                InitializeChildrenItems();
         }
     }
 
-    public TreeItem(Tree tree, TreeItem? parent, Node? node, bool hasChildren)
+    public TreeItem() { }
+
+    public TreeItem(
+        IDependenciesService service,
+         TreeItem? parent,
+         Node node,
+         bool hasChildren,
+         Func<TreeItem, IReadOnlyList<TreeItem>> getChildren)
     {
-        Tree = tree;
+        Value = this;
+        this.service = service;
         Parent = parent;
-        if (node == null)
-        {
-            NodeId = NodeId.Empty;
-            HasTreeItemChildren = false;
-            IsChildrenInitialized = true;
-            return;
-        }
-
+        this.getChildren = getChildren;
         NodeId = node.Id;
-        HasTreeItemChildren = hasChildren; //tree.HasTreeItemChildren(node);
-        IsChildrenInitialized = !HasTreeItemChildren;
-    }
-
-    public void ItemClicked() => Tree.SelectedItem = this;
-
-
-
-    public void SetIsSelected(bool isSelected)
-    {
-        Selected = isSelected;
+        areChildrenInitialized = !hasChildren;
     }
 
 
@@ -75,14 +53,14 @@ class TreeItem : TreeItemData<TreeItem>
     {
         // Check if node already added
         var existingChildItem = FindChildItem(node.Id);
-        if (existingChildItem != null) return existingChildItem;
+        if (existingChildItem is not null) return existingChildItem;
 
-        var newChildItem = CreateTreeItem(Tree, this, node);
+        var newChildItem = CreateTreeItem(service, this, node);
         ChildItems.Add(newChildItem);
 
         if ((node.Parent?.Children?.Count ?? 0) == ChildItems.Count)
         {
-            IsChildrenInitialized = true;
+            areChildrenInitialized = true;
         }
 
         return newChildItem;
@@ -92,10 +70,10 @@ class TreeItem : TreeItemData<TreeItem>
 
     public void ShowTreeItem() => this.Ancestors().ForEach(a => a.isExpanded = true);
 
-    public static TreeItem CreateTreeItem(Tree tree, TreeItem? parent, Node node)
+    public static TreeItem CreateTreeItem(IDependenciesService service, TreeItem? parent, Node node)
     {
         var hasChildren = node.Children.Any();
-        return new(tree, parent, node, hasChildren)
+        return new(service, parent, node, hasChildren, null!)
         {
             Text = node.IsRoot ? "<all>" : node.ShortName,
             Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),
@@ -104,12 +82,12 @@ class TreeItem : TreeItemData<TreeItem>
 
     void InitializeChildrenItems()
     {
-        Log.Info($"IntializeChildrenItems: {NodeId}, ");
-        ChildItems = [];
-        Tree.Service.GetChildren(NodeId)
-            .Where(Tree.IsNodeIncluded)
-            .ForEach(child => AddChildNode(child));
-        IsChildrenInitialized = true;
+        Log.Info($"InitializeChildrenItems: {NodeId}, ");
+        ChildItems = getChildren(this) ?? [];
+
+        // service.GetChildren(NodeId)
+        //     .ForEach(child => AddChildNode(child));
+        areChildrenInitialized = true;
     }
 
     IEnumerable<TreeItem> Ancestors()
