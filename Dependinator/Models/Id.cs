@@ -3,7 +3,6 @@ using System.Text;
 
 namespace Dependinator.Models;
 
-
 public record Id(string Value)
 {
     private static readonly char[] Base62Chars =
@@ -33,11 +32,15 @@ public record Id(string Value)
 public record NodeId : Id
 {
     public static NodeId Empty = new("");
-    private NodeId(string Value) : base(Value) { }
+
+    private NodeId(string Value)
+        : base(Value) { }
+
     public static NodeId FromName(string name) => new(ToId(name));
+
     public static NodeId FromId(string id) => new(id);
 }
 
 public record LinkId(string sourceName, string targetName) : Id(Id.ToId($"{sourceName}->{targetName}"));
-public record LineId(string sourceName, string targetName) : Id(Id.ToId($"{sourceName}=>{targetName}"));
 
+public record LineId(string sourceName, string targetName) : Id(Id.ToId($"{sourceName}=>{targetName}"));

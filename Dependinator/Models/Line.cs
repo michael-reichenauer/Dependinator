@@ -28,10 +28,8 @@ class Line : IItem
         }
     }
 
-
     public string Color { get; set; } = "red";
     public double StrokeWidth { get; set; } = 2.0;
-
 
     public void Add(Link link)
     {
@@ -44,7 +42,6 @@ class Line : IItem
 
         return new LinePos(s.X + s.Width, s.Y + s.Height / 2, t.X, t.Y + t.Height / 2);
     }
-
 
     public override string ToString() => $"{Source}->{Target} ({links.Count})";
 }

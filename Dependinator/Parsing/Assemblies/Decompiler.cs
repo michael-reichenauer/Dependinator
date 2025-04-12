@@ -3,8 +3,6 @@ using ICSharpCode.Decompiler.CSharp;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-
-
 namespace Dependinator.Parsing.Assemblies;
 
 class Decompiler
@@ -40,12 +38,12 @@ class Decompiler
         return R.Error("Failed to locate source for:\n{nodeName}");
     }
 
-
     public bool TryGetNodeNameForSourceFile(
         ModuleDefinition module,
         IEnumerable<TypeDefinition> assemblyTypes,
         string sourceFilePath,
-        out string nodeName)
+        out string nodeName
+    )
     {
         foreach (TypeDefinition type in assemblyTypes)
         {
@@ -63,9 +61,7 @@ class Decompiler
         return false;
     }
 
-
-    static bool TryGetType(
-       ModuleDefinition module, string nodeName, out TypeDefinition type)
+    static bool TryGetType(ModuleDefinition module, string nodeName, out TypeDefinition type)
     {
         // The type starts after the module name, which is after the first '.'
         int typeIndex = nodeName.IndexOf(".");
@@ -82,9 +78,7 @@ class Decompiler
         return false;
     }
 
-
-    static bool TryGetMember(
-       ModuleDefinition module, string nodeName, out IMemberDefinition member)
+    static bool TryGetMember(ModuleDefinition module, string nodeName, out IMemberDefinition member)
     {
         // The type starts after the module name, which is after the first '.'
         int typeIndex = nodeName.IndexOf(".");
@@ -102,8 +96,7 @@ class Decompiler
 
                 TypeDefinition typeDefinition = module.GetType(typeName);
 
-                if (typeDefinition != null
-                    && TryGetMember(typeDefinition, nodeName, out member))
+                if (typeDefinition != null && TryGetMember(typeDefinition, nodeName, out member))
                 {
                     return true;
                 }
@@ -114,44 +107,38 @@ class Decompiler
         return false;
     }
 
-
-    static bool TryGetMember(
-       TypeDefinition typeDefinition, string fullName, out IMemberDefinition member)
+    static bool TryGetMember(TypeDefinition typeDefinition, string fullName, out IMemberDefinition member)
     {
-        if (TryGetMethod(typeDefinition, fullName, out member)) return true;
+        if (TryGetMethod(typeDefinition, fullName, out member))
+            return true;
 
-        if (TryGetProperty(typeDefinition, fullName, out member)) return true;
+        if (TryGetProperty(typeDefinition, fullName, out member))
+            return true;
 
-        if (TryGetField(typeDefinition, fullName, out member)) return true;
+        if (TryGetField(typeDefinition, fullName, out member))
+            return true;
 
         member = default!;
         return false;
     }
 
-
-    static bool TryGetMethod(
-       TypeDefinition type, string fullName, out IMemberDefinition method)
+    static bool TryGetMethod(TypeDefinition type, string fullName, out IMemberDefinition method)
     {
         method = type.Methods.FirstOrDefault(m => Name.GetMethodFullName(m) == fullName)!;
         return method != null;
     }
 
-
-    static bool TryGetProperty(
-       TypeDefinition type, string fullName, out IMemberDefinition property)
+    static bool TryGetProperty(TypeDefinition type, string fullName, out IMemberDefinition property)
     {
         property = type.Properties.FirstOrDefault(m => Name.GetMemberFullName(m) == fullName)!;
         return property != null;
     }
 
-
-    static bool TryGetField(
-       TypeDefinition type, string fullName, out IMemberDefinition field)
+    static bool TryGetField(TypeDefinition type, string fullName, out IMemberDefinition field)
     {
         field = type.Fields.FirstOrDefault(m => Name.GetMemberFullName(m) == fullName)!;
         return field != null;
     }
-
 
     static string GetDecompiledText(ModuleDefinition module, TypeDefinition type)
     {
@@ -159,7 +146,6 @@ class Decompiler
         // CSharpDecompiler decompiler = GetDecompiler(module);
         // return DecompiledText + decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
     }
-
 
     private static string GetDecompiledText(ModuleDefinition module, IMemberDefinition member)
     {
@@ -184,7 +170,6 @@ class Decompiler
         return false;
     }
 
-
     bool TryGetFilePath(IMemberDefinition member, out Parsing.Source source)
     {
         if (member is MethodDefinition method)
@@ -200,12 +185,9 @@ class Decompiler
         return TryGetFilePath(member.DeclaringType, out source);
     }
 
-
     static Source ToFileLocation(SequencePoint sequencePoint) =>
         new Source(sequencePoint.Document.Url, "", sequencePoint.StartLine);
-
 
     static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>
         new CSharpDecompiler(module.FileName, new DecompilerSettings(LanguageVersion.Latest));
 }
-

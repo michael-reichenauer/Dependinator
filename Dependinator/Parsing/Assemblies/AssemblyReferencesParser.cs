@@ -1,6 +1,5 @@
-﻿using Mono.Cecil;
-using System.Threading.Channels;
-
+﻿using System.Threading.Channels;
+using Mono.Cecil;
 
 namespace Dependinator.Parsing.Assemblies;
 
@@ -9,23 +8,20 @@ internal class AssemblyReferencesParser
     readonly LinkHandler linkHandler;
     readonly ChannelWriter<IItem> items;
 
-
     public AssemblyReferencesParser(LinkHandler linkHandler, ChannelWriter<IItem> items)
     {
         this.linkHandler = linkHandler;
         this.items = items;
     }
 
-
-    public async Task AddReferencesAsync(
-        AssemblyDefinition assembly,
-        IReadOnlyList<string> internalModules)
+    public async Task AddReferencesAsync(AssemblyDefinition assembly, IReadOnlyList<string> internalModules)
     {
         string sourceAssemblyName = Name.GetModuleName(assembly);
 
         var externalReferences = GetExternalAssemblyReferences(assembly, internalModules);
 
-        if (!externalReferences.Any()) return;
+        if (!externalReferences.Any())
+            return;
 
         string referencesRootName = await SendReferencesRootNodeAsync();
         foreach (AssemblyNameReference reference in externalReferences)
@@ -41,28 +37,22 @@ internal class AssemblyReferencesParser
         }
     }
 
-
     public static IReadOnlyList<string> GetReferencesPaths(
         string assemblyPath,
         AssemblyDefinition assembly,
-        IReadOnlyList<string> internalModules)
+        IReadOnlyList<string> internalModules
+    )
     {
         string folderPath = Path.GetDirectoryName(assemblyPath) ?? "";
         var assemblyReferences = GetExternalAssemblyReferences(assembly, internalModules);
 
-        return assemblyReferences
-            .Select(reference => AssemblyFileName(reference, folderPath))
-            .ToList();
+        return assemblyReferences.Select(reference => AssemblyFileName(reference, folderPath)).ToList();
     }
 
+    static string AssemblyFileName(AssemblyNameReference reference, string folderPath) =>
+        Path.Combine(folderPath, $"{GetAssemblyName(reference)}.dll");
 
-    static string AssemblyFileName(AssemblyNameReference reference, string folderPath)
-       => Path.Combine(folderPath, $"{GetAssemblyName(reference)}.dll");
-
-
-    static string GetAssemblyName(AssemblyNameReference reference)
-       => Name.GetModuleName(reference).Replace("*", ".");
-
+    static string GetAssemblyName(AssemblyNameReference reference) => Name.GetModuleName(reference).Replace("*", ".");
 
     async Task<string> SendReferencesRootNodeAsync()
     {
@@ -72,7 +62,6 @@ internal class AssemblyReferencesParser
         await items.WriteAsync(referencesRootNode);
         return referencesRootName;
     }
-
 
     async Task<string> GetReferenceParentAsync(string parent, string referenceName)
     {
@@ -92,15 +81,14 @@ internal class AssemblyReferencesParser
         return parent;
     }
 
-
     static IReadOnlyList<AssemblyNameReference> GetExternalAssemblyReferences(
-       AssemblyDefinition assembly,
-       IReadOnlyList<string> internalModules)
+        AssemblyDefinition assembly,
+        IReadOnlyList<string> internalModules
+    )
     {
-        return assembly.MainModule.AssemblyReferences
-            .Where(reference => !IgnoredTypes.IsSystemIgnoredModuleName(reference.Name))
+        return assembly
+            .MainModule.AssemblyReferences.Where(reference => !IgnoredTypes.IsSystemIgnoredModuleName(reference.Name))
             .Where(reference => !internalModules.Contains(Name.GetModuleName(reference)))
             .ToList();
     }
 }
-

@@ -4,8 +4,6 @@
 
 
 <NodeToolbar />
-<DependenciesExplorer />
-
 
 <div @ref="dropZoneElement" class="drop-zone">
     <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
@@ -13,13 +11,13 @@
         <style>
             svg {
                 cursor:
-            @Cursor
+                    @Cursor
                 ;
             }
 
             .hoverable:hover * {
                 stroke:
-            @Coloring.Highlight
+                    @Coloring.Highlight
                 ;
                 stroke-width: 4px;
                 stroke-opacity: 1;
@@ -27,7 +25,7 @@
 
             .hoverableedit:hover * {
                 stroke:
-            @Coloring.EditNode
+                    @Coloring.EditNode
                 ;
                 stroke-width: 4px;
                 stroke-opacity: 1;

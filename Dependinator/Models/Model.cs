@@ -1,6 +1,5 @@
 namespace Dependinator.Models;
 
-
 interface IModel : IDisposable
 {
     string Path { get; set; }
@@ -10,7 +9,7 @@ interface IModel : IDisposable
     double Zoom { get; set; }
     Pos Offset { get; set; }
     Tiles Tiles { get; }
-    IDictionary<Id, IItem> Items { get; }   // Ta bort
+    IDictionary<Id, IItem> Items { get; } // Ta bort
     bool IsSaving { get; set; }
     DateTime ModifiedTime { get; set; }
     CancellationTokenSource SaveCancelSource { get; set; }
@@ -27,7 +26,6 @@ interface IModel : IDisposable
     void ClearCachedSvg();
     bool ContainsKey(Id linkId);
 }
-
 
 [Scoped]
 class Model : IModel
@@ -104,20 +102,19 @@ class Model : IModel
         return true;
     }
 
-
     public void AddNode(Node node)
     {
-        if (Items.ContainsKey(node.Id)) return;
+        if (Items.ContainsKey(node.Id))
+            return;
         Items[node.Id] = node;
     }
 
     public Node GetNode(NodeId id) => (Node)Items[id];
 
-
-
     public void AddLink(Link link)
     {
-        if (Items.ContainsKey(link.Id)) return;
+        if (Items.ContainsKey(link.Id))
+            return;
         Items[link.Id] = link;
     }
 
@@ -134,13 +131,12 @@ class Model : IModel
         return true;
     }
 
-
     public void AddLine(Line line)
     {
-        if (Items.ContainsKey(line.Id)) return;
+        if (Items.ContainsKey(line.Id))
+            return;
         Items[line.Id] = line;
     }
-
 
     public void Clear()
     {
@@ -167,10 +163,11 @@ class Model : IModel
         Items[Root.Id] = Root;
     }
 
-    static Node DefaultRootNode() => new("", null!)
-    {
-        Type = NodeType.Root,
-        Boundary = new Rect(0, 0, 1000, 1000),
-        ContainerZoom = 1
-    };
+    static Node DefaultRootNode() =>
+        new("", null!)
+        {
+            Type = NodeType.Root,
+            Boundary = new Rect(0, 0, 1000, 1000),
+            ContainerZoom = 1,
+        };
 }

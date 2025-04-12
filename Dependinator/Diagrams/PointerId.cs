@@ -13,18 +13,19 @@ record PointerId(string ElementId, string Id, string SubId)
         return new(elementId, id, subId);
     }
 
-    public bool IsResize => SubId switch
-    {
-        "tl" => true,
-        "tm" => true,
-        "tr" => true,
-        "ml" => true,
-        "mr" => true,
-        "bl" => true,
-        "bm" => true,
-        "br" => true,
-        _ => false
-    };
+    public bool IsResize =>
+        SubId switch
+        {
+            "tl" => true,
+            "tm" => true,
+            "tr" => true,
+            "ml" => true,
+            "mr" => true,
+            "bl" => true,
+            "bm" => true,
+            "br" => true,
+            _ => false,
+        };
 
     public bool IsIcon => SubId == "i";
     public bool IsContainer => SubId == "c";

@@ -38,7 +38,6 @@ public static class EnumerableExtensions
         }
     }
 
-
     // Returns a concatenated string of all items in the string enumeration
     // Same result as calling string.Join(separator, source)
     public static string Join(this IEnumerable<string> source, string separator)
@@ -48,12 +47,16 @@ public static class EnumerableExtensions
 
     // Returns a concatenated string of all items in the enumeration after applying transform
     // Same result as calling string.Join(separator, source.Select(transform)
-    public static string JoinBy<TSource>(this IEnumerable<TSource> source, Func<TSource, string> transform, string separator)
+    public static string JoinBy<TSource>(
+        this IEnumerable<TSource> source,
+        Func<TSource, string> transform,
+        string separator
+    )
     {
         return string.Join(separator, source.Select(transform));
     }
 
-    // Returns a concatenated string of all items in the string enumeration 
+    // Returns a concatenated string of all items in the string enumeration
     // Same result as calling string.Join(separator, source)
     public static string Join(this IEnumerable<string> source, char separator)
     {
@@ -62,7 +65,11 @@ public static class EnumerableExtensions
 
     // Returns a concatenated string of all items in the string enumeration after applying transform
     // Same result as calling string.Join(separator, source)
-    public static string Join<TSource>(this IEnumerable<TSource> source, Func<TSource, string> transform, char separator)
+    public static string Join<TSource>(
+        this IEnumerable<TSource> source,
+        Func<TSource, string> transform,
+        char separator
+    )
     {
         return string.Join(separator, source.Select(transform));
     }
@@ -137,18 +144,18 @@ public static class EnumerableExtensions
         return -1;
     }
 
-
     // Returns elements from a sequence by concatenating the params parameters
     public static IEnumerable<TSource> Add<TSource>(this IEnumerable<TSource> source, params TSource[] items)
     {
         return source.Concat(items);
     }
 
-
-    // Returns distinct elements from a sequence by using a specified 
+    // Returns distinct elements from a sequence by using a specified
     // predicate to compare values of two elements.
-    public static IEnumerable<TSource> DistinctBy<TSource>(this IEnumerable<TSource> source,
-        Func<TSource, TSource, bool> comparer)
+    public static IEnumerable<TSource> DistinctBy<TSource>(
+        this IEnumerable<TSource> source,
+        Func<TSource, TSource, bool> comparer
+    )
     {
         if (source == null)
         {
@@ -163,7 +170,6 @@ public static class EnumerableExtensions
         // Use the MSDN provided Distinct function with a private custom IEqualityComparer comparer.
         return source.Distinct(new DistinctComparer<TSource>(comparer));
     }
-
 
     class DistinctComparer<TSource> : IEqualityComparer<TSource>
     {

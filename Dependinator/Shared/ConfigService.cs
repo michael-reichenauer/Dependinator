@@ -1,6 +1,5 @@
 namespace Dependinator.Shared;
 
-
 class Config
 {
     public List<string> RecentPaths { get; set; } = [];
@@ -11,7 +10,6 @@ interface IConfigService
     Task<Config> GetAsync();
     Task SetAsync(Action<Config> updateAction);
 }
-
 
 [Transient]
 class ConfigService : IConfigService
@@ -28,7 +26,7 @@ class ConfigService : IConfigService
     public async Task<Config> GetAsync()
     {
         if (!Try(out var config, out var e, await fileService.ReadAsync<Config>(ConfigPath)))
-        {   // Return default config values
+        { // Return default config values
             return new Config();
         }
         return config;
@@ -37,7 +35,7 @@ class ConfigService : IConfigService
     public async Task SetAsync(Action<Config> updateAction)
     {
         if (!Try(out var config, out var e, await fileService.ReadAsync<Config>(ConfigPath)))
-        {   // Use default config values
+        { // Use default config values
             config = new Config();
         }
         updateAction(config);

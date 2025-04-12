@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 
-
 namespace Dependinator.Utils;
 
 /// <summary>
@@ -12,7 +11,8 @@ internal static class Reflection
     public static R<Type> GetType(Assembly assembly, string typeName)
     {
         var type = assembly.GetType(typeName);
-        if (type == null) return R.Error($"Failed to get type '{typeName}'");
+        if (type == null)
+            return R.Error($"Failed to get type '{typeName}'");
         return type;
     }
 
@@ -21,10 +21,8 @@ internal static class Reflection
             .Select(f => f.GetValue(null))
             .Cast<T>();
 
-    public static IEnumerable<string> GetPublicFieldNames<T>() => typeof(T)
-        .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
-        .Select(f => f.Name);
-
+    public static IEnumerable<string> GetPublicFieldNames<T>() =>
+        typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly).Select(f => f.Name);
 
     // public static R<object> Create(Type type, params object[] parameters)
     // {
@@ -102,4 +100,3 @@ internal static class Reflection
     //         .GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
     // }
 }
-

@@ -15,31 +15,30 @@ internal class SolutionParserService : IParser
 
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".sln");
 
-
     public async Task<R> ParseAsync(string path, ChannelWriter<IItem> items)
     {
         using var solutionParser = new SolutionParser(path, items, false, fileService);
-        if (!Try(out var e, await solutionParser.ParseAsync())) return e;
+        if (!Try(out var e, await solutionParser.ParseAsync()))
+            return e;
         return R.Ok;
     }
-
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
         using var solutionParser = new SolutionParser(path, null!, true, fileService);
-        if (!Try(out var source, out var e, await solutionParser.TryGetSourceAsync(nodeName))) return e;
+        if (!Try(out var source, out var e, await solutionParser.TryGetSourceAsync(nodeName)))
+            return e;
 
         return source;
     }
 
-
     public async Task<R<string>> GetNodeAsync(string path, Source source)
     {
         using var solutionParser = new SolutionParser(path, null!, true, fileService);
-        if (!Try(out var nodeName, out var e, await solutionParser.TryGetNodeAsync(source))) return e;
+        if (!Try(out var nodeName, out var e, await solutionParser.TryGetNodeAsync(source)))
+            return e;
         return nodeName;
     }
-
 
     public DateTime GetDataTime(string path)
     {
@@ -58,4 +57,3 @@ internal class SolutionParserService : IParser
         return time != DateTime.MaxValue ? time : DateTime.MinValue;
     }
 }
-

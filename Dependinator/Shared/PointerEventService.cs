@@ -1,6 +1,5 @@
 using Microsoft.JSInterop;
 
-
 namespace Dependinator.Shared;
 
 interface IPointerEventService
@@ -14,7 +13,6 @@ interface IPointerEventService
 
     Task InitAsync();
 }
-
 
 [Scoped]
 class PointerEventService : IPointerEventService
@@ -31,16 +29,12 @@ class PointerEventService : IPointerEventService
     PointerEvent pointerDown = new();
     DateTime pointerDownTime = DateTime.MinValue;
 
-
-    public PointerEventService(
-        IJSInterop jSInterop,
-        IApplicationEvents applicationEvents)
+    public PointerEventService(IJSInterop jSInterop, IApplicationEvents applicationEvents)
     {
         clickTimer = new Timer(OnLeftClickTimer, null, Timeout.Infinite, Timeout.Infinite);
         this.jSInterop = jSInterop;
         this.applicationEvents = applicationEvents;
     }
-
 
     public event Action<PointerEvent> Wheel = null!;
     public event Action<PointerEvent> PointerMove = null!;
@@ -49,19 +43,35 @@ class PointerEventService : IPointerEventService
     public event Action<PointerEvent> Click = null!;
     public event Action<PointerEvent> DblClick = null!;
 
-
     public async Task InitAsync()
     {
         await jSInterop.Call("preventDefaultTouchEvents", "svgcanvas");
 
         var objRef = jSInterop.Reference(this);
         await jSInterop.Call("addMouseEventListener", "svgcanvas", "wheel", objRef, nameof(MouseEventCallback));
-        await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointerdown", objRef, nameof(PointerEventCallback));
-        await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointermove", objRef, nameof(PointerEventCallback));
+        await jSInterop.Call(
+            "addPointerEventListener",
+            "svgcanvas",
+            "pointerdown",
+            objRef,
+            nameof(PointerEventCallback)
+        );
+        await jSInterop.Call(
+            "addPointerEventListener",
+            "svgcanvas",
+            "pointermove",
+            objRef,
+            nameof(PointerEventCallback)
+        );
         await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointerup", objRef, nameof(PointerEventCallback));
-        await jSInterop.Call("addPointerEventListener", "svgcanvas", "pointercancel", objRef, nameof(PointerEventCallback));
+        await jSInterop.Call(
+            "addPointerEventListener",
+            "svgcanvas",
+            "pointercancel",
+            objRef,
+            nameof(PointerEventCallback)
+        );
     }
-
 
     [JSInvokable]
     public ValueTask MouseEventCallback(PointerEvent e)
@@ -69,13 +79,14 @@ class PointerEventService : IPointerEventService
         // Log.Info($"MouseEventCallback: '{e.ToJson()}'");
         switch (e.Type)
         {
-            case "wheel": OnMouseWheelEvent(e); break;
+            case "wheel":
+                OnMouseWheelEvent(e);
+                break;
         }
 
         applicationEvents.TriggerUIStateChanged();
         return ValueTask.CompletedTask;
     }
-
 
     [JSInvokable]
     public ValueTask PointerEventCallback(PointerEvent e)
@@ -83,10 +94,18 @@ class PointerEventService : IPointerEventService
         // Log.Info($"PointerEventCallback: {e.Time} {e.Type} {e.PointerId} {e.PointerType} on {e.TargetId}'");
         switch (e.Type)
         {
-            case "pointerdown": OnPointerDownEvent(e); break;
-            case "pointermove": OnPointerMoveEvent(e); break;
-            case "pointerup": OnPoinerUpEvent(e); break;
-            case "pointercancel": OnPoinerUpEvent(e); break;
+            case "pointerdown":
+                OnPointerDownEvent(e);
+                break;
+            case "pointermove":
+                OnPointerMoveEvent(e);
+                break;
+            case "pointerup":
+                OnPoinerUpEvent(e);
+                break;
+            case "pointercancel":
+                OnPoinerUpEvent(e);
+                break;
         }
 
         applicationEvents.TriggerUIStateChanged();
@@ -159,17 +178,18 @@ class PointerEventService : IPointerEventService
         }
     }
 
-
     void OnPoinerUpEvent(PointerEvent e)
     {
         activePointers.Remove(e.PointerId);
 
         PointerUp?.Invoke(e);
 
-        if (e.Button == 0 &&
-            Math.Abs(e.OffsetX - pointerDown.OffsetX) < 5 &&
-            Math.Abs(e.OffsetY - pointerDown.OffsetY) < 5
-            && (DateTime.UtcNow - pointerDownTime).TotalMilliseconds < ClickTimeout)
+        if (
+            e.Button == 0
+            && Math.Abs(e.OffsetX - pointerDown.OffsetX) < 5
+            && Math.Abs(e.OffsetY - pointerDown.OffsetY) < 5
+            && (DateTime.UtcNow - pointerDownTime).TotalMilliseconds < ClickTimeout
+        )
         {
             Log.Info("on click");
             OnLeftClickEvent(e);
@@ -185,7 +205,7 @@ class PointerEventService : IPointerEventService
     {
         pointerDown = e;
         if (!timerRunning)
-        {   // This is the first click, start the timer
+        { // This is the first click, start the timer
             timerRunning = true;
             Click?.Invoke(pointerDown);
             clickTimer.Change(ClickDelay, Timeout.Infinite);

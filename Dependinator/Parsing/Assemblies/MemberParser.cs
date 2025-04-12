@@ -1,5 +1,5 @@
-﻿using Mono.Cecil;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
+using Mono.Cecil;
 
 namespace Dependinator.Parsing.Assemblies;
 
@@ -15,7 +15,6 @@ internal class MemberParser
     readonly XmlDocParser xmlDocParser;
     readonly ChannelWriter<IItem> items;
 
-
     public MemberParser(LinkHandler linkHandler, XmlDocParser xmlDocParser, ChannelWriter<IItem> items)
     {
         this.linkHandler = linkHandler;
@@ -25,10 +24,8 @@ internal class MemberParser
         methodParser = new MethodParser(linkHandler);
     }
 
-
     public int IlCount => methodParser.IlCount;
     public int MembersCount { get; private set; } = 0;
-
 
     public async Task AddTypesMembersAsync(IEnumerable<TypeData> typeInfos)
     {
@@ -36,7 +33,6 @@ internal class MemberParser
 
         await methodParser.AddAllMethodBodyLinksAsync();
     }
-
 
     Task AddTypeMembersAsync(TypeData typeData)
     {
@@ -51,34 +47,37 @@ internal class MemberParser
 
         try
         {
-            type.Fields
-                .Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(async member => await AddMemberAsync(
-                    member, typeNode, member.Attributes.HasFlag(FieldAttributes.Private)));
+            type.Fields.Where(member => !Name.IsCompilerGenerated(member.Name))
+                .ForEach(async member =>
+                    await AddMemberAsync(member, typeNode, member.Attributes.HasFlag(FieldAttributes.Private))
+                );
 
-            type.Events
-                .Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(async member => await AddMemberAsync(
-                    member,
-                    typeNode,
-                    (member.AddMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true) &&
-                    (member.RemoveMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)));
+            type.Events.Where(member => !Name.IsCompilerGenerated(member.Name))
+                .ForEach(async member =>
+                    await AddMemberAsync(
+                        member,
+                        typeNode,
+                        (member.AddMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
+                            && (member.RemoveMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
+                    )
+                );
 
-            type.Properties
-                .Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(async member => await AddMemberAsync(
-                    member,
-                    typeNode,
-                    (member.GetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true) &&
-                    (member.SetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)));
+            type.Properties.Where(member => !Name.IsCompilerGenerated(member.Name))
+                .ForEach(async member =>
+                    await AddMemberAsync(
+                        member,
+                        typeNode,
+                        (member.GetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
+                            && (member.SetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
+                    )
+                );
 
-            type.Methods
-                .Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(async member => await AddMemberAsync(
-                    member, typeNode, member.Attributes.HasFlag(MethodAttributes.Private)));
+            type.Methods.Where(member => !Name.IsCompilerGenerated(member.Name))
+                .ForEach(async member =>
+                    await AddMemberAsync(member, typeNode, member.Attributes.HasFlag(MethodAttributes.Private))
+                );
 
-            type.Methods
-                .Where(member => Name.IsCompilerGenerated(member.Name))
+            type.Methods.Where(member => Name.IsCompilerGenerated(member.Name))
                 .ForEach(async member => await AddCompilerGeneratedMemberAsync(member, typeNode, type));
         }
         catch (Exception e) when (e.IsNotFatal())
@@ -87,7 +86,6 @@ internal class MemberParser
         }
         return Task.CompletedTask;
     }
-
 
     async Task AddMemberAsync(IMemberDefinition memberInfo, Node parentTypeNode, bool isPrivate)
     {
@@ -125,9 +123,7 @@ internal class MemberParser
         }
     }
 
-
-    Task AddCompilerGeneratedMemberAsync(MethodDefinition memberInfo,
-      Node parentTypeNode, TypeDefinition type)
+    Task AddCompilerGeneratedMemberAsync(MethodDefinition memberInfo, Node parentTypeNode, TypeDefinition type)
     {
         try
         {
@@ -162,7 +158,6 @@ internal class MemberParser
         return Task.CompletedTask;
     }
 
-
     async Task AddMemberLinksAsync(string sourceMemberName, IMemberDefinition member)
     {
         try
@@ -192,7 +187,6 @@ internal class MemberParser
         }
     }
 
-
     static string GetParentName(string fullName)
     {
         // Split full name in name and parent name,
@@ -201,4 +195,3 @@ internal class MemberParser
         return index > -1 ? fullName.Substring(0, index) : "";
     }
 }
-

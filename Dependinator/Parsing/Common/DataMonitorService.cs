@@ -83,13 +83,13 @@
 
 //         if (monitoredFiles.Any(file => file.IsSameIc(fullPath)) && File.Exists(fullPath))
 //         {
-//             // Data file has changed, postpone event a little 
+//             // Data file has changed, postpone event a little
 //             ScheduleDataChange(DataChangedTime);
 //             return;
 //         }
 
 
-//         // Data building event, postpone event a little 
+//         // Data building event, postpone event a little
 //         if (changeDebounce.IsTriggered)
 //         {
 //             ScheduleDataChange(DataChangingTime);
@@ -121,4 +121,3 @@
 //         }
 //     }
 // }
-

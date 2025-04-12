@@ -1,226 +1,201 @@
+using Dependinator.DiagramIcons;
 using Dependinator.Models;
+using MudBlazor;
 
 namespace Dependinator.Diagrams.Dependencies;
 
+public enum TreeType
+{
+    References,
+    Dependencies,
+}
 
 interface IDependenciesService
 {
-    bool IsShowExplorer { get; }
-    bool IsShowTrees { get; }
-    string Icon { get; }
+    string TreeIcon { get; }
+    IReadOnlyList<TreeItem> TreeItems { get; }
 
-    Tree TreeData(TreeSide side);
-
-    void ShowExplorer(TreeSide selectedSide);
-    void ToggleShowTrees();
-    void SwitchSides();
-    void HideExplorer();
+    void SetSelected(TreeItem selectedItem);
     void ShowNode(NodeId nodeId);
+    void ShowReferences();
+    void ShowDependencies();
 }
-
 
 [Scoped]
 class DependenciesService(
+    IDialogService dialogService,
     ISelectionService selectionService,
     IApplicationEvents applicationEvents,
     IModelService modelService,
-    IPanZoomService panZoomService) : IDependenciesService
+    IPanZoomService panZoomService
+) : IDependenciesService
 {
-    public const string Dependencies = MudBlazor.Icons.Material.Outlined.Polyline;
-    public const string References = "<g><rect fill=\"none\" height=\"24\" width=\"24\"/></g><g transform=\"rotate(180,12,12)\"><path d=\"M15,16v1.26l-6-3v-3.17L11.7,8H16V2h-6v4.9L7.3,10H3v6h5l7,3.5V22h6v-6H15z M12,4h2v2h-2V4z M7,14H5v-2h2V14z M19,20h-2v-2 h2V20z\"/></g>";
+    public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
 
-
-    Tree leftTree = null!;
-    Tree rightTree = null!;
-
-    public bool IsShowExplorer { get; private set; }
-    public bool IsShowTrees { get; private set; } = true;
-
-    public string Icon => leftTree?.IsSelected == true ? Dependencies : References;
-
-
-    public Tree TreeData(TreeSide side)
-    {
-        if (side == TreeSide.Left) return leftTree;
-        return rightTree;
-    }
+    public string TreeIcon => true ? Icon.DependenciesIcon : Icon.ReferencesIcon;
 
     public void ShowNode(NodeId nodeId)
     {
-        IsShowTrees = false;
         selectionService.Unselect();
-        applicationEvents.TriggerUIStateChanged();
 
         Pos pos = Pos.None;
         double zoom = 0;
-        if (!modelService.UseNodeN(nodeId, node =>
-        {
-            (pos, zoom) = node.GetCenterPosAndZoom();
-        })) return;
+        if (
+            !modelService.UseNodeN(
+                nodeId,
+                node =>
+                {
+                    (pos, zoom) = node.GetCenterPosAndZoom();
+                }
+            )
+        )
+            return;
+
+        selectionService.Select(new PointerId(nodeId.Value, nodeId.Value, ""));
 
         panZoomService.PanZoomToAsync(pos, zoom).RunInBackground();
     }
 
-    public void ShowExplorer(TreeSide selectedSide)
+    public void SetSelected(TreeItem selectedItem)
     {
+        if (selectedItem is null)
+            return;
+        Log.Info($"ItemSelected: {selectedItem.Text}");
+    }
+
+    public void ShowReferences()
+    {
+        TreeItems = GetTreeItems(TreeType.References);
+
+        var options = new DialogOptions()
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = true,
+            Position = DialogPosition.Custom,
+        };
+        dialogService.ShowAsync<DependenciesTree>(null, options);
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public void ShowDependencies()
+    {
+        TreeItems = GetTreeItems(TreeType.Dependencies);
+
+        var options = new DialogOptions()
+        {
+            NoHeader = true,
+            CloseOnEscapeKey = true,
+            Position = DialogPosition.Custom,
+        };
+        dialogService.ShowAsync<DependenciesTree>(null, options);
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    IReadOnlyList<TreeItem> GetTreeItems(TreeType treeType)
+    {
+        List<TreeItem> treeItems = [];
+        Log.Info($"GetTreeItems: {treeType}");
+
         var selectedId = selectionService.SelectedId.Id;
 
-        ShowNodeExplorer(selectedSide, selectedId);
-    }
-
-    public void ToggleShowTrees()
-    {
-        IsShowTrees = !IsShowTrees;
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-    public void HideExplorer()
-    {
-        IsShowExplorer = false;
-
         using (var model = modelService.UseModel())
         {
-            leftTree = new(this, TreeSide.Left, model.Root);
-            rightTree = new(this, TreeSide.Right, model.Root);
+            if (!model.TryGetNode(selectedId, out var selectedNode))
+                return [];
+
+            var items = GetNodeItems(selectedNode, treeType);
+            treeItems.AddRange(items);
         }
 
-        applicationEvents.TriggerUIStateChanged();
+        return treeItems;
     }
 
-    public void SwitchSides()
+    static IReadOnlyList<TreeItem> GetNodeItems(Node node, TreeType treeType)
     {
-        var tree = leftTree.IsSelected ? leftTree : rightTree;
-        var selectedItem = tree.SelectedItem;
-
-        var selectedId = selectedItem.NodeId;
-        var otherTreeSide = tree.OtherTree.Side;
-        IsShowTrees = true;
-        ShowNodeExplorer(otherTreeSide, selectedId.Value);
-    }
-
-    void ShowNodeExplorer(TreeSide selectedSide, string selectedId)
-    {
-        using (var model = modelService.UseModel())
+        if (treeType == TreeType.References)
         {
-            leftTree = new(this, TreeSide.Left, model.Root);
-            rightTree = new(this, TreeSide.Right, model.Root);
+            return GetNodeReferenceItems(node);
+        }
+        else
+        {
+            return GetNodeDependencyItems(node);
+        }
+    }
 
-            if (!model.TryGetNode(selectedId, out var selectedNode)) return;
+    static IReadOnlyList<TreeItem> GetNodeReferenceItems(Node node)
+    {
+        List<TreeItem> items = [];
 
-            var activeTree = GetActiveTree(selectedSide);
+        foreach (var line in node.TargetLines)
+        {
+            var isToNodeOrChild = line.Links.Any(link => link.Target == node || link.Target.Ancestors().Contains(node));
+            if (!isToNodeOrChild)
+                continue;
 
-            activeTree.IsSelected = true;
-            var selectedItem = activeTree.AddNode(selectedNode);
-            activeTree.SelectedItem = selectedItem;
+            var referenceItems = GetLineReferenceItems(line, line, null);
+            items.AddRange(referenceItems);
+        }
+        if (!items.Any())
+        {
+            items.Add(new TreeItem() { Text = "No references found" });
+        }
+        return items;
+    }
+
+    static IReadOnlyList<TreeItem> GetNodeDependencyItems(Node node)
+    {
+        List<TreeItem> items = [];
+
+        foreach (var line in node.SourceLines)
+        {
+            var isFromNodeOrChild = line.Links.Any(link =>
+                link.Source == node || link.Source.Ancestors().Contains(node)
+            );
+            if (!isFromNodeOrChild)
+                continue;
+
+            var dependencyItems = GetLineDependencyItems(line, line, null);
+            items.AddRange(dependencyItems);
         }
 
-        IsShowExplorer = true;
-        IsShowTrees = true;
-        applicationEvents.TriggerUIStateChanged();
+        if (!items.Any())
+        {
+            items.Add(new TreeItem() { Text = "No dependencies found" });
+        }
+        return items;
     }
 
-
-    public TreeItem ItemSelected(TreeItem selectedItem)
+    static IReadOnlyList<TreeItem> GetLineReferenceItems(Line line, Line rootLine, TreeItem? parentItem)
     {
-        using var model = modelService.UseModel();
-        if (!model.TryGetNode(selectedItem.NodeId, out var selectedNode)) return selectedItem;
+        var sourceTargetLines = line.Source.TargetLines.Where(stl => stl.Links.Any(l => rootLine.Links.Contains(l)));
 
-        var isSwitchSide = !selectedItem.Tree.IsSelected;
-
-        leftTree.ClearSelection();
-        rightTree.ClearSelection();
-
-        if (isSwitchSide)
-        {   // Switching side, lets refresh new selected side items.
-            selectedItem = SetSelectedSideItems(selectedItem, selectedNode, model.Root);
+        if (line.Target.Parent == line.Source)
+        {
+            // If the source is the parent of the target, we need to get the source lines of the source
+            return sourceTargetLines.SelectMany(l => GetLineReferenceItems(l, rootLine, parentItem)).ToList();
         }
 
-        selectedItem.Tree.SetSelectedItem(selectedItem);
+        GetTreeItemChildren? getChildren = sourceTargetLines.Any()
+            ? (itemParent) => [.. sourceTargetLines.SelectMany(tsl => GetLineReferenceItems(tsl, rootLine, itemParent))]
+            : null;
 
-        SetOtherSideItems(selectedItem, selectedNode, model.Root);
-
-        applicationEvents.TriggerUIStateChanged();
-        return selectedItem;
+        return [new TreeItem(line.Source, parentItem, getChildren)];
     }
 
-    Tree GetActiveTree(TreeSide selectedSide) =>
-         selectedSide == TreeSide.Left ? leftTree : rightTree;
-
-    static TreeItem SetSelectedSideItems(TreeItem selectedItem, Node selectedNode, Node root)
+    static IReadOnlyList<TreeItem> GetLineDependencyItems(Line line, Line rootLine, TreeItem? parentItem)
     {
-        var thisTree = selectedItem.Tree;
-        thisTree.EmptyTo(root);
-        selectedItem.Tree.IsSelected = true;
-
-        return thisTree.AddNode(selectedNode);
-    }
-
-    static void SetOtherSideItems(TreeItem selectedItem, Node selectedNode, Node root)
-    {
-        var otherTree = selectedItem.Tree.OtherTree;
-        otherTree.EmptyTo(root);
-
-        // Get all peer noded for seleced node, SelectedPeers 
-        LinkNodes(selectedItem.Tree, selectedNode).ForEach(n =>
+        var targetSourceLines = line.Target.SourceLines.Where(stl => stl.Links.Any(l => rootLine.Links.Contains(l)));
+        if (line.Source.Parent == line.Target)
         {
-            otherTree.SelectedPeers.Add(n.Id);
-            n.Ancestors().ForEach(a => otherTree.SelectedPeers.Add(a.Id));
-        });
+            // If the target is the parent of the source, we need to get the target lines of the target
+            return targetSourceLines.SelectMany(l => GetLineDependencyItems(l, rootLine, parentItem)).ToList();
+        }
 
-        HashSet<NodeId> addedNodes = [];
-        LineNodes(selectedItem.Tree, selectedNode).ForEach(n =>
-        {
-            addedNodes.Add(n.Id);
-            if (selectedNode.Parent == n)
-            {
-                SetOtherAncestorSideItems(selectedItem, selectedNode, n, addedNodes);
-                return;
-            }
+        GetTreeItemChildren? getChildren = targetSourceLines.Any()
+            ? (itemParent) =>
+                [.. targetSourceLines.SelectMany(tsl => GetLineDependencyItems(tsl, rootLine, itemParent))]
+            : null;
 
-            otherTree.AddNode(n);
-        });
-    }
-
-    static void SetOtherAncestorSideItems(TreeItem selectedItem, Node selectedNode, Node otherNode, HashSet<NodeId> addedNodes)
-    {
-        var otherTree = selectedItem.Tree.OtherTree;
-        LineNodes(selectedItem.Tree, otherNode).ForEach(n =>
-        {
-            if (!otherTree.IsNodeIncluded(n)) return;
-            if (addedNodes.Contains(n.Id)) return;
-            addedNodes.Add(n.Id);
-
-            if (selectedNode.Ancestors().Contains(n))
-            {
-                SetOtherAncestorSideItems(selectedItem, selectedNode, n, addedNodes);
-                return;
-            }
-
-            otherTree.AddNode(n);
-        });
-    }
-
-    static IEnumerable<Node> LineNodes(Tree tree, Node node)
-    {
-        if (tree.Side == TreeSide.Left)
-            return node.SourceLines.Select(l => l.Target);
-
-        return node.TargetLines.Select(l => l.Source);
-    }
-
-    static IEnumerable<Node> LinkNodes(Tree tree, Node node)
-    {
-        if (tree.Side == TreeSide.Left)
-            return node.SourceLines.SelectMany(l => l.Links.Select(link => link.Target));
-
-        return node.TargetLines.SelectMany(l => l.Links.Select(link => link.Source));
-    }
-
-    internal IReadOnlyList<Node> GetChildren(NodeId nodeId)
-    {
-        using var model = modelService.UseModel();
-        if (!model.TryGetNode(nodeId, out var node)) return [];
-
-        return node.Children;
+        return [new TreeItem(line.Target, parentItem, getChildren)];
     }
 }

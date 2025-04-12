@@ -1,27 +1,29 @@
-
 namespace Dependinator.Models;
-
 
 record Tile(TileKey Key, string Svg, double Zoom, Pos Offset)
 {
-    public const double ZoomFactor = 1.1;  // How often is a new tile needed when zooming
+    public const double ZoomFactor = 1.1; // How often is a new tile needed when zooming
     public static Tile Empty = new(TileKey.Empty, "", 1.0, Pos.None);
 }
 
 record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
 {
-    private const double Margin = 0.6;    // How much larger than screen needs to be included in tile
+    private const double Margin = 0.6; // How much larger than screen needs to be included in tile
     public static TileKey Empty = new(0L, 0L, 0, 0, 0);
 
     public double GetTileZoom() => Math.Pow(Tile.ZoomFactor, -Z);
+
     public Rect GetTileRect() => new(X * TileWidth, Y * TileHeight, TileWidth, TileHeight);
+
     public Rect GetViewRect() => new(-TileWidth * 2, -TileHeight * 2, TileWidth * 5, TileHeight * 5);
 
-    public Rect GetTileRectWithMargin() => new(
-        -TileWidth * Margin,
-        -TileHeight * Margin,
-        TileWidth + 2 * (TileWidth * Margin),
-        TileHeight + 2 * (TileHeight * Margin));
+    public Rect GetTileRectWithMargin() =>
+        new(
+            -TileWidth * Margin,
+            -TileHeight * Margin,
+            TileWidth + 2 * (TileWidth * Margin),
+            TileHeight + 2 * (TileHeight * Margin)
+        );
 
     public static TileKey From(Rect canvasRect, Double canvasZoom)
     {
@@ -40,8 +42,6 @@ record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
     public override string ToString() => $"(({X},{Y},{Z}))";
 }
 
-
-
 class Tiles
 {
     readonly Dictionary<TileKey, Tile> tiles = [];
@@ -51,7 +51,6 @@ class Tiles
     Rect lastViewRect = Rect.None;
     double lastZoom = 0;
     Tile lastTile = Tile.Empty;
-
 
     public bool TryGetLastUsed(Rect viewRect, double zoom, out Tile tile)
     {
@@ -66,7 +65,6 @@ class Tiles
         tile = lastTile;
         return true;
     }
-
 
     public bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile)
     {
@@ -114,7 +112,7 @@ class Tiles
     void ValidateTileSize(TileKey key)
     {
         if (tileWidth != key.TileWidth || tileHeight != key.TileHeight)
-        {   // Tile sizes have been changed, invalidate all tiles.
+        { // Tile sizes have been changed, invalidate all tiles.
             Clear();
         }
     }

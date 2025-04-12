@@ -9,7 +9,8 @@ class NodeLayout
 
     public static Rect GetNextChildRect(Node node)
     {
-        if (!node.IsRoot) return Rect.None;
+        if (!node.IsRoot)
+            return Rect.None;
 
         var childSize = DefaultSize;
         var b = node.Boundary;
@@ -35,7 +36,7 @@ class NodeLayout
             <= 16 => 1 / 6.0,
             <= 25 => 1 / 7.0,
             <= 36 => 1 / 8.0,
-            _ => Node.DefaultContainerZoom
+            _ => Node.DefaultContainerZoom,
         };
 
         int columnsCount = (int)Math.Floor(parent.Boundary.Width / parent.ContainerZoom / DefaultWidth) - 2;
@@ -54,13 +55,16 @@ class NodeLayout
             for (int offset = 0; offset <= (rowsCount + 1) / 2; offset++)
             {
                 var row = midRow - offset;
-                if (row < 0 || index >= parent.Children.Count) break;
+                if (row < 0 || index >= parent.Children.Count)
+                    break;
                 var child = parent.Children[index++];
                 AdjustChild(child, column, row, marginX, marginY);
-                if (offset == 0) continue;
+                if (offset == 0)
+                    continue;
 
                 row = midRow + offset;
-                if (row >= rowsCount || index >= parent.Children.Count) break;
+                if (row >= rowsCount || index >= parent.Children.Count)
+                    break;
                 child = parent.Children[index++];
                 AdjustChild(child, column, row, marginX, marginY);
             }
@@ -77,19 +81,37 @@ class NodeLayout
     static int CompareChilren(Node c1, Node c2)
     {
         // c1->c2
-        if (c1.SourceLines.ContainsBy(l => l.Target == c2) && !c2.SourceLines.ContainsBy(l => l.Target == c1)) return -1;
+        if (c1.SourceLines.ContainsBy(l => l.Target == c2) && !c2.SourceLines.ContainsBy(l => l.Target == c1))
+            return -1;
         // c2->c1
-        if (!c1.SourceLines.ContainsBy(l => l.Target == c2) && c2.SourceLines.ContainsBy(l => l.Target == c1)) return 1;
+        if (!c1.SourceLines.ContainsBy(l => l.Target == c2) && c2.SourceLines.ContainsBy(l => l.Target == c1))
+            return 1;
 
         // Parent->c1 but not Parent->c2
-        if (c1.TargetLines.ContainsBy(l => l.Source == c1.Parent) && !c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)) return -1;
+        if (
+            c1.TargetLines.ContainsBy(l => l.Source == c1.Parent)
+            && !c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)
+        )
+            return -1;
         // Not Parent->c1 but Parent->c2
-        if (!c1.TargetLines.ContainsBy(l => l.Source == c1.Parent) && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)) return 1;
+        if (
+            !c1.TargetLines.ContainsBy(l => l.Source == c1.Parent)
+            && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)
+        )
+            return 1;
 
         // c1->Parent but not c2->Parent
-        if (c1.SourceLines.ContainsBy(l => l.Target == c1.Parent) && !c2.SourceLines.ContainsBy(l => l.Target == c2.Parent)) return -1;
+        if (
+            c1.SourceLines.ContainsBy(l => l.Target == c1.Parent)
+            && !c2.SourceLines.ContainsBy(l => l.Target == c2.Parent)
+        )
+            return -1;
         // Not c1->Parent but c2->Parent
-        if (!c1.TargetLines.ContainsBy(l => l.Source == c1.Parent) && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)) return 1;
+        if (
+            !c1.TargetLines.ContainsBy(l => l.Source == c1.Parent)
+            && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)
+        )
+            return 1;
 
         return 0;
     }

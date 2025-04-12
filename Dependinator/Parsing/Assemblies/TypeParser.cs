@@ -1,5 +1,5 @@
-﻿using Mono.Cecil;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
+using Mono.Cecil;
 
 namespace Dependinator.Parsing.Assemblies;
 
@@ -9,14 +9,12 @@ internal class TypeParser
     readonly XmlDocParser xmlDockParser;
     readonly ChannelWriter<IItem> items;
 
-
     public TypeParser(LinkHandler linkHandler, XmlDocParser xmlDockParser, ChannelWriter<IItem> items)
     {
         this.linkHandler = linkHandler;
         this.xmlDockParser = xmlDockParser;
         this.items = items;
     }
-
 
     public async IAsyncEnumerable<TypeData> AddTypeAsync(AssemblyDefinition assembly, TypeDefinition type)
     {
@@ -30,7 +28,7 @@ internal class TypeParser
             isAsyncStateType = type.Interfaces.Any(it => it.InterfaceType.Name == "IAsyncStateMachine");
 
             // AsyncStateTypes are only partially included. The state types are not included as nodes,
-            // but are parsed to extract internal types and references. 
+            // but are parsed to extract internal types and references.
             if (!isAsyncStateType)
             {
                 // Some other internal compiler generated type, which is ignored for now
@@ -43,7 +41,8 @@ internal class TypeParser
             string name = Name.GetTypeFullName(type);
             bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
             string parentName = isPrivate
-                ? $"{NodeName.From(name).ParentName.FullName}.$private" : NodeName.From(name).ParentName.FullName;
+                ? $"{NodeName.From(name).ParentName.FullName}.$private"
+                : NodeName.From(name).ParentName.FullName;
             string description = xmlDockParser.GetDescription(name);
 
             if (await IsNameSpaceDocTypeAsync(type, description))
@@ -69,7 +68,6 @@ internal class TypeParser
         }
     }
 
-
     private async Task<bool> IsNameSpaceDocTypeAsync(TypeDefinition type, string description)
     {
         if (type.Name.IsSameIc("NamespaceDoc"))
@@ -87,17 +85,16 @@ internal class TypeParser
         return false;
     }
 
-
     public Task AddTypesLinksAsync(IEnumerable<TypeData> typeInfos)
     {
         typeInfos.ForEach(async t => await AddLinksToBaseTypesAsync(t));
         return Task.CompletedTask;
     }
 
-
     async Task AddLinksToBaseTypesAsync(TypeData typeData)
     {
-        if (typeData.IsAsyncStateType) return; // Internal async/await helper type, which is ignored
+        if (typeData.IsAsyncStateType)
+            return; // Internal async/await helper type, which is ignored
 
         TypeDefinition type = typeData.Type;
         Node sourceNode = typeData.Node;
@@ -110,8 +107,9 @@ internal class TypeParser
                 await linkHandler.AddLinkToTypeAsync(sourceNode.Name, baseType);
             }
 
-            type.Interfaces
-                .ForEach(async interfaceType => await linkHandler.AddLinkToTypeAsync(sourceNode.Name, interfaceType.InterfaceType));
+            type.Interfaces.ForEach(async interfaceType =>
+                await linkHandler.AddLinkToTypeAsync(sourceNode.Name, interfaceType.InterfaceType)
+            );
         }
         catch (Exception e)
         {
@@ -119,4 +117,3 @@ internal class TypeParser
         }
     }
 }
-

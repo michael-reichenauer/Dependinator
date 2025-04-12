@@ -9,17 +9,14 @@ internal class IgnoredTypes
         return IsSystemIgnoredModuleName(targetType.Scope.Name);
     }
 
-
     public static bool IsSystemIgnoredModuleName(string moduleName)
     {
-        return
-            moduleName == "mscorlib" ||
-            moduleName == "PresentationFramework" ||
-            moduleName == "PresentationCore" ||
-            moduleName == "WindowsBase" ||
-            moduleName == "System" ||
-            moduleName.StartsWith("Microsoft.") ||
-            moduleName.StartsWith("System.");
+        return moduleName == "mscorlib"
+            || moduleName == "PresentationFramework"
+            || moduleName == "PresentationCore"
+            || moduleName == "WindowsBase"
+            || moduleName == "System"
+            || moduleName.StartsWith("Microsoft.")
+            || moduleName.StartsWith("System.");
     }
 }
-

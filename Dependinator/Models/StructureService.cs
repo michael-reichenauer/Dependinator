@@ -2,13 +2,11 @@ using System.Threading.Channels;
 
 namespace Dependinator.Models;
 
-
 interface IStructureService
 {
     void AddOrUpdateNode(Parsing.Node parsedNode);
     void AddOrUpdateLink(Parsing.Link parsedLink);
 }
-
 
 [Transient]
 class StructureService : IStructureService
@@ -24,7 +22,7 @@ class StructureService : IStructureService
     {
         var parentName = parsedNode.ParentName;
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
-        {   // New node, add it to the model and parent
+        { // New node, add it to the model and parent
             var parent = GetOrCreateParent(parentName);
 
             node = new Node(parsedNode.Name, parent);
@@ -43,19 +41,18 @@ class StructureService : IStructureService
         node.Update(parsedNode);
 
         if (!node.IsRoot && node.Parent.Name != parentName)
-        {   // The node has changed parent, remove it from the old parent and add it to the new parent
+        { // The node has changed parent, remove it from the old parent and add it to the new parent
             node.Parent.RemoveChild(node);
             var parent = GetOrCreateNode(parentName);
             parent.AddChild(node);
         }
     }
 
-
-
     public void AddOrUpdateLink(Parsing.Link parsedLink)
     {
         var linkId = new LinkId(parsedLink.SourceName, parsedLink.TargetName);
-        if (model.ContainsKey(linkId)) return;
+        if (model.ContainsKey(linkId))
+            return;
 
         EnsureSourceAndTargetExists(parsedLink);
 
@@ -99,8 +96,6 @@ class StructureService : IStructureService
         return item;
     }
 
-
-
     void AddLinesFromSourceToTarget(Link link)
     {
         Node commonAncestor = GetCommonAncestor(link);
@@ -112,7 +107,6 @@ class StructureService : IStructureService
         // Connect 'sibling' nodes that are ancestors to source and target (or are source/target if they are siblings)
         AddDirectLine(sourceAncestor, targetAncestor, link);
     }
-
 
     static Node GetCommonAncestor(Link link)
     {
@@ -126,7 +120,8 @@ class StructureService : IStructureService
         Node currentSource = source;
         foreach (var parent in source.Ancestors())
         {
-            if (parent == commonAncestor) break;
+            if (parent == commonAncestor)
+                break;
             AddDirectLine(currentSource, parent, link);
             currentSource = parent;
         }
@@ -136,11 +131,12 @@ class StructureService : IStructureService
 
     Node AddDescendantLines(Link link, Node target, Node commonAncestor)
     {
-        // Add lines from just below commonAncestor node down to all descendants until target 
+        // Add lines from just below commonAncestor node down to all descendants until target
         Node currentTarget = target;
         foreach (var parent in target.Ancestors())
         {
-            if (parent == commonAncestor) break;
+            if (parent == commonAncestor)
+                break;
             AddDirectLine(parent, currentTarget, link);
             currentTarget = parent;
         }
@@ -152,7 +148,7 @@ class StructureService : IStructureService
     {
         var line = source.SourceLines.FirstOrDefault(l => l.Target == target);
         if (line == null)
-        {   // First line between these source and target
+        { // First line between these source and target
             line = new Line(source, target);
             source.SourceLines.Add(line);
             target.TargetLines.Add(line);
@@ -163,7 +159,6 @@ class StructureService : IStructureService
         line.Add(link);
         link.AddLine(line);
     }
-
 
     void EnsureSourceAndTargetExists(Parsing.Link parsedLink)
     {
@@ -178,10 +173,9 @@ class StructureService : IStructureService
         }
     }
 
-
     static Parsing.Node DefaultParentNode(string name) =>
         new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.Parent, "");
+
     static Parsing.Node DefaultParsingNode(string name) =>
         new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.None, "");
-
 }

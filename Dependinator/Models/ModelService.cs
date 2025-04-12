@@ -1,6 +1,5 @@
 namespace Dependinator.Models;
 
-
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
 
 interface IModelService
@@ -28,8 +27,6 @@ interface IModelService
     Rect GetBounds();
 }
 
-
-
 [Transient]
 class ModelService : IModelService
 {
@@ -51,7 +48,8 @@ class ModelService : IModelService
         ISvgService modelSvgService,
         Parsing.IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
-        ICommandService commandService)
+        ICommandService commandService
+    )
     {
         this.model = model;
         this.parserService = parserService;
@@ -63,26 +61,24 @@ class ModelService : IModelService
         this.applicationEvents.SaveNeeded += TriggerSave;
     }
 
-
     public bool CanUndo => commandService.CanUndo;
     public bool CanRedo => commandService.CanRedo;
     public Pos Offset => Use(m => m.Offset);
     public double Zoom => Use(m => m.Zoom);
     public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
 
-
     public void Do(Command command, bool isClearCache = true)
     {
         using (var model = UseModel())
         {
             commandService.Do(model, command);
-            if (isClearCache) model.ClearCachedSvg();
+            if (isClearCache)
+                model.ClearCachedSvg();
         }
 
         applicationEvents.TriggerUIStateChanged();
         TriggerSave();
     }
-
 
     public void Undo()
     {
@@ -90,13 +86,11 @@ class ModelService : IModelService
         TriggerSave();
     }
 
-
     public void Redo()
     {
         commandService.Redo(UseModel);
         TriggerSave();
     }
-
 
     public IModel UseModel()
     {
@@ -128,7 +122,6 @@ class ModelService : IModelService
         }
     }
 
-
     public bool TryGetNode(string id, out Node node)
     {
         lock (model.Lock)
@@ -141,7 +134,8 @@ class ModelService : IModelService
     {
         lock (model.Lock)
         {
-            if (!model.TryGetNode(id, out var node)) return false;
+            if (!model.TryGetNode(id, out var node))
+                return false;
 
             updateAction(node);
             model.ClearCachedSvg();
@@ -204,13 +198,12 @@ class ModelService : IModelService
             return parsedModelInfo;
         }
         return modelInfo;
-
-
-
     }
+
     async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
     {
-        if (!Try(out var model, out var e, await persistenceService.ReadAsync(path))) return e;
+        if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
+            return e;
 
         var modelInfo = await LoadCachedModelDataAsync(model);
 
@@ -219,21 +212,26 @@ class ModelService : IModelService
         return modelInfo;
     }
 
-
     public async Task<R> RefreshAsync()
     {
         var path = "";
-        lock (model.Lock) { path = model.Path; }
+        lock (model.Lock)
+        {
+            path = model.Path;
+        }
 
-        if (!Try(out var e, await ParseAsync(path))) return e;
+        if (!Try(out var e, await ParseAsync(path)))
+            return e;
 
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
         return R.Ok;
     }
+
     async Task<R<ModelInfo>> ParseNewModelAsync(string path)
     {
-        if (!Try(out var e, await ParseAsync(path))) return e;
+        if (!Try(out var e, await ParseAsync(path)))
+            return e;
 
         lock (model.Lock)
         {
@@ -243,13 +241,13 @@ class ModelService : IModelService
         return new ModelInfo(path, Rect.None, 0);
     }
 
-
     async Task<R> ParseAsync(string path)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
         //var path = "/workspaces/Dependinator/Dependinator.sln";
 
-        if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
+        if (!Try(out var reader, out var e, parserService.Parse(path)))
+            return e;
 
         await Task.Run(async () =>
         {
@@ -267,13 +265,13 @@ class ModelService : IModelService
         return R.Ok;
     }
 
-
     public void TriggerSave()
     {
         CancellationToken ct;
         lock (model.Lock)
         {
-            if (model.Items.Count == 1) return;
+            if (model.Items.Count == 1)
+                return;
 
             if (!model.IsSaving)
             {
@@ -284,7 +282,8 @@ class ModelService : IModelService
             }
             else
             {
-                if (DateTime.Now - model.ModifiedTime > MaxSaveDelay) return; // Time to save (not postoning more)
+                if (DateTime.Now - model.ModifiedTime > MaxSaveDelay)
+                    return; // Time to save (not postoning more)
 
                 model.SaveCancelSource.Cancel(); // Pospone the save a bit more
                 model.SaveCancelSource = new CancellationTokenSource();
@@ -292,15 +291,18 @@ class ModelService : IModelService
             }
         }
 
-        Task.Delay(SaveDelay, ct).ContinueWith(t =>
-        {
-            if (!t.IsCanceled) Task.Run(() => Save(ct)).RunInBackground();
-        });
+        Task.Delay(SaveDelay, ct)
+            .ContinueWith(t =>
+            {
+                if (!t.IsCanceled)
+                    Task.Run(() => Save(ct)).RunInBackground();
+            });
     }
 
     void Save(CancellationToken ct)
     {
-        if (ct.IsCancellationRequested) return;
+        if (ct.IsCancellationRequested)
+            return;
 
         Parsing.Model modelData;
         lock (model.Lock)
@@ -308,7 +310,8 @@ class ModelService : IModelService
             modelData = persistenceService.ModelToData(model);
             model.IsSaving = false;
         }
-        if (model.Path == "") return;
+        if (model.Path == "")
+            return;
 
         persistenceService.WriteAsync(modelData).RunInBackground();
     }

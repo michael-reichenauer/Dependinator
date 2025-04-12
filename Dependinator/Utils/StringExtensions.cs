@@ -4,7 +4,6 @@ using System.Text.Json;
 
 namespace Dependinator.Utils;
 
-
 public static class StringExtensions
 {
     const int SidLength = 6;
@@ -50,7 +49,8 @@ public static class StringExtensions
 
     public static string ToJson(this object? source)
     {
-        if (source == null) return "";
+        if (source == null)
+            return "";
 
         if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, JsonIndented)))
         {
@@ -62,7 +62,8 @@ public static class StringExtensions
 
     public static string ToJsonOneLine(this object? source)
     {
-        if (source == null) return "";
+        if (source == null)
+            return "";
 
         if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, JsonOneLine)))
         {
@@ -91,10 +92,10 @@ public static class StringExtensions
 
     public static string Txt(this Version? source)
     {
-        if (source == null) return "";
+        if (source == null)
+            return "";
         return $"{source.Major}.{source.Minor} ({source.Build}.{source.Revision})";
     }
-
 
     public static bool IsSameIc(this string strA, string strB) =>
         0 == string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase);

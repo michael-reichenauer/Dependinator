@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Diagrams;
 
-
 interface ICanvasService
 {
     string SvgContent { get; }
@@ -32,7 +31,6 @@ interface ICanvasService
     Task<IReadOnlyList<string>> GetModelPaths();
 }
 
-
 [Scoped]
 class CanvasService : ICanvasService
 {
@@ -53,7 +51,8 @@ class CanvasService : ICanvasService
         IJSInterop jSInteropService,
         IFileService fileService,
         IRecentModelsService recentModelsService,
-        IInteractionService interactionService)
+        IInteractionService interactionService
+    )
     {
         this.screenService = screenService;
         this.panZoomService = panZoomService;
@@ -68,7 +67,8 @@ class CanvasService : ICanvasService
     public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
 
     public string DiagramName { get; set; } = "Loading ...";
-    public string TitleInfo => $"Zoom: {1 / Zoom * 100:#}%, {1 / Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(Zoom) / Math.Log(7)) + 1}";
+    public string TitleInfo =>
+        $"Zoom: {1 / Zoom * 100:#}%, {1 / Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(Zoom) / Math.Log(7)) + 1}";
     public string SvgContent => GetSvgContent();
     public string TileKeyText { get; private set; } = "()";
     public double LevelZoom { get; private set; } = 1;
@@ -83,8 +83,8 @@ class CanvasService : ICanvasService
     public double ActualZoom => Zoom / LevelZoom;
     public Pos SelectedNodePosition => interactionService.SelectedNodePosition;
 
-
-    public string SvgViewBox => $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";
+    public string SvgViewBox =>
+        $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";
 
     public async Task InitAsync()
     {
@@ -97,13 +97,13 @@ class CanvasService : ICanvasService
         await LoadAsync(recentModelsService.LastUsedPath);
     }
 
-
     public async Task LoadAsync(string modelPath)
     {
         DiagramName = $"Loading {modelPath} ...";
         applicationEvents.TriggerUIStateChanged();
 
-        if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath))) return;
+        if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath)))
+            return;
 
         DiagramName = modelService.ModelName;
         PanZoomModel(modelInfo);
@@ -119,7 +119,6 @@ class CanvasService : ICanvasService
         var modelPath = paths.First();
         await LoadAsync(modelPath);
     }
-
 
     void PanZoomModel(ModelInfo modelInfo)
     {
@@ -149,11 +148,11 @@ class CanvasService : ICanvasService
 
     public async Task<IReadOnlyList<string>> GetModelPaths()
     {
-        if (!Try(out var paths, out var eee, await fileService.GetFilePathsAsync())) return [];
+        if (!Try(out var paths, out var eee, await fileService.GetFilePathsAsync()))
+            return [];
 
         return paths.Where(p => Path.GetDirectoryName(p) == "/models").ToList();
     }
-
 
     public void PanZoomToFit()
     {
@@ -168,7 +167,6 @@ class CanvasService : ICanvasService
         applicationEvents.TriggerUIStateChanged();
     }
 
-
     public void Clear()
     {
         modelService.Clear();
@@ -176,14 +174,14 @@ class CanvasService : ICanvasService
         applicationEvents.TriggerUIStateChanged();
     }
 
-
     string GetSvgContent()
     {
         // Log.Info($"GetSvgContent:", Offset, Zoom);
         var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
         var tile = modelService.GetTile(viewRect, Zoom);
 
-        if (Content == tile.Svg) return Content;  // No change
+        if (Content == tile.Svg)
+            return Content; // No change
 
         Content = tile.Svg;
         LevelZoom = tile.Zoom;

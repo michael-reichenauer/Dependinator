@@ -6,7 +6,6 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
 
-
 namespace Dependinator.Parsing.Assemblies;
 
 internal class AssemblyParser : IDisposable
@@ -31,7 +30,8 @@ internal class AssemblyParser : IDisposable
         string parentName,
         ChannelWriter<IItem> items,
         bool isReadSymbols,
-        IFileService fileService)
+        IFileService fileService
+    )
     {
         ProjectPath = projectPath;
         this.assemblyPath = assemblyPath;
@@ -57,16 +57,15 @@ internal class AssemblyParser : IDisposable
     public int IlCount => memberParser.IlCount;
     public int LinksCount => linkHandler.LinksCount;
 
-
     public void Dispose()
     {
         assembly.Value?.Dispose();
     }
 
-
     public async Task<R> ParseAsync()
     {
-        if (!fileService.ExistsStream(assemblyPath)) return R.Error($"No file at '{assemblyPath}'");
+        if (!fileService.ExistsStream(assemblyPath))
+            return R.Error($"No file at '{assemblyPath}'");
 
         return await Task.Run(async () =>
         {
@@ -78,7 +77,6 @@ internal class AssemblyParser : IDisposable
         });
     }
 
-
     public async Task ParseAssemblyModuleAsync()
     {
         string nodeName = Name.GetModuleName(assembly.Value!);
@@ -88,33 +86,30 @@ internal class AssemblyParser : IDisposable
         await items.WriteAsync(assemblyNode);
     }
 
-
     public async Task ParseAssemblyReferencesAsync(IReadOnlyList<string> internalModules)
     {
-        if (assembly.Value == null) return;
+        if (assembly.Value == null)
+            return;
 
         await assemblyReferencesParser.AddReferencesAsync(assembly.Value, internalModules);
     }
 
-
-    public IEnumerable<string> GetReferencePaths(IReadOnlyList<string> internalModules)
-        => AssemblyReferencesParser.GetReferencesPaths(
-            assemblyPath, assembly.Value!, internalModules);
-
+    public IEnumerable<string> GetReferencePaths(IReadOnlyList<string> internalModules) =>
+        AssemblyReferencesParser.GetReferencesPaths(assemblyPath, assembly.Value!, internalModules);
 
     public void ParseTypes()
     {
-        if (assembly.Value == null) return;
+        if (assembly.Value == null)
+            return;
 
         IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
 
         // Add assembly type nodes (including inner type types)
         typeInfos = new List<TypeData>();
-        assemblyTypes
-            .ForEach(async t => await typeParser.AddTypeAsync(assembly.Value, t)
-                .ForEachAsync(tt => typeInfos.Add(tt)));
+        assemblyTypes.ForEach(async t =>
+            await typeParser.AddTypeAsync(assembly.Value, t).ForEachAsync(tt => typeInfos.Add(tt))
+        );
     }
-
 
     public async Task ParseTypeMembersAsync()
     {
@@ -122,31 +117,28 @@ internal class AssemblyParser : IDisposable
         await memberParser.AddTypesMembersAsync(typeInfos);
     }
 
-
-    public R<Source> TryGetSource(string nodeName) =>
-        decompiler.TryGetSource(assembly.Value!.MainModule, nodeName);
-
+    public R<Source> TryGetSource(string nodeName) => decompiler.TryGetSource(assembly.Value!.MainModule, nodeName);
 
     public bool TryGetNode(string sourceFilePath, out string nodeName)
     {
         IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
 
         return decompiler.TryGetNodeNameForSourceFile(
-            assembly.Value!.MainModule, assemblyTypes, sourceFilePath, out nodeName);
+            assembly.Value!.MainModule,
+            assemblyTypes,
+            sourceFilePath,
+            out nodeName
+        );
     }
-
 
     private AssemblyDefinition? GetAssembly(bool isSymbols)
     {
         try
         {
-            ReaderParameters parameters = new ReaderParameters
-            {
-                AssemblyResolver = resolver,
-                ReadSymbols = isSymbols
-            };
+            ReaderParameters parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
 
-            if (!Try(out var stream, out var e, fileService.ReadStram(assemblyPath))) return null;
+            if (!Try(out var stream, out var e, fileService.ReadStram(assemblyPath)))
+                return null;
             return AssemblyDefinition.ReadAssembly(stream, parameters);
         }
         catch (SymbolsNotFoundException)
@@ -162,25 +154,21 @@ internal class AssemblyParser : IDisposable
         return null;
     }
 
-
     private IEnumerable<TypeDefinition> GetAssemblyTypes() =>
-        assembly.Value!.MainModule.Types
-            .Where(type =>
-                !Name.IsCompilerGenerated(type.Name) &&
-                !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? ""));
-
+        assembly.Value!.MainModule.Types.Where(type =>
+            !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
+        );
 
     private static string GetAssemblyDescription(AssemblyDefinition assembly)
     {
         Collection<CustomAttribute> attributes = assembly.CustomAttributes;
 
         CustomAttribute? descriptionAttribute = attributes.FirstOrDefault(attribute =>
-            attribute.AttributeType.FullName == typeof(AssemblyDescriptionAttribute).FullName);
+            attribute.AttributeType.FullName == typeof(AssemblyDescriptionAttribute).FullName
+        );
 
-        CustomAttributeArgument? argument = descriptionAttribute?.ConstructorArguments
-            .FirstOrDefault();
+        CustomAttributeArgument? argument = descriptionAttribute?.ConstructorArguments.FirstOrDefault();
 
         return argument?.Value as string ?? "";
     }
 }
-
