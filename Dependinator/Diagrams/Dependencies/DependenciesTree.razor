@@ -30,11 +30,14 @@
          
                                     <MudText Style="justify-self: start;">@item.Text</MudText>
                                     
-                                    <div style="justify-self: end;">
-                                        <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
-                                            Color="Color.Inherit" Class="ml-3 hover-button"
-                                            OnClick="() => srv.ShowNode(item.NodeId)" />
-                                    </div>
+                                    @if (item.NodeId != Models.NodeId.Empty)
+                                    {
+                                        <div style="justify-self: end;">
+                                            <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
+                                                Color="Color.Inherit" Class="ml-3 hover-button"
+                                                OnClick="() => ShowNode(item.NodeId)" />
+                                        </div>
+                                    }
                                 </div>
                             </BodyContent>
                         </MudTreeViewItem>
@@ -48,6 +51,12 @@
 
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    void ShowNode(Models.NodeId nodeId)
+    {
+        MudDialog.Close();
+        srv.ShowNode(nodeId);
+    }
    
     string NodeToolBarPosition => 
         $"Position: fixed; " +

@@ -51,11 +51,15 @@ class DependenciesService(
         )
             return;
 
+        selectionService.Select(new PointerId(nodeId.Value, nodeId.Value, ""));
+
         panZoomService.PanZoomToAsync(pos, zoom).RunInBackground();
     }
 
     public void SetSelected(TreeItem selectedItem)
     {
+        if (selectedItem is null)
+            return;
         Log.Info($"ItemSelected: {selectedItem.Text}");
     }
 
@@ -99,26 +103,26 @@ class DependenciesService(
             if (!model.TryGetNode(selectedId, out var selectedNode))
                 return [];
 
-            var items = GetNodeItems(selectedNode, treeType, null);
+            var items = GetNodeItems(selectedNode, treeType);
             treeItems.AddRange(items);
         }
 
         return treeItems;
     }
 
-    static IReadOnlyList<TreeItem> GetNodeItems(Node node, TreeType treeType, TreeItem? parentItem)
+    static IReadOnlyList<TreeItem> GetNodeItems(Node node, TreeType treeType)
     {
         if (treeType == TreeType.References)
         {
-            return GetNodeReferenceItems(node, parentItem);
+            return GetNodeReferenceItems(node);
         }
         else
         {
-            return GetNodeDependencyItems(node, parentItem);
+            return GetNodeDependencyItems(node);
         }
     }
 
-    static IReadOnlyList<TreeItem> GetNodeReferenceItems(Node node, TreeItem? parentItem)
+    static IReadOnlyList<TreeItem> GetNodeReferenceItems(Node node)
     {
         List<TreeItem> items = [];
 
@@ -128,13 +132,17 @@ class DependenciesService(
             if (!isToNodeOrChild)
                 continue;
 
-            var referenceItems = GetLineReferenceItems(line, line, parentItem);
+            var referenceItems = GetLineReferenceItems(line, line, null);
             items.AddRange(referenceItems);
+        }
+        if (!items.Any())
+        {
+            items.Add(new TreeItem() { Text = "No references found" });
         }
         return items;
     }
 
-    static IReadOnlyList<TreeItem> GetNodeDependencyItems(Node node, TreeItem? parentItem)
+    static IReadOnlyList<TreeItem> GetNodeDependencyItems(Node node)
     {
         List<TreeItem> items = [];
 
@@ -146,8 +154,13 @@ class DependenciesService(
             if (!isFromNodeOrChild)
                 continue;
 
-            var dependencyItems = GetLineDependencyItems(line, line, parentItem);
+            var dependencyItems = GetLineDependencyItems(line, line, null);
             items.AddRange(dependencyItems);
+        }
+
+        if (!items.Any())
+        {
+            items.Add(new TreeItem() { Text = "No dependencies found" });
         }
         return items;
     }
@@ -155,6 +168,13 @@ class DependenciesService(
     static IReadOnlyList<TreeItem> GetLineReferenceItems(Line line, Line rootLine, TreeItem? parentItem)
     {
         var sourceTargetLines = line.Source.TargetLines.Where(stl => stl.Links.Any(l => rootLine.Links.Contains(l)));
+
+        if (line.Target.Parent == line.Source)
+        {
+            // If the source is the parent of the target, we need to get the source lines of the source
+            return sourceTargetLines.SelectMany(l => GetLineReferenceItems(l, rootLine, parentItem)).ToList();
+        }
+
         GetTreeItemChildren? getChildren = sourceTargetLines.Any()
             ? (itemParent) => [.. sourceTargetLines.SelectMany(tsl => GetLineReferenceItems(tsl, rootLine, itemParent))]
             : null;
@@ -165,6 +185,12 @@ class DependenciesService(
     static IReadOnlyList<TreeItem> GetLineDependencyItems(Line line, Line rootLine, TreeItem? parentItem)
     {
         var targetSourceLines = line.Target.SourceLines.Where(stl => stl.Links.Any(l => rootLine.Links.Contains(l)));
+        if (line.Source.Parent == line.Target)
+        {
+            // If the target is the parent of the source, we need to get the target lines of the target
+            return targetSourceLines.SelectMany(l => GetLineDependencyItems(l, rootLine, parentItem)).ToList();
+        }
+
         GetTreeItemChildren? getChildren = targetSourceLines.Any()
             ? (itemParent) =>
                 [.. targetSourceLines.SelectMany(tsl => GetLineDependencyItems(tsl, rootLine, itemParent))]
