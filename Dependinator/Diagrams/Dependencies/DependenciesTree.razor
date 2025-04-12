@@ -46,13 +46,13 @@
 </MudDialog>
 
 
-
-
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
    
     string NodeToolBarPosition => 
-        $"Position: fixed; left:{interactionService.SelectedNodePosition.X + 40}px; top:{interactionService.SelectedNodePosition.Y - 20}px";
+        $"Position: fixed; " +
+        $"left:{interactionService.SelectedNodePosition.X + 40}px; " +
+        $"top:{interactionService.SelectedNodePosition.Y - 20}px";
     
     int MaxHeight => (int)screenService.SvgRect.Height - 5;
     int MaxWidth => (int)screenService.SvgRect.Width - 20;

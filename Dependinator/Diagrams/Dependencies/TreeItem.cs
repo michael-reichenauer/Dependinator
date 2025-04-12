@@ -3,21 +3,40 @@ using MudBlazor;
 
 namespace Dependinator.Diagrams.Dependencies;
 
+delegate IReadOnlyList<TreeItemData<TreeItem>> GetTreeItemChildren(TreeItem item);
+
 class TreeItem : TreeItemData<TreeItem>
 {
+    // To make it look like there are children we use a children item array with one dummy item until first expand
+    // Which will then create the actually list of
     static readonly List<TreeItemData<TreeItem>> uninitializedChildren = [new TreeItem()];
-    private readonly IDependenciesService service;
-    private readonly Func<TreeItem, IReadOnlyList<TreeItem>> getChildren;
-    bool isExpanded;
-    bool areChildrenInitialized = true;
 
-    public IReadOnlyList<TreeItem> ChildItems { get; private set; } = [];
+    readonly GetTreeItemChildren? getChildren = null!;
+    bool isExpanded;
+    bool isInitialized = true;
+
+    public TreeItem() { }
+
+    public TreeItem(Node node, TreeItem? parent, GetTreeItemChildren? getChildren)
+    {
+        Value = this;
+        Parent = parent;
+        NodeId = node.Id;
+        Text = node.ShortName;
+        Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Icon);
+        this.getChildren = getChildren;
+
+        if (getChildren is not null)
+        {
+            // There children to get, but will be retrieved on first expand
+            isInitialized = false;
+            Children = uninitializedChildren;
+        }
+    }
 
     public TreeItem? Parent { get; init; }
     public NodeId NodeId { get; init; } = NodeId.Empty!;
-
-    public override List<TreeItemData<TreeItem>>? Children =>
-        !areChildrenInitialized && !ChildItems.Any() ? uninitializedChildren : [.. ChildItems];
+    public override List<TreeItemData<TreeItem>>? Children { get; set; } = [];
 
     public override bool Expanded
     {
@@ -25,78 +44,12 @@ class TreeItem : TreeItemData<TreeItem>
         set
         {
             isExpanded = value;
-            if (isExpanded && !areChildrenInitialized)
-                InitializeChildrenItems();
-        }
-    }
-
-    public TreeItem() { }
-
-    public TreeItem(
-        IDependenciesService service,
-        TreeItem? parent,
-        Node node,
-        bool hasChildren,
-        Func<TreeItem, IReadOnlyList<TreeItem>> getChildren
-    )
-    {
-        Value = this;
-        this.service = service;
-        Parent = parent;
-        this.getChildren = getChildren;
-        NodeId = node.Id;
-        areChildrenInitialized = !hasChildren;
-    }
-
-    public TreeItem AddChildNode(Node node)
-    {
-        // Check if node already added
-        var existingChildItem = FindChildItem(node.Id);
-        if (existingChildItem is not null)
-            return existingChildItem;
-
-        var newChildItem = CreateTreeItem(service, this, node);
-        ChildItems.Add(newChildItem);
-
-        if ((node.Parent?.Children?.Count ?? 0) == ChildItems.Count)
-        {
-            areChildrenInitialized = true;
-        }
-
-        return newChildItem;
-    }
-
-    private TreeItem? FindChildItem(NodeId nodeId) => ChildItems.FirstOrDefault(n => n.NodeId == nodeId);
-
-    public void ShowTreeItem() => this.Ancestors().ForEach(a => a.isExpanded = true);
-
-    public static TreeItem CreateTreeItem(IDependenciesService service, TreeItem? parent, Node node)
-    {
-        var hasChildren = node.Children.Any();
-        return new(service, parent, node, hasChildren, null!)
-        {
-            Text = node.IsRoot ? "<all>" : node.ShortName,
-            Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Type.Text),
-        };
-    }
-
-    void InitializeChildrenItems()
-    {
-        Log.Info($"InitializeChildrenItems: {NodeId}, ");
-        ChildItems = getChildren(this) ?? [];
-
-        // service.GetChildren(NodeId)
-        //     .ForEach(child => AddChildNode(child));
-        areChildrenInitialized = true;
-    }
-
-    IEnumerable<TreeItem> Ancestors()
-    {
-        var current = this;
-        while (current.Parent != null)
-        {
-            yield return current.Parent;
-            current = current.Parent;
+            if (isExpanded && !isInitialized)
+            {
+                // Get the children on first expand
+                Children = getChildren is null ? [] : [.. getChildren(this)];
+                isInitialized = true;
+            }
         }
     }
 }

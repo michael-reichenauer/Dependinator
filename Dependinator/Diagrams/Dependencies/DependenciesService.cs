@@ -1,4 +1,3 @@
-using System.Net.Sockets;
 using Dependinator.DiagramIcons;
 using Dependinator.Models;
 using MudBlazor;
@@ -20,7 +19,6 @@ interface IDependenciesService
     void ShowNode(NodeId nodeId);
     void ShowReferences();
     void ShowDependencies();
-    IReadOnlyList<Node> GetChildren(NodeId nodeId);
 }
 
 [Scoped]
@@ -35,6 +33,31 @@ class DependenciesService(
     public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
 
     public string TreeIcon => true ? Icon.DependenciesIcon : Icon.ReferencesIcon;
+
+    public void ShowNode(NodeId nodeId)
+    {
+        selectionService.Unselect();
+
+        Pos pos = Pos.None;
+        double zoom = 0;
+        if (
+            !modelService.UseNodeN(
+                nodeId,
+                node =>
+                {
+                    (pos, zoom) = node.GetCenterPosAndZoom();
+                }
+            )
+        )
+            return;
+
+        panZoomService.PanZoomToAsync(pos, zoom).RunInBackground();
+    }
+
+    public void SetSelected(TreeItem selectedItem)
+    {
+        Log.Info($"ItemSelected: {selectedItem.Text}");
+    }
 
     public void ShowReferences()
     {
@@ -83,7 +106,7 @@ class DependenciesService(
         return treeItems;
     }
 
-    IReadOnlyList<TreeItem> GetNodeItems(Node node, TreeType treeType, TreeItem? parentItem)
+    static IReadOnlyList<TreeItem> GetNodeItems(Node node, TreeType treeType, TreeItem? parentItem)
     {
         if (treeType == TreeType.References)
         {
@@ -95,14 +118,13 @@ class DependenciesService(
         }
     }
 
-    private IReadOnlyList<TreeItem> GetNodeReferenceItems(Node node, TreeItem? parentItem)
+    static IReadOnlyList<TreeItem> GetNodeReferenceItems(Node node, TreeItem? parentItem)
     {
         List<TreeItem> items = [];
 
         foreach (var line in node.TargetLines)
         {
             var isToNodeOrChild = line.Links.Any(link => link.Target == node || link.Target.Ancestors().Contains(node));
-
             if (!isToNodeOrChild)
                 continue;
 
@@ -112,18 +134,7 @@ class DependenciesService(
         return items;
     }
 
-    private IReadOnlyList<TreeItem> GetLineReferenceItems(Line line, Line rootLine, TreeItem? parentItem)
-    {
-        var sourceTargetLines = line.Source.TargetLines.Where(stl => stl.Links.Any(l => rootLine.Links.Contains(l)));
-
-        Func<TreeItem, IReadOnlyList<TreeItem>> getChildren = (itemParent) =>
-            [.. sourceTargetLines.SelectMany(tsl => GetLineReferenceItems(tsl, rootLine, itemParent))];
-
-        var hasChildren = sourceTargetLines.Any();
-        return [ToTreeItem(line.Source, parentItem, hasChildren, getChildren)];
-    }
-
-    private IReadOnlyList<TreeItem> GetNodeDependencyItems(Node node, TreeItem? parentItem)
+    static IReadOnlyList<TreeItem> GetNodeDependencyItems(Node node, TreeItem? parentItem)
     {
         List<TreeItem> items = [];
 
@@ -141,61 +152,24 @@ class DependenciesService(
         return items;
     }
 
-    private IReadOnlyList<TreeItem> GetLineDependencyItems(Line line, Line rootLine, TreeItem? parentItem)
+    static IReadOnlyList<TreeItem> GetLineReferenceItems(Line line, Line rootLine, TreeItem? parentItem)
+    {
+        var sourceTargetLines = line.Source.TargetLines.Where(stl => stl.Links.Any(l => rootLine.Links.Contains(l)));
+        GetTreeItemChildren? getChildren = sourceTargetLines.Any()
+            ? (itemParent) => [.. sourceTargetLines.SelectMany(tsl => GetLineReferenceItems(tsl, rootLine, itemParent))]
+            : null;
+
+        return [new TreeItem(line.Source, parentItem, getChildren)];
+    }
+
+    static IReadOnlyList<TreeItem> GetLineDependencyItems(Line line, Line rootLine, TreeItem? parentItem)
     {
         var targetSourceLines = line.Target.SourceLines.Where(stl => stl.Links.Any(l => rootLine.Links.Contains(l)));
+        GetTreeItemChildren? getChildren = targetSourceLines.Any()
+            ? (itemParent) =>
+                [.. targetSourceLines.SelectMany(tsl => GetLineDependencyItems(tsl, rootLine, itemParent))]
+            : null;
 
-        Func<TreeItem, IReadOnlyList<TreeItem>> getChildren = (itemParent) =>
-            [.. targetSourceLines.SelectMany(tsl => GetLineDependencyItems(tsl, rootLine, itemParent))];
-        var hasChildren = targetSourceLines.Any();
-        return [ToTreeItem(line.Target, parentItem, hasChildren, getChildren)];
-    }
-
-    TreeItem ToTreeItem(
-        Node node,
-        TreeItem? parentItem,
-        bool hasChildren,
-        Func<TreeItem, IReadOnlyList<TreeItem>> getChildren
-    )
-    {
-        return new TreeItem(this, parentItem, node, hasChildren, getChildren)
-        {
-            Text = node.ShortName,
-            Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Icon),
-        };
-    }
-
-    public void ShowNode(NodeId nodeId)
-    {
-        selectionService.Unselect();
-
-        Pos pos = Pos.None;
-        double zoom = 0;
-        if (
-            !modelService.UseNodeN(
-                nodeId,
-                node =>
-                {
-                    (pos, zoom) = node.GetCenterPosAndZoom();
-                }
-            )
-        )
-            return;
-
-        panZoomService.PanZoomToAsync(pos, zoom).RunInBackground();
-    }
-
-    public void SetSelected(TreeItem selectedItem)
-    {
-        Log.Info($"ItemSelected: {selectedItem.Text}");
-    }
-
-    public IReadOnlyList<Node> GetChildren(NodeId nodeId)
-    {
-        using var model = modelService.UseModel();
-        if (!model.TryGetNode(nodeId, out var node))
-            return [];
-
-        return node.Children;
+        return [new TreeItem(line.Target, parentItem, getChildren)];
     }
 }
