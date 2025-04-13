@@ -42,6 +42,7 @@ class CanvasService : ICanvasService
     readonly IFileService fileService;
     readonly IRecentModelsService recentModelsService;
     readonly IInteractionService interactionService;
+    private readonly ISelectionService selectionService;
 
     public CanvasService(
         IScreenService screenService,
@@ -51,7 +52,8 @@ class CanvasService : ICanvasService
         IJSInterop jSInteropService,
         IFileService fileService,
         IRecentModelsService recentModelsService,
-        IInteractionService interactionService
+        IInteractionService interactionService,
+        ISelectionService selectionService
     )
     {
         this.screenService = screenService;
@@ -62,6 +64,7 @@ class CanvasService : ICanvasService
         this.fileService = fileService;
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
+        this.selectionService = selectionService;
     }
 
     public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
@@ -81,7 +84,7 @@ class CanvasService : ICanvasService
     public Pos Offset => modelService.Offset;
     public double Zoom => modelService.Zoom;
     public double ActualZoom => Zoom / LevelZoom;
-    public Pos SelectedNodePosition => interactionService.SelectedNodePosition;
+    public Pos SelectedNodePosition => selectionService.SelectedNodePosition;
 
     public string SvgViewBox =>
         $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";

@@ -8,9 +8,11 @@ interface ISelectionService
     bool IsSelected { get; }
     bool IsEditMode { get; }
     PointerId SelectedId { get; }
+    Pos SelectedNodePosition { get; set; }
 
     bool IsNodeMovable(double zoom);
     void Select(PointerId pointerId);
+    void Select(NodeId nodeId);
     void SetEditMode(bool isEditMode);
     void Unselect();
 }
@@ -25,6 +27,7 @@ class SelectionService : ISelectionService
     readonly IApplicationEvents applicationEvents;
     readonly IScreenService screenService;
 
+    Pos selectedNodePosition = Pos.None;
     PointerId selectedId = PointerId.Empty;
     bool isEditMode = false;
 
@@ -44,6 +47,12 @@ class SelectionService : ISelectionService
 
     public bool IsEditMode => isEditMode;
 
+    public Pos SelectedNodePosition
+    {
+        get => IsSelected ? selectedNodePosition : Pos.None;
+        set => selectedNodePosition = value;
+    }
+
     public void SetEditMode(bool isEditMode)
     {
         if (!IsSelected)
@@ -60,7 +69,12 @@ class SelectionService : ISelectionService
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public void Select(PointerId pointerId)
+    public void Select(NodeId nodeId)
+    {
+        Select(new PointerId(nodeId.Value, nodeId.Value, ""));
+    }
+
+    public async void Select(PointerId pointerId)
     {
         if (IsSelected && selectedId.Id == pointerId.Id)
             return;
@@ -81,6 +95,9 @@ class SelectionService : ISelectionService
         {
             selectedId = pointerId;
             this.isEditMode = false;
+            if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
+                return;
+            SelectedNodePosition = new Pos(bound.X, bound.Y);
             applicationEvents.TriggerUIStateChanged();
         }
     }

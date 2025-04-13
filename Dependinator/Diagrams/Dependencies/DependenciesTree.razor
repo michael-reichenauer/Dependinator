@@ -2,6 +2,7 @@
 @inject IDependenciesService srv
 @inject IScreenService screenService
 @inject IInteractionService interactionService
+@inject ISelectionService selectionService
 
 <style>
     .hover-button {
@@ -56,12 +57,13 @@
     {
         MudDialog.Close();
         srv.ShowNode(nodeId);
+        applicationEvents.TriggerUIStateChanged();
     }
    
     string NodeToolBarPosition => 
         $"Position: fixed; " +
-        $"left:{interactionService.SelectedNodePosition.X + 40}px; " +
-        $"top:{interactionService.SelectedNodePosition.Y - 20}px";
+        $"left:{selectionService.SelectedNodePosition.X + 40}px; " +
+        $"top:{selectionService.SelectedNodePosition.Y - 20}px";
     
     int MaxHeight => (int)screenService.SvgRect.Height - 5;
     int MaxWidth => (int)screenService.SvgRect.Width - 20;

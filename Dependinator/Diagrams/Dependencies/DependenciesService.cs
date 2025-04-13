@@ -34,7 +34,7 @@ class DependenciesService(
 
     public string TreeIcon => true ? Icon.DependenciesIcon : Icon.ReferencesIcon;
 
-    public void ShowNode(NodeId nodeId)
+    public async void ShowNode(NodeId nodeId)
     {
         selectionService.Unselect();
 
@@ -51,9 +51,9 @@ class DependenciesService(
         )
             return;
 
-        selectionService.Select(new PointerId(nodeId.Value, nodeId.Value, ""));
-
-        panZoomService.PanZoomToAsync(pos, zoom).RunInBackground();
+        await panZoomService.PanZoomToAsync(pos, zoom);
+        selectionService.Select(nodeId);
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public void SetSelected(TreeItem selectedItem)

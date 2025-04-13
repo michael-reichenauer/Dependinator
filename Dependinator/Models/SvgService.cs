@@ -242,11 +242,15 @@ class SvgService : ISvgService
         const int mm = s / 2;
         const int mr = m;
         const int mb = m;
+        const int rp = 6;
+        const int rs = 13;
 
         const int tt = 12;
         const int t = 10 * 3 + 1;
 
         return $"""
+            <rect id="{node.Id.Value}.c" x="{x-rp}" y="{y-rp}" width="{w + rs:0.##}" height="{h
+                + rs:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{c}" stroke-dasharray="5,5"/>
             <g class="selectpoint">
               <rect id="{node.Id.Value}.tl" x="{x - ml}" y="{y
                 - mt}" width="{s}" height="{s}" fill="{c}" />

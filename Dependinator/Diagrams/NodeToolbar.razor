@@ -3,6 +3,7 @@
 
 @inject IApplicationEvents applicationEvents
 @inject IInteractionService interactionService
+@inject ISelectionService selectionService
 @inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
 
@@ -26,10 +27,10 @@
 
 
 @code {
-    string show => interactionService.SelectedNodePosition != Models.Pos.None ? "visible" : "hidden";
+    string show => selectionService.SelectedNodePosition != Models.Pos.None ? "visible" : "hidden";
     bool isIcon => !interactionService.IsContainer;
     string NodeToolBarPosition => 
-        $"Position: fixed; left:{interactionService.SelectedNodePosition.X}px; top:{interactionService.SelectedNodePosition.Y - 55}px";
+        $"Position: fixed; left:{selectionService.SelectedNodePosition.X}px; top:{selectionService.SelectedNodePosition.Y - 55}px";
     
     void ShowProperties()  =>
         dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 

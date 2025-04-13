@@ -7,8 +7,6 @@ interface IInteractionService
     string Cursor { get; }
     bool IsContainer { get; }
     bool IsEditNodeMode { get; set; }
-    Pos SelectedNodePosition { get; }
-
     Task InitAsync();
     void NodePanZoomToFit();
 }
@@ -67,13 +65,6 @@ class InteractionService : IInteractionService
             var nodeZoom = 1 / (node.GetZoom() * Zoom);
             return !Node.IsToLargeToBeSeen(nodeZoom) && !node.IsShowIcon(nodeZoom);
         }
-    }
-
-    Pos selectedNodePosition = Pos.None;
-    public Pos SelectedNodePosition
-    {
-        get => selectionService.IsSelected ? selectedNodePosition : Pos.None;
-        set => selectedNodePosition = value;
     }
 
     public bool IsEditNodeMode
@@ -165,7 +156,7 @@ class InteractionService : IInteractionService
                         )
                     )
                         return;
-                    SelectedNodePosition = new Pos(bound.X, bound.Y);
+                    selectionService.SelectedNodePosition = new Pos(bound.X, bound.Y);
                     applicationEvents.TriggerUIStateChanged();
                 }
             );
@@ -182,7 +173,7 @@ class InteractionService : IInteractionService
         if (!selectionService.IsNodeMovable(Zoom))
         {
             selectionService.Unselect();
-            SelectedNodePosition = Pos.None;
+            selectionService.SelectedNodePosition = Pos.None;
             applicationEvents.TriggerUIStateChanged();
             return;
         }
@@ -191,7 +182,7 @@ class InteractionService : IInteractionService
         {
             if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(targetId.Id)))
                 return;
-            SelectedNodePosition = new Pos(bound.X, bound.Y);
+            selectionService.SelectedNodePosition = new Pos(bound.X, bound.Y);
             applicationEvents.TriggerUIStateChanged();
         }
     }
@@ -264,7 +255,10 @@ class InteractionService : IInteractionService
             "bl" => (e.MovementX, 0),
             _ => (0, 0),
         };
-        SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
+        selectionService.SelectedNodePosition = new Pos(
+            selectionService.SelectedNodePosition.X + dx,
+            selectionService.SelectedNodePosition.Y + dy
+        );
     }
 
     void PanedMoveToolbar(PointerEvent e)
@@ -272,7 +266,10 @@ class InteractionService : IInteractionService
         if (selectionService.IsSelected)
         {
             var (dx, dy) = (e.MovementX, e.MovementY);
-            SelectedNodePosition = new Pos(SelectedNodePosition.X + dx, SelectedNodePosition.Y + dy);
+            selectionService.SelectedNodePosition = new Pos(
+                selectionService.SelectedNodePosition.X + dx,
+                selectionService.SelectedNodePosition.Y + dy
+            );
         }
     }
 
