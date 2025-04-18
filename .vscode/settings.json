@@ -6,6 +6,8 @@
   "azureFunctions.preDeployTask": "publish (functions)",
   "cSpell.words": [
     "Blazor",
+    "dasharray",
+    "Debouncer",
     "Decompile",
     "Decompiled",
     "Decompiler",
@@ -14,6 +16,7 @@
     "dotnettools",
     "Dtos",
     "hoverable",
+    "hoverableedit",
     "Hsts",
     "linejoin",
     "mhutchie",
@@ -21,6 +24,7 @@
     "Newtonsoft",
     "polyline",
     "Rezise",
+    "selectpoint",
     "Svgs",
     "uninstallation"
   ],

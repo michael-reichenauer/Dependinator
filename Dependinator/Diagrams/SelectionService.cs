@@ -71,7 +71,7 @@ class SelectionService : ISelectionService
 
     public void Select(NodeId nodeId)
     {
-        Select(new PointerId(nodeId.Value, nodeId.Value, ""));
+        Select(PointerId.FromNode(nodeId));
     }
 
     public async void Select(PointerId pointerId)
@@ -100,6 +100,22 @@ class SelectionService : ISelectionService
             SelectedNodePosition = new Pos(bound.X, bound.Y);
             applicationEvents.TriggerUIStateChanged();
         }
+
+        if (!IsNodeMovable(modelService.Zoom))
+        {
+            Unselect();
+            SelectedNodePosition = Pos.None;
+            applicationEvents.TriggerUIStateChanged();
+            return;
+        }
+
+        if (IsSelected)
+        {
+            if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
+                return;
+            SelectedNodePosition = new Pos(bound.X, bound.Y);
+            applicationEvents.TriggerUIStateChanged();
+        }
     }
 
     public void Unselect()
@@ -120,6 +136,7 @@ class SelectionService : ISelectionService
         applicationEvents.TriggerUIStateChanged();
     }
 
+    // Returns true if the node is movable, i.e. the node is not too large (to zoomed in) for the current screen.
     public bool IsNodeMovable(double zoom)
     {
         if (!IsSelected || IsEditMode)

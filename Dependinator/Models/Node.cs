@@ -16,7 +16,13 @@ class Node : IItem
         var color = Coloring.BrightRandom();
         Color = color.ToString();
         Background = color.VeryDark().ToString();
-        (LongName, ShortName) = NodeName.GetDisplayNames(name);
+
+        SetDisplayNames();
+    }
+
+    private void SetDisplayNames()
+    {
+        (LongName, ShortName) = NodeName.GetDisplayNames(Name, Type);
         HtmlShortName = HttpUtility.HtmlEncode(ShortName);
         HtmlLongName = HttpUtility.HtmlEncode(LongName);
     }
@@ -26,7 +32,16 @@ class Node : IItem
     public NodeId Id { get; }
     public string Name { get; }
     public Node Parent { get; private set; }
-    public NodeType Type { get; set; } = NodeType.None;
+    NodeType type = NodeType.None;
+    public NodeType Type
+    {
+        get => type;
+        set
+        {
+            type = value;
+            SetDisplayNames();
+        }
+    }
     public string Icon => Type.Text;
 
     public string Description { get; set; } = "";
@@ -48,10 +63,10 @@ class Node : IItem
     public List<Line> TargetLines { get; } = new();
 
     public bool IsRoot => Type == NodeType.Root;
-    public string LongName { get; }
-    public string ShortName { get; }
-    public string HtmlShortName { get; }
-    public string HtmlLongName { get; }
+    public string LongName { get; private set; } = "";
+    public string ShortName { get; private set; } = "";
+    public string HtmlShortName { get; private set; } = "";
+    public string HtmlLongName { get; private set; } = "";
 
     public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 

@@ -64,17 +64,21 @@ class NodeEditService(IModelService modelService) : INodeEditService
                 var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
 
                 var oldBoundary = node.Boundary;
-                var newBoundary = pointerId.SubId switch
+                var newBoundary = pointerId.NodeResizeType switch
                 {
-                    "tl" => node.Boundary with
+                    NodeResizeType.TopLeft => node.Boundary with
                     {
                         X = node.Boundary.X + dx,
                         Y = node.Boundary.Y + dy,
                         Width = node.Boundary.Width - dx,
                         Height = node.Boundary.Height - dy,
                     },
-                    "tm" => node.Boundary with { Y = node.Boundary.Y + dy, Height = node.Boundary.Height - dy },
-                    "tr" => node.Boundary with
+                    NodeResizeType.TopMiddle => node.Boundary with
+                    {
+                        Y = node.Boundary.Y + dy,
+                        Height = node.Boundary.Height - dy,
+                    },
+                    NodeResizeType.TopRight => node.Boundary with
                     {
                         X = node.Boundary.X,
                         Y = node.Boundary.Y + dy,
@@ -82,18 +86,30 @@ class NodeEditService(IModelService modelService) : INodeEditService
                         Height = node.Boundary.Height - dy,
                     },
 
-                    "ml" => node.Boundary with { X = node.Boundary.X + dx, Width = node.Boundary.Width - dx },
-                    "mr" => node.Boundary with { X = node.Boundary.X, Width = node.Boundary.Width + dx },
+                    NodeResizeType.MiddleLeft => node.Boundary with
+                    {
+                        X = node.Boundary.X + dx,
+                        Width = node.Boundary.Width - dx,
+                    },
+                    NodeResizeType.MiddleRight => node.Boundary with
+                    {
+                        X = node.Boundary.X,
+                        Width = node.Boundary.Width + dx,
+                    },
 
-                    "bl" => node.Boundary with
+                    NodeResizeType.BottomLeft => node.Boundary with
                     {
                         X = node.Boundary.X + dx,
                         Y = node.Boundary.Y,
                         Width = node.Boundary.Width - dx,
                         Height = node.Boundary.Height + dy,
                     },
-                    "bm" => node.Boundary with { Y = node.Boundary.Y, Height = node.Boundary.Height + dy },
-                    "br" => node.Boundary with
+                    NodeResizeType.BottomMiddle => node.Boundary with
+                    {
+                        Y = node.Boundary.Y,
+                        Height = node.Boundary.Height + dy,
+                    },
+                    NodeResizeType.BottomRight => node.Boundary with
                     {
                         X = node.Boundary.X,
                         Y = node.Boundary.Y,
@@ -104,7 +120,7 @@ class NodeEditService(IModelService modelService) : INodeEditService
                     _ => node.Boundary,
                 };
 
-                // Adjust container offest to ensure that children stay in place
+                // Adjust container offset to ensure that children stay in place
                 var newContainerOffset = node.ContainerOffset with
                 {
                     X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),

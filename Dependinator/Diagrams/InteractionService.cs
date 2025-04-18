@@ -114,7 +114,7 @@ class InteractionService : IInteractionService
             var targetId = PointerId.Parse(e.TargetId);
             if (targetId.Id != selectionService.SelectedId.Id)
             {
-                // Node is in edit mode, check if mouse down is inside the selected node, if so trate as selected node
+                // Node is in edit mode, check if mouse down is inside the selected node, if so treat as selected node
                 var selectId = NodeId.FromId(selectionService.SelectedId.Id);
 
                 using (var model = modelService.UseModel())
@@ -163,28 +163,12 @@ class InteractionService : IInteractionService
         }
     }
 
-    async void OnClick(PointerEvent e)
+    void OnClick(PointerEvent e)
     {
         Log.Info("mouse click", e.TargetId);
         var targetId = PointerId.Parse(e.TargetId);
 
         selectionService.Select(targetId);
-
-        if (!selectionService.IsNodeMovable(Zoom))
-        {
-            selectionService.Unselect();
-            selectionService.SelectedNodePosition = Pos.None;
-            applicationEvents.TriggerUIStateChanged();
-            return;
-        }
-
-        if (selectionService.IsSelected)
-        {
-            if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(targetId.Id)))
-                return;
-            selectionService.SelectedNodePosition = new Pos(bound.X, bound.Y);
-            applicationEvents.TriggerUIStateChanged();
-        }
     }
 
     void OnDblClick(PointerEvent e)
@@ -203,7 +187,7 @@ class InteractionService : IInteractionService
         if (!IsEditNodeMode)
             return;
 
-        // Node is in edit mode, check if mouse down is inside the selected node, if so trate as selected node
+        // Node is in edit mode, check if mouse down is inside the selected node, if so treat as selected node
         var downId = NodeId.FromId(mouseDownId.Id);
         var selectId = NodeId.FromId(selectionService.SelectedId.Id);
 
@@ -246,13 +230,13 @@ class InteractionService : IInteractionService
 
     void ResizedMoveToolbar(PointerEvent e)
     {
-        var (dx, dy) = mouseDownId.SubId switch
+        var (dx, dy) = mouseDownId.NodeResizeType switch
         {
-            "tl" => (e.MovementX, e.MovementY),
-            "tm" => (0, e.MovementY),
-            "tr" => (0, e.MovementY),
-            "ml" => (e.MovementX, 0),
-            "bl" => (e.MovementX, 0),
+            NodeResizeType.TopLeft => (e.MovementX, e.MovementY),
+            NodeResizeType.TopMiddle => (0, e.MovementY),
+            NodeResizeType.TopRight => (0, e.MovementY),
+            NodeResizeType.MiddleLeft => (e.MovementX, 0),
+            NodeResizeType.BottomLeft => (e.MovementX, 0),
             _ => (0, 0),
         };
         selectionService.SelectedNodePosition = new Pos(

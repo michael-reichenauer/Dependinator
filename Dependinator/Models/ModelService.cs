@@ -283,9 +283,9 @@ class ModelService : IModelService
             else
             {
                 if (DateTime.Now - model.ModifiedTime > MaxSaveDelay)
-                    return; // Time to save (not postoning more)
+                    return; // Time to save (not postponing more)
 
-                model.SaveCancelSource.Cancel(); // Pospone the save a bit more
+                model.SaveCancelSource.Cancel(); // Postpone the save a bit more
                 model.SaveCancelSource = new CancellationTokenSource();
                 ct = model.SaveCancelSource.Token;
             }
