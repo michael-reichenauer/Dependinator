@@ -217,7 +217,11 @@ class InteractionService : IInteractionService
             return;
         }
 
-        if (mouseDownId == selectionService.SelectedId && selectionService.IsNodeMovable(Zoom) && mouseDownId.IsNode)
+        if (
+            mouseDownId == selectionService.SelectedId
+            && selectionService.IsSelectedNodeMovable(Zoom)
+            && mouseDownId.IsNode
+        )
         {
             nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
             PanedMoveToolbar(e);

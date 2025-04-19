@@ -23,6 +23,12 @@ interface IModelService
     bool TryGetNode(string id, out Node node);
     bool UseNode(string id, Action<Node> useAction);
     bool UseNodeN(NodeId id, Action<Node> updateAction);
+    bool UseNode(string id, Func<Node, bool> useAction);
+    bool UseNodeN(NodeId id, Func<Node, bool> updateAction);
+    bool UseLine(string id, Func<Line, bool> useAction);
+    bool UseLineN(LineId id, Func<Line, bool> updateAction);
+    bool UseLine(string id, Action<Line> useAction);
+    bool UseLineN(LineId id, Action<Line> updateAction);
     void Clear();
     Rect GetBounds();
 }
@@ -145,7 +151,60 @@ class ModelService : IModelService
         return true;
     }
 
+    public bool UseNodeN(NodeId id, Func<Node, bool> updateAction)
+    {
+        lock (model.Lock)
+        {
+            if (!model.TryGetNode(id, out var node))
+                return false;
+
+            if (!updateAction(node))
+                return false;
+            model.ClearCachedSvg();
+        }
+
+        TriggerSave();
+        return true;
+    }
+
+    public bool UseLineN(LineId id, Func<Line, bool> updateAction)
+    {
+        lock (model.Lock)
+        {
+            if (!model.TryGetLine(id, out var line))
+                return false;
+
+            if (!updateAction(line))
+                return false;
+            model.ClearCachedSvg();
+        }
+
+        TriggerSave();
+        return true;
+    }
+
+    public bool UseLineN(LineId id, Action<Line> updateAction)
+    {
+        lock (model.Lock)
+        {
+            if (!model.TryGetLine(id, out var line))
+                return false;
+
+            updateAction(line);
+            model.ClearCachedSvg();
+        }
+
+        TriggerSave();
+        return true;
+    }
+
     public bool UseNode(string id, Action<Node> updateAction) => UseNodeN(NodeId.FromId(id), updateAction);
+
+    public bool UseNode(string id, Func<Node, bool> updateAction) => UseNodeN(NodeId.FromId(id), updateAction);
+
+    public bool UseLine(string id, Action<Line> updateAction) => UseLineN(LineId.FromId(id), updateAction);
+
+    public bool UseLine(string id, Func<Line, bool> updateAction) => UseLineN(LineId.FromId(id), updateAction);
 
     public Tile GetTile(Rect viewRect, double zoom)
     {

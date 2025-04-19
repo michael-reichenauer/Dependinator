@@ -10,7 +10,7 @@ interface ISelectionService
     PointerId SelectedId { get; }
     Pos SelectedNodePosition { get; set; }
 
-    bool IsNodeMovable(double zoom);
+    bool IsSelectedNodeMovable(double zoom);
     void Select(PointerId pointerId);
     void Select(NodeId nodeId);
     void SetEditMode(bool isEditMode);
@@ -80,40 +80,46 @@ class SelectionService : ISelectionService
             return;
 
         if (IsSelected)
-            Unselect(); // Clicked on some other node
+            Unselect(); // Clicked on some other item or outside the diagram
 
-        if (
-            modelService.UseNode(
-                pointerId.Id,
-                node =>
-                {
-                    node.IsSelected = true;
-                    node.IsEditMode = false;
-                }
-            )
-        )
+        if (pointerId.IsNode)
         {
+            var zoom = modelService.Zoom;
+
+            if (
+                modelService.UseNode(
+                    pointerId.Id,
+                    node =>
+                    {
+                        if (!IsNodeMovable(node, zoom))
+                            return false;
+                        node.IsSelected = true;
+                        node.IsEditMode = false;
+                        return true;
+                    }
+                )
+            )
+            {
+                selectedId = pointerId;
+                this.isEditMode = false;
+                if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
+                    return;
+                SelectedNodePosition = new Pos(bound.X, bound.Y);
+                applicationEvents.TriggerUIStateChanged();
+            }
+        }
+        if (pointerId.IsLine)
+        {
+            modelService.UseLine(
+                pointerId.Id,
+                line =>
+                {
+                    line.IsSelected = true;
+                    return true;
+                }
+            );
             selectedId = pointerId;
             this.isEditMode = false;
-            if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
-                return;
-            SelectedNodePosition = new Pos(bound.X, bound.Y);
-            applicationEvents.TriggerUIStateChanged();
-        }
-
-        if (!IsNodeMovable(modelService.Zoom))
-        {
-            Unselect();
-            SelectedNodePosition = Pos.None;
-            applicationEvents.TriggerUIStateChanged();
-            return;
-        }
-
-        if (IsSelected)
-        {
-            if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
-                return;
-            SelectedNodePosition = new Pos(bound.X, bound.Y);
             applicationEvents.TriggerUIStateChanged();
         }
     }
@@ -123,27 +129,45 @@ class SelectionService : ISelectionService
         if (!IsSelected)
             return;
 
-        modelService.UseNode(
-            selectedId.Id,
-            node =>
-            {
-                node.IsSelected = false;
-                node.IsEditMode = false;
-            }
-        );
+        if (selectedId.IsNode)
+        {
+            modelService.UseNode(
+                selectedId.Id,
+                node =>
+                {
+                    node.IsSelected = false;
+                    node.IsEditMode = false;
+                }
+            );
+        }
+        if (selectedId.IsLine)
+        {
+            modelService.UseLine(
+                selectedId.Id,
+                line =>
+                {
+                    line.IsSelected = false;
+                }
+            );
+        }
         selectedId = PointerId.Empty;
         this.isEditMode = false;
         applicationEvents.TriggerUIStateChanged();
     }
 
     // Returns true if the node is movable, i.e. the node is not too large (to zoomed in) for the current screen.
-    public bool IsNodeMovable(double zoom)
+    public bool IsSelectedNodeMovable(double zoom)
     {
         if (!IsSelected || IsEditMode)
             return false;
         if (!modelService.TryGetNode(selectedId.Id, out var node))
             return false;
 
+        return IsNodeMovable(node, zoom);
+    }
+
+    private bool IsNodeMovable(Node node, double zoom)
+    {
         var v = screenService.SvgRect;
         var nodeZoom = 1 / node.GetZoom();
         var vx = (node.Boundary.Width * nodeZoom) / (v.Width * zoom);

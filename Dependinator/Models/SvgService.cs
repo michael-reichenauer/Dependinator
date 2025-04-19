@@ -232,11 +232,6 @@ class SvgService : ISvgService
         if (!node.IsSelected)
             return "";
 
-        return SelectedResizeSvg(node, x, y, w, h);
-    }
-
-    static string SelectedResizeSvg(Node node, double x, double y, double w, double h)
-    {
         string c = Coloring.Highlight;
         const int s = 8;
         const int m = 3;
@@ -262,67 +257,38 @@ class SvgService : ISvgService
         return $"""
             <rect x="{x-rp}" y="{y-rp}" width="{w + rs:0.##}" height="{h
                 + rs:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{c}" stroke-dasharray="5,5"/>
+
             <g class="selectpoint">
-              <rect id="{etl}" x="{x - ml}" y="{y
-                - mt}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{etl}" x="{x - ml - tt}" y="{y
-                - mt
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{etl}" cx="{x - ml + s/2.0}" cy="{y - mt + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{etl}" cx="{x - ml - tt + t/2.0}"  cy="{y - mt - tt + t/2.0}"  r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{etm}" x="{x + w / 2 - mm}" y="{y
-                - mt}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{etm}" x="{x + w / 2 - mm - tt}" y="{y
-                - mt
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
+                <circle id="{etm}" cx="{x + w/2 - mm + s/2.0}" cy="{y - mt + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{etm}" cx="{x + w/2 - mm - tt + t/2.0}" cy="{y - mt - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{etr}" x="{x + w + mr}" y="{y
-                - mt}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{etr}" x="{x + w + mr - tt}" y="{y
-                - mt
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{etr}" cx="{x + w + mr + s/2.0}" cy="{y - mt + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{etr}" cx="{x + w + mr - tt + t/2.0}" cy="{y - mt - tt + t/2.0}"  r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{eml}" x="{x - ml}" y="{y
-                + h / 2}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{eml}" x="{x - ml - tt}" y="{y
-                + h / 2
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{eml}" cx="{x - ml + s/2.0}" cy="{y + h/2 + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{eml}" cx="{x - ml - tt + t/2.0}"  cy="{y + h/2 - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{emr}" x="{x + w + mr}" y="{y
-                + h / 2}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{emr}" x="{x + w + mr - tt}" y="{y
-                + h / 2
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
-            </g>
-            <g class="selectpoint">    
-              <rect id="{ebl}" x="{x - ml}" y="{y
-                + h
-                + mb}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{ebl}" x="{x - ml - tt}" y="{y
-                + h
-                + mb
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{emr}" cx="{x + w + mr + s/2.0}" cy="{y + h/2 + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{emr}" cx="{x + w + mr - tt + t/2.0}" cy="{y + h/2 - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{ebm}" x="{x + w / 2 - mm}" y="{y
-                + h
-                + mb}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{ebm}" x="{x + w / 2 - mm - tt}" y="{y
-                + h
-                + mb
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
+                <circle id="{ebl}" cx="{x - ml + s/2.0}" cy="{y + h + mb + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{ebl}" cx="{x - ml - tt + t/2.0}"  cy="{y + h + mb - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{ebr}" x="{x + w + mr}" y="{y
-                + h
-                + mb}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{ebr}" x="{x + w + mr - tt}" y="{y
-                + h
-                + mb
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{ebm}" cx="{x + w/2 - mm + s/2.0}" cy="{y + h + mb + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{ebm}" cx="{x + w/2 - mm - tt + t/2.0}" cy="{y + h + mb - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+            </g>
+            <g class="selectpoint">
+                <circle id="{ebr}" cx="{x + w + mr + s/2.0}" cy="{y + h + mb + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{ebr}" cx="{x + w + mr - tt + t/2.0}" cy="{y + h + mb - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             """;
     }
@@ -367,6 +333,7 @@ class SvgService : ISvgService
             (x2, y2) = (nodeCanvasPos.X + x2 * childrenZoom, nodeCanvasPos.Y + y2 * childrenZoom);
         }
         var elementId = PointerId.FromLine(line.Id).ElementId;
+        string selectedSvg = SelectedLineSvg(line, x1, y1, x2, y2);
 
         var c = "#B388FF";
         return $"""
@@ -376,6 +343,24 @@ class SvgService : ISvgService
                 + 10}" stroke="black" stroke-opacity="0" />
               <title>{line.Source.HtmlLongName}→{line.Target.HtmlLongName}</title>
             </g>
+            {selectedSvg}
+            """;
+    }
+
+    private static string SelectedLineSvg(Line line, double x1, double y1, double x2, double y2)
+    {
+        if (!line.IsSelected)
+            return "";
+
+        string c = Coloring.Highlight;
+        var sw = line.StrokeWidth;
+        var ps = 7;
+
+        return $"""
+            <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{c}" stroke-width="{sw
+                + 3}" stroke-dasharray="3,50"/>
+            <circle cx="{x1}" cy="{y1}" r="{ps}" fill="{c}" />
+            <circle cx="{x2}" cy="{y2}" r="{ps}" fill="{c}" />
             """;
     }
 }
