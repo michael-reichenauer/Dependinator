@@ -27,10 +27,10 @@
 
 
 @code {
-    string show => selectionService.SelectedNodePosition != Models.Pos.None ? "visible" : "hidden";
+    string show => selectionService.SelectedPosition != Models.Pos.None ? "visible" : "hidden";
     bool isIcon => !interactionService.IsContainer;
     string NodeToolBarPosition => 
-        $"Position: fixed; left:{selectionService.SelectedNodePosition.X}px; top:{selectionService.SelectedNodePosition.Y - 55}px";
+        $"Position: fixed; left:{selectionService.SelectedPosition.X}px; top:{selectionService.SelectedPosition.Y - 55}px";
     
     void ShowProperties()  =>
         dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 

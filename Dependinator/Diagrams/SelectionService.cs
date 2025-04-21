@@ -8,8 +8,9 @@ interface ISelectionService
     bool IsSelected { get; }
     bool IsEditMode { get; }
     PointerId SelectedId { get; }
-    Pos SelectedNodePosition { get; set; }
+    Pos SelectedPosition { get; }
 
+    Task UpdateSelectedPositionAsync();
     bool IsSelectedNodeMovable(double zoom);
     void Select(PointerId pointerId);
     void Select(NodeId nodeId);
@@ -47,10 +48,36 @@ class SelectionService : ISelectionService
 
     public bool IsEditMode => isEditMode;
 
-    public Pos SelectedNodePosition
+    public Pos SelectedPosition
     {
         get => IsSelected ? selectedNodePosition : Pos.None;
-        set => selectedNodePosition = value;
+        private set => selectedNodePosition = value;
+    }
+
+    public async Task UpdateSelectedPositionAsync()
+    {
+        if (!IsSelected)
+            return;
+
+        var id = SelectedId.ElementId;
+        if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(id)))
+        {
+            // Selected Element is not visible on the screen
+            if (selectedNodePosition != Pos.None)
+            {
+                Log.Info($"UpdateToolbar hide !!!");
+                selectedNodePosition = Pos.None;
+                applicationEvents.TriggerUIStateChanged();
+            }
+            return;
+        }
+
+        if (selectedNodePosition.X == bound.X && selectedNodePosition.Y == bound.Y)
+            return;
+
+        Log.Info($"UpdateToolbar {bound}");
+        selectedNodePosition = new Pos(bound.X, bound.Y);
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public void SetEditMode(bool isEditMode)
@@ -102,10 +129,7 @@ class SelectionService : ISelectionService
             {
                 selectedId = pointerId;
                 this.isEditMode = false;
-                if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
-                    return;
-                SelectedNodePosition = new Pos(bound.X, bound.Y);
-                applicationEvents.TriggerUIStateChanged();
+                await UpdateSelectedPositionAsync();
             }
         }
         if (pointerId.IsLine)

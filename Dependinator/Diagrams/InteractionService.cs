@@ -142,24 +142,10 @@ class InteractionService : IInteractionService
 
     void UpdateToolbar()
     {
+        Log.Info("UpdateToolbar");
         if (selectionService.IsSelected)
         {
-            zoomToolbarDebouncer.Debounce(
-                20,
-                async () =>
-                {
-                    if (
-                        !Try(
-                            out var bound,
-                            out var _,
-                            await screenService.GetBoundingRectangle(selectionService.SelectedId.Id)
-                        )
-                    )
-                        return;
-                    selectionService.SelectedNodePosition = new Pos(bound.X, bound.Y);
-                    applicationEvents.TriggerUIStateChanged();
-                }
-            );
+            zoomToolbarDebouncer.Debounce(20, () => selectionService.UpdateSelectedPositionAsync());
         }
     }
 
@@ -213,7 +199,7 @@ class InteractionService : IInteractionService
         if (mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
-            ResizedMoveToolbar(e);
+            selectionService.UpdateSelectedPositionAsync();
             return;
         }
 
@@ -224,41 +210,12 @@ class InteractionService : IInteractionService
         )
         {
             nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
-            PanedMoveToolbar(e);
+            selectionService.UpdateSelectedPositionAsync();
             return;
         }
 
         panZoomService.Pan(e);
-        PanedMoveToolbar(e);
-    }
-
-    void ResizedMoveToolbar(PointerEvent e)
-    {
-        var (dx, dy) = mouseDownId.NodeResizeType switch
-        {
-            NodeResizeType.TopLeft => (e.MovementX, e.MovementY),
-            NodeResizeType.TopMiddle => (0, e.MovementY),
-            NodeResizeType.TopRight => (0, e.MovementY),
-            NodeResizeType.MiddleLeft => (e.MovementX, 0),
-            NodeResizeType.BottomLeft => (e.MovementX, 0),
-            _ => (0, 0),
-        };
-        selectionService.SelectedNodePosition = new Pos(
-            selectionService.SelectedNodePosition.X + dx,
-            selectionService.SelectedNodePosition.Y + dy
-        );
-    }
-
-    void PanedMoveToolbar(PointerEvent e)
-    {
-        if (selectionService.IsSelected)
-        {
-            var (dx, dy) = (e.MovementX, e.MovementY);
-            selectionService.SelectedNodePosition = new Pos(
-                selectionService.SelectedNodePosition.X + dx,
-                selectionService.SelectedNodePosition.Y + dy
-            );
-        }
+        selectionService.UpdateSelectedPositionAsync();
     }
 
     void OnMouseUp(PointerEvent e)

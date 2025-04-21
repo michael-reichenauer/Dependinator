@@ -62,8 +62,8 @@
    
     string NodeToolBarPosition => 
         $"Position: fixed; " +
-        $"left:{selectionService.SelectedNodePosition.X + 40}px; " +
-        $"top:{selectionService.SelectedNodePosition.Y - 20}px";
+        $"left:{selectionService.SelectedPosition.X + 40}px; " +
+        $"top:{selectionService.SelectedPosition.Y - 20}px";
     
     int MaxHeight => (int)screenService.SvgRect.Height - 5;
     int MaxWidth => (int)screenService.SvgRect.Width - 20;
