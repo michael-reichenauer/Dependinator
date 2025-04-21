@@ -19,9 +19,12 @@ interface IModel : IDisposable
     void AddNode(Node node);
     Node GetNode(NodeId id);
     void AddLink(Link link);
-    Link GetLink(NodeId id);
-    bool TryGetLink(NodeId id, out Link link);
+    Link GetLink(LinkId id);
+    bool TryGetLink(LinkId id, out Link link);
     void AddLine(Line line);
+    Line GetLine(LineId id);
+    bool TryGetLine(LineId id, out Line line);
+    bool TryGetLine(string id, out Line line);
     void Clear();
     void ClearCachedSvg();
     bool ContainsKey(Id linkId);
@@ -118,9 +121,9 @@ class Model : IModel
         Items[link.Id] = link;
     }
 
-    public Link GetLink(NodeId id) => (Link)Items[id];
+    public Link GetLink(LinkId id) => (Link)Items[id];
 
-    public bool TryGetLink(NodeId id, out Link link)
+    public bool TryGetLink(LinkId id, out Link link)
     {
         if (!Items.TryGetValue(id, out var item))
         {
@@ -136,6 +139,24 @@ class Model : IModel
         if (Items.ContainsKey(line.Id))
             return;
         Items[line.Id] = line;
+    }
+
+    public Line GetLine(LineId id) => (Line)Items[id];
+
+    public bool TryGetLine(string id, out Line line)
+    {
+        return TryGetLine(LineId.FromId(id), out line);
+    }
+
+    public bool TryGetLine(LineId id, out Line link)
+    {
+        if (!Items.TryGetValue(id, out var item))
+        {
+            link = null!;
+            return false;
+        }
+        link = (Line)item;
+        return true;
     }
 
     public void Clear()

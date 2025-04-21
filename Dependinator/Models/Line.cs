@@ -10,7 +10,7 @@ class Line : IItem
     {
         Source = source;
         Target = target;
-        Id = new LineId(source.Name, target.Name);
+        Id = LineId.From(source.Name, target.Name);
         // Color = Models.Color.BrightRandom().ToString();
     }
 
@@ -30,13 +30,15 @@ class Line : IItem
 
     public string Color { get; set; } = "red";
     public double StrokeWidth { get; set; } = 2.0;
+    public bool IsSelected { get; internal set; }
+    public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
 
     public void Add(Link link)
     {
         links[link.Id] = link;
     }
 
-    public LinePos GetLineEndpoints()
+    private LinePos GetLineEndpoints()
     {
         var (s, t) = (Source.Boundary, Target.Boundary);
 

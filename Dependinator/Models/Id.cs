@@ -43,4 +43,12 @@ public record NodeId : Id
 
 public record LinkId(string sourceName, string targetName) : Id(Id.ToId($"{sourceName}->{targetName}"));
 
-public record LineId(string sourceName, string targetName) : Id(Id.ToId($"{sourceName}=>{targetName}"));
+public record LineId : Id
+{
+    private LineId(string Value)
+        : base(Value) { }
+
+    public static LineId From(string sourceName, string targetName) => new(Id.ToId($"{sourceName}=>{targetName}"));
+
+    public static LineId FromId(string id) => new(id);
+}

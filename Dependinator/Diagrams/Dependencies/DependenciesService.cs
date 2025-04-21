@@ -12,6 +12,7 @@ public enum TreeType
 
 interface IDependenciesService
 {
+    string Title { get; }
     string TreeIcon { get; }
     IReadOnlyList<TreeItem> TreeItems { get; }
 
@@ -30,9 +31,11 @@ class DependenciesService(
     IPanZoomService panZoomService
 ) : IDependenciesService
 {
+    TreeType treeType = TreeType.References;
     public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
 
-    public string TreeIcon => true ? Icon.DependenciesIcon : Icon.ReferencesIcon;
+    public string Title { get; private set; } = "";
+    public string TreeIcon => treeType == TreeType.Dependencies ? Icon.DependenciesIcon : Icon.ReferencesIcon;
 
     public async void ShowNode(NodeId nodeId)
     {
@@ -65,7 +68,8 @@ class DependenciesService(
 
     public void ShowReferences()
     {
-        TreeItems = GetTreeItems(TreeType.References);
+        treeType = TreeType.References;
+        TreeItems = GetTreeItems(treeType);
 
         var options = new DialogOptions()
         {
@@ -79,7 +83,8 @@ class DependenciesService(
 
     public void ShowDependencies()
     {
-        TreeItems = GetTreeItems(TreeType.Dependencies);
+        treeType = TreeType.Dependencies;
+        TreeItems = GetTreeItems(treeType);
 
         var options = new DialogOptions()
         {
@@ -100,14 +105,24 @@ class DependenciesService(
 
         using (var model = modelService.UseModel())
         {
-            if (!model.TryGetNode(selectedId, out var selectedNode))
-                return [];
-
-            var items = GetNodeItems(selectedNode, treeType);
-            treeItems.AddRange(items);
+            if (model.TryGetNode(selectedId, out var selectedNode))
+            {
+                Title = selectedNode.HtmlShortName;
+                var items = GetNodeItems(selectedNode, treeType);
+                treeItems.AddRange(items);
+                return treeItems;
+            }
+            if (model.TryGetLine(selectedId, out var selectedLine))
+            {
+                Title = selectedLine.HtmlShortName;
+                var items = GetLineItems(selectedLine, treeType);
+                treeItems.AddRange(items);
+                return treeItems;
+            }
         }
 
-        return treeItems;
+        Title = "No items found";
+        return [];
     }
 
     static IReadOnlyList<TreeItem> GetNodeItems(Node node, TreeType treeType)
@@ -119,6 +134,18 @@ class DependenciesService(
         else
         {
             return GetNodeDependencyItems(node);
+        }
+    }
+
+    static IReadOnlyList<TreeItem> GetLineItems(Line line, TreeType treeType)
+    {
+        if (treeType == TreeType.References)
+        {
+            return GetLineReferenceItems(line, line, null);
+        }
+        else
+        {
+            return GetLineDependencyItems(line, line, null);
         }
     }
 

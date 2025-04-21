@@ -17,6 +17,10 @@
 <MudDialog Style="@NodeToolBarPosition">
     <DialogContent>
         <MudStack>
+            <MudStack Row="true">
+               <MudIcon Icon="@srv.TreeIcon" Class="ml-n5" />
+                <MudText Color="Color.Info"><b>@(srv.Title)</b></MudText>
+            </MudStack>
             <MudPaper Class="overflow-y-auto ml-n8" Elevation="0" MaxWidth="MaxWidth" MaxHeight="500px">
                 <MudTreeView Items="@srv.TreeItems" Hover="true" Dense="true" Width="100%">
                     <ItemTemplate Context="treeItem">
@@ -62,8 +66,8 @@
    
     string NodeToolBarPosition => 
         $"Position: fixed; " +
-        $"left:{selectionService.SelectedNodePosition.X + 40}px; " +
-        $"top:{selectionService.SelectedNodePosition.Y - 20}px";
+        $"left:{selectionService.SelectedPosition.X + 40}px; " +
+        $"top:{selectionService.SelectedPosition.Y - 20}px";
     
     int MaxHeight => (int)screenService.SvgRect.Height - 5;
     int MaxWidth => (int)screenService.SvgRect.Width - 20;

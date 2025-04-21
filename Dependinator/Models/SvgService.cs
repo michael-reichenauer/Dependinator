@@ -1,3 +1,5 @@
+using Dependinator.Diagrams;
+
 namespace Dependinator.Models;
 
 interface ISvgService
@@ -45,7 +47,7 @@ class SvgService : ISvgService
 
         var rootContentSvg = GetNodeContentSvg(model.Root, tileOffset, 1 / tileZoom, tileWithMargin, new Pos(0, 0));
 
-        // Enable this if need to show tile border and/or tile with marghin border
+        // Enable this if need to show tile border and/or tile with margin border
         // var tileBorderSvg = $"""<rect x="{0}" y="{0}" width="{tileRect.Width:0.##}" height="{tileRect.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="red"/>""";
         // var tileMarginBorderSvg = $"""<rect x="{tileWithMargin.X}" y="{tileWithMargin.Y}" width="{tileWithMargin.Width:0.##}" height="{tileWithMargin.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="green"/>""";
 
@@ -164,12 +166,13 @@ class SvgService : ISvgService
         //Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
         //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
         string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
+        var elementId = PointerId.FromNode(node.Id).ElementId;
 
         return $"""
             <use href="#{icon}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" />
             <text x="{tx:0.##}" y="{ty:0.##}" class="iconName" font-size="{fz:0.##}px">{node.HtmlShortName}</text>
-            <g class="hoverable" id="{node.Id.Value}">
-              <rect id="{node.Id.Value}.i" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+            <g class="hoverable" id="{elementId}">
+              <rect id="{elementId}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
               <title>{node.HtmlLongName}</title>
             </g>
             {selectedSvg}
@@ -188,9 +191,9 @@ class SvgService : ISvgService
         var (tx, ty) = (x + (SmallIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
-
+        var elementId = PointerId.FromNode(node.Id).ElementId;
         //Log.Info($"Container: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
-        //var toolTip = $"{node.HtmlLongName}, np: {node.Boundarsy}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
+        //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
 
         string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
 
@@ -201,8 +204,8 @@ class SvgService : ISvgService
         return $"""
             <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
               <rect x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="{s}" rx="5" fill="{back}" stroke="{c}"/>
-              <g class="{cl}" id="{node.Id.Value}">
-                <rect id="{node.Id.Value}.c" x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+              <g class="{cl}" id="{elementId}">
+                <rect id="{elementId}" x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                 <title>{node.HtmlLongName}</title>
               </g>
               {childrenContent}
@@ -229,11 +232,6 @@ class SvgService : ISvgService
         if (!node.IsSelected)
             return "";
 
-        return SelectedResizeSvg(node, x, y, w, h);
-    }
-
-    static string SelectedResizeSvg(Node node, double x, double y, double w, double h)
-    {
         string c = Coloring.Highlight;
         const int s = 8;
         const int m = 3;
@@ -247,71 +245,50 @@ class SvgService : ISvgService
 
         const int tt = 12;
         const int t = 10 * 3 + 1;
+        var etl = PointerId.FromNodeResize(node.Id, NodeResizeType.TopLeft).ElementId;
+        var etm = PointerId.FromNodeResize(node.Id, NodeResizeType.TopMiddle).ElementId;
+        var etr = PointerId.FromNodeResize(node.Id, NodeResizeType.TopRight).ElementId;
+        var eml = PointerId.FromNodeResize(node.Id, NodeResizeType.MiddleLeft).ElementId;
+        var emr = PointerId.FromNodeResize(node.Id, NodeResizeType.MiddleRight).ElementId;
+        var ebl = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomLeft).ElementId;
+        var ebm = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomMiddle).ElementId;
+        var ebr = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomRight).ElementId;
 
         return $"""
-            <rect id="{node.Id.Value}.c" x="{x-rp}" y="{y-rp}" width="{w + rs:0.##}" height="{h
+            <rect x="{x-rp}" y="{y-rp}" width="{w + rs:0.##}" height="{h
                 + rs:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{c}" stroke-dasharray="5,5"/>
+
             <g class="selectpoint">
-              <rect id="{node.Id.Value}.tl" x="{x - ml}" y="{y
-                - mt}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{node.Id.Value}.tl" x="{x - ml - tt}" y="{y
-                - mt
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{etl}" cx="{x - ml + s/2.0}" cy="{y - mt + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{etl}" cx="{x - ml - tt + t/2.0}"  cy="{y - mt - tt + t/2.0}"  r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{node.Id.Value}.tm" x="{x + w / 2 - mm}" y="{y
-                - mt}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{node.Id.Value}.tm" x="{x + w / 2 - mm - tt}" y="{y
-                - mt
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
+                <circle id="{etm}" cx="{x + w/2 - mm + s/2.0}" cy="{y - mt + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{etm}" cx="{x + w/2 - mm - tt + t/2.0}" cy="{y - mt - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{node.Id.Value}.tr" x="{x + w + mr}" y="{y
-                - mt}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{node.Id.Value}.tr" x="{x + w + mr - tt}" y="{y
-                - mt
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{etr}" cx="{x + w + mr + s/2.0}" cy="{y - mt + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{etr}" cx="{x + w + mr - tt + t/2.0}" cy="{y - mt - tt + t/2.0}"  r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{node.Id.Value}.ml" x="{x - ml}" y="{y
-                + h / 2}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{node.Id.Value}.ml" x="{x - ml - tt}" y="{y
-                + h / 2
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{eml}" cx="{x - ml + s/2.0}" cy="{y + h/2 + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{eml}" cx="{x - ml - tt + t/2.0}"  cy="{y + h/2 - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{node.Id.Value}.mr" x="{x + w + mr}" y="{y
-                + h / 2}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{node.Id.Value}.mr" x="{x + w + mr - tt}" y="{y
-                + h / 2
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
-            </g>
-            <g class="selectpoint">    
-              <rect id="{node.Id.Value}.bl" x="{x - ml}" y="{y
-                + h
-                + mb}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{node.Id.Value}.bl" x="{x - ml - tt}" y="{y
-                + h
-                + mb
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{emr}" cx="{x + w + mr + s/2.0}" cy="{y + h/2 + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{emr}" cx="{x + w + mr - tt + t/2.0}" cy="{y + h/2 - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{node.Id.Value}.bm" x="{x + w / 2 - mm}" y="{y
-                + h
-                + mb}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{node.Id.Value}.bm" x="{x + w / 2 - mm - tt}" y="{y
-                + h
-                + mb
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0" />
+                <circle id="{ebl}" cx="{x - ml + s/2.0}" cy="{y + h + mb + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{ebl}" cx="{x - ml - tt + t/2.0}"  cy="{y + h + mb - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-              <rect id="{node.Id.Value}.br" x="{x + w + mr}" y="{y
-                + h
-                + mb}" width="{s}" height="{s}" fill="{c}" />
-              <rect id="{node.Id.Value}.br" x="{x + w + mr - tt}" y="{y
-                + h
-                + mb
-                - tt}" rx="20" width="{t}" height="{t}" fill="{c}" fill-opacity="0"/>
+                <circle id="{ebm}" cx="{x + w/2 - mm + s/2.0}" cy="{y + h + mb + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{ebm}" cx="{x + w/2 - mm - tt + t/2.0}" cy="{y + h + mb - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+            </g>
+            <g class="selectpoint">
+                <circle id="{ebr}" cx="{x + w + mr + s/2.0}" cy="{y + h + mb + s/2.0}" r="{s/2.0}" fill="{c}" />
+                <circle id="{ebr}" cx="{x + w + mr - tt + t/2.0}" cy="{y + h + mb - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             """;
     }
@@ -321,7 +298,14 @@ class SvgService : ISvgService
         if (Node.IsToLargeToBeSeen(childrenZoom))
             return "";
 
-        var sw = line.StrokeWidth;
+        if (
+            (line.Target.Parent == line.Source || line.Source.Parent == line.Target)
+            && Node.IsToLargeToBeSeen(parentZoom)
+        )
+        {
+            return "";
+        }
+
         var (s, t) = (line.Source.Boundary, line.Target.Boundary);
 
         var (x1, y1) = (s.X + s.Width, s.Y + s.Height / 2);
@@ -329,8 +313,6 @@ class SvgService : ISvgService
 
         if (line.Target.Parent == line.Source)
         { // Parent source to child target (left of parent to right of child)
-            if (Node.IsToLargeToBeSeen(parentZoom))
-                return "";
             var parent = line.Source;
             (x1, y1) = (
                 nodeCanvasPos.X - parent.ContainerOffset.X * parentZoom,
@@ -340,8 +322,6 @@ class SvgService : ISvgService
         }
         else if (line.Source.Parent == line.Target)
         { // Child source to parent target (left of child to right of parent)
-            if (Node.IsToLargeToBeSeen(parentZoom))
-                return "";
             var parent = line.Target;
             (x1, y1) = (nodeCanvasPos.X + x1 * childrenZoom, nodeCanvasPos.Y + y1 * childrenZoom);
 
@@ -356,14 +336,36 @@ class SvgService : ISvgService
             (x2, y2) = (nodeCanvasPos.X + x2 * childrenZoom, nodeCanvasPos.Y + y2 * childrenZoom);
         }
 
+        var sw = line.StrokeWidth;
+        var elementId = PointerId.FromLine(line.Id).ElementId;
+        string selectedSvg = SelectedLineSvg(line, x1, y1, x2, y2);
+
         var c = "#B388FF";
         return $"""
             <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="{c}" marker-end="url(#arrow)" />
-            <g class="hoverable" >
-              <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw
+            <g class="hoverable" id="{elementId}">
+              <line id="{elementId}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw
                 + 10}" stroke="black" stroke-opacity="0" />
-              <title>{line.Source.HtmlLongName} {line.Target.HtmlLongName}</title>
+              <title>{line.Source.HtmlLongName}→{line.Target.HtmlLongName}</title>
             </g>
+            {selectedSvg}
+            """;
+    }
+
+    private static string SelectedLineSvg(Line line, double x1, double y1, double x2, double y2)
+    {
+        if (!line.IsSelected)
+            return "";
+
+        string c = Coloring.Highlight;
+        var sw = line.StrokeWidth;
+        var ps = 7;
+
+        return $"""
+            <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{c}" stroke-width="{sw
+                + 3}" stroke-dasharray="3,50"/>
+            <circle cx="{x1}" cy="{y1}" r="{ps}" fill="{c}" />
+            <circle cx="{x2}" cy="{y2}" r="{ps}" fill="{c}" />
             """;
     }
 }

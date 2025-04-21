@@ -4,7 +4,7 @@ class NodeName
 {
     static readonly char[] PartsSeparators = "./".ToCharArray();
 
-    public static (string longName, string shortName) GetDisplayNames(string nodeName)
+    public static (string longName, string shortName) GetDisplayNames(string nodeName, NodeType nodeType)
     {
         string[] parts = nodeName.Split(PartsSeparators);
 
@@ -12,8 +12,8 @@ class NodeName
         int index = namePart.IndexOf('(');
         string shortName = ToNiceText(index > -1 ? namePart[..index] : namePart);
 
-        var subParts = nodeName.StartsWith("$") ? parts : parts.Skip(1);
-        string longName = string.Join(".", subParts.Where(part => !part.StartsWith("?")));
+        var subParts = nodeName.StartsWith('$') ? parts : parts.Skip(1);
+        string longName = string.Join(".", subParts.Where(part => !part.StartsWith('?')));
 
         if (string.IsNullOrEmpty(longName))
         {
@@ -23,6 +23,9 @@ class NodeName
         {
             longName = ToNiceParameters(ToNiceText(longName));
         }
+
+        shortName = nodeType == NodeType.Assembly ? shortName + ".dll" : shortName;
+        longName = nodeType == NodeType.Assembly ? longName + ".dll" : longName;
 
         return (longName, shortName);
     }
