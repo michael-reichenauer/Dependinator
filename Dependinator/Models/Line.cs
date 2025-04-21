@@ -31,6 +31,7 @@ class Line : IItem
     public string Color { get; set; } = "red";
     public double StrokeWidth { get; set; } = 2.0;
     public bool IsSelected { get; internal set; }
+    public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
 
     public void Add(Link link)
     {

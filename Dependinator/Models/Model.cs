@@ -24,6 +24,7 @@ interface IModel : IDisposable
     void AddLine(Line line);
     Line GetLine(LineId id);
     bool TryGetLine(LineId id, out Line line);
+    bool TryGetLine(string id, out Line line);
     void Clear();
     void ClearCachedSvg();
     bool ContainsKey(Id linkId);
@@ -141,6 +142,11 @@ class Model : IModel
     }
 
     public Line GetLine(LineId id) => (Line)Items[id];
+
+    public bool TryGetLine(string id, out Line line)
+    {
+        return TryGetLine(LineId.FromId(id), out line);
+    }
 
     public bool TryGetLine(LineId id, out Line link)
     {
