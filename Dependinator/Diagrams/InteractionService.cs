@@ -154,7 +154,7 @@ class InteractionService : IInteractionService
         Log.Info("mouse click", e.TargetId);
         var targetId = PointerId.Parse(e.TargetId);
 
-        selectionService.Select(targetId);
+        selectionService.Select(targetId, e);
     }
 
     void OnDblClick(PointerEvent e)

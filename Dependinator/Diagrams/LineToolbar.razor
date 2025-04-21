@@ -12,29 +12,18 @@
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show"
     Style="@position">
 
-    <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
-            OnClick="ShowProperties">Properties ...</MudMenuItem>
-    </MudMenu>
-    
     <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences"  />
     <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies"  />
    
-    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" Disabled="@isIcon"/>
-    <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit" Disabled="@isIcon"
-        ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
 </MudButtonGroup>
 
 
 @code {
-    string show => selectionService.SelectedNodePosition != Models.Pos.None ? "visible" : "hidden";
+    string show => selectionService.SelectedLinePosition != Models.Pos.None ? "visible" : "hidden";
     bool isIcon => !interactionService.IsContainer;
-    double left => selectionService.SelectedNodePosition.X;
-    double top => selectionService.SelectedNodePosition.Y - 55;
+    double left =>selectionService.SelectedLinePosition.X;
+    double top => selectionService.SelectedLinePosition.Y -20;
     string position => $"Position: fixed; left:{left}px; top:{top}px";
-    
-    void ShowProperties()  =>
-        dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
 
     void ShowReferences() => dependenciesService.ShowReferences();
     void ShowDependencies() => dependenciesService.ShowDependencies();

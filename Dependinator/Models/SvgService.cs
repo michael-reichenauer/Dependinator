@@ -298,7 +298,14 @@ class SvgService : ISvgService
         if (Node.IsToLargeToBeSeen(childrenZoom))
             return "";
 
-        var sw = line.StrokeWidth;
+        if (
+            (line.Target.Parent == line.Source || line.Source.Parent == line.Target)
+            && Node.IsToLargeToBeSeen(parentZoom)
+        )
+        {
+            return "";
+        }
+
         var (s, t) = (line.Source.Boundary, line.Target.Boundary);
 
         var (x1, y1) = (s.X + s.Width, s.Y + s.Height / 2);
@@ -306,8 +313,6 @@ class SvgService : ISvgService
 
         if (line.Target.Parent == line.Source)
         { // Parent source to child target (left of parent to right of child)
-            if (Node.IsToLargeToBeSeen(parentZoom))
-                return "";
             var parent = line.Source;
             (x1, y1) = (
                 nodeCanvasPos.X - parent.ContainerOffset.X * parentZoom,
@@ -317,8 +322,6 @@ class SvgService : ISvgService
         }
         else if (line.Source.Parent == line.Target)
         { // Child source to parent target (left of child to right of parent)
-            if (Node.IsToLargeToBeSeen(parentZoom))
-                return "";
             var parent = line.Target;
             (x1, y1) = (nodeCanvasPos.X + x1 * childrenZoom, nodeCanvasPos.Y + y1 * childrenZoom);
 
@@ -332,6 +335,8 @@ class SvgService : ISvgService
             (x1, y1) = (nodeCanvasPos.X + x1 * childrenZoom, nodeCanvasPos.Y + y1 * childrenZoom);
             (x2, y2) = (nodeCanvasPos.X + x2 * childrenZoom, nodeCanvasPos.Y + y2 * childrenZoom);
         }
+
+        var sw = line.StrokeWidth;
         var elementId = PointerId.FromLine(line.Id).ElementId;
         string selectedSvg = SelectedLineSvg(line, x1, y1, x2, y2);
 

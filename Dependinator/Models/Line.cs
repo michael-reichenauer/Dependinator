@@ -37,7 +37,7 @@ class Line : IItem
         links[link.Id] = link;
     }
 
-    public LinePos GetLineEndpoints()
+    private LinePos GetLineEndpoints()
     {
         var (s, t) = (Source.Boundary, Target.Boundary);
 
