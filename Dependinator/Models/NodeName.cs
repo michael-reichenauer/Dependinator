@@ -11,7 +11,6 @@ class NodeName
         string namePart = parts[^1];
         int index = namePart.IndexOf('(');
         string shortName = ToNiceText(index > -1 ? namePart[..index] : namePart);
-        shortName = nodeType == NodeType.Assembly ? shortName + ".dll" : shortName;
 
         var subParts = nodeName.StartsWith('$') ? parts : parts.Skip(1);
         string longName = string.Join(".", subParts.Where(part => !part.StartsWith('?')));
@@ -24,6 +23,9 @@ class NodeName
         {
             longName = ToNiceParameters(ToNiceText(longName));
         }
+
+        shortName = nodeType == NodeType.Assembly ? shortName + ".dll" : shortName;
+        longName = nodeType == NodeType.Assembly ? longName + ".dll" : longName;
 
         return (longName, shortName);
     }

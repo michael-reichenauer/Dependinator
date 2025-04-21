@@ -12,6 +12,7 @@ public enum TreeType
 
 interface IDependenciesService
 {
+    string Title { get; }
     string TreeIcon { get; }
     IReadOnlyList<TreeItem> TreeItems { get; }
 
@@ -30,9 +31,12 @@ class DependenciesService(
     IPanZoomService panZoomService
 ) : IDependenciesService
 {
+    Node currentNode = null!;
+    TreeType treeType = TreeType.References;
     public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
 
-    public string TreeIcon => true ? Icon.DependenciesIcon : Icon.ReferencesIcon;
+    public string Title => currentNode?.HtmlShortName ?? "";
+    public string TreeIcon => treeType == TreeType.Dependencies ? Icon.DependenciesIcon : Icon.ReferencesIcon;
 
     public async void ShowNode(NodeId nodeId)
     {
@@ -65,7 +69,8 @@ class DependenciesService(
 
     public void ShowReferences()
     {
-        TreeItems = GetTreeItems(TreeType.References);
+        treeType = TreeType.References;
+        TreeItems = GetTreeItems(treeType);
 
         var options = new DialogOptions()
         {
@@ -79,7 +84,8 @@ class DependenciesService(
 
     public void ShowDependencies()
     {
-        TreeItems = GetTreeItems(TreeType.Dependencies);
+        treeType = TreeType.Dependencies;
+        TreeItems = GetTreeItems(treeType);
 
         var options = new DialogOptions()
         {
@@ -102,7 +108,7 @@ class DependenciesService(
         {
             if (!model.TryGetNode(selectedId, out var selectedNode))
                 return [];
-
+            currentNode = selectedNode;
             var items = GetNodeItems(selectedNode, treeType);
             treeItems.AddRange(items);
         }

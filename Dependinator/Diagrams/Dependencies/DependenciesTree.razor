@@ -17,6 +17,10 @@
 <MudDialog Style="@NodeToolBarPosition">
     <DialogContent>
         <MudStack>
+            <MudStack Row="true">
+               <MudIcon Icon="@srv.TreeIcon" Class="ml-n5" />
+                <MudText Color="Color.Info"><b>@(srv.Title)</b></MudText>
+            </MudStack>
             <MudPaper Class="overflow-y-auto ml-n8" Elevation="0" MaxWidth="MaxWidth" MaxHeight="500px">
                 <MudTreeView Items="@srv.TreeItems" Hover="true" Dense="true" Width="100%">
                     <ItemTemplate Context="treeItem">
