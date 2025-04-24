@@ -1,6 +1,5 @@
 ﻿namespace Dependinator.Utils;
 
-
 public class Debouncer
 {
     private readonly Timer timer;
@@ -22,7 +21,6 @@ public class Debouncer
     }
 
     public void Dispose() => timer?.Dispose();
-
 
     void InvokeAction()
     {

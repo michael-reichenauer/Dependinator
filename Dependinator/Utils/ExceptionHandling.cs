@@ -1,9 +1,6 @@
 using System.Diagnostics;
 
-
-
 namespace Dependinator.Utils;
-
 
 // Handles unhandled exceptions top ensure they are logged and program is restarted or shut down
 static class ExceptionHandling
@@ -19,7 +16,7 @@ static class ExceptionHandling
     public static void HandleUnhandledExceptions(Action shutdownCallback)
     {
         shutdown = shutdownCallback;
-        // Add the event handler for handling non-UI thread exceptions to the event. 
+        // Add the event handler for handling non-UI thread exceptions to the event.
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             HandleException("app domain exception", e.ExceptionObject as Exception ?? new Exception());
 
@@ -31,8 +28,7 @@ static class ExceptionHandling
         };
 
         // Add event handler for fatal exceptions using catch condition "when (e.IsNotFatal())"
-        FatalExceptionsExtensions.FatalException += (s, e) =>
-            HandleException(e.Message, e.Exception);
+        FatalExceptionsExtensions.FatalException += (s, e) => HandleException(e.Message, e.Exception);
 
         // Add handler for asserts
         Asserter.AssertOccurred += (s, e) => HandleException("Assert failed", e.Exception);
@@ -45,7 +41,7 @@ static class ExceptionHandling
 
     // public static void HandleDispatcherUnhandledException()
     // {
-    // 	// Add the event handler for handling UI thread exceptions to the event		
+    // 	// Add the event handler for handling UI thread exceptions to the event
     // 	Application.Current.DispatcherUnhandledException += (s, e) =>
     // 	{
     // 		HandleException("dispatcher exception", e.Exception);
@@ -61,7 +57,8 @@ static class ExceptionHandling
 
     static void HandleException(string errorType, Exception exception)
     {
-        if (hasFailed) return;
+        if (hasFailed)
+            return;
         hasFailed = true;
 
         string errorMessage = $"Unhandled {errorType}";
@@ -70,12 +67,11 @@ static class ExceptionHandling
         Shutdown(errorMessage, exception);
     }
 
-
     static void Shutdown(string message, Exception e)
     {
-        if (hasShutdown) return;
+        if (hasShutdown)
+            return;
         hasShutdown = true;
-
 
         // if (isDispatcherInitialized)
         // {
@@ -98,7 +94,6 @@ static class ExceptionHandling
 
         ConfigLogger.CloseAsync().ContinueWith(t => shutdown());
 
-
         // shutdown();
 
         // if (DateTime.Now - StartTime >= MinTimeBeforeAutoRestart)
@@ -116,7 +111,6 @@ static class ExceptionHandling
         // }
     }
 
-
     private static void ShowExceptionDialog(Exception e)
     {
         if (hasDisplayedErrorMessageBox)
@@ -132,7 +126,6 @@ static class ExceptionHandling
 
         hasDisplayedErrorMessageBox = true;
     }
-
 
     // private static Dispatcher GetApplicationDispatcher() =>
     // 	Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;

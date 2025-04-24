@@ -7,7 +7,6 @@ namespace Dependinator.Utils
         object? __EqValue3 { get; }
     }
 
-
     /// <summary>
     ///     Base class, which implement IEquatable'T' interface and makes it easier to prt
     ///     equality operators like "==" and "!=" and usage in Dictionary.
@@ -41,19 +40,18 @@ namespace Dependinator.Utils
         object? IEquatable.__EqValue2 => eqValue2;
         object? IEquatable.__EqValue3 => eqValue3;
 
-
         public bool Equals(T? other)
         {
             if (isEqualFunc == null)
             {
                 throw new InvalidOperationException(
-                    $"To support Equals() or == for {GetType()},\n" +
-                    "you need to call IsEqualWhenSame(), e.g. in the constructor");
+                    $"To support Equals() or == for {GetType()},\n"
+                        + "you need to call IsEqualWhenSame(), e.g. in the constructor"
+                );
             }
 
             return other != null && isEqualFunc(other);
         }
-
 
         protected void IsEqualWhenSame(object value1)
         {
@@ -71,7 +69,6 @@ namespace Dependinator.Utils
             };
         }
 
-
         protected void IsEqualWhenSame(object value1, object value2)
         {
             hashCode = GetHashFor(value1, value2);
@@ -82,14 +79,12 @@ namespace Dependinator.Utils
             {
                 if (other is IEquatable otherTyped)
                 {
-                    return Equals(otherTyped.__EqValue1, eqValue1)
-                           && Equals(otherTyped.__EqValue2, eqValue2);
+                    return Equals(otherTyped.__EqValue1, eqValue1) && Equals(otherTyped.__EqValue2, eqValue2);
                 }
 
                 return false;
             };
         }
-
 
         protected void IsEqualWhenSame(object value1, object value2, object value3)
         {
@@ -103,48 +98,39 @@ namespace Dependinator.Utils
                 if (other is IEquatable otherTyped)
                 {
                     return Equals(otherTyped.__EqValue1, eqValue1)
-                           && Equals(otherTyped.__EqValue2, eqValue2)
-                           && Equals(otherTyped.__EqValue3, eqValue3);
+                        && Equals(otherTyped.__EqValue2, eqValue2)
+                        && Equals(otherTyped.__EqValue3, eqValue3);
                 }
 
                 return false;
             };
         }
 
-
-        protected void IsEqualWhen(
-            Func<T, bool> isEqual,
-            object getHashCodeObject,
-            params object[] getHashCodeObjects)
+        protected void IsEqualWhen(Func<T, bool> isEqual, object getHashCodeObject, params object[] getHashCodeObjects)
         {
             hashCode = GetHashFor(getHashCodeObject, getHashCodeObjects);
 
             isEqualFunc = isEqual;
         }
 
-
         public override int GetHashCode()
         {
             if (hashCode == null)
             {
                 throw new InvalidOperationException(
-                    $"To support GetHashCode() for {GetType()}, for use in e.g. a Dictionary,\n" +
-                    "you need to call IsEqualWhenSame(), e.g. in the constructor");
+                    $"To support GetHashCode() for {GetType()}, for use in e.g. a Dictionary,\n"
+                        + "you need to call IsEqualWhenSame(), e.g. in the constructor"
+                );
             }
 
             return hashCode.Value;
         }
 
-
         public override bool Equals(object? other) => other is T otherTyped && Equals(otherTyped);
 
-
-        public static bool operator ==(Equatable<T> obj1, Equatable<T> obj2) =>
-            Equatable.IsEqual(obj1, obj2);
-
+        public static bool operator ==(Equatable<T> obj1, Equatable<T> obj2) => Equatable.IsEqual(obj1, obj2);
 
         public static bool operator !=(Equatable<T> obj1, Equatable<T> obj2) => !(obj1 == obj2);
-
 
         private static int GetHashFor(object getHashCodeObject, params object[] getHashCodeObjects)
         {
@@ -157,7 +143,6 @@ namespace Dependinator.Utils
             return code;
         }
     }
-
 
     /// <summary>
     ///     Helper class to implement IEquatable'T'  interface
@@ -200,7 +185,6 @@ namespace Dependinator.Utils
 
             return predicate(obj1, obj2);
         }
-
 
         public static bool IsEqual<T>(IEquatable<T> obj1, IEquatable<T> obj2)
         {

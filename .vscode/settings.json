@@ -1,11 +1,13 @@
 {
-  "azureFunctions.deploySubpath": "Api/bin/Release/net8.0/publish",
+  "azureFunctions.deploySubpath": "Api/bin/Release/net9.0/publish",
   "azureFunctions.projectLanguage": "C#",
   "azureFunctions.projectRuntime": "~4",
   "debug.internalConsoleOptions": "neverOpen",
   "azureFunctions.preDeployTask": "publish (functions)",
   "cSpell.words": [
     "Blazor",
+    "dasharray",
+    "Debouncer",
     "Decompile",
     "Decompiled",
     "Decompiler",
@@ -14,6 +16,7 @@
     "dotnettools",
     "Dtos",
     "hoverable",
+    "hoverableedit",
     "Hsts",
     "linejoin",
     "mhutchie",
@@ -21,6 +24,7 @@
     "Newtonsoft",
     "polyline",
     "Rezise",
+    "selectpoint",
     "Svgs",
     "uninstallation"
   ],

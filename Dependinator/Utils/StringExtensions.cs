@@ -4,11 +4,12 @@ using System.Text.Json;
 
 namespace Dependinator.Utils;
 
-
 public static class StringExtensions
 {
-    private static readonly JsonSerializerOptions JsonIndented = new() { WriteIndented = true };
-    private static readonly JsonSerializerOptions JsonOneLine = new() { WriteIndented = false };
+    const int SidLength = 6;
+    static readonly JsonSerializerOptions JsonIndented = new() { WriteIndented = true };
+    static readonly JsonSerializerOptions JsonOneLine = new() { WriteIndented = false };
+
     // Method that limits the length of text to a defined length and can fill the rest with spaces
     public static string Max(this string source, int maxLength, bool isFill = false)
     {
@@ -48,7 +49,8 @@ public static class StringExtensions
 
     public static string ToJson(this object? source)
     {
-        if (source == null) return "";
+        if (source == null)
+            return "";
 
         if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, JsonIndented)))
         {
@@ -60,7 +62,8 @@ public static class StringExtensions
 
     public static string ToJsonOneLine(this object? source)
     {
-        if (source == null) return "";
+        if (source == null)
+            return "";
 
         if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, JsonOneLine)))
         {
@@ -68,6 +71,16 @@ public static class StringExtensions
         }
 
         return json;
+    }
+
+    public static string Sid(this string source)
+    {
+        if (source.Length <= SidLength)
+        {
+            return source;
+        }
+
+        return source.Substring(0, SidLength);
     }
 
     public static string ToSha2(this string text)
@@ -79,10 +92,10 @@ public static class StringExtensions
 
     public static string Txt(this Version? source)
     {
-        if (source == null) return "";
+        if (source == null)
+            return "";
         return $"{source.Major}.{source.Minor} ({source.Build}.{source.Revision})";
     }
-
 
     public static bool IsSameIc(this string strA, string strB) =>
         0 == string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase);

@@ -2,7 +2,6 @@ using Dependinator.Models;
 using Dependinator.Utils.UI;
 using Microsoft.JSInterop;
 
-
 namespace Dependinator.Diagrams;
 
 public class BrowserSizeDetails
@@ -24,7 +23,6 @@ public class ElementBoundingRectangle
     public double Bottom { get; set; }
     public double Left { get; set; }
 }
-
 
 interface IScreenService
 {
@@ -55,11 +53,11 @@ class ScreenService : IScreenService
         this.jSInterop = jSInteropService;
 
         this.resizeTimer = new System.Timers.Timer(interval: 25);
-        this.resizeTimer.Elapsed += async (sender, elapsedEventArgs) => await DimensionsChanged(sender!, elapsedEventArgs);
+        this.resizeTimer.Elapsed += async (sender, elapsedEventArgs) =>
+            await DimensionsChanged(sender!, elapsedEventArgs);
     }
 
     public Rect SvgRect { get; private set; } = Rect.None;
-
 
     public async Task InitAsync(IUIComponent component)
     {
@@ -69,11 +67,11 @@ class ScreenService : IScreenService
         await RegisterWindowResizeEvents();
     }
 
-
     public async Task CheckResizeAsync()
     {
         // Get Svg position (width and height are unreliable)
-        if (!Try(out var svg, out var _, await GetBoundingRectangle("svgcanvas"))) return;
+        if (!Try(out var svg, out var _, await GetBoundingRectangle("svgcanvas")))
+            return;
 
         // Get window width and height
         var windowWidth = Math.Floor(browserSizeDetails.InnerWidth);
@@ -90,7 +88,7 @@ class ScreenService : IScreenService
         lock (syncRoot)
         {
             if (newSwgRect != SvgRect)
-            {   // Svg size has changed, adjust svg to fit new window size window and trigger update
+            { // Svg size has changed, adjust svg to fit new window size window and trigger update
                 SvgRect = newSwgRect;
                 isChanged = true;
             }
@@ -107,12 +105,13 @@ class ScreenService : IScreenService
     public async Task<R<ElementBoundingRectangle>> GetBoundingRectangle(string elementId)
     {
         var r = await jSInterop.Call<ElementBoundingRectangle>("getBoundingRectangle", elementId);
-        if (r == null) return R.None;
+        if (r == null)
+            return R.None;
         return r;
     }
 
     async Task RegisterWindowResizeEvents() =>
-          await jSInterop.Call("listenToWindowResize", "svgcanvas", jSInterop.Reference(this), nameof(OnWindowResized));
+        await jSInterop.Call("listenToWindowResize", "svgcanvas", jSInterop.Reference(this), nameof(OnWindowResized));
 
     async Task<BrowserSizeDetails> GetBrowserSizeDetails() =>
         await jSInterop.Call<BrowserSizeDetails>("getWindowSizeDetails");
@@ -154,5 +153,3 @@ class ScreenService : IScreenService
         OnResize();
     }
 }
-
-

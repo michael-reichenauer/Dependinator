@@ -2,12 +2,10 @@
 
 namespace Dependinator.Parsing.Solutions;
 
-
 internal class Project
 {
     private readonly ProjectInSolution projectInSolution;
     private readonly string solutionDirectory;
-
 
     public Project(ProjectInSolution projectInSolution, string solutionDirectory)
     {
@@ -16,7 +14,6 @@ internal class Project
 
         ProjectFilePath = Path.Combine(solutionDirectory, projectInSolution.RelativePath);
     }
-
 
     public string ProjectFilePath { get; }
 
@@ -39,7 +36,7 @@ internal class Project
             return "";
         }
 
-        // Get all ".dll" or ".exe" assemblies of the project name. Could be several configurations 
+        // Get all ".dll" or ".exe" assemblies of the project name. Could be several configurations
         // have been built. Order them latest built first
         var filePaths = Directory
             .EnumerateFiles(binariesDir, $"{ProjectName}.*", SearchOption.AllDirectories)
@@ -52,14 +49,9 @@ internal class Project
 
     public override string ToString() => ProjectFilePath;
 
-    static bool IsAssembly(string path) =>
-        HasExtension(path, ".exe") || HasExtension(path, ".dll");
-
+    static bool IsAssembly(string path) => HasExtension(path, ".exe") || HasExtension(path, ".dll");
 
     static DateTime GetBuildTime(string path) => new FileInfo(path).LastWriteTimeUtc;
 
-
-    static bool HasExtension(string path, string extension) =>
-        Path.GetExtension(path).IsSameIc(extension);
+    static bool HasExtension(string path, string extension) => Path.GetExtension(path).IsSameIc(extension);
 }
-

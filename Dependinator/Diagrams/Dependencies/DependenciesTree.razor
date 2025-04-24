@@ -1,42 +1,76 @@
 @inject IApplicationEvents applicationEvents
 @inject IDependenciesService srv
+@inject IScreenService screenService
+@inject IInteractionService interactionService
+@inject ISelectionService selectionService
 
+<style>
+    .hover-button {
+        visibility: hidden;
+    }
 
-<MudTreeView Color="Color.Info" Items="@Tree.Items" @bind-SelectedValue="Tree.Selected" Hover="true" Dense="true"
-    Width="100%">
-    <ItemTemplate>
-        <MudTreeViewItem Value="@context" Icon="@context.Icon" @bind-Expanded="@context.IsExpanded"
-            ExpandedIcon="@context.ExpandIcon" Items="@context.Items">
-            <BodyContent Context="item">
-                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                    @if (context.IsSelected)
-                    {
-                        <MudText Style="justify-self: start;" Color="@context.TextColor">
-                            <b>@context.Title</b>
-                        </MudText>
-                    }
-                    else
-                    {
-                        <MudText Style="justify-self: start;" Color="@context.TextColor">
-                            @context.Title
-                        </MudText>
-                    }
-                    <div style="justify-self: end;">
-                        <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
-                            Color="Color.Inherit" Class="ml-3" />
-                    </div>
-                </div>
-            </BodyContent>
-        </MudTreeViewItem>
-    </ItemTemplate>
-</MudTreeView>
+    .hover-element:hover .hover-button {
+        visibility: visible;
+    }
+</style>
+
+<MudDialog Style="@NodeToolBarPosition">
+    <DialogContent>
+        <MudStack>
+            <MudStack Row="true">
+               <MudIcon Icon="@srv.TreeIcon" Class="ml-n5" />
+                <MudText Color="Color.Info"><b>@(srv.Title)</b></MudText>
+            </MudStack>
+            <MudPaper Class="overflow-y-auto ml-n8" Elevation="0" MaxWidth="MaxWidth" MaxHeight="500px">
+                <MudTreeView Items="@srv.TreeItems" Hover="true" Dense="true" Width="100%">
+                    <ItemTemplate Context="treeItem">
+                        @{
+                            var item = (TreeItem)treeItem;
+                        }
+                        <MudTreeViewItem Items="@item.Children" Icon="@item.Icon"
+                            OnClick="() => srv.SetSelected(item.Value!)" @bind-Expanded="@item.Expanded">
+                            <BodyContent>
+                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
+                                    class="hover-element">
+         
+                                    <MudText Style="justify-self: start;">@item.Text</MudText>
+                                    
+                                    @if (item.NodeId != Models.NodeId.Empty)
+                                    {
+                                        <div style="justify-self: end;">
+                                            <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
+                                                Color="Color.Inherit" Class="ml-3 hover-button"
+                                                OnClick="() => ShowNode(item.NodeId)" />
+                                        </div>
+                                    }
+                                </div>
+                            </BodyContent>
+                        </MudTreeViewItem>
+                    </ItemTemplate>
+                </MudTreeView>
+            </MudPaper>
+        </MudStack>
+    </DialogContent>
+</MudDialog>
+
 
 @code {
-    [Parameter]
-    public TreeSide Side { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
-    Tree Tree => srv.TreeData(Side);
-
+    void ShowNode(Models.NodeId nodeId)
+    {
+        MudDialog.Close();
+        srv.ShowNode(nodeId);
+        applicationEvents.TriggerUIStateChanged();
+    }
+   
+    string NodeToolBarPosition => 
+        $"Position: fixed; " +
+        $"left:{selectionService.SelectedPosition.X + 40}px; " +
+        $"top:{selectionService.SelectedPosition.Y - 20}px";
+    
+    int MaxHeight => (int)screenService.SvgRect.Height - 5;
+    int MaxWidth => (int)screenService.SvgRect.Width - 20;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

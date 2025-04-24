@@ -1,6 +1,5 @@
 namespace Dependinator.Models;
 
-
 interface ICommandService
 {
     bool CanUndo { get; }
@@ -11,8 +10,7 @@ interface ICommandService
     void Undo(Func<IModel> useModel);
 }
 
-
-[Singleton]
+[Scoped]
 class CommandService : ICommandService
 {
     readonly IApplicationEvents applicationEvents;
@@ -24,10 +22,8 @@ class CommandService : ICommandService
         this.applicationEvents = applicationEvents;
     }
 
-
     public bool CanUndo => undoStack.Any();
     public bool CanRedo => redoStack.Any();
-
 
     public void Do(IModel model, Command command)
     {
@@ -55,12 +51,14 @@ class CommandService : ICommandService
 
         undoStack.Push(command);
         redoStack.Clear();
+        applicationEvents.TriggerUndoneRedone();
+        applicationEvents.TriggerUIStateChanged();
     }
-
 
     public void Undo(Func<IModel> useModel)
     {
-        if (!CanUndo) return;
+        if (!CanUndo)
+            return;
 
         if (undoStack.Peek() is CompositeCommand composite)
         {
@@ -81,7 +79,8 @@ class CommandService : ICommandService
 
     public void Redo(Func<IModel> useModel)
     {
-        if (!CanRedo) return;
+        if (!CanRedo)
+            return;
 
         if (redoStack.Peek() is CompositeCommand composite)
         {
@@ -99,7 +98,6 @@ class CommandService : ICommandService
         applicationEvents.TriggerUndoneRedone();
         applicationEvents.TriggerUIStateChanged();
     }
-
 
     async void UndoComposite(Func<IModel> useModel, CompositeCommand composite)
     {
@@ -119,7 +117,6 @@ class CommandService : ICommandService
         var command = undoStack.Pop();
         redoStack.Push(command);
     }
-
 
     async void RedoComposite(Func<IModel> useModel, CompositeCommand composite)
     {

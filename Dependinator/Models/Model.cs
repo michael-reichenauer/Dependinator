@@ -1,6 +1,5 @@
 namespace Dependinator.Models;
 
-
 interface IModel : IDisposable
 {
     string Path { get; set; }
@@ -10,7 +9,7 @@ interface IModel : IDisposable
     double Zoom { get; set; }
     Pos Offset { get; set; }
     Tiles Tiles { get; }
-    IDictionary<Id, IItem> Items { get; }   // Ta bort
+    IDictionary<Id, IItem> Items { get; } // Ta bort
     bool IsSaving { get; set; }
     DateTime ModifiedTime { get; set; }
     CancellationTokenSource SaveCancelSource { get; set; }
@@ -20,16 +19,18 @@ interface IModel : IDisposable
     void AddNode(Node node);
     Node GetNode(NodeId id);
     void AddLink(Link link);
-    Link GetLink(NodeId id);
-    bool TryGetLink(NodeId id, out Link link);
+    Link GetLink(LinkId id);
+    bool TryGetLink(LinkId id, out Link link);
     void AddLine(Line line);
+    Line GetLine(LineId id);
+    bool TryGetLine(LineId id, out Line line);
+    bool TryGetLine(string id, out Line line);
     void Clear();
     void ClearCachedSvg();
     bool ContainsKey(Id linkId);
 }
 
-
-[Singleton]
+[Scoped]
 class Model : IModel
 {
     private readonly object syncRoot = new();
@@ -44,8 +45,27 @@ class Model : IModel
     public bool IsSaving { get; set; } = false;
 
     public Rect ViewRect { get; set; } = Rect.None;
-    public double Zoom { get; set; } = 0;
-    public Pos Offset { get; set; } = Pos.None;
+    double zoom = 0;
+    Pos offset = Pos.None;
+
+    public double Zoom
+    {
+        get => zoom;
+        set
+        {
+            // Log.Info($"Set model zoom to {value}\n{Util.CallStack(4)}");
+            zoom = value;
+        }
+    }
+    public Pos Offset
+    {
+        get => offset;
+        set
+        {
+            // Log.Info($"Set model offset to {value}\n{Util.CallStack(4)}");
+            offset = value;
+        }
+    }
 
     public Tiles Tiles { get; } = new();
 
@@ -85,26 +105,25 @@ class Model : IModel
         return true;
     }
 
-
     public void AddNode(Node node)
     {
-        if (Items.ContainsKey(node.Id)) return;
+        if (Items.ContainsKey(node.Id))
+            return;
         Items[node.Id] = node;
     }
 
     public Node GetNode(NodeId id) => (Node)Items[id];
 
-
-
     public void AddLink(Link link)
     {
-        if (Items.ContainsKey(link.Id)) return;
+        if (Items.ContainsKey(link.Id))
+            return;
         Items[link.Id] = link;
     }
 
-    public Link GetLink(NodeId id) => (Link)Items[id];
+    public Link GetLink(LinkId id) => (Link)Items[id];
 
-    public bool TryGetLink(NodeId id, out Link link)
+    public bool TryGetLink(LinkId id, out Link link)
     {
         if (!Items.TryGetValue(id, out var item))
         {
@@ -115,13 +134,30 @@ class Model : IModel
         return true;
     }
 
-
     public void AddLine(Line line)
     {
-        if (Items.ContainsKey(line.Id)) return;
+        if (Items.ContainsKey(line.Id))
+            return;
         Items[line.Id] = line;
     }
 
+    public Line GetLine(LineId id) => (Line)Items[id];
+
+    public bool TryGetLine(string id, out Line line)
+    {
+        return TryGetLine(LineId.FromId(id), out line);
+    }
+
+    public bool TryGetLine(LineId id, out Line link)
+    {
+        if (!Items.TryGetValue(id, out var item))
+        {
+            link = null!;
+            return false;
+        }
+        link = (Line)item;
+        return true;
+    }
 
     public void Clear()
     {
@@ -131,6 +167,7 @@ class Model : IModel
         ModifiedTime = DateTime.MinValue;
         ViewRect = Rect.None;
         Zoom = 0;
+        Offset = Pos.None;
         ClearCachedSvg();
 
         InitModel();
@@ -147,10 +184,11 @@ class Model : IModel
         Items[Root.Id] = Root;
     }
 
-    static Node DefaultRootNode() => new("", null!)
-    {
-        Type = NodeType.Root,
-        Boundary = new Rect(0, 0, 1000, 1000),
-        ContainerZoom = 1
-    };
+    static Node DefaultRootNode() =>
+        new("", null!)
+        {
+            Type = NodeType.Root,
+            Boundary = new Rect(0, 0, 1000, 1000),
+            ContainerZoom = 1,
+        };
 }

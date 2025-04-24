@@ -1,39 +1,44 @@
-﻿@inject IApplicationEvents applicationEvents
+﻿@using Dependinator.DiagramIcons
+@using Dependinator.Diagrams.Dependencies
+
+@inject IApplicationEvents applicationEvents
 @inject IInteractionService interactionService
-@inject IDialogService DialogService
+@inject ISelectionService selectionService
+@inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
 
 
+
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show"
-    Style="@NodeToolBarPosition">
+    Style="@position">
+
     <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
-        <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
-            OnClick="ShowProperties" OnTouch="ShowProperties">Properties ...</MudMenuItem>
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
+            OnClick="ShowProperties">Properties ...</MudMenuItem>
     </MudMenu>
     
-    <MudIconButton Icon="@DependenciesService.Dependencies" OnClick="()=> dependenciesService.ShowExplorer(TreeSide.Left)"  />
-    <MudIconButton Icon="@DependenciesService.References" OnClick="()=> dependenciesService.ShowExplorer(TreeSide.Right)"  />
-
+    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences"  />
+    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies"  />
+   
     <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" Disabled="@isIcon"/>
     <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit" Disabled="@isIcon"
         ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
 </MudButtonGroup>
 
 
-
 @code {
-    string show => interactionService.SelectedNodePosition != Models.Pos.None ? "visible" : "hidden";
+    string show => selectionService.SelectedNodePosition != Models.Pos.None ? "visible" : "hidden";
     bool isIcon => !interactionService.IsContainer;
-    string NodeToolBarPosition => 
-        $"Position: fixed; left:{interactionService.SelectedNodePosition.X}px; top:{interactionService.SelectedNodePosition.Y - 55}px";
-  
-  
-    private void ShowProperties()
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true };
-        DialogService.Show<NodeProperties>("Node Properties", options);
-    }
+    double left => selectionService.SelectedNodePosition.X;
+    double top => selectionService.SelectedNodePosition.Y - 55;
+    string position => $"Position: fixed; left:{left}px; top:{top}px";
+    
+    void ShowProperties()  =>
+        dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
 
+    void ShowReferences() => dependenciesService.ShowReferences();
+    void ShowDependencies() => dependenciesService.ShowDependencies();
+      
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);

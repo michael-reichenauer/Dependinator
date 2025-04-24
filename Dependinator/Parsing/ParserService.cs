@@ -4,7 +4,6 @@ namespace Dependinator.Parsing;
 
 record ModelPaths(string ModelPath, string WorkFolderPath);
 
-
 internal interface IParserService
 {
     DateTime GetDataTime(string path);
@@ -16,7 +15,6 @@ internal interface IParserService
     Task<R<string>> TryGetNodeAsync(string path, Source source);
 }
 
-
 [Transient]
 class ParserService : IParserService
 {
@@ -27,14 +25,13 @@ class ParserService : IParserService
         this.parsers = parsers;
     }
 
-
     public DateTime GetDataTime(string path)
     {
-        if (!Try(out var parser, GetParser(path))) return DateTime.MinValue;
+        if (!Try(out var parser, GetParser(path)))
+            return DateTime.MinValue;
 
         return parser.GetDataTime(path);
     }
-
 
     public R<ChannelReader<IItem>> Parse(string path)
     {
@@ -45,15 +42,15 @@ class ParserService : IParserService
             return R.Error($"File not supported: {path}", e);
 
         Task.Run(async () =>
-        {
-            using var t = Timing.Start($"Parsed {path}");
-            await parser.ParseAsync(path, channel.Writer);
-            channel.Writer.Complete();
-        }).RunInBackground();
+            {
+                using var t = Timing.Start($"Parsed {path}");
+                await parser.ParseAsync(path, channel.Writer);
+                channel.Writer.Complete();
+            })
+            .RunInBackground();
 
         return channel.Reader;
     }
-
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
@@ -64,7 +61,6 @@ class ParserService : IParserService
 
         return await parser.GetSourceAsync(path, nodeName);
     }
-
 
     public Task<R<string>> TryGetNodeAsync(string path, Source source)
     {
@@ -88,18 +84,16 @@ class ParserService : IParserService
         // return (DataNodeName)nodeName;
     }
 
-
-
     R<IParser> GetParser(string path)
     {
         // return new CustomParser();
 
         var parser = parsers.FirstOrDefault(p => p.CanSupport(path));
-        if (parser == null) return R.Error($"No supported parser for {path}");
+        if (parser == null)
+            return R.Error($"No supported parser for {path}");
 
         return R<IParser>.From(parser);
     }
-
 
     class CustomParser : IParser
     {
@@ -146,4 +140,3 @@ class ParserService : IParserService
         }
     }
 }
-

@@ -4,14 +4,12 @@ using Dependinator.Shared;
 
 namespace Dependinator.Parsing;
 
-
 interface IPersistenceService
 {
     Model ModelToData(Models.IModel node);
     Task<R> WriteAsync(Model model);
     Task<R<Model>> ReadAsync(string path);
 }
-
 
 [Transient]
 class PersistenceService : IPersistenceService
@@ -78,19 +76,20 @@ class PersistenceService : IPersistenceService
                 {
                     Log.Info("Example model not cached, use built in model", modelPath);
                     var json = ExampleModel.Model;
-                    if (!Try(out model, out e, () => JsonSerializer.Deserialize<Model>(json))) return e;
+                    if (!Try(out model, out e, () => JsonSerializer.Deserialize<Model>(json)))
+                        return e;
                 }
 
                 Log.Info("Read cached example model", modelPath);
                 return model;
             }
 
-            if (!Try(out var model2, out var e2, await fileService.ReadAsync<Model>(filePath))) return e2;
+            if (!Try(out var model2, out var e2, await fileService.ReadAsync<Model>(filePath)))
+                return e2;
             Log.Info("Read cached model", modelPath);
             return model2;
         });
     }
-
 
     static Node ToNode(Models.Node node) =>
         new(node.Name, node.Parent?.Name ?? "", new NodeType(node.Type.Text), node.Description)
@@ -105,7 +104,6 @@ class PersistenceService : IPersistenceService
             Color = node.Color,
             Background = node.Background,
         };
-
 
     static Link ToLink(Models.Link link) =>
         new(link.Source.Name, link.Target.Name, new NodeType(link.Target.Type.Text));

@@ -18,7 +18,6 @@ internal class ParsingAssemblyResolver : DefaultAssemblyResolver
         return null!;
     }
 
-
     public override AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
     {
         try
@@ -33,4 +32,3 @@ internal class ParsingAssemblyResolver : DefaultAssemblyResolver
         return null!;
     }
 }
-

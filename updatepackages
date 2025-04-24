@@ -1,46 +1,57 @@
 #!/bin/bash
 
-
-# Function to update packages in a given project
-update_project_packages() {
-    local project_path="$1"
-    echo
-    echo "#################################################################################"
-    echo "Checking packages for project: $project_path"
-
-    # List outdated packages and update each
-    dotnet list "$project_path" package --outdated --highest-minor | \
-    grep '>' | \
-    awk '{print $2 " " $4}' | \
-    while IFS= read -r line; do
-        local package_name=$(echo "$line" | awk '{print $1}')
-        local package_version=$(echo "$line" | awk '{print $2}')
-        echo
-        echo "---------------------------------------------------------------------------------"
-        echo "Updating $package_name from version $package_version in $project_path"
-        dotnet add "$project_path" package "$package_name"
-    done
+# Function to check if dotnet-outdated is installed
+check_dotnet_outdated_installed() {
+    if ! dotnet tool list -g | grep -q 'dotnet-outdated'; then
+        echo "dotnet-outdated is not installed. Installing it now..."
+        dotnet tool install --global dotnet-outdated-tool
+    fi
 }
 
+# Initialize variables
+update_packages=false
+include_major=false
 
-solutionFile=$(find . -maxdepth 1 -name "*.sln")
-echo "Updating outdated packages for solution file: $solutionFile"
-dotnet restore
-echo
-
-echo "Listing all outdated packages after updates: $PWD"
-dotnet list package --outdated 
-echo "================================================================================="
-
-# Extract paths to .csproj files from the solution file and update their packages
-
-projectFiles=$(grep "Project(" "$solutionFile" | grep ".csproj" | awk -F '=' '{print $2}' | awk -F ',' '{print $2}' | tr -d ' "' | tr '\\' '/')
-
-for projectFile in $projectFiles; do
-    update_project_packages "$projectFile"
+# Parse command-line arguments
+while getopts "um" opt; do
+    case $opt in
+        u)
+            update_packages=true
+            ;;
+        m)
+            update_packages=true
+            include_major=true
+            ;;
+        *)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+    esac
 done
 
+# Check if dotnet-outdated is installed
+check_dotnet_outdated_installed
+
+if [ "$update_packages" = true ]; then
+    if [ "$include_major" = true ]; then
+        echo "Upgrading all packages (including major) in '$PWD' ..."
+        dotnet outdated "$projectFile" --upgrade
+    else
+        echo "Upgrading all non-major packages in '$PWD' ..."
+        dotnet outdated "$projectFile" --upgrade --version-lock Major
+    fi
+fi
+
 echo
 echo "================================================================================="
-echo "Listing all outdated packages after updates: $PWD"
-dotnet list package --outdated 
+echo "Listing all outdated packages in $PWD"
+dotnet outdated
+echo 
+echo "================================================================================="
+echo "Checking for vulnerable packages in $PWD"
+dotnet list package --vulnerable
+echo 
+echo "---------------------------------------------------------------------------------"
+echo "Use option '-u' to update non-major outdated packages"
+echo "Use option '-m' to update all outdated packages including major versions"
+echo

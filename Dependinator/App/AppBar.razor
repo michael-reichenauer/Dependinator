@@ -7,27 +7,27 @@
     <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3 mr-5"
         AnchorOrigin="Origin.BottomCenter">
 
-        <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
-            OnClick="srv.PanZoomToFit" OnTouch="srv.PanZoomToFit">Fit
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen" OnClick="srv.PanZoomToFit">
+            Fit
             to
             Screen</MudMenuItem>
 
-        <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser"
-            OnClick="srv.OpenFiles" OnTouch="srv.OpenFiles">Browse
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.OpenFiles">
+            Browse
             Files ...</MudMenuItem>
 
         <MudDivider />
 
-        <MudMenuItem IconSize="Size.Medium" IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever"
-            OnClick="@OnRemove" OnTouch="@OnRemove">Remove Model</MudMenuItem>
+        <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever" OnClick="@OnRemove">Remove
+            Model</MudMenuItem>
 
         <MudDivider />
 
         @{
             foreach (var path in RecentModelPaths)
             {
-                <MudMenuItem IconSize="Size.Medium" IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Schema"
-                    OnClick="()=> srv.LoadAsync(path)" OnTouch="()=> srv.LoadAsync(path)">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Schema"
+                    OnClick="() => srv.LoadAsync(path)">
                     @Path.GetFileNameWithoutExtension(path)
                 </MudMenuItem>
             }
@@ -67,7 +67,7 @@
 
     private async void OnRemove()
     {
-        if (await mbox.Show() != true) return;
+        if (await mbox.ShowAsync() != true) return;
         srv.Remove();
     }
 
