@@ -1,7 +1,5 @@
 ﻿// using System;
 
-
-
 // namespace Dependinator.Utils.UI
 // {
 //     /// <summary>
@@ -17,7 +15,6 @@
 //         private DispatcherTimer timer;
 
 //         public bool IsTriggered => timer?.IsEnabled ?? false;
-
 
 //         /// <summary>
 //         ///     Debounce an event by resetting the event timeout every time the event is
@@ -65,7 +62,6 @@
 
 //             timer.Start();
 //         }
-
 
 //         public void Stop()
 //         {

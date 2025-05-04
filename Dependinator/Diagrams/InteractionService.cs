@@ -1,4 +1,5 @@
-﻿using Dependinator.Models;
+﻿using Dependinator.Diagrams.Dependencies;
+using Dependinator.Models;
 
 namespace Dependinator.Diagrams;
 
@@ -19,8 +20,8 @@ class InteractionService : IInteractionService
     readonly INodeEditService nodeEditService;
     readonly IApplicationEvents applicationEvents;
     readonly ISelectionService selectionService;
-    readonly IScreenService screenService;
     readonly IModelService modelService;
+    readonly IDependenciesService dependenciesService;
 
     const int MoveDelay = 300;
 
@@ -37,8 +38,8 @@ class InteractionService : IInteractionService
         INodeEditService nodeEditService,
         IApplicationEvents applicationEvents,
         ISelectionService selectionService,
-        IScreenService screenService,
-        IModelService modelService
+        IModelService modelService,
+        IDependenciesService dependenciesService
     )
     {
         this.mouseEventService = mouseEventService;
@@ -46,9 +47,8 @@ class InteractionService : IInteractionService
         this.nodeEditService = nodeEditService;
         this.applicationEvents = applicationEvents;
         this.selectionService = selectionService;
-        this.screenService = screenService;
         this.modelService = modelService;
-
+        this.dependenciesService = dependenciesService;
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
         this.applicationEvents.UndoneRedone += UpdateToolbar;
     }
@@ -152,9 +152,10 @@ class InteractionService : IInteractionService
     void OnClick(PointerEvent e)
     {
         Log.Info("mouse click", e.TargetId);
-        var targetId = PointerId.Parse(e.TargetId);
+        var pointerId = PointerId.Parse(e.TargetId);
+        dependenciesService.Clicked(pointerId);
 
-        selectionService.Select(targetId, e);
+        selectionService.Select(pointerId, e);
     }
 
     void OnDblClick(PointerEvent e)

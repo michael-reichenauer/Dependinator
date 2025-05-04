@@ -170,7 +170,6 @@ namespace Dependinator.Utils
 
         */
 
-
         public static bool IsEqual<T>(T obj1, T obj2, Func<T, T, bool> predicate)
         {
             if (ReferenceEquals(obj1, null) && ReferenceEquals(obj2, null))

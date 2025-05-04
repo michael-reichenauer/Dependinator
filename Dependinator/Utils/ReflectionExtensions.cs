@@ -34,7 +34,6 @@ internal static class Reflection
     //     return constructor.Invoke(parameters);
     // }
 
-
     // public static T Invoke<T>(this object instance, string name, params object[] parameters)
     // {
     //     MethodInfo? method = GetMethod(instance, name);
@@ -43,14 +42,12 @@ internal static class Reflection
     //     return (T)returnValue;
     // }
 
-
     // public static void Invoke(this object instance, string name, params object[] parameters)
     // {
     //     MethodInfo method = GetMethod(instance, name);
 
     //     method.Invoke(instance, parameters);
     // }
-
 
     // public static T GetProperty<T>(this object instance, string name)
     // {
@@ -61,7 +58,6 @@ internal static class Reflection
     //     return (T)value;
     // }
 
-
     // public static T GetField<T>(this object instance, string name)
     // {
     //     FieldInfo field = GetField(instance, name);
@@ -71,7 +67,6 @@ internal static class Reflection
     //     return (T)value;
     // }
 
-
     // public static void SetProperty(this object instance, string name, object value)
     // {
     //     PropertyInfo property = GetProperty(instance, name);
@@ -79,20 +74,17 @@ internal static class Reflection
     //     property.SetValue(instance, value);
     // }
 
-
     // private static MethodInfo GetMethod(object instance, string name)
     // {
     //     return instance.GetType()
     //         .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
     // }
 
-
     // private static PropertyInfo GetProperty(object instance, string name)
     // {
     //     return instance.GetType()
     //         .GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
     // }
-
 
     // private static FieldInfo GetField(object instance, string name)
     // {

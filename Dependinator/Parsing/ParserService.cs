@@ -67,7 +67,6 @@ class ParserService : IParserService
         throw new NotImplementedException();
         // Log.Debug($"Get node for {source} in model {modelPaths}...");
 
-
         // if (!TryGetParser(modelPaths, out IParser parser))
         // {
         //     return Error.From($"File not supported: {modelPaths}");

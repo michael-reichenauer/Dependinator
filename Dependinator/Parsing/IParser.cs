@@ -74,8 +74,6 @@ record NodeType(string Text)
 }
 
 
-
-
 // internal enum NodeType
 // {
 //     None,
