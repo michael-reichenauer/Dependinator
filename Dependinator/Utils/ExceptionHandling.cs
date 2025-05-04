@@ -53,8 +53,6 @@ static class ExceptionHandling
     // 	isDispatcherInitialized = true;
     // }
 
-
-
     static void HandleException(string errorType, Exception exception)
     {
         if (hasFailed)

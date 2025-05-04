@@ -37,7 +37,6 @@ internal class NodeName : Equatable<NodeName>
     // public static implicit operator NodeName(DataNodeName dataName) => new NodeName((string)dataName);
     // public static implicit operator DataNodeName(NodeName nodeName) => (DataNodeName)nodeName.FullName;
 
-
     NodeName GetParentName()
     {
         // Split full name in name and parent name,

@@ -20,9 +20,13 @@
     <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences"  />
     <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies"  />
    
-    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" Disabled="@isIcon"/>
-    <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit" Disabled="@isIcon"
+    @if(!isIcon)
+    {
+        <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit"/>
+        <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit"
         ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
+    }
+   
 </MudButtonGroup>
 
 

@@ -21,14 +21,13 @@ public class JSInterop : IJSInterop, IAsyncDisposable
         // var version = "1.4";                    // Version is needed to avoid cached js file (prod)
         var version = $"{DateTime.UtcNow.Ticks}"; // Vesion is needed to avoid cached js file (dev)
 
-        this.moduleTask = new(
-            () =>
-                jsRuntime
-                    .InvokeAsync<IJSObjectReference>(
-                        identifier: "import",
-                        args: $"./_content/Dependinator/jsInterop.js?v={version}"
-                    )
-                    .AsTask()
+        this.moduleTask = new(() =>
+            jsRuntime
+                .InvokeAsync<IJSObjectReference>(
+                    identifier: "import",
+                    args: $"./_content/Dependinator/jsInterop.js?v={version}"
+                )
+                .AsTask()
         );
     }
 
