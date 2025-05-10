@@ -340,6 +340,8 @@ class SvgService : ISvgService
         var elementId = PointerId.FromLine(line.Id).ElementId;
         string selectedSvg = SelectedLineSvg(line, x1, y1, x2, y2);
 
+        line.IsUpHill = x1 <= x2 && y1 >= y2 || x1 >= x2 && y1 <= y2;
+
         var c = "#B388FF";
         return $"""
             <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="{c}" marker-end="url(#arrow)" />

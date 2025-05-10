@@ -18,31 +18,17 @@ class Line : IItem
     public LineId Id { get; }
     public Node Source { get; }
     public Node Target { get; }
-    public Rect Boundary
-    {
-        get
-        {
-            var (x1, y1, x2, y2) = GetLineEndpoints();
-
-            return new Rect(Math.Min(x1, x2), Math.Min(y1, y2), Math.Max(x1, x2), Math.Max(y1, y2));
-        }
-    }
 
     public string Color { get; set; } = "red";
     public double StrokeWidth { get; set; } = 2.0;
     public bool IsSelected { get; internal set; }
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
 
+    public bool IsUpHill { get; internal set; } // Used to determine the direction of the line for placing the toolbar
+
     public void Add(Link link)
     {
         links[link.Id] = link;
-    }
-
-    private LinePos GetLineEndpoints()
-    {
-        var (s, t) = (Source.Boundary, Target.Boundary);
-
-        return new LinePos(s.X + s.Width, s.Y + s.Height / 2, t.X, t.Y + t.Height / 2);
     }
 
     public override string ToString() => $"{Source}->{Target} ({links.Count})";
