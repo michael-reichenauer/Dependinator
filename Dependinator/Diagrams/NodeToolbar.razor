@@ -1,51 +1,56 @@
 ﻿@using Dependinator.DiagramIcons
 @using Dependinator.Diagrams.Dependencies
 
-@inject IApplicationEvents applicationEvents
-@inject IInteractionService interactionService
-@inject ISelectionService selectionService
-@inject IDialogService dialogService
-@inject IDependenciesService dependenciesService
+<MudButtonGroup 
+    Color="Color.Tertiary" 
+    Size="Size.Small" 
+    Variant="Variant.Filled"
+    Class="@($"mud-toolbar {CssVisibility}")" 
+    Style="@CssPosition">
+  <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
+    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
+                 OnClick="ShowProperties">Properties …</MudMenuItem>
+  </MudMenu>
 
+  <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
+  <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
 
-
-<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show"
-    Style="@position">
-
-    <MudMenu Icon="@Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TextSnippet"
-            OnClick="ShowProperties">Properties ...</MudMenuItem>
-    </MudMenu>
-    
-    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences"  />
-    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies"  />
-   
-    @if(!isIcon)
-    {
-        <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit"/>
-        <MudToggleIconButton @bind-Toggled="@interactionService.IsEditNodeMode" Icon="@Icons.Material.Outlined.Edit"
-        ToggledIcon="@Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
-    }
-   
+  @if (!IsIconMode)
+  {
+    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" 
+                   OnClick="interactionService.NodePanZoomToFit" />
+    <MudToggleIconButton @bind-Toggled="interactionService.IsEditNodeMode"
+                         Icon="@Icons.Material.Outlined.Edit"
+                         ToggledIcon="@Icons.Material.Filled.Edit"
+                         ToggledColor="@Color.Warning" />
+  }
 </MudButtonGroup>
 
-
 @code {
-    string show => selectionService.SelectedNodePosition != Models.Pos.None ? "visible" : "hidden";
-    bool isIcon => !interactionService.IsContainer;
-    double left => selectionService.SelectedNodePosition.X;
-    double top => selectionService.SelectedNodePosition.Y - 55;
-    string position => $"Position: fixed; left:{left}px; top:{top}px";
-    
-    void ShowProperties()  =>
-        dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions() { CloseOnEscapeKey = true }); 
+  const double ToolbarOffset = 55;
 
-    void ShowReferences() => dependenciesService.ShowReferences();
-    void ShowDependencies() => dependenciesService.ShowDependencies();
-      
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-        if (firstRender) applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
-    }
+  [Inject] IApplicationEvents applicationEvents { get; set; } = null!;
+  [Inject] IInteractionService interactionService { get; set; } = null!;
+  [Inject] ISelectionService    selectionService    { get; set; } = null!;
+  [Inject] IDialogService       dialogService       { get; set; } = null!;
+  [Inject] IDependenciesService dependenciesService { get; set; } = null!;
+
+  string CssVisibility => selectionService.SelectedNodePosition != Models.Pos.None
+                           ? "visible" : "hidden";
+  string CssPosition   => 
+      $"position:fixed;left:{selectionService.SelectedNodePosition.X}px;" +
+      $"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset}px;";
+  bool IsIconMode      => !interactionService.IsContainer;
+
+  protected override void OnInitialized()=> applicationEvents.UIStateChanged += OnUiStateChanged;  
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+  public void Dispose()=> applicationEvents.UIStateChanged -= OnUiStateChanged;
+  
+
+  void ShowProperties() =>
+      dialogService.ShowAsync<NodeProperties>("Node Properties", 
+          new DialogOptions { CloseOnEscapeKey = true });
+
+  void ShowReferences()   => dependenciesService.ShowReferences();
+  void ShowDependencies() => dependenciesService.ShowDependencies();
 }
