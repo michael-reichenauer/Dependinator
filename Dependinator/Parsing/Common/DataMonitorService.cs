@@ -1,7 +1,6 @@
 ﻿// using System.Runtime.Versioning;
 // using Microsoft.AspNetCore.Components;
 
-
 // namespace Dependinator.Parsing.Common;
 
 // [UnsupportedOSPlatform("browser")]
@@ -23,7 +22,6 @@
 //     IReadOnlyList<string> monitoredFiles;
 //     string monitoredFolder;
 
-
 //     public DataMonitorService()
 //     {
 //         folderWatcher.Changed += (s, e) => FileChange(e);
@@ -31,9 +29,7 @@
 //         folderWatcher.Renamed += (s, e) => FileChange(e);
 //     }
 
-
 //     public event EventHandler DataChangedOccurred;
-
 
 //     public void StartMonitorData(string mainPath, IReadOnlyList<string> dataPaths)
 //     {
@@ -53,8 +49,6 @@
 //         StartMonitorData();
 //     }
 
-
-
 //     private void StartMonitorData()
 //     {
 //         folderWatcher.Path = monitoredFolder;
@@ -65,13 +59,11 @@
 //         folderWatcher.EnableRaisingEvents = true;
 //     }
 
-
 //     public void StopMonitorData()
 //     {
 //         changeDebounce.Stop();
 //         folderWatcher.EnableRaisingEvents = false;
 //     }
-
 
 //     private void FileChange(FileSystemEventArgs e)
 //     {
@@ -88,7 +80,6 @@
 //             return;
 //         }
 
-
 //         // Data building event, postpone event a little
 //         if (changeDebounce.IsTriggered)
 //         {
@@ -96,17 +87,14 @@
 //         }
 //     }
 
-
 //     private void ScheduleDataChange(TimeSpan withinTime)
 //     {
 //         changeDebounce.Debounce(
 //             withinTime, TriggerEvent, null, DispatcherPriority.ApplicationIdle, dispatcher);
 //     }
 
-
 //     private bool IsMonitoring(string mainPath) =>
 //         monitoredMainPath != null && mainPath.IsSameIc(monitoredMainPath);
-
 
 //     private void TriggerEvent(object obj)
 //     {

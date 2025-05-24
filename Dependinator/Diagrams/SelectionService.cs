@@ -1,4 +1,5 @@
-﻿using Dependinator.Diagrams;
+﻿using System.Security.Cryptography;
+using Dependinator.Diagrams;
 using Dependinator.Models;
 
 namespace Dependinator;
@@ -23,6 +24,8 @@ interface ISelectionService
 [Scoped]
 class SelectionService : ISelectionService
 {
+    const double toolbarOffsetX = 40;
+    const double toolbarOffsetY = 20;
     const double MinCover = 0.5;
     const double MaxCover = 0.8;
 
@@ -72,13 +75,22 @@ class SelectionService : ISelectionService
             return;
         }
         (double x, double y) = (bound.X, bound.Y);
+
         if (selectedId.IsLine)
         {
-            // For a line we adjust the position to the clicked relative position
-            var dx = bound.Width;
-            var dy = bound.Height;
-            x = bound.X + clickedRelativePosition * dx;
-            y = bound.Y + clickedRelativePosition * dy;
+            // Calculate the clicked relative position on the line, to show the toolbar at the clicked position on the line
+            x = bound.X + clickedRelativePosition * bound.Width - toolbarOffsetX;
+            y = bound.Y + clickedRelativePosition * bound.Height - toolbarOffsetY;
+
+            modelService.UseLine(
+                selectedId.Id,
+                line =>
+                {
+                    // For some lines based int its direction we need to flip the y coordinate
+                    if (line.IsUpHill)
+                        y = bound.Bottom - clickedRelativePosition * bound.Height - toolbarOffsetY;
+                }
+            );
         }
 
         if (selectedPosition.X == x && selectedPosition.Y == y)
@@ -151,9 +163,10 @@ class SelectionService : ISelectionService
                 return;
             }
             Log.Info("Line bound", bound);
-            (double x1, double y1) = (bound.X, bound.Y);
-            (double x2, double y2) = (bound.X + bound.Width, bound.Y + bound.Height);
-            (double x, double y) = (e.ClientX, e.ClientY);
+
+            var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);
+            // var (x1, y1, x2, y2) = (bound.X, bound.Bottom, bound.Right, bound.Y);
+            var (x, y) = (e.ClientX, e.ClientY);
 
             modelService.UseLine(
                 pointerId.Id,
@@ -161,13 +174,16 @@ class SelectionService : ISelectionService
                 {
                     line.IsSelected = true;
 
-                    // var dx = x2 - x1;
-                    // var dy = y2 - y1;
-                    // var len2 = dx * dx + dy * dy;
-
-                    // var t = ((x - x1) * dx + (y - y1) * dy) / len2; // projection factor t ∈ [0,1]
-                    // t = Math.Max(0, Math.Min(1, t));
-                    // clickedRelativePosition = t;
+                    // Calculate the clicked relative position on the line, this is used to
+                    // show the toolbar at the clicked position on the line
+                    if (line.IsUpHill)
+                        (y1, y2) = (y2, y1);
+                    var dx = x2 - x1;
+                    var dy = y2 - y1;
+                    var len2 = dx * dx + dy * dy;
+                    var t = ((x - x1) * dx + (y - y1) * dy) / len2; // projection factor t ∈ [0,1]
+                    t = Math.Max(0, Math.Min(1, t));
+                    clickedRelativePosition = t;
 
                     return true;
                 }

@@ -12,6 +12,8 @@ public enum TreeType
 
 interface IDependenciesService
 {
+    bool IsShowExplorer { get; }
+
     string Title { get; }
     string TreeIcon { get; }
     IReadOnlyList<TreeItem> TreeItems { get; }
@@ -20,26 +22,40 @@ interface IDependenciesService
     void ShowNode(NodeId nodeId);
     void ShowReferences();
     void ShowDependencies();
+    void Clicked(PointerId pointerId);
 }
 
 [Scoped]
 class DependenciesService(
-    IDialogService dialogService,
     ISelectionService selectionService,
     IApplicationEvents applicationEvents,
     IModelService modelService,
     IPanZoomService panZoomService
 ) : IDependenciesService
 {
+    private string selectedId = "";
     TreeType treeType = TreeType.References;
     public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
 
     public string Title { get; private set; } = "";
     public string TreeIcon => treeType == TreeType.Dependencies ? Icon.DependenciesIcon : Icon.ReferencesIcon;
 
+    public bool IsShowExplorer { get; private set; }
+
+    public void Clicked(PointerId pointerId)
+    {
+        if (IsShowExplorer && pointerId.Id != selectedId)
+        {
+            Close();
+        }
+    }
+
     public async void ShowNode(NodeId nodeId)
     {
+        Close();
         selectionService.Unselect();
+        applicationEvents.TriggerUIStateChanged();
+        await Task.Yield();
 
         Pos pos = Pos.None;
         double zoom = 0;
@@ -59,6 +75,12 @@ class DependenciesService(
         applicationEvents.TriggerUIStateChanged();
     }
 
+    private void Close()
+    {
+        IsShowExplorer = false;
+        selectedId = "";
+    }
+
     public void SetSelected(TreeItem selectedItem)
     {
         if (selectedItem is null)
@@ -68,31 +90,21 @@ class DependenciesService(
 
     public void ShowReferences()
     {
+        selectedId = "";
         treeType = TreeType.References;
         TreeItems = GetTreeItems(treeType);
 
-        var options = new DialogOptions()
-        {
-            NoHeader = true,
-            CloseOnEscapeKey = true,
-            Position = DialogPosition.Custom,
-        };
-        dialogService.ShowAsync<DependenciesTree>(null, options);
+        IsShowExplorer = true;
         applicationEvents.TriggerUIStateChanged();
     }
 
     public void ShowDependencies()
     {
+        selectedId = "";
         treeType = TreeType.Dependencies;
         TreeItems = GetTreeItems(treeType);
 
-        var options = new DialogOptions()
-        {
-            NoHeader = true,
-            CloseOnEscapeKey = true,
-            Position = DialogPosition.Custom,
-        };
-        dialogService.ShowAsync<DependenciesTree>(null, options);
+        IsShowExplorer = true;
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -101,7 +113,7 @@ class DependenciesService(
         List<TreeItem> treeItems = [];
         Log.Info($"GetTreeItems: {treeType}");
 
-        var selectedId = selectionService.SelectedId.Id;
+        selectedId = selectionService.SelectedId.Id;
 
         using (var model = modelService.UseModel())
         {
