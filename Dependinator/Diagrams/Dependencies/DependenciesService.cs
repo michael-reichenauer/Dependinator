@@ -1,4 +1,4 @@
-using Dependinator.DiagramIcons;
+using Dependinator.Diagrams.Icons;
 using Dependinator.Models;
 using MudBlazor;
 
