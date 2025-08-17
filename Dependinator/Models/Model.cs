@@ -7,6 +7,8 @@ interface IModel : IDisposable
     Node Root { get; }
     Rect ViewRect { get; set; }
     double Zoom { get; set; }
+    DateTime UpdateStamp { get; set; }
+
     Pos Offset { get; set; }
     Tiles Tiles { get; }
     IDictionary<Id, IItem> Items { get; } // Ta bort
@@ -28,6 +30,7 @@ interface IModel : IDisposable
     void Clear();
     void ClearCachedSvg();
     bool ContainsKey(Id linkId);
+    void ClearNotUpdated();
 }
 
 [Scoped]
@@ -43,10 +46,12 @@ class Model : IModel
     public string Path { get; set; } = "";
     public object Lock => syncRoot;
     public bool IsSaving { get; set; } = false;
+    public DateTime UpdateStamp { get; set; }
 
     public Rect ViewRect { get; set; } = Rect.None;
     double zoom = 0;
     Pos offset = Pos.None;
+    DateTime updateStartTime;
 
     public double Zoom
     {
@@ -176,6 +181,51 @@ class Model : IModel
     public void ClearCachedSvg()
     {
         Tiles.Clear();
+    }
+
+    public void ClearNotUpdated()
+    {
+        var links = Items.Values.OfType<Link>().Where(l => l.UpdateStamp != UpdateStamp).ToList();
+        foreach (var link in links)
+            RemoveLink(link);
+
+        var nodes = Items
+            .Values.OfType<Node>()
+            .Where(n => n.UpdateStamp != UpdateStamp && n.Children.Count == 0)
+            .ToList();
+        foreach (var node in nodes)
+            RemoveNode(node);
+    }
+
+    private void RemoveLink(Link link)
+    {
+        Items.Remove(link.Id);
+
+        foreach (var line in link.Lines)
+        {
+            line.Remove(link);
+            if (line.IsEmpty)
+                RemoveLine(line);
+
+            link.Target.Remove(link);
+            link.Source.Remove(link);
+        }
+    }
+
+    private void RemoveLine(Line line)
+    {
+        Items.Remove(line.Id);
+        line.Target.Remove(line);
+        line.Source.Remove(line);
+    }
+
+    private void RemoveNode(Node node)
+    {
+        Items.Remove(node.Id);
+        var parent = node.Parent;
+        parent.RemoveChild(node);
+        if (parent.UpdateStamp != UpdateStamp && parent.Children.Count == 0 && !parent.IsRoot)
+            RemoveNode(parent);
     }
 
     void InitModel()

@@ -33,6 +33,7 @@ class Node : IItem
     public string Name { get; }
     public Node Parent { get; private set; }
     NodeType type = NodeType.None;
+    public DateTime UpdateStamp { get; set; }
     public NodeType Type
     {
         get => type;
@@ -170,6 +171,18 @@ class Node : IItem
         if (TargetLinks.Contains(link))
             return;
         TargetLinks.Add(link);
+    }
+
+    public void Remove(Link link)
+    {
+        SourceLinks.Remove(link);
+        TargetLinks.Remove(link);
+    }
+
+    public void Remove(Line line)
+    {
+        SourceLines.Remove(line);
+        TargetLines.Remove(line);
     }
 
     public IEnumerable<Node> Ancestors()

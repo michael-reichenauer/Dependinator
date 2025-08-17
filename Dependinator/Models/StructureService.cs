@@ -31,6 +31,7 @@ class StructureService : IStructureService
                 node.Boundary = NodeLayout.GetNextChildRect(parent);
             }
             node.Update(parsedNode);
+            node.UpdateStamp = model.UpdateStamp;
 
             model.AddNode(node);
             parent.AddChild(node);
@@ -39,6 +40,7 @@ class StructureService : IStructureService
         }
 
         node.Update(parsedNode);
+        node.UpdateStamp = model.UpdateStamp;
 
         if (!node.IsRoot && node.Parent.Name != parentName)
         { // The node has changed parent, remove it from the old parent and add it to the new parent
@@ -51,15 +53,20 @@ class StructureService : IStructureService
     public void AddOrUpdateLink(Parsing.Link parsedLink)
     {
         var linkId = new LinkId(parsedLink.SourceName, parsedLink.TargetName);
-        if (model.ContainsKey(linkId))
+
+        if (model.TryGetLink(linkId, out var link))
+        {
+            link.UpdateStamp = model.UpdateStamp;
             return;
+        }
 
         EnsureSourceAndTargetExists(parsedLink);
 
         var source = model.GetNode(NodeId.FromName(parsedLink.SourceName));
         var target = model.GetNode(NodeId.FromName(parsedLink.TargetName));
 
-        var link = new Link(source, target);
+        link = new Link(source, target);
+        link.UpdateStamp = model.UpdateStamp;
 
         model.AddLink(link);
         target.AddTargetLink(link);

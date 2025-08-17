@@ -281,6 +281,10 @@ class ModelService : IModelService
 
         if (!Try(out var e, await ParseAsync(path)))
             return e;
+        lock (model.Lock)
+        {
+            model.ClearNotUpdated();
+        }
 
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
@@ -308,6 +312,10 @@ class ModelService : IModelService
         if (!Try(out var reader, out var e, parserService.Parse(path)))
             return e;
 
+        lock (model.Lock)
+        {
+            model.UpdateStamp = DateTime.UtcNow;
+        }
         await Task.Run(async () =>
         {
             var batchItems = new List<Parsing.IItem>();

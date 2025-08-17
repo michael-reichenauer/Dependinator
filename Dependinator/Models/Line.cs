@@ -18,6 +18,7 @@ class Line : IItem
     public LineId Id { get; }
     public Node Source { get; }
     public Node Target { get; }
+    public bool IsEmpty => links.Count == 0;
 
     public string Color { get; set; } = "red";
     public double StrokeWidth { get; set; } = 2.0;
@@ -29,6 +30,11 @@ class Line : IItem
     public void Add(Link link)
     {
         links[link.Id] = link;
+    }
+
+    public void Remove(Link link)
+    {
+        links.Remove(link.Id);
     }
 
     public override string ToString() => $"{Source}->{Target} ({links.Count})";
