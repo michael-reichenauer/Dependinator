@@ -26,6 +26,7 @@ class Line : IItem
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
 
     public bool IsUpHill { get; internal set; } // Used to determine the direction of the line for placing the toolbar
+    public bool IsHidden { get; internal set; }
 
     public void Add(Link link)
     {

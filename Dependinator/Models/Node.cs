@@ -46,7 +46,9 @@ class Node : IItem
     public string Icon => Type.Text;
 
     public string Description { get; set; } = "";
+
     public string Color { get; set; } = "";
+
     public string Background { get; set; } = "green";
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
@@ -68,6 +70,25 @@ class Node : IItem
     public string ShortName { get; private set; } = "";
     public string HtmlShortName { get; private set; } = "";
     public string HtmlLongName { get; private set; } = "";
+    public bool IsHidden => IsUserSetHidden || IsParentSetHidden;
+    public bool IsUserSetHidden { get; private set; }
+    private bool IsParentSetHidden { get; set; }
+
+    public void SetHidden(bool hidden, bool isUserSet)
+    {
+        if (isUserSet)
+        {
+            IsUserSetHidden = hidden;
+            Children.ForEach(child => child.SetHidden(hidden, false));
+            return;
+        }
+
+        // Set by parent
+        IsParentSetHidden = hidden;
+        if (IsUserSetHidden)
+            return;
+        Children.ForEach(child => child.SetHidden(hidden, false));
+    }
 
     public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 

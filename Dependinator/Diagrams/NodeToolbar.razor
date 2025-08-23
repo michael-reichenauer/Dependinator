@@ -8,7 +8,20 @@
     <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
       OnClick="ShowProperties">
       Properties …</MudMenuItem>
+    @if (!IsNodeHidden)
+    {
+      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
+        OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled">
+        Hide Node …</MudMenuItem>
+    }
+    else
+    {
+      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility"
+        OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled">
+        Show Node …</MudMenuItem>
+    }
   </MudMenu>
+
 
   <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
   <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
@@ -30,6 +43,8 @@
   [Inject] IDialogService dialogService { get; set; } = null!;
   [Inject] IDependenciesService dependenciesService { get; set; } = null!;
 
+  bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
+  bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
   string CssVisibility => selectionService.SelectedNodePosition != Models.Pos.None
   ? "visible" : "hidden";
   string CssPosition =>
@@ -48,4 +63,5 @@
 
   void ShowReferences() => dependenciesService.ShowReferences();
   void ShowDependencies() => dependenciesService.ShowDependencies();
+  void ToggleNodeHide() => selectionService.ToggleNodeHide();
 }

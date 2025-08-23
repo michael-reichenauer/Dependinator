@@ -157,6 +157,7 @@ class SvgService : ISvgService
     static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
         //Log.Info("Draw", node.Name, nodeCanvasRect.ToString());
+        var s = node.IsEditMode ? 10 : node.StrokeWidth;
         var (x, y) = (nodeCanvasRect.X, nodeCanvasRect.Y);
         var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
 
@@ -168,9 +169,11 @@ class SvgService : ISvgService
         string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
         var elementId = PointerId.FromNode(node.Id).ElementId;
 
+        var hiddenNode = node.IsHidden ? "opacity=\"0.1\"" : "";
+        var hiddenText = node.IsHidden ? "opacity=\"0.3\"" : "";
         return $"""
-            <use href="#{icon}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" />
-            <text x="{tx:0.##}" y="{ty:0.##}" class="iconName" font-size="{fz:0.##}px">{node.HtmlShortName}</text>
+            <use href="#{icon}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" {hiddenNode} />
+            <text x="{tx:0.##}" y="{ty:0.##}" class="iconName" font-size="{fz:0.##}px" {hiddenText} >{node.HtmlShortName}</text>
             <g class="hoverable" id="{elementId}">
               <rect id="{elementId}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
               <title>{node.HtmlLongName}</title>
@@ -200,18 +203,20 @@ class SvgService : ISvgService
         var cl = node.IsEditMode ? "hoverableedit" : "hoverable";
         var c = node.IsEditMode ? Coloring.EditNode : node.Color;
         var back = node.IsEditMode ? Coloring.EditNodeBack : node.Background;
+        var hiddenNode = node.IsHidden ? "opacity=\"0.1\"" : "";
+        var hiddenText = node.IsHidden ? "opacity=\"0.3\"" : "";
 
         return $"""
             <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
-              <rect x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="{s}" rx="5" fill="{back}" stroke="{c}"/>
+              <rect x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="{s}" rx="5" fill="{back}" stroke="{c}" {hiddenNode}/>
               <g class="{cl}" id="{elementId}">
                 <rect id="{elementId}" x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                 <title>{node.HtmlLongName}</title>
               </g>
-              {childrenContent}
+              {childrenContent}          
             </svg>
-            <use href="#{icon}" x="{ix:0.##}" y="{iy:0.##}" width="{iw:0.##}" height="{ih:0.##}" />
-            <text x="{tx:0.##}" y="{ty:0.##}" class="nodeName" font-size="{fz:0.##}px">{node.HtmlShortName}</text>
+            <use href="#{icon}" x="{ix:0.##}" y="{iy:0.##}" width="{iw:0.##}" height="{ih:0.##}" {hiddenText}/>
+            <text x="{tx:0.##}" y="{ty:0.##}" class="nodeName" font-size="{fz:0.##}px" {hiddenText}>{node.HtmlShortName}</text>
             {selectedSvg}
             """;
     }
@@ -295,7 +300,7 @@ class SvgService : ISvgService
 
     static string GetLineSvg(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
     {
-        if (Node.IsToLargeToBeSeen(childrenZoom))
+        if (line.IsHidden || Node.IsToLargeToBeSeen(childrenZoom))
             return "";
 
         if (
@@ -342,7 +347,8 @@ class SvgService : ISvgService
 
         line.IsUpHill = x1 <= x2 && y1 >= y2 || x1 >= x2 && y1 <= y2;
 
-        var c = "#B388FF";
+        var c = Coloring.LineColor;
+
         return $"""
             <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="{c}" marker-end="url(#arrow)" />
             <g class="hoverable" id="{elementId}">

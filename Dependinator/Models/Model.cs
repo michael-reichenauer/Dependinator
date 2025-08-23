@@ -51,7 +51,6 @@ class Model : IModel
     public Rect ViewRect { get; set; } = Rect.None;
     double zoom = 0;
     Pos offset = Pos.None;
-    DateTime updateStartTime;
 
     public double Zoom
     {

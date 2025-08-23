@@ -31,6 +31,7 @@ interface IModelService
     bool UseLineN(LineId id, Action<Line> updateAction);
     void Clear();
     Rect GetBounds();
+    void CheckLineVisibility();
 }
 
 [Transient]
@@ -257,6 +258,17 @@ class ModelService : IModelService
             return parsedModelInfo;
         }
         return modelInfo;
+    }
+
+    public void CheckLineVisibility()
+    {
+        lock (model.Lock)
+        {
+            foreach (var line in model.Items.Values.OfType<Line>())
+            {
+                line.IsHidden = line.Links.All(link => link.Source.IsHidden || link.Target.IsHidden);
+            }
+        }
     }
 
     async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
