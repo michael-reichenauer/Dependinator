@@ -35,6 +35,7 @@ class CanvasService : ICanvasService
     readonly IScreenService screenService;
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
+    readonly ISvgService svgService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInteropService;
     readonly IFileService fileService;
@@ -46,6 +47,7 @@ class CanvasService : ICanvasService
         IScreenService screenService,
         IPanZoomService panZoomService,
         IModelService modelService,
+        ISvgService svgService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
         IFileService fileService,
@@ -57,6 +59,7 @@ class CanvasService : ICanvasService
         this.screenService = screenService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
+        this.svgService = svgService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
@@ -178,7 +181,7 @@ class CanvasService : ICanvasService
     {
         // Log.Info($"GetSvgContent:", Offset, Zoom);
         var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
-        var tile = modelService.GetTile(viewRect, Zoom);
+        var tile = svgService.GetTile(viewRect, Zoom);
 
         if (Content == tile.Svg)
             return Content; // No change

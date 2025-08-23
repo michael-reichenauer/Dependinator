@@ -4,7 +4,7 @@ namespace Dependinator.Models;
 
 interface ISvgService
 {
-    Tile GetTile(IModel model, Rect viewRect, double zoom);
+    Tile GetTile(Rect viewRect, double zoom);
 }
 
 [Transient]
@@ -12,6 +12,27 @@ class SvgService : ISvgService
 {
     const int SmallIconSize = 9;
     const int FontSize = 8;
+
+    readonly IModelService modelService;
+
+    public SvgService(IModelService modelService)
+    {
+        this.modelService = modelService;
+    }
+
+    public Tile GetTile(Rect viewRect, double zoom)
+    {
+        //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
+
+        using var model = modelService.UseModel();
+
+        if (model.Root.Children.Any())
+        {
+            model.ViewRect = viewRect;
+            model.Zoom = zoom;
+        }
+        return GetTile(model, viewRect, zoom);
+    }
 
     public Tile GetTile(IModel model, Rect viewRect, double zoom)
     {

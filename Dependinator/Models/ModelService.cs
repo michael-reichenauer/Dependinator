@@ -19,7 +19,6 @@ interface IModelService
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
-    Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool UseNode(string id, Action<Node> useAction);
     bool UseNodeN(NodeId id, Action<Node> updateAction);
@@ -43,7 +42,6 @@ class ModelService : IModelService
     readonly IModel model;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
-    readonly ISvgService modelSvgService;
     readonly Parsing.IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
     readonly ICommandService commandService;
@@ -52,7 +50,6 @@ class ModelService : IModelService
         IModel model,
         Parsing.IParserService parserService,
         IStructureService modelStructureService,
-        ISvgService modelSvgService,
         Parsing.IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
         ICommandService commandService
@@ -61,7 +58,6 @@ class ModelService : IModelService
         this.model = model;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
-        this.modelSvgService = modelSvgService;
         this.persistenceService = persistenceService;
         this.applicationEvents = applicationEvents;
         this.commandService = commandService;
@@ -206,20 +202,6 @@ class ModelService : IModelService
     public bool UseLine(string id, Action<Line> updateAction) => UseLineN(LineId.FromId(id), updateAction);
 
     public bool UseLine(string id, Func<Line, bool> updateAction) => UseLineN(LineId.FromId(id), updateAction);
-
-    public Tile GetTile(Rect viewRect, double zoom)
-    {
-        //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
-        lock (model.Lock)
-        {
-            if (model.Root.Children.Any())
-            {
-                model.ViewRect = viewRect;
-                model.Zoom = zoom;
-            }
-            return modelSvgService.GetTile(model, viewRect, zoom);
-        }
-    }
 
     public (Rect, double) GetLatestView()
     {
