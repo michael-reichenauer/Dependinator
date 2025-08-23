@@ -23,7 +23,7 @@ class TreeItem : TreeItemData<TreeItem>
         Parent = parent;
         NodeId = node.Id;
         Text = node.ShortName;
-        Icon = Dependinator.DiagramIcons.Icon.GetIcon(node.Icon);
+        Icon = Icons.Icon.GetIcon(node.Icon);
         this.getChildren = getChildren;
 
         if (getChildren is not null)

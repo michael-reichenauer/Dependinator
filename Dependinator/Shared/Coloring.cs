@@ -5,6 +5,7 @@ record Coloring(int R, int G, int B)
     public static readonly string Highlight = MudBlazor.Colors.Blue.Accent1;
     public static readonly string EditNode = MudBlazor.Colors.Yellow.Darken2;
     public static readonly string ToolBarIcon = MudBlazor.Colors.DeepPurple.Lighten5;
+    public static readonly string LineColor = "#B388FF";
 
     const int VeryDarkFactor = 12;
     const int EditFactor = 7;

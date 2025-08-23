@@ -31,6 +31,7 @@ interface IModelService
     bool UseLineN(LineId id, Action<Line> updateAction);
     void Clear();
     Rect GetBounds();
+    void CheckLineVisibility();
 }
 
 [Transient]
@@ -259,6 +260,17 @@ class ModelService : IModelService
         return modelInfo;
     }
 
+    public void CheckLineVisibility()
+    {
+        lock (model.Lock)
+        {
+            foreach (var line in model.Items.Values.OfType<Line>())
+            {
+                line.IsHidden = line.Links.All(link => link.Source.IsHidden || link.Target.IsHidden);
+            }
+        }
+    }
+
     async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
     {
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
@@ -281,6 +293,10 @@ class ModelService : IModelService
 
         if (!Try(out var e, await ParseAsync(path)))
             return e;
+        lock (model.Lock)
+        {
+            model.ClearNotUpdated();
+        }
 
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
@@ -308,6 +324,10 @@ class ModelService : IModelService
         if (!Try(out var reader, out var e, parserService.Parse(path)))
             return e;
 
+        lock (model.Lock)
+        {
+            model.UpdateStamp = DateTime.UtcNow;
+        }
         await Task.Run(async () =>
         {
             var batchItems = new List<Parsing.IItem>();
