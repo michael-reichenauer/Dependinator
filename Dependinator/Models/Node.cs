@@ -4,9 +4,6 @@ namespace Dependinator.Models;
 
 class Node : IItem
 {
-    const double MinContainerZoom = 2.0;
-    const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
-
     public Node(string name, Node parent)
     {
         Id = NodeId.FromName(name);
@@ -89,10 +86,6 @@ class Node : IItem
             return;
         Children.ForEach(child => child.SetHidden(hidden, false));
     }
-
-    public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
-
-    public bool IsShowIcon(double zoom) => Type == NodeType.Member || zoom <= MinContainerZoom;
 
     public double GetZoom()
     {

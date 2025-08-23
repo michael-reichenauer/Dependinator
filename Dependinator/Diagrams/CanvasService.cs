@@ -1,3 +1,4 @@
+using Dependinator.Diagrams.Svg;
 using Dependinator.Models;
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -41,7 +42,6 @@ class CanvasService : ICanvasService
     readonly IFileService fileService;
     readonly IRecentModelsService recentModelsService;
     readonly IInteractionService interactionService;
-    private readonly ISelectionService selectionService;
 
     public CanvasService(
         IScreenService screenService,
@@ -52,8 +52,7 @@ class CanvasService : ICanvasService
         IJSInterop jSInteropService,
         IFileService fileService,
         IRecentModelsService recentModelsService,
-        IInteractionService interactionService,
-        ISelectionService selectionService
+        IInteractionService interactionService
     )
     {
         this.screenService = screenService;
@@ -65,7 +64,6 @@ class CanvasService : ICanvasService
         this.fileService = fileService;
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
-        this.selectionService = selectionService;
     }
 
     public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
