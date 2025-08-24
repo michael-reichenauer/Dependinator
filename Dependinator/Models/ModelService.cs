@@ -29,6 +29,7 @@ interface IModelService
     bool UseLine(string id, Action<Line> useAction);
     bool UseLineN(LineId id, Action<Line> updateAction);
     void Clear();
+    void ClearCache();
     Rect GetBounds();
     void CheckLineVisibility();
 }
@@ -69,6 +70,15 @@ class ModelService : IModelService
     public Pos Offset => Use(m => m.Offset);
     public double Zoom => Use(m => m.Zoom);
     public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
+
+    public void ClearCache()
+    {
+        lock (model.Lock)
+        {
+            model.ClearCachedSvg();
+        }
+        TriggerSave();
+    }
 
     public void Do(Command command, bool isClearCache = true)
     {

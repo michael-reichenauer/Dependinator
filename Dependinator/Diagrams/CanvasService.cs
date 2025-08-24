@@ -20,6 +20,7 @@ interface ICanvasService
 
     Task InitAsync();
     void OpenFiles();
+    void ToggleTheme();
     public void Remove();
     void Refresh();
     void Clear();
@@ -145,6 +146,14 @@ class CanvasService : ICanvasService
     public async void OpenFiles()
     {
         await jSInteropService.Call("clickElement", "inputfile");
+    }
+
+    public void ToggleTheme()
+    {
+        DColors.IsDark = !DColors.IsDark;
+
+        modelService.ClearCache();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public async Task<IReadOnlyList<string>> GetModelPaths()

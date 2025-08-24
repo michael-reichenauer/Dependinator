@@ -10,9 +10,7 @@ class Node : IItem
         Name = name;
         Parent = parent;
 
-        var color = Coloring.BrightRandom();
-        Color = color.ToString();
-        Background = color.VeryDark().ToString();
+        Color = DColors.RandomNodeColorName();
 
         SetDisplayNames();
     }
@@ -46,7 +44,6 @@ class Node : IItem
 
     public string Color { get; set; } = "";
 
-    public string Background { get; set; } = "green";
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
@@ -152,7 +149,6 @@ class Node : IItem
         ContainerOffset = offset;
         ContainerZoom = node.Zoom ?? ContainerZoom;
         Color = node.Color ?? Color;
-        Background = node.Background ?? Background;
     }
 
     public void AddChild(Node child)

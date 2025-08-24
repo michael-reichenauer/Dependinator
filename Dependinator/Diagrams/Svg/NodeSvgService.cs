@@ -61,8 +61,9 @@ class NodeSvg
         string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
 
         var cl = node.IsEditMode ? "hoverableedit" : "hoverable";
-        var c = node.IsEditMode ? DColors.EditNode : node.Color;
-        var back = node.IsEditMode ? DColors.EditNodeBack : node.Background;
+        var (border, background) = DColors.NodeColorByName(node.Color);
+        var c = node.IsEditMode ? DColors.EditNodeBorder : border;
+        var back = node.IsEditMode ? DColors.EditNodeBackground : background;
         var hiddenNode = node.IsHidden ? "opacity=\"0.1\"" : "";
         var hiddenText = node.IsHidden ? "opacity=\"0.3\"" : "";
 
@@ -97,7 +98,7 @@ class NodeSvg
         if (!node.IsSelected)
             return "";
 
-        string c = DColors.Highlight;
+        string c = DColors.Selected;
         const int s = 8;
         const int m = 3;
         const int mt = m + s;

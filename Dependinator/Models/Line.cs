@@ -21,7 +21,7 @@ class Line : IItem
     public bool IsEmpty => links.Count == 0;
 
     public string Color { get; set; } = "red";
-    public double StrokeWidth { get; set; } = 2.0;
+    public double StrokeWidth { get; set; } = 1.5;
     public bool IsSelected { get; internal set; }
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
 

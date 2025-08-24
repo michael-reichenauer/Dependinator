@@ -102,7 +102,6 @@ class PersistenceService : IPersistenceService
             Height = node.Boundary != Rect.None ? node.Boundary.Height : null,
             Zoom = node.ContainerZoom != Models.Node.DefaultContainerZoom ? node.ContainerZoom : null,
             Color = node.Color,
-            Background = node.Background,
         };
 
     static Link ToLink(Models.Link link) =>
