@@ -10,7 +10,8 @@
 
 <div @ref="dropZoneElement" class="drop-zone">
     <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
-    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox">
+    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox"
+        style="background-color: @DColors.CanvasBackground">
         <style>
             svg {
                 cursor:
@@ -20,7 +21,7 @@
 
             .hoverable:hover * {
                 stroke:
-                    @Coloring.Highlight
+                    @DColors.Highlight
                 ;
                 stroke-width: 4px;
                 stroke-opacity: 1;
@@ -28,7 +29,7 @@
 
             .hoverableedit:hover * {
                 stroke:
-                    @Coloring.EditNode
+                    @DColors.EditNode
                 ;
                 stroke-width: 4px;
                 stroke-opacity: 1;
@@ -69,7 +70,6 @@
             </marker>
             @((MarkupString)IconDefs)
         </defs>
-
         @((MarkupString)Content)
     </svg>
 </div>

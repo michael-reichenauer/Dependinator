@@ -53,7 +53,7 @@ class LineSvg
 
         line.IsUpHill = x1 <= x2 && y1 >= y2 || x1 >= x2 && y1 <= y2;
 
-        var c = Coloring.LineColor;
+        var c = DColors.LineColor;
 
         return $"""
             <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="{c}" marker-end="url(#arrow)" />
@@ -71,7 +71,7 @@ class LineSvg
         if (!line.IsSelected)
             return "";
 
-        string c = Coloring.Highlight;
+        string c = DColors.Highlight;
         var sw = line.StrokeWidth;
         var ps = 7;
 
