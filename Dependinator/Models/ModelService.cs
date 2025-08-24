@@ -267,6 +267,9 @@ class ModelService : IModelService
 
     public async Task<R> RefreshAsync()
     {
+        if (Build.IsWebAssembly) // Not yet supported
+            return R.Ok;
+
         var path = "";
         lock (model.Lock)
         {
