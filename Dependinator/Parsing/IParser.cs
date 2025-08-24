@@ -42,7 +42,6 @@ record Node(string Name, string ParentName, NodeType Type, string? Description) 
     public double? OffsetX { get; init; }
     public double? OffsetY { get; init; }
     public string? Color { get; init; }
-    public string? Background { get; init; }
 
     public static string ParseParentName(string name)
     {

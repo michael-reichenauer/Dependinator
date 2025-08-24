@@ -10,7 +10,10 @@
 
 <div @ref="dropZoneElement" class="drop-zone">
     <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
-    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox">
+
+    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox"
+        style="background-color:@DColors.CanvasBackground">
+
         <style>
             svg {
                 cursor:
@@ -20,7 +23,7 @@
 
             .hoverable:hover * {
                 stroke:
-                    @Coloring.Highlight
+                    @DColors.Selected
                 ;
                 stroke-width: 4px;
                 stroke-opacity: 1;
@@ -28,7 +31,7 @@
 
             .hoverableedit:hover * {
                 stroke:
-                    @Coloring.EditNode
+                    @DColors.EditNodeBorder
                 ;
                 stroke-width: 4px;
                 stroke-opacity: 1;
@@ -49,7 +52,9 @@
 
             .iconName {
                 font: Verdana, Helvetica, Arial, sans-serif;
-                fill: #D1C4E9;
+                fill:
+                    @DColors.Text
+                ;
                 dominant-baseline: hanging;
                 text-anchor: middle;
                 pointer-events: none;
@@ -57,7 +62,9 @@
 
             .nodeName {
                 font: Verdana, Helvetica, Arial, sans-serif;
-                fill: #D1C4E9;
+                fill:
+                    @DColors.Text
+                ;
                 dominant-baseline: hanging;
                 text-anchor: start;
                 pointer-events: none;
@@ -65,11 +72,10 @@
         </style>
         <defs>
             <marker id="arrow" markerWidth="5" markerHeight="4" refX="5" refY="2" orient="auto">
-                <polygon points="0 0, 5 2, 0 4" fill="#B388FF" />
+                <polygon points="0 0, 5 2, 0 4" fill="@DColors.Line" />
             </marker>
             @((MarkupString)IconDefs)
         </defs>
-
         @((MarkupString)Content)
     </svg>
 </div>

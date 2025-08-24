@@ -19,7 +19,6 @@ interface IModelService
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
-    Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool UseNode(string id, Action<Node> useAction);
     bool UseNodeN(NodeId id, Action<Node> updateAction);
@@ -30,6 +29,7 @@ interface IModelService
     bool UseLine(string id, Action<Line> useAction);
     bool UseLineN(LineId id, Action<Line> updateAction);
     void Clear();
+    void ClearCache();
     Rect GetBounds();
     void CheckLineVisibility();
 }
@@ -43,7 +43,6 @@ class ModelService : IModelService
     readonly IModel model;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
-    readonly ISvgService modelSvgService;
     readonly Parsing.IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
     readonly ICommandService commandService;
@@ -52,7 +51,6 @@ class ModelService : IModelService
         IModel model,
         Parsing.IParserService parserService,
         IStructureService modelStructureService,
-        ISvgService modelSvgService,
         Parsing.IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
         ICommandService commandService
@@ -61,7 +59,6 @@ class ModelService : IModelService
         this.model = model;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
-        this.modelSvgService = modelSvgService;
         this.persistenceService = persistenceService;
         this.applicationEvents = applicationEvents;
         this.commandService = commandService;
@@ -73,6 +70,15 @@ class ModelService : IModelService
     public Pos Offset => Use(m => m.Offset);
     public double Zoom => Use(m => m.Zoom);
     public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
+
+    public void ClearCache()
+    {
+        lock (model.Lock)
+        {
+            model.ClearCachedSvg();
+        }
+        TriggerSave();
+    }
 
     public void Do(Command command, bool isClearCache = true)
     {
@@ -207,20 +213,6 @@ class ModelService : IModelService
 
     public bool UseLine(string id, Func<Line, bool> updateAction) => UseLineN(LineId.FromId(id), updateAction);
 
-    public Tile GetTile(Rect viewRect, double zoom)
-    {
-        //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
-        lock (model.Lock)
-        {
-            if (model.Root.Children.Any())
-            {
-                model.ViewRect = viewRect;
-                model.Zoom = zoom;
-            }
-            return modelSvgService.GetTile(model, viewRect, zoom);
-        }
-    }
-
     public (Rect, double) GetLatestView()
     {
         lock (model.Lock)
@@ -285,6 +277,9 @@ class ModelService : IModelService
 
     public async Task<R> RefreshAsync()
     {
+        if (Build.IsWebAssembly) // Not yet supported
+            return R.Ok;
+
         var path = "";
         lock (model.Lock)
         {

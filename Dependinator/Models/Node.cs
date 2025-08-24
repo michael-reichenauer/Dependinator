@@ -4,18 +4,13 @@ namespace Dependinator.Models;
 
 class Node : IItem
 {
-    const double MinContainerZoom = 2.0;
-    const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
-
     public Node(string name, Node parent)
     {
         Id = NodeId.FromName(name);
         Name = name;
         Parent = parent;
 
-        var color = Coloring.BrightRandom();
-        Color = color.ToString();
-        Background = color.VeryDark().ToString();
+        Color = DColors.RandomNodeColorName();
 
         SetDisplayNames();
     }
@@ -49,7 +44,6 @@ class Node : IItem
 
     public string Color { get; set; } = "";
 
-    public string Background { get; set; } = "green";
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
@@ -89,10 +83,6 @@ class Node : IItem
             return;
         Children.ForEach(child => child.SetHidden(hidden, false));
     }
-
-    public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
-
-    public bool IsShowIcon(double zoom) => Type == NodeType.Member || zoom <= MinContainerZoom;
 
     public double GetZoom()
     {
@@ -159,7 +149,6 @@ class Node : IItem
         ContainerOffset = offset;
         ContainerZoom = node.Zoom ?? ContainerZoom;
         Color = node.Color ?? Color;
-        Background = node.Background ?? Background;
     }
 
     public void AddChild(Node child)
