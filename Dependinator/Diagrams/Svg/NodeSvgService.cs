@@ -6,7 +6,9 @@ class NodeSvg
 {
     const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
     const double MinContainerZoom = 2.0;
-    const int SmallIconSize = 9;
+    const int NameIconSize = 9;
+    const int MemberIconSize = 20;
+    const int MemberFontSize = 18;
     const int FontSize = 8;
 
     public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
@@ -48,10 +50,10 @@ class NodeSvg
         var s = node.IsEditMode ? 10 : node.StrokeWidth;
         var (x, y, w, h) = (nodeCanvasRect.X, nodeCanvasRect.Y, nodeCanvasRect.Width, nodeCanvasRect.Height);
 
-        var iSize = SmallIconSize * parentZoom;
+        var iSize = NameIconSize * parentZoom;
         var (ix, iy, iw, ih) = (x, y + h + 1 * parentZoom, iSize, iSize);
 
-        var (tx, ty) = (x + (SmallIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
+        var (tx, ty) = (x + (NameIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
         var fz = FontSize * parentZoom;
         var icon = node.Type.IconName;
         var elementId = PointerId.FromNode(node.Id).ElementId;
@@ -78,6 +80,34 @@ class NodeSvg
             </svg>
             <use href="#{icon}" x="{ix:0.##}" y="{iy:0.##}" width="{iw:0.##}" height="{ih:0.##}" {hiddenText}/>
             <text x="{tx:0.##}" y="{ty:0.##}" class="nodeName" font-size="{fz:0.##}px" {hiddenText}>{node.HtmlShortName}</text>
+            {selectedSvg}
+            """;
+    }
+
+    public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom)
+    {
+        //Log.Info("Draw", node.Name, nodeCanvasRect.ToString());
+        var s = node.IsEditMode ? 10 : node.StrokeWidth;
+        var (x, y) = (nodeCanvasRect.X, nodeCanvasRect.Y);
+        var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
+
+        var (tx, ty) = (x + w / 2, y + h);
+        var fz = FontSize * parentZoom;
+        var icon = node.Type.IconName;
+        //Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
+        //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
+        string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
+        var elementId = PointerId.FromNode(node.Id).ElementId;
+
+        var hiddenNode = node.IsHidden ? "opacity=\"0.1\"" : "";
+        var hiddenText = node.IsHidden ? "opacity=\"0.3\"" : "";
+        return $"""
+            <use href="#{icon}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" {hiddenNode} />
+            <text x="{tx:0.##}" y="{ty:0.##}" class="iconName" font-size="{fz:0.##}px" {hiddenText} >{node.HtmlShortName}</text>
+            <g class="hoverable" id="{elementId}">
+              <rect id="{elementId}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+              <title>{node.HtmlLongName}</title>
+            </g>
             {selectedSvg}
             """;
     }
