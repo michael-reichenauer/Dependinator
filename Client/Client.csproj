@@ -1,23 +1,40 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-	  <RootNamespace>BlazorApp.Client</RootNamespace>
+    <RootNamespace>BlazorApp.Client</RootNamespace>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly"  />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Scrutor" />
   </ItemGroup>
-
+  <Target Name="CopyAnalyzableIL" AfterTargets="Build">
+    <MakeDir Directories="wwwroot/analyzable" />
+    <Copy
+      SourceFiles="$(TargetDir)Dependinator.dll"
+      DestinationFiles="wwwroot/analyzable/Dependinator.dll"
+      SkipUnchangedFiles="true"
+    />
+    <Copy
+      SourceFiles="$(TargetDir)Dependinator.pdb"
+      DestinationFiles="wwwroot/analyzable/Dependinator.pdb"
+      SkipUnchangedFiles="true"
+      Condition="Exists('$(TargetDir)Dependinator.pdb')"
+    />
+  </Target>
   <ItemGroup>
-	<ProjectReference Include="..\Shared\Shared.csproj" />
-	<ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+    <Content Update="wwwroot/analyzable/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+  </ItemGroup>
 </Project>

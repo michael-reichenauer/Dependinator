@@ -1,7 +1,5 @@
 ﻿using System.Reflection;
-using System.Text;
 using System.Threading.Channels;
-using Dependinator.Shared;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
@@ -11,7 +9,9 @@ namespace Dependinator.Parsing.Assemblies;
 internal class AssemblyParser : IDisposable
 {
     readonly Lazy<AssemblyDefinition?> assembly;
+    readonly HttpClient httpClient;
     readonly string assemblyPath;
+    byte[]? assemblyBytes;
     readonly AssemblyReferencesParser assemblyReferencesParser;
     readonly Decompiler decompiler = new Decompiler();
 
@@ -25,6 +25,7 @@ internal class AssemblyParser : IDisposable
     List<TypeData> typeInfos = new List<TypeData>();
 
     public AssemblyParser(
+        HttpClient httpClient,
         string assemblyPath,
         string projectPath,
         string parentName,
@@ -34,6 +35,7 @@ internal class AssemblyParser : IDisposable
     )
     {
         ProjectPath = projectPath;
+        this.httpClient = httpClient;
         this.assemblyPath = assemblyPath;
         this.parentName = parentName;
         this.items = items;
@@ -64,7 +66,11 @@ internal class AssemblyParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        if (!fileService.ExistsStream(assemblyPath))
+        if (assemblyPath == "analyzable/Dependinator.dll")
+        {
+            assemblyBytes = await httpClient.GetByteArrayAsync("analyzable/Dependinator.dll");
+        }
+        else if (!fileService.ExistsStream(assemblyPath))
             return R.Error($"No file at '{assemblyPath}'");
 
         return await Task.Run(async () =>
@@ -136,6 +142,11 @@ internal class AssemblyParser : IDisposable
         try
         {
             ReaderParameters parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
+            if (assemblyBytes != null)
+            {
+                var bytesStream = new MemoryStream(assemblyBytes);
+                return AssemblyDefinition.ReadAssembly(bytesStream, parameters);
+            }
 
             if (!Try(out var stream, out var e, fileService.ReadStram(assemblyPath)))
                 return null;

@@ -114,7 +114,8 @@ class SvgService : ISvgService
 
         if (!IsInsideTile(node, nodeTilePos, zoom, tileWithMargin))
             return "";
-
+        if (node.Type == NodeType.Member)
+            return NodeSvg.GetMemberNodeSvg(node, nodeSvgRect, zoom);
         if (NodeSvg.IsShowIcon(node.Type, zoom))
             return NodeSvg.GetNodeIconSvg(node, nodeSvgRect, zoom);
 

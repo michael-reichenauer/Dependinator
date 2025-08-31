@@ -1,5 +1,4 @@
 ﻿using System.Threading.Channels;
-using Dependinator.Shared;
 
 namespace Dependinator.Parsing.Solutions;
 
@@ -7,17 +6,19 @@ namespace Dependinator.Parsing.Solutions;
 internal class SolutionParserService : IParser
 {
     readonly IFileService fileService;
+    private readonly HttpClient httpClient;
 
-    public SolutionParserService(IFileService fileService)
+    public SolutionParserService(IFileService fileService, HttpClient httpClient)
     {
         this.fileService = fileService;
+        this.httpClient = httpClient;
     }
 
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".sln");
 
     public async Task<R> ParseAsync(string path, ChannelWriter<IItem> items)
     {
-        using var solutionParser = new SolutionParser(path, items, false, fileService);
+        using var solutionParser = new SolutionParser(httpClient, path, items, false, fileService);
         if (!Try(out var e, await solutionParser.ParseAsync()))
             return e;
         return R.Ok;
@@ -25,7 +26,7 @@ internal class SolutionParserService : IParser
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        using var solutionParser = new SolutionParser(path, null!, true, fileService);
+        using var solutionParser = new SolutionParser(httpClient, path, null!, true, fileService);
         if (!Try(out var source, out var e, await solutionParser.TryGetSourceAsync(nodeName)))
             return e;
 
@@ -34,7 +35,7 @@ internal class SolutionParserService : IParser
 
     public async Task<R<string>> GetNodeAsync(string path, Source source)
     {
-        using var solutionParser = new SolutionParser(path, null!, true, fileService);
+        using var solutionParser = new SolutionParser(httpClient, path, null!, true, fileService);
         if (!Try(out var nodeName, out var e, await solutionParser.TryGetNodeAsync(source)))
             return e;
         return nodeName;

@@ -46,8 +46,6 @@ partial class Canvas : ComponentBase, IUIComponent
     string ViewBox => srv.SvgViewBox;
     static string IconDefs => Icon.IconDefs;
 
-    int ThemeVersion = 0;
-
     string Cursor => srv.Cursor;
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
 
@@ -61,12 +59,7 @@ partial class Canvas : ComponentBase, IUIComponent
 
             await jSInterop.Call("initializeFileDropZone", dropZoneElement, inputFile.Element);
 
-            applicationEvents.UIStateChanged += () =>
-            {
-                Log.Info($"222UI state changed: {ThemeVersion}");
-                ThemeVersion++;
-                InvokeAsync(StateHasChanged);
-            };
+            applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
             await InvokeAsync(srv.InitialShow);
         }
     }
