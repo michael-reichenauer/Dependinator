@@ -13,25 +13,13 @@
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Scrutor" />
   </ItemGroup>
-  <Target Name="CopyAnalyzableIL" AfterTargets="Build">
-    <MakeDir Directories="wwwroot/analyzable" />
-    <Copy
-      SourceFiles="$(TargetDir)Dependinator.dll"
-      DestinationFiles="wwwroot/analyzable/Dependinator.dll"
-      SkipUnchangedFiles="true"
-    />
-    <Copy
-      SourceFiles="$(TargetDir)Dependinator.pdb"
-      DestinationFiles="wwwroot/analyzable/Dependinator.pdb"
-      SkipUnchangedFiles="true"
-      Condition="Exists('$(TargetDir)Dependinator.pdb')"
-    />
-  </Target>
   <ItemGroup>
-    <Content Update="wwwroot/analyzable/**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </Content>
+    <EmbeddedResource Include="$(TargetDir)Dependinator.dll">
+      <LogicalName>Example/Dependinator.dll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(TargetDir)Dependinator.pdb" Condition="Exists('$(TargetDir)Dependinator.pdb')">
+      <LogicalName>Example/Dependinator.pdb</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />

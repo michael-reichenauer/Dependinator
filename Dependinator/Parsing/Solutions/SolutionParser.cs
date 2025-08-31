@@ -11,19 +11,19 @@ internal class SolutionParser : IDisposable
     readonly bool isReadSymbols;
     readonly IFileService fileService;
     readonly List<Node> parentNodesToSend = new List<Node>();
-    private readonly HttpClient httpClient;
+    readonly IEmbeddedResources embeddedResources;
     readonly string solutionFilePath;
     readonly ChannelWriter<IItem> items;
 
     public SolutionParser(
-        HttpClient httpClient,
+        IEmbeddedResources embeddedResources,
         string solutionFilePath,
         ChannelWriter<IItem> items,
         bool isReadSymbols,
         IFileService fileService
     )
     {
-        this.httpClient = httpClient;
+        this.embeddedResources = embeddedResources;
         this.solutionFilePath = solutionFilePath;
         this.items = items;
         this.isReadSymbols = isReadSymbols;
@@ -129,7 +129,7 @@ internal class SolutionParser : IDisposable
             string parent = GetProjectParentName(solutionName, project);
 
             var assemblyParser = new AssemblyParser(
-                httpClient,
+                embeddedResources,
                 assemblyPath,
                 project.ProjectFilePath,
                 parent,
@@ -153,7 +153,7 @@ internal class SolutionParser : IDisposable
             foreach (string referencePath in referencePaths)
             {
                 var assemblyParser = new AssemblyParser(
-                    httpClient,
+                    embeddedResources,
                     referencePath,
                     "",
                     "",

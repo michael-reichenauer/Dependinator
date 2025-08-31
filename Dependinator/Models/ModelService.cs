@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace Dependinator.Models;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
@@ -230,14 +232,12 @@ class ModelService : IModelService
 
     public async Task<R<ModelInfo>> LoadAsync(string path)
     {
+        Log.Info("getting assembl...");
+
         Clear();
         if (!Build.IsWebAssembly && path == ExampleModel.Path)
         {
             path = "/workspaces/Dependinator/Dependinator.sln";
-        }
-        else if (Build.IsWebAssembly && path == ExampleModel.Path)
-        {
-            path = "analyzable/Dependinator.dll";
         }
 
         Log.Info("Loading ...", path);
