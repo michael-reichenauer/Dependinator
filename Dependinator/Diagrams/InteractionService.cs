@@ -1,4 +1,5 @@
 ﻿using Dependinator.Diagrams.Dependencies;
+using Dependinator.Diagrams.Svg;
 using Dependinator.Models;
 
 namespace Dependinator.Diagrams;
@@ -63,7 +64,7 @@ class InteractionService : IInteractionService
             if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
                 return false;
             var nodeZoom = 1 / (node.GetZoom() * Zoom);
-            return !Node.IsToLargeToBeSeen(nodeZoom) && !node.IsShowIcon(nodeZoom);
+            return !NodeSvg.IsToLargeToBeSeen(nodeZoom) && !NodeSvg.IsShowIcon(node.Type, nodeZoom);
         }
     }
 
@@ -76,7 +77,7 @@ class InteractionService : IInteractionService
             if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
                 return false;
             var nodeZoom = 1 / (node.GetZoom() * Zoom);
-            if (!Node.IsToLargeToBeSeen(nodeZoom) && !node.IsShowIcon(nodeZoom))
+            if (!NodeSvg.IsToLargeToBeSeen(nodeZoom) && !NodeSvg.IsShowIcon(node.Type, nodeZoom))
             { // No longer in edit mode if node is to large to be seen or has an icon
                 return true;
             }
@@ -142,7 +143,6 @@ class InteractionService : IInteractionService
 
     void UpdateToolbar()
     {
-        Log.Info("UpdateToolbar");
         if (selectionService.IsSelected)
         {
             zoomToolbarDebouncer.Debounce(20, () => selectionService.UpdateSelectedPositionAsync());

@@ -2,7 +2,7 @@ namespace Dependinator.Models;
 
 class Link : IItem
 {
-    readonly List<Line> lines = new();
+    public List<Line> Lines { get; } = new();
 
     public Link(Node Source, Node Target)
     {
@@ -14,13 +14,14 @@ class Link : IItem
     public LinkId Id { get; }
     public Node Source { get; }
     public Node Target { get; }
+    public DateTime UpdateStamp { get; set; }
 
     public void AddLine(Line line)
     {
-        if (lines.Contains(line))
+        if (Lines.Contains(line))
             return;
-        lines.Add(line);
+        Lines.Add(line);
     }
 
-    public override string ToString() => $"{Source}->{Target} ({lines.Count})";
+    public override string ToString() => $"{Source}->{Target} ({Lines.Count})";
 }

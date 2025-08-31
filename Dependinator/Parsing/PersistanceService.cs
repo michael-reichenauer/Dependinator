@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Dependinator.Models;
-using Dependinator.Shared;
 
 namespace Dependinator.Parsing;
 
@@ -69,20 +67,20 @@ class PersistenceService : IPersistenceService
             var filePath = modelPath;
             using var t = Timing.Start();
 
-            if (modelPath == ExampleModel.Path)
-            {
-                Log.Info("Reading cached example model ...", modelPath);
-                if (!Try(out var model, out var e, await fileService.ReadAsync<Model>(filePath)))
-                {
-                    Log.Info("Example model not cached, use built in model", modelPath);
-                    var json = ExampleModel.Model;
-                    if (!Try(out model, out e, () => JsonSerializer.Deserialize<Model>(json)))
-                        return e;
-                }
+            // if (modelPath == ExampleModel.Path)
+            // {
+            //     Log.Info("Reading cached example model ...", modelPath);
+            //     if (!Try(out var model, out var e, await fileService.ReadAsync<Model>(filePath)))
+            //     {
+            //         Log.Info("Example model not cached, use built in model", modelPath);
+            //         var json = ExampleModel.Model;
+            //         if (!Try(out model, out e, () => JsonSerializer.Deserialize<Model>(json)))
+            //             return e;
+            //     }
 
-                Log.Info("Read cached example model", modelPath);
-                return model;
-            }
+            //     Log.Info("Read cached example model", modelPath);
+            //     return model;
+            // }
 
             if (!Try(out var model2, out var e2, await fileService.ReadAsync<Model>(filePath)))
                 return e2;
@@ -102,7 +100,6 @@ class PersistenceService : IPersistenceService
             Height = node.Boundary != Rect.None ? node.Boundary.Height : null,
             Zoom = node.ContainerZoom != Models.Node.DefaultContainerZoom ? node.ContainerZoom : null,
             Color = node.Color,
-            Background = node.Background,
         };
 
     static Link ToLink(Models.Link link) =>

@@ -1,3 +1,4 @@
+using Dependinator.Diagrams.Svg;
 using Dependinator.Models;
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -19,6 +20,7 @@ interface ICanvasService
 
     Task InitAsync();
     void OpenFiles();
+    void ToggleTheme();
     public void Remove();
     void Refresh();
     void Clear();
@@ -35,34 +37,34 @@ class CanvasService : ICanvasService
     readonly IScreenService screenService;
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
+    readonly ISvgService svgService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInteropService;
     readonly IFileService fileService;
     readonly IRecentModelsService recentModelsService;
     readonly IInteractionService interactionService;
-    private readonly ISelectionService selectionService;
 
     public CanvasService(
         IScreenService screenService,
         IPanZoomService panZoomService,
         IModelService modelService,
+        ISvgService svgService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
         IFileService fileService,
         IRecentModelsService recentModelsService,
-        IInteractionService interactionService,
-        ISelectionService selectionService
+        IInteractionService interactionService
     )
     {
         this.screenService = screenService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
+        this.svgService = svgService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
         this.fileService = fileService;
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
-        this.selectionService = selectionService;
     }
 
     public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
@@ -81,10 +83,12 @@ class CanvasService : ICanvasService
     public Rect SvgRect => screenService.SvgRect;
     public Pos Offset => modelService.Offset;
     public double Zoom => modelService.Zoom;
-    public double ActualZoom => Zoom / LevelZoom;
+    public double ActualZoom => LevelZoom != 0 ? Zoom / LevelZoom : 0;
 
     public string SvgViewBox =>
-        $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}";
+        LevelZoom != 0 && TileOffset.X != 0 && TileOffset.Y != 0
+            ? $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}"
+            : "0 0 0 0";
 
     public async Task InitAsync()
     {
@@ -93,6 +97,7 @@ class CanvasService : ICanvasService
 
     public async void InitialShow()
     {
+        using var t = Timing.Start("InitialShow");
         await screenService.CheckResizeAsync();
         await LoadAsync(recentModelsService.LastUsedPath);
     }
@@ -146,6 +151,14 @@ class CanvasService : ICanvasService
         await jSInteropService.Call("clickElement", "inputfile");
     }
 
+    public void ToggleTheme()
+    {
+        DColors.IsDark = !DColors.IsDark;
+
+        modelService.ClearCache();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
     public async Task<IReadOnlyList<string>> GetModelPaths()
     {
         if (!Try(out var paths, out var eee, await fileService.GetFilePathsAsync()))
@@ -176,9 +189,11 @@ class CanvasService : ICanvasService
 
     string GetSvgContent()
     {
-        // Log.Info($"GetSvgContent:", Offset, Zoom);
+        if (SvgRect.Width == 0 || SvgRect.Height == 0 || Zoom == 0)
+            return "";
+
         var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
-        var tile = modelService.GetTile(viewRect, Zoom);
+        var tile = svgService.GetTile(viewRect, Zoom);
 
         if (Content == tile.Svg)
             return Content; // No change

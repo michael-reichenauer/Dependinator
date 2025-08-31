@@ -1,4 +1,4 @@
-﻿@using Dependinator.DiagramIcons
+﻿@using Dependinator.Diagrams.Icons
 @using Dependinator.Diagrams.Dependencies
 
 @inject IApplicationEvents applicationEvents
@@ -8,25 +8,24 @@
 @inject IDependenciesService dependenciesService
 
 
-<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show"
-    Style="@position">
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show" Style="@position">
 
-    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences"  />
-    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies"  />
-   
+    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
+    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+
 </MudButtonGroup>
 
 
 @code {
     string show => selectionService.SelectedLinePosition != Models.Pos.None ? "visible" : "hidden";
     bool isIcon => !interactionService.IsContainer;
-    double left =>selectionService.SelectedLinePosition.X;
-    double top => selectionService.SelectedLinePosition.Y -20;
+    double left => selectionService.SelectedLinePosition.X;
+    double top => selectionService.SelectedLinePosition.Y - 20;
     string position => $"Position: fixed; left:{left}px; top:{top}px";
 
     void ShowReferences() => dependenciesService.ShowReferences();
     void ShowDependencies() => dependenciesService.ShowDependencies();
-      
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);

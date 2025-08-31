@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography;
-using Dependinator.Diagrams;
+﻿using Dependinator.Diagrams;
 using Dependinator.Models;
 
 namespace Dependinator;
@@ -15,10 +14,13 @@ interface ISelectionService
 
     Task UpdateSelectedPositionAsync();
     bool IsSelectedNodeMovable(double zoom);
+    bool IsSelectedNodeHidden();
+    bool IsSelectedNodeParentHidden();
     void Select(PointerId pointerId, PointerEvent e);
     void Select(NodeId nodeId);
     void SetEditMode(bool isEditMode);
     void Unselect();
+    void ToggleNodeHide();
 }
 
 [Scoped]
@@ -233,7 +235,36 @@ class SelectionService : ISelectionService
         if (!modelService.TryGetNode(selectedId.Id, out var node))
             return false;
 
+        if (node.IsHidden && node.Parent.IsHidden)
+            return false;
         return IsNodeMovable(node, zoom);
+    }
+
+    public bool IsSelectedNodeHidden()
+    {
+        if (!IsSelected)
+            return false;
+        if (!modelService.TryGetNode(selectedId.Id, out var node))
+            return false;
+        return node.IsHidden;
+    }
+
+    public bool IsSelectedNodeParentHidden()
+    {
+        if (!IsSelected)
+            return false;
+        if (!modelService.TryGetNode(selectedId.Id, out var node))
+            return false;
+        return node.Parent.IsHidden;
+    }
+
+    public void ToggleNodeHide()
+    {
+        if (!IsSelected)
+            return;
+        modelService.UseNode(selectedId.Id, node => node.SetHidden(!node.IsHidden, true));
+        modelService.CheckLineVisibility();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     private bool IsNodeMovable(Node node, double zoom)

@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace Dependinator.Models;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
@@ -19,7 +21,6 @@ interface IModelService
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
-    Tile GetTile(Rect viewRect, double zoom);
     bool TryGetNode(string id, out Node node);
     bool UseNode(string id, Action<Node> useAction);
     bool UseNodeN(NodeId id, Action<Node> updateAction);
@@ -30,7 +31,9 @@ interface IModelService
     bool UseLine(string id, Action<Line> useAction);
     bool UseLineN(LineId id, Action<Line> updateAction);
     void Clear();
+    void ClearCache();
     Rect GetBounds();
+    void CheckLineVisibility();
 }
 
 [Transient]
@@ -38,11 +41,9 @@ class ModelService : IModelService
 {
     static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
     static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10) - SaveDelay;
-
     readonly IModel model;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
-    readonly ISvgService modelSvgService;
     readonly Parsing.IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
     readonly ICommandService commandService;
@@ -51,7 +52,6 @@ class ModelService : IModelService
         IModel model,
         Parsing.IParserService parserService,
         IStructureService modelStructureService,
-        ISvgService modelSvgService,
         Parsing.IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
         ICommandService commandService
@@ -60,7 +60,6 @@ class ModelService : IModelService
         this.model = model;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
-        this.modelSvgService = modelSvgService;
         this.persistenceService = persistenceService;
         this.applicationEvents = applicationEvents;
         this.commandService = commandService;
@@ -72,6 +71,15 @@ class ModelService : IModelService
     public Pos Offset => Use(m => m.Offset);
     public double Zoom => Use(m => m.Zoom);
     public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
+
+    public void ClearCache()
+    {
+        lock (model.Lock)
+        {
+            model.ClearCachedSvg();
+        }
+        TriggerSave();
+    }
 
     public void Do(Command command, bool isClearCache = true)
     {
@@ -206,20 +214,6 @@ class ModelService : IModelService
 
     public bool UseLine(string id, Func<Line, bool> updateAction) => UseLineN(LineId.FromId(id), updateAction);
 
-    public Tile GetTile(Rect viewRect, double zoom)
-    {
-        //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
-        lock (model.Lock)
-        {
-            if (model.Root.Children.Any())
-            {
-                model.ViewRect = viewRect;
-                model.Zoom = zoom;
-            }
-            return modelSvgService.GetTile(model, viewRect, zoom);
-        }
-    }
-
     public (Rect, double) GetLatestView()
     {
         lock (model.Lock)
@@ -238,13 +232,15 @@ class ModelService : IModelService
 
     public async Task<R<ModelInfo>> LoadAsync(string path)
     {
+        Log.Info("getting assembl...");
+
         Clear();
         if (!Build.IsWebAssembly && path == ExampleModel.Path)
         {
             path = "/workspaces/Dependinator/Dependinator.sln";
         }
 
-        Log.Info("Loading", path);
+        Log.Info("Loading ...", path);
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
@@ -257,6 +253,17 @@ class ModelService : IModelService
             return parsedModelInfo;
         }
         return modelInfo;
+    }
+
+    public void CheckLineVisibility()
+    {
+        lock (model.Lock)
+        {
+            foreach (var line in model.Items.Values.OfType<Line>())
+            {
+                line.IsHidden = line.Links.All(link => link.Source.IsHidden || link.Target.IsHidden);
+            }
+        }
     }
 
     async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
@@ -273,6 +280,9 @@ class ModelService : IModelService
 
     public async Task<R> RefreshAsync()
     {
+        if (Build.IsWebAssembly) // Not yet supported
+            return R.Ok;
+
         var path = "";
         lock (model.Lock)
         {
@@ -281,6 +291,10 @@ class ModelService : IModelService
 
         if (!Try(out var e, await ParseAsync(path)))
             return e;
+        lock (model.Lock)
+        {
+            model.ClearNotUpdated();
+        }
 
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
@@ -308,18 +322,14 @@ class ModelService : IModelService
         if (!Try(out var reader, out var e, parserService.Parse(path)))
             return e;
 
-        await Task.Run(async () =>
+        Log.Info("Adding...");
+        lock (model.Lock)
         {
-            var batchItems = new List<Parsing.IItem>();
-            while (await reader.WaitToReadAsync())
-            {
-                while (reader.TryRead(out var item))
-                {
-                    batchItems.Add(item);
-                }
-            }
-            AddOrUpdateItems(batchItems);
-        });
+            model.UpdateStamp = DateTime.UtcNow;
+            model.ClearCachedSvg();
+        }
+
+        await AddOrUpdateAllItems(reader);
 
         return R.Ok;
     }
@@ -393,13 +403,32 @@ class ModelService : IModelService
         return new ModelInfo(modelData.Path, modelData.ViewRect, modelData.Zoom);
     }
 
+    private async Task AddOrUpdateAllItems(System.Threading.Channels.ChannelReader<Parsing.IItem> reader)
+    {
+        var itemsCount = 0;
+        var t = Timing.Start();
+        await Task.Run(async () =>
+        {
+            while (await reader.WaitToReadAsync())
+            {
+                var batchItems = new List<Parsing.IItem>();
+                while (reader.TryRead(out var item))
+                {
+                    batchItems.Add(item);
+                    itemsCount++;
+                    if (batchItems.Count >= 500)
+                        break;
+                }
+                AddOrUpdateItems(batchItems);
+            }
+        });
+        t.Log($"Added or updated {itemsCount} items");
+    }
+
     void AddOrUpdateItems(IReadOnlyList<Parsing.IItem> parsedItems)
     {
-        using var _ = Timing.Start($"Added {parsedItems.Count} items");
         lock (model.Lock)
         {
-            model.ClearCachedSvg();
-
             // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {

@@ -4,18 +4,13 @@ namespace Dependinator.Models;
 
 class Node : IItem
 {
-    const double MinContainerZoom = 2.0;
-    const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
-
     public Node(string name, Node parent)
     {
         Id = NodeId.FromName(name);
         Name = name;
         Parent = parent;
 
-        var color = Coloring.BrightRandom();
-        Color = color.ToString();
-        Background = color.VeryDark().ToString();
+        Color = DColors.RandomNodeColorName();
 
         SetDisplayNames();
     }
@@ -33,6 +28,7 @@ class Node : IItem
     public string Name { get; }
     public Node Parent { get; private set; }
     NodeType type = NodeType.None;
+    public DateTime UpdateStamp { get; set; }
     public NodeType Type
     {
         get => type;
@@ -45,8 +41,9 @@ class Node : IItem
     public string Icon => Type.Text;
 
     public string Description { get; set; } = "";
+
     public string Color { get; set; } = "";
-    public string Background { get; set; } = "green";
+
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
@@ -67,10 +64,25 @@ class Node : IItem
     public string ShortName { get; private set; } = "";
     public string HtmlShortName { get; private set; } = "";
     public string HtmlLongName { get; private set; } = "";
+    public bool IsHidden => IsUserSetHidden || IsParentSetHidden;
+    public bool IsUserSetHidden { get; private set; }
+    private bool IsParentSetHidden { get; set; }
 
-    public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
+    public void SetHidden(bool hidden, bool isUserSet)
+    {
+        if (isUserSet)
+        {
+            IsUserSetHidden = hidden;
+            Children.ForEach(child => child.SetHidden(hidden, false));
+            return;
+        }
 
-    public bool IsShowIcon(double zoom) => Type == NodeType.Member || zoom <= MinContainerZoom;
+        // Set by parent
+        IsParentSetHidden = hidden;
+        if (IsUserSetHidden)
+            return;
+        Children.ForEach(child => child.SetHidden(hidden, false));
+    }
 
     public double GetZoom()
     {
@@ -137,7 +149,6 @@ class Node : IItem
         ContainerOffset = offset;
         ContainerZoom = node.Zoom ?? ContainerZoom;
         Color = node.Color ?? Color;
-        Background = node.Background ?? Background;
     }
 
     public void AddChild(Node child)
@@ -170,6 +181,18 @@ class Node : IItem
         if (TargetLinks.Contains(link))
             return;
         TargetLinks.Add(link);
+    }
+
+    public void Remove(Link link)
+    {
+        SourceLinks.Remove(link);
+        TargetLinks.Remove(link);
+    }
+
+    public void Remove(Line line)
+    {
+        SourceLines.Remove(line);
+        TargetLines.Remove(line);
     }
 
     public IEnumerable<Node> Ancestors()

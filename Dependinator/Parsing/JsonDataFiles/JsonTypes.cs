@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Dependinator.Parsing.JsonDataFiles;
+﻿namespace Dependinator.Parsing.JsonDataFiles;
 
 public static class JsonTypes
 {

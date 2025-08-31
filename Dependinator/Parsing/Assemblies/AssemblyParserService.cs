@@ -1,5 +1,4 @@
 ﻿using System.Threading.Channels;
-using Dependinator.Shared;
 
 namespace Dependinator.Parsing.Assemblies;
 
@@ -7,10 +6,12 @@ namespace Dependinator.Parsing.Assemblies;
 internal class AssemblyParserService : IParser
 {
     readonly IFileService fileService;
+    readonly IEmbeddedResources embeddedResources;
 
-    public AssemblyParserService(IFileService fileService)
+    public AssemblyParserService(IFileService fileService, IEmbeddedResources embeddedResources)
     {
         this.fileService = fileService;
+        this.embeddedResources = embeddedResources;
     }
 
     public bool CanSupport(string path) =>
@@ -21,13 +22,21 @@ internal class AssemblyParserService : IParser
         Node assemblyNode = CreateAssemblyNode(path);
         await items.WriteAsync(assemblyNode);
 
-        using var parser = new AssemblyParser(path, "", assemblyNode.Name, items, false, fileService);
+        using var parser = new AssemblyParser(
+            embeddedResources,
+            path,
+            "",
+            assemblyNode.Name,
+            items,
+            false,
+            fileService
+        );
         return await parser.ParseAsync();
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        using var parser = new AssemblyParser(path, "", "", null!, true, fileService);
+        using var parser = new AssemblyParser(embeddedResources, path, "", "", null!, true, fileService);
         return await Task.Run(() => parser.TryGetSource(nodeName));
     }
 
