@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Threading.Channels;
+using Dependinator.Models;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
@@ -9,23 +10,22 @@ namespace Dependinator.Parsing.Assemblies;
 internal class AssemblyParser : IDisposable
 {
     readonly Lazy<AssemblyDefinition?> assembly;
-    readonly HttpClient httpClient;
+    readonly IEmbeddedResources embeddedResources;
     readonly string assemblyPath;
-    byte[]? assemblyBytes;
     readonly AssemblyReferencesParser assemblyReferencesParser;
-    readonly Decompiler decompiler = new Decompiler();
+    readonly Decompiler decompiler = new();
 
     readonly ChannelWriter<IItem> items;
     readonly IFileService fileService;
     readonly MemberParser memberParser;
     readonly string parentName;
-    readonly ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
+    readonly ParsingAssemblyResolver resolver = new();
     readonly TypeParser typeParser;
     readonly LinkHandler linkHandler;
     List<TypeData> typeInfos = new List<TypeData>();
 
     public AssemblyParser(
-        HttpClient httpClient,
+        IEmbeddedResources embeddedResources,
         string assemblyPath,
         string projectPath,
         string parentName,
@@ -35,7 +35,7 @@ internal class AssemblyParser : IDisposable
     )
     {
         ProjectPath = projectPath;
-        this.httpClient = httpClient;
+        this.embeddedResources = embeddedResources;
         this.assemblyPath = assemblyPath;
         this.parentName = parentName;
         this.items = items;
@@ -66,11 +66,7 @@ internal class AssemblyParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        if (assemblyPath == "analyzable/Dependinator.dll")
-        {
-            assemblyBytes = await httpClient.GetByteArrayAsync("analyzable/Dependinator.dll");
-        }
-        else if (!fileService.ExistsStream(assemblyPath))
+        if (assemblyPath != ExampleModel.Path && !fileService.ExistsStream(assemblyPath))
             return R.Error($"No file at '{assemblyPath}'");
 
         return await Task.Run(async () =>
@@ -141,11 +137,10 @@ internal class AssemblyParser : IDisposable
     {
         try
         {
-            ReaderParameters parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
-            if (assemblyBytes != null)
+            var parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
+            if (assemblyPath == ExampleModel.Path)
             {
-                var bytesStream = new MemoryStream(assemblyBytes);
-                return AssemblyDefinition.ReadAssembly(bytesStream, parameters);
+                return AssemblyDefinition.ReadAssembly(embeddedResources.OpenResource(ExampleModel.Path), parameters);
             }
 
             if (!Try(out var stream, out var e, fileService.ReadStram(assemblyPath)))

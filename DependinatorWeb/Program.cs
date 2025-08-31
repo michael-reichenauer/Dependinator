@@ -22,7 +22,7 @@ public class Program
                 options.Listen(System.Net.IPAddress.Loopback, 5000); // Listen on port 5000 for HTTP on IPv4
             });
         }
-        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5000") });
+        builder.Services.AddSingleton<IEmbeddedResources, EmbeddedResources<Program>>();
 
         // Add services to the container.
         builder.Services.AddRazorPages();
