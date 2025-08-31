@@ -143,7 +143,6 @@ class InteractionService : IInteractionService
 
     void UpdateToolbar()
     {
-        Log.Info("UpdateToolbar");
         if (selectionService.IsSelected)
         {
             zoomToolbarDebouncer.Debounce(20, () => selectionService.UpdateSelectedPositionAsync());
