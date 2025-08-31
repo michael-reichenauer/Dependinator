@@ -14,15 +14,18 @@
     <PackageReference Include="Scrutor" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="$(TargetDir)Dependinator.dll">
-      <LogicalName>Example/Dependinator.dll</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="$(TargetDir)Dependinator.pdb" Condition="Exists('$(TargetDir)Dependinator.pdb')">
-      <LogicalName>Example/Dependinator.pdb</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
     <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../Dependinator/bin/$(Configuration)/$(TargetFramework)/Dependinator.dll">
+      <LogicalName>Example/Dependinator.dll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource
+      Include="../Dependinator/bin/$(Configuration)/$(TargetFramework)/Dependinator.pdb"
+      Condition="Exists('../Dependinator/bin/$(Configuration)/$(TargetFramework)/Dependinator.pdb')"
+    >
+      <LogicalName>Example/Dependinator.pdb</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
