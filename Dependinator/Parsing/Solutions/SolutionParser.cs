@@ -1,6 +1,5 @@
 ﻿using System.Threading.Channels;
 using Dependinator.Parsing.Assemblies;
-using Dependinator.Shared;
 
 namespace Dependinator.Parsing.Solutions;
 
@@ -12,16 +11,19 @@ internal class SolutionParser : IDisposable
     readonly bool isReadSymbols;
     readonly IFileService fileService;
     readonly List<Node> parentNodesToSend = new List<Node>();
+    private readonly HttpClient httpClient;
     readonly string solutionFilePath;
     readonly ChannelWriter<IItem> items;
 
     public SolutionParser(
+        HttpClient httpClient,
         string solutionFilePath,
         ChannelWriter<IItem> items,
         bool isReadSymbols,
         IFileService fileService
     )
     {
+        this.httpClient = httpClient;
         this.solutionFilePath = solutionFilePath;
         this.items = items;
         this.isReadSymbols = isReadSymbols;
@@ -127,6 +129,7 @@ internal class SolutionParser : IDisposable
             string parent = GetProjectParentName(solutionName, project);
 
             var assemblyParser = new AssemblyParser(
+                httpClient,
                 assemblyPath,
                 project.ProjectFilePath,
                 parent,
@@ -149,7 +152,15 @@ internal class SolutionParser : IDisposable
 
             foreach (string referencePath in referencePaths)
             {
-                var assemblyParser = new AssemblyParser(referencePath, "", "", items, isReadSymbols, fileService);
+                var assemblyParser = new AssemblyParser(
+                    httpClient,
+                    referencePath,
+                    "",
+                    "",
+                    items,
+                    isReadSymbols,
+                    fileService
+                );
 
                 assemblyParsers.Add(assemblyParser);
             }

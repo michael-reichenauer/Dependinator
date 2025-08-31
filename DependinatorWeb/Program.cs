@@ -5,7 +5,6 @@ using MudBlazor.Services;
 
 namespace DependinatorWeb;
 
-
 public class Program
 {
     public static void Main(string[] args)
@@ -23,6 +22,7 @@ public class Program
                 options.Listen(System.Net.IPAddress.Loopback, 5000); // Listen on port 5000 for HTTP on IPv4
             });
         }
+        builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5000") });
 
         // Add services to the container.
         builder.Services.AddRazorPages();
@@ -34,11 +34,9 @@ public class Program
                 .AddClasses(c => c.WithAttribute<SingletonAttribute>(), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithSingletonLifetime()
-
                 .AddClasses(c => c.WithAttribute<ScopedAttribute>(), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
-
                 .AddClasses(c => c.WithAttribute<TransientAttribute>(), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithTransientLifetime()

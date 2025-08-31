@@ -39,7 +39,6 @@ class ModelService : IModelService
 {
     static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
     static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10) - SaveDelay;
-
     readonly IModel model;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
@@ -236,8 +235,12 @@ class ModelService : IModelService
         {
             path = "/workspaces/Dependinator/Dependinator.sln";
         }
+        else if (Build.IsWebAssembly && path == ExampleModel.Path)
+        {
+            path = "analyzable/Dependinator.dll";
+        }
 
-        Log.Info("Loading", path);
+        Log.Info("Loading ...", path);
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
@@ -319,22 +322,14 @@ class ModelService : IModelService
         if (!Try(out var reader, out var e, parserService.Parse(path)))
             return e;
 
+        Log.Info("Adding...");
         lock (model.Lock)
         {
             model.UpdateStamp = DateTime.UtcNow;
+            model.ClearCachedSvg();
         }
-        await Task.Run(async () =>
-        {
-            var batchItems = new List<Parsing.IItem>();
-            while (await reader.WaitToReadAsync())
-            {
-                while (reader.TryRead(out var item))
-                {
-                    batchItems.Add(item);
-                }
-            }
-            AddOrUpdateItems(batchItems);
-        });
+
+        await AddOrUpdateAllItems(reader);
 
         return R.Ok;
     }
@@ -408,13 +403,32 @@ class ModelService : IModelService
         return new ModelInfo(modelData.Path, modelData.ViewRect, modelData.Zoom);
     }
 
+    private async Task AddOrUpdateAllItems(System.Threading.Channels.ChannelReader<Parsing.IItem> reader)
+    {
+        var itemsCount = 0;
+        var t = Timing.Start();
+        await Task.Run(async () =>
+        {
+            while (await reader.WaitToReadAsync())
+            {
+                var batchItems = new List<Parsing.IItem>();
+                while (reader.TryRead(out var item))
+                {
+                    batchItems.Add(item);
+                    itemsCount++;
+                    if (batchItems.Count >= 500)
+                        break;
+                }
+                AddOrUpdateItems(batchItems);
+            }
+        });
+        t.Log($"Added or updated {itemsCount} items");
+    }
+
     void AddOrUpdateItems(IReadOnlyList<Parsing.IItem> parsedItems)
     {
-        using var _ = Timing.Start($"Added {parsedItems.Count} items");
         lock (model.Lock)
         {
-            model.ClearCachedSvg();
-
             // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {

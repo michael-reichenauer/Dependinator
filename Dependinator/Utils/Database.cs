@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using Dependinator.Shared;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Utils;
