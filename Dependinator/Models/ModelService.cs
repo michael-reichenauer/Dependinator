@@ -373,10 +373,10 @@ class ModelService : IModelService
         if (ct.IsCancellationRequested)
             return;
 
-        Parsing.Model modelData;
+        Parsing.ModelDto modelData;
         lock (model.Lock)
         {
-            modelData = persistenceService.ModelToData(model);
+            modelData = Parsing.ModelDto.From(model);
             model.IsSaving = false;
         }
         if (model.Path == "")
@@ -385,7 +385,7 @@ class ModelService : IModelService
         persistenceService.WriteAsync(modelData).RunInBackground();
     }
 
-    async Task<ModelInfo> LoadCachedModelDataAsync(Parsing.Model modelData)
+    async Task<ModelInfo> LoadCachedModelDataAsync(Parsing.ModelDto modelData)
     {
         var batchItems = new List<Parsing.IItem>();
         modelData.Nodes.ForEach(batchItems.Add);
@@ -429,7 +429,6 @@ class ModelService : IModelService
     {
         lock (model.Lock)
         {
-            // AddSpecials();
             foreach (var parsedItem in parsedItems)
             {
                 switch (parsedItem)
@@ -437,26 +436,16 @@ class ModelService : IModelService
                     case Parsing.Node parsedNode:
                         modelStructureService.AddOrUpdateNode(parsedNode);
                         break;
-
                     case Parsing.Link parsedLink:
                         modelStructureService.AddOrUpdateLink(parsedLink);
                         break;
+                    case Parsing.NodeDto parsedNode:
+                        modelStructureService.SetNode(parsedNode);
+                        break;
+                    case Parsing.LinkDto parsedLink:
+                        modelStructureService.SetLink(parsedLink);
+                        break;
                 }
-            }
-        }
-    }
-
-    void AddSpecials()
-    {
-        for (int j = 1; j < 2; j++)
-        {
-            var name = $"Test-1-1";
-            for (int i = 1; i < 20; i++)
-            {
-                var parentName = name;
-                name = $"{name}.Test-{j}-{i + 1}";
-                var node = new Parsing.Node(name, parentName, Parsing.NodeType.Assembly, "");
-                modelStructureService.AddOrUpdateNode(node);
             }
         }
     }

@@ -93,49 +93,4 @@ class ParserService : IParserService
 
         return R<IParser>.From(parser);
     }
-
-    class CustomParser : IParser
-    {
-        public bool CanSupport(string path) => true;
-
-        public async Task<R> ParseAsync(string path, ChannelWriter<IItem> items)
-        {
-            await items.WriteAsync(new Node("A", "", NodeType.Solution, ""));
-            await items.WriteAsync(new Node("B1", "A", NodeType.Assembly, ""));
-            await items.WriteAsync(new Node("B2", "A", NodeType.Assembly, ""));
-
-            await items.WriteAsync(new Node("C11", "B1", NodeType.Type, ""));
-            await items.WriteAsync(new Node("C12", "B1", NodeType.Type, ""));
-            await items.WriteAsync(new Node("C13", "B1", NodeType.Type, ""));
-
-            await items.WriteAsync(new Node("C21", "B2", NodeType.Type, ""));
-            await items.WriteAsync(new Node("C22", "B2", NodeType.Type, ""));
-            await items.WriteAsync(new Node("C23", "B2", NodeType.Type, ""));
-
-            await items.WriteAsync(new Node("D111", "C11", NodeType.Member, ""));
-            await items.WriteAsync(new Node("D112", "C11", NodeType.Type, ""));
-            await items.WriteAsync(new Node("D123", "C12", NodeType.Type, ""));
-
-            await items.WriteAsync(new Node("D211", "C21", NodeType.Member, ""));
-            await items.WriteAsync(new Node("D212", "C22", NodeType.Type, ""));
-            await items.WriteAsync(new Node("D223", "C23", NodeType.Type, ""));
-
-            return R.Ok;
-        }
-
-        public Task<R<Source>> GetSourceAsync(string path, string nodeName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<R<string>> GetNodeAsync(string path, Source source)
-        {
-            throw new NotImplementedException();
-        }
-
-        public DateTime GetDataTime(string path)
-        {
-            throw new NotImplementedException();
-        }
-    }
 }

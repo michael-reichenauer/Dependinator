@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace Dependinator.Models;
 
 record NodeType
@@ -22,6 +24,26 @@ record NodeType
     public static readonly NodeType Private = new("Private");
 
     public static implicit operator NodeType(Parsing.NodeType type) => new(type.Text);
+
+    public static implicit operator NodeType(string typeName) =>
+        All.FirstOrDefault(m => m.Text == typeName)
+        ?? throw new NotSupportedException($"Node type '{typeName}' not supported");
+
+    public static IReadOnlyList<NodeType> All { get; } =
+    [
+        .. typeof(NodeType)
+            .GetMembers(BindingFlags.Public | BindingFlags.Static)
+            .Select(m =>
+                m switch
+                {
+                    FieldInfo f when f.FieldType == typeof(NodeType) => f.GetValue(null) as NodeType,
+                    PropertyInfo p when p.PropertyType == typeof(NodeType) => p.GetValue(null) as NodeType,
+                    _ => null,
+                }
+            )
+            .Where(x => x is not null)
+            .Cast<NodeType>(),
+    ];
 
     public string IconName =>
         Text switch

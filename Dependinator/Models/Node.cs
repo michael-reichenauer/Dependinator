@@ -142,12 +142,15 @@ class Node : IItem
     {
         Type = node.Type;
         Description = node.Description ?? Description;
-        var rect =
-            node.X != null ? new Rect(node.X.Value, node.Y!.Value, node.Width!.Value!, node.Height!.Value) : Boundary;
-        var offset = node.OffsetX != null ? new Pos(node.OffsetX.Value, node.OffsetY!.Value) : ContainerOffset;
-        Boundary = rect;
-        ContainerOffset = offset;
-        ContainerZoom = node.Zoom ?? ContainerZoom;
+    }
+
+    public void Set(Parsing.NodeDto node)
+    {
+        Type = node.Type;
+        Description = node.Description ?? "";
+        Boundary = node.Boundary ?? Rect.None;
+        ContainerOffset = node.Offset ?? Pos.None;
+        ContainerZoom = node.Zoom ?? DefaultContainerZoom;
         Color = node.Color ?? Color;
     }
 
