@@ -29,6 +29,13 @@
 - Naming: PascalCase for types/methods/properties and constants.
 - Keep files focused; avoid one‑letter identifiers; no inline copyrights.
 
+## CSharpier Formatting
+- Tool vs package: `csharpier` (dotnet tool) is separate from `CSharpier.MsBuild` (NuGet that runs during builds). Versions do not need to match.
+- Update tool: run `dotnet tool update csharpier` at repo root; this updates `.config/dotnet-tools.json`. To pin, use `--version X.Y.Z`. Teammates run `dotnet tool restore`.
+- Update MSBuild package: edit `Directory.Packages.props` to set `<PackageVersion Include="CSharpier.MsBuild" Version="X.Y.Z" />`. Use central management; avoid `dotnet add package` overrides.
+- Find latest: `dotnet list Dependinator.sln package --outdated` or use `./updatepackages -u` (non‑major) / `-m` (allow majors).
+- Verify: `dotnet csharpier --version`, `dotnet csharpier --check .`, then `dotnet restore` and `dotnet build` to ensure the MSBuild integration runs cleanly.
+
 ## Testing Guidelines
 - Frameworks: xUnit + Moq (see `Dependinator.Tests/Usings.cs`).
 - Name tests using behavior style, e.g., `MethodName_ShouldDoX()`.
