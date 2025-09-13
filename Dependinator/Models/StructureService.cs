@@ -4,8 +4,8 @@ interface IStructureService
 {
     void AddOrUpdateNode(Parsing.Node parsedNode);
     void AddOrUpdateLink(Parsing.Link parsedLink);
-    void SetNode(Parsing.NodeDto parsedNode);
-    void SetLink(Parsing.LinkDto parsedLink);
+    void SetNodeDto(NodeDto nodeDto);
+    void SetLinkDto(LinkDto linkDto);
 }
 
 [Transient]
@@ -68,20 +68,20 @@ class StructureService(IModel model) : IStructureService
         return;
     }
 
-    public void SetNode(Parsing.NodeDto parsedNode)
+    public void SetNodeDto(NodeDto nodeDto)
     {
-        if (parsedNode.Name == "") // Root node already exists
+        if (nodeDto.Name == "") // Root node already exists
             return;
 
-        var parentName = parsedNode.ParentName;
+        var parentName = nodeDto.ParentName;
         var parent = GetOrCreateParent(parentName);
 
-        var node = new Node(parsedNode.Name, parent);
-        if (parsedNode.Boundary is null)
+        var node = new Node(nodeDto.Name, parent);
+        if (nodeDto.Boundary is null)
         {
             node.Boundary = NodeLayout.GetNextChildRect(parent);
         }
-        node.Set(parsedNode);
+        node.SetFromDto(nodeDto);
         node.UpdateStamp = model.UpdateStamp;
 
         model.AddNode(node);
@@ -90,12 +90,12 @@ class StructureService(IModel model) : IStructureService
         return;
     }
 
-    public void SetLink(Parsing.LinkDto parsedLink)
+    public void SetLinkDto(LinkDto linkDto)
     {
-        EnsureSourceAndTargetExists(parsedLink.SourceName, parsedLink.TargetName);
+        EnsureSourceAndTargetExists(linkDto.SourceName, linkDto.TargetName);
 
-        var source = model.GetNode(NodeId.FromName(parsedLink.SourceName));
-        var target = model.GetNode(NodeId.FromName(parsedLink.TargetName));
+        var source = model.GetNode(NodeId.FromName(linkDto.SourceName));
+        var target = model.GetNode(NodeId.FromName(linkDto.TargetName));
 
         var link = new Link(source, target);
         link.UpdateStamp = model.UpdateStamp;

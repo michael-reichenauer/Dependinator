@@ -1,3 +1,5 @@
+using Dependinator.Parsing;
+
 namespace Dependinator.Models;
 
 class NodeName

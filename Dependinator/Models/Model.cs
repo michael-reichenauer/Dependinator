@@ -1,4 +1,20 @@
+using Dependinator.Parsing;
+
 namespace Dependinator.Models;
+
+[Serializable]
+record ModelDto
+{
+    public static string CurrentFormatVersion = "4";
+
+    public string FormatVersion { get; init; } = CurrentFormatVersion;
+    public required string Name { get; init; }
+    public double Zoom { get; init; } = 0;
+    public Pos Offset { get; init; } = Pos.None;
+    public Rect ViewRect { get; init; } = Rect.None;
+    public required IReadOnlyList<NodeDto> Nodes { get; init; }
+    public required IReadOnlyList<LinkDto> Links { get; init; }
+}
 
 interface IModel : IDisposable
 {
@@ -31,6 +47,8 @@ interface IModel : IDisposable
     void ClearCachedSvg();
     bool ContainsKey(Id linkId);
     void ClearNotUpdated();
+    ModelDto ToDto();
+    void SetFromDto(string path, ModelDto modelDto);
 }
 
 [Scoped]
@@ -78,6 +96,26 @@ class Model : IModel
     public Node Root { get; private set; } = null!;
     public DateTime ModifiedTime { get; set; } = DateTime.MinValue;
     public CancellationTokenSource SaveCancelSource { get; set; } = new();
+
+    public ModelDto ToDto() =>
+        new()
+        {
+            Name = Path,
+            Zoom = Zoom,
+            Offset = Offset,
+            ViewRect = ViewRect,
+            Nodes = [.. Items.Values.OfType<Models.Node>().Select(n => n.ToDto())],
+            Links = [.. Items.Values.OfType<Models.Link>().Select(l => l.ToDto())],
+        };
+
+    public void SetFromDto(string path, ModelDto modelDto)
+    {
+        Path = path;
+        Zoom = modelDto.Zoom;
+        Offset = modelDto.Offset;
+        ViewRect = modelDto.ViewRect;
+        // Nodes and links will be set by model service in separate worker thread
+    }
 
     public void Dispose()
     {

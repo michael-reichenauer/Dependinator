@@ -44,7 +44,7 @@ class ModelService : IModelService
     readonly IModel model;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
-    readonly Parsing.IPersistenceService persistenceService;
+    readonly IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
     readonly ICommandService commandService;
 
@@ -52,7 +52,7 @@ class ModelService : IModelService
         IModel model,
         Parsing.IParserService parserService,
         IStructureService modelStructureService,
-        Parsing.IPersistenceService persistenceService,
+        IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
         ICommandService commandService
     )
@@ -232,8 +232,6 @@ class ModelService : IModelService
 
     public async Task<R<ModelInfo>> LoadAsync(string path)
     {
-        Log.Info("getting assembl...");
-
         Clear();
         if (!Build.IsWebAssembly && path == ExampleModel.Path)
         {
@@ -271,9 +269,8 @@ class ModelService : IModelService
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
             return e;
 
-        var modelInfo = await LoadCachedModelDataAsync(model);
-
-        // if (path != ExampleModel.Path) Util.Trigger(RefreshAsync);
+        var modelInfo = await LoadCachedModelDataAsync(path, model);
+        CheckLineVisibility();
 
         return modelInfo;
     }
@@ -373,34 +370,29 @@ class ModelService : IModelService
         if (ct.IsCancellationRequested)
             return;
 
-        Parsing.ModelDto modelData;
+        ModelDto modelData;
+        string modelPath = model.Path;
         lock (model.Lock)
         {
-            modelData = Parsing.ModelDto.From(model);
+            modelPath = model.Path;
+            modelData = model.ToDto();
             model.IsSaving = false;
         }
         if (model.Path == "")
             return;
 
-        persistenceService.WriteAsync(modelData).RunInBackground();
+        persistenceService.WriteAsync(modelPath, modelData).RunInBackground();
     }
 
-    async Task<ModelInfo> LoadCachedModelDataAsync(Parsing.ModelDto modelData)
+    async Task<ModelInfo> LoadCachedModelDataAsync(string path, ModelDto modelDto)
     {
-        var batchItems = new List<Parsing.IItem>();
-        modelData.Nodes.ForEach(batchItems.Add);
-        modelData.Links.ForEach(batchItems.Add);
-
         lock (model.Lock)
         {
-            model.Path = modelData.Path;
-            model.ViewRect = modelData.ViewRect;
-            model.Zoom = modelData.Zoom;
-            model.Offset = modelData.Offset;
+            model.SetFromDto(path, modelDto);
         }
 
-        await Task.Run(() => AddOrUpdateItems(batchItems));
-        return new ModelInfo(modelData.Path, modelData.ViewRect, modelData.Zoom);
+        await Task.Run(() => SetNodeAndLinkDtos(modelDto));
+        return new ModelInfo(path, modelDto.ViewRect, modelDto.Zoom);
     }
 
     private async Task AddOrUpdateAllItems(System.Threading.Channels.ChannelReader<Parsing.IItem> reader)
@@ -439,14 +431,17 @@ class ModelService : IModelService
                     case Parsing.Link parsedLink:
                         modelStructureService.AddOrUpdateLink(parsedLink);
                         break;
-                    case Parsing.NodeDto parsedNode:
-                        modelStructureService.SetNode(parsedNode);
-                        break;
-                    case Parsing.LinkDto parsedLink:
-                        modelStructureService.SetLink(parsedLink);
-                        break;
                 }
             }
+        }
+    }
+
+    void SetNodeAndLinkDtos(ModelDto modelDto)
+    {
+        lock (model.Lock)
+        {
+            modelDto.Nodes.ForEach(modelStructureService.SetNodeDto);
+            modelDto.Links.ForEach(modelStructureService.SetLinkDto);
         }
     }
 }

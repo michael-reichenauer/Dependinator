@@ -1,5 +1,5 @@
-﻿using System.Threading.Channels;
-using Dependinator.Models;
+﻿using System.Reflection;
+using System.Threading.Channels;
 
 namespace Dependinator.Parsing;
 
@@ -33,8 +33,12 @@ record Node(string Name, string ParentName, NodeType Type, string? Description) 
 
 record Source(string Path, string Text, int LineNumber);
 
-record NodeType(string Text)
+record NodeType
 {
+    public string Text { get; init; }
+
+    private NodeType(string text) => Text = text;
+
     public static readonly NodeType None = new("None");
     public static readonly NodeType Root = new("Root");
     public static readonly NodeType Parent = new("Parent");
@@ -49,6 +53,25 @@ record NodeType(string Text)
     public static readonly NodeType Type = new("Type");
     public static readonly NodeType Member = new("Member");
     public static readonly NodeType Private = new("Private");
+
+    public static implicit operator NodeType(string typeName) =>
+        All.FirstOrDefault(m => m.Text == typeName)
+        ?? throw new NotSupportedException($"Node type '{typeName}' not supported");
+
+    public static IReadOnlyList<NodeType> All { get; } =
+    [
+        .. typeof(NodeType)
+            .GetMembers(BindingFlags.Public | BindingFlags.Static)
+            .Select(m =>
+                m switch
+                {
+                    FieldInfo f when f.FieldType == typeof(NodeType) => f.GetValue(null) as NodeType,
+                    _ => null,
+                }
+            )
+            .Where(x => x is not null)
+            .Cast<NodeType>(),
+    ];
 
     public override string ToString() => Text;
 }
