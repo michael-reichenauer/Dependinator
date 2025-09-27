@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Dependinator.Parsing;
 using Newtonsoft.Json;
 
 namespace Dependinator.Parsing.JsonDataFiles;
@@ -85,10 +86,9 @@ class JsonFileParserService : IParser
         return itemCount;
     }
 
-    static Node ToNodeData(JsonTypes.Node node) =>
-        new(node.Name, node.Parent, new NodeType(node.Type), node.Description);
+    static Node ToNodeData(JsonTypes.Node node) => new(node.Name, node.Parent, node.Type, node.Description);
 
-    static Link ToLinkData(JsonTypes.Link link) => new(link.Source, link.Target, new NodeType(link.TargetType));
+    static Link ToLinkData(JsonTypes.Link link) => new(link.Source, link.Target, link.TargetType);
 
     static void ValidateVersion(JsonReader reader)
     {

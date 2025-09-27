@@ -12,16 +12,10 @@ partial class Canvas : ComponentBase, IUIComponent
     ICanvasService srv { get; init; } = null!;
 
     [Inject]
-    IPointerEventService mouseEventService { get; init; } = null!;
-
-    [Inject]
     IJSInterop jSInterop { get; init; } = null!;
 
     [Inject]
     IApplicationEvents applicationEvents { get; init; } = null!;
-
-    [Inject]
-    IDatabase database { get; init; } = null!;
 
     [Inject]
     IInitService initService { get; init; } = null!;
@@ -29,16 +23,6 @@ partial class Canvas : ComponentBase, IUIComponent
     public ElementReference dropZoneElement { get; private set; }
     public InputFile inputFile { get; private set; } = null!;
     public ElementReference Ref { get; private set; }
-
-    // string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), Level: {srv.LevelNbr}, " +
-    //     $"LevelZoom: {srv.LevelZoom:E2}, LevelViewBox: {srv.LevelViewBox}, SvgZoom: {srv.Zoom / srv.LevelZoom:0.###} " +
-    //     $"SvgOffset: {srv.Offset}, SvgRect:{srv.SvgRect} SvgViewBox: {srv.SvgViewBox},";
-
-    //string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#######}), SvgKey: {srv.TileKeyText}, Offset: {srv.Offset}, TileViewBox: {srv.TileViewBox}, SvgViewBox: {srv.SvgViewBox}, Svg: {srv.SvgRect}";
-
-    // string Info => $"Zoom: {1 / srv.Zoom * 100:#}% ({srv.Zoom:0.#########}), SvgKey: {srv.TileKeyText}";
-    string Info => $"{1 / srv.Zoom * 100:#}%, L: {-(int)Math.Ceiling(Math.Log(srv.Zoom) / Math.Log(7)) + 1}";
-    string DiagramName => srv.DiagramName;
 
     string Content => srv.SvgContent;
     double Width => srv.SvgRect.Width;

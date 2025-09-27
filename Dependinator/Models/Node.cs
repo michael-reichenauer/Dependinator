@@ -1,6 +1,37 @@
+using System.Text.Json.Serialization;
 using System.Web;
+using Dependinator.Parsing;
 
 namespace Dependinator.Models;
+
+[Serializable]
+record NodeDto
+{
+    public required string Name { get; init; }
+    public required string ParentName { get; init; }
+    public required string Type { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? Description { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public Rect? Boundary { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public double? Zoom { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public Pos? Offset { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? Color { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsUserSetHidden { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsParentSetHidden { get; set; }
+}
 
 class Node : IItem
 {
@@ -65,8 +96,35 @@ class Node : IItem
     public string HtmlShortName { get; private set; } = "";
     public string HtmlLongName { get; private set; } = "";
     public bool IsHidden => IsUserSetHidden || IsParentSetHidden;
-    public bool IsUserSetHidden { get; private set; }
-    private bool IsParentSetHidden { get; set; }
+    public bool IsUserSetHidden { get; set; }
+    public bool IsParentSetHidden { get; set; }
+
+    public NodeDto ToDto() =>
+        new()
+        {
+            Name = Name,
+            ParentName = Parent?.Name ?? "",
+            Type = Type.Text,
+            Description = Description,
+            Boundary = Boundary != Rect.None ? Boundary : null,
+            Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
+            Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
+            Color = Color,
+            IsUserSetHidden = IsUserSetHidden,
+            IsParentSetHidden = IsParentSetHidden,
+        };
+
+    public void SetFromDto(NodeDto dto)
+    {
+        Type = dto.Type;
+        Description = dto.Description ?? "";
+        Boundary = dto.Boundary ?? Rect.None;
+        ContainerOffset = dto.Offset ?? Pos.None;
+        ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
+        Color = dto.Color ?? Color;
+        IsUserSetHidden = dto.IsUserSetHidden;
+        IsParentSetHidden = dto.IsParentSetHidden;
+    }
 
     public void SetHidden(bool hidden, bool isUserSet)
     {
@@ -142,13 +200,6 @@ class Node : IItem
     {
         Type = node.Type;
         Description = node.Description ?? Description;
-        var rect =
-            node.X != null ? new Rect(node.X.Value, node.Y!.Value, node.Width!.Value!, node.Height!.Value) : Boundary;
-        var offset = node.OffsetX != null ? new Pos(node.OffsetX.Value, node.OffsetY!.Value) : ContainerOffset;
-        Boundary = rect;
-        ContainerOffset = offset;
-        ContainerZoom = node.Zoom ?? ContainerZoom;
-        Color = node.Color ?? Color;
     }
 
     public void AddChild(Node child)

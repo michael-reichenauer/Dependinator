@@ -1,5 +1,5 @@
-﻿using System.Threading.Channels;
-using Dependinator.Models;
+﻿using System.Reflection;
+using System.Threading.Channels;
 
 namespace Dependinator.Parsing;
 
@@ -18,30 +18,11 @@ interface IParser
 
 interface IItem { }
 
-record Model
-{
-    public required string Path { get; init; }
-    public double Zoom { get; init; } = 0;
-    public Pos Offset { get; init; } = Pos.None;
-    public Rect ViewRect { get; init; } = Rect.None;
-    public required IReadOnlyList<Node> Nodes { get; init; }
-    public required IReadOnlyList<Link> Links { get; init; }
-}
-
 record Link(string SourceName, string TargetName, NodeType TargetType) : IItem;
 
 record Node(string Name, string ParentName, NodeType Type, string? Description) : IItem
 {
     static readonly char[] NamePartsSeparators = "./".ToCharArray();
-
-    public double? X { get; init; }
-    public double? Y { get; init; }
-    public double? Width { get; init; }
-    public double? Height { get; init; }
-    public double? Zoom { get; init; }
-    public double? OffsetX { get; init; }
-    public double? OffsetY { get; init; }
-    public string? Color { get; init; }
 
     public static string ParseParentName(string name)
     {
@@ -52,8 +33,12 @@ record Node(string Name, string ParentName, NodeType Type, string? Description) 
 
 record Source(string Path, string Text, int LineNumber);
 
-record NodeType(string Text)
+record NodeType
 {
+    public string Text { get; init; }
+
+    private NodeType(string text) => Text = text;
+
     public static readonly NodeType None = new("None");
     public static readonly NodeType Root = new("Root");
     public static readonly NodeType Parent = new("Parent");
@@ -69,31 +54,24 @@ record NodeType(string Text)
     public static readonly NodeType Member = new("Member");
     public static readonly NodeType Private = new("Private");
 
+    public static implicit operator NodeType(string typeName) =>
+        All.FirstOrDefault(m => m.Text == typeName)
+        ?? throw new NotSupportedException($"Node type '{typeName}' not supported");
+
+    public static IReadOnlyList<NodeType> All { get; } =
+        [
+            .. typeof(NodeType)
+                .GetMembers(BindingFlags.Public | BindingFlags.Static)
+                .Select(m =>
+                    m switch
+                    {
+                        FieldInfo f when f.FieldType == typeof(NodeType) => f.GetValue(null) as NodeType,
+                        _ => null,
+                    }
+                )
+                .Where(x => x is not null)
+                .Cast<NodeType>(),
+        ];
+
     public override string ToString() => Text;
 }
-
-
-// internal enum NodeType
-// {
-//     None,
-//     Root,
-//     Parent,
-//     Solution,
-//     Externals,
-//     SolutionFolder,
-//     Assembly,
-//     Group,
-//     Dll,
-//     Exe,
-//     Namespace,
-//     Type,
-//     Member,
-//     Private
-// }
-
-// static class NodeTypeEx
-// {
-//     public static string ToText(NodeType type) => Enum.GetName(type) ?? "None";
-
-//     public static NodeType ToNodeType(string text) => Enum.TryParse<NodeType>(text, out var type) ? type : NodeType.None;
-// }

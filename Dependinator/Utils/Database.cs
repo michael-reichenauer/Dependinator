@@ -79,7 +79,8 @@ class Database : IDatabase
             return R.None;
 
         var valueText = valueHandler.GetValue();
-        var value = JsonSerializer.Deserialize<T>(valueText, options);
+        if (!Try(out var value, out var e, () => JsonSerializer.Deserialize<T>(valueText, options)))
+            return e;
         return value!;
     }
 

@@ -57,6 +57,7 @@ class LineSvg
 
         return $"""
             <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="{c}" marker-end="url(#arrow)" />
+            <circle cx="{x1}" cy="{y1}" r="3" fill="{c}" />
             <g class="hoverable" id="{elementId}">
               <line id="{elementId}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw
                 + 10}" stroke="black" stroke-opacity="0" />
