@@ -7,14 +7,12 @@ class NodeSvg
     const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
     const double MinContainerZoom = 2.0;
     const int NameIconSize = 9;
-    const int MemberIconSize = 20;
-    const int MemberFontSize = 18;
     const int FontSize = 8;
 
     public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 
-    public static bool IsShowIcon(NodeType nodeType, double zoom) =>
-        nodeType == NodeType.Member || zoom <= MinContainerZoom;
+    public static bool IsShowIcon(Parsing.NodeType nodeType, double zoom) =>
+        nodeType == Parsing.NodeType.Member || zoom <= MinContainerZoom;
 
     public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
@@ -25,7 +23,7 @@ class NodeSvg
 
         var (tx, ty) = (x + w / 2, y + h);
         var fz = FontSize * parentZoom;
-        var icon = node.Type.IconName;
+        var icon = IconName(node.Type);
         //Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
         //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
         string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
@@ -55,7 +53,7 @@ class NodeSvg
 
         var (tx, ty) = (x + (NameIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
         var fz = FontSize * parentZoom;
-        var icon = node.Type.IconName;
+        var icon = IconName(node.Type);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         //Log.Info($"Container: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
         //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
@@ -93,7 +91,7 @@ class NodeSvg
 
         var (tx, ty) = (x + w / 2, y + h);
         var fz = FontSize * parentZoom;
-        var icon = node.Type.IconName;
+        var icon = IconName(node.Type);
         //Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
         //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
         string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
@@ -151,41 +149,55 @@ class NodeSvg
         var ebr = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomRight).ElementId;
 
         return $"""
-            <rect x="{x-rp}" y="{y-rp}" width="{w + rs:0.##}" height="{h
+            <rect x="{x - rp}" y="{y - rp}" width="{w + rs:0.##}" height="{h
                 + rs:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{c}" stroke-dasharray="5,5"/>
 
             <g class="selectpoint">
-                <circle id="{etl}" cx="{x - ml + s/2.0}" cy="{y - mt + s/2.0}" r="{s/2.0}" fill="{c}" />
-                <circle id="{etl}" cx="{x - ml - tt + t/2.0}"  cy="{y - mt - tt + t/2.0}"  r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+                <circle id="{etl}" cx="{x - ml + s / 2.0}" cy="{y - mt + s / 2.0}" r="{s / 2.0}" fill="{c}" />
+                <circle id="{etl}" cx="{x - ml - tt + t / 2.0}"  cy="{y - mt - tt + t / 2.0}"  r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-                <circle id="{etm}" cx="{x + w/2 - mm + s/2.0}" cy="{y - mt + s/2.0}" r="{s/2.0}" fill="{c}" />
-                <circle id="{etm}" cx="{x + w/2 - mm - tt + t/2.0}" cy="{y - mt - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+                <circle id="{etm}" cx="{x + w / 2 - mm + s / 2.0}" cy="{y - mt + s / 2.0}" r="{s / 2.0}" fill="{c}" />
+                <circle id="{etm}" cx="{x + w / 2 - mm - tt + t / 2.0}" cy="{y - mt - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-                <circle id="{etr}" cx="{x + w + mr + s/2.0}" cy="{y - mt + s/2.0}" r="{s/2.0}" fill="{c}" />
-                <circle id="{etr}" cx="{x + w + mr - tt + t/2.0}" cy="{y - mt - tt + t/2.0}"  r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+                <circle id="{etr}" cx="{x + w + mr + s / 2.0}" cy="{y - mt + s / 2.0}" r="{s / 2.0}" fill="{c}" />
+                <circle id="{etr}" cx="{x + w + mr - tt + t / 2.0}" cy="{y - mt - tt + t / 2.0}"  r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-                <circle id="{eml}" cx="{x - ml + s/2.0}" cy="{y + h/2 + s/2.0}" r="{s/2.0}" fill="{c}" />
-                <circle id="{eml}" cx="{x - ml - tt + t/2.0}"  cy="{y + h/2 - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+                <circle id="{eml}" cx="{x - ml + s / 2.0}" cy="{y + h / 2 + s / 2.0}" r="{s / 2.0}" fill="{c}" />
+                <circle id="{eml}" cx="{x - ml - tt + t / 2.0}"  cy="{y + h / 2 - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-                <circle id="{emr}" cx="{x + w + mr + s/2.0}" cy="{y + h/2 + s/2.0}" r="{s/2.0}" fill="{c}" />
-                <circle id="{emr}" cx="{x + w + mr - tt + t/2.0}" cy="{y + h/2 - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+                <circle id="{emr}" cx="{x + w + mr + s / 2.0}" cy="{y + h / 2 + s / 2.0}" r="{s / 2.0}" fill="{c}" />
+                <circle id="{emr}" cx="{x + w + mr - tt + t / 2.0}" cy="{y + h / 2 - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-                <circle id="{ebl}" cx="{x - ml + s/2.0}" cy="{y + h + mb + s/2.0}" r="{s/2.0}" fill="{c}" />
-                <circle id="{ebl}" cx="{x - ml - tt + t/2.0}"  cy="{y + h + mb - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+                <circle id="{ebl}" cx="{x - ml + s / 2.0}" cy="{y + h + mb + s / 2.0}" r="{s / 2.0}" fill="{c}" />
+                <circle id="{ebl}" cx="{x - ml - tt + t / 2.0}"  cy="{y + h + mb - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-                <circle id="{ebm}" cx="{x + w/2 - mm + s/2.0}" cy="{y + h + mb + s/2.0}" r="{s/2.0}" fill="{c}" />
-                <circle id="{ebm}" cx="{x + w/2 - mm - tt + t/2.0}" cy="{y + h + mb - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+                <circle id="{ebm}" cx="{x + w / 2 - mm + s / 2.0}" cy="{y + h + mb + s / 2.0}" r="{s / 2.0}" fill="{c}" />
+                <circle id="{ebm}" cx="{x + w / 2 - mm - tt + t / 2.0}" cy="{y + h + mb - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             <g class="selectpoint">
-                <circle id="{ebr}" cx="{x + w + mr + s/2.0}" cy="{y + h + mb + s/2.0}" r="{s/2.0}" fill="{c}" />
-                <circle id="{ebr}" cx="{x + w + mr - tt + t/2.0}" cy="{y + h + mb - tt + t/2.0}" r="{t/2.0}" fill="{c}" fill-opacity="0"/>
+                <circle id="{ebr}" cx="{x + w + mr + s / 2.0}" cy="{y + h + mb + s / 2.0}" r="{s / 2.0}" fill="{c}" />
+                <circle id="{ebr}" cx="{x + w + mr - tt + t / 2.0}" cy="{y + h + mb - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
             </g>
             """;
     }
+
+    static string IconName(Parsing.NodeType type) =>
+        type.Text switch
+        {
+            "Solution" => "SolutionIcon",
+            "Externals" => "ExternalsIcon",
+            "Assembly" => "ModuleIcon",
+            "Namespace" => "FilesIcon",
+            "Private" => "PrivateIcon",
+            "Parent" => "FilesIcon",
+            "Type" => "TypeIcon",
+            "Member" => "MemberIcon",
+            _ => "ModuleIcon",
+        };
 }

@@ -1,3 +1,5 @@
+using Dependinator.Parsing;
+
 namespace Dependinator.Models;
 
 class NodeName
@@ -24,8 +26,8 @@ class NodeName
             longName = ToNiceParameters(ToNiceText(longName));
         }
 
-        shortName = nodeType == NodeType.Assembly ? shortName + ".dll" : shortName;
-        longName = nodeType == NodeType.Assembly ? longName + ".dll" : longName;
+        shortName = nodeType == NodeType.Assembly && !shortName.EndsWith(".dll") ? shortName + ".dll" : shortName;
+        longName = nodeType == NodeType.Assembly && !shortName.EndsWith(".dll") ? longName + ".dll" : longName;
 
         return (longName, shortName);
     }

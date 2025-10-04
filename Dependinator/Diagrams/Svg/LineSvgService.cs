@@ -6,7 +6,7 @@ class LineSvg
 {
     public static string GetLineSvg(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
     {
-        if (line.IsHidden || NodeSvg.IsToLargeToBeSeen(childrenZoom))
+        if (NodeSvg.IsToLargeToBeSeen(childrenZoom))
             return "";
 
         if (
@@ -53,10 +53,11 @@ class LineSvg
 
         line.IsUpHill = x1 <= x2 && y1 >= y2 || x1 >= x2 && y1 <= y2;
 
-        var c = DColors.Line;
+        var c = line.IsHidden ? DColors.LineHidden : DColors.Line;
 
         return $"""
             <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="{c}" marker-end="url(#arrow)" />
+            <circle cx="{x1}" cy="{y1}" r="3" fill="{c}" />
             <g class="hoverable" id="{elementId}">
               <line id="{elementId}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw
                 + 10}" stroke="black" stroke-opacity="0" />

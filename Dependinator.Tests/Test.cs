@@ -1,4 +1,3 @@
-
 namespace Dependinator.Tests;
 
 interface ISome
@@ -18,7 +17,7 @@ public class Test
     {
         var someMock = CreateMock<ISome>();
 
-        //someMock.Setup(s => s.Get("name")).Returns("nameX");
+        someMock.Setup(s => s.Get("name")).Returns("nameX");
 
         var some = new SomeSome(someMock.Object);
         Assert.Equal("nameX", some.Get("name"));
