@@ -1,53 +1,36 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Solution: `Dependinator.sln` with projects:
-  - `DependinatorWeb/` (Blazor Server host, main entry)
-  - `Dependinator/` (core UI, parsing, models, utils)
-  - `Client/` (Blazor WebAssembly sample)
-  - `Api/` (Azure Functions sample)
-  - `Shared/` (shared DTOs/models)
-  - `Dependinator.Tests/` (xUnit tests)
-- Common folders in `Dependinator/`: `Parsing/`, `Models/`, `Utils/`, `Diagrams/`, `App/`, `Shared/`.
+- `DependinatorWeb/` hosts the Blazor Server app entry point; run-time assets live in `wwwroot/`.
+- `Dependinator/` contains core UI, parsing, models, utilities, diagrams, and shared app services.
+- `Client/` provides the Blazor WebAssembly sample; `Api/` is the Azure Functions sample.
+- `Shared/` holds DTOs used across server and client; `Dependinator.Tests/` stores xUnit test suites.
+- Solution file `Dependinator.sln` ties projects together; prefer editing via solution-aware tooling.
 
 ## Build, Test, and Development Commands
-- Build site: `./build` (builds `DependinatorWeb`)
-- Run WASM sample: `./run` (runs `Client` in Release)
-- Live dev (server): `./watch` (dotnet watch on `DependinatorWeb`)
-- Standard .NET:
-  - `dotnet build` (solution-wide build)
-  - `dotnet test Dependinator.Tests/Dependinator.Tests.csproj`
-  - `dotnet run --project DependinatorWeb/DependinatorWeb.csproj`
-- Packages and security:
-  - `./updatepackages -u` (update non‑major) or `-m` (include major)
-  - `dotnet list package --vulnerable` (vulnerability scan)
+- `./build` builds the Blazor Server host with production settings.
+- `./run` publishes and serves the WebAssembly client in Release.
+- `./watch` runs `dotnet watch` on `DependinatorWeb` for live reload during development.
+- `dotnet build` compiles the full solution; use before PRs to validate project-wide health.
+- `dotnet test Dependinator.Tests/Dependinator.Tests.csproj` executes automated tests locally.
 
 ## Coding Style & Naming Conventions
-- Formatting via `.editorconfig` and optional CSharpier (`.csharpierrc.json`).
-- Indentation: 4 spaces; UTF‑8 BOM; `this.` not required; braces are not required.
-- Prefer `var` over 'explicit' types; System usings first.
-- Naming: PascalCase for types/methods/properties and constants.
-- Keep files focused; avoid one‑letter identifiers; no inline copyrights.
-
-## CSharpier Formatting
-- Tool vs package: `csharpier` (dotnet tool) is separate from `CSharpier.MsBuild` (NuGet that runs during builds). Versions do not need to match.
-- Update tool: run `dotnet tool update csharpier` at repo root; this updates `.config/dotnet-tools.json`. To pin, use `--version X.Y.Z`. Teammates run `dotnet tool restore`.
-- Update MSBuild package: edit `Directory.Packages.props` to set `<PackageVersion Include="CSharpier.MsBuild" Version="X.Y.Z" />`. Use central management; avoid `dotnet add package` overrides.
-- Find latest: `dotnet list Dependinator.sln package --outdated` or use `./updatepackages -u` (non‑major) / `-m` (allow majors).
-- Verify: `dotnet csharpier --version`, `dotnet csharpier --check .`, then `dotnet restore` and `dotnet build` to ensure the MSBuild integration runs cleanly.
+- Follow `.editorconfig` rules: 4-space indentation, UTF-8 BOM files, `var` preferred for locals.
+- Use PascalCase for types, methods, properties, and constants; avoid one-letter identifiers.
+- Formatting is enforced with CSharpier (`dotnet csharpier --check .`); run before committing.
 
 ## Testing Guidelines
-- Frameworks: xUnit + Moq (see `Dependinator.Tests/Usings.cs`).
-- Name tests using behavior style, e.g., `MethodName_ShouldDoX()`.
-- Place unit tests alongside feature area (e.g., parsing → `ParsingTests`).
-- Run: `dotnet test`; keep tests fast and deterministic; mock external deps.
+- Tests rely on xUnit and Moq (see `Dependinator.Tests/Usings.cs`).
+- Name tests using behavior phrasing, e.g., `MethodName_ShouldHandleEmptyInput()`.
+- Keep tests deterministic and fast; run `dotnet test` prior to pushing changes.
 
 ## Commit & Pull Request Guidelines
-- Commits: imperative, concise subject (<72 chars), e.g., `Fix parsing of generic constraints`.
-- Group related changes; include rationale in body when useful.
-- PRs: clear description, linked issues (`Fixes #123`), screenshots for UI, and steps to verify.
-- Ensure build/tests pass locally; include new/updated tests for logic changes.
+- Write imperative commit subjects under 72 characters, e.g., `Improve diagram layout caching`.
+- Group related changes per commit; include rationale or context in the body when helpful.
+- PRs should describe the change, link tracked issues (`Fixes #123`), and add screenshots for UI work.
+- Ensure build and tests pass locally; highlight manual verification steps in the PR description.
 
 ## Security & Configuration Tips
-- Do not commit secrets. Use `Api/local.settings.json` locally (example provided).
-- Validate third‑party updates with `./updatepackages` and run tests after upgrades.
+- Never commit secrets; use `Api/local.settings.json` for local Azure Function settings.
+- After package updates (`./updatepackages -u` or `-m`), run `dotnet build` and `dotnet test`.
+- Periodically scan dependencies with `dotnet list package --vulnerable` and triage findings quickly.
