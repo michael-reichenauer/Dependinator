@@ -54,9 +54,10 @@ class LineSvg
         line.IsUpHill = x1 <= x2 && y1 >= y2 || x1 >= x2 && y1 <= y2;
 
         var c = line.IsHidden ? DColors.LineHidden : DColors.Line;
+        var markerId = line.IsHidden ? "arrow-hidden" : "arrow-line";
 
         return $"""
-            <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="{c}" marker-end="url(#arrow)" />
+            <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw}" stroke="{c}" marker-end="url(#{markerId})" />
             <circle cx="{x1}" cy="{y1}" r="3" fill="{c}" />
             <g class="hoverable" id="{elementId}">
               <line id="{elementId}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke-width="{sw
