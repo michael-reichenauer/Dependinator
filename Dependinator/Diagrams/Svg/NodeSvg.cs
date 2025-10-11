@@ -14,105 +14,41 @@ class NodeSvg
     public static bool IsShowIcon(Parsing.NodeType nodeType, double zoom) =>
         nodeType == Parsing.NodeType.Member || zoom <= MinContainerZoom;
 
-    public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
-    {
-        //Log.Info("Draw", node.Name, nodeCanvasRect.ToString());
-        var s = node.IsEditMode ? 10 : node.StrokeWidth;
-        var (x, y) = (nodeCanvasRect.X, nodeCanvasRect.Y);
-        var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
-
-        var (tx, ty) = (x + w / 2, y + h);
-        var fz = FontSize * parentZoom;
-        var icon = IconName(node.Type);
-        //Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
-        //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
-        string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
-        var elementId = PointerId.FromNode(node.Id).ElementId;
-
-        var hiddenNode = node.IsHidden ? "opacity=\"0.1\"" : "";
-        var hiddenText = node.IsHidden ? "opacity=\"0.3\"" : "";
-        return $"""
-            <use href="#{icon}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" {hiddenNode} />
-            <text x="{tx:0.##}" y="{ty:0.##}" class="iconName" font-size="{fz:0.##}px" {hiddenText} >{node.HtmlShortName}</text>
-            <g class="hoverable" id="{elementId}">
-              <rect id="{elementId}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
-              <title>{node.HtmlLongName}</title>
-            </g>
-            {selectedSvg}
-            """;
-    }
+    public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom) =>
+        BuildSimpleNodeSvg(node, nodeCanvasRect, parentZoom);
 
     public static string GetNodeContainerSvg(Node node, Rect nodeCanvasRect, double parentZoom, string childrenContent)
     {
-        //Log.Info("Draw", node.Name, nodeCanvasRect.ToString());
-        var s = node.IsEditMode ? 10 : node.StrokeWidth;
-        var (x, y, w, h) = (nodeCanvasRect.X, nodeCanvasRect.Y, nodeCanvasRect.Width, nodeCanvasRect.Height);
-
-        var iSize = NameIconSize * parentZoom;
-        var (ix, iy, iw, ih) = (x, y + h + 1 * parentZoom, iSize, iSize);
-
-        var (tx, ty) = (x + (NameIconSize + 1) * parentZoom, y + h + 2 * parentZoom);
-        var fz = FontSize * parentZoom;
-        var icon = IconName(node.Type);
+        var geometry = nodeCanvasRect;
+        var header = CalculateContainerHeader(nodeCanvasRect, parentZoom);
         var elementId = PointerId.FromNode(node.Id).ElementId;
-        //Log.Info($"Container: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
-        //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
+        var (border, background) = NodeColors(node);
+        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
+        var iconId = IconName(node.Type);
+        var strokeWidth = node.IsEditMode ? 10 : node.StrokeWidth;
+        var hoverClass = node.IsEditMode ? "hoverableedit" : "hoverable";
+        var selectedOverlay = SelectedNodeSvg(node, geometry);
 
-        string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
-
-        var cl = node.IsEditMode ? "hoverableedit" : "hoverable";
-        var (border, background) = DColors.NodeColorByName(node.Color);
-        var c = node.IsEditMode ? DColors.EditNodeBorder : border;
-        var back = node.IsEditMode ? DColors.EditNodeBackground : background;
-        var hiddenNode = node.IsHidden ? "opacity=\"0.1\"" : "";
-        var hiddenText = node.IsHidden ? "opacity=\"0.3\"" : "";
+        var innerGeometry = new Rect(0, 0, geometry.Width, geometry.Height);
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName);
 
         return $"""
-            <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="{0} {0} {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
-              <rect x="{0}" y="{0}" width="{w:0.##}" height="{h:0.##}" stroke-width="{s}" rx="5" fill="{back}" stroke="{c}" {hiddenNode}/>
-              <g class="{cl}" id="{elementId}">
-                <rect id="{elementId}" x="0" y="0" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
-                <title>{node.HtmlLongName}</title>
-              </g>
+            <svg x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" viewBox="{0} {0} {geometry.Width:0.##} {geometry.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
+              <rect x="{0}" y="{0}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="{strokeWidth}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
+              {hoverGroup}
               {childrenContent}          
             </svg>
-            <use href="#{icon}" x="{ix:0.##}" y="{iy:0.##}" width="{iw:0.##}" height="{ih:0.##}" {hiddenText}/>
-            <text x="{tx:0.##}" y="{ty:0.##}" class="nodeName" font-size="{fz:0.##}px" {hiddenText}>{node.HtmlShortName}</text>
-            {selectedSvg}
+            <use href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
+            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            {selectedOverlay}
             """;
     }
 
-    public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom)
-    {
-        //Log.Info("Draw", node.Name, nodeCanvasRect.ToString());
-        var s = node.IsEditMode ? 10 : node.StrokeWidth;
-        var (x, y) = (nodeCanvasRect.X, nodeCanvasRect.Y);
-        var (w, h) = (node.Boundary.Width * parentZoom, node.Boundary.Height * parentZoom);
-
-        var (tx, ty) = (x + w / 2, y + h);
-        var fz = FontSize * parentZoom;
-        var icon = IconName(node.Type);
-        //Log.Info($"Icon: {node.LongName} ({x},{y},{w},{h}) ,{node.Boundary}, Z: {parentZoom}");
-        //var toolTip = $"{node.HtmlLongName}, np: {node.Boundary}, Zoom: {parentZoom}, cr: {x}, {y}, {w}, {h}";
-        string selectedSvg = SelectedNodeSvg(node, x, y, w, h);
-        var elementId = PointerId.FromNode(node.Id).ElementId;
-
-        var hiddenNode = node.IsHidden ? "opacity=\"0.1\"" : "";
-        var hiddenText = node.IsHidden ? "opacity=\"0.3\"" : "";
-        return $"""
-            <use href="#{icon}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" {hiddenNode} />
-            <text x="{tx:0.##}" y="{ty:0.##}" class="iconName" font-size="{fz:0.##}px" {hiddenText} >{node.HtmlShortName}</text>
-            <g class="hoverable" id="{elementId}">
-              <rect id="{elementId}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
-              <title>{node.HtmlLongName}</title>
-            </g>
-            {selectedSvg}
-            """;
-    }
+    public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom) =>
+        BuildSimpleNodeSvg(node, nodeCanvasRect, parentZoom);
 
     public static string GetToLargeNodeContainerSvg(Rect nodeCanvasRect, string childrenContent)
     {
-        //Log.Info("Draw", node.Name, nodeCanvasRect.ToString());
         var (x, y, w, h) = (nodeCanvasRect.X, nodeCanvasRect.Y, nodeCanvasRect.Width, nodeCanvasRect.Height);
         return $"""
               <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="0 0 {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
@@ -121,7 +57,65 @@ class NodeSvg
             """;
     }
 
-    static string SelectedNodeSvg(Node node, double x, double y, double w, double h)
+    static string BuildSimpleNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom)
+    {
+        var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
+        var textX = geometry.X + geometry.Width / 2;
+        var textY = geometry.Y + geometry.Height;
+        var fontSize = FontSize * parentZoom;
+        var iconId = IconName(node.Type);
+        var elementId = PointerId.FromNode(node.Id).ElementId;
+        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
+        var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName);
+        var selectedOverlay = SelectedNodeSvg(node, geometry);
+
+        return $"""
+            <use href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
+            <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
+            {hoverGroup}
+            {selectedOverlay}
+            """;
+    }
+
+    static Rect CalculateIconGeometry(Node node, Rect nodeCanvasRect, double parentZoom)
+    {
+        var width = node.Boundary.Width * parentZoom;
+        var height = node.Boundary.Height * parentZoom;
+        return new Rect(nodeCanvasRect.X, nodeCanvasRect.Y, width, height);
+    }
+
+    static ContainerHeader CalculateContainerHeader(Rect nodeCanvasRect, double parentZoom)
+    {
+        var iconSize = NameIconSize * parentZoom;
+        var iconPosition = new Pos(nodeCanvasRect.X, nodeCanvasRect.Y + nodeCanvasRect.Height + 1 * parentZoom);
+        var textPosition = new Pos(
+            nodeCanvasRect.X + (NameIconSize + 1) * parentZoom,
+            nodeCanvasRect.Y + nodeCanvasRect.Height + 2 * parentZoom
+        );
+        var fontSize = FontSize * parentZoom;
+        return new ContainerHeader(iconPosition, iconSize, textPosition, fontSize);
+    }
+
+    static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
+        node.IsHidden ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
+
+    static (string Border, string Background) NodeColors(Node node)
+    {
+        var (border, background) = DColors.NodeColorByName(node.Color);
+        if (node.IsEditMode)
+            return (DColors.EditNodeBorder, DColors.EditNodeBackground);
+        return (border, background);
+    }
+
+    static string BuildHoverGroup(string elementId, string cssClass, Rect geometry, string title) =>
+        $"""
+            <g class="{cssClass}" id="{elementId}">
+              <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+              <title>{title}</title>
+            </g>
+            """.Trim();
+
+    static string SelectedNodeSvg(Node node, Rect geometry)
     {
         if (!node.IsSelected)
             return "";
@@ -147,6 +141,11 @@ class NodeSvg
         var ebl = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomLeft).ElementId;
         var ebm = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomMiddle).ElementId;
         var ebr = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomRight).ElementId;
+
+        var x = geometry.X;
+        var y = geometry.Y;
+        var w = geometry.Width;
+        var h = geometry.Height;
 
         return $"""
             <rect x="{x - rp}" y="{y - rp}" width="{w + rs:0.##}" height="{h
@@ -200,4 +199,6 @@ class NodeSvg
             "Member" => "MemberIcon",
             _ => "ModuleIcon",
         };
+
+    readonly record struct ContainerHeader(Pos IconPos, double IconSize, Pos TextPos, double FontSize);
 }
