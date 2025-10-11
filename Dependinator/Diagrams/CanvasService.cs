@@ -86,7 +86,7 @@ class CanvasService : ICanvasService
     public double ActualZoom => LevelZoom != 0 ? Zoom / LevelZoom : 0;
 
     public string SvgViewBox =>
-        LevelZoom != 0 && TileOffset.X != 0 && TileOffset.Y != 0
+        LevelZoom != 0
             ? $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}"
             : "0 0 0 0";
 
