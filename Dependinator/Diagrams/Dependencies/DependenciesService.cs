@@ -22,6 +22,7 @@ interface IDependenciesService
     void SetSelected(TreeItem selectedItem);
     void ShowNode(NodeId nodeId);
     void ShowDirectLine(NodeId nodeId);
+    bool TryGetLine(LineId lineId, out Line line);
     void HideDirectLine(LineId lineId);
     void ShowReferences();
     void ShowDependencies();
@@ -58,15 +59,18 @@ class DependenciesService(
         if (!selectionService.SelectedId.IsNode)
             return;
 
-        var sourceId = NodeId.FromId(selectionService.SelectedId.Id);
-        if (sourceId == otherNodeId)
+        var thisNodeId = NodeId.FromId(selectionService.SelectedId.Id);
+        if (thisNodeId == otherNodeId)
             return;
+
+        var (sourceId, targetId) =
+            treeType is TreeType.Dependencies ? (thisNodeId, otherNodeId) : (otherNodeId, thisNodeId);
 
         using var model = modelService.UseModel();
 
         if (!model.TryGetNode(sourceId, out var sourceNode))
             return;
-        if (!model.TryGetNode(otherNodeId, out var targetNode))
+        if (!model.TryGetNode(targetId, out var targetNode))
             return;
 
         var directLineId = LineId.FromDirect(sourceNode.Name, targetNode.Name);
@@ -85,6 +89,12 @@ class DependenciesService(
 
         model.ClearCachedSvg();
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    public bool TryGetLine(LineId lineId, out Line line)
+    {
+        using var model = modelService.UseModel();
+        return model.TryGetLine(lineId.Value, out line);
     }
 
     public void HideDirectLine(LineId lineId)
