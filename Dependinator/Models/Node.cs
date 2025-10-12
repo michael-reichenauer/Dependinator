@@ -89,6 +89,7 @@ class Node : IItem
     public List<Link> TargetLinks { get; } = new();
     public List<Line> SourceLines { get; } = new();
     public List<Line> TargetLines { get; } = new();
+    public List<Line> DirectLines { get; } = new();
 
     public bool IsRoot => Type == NodeType.Root;
     public string LongName { get; private set; } = "";
@@ -244,6 +245,20 @@ class Node : IItem
     {
         SourceLines.Remove(line);
         TargetLines.Remove(line);
+        DirectLines.Remove(line);
+    }
+
+    public void AddDirectLine(Line line)
+    {
+        if (!DirectLines.Contains(line))
+        {
+            DirectLines.Add(line);
+        }
+    }
+
+    public void RemoveDirectLine(Line line)
+    {
+        DirectLines.Remove(line);
     }
 
     public IEnumerable<Node> Ancestors()

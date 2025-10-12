@@ -11,6 +11,7 @@ interface ISelectionService
     Pos SelectedPosition { get; }
     Pos SelectedNodePosition { get; }
     Pos SelectedLinePosition { get; }
+    bool IsSelectedLineDirect { get; }
 
     Task UpdateSelectedPositionAsync();
     bool IsSelectedNodeMovable(double zoom);
@@ -39,6 +40,7 @@ class SelectionService : ISelectionService
     double clickedRelativePosition = 0.5;
     PointerId selectedId = PointerId.Empty;
     bool isEditMode = false;
+    bool isSelectedLineDirect = false;
 
     public SelectionService(
         IModelService modelService,
@@ -59,6 +61,7 @@ class SelectionService : ISelectionService
     public Pos SelectedPosition => IsSelected ? selectedPosition : Pos.None;
     public Pos SelectedNodePosition => selectedId.IsNode ? SelectedPosition : Pos.None;
     public Pos SelectedLinePosition => selectedId.IsLine ? SelectedPosition : Pos.None;
+    public bool IsSelectedLineDirect => IsSelected && selectedId.IsLine && isSelectedLineDirect;
 
     public async Task UpdateSelectedPositionAsync()
     {
@@ -130,6 +133,8 @@ class SelectionService : ISelectionService
 
         if (IsSelected)
             Unselect(); // Clicked on some other item or outside the diagram
+        else
+            isSelectedLineDirect = false;
 
         if (pointerId.IsNode)
         {
@@ -151,6 +156,7 @@ class SelectionService : ISelectionService
             {
                 selectedId = pointerId;
                 this.isEditMode = false;
+                isSelectedLineDirect = false;
                 await UpdateSelectedPositionAsync();
             }
         }
@@ -175,6 +181,7 @@ class SelectionService : ISelectionService
                 line =>
                 {
                     line.IsSelected = true;
+                    isSelectedLineDirect = line.IsDirect;
 
                     // Calculate the clicked relative position on the line, this is used to
                     // show the toolbar at the clicked position on the line
@@ -224,6 +231,7 @@ class SelectionService : ISelectionService
         }
         selectedId = PointerId.Empty;
         this.isEditMode = false;
+        isSelectedLineDirect = false;
         applicationEvents.TriggerUIStateChanged();
     }
 

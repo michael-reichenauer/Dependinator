@@ -16,6 +16,32 @@ class LineSvg
         return BuildLineSvg(line, endpoints, elementId);
     }
 
+    public static string GetDirectLineSvg(Line line, Node ancestor, Pos nodeCanvasPos, double childrenZoom)
+    {
+        if (line.RenderAncestor != ancestor)
+            return "";
+        if (NodeSvg.IsToLargeToBeSeen(childrenZoom))
+            return "";
+
+        var (sourceAnchor, targetAnchor) = DirectLineCalculator.GetAnchorsRelativeToAncestor(
+            ancestor,
+            line.Source,
+            line.Target
+        );
+
+        var endpoints = new LineEndpoints(
+            nodeCanvasPos.X + sourceAnchor.X * childrenZoom,
+            nodeCanvasPos.Y + sourceAnchor.Y * childrenZoom,
+            nodeCanvasPos.X + targetAnchor.X * childrenZoom,
+            nodeCanvasPos.Y + targetAnchor.Y * childrenZoom
+        );
+
+        var elementId = PointerId.FromLine(line.Id).ElementId;
+        UpdateLineOrientation(line, endpoints);
+
+        return BuildLineSvg(line, endpoints, elementId);
+    }
+
     static bool ShouldRender(Line line, double parentZoom, double childrenZoom)
     {
         if (NodeSvg.IsToLargeToBeSeen(childrenZoom))

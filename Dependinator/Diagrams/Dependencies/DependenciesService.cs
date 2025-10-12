@@ -1,5 +1,6 @@
 using Dependinator.Diagrams.Icons;
 using Dependinator.Models;
+using Dependinator.Shared;
 using MudBlazor;
 
 namespace Dependinator.Diagrams.Dependencies;
@@ -21,6 +22,7 @@ interface IDependenciesService
     void SetSelected(TreeItem selectedItem);
     void ShowNode(NodeId nodeId);
     void ShowDirectLine(NodeId nodeId);
+    void HideDirectLine(LineId lineId);
     void ShowReferences();
     void ShowDependencies();
     void Clicked(PointerId pointerId);
@@ -51,9 +53,80 @@ class DependenciesService(
         }
     }
 
-    public async void ShowDirectLine(NodeId otherNodeId)
+    public void ShowDirectLine(NodeId otherNodeId)
     {
-        // TODO: Implement showing direct line between selected node and the otherNodeId.
+        if (!selectionService.SelectedId.IsNode)
+            return;
+
+        var sourceId = NodeId.FromId(selectionService.SelectedId.Id);
+        if (sourceId == otherNodeId)
+            return;
+
+        using var model = modelService.UseModel();
+
+        if (!model.TryGetNode(sourceId, out var sourceNode))
+            return;
+        if (!model.TryGetNode(otherNodeId, out var targetNode))
+            return;
+
+        var ancestor = sourceNode.LowestCommonAncestor(targetNode) ?? model.Root;
+        var lineId = LineId.FromDirect(sourceNode.Name, targetNode.Name);
+
+        if (model.TryGetLine(lineId, out var existingLine))
+        {
+            if (!existingLine.IsDirect)
+                return;
+
+            existingLine.RenderAncestor?.RemoveDirectLine(existingLine);
+            existingLine.RenderAncestor = ancestor;
+            ancestor.AddDirectLine(existingLine);
+            existingLine.Color = DColors.Selected;
+            existingLine.StrokeWidth = 2.5;
+            existingLine.IsHidden = false;
+        }
+        else
+        {
+            var directLine = new Line(sourceNode, targetNode, isDirect: true, id: lineId)
+            {
+                Color = DColors.Selected,
+                StrokeWidth = 2.5,
+                RenderAncestor = ancestor,
+                IsHidden = false,
+            };
+
+            ancestor.AddDirectLine(directLine);
+            model.AddLine(directLine);
+        }
+
+        model.ClearCachedSvg();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public void HideDirectLine(LineId lineId)
+    {
+        var shouldUnselect = selectionService.SelectedId.IsLine && selectionService.SelectedId.Id == lineId.Value;
+        var removed = false;
+
+        using (var model = modelService.UseModel())
+        {
+            if (!model.TryGetLine(lineId, out var line) || !line.IsDirect)
+                return;
+
+            removed = true;
+            line.RenderAncestor?.RemoveDirectLine(line);
+            line.RenderAncestor = null;
+            line.Target.Remove(line);
+            line.Source.Remove(line);
+            model.Items.Remove(line.Id);
+            model.ClearCachedSvg();
+        }
+
+        if (removed)
+        {
+            if (shouldUnselect)
+                selectionService.Unselect();
+            applicationEvents.TriggerUIStateChanged();
+        }
     }
 
     public async void ShowNode(NodeId nodeId)
