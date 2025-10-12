@@ -14,8 +14,8 @@
         @if (selectionService.IsSelectedLineDirect)
         {
             <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine" />
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.ArrowLeft" OnClick="PanToSource" />
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.ArrowRight" OnClick="PanToTarget" />
+            <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" />
+            <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" />
         }
         else
         {
