@@ -16,6 +16,12 @@
     margin: 0 2px;
 }
 
+.app-bar ::deep .menu-root .mud-button-root {
+    min-height: 26px;
+    height: 26px;
+    padding: 0 4px;
+}
+
 .app-bar ::deep .mud-icon-button {
     width: 26px;
     height: 26px;
@@ -28,4 +34,21 @@
 
 .app-bar-title {
     line-height: 1;
+}
+
+.mobile-menu-container {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1300;
+}
+
+.mobile-menu-button {
+    width: 44px;
+    height: 44px;
+    box-shadow: var(--mud-elevation-6);
+}
+
+.mobile-menu-container ::deep .mud-button-label {
+    display: none;
 }

@@ -2,73 +2,147 @@
 @inject IApplicationEvents applicationEvents
 @inject Dependinator.Models.IModelService modelService
 
-<MudAppBar Dense="true" Elevation="5" Class="app-bar">
-    <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3"
-        AnchorOrigin="Origin.BottomCenter">
+<MudHidden Breakpoint="Breakpoint.SmAndDown">
+    <MudAppBar Dense="true" Elevation="5" Class="app-bar">
+        <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3 mr-2 menu-root"
+            AnchorOrigin="Origin.BottomCenter">
+            <ChildContent>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
+                    Disabled="@(!modelService.CanUndo)" OnClick="modelService.Undo">
+                    Undo</MudMenuItem>
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
-            Disabled="@(!modelService.CanUndo)" OnClick="modelService.Undo">
-            Undo</MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
+                    Disabled="@(!modelService.CanRedo)" OnClick="modelService.Redo">
+                    Redo</MudMenuItem>
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
-            Disabled="@(!modelService.CanRedo)" OnClick="modelService.Redo">
-            Redo</MudMenuItem>
+                <MudDivider />
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen" OnClick="srv.PanZoomToFit">
-            Fit
-            to
-            Screen</MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
+                    OnClick="srv.PanZoomToFit">
+                    Fit
+                    to
+                    Screen</MudMenuItem>
 
+                @if (!Build.IsWebAssembly)
+                {
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                        OnClick="srv.Refresh">
+                        Refresh</MudMenuItem>
+                }
+
+                <MudDivider />
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser"
+                    OnClick="srv.OpenFiles">
+                    Browse
+                    Files ...</MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser"
+                    OnClick="srv.ToggleTheme">
+                    Toggle Dark/Light Theme</MudMenuItem>
+
+                <MudDivider />
+
+                <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever" OnClick="@OnRemove">
+                    Remove
+                    Model</MudMenuItem>
+
+                <MudDivider />
+
+                @{
+                    foreach (var path in RecentModelPaths)
+                    {
+                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Schema"
+                            OnClick="() => srv.LoadAsync(path)">
+                            @Path.GetFileNameWithoutExtension(path)
+                        </MudMenuItem>
+                    }
+                }
+            </ChildContent>
+        </MudMenu>
+
+        <MudIconButton Icon="@Icons.Material.Outlined.Undo" Size="Size.Small" Color="Color.Inherit"
+            Disabled="@(!modelService.CanUndo)" OnClick="modelService.Undo" />
+
+        <MudIconButton Icon="@Icons.Material.Outlined.Redo" Size="Size.Small" Color="Color.Inherit"
+            Disabled="@(!modelService.CanRedo)" OnClick="modelService.Redo" />
+
+        <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Size="Size.Small" Color="Color.Inherit"
+            OnClick="srv.PanZoomToFit" />
         @if (!Build.IsWebAssembly)
         {
-            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh">
-                Refresh</MudMenuItem>
-        }
-        <MudDivider />
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.OpenFiles">
-            Browse
-            Files ...</MudMenuItem>
-
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser"
-            OnClick="srv.ToggleTheme">
-            Toggle Dark/Light Theme</MudMenuItem>
-
-        <MudDivider />
-
-        <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever" OnClick="@OnRemove">Remove
-            Model</MudMenuItem>
-
-        <MudDivider />
-
-        @{
-            foreach (var path in RecentModelPaths)
-            {
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Schema"
-                    OnClick="() => srv.LoadAsync(path)">
-                    @Path.GetFileNameWithoutExtension(path)
-                </MudMenuItem>
-            }
+            <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Size="Size.Small" Color="Color.Inherit"
+                OnClick="srv.Refresh" />
         }
 
-    </MudMenu>
+        <MudText Typo="Typo.subtitle1" Class="ml-6 app-bar-title">@DiagramName</MudText>
 
-    <MudIconButton Icon="@Icons.Material.Outlined.Undo" Size="Size.Small" Color="Color.Inherit"
-        Disabled="@(!modelService.CanUndo)" OnClick="modelService.Undo" />
+    </MudAppBar>
+</MudHidden>
 
-    <MudIconButton Icon="@Icons.Material.Outlined.Redo" Size="Size.Small" Color="Color.Inherit"
-        Disabled="@(!modelService.CanRedo)" OnClick="modelService.Redo" />
+<MudHidden Breakpoint="Breakpoint.MdAndUp">
+    <div class="mobile-menu-container">
+        <MudMenu Dense="true" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+            <ActivatorContent>
+                <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Primary" Size="Size.Medium"
+                    Class="mobile-menu-button" />
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
+                    Disabled="@(!modelService.CanUndo)" OnClick="modelService.Undo">
+                    Undo</MudMenuItem>
 
-    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Size="Size.Small" Color="Color.Inherit"
-        OnClick="srv.PanZoomToFit" />
-    @if (!Build.IsWebAssembly)
-    {
-        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Size="Size.Small" Color="Color.Inherit"
-            OnClick="srv.Refresh" />
-    }
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
+                    Disabled="@(!modelService.CanRedo)" OnClick="modelService.Redo">
+                    Redo</MudMenuItem>
 
-    <MudText Typo="Typo.subtitle1" Class="ml-6 app-bar-title">@DiagramName</MudText>
+                <MudDivider />
 
-</MudAppBar>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
+                    OnClick="srv.PanZoomToFit">
+                    Fit
+                    to
+                    Screen</MudMenuItem>
+
+                @if (!Build.IsWebAssembly)
+                {
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                        OnClick="srv.Refresh">
+                        Refresh</MudMenuItem>
+                }
+
+                <MudDivider />
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser"
+                    OnClick="srv.OpenFiles">
+                    Browse
+                    Files ...</MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser"
+                    OnClick="srv.ToggleTheme">
+                    Toggle Dark/Light Theme</MudMenuItem>
+
+                <MudDivider />
+
+                <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever" OnClick="@OnRemove">
+                    Remove
+                    Model</MudMenuItem>
+
+                <MudDivider />
+
+                @{
+                    foreach (var path in RecentModelPaths)
+                    {
+                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Schema"
+                            OnClick="() => srv.LoadAsync(path)">
+                            @Path.GetFileNameWithoutExtension(path)
+                        </MudMenuItem>
+                    }
+                }
+            </ChildContent>
+        </MudMenu>
+    </div>
+</MudHidden>
 
 
 <MudMessageBox @ref="mbox" Title="Remove Model" CancelText="Cancel">

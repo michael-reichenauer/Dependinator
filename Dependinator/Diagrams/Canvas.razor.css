@@ -15,10 +15,12 @@ svg {
 
 .drop-zone {
     border: 2px solid #0088f711;
+    margin: 0;
+    padding: 0;
+    display: block;
 }
 
 .drop-zone.hover {
     border: 2px solid #0087F7;
     background-color: #0088f711;
 }
-

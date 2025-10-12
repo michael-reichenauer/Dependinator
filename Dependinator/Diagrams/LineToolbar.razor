@@ -9,29 +9,32 @@
 @inject IDependenciesService dependenciesService
 
 
-<MudStack Class="@show" Style="@containerPosition" Spacing="1">
-    <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled">
-        @if (selectionService.IsSelectedLineDirect)
-        {
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine" />
-            <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" />
-            <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" />
-        }
-        else
-        {
-            <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
-            <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
-        }
-    </MudButtonGroup>
-</MudStack>
+@if (HasSelectedLine)
+{
+    <MudStack Style="@containerPosition" Spacing="1">
+        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled">
+            @if (selectionService.IsSelectedLineDirect)
+            {
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine" />
+                <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" />
+                <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" />
+            }
+            else
+            {
+                <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
+                <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+            }
+        </MudButtonGroup>
+    </MudStack>
+}
 
 
 @code {
-    string show => selectionService.SelectedLinePosition != Models.Pos.None ? "visible" : "hidden";
+    bool HasSelectedLine => selectionService.SelectedLinePosition != Models.Pos.None;
     bool isIcon => !interactionService.IsContainer;
     double left => selectionService.SelectedLinePosition.X;
     double top => selectionService.SelectedLinePosition.Y - 20;
-    string containerPosition => $"Position: fixed; left:{left}px; top:{top}px";
+    string containerPosition => $"position: fixed; left:{left}px; top:{top}px";
 
     void ShowReferences() => dependenciesService.ShowReferences();
     void ShowDependencies() => dependenciesService.ShowDependencies();
