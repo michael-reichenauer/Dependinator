@@ -22,13 +22,12 @@ class Line : IItem
     public bool IsDirect { get; }
     public Node? RenderAncestor { get; set; }
 
-    public string Color { get; set; } = "red";
     public double StrokeWidth { get; set; } = 1.5;
     public bool IsSelected { get; internal set; }
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
 
     public bool IsUpHill { get; internal set; } // Used to determine the direction of the line for placing the toolbar
-    public bool IsHidden { get; internal set; }
+    public bool IsHidden { get; internal set; } = false;
 
     public void Add(Link link)
     {

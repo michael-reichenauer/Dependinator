@@ -20,8 +20,6 @@ class LineSvg
     {
         if (line.RenderAncestor != ancestor)
             return "";
-        if (NodeSvg.IsToLargeToBeSeen(childrenZoom))
-            return "";
 
         var (sourceAnchor, targetAnchor) = DirectLineCalculator.GetAnchorsRelativeToAncestor(
             ancestor,
@@ -137,13 +135,22 @@ class LineSvg
 
     static string BuildLineSvg(Line line, LineEndpoints endpoints, string elementId)
     {
-        var color = line.IsHidden ? DColors.LineHidden : DColors.Line;
-        var markerId = line.IsHidden ? "arrow-hidden" : "arrow-line";
+        var color =
+            line.IsDirect ? DColors.DirectLine
+            : line.IsHidden ? DColors.LineHidden
+            : DColors.Line;
+
+        var markerId =
+            line.IsDirect ? "arrow-direct"
+            : line.IsHidden ? "arrow-hidden"
+            : "arrow-line";
+
         var strokeWidth = line.StrokeWidth;
+        var dashArray = line.IsDirect ? " stroke-dasharray=\"6,6\"" : "";
         var selectedSvg = SelectedLineSvg(line, endpoints);
 
         return $"""
-            <line x1="{endpoints.X1}" y1="{endpoints.Y1}" x2="{endpoints.X2}" y2="{endpoints.Y2}" stroke-width="{strokeWidth}" stroke="{color}" marker-end="url(#{markerId})" />
+            <line x1="{endpoints.X1}" y1="{endpoints.Y1}" x2="{endpoints.X2}" y2="{endpoints.Y2}" stroke-width="{strokeWidth}" stroke="{color}" marker-end="url(#{markerId})"{dashArray} />
             <circle cx="{endpoints.X1}" cy="{endpoints.Y1}" r="3" fill="{color}" />
             <g class="hoverable" id="{elementId}">
               <line id="{elementId}" x1="{endpoints.X1}" y1="{endpoints.Y1}" x2="{endpoints.X2}" y2="{endpoints.Y2}" stroke-width="{strokeWidth

@@ -69,34 +69,19 @@ class DependenciesService(
         if (!model.TryGetNode(otherNodeId, out var targetNode))
             return;
 
-        var ancestor = sourceNode.LowestCommonAncestor(targetNode) ?? model.Root;
-        var lineId = LineId.FromDirect(sourceNode.Name, targetNode.Name);
+        var directLineId = LineId.FromDirect(sourceNode.Name, targetNode.Name);
+        if (model.TryGetLine(directLineId, out var existingLine))
+            return;
 
-        if (model.TryGetLine(lineId, out var existingLine))
+        var ancestor = sourceNode.LowestCommonAncestor(targetNode);
+        var directLine = new Line(sourceNode, targetNode, isDirect: true, id: directLineId)
         {
-            if (!existingLine.IsDirect)
-                return;
+            RenderAncestor = ancestor,
+            IsHidden = false,
+        };
 
-            existingLine.RenderAncestor?.RemoveDirectLine(existingLine);
-            existingLine.RenderAncestor = ancestor;
-            ancestor.AddDirectLine(existingLine);
-            existingLine.Color = DColors.Selected;
-            existingLine.StrokeWidth = 2.5;
-            existingLine.IsHidden = false;
-        }
-        else
-        {
-            var directLine = new Line(sourceNode, targetNode, isDirect: true, id: lineId)
-            {
-                Color = DColors.Selected,
-                StrokeWidth = 2.5,
-                RenderAncestor = ancestor,
-                IsHidden = false,
-            };
-
-            ancestor.AddDirectLine(directLine);
-            model.AddLine(directLine);
-        }
+        ancestor.AddDirectLine(directLine);
+        model.AddLine(directLine);
 
         model.ClearCachedSvg();
         applicationEvents.TriggerUIStateChanged();
@@ -105,28 +90,22 @@ class DependenciesService(
     public void HideDirectLine(LineId lineId)
     {
         var shouldUnselect = selectionService.SelectedId.IsLine && selectionService.SelectedId.Id == lineId.Value;
-        var removed = false;
 
-        using (var model = modelService.UseModel())
-        {
-            if (!model.TryGetLine(lineId, out var line) || !line.IsDirect)
-                return;
+        using var model = modelService.UseModel();
 
-            removed = true;
-            line.RenderAncestor?.RemoveDirectLine(line);
-            line.RenderAncestor = null;
-            line.Target.Remove(line);
-            line.Source.Remove(line);
-            model.Items.Remove(line.Id);
-            model.ClearCachedSvg();
-        }
+        if (!model.TryGetLine(lineId, out var line))
+            return;
 
-        if (removed)
-        {
-            if (shouldUnselect)
-                selectionService.Unselect();
-            applicationEvents.TriggerUIStateChanged();
-        }
+        line.RenderAncestor?.RemoveDirectLine(line);
+        line.RenderAncestor = null;
+        line.Target.Remove(line);
+        line.Source.Remove(line);
+        model.Items.Remove(line.Id);
+        model.ClearCachedSvg();
+
+        if (shouldUnselect)
+            selectionService.Unselect();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public async void ShowNode(NodeId nodeId)

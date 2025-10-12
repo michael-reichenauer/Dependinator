@@ -146,7 +146,7 @@ class Node : IItem
     public double GetZoom()
     {
         var zoom = 1.0;
-        Ancestors().ForEach(n => zoom *= 1 / n.ContainerZoom);
+        this.Ancestors().ForEach(n => zoom *= 1 / n.ContainerZoom);
         return zoom;
     }
 
@@ -259,16 +259,6 @@ class Node : IItem
     public void RemoveDirectLine(Line line)
     {
         DirectLines.Remove(line);
-    }
-
-    public IEnumerable<Node> Ancestors()
-    {
-        var node = this;
-        while (node.Parent != null)
-        {
-            yield return node.Parent;
-            node = node.Parent;
-        }
     }
 
     public override string ToString() => IsRoot ? "<root>" : LongName;

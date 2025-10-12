@@ -4,6 +4,15 @@ namespace Dependinator.Models;
 
 static class NodeExtensions
 {
+    public static IEnumerable<Node> Ancestors(this Node node)
+    {
+        while (node.Parent != null)
+        {
+            yield return node.Parent;
+            node = node.Parent;
+        }
+    }
+
     public static IEnumerable<Node> AncestorsAndSelf(this Node node)
     {
         yield return node;
@@ -13,7 +22,7 @@ static class NodeExtensions
         }
     }
 
-    public static Node? LowestCommonAncestor(this Node first, Node second)
+    public static Node LowestCommonAncestor(this Node first, Node second)
     {
         if (first == second)
             return first;
@@ -25,6 +34,6 @@ static class NodeExtensions
                 return candidate;
         }
 
-        return null;
+        throw new InvalidOperationException($"Node {first} and {second} do not have a common ancestor");
     }
 }

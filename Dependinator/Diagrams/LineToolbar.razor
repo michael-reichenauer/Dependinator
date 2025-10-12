@@ -10,17 +10,15 @@
 
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show" Style="@position">
-
     @if (selectionService.IsSelectedLineDirect)
     {
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Color="Color.Error" OnClick="CloseDirectLine" />
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine" />
     }
     else
     {
         <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
         <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
     }
-
 </MudButtonGroup>
 
 
