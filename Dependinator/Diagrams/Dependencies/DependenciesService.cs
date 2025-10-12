@@ -139,7 +139,7 @@ class DependenciesService(
             return;
 
         await panZoomService.PanZoomToAsync(pos, zoom);
-        // selectionService.Select(nodeId);
+        selectionService.Select(nodeId);
         applicationEvents.TriggerUIStateChanged();
     }
 
