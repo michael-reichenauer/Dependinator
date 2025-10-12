@@ -6,11 +6,27 @@
     <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3 mr-5"
         AnchorOrigin="Origin.BottomCenter">
 
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
+            Disabled="@(!modelService.CanUndo)" OnClick="modelService.Undo">
+            Undo</MudMenuItem>
+
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
+            Disabled="@(!modelService.CanRedo)" OnClick="modelService.Redo">
+            Redo</MudMenuItem>
+
+
+
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen" OnClick="srv.PanZoomToFit">
             Fit
             to
             Screen</MudMenuItem>
 
+        @if (!Build.IsWebAssembly)
+        {
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh">
+                Refresh</MudMenuItem>
+        }
+        <MudDivider />
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.OpenFiles">
             Browse
             Files ...</MudMenuItem>
