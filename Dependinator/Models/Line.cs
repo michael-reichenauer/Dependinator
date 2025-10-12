@@ -6,11 +6,12 @@ class Line : IItem
 {
     readonly Dictionary<Id, Link> links = new();
 
-    public Line(Node source, Node target)
+    public Line(Node source, Node target, bool isDirect = false, LineId? id = null)
     {
         Source = source;
         Target = target;
-        Id = LineId.From(source.Name, target.Name);
+        Id = id ?? (isDirect ? LineId.FromDirect(source.Name, target.Name) : LineId.From(source.Name, target.Name));
+        IsDirect = isDirect;
     }
 
     public ICollection<Link> Links => links.Values;
@@ -18,14 +19,15 @@ class Line : IItem
     public Node Source { get; }
     public Node Target { get; }
     public bool IsEmpty => links.Count == 0;
+    public bool IsDirect { get; }
+    public Node? RenderAncestor { get; set; }
 
-    public string Color { get; set; } = "red";
     public double StrokeWidth { get; set; } = 1.5;
     public bool IsSelected { get; internal set; }
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
 
     public bool IsUpHill { get; internal set; } // Used to determine the direction of the line for placing the toolbar
-    public bool IsHidden { get; internal set; }
+    public bool IsHidden { get; internal set; } = false;
 
     public void Add(Link link)
     {

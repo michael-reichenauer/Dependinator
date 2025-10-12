@@ -15,6 +15,7 @@ public class Test
     [Fact]
     public async Task TestAsync()
     {
+        await Task.CompletedTask;
         var someMock = CreateMock<ISome>();
 
         someMock.Setup(s => s.Get("name")).Returns("nameX");

@@ -169,6 +169,13 @@ class SvgService : ISvgService
                 yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
             }
         }
+
+        foreach (var directLine in node.DirectLines)
+        {
+            var svg = LineSvg.GetDirectLineSvg(directLine, node, nodeCanvasPos, childrenZoom);
+            if (svg.Length > 0)
+                yield return svg;
+        }
     }
 
     readonly record struct RenderContext(Pos CanvasOffset, double Zoom, Rect TileBounds, Pos TilePosition)

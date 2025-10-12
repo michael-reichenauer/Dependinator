@@ -1,6 +1,7 @@
 ﻿@using Dependinator.Diagrams.Icons
 @using Dependinator.Diagrams.Dependencies
 
+
 @inject IApplicationEvents applicationEvents
 @inject IInteractionService interactionService
 @inject ISelectionService selectionService
@@ -9,10 +10,15 @@
 
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show" Style="@position">
-
-    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
-    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
-
+    @if (selectionService.IsSelectedLineDirect)
+    {
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine" />
+    }
+    else
+    {
+        <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
+        <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+    }
 </MudButtonGroup>
 
 
@@ -25,6 +31,13 @@
 
     void ShowReferences() => dependenciesService.ShowReferences();
     void ShowDependencies() => dependenciesService.ShowDependencies();
+    void CloseDirectLine()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        var lineId = Models.LineId.FromId(selectionService.SelectedId.Id);
+        dependenciesService.HideDirectLine(lineId);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
