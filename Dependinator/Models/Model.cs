@@ -217,7 +217,7 @@ class Model : IModel
 
     public void ClearCachedSvg()
     {
-        Tiles.Clear();
+        Tiles.ClearCache();
     }
 
     public void ClearNotUpdated()

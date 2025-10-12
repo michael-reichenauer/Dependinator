@@ -45,36 +45,33 @@ record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
 class Tiles
 {
     readonly Dictionary<TileKey, Tile> tiles = [];
-    int tileWidth = 0;
-    int tileHeight = 0;
-    int maxSvgSize = 0;
-    Rect lastViewRect = Rect.None;
-    double lastZoom = 0;
-    Tile lastTile = Tile.Empty;
+    int currentScreenTileWidth = 0;
+    int currentScreenTileHeight = 0;
+
+    Rect lastUsedViewRect = Rect.None;
+    double lastUsedZoom = 0;
+    Tile lastUsedTile = Tile.Empty;
 
     public bool TryGetLastUsed(Rect viewRect, double zoom, out Tile tile)
     {
-        if (viewRect != lastViewRect || zoom != lastZoom)
-        {
-            lastViewRect = Rect.None;
-            lastZoom = 0;
-            lastTile = Tile.Empty;
-            tile = Tile.Empty;
-            return false;
+        if (viewRect == lastUsedViewRect && zoom == lastUsedZoom)
+        { // No change, just reuse
+            tile = lastUsedTile;
+            return true;
         }
-        tile = lastTile;
-        return true;
+
+        ClearLastUsed();
+        tile = Tile.Empty;
+        return false;
     }
 
     public bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile)
     {
-        ValidateTileSize(key);
+        ValidateScreenTileSize(key);
         var isCached = tiles.TryGetValue(key, out tile!);
         if (isCached)
         {
-            lastViewRect = viewRect;
-            lastZoom = zoom;
-            lastTile = tile;
+            SetLastUsed(viewRect, zoom, tile);
         }
 
         return isCached;
@@ -82,38 +79,46 @@ class Tiles
 
     public void SetCached(Tile tile, Rect viewRect, double zoom)
     {
-        ValidateTileSize(tile.Key);
+        ValidateScreenTileSize(tile.Key);
         tiles[tile.Key] = tile;
-        tileWidth = tile.Key.TileWidth;
-        tileHeight = tile.Key.TileHeight;
-        lastViewRect = viewRect;
-        lastZoom = zoom;
-        lastTile = tile;
-
-        if (tile.Svg.Length > maxSvgSize)
-        {
-            maxSvgSize = tile.Svg.Length;
-        }
+        SetCurrentScreenTileSize(tile);
+        SetLastUsed(viewRect, zoom, tile);
     }
 
-    public void Clear()
+    public void ClearCache()
     {
         tiles.Clear();
-        tileWidth = 0;
-        tileHeight = 0;
-        maxSvgSize = 0;
-        lastViewRect = Rect.None;
-        lastZoom = 0;
-        lastTile = Tile.Empty;
+        SetCurrentScreenTileSize(Tile.Empty);
+        ClearLastUsed();
     }
 
-    public override string ToString() => $"{tiles.Count} (max: {maxSvgSize})";
-
-    void ValidateTileSize(TileKey key)
+    void ClearLastUsed()
     {
-        if (tileWidth != key.TileWidth || tileHeight != key.TileHeight)
-        { // Tile sizes have been changed, invalidate all tiles.
-            Clear();
+        lastUsedViewRect = Rect.None;
+        lastUsedZoom = 0;
+        lastUsedTile = Tile.Empty;
+    }
+
+    void SetCurrentScreenTileSize(Tile tile)
+    {
+        currentScreenTileWidth = tile.Key.TileWidth;
+        currentScreenTileHeight = tile.Key.TileHeight;
+    }
+
+    void SetLastUsed(Rect viewRect, double zoom, Tile tile)
+    {
+        lastUsedViewRect = viewRect;
+        lastUsedZoom = zoom;
+        lastUsedTile = tile;
+    }
+
+    public override string ToString() => $"{tiles.Count}";
+
+    void ValidateScreenTileSize(TileKey key)
+    {
+        if (currentScreenTileWidth != key.TileWidth || currentScreenTileHeight != key.TileHeight)
+        { // Screen Tile size have been changed, invalidate all cached tiles.
+            ClearCache();
         }
     }
 }
