@@ -10,7 +10,7 @@ class Line : IItem
     const double BaseStrokeWidth = 1;
     const double HiddenStrokeWidth = 1;
     const double AdditionalStrokeWidthPerLink = 0.05;
-    const double MaxStrokeWidth = 4;
+    const double MaxStrokeWidth = 3;
 
     readonly Dictionary<Id, Link> links = new();
     double strokeWidth = BaseStrokeWidth;
