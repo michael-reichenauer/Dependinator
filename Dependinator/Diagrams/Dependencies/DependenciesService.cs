@@ -22,6 +22,7 @@ interface IDependenciesService
     void SetSelected(TreeItem selectedItem);
     void ShowNode(NodeId nodeId);
     void ShowDirectLine(NodeId nodeId);
+    bool TryGetLine(LineId lineId, out Line line);
     void HideDirectLine(LineId lineId);
     void ShowReferences();
     void ShowDependencies();
@@ -88,6 +89,12 @@ class DependenciesService(
 
         model.ClearCachedSvg();
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    public bool TryGetLine(LineId lineId, out Line line)
+    {
+        using var model = modelService.UseModel();
+        return model.TryGetLine(lineId.Value, out line);
     }
 
     public void HideDirectLine(LineId lineId)
