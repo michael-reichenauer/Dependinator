@@ -14,8 +14,8 @@
     }
 </style>
 
-<MudPopover Open="IsShowExplorer" Fixed="true" Class="px-4 pt-4 ml-1"  MaxHeight="MaxHeight"
-    AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft" >
+<MudPopover Open="IsShowExplorer" Fixed="true" Class="px-4 pt-4 ml-1" MaxHeight="MaxHeight"
+    AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft">
     <MudStack>
         <MudStack Row="true">
             <MudIcon Icon="@srv.TreeIcon" Class="ml-n5" />
@@ -32,14 +32,17 @@
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
                                 class="hover-element">
-        
+
                                 <MudText Style="justify-self: start;">@item.Text</MudText>
-                                
+
                                 @if (item.NodeId != Models.NodeId.Empty)
                                 {
                                     <div style="justify-self: end;">
                                         <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
                                             Color="Color.Inherit" Class="ml-3 hover-button"
+                                            OnClick="() => srv.ShowNode(item.NodeId)" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.LinearScale" Size="Size.Small"
+                                            Color="Color.Inherit" Class="ml hover-button"
                                             OnClick="() => srv.ShowNode(item.NodeId)" />
                                     </div>
                                 }
@@ -55,7 +58,7 @@
 
 @code {
     bool IsShowExplorer => srv.IsShowExplorer;
-   
+
     int MaxHeight => (int)screenService.SvgRect.Height - 5;
     int MaxWidth => (int)screenService.SvgRect.Width - 20;
 

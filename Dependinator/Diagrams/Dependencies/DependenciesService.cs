@@ -20,6 +20,7 @@ interface IDependenciesService
 
     void SetSelected(TreeItem selectedItem);
     void ShowNode(NodeId nodeId);
+    void ShowDirectLine(NodeId nodeId);
     void ShowReferences();
     void ShowDependencies();
     void Clicked(PointerId pointerId);
@@ -48,6 +49,11 @@ class DependenciesService(
         {
             Close();
         }
+    }
+
+    public async void ShowDirectLine(NodeId otherNodeId)
+    {
+        // TODO: Implement showing direct line between selected node and the otherNodeId.
     }
 
     public async void ShowNode(NodeId nodeId)
