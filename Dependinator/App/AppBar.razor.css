@@ -1,0 +1,31 @@
+.app-bar {
+    min-height: 32px;
+    height: 32px;
+    padding: 0 8px;
+}
+
+.app-bar ::deep .mud-toolbar {
+    min-height: 32px;
+    padding: 0 2px;
+}
+
+.app-bar ::deep .mud-button-root {
+    min-height: 26px;
+    height: 26px;
+    padding: 0 4px;
+    margin: 0 2px;
+}
+
+.app-bar ::deep .mud-icon-button {
+    width: 26px;
+    height: 26px;
+    margin: 0 3px;
+}
+
+.app-bar ::deep .mud-icon-root {
+    font-size: 1.1rem;
+}
+
+.app-bar-title {
+    line-height: 1;
+}

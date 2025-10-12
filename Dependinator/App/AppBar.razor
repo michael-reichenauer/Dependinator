@@ -2,8 +2,8 @@
 @inject IApplicationEvents applicationEvents
 @inject Dependinator.Models.IModelService modelService
 
-<MudAppBar Dense="true" Elevation="5">
-    <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3 mr-5"
+<MudAppBar Dense="true" Elevation="5" Class="app-bar">
+    <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3"
         AnchorOrigin="Origin.BottomCenter">
 
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
@@ -13,8 +13,6 @@
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
             Disabled="@(!modelService.CanRedo)" OnClick="modelService.Redo">
             Redo</MudMenuItem>
-
-
 
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen" OnClick="srv.PanZoomToFit">
             Fit
@@ -54,19 +52,21 @@
 
     </MudMenu>
 
-    <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="Color.Inherit" Disabled="@(!modelService.CanUndo)"
-        OnClick="modelService.Undo" />
+    <MudIconButton Icon="@Icons.Material.Outlined.Undo" Size="Size.Small" Color="Color.Inherit"
+        Disabled="@(!modelService.CanUndo)" OnClick="modelService.Undo" />
 
-    <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="Color.Inherit" Disabled="@(!modelService.CanRedo)"
-        OnClick="modelService.Redo" />
+    <MudIconButton Icon="@Icons.Material.Outlined.Redo" Size="Size.Small" Color="Color.Inherit"
+        Disabled="@(!modelService.CanRedo)" OnClick="modelService.Redo" />
 
-    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Color="Color.Inherit" OnClick="srv.PanZoomToFit" />
+    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Size="Size.Small" Color="Color.Inherit"
+        OnClick="srv.PanZoomToFit" />
     @if (!Build.IsWebAssembly)
     {
-        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Color="Color.Inherit" OnClick="srv.Refresh" />
+        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Size="Size.Small" Color="Color.Inherit"
+            OnClick="srv.Refresh" />
     }
 
-    <MudText Typo="Typo.h6" Class="ml-6">@DiagramName</MudText>
+    <MudText Typo="Typo.subtitle1" Class="ml-6 app-bar-title">@DiagramName</MudText>
 
 </MudAppBar>
 
