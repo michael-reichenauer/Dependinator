@@ -1,3 +1,4 @@
+using System;
 using Dependinator.Models;
 
 namespace Dependinator.Diagrams.Svg;
@@ -146,16 +147,17 @@ class LineSvg
             : "arrow-line";
 
         var strokeWidth = line.StrokeWidth;
+        var circleRadius = strokeWidth + 1.5;
         var dashArray = line.IsDirect ? " stroke-dasharray=\"6,6\"" : "";
         var selectedSvg = SelectedLineSvg(line, endpoints);
 
         return $"""
             <line x1="{endpoints.X1}" y1="{endpoints.Y1}" x2="{endpoints.X2}" y2="{endpoints.Y2}" stroke-width="{strokeWidth}" stroke="{color}" marker-end="url(#{markerId})"{dashArray} />
-            <circle cx="{endpoints.X1}" cy="{endpoints.Y1}" r="3" fill="{color}" />
+            <circle cx="{endpoints.X1}" cy="{endpoints.Y1}" r="{circleRadius}" fill="{color}" />
             <g class="hoverable" id="{elementId}">
               <line id="{elementId}" x1="{endpoints.X1}" y1="{endpoints.Y1}" x2="{endpoints.X2}" y2="{endpoints.Y2}" stroke-width="{strokeWidth
                 + 10}" stroke="black" stroke-opacity="0" />
-              <title>{line.Source.HtmlLongName}→{line.Target.HtmlLongName}</title>
+              <title>{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})</title>
             </g>
             {selectedSvg}
             """;
@@ -168,13 +170,13 @@ class LineSvg
 
         var color = DColors.Selected;
         var strokeWidth = line.StrokeWidth;
-        var pointSize = 7;
+        var circleRadius = strokeWidth + 3;
 
         return $"""
             <line x1="{endpoints.X1}" y1="{endpoints.Y1}" x2="{endpoints.X2}" y2="{endpoints.Y2}" stroke="{color}" stroke-width="{strokeWidth
                 + 5}" stroke-dasharray="3,50"/>
-            <circle cx="{endpoints.X1}" cy="{endpoints.Y1}" r="{pointSize}" fill="{color}" />
-            <circle cx="{endpoints.X2}" cy="{endpoints.Y2}" r="{pointSize}" fill="{color}" />
+            <circle cx="{endpoints.X1}" cy="{endpoints.Y1}" r="{circleRadius}" fill="{color}" />
+            <circle cx="{endpoints.X2}" cy="{endpoints.Y2}" r="{circleRadius}" fill="{color}" />
             """;
     }
 
