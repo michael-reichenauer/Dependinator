@@ -259,6 +259,12 @@ class ModelService : IModelService
         {
             foreach (var line in model.Items.Values.OfType<Line>())
             {
+                if (line.IsDirect)
+                {
+                    line.IsHidden = false;
+                    continue;
+                }
+
                 line.IsHidden = line.Links.All(link => link.Source.IsHidden || link.Target.IsHidden);
             }
         }

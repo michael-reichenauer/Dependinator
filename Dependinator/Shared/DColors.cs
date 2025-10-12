@@ -21,6 +21,10 @@ class DColors
     static readonly string LineLight = "#555555";
     static readonly string LineHiddenLight = "#DDDDDD";
 
+    // Direct line
+    static readonly string DirectLineDark = "#7C4DFF";
+    static readonly string DirectLineLight = "#512DA8";
+
     // Node Dark
     // static readonly string NodeBackgroundDarkSelected = "#1A2A40";
     static readonly string NodeBorderDarkEdit = "#FFA64D";
@@ -65,6 +69,7 @@ class DColors
     public static readonly string CanvasBackground = IsDark ? CanvasBackgroundDark : CanvasBackgroundLight;
     public static readonly string Line = IsDark ? LineDark : LineLight;
     public static readonly string LineHidden = IsDark ? LineHiddenDark : LineHiddenLight;
+    public static readonly string DirectLine = IsDark ? DirectLineDark : DirectLineLight;
     public static readonly string EditNodeBorder = IsDark ? NodeBorderDarkEdit : NodeBorderLightEdit;
     public static readonly string EditNodeBackground = IsDark ? NodeBackgroundDarkEdit : NodeBackgroundLightEdit;
     public static readonly string Text = IsDark ? TextDark : TextLight;

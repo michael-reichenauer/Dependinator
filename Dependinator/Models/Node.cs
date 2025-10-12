@@ -89,6 +89,7 @@ class Node : IItem
     public List<Link> TargetLinks { get; } = new();
     public List<Line> SourceLines { get; } = new();
     public List<Line> TargetLines { get; } = new();
+    public List<Line> DirectLines { get; } = new();
 
     public bool IsRoot => Type == NodeType.Root;
     public string LongName { get; private set; } = "";
@@ -145,7 +146,7 @@ class Node : IItem
     public double GetZoom()
     {
         var zoom = 1.0;
-        Ancestors().ForEach(n => zoom *= 1 / n.ContainerZoom);
+        this.Ancestors().ForEach(n => zoom *= 1 / n.ContainerZoom);
         return zoom;
     }
 
@@ -244,16 +245,20 @@ class Node : IItem
     {
         SourceLines.Remove(line);
         TargetLines.Remove(line);
+        DirectLines.Remove(line);
     }
 
-    public IEnumerable<Node> Ancestors()
+    public void AddDirectLine(Line line)
     {
-        var node = this;
-        while (node.Parent != null)
+        if (!DirectLines.Contains(line))
         {
-            yield return node.Parent;
-            node = node.Parent;
+            DirectLines.Add(line);
         }
+    }
+
+    public void RemoveDirectLine(Line line)
+    {
+        DirectLines.Remove(line);
     }
 
     public override string ToString() => IsRoot ? "<root>" : LongName;

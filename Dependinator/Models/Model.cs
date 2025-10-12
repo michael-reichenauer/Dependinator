@@ -217,7 +217,7 @@ class Model : IModel
 
     public void ClearCachedSvg()
     {
-        Tiles.Clear();
+        Tiles.ClearCache();
     }
 
     public void ClearNotUpdated()
@@ -252,6 +252,7 @@ class Model : IModel
     private void RemoveLine(Line line)
     {
         Items.Remove(line.Id);
+        line.RenderAncestor?.RemoveDirectLine(line);
         line.Target.Remove(line);
         line.Source.Remove(line);
     }

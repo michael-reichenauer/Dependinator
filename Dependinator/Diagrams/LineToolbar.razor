@@ -1,6 +1,7 @@
 ﻿@using Dependinator.Diagrams.Icons
 @using Dependinator.Diagrams.Dependencies
 
+
 @inject IApplicationEvents applicationEvents
 @inject IInteractionService interactionService
 @inject ISelectionService selectionService
@@ -8,12 +9,21 @@
 @inject IDependenciesService dependenciesService
 
 
-<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="@show" Style="@position">
-
-    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
-    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
-
-</MudButtonGroup>
+<MudStack Class="@show" Style="@containerPosition" Spacing="1">
+    <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled">
+        @if (selectionService.IsSelectedLineDirect)
+        {
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine" />
+            <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" />
+            <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" />
+        }
+        else
+        {
+            <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
+            <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+        }
+    </MudButtonGroup>
+</MudStack>
 
 
 @code {
@@ -21,10 +31,46 @@
     bool isIcon => !interactionService.IsContainer;
     double left => selectionService.SelectedLinePosition.X;
     double top => selectionService.SelectedLinePosition.Y - 20;
-    string position => $"Position: fixed; left:{left}px; top:{top}px";
+    string containerPosition => $"Position: fixed; left:{left}px; top:{top}px";
 
     void ShowReferences() => dependenciesService.ShowReferences();
     void ShowDependencies() => dependenciesService.ShowDependencies();
+    void CloseDirectLine()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        var lineId = Models.LineId.FromId(selectionService.SelectedId.Id);
+        dependenciesService.HideDirectLine(lineId);
+    }
+    void PanToSource()
+    {
+        if (!TryGetSelectedLine(out var line))
+            return;
+        SelectNode(line.Source);
+    }
+
+    void PanToTarget()
+    {
+        if (!TryGetSelectedLine(out var line))
+            return;
+        SelectNode(line.Target);
+    }
+
+    bool TryGetSelectedLine(out Models.Line line)
+    {
+        line = null!;
+        if (!selectionService.SelectedId.IsLine)
+            return false;
+        var lineId = Models.LineId.FromId(selectionService.SelectedId.Id);
+        var found = dependenciesService.TryGetLine(lineId, out line);
+        return found && line is not null;
+    }
+
+    void SelectNode(Models.Node node)
+    {
+        applicationEvents.TriggerUIStateChanged();
+        dependenciesService.ShowNode(node.Id);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
