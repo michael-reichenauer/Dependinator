@@ -30,8 +30,6 @@ class SvgService : ISvgService
         model.ViewRect = viewRect;
         model.Zoom = zoom;
 
-        // Log.Info($"GetSvg: {viewRect} zoom: {zoom}");
-
         if (model.Tiles.TryGetLastUsed(viewRect, zoom, out var tile))
             return tile; // Same tile as last call
 
@@ -42,14 +40,14 @@ class SvgService : ISvgService
         // Log.Info($"Not Cached {tileKey}, for viewRect {viewRect} viewZoom: {zoom}, Tile:{tileKey.GetTileRect()}");
 
         // Create a new tile and cache it
-        tile = GetModelTile(model, tileKey);
+        tile = CreateModelTile(model, tileKey);
         model.Tiles.SetCached(tile, viewRect, zoom);
 
         // Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars, Tiles: {model.Tiles}");
         return tile;
     }
 
-    static Tile GetModelTile(IModel model, TileKey tileKey)
+    static Tile CreateModelTile(IModel model, TileKey tileKey)
     {
         // using var t = Timing.Start($"GetModelSvg: {tileKey}");
         var tileRect = tileKey.GetTileRect();
