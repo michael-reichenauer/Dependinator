@@ -3,7 +3,7 @@
 @inject Dependinator.Models.IModelService modelService
 
 <MudAppBar Dense="true" Elevation="5">
-    <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3 mr-5"
+    <MudMenu Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Dense="true" Class="ml-n3"
         AnchorOrigin="Origin.BottomCenter">
 
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
@@ -66,7 +66,7 @@
         <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Color="Color.Inherit" OnClick="srv.Refresh" />
     }
 
-    <MudText Typo="Typo.h6" Class="ml-6">@DiagramName</MudText>
+    <MudText Typo="Typo.h6" Class="ml-2">@DiagramName</MudText>
 
 </MudAppBar>
 
