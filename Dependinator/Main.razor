@@ -6,10 +6,17 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <AppFloatingMenu />
-    <MudMainContent>
+    <Canvas />
+    @* <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <AppBar />
+        <MudMainContent>
+            <Canvas />
+        </MudMainContent>
+    </MudHidden>
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
         <Canvas />
-    </MudMainContent>
+    </MudHidden> *@
+
 </MudLayout>
 
 @code {
@@ -28,7 +35,7 @@
             AppbarText = Colors.DeepPurple.Lighten5,
             Secondary = Colors.DeepPurple.Lighten4,
             Primary = Colors.DeepPurple.Lighten5,
-            Tertiary = Colors.DeepPurple.Darken4,
+            Tertiary = Colors.DeepPurple.Darken2,
         },
     };
 }
