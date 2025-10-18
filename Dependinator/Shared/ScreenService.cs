@@ -81,7 +81,7 @@ class ScreenService : IScreenService
         var svgX = Math.Floor(svg.X);
         var svgY = Math.Floor(svg.Y);
         var svgWidth = windowWidth - svgX - SvgPageMargin * 2;
-        var svgHeight = windowHeight - svgY - SvgPageMargin * 2;
+        var svgHeight = windowHeight - svgY - SvgPageMargin * 2 + 10;
         var newSwgRect = new Rect(0, 0, svgWidth, svgHeight);
 
         var isChanged = false;
