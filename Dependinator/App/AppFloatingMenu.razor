@@ -4,6 +4,7 @@
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
     <AppMenu />
 
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
     @if (modelService.CanUndo)
     {
         <MudIconButton Icon="@Icons.Material.Outlined.Undo" IconColor="Color.Secondary" OnClick="modelService.Undo" />
@@ -20,7 +21,9 @@
     else
     {
         <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="Color.Inherit" OnClick="modelService.Redo" />
-    }
+    } 
+    </MudHidden>
+    
 </MudButtonGroup>
 
 @code {
