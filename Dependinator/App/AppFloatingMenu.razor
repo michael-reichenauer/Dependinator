@@ -1,0 +1,38 @@
+@inject ICanvasService srv
+@inject Dependinator.Models.IModelService modelService
+
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
+    <AppMenu />
+
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+    @if (modelService.CanUndo)
+    {
+        <MudIconButton Icon="@Icons.Material.Outlined.Undo" IconColor="Color.Secondary" OnClick="modelService.Undo" />
+    }
+    else
+    {
+        <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="Color.Inherit" OnClick="modelService.Undo" />
+    }
+
+    @if (modelService.CanRedo)
+    {
+        <MudIconButton Icon="@Icons.Material.Outlined.Redo" OnClick="modelService.Redo" />
+    }
+    else
+    {
+        <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="Color.Inherit" OnClick="modelService.Redo" />
+    } 
+    </MudHidden>
+    
+</MudButtonGroup>
+
+@code {
+    [Inject] IApplicationEvents applicationEvents { get; set; } = null!;
+
+    string CssClass => "app-floating-menu";
+    string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
+
+    protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}
