@@ -1,0 +1,10 @@
+.app-floating-menu {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1100;
+}
+
+.app-floating-menu .app-floating-menu-trigger {
+    margin-left: 0;
+}
