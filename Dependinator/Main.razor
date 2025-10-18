@@ -6,7 +6,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <AppBar />
+    <AppFloatingMenu />
     <MudMainContent>
         <Canvas />
     </MudMainContent>
@@ -16,19 +16,19 @@
     bool _isDarkMode = true;
 
     MudTheme DependinatorTheme = new MudTheme
+    {
+        PaletteLight = new PaletteLight()
         {
-            PaletteLight = new PaletteLight()
-            {
-                AppbarBackground = Colors.DeepPurple.Accent4,
-                AppbarText = Colors.DeepPurple.Lighten5,
-            },
-            PaletteDark = new PaletteDark()
-            {
-                AppbarBackground = Colors.DeepPurple.Darken4,
-                AppbarText = Colors.DeepPurple.Lighten5,
-                Secondary = Colors.DeepPurple.Lighten4,
-                Primary = Colors.DeepPurple.Lighten5,
-                Tertiary = Colors.DeepPurple.Darken4,
-            },
-        };
+            AppbarBackground = Colors.DeepPurple.Accent4,
+            AppbarText = Colors.DeepPurple.Lighten5,
+        },
+        PaletteDark = new PaletteDark()
+        {
+            AppbarBackground = Colors.DeepPurple.Darken4,
+            AppbarText = Colors.DeepPurple.Lighten5,
+            Secondary = Colors.DeepPurple.Lighten4,
+            Primary = Colors.DeepPurple.Lighten5,
+            Tertiary = Colors.DeepPurple.Darken4,
+        },
+    };
 }

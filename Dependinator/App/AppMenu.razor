@@ -1,11 +1,12 @@
 @inject ICanvasService srv
 @inject Dependinator.Models.IModelService modelService
 @inject IApplicationEvents applicationEvents
+@implements IDisposable
 
 <MudMenu Icon="@Icons.Material.Outlined.Menu"
          Color="Color.Inherit"
          Dense="true"
-         Class="ml-n3"
+         Class="@MenuClass"
          AnchorOrigin="Origin.BottomCenter">
 
     <MudMenuItem IconColor="Color.Secondary"
@@ -88,9 +89,13 @@
 </MudMessageBox>
 
 @code {
+    private Action? uiStateChangedHandler;
     private MudMessageBox mbox { get; set; } = null!;
 
     private IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
+
+    [Parameter]
+    public string MenuClass { get; set; } = "ml-n3";
 
     private async void OnRemove()
     {
@@ -102,13 +107,21 @@
         srv.Remove();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnInitialized()
     {
-        await base.OnAfterRenderAsync(firstRender);
+        base.OnInitialized();
 
-        if (firstRender)
+        uiStateChangedHandler = () => InvokeAsync(StateHasChanged);
+        applicationEvents.UIStateChanged += uiStateChangedHandler;
+    }
+
+    public void Dispose()
+    {
+        if (uiStateChangedHandler is null)
         {
-            applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
+            return;
         }
+
+        applicationEvents.UIStateChanged -= uiStateChangedHandler;
     }
 }

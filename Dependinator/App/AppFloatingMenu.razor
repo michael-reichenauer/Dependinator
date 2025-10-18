@@ -1,0 +1,12 @@
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled">
+    <AppMenu MenuClass="app-floating-menu-trigger" />
+</MudButtonGroup>
+
+@code {
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string CssClass => string.IsNullOrWhiteSpace(Class)
+    ? "app-floating-menu"
+    : $"app-floating-menu {Class}";
+}
