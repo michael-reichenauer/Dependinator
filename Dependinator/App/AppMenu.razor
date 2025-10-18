@@ -1,0 +1,114 @@
+@inject ICanvasService srv
+@inject Dependinator.Models.IModelService modelService
+@inject IApplicationEvents applicationEvents
+
+<MudMenu Icon="@Icons.Material.Outlined.Menu"
+         Color="Color.Inherit"
+         Dense="true"
+         Class="ml-n3"
+         AnchorOrigin="Origin.BottomCenter">
+
+    <MudMenuItem IconColor="Color.Secondary"
+                 Icon="@Icons.Material.Outlined.Undo"
+                 Disabled="@(!modelService.CanUndo)"
+                 OnClick="modelService.Undo">
+        Undo
+    </MudMenuItem>
+
+    <MudMenuItem IconColor="Color.Secondary"
+                 Icon="@Icons.Material.Outlined.Redo"
+                 Disabled="@(!modelService.CanRedo)"
+                 OnClick="modelService.Redo">
+        Redo
+    </MudMenuItem>
+
+    <MudMenuItem IconColor="Color.Secondary"
+                 Icon="@Icons.Material.Outlined.FitScreen"
+                 OnClick="srv.PanZoomToFit">
+        Fit to Screen
+    </MudMenuItem>
+
+    @if (!Build.IsWebAssembly)
+    {
+        <MudMenuItem IconColor="Color.Secondary"
+                     Icon="@Icons.Material.Outlined.Refresh"
+                     OnClick="srv.Refresh">
+            Refresh
+        </MudMenuItem>
+    }
+
+    <MudDivider />
+
+    <MudMenuItem IconColor="Color.Secondary"
+                 Icon="@Icons.Material.Outlined.OpenInBrowser"
+                 OnClick="srv.OpenFiles">
+        Browse Files ...
+    </MudMenuItem>
+
+    <MudMenuItem IconColor="Color.Secondary"
+                 Icon="@Icons.Material.Outlined.OpenInBrowser"
+                 OnClick="srv.ToggleTheme">
+        Toggle Dark/Light Theme
+    </MudMenuItem>
+
+    <MudDivider />
+
+    <MudMenuItem IconColor="Color.Error"
+                 Icon="@Icons.Material.Outlined.DeleteForever"
+                 OnClick="@OnRemove">
+        Remove Model
+    </MudMenuItem>
+
+    <MudDivider />
+
+    @foreach (var path in RecentModelPaths)
+    {
+        <MudMenuItem IconColor="Color.Secondary"
+                     Icon="@Icons.Material.Outlined.Schema"
+                     OnClick="() => srv.LoadAsync(path)">
+            @Path.GetFileNameWithoutExtension(path)
+        </MudMenuItem>
+    }
+
+</MudMenu>
+
+<MudMessageBox @ref="mbox"
+               Title="Remove Model"
+               CancelText="Cancel">
+    <MessageContent>
+        Do you want to remove model?
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.DeleteForever">
+            Remove
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@code {
+    private MudMessageBox mbox { get; set; } = null!;
+
+    private IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
+
+    private async void OnRemove()
+    {
+        if (await mbox.ShowAsync() != true)
+        {
+            return;
+        }
+
+        srv.Remove();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (firstRender)
+        {
+            applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
+        }
+    }
+}
