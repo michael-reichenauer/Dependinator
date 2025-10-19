@@ -13,7 +13,7 @@
 <div @ref="dropZoneElement" class="drop-zone">
     <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
 
-    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewBox"
+    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="@Width" height="@Height" viewBox="@ViewBox"
         style="background-color:@DColors.CanvasBackground">
 
         <style>

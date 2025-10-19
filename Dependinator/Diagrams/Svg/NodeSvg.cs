@@ -38,7 +38,7 @@ class NodeSvg
               {hoverGroup}
               {childrenContent}          
             </svg>
-            <use href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
+            <use href="#{iconId}" xlink:href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
             <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {selectedOverlay}
             """;
@@ -70,7 +70,7 @@ class NodeSvg
         var selectedOverlay = SelectedNodeSvg(node, geometry);
 
         return $"""
-            <use href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
+            <use href="#{iconId}" xlink:href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
             <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
             {hoverGroup}
             {selectedOverlay}
