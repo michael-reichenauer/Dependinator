@@ -40,21 +40,26 @@
     <MudDivider />
 
     <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever" OnClick="@OnRemove">
-        Remove Model
-    </MudMenuItem>
-
-    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="@ShowAbout">
-        About
+        Remove Current Model
     </MudMenuItem>
 
     <MudDivider />
-
+    @{
+        string? currentPath = RecentModelPaths.Count > 0 ? RecentModelPaths[0] : null;
+    }
     @foreach (var path in RecentModelPaths)
     {
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Schema" OnClick="() => srv.LoadAsync(path)">
+        var isCurrent = path == currentPath;
+        <MudMenuItem IconColor="@(isCurrent? Color.Secondary: Color.Default)" Icon="@Icons.Material.Outlined.Schema"
+            Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)" OnClick="() => srv.LoadAsync(path)">
             @Path.GetFileNameWithoutExtension(path)
         </MudMenuItem>
     }
+
+    <MudDivider />
+    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="@ShowAbout">
+        About
+    </MudMenuItem>
 
 </MudMenu>
 
