@@ -43,6 +43,10 @@
         Remove Model
     </MudMenuItem>
 
+    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="@ShowAbout">
+        About
+    </MudMenuItem>
+
     <MudDivider />
 
     @foreach (var path in RecentModelPaths)
@@ -65,9 +69,18 @@
     </YesButton>
 </MudMessageBox>
 
+<MudMessageBox @ref="aboutBox" Title="About Dependinator" YesText="Close">
+    <MessageContent>
+        <MudText Typo="Typo.body1">Version: @Build.Version</MudText>
+        <MudText Typo="Typo.body1">Commit: @Build.CommitSid</MudText>
+        <MudText Typo="Typo.body1">Build Time: @Build.Time</MudText>
+    </MessageContent>
+</MudMessageBox>
+
 @code {
     private Action? uiStateChangedHandler;
     private MudMessageBox mbox { get; set; } = null!;
+    private MudMessageBox aboutBox { get; set; } = null!;
 
     private IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
 
@@ -100,5 +113,10 @@
         }
 
         applicationEvents.UIStateChanged -= uiStateChangedHandler;
+    }
+
+    private async Task ShowAbout()
+    {
+        await aboutBox.ShowAsync();
     }
 }
