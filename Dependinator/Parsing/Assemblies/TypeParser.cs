@@ -18,7 +18,7 @@ internal class TypeParser
 
     public async IAsyncEnumerable<TypeData> AddTypeAsync(AssemblyDefinition assembly, TypeDefinition type)
     {
-        bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
+        bool isCompilerGenerated = Name.IsCompilerGenerated(type.FullName);
         bool isAsyncStateType = false;
         Node typeNode = null!;
 
@@ -52,7 +52,7 @@ internal class TypeParser
             }
 
             typeNode = new Node(name, parentName, NodeType.Type, description);
-            await items.WriteAsync(typeNode);
+            await SendNodeAsync(typeNode);
         }
 
         yield return new TypeData(type, typeNode, isAsyncStateType);
@@ -68,6 +68,11 @@ internal class TypeParser
         }
     }
 
+    private async Task SendNodeAsync(Node typeNode)
+    {
+        await items.WriteAsync(typeNode);
+    }
+
     private async Task<bool> IsNameSpaceDocTypeAsync(TypeDefinition type, string description)
     {
         if (type.Name.IsSameIc("NamespaceDoc"))
@@ -76,7 +81,7 @@ internal class TypeParser
             {
                 string name = Name.GetTypeNamespaceFullName(type);
                 Node node = new Node(name, Node.ParseParentName(name), NodeType.Namespace, description);
-                await items.WriteAsync(node);
+                await SendNodeAsync(node);
             }
 
             return true;

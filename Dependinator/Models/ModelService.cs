@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Threading.Channels;
 
 namespace Dependinator.Models;
 
@@ -401,7 +402,7 @@ class ModelService : IModelService
         return new ModelInfo(path, modelDto.ViewRect, modelDto.Zoom);
     }
 
-    private async Task AddOrUpdateAllItems(System.Threading.Channels.ChannelReader<Parsing.IItem> reader)
+    private async Task AddOrUpdateAllItems(ChannelReader<Parsing.IItem> reader)
     {
         var itemsCount = 0;
         var t = Timing.Start();
