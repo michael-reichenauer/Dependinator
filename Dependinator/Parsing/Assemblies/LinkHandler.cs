@@ -50,9 +50,9 @@ internal class LinkHandler
         await SendLinkAsync(sourceName, targetNodeName, NodeType.Member);
     }
 
-    private async Task SendLinkAsync(string source, string targetName, NodeType targetType)
+    private async Task SendLinkAsync(string sourceName, string targetName, NodeType targetType)
     {
-        Link dataLink = new Link(source, targetName, targetType);
+        Link dataLink = new Link(sourceName, targetName, targetType);
         await items.WriteAsync(dataLink);
         LinksCount++;
     }
