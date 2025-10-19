@@ -34,7 +34,7 @@ class NodeSvg
 
         return $"""
             <svg x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" viewBox="{0} {0} {geometry.Width:0.##} {geometry.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
-              <rect x="{0}" y="{0}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="{strokeWidth}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
+              <rect x="{0}" y="{0}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="{strokeWidth}" rx="5" fill="{background}" fill-opacity="0.5" stroke="{border}" {nodeOpacity}/>
               {hoverGroup}
               {childrenContent}          
             </svg>
