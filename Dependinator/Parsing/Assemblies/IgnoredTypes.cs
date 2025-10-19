@@ -6,6 +6,9 @@ internal class IgnoredTypes
 {
     public static bool IsIgnoredSystemType(TypeReference targetType)
     {
+        if (targetType.FullName.StartsWith("__Blazor"))
+            return true;
+
         return IsSystemIgnoredModuleName(targetType.Scope.Name);
     }
 

@@ -8,13 +8,12 @@ internal static class Name
     public static bool IsCompilerGenerated(string name)
     {
         if (name == null)
-        {
             return false;
-        }
 
         bool isCompilerGenerated =
-            name == "GeneratedInternalTypeHelper"
+            name.Contains("GeneratedInternalTypeHelper")
             || name.Contains("__")
+            || name.Contains("._Imports")
             || name.Contains("<>")
             || name.Contains("<Module>")
             || name.Contains("<PrivateImplementationDetails>")
