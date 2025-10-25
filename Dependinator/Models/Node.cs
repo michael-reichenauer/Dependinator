@@ -60,6 +60,7 @@ class Node : IItem
     public Node Parent { get; private set; }
     NodeType type = NodeType.None;
     public DateTime UpdateStamp { get; set; }
+    public bool IsPrivate { get; set; }
     public NodeType Type
     {
         get => type;
