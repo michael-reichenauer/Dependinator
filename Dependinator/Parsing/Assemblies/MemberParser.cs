@@ -189,6 +189,11 @@ internal class MemberParser
 
     static string GetParentName(string fullName)
     {
+        // If fullname contains a function parameter list, lets skip that
+        var parametersIndex = fullName.IndexOf('(');
+        if (parametersIndex > -1)
+            fullName = fullName[..parametersIndex];
+
         // Split full name in name and parent name,
         int index = fullName.LastIndexOfAny(PartsSeparators);
 
