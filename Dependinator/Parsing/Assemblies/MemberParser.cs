@@ -91,6 +91,8 @@ internal class MemberParser
     {
         try
         {
+            isPrivate = false;
+
             string memberName = Name.GetMemberFullName(memberInfo);
             string parentName = isPrivate ? $"{GetParentName(memberName)}.$private" : GetParentName(memberName);
             string description = xmlDocParser.GetDescription(memberName);

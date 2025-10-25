@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
+using Dependinator.Parsing;
+
 namespace Dependinator.Models;
 
 class NodeLayout
@@ -6,6 +10,9 @@ class NodeLayout
     const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const int margin = 10;
+    const double MemberNodeWidth = 120;
+    const double MemberNodeHeight = 15;
+    const double MemberVerticalSpacing = 5;
 
     public static Rect GetNextChildRect(Node node)
     {
@@ -25,7 +32,15 @@ class NodeLayout
     {
         parent.IsChildrenLayoutRequired = false;
 
-        Sorter.Sort(parent.Children, CompareChilren);
+        Sorter.Sort(parent.Children, CompareChildren);
+        if (parent.Children.Count == 0)
+            return;
+
+        if (parent.Children.All(child => child.Type == Parsing.NodeType.Member))
+        {
+            ArrangeMemberChildren(parent);
+            return;
+        }
 
         var childrenCount = parent.Children.Count;
         parent.ContainerZoom = childrenCount switch
@@ -78,7 +93,57 @@ class NodeLayout
         child.Boundary = new Rect(x, y, DefaultWidth, DefaultHeight);
     }
 
-    static int CompareChilren(Node c1, Node c2)
+    static void ArrangeMemberChildren(Node parent)
+    {
+        var childrenCount = parent.Children.Count;
+        parent.ContainerZoom = childrenCount switch
+        {
+            <= 1 => 1 / 3.0,
+            <= 4 => 1 / 4.0,
+            <= 9 => 1 / 5.0,
+            <= 16 => 1 / 6.0,
+            <= 25 => 1 / 7.0,
+            <= 36 => 1 / 8.0,
+            _ => Node.DefaultContainerZoom,
+        };
+
+        var leftColumn = new List<Node>();
+        var rightColumn = new List<Node>();
+
+        foreach (var child in parent.Children)
+        {
+            if (child.Type != Parsing.NodeType.Member)
+                continue;
+
+            if (child.IsPrivate)
+                rightColumn.Add(child);
+            else
+                leftColumn.Add(child);
+        }
+
+        ArrangeColumn(leftColumn, margin, MemberNodeWidth, MemberNodeHeight, MemberVerticalSpacing);
+        var hasLeft = leftColumn.Count > 0;
+        var rightX = hasLeft ? margin + MemberNodeWidth + margin : margin;
+        ArrangeColumn(rightColumn, rightX, MemberNodeWidth, MemberNodeHeight, MemberVerticalSpacing);
+    }
+
+    static void ArrangeColumn(
+        IReadOnlyList<Node> columnNodes,
+        double startX,
+        double width,
+        double nodeHeight,
+        double verticalSpacing
+    )
+    {
+        for (int index = 0; index < columnNodes.Count; index++)
+        {
+            var node = columnNodes[index];
+            var y = margin + index * (nodeHeight + verticalSpacing);
+            node.Boundary = new Rect(startX, y, width, nodeHeight);
+        }
+    }
+
+    static int CompareChildren(Node c1, Node c2)
     {
         // c1->c2
         if (c1.SourceLines.ContainsBy(l => l.Target == c2) && !c2.SourceLines.ContainsBy(l => l.Target == c1))
