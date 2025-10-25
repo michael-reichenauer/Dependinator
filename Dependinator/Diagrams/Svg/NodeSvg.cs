@@ -142,13 +142,75 @@ class NodeSvg
 
     readonly record struct MemberNodeLayout(Rect Bounds, Rect Icon, Pos Text);
 
-    internal static double GetHorizontalAnchorOffset(Node node, bool isRightSide)
-    {
-        if (node.Type != Parsing.NodeType.Member)
-            return isRightSide ? node.Boundary.Width : 0;
+    readonly record struct MemberAnchorMetrics(
+        double Left,
+        double Right,
+        double CenterX,
+        double CenterY,
+        double Bottom
+    );
 
+    internal enum LineAnchorRole
+    {
+        Source,
+        Target,
+    }
+
+    internal enum AnchorPreference
+    {
+        Default,
+        Left,
+        Right,
+    }
+
+    internal static (double X, double Y) GetLineAnchor(
+        Node node,
+        LineAnchorRole role,
+        AnchorPreference preference = AnchorPreference.Default
+    )
+    {
+        if (node.Type == Parsing.NodeType.Member)
+        {
+            var metrics = GetMemberAnchorMetrics(node);
+            if (role == LineAnchorRole.Source)
+                return (metrics.CenterX, metrics.Bottom);
+
+            return preference switch
+            {
+                AnchorPreference.Right => (metrics.Right, metrics.CenterY),
+                _ => (metrics.Left, metrics.CenterY),
+            };
+        }
+
+        var boundary = node.Boundary;
+        var centerY = boundary.Y + boundary.Height / 2.0;
+
+        if (role == LineAnchorRole.Source)
+        {
+            return preference switch
+            {
+                AnchorPreference.Left => (boundary.X, centerY),
+                _ => (boundary.X + boundary.Width, centerY),
+            };
+        }
+
+        return preference switch
+        {
+            AnchorPreference.Right => (boundary.X + boundary.Width, centerY),
+            _ => (boundary.X, centerY),
+        };
+    }
+
+    static MemberAnchorMetrics GetMemberAnchorMetrics(Node node)
+    {
+        var boundary = node.Boundary;
         var iconSize = (double)FontSize;
-        return isRightSide ? iconSize + MemberTextGap : iconSize / 2;
+        var left = boundary.X;
+        var right = boundary.X + iconSize;
+        var centerX = boundary.X + iconSize / 2.0;
+        var centerY = boundary.Y + boundary.Height / 2.0;
+        var bottom = centerY + iconSize / 2.0;
+        return new MemberAnchorMetrics(left, right, centerX, centerY, bottom);
     }
 
     static ContainerHeader CalculateContainerHeader(Rect nodeCanvasRect, double parentZoom)

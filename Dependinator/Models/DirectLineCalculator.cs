@@ -12,8 +12,11 @@ static class DirectLineCalculator
 
         var useRightSide = sourceCenter.X <= targetCenter.X;
 
-        var sourceAnchorGlobal = GetHorizontalAnchorGlobal(source, useRightSide ? AnchorSide.Right : AnchorSide.Left);
-        var targetAnchorGlobal = GetHorizontalAnchorGlobal(target, useRightSide ? AnchorSide.Left : AnchorSide.Right);
+        var sourcePreference = useRightSide ? NodeSvg.AnchorPreference.Right : NodeSvg.AnchorPreference.Left;
+        var targetPreference = useRightSide ? NodeSvg.AnchorPreference.Left : NodeSvg.AnchorPreference.Right;
+
+        var sourceAnchorGlobal = GetAnchorGlobal(source, NodeSvg.LineAnchorRole.Source, sourcePreference);
+        var targetAnchorGlobal = GetAnchorGlobal(target, NodeSvg.LineAnchorRole.Target, targetPreference);
 
         var sourceLocal = ToAncestorLocal(ancestor, sourceAnchorGlobal);
         var targetLocal = ToAncestorLocal(ancestor, targetAnchorGlobal);
@@ -21,12 +24,14 @@ static class DirectLineCalculator
         return (sourceLocal, targetLocal);
     }
 
-    static Pos GetHorizontalAnchorGlobal(Node node, AnchorSide side)
+    static Pos GetAnchorGlobal(Node node, NodeSvg.LineAnchorRole role, NodeSvg.AnchorPreference preference)
     {
         var (pos, zoom) = node.GetPosAndZoom();
-        var offset = NodeSvg.GetHorizontalAnchorOffset(node, side == AnchorSide.Right);
-        var x = pos.X + offset * zoom;
-        var y = pos.Y + node.Boundary.Height / 2 * zoom;
+        var (anchorX, anchorY) = NodeSvg.GetLineAnchor(node, role, preference);
+        var localX = anchorX - node.Boundary.X;
+        var localY = anchorY - node.Boundary.Y;
+        var x = pos.X + localX * zoom;
+        var y = pos.Y + localY * zoom;
         return new Pos(x, y);
     }
 
@@ -47,11 +52,5 @@ static class DirectLineCalculator
         var localX = (globalPoint.X - offset.X) / scale;
         var localY = (globalPoint.Y - offset.Y) / scale;
         return new Pos(localX, localY);
-    }
-
-    enum AnchorSide
-    {
-        Left,
-        Right,
     }
 }
