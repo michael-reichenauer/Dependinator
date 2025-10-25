@@ -1,4 +1,5 @@
 using System;
+using Dependinator.Diagrams.Svg;
 
 namespace Dependinator.Models;
 
@@ -23,7 +24,8 @@ static class DirectLineCalculator
     static Pos GetHorizontalAnchorGlobal(Node node, AnchorSide side)
     {
         var (pos, zoom) = node.GetPosAndZoom();
-        var x = pos.X + (side == AnchorSide.Right ? node.Boundary.Width : 0) * zoom;
+        var offset = NodeSvg.GetHorizontalAnchorOffset(node, side == AnchorSide.Right);
+        var x = pos.X + offset * zoom;
         var y = pos.Y + node.Boundary.Height / 2 * zoom;
         return new Pos(x, y);
     }

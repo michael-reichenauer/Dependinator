@@ -58,11 +58,8 @@ class LineSvg
         var sourceBoundary = line.Source.Boundary;
         var targetBoundary = line.Target.Boundary;
 
-        var sourceAnchor = (
-            X: sourceBoundary.X + sourceBoundary.Width,
-            Y: sourceBoundary.Y + sourceBoundary.Height / 2
-        );
-        var targetAnchor = (X: targetBoundary.X, Y: targetBoundary.Y + targetBoundary.Height / 2);
+        var sourceAnchor = GetAnchor(line.Source, AnchorSide.Right);
+        var targetAnchor = GetAnchor(line.Target, AnchorSide.Left);
 
         return GetRelation(line) switch
         {
@@ -201,6 +198,19 @@ class LineSvg
         ParentToChild,
         ChildToParent,
         Sibling,
+    }
+
+    enum AnchorSide
+    {
+        Left,
+        Right,
+    }
+
+    static (double X, double Y) GetAnchor(Node node, AnchorSide side)
+    {
+        var offsetX = NodeSvg.GetHorizontalAnchorOffset(node, side == AnchorSide.Right);
+        var boundary = node.Boundary;
+        return (boundary.X + offsetX, boundary.Y + boundary.Height / 2);
     }
 
     readonly record struct LineEndpoints(double X1, double Y1, double X2, double Y2);

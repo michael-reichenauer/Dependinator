@@ -8,14 +8,34 @@ class NodeSvg
     const double MinContainerZoom = 2.0;
     const int NameIconSize = 9;
     const int FontSize = 8;
+    const double MemberTextGap = 4;
+    const double MemberHorizontalPadding = 4;
+    const double MemberAverageCharWidthFactor = 0.6;
 
     public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 
     public static bool IsShowIcon(Parsing.NodeType nodeType, double zoom) =>
         nodeType == Parsing.NodeType.Member || zoom <= MinContainerZoom;
 
-    public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom) =>
-        BuildSimpleNodeSvg(node, nodeCanvasRect, parentZoom);
+    public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
+    {
+        var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
+        var textX = geometry.X + geometry.Width / 2;
+        var textY = geometry.Y + geometry.Height;
+        var fontSize = FontSize * parentZoom;
+        var iconId = IconName(node.Type);
+        var elementId = PointerId.FromNode(node.Id).ElementId;
+        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
+        var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName);
+        var selectedOverlay = SelectedNodeSvg(node, geometry);
+
+        return $"""
+            <use href="#{iconId}" xlink:href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
+            <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
+            {hoverGroup}
+            {selectedOverlay}
+            """;
+    }
 
     public static string GetNodeContainerSvg(Node node, Rect nodeCanvasRect, double parentZoom, string childrenContent)
     {
@@ -44,8 +64,23 @@ class NodeSvg
             """;
     }
 
-    public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom) =>
-        BuildSimpleNodeSvg(node, nodeCanvasRect, parentZoom);
+    public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom)
+    {
+        var fontSize = FontSize * parentZoom;
+        var layout = CalculateMemberNodeLayout(node, nodeCanvasRect, parentZoom, fontSize);
+        var iconId = IconName(node.Type);
+        var elementId = PointerId.FromNode(node.Id).ElementId;
+        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
+        var hoverGroup = BuildHoverGroup(elementId, "hoverable", layout.Bounds, node.HtmlLongName);
+        var selectedOverlay = SelectedNodeSvg(node, layout.Bounds);
+
+        return $"""
+            <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.Icon.X:0.##}" y="{layout.Icon.Y:0.##}" width="{layout.Icon.Width:0.##}" height="{layout.Icon.Height:0.##}" {nodeOpacity} />
+            <text x="{layout.Text.X:0.##}" y="{layout.Text.Y:0.##}" class="memberName" font-size="{fontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            {hoverGroup}
+            {selectedOverlay}
+            """;
+    }
 
     public static string GetToLargeNodeContainerSvg(Rect nodeCanvasRect, string childrenContent)
     {
@@ -57,31 +92,63 @@ class NodeSvg
             """;
     }
 
-    static string BuildSimpleNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom)
-    {
-        var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
-        var textX = geometry.X + geometry.Width / 2;
-        var textY = geometry.Y + geometry.Height;
-        var fontSize = FontSize * parentZoom;
-        var iconId = IconName(node.Type);
-        var elementId = PointerId.FromNode(node.Id).ElementId;
-        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
-        var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName);
-        var selectedOverlay = SelectedNodeSvg(node, geometry);
-
-        return $"""
-            <use href="#{iconId}" xlink:href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
-            <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
-            {hoverGroup}
-            {selectedOverlay}
-            """;
-    }
-
     static Rect CalculateIconGeometry(Node node, Rect nodeCanvasRect, double parentZoom)
     {
         var width = node.Boundary.Width * parentZoom;
         var height = node.Boundary.Height * parentZoom;
         return new Rect(nodeCanvasRect.X, nodeCanvasRect.Y, width, height);
+    }
+
+    static MemberNodeLayout CalculateMemberNodeLayout(
+        Node node,
+        Rect nodeCanvasRect,
+        double parentZoom,
+        double fontSize
+    )
+    {
+        var iconSize = fontSize;
+        var centerY = nodeCanvasRect.Y + nodeCanvasRect.Height / 2;
+
+        var iconX = nodeCanvasRect.X;
+        var iconY = centerY - iconSize / 2;
+
+        var gap = MemberTextGap * parentZoom;
+        var padding = MemberHorizontalPadding * parentZoom;
+        var textWidth = EstimateMemberTextWidth(node.ShortName, fontSize);
+
+        var layoutWidth = iconSize + gap + textWidth + padding;
+        var layoutHeight = Math.Max(iconSize, fontSize);
+        var layoutX = iconX;
+        var layoutY = centerY - layoutHeight / 2;
+
+        var textX = iconX + iconSize + gap;
+        var textY = centerY;
+
+        var layoutRect = new Rect(layoutX, layoutY, layoutWidth, layoutHeight);
+        var iconRect = new Rect(iconX, iconY, iconSize, iconSize);
+        var textPos = new Pos(textX, textY);
+
+        return new MemberNodeLayout(layoutRect, iconRect, textPos);
+    }
+
+    static double EstimateMemberTextWidth(string shortName, double fontSize)
+    {
+        if (string.IsNullOrEmpty(shortName))
+            return fontSize;
+
+        var approximate = shortName.Length * fontSize * MemberAverageCharWidthFactor;
+        return Math.Max(fontSize, approximate);
+    }
+
+    readonly record struct MemberNodeLayout(Rect Bounds, Rect Icon, Pos Text);
+
+    internal static double GetHorizontalAnchorOffset(Node node, bool isRightSide)
+    {
+        if (node.Type != Parsing.NodeType.Member)
+            return isRightSide ? node.Boundary.Width : 0;
+
+        var iconSize = (double)FontSize;
+        return isRightSide ? iconSize + MemberTextGap : iconSize / 2;
     }
 
     static ContainerHeader CalculateContainerHeader(Rect nodeCanvasRect, double parentZoom)
