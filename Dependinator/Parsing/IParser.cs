@@ -27,6 +27,7 @@ class NodeAttributes
     public string Description { get; init; } = "";
     public NodeType Type { get; init; } = NodeType.None;
     public string Parent { get; init; } = "";
+    public bool IsPrivate { get; init; }
 }
 
 class LinkAttributes
@@ -56,7 +57,6 @@ record NodeType
     public static readonly NodeType Namespace = new("Namespace");
     public static readonly NodeType Type = new("Type");
     public static readonly NodeType Member = new("Member");
-    public static readonly NodeType Private = new("Private");
 
     public static implicit operator NodeType(string typeName) =>
         All.FirstOrDefault(m => m.Text == typeName)

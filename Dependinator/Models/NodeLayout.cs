@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using Dependinator.Parsing;
-
 namespace Dependinator.Models;
 
 class NodeLayout
@@ -10,8 +6,8 @@ class NodeLayout
     const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const int margin = 10;
-    const double MemberNodeWidth = 120;
-    const double MemberNodeHeight = 15;
+    const double MemberNodeWidth = 150;
+    const double MemberNodeHeight = 20;
     const double MemberVerticalSpacing = 5;
 
     public static Rect GetNextChildRect(Node node)

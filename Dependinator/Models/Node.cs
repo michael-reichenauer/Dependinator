@@ -36,6 +36,7 @@ record NodeAttributes
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Description { get; init; }
+    public bool IsPrivate { get; init; }
 }
 
 class Node : IItem
@@ -112,7 +113,7 @@ class Node : IItem
             Name = Name,
             ParentName = Parent?.Name ?? "",
             Type = Type.Text,
-            Attributes = new() { Description = Description },
+            Attributes = new() { Description = Description, IsPrivate = IsPrivate },
             Boundary = Boundary != Rect.None ? Boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
@@ -125,6 +126,7 @@ class Node : IItem
     {
         Type = dto.Type;
         Description = dto.Attributes.Description ?? "";
+        IsPrivate = dto.Attributes.IsPrivate;
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
@@ -206,6 +208,7 @@ class Node : IItem
     public void Update(Parsing.Node node)
     {
         Type = node.Attributes.Type;
+        IsPrivate = node.Attributes.IsPrivate;
         Description = node.Attributes.Description ?? Description;
     }
 
