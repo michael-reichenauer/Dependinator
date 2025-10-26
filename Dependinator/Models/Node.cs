@@ -10,9 +10,7 @@ record NodeDto
     public required string Name { get; init; }
     public required string ParentName { get; init; }
     public required string Type { get; init; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string? Description { get; init; }
+    public NodeAttributes Attributes { get; init; } = new();
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Rect? Boundary { get; init; }
@@ -31,6 +29,15 @@ record NodeDto
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsParentSetHidden { get; set; }
+}
+
+[Serializable]
+record NodeAttributes
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? Description { get; init; }
+    public bool IsPrivate { get; init; }
+    public string? MemberType { get; set; }
 }
 
 class Node : IItem
@@ -60,6 +67,8 @@ class Node : IItem
     public Node Parent { get; private set; }
     NodeType type = NodeType.None;
     public DateTime UpdateStamp { get; set; }
+    public bool IsPrivate { get; set; }
+    public MemberType MemberType { get; set; }
     public NodeType Type
     {
         get => type;
@@ -106,7 +115,12 @@ class Node : IItem
             Name = Name,
             ParentName = Parent?.Name ?? "",
             Type = Type.Text,
-            Description = Description,
+            Attributes = new()
+            {
+                Description = Description,
+                IsPrivate = IsPrivate,
+                MemberType = MemberType.ToString(),
+            },
             Boundary = Boundary != Rect.None ? Boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
@@ -118,13 +132,23 @@ class Node : IItem
     public void SetFromDto(NodeDto dto)
     {
         Type = dto.Type;
-        Description = dto.Description ?? "";
+        Description = dto.Attributes.Description ?? "";
+        IsPrivate = dto.Attributes.IsPrivate;
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
         Color = dto.Color ?? Color;
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
+        MemberType = Enum.TryParse<MemberType>(dto.Attributes.MemberType, out var value) ? value : MemberType.None;
+    }
+
+    public void Update(Parsing.Node node)
+    {
+        Type = node.Attributes.Type;
+        IsPrivate = node.Attributes.IsPrivate;
+        Description = node.Attributes.Description ?? Description;
+        MemberType = node.Attributes.MemberType;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)
@@ -195,12 +219,6 @@ class Node : IItem
         var centerPos = new Pos(x, y);
 
         return (centerPos, zoom);
-    }
-
-    public void Update(Parsing.Node node)
-    {
-        Type = node.Type;
-        Description = node.Description ?? Description;
     }
 
     public void AddChild(Node child)

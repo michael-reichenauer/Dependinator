@@ -58,11 +58,8 @@ class LineSvg
         var sourceBoundary = line.Source.Boundary;
         var targetBoundary = line.Target.Boundary;
 
-        var sourceAnchor = (
-            X: sourceBoundary.X + sourceBoundary.Width,
-            Y: sourceBoundary.Y + sourceBoundary.Height / 2
-        );
-        var targetAnchor = (X: targetBoundary.X, Y: targetBoundary.Y + targetBoundary.Height / 2);
+        var sourceAnchor = NodeSvg.GetLineAnchor(line.Source, NodeSvg.LineAnchorRole.Source);
+        var targetAnchor = NodeSvg.GetLineAnchor(line.Target, NodeSvg.LineAnchorRole.Target);
 
         return GetRelation(line) switch
         {

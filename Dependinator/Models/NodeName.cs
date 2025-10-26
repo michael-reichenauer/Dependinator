@@ -8,14 +8,25 @@ class NodeName
 
     public static (string longName, string shortName) GetDisplayNames(string nodeName, NodeType nodeType)
     {
-        string[] parts = nodeName.Split(PartsSeparators);
+        if (nodeName.Contains("LowestCommonAncestor"))
+        {
+            var a = 0;
+        }
+        var name = nodeName;
+        var parametersParts = "";
+        var parametersIndex = name.IndexOf('(');
+        if (parametersIndex > -1)
+        {
+            name = nodeName[..parametersIndex];
+            parametersParts = nodeName[parametersIndex..];
+        }
+        string[] parts = name.Split(PartsSeparators);
 
         string namePart = parts[^1];
-        int index = namePart.IndexOf('(');
-        string shortName = ToNiceText(index > -1 ? namePart[..index] : namePart);
+        string shortName = ToNiceText(namePart);
 
         var subParts = nodeName.StartsWith('$') ? parts : parts.Skip(1);
-        string longName = string.Join(".", subParts.Where(part => !part.StartsWith('?')));
+        string longName = string.Join(".", subParts.Where(part => !part.StartsWith('?'))) + parametersParts;
 
         if (string.IsNullOrEmpty(longName))
         {
