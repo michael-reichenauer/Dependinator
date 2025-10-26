@@ -18,23 +18,20 @@ interface IParser
 
 interface IItem { }
 
-record Link(string SourceName, string TargetName, NodeType TargetType) : IItem;
+record Link(string Source, string Target, LinkAttributes Attributes) : IItem;
+
+record Node(string Name, string Parent, NodeAttributes Attributes) : IItem;
 
 class NodeAttributes
 {
-    public static NodeAttributes Default = new();
     public string Description { get; init; } = "";
+    public NodeType Type { get; init; } = NodeType.None;
 }
 
-record Node(string Name, string ParentName, NodeType Type, NodeAttributes Attributes) : IItem
+class LinkAttributes
 {
-    static readonly char[] NamePartsSeparators = "./".ToCharArray();
-
-    public static string ParseParentName(string name)
-    {
-        int index = name.LastIndexOfAny(NamePartsSeparators);
-        return index > -1 ? name[..index] : "";
-    }
+    public string Description { get; init; } = "";
+    public NodeType TargetType { get; init; } = NodeType.None;
 }
 
 record Source(string Path, string Text, int LineNumber);

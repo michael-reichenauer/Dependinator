@@ -104,15 +104,18 @@ internal class MemberParser
                     var parentNode = new Node(
                         parentName,
                         GetParentName(parentName),
-                        NodeType.Private,
-                        new() { Description = description }
+                        new() { Type = NodeType.Private, Description = description }
                     );
                     sentNodes[parentName] = parentNode;
                     await items.WriteAsync(parentNode);
                 }
             }
 
-            var memberNode = new Node(memberName, parentName, NodeType.Member, new() { Description = description });
+            var memberNode = new Node(
+                memberName,
+                parentName,
+                new() { Type = NodeType.Member, Description = description }
+            );
 
             if (!sentNodes.ContainsKey(memberNode.Name))
             {

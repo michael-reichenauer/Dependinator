@@ -13,7 +13,7 @@ class StructureService(IModel model) : IStructureService
 {
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
-        var parentName = parsedNode.ParentName;
+        var parentName = parsedNode.Parent;
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
         { // New node, add it to the model and parent
             var parent = GetOrCreateParent(parentName);
@@ -43,7 +43,7 @@ class StructureService(IModel model) : IStructureService
 
     public void AddOrUpdateLink(Parsing.Link parsedLink)
     {
-        var linkId = new LinkId(parsedLink.SourceName, parsedLink.TargetName);
+        var linkId = new LinkId(parsedLink.Source, parsedLink.Target);
 
         if (model.TryGetLink(linkId, out var link))
         {
@@ -51,10 +51,10 @@ class StructureService(IModel model) : IStructureService
             return;
         }
 
-        EnsureSourceAndTargetExists(parsedLink.SourceName, parsedLink.TargetName);
+        EnsureSourceAndTargetExists(parsedLink.Source, parsedLink.Target);
 
-        var source = model.GetNode(NodeId.FromName(parsedLink.SourceName));
-        var target = model.GetNode(NodeId.FromName(parsedLink.TargetName));
+        var source = model.GetNode(NodeId.FromName(parsedLink.Source));
+        var target = model.GetNode(NodeId.FromName(parsedLink.Target));
 
         link = new Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
@@ -213,8 +213,8 @@ class StructureService(IModel model) : IStructureService
     }
 
     static Parsing.Node DefaultParentNode(string name) =>
-        new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.Parent, Parsing.NodeAttributes.Default);
+        new(name, Parsing.NodeName.ParseParentName(name), new() { Type = Parsing.NodeType.Parent });
 
     static Parsing.Node DefaultParsingNode(string name) =>
-        new(name, Parsing.Node.ParseParentName(name), Parsing.NodeType.None, Parsing.NodeAttributes.Default);
+        new(name, Parsing.NodeName.ParseParentName(name), new() { Type = Parsing.NodeType.None });
 }

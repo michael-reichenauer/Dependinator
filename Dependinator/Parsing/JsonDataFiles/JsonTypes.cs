@@ -32,13 +32,19 @@ public static class JsonTypes
 
         // Optional data like parent, type, ...
         public string Parent { get; set; } = "";
-        public string Type { get; set; } = "";
         public NodeAttributes? Attributes { get; set; }
     }
 
     public class NodeAttributes
     {
         public string? Description { get; set; }
+        public string? Type { get; set; } = "";
+    }
+
+    public class LinkAttributes
+    {
+        public string? Description { get; set; }
+        public string? Type { get; set; } = "";
     }
 
     // Link between two nodes
@@ -51,20 +57,7 @@ public static class JsonTypes
         // The target node name
         public string Target { get; set; } = "";
 
-        // Optional data like type, ...
-        public string TargetType { get; set; } = "";
-    }
-
-    internal static class NodeType
-    {
-        public const string Solution = "Solution";
-        public const string Assembly = "Assembly";
-        public const string Group = "Group";
-        public const string Dll = "Dll";
-        public const string Exe = "Exe";
-        public const string NameSpace = "NameSpace";
-        public const string Type = "Type";
-        public const string Member = "Member";
-        public const string SolutionFolder = "SolutionFolder";
+        // Optional attributes like target type, ...
+        public LinkAttributes? Attributes { get; set; }
     }
 }

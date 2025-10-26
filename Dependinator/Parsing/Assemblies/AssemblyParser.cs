@@ -86,8 +86,7 @@ internal class AssemblyParser : IDisposable
         var assemblyNode = new Node(
             nodeName,
             parentName,
-            NodeType.Assembly,
-            new() { Description = assemblyDescription }
+            new() { Type = NodeType.Assembly, Description = assemblyDescription }
         );
 
         await items.WriteAsync(assemblyNode);

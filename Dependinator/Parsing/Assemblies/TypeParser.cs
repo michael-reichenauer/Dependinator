@@ -51,7 +51,7 @@ internal class TypeParser
                 yield break;
             }
 
-            typeNode = new Node(name, parentName, NodeType.Type, new() { Description = description });
+            typeNode = new Node(name, parentName, new() { Type = NodeType.Type, Description = description });
             await SendNodeAsync(typeNode);
         }
 
@@ -82,9 +82,8 @@ internal class TypeParser
                 string name = Name.GetTypeNamespaceFullName(type);
                 Node node = new(
                     name,
-                    Node.ParseParentName(name),
-                    NodeType.Namespace,
-                    new() { Description = description }
+                    NodeName.ParseParentName(name),
+                    new() { Type = NodeType.Namespace, Description = description }
                 );
                 await SendNodeAsync(node);
             }

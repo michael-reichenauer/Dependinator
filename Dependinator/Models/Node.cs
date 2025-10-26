@@ -205,7 +205,7 @@ class Node : IItem
 
     public void Update(Parsing.Node node)
     {
-        Type = node.Type;
+        Type = node.Attributes.Type;
         Description = node.Attributes.Description ?? Description;
     }
 
