@@ -209,7 +209,9 @@ class NodeLayout
 
     static int CompareMemberChildren(Node c1, Node c2)
     {
-        // Will compar based on attributes
-        return 0;
+        var (v1, v2) = ((int)c1.MemberType, (int)c2.MemberType);
+        return v1 < v2 ? -1
+            : v2 > v1 ? 1
+            : 0;
     }
 }

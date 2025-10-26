@@ -37,6 +37,7 @@ record NodeAttributes
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Description { get; init; }
     public bool IsPrivate { get; init; }
+    public string? MemberType { get; set; }
 }
 
 class Node : IItem
@@ -67,6 +68,7 @@ class Node : IItem
     NodeType type = NodeType.None;
     public DateTime UpdateStamp { get; set; }
     public bool IsPrivate { get; set; }
+    public MemberType MemberType { get; set; }
     public NodeType Type
     {
         get => type;
@@ -113,7 +115,12 @@ class Node : IItem
             Name = Name,
             ParentName = Parent?.Name ?? "",
             Type = Type.Text,
-            Attributes = new() { Description = Description, IsPrivate = IsPrivate },
+            Attributes = new()
+            {
+                Description = Description,
+                IsPrivate = IsPrivate,
+                MemberType = MemberType.ToString(),
+            },
             Boundary = Boundary != Rect.None ? Boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
@@ -133,6 +140,15 @@ class Node : IItem
         Color = dto.Color ?? Color;
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
+        MemberType = Enum.TryParse<MemberType>(dto.Attributes.MemberType, out var value) ? value : MemberType.None;
+    }
+
+    public void Update(Parsing.Node node)
+    {
+        Type = node.Attributes.Type;
+        IsPrivate = node.Attributes.IsPrivate;
+        Description = node.Attributes.Description ?? Description;
+        MemberType = node.Attributes.MemberType;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)
@@ -203,13 +219,6 @@ class Node : IItem
         var centerPos = new Pos(x, y);
 
         return (centerPos, zoom);
-    }
-
-    public void Update(Parsing.Node node)
-    {
-        Type = node.Attributes.Type;
-        IsPrivate = node.Attributes.IsPrivate;
-        Description = node.Attributes.Description ?? Description;
     }
 
     public void AddChild(Node child)

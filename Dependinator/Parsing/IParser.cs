@@ -28,6 +28,7 @@ class NodeAttributes
     public NodeType Type { get; init; } = NodeType.None;
     public string Parent { get; init; } = "";
     public bool IsPrivate { get; init; }
+    public MemberType MemberType { get; init; }
 }
 
 class LinkAttributes
@@ -37,6 +38,15 @@ class LinkAttributes
 }
 
 record Source(string Path, string Text, int LineNumber);
+
+enum MemberType
+{
+    None,
+    Field,
+    Event,
+    Property,
+    Method,
+}
 
 record NodeType
 {
