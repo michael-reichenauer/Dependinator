@@ -7,7 +7,7 @@ class NodeLayout
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const int margin = 10;
     const double MemberNodeWidth = 150;
-    const double MemberNodeHeight = 20;
+    const double MemberNodeHeight = 10;
     const double MemberVerticalSpacing = 5;
 
     public static Rect GetNextChildRect(Node node)
@@ -28,27 +28,19 @@ class NodeLayout
     {
         parent.IsChildrenLayoutRequired = false;
 
-        Sorter.Sort(parent.Children, CompareChildren);
         if (parent.Children.Count == 0)
             return;
 
-        if (parent.Children.All(child => child.Type == Parsing.NodeType.Member))
+        if (parent.Children.Any(child => child.Type == Parsing.NodeType.Member))
         {
             ArrangeMemberChildren(parent);
             return;
         }
 
+        Sorter.Sort(parent.Children, CompareChildren);
+
         var childrenCount = parent.Children.Count;
-        parent.ContainerZoom = childrenCount switch
-        {
-            <= 1 => 1 / 3.0,
-            <= 4 => 1 / 4.0,
-            <= 9 => 1 / 5.0,
-            <= 16 => 1 / 6.0,
-            <= 25 => 1 / 7.0,
-            <= 36 => 1 / 8.0,
-            _ => Node.DefaultContainerZoom,
-        };
+        parent.ContainerZoom = GetContainerZoom(childrenCount);
 
         int columnsCount = (int)Math.Floor(parent.Boundary.Width / parent.ContainerZoom / DefaultWidth) - 2;
         int rowsCount = (int)Math.Floor(parent.Boundary.Height / parent.ContainerZoom / DefaultHeight) - 2;
@@ -91,17 +83,7 @@ class NodeLayout
 
     static void ArrangeMemberChildren(Node parent)
     {
-        var childrenCount = parent.Children.Count;
-        parent.ContainerZoom = childrenCount switch
-        {
-            <= 1 => 1 / 3.0,
-            <= 4 => 1 / 4.0,
-            <= 9 => 1 / 5.0,
-            <= 16 => 1 / 6.0,
-            <= 25 => 1 / 7.0,
-            <= 36 => 1 / 8.0,
-            _ => Node.DefaultContainerZoom,
-        };
+        Sorter.Sort(parent.Children, CompareMemberChildren);
 
         var leftColumn = new List<Node>();
         var rightColumn = new List<Node>();
@@ -117,10 +99,22 @@ class NodeLayout
                 leftColumn.Add(child);
         }
 
-        ArrangeColumn(leftColumn, margin, MemberNodeWidth, MemberNodeHeight, MemberVerticalSpacing);
-        var hasLeft = leftColumn.Count > 0;
-        var rightX = hasLeft ? margin + MemberNodeWidth + margin : margin;
-        ArrangeColumn(rightColumn, rightX, MemberNodeWidth, MemberNodeHeight, MemberVerticalSpacing);
+        parent.ContainerZoom = GetMemberContainerZoom(leftColumn.Count, rightColumn.Count);
+
+        var layoutWidth = parent.Boundary.Width / parent.ContainerZoom;
+        var layoutCenter = layoutWidth / 2;
+
+        if (leftColumn.Count > 0)
+        {
+            var maxLeftStart = Math.Max(margin, layoutCenter - MemberNodeWidth);
+            var leftColumnStart = Math.Min(margin, maxLeftStart);
+            ArrangeColumn(leftColumn, leftColumnStart, MemberNodeWidth, MemberNodeHeight, MemberVerticalSpacing);
+        }
+
+        if (rightColumn.Count > 0)
+        {
+            ArrangeColumn(rightColumn, layoutCenter, MemberNodeWidth, MemberNodeHeight, MemberVerticalSpacing);
+        }
     }
 
     static void ArrangeColumn(
@@ -137,6 +131,42 @@ class NodeLayout
             var y = margin + index * (nodeHeight + verticalSpacing);
             node.Boundary = new Rect(startX, y, width, nodeHeight);
         }
+    }
+
+    static double GetContainerZoom(int childrenCount) =>
+        childrenCount switch
+        {
+            <= 1 => 1 / 3.0,
+            <= 4 => 1 / 4.0,
+            <= 9 => 1 / 5.0,
+            <= 16 => 1 / 6.0,
+            <= 25 => 1 / 7.0,
+            <= 36 => 1 / 8.0,
+            _ => Node.DefaultContainerZoom,
+        };
+
+    static double GetMemberContainerZoom(int leftChildrenCount, int rightChildrenCount)
+    {
+        if (rightChildrenCount == 0)
+        {
+            return leftChildrenCount switch
+            {
+                <= 8 => 1 / 2.0,
+                <= 16 => 1 / 2.5,
+                <= 25 => 1 / 3.5,
+                <= 36 => 1 / 4.5,
+                _ => Node.DefaultContainerZoom,
+            };
+        }
+        var largestColumnCount = Math.Max(leftChildrenCount, rightChildrenCount);
+
+        return largestColumnCount switch
+        {
+            <= 19 => 1 / 3.0,
+            <= 25 => 1 / 3.5,
+            <= 36 => 1 / 5.0,
+            _ => Node.DefaultContainerZoom,
+        };
     }
 
     static int CompareChildren(Node c1, Node c2)
@@ -174,6 +204,12 @@ class NodeLayout
         )
             return 1;
 
+        return 0;
+    }
+
+    static int CompareMemberChildren(Node c1, Node c2)
+    {
+        // Will compar based on attributes
         return 0;
     }
 }
