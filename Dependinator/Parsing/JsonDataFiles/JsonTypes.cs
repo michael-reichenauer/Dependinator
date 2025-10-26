@@ -44,7 +44,7 @@ public static class JsonTypes
     public class LinkAttributes
     {
         public string? Description { get; set; }
-        public string? Type { get; set; } = "";
+        public string? TargetType { get; set; } = "";
     }
 
     // Link between two nodes

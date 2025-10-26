@@ -1,3 +1,5 @@
+using ICSharpCode.Decompiler.CSharp.Syntax;
+
 namespace Dependinator.Models;
 
 interface IStructureService
@@ -13,7 +15,7 @@ class StructureService(IModel model) : IStructureService
 {
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
-        var parentName = parsedNode.Parent;
+        var parentName = parsedNode.Attributes.Parent;
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
         { // New node, add it to the model and parent
             var parent = GetOrCreateParent(parentName);
@@ -213,8 +215,8 @@ class StructureService(IModel model) : IStructureService
     }
 
     static Parsing.Node DefaultParentNode(string name) =>
-        new(name, Parsing.NodeName.ParseParentName(name), new() { Type = Parsing.NodeType.Parent });
+        new(name, new() { Type = Parsing.NodeType.Parent, Parent = Parsing.NodeName.ParseParentName(name) });
 
     static Parsing.Node DefaultParsingNode(string name) =>
-        new(name, Parsing.NodeName.ParseParentName(name), new() { Type = Parsing.NodeType.None });
+        new(name, new() { Type = Parsing.NodeType.None, Parent = Parsing.NodeName.ParseParentName(name) });
 }

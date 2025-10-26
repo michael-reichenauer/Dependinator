@@ -20,12 +20,13 @@ interface IItem { }
 
 record Link(string Source, string Target, LinkAttributes Attributes) : IItem;
 
-record Node(string Name, string Parent, NodeAttributes Attributes) : IItem;
+record Node(string Name, NodeAttributes Attributes) : IItem;
 
 class NodeAttributes
 {
     public string Description { get; init; } = "";
     public NodeType Type { get; init; } = NodeType.None;
+    public string Parent { get; init; } = "";
 }
 
 class LinkAttributes
