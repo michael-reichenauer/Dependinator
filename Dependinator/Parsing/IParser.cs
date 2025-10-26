@@ -46,6 +46,7 @@ enum MemberType
     Event,
     Property,
     Method,
+    Constructor,
 }
 
 record NodeType

@@ -323,6 +323,7 @@ class NodeSvg
             Parsing.MemberType.Field => "FieldIcon",
             Parsing.MemberType.Property => "PropertyIcon",
             Parsing.MemberType.Method => "MethodIcon",
+            Parsing.MemberType.Constructor => "ConstructorIcon",
             _ => node.Type.Text switch
             {
                 "Solution" => "SolutionIcon",

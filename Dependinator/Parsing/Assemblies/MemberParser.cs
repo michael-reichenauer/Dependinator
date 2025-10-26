@@ -107,6 +107,7 @@ internal class MemberParser
             string memberName = Name.GetMemberFullName(memberInfo);
             string parentName = GetParentName(memberName);
             string description = xmlDocParser.GetDescription(memberName);
+            bool isConstructor = memberName.Contains(".ctor(") || memberName.Contains(".cctor(");
 
             var memberNode = new Node(
                 memberName,
@@ -116,7 +117,7 @@ internal class MemberParser
                     Description = description,
                     Parent = parentName,
                     IsPrivate = isPrivate,
-                    MemberType = memberType,
+                    MemberType = isConstructor ? MemberType.Constructor : memberType,
                 }
             );
 
