@@ -18,20 +18,36 @@ interface IParser
 
 interface IItem { }
 
-record Link(string SourceName, string TargetName, NodeType TargetType) : IItem;
+record Link(string Source, string Target, LinkAttributes Attributes) : IItem;
 
-record Node(string Name, string ParentName, NodeType Type, string? Description) : IItem
+record Node(string Name, NodeAttributes Attributes) : IItem;
+
+class NodeAttributes
 {
-    static readonly char[] NamePartsSeparators = "./".ToCharArray();
+    public string Description { get; init; } = "";
+    public NodeType Type { get; init; } = NodeType.None;
+    public string Parent { get; init; } = "";
+    public bool IsPrivate { get; init; }
+    public MemberType MemberType { get; init; }
+}
 
-    public static string ParseParentName(string name)
-    {
-        int index = name.LastIndexOfAny(NamePartsSeparators);
-        return index > -1 ? name[..index] : "";
-    }
+class LinkAttributes
+{
+    public string Description { get; init; } = "";
+    public NodeType TargetType { get; init; } = NodeType.None;
 }
 
 record Source(string Path, string Text, int LineNumber);
+
+enum MemberType
+{
+    None,
+    Field,
+    Event,
+    Property,
+    Method,
+    Constructor,
+}
 
 record NodeType
 {
@@ -52,7 +68,6 @@ record NodeType
     public static readonly NodeType Namespace = new("Namespace");
     public static readonly NodeType Type = new("Type");
     public static readonly NodeType Member = new("Member");
-    public static readonly NodeType Private = new("Private");
 
     public static implicit operator NodeType(string typeName) =>
         All.FirstOrDefault(m => m.Text == typeName)

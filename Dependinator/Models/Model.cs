@@ -5,7 +5,7 @@ namespace Dependinator.Models;
 [Serializable]
 record ModelDto
 {
-    public static string CurrentFormatVersion = "4";
+    public static string CurrentFormatVersion = "5";
 
     public string FormatVersion { get; init; } = CurrentFormatVersion;
     public required string Name { get; init; }

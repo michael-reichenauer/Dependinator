@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Reflection.Emit;
+using System.Threading.Channels;
 using Mono.Cecil;
 
 namespace Dependinator.Parsing.Assemblies;
@@ -49,7 +50,12 @@ internal class MemberParser
         {
             type.Fields.Where(member => !Name.IsCompilerGenerated(member.Name))
                 .ForEach(async member =>
-                    await AddMemberAsync(member, typeNode, member.Attributes.HasFlag(FieldAttributes.Private))
+                    await AddMemberAsync(
+                        member,
+                        typeNode,
+                        member.Attributes.HasFlag(FieldAttributes.Private),
+                        MemberType.Field
+                    )
                 );
 
             type.Events.Where(member => !Name.IsCompilerGenerated(member.Name))
@@ -58,7 +64,8 @@ internal class MemberParser
                         member,
                         typeNode,
                         (member.AddMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
-                            && (member.RemoveMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
+                            && (member.RemoveMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true),
+                        MemberType.Event
                     )
                 );
 
@@ -68,13 +75,19 @@ internal class MemberParser
                         member,
                         typeNode,
                         (member.GetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
-                            && (member.SetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
+                            && (member.SetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true),
+                        MemberType.Property
                     )
                 );
 
             type.Methods.Where(member => !Name.IsCompilerGenerated(member.Name))
                 .ForEach(async member =>
-                    await AddMemberAsync(member, typeNode, member.Attributes.HasFlag(MethodAttributes.Private))
+                    await AddMemberAsync(
+                        member,
+                        typeNode,
+                        member.Attributes.HasFlag(MethodAttributes.Private),
+                        MemberType.Method
+                    )
                 );
 
             type.Methods.Where(member => Name.IsCompilerGenerated(member.Name))
@@ -87,25 +100,27 @@ internal class MemberParser
         return Task.CompletedTask;
     }
 
-    async Task AddMemberAsync(IMemberDefinition memberInfo, Node parentTypeNode, bool isPrivate)
+    async Task AddMemberAsync(IMemberDefinition memberInfo, Node parentTypeNode, bool isPrivate, MemberType memberType)
     {
         try
         {
             string memberName = Name.GetMemberFullName(memberInfo);
-            string parentName = isPrivate ? $"{GetParentName(memberName)}.$private" : GetParentName(memberName);
+
+            string parentName = GetParentName(memberName);
             string description = xmlDocParser.GetDescription(memberName);
+            bool isConstructor = memberName.Contains(".ctor(") || memberName.Contains(".cctor(");
 
-            if (isPrivate)
-            {
-                if (!sentNodes.ContainsKey(parentName))
+            var memberNode = new Node(
+                memberName,
+                new()
                 {
-                    var parentNode = new Node(parentName, GetParentName(parentName), NodeType.Private, description);
-                    sentNodes[parentName] = parentNode;
-                    await items.WriteAsync(parentNode);
+                    Type = NodeType.Member,
+                    Description = description,
+                    Parent = parentName,
+                    IsPrivate = isPrivate,
+                    MemberType = isConstructor ? MemberType.Constructor : memberType,
                 }
-            }
-
-            var memberNode = new Node(memberName, parentName, NodeType.Member, description);
+            );
 
             if (!sentNodes.ContainsKey(memberNode.Name))
             {

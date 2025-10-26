@@ -86,9 +86,18 @@ class JsonFileParserService : IParser
         return itemCount;
     }
 
-    static Node ToNodeData(JsonTypes.Node node) => new(node.Name, node.Parent, node.Type, node.Description);
+    static Node ToNodeData(JsonTypes.Node node) => new(node.Name, ToNodeAttributes(node));
 
-    static Link ToLinkData(JsonTypes.Link link) => new(link.Source, link.Target, link.TargetType);
+    static NodeAttributes ToNodeAttributes(JsonTypes.Node node) =>
+        new()
+        {
+            Type = node.Attributes?.Type ?? "",
+            Description = node.Attributes?.Description ?? "",
+            Parent = node.Parent,
+        };
+
+    static Link ToLinkData(JsonTypes.Link link) =>
+        new(link.Source, link.Target, new() { TargetType = link.Attributes?.TargetType ?? "" });
 
     static void ValidateVersion(JsonReader reader)
     {

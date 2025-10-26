@@ -30,6 +30,12 @@ internal class NodeName : Equatable<NodeName>
         return new NodeName(fullName);
     }
 
+    public static string ParseParentName(string name)
+    {
+        int index = name.LastIndexOfAny(PartsSeparators);
+        return index > -1 ? name[..index] : "";
+    }
+
     public bool IsSame(string nameText) => nameText == FullName;
 
     public override string ToString() => this != Root ? FullName : "<root>";
