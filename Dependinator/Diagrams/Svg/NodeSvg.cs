@@ -23,7 +23,7 @@ class NodeSvg
         var textX = geometry.X + geometry.Width / 2;
         var textY = geometry.Y + geometry.Height;
         var fontSize = FontSize * parentZoom;
-        var iconId = IconName(node.Type);
+        var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName);
@@ -44,7 +44,7 @@ class NodeSvg
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (border, background) = NodeColors(node);
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
-        var iconId = IconName(node.Type);
+        var iconId = IconName(node);
         var strokeWidth = node.IsEditMode ? 10 : node.StrokeWidth;
         var hoverClass = node.IsEditMode ? "hoverableedit" : "hoverable";
         var selectedOverlay = SelectedNodeSvg(node, geometry);
@@ -68,7 +68,7 @@ class NodeSvg
     {
         var fontSize = FontSize * parentZoom;
         var layout = CalculateMemberNodeLayout(node, nodeCanvasRect, parentZoom, fontSize);
-        var iconId = IconName(node.Type);
+        var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var hoverGroup = BuildHoverGroup(elementId, "hoverable", layout.Bounds, node.HtmlLongName);
@@ -315,19 +315,28 @@ class NodeSvg
             """;
     }
 
-    static string IconName(Parsing.NodeType type) =>
-        type.Text switch
+    static string IconName(Node node)
+    {
+        return node.MemberType switch
         {
-            "Solution" => "SolutionIcon",
-            "Externals" => "ExternalsIcon",
-            "Assembly" => "ModuleIcon",
-            "Namespace" => "FilesIcon",
-            "Private" => "PrivateIcon",
-            "Parent" => "FilesIcon",
-            "Type" => "TypeIcon",
-            "Member" => "MemberIcon",
-            _ => "ModuleIcon",
+            Parsing.MemberType.Event => "EventIcon",
+            Parsing.MemberType.Field => "FieldIcon",
+            Parsing.MemberType.Property => "PropertyIcon",
+            Parsing.MemberType.Method => "MethodIcon",
+            _ => node.Type.Text switch
+            {
+                "Solution" => "SolutionIcon",
+                "Externals" => "ExternalsIcon",
+                "Assembly" => "ModuleIcon",
+                "Namespace" => "FilesIcon",
+                "Private" => "PrivateIcon",
+                "Parent" => "FilesIcon",
+                "Type" => "TypeIcon",
+                "Member" => "MemberIcon",
+                _ => "ModuleIcon",
+            },
         };
+    }
 
     readonly record struct ContainerHeader(Pos IconPos, double IconSize, Pos TextPos, double FontSize);
 }
