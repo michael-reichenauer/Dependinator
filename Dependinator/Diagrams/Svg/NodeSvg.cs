@@ -173,12 +173,12 @@ class NodeSvg
         {
             var metrics = GetMemberAnchorMetrics(node);
             if (role == LineAnchorRole.Source)
-                return (metrics.CenterX, metrics.Bottom);
+                return (metrics.CenterX, metrics.Bottom + 0.5);
 
             return preference switch
             {
                 AnchorPreference.Right => (metrics.Right, metrics.CenterY),
-                _ => (metrics.Left, metrics.CenterY),
+                _ => (metrics.Left - 0.5, metrics.CenterY),
             };
         }
 
