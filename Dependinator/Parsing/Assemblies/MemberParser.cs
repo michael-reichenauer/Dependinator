@@ -86,7 +86,7 @@ internal class MemberParser
                         member,
                         typeNode,
                         member.Attributes.HasFlag(MethodAttributes.Private),
-                        MemberType.None
+                        MemberType.Method
                     )
                 );
 
@@ -105,6 +105,7 @@ internal class MemberParser
         try
         {
             string memberName = Name.GetMemberFullName(memberInfo);
+
             string parentName = GetParentName(memberName);
             string description = xmlDocParser.GetDescription(memberName);
             bool isConstructor = memberName.Contains(".ctor(") || memberName.Contains(".cctor(");
