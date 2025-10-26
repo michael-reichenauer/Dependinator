@@ -10,9 +10,7 @@ record NodeDto
     public required string Name { get; init; }
     public required string ParentName { get; init; }
     public required string Type { get; init; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string? Description { get; init; }
+    public NodeAttributes Attributes { get; init; } = new();
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Rect? Boundary { get; init; }
@@ -31,6 +29,13 @@ record NodeDto
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsParentSetHidden { get; set; }
+}
+
+[Serializable]
+record NodeAttributes
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? Description { get; init; }
 }
 
 class Node : IItem
@@ -107,7 +112,7 @@ class Node : IItem
             Name = Name,
             ParentName = Parent?.Name ?? "",
             Type = Type.Text,
-            Description = Description,
+            Attributes = new() { Description = Description },
             Boundary = Boundary != Rect.None ? Boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
@@ -119,7 +124,7 @@ class Node : IItem
     public void SetFromDto(NodeDto dto)
     {
         Type = dto.Type;
-        Description = dto.Description ?? "";
+        Description = dto.Attributes.Description ?? "";
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
@@ -201,7 +206,7 @@ class Node : IItem
     public void Update(Parsing.Node node)
     {
         Type = node.Type;
-        Description = node.Description ?? Description;
+        Description = node.Attributes.Description ?? Description;
     }
 
     public void AddChild(Node child)

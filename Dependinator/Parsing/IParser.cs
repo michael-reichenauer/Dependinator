@@ -20,7 +20,13 @@ interface IItem { }
 
 record Link(string SourceName, string TargetName, NodeType TargetType) : IItem;
 
-record Node(string Name, string ParentName, NodeType Type, string? Description) : IItem
+class NodeAttributes
+{
+    public static NodeAttributes Default = new();
+    public string Description { get; init; } = "";
+}
+
+record Node(string Name, string ParentName, NodeType Type, NodeAttributes Attributes) : IItem
 {
     static readonly char[] NamePartsSeparators = "./".ToCharArray();
 

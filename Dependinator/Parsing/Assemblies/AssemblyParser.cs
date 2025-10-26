@@ -83,7 +83,12 @@ internal class AssemblyParser : IDisposable
     {
         string nodeName = Name.GetModuleName(assembly.Value!);
         string assemblyDescription = GetAssemblyDescription(assembly.Value!);
-        var assemblyNode = new Node(nodeName, parentName, NodeType.Assembly, assemblyDescription);
+        var assemblyNode = new Node(
+            nodeName,
+            parentName,
+            NodeType.Assembly,
+            new() { Description = assemblyDescription }
+        );
 
         await items.WriteAsync(assemblyNode);
     }

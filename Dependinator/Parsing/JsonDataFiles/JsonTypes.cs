@@ -2,7 +2,7 @@
 
 public static class JsonTypes
 {
-    public static string Version = "1";
+    public static string Version = "2";
 
     // A model contains a list of nodes and links
     [Serializable]
@@ -33,7 +33,12 @@ public static class JsonTypes
         // Optional data like parent, type, ...
         public string Parent { get; set; } = "";
         public string Type { get; set; } = "";
-        public string Description { get; set; } = "";
+        public NodeAttributes? Attributes { get; set; }
+    }
+
+    public class NodeAttributes
+    {
+        public string? Description { get; set; }
     }
 
     // Link between two nodes

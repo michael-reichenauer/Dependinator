@@ -111,7 +111,8 @@ internal class SolutionParser : IDisposable
         return solution.GetDataFilePaths();
     }
 
-    Node CreateSolutionNode() => new Node(SolutionNodeName, "", NodeType.Solution, "Solution file");
+    Node CreateSolutionNode() =>
+        new Node(SolutionNodeName, "", NodeType.Solution, new() { Description = "Solution file" });
 
     R CreateAssemblyParsers(bool includeReferences = false)
     {
@@ -187,7 +188,7 @@ internal class SolutionParser : IDisposable
 
             if (!parentNodesToSend.Any(n => n.Name == folderName))
             {
-                var folderNode = new Node(folderName, parentName, NodeType.SolutionFolder, "");
+                var folderNode = new Node(folderName, parentName, NodeType.SolutionFolder, NodeAttributes.Default);
                 parentNodesToSend.Add(folderNode);
             }
 
