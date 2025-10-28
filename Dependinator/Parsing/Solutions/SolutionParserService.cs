@@ -1,6 +1,4 @@
-﻿using System.Threading.Channels;
-
-namespace Dependinator.Parsing.Solutions;
+﻿namespace Dependinator.Parsing.Solutions;
 
 [Transient]
 internal class SolutionParserService : IParser
@@ -16,7 +14,7 @@ internal class SolutionParserService : IParser
 
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".sln");
 
-    public async Task<R> ParseAsync(string path, ChannelWriter<IItem> items)
+    public async Task<R> ParseAsync(string path, IItems items)
     {
         using var solutionParser = new SolutionParser(embeddedResources, path, items, false, fileService);
         if (!Try(out var e, await solutionParser.ParseAsync()))

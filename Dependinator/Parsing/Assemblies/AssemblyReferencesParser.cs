@@ -1,14 +1,13 @@
-﻿using System.Threading.Channels;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 
 namespace Dependinator.Parsing.Assemblies;
 
 internal class AssemblyReferencesParser
 {
     readonly LinkHandler linkHandler;
-    readonly ChannelWriter<IItem> items;
+    readonly IItems items;
 
-    public AssemblyReferencesParser(LinkHandler linkHandler, ChannelWriter<IItem> items)
+    public AssemblyReferencesParser(LinkHandler linkHandler, IItems items)
     {
         this.linkHandler = linkHandler;
         this.items = items;
@@ -31,7 +30,7 @@ internal class AssemblyReferencesParser
 
             var referenceNode = new Node(referenceName, new() { Type = NodeType.Assembly, Parent = parent });
 
-            await items.WriteAsync(referenceNode);
+            await items.SendAsync(referenceNode);
 
             await linkHandler.AddLinkAsync(sourceAssemblyName, referenceName, NodeType.Assembly);
         }
@@ -62,7 +61,7 @@ internal class AssemblyReferencesParser
             new() { Type = NodeType.Externals, Description = "External references" }
         );
 
-        await items.WriteAsync(referencesRootNode);
+        await items.SendAsync(referencesRootNode);
         return referencesRootName;
     }
 
@@ -77,7 +76,7 @@ internal class AssemblyReferencesParser
             string groupName = $"{parent}.{name}";
             var groupNode = new Node(groupName, new() { Type = NodeType.Group, Parent = parent });
 
-            await items.WriteAsync(groupNode);
+            await items.SendAsync(groupNode);
             parent = groupName;
         }
 

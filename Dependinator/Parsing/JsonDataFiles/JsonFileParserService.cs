@@ -1,5 +1,4 @@
-﻿using System.Threading.Channels;
-using Dependinator.Parsing;
+﻿using Dependinator.Parsing;
 using Newtonsoft.Json;
 
 namespace Dependinator.Parsing.JsonDataFiles;
@@ -17,7 +16,7 @@ class JsonFileParserService : IParser
 
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".json");
 
-    public Task<R> ParseAsync(string path, ChannelWriter<IItem> items)
+    public Task<R> ParseAsync(string path, IItems items)
     {
         return Task.Run(async () =>
         {
@@ -59,7 +58,7 @@ class JsonFileParserService : IParser
         while (reader.Read() && reader.TokenType != JsonToken.StartArray) { }
     }
 
-    static async Task<int> ReadItemsAsync(JsonReader reader, ChannelWriter<IItem> items)
+    static async Task<int> ReadItemsAsync(JsonReader reader, IItems items)
     {
         int itemCount = 0;
         while (reader.Read())
@@ -71,12 +70,12 @@ class JsonFileParserService : IParser
                 if (jsonItem?.Node != null)
                 {
                     var nodeData = ToNodeData(jsonItem.Node);
-                    await items.WriteAsync(nodeData);
+                    await items.SendAsync(nodeData);
                 }
                 else if (jsonItem?.Link != null)
                 {
                     var linkData = ToLinkData(jsonItem.Link);
-                    await items.WriteAsync(linkData);
+                    await items.SendAsync(linkData);
                 }
 
                 itemCount++;

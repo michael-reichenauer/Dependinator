@@ -1,5 +1,4 @@
 ﻿using System.Reflection.Emit;
-using System.Threading.Channels;
 using Mono.Cecil;
 
 namespace Dependinator.Parsing.Assemblies;
@@ -14,9 +13,9 @@ internal class MemberParser
     readonly Dictionary<string, Node> sentNodes = new Dictionary<string, Node>();
 
     readonly XmlDocParser xmlDocParser;
-    readonly ChannelWriter<IItem> items;
+    readonly IItems items;
 
-    public MemberParser(LinkHandler linkHandler, XmlDocParser xmlDocParser, ChannelWriter<IItem> items)
+    public MemberParser(LinkHandler linkHandler, XmlDocParser xmlDocParser, IItems items)
     {
         this.linkHandler = linkHandler;
         this.xmlDocParser = xmlDocParser;
@@ -127,7 +126,7 @@ internal class MemberParser
                 MembersCount++;
                 // Not yet sent this node name (properties get/set, events (add/remove) appear twice
                 sentNodes[memberNode.Name] = memberNode;
-                await items.WriteAsync(memberNode);
+                await items.SendAsync(memberNode);
             }
 
             await AddMemberLinksAsync(memberName, memberInfo);

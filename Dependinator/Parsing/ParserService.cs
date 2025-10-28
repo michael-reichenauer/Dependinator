@@ -1,4 +1,6 @@
-﻿using System.Threading.Channels;
+﻿using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace Dependinator.Parsing;
 
@@ -37,6 +39,7 @@ class ParserService : IParserService
     {
         Log.Debug($"Parse {path} ...");
         Channel<IItem> channel = Channel.CreateUnbounded<IItem>();
+        IItems items = new ChannelItemsAdapter(channel.Writer);
 
         if (!Try(out var parser, out var e, GetParser(path)))
             return R.Error($"File not supported: {path}", e);
@@ -44,7 +47,7 @@ class ParserService : IParserService
         Task.Run(async () =>
             {
                 using var t = Timing.Start($"Parsed {path}");
-                await parser.ParseAsync(path, channel.Writer);
+                await parser.ParseAsync(path, items);
                 channel.Writer.Complete();
             })
             .RunInBackground();
@@ -92,5 +95,18 @@ class ParserService : IParserService
             return R.Error($"No supported parser for {path}");
 
         return R<IParser>.From(parser);
+    }
+
+    sealed class ChannelItemsAdapter : IItems
+    {
+        readonly ChannelWriter<IItem> writer;
+
+        public ChannelItemsAdapter(ChannelWriter<IItem> writer)
+        {
+            this.writer = writer;
+        }
+
+        public async Task SendAsync(IItem item, CancellationToken cancellationToken = default) =>
+            await writer.WriteAsync(item, cancellationToken);
     }
 }

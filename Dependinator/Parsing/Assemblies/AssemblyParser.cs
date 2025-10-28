@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Threading.Channels;
 using Dependinator.Models;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -15,7 +14,7 @@ internal class AssemblyParser : IDisposable
     readonly AssemblyReferencesParser assemblyReferencesParser;
     readonly Decompiler decompiler = new();
 
-    readonly ChannelWriter<IItem> items;
+    readonly IItems items;
     readonly IFileService fileService;
     readonly MemberParser memberParser;
     readonly string parentName;
@@ -29,7 +28,7 @@ internal class AssemblyParser : IDisposable
         string assemblyPath,
         string projectPath,
         string parentName,
-        ChannelWriter<IItem> items,
+        IItems items,
         bool isReadSymbols,
         IFileService fileService
     )
@@ -93,7 +92,7 @@ internal class AssemblyParser : IDisposable
             }
         );
 
-        await items.WriteAsync(assemblyNode);
+        await items.SendAsync(assemblyNode);
     }
 
     public async Task ParseAssemblyReferencesAsync(IReadOnlyList<string> internalModules)

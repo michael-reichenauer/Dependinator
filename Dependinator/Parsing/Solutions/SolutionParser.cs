@@ -1,5 +1,4 @@
-﻿using System.Threading.Channels;
-using Dependinator.Parsing.Assemblies;
+﻿using Dependinator.Parsing.Assemblies;
 
 namespace Dependinator.Parsing.Solutions;
 
@@ -13,12 +12,12 @@ internal class SolutionParser : IDisposable
     readonly List<Node> parentNodesToSend = new List<Node>();
     readonly IEmbeddedResources embeddedResources;
     readonly string solutionFilePath;
-    readonly ChannelWriter<IItem> items;
+    readonly IItems items;
 
     public SolutionParser(
         IEmbeddedResources embeddedResources,
         string solutionFilePath,
-        ChannelWriter<IItem> items,
+        IItems items,
         bool isReadSymbols,
         IFileService fileService
     )
@@ -43,7 +42,7 @@ internal class SolutionParser : IDisposable
             return e;
         //Log.Debug($"Solution: {assemblyParsers.Count} assemblies");
 
-        parentNodesToSend.ForEach(async node => await items.WriteAsync(node));
+        parentNodesToSend.ForEach(async node => await items.SendAsync(node));
 
         await ParseSolutionAssembliesAsync();
         int typeCount = assemblyParsers.Sum(parser => parser.TypeCount);

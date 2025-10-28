@@ -1,13 +1,12 @@
-﻿using System.Threading.Channels;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 
 namespace Dependinator.Parsing.Assemblies;
 
 internal class LinkHandler
 {
-    readonly ChannelWriter<IItem> items;
+    readonly IItems items;
 
-    public LinkHandler(ChannelWriter<IItem> items)
+    public LinkHandler(IItems items)
     {
         this.items = items;
     }
@@ -53,7 +52,7 @@ internal class LinkHandler
     private async Task SendLinkAsync(string sourceName, string targetName, NodeType targetType)
     {
         Link dataLink = new Link(sourceName, targetName, new() { TargetType = targetType });
-        await items.WriteAsync(dataLink);
+        await items.SendAsync(dataLink);
         LinksCount++;
     }
 

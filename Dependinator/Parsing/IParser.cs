@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Threading.Channels;
 
 namespace Dependinator.Parsing;
 
@@ -7,7 +6,7 @@ interface IParser
 {
     bool CanSupport(string path);
 
-    Task<R> ParseAsync(string path, ChannelWriter<IItem> items);
+    Task<R> ParseAsync(string path, IItems items);
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 

@@ -1,5 +1,4 @@
-﻿using System.Threading.Channels;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 
 namespace Dependinator.Parsing.Assemblies;
 
@@ -7,9 +6,9 @@ internal class TypeParser
 {
     readonly LinkHandler linkHandler;
     readonly XmlDocParser xmlDockParser;
-    readonly ChannelWriter<IItem> items;
+    readonly IItems items;
 
-    public TypeParser(LinkHandler linkHandler, XmlDocParser xmlDockParser, ChannelWriter<IItem> items)
+    public TypeParser(LinkHandler linkHandler, XmlDocParser xmlDockParser, IItems items)
     {
         this.linkHandler = linkHandler;
         this.xmlDockParser = xmlDockParser;
@@ -77,7 +76,7 @@ internal class TypeParser
 
     private async Task SendNodeAsync(Node typeNode)
     {
-        await items.WriteAsync(typeNode);
+        await items.SendAsync(typeNode);
     }
 
     private async Task<bool> IsNameSpaceDocTypeAsync(TypeDefinition type, string description)
