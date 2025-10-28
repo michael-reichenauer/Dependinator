@@ -4,12 +4,10 @@
 internal class AssemblyParserService : IParser
 {
     readonly IStreamService streamService;
-    readonly IEmbeddedResources embeddedResources;
 
-    public AssemblyParserService(IStreamService streamService, IEmbeddedResources embeddedResources)
+    public AssemblyParserService(IStreamService streamService)
     {
         this.streamService = streamService;
-        this.embeddedResources = embeddedResources;
     }
 
     public bool CanSupport(string path) =>
@@ -17,13 +15,13 @@ internal class AssemblyParserService : IParser
 
     public async Task<R> ParseAsync(string path, IItems items)
     {
-        using var parser = new AssemblyParser(embeddedResources, path, "", "", items, false, streamService);
+        using var parser = new AssemblyParser(path, "", "", items, false, streamService);
         return await parser.ParseAsync();
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        using var parser = new AssemblyParser(embeddedResources, path, "", "", null!, true, streamService);
+        using var parser = new AssemblyParser(path, "", "", null!, true, streamService);
         return await Task.Run(() => parser.TryGetSource(nodeName));
     }
 

@@ -9,7 +9,7 @@ namespace Dependinator.Parsing.Assemblies;
 internal class AssemblyParser : IDisposable
 {
     readonly Lazy<AssemblyDefinition?> assembly;
-    readonly IEmbeddedResources embeddedResources;
+
     readonly string assemblyPath;
     readonly AssemblyReferencesParser assemblyReferencesParser;
     readonly Decompiler decompiler = new();
@@ -24,7 +24,6 @@ internal class AssemblyParser : IDisposable
     List<TypeData> typeInfos = new List<TypeData>();
 
     public AssemblyParser(
-        IEmbeddedResources embeddedResources,
         string assemblyPath,
         string projectPath,
         string parentName,
@@ -34,7 +33,6 @@ internal class AssemblyParser : IDisposable
     )
     {
         ProjectPath = projectPath;
-        this.embeddedResources = embeddedResources;
         this.assemblyPath = assemblyPath;
         this.parentName = parentName;
         this.items = items;
@@ -65,7 +63,7 @@ internal class AssemblyParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        if (assemblyPath != ExampleModel.Path && !streamService.Exists(assemblyPath))
+        if (!streamService.Exists(assemblyPath))
             return R.Error($"No file at '{assemblyPath}'");
 
         return await Task.Run(async () =>
@@ -145,10 +143,6 @@ internal class AssemblyParser : IDisposable
         try
         {
             var parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
-            if (assemblyPath == ExampleModel.Path)
-            {
-                return AssemblyDefinition.ReadAssembly(embeddedResources.OpenResource(ExampleModel.Path), parameters);
-            }
 
             if (!Try(out var stream, out var e, streamService.ReadStream(assemblyPath)))
                 return null;

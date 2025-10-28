@@ -10,19 +10,12 @@ internal class SolutionParser : IDisposable
     readonly bool isReadSymbols;
     readonly IStreamService streamService;
     readonly List<Node> parentNodesToSend = new List<Node>();
-    readonly IEmbeddedResources embeddedResources;
+
     readonly string solutionFilePath;
     readonly IItems items;
 
-    public SolutionParser(
-        IEmbeddedResources embeddedResources,
-        string solutionFilePath,
-        IItems items,
-        bool isReadSymbols,
-        IStreamService streamService
-    )
+    public SolutionParser(string solutionFilePath, IItems items, bool isReadSymbols, IStreamService streamService)
     {
-        this.embeddedResources = embeddedResources;
         this.solutionFilePath = solutionFilePath;
         this.items = items;
         this.isReadSymbols = isReadSymbols;
@@ -129,7 +122,6 @@ internal class SolutionParser : IDisposable
             string parent = GetProjectParentName(solutionName, project);
 
             var assemblyParser = new AssemblyParser(
-                embeddedResources,
                 assemblyPath,
                 project.ProjectFilePath,
                 parent,
@@ -152,15 +144,7 @@ internal class SolutionParser : IDisposable
 
             foreach (string referencePath in referencePaths)
             {
-                var assemblyParser = new AssemblyParser(
-                    embeddedResources,
-                    referencePath,
-                    "",
-                    "",
-                    items,
-                    isReadSymbols,
-                    streamService
-                );
+                var assemblyParser = new AssemblyParser(referencePath, "", "", items, isReadSymbols, streamService);
 
                 assemblyParsers.Add(assemblyParser);
             }
