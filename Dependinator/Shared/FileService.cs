@@ -10,7 +10,7 @@ interface IFileService
     Task<R> DeleteAsync(string path);
     Task<IReadOnlyList<string>> AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
 
-    R<Stream> ReadStram(string path);
+    R<Stream> ReadStream(string path);
     bool ExistsStream(string path);
 
     Task<R<IReadOnlyList<string>>> GetFilePathsAsync();
@@ -88,7 +88,7 @@ class FileService : IFileService
         return paths;
     }
 
-    public R<Stream> ReadStram(string path)
+    public R<Stream> ReadStream(string path)
     {
         Log.Info("ReadStram:", path);
         if (path.StartsWith(WebFilesPrefix))

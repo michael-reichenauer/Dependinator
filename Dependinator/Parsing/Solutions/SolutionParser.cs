@@ -8,7 +8,7 @@ internal class SolutionParser : IDisposable
 
     readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
     readonly bool isReadSymbols;
-    readonly IFileService fileService;
+    readonly IStreamService streamService;
     readonly List<Node> parentNodesToSend = new List<Node>();
     readonly IEmbeddedResources embeddedResources;
     readonly string solutionFilePath;
@@ -19,14 +19,14 @@ internal class SolutionParser : IDisposable
         string solutionFilePath,
         IItems items,
         bool isReadSymbols,
-        IFileService fileService
+        IStreamService streamService
     )
     {
         this.embeddedResources = embeddedResources;
         this.solutionFilePath = solutionFilePath;
         this.items = items;
         this.isReadSymbols = isReadSymbols;
-        this.fileService = fileService;
+        this.streamService = streamService;
     }
 
     private string SolutionNodeName => Path.GetFileName(solutionFilePath).Replace(".", "*");
@@ -135,7 +135,7 @@ internal class SolutionParser : IDisposable
                 parent,
                 items,
                 isReadSymbols,
-                fileService
+                streamService
             );
 
             assemblyParsers.Add(assemblyParser);
@@ -159,7 +159,7 @@ internal class SolutionParser : IDisposable
                     "",
                     items,
                     isReadSymbols,
-                    fileService
+                    streamService
                 );
 
                 assemblyParsers.Add(assemblyParser);
