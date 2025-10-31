@@ -21,7 +21,7 @@ public static class EnumerableExtensions
         }
     }
 
-    public static async Task<List<T>> ToList<T>(this IAsyncEnumerable<T> enumeration)
+    public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> enumeration)
     {
         var list = new List<T>();
         await enumeration.ForEachAsync(list.Add);

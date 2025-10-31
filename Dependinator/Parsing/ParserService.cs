@@ -106,7 +106,6 @@ class ParserService : IParserService
             this.writer = writer;
         }
 
-        public async Task SendAsync(IItem item, CancellationToken cancellationToken = default) =>
-            await writer.WriteAsync(item, cancellationToken);
+        public async Task SendAsync(IItem item) => await writer.WriteAsync(item);
     }
 }

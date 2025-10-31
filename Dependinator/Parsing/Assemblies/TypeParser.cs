@@ -15,7 +15,7 @@ internal class TypeParser
         this.items = items;
     }
 
-    public async IAsyncEnumerable<TypeData> AddTypeAsync(AssemblyDefinition assembly, TypeDefinition type)
+    public async IAsyncEnumerable<TypeData> AddTypeAsync(TypeDefinition type)
     {
         bool isCompilerGenerated = Name.IsCompilerGenerated(type.FullName);
         bool isAsyncStateType = false;
@@ -67,7 +67,7 @@ internal class TypeParser
         foreach (var nestedType in type.NestedTypes)
         {
             // Adding a type could result in multiple types
-            await foreach (var types in AddTypeAsync(assembly, nestedType))
+            await foreach (var types in AddTypeAsync(nestedType))
             {
                 yield return types;
             }
@@ -110,7 +110,7 @@ internal class TypeParser
         return Task.CompletedTask;
     }
 
-    async Task AddLinksToBaseTypesAsync(TypeData typeData)
+    public async Task AddLinksToBaseTypesAsync(TypeData typeData)
     {
         if (typeData.IsAsyncStateType)
             return; // Internal async/await helper type, which is ignored

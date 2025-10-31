@@ -5,5 +5,5 @@ namespace Dependinator.Parsing;
 
 interface IItems
 {
-    Task SendAsync(IItem item, CancellationToken cancellationToken = default);
+    Task SendAsync(IItem item);
 }

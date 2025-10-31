@@ -113,9 +113,7 @@ internal class AssemblyParser : IDisposable
 
         // Add assembly type nodes (including inner type types)
         typeInfos = new List<TypeData>();
-        assemblyTypes.ForEach(async t =>
-            await typeParser.AddTypeAsync(assembly.Value, t).ForEachAsync(tt => typeInfos.Add(tt))
-        );
+        assemblyTypes.ForEach(async t => await typeParser.AddTypeAsync(t).ForEachAsync(tt => typeInfos.Add(tt)));
     }
 
     public async Task ParseTypeMembersAsync()
