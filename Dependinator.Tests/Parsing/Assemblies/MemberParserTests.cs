@@ -1,4 +1,3 @@
-using System.Reflection;
 using Dependinator.Parsing.Assemblies;
 using Dependinator.Tests.Parsing.Utils;
 using Mono.Cecil;
