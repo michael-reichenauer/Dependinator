@@ -1,4 +1,5 @@
 global using static Dependinator.Tests.Parsing.Utils.Reference;
+global using static Dependinator.Tests.VerifierExtensions;
 global using Dependinator.Utils;
 global using Moq;
 global using VerifyTests;

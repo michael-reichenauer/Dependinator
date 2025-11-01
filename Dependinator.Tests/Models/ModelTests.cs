@@ -1,4 +1,5 @@
 using System;
+using Dependinator.Diagrams.Svg;
 using Dependinator.Models;
 using Dependinator.Parsing;
 using Dependinator.Parsing.Assemblies;
@@ -25,32 +26,23 @@ public class ModelTests
     public async Task TestAsync()
     {
         var items = new ItemsMock();
-        await ParseType<ModelTestData>(items);
+        await TestHelper.ParseType<ModelTestData>(items);
 
         var model = new Model();
-        AddItems(model, items);
+        TestHelper.AddItems(model, items);
 
         var modelDto = model.ToDto();
-        await Verifier.Verify(modelDto);
+        await VerifyJson(modelDto);
     }
 
-    private static void AddItems(Model model, ItemsMock items)
+    [Fact]
+    public async Task TestParsingAsync()
     {
-        var lineService = new LineService(model);
-        var structureService = new StructureService(model, lineService);
-        items.Nodes.ForEach(structureService.AddOrUpdateNode);
-        items.Links.ForEach(structureService.AddOrUpdateLink);
+        var items = new ItemsMock();
+        await TestHelper.ParseType<ModelTestData>(items);
+        var dto = new ModelDto(items.Nodes, items.Links);
+        await VerifyJson(dto);
     }
 
-    private static async Task ParseType<T>(IItems items)
-    {
-        var xmlDockParser = new XmlDocParser("");
-        var linkHandler = new LinkHandler(items);
-        var typeParser = new TypeParser(linkHandler, xmlDockParser, items);
-        var memberParser = new MemberParser(linkHandler, xmlDockParser, items);
-
-        TypeDefinition testDataType = AssemblyHelper.GetTypeDefinition<T>();
-        var types = await typeParser.AddTypeAsync(testDataType).ToListAsync();
-        await memberParser.AddTypesMembersAsync(types);
-    }
+    record ModelDto(IReadOnlyList<Dependinator.Parsing.Node> Nodes, IReadOnlyList<Dependinator.Parsing.Link> Links);
 }
