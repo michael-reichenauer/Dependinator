@@ -9,7 +9,7 @@ class AssemblyHelper
     public static TypeDefinition GetTypeDefinition<T>()
     {
         var parameters = new ReaderParameters { AssemblyResolver = new ParsingAssemblyResolver(), ReadSymbols = false };
-        var assemblyPath = typeof(TypeParserTests).Assembly.Location;
+        var assemblyPath = typeof(T).Assembly.Location;
         var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
 
         return GetAssemblyTypes(assemblyDefinition).Single(t => t.FullName == typeof(T).FullName);

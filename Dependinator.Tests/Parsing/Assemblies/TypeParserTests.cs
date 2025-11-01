@@ -21,6 +21,6 @@ public class TypeParserTests
         await typeParser.AddTypeAsync(testDataType).ToListAsync();
 
         Assert.Equal(1, items.Count);
-        var typeNode = items.GetNode(Ref<TypeTestData>());
+        items.GetNode(Ref<TypeTestData>());
     }
 }
