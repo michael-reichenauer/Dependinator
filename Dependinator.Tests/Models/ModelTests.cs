@@ -29,6 +29,9 @@ public class ModelTests
 
         var model = new Model();
         AddItems(model, items);
+
+        var modelDto = model.ToDto();
+        await Verifier.Verify(modelDto);
     }
 
     private static void AddItems(Model model, ItemsMock items)

@@ -48,7 +48,7 @@ class Node : IItem
         Name = name;
         Parent = parent;
 
-        Color = DColors.RandomNodeColorName();
+        Color = DColors.ColorBasedOnName(name);
 
         SetDisplayNames();
     }
