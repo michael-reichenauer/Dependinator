@@ -9,17 +9,13 @@
         <MudText Typo="Typo.caption" Class="node-source-dialog__path">
           // File: @Source.Path
         </MudText>
-        <MudText Typo="Typo.caption" Class="node-source-dialog__path">
-          &nbsp;
-        </MudText>
       }
     </div>
 
     <div class="node-source-dialog__code-container">
       @foreach (var line in codeLines)
       {
-        <div
-          class="node-source-dialog__line @(line.IsHighlighted ? "node-source-dialog__line--highlight" : string.Empty)">
+        <div class="node-source-dialog__line @(string.Empty)">
           @line.Text</div>
       }
     </div>
@@ -49,18 +45,17 @@
     var normalized = text.Replace("\r\n", "\n").Replace("\r", "");
 
     var lines = normalized.Split('\n');
-    var highlight = Source?.LineNumber > 0 ? Source!.LineNumber : -1;
 
     for (var i = 0; i < lines.Length; i++)
     {
       var lineText = lines[i].Replace("\t", " ");
       var encoded = System.Net.WebUtility.HtmlEncode(lineText);
       var withSpaces = encoded.Length == 0 ? "&nbsp;" : encoded.Replace(" ", "&nbsp;");
-      codeLines.Add(new CodeLine(new MarkupString(withSpaces), i + 1 == highlight));
+      codeLines.Add(new CodeLine(new MarkupString(withSpaces)));
     }
   }
 
   void Close() => MudDialog.Close(DialogResult.Ok(true));
 
-  record CodeLine(MarkupString Text, bool IsHighlighted);
+  record CodeLine(MarkupString Text);
 }
