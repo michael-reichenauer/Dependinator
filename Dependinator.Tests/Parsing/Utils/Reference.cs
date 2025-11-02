@@ -17,7 +17,7 @@ class Reference
         throw new NotImplementedException();
     }
 
-    static string NodeName<T>(string? memberName = null)
+    public static string NodeName<T>(string? memberName = null)
     {
         if (memberName is not null)
         {

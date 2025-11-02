@@ -7,7 +7,7 @@ namespace Dependinator.Parsing.Assemblies;
 
 class Decompiler
 {
-    // static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
+    static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
 
     public R<Source> TryGetSource(ModuleDefinition module, string nodeName)
     {
@@ -142,9 +142,8 @@ class Decompiler
 
     static string GetDecompiledText(ModuleDefinition module, TypeDefinition type)
     {
-        return "";
-        // CSharpDecompiler decompiler = GetDecompiler(module);
-        // return DecompiledText + decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
+        CSharpDecompiler decompiler = GetDecompiler(module);
+        return DecompiledText + decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
     }
 
     private static string GetDecompiledText(ModuleDefinition module, IMemberDefinition member)
