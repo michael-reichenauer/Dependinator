@@ -128,12 +128,7 @@ internal class AssemblyParser : IDisposable
     {
         IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
 
-        return decompiler.TryGetNodeNameForSourceFile(
-            assembly.Value!.MainModule,
-            assemblyTypes,
-            sourceFilePath,
-            out nodeName
-        );
+        return decompiler.TryGetNodeNameForSourceFile(assemblyTypes, sourceFilePath, out nodeName);
     }
 
     private AssemblyDefinition? GetAssembly(bool isSymbols)

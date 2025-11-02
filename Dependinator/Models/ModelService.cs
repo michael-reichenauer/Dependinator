@@ -332,7 +332,7 @@ class ModelService : IModelService
         )
             return e;
 
-        var sourceText = source.Text.Replace("\t", "    "); // The autoformater removes this in Blazor code.
+        var sourceText = source.Text.Replace("\t", "  "); // The autoformater removes this in Blazor code.
         return new Source(source.Path, sourceText, source.LineNumber);
     }
 

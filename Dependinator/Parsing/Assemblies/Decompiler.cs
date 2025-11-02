@@ -1,5 +1,7 @@
-﻿using ICSharpCode.Decompiler;
+﻿using System.Reflection.PortableExecutable;
+using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
+using ICSharpCode.Decompiler.Metadata;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -13,9 +15,9 @@ class Decompiler
         {
             string codeText = GetDecompiledText(module, type);
 
-            if (TryGetFilePath(type, out Parsing.Source source))
+            if (TryGetFileLocation(type, out FileLocation fileLocation))
             {
-                return new Source(source.Path, codeText, source.LineNumber);
+                return new Source(fileLocation.Path, codeText, fileLocation.Line);
             }
 
             return new Source("", codeText, 0);
@@ -24,9 +26,9 @@ class Decompiler
         {
             string codeText = GetDecompiledText(module, member);
 
-            if (TryGetFilePath(member, out Source source))
+            if (TryGetFilePath(member, out FileLocation fileLocation))
             {
-                return new Source(source.Path, codeText, source.LineNumber);
+                return new Source(fileLocation.Path, codeText, fileLocation.Line);
             }
 
             return new Source("", codeText, 0);
@@ -37,7 +39,6 @@ class Decompiler
     }
 
     public bool TryGetNodeNameForSourceFile(
-        ModuleDefinition module,
         IEnumerable<TypeDefinition> assemblyTypes,
         string sourceFilePath,
         out string nodeName
@@ -45,9 +46,9 @@ class Decompiler
     {
         foreach (TypeDefinition type in assemblyTypes)
         {
-            if (TryGetFilePath(type, out Parsing.Source source))
+            if (TryGetFileLocation(type, out FileLocation fileLocation))
             {
-                if (source.Path.StartsWithIc(sourceFilePath))
+                if (fileLocation.Path.StartsWithIc(sourceFilePath))
                 {
                     nodeName = Name.GetTypeFullName(type);
                     return true;
@@ -144,7 +145,7 @@ class Decompiler
 
     static string GetDecompiledText(ModuleDefinition module, TypeDefinition type)
     {
-        CSharpDecompiler decompiler = GetDecompiler(module);
+        CSharpDecompiler decompiler = CreateDecompiler(module);
         System.Reflection.Metadata.TypeDefinitionHandle handle =
             System.Reflection.Metadata.Ecma335.MetadataTokens.TypeDefinitionHandle(type.MetadataToken.ToInt32());
         var source = decompiler.DecompileTypesAsString([handle]);
@@ -153,47 +154,60 @@ class Decompiler
 
     private static string GetDecompiledText(ModuleDefinition module, IMemberDefinition member)
     {
-        CSharpDecompiler decompiler = GetDecompiler(module);
+        CSharpDecompiler decompiler = CreateDecompiler(module);
         System.Reflection.Metadata.EntityHandle handle = System.Reflection.Metadata.Ecma335.MetadataTokens.EntityHandle(
             member.MetadataToken.ToInt32()
         );
         return decompiler.DecompileAsString([handle]);
     }
 
-    static bool TryGetFilePath(TypeDefinition type, out Source source)
+    static bool TryGetFileLocation(TypeDefinition type, out FileLocation fileLocation)
     {
         foreach (MethodDefinition method in type.Methods)
         {
             SequencePoint? sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
             if (sequencePoint != null)
             {
-                source = ToFileLocation(sequencePoint);
+                fileLocation = ToFileLocation(sequencePoint);
                 return true;
             }
         }
 
-        source = default!;
+        fileLocation = default!;
         return false;
     }
 
-    bool TryGetFilePath(IMemberDefinition member, out Parsing.Source source)
+    bool TryGetFilePath(IMemberDefinition member, out FileLocation fileLocation)
     {
         if (member is MethodDefinition method)
         {
             SequencePoint? sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
             if (sequencePoint != null)
             {
-                source = ToFileLocation(sequencePoint);
+                fileLocation = ToFileLocation(sequencePoint);
                 return true;
             }
         }
 
-        return TryGetFilePath(member.DeclaringType, out source);
+        return TryGetFileLocation(member.DeclaringType, out fileLocation);
     }
 
-    static Source ToFileLocation(SequencePoint sequencePoint) =>
-        new Source(sequencePoint.Document.Url, "", sequencePoint.StartLine);
+    record FileLocation(string Path, int Line);
 
-    static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>
-        new CSharpDecompiler(module.FileName, new DecompilerSettings(LanguageVersion.Latest));
+    static FileLocation ToFileLocation(SequencePoint sequencePoint) =>
+        new(sequencePoint.Document.Url, sequencePoint.StartLine);
+
+    static CSharpDecompiler CreateDecompiler(ModuleDefinition module)
+    {
+        // Create an in-memory PE image from the Mono.Cecil module
+        var peStream = new MemoryStream();
+        module.Write(peStream);
+        peStream.Position = 0;
+
+        var peFile = new PEFile(module.Name, peStream, PEStreamOptions.LeaveOpen);
+        var resolver = new InMemoryAssemblyResolver(peFile);
+        var settings = new DecompilerSettings(LanguageVersion.Latest);
+
+        return new CSharpDecompiler(peFile, resolver, settings);
+    }
 }
