@@ -18,7 +18,7 @@
   max-height: 70vh;
   overflow: auto;
   font-family: Consolas, "Courier New", monospace;
-  font-size: 0.875rem;
+  font-size: 0.7125rem;
   background-color: #181818;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--mud-default-borderradius);
