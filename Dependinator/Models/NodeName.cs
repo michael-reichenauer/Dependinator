@@ -8,10 +8,6 @@ class NodeName
 
     public static (string longName, string shortName) GetDisplayNames(string nodeName, NodeType nodeType)
     {
-        if (nodeName.Contains("LowestCommonAncestor"))
-        {
-            var a = 0;
-        }
         var name = nodeName;
         var parametersParts = "";
         var parametersIndex = name.IndexOf('(');

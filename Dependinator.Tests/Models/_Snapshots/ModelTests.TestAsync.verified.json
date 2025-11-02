@@ -1,0 +1,126 @@
+﻿{
+  "FormatVersion": "5",
+  "Name": "",
+  "Offset": {},
+  "ViewRect": {},
+  "Nodes": [
+    {
+      "Name": "",
+      "ParentName": "",
+      "Type": "Root",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "None"
+      },
+      "Boundary": {
+        "Width": 1000,
+        "Height": 1000
+      },
+      "Zoom": 1,
+      "Color": "Gray"
+    },
+    {
+      "Name": "Dependinator*Tests",
+      "ParentName": "",
+      "Type": "Parent",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "None"
+      },
+      "Boundary": {
+        "X": 10,
+        "Y": 10,
+        "Width": 100,
+        "Height": 100
+      },
+      "Color": "Purple"
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator",
+      "ParentName": "Dependinator*Tests",
+      "Type": "Parent",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "None"
+      },
+      "Color": "Cyan"
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests",
+      "ParentName": "Dependinator*Tests.Dependinator",
+      "Type": "Parent",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "None"
+      },
+      "Color": "Yellow"
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models",
+      "ParentName": "Dependinator*Tests.Dependinator.Tests",
+      "Type": "Parent",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "None"
+      },
+      "Color": "Red"
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+      "ParentName": "Dependinator*Tests.Dependinator.Tests.Models",
+      "Type": "Type",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "None"
+      },
+      "Color": "Green"
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
+      "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+      "Type": "Member",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "Field"
+      },
+      "Color": "Red"
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
+      "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+      "Type": "Member",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "Method"
+      },
+      "Color": "Blue"
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.SecondFunction()",
+      "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+      "Type": "Member",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "Method"
+      },
+      "Color": "Yellow"
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
+      "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+      "Type": "Member",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "Constructor"
+      },
+      "Color": "Teal"
+    }
+  ],
+  "Links": [
+    {
+      "SourceName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
+      "TargetName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
+      "TargetType": "Member"
+    }
+  ]
+}

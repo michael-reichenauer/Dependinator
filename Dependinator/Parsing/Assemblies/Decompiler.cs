@@ -7,8 +7,6 @@ namespace Dependinator.Parsing.Assemblies;
 
 class Decompiler
 {
-    // static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
-
     public R<Source> TryGetSource(ModuleDefinition module, string nodeName)
     {
         if (TryGetType(module, nodeName, out TypeDefinition type))
@@ -87,6 +85,10 @@ class Decompiler
         {
             string name = nodeName.Substring(typeIndex + 1);
 
+            int paramsIndex = name.IndexOf("(");
+            if (paramsIndex > -1)
+                name = name[..paramsIndex];
+
             // Was no type, so it is a member of a type.
             int memberIndex = name.LastIndexOf('.');
             if (memberIndex > -1)
@@ -142,16 +144,20 @@ class Decompiler
 
     static string GetDecompiledText(ModuleDefinition module, TypeDefinition type)
     {
-        return "";
-        // CSharpDecompiler decompiler = GetDecompiler(module);
-        // return DecompiledText + decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
+        CSharpDecompiler decompiler = GetDecompiler(module);
+        System.Reflection.Metadata.TypeDefinitionHandle handle =
+            System.Reflection.Metadata.Ecma335.MetadataTokens.TypeDefinitionHandle(type.MetadataToken.ToInt32());
+        var source = decompiler.DecompileTypesAsString([handle]);
+        return source;
     }
 
     private static string GetDecompiledText(ModuleDefinition module, IMemberDefinition member)
     {
-        return "";
-        // CSharpDecompiler decompiler = GetDecompiler(module);
-        // return DecompiledText + decompiler.DecompileAsString(member).Replace("\t", "  ");
+        CSharpDecompiler decompiler = GetDecompiler(module);
+        System.Reflection.Metadata.EntityHandle handle = System.Reflection.Metadata.Ecma335.MetadataTokens.EntityHandle(
+            member.MetadataToken.ToInt32()
+        );
+        return decompiler.DecompileAsString([handle]);
     }
 
     static bool TryGetFilePath(TypeDefinition type, out Source source)

@@ -64,8 +64,6 @@ class DColors
     static readonly string NodeBackgroundLightEdit = "#FFF2E0";
 
     public static bool IsDark { get; set; } = false;
-    static readonly Random random = new();
-
     public static readonly string CanvasBackground = IsDark ? CanvasBackgroundDark : CanvasBackgroundLight;
     public static readonly string Line = IsDark ? LineDark : LineLight;
     public static readonly string LineHidden = IsDark ? LineHiddenDark : LineHiddenLight;
@@ -77,13 +75,36 @@ class DColors
     public static readonly string Selected = IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
     public static readonly string ToolBarIcon = MudBlazor.Colors.DeepPurple.Lighten5;
 
-    public static string RandomNodeColorName() => nodeColorsDark[random.Next(nodeColorsDark.Count)].Name;
+    public static string ColorBasedOnName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return nodeColorsDark[0].Name;
+
+        uint hash = GetHash(name);
+        var index = (int)(hash % (uint)nodeColorsDark.Count);
+        return nodeColorsDark[index].Name;
+    }
 
     public static (string color, string background) NodeColorByName(string name)
     {
         var colors = IsDark ? nodeColorsDark : nodeColorsLight;
         var color = colors.FirstOrDefault(c => c.Name == name) ?? colors[0];
         return (color.Border, color.Background);
+    }
+
+    static uint GetHash(string name)
+    {
+        const uint offsetBasis = 2166136261;
+        const uint prime = 16777619;
+
+        uint hash = offsetBasis;
+        foreach (var character in name)
+        {
+            hash ^= char.ToUpperInvariant(character);
+            hash *= prime;
+        }
+
+        return hash;
     }
 }
 

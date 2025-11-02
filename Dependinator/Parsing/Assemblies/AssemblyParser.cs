@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Threading.Channels;
 using Dependinator.Models;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -10,13 +9,13 @@ namespace Dependinator.Parsing.Assemblies;
 internal class AssemblyParser : IDisposable
 {
     readonly Lazy<AssemblyDefinition?> assembly;
-    readonly IEmbeddedResources embeddedResources;
+
     readonly string assemblyPath;
     readonly AssemblyReferencesParser assemblyReferencesParser;
     readonly Decompiler decompiler = new();
 
-    readonly ChannelWriter<IItem> items;
-    readonly IFileService fileService;
+    readonly IItems items;
+    readonly IStreamService streamService;
     readonly MemberParser memberParser;
     readonly string parentName;
     readonly ParsingAssemblyResolver resolver = new();
@@ -25,21 +24,19 @@ internal class AssemblyParser : IDisposable
     List<TypeData> typeInfos = new List<TypeData>();
 
     public AssemblyParser(
-        IEmbeddedResources embeddedResources,
         string assemblyPath,
         string projectPath,
         string parentName,
-        ChannelWriter<IItem> items,
+        IItems items,
         bool isReadSymbols,
-        IFileService fileService
+        IStreamService streamService
     )
     {
         ProjectPath = projectPath;
-        this.embeddedResources = embeddedResources;
         this.assemblyPath = assemblyPath;
         this.parentName = parentName;
         this.items = items;
-        this.fileService = fileService;
+        this.streamService = streamService;
         XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
         linkHandler = new LinkHandler(items);
 
@@ -66,7 +63,7 @@ internal class AssemblyParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        if (assemblyPath != ExampleModel.Path && !fileService.ExistsStream(assemblyPath))
+        if (!streamService.Exists(assemblyPath))
             return R.Error($"No file at '{assemblyPath}'");
 
         return await Task.Run(async () =>
@@ -93,7 +90,7 @@ internal class AssemblyParser : IDisposable
             }
         );
 
-        await items.WriteAsync(assemblyNode);
+        await items.SendAsync(assemblyNode);
     }
 
     public async Task ParseAssemblyReferencesAsync(IReadOnlyList<string> internalModules)
@@ -116,9 +113,7 @@ internal class AssemblyParser : IDisposable
 
         // Add assembly type nodes (including inner type types)
         typeInfos = new List<TypeData>();
-        assemblyTypes.ForEach(async t =>
-            await typeParser.AddTypeAsync(assembly.Value, t).ForEachAsync(tt => typeInfos.Add(tt))
-        );
+        assemblyTypes.ForEach(async t => await typeParser.AddTypeAsync(t).ForEachAsync(tt => typeInfos.Add(tt)));
     }
 
     public async Task ParseTypeMembersAsync()
@@ -146,12 +141,8 @@ internal class AssemblyParser : IDisposable
         try
         {
             var parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
-            if (assemblyPath == ExampleModel.Path)
-            {
-                return AssemblyDefinition.ReadAssembly(embeddedResources.OpenResource(ExampleModel.Path), parameters);
-            }
 
-            if (!Try(out var stream, out var e, fileService.ReadStram(assemblyPath)))
+            if (!Try(out var stream, out var e, streamService.ReadStream(assemblyPath)))
                 return null;
             return AssemblyDefinition.ReadAssembly(stream, parameters);
         }

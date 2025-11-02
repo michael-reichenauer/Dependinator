@@ -1,5 +1,4 @@
-﻿using System.Threading.Channels;
-using Dependinator.Parsing.Assemblies;
+﻿using Dependinator.Parsing.Assemblies;
 
 namespace Dependinator.Parsing.Solutions;
 
@@ -9,25 +8,18 @@ internal class SolutionParser : IDisposable
 
     readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
     readonly bool isReadSymbols;
-    readonly IFileService fileService;
+    readonly IStreamService streamService;
     readonly List<Node> parentNodesToSend = new List<Node>();
-    readonly IEmbeddedResources embeddedResources;
-    readonly string solutionFilePath;
-    readonly ChannelWriter<IItem> items;
 
-    public SolutionParser(
-        IEmbeddedResources embeddedResources,
-        string solutionFilePath,
-        ChannelWriter<IItem> items,
-        bool isReadSymbols,
-        IFileService fileService
-    )
+    readonly string solutionFilePath;
+    readonly IItems items;
+
+    public SolutionParser(string solutionFilePath, IItems items, bool isReadSymbols, IStreamService streamService)
     {
-        this.embeddedResources = embeddedResources;
         this.solutionFilePath = solutionFilePath;
         this.items = items;
         this.isReadSymbols = isReadSymbols;
-        this.fileService = fileService;
+        this.streamService = streamService;
     }
 
     private string SolutionNodeName => Path.GetFileName(solutionFilePath).Replace(".", "*");
@@ -43,7 +35,7 @@ internal class SolutionParser : IDisposable
             return e;
         //Log.Debug($"Solution: {assemblyParsers.Count} assemblies");
 
-        parentNodesToSend.ForEach(async node => await items.WriteAsync(node));
+        parentNodesToSend.ForEach(async node => await items.SendAsync(node));
 
         await ParseSolutionAssembliesAsync();
         int typeCount = assemblyParsers.Sum(parser => parser.TypeCount);
@@ -130,13 +122,12 @@ internal class SolutionParser : IDisposable
             string parent = GetProjectParentName(solutionName, project);
 
             var assemblyParser = new AssemblyParser(
-                embeddedResources,
                 assemblyPath,
                 project.ProjectFilePath,
                 parent,
                 items,
                 isReadSymbols,
-                fileService
+                streamService
             );
 
             assemblyParsers.Add(assemblyParser);
@@ -153,15 +144,7 @@ internal class SolutionParser : IDisposable
 
             foreach (string referencePath in referencePaths)
             {
-                var assemblyParser = new AssemblyParser(
-                    embeddedResources,
-                    referencePath,
-                    "",
-                    "",
-                    items,
-                    isReadSymbols,
-                    fileService
-                );
+                var assemblyParser = new AssemblyParser(referencePath, "", "", items, isReadSymbols, streamService);
 
                 assemblyParsers.Add(assemblyParser);
             }
