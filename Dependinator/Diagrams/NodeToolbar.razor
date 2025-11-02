@@ -27,6 +27,10 @@
 
     <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
     <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+    @if (CanShowSource)
+    {
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync" />
+    }
 
     @if (!IsIconMode)
     {
@@ -45,6 +49,7 @@
   [Inject] ISelectionService selectionService { get; set; } = null!;
   [Inject] IDialogService dialogService { get; set; } = null!;
   [Inject] IDependenciesService dependenciesService { get; set; } = null!;
+  [Inject] Models.IModelService modelService { get; set; } = null!;
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
@@ -54,6 +59,7 @@
   $"position:fixed;left:{selectionService.SelectedNodePosition.X}px;" +
   $"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset}px;";
   bool IsIconMode => !interactionService.IsContainer;
+  bool CanShowSource => interactionService.IsTypeOrMember;
 
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
   void OnUiStateChanged() => InvokeAsync(StateHasChanged);
@@ -66,5 +72,42 @@
 
   void ShowReferences() => dependenciesService.ShowReferences();
   void ShowDependencies() => dependenciesService.ShowDependencies();
+  async Task ShowSourceAsync()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+
+    string selectedId = selectionService.SelectedId.Id;
+    var nodeId = Models.NodeId.FromId(selectedId);
+
+    string nodeTitle = selectedId;
+    modelService.UseNode(
+    selectedId,
+    node =>
+    {
+      nodeTitle = node.LongName;
+    }
+    );
+
+    if (!Try(out var source, out var e, await modelService.GetSourceAsync(nodeId)))
+    {
+      await dialogService.ShowMessageBox("Source unavailable", e.ErrorMessage);
+      return;
+    }
+
+    var parameters = new DialogParameters
+    {
+      [nameof(NodeSourceDialog.Source)] = source,
+    };
+
+    var options = new DialogOptions
+    {
+      CloseOnEscapeKey = true,
+      FullWidth = true,
+      MaxWidth = MaxWidth.ExtraLarge,
+    };
+
+    await dialogService.ShowAsync<NodeSourceDialog>(nodeTitle, parameters, options);
+  }
   void ToggleNodeHide() => selectionService.ToggleNodeHide();
 }

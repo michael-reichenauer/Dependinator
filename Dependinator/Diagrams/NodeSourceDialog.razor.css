@@ -1,0 +1,39 @@
+.node-source-dialog {
+  background-color: #101010;
+  color: var(--mud-palette-text-primary);
+}
+
+.node-source-dialog__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.node-source-dialog__path {
+  color: var(--mud-palette-text-secondary);
+}
+
+.node-source-dialog__code-container {
+  max-height: 70vh;
+  overflow: auto;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.875rem;
+  background-color: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--mud-default-borderradius);
+}
+
+
+.node-source-dialog__line {
+  margin: 0;
+  padding: 0.125rem 0.75rem;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.node-source-dialog__line--highlight {
+  background-color: rgba(255, 214, 0, 0.16);
+}

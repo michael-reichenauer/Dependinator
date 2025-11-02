@@ -22,6 +22,7 @@ interface IModelService
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
+    Task<R<Source>> GetSourceAsync(NodeId nodeId);
     bool TryGetNode(string id, out Node node);
     bool UseNode(string id, Action<Node> useAction);
     bool UseNodeN(NodeId id, Action<Node> updateAction);
@@ -303,6 +304,36 @@ class ModelService : IModelService
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
         return R.Ok;
+    }
+
+    public async Task<R<Source>> GetSourceAsync(NodeId nodeId)
+    {
+        string modelPath;
+        string nodeName;
+
+        lock (model.Lock)
+        {
+            modelPath = model.Path;
+            if (string.IsNullOrEmpty(modelPath))
+                return R.Error("Model is not loaded");
+
+            if (!model.TryGetNode(nodeId, out var node))
+                return R.Error($"Failed to locate node '{nodeId.Value}' in the current model");
+
+            nodeName = node.Name;
+        }
+
+        if (
+            !Try(
+                out Dependinator.Parsing.Source? source,
+                out var e,
+                await parserService.GetSourceAsync(modelPath, nodeName)
+            )
+        )
+            return e;
+
+        var sourceText = source.Text.Replace("\t", "    "); // The autoformater removes this in Blazor code.
+        return new Source(source.Path, sourceText, source.LineNumber);
     }
 
     async Task<R<ModelInfo>> ParseNewModelAsync(string path)
