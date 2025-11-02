@@ -1,31 +1,27 @@
-﻿using System.Threading.Channels;
-
-namespace Dependinator.Parsing.Assemblies;
+﻿namespace Dependinator.Parsing.Assemblies;
 
 [Transient]
 internal class AssemblyParserService : IParser
 {
-    readonly IFileService fileService;
-    readonly IEmbeddedResources embeddedResources;
+    readonly IStreamService streamService;
 
-    public AssemblyParserService(IFileService fileService, IEmbeddedResources embeddedResources)
+    public AssemblyParserService(IStreamService streamService)
     {
-        this.fileService = fileService;
-        this.embeddedResources = embeddedResources;
+        this.streamService = streamService;
     }
 
     public bool CanSupport(string path) =>
         Path.GetExtension(path).IsSameIc(".exe") || Path.GetExtension(path).IsSameIc(".dll");
 
-    public async Task<R> ParseAsync(string path, ChannelWriter<IItem> items)
+    public async Task<R> ParseAsync(string path, IItems items)
     {
-        using var parser = new AssemblyParser(embeddedResources, path, "", "", items, false, fileService);
+        using var parser = new AssemblyParser(path, "", "", items, false, streamService);
         return await parser.ParseAsync();
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        using var parser = new AssemblyParser(embeddedResources, path, "", "", null!, true, fileService);
+        using var parser = new AssemblyParser(path, "", "", null!, true, streamService);
         return await Task.Run(() => parser.TryGetSource(nodeName));
     }
 

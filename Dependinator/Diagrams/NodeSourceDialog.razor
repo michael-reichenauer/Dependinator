@@ -1,0 +1,61 @@
+@using Dependinator.Models
+@using Microsoft.AspNetCore.Components
+
+<MudDialog Class="node-source-dialog">
+  <DialogContent>
+    <div class="node-source-dialog__header">
+      @if (!string.IsNullOrEmpty(Source.Path))
+      {
+        <MudText Typo="Typo.caption" Class="node-source-dialog__path">
+          // File: @Source.Path
+        </MudText>
+      }
+    </div>
+
+    <div class="node-source-dialog__code-container">
+      @foreach (var line in codeLines)
+      {
+        <div class="node-source-dialog__line @(string.Empty)">
+          @line.Text</div>
+      }
+    </div>
+  </DialogContent>
+  <DialogActions>
+    <MudButton Color="Color.Primary" OnClick="Close">Close</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+  [Parameter] public Source Source { get; set; } = null!;
+
+  readonly List<CodeLine> codeLines = new();
+
+  protected override void OnParametersSet()
+  {
+    base.OnParametersSet();
+    BuildCodeLines();
+  }
+
+  void BuildCodeLines()
+  {
+    codeLines.Clear();
+
+    var text = Source?.Text ?? "";
+    var normalized = text.Replace("\r\n", "\n").Replace("\r", "");
+
+    var lines = normalized.Split('\n');
+
+    for (var i = 0; i < lines.Length; i++)
+    {
+      var lineText = lines[i].Replace("\t", " ");
+      var encoded = System.Net.WebUtility.HtmlEncode(lineText);
+      var withSpaces = encoded.Length == 0 ? "&nbsp;" : encoded.Replace(" ", "&nbsp;");
+      codeLines.Add(new CodeLine(new MarkupString(withSpaces)));
+    }
+  }
+
+  void Close() => MudDialog.Close(DialogResult.Ok(true));
+
+  record CodeLine(MarkupString Text);
+}

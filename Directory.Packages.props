@@ -5,25 +5,26 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
-    <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.3.0" />
     <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.5" />
     <PackageVersion Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
     <PackageVersion Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.8" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.8" />
-    <PackageVersion Include="MudBlazor" Version="8.12.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.10" />
+    <PackageVersion Include="MudBlazor" Version="8.13.0" />
     <PackageVersion Include="Scrutor" Version="6.1.0" />
     <PackageVersion Include="ICSharpCode.Decompiler" Version="9.1.0.7988" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
-    <PackageVersion Include="Microsoft.Build" Version="17.14.8" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Build" Version="17.14.28" />
     <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Verify.Xunit" Version="31.4.0" />
   </ItemGroup>
   <PropertyGroup>
     <!-- If you already have NoWarn, just add 7035 or CS7035 to it: -->

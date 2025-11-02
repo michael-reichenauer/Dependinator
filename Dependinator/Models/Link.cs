@@ -14,7 +14,7 @@ class Link : IItem
         this.Id = new LinkId(Source.Name, Target.Name);
     }
 
-    public LinkDto ToDto() => new(Source.Name, Target.Name, Target.Type.Text);
+    public LinkDto ToDto() => new(Source.Name, Target.Name, Target.Type.ToString());
 
     public LinkId Id { get; }
     public Node Source { get; }

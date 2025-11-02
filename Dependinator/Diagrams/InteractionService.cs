@@ -8,6 +8,7 @@ interface IInteractionService
 {
     string Cursor { get; }
     bool IsContainer { get; }
+    bool IsTypeOrMember { get; }
     bool IsEditNodeMode { get; set; }
     Task InitAsync();
     void NodePanZoomToFit();
@@ -65,6 +66,18 @@ class InteractionService : IInteractionService
                 return false;
             var nodeZoom = 1 / (node.GetZoom() * Zoom);
             return !NodeSvg.IsToLargeToBeSeen(nodeZoom) && !NodeSvg.IsShowIcon(node.Type, nodeZoom);
+        }
+    }
+
+    public bool IsTypeOrMember
+    {
+        get
+        {
+            if (!selectionService.IsSelected)
+                return false;
+            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
+                return false;
+            return node.Type is Parsing.NodeType.Type or Parsing.NodeType.Member;
         }
     }
 
