@@ -1,4 +1,5 @@
 using System;
+using Dependinator.Models;
 using Dependinator.Parsing.Assemblies;
 using Dependinator.Tests.Parsing.Utils;
 using Mono.Cecil;
@@ -11,7 +12,7 @@ public class DecompilerTestClass
 
     public void FirstFunction()
     {
-        var a = number;
+        int a = number;
     }
 
     public void SecondFunction() { }
@@ -20,13 +21,19 @@ public class DecompilerTestClass
 public class DecompilerTests
 {
     [Fact]
-    public async Task GetSourceAsync()
+    public async Task GetTypeSourceAsync()
     {
-        var parameters = new ReaderParameters { AssemblyResolver = new ParsingAssemblyResolver(), ReadSymbols = false };
+        Decompiler decompiler = new();
+
+        var parameters = new ReaderParameters { AssemblyResolver = new ParsingAssemblyResolver(), ReadSymbols = true };
         var assemblyPath = typeof(DecompilerTestClass).Assembly.Location;
         var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
 
-        Decompiler decompiler = new();
-        decompiler.TryGetSource(assemblyDefinition.MainModule, Reference.NodeName<DecompilerTestClass>());
+        string nodeName = Reference.NodeName<DecompilerTestClass>();
+        if (!Try(out var source, out var e, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName)))
+            Assert.Fail(e.ErrorMessage);
+        var sourceText = source.Text.Replace("\t", "    ");
+
+        await Verify(sourceText, extension: "cs");
     }
 }

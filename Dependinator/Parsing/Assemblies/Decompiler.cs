@@ -7,8 +7,6 @@ namespace Dependinator.Parsing.Assemblies;
 
 class Decompiler
 {
-    static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
-
     public R<Source> TryGetSource(ModuleDefinition module, string nodeName)
     {
         if (TryGetType(module, nodeName, out TypeDefinition type))
@@ -143,14 +141,17 @@ class Decompiler
     static string GetDecompiledText(ModuleDefinition module, TypeDefinition type)
     {
         CSharpDecompiler decompiler = GetDecompiler(module);
-        return DecompiledText + decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
+        System.Reflection.Metadata.TypeDefinitionHandle handle =
+            System.Reflection.Metadata.Ecma335.MetadataTokens.TypeDefinitionHandle(type.MetadataToken.ToInt32());
+        var source = decompiler.DecompileTypesAsString([handle]);
+        return source;
     }
 
     private static string GetDecompiledText(ModuleDefinition module, IMemberDefinition member)
     {
         return "";
         // CSharpDecompiler decompiler = GetDecompiler(module);
-        // return DecompiledText + decompiler.DecompileAsString(member).Replace("\t", "  ");
+        // return DecompiledText + decompiler.DecompileAsString(member);
     }
 
     static bool TryGetFilePath(TypeDefinition type, out Source source)
