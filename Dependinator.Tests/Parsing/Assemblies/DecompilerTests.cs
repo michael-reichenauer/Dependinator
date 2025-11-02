@@ -1,5 +1,3 @@
-using System;
-using Dependinator.Models;
 using Dependinator.Parsing.Assemblies;
 using Dependinator.Tests.Parsing.Utils;
 using Mono.Cecil;
@@ -24,16 +22,25 @@ public class DecompilerTests
     public async Task GetTypeSourceAsync()
     {
         Decompiler decompiler = new();
-
-        var parameters = new ReaderParameters { AssemblyResolver = new ParsingAssemblyResolver(), ReadSymbols = true };
-        var assemblyPath = typeof(DecompilerTestClass).Assembly.Location;
-        var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
+        AssemblyDefinition assemblyDefinition = AssemblyHelper.GetAssemblyDefinition<DecompilerTestClass>();
 
         string nodeName = Reference.NodeName<DecompilerTestClass>();
         if (!Try(out var source, out var e, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName)))
             Assert.Fail(e.ErrorMessage);
-        var sourceText = source.Text.Replace("\t", "    ");
 
-        await Verify(sourceText, extension: "cs");
+        await Verify(source.Text, extension: "cs");
+    }
+
+    [Fact]
+    public async Task GetMemberSourceAsync()
+    {
+        Decompiler decompiler = new();
+        AssemblyDefinition assemblyDefinition = AssemblyHelper.GetAssemblyDefinition<DecompilerTestClass>();
+
+        string nodeName = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.FirstFunction));
+        if (!Try(out var source, out var e, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName)))
+            Assert.Fail(e.ErrorMessage);
+
+        await Verify(source.Text, extension: "cs");
     }
 }

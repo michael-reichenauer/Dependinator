@@ -85,6 +85,10 @@ class Decompiler
         {
             string name = nodeName.Substring(typeIndex + 1);
 
+            int paramsIndex = name.IndexOf("(");
+            if (paramsIndex > -1)
+                name = name[..paramsIndex];
+
             // Was no type, so it is a member of a type.
             int memberIndex = name.LastIndexOf('.');
             if (memberIndex > -1)
@@ -149,9 +153,11 @@ class Decompiler
 
     private static string GetDecompiledText(ModuleDefinition module, IMemberDefinition member)
     {
-        return "";
-        // CSharpDecompiler decompiler = GetDecompiler(module);
-        // return DecompiledText + decompiler.DecompileAsString(member);
+        CSharpDecompiler decompiler = GetDecompiler(module);
+        System.Reflection.Metadata.EntityHandle handle = System.Reflection.Metadata.Ecma335.MetadataTokens.EntityHandle(
+            member.MetadataToken.ToInt32()
+        );
+        return decompiler.DecompileAsString([handle]);
     }
 
     static bool TryGetFilePath(TypeDefinition type, out Source source)

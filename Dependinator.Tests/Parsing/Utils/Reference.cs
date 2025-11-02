@@ -1,4 +1,4 @@
-using System.Reflection;
+using Mono.Cecil;
 
 namespace Dependinator.Tests.Parsing.Utils;
 
@@ -19,24 +19,49 @@ class Reference
 
     public static string NodeName<T>(string? memberName = null)
     {
-        if (memberName is not null)
+        var typeDefinition = AssemblyHelper.GetTypeDefinition<T>();
+        if (memberName is null)
         {
-            var allMembers = typeof(T).GetMembers(
-                BindingFlags.Public
-                    | BindingFlags.NonPublic
-                    | BindingFlags.Instance
-                    | BindingFlags.Static
-                    | BindingFlags.FlattenHierarchy
-            );
-            var member = allMembers.Single(m => m.Name == memberName);
-            if (member.MemberType == MemberTypes.Method)
-                memberName = $"{memberName}(";
-            else if (member.MemberType == MemberTypes.Constructor)
-                memberName = $"{memberName[1..]}(";
+            return Dependinator.Parsing.Assemblies.Name.GetTypeFullName(typeDefinition);
+        }
+        if (TryGetMember(typeDefinition, memberName, out var member))
+        {
+            return Dependinator.Parsing.Assemblies.Name.GetMemberFullName(member);
         }
 
-        var typeName = typeof(T).FullName;
-        var moduleName = Path.GetFileNameWithoutExtension(typeof(T).Module.Name).Replace(".", "*");
-        return string.IsNullOrEmpty(memberName) ? $"{moduleName}.{typeName}" : $"{moduleName}.{typeName}.{memberName}";
+        throw new Exception($"Invalid reference '{typeof(T).FullName}', '{memberName}'");
+    }
+
+    static bool TryGetMember(TypeDefinition typeDefinition, string memberName, out IMemberDefinition member)
+    {
+        if (TryGetMethod(typeDefinition, memberName, out member))
+            return true;
+
+        if (TryGetProperty(typeDefinition, memberName, out member))
+            return true;
+
+        if (TryGetField(typeDefinition, memberName, out member))
+            return true;
+
+        member = default!;
+        return false;
+    }
+
+    static bool TryGetMethod(TypeDefinition type, string memberName, out IMemberDefinition method)
+    {
+        method = type.Methods.FirstOrDefault(m => m.Name == memberName)!;
+        return method != null;
+    }
+
+    static bool TryGetProperty(TypeDefinition type, string memberName, out IMemberDefinition property)
+    {
+        property = type.Properties.FirstOrDefault(m => m.Name == memberName)!;
+        return property != null;
+    }
+
+    static bool TryGetField(TypeDefinition type, string memberName, out IMemberDefinition field)
+    {
+        field = type.Fields.FirstOrDefault(m => m.Name == memberName)!;
+        return field != null;
     }
 }

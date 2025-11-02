@@ -2,14 +2,14 @@
 
 public class DecompilerTestClass
 {
-    public int number;
+	public int number;
 
-    public void FirstFunction()
-    {
-        int num = number;
-    }
+	public void FirstFunction()
+	{
+		int num = number;
+	}
 
-    public void SecondFunction()
-    {
-    }
+	public void SecondFunction()
+	{
+	}
 }
