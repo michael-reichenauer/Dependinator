@@ -324,16 +324,15 @@ class NodeSvg
             Parsing.MemberType.Property => "PropertyIcon",
             Parsing.MemberType.Method => "MethodIcon",
             Parsing.MemberType.Constructor => "ConstructorIcon",
-            _ => node.Type.Text switch
+            _ => node.Type switch
             {
-                "Solution" => "SolutionIcon",
-                "Externals" => "ExternalsIcon",
-                "Assembly" => "ModuleIcon",
-                "Namespace" => "FilesIcon",
-                "Private" => "PrivateIcon",
-                "Parent" => "FilesIcon",
-                "Type" => "TypeIcon",
-                "Member" => "MemberIcon",
+                Parsing.NodeType.Solution => "SolutionIcon",
+                Parsing.NodeType.Externals => "ExternalsIcon",
+                Parsing.NodeType.Assembly => "ModuleIcon",
+                Parsing.NodeType.Namespace => "FilesIcon",
+                Parsing.NodeType.Parent => "FilesIcon",
+                Parsing.NodeType.Type => "TypeIcon",
+                Parsing.NodeType.Member => "MemberIcon",
                 _ => "ModuleIcon",
             },
         };

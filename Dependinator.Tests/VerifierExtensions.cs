@@ -1,6 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Dependinator.Tests;
 
@@ -21,16 +19,6 @@ public static class VerifierExtensions
         [CallerFilePath] string sourceFile = ""
     )
     {
-        return VerifyJson(
-            jsonText: JsonSerializer.Serialize(instance, JsonSettings),
-            settings: settings,
-            sourceFile: sourceFile
-        );
+        return VerifyJson(jsonText: Json.Serialize(instance), settings: settings, sourceFile: sourceFile);
     }
-
-    static readonly JsonSerializerOptions JsonSettings = new()
-    {
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-    };
 }

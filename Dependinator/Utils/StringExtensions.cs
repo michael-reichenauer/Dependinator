@@ -7,8 +7,6 @@ namespace Dependinator.Utils;
 public static class StringExtensions
 {
     const int SidLength = 6;
-    static readonly JsonSerializerOptions JsonIndented = new() { WriteIndented = true };
-    static readonly JsonSerializerOptions JsonOneLine = new() { WriteIndented = false };
 
     // Method that limits the length of text to a defined length and can fill the rest with spaces
     public static string Max(this string source, int maxLength, bool isFill = false)
@@ -45,32 +43,6 @@ public static class StringExtensions
         }
 
         return source.Substring(0, source.Length - suffix.Length);
-    }
-
-    public static string ToJson(this object? source)
-    {
-        if (source == null)
-            return "";
-
-        if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, JsonIndented)))
-        {
-            return $"<Error: {e}>";
-        }
-
-        return json;
-    }
-
-    public static string ToJsonOneLine(this object? source)
-    {
-        if (source == null)
-            return "";
-
-        if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, JsonOneLine)))
-        {
-            return $"<Error: {e}>";
-        }
-
-        return json;
     }
 
     public static string Sid(this string source)

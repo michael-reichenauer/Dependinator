@@ -4,9 +4,7 @@
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Attributes": {
         "Description": "",
-        "Type": {
-          "Text": "Type"
-        },
+        "Type": "Type",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models"
       }
     },
@@ -14,44 +12,36 @@
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
       "Attributes": {
         "Description": "",
-        "Type": {
-          "Text": "Member"
-        },
+        "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "MemberType": 1
+        "MemberType": "Field"
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "Attributes": {
         "Description": "",
-        "Type": {
-          "Text": "Member"
-        },
+        "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "MemberType": 4
+        "MemberType": "Method"
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.SecondFunction()",
       "Attributes": {
         "Description": "",
-        "Type": {
-          "Text": "Member"
-        },
+        "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "MemberType": 4
+        "MemberType": "Method"
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
       "Attributes": {
         "Description": "",
-        "Type": {
-          "Text": "Member"
-        },
+        "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "MemberType": 5
+        "MemberType": "Constructor"
       }
     }
   ],
@@ -61,9 +51,7 @@
       "Target": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
       "Attributes": {
         "Description": "",
-        "TargetType": {
-          "Text": "Member"
-        }
+        "TargetType": "Member"
       }
     }
   ]

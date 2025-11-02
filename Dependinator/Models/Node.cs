@@ -78,7 +78,6 @@ class Node : IItem
             SetDisplayNames();
         }
     }
-    public string Icon => Type.Text;
 
     public string Description { get; set; } = "";
 
@@ -114,7 +113,7 @@ class Node : IItem
         {
             Name = Name,
             ParentName = Parent?.Name ?? "",
-            Type = Type.Text,
+            Type = Type.ToString(),
             Attributes = new()
             {
                 Description = Description,
@@ -131,7 +130,7 @@ class Node : IItem
 
     public void SetFromDto(NodeDto dto)
     {
-        Type = dto.Type;
+        Type = Enums.To<NodeType>(dto.Type, NodeType.None);
         Description = dto.Attributes.Description ?? "";
         IsPrivate = dto.Attributes.IsPrivate;
         Boundary = dto.Boundary ?? Rect.None;

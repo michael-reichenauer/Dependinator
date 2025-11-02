@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace Dependinator.Utils.Logging;
 
@@ -9,6 +10,7 @@ static class Log
     private static readonly string LevelInfo = "INFO ";
     private static readonly string LevelWarn = "WARN ";
     private static readonly string LevelError = "ERROR";
+    static readonly JsonSerializerOptions JsonOneLine = new() { WriteIndented = false };
 
     public static void Debug(
         string msg,
@@ -169,7 +171,7 @@ static class Log
 
         try
         {
-            return obj.ToJsonOneLine();
+            return ToJsonOneLine(obj);
         }
         catch
         {
@@ -180,5 +182,18 @@ static class Log
     public class StopParameter
     {
         public const StopParameter Empty = default;
+    }
+
+    static string ToJsonOneLine(object? source)
+    {
+        if (source == null)
+            return "";
+
+        if (!Try(out var json, out var e, () => JsonSerializer.Serialize(source, JsonOneLine)))
+        {
+            return $"<Error: {e}>";
+        }
+
+        return json;
     }
 }

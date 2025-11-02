@@ -95,29 +95,18 @@ static class Icon
     internal static readonly string ModuleIcon =
         """<svg id="ModuleIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="2" fill="#2f73d6" /><rect x="1" y="1" width="16" height="8.5" rx="2" fill="#6aa7f4" /><g fill="#ffffff"><rect x="2.1" y="2.1" width="3.6" height="3.2" rx="0.6" /><rect x="7.2" y="2.1" width="3.6" height="3.2" rx="0.6" /><rect x="12.3" y="2.1" width="3.6" height="3.2" rx="0.6" /></g><rect x="2.1" y="7.5" width="8.5" height="3.2" rx="0.6" fill="#d6e6ff" /><rect x="11.5" y="7.5" width="3.6" height="3.2" rx="0.6" fill="#d6e6ff" /><rect x="2.1" y="12.1" width="12.4" height="3.2" rx="0.6" fill="#c4dcff" /></svg>""";
 
-    static Dictionary<string, string> IconMap = new()
+    static Dictionary<Parsing.NodeType, string> IconMap = new()
     {
-        { "Solution", SolutionIcon },
-        { "Externals", ExternalsIcon },
-        { "Private", PrivateIcon },
-        { "Files", FilesIcon },
-        { "Type", TypeIcon },
-        { "Member", MemberIcon },
-        { "Field", FieldIcon },
-        { "Event", EventIcon },
-        { "Property", PropertyIcon },
-        { "Function", FunctionIcon },
-        { "Method", MethodIcon },
-        { "Constructor", ConstructorIcon },
-        { "Module", ModuleIcon },
+        { Parsing.NodeType.Solution, SolutionIcon },
+        { Parsing.NodeType.Externals, ExternalsIcon },
+        { Parsing.NodeType.Type, TypeIcon },
+        { Parsing.NodeType.Member, MemberIcon },
     };
 
-    public static string GetIcon(string iconName)
+    public static string GetIcon(Parsing.NodeType iconName)
     {
         if (!IconMap.TryGetValue(iconName, out string? icon))
-        {
             return ModuleIcon;
-        }
 
         return icon;
     }
