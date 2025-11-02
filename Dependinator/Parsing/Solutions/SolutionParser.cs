@@ -62,10 +62,8 @@ internal class SolutionParser : IDisposable
         {
             if (!Try(out var source, out var e, assemblyParser.TryGetSource(nodeName)))
                 return e;
-            if (!Try(out var path, out e, TryGetFilePath(nodeName, assemblyParser.ProjectPath)))
-                return e;
 
-            return new Source(path, source.Text, source.LineNumber);
+            return new Source(source.Path, source.Text, source.LineNumber);
         });
     }
 
