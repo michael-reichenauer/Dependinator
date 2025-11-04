@@ -3,11 +3,11 @@
 [Transient]
 internal class AssemblyParserService : IParser
 {
-    readonly IStreamService streamService;
+    readonly IFileService fileService;
 
-    public AssemblyParserService(IStreamService streamService)
+    public AssemblyParserService(IFileService fileService)
     {
-        this.streamService = streamService;
+        this.fileService = fileService;
     }
 
     public bool CanSupport(string path) =>
@@ -15,13 +15,13 @@ internal class AssemblyParserService : IParser
 
     public async Task<R> ParseAsync(string path, IItems items)
     {
-        using var parser = new AssemblyParser(path, "", "", items, false, streamService);
+        using var parser = new AssemblyParser(path, "", "", items, false, fileService);
         return await parser.ParseAsync();
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        using var parser = new AssemblyParser(path, "", "", null!, true, streamService);
+        using var parser = new AssemblyParser(path, "", "", null!, true, fileService);
         return await Task.Run(() => parser.TryGetSource(nodeName));
     }
 

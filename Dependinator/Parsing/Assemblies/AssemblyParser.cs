@@ -15,7 +15,7 @@ internal class AssemblyParser : IDisposable
     readonly Decompiler decompiler = new();
 
     readonly IItems items;
-    readonly IStreamService streamService;
+    readonly IFileService fileService;
     readonly MemberParser memberParser;
     readonly string parentName;
     readonly ParsingAssemblyResolver resolver = new();
@@ -29,14 +29,14 @@ internal class AssemblyParser : IDisposable
         string parentName,
         IItems items,
         bool isReadSymbols,
-        IStreamService streamService
+        IFileService fileService
     )
     {
         ProjectPath = projectPath;
         this.assemblyPath = assemblyPath;
         this.parentName = parentName;
         this.items = items;
-        this.streamService = streamService;
+        this.fileService = fileService;
         XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
         linkHandler = new LinkHandler(items);
 
@@ -63,7 +63,7 @@ internal class AssemblyParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        if (!streamService.Exists(assemblyPath))
+        if (!await fileService.Exists(assemblyPath))
             return R.Error($"No file at '{assemblyPath}'");
 
         return await Task.Run(async () =>
@@ -122,7 +122,13 @@ internal class AssemblyParser : IDisposable
         await memberParser.AddTypesMembersAsync(typeInfos);
     }
 
-    public R<Source> TryGetSource(string nodeName) => decompiler.TryGetSource(assembly.Value!.MainModule, nodeName);
+    public R<Source> TryGetSource(string nodeName)
+    {
+        if (assembly.Value is null)
+            return R.Error($"Failed to read Assembly for {nodeName}");
+
+        return decompiler.TryGetSource(assembly.Value!.MainModule, nodeName);
+    }
 
     public bool TryGetNode(string sourceFilePath, out string nodeName)
     {
@@ -137,7 +143,7 @@ internal class AssemblyParser : IDisposable
         {
             var parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
 
-            if (!Try(out var stream, out var e, streamService.ReadStream(assemblyPath)))
+            if (!Try(out var stream, out var e, fileService.ReadStream(assemblyPath)))
                 return null;
             return AssemblyDefinition.ReadAssembly(stream, parameters);
         }

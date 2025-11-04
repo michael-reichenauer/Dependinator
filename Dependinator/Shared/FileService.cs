@@ -11,7 +11,6 @@ interface IFileService
     Task<IReadOnlyList<string>> AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
 
     R<Stream> ReadStream(string path);
-    bool ExistsStream(string path);
 
     Task<R<IReadOnlyList<string>>> GetFilePathsAsync();
 }
@@ -26,14 +25,19 @@ class FileService : IFileService
     const long MaxFileSize = 1024 * 1024 * 10; // 10 MB
     Dictionary<string, Stream> streamsByName = [];
     readonly IDatabase database;
+    readonly IEmbeddedResources embeddedResources;
 
-    public FileService(IDatabase database)
+    public FileService(IDatabase database, IEmbeddedResources embeddedResources)
     {
         this.database = database;
+        this.embeddedResources = embeddedResources;
     }
 
     public async Task<bool> Exists(string path)
     {
+        if (path == Models.ExampleModel.Path || streamsByName.ContainsKey(path))
+            return true;
+
         if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName)))
             return false;
         return paths.Contains(path);
@@ -76,6 +80,7 @@ class FileService : IFileService
                 var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
                 var streamPath = $"{WebFilesPrefix}{file.Name}";
+
                 streamsByName[streamPath] = memoryStream;
                 paths.Add(streamPath);
             }
@@ -91,13 +96,18 @@ class FileService : IFileService
     public R<Stream> ReadStream(string path)
     {
         Log.Info("ReadStram:", path);
+        if (path == Models.ExampleModel.Path)
+        {
+            return embeddedResources.OpenResource(Models.ExampleModel.Path);
+        }
+
         if (path.StartsWith(WebFilesPrefix))
         {
             Log.Info("Reading Web File:", path);
             if (!streamsByName.TryGetValue(path, out var webFileStream))
                 return R.None;
 
-            streamsByName.Remove(path);
+            //streamsByName.Remove(path);
             webFileStream.Seek(0, SeekOrigin.Begin);
             return webFileStream;
         }
@@ -105,10 +115,5 @@ class FileService : IFileService
         if (!Try(out var fileStream, out var e, () => File.OpenRead(path)))
             return e;
         return fileStream;
-    }
-
-    public bool ExistsStream(string path)
-    {
-        return streamsByName.ContainsKey(path);
     }
 }
