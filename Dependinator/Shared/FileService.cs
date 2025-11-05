@@ -1,3 +1,4 @@
+using System.Configuration;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Shared;
@@ -7,10 +8,9 @@ interface IFileService
     Task<bool> Exists(string path);
     Task<R> WriteAsync<T>(string path, T content);
     Task<R<T>> ReadAsync<T>(string path);
+    Task<R<Stream>> ReadStreamAsync(string path);
     Task<R> DeleteAsync(string path);
     Task<IReadOnlyList<string>> AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
-
-    R<Stream> ReadStream(string path);
 
     Task<R<IReadOnlyList<string>>> GetFilePathsAsync();
 }
@@ -23,7 +23,7 @@ class FileService : IFileService
     public static readonly string DBCollectionName = "Files";
 
     const long MaxFileSize = 1024 * 1024 * 10; // 10 MB
-    Dictionary<string, Stream> streamsByName = [];
+
     readonly IDatabase database;
     readonly IEmbeddedResources embeddedResources;
 
@@ -35,7 +35,10 @@ class FileService : IFileService
 
     public async Task<bool> Exists(string path)
     {
-        if (path == Models.ExampleModel.Path || streamsByName.ContainsKey(path))
+        if (path == Models.ExampleModel.Path)
+            return true;
+
+        if (File.Exists(path))
             return true;
 
         if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName)))
@@ -67,21 +70,22 @@ class FileService : IFileService
     {
         using var _ = Timing.Start($"Added {browserFiles.Count} files");
 
-        streamsByName.Clear();
-
-        List<string> paths = new();
+        List<string> paths = [];
 
         foreach (var file in browserFiles)
         {
             try
             {
                 Log.Info($"Adding file: {file.Name} {file.Size}");
-                using var stream = file.OpenReadStream(MaxFileSize);
-                var memoryStream = new MemoryStream();
-                await stream.CopyToAsync(memoryStream);
+                using var webFileStream = file.OpenReadStream(MaxFileSize);
+                var filesStream = new MemoryStream();
+                await webFileStream.CopyToAsync(filesStream);
                 var streamPath = $"{WebFilesPrefix}{file.Name}";
 
-                streamsByName[streamPath] = memoryStream;
+                var fileBytes = filesStream.ToArray();
+                var fileBase64 = Convert.ToBase64String(fileBytes);
+                await WriteAsync(streamPath, fileBase64);
+
                 paths.Add(streamPath);
             }
             catch (Exception ex)
@@ -93,9 +97,9 @@ class FileService : IFileService
         return paths;
     }
 
-    public R<Stream> ReadStream(string path)
+    public async Task<R<Stream>> ReadStreamAsync(string path)
     {
-        Log.Info("ReadStram:", path);
+        Log.Info("ReadStream:", path);
         if (path == Models.ExampleModel.Path)
         {
             return embeddedResources.OpenResource(Models.ExampleModel.Path);
@@ -103,17 +107,16 @@ class FileService : IFileService
 
         if (path.StartsWith(WebFilesPrefix))
         {
-            Log.Info("Reading Web File:", path);
-            if (!streamsByName.TryGetValue(path, out var webFileStream))
-                return R.None;
-
-            //streamsByName.Remove(path);
-            webFileStream.Seek(0, SeekOrigin.Begin);
-            return webFileStream;
+            if (!Try(out var fileBase64, out var e, await ReadAsync<string>(path)))
+                return e;
+            var bytes = Convert.FromBase64String(fileBase64);
+            var filesStream = new MemoryStream(bytes, writable: false);
+            filesStream.Seek(0, SeekOrigin.Begin);
+            return filesStream;
         }
 
-        if (!Try(out var fileStream, out var e, () => File.OpenRead(path)))
-            return e;
+        if (!Try(out var fileStream, out var e2, () => File.OpenRead(path)))
+            return e2;
         return fileStream;
     }
 }

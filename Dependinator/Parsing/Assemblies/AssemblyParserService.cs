@@ -15,14 +15,18 @@ internal class AssemblyParserService : IParser
 
     public async Task<R> ParseAsync(string path, IItems items)
     {
-        using var parser = new AssemblyParser(path, "", "", items, false, fileService);
-        return await parser.ParseAsync();
+        if (!Try(out var parser, out var e, await AssemblyParser.CreateAsync(path, "", "", items, false, fileService)))
+            return e;
+        using var p = parser;
+        return await p.ParseAsync();
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        using var parser = new AssemblyParser(path, "", "", null!, true, fileService);
-        return await Task.Run(() => parser.TryGetSource(nodeName));
+        if (!Try(out var parser, out var e, await AssemblyParser.CreateAsync(path, "", "", null!, true, fileService)))
+            return e;
+        using var p = parser;
+        return await Task.Run(() => p.TryGetSource(nodeName));
     }
 
     public Task<R<string>> GetNodeAsync(string path, Source source) => Task.FromResult((R<string>)"");

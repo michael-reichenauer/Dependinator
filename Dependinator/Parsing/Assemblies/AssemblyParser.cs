@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Dependinator.Models;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
@@ -8,22 +7,41 @@ namespace Dependinator.Parsing.Assemblies;
 
 internal class AssemblyParser : IDisposable
 {
-    readonly Lazy<AssemblyDefinition?> assembly;
+    readonly AssemblyDefinition assemblyDefinition;
 
     readonly string assemblyPath;
     readonly AssemblyReferencesParser assemblyReferencesParser;
     readonly Decompiler decompiler = new();
 
     readonly IItems items;
-    readonly IFileService fileService;
     readonly MemberParser memberParser;
     readonly string parentName;
-    readonly ParsingAssemblyResolver resolver = new();
     readonly TypeParser typeParser;
     readonly LinkHandler linkHandler;
     List<TypeData> typeInfos = new List<TypeData>();
 
-    public AssemblyParser(
+    private AssemblyParser(
+        string assemblyPath,
+        AssemblyDefinition assemblyDefinition,
+        string projectPath,
+        string parentName,
+        IItems items
+    )
+    {
+        ProjectPath = projectPath;
+        this.assemblyPath = assemblyPath;
+        this.assemblyDefinition = assemblyDefinition;
+        this.parentName = parentName;
+        this.items = items;
+        XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
+        linkHandler = new LinkHandler(items);
+
+        assemblyReferencesParser = new AssemblyReferencesParser(linkHandler, items);
+        typeParser = new TypeParser(linkHandler, xmlDockParser, items);
+        memberParser = new MemberParser(linkHandler, xmlDockParser, items);
+    }
+
+    public static async Task<R<AssemblyParser>> CreateAsync(
         string assemblyPath,
         string projectPath,
         string parentName,
@@ -32,24 +50,19 @@ internal class AssemblyParser : IDisposable
         IFileService fileService
     )
     {
-        ProjectPath = projectPath;
-        this.assemblyPath = assemblyPath;
-        this.parentName = parentName;
-        this.items = items;
-        this.fileService = fileService;
-        XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
-        linkHandler = new LinkHandler(items);
+        if (!await fileService.Exists(assemblyPath))
+            return R.Error($"No file at '{assemblyPath}'");
 
-        assemblyReferencesParser = new AssemblyReferencesParser(linkHandler, items);
-        typeParser = new TypeParser(linkHandler, xmlDockParser, items);
-        memberParser = new MemberParser(linkHandler, xmlDockParser, items);
+        var assemblyDefinition = await GetAssemblyAsync(assemblyPath, fileService, isReadSymbols);
+        if (assemblyDefinition is null)
+            return R.Error($"Failed to read assembly {assemblyPath}");
 
-        assembly = new Lazy<AssemblyDefinition?>(() => GetAssembly(isReadSymbols));
+        return new AssemblyParser(assemblyPath, assemblyDefinition, projectPath, parentName, items);
     }
 
     public string ProjectPath { get; }
 
-    public string ModuleName => Name.GetModuleName(assembly.Value!);
+    public string ModuleName => Name.GetModuleName(assemblyDefinition);
 
     public int TypeCount => typeInfos.Count;
     public int MemberCount => memberParser.MembersCount;
@@ -58,19 +71,16 @@ internal class AssemblyParser : IDisposable
 
     public void Dispose()
     {
-        assembly.Value?.Dispose();
+        assemblyDefinition.Dispose();
     }
 
     public async Task<R> ParseAsync()
     {
-        if (!await fileService.Exists(assemblyPath))
-            return R.Error($"No file at '{assemblyPath}'");
-
         return await Task.Run(async () =>
         {
             await ParseAssemblyModuleAsync();
-            await ParseAssemblyReferencesAsync(Array.Empty<string>());
-            ParseTypes();
+            await ParseAssemblyReferencesAsync([]);
+            await ParseTypesAsync();
             await ParseTypeMembersAsync();
             return R.Ok;
         });
@@ -78,8 +88,8 @@ internal class AssemblyParser : IDisposable
 
     public async Task ParseAssemblyModuleAsync()
     {
-        string nodeName = Name.GetModuleName(assembly.Value!);
-        string assemblyDescription = GetAssemblyDescription(assembly.Value!);
+        string nodeName = Name.GetModuleName(assemblyDefinition!);
+        string assemblyDescription = GetAssemblyDescription(assemblyDefinition!);
         var assemblyNode = new Node(
             nodeName,
             new()
@@ -95,25 +105,25 @@ internal class AssemblyParser : IDisposable
 
     public async Task ParseAssemblyReferencesAsync(IReadOnlyList<string> internalModules)
     {
-        if (assembly.Value == null)
-            return;
-
-        await assemblyReferencesParser.AddReferencesAsync(assembly.Value, internalModules);
+        await assemblyReferencesParser.AddReferencesAsync(assemblyDefinition, internalModules);
     }
 
-    public IEnumerable<string> GetReferencePaths(IReadOnlyList<string> internalModules) =>
-        AssemblyReferencesParser.GetReferencesPaths(assemblyPath, assembly.Value!, internalModules);
-
-    public void ParseTypes()
+    public IEnumerable<string> GetReferencePaths(IReadOnlyList<string> internalModules)
     {
-        if (assembly.Value == null)
-            return;
+        return AssemblyReferencesParser.GetReferencesPaths(assemblyPath, assemblyDefinition, internalModules);
+    }
 
-        IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
+    public async Task ParseTypesAsync()
+    {
+        var assemblyTypes = GetAssemblyTypes();
 
         // Add assembly type nodes (including inner type types)
-        typeInfos = new List<TypeData>();
-        assemblyTypes.ForEach(async t => await typeParser.AddTypeAsync(t).ForEachAsync(tt => typeInfos.Add(tt)));
+        typeInfos = [];
+
+        foreach (var type in assemblyTypes)
+        {
+            await typeParser.AddTypeAsync(type).ForEachAsync(t => typeInfos.Add(t));
+        }
     }
 
     public async Task ParseTypeMembersAsync()
@@ -124,33 +134,37 @@ internal class AssemblyParser : IDisposable
 
     public R<Source> TryGetSource(string nodeName)
     {
-        if (assembly.Value is null)
-            return R.Error($"Failed to read Assembly for {nodeName}");
-
-        return decompiler.TryGetSource(assembly.Value!.MainModule, nodeName);
+        return decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName);
     }
 
-    public bool TryGetNode(string sourceFilePath, out string nodeName)
+    public R<string> TryGetNode(string sourceFilePath)
     {
-        IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
+        var assemblyTypes = GetAssemblyTypes();
 
-        return decompiler.TryGetNodeNameForSourceFile(assemblyTypes, sourceFilePath, out nodeName);
+        if (!decompiler.TryGetNodeNameForSourceFile(assemblyTypes, sourceFilePath, out var nodeName))
+            return R.Error($"Failed to get node {sourceFilePath}");
+        return nodeName;
     }
 
-    private AssemblyDefinition? GetAssembly(bool isSymbols)
+    static async Task<AssemblyDefinition?> GetAssemblyAsync(
+        string assemblyPath,
+        IFileService fileService,
+        bool isSymbols
+    )
     {
         try
         {
+            ParsingAssemblyResolver resolver = new();
             var parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
 
-            if (!Try(out var stream, out var e, fileService.ReadStream(assemblyPath)))
+            if (!Try(out var stream, out var e, await fileService.ReadStreamAsync(assemblyPath)))
                 return null;
             return AssemblyDefinition.ReadAssembly(stream, parameters);
         }
         catch (SymbolsNotFoundException)
         {
             Log.Debug("Assembly does not have symbols");
-            return GetAssembly(false);
+            return await GetAssemblyAsync(assemblyPath, fileService, false);
         }
         catch (Exception e)
         {
@@ -160,12 +174,14 @@ internal class AssemblyParser : IDisposable
         return null;
     }
 
-    private IEnumerable<TypeDefinition> GetAssemblyTypes() =>
-        assembly.Value!.MainModule.Types.Where(type =>
+    IEnumerable<TypeDefinition> GetAssemblyTypes()
+    {
+        return assemblyDefinition.MainModule.Types.Where(type =>
             !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
         );
+    }
 
-    private static string GetAssemblyDescription(AssemblyDefinition assembly)
+    static string GetAssemblyDescription(AssemblyDefinition assembly)
     {
         Collection<CustomAttribute> attributes = assembly.CustomAttributes;
 
