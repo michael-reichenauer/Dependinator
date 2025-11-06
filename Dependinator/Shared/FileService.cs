@@ -43,7 +43,7 @@ class FileService : IFileService
 
         if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName)))
             return false;
-        return paths.Contains(path);
+        return paths.Contains(path) || paths.Contains(BinPath(path));
     }
 
     public async Task<R<IReadOnlyList<string>>> GetFilePathsAsync()
@@ -63,6 +63,8 @@ class FileService : IFileService
 
     public async Task<R> DeleteAsync(string path)
     {
+        var binPath = BinPath(path);
+        await database.DeleteAsync(DBCollectionName, binPath);
         return await database.DeleteAsync(DBCollectionName, path);
     }
 
@@ -80,13 +82,14 @@ class FileService : IFileService
                 using var webFileStream = file.OpenReadStream(MaxFileSize);
                 var filesStream = new MemoryStream();
                 await webFileStream.CopyToAsync(filesStream);
-                var streamPath = $"{WebFilesPrefix}{file.Name}";
+                var modelPath = $"{WebFilesPrefix}{file.Name}";
+                var binPath = BinPath(modelPath);
 
                 var fileBytes = filesStream.ToArray();
                 var fileBase64 = Convert.ToBase64String(fileBytes);
-                await WriteAsync(streamPath, fileBase64);
+                await WriteAsync(binPath, fileBase64);
 
-                paths.Add(streamPath);
+                paths.Add(modelPath);
             }
             catch (Exception ex)
             {
@@ -107,7 +110,8 @@ class FileService : IFileService
 
         if (path.StartsWith(WebFilesPrefix))
         {
-            if (!Try(out var fileBase64, out var e, await ReadAsync<string>(path)))
+            var binPath = BinPath(path);
+            if (!Try(out var fileBase64, out var e, await ReadAsync<string>(binPath)))
                 return e;
             var bytes = Convert.FromBase64String(fileBase64);
             var filesStream = new MemoryStream(bytes, writable: false);
@@ -119,4 +123,6 @@ class FileService : IFileService
             return e2;
         return fileStream;
     }
+
+    string BinPath(string path) => $"{path}.bin";
 }
