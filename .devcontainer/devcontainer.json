@@ -1,6 +1,10 @@
 {
   "name": "Dependinator",
-  "image": "mcr.microsoft.com/dotnet/sdk:9.0",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
     "ghcr.io/devcontainers/features/github-cli:1": {
@@ -14,6 +18,7 @@
     },
     "ghcr.io/devcontainers/features/common-utils:2": {}
   },
+
   "customizations": {
     "vscode": {
       "extensions": [
@@ -21,10 +26,11 @@
         "GitHub.vscode-github-actions",
         "ms-dotnettools.vscode-dotnet-runtime",
         "ms-dotnettools.csdevkit",
-        "ms-dotnetools.csharp",
+        "ms-dotnettools.csharp",
         "ms-azuretools.vscode-azurefunctions"
       ]
     }
   },
+
   "postCreateCommand": "./installdevtools"
 }
