@@ -235,10 +235,6 @@ class ModelService : IModelService
     public async Task<R<ModelInfo>> LoadAsync(string path)
     {
         Clear();
-        if (!Build.IsWebAssembly && path == ExampleModel.Path)
-        {
-            path = "/workspaces/Dependinator/Dependinator.sln";
-        }
 
         Log.Info("Loading ...", path);
         using var _ = Timing.Start("Load model", path);
