@@ -83,7 +83,7 @@
 			"type": "func",
 			"dependsOn": "build (functions)",
 			"options": {
-				"cwd": "${workspaceFolder}/Api/bin/Debug/net9.0"
+				"cwd": "${workspaceFolder}/Api/bin/Debug/net10.0"
 			},
 			"command": "host start",
 			"isBackground": true,
