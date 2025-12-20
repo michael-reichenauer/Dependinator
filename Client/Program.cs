@@ -1,4 +1,4 @@
-using BlazorApp.Client;
+using Dependinator.Client;
 using Dependinator.Utils;
 using Dependinator.Utils.Logging;
 using Microsoft.AspNetCore.Components.Web;

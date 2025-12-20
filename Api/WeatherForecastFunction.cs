@@ -1,5 +1,5 @@
 using System.Net;
-using BlazorApp.Shared;
+using Dependinator.Shared;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
