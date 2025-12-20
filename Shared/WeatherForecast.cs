@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BlazorApp.Shared
+namespace Dependinator.Shared
 {
     public class WeatherForecast
     {

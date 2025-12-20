@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>BlazorApp.Shared</RootNamespace>
+    <RootNamespace>Dependinator.Shared</RootNamespace>
   </PropertyGroup>
 
 </Project>
