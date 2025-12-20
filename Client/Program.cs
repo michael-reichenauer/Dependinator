@@ -3,7 +3,6 @@ using Dependinator.Utils;
 using Dependinator.Utils.Logging;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using MudBlazor.Services;
 
 internal class Program
 {
@@ -16,22 +15,7 @@ internal class Program
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
-        builder.Services.AddSingleton<IEmbeddedResources, EmbeddedResources<Program>>();
-
-        builder.Services.AddMudServices();
-
-        builder.Services.Scan(i =>
-            i.FromAssembliesOf(typeof(Dependinator.RootClass))
-                .AddClasses(c => c.WithAttribute<SingletonAttribute>(), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithSingletonLifetime()
-                .AddClasses(c => c.WithAttribute<ScopedAttribute>(), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-                .AddClasses(c => c.WithAttribute<TransientAttribute>(), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithTransientLifetime()
-        );
+        builder.Services.AddDependinatorServices<Program>();
 
         await builder.Build().RunAsync();
     }

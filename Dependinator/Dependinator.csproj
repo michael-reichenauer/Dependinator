@@ -22,5 +22,6 @@
     <PackageReference Include="Mono.Cecil" />
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Scrutor" />
   </ItemGroup>
 </Project>
