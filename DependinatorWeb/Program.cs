@@ -1,7 +1,6 @@
 using Dependinator;
 using Dependinator.Utils;
 using Dependinator.Utils.Logging;
-using MudBlazor.Services;
 
 namespace DependinatorWeb;
 
@@ -22,25 +21,11 @@ public class Program
                 options.Listen(System.Net.IPAddress.Loopback, 5000); // Listen on port 5000 for HTTP on IPv4
             });
         }
-        builder.Services.AddSingleton<IEmbeddedResources, EmbeddedResources<Program>>();
 
         // Add services to the container.
         builder.Services.AddRazorPages();
         builder.Services.AddServerSideBlazor();
-        builder.Services.AddMudServices();
-
-        builder.Services.Scan(i =>
-            i.FromAssembliesOf(typeof(Dependinator.RootClass))
-                .AddClasses(c => c.WithAttribute<SingletonAttribute>(), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithSingletonLifetime()
-                .AddClasses(c => c.WithAttribute<ScopedAttribute>(), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-                .AddClasses(c => c.WithAttribute<TransientAttribute>(), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithTransientLifetime()
-        );
+        builder.Services.AddDependinatorServices<Program>();
 
         var app = builder.Build();
 
