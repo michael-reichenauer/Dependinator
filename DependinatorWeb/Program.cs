@@ -1,4 +1,5 @@
 using Dependinator;
+using Dependinator.Shared;
 using Dependinator.Utils;
 using Dependinator.Utils.Logging;
 
@@ -26,6 +27,7 @@ public class Program
         builder.Services.AddRazorPages();
         builder.Services.AddServerSideBlazor();
         builder.Services.AddDependinatorServices<Program>();
+        builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
 
         var app = builder.Build();
 
