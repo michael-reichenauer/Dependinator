@@ -4,6 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Dependinator.Client</RootNamespace>
+    <AssemblyName>Dependinator.Client</AssemblyName>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>

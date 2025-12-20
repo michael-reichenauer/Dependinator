@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Dependinator.Shared</RootNamespace>
+    <AssemblyName>Dependinator.Shared</AssemblyName>
   </PropertyGroup>
 
 </Project>
