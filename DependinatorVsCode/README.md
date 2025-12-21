@@ -5,8 +5,7 @@ This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
 ## Local development
 
 1. Build and copy the WASM assets into `DependinatorVsCode/media`:
-   - Linux/macOS: `scripts/prepare-wasm.sh`
-   - Windows: `scripts/prepare-wasm.ps1`
+   - `scripts/prepare-wasm.sh`
 2. In `DependinatorVsCode`, install dependencies and compile:
    - `npm install`
    - `npm run compile`
@@ -16,4 +15,6 @@ This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
 ## Notes
 
 - In vscode.dev, the UI can load, but the .NET language server will be disabled.
+- The default script disables native WASM runtime compilation to avoid needing Python.
+- Use `scripts/prepare-wasm.sh --aot` if you want full AOT and compressed artifacts (requires Python).
 - `publisher` in `package.json` should be updated before publishing to the marketplace.
