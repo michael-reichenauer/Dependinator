@@ -14,18 +14,18 @@ interface IConfigService
 [Transient]
 class ConfigService : IConfigService
 {
-    const string ConfigPath = "/.dependinator/DependinatorConfig.json";
-
     readonly IFileService fileService;
+    readonly IHostStoragePaths hostStoragePaths;
 
-    public ConfigService(IFileService fileService)
+    public ConfigService(IFileService fileService, IHostStoragePaths hostStoragePaths)
     {
         this.fileService = fileService;
+        this.hostStoragePaths = hostStoragePaths;
     }
 
     public async Task<Config> GetAsync()
     {
-        if (!Try(out var config, out var e, await fileService.ReadAsync<Config>(ConfigPath)))
+        if (!Try(out var config, out var e, await fileService.ReadAsync<Config>(hostStoragePaths.ConfigPath)))
         { // Return default config values
             return new Config();
         }
@@ -34,11 +34,11 @@ class ConfigService : IConfigService
 
     public async Task SetAsync(Action<Config> updateAction)
     {
-        if (!Try(out var config, out var e, await fileService.ReadAsync<Config>(ConfigPath)))
+        if (!Try(out var config, out var e, await fileService.ReadAsync<Config>(hostStoragePaths.ConfigPath)))
         { // Use default config values
             config = new Config();
         }
         updateAction(config);
-        await fileService.WriteAsync(ConfigPath, config);
+        await fileService.WriteAsync(hostStoragePaths.ConfigPath, config);
     }
 }

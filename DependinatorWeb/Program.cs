@@ -28,6 +28,7 @@ public class Program
         builder.Services.AddServerSideBlazor();
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
+        builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
 
         var app = builder.Build();
 

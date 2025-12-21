@@ -17,8 +17,6 @@ interface IFileService
 [Scoped]
 class FileService : IFileService
 {
-    static readonly string WebFilesPrefix = "/.dependinator/web-files/";
-
     public static readonly string DBCollectionName = "Files";
 
     const long MaxFileSize = 1024 * 1024 * 10; // 10 MB
@@ -26,12 +24,19 @@ class FileService : IFileService
     readonly IDatabase database;
     readonly IEmbeddedResources embeddedResources;
     readonly IHostFileSystem hostFileSystem;
+    readonly IHostStoragePaths hostStoragePaths;
 
-    public FileService(IDatabase database, IEmbeddedResources embeddedResources, IHostFileSystem hostFileSystem)
+    public FileService(
+        IDatabase database,
+        IEmbeddedResources embeddedResources,
+        IHostFileSystem hostFileSystem,
+        IHostStoragePaths hostStoragePaths
+    )
     {
         this.database = database;
         this.embeddedResources = embeddedResources;
         this.hostFileSystem = hostFileSystem;
+        this.hostStoragePaths = hostStoragePaths;
     }
 
     public async Task<bool> Exists(string path)
@@ -83,7 +88,7 @@ class FileService : IFileService
                 using var webFileStream = file.OpenReadStream(MaxFileSize);
                 var filesStream = new MemoryStream();
                 await webFileStream.CopyToAsync(filesStream);
-                var modelPath = $"{WebFilesPrefix}{file.Name}";
+                var modelPath = $"{hostStoragePaths.WebFilesPrefix}{file.Name}";
                 var binPath = BinPath(modelPath);
 
                 var fileBytes = filesStream.ToArray();
@@ -109,7 +114,7 @@ class FileService : IFileService
             return embeddedResources.OpenResource(Models.ExampleModel.Path);
         }
 
-        if (path.StartsWith(WebFilesPrefix))
+        if (path.StartsWith(hostStoragePaths.WebFilesPrefix))
         {
             var binPath = BinPath(path);
             if (!Try(out var fileBase64, out var e, await ReadAsync<string>(binPath)))

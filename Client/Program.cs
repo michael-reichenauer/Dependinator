@@ -18,6 +18,7 @@ internal class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
+        builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
 
         await builder.Build().RunAsync();
     }
