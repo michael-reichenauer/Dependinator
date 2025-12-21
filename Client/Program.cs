@@ -9,7 +9,7 @@ internal class Program
 {
     public static async Task Main(string[] args)
     {
-        Dependinator.Utils.Logging.ConfigLogger.Enable(isFileLog: false, isConsoleLog: true);
+        ConfigLogger.Configure(new HostLoggingSettings(EnableFileLog: false, EnableConsoleLog: true));
         Log.Info($"Starting Dependinator Client ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 

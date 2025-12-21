@@ -9,7 +9,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        Dependinator.Utils.Logging.ConfigLogger.Enable(isFileLog: true, isConsoleLog: false);
+        ConfigLogger.Configure(new HostLoggingSettings(EnableFileLog: true, EnableConsoleLog: false));
         Log.Info($"Starting Dependinator {Build.ProductVersion}, {Build.Time}, ({Build.CommitSid}) ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 

@@ -25,25 +25,39 @@ static class ConfigLogger
 
     static readonly object syncRoot = new object();
     static int prefixLength = 0;
-    static string LogPath = LogFileName;
+    static string? LogPath;
     static bool isFileLog = false;
     static bool isConsoleLog = false;
 
     static TaskCompletionSource doneTask = new TaskCompletionSource();
 
-    public static void Enable(bool isFileLog, bool isConsoleLog)
-    {
-        ConfigLogger.isFileLog = isFileLog;
-        ConfigLogger.isConsoleLog = isConsoleLog;
-    }
-
     static ConfigLogger()
     {
         Task.Factory.StartNew(ProcessLogsAsync, TaskCreationOptions.LongRunning).RunInBackground();
-        // string path = $"{Environment.GetFolderPath(SpecialFolder.UserProfile)}/gmd.log";
-        string path = Path.Join(GetFolderPath(SpecialFolder.UserProfile), LogFileName);
-        // var path = "/workspaces/Dependinator/Dependinator.log";
-        Init(path);
+        SetPrefixLength();
+    }
+
+    public static void Enable(bool isFileLog, bool isConsoleLog)
+    {
+        Configure(new HostLoggingSettings(isFileLog, isConsoleLog));
+    }
+
+    public static void Configure(IHostLoggingSettings settings)
+    {
+        isFileLog = settings.EnableFileLog;
+        isConsoleLog = settings.EnableConsoleLog;
+
+        if (isFileLog)
+        {
+            var logPath = string.IsNullOrWhiteSpace(settings.LogFilePath)
+                ? Path.Join(GetFolderPath(SpecialFolder.UserProfile), LogFileName)
+                : settings.LogFilePath!;
+            Init(logPath);
+        }
+        else
+        {
+            LogPath = null;
+        }
     }
 
     public static Task CloseAsync()
@@ -65,15 +79,19 @@ static class ConfigLogger
         QueueLogMessage(new LogMsg(level, msg, memberName, sourceFilePath, sourceLineNumber));
     }
 
-    static void Init(string logFilePath, [CallerFilePath] string sourceFilePath = "")
+    static void Init(string logFilePath)
     {
         LogPath = logFilePath;
+        if (!Try(out var e, () => File.WriteAllText(LogPath, "")))
+            throw Asserter.FailFast(e.ErrorMessage);
+    }
+
+    static void SetPrefixLength([CallerFilePath] string sourceFilePath = "")
+    {
         string rootPath =
             Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(sourceFilePath))))
             ?? "";
         prefixLength = rootPath.Length + 1;
-        if (!Try(out var e, () => File.WriteAllText(LogPath, "")))
-            throw Asserter.FailFast(e.ErrorMessage);
     }
 
     static void LogDone(
@@ -183,7 +201,7 @@ static class ConfigLogger
 
     private static void WriteToFile(IReadOnlyCollection<string> textLines)
     {
-        if (LogPath == null)
+        if (!isFileLog && !isConsoleLog)
         {
             return;
         }
@@ -198,13 +216,17 @@ static class ConfigLogger
                     if (isConsoleLog)
                         Console.WriteLine(textLines.Select(l => l.Length > 24 ? l[24..] : l).Join("\n"));
                     if (isFileLog)
+                    {
+                        if (LogPath == null)
+                            return;
                         File.AppendAllLines(LogPath, textLines);
 
-                    long length = new FileInfo(LogPath).Length;
+                        long length = new FileInfo(LogPath).Length;
 
-                    if (length > MaxLogFileSize)
-                    {
-                        MoveLargeLogFile();
+                        if (length > MaxLogFileSize)
+                        {
+                            MoveLargeLogFile();
+                        }
                     }
 
                     return;
@@ -238,6 +260,11 @@ static class ConfigLogger
     {
         try
         {
+            if (LogPath == null)
+            {
+                return;
+            }
+
             string tempPath = LogPath + "." + Guid.NewGuid();
             File.Move(LogPath, tempPath);
 
