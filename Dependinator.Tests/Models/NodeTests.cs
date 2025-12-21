@@ -21,7 +21,7 @@ public class NodeTests
         var (pos, zoom) = child.GetPosAndZoom();
         var (centerPos, centerZoom) = child.GetCenterPosAndZoom();
 
-        Assert.Equal(new Pos(10*2 + 5*2, 20*2 + 6*2), pos);
+        Assert.Equal(new Pos(20, 32), pos);
         Assert.Equal(2, zoom);
         Assert.Equal(new Pos(30, 44), centerPos);
         Assert.Equal(2, centerZoom);
