@@ -5,7 +5,7 @@ global using static Dependinator.Utils.Result;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Dependinator.Client")]
+[assembly: InternalsVisibleTo("Dependinator.Wasm")]
 [assembly: InternalsVisibleTo("DependinatorWeb")]
 [assembly: InternalsVisibleTo("Dependinator.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // DI and tests access

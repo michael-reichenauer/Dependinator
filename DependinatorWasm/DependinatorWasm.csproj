@@ -3,8 +3,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Dependinator.Client</RootNamespace>
-    <AssemblyName>Dependinator.Client</AssemblyName>
+    <RootNamespace>Dependinator.Wasm</RootNamespace>
+    <AssemblyName>Dependinator.Wasm</AssemblyName>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>

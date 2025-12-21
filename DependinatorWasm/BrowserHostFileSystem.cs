@@ -1,6 +1,6 @@
 using Dependinator.Shared;
 
-namespace Dependinator.Client;
+namespace Dependinator.Wasm;
 
 class BrowserHostFileSystem : IHostFileSystem
 {

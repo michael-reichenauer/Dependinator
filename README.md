@@ -5,7 +5,7 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
 ## Solution structure
 - `Dependinator/`: Shared UI, parsing, models, utilities.
 - `DependinatorWeb/`: Blazor Server host for local development.
-- `Client/`: Blazor WebAssembly host (Azure Static Web Apps target).
+- `DependinatorWasm/`: Blazor WebAssembly host (Azure Static Web Apps target).
 - `Api/`: Azure Functions sample (planned for future use).
 - `Shared/`: Shared DTOs/models between client and API.
 - `Dependinator.Tests/`: xUnit tests.

@@ -1,4 +1,4 @@
-using Dependinator.Client;
+using Dependinator.Wasm;
 using Dependinator.Shared;
 using Dependinator.Utils;
 using Dependinator.Utils.Logging;
@@ -10,7 +10,7 @@ internal class Program
     public static async Task Main(string[] args)
     {
         ConfigLogger.Configure(new HostLoggingSettings(EnableFileLog: false, EnableConsoleLog: true));
-        Log.Info($"Starting Dependinator Client ...");
+        Log.Info($"Starting Dependinator WASM ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
