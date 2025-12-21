@@ -4,7 +4,7 @@
 - Solution: `Dependinator.sln` with projects:
   - `DependinatorWeb/` (Blazor Server host, main entry)
   - `Dependinator/` (core UI, parsing, models, utils)
-  - `Client/` (Blazor WebAssembly sample)
+  - `DependinatorWasm/` (Blazor WebAssembly sample)
   - `Api/` (Azure Functions sample)
   - `Shared/` (shared DTOs/models)
   - `Dependinator.Tests/` (xUnit tests)
@@ -12,7 +12,7 @@
 
 ## Build, Test, and Development Commands
 - Build site: `./build` (builds `DependinatorWeb`)
-- Run WASM sample: `./run` (runs `Client` in Release)
+- Run WASM sample: `./run` (runs `DependinatorWasm` in Release)
 - Live dev (server): `./watch` (dotnet watch on `DependinatorWeb`)
 - Standard .NET:
   - `dotnet build` (solution-wide build)
