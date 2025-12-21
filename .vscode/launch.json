@@ -25,6 +25,13 @@
             },
             "dotnetRunMessages": true,
             "console": "internalConsole"
+        },
+        {
+            "name": "Dependinator Extension (Desktop)",
+            "type": "extensionHost",
+            "request": "launch",
+            "extensionDevelopmentPath": "${workspaceFolder}/DependinatorVsCode",
+            "preLaunchTask": "Dependinator: Compile Extension"
         }
     ],
     "compounds": [

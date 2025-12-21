@@ -88,6 +88,15 @@
 			"command": "host start",
 			"isBackground": true,
 			"problemMatcher": "$func-dotnet-watch"
+		},
+		{
+			"label": "Dependinator: Compile Extension",
+			"type": "shell",
+			"command": "npm run compile",
+			"options": {
+				"cwd": "${workspaceFolder}/DependinatorVsCode"
+			},
+			"problemMatcher": "$tsc"
 		}
 	]
 }
