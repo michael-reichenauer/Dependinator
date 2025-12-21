@@ -1,4 +1,3 @@
-using System.Configuration;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Shared;
@@ -26,11 +25,13 @@ class FileService : IFileService
 
     readonly IDatabase database;
     readonly IEmbeddedResources embeddedResources;
+    readonly IHostFileSystem hostFileSystem;
 
-    public FileService(IDatabase database, IEmbeddedResources embeddedResources)
+    public FileService(IDatabase database, IEmbeddedResources embeddedResources, IHostFileSystem hostFileSystem)
     {
         this.database = database;
         this.embeddedResources = embeddedResources;
+        this.hostFileSystem = hostFileSystem;
     }
 
     public async Task<bool> Exists(string path)
@@ -38,7 +39,7 @@ class FileService : IFileService
         if (path == Models.ExampleModel.Path)
             return true;
 
-        if (File.Exists(path))
+        if (hostFileSystem.Exists(path))
             return true;
 
         if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName)))
@@ -119,7 +120,7 @@ class FileService : IFileService
             return filesStream;
         }
 
-        if (!Try(out var fileStream, out var e2, () => File.OpenRead(path)))
+        if (!Try(out var fileStream, out var e2, () => hostFileSystem.OpenRead(path)))
             return e2;
         return fileStream;
     }

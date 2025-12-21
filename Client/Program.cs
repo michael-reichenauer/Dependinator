@@ -1,4 +1,5 @@
 using Dependinator.Client;
+using Dependinator.Shared;
 using Dependinator.Utils;
 using Dependinator.Utils.Logging;
 using Microsoft.AspNetCore.Components.Web;
@@ -16,6 +17,7 @@ internal class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddDependinatorServices<Program>();
+        builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
 
         await builder.Build().RunAsync();
     }
