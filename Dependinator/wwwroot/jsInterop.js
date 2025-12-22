@@ -27,6 +27,14 @@ export function clickElement(elementId) {
   document.getElementById(elementId).click();
 }
 
+export function postVsCodeMessage(message) {
+  if (window.dependinator && typeof window.dependinator.postMessage === "function") {
+    window.dependinator.postMessage(message);
+    return true;
+  }
+  return false;
+}
+
 export function getBoundingRectangle(elementId) {
   var element = document.getElementById(elementId);
   if (element == null) {

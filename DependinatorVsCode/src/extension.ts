@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext): void {
             }
         );
 
-        panel.webview.onDidReceiveMessage(message => {
+        panel.webview.onDidReceiveMessage(async message => {
             if (!message || typeof message.type !== "string")
                 return;
 
@@ -29,6 +29,25 @@ export function activate(context: vscode.ExtensionContext): void {
             if (message.type === "ping") {
                 console.log("Dependinator ping", message.id ?? null);
                 panel.webview.postMessage({ type: "pong", id: message.id ?? null });
+                return;
+            }
+
+            if (message.type === "open-file") {
+                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+                const selected = await vscode.window.showOpenDialog({
+                    canSelectMany: false,
+                    openLabel: "Open in VS Code",
+                    defaultUri: workspaceFolder?.uri
+                });
+
+                if (!selected || selected.length === 0) {
+                    panel.webview.postMessage({ type: "open-file-canceled" });
+                    return;
+                }
+
+                const document = await vscode.workspace.openTextDocument(selected[0]);
+                await vscode.window.showTextDocument(document, { preview: true });
+                panel.webview.postMessage({ type: "open-file-result", path: document.uri.toString() });
                 return;
             }
         });
@@ -100,6 +119,14 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
             if (event.data.type === "pong")
             {
                 console.log("Dependinator: pong", event.data.id ?? null);
+            }
+            if (event.data.type === "open-file-result")
+            {
+                console.log("Dependinator: open file", event.data.path ?? null);
+            }
+            if (event.data.type === "open-file-canceled")
+            {
+                console.log("Dependinator: open file canceled");
             }
         });
 

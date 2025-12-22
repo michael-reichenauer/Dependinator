@@ -148,7 +148,11 @@ class CanvasService : ICanvasService
 
     public async void OpenFiles()
     {
-        await jSInteropService.Call("clickElement", "inputfile");
+        var sent = await jSInteropService.Call<bool>("postVsCodeMessage", new { type = "open-file" });
+        if (!sent)
+        {
+            await jSInteropService.Call("clickElement", "inputfile");
+        }
     }
 
     public void ToggleTheme()
