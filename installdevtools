@@ -9,6 +9,12 @@ echo ""
 echo "Updating apt ..."
 sudo apt update -q -y
 echo ""
+echo "Installing Python for WASM tooling ..."
+sudo apt-get install -y python3 python-is-python3 1>/dev/null
+echo ""
+echo "Installing dotnet wasm-tools workload ..."
+dotnet workload install wasm-tools
+echo ""
 echo "Installing mc for file browsning support ..."
 sudo apt install -q mc -y 1>/dev/null
 echo ""

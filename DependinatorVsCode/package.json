@@ -1,0 +1,41 @@
+{
+    "name": "dependinator",
+    "displayName": "Dependinator",
+    "description": "Dependinator UI hosted in a VS Code webview.",
+    "version": "0.0.1",
+    "publisher": "dependinator",
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.84.0"
+    },
+    "categories": [
+        "Visualization"
+    ],
+    "extensionKind": [
+        "ui",
+        "workspace"
+    ],
+    "activationEvents": [
+        "onCommand:dependinator.open"
+    ],
+    "main": "./dist/node/extension.js",
+    "browser": "./dist/web/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "dependinator.open",
+                "title": "Dependinator: Open"
+            }
+        ]
+    },
+    "scripts": {
+        "compile": "tsc -p tsconfig.node.json && tsc -p tsconfig.web.json",
+        "watch": "tsc -w -p tsconfig.node.json",
+        "watch:web": "tsc -w -p tsconfig.web.json",
+        "vscode:prepublish": "npm run compile"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.84.0",
+        "typescript": "^5.4.5"
+    }
+}
