@@ -33,15 +33,16 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
     const mediaUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "media"));
     const baseUri = `${mediaUri.toString()}/`;
     const cspSource = webview.cspSource;
+    const nonce = getNonce();
 
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} data:; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource}; script-src ${cspSource} 'wasm-unsafe-eval' 'unsafe-eval'; connect-src ${cspSource}; worker-src ${cspSource};" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} data:; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource}; script-src ${cspSource} 'nonce-${nonce}' 'wasm-unsafe-eval' 'unsafe-eval'; connect-src ${cspSource}; worker-src ${cspSource} blob:;" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <title>Dependinator</title>
-    <base href="${baseUri}" />
+    <base href="./" />
     <link href="${baseUri}_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="${baseUri}Dependinator.Wasm.styles.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="${baseUri}favicon.png" />
@@ -67,8 +68,33 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
         <a class="dismiss">x</a>
     </div>
 
-    <script src="${baseUri}_framework/blazor.webassembly.js"></script>
-    <script src="${baseUri}_content/MudBlazor/MudBlazor.min.js"></script>
+    <script nonce="${nonce}">
+        const dependinatorBaseUri = "${baseUri}";
+        window.dependinator = {
+            getBaseUri: () => dependinatorBaseUri
+        };
+    </script>
+    <script nonce="${nonce}" src="${baseUri}_framework/blazor.webassembly.js" autostart="false"></script>
+    <script nonce="${nonce}">
+        Blazor.start({
+            loadBootResource: function (type, name, defaultUri, integrity) {
+                const url = new URL(defaultUri, dependinatorBaseUri);
+                return url.toString();
+            }
+        });
+    </script>
+    <script nonce="${nonce}" src="${baseUri}_content/MudBlazor/MudBlazor.min.js"></script>
 </body>
 </html>`;
+}
+
+function getNonce(): string
+{
+    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let text = "";
+    for (let i = 0; i < 32; i++)
+    {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
 }

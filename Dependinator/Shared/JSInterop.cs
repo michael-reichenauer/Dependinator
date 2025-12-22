@@ -21,14 +21,7 @@ public class JSInterop : IJSInterop, IAsyncDisposable
         // var version = "1.4";                    // Version is needed to avoid cached js file (prod)
         var version = $"{DateTime.UtcNow.Ticks}"; // Vesion is needed to avoid cached js file (dev)
 
-        this.moduleTask = new(() =>
-            jsRuntime
-                .InvokeAsync<IJSObjectReference>(
-                    identifier: "import",
-                    args: $"./_content/Dependinator/jsInterop.js?v={version}"
-                )
-                .AsTask()
-        );
+        this.moduleTask = new(() => CreateModuleAsync(jsRuntime, version));
     }
 
     public async ValueTask Call(string functionName, params object?[]? args)
@@ -67,4 +60,33 @@ public class JSInterop : IJSInterop, IAsyncDisposable
     }
 
     async Task<IJSObjectReference> GetModuleAsync() => await this.moduleTask.Value;
+
+    static async Task<IJSObjectReference> CreateModuleAsync(IJSRuntime jsRuntime, string version)
+    {
+        var baseUri = await TryGetBaseUriAsync(jsRuntime);
+        var modulePath = string.IsNullOrWhiteSpace(baseUri)
+            ? $"./_content/Dependinator/jsInterop.js?v={version}"
+            : $"{baseUri}_content/Dependinator/jsInterop.js?v={version}";
+
+        return await jsRuntime.InvokeAsync<IJSObjectReference>(identifier: "import", args: modulePath);
+    }
+
+    static async Task<string?> TryGetBaseUriAsync(IJSRuntime jsRuntime)
+    {
+        try
+        {
+            var baseUri = await jsRuntime.InvokeAsync<string>("dependinator.getBaseUri");
+            if (string.IsNullOrWhiteSpace(baseUri))
+                return null;
+            return baseUri.EndsWith("/") ? baseUri : $"{baseUri}/";
+        }
+        catch (JSException)
+        {
+            return null;
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
 }
