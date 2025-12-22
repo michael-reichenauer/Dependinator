@@ -97,6 +97,21 @@
 				"cwd": "${workspaceFolder}/DependinatorVsCode"
 			},
 			"problemMatcher": "$tsc"
+		},
+		{
+			"label": "Dependinator: Prepare WASM",
+			"type": "shell",
+			"command": "bash DependinatorVsCode/scripts/prepare-wasm.sh",
+			"problemMatcher": []
+		},
+		{
+			"label": "Dependinator: Prepare and Compile Extension",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"Dependinator: Prepare WASM",
+				"Dependinator: Compile Extension"
+			],
+			"problemMatcher": []
 		}
 	]
 }

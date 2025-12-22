@@ -31,7 +31,7 @@
             "type": "extensionHost",
             "request": "launch",
             "extensionDevelopmentPath": "${workspaceFolder}/DependinatorVsCode",
-            "preLaunchTask": "Dependinator: Compile Extension"
+            "preLaunchTask": "Dependinator: Prepare and Compile Extension"
         }
     ],
     "compounds": [

@@ -3,10 +3,8 @@ import * as vscode from "vscode";
 const commandId = "dependinator.open";
 const viewType = "dependinator.webview";
 
-export function activate(context: vscode.ExtensionContext): void
-{
-    const disposable = vscode.commands.registerCommand(commandId, () =>
-    {
+export function activate(context: vscode.ExtensionContext): void {
+    const disposable = vscode.commands.registerCommand(commandId, () => {
         const panel = vscode.window.createWebviewPanel(
             viewType,
             "Dependinator",
@@ -18,18 +16,33 @@ export function activate(context: vscode.ExtensionContext): void
             }
         );
 
+        panel.webview.onDidReceiveMessage(message => {
+            if (!message || typeof message.type !== "string")
+                return;
+
+            if (message.type === "ready") {
+                console.log("Dependinator webview ready");
+                panel.webview.postMessage({ type: "ready-ack" });
+                return;
+            }
+
+            if (message.type === "ping") {
+                console.log("Dependinator ping", message.id ?? null);
+                panel.webview.postMessage({ type: "pong", id: message.id ?? null });
+                return;
+            }
+        });
+
         panel.webview.html = getWebviewHtml(panel.webview, context.extensionUri);
     });
 
     context.subscriptions.push(disposable);
 }
 
-export function deactivate(): void
-{
+export function deactivate(): void {
 }
 
-function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string
-{
+function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
     const mediaUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "media"));
     const baseUri = `${mediaUri.toString()}/`;
     const cspSource = webview.cspSource;
@@ -70,9 +83,27 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
 
     <script nonce="${nonce}">
         const dependinatorBaseUri = "${baseUri}";
+        const vscode = acquireVsCodeApi();
         window.dependinator = {
-            getBaseUri: () => dependinatorBaseUri
+            getBaseUri: () => dependinatorBaseUri,
+            postMessage: (message) => vscode.postMessage(message)
         };
+
+        window.addEventListener("message", (event) =>
+        {
+            if (!event?.data?.type)
+                return;
+            if (event.data.type === "ready-ack")
+            {
+                console.log("Dependinator: bridge ready");
+            }
+            if (event.data.type === "pong")
+            {
+                console.log("Dependinator: pong", event.data.id ?? null);
+            }
+        });
+
+        vscode.postMessage({ type: "ready" });
     </script>
     <script nonce="${nonce}" src="${baseUri}_framework/blazor.webassembly.js" autostart="false"></script>
     <script nonce="${nonce}">
@@ -88,12 +119,10 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
 </html>`;
 }
 
-function getNonce(): string
-{
+function getNonce(): string {
     const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let text = "";
-    for (let i = 0; i < 32; i++)
-    {
+    for (let i = 0; i < 32; i++) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
