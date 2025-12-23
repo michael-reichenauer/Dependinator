@@ -20,6 +20,7 @@ interface ICanvasService
 
     Task InitAsync();
     void OpenFiles();
+    void PingLanguageServer();
     void ToggleTheme();
     public void Remove();
     void Refresh();
@@ -148,7 +149,16 @@ class CanvasService : ICanvasService
 
     public async void OpenFiles()
     {
-        await jSInteropService.Call("clickElement", "inputfile");
+        var sent = await jSInteropService.Call<bool>("postVsCodeMessage", new { type = "open-file" });
+        if (!sent)
+        {
+            await jSInteropService.Call("clickElement", "inputfile");
+        }
+    }
+
+    public async void PingLanguageServer()
+    {
+        await jSInteropService.Call<bool>("postVsCodeMessage", new { type = "lsp-ping", message = "ping" });
     }
 
     public void ToggleTheme()

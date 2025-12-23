@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (web)",
+            "name": "Web Dependinator",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -27,11 +27,11 @@
             "console": "internalConsole"
         },
         {
-            "name": "Dependinator Extension (Desktop)",
+            "name": "VSCodeExt Dependinator",
             "type": "extensionHost",
             "request": "launch",
             "extensionDevelopmentPath": "${workspaceFolder}/DependinatorVsCode",
-            "preLaunchTask": "Dependinator: Compile Extension"
+            "preLaunchTask": "Dependinator: Prepare and Compile Extension"
         }
     ],
     "compounds": [

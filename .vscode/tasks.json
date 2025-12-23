@@ -90,6 +90,15 @@
 			"problemMatcher": "$func-dotnet-watch"
 		},
 		{
+			"label": "Dependinator: Install Extension Dependencies",
+			"type": "shell",
+			"command": "npm install",
+			"options": {
+				"cwd": "${workspaceFolder}/DependinatorVsCode"
+			},
+			"problemMatcher": []
+		},
+		{
 			"label": "Dependinator: Compile Extension",
 			"type": "shell",
 			"command": "npm run compile",
@@ -97,6 +106,22 @@
 				"cwd": "${workspaceFolder}/DependinatorVsCode"
 			},
 			"problemMatcher": "$tsc"
+		},
+		{
+			"label": "Dependinator: Prepare WASM",
+			"type": "shell",
+			"command": "bash DependinatorVsCode/scripts/prepare-wasm.sh",
+			"problemMatcher": []
+		},
+		{
+			"label": "Dependinator: Prepare and Compile Extension",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"Dependinator: Prepare WASM",
+				"Dependinator: Install Extension Dependencies",
+				"Dependinator: Compile Extension"
+			],
+			"problemMatcher": []
 		}
 	]
 }

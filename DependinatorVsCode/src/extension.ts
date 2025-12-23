@@ -1,12 +1,34 @@
 import * as vscode from "vscode";
+import type { LanguageClient, LanguageClientOptions, ServerOptions } from "vscode-languageclient/node";
 
 const commandId = "dependinator.open";
 const viewType = "dependinator.webview";
 
-export function activate(context: vscode.ExtensionContext): void
-{
-    const disposable = vscode.commands.registerCommand(commandId, () =>
-    {
+let languageClient: LanguageClient | undefined;
+let languageClientPromise: Promise<LanguageClient | undefined> | undefined;
+let activePanel: vscode.WebviewPanel | undefined;
+
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
+    languageClientPromise = isWeb
+        ? Promise.resolve(undefined)
+        : startLanguageServer(context).catch(error => {
+            console.error("Dependinator language server failed to start", error);
+            return undefined;
+        });
+    languageClientPromise.then(client => {
+        languageClient = client;
+        if (!client)
+            return;
+        client.onNotification("dependinator/serverReady", params => {
+            activePanel?.webview.postMessage({
+                type: "lsp-ready",
+                message: params?.message ?? null
+            });
+        });
+    });
+
+    const disposable = vscode.commands.registerCommand(commandId, () => {
         const panel = vscode.window.createWebviewPanel(
             viewType,
             "Dependinator",
@@ -18,18 +40,88 @@ export function activate(context: vscode.ExtensionContext): void
             }
         );
 
+        activePanel = panel;
+        panel.onDidDispose(() => {
+            if (activePanel === panel)
+                activePanel = undefined;
+        });
+
+        panel.webview.onDidReceiveMessage(async message => {
+            if (!message || typeof message.type !== "string")
+                return;
+
+            if (message.type === "ready") {
+                console.log("Dependinator webview ready");
+                panel.webview.postMessage({ type: "ready-ack" });
+                return;
+            }
+
+            if (message.type === "ping") {
+                console.log("Dependinator ping", message.id ?? null);
+                panel.webview.postMessage({ type: "pong", id: message.id ?? null });
+                return;
+            }
+
+            if (message.type === "open-file") {
+                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+                const selected = await vscode.window.showOpenDialog({
+                    canSelectMany: false,
+                    openLabel: "Open in VS Code",
+                    defaultUri: workspaceFolder?.uri
+                });
+
+                if (!selected || selected.length === 0) {
+                    panel.webview.postMessage({ type: "open-file-canceled" });
+                    return;
+                }
+
+                const document = await vscode.workspace.openTextDocument(selected[0]);
+                await vscode.window.showTextDocument(document, { preview: true });
+                panel.webview.postMessage({ type: "open-file-result", path: document.uri.toString() });
+                return;
+            }
+
+            if (message.type === "lsp-ping") {
+                const client = await languageClientPromise;
+                if (!client) {
+                    panel.webview.postMessage({
+                        type: "lsp-ping-result",
+                        error: "Language server unavailable"
+                    });
+                    return;
+                }
+
+                try {
+                    const response = await client.sendRequest<{ message?: string }>("dependinator/ping", {
+                        message: message.message ?? "ping"
+                    });
+                    panel.webview.postMessage({
+                        type: "lsp-ping-result",
+                        message: response?.message ?? null
+                    });
+                } catch (error) {
+                    panel.webview.postMessage({
+                        type: "lsp-ping-result",
+                        error: String(error)
+                    });
+                }
+                return;
+            }
+        });
+
         panel.webview.html = getWebviewHtml(panel.webview, context.extensionUri);
     });
 
     context.subscriptions.push(disposable);
 }
 
-export function deactivate(): void
-{
+export async function deactivate(): Promise<void> {
+    if (languageClient) {
+        await languageClient.stop();
+    }
 }
 
-function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string
-{
+function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
     const mediaUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "media"));
     const baseUri = `${mediaUri.toString()}/`;
     const cspSource = webview.cspSource;
@@ -70,9 +162,50 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
 
     <script nonce="${nonce}">
         const dependinatorBaseUri = "${baseUri}";
+        const vscode = acquireVsCodeApi();
         window.dependinator = {
-            getBaseUri: () => dependinatorBaseUri
+            getBaseUri: () => dependinatorBaseUri,
+            postMessage: (message) => vscode.postMessage(message)
         };
+
+        window.addEventListener("message", (event) =>
+        {
+            if (!event?.data?.type)
+                return;
+            if (event.data.type === "ready-ack")
+            {
+                console.log("Dependinator: bridge ready");
+            }
+            if (event.data.type === "pong")
+            {
+                console.log("Dependinator: pong", event.data.id ?? null);
+            }
+            if (event.data.type === "open-file-result")
+            {
+                console.log("Dependinator: open file", event.data.path ?? null);
+            }
+            if (event.data.type === "open-file-canceled")
+            {
+                console.log("Dependinator: open file canceled");
+            }
+            if (event.data.type === "lsp-ready")
+            {
+                console.log("Dependinator: language server ready", event.data.message ?? null);
+            }
+            if (event.data.type === "lsp-ping-result")
+            {
+                if (event.data.error)
+                {
+                    console.warn("Dependinator: lsp ping error", event.data.error);
+                }
+                else
+                {
+                    console.log("Dependinator: lsp ping", event.data.message ?? null);
+                }
+            }
+        });
+
+        vscode.postMessage({ type: "ready" });
     </script>
     <script nonce="${nonce}" src="${baseUri}_framework/blazor.webassembly.js" autostart="false"></script>
     <script nonce="${nonce}">
@@ -88,12 +221,154 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
 </html>`;
 }
 
-function getNonce(): string
-{
+async function startLanguageServer(
+    context: vscode.ExtensionContext
+): Promise<LanguageClient | undefined> {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const workspaceProject = workspaceFolder
+        ? vscode.Uri.joinPath(
+            workspaceFolder,
+            "DependinatorLanguageServer",
+            "DependinatorLanguageServer.csproj"
+        )
+        : undefined;
+    const extensionProject = vscode.Uri.joinPath(
+        context.extensionUri,
+        "..",
+        "DependinatorLanguageServer",
+        "DependinatorLanguageServer.csproj"
+    );
+    const serverDllCandidates: vscode.Uri[] = [
+        workspaceFolder
+            ? vscode.Uri.joinPath(
+                workspaceFolder,
+                "DependinatorLanguageServer",
+                "bin",
+                "Debug",
+                "net10.0",
+                "DependinatorLanguageServer.dll"
+            )
+            : undefined,
+        workspaceFolder
+            ? vscode.Uri.joinPath(
+                workspaceFolder,
+                "DependinatorLanguageServer",
+                "bin",
+                "Release",
+                "net10.0",
+                "DependinatorLanguageServer.dll"
+            )
+            : undefined,
+        vscode.Uri.joinPath(
+            context.extensionUri,
+            "server",
+            "DependinatorLanguageServer.dll"
+        ),
+        vscode.Uri.joinPath(
+            context.extensionUri,
+            "..",
+            "DependinatorLanguageServer",
+            "bin",
+            "Debug",
+            "net10.0",
+            "DependinatorLanguageServer.dll"
+        ),
+        vscode.Uri.joinPath(
+            context.extensionUri,
+            "..",
+            "DependinatorLanguageServer",
+            "bin",
+            "Release",
+            "net10.0",
+            "DependinatorLanguageServer.dll"
+        )
+    ].filter((candidate): candidate is vscode.Uri => !!candidate);
+
+    let serverArgs: string[] | undefined;
+    const serverDll = await firstExisting(serverDllCandidates);
+    if (serverDll) {
+        serverArgs = [serverDll.fsPath];
+    } else {
+        const projectCandidates = [workspaceProject, extensionProject].filter(
+            (candidate): candidate is vscode.Uri => !!candidate
+        );
+        const project = await firstExisting(projectCandidates);
+        if (project) {
+            serverArgs = [
+                "run",
+                "--project",
+                project.fsPath,
+                "--no-build",
+                "--no-restore",
+                "--nologo"
+            ];
+        } else {
+            console.warn("Dependinator language server project not found.");
+            return undefined;
+        }
+    }
+
+    const { LanguageClient, TransportKind } = await import("vscode-languageclient/node");
+
+    const environment = {
+        ...process.env,
+        DOTNET_NOLOGO: "1",
+        NUGET_XMLDOC_MODE: "skip",
+        DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    };
+    const executableOptions = workspaceFolder ? { cwd: workspaceFolder.fsPath, env: environment } : { env: environment };
+    const serverOptions: ServerOptions = {
+        run: {
+            command: "dotnet",
+            args: serverArgs,
+            transport: TransportKind.stdio,
+            options: executableOptions
+        },
+        debug: {
+            command: "dotnet",
+            args: serverArgs,
+            transport: TransportKind.stdio,
+            options: executableOptions
+        }
+    };
+
+    const clientOptions: LanguageClientOptions = {
+        documentSelector: [{ scheme: "file", language: "csharp" }]
+    };
+
+    const client = new LanguageClient(
+        "dependinatorLanguageServer",
+        "Dependinator Language Server",
+        serverOptions,
+        clientOptions
+    );
+
+    await client.start();
+    context.subscriptions.push(client);
+    return client;
+}
+
+async function fileExists(uri: vscode.Uri): Promise<boolean> {
+    try {
+        await vscode.workspace.fs.stat(uri);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function firstExisting(uris: vscode.Uri[]): Promise<vscode.Uri | undefined> {
+    for (const uri of uris) {
+        if (await fileExists(uri))
+            return uri;
+    }
+    return undefined;
+}
+
+function getNonce(): string {
     const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let text = "";
-    for (let i = 0; i < 32; i++)
-    {
+    for (let i = 0; i < 32; i++) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
