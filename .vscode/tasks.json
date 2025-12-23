@@ -90,6 +90,15 @@
 			"problemMatcher": "$func-dotnet-watch"
 		},
 		{
+			"label": "Dependinator: Install Extension Dependencies",
+			"type": "shell",
+			"command": "npm install",
+			"options": {
+				"cwd": "${workspaceFolder}/DependinatorVsCode"
+			},
+			"problemMatcher": []
+		},
+		{
 			"label": "Dependinator: Compile Extension",
 			"type": "shell",
 			"command": "npm run compile",
@@ -109,6 +118,7 @@
 			"dependsOrder": "sequence",
 			"dependsOn": [
 				"Dependinator: Prepare WASM",
+				"Dependinator: Install Extension Dependencies",
 				"Dependinator: Compile Extension"
 			],
 			"problemMatcher": []
