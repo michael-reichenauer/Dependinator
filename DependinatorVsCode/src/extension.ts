@@ -4,11 +4,13 @@ import type { LanguageClient, LanguageClientOptions, ServerOptions } from "vscod
 const commandId = "dependinator.open";
 const viewType = "dependinator.webview";
 
+// Track the LSP client and the last active webview to route notifications.
 let languageClient: LanguageClient | undefined;
 let languageClientPromise: Promise<LanguageClient | undefined> | undefined;
 let activePanel: vscode.WebviewPanel | undefined;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    // Web extensions can't start a .NET process, so skip the server there.
     const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
     languageClientPromise = isWeb
         ? Promise.resolve(undefined)
@@ -28,6 +30,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
     });
 
+    // Command opens the webview hosting the WASM UI.
     const disposable = vscode.commands.registerCommand(commandId, () => {
         const panel = vscode.window.createWebviewPanel(
             viewType,
@@ -46,6 +49,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 activePanel = undefined;
         });
 
+        // Webview -> extension message bridge.
         panel.webview.onDidReceiveMessage(async message => {
             if (!message || typeof message.type !== "string")
                 return;
@@ -63,6 +67,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             }
 
             if (message.type === "open-file") {
+                // Let the user pick a file in the workspace and open it in the editor.
                 const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
                 const selected = await vscode.window.showOpenDialog({
                     canSelectMany: false,
@@ -82,6 +87,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             }
 
             if (message.type === "lsp-ping") {
+                // Forward a simple ping to the language server and relay the response.
                 const client = await languageClientPromise;
                 if (!client) {
                     panel.webview.postMessage({
@@ -122,6 +128,7 @@ export async function deactivate(): Promise<void> {
 }
 
 function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
+    // Use a webview-safe URI for bundled assets.
     const mediaUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "media"));
     const baseUri = `${mediaUri.toString()}/`;
     const cspSource = webview.cspSource;
@@ -161,6 +168,7 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
     </div>
 
     <script nonce="${nonce}">
+        // Bridge base URL and VS Code messaging into the WASM app.
         const dependinatorBaseUri = "${baseUri}";
         const vscode = acquireVsCodeApi();
         window.dependinator = {
@@ -224,6 +232,7 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
 async function startLanguageServer(
     context: vscode.ExtensionContext
 ): Promise<LanguageClient | undefined> {
+    // Prefer a prebuilt DLL; fallback to `dotnet run` without build/restore noise.
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
     const workspaceProject = workspaceFolder
         ? vscode.Uri.joinPath(
@@ -310,6 +319,7 @@ async function startLanguageServer(
 
     const { LanguageClient, TransportKind } = await import("vscode-languageclient/node");
 
+    // Keep stdout clean for JSON-RPC by suppressing CLI banners.
     const environment = {
         ...process.env,
         DOTNET_NOLOGO: "1",
@@ -365,6 +375,7 @@ async function firstExisting(uris: vscode.Uri[]): Promise<vscode.Uri | undefined
     return undefined;
 }
 
+// CSP needs a nonce for inline scripts.
 function getNonce(): string {
     const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let text = "";
