@@ -2,7 +2,11 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "module": "CommonJS",
-        "outDir": "dist/node"
+        "outDir": "dist/node",
+        "types": [
+            "vscode",
+            "node"
+        ]
     },
     "include": [
         "src"
