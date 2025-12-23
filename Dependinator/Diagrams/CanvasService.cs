@@ -158,7 +158,7 @@ class CanvasService : ICanvasService
 
     public async void PingLanguageServer()
     {
-        await jSInteropService.Call<bool>("postVsCodeMessage", new { type = "lsp-ping", message = "ping" });
+        await jSInteropService.Call<bool>("postVsCodeMessage", new { type = "lsp-ping", message = "'ping from UI'" });
     }
 
     public void ToggleTheme()

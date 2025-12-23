@@ -35,6 +35,16 @@ export function postVsCodeMessage(message) {
   return false;
 }
 
+export function listenToVsCodeMessages(instance, functionName) {
+  window.addEventListener("message", (event) => {
+    if (!event || !event.data || !event.data.type) {
+      return;
+    }
+
+    instance.invokeMethodAsync(functionName, event.data);
+  });
+}
+
 export function getBoundingRectangle(elementId) {
   var element = document.getElementById(elementId);
   if (element == null) {

@@ -40,7 +40,7 @@ public class PingHandler : IJsonRpcRequestHandler<PingParams, PingResult>
 {
     public Task<PingResult> Handle(PingParams request, CancellationToken cancellationToken)
     {
-        var message = $"pong: {request.Message}";
+        var message = $"pong: of '{request.Message}' from Language Server";
         return Task.FromResult(new PingResult(message));
     }
 }
