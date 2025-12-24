@@ -18,6 +18,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             console.error("Dependinator language server failed to start", error);
             return undefined;
         });
+
     languageClientPromise.then(client => {
         languageClient = client;
         if (!client)
@@ -26,6 +27,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             activePanel?.webview.postMessage({
                 type: "lsp-ready",
                 message: params?.message ?? null
+            });
+        });
+        client.onNotification("ui/message", params => {
+            console.log("Received UIMessage", params);
+            activePanel?.webview.postMessage({
+                type: "us/message",
+                message: params?.message,
+                data: params?.data
             });
         });
     });
@@ -54,61 +63,29 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             if (!message || typeof message.type !== "string")
                 return;
 
-            if (message.type === "ready") {
-                console.log("Dependinator webview ready");
-                panel.webview.postMessage({ type: "ready-ack" });
-                return;
-            }
-
-            if (message.type === "ping") {
-                console.log("Dependinator ping", message.id ?? null);
-                panel.webview.postMessage({ type: "pong", id: message.id ?? null });
-                return;
-            }
-
-            if (message.type === "open-file") {
-                // Let the user pick a file in the workspace and open it in the editor.
-                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-                const selected = await vscode.window.showOpenDialog({
-                    canSelectMany: false,
-                    openLabel: "Open in VS Code",
-                    defaultUri: workspaceFolder?.uri
-                });
-
-                if (!selected || selected.length === 0) {
-                    panel.webview.postMessage({ type: "open-file-canceled" });
-                    return;
-                }
-
-                const document = await vscode.workspace.openTextDocument(selected[0]);
-                await vscode.window.showTextDocument(document, { preview: true });
-                panel.webview.postMessage({ type: "open-file-result", path: document.uri.toString() });
-                return;
-            }
-
-            if (message.type === "lsp-ping") {
+            if (message.type === "lsp/message") {
+                console.log("vscode: received", message);
                 // Forward a simple ping to the language server and relay the response.
                 const client = await languageClientPromise;
                 if (!client) {
+                    console.error("No client to send", message);
                     panel.webview.postMessage({
-                        type: "lsp-ping-result",
-                        error: "Language server unavailable"
+                        type: "ui/error",
+                        message: "Language server unavailable"
                     });
                     return;
                 }
 
                 try {
-                    const response = await client.sendRequest<{ message?: string }>("dependinator/ping", {
-                        message: message.message ?? "ping"
+                    await client.sendRequest<{ message?: string }>("lsp/message", {
+                        message: message.message
                     });
-                    panel.webview.postMessage({
-                        type: "lsp-ping-result",
-                        message: response?.message ?? null
-                    });
+
                 } catch (error) {
+                    console.error("Failed to send", message);
                     panel.webview.postMessage({
-                        type: "lsp-ping-result",
-                        error: String(error)
+                        type: "ui/error",
+                        message: String(error)
                     });
                 }
                 return;
@@ -176,44 +153,6 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
             postMessage: (message) => vscode.postMessage(message)
         };
 
-        window.addEventListener("message", (event) =>
-        {
-            if (!event?.data?.type)
-                return;
-            if (event.data.type === "ready-ack")
-            {
-                console.log("Dependinator: bridge ready");
-            }
-            if (event.data.type === "pong")
-            {
-                console.log("Dependinator: pong", event.data.id ?? null);
-            }
-            if (event.data.type === "open-file-result")
-            {
-                console.log("Dependinator: open file", event.data.path ?? null);
-            }
-            if (event.data.type === "open-file-canceled")
-            {
-                console.log("Dependinator: open file canceled");
-            }
-            if (event.data.type === "lsp-ready")
-            {
-                console.log("Dependinator: language server ready", event.data.message ?? null);
-            }
-            if (event.data.type === "lsp-ping-result")
-            {
-                if (event.data.error)
-                {
-                    console.warn("Dependinator: lsp ping error", event.data.error);
-                }
-                else
-                {
-                    console.log("Dependinator: lsp ping", event.data.message ?? null);
-                }
-            }
-        });
-
-        vscode.postMessage({ type: "ready" });
     </script>
     <script nonce="${nonce}" src="${baseUri}_framework/blazor.webassembly.js" autostart="false"></script>
     <script nonce="${nonce}">

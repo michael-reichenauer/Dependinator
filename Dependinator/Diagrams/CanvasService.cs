@@ -41,6 +41,7 @@ class CanvasService : ICanvasService
     readonly ISvgService svgService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInteropService;
+    readonly IVsCodeMessageService vsCodeMessageService;
     readonly IFileService fileService;
     readonly IRecentModelsService recentModelsService;
     readonly IInteractionService interactionService;
@@ -52,6 +53,7 @@ class CanvasService : ICanvasService
         ISvgService svgService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
+        IVsCodeMessageService vsCodeMessageService,
         IFileService fileService,
         IRecentModelsService recentModelsService,
         IInteractionService interactionService
@@ -63,6 +65,7 @@ class CanvasService : ICanvasService
         this.svgService = svgService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
+        this.vsCodeMessageService = vsCodeMessageService;
         this.fileService = fileService;
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
@@ -149,16 +152,12 @@ class CanvasService : ICanvasService
 
     public async void OpenFiles()
     {
-        var sent = await jSInteropService.Call<bool>("postVsCodeMessage", new { type = "open-file" });
-        if (!sent)
-        {
-            await jSInteropService.Call("clickElement", "inputfile");
-        }
+        await jSInteropService.Call("clickElement", "inputfile");
     }
 
     public async void PingLanguageServer()
     {
-        await jSInteropService.Call<bool>("postVsCodeMessage", new { type = "lsp-ping", message = "'ping from UI'" });
+        await vsCodeMessageService.PostAsync("lsp/message", "'ping from UI2'");
     }
 
     public void ToggleTheme()

@@ -5,12 +5,12 @@ using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;
 
-public record VsCodeMessage(string Type, JsonElement Raw, string? Message, string? Error, string? Path);
+public record VsCodeMessage(string Type, JsonElement Raw, string? Message);
 
 interface IVsCodeMessageService
 {
     event Action<VsCodeMessage> MessageReceived;
-    VsCodeMessage? LastMessage { get; }
+    ValueTask<bool> PostAsync(string type, object? data = null);
     Task InitAsync();
 }
 
@@ -18,16 +18,13 @@ interface IVsCodeMessageService
 class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
-    readonly IApplicationEvents applicationEvents;
     DotNetObjectReference<VsCodeMessageService>? reference;
 
     public event Action<VsCodeMessage> MessageReceived = null!;
-    public VsCodeMessage? LastMessage { get; private set; }
 
-    public VsCodeMessageService(IJSInterop jSInterop, IApplicationEvents applicationEvents)
+    public VsCodeMessageService(IJSInterop jSInterop)
     {
         this.jSInterop = jSInterop;
-        this.applicationEvents = applicationEvents;
     }
 
     public async Task InitAsync()
@@ -39,29 +36,31 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));
     }
 
-    [JSInvokable]
-    public Task OnVsCodeMessage(JsonElement message)
+    public async ValueTask<bool> PostAsync(string type, object? data = null)
     {
-        if (!message.TryGetProperty("type", out var typeElement))
+        return await jSInterop.Call<bool>("postVsCodeMessage", new { type = type, message = data });
+    }
+
+    [JSInvokable]
+    public Task OnVsCodeMessage(JsonElement raw)
+    {
+        if (!raw.TryGetProperty("type", out var typeElement))
             return Task.CompletedTask;
 
         var type = typeElement.GetString();
         if (string.IsNullOrWhiteSpace(type))
             return Task.CompletedTask;
 
-        var info = new VsCodeMessage(
-            type,
-            message,
-            TryGetString(message, "message"),
-            TryGetString(message, "error"),
-            TryGetString(message, "path")
-        );
+        var message = new VsCodeMessage(type, raw, TryGetString(raw, "message"));
+        if (type == "ui/error")
+        {
+            Log.Error("Comunication Error", message.Type, message.Message ?? "");
+            return Task.CompletedTask;
+        }
 
-        LastMessage = info;
-        MessageReceived?.Invoke(info);
-        applicationEvents.TriggerUIStateChanged();
+        MessageReceived?.Invoke(message);
 
-        Log.Info("VS Code message:", info.Type, info.Message ?? info.Error ?? info.Path);
+        Log.Info("VS Code message:", message.Type, message.Message);
         return Task.CompletedTask;
     }
 
@@ -71,9 +70,9 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 
-    static string? TryGetString(JsonElement message, string propertyName)
+    static string? TryGetString(JsonElement raw, string propertyName)
     {
-        if (!message.TryGetProperty(propertyName, out var value))
+        if (!raw.TryGetProperty(propertyName, out var value))
             return null;
         return value.ValueKind == JsonValueKind.String ? value.GetString() : value.ToString();
     }
