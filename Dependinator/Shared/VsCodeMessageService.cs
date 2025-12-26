@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Dependinator.Utils;
-using Dependinator.Utils.Logging;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;

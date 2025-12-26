@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace Dependinator.Utils;
+namespace Dependinator.Shared.Utils;
 
 public class AsserterEventArgs : EventArgs
 {

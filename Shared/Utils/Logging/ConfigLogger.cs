@@ -2,9 +2,9 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using static System.Environment;
 
-namespace Dependinator.Utils.Logging;
+namespace Dependinator.Shared.Utils.Logging;
 
-static class ConfigLogger
+public static class ConfigLogger
 {
     static readonly string LogFileName = "Dependinator.log";
     static readonly string LevelInfo = "INFO ";

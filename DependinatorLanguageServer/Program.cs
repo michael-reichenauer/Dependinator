@@ -1,3 +1,4 @@
+using Dependinator.Shared.Utils.Logging;
 using MediatR;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
@@ -9,6 +10,9 @@ internal class Program
 {
     public static async Task Main(string[] args)
     {
+        ConfigLogger.Configure(new HostLoggingSettings(EnableFileLog: true, EnableConsoleLog: true));
+        Log.Info($"Starting Dependinator Language Server  ...");
+
         var server = await LanguageServer.From(options =>
             options
                 .WithInput(Console.OpenStandardInput())

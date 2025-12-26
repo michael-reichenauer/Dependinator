@@ -24,4 +24,7 @@
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Scrutor" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Shared/Shared.csproj" />
+  </ItemGroup>
 </Project>

@@ -1,7 +1,8 @@
 using Dependinator;
 using Dependinator.Shared;
+using Dependinator.Shared.Utils;
+using Dependinator.Shared.Utils.Logging;
 using Dependinator.Utils;
-using Dependinator.Utils.Logging;
 
 namespace DependinatorWeb;
 
@@ -10,7 +11,7 @@ public class Program
     public static void Main(string[] args)
     {
         ConfigLogger.Configure(new HostLoggingSettings(EnableFileLog: true, EnableConsoleLog: false));
-        Log.Info($"Starting Dependinator {Build.ProductVersion}, {Build.Time}, ({Build.CommitSid}) ...");
+        Log.Info($"Starting Dependinator Web {Build.ProductVersion}, {Build.Time}, ({Build.CommitSid}) ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 
         var builder = WebApplication.CreateBuilder(args);

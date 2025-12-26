@@ -1,7 +1,8 @@
-using Dependinator.Wasm;
 using Dependinator.Shared;
+using Dependinator.Shared.Utils;
+using Dependinator.Shared.Utils.Logging;
 using Dependinator.Utils;
-using Dependinator.Utils.Logging;
+using Dependinator.Wasm;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 

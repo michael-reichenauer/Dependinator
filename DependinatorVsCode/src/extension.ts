@@ -23,16 +23,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         languageClient = client;
         if (!client)
             return;
+
         client.onNotification("dependinator/serverReady", params => {
+            console.log("dependinator/serverReady", params);
             activePanel?.webview.postMessage({
                 type: "lsp-ready",
                 message: params?.message ?? null
             });
         });
+
         client.onNotification("ui/message", params => {
             console.log("Received UIMessage", params);
             activePanel?.webview.postMessage({
-                type: "us/message",
+                type: "ui/message",
                 message: params?.message,
                 data: params?.data
             });
@@ -60,11 +63,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         // Webview -> extension message bridge.
         panel.webview.onDidReceiveMessage(async message => {
+            console.log("vscode: onDidReceiveMessage check message", message);
             if (!message || typeof message.type !== "string")
                 return;
 
+            console.log("vscode: onDidReceiveMessage", message);
+
             if (message.type === "lsp/message") {
-                console.log("vscode: received", message);
                 // Forward a simple ping to the language server and relay the response.
                 const client = await languageClientPromise;
                 if (!client) {

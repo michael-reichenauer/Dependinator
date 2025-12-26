@@ -1,7 +1,8 @@
 global using Dependinator.Shared;
+global using Dependinator.Shared.Utils;
+global using Dependinator.Shared.Utils.Logging;
+global using static Dependinator.Shared.Utils.Result;
 global using Dependinator.Utils;
-global using Dependinator.Utils.Logging;
-global using static Dependinator.Utils.Result;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 

@@ -2,9 +2,9 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
-namespace Dependinator.Utils.Logging;
+namespace Dependinator.Shared.Utils.Logging;
 
-static class Log
+public static class Log
 {
     private static readonly string LevelDebug = "DEBUG";
     private static readonly string LevelInfo = "INFO ";
