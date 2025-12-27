@@ -28,6 +28,7 @@ public static class ConfigLogger
     static string? LogPath;
     static bool isFileLog = false;
     static bool isConsoleLog = false;
+    static Action<string>? output = null;
 
     static TaskCompletionSource doneTask = new TaskCompletionSource();
 
@@ -46,6 +47,7 @@ public static class ConfigLogger
     {
         isFileLog = settings.EnableFileLog;
         isConsoleLog = settings.EnableConsoleLog;
+        output = settings.Output;
 
         if (isFileLog)
         {
@@ -201,7 +203,7 @@ public static class ConfigLogger
 
     private static void WriteToFile(IReadOnlyCollection<string> textLines)
     {
-        if (!isFileLog && !isConsoleLog)
+        if (!isFileLog && !isConsoleLog && output is null)
         {
             return;
         }
@@ -213,6 +215,9 @@ public static class ConfigLogger
             {
                 try
                 {
+                    if (output is not null)
+                        textLines.ForEach(l => output(l));
+
                     if (isConsoleLog)
                         Console.WriteLine(textLines.Select(l => l.Length > 24 ? l[24..] : l).Join("\n"));
                     if (isFileLog)

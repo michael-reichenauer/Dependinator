@@ -32,6 +32,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             });
         });
 
+        client.onNotification("vscode/loginfo", params => {
+            const type = typeof params?.Type === "string" ? params.Type.toLowerCase() : "";
+            const message = params?.Message ?? params?.message ?? "";
+
+            switch (type) {
+                case "warning":
+                case "warn":
+                    console.warn(message);
+                    break;
+                case "error":
+                case "err":
+                    console.error(message);
+                    break;
+                case "log":
+                case "info":
+                default:
+                    console.log(message);
+                    break;
+            }
+        });
+
         client.onNotification("ui/message", params => {
             console.log("Received UIMessage", params);
             activePanel?.webview.postMessage({
