@@ -24,14 +24,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         if (!client)
             return;
 
-        client.onNotification("dependinator/serverReady", params => {
-            console.log("dependinator/serverReady", params);
-            activePanel?.webview.postMessage({
-                type: "lsp-ready",
-                message: params?.message ?? null
-            });
-        });
-
         client.onNotification("vscode/loginfo", params => {
             const type = typeof params?.Type === "string" ? params.Type.toLowerCase() : "";
             const message = params?.Message ?? params?.message ?? "";
@@ -53,12 +45,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             }
         });
 
+        // Messages from language server to WebView ui
         client.onNotification("ui/message", params => {
             console.log("Received UIMessage", params);
             activePanel?.webview.postMessage({
                 type: "ui/message",
                 message: params?.message,
-                data: params?.data
             });
         });
     });
@@ -90,8 +82,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             console.log("vscode: onDidReceiveMessage", message);
 
+
             if (message.type === "lsp/message") {
-                // Forward a simple ping to the language server and relay the response.
+                // Messages from WebView UI to language server
                 const client = await languageClientPromise;
                 if (!client) {
                     console.error("No client to send", message);
@@ -103,7 +96,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 }
 
                 try {
-                    await client.sendRequest<{ message?: string }>("lsp/message", {
+                    await client.sendNotification("lsp/message", {
                         message: message.message
                     });
 

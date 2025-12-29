@@ -6,13 +6,13 @@ using StreamJsonRpc.Protocol;
 
 namespace Dependinator.Shared.Utils;
 
-public sealed class PacketMessageHandler : MessageHandlerBase
+public sealed class JsonRpcPacketMessageHandler : MessageHandlerBase
 {
-    private readonly IPacketTransport transport;
+    private readonly IJsonRpcPacketTransport transport;
 
     private readonly SemaphoreSlim writeGate = new(1, 1);
 
-    public PacketMessageHandler(IPacketTransport transport)
+    public JsonRpcPacketMessageHandler(IJsonRpcPacketTransport transport)
         : base(new StreamJsonRpc.MessagePackFormatter())
     {
         this.transport = transport;
