@@ -49,72 +49,72 @@ public sealed class CalcProdService(int extra) : ICalcProd
 
 public class JsonRpcTests : IAsyncDisposable
 {
-    readonly JsonRpcPacketMessageHandler clientPacketHandler;
-    readonly JsonRpc rpcClient;
-    readonly JsonRpcPacketMessageHandler serverPacketHandler;
-    readonly JsonRpc rpcServer;
+    readonly JsonRpcPacketMessageHandler packetHandlerA;
+    readonly JsonRpc jsonRpcA;
+    readonly JsonRpcPacketMessageHandler packetHandlerB;
+    readonly JsonRpc jsonRpcB;
 
     public JsonRpcTests()
     {
-        serverPacketHandler = new JsonRpcPacketMessageHandler();
-        clientPacketHandler = new JsonRpcPacketMessageHandler();
-        serverPacketHandler.SetWritePackageAction(clientPacketHandler.WritePackageAsync);
-        clientPacketHandler.SetWritePackageAction(serverPacketHandler.WritePackageAsync);
+        packetHandlerB = new JsonRpcPacketMessageHandler();
+        packetHandlerA = new JsonRpcPacketMessageHandler();
+        packetHandlerB.SetWriteStringPackageAction(packetHandlerA.WriteStringPackageAsync);
+        packetHandlerA.SetWriteStringPackageAction(packetHandlerB.WriteStringPackageAsync);
 
-        rpcServer = new JsonRpc(serverPacketHandler);
-        rpcClient = new JsonRpc(clientPacketHandler);
+        jsonRpcB = new JsonRpc(packetHandlerB);
+        jsonRpcA = new JsonRpc(packetHandlerA);
     }
 
     public async ValueTask DisposeAsync()
     {
-        await clientPacketHandler.DisposeAsync();
-        rpcClient.Dispose();
-        await serverPacketHandler.DisposeAsync();
-        rpcServer.Dispose();
+        await packetHandlerA.DisposeAsync();
+        jsonRpcA.Dispose();
+        await packetHandlerB.DisposeAsync();
+        jsonRpcB.Dispose();
     }
 
     [Fact]
     public async Task TestSimpleAsync()
     {
-        rpcServer.AddLocalRpcTarget(new CalcAddService(0));
-        rpcServer.StartListening();
-        rpcClient.StartListening();
+        jsonRpcB.AddLocalRpcTarget(new CalcAddService(0));
+        jsonRpcB.StartListening();
+        jsonRpcA.StartListening();
 
-        ICalcAdd calcAddClient = rpcClient.Attach<ICalcAdd>();
+        ICalcAdd calcAdd = jsonRpcA.Attach<ICalcAdd>();
 
-        int sumClient = await calcAddClient.AddAsync(3, 8);
-        Assert.Equal(3 + 8, sumClient);
+        int sum = await calcAdd.AddAsync(3, 8);
+        Assert.Equal(3 + 8, sum);
     }
 
     [Fact]
     public async Task TestCancelAsync()
     {
-        rpcServer.AddLocalRpcTarget(new CalcAddService(0));
-        rpcServer.StartListening();
-        rpcClient.StartListening();
+        jsonRpcB.AddLocalRpcTarget(new CalcAddService(0));
+        jsonRpcB.StartListening();
+        jsonRpcA.StartListening();
 
-        ICalcAdd calcAddClient = rpcClient.Attach<ICalcAdd>();
+        ICalcAdd calcAdd = jsonRpcA.Attach<ICalcAdd>();
 
         // Check that cancellation token is forwarded to target and can be used there
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
         CancellationToken ct = cts.Token;
-        int sumClient = await calcAddClient.AddWitchCancelAsync(3, 8, ct);
-        Assert.Equal(3 + 8 + 899, sumClient);
+        int sum = await calcAdd.AddWitchCancelAsync(3, 8, ct);
+        Assert.Equal(3 + 8 + 899, sum);
     }
 
     [Fact]
     public async Task TestProgressAsync()
     {
-        rpcServer.AddLocalRpcTarget(new CalcAddService(0));
-        rpcServer.StartListening();
-        rpcClient.StartListening();
+        jsonRpcB.AddLocalRpcTarget(new CalcAddService(0));
+        jsonRpcB.StartListening();
+        jsonRpcA.StartListening();
 
-        ICalcAdd calcAddClient = rpcClient.Attach<ICalcAdd>();
+        ICalcAdd calcAdd = jsonRpcA.Attach<ICalcAdd>();
         List<int> progressResults = [];
         var progress = new Progress<int>(progressResults.Add);
 
-        int sumClient = await calcAddClient.AddWithFuncAsync(3, 8, progress);
-        Assert.Equal(3 + 8, sumClient);
+        int sum = await calcAdd.AddWithFuncAsync(3, 8, progress);
+        Assert.Equal(3 + 8, sum);
         Assert.Equal(2, progressResults.Count);
         Assert.Contains(3, progressResults);
         Assert.Contains(8, progressResults);
@@ -123,30 +123,30 @@ public class JsonRpcTests : IAsyncDisposable
     [Fact]
     public async Task TestMultipleDuplexAsync()
     {
-        rpcServer.AddLocalRpcTarget(new CalcAddService(100));
-        rpcServer.AddLocalRpcTarget(new CalcProdService(100));
-        rpcServer.StartListening();
+        jsonRpcB.AddLocalRpcTarget(new CalcAddService(100));
+        jsonRpcB.AddLocalRpcTarget(new CalcProdService(100));
+        jsonRpcB.StartListening();
 
-        rpcClient.AddLocalRpcTarget(new CalcAddService(200));
-        rpcClient.AddLocalRpcTarget(new CalcProdService(200));
-        rpcClient.StartListening();
+        jsonRpcA.AddLocalRpcTarget(new CalcAddService(200));
+        jsonRpcA.AddLocalRpcTarget(new CalcProdService(200));
+        jsonRpcA.StartListening();
 
-        ICalcAdd calcAddClient = rpcClient.Attach<ICalcAdd>();
-        ICalcProd calcProdClient = rpcClient.Attach<ICalcProd>();
-        ICalcAdd calcAddServer = rpcServer.Attach<ICalcAdd>();
-        ICalcProd calcProdServer = rpcServer.Attach<ICalcProd>();
+        ICalcAdd calcAddA = jsonRpcA.Attach<ICalcAdd>();
+        ICalcProd calcProdA = jsonRpcA.Attach<ICalcProd>();
+        ICalcAdd calcAddB = jsonRpcB.Attach<ICalcAdd>();
+        ICalcProd calcProdB = jsonRpcB.Attach<ICalcProd>();
 
         for (int i = 0; i < 1000; i++)
         {
-            int sumClient = await calcAddClient.AddAsync(i, i);
-            Assert.Equal(i + i + 100, sumClient);
-            int prodClient = await calcProdClient.MultiAsync(i, i);
-            Assert.Equal(i * i + 100, prodClient);
+            int sumA = await calcAddA.AddAsync(i, i);
+            Assert.Equal(i + i + 100, sumA);
+            int prodA = await calcProdA.MultiAsync(i, i);
+            Assert.Equal(i * i + 100, prodA);
 
-            int sumServer = await calcAddServer.AddAsync(i, i);
-            Assert.Equal(i + i + 200, sumServer);
-            int prodServer = await calcProdServer.MultiAsync(i, i);
-            Assert.Equal(i * i + 200, prodServer);
+            int sumB = await calcAddB.AddAsync(i, i);
+            Assert.Equal(i + i + 200, sumB);
+            int prodB = await calcProdB.MultiAsync(i, i);
+            Assert.Equal(i * i + 200, prodB);
         }
     }
 }

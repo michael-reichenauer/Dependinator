@@ -1,5 +1,6 @@
 using Dependinator.Diagrams.Svg;
 using Dependinator.Models;
+using Dependinator.Shared.Parsing;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Diagrams;
@@ -41,7 +42,7 @@ class CanvasService : ICanvasService
     readonly ISvgService svgService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInteropService;
-    readonly IVsCodeMessageService vsCodeMessageService;
+    readonly IParserServiceX parserServiceX;
     readonly IFileService fileService;
     readonly IRecentModelsService recentModelsService;
     readonly IInteractionService interactionService;
@@ -53,7 +54,7 @@ class CanvasService : ICanvasService
         ISvgService svgService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
-        IVsCodeMessageService vsCodeMessageService,
+        IParserServiceX parserServiceX,
         IFileService fileService,
         IRecentModelsService recentModelsService,
         IInteractionService interactionService
@@ -65,7 +66,7 @@ class CanvasService : ICanvasService
         this.svgService = svgService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
-        this.vsCodeMessageService = vsCodeMessageService;
+        this.parserServiceX = parserServiceX;
         this.fileService = fileService;
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
@@ -157,7 +158,9 @@ class CanvasService : ICanvasService
 
     public async void PingLanguageServer()
     {
-        await vsCodeMessageService.PostAsync("lsp/message", "'ping from UI2'");
+        Log.Info("Calling with 'SomePath'");
+        var resp = await parserServiceX.ParseAsync("SomePath");
+        Log.Info("The reaponse was:", resp);
     }
 
     public void ToggleTheme()

@@ -9,33 +9,53 @@ namespace Dependinator.Shared.Utils;
 
 public interface IJsonRpcPacketWriter
 {
-    ValueTask WritePackageAsync(ReadOnlyMemory<byte> payload, CancellationToken ct);
+    ValueTask WriteBinaryPackageAsync(ReadOnlyMemory<byte> binaryPayload, CancellationToken ct);
+    ValueTask WriteStringPackageAsync(string stringPayload, CancellationToken ct);
+    void SetWriteBinaryPackageAction(WriteBinaryPackageActionAsync writePackageActionAsync);
+    void SetWriteStringPackageAction(WriteStringPackageActionAsync writeMessageActionAsync);
 }
 
-public delegate ValueTask WritePackageActionAsync(ReadOnlyMemory<byte> payload, CancellationToken ct);
+public delegate ValueTask WriteBinaryPackageActionAsync(ReadOnlyMemory<byte> payload, CancellationToken ct);
+public delegate ValueTask WriteStringPackageActionAsync(string message, CancellationToken ct);
 
 public sealed class JsonRpcPacketMessageHandler : MessageHandlerBase, IJsonRpcPacketWriter
 {
     readonly SemaphoreSlim writeGate = new(1, 1);
     readonly Channel<ReadOnlyMemory<byte>> packageChannel = Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
-    WritePackageActionAsync writePackageActionAsync = null!;
+    WriteBinaryPackageActionAsync writeBinaryPackageActionAsync = null!;
+    WriteStringPackageActionAsync writeStringPackageActionAsync = null!;
 
     public JsonRpcPacketMessageHandler()
-        : base(new StreamJsonRpc.MessagePackFormatter()) { }
+        //       : base(new StreamJsonRpc.MessagePackFormatter()) { }
+        : base(new StreamJsonRpc.SystemTextJsonFormatter()) { }
 
     public override bool CanRead => true;
     public override bool CanWrite => true;
 
-    public void SetWritePackageAction(WritePackageActionAsync writePackageActionAsync)
+    public void SetWriteBinaryPackageAction(WriteBinaryPackageActionAsync writePackageActionAsync)
     {
         if (writePackageActionAsync is null)
             throw new InvalidOperationException($"{nameof(writePackageActionAsync)} cannot be null");
 
-        this.writePackageActionAsync = writePackageActionAsync;
+        this.writeBinaryPackageActionAsync = writePackageActionAsync;
     }
 
-    public ValueTask WritePackageAsync(ReadOnlyMemory<byte> payload, CancellationToken ct)
+    public void SetWriteStringPackageAction(WriteStringPackageActionAsync WriteStringPackageActionAsync)
     {
+        if (WriteStringPackageActionAsync is null)
+            throw new InvalidOperationException($"{nameof(WriteStringPackageActionAsync)} cannot be null");
+
+        this.writeStringPackageActionAsync = WriteStringPackageActionAsync;
+    }
+
+    public ValueTask WriteBinaryPackageAsync(ReadOnlyMemory<byte> binaryPackage, CancellationToken ct)
+    {
+        return packageChannel.Writer.WriteAsync(binaryPackage, ct);
+    }
+
+    public ValueTask WriteStringPackageAsync(string stringPackage, CancellationToken ct)
+    {
+        var payload = Convert.FromBase64String(stringPackage);
         return packageChannel.Writer.WriteAsync(payload, ct);
     }
 
@@ -45,22 +65,34 @@ public sealed class JsonRpcPacketMessageHandler : MessageHandlerBase, IJsonRpcPa
 
         // Formatter expects a ReadOnlySequence<byte>.
         var seq = new ReadOnlySequence<byte>(payload);
-        return this.Formatter.Deserialize(seq);
+        var rpcMessage = this.Formatter.Deserialize(seq);
+
+        return rpcMessage;
     }
 
-    protected override async ValueTask WriteCoreAsync(JsonRpcMessage content, CancellationToken ct)
+    protected override async ValueTask WriteCoreAsync(JsonRpcMessage rpcMessage, CancellationToken ct)
     {
-        if (writePackageActionAsync is null)
-            throw new InvalidOperationException($"{nameof(SetWritePackageAction)} has not yet been called");
+        if (writeBinaryPackageActionAsync is null && writeStringPackageActionAsync is null)
+            throw new InvalidOperationException(
+                $"{nameof(SetWriteStringPackageAction)} or {writeStringPackageActionAsync} has not yet been called"
+            );
 
         // Serialize message into a buffer.
         var buffer = new ArrayBufferWriter<byte>(initialCapacity: 1024);
-        this.Formatter.Serialize(buffer, content);
+        this.Formatter.Serialize(buffer, rpcMessage);
 
         await writeGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            await writePackageActionAsync(buffer.WrittenMemory, ct).ConfigureAwait(false);
+            if (writeBinaryPackageActionAsync is not null)
+            {
+                await writeBinaryPackageActionAsync(buffer.WrittenMemory, ct).ConfigureAwait(false);
+            }
+            else
+            {
+                var base64Message = Convert.ToBase64String(buffer.WrittenMemory.ToArray());
+                await writeStringPackageActionAsync(base64Message, ct).ConfigureAwait(false);
+            }
         }
         finally
         {

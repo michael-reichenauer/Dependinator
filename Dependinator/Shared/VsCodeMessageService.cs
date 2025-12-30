@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Microsoft.JSInterop;
 
@@ -7,8 +8,6 @@ public record VsCodeMessage(string Type, JsonElement Raw, string? Message);
 
 interface IVsCodeMessageService
 {
-    event Action<VsCodeMessage> MessageReceived;
-    ValueTask<bool> PostAsync(string type, object? data = null);
     Task InitAsync();
 }
 
@@ -16,13 +15,13 @@ interface IVsCodeMessageService
 class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
+    private readonly IJsonRpcPacketWriter jsonRpcPacketWriter;
     DotNetObjectReference<VsCodeMessageService>? reference;
 
-    public event Action<VsCodeMessage> MessageReceived = null!;
-
-    public VsCodeMessageService(IJSInterop jSInterop)
+    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcPacketWriter jsonRpcPacketWriter)
     {
         this.jSInterop = jSInterop;
+        this.jsonRpcPacketWriter = jsonRpcPacketWriter;
     }
 
     public async Task InitAsync()
@@ -32,34 +31,36 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 
         reference = jSInterop.Reference(this);
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));
+
+        jsonRpcPacketWriter.SetWriteStringPackageAction(SendPackageToLspAsync);
     }
 
-    public async ValueTask<bool> PostAsync(string type, object? data = null)
+    public async ValueTask SendPackageToLspAsync(string stringPackage, CancellationToken ct)
     {
-        return await jSInterop.Call<bool>("postVsCodeMessage", new { type = type, message = data });
+        await jSInterop.Call<bool>("postVsCodeMessage", new { type = "lsp/message", message = stringPackage });
     }
 
     [JSInvokable]
-    public Task OnVsCodeMessage(JsonElement raw)
+    public async Task OnVsCodeMessage(JsonElement raw)
     {
         if (!raw.TryGetProperty("type", out var typeElement))
-            return Task.CompletedTask;
+            return;
 
         var type = typeElement.GetString();
         if (string.IsNullOrWhiteSpace(type))
-            return Task.CompletedTask;
+            return;
 
-        var message = new VsCodeMessage(type, raw, TryGetString(raw, "message"));
+        var message = TryGetString(raw, "message");
+        if (message is null)
+            return;
+
         if (type == "ui/error")
         {
-            Log.Error("Comunication Error", message.Type, message.Message ?? "");
-            return Task.CompletedTask;
+            Log.Error("Comunication Error", message, message);
+            return;
         }
 
-        MessageReceived?.Invoke(message);
-
-        Log.Info("VS Code message:", message.Type, message.Message);
-        return Task.CompletedTask;
+        await jsonRpcPacketWriter.WriteStringPackageAsync(message, CancellationToken.None);
     }
 
     public ValueTask DisposeAsync()

@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         // Messages from language server to WebView ui
         client.onNotification("ui/message", params => {
-            console.log("Received UIMessage", params);
+            // console.log("Received UIMessage", params);
             activePanel?.webview.postMessage({
                 type: "ui/message",
                 message: params?.message,
@@ -77,12 +77,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         // Webview -> extension message bridge.
         panel.webview.onDidReceiveMessage(async message => {
-            console.log("vscode: onDidReceiveMessage check message", message);
             if (!message || typeof message.type !== "string")
                 return;
 
-            console.log("vscode: onDidReceiveMessage", message);
-
+            // console.log("vscode: onDidReceiveMessage", message);
 
             if (message.type === "lsp/message") {
                 // Messages from WebView UI to language server
