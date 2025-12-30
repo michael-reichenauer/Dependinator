@@ -8,6 +8,7 @@ public interface ICalcAdd
 {
     Task<int> AddAsync(int a, int b);
     Task<int> AddWitchCancelAsync(int a, int b, CancellationToken ct);
+    Task<int> AddWithFuncAsync(int a, int b, IProgress<int> progress);
 }
 
 public sealed class CalcAddService(int extra) : ICalcAdd
@@ -26,6 +27,14 @@ public sealed class CalcAddService(int extra) : ICalcAdd
             return a + b + extra + 899;
         }
     }
+
+    public async Task<int> AddWithFuncAsync(int a, int b, IProgress<int> progress)
+    {
+        progress.Report(a);
+        progress.Report(b);
+
+        return a + b;
+    }
 }
 
 public interface ICalcProd
@@ -38,19 +47,6 @@ public sealed class CalcProdService(int extra) : ICalcProd
     public Task<int> MultiAsync(int a, int b) => Task.FromResult(a * b + extra);
 }
 
-public sealed class JsonRpcPacketTransport(
-    ChannelReader<ReadOnlyMemory<byte>> ReadChannel,
-    ChannelWriter<ReadOnlyMemory<byte>> WriteChannel
-) : IJsonRpcPacketTransport
-{
-    public ValueTask<ReadOnlyMemory<byte>> ReceiveAsync(CancellationToken ct) => ReadChannel.ReadAsync(ct);
-
-    public ValueTask SendAsync(ReadOnlyMemory<byte> payload, CancellationToken ct) =>
-        WriteChannel.WriteAsync(payload, ct);
-
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-}
-
 public class JsonRpcTests : IAsyncDisposable
 {
     readonly JsonRpcPacketMessageHandler clientPacketHandler;
@@ -60,17 +56,12 @@ public class JsonRpcTests : IAsyncDisposable
 
     public JsonRpcTests()
     {
-        // Create buffered channnels to conect client and server transports
-        var channel1 = Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
-        var channel2 = Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
+        serverPacketHandler = new JsonRpcPacketMessageHandler();
+        clientPacketHandler = new JsonRpcPacketMessageHandler();
+        serverPacketHandler.SetWritePackageAction(clientPacketHandler.WritePackageAsync);
+        clientPacketHandler.SetWritePackageAction(serverPacketHandler.WritePackageAsync);
 
-        IJsonRpcPacketTransport transport1 = new JsonRpcPacketTransport(channel1.Reader, channel2.Writer);
-        IJsonRpcPacketTransport transport2 = new JsonRpcPacketTransport(channel2.Reader, channel1.Writer);
-
-        serverPacketHandler = new JsonRpcPacketMessageHandler(transport1);
         rpcServer = new JsonRpc(serverPacketHandler);
-
-        clientPacketHandler = new JsonRpcPacketMessageHandler(transport2);
         rpcClient = new JsonRpc(clientPacketHandler);
     }
 
@@ -109,6 +100,24 @@ public class JsonRpcTests : IAsyncDisposable
         CancellationToken ct = cts.Token;
         int sumClient = await calcAddClient.AddWitchCancelAsync(3, 8, ct);
         Assert.Equal(3 + 8 + 899, sumClient);
+    }
+
+    [Fact]
+    public async Task TestProgressAsync()
+    {
+        rpcServer.AddLocalRpcTarget(new CalcAddService(0));
+        rpcServer.StartListening();
+        rpcClient.StartListening();
+
+        ICalcAdd calcAddClient = rpcClient.Attach<ICalcAdd>();
+        List<int> progressResults = [];
+        var progress = new Progress<int>(progressResults.Add);
+
+        int sumClient = await calcAddClient.AddWithFuncAsync(3, 8, progress);
+        Assert.Equal(3 + 8, sumClient);
+        Assert.Equal(2, progressResults.Count);
+        Assert.Contains(3, progressResults);
+        Assert.Contains(8, progressResults);
     }
 
     [Fact]

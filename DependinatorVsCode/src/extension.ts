@@ -24,6 +24,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         if (!client)
             return;
 
+        // Logging messages from language server
         client.onNotification("vscode/loginfo", params => {
             const type = typeof params?.Type === "string" ? params.Type.toLowerCase() : "";
             const message = params?.Message ?? params?.message ?? "";
@@ -88,6 +89,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 const client = await languageClientPromise;
                 if (!client) {
                     console.error("No client to send", message);
+                    // Forward error message back to WebvView UI
                     panel.webview.postMessage({
                         type: "ui/error",
                         message: "Language server unavailable"
@@ -96,12 +98,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 }
 
                 try {
+                    // Forward messages to language server (from WebView UI)
                     await client.sendNotification("lsp/message", {
                         message: message.message
                     });
 
                 } catch (error) {
                     console.error("Failed to send", message);
+                    // Forward error message back to WebvView UI
                     panel.webview.postMessage({
                         type: "ui/error",
                         message: String(error)

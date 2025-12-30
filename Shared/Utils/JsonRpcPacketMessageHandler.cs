@@ -1,29 +1,47 @@
 using System.Buffers;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using StreamJsonRpc;
 using StreamJsonRpc.Protocol;
 
 namespace Dependinator.Shared.Utils;
 
-public sealed class JsonRpcPacketMessageHandler : MessageHandlerBase
+public interface IJsonRpcPacketWriter
 {
-    private readonly IJsonRpcPacketTransport transport;
+    ValueTask WritePackageAsync(ReadOnlyMemory<byte> payload, CancellationToken ct);
+}
 
-    private readonly SemaphoreSlim writeGate = new(1, 1);
+public delegate ValueTask WritePackageActionAsync(ReadOnlyMemory<byte> payload, CancellationToken ct);
 
-    public JsonRpcPacketMessageHandler(IJsonRpcPacketTransport transport)
-        : base(new StreamJsonRpc.MessagePackFormatter())
-    {
-        this.transport = transport;
-    }
+public sealed class JsonRpcPacketMessageHandler : MessageHandlerBase, IJsonRpcPacketWriter
+{
+    readonly SemaphoreSlim writeGate = new(1, 1);
+    readonly Channel<ReadOnlyMemory<byte>> packageChannel = Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
+    WritePackageActionAsync writePackageActionAsync = null!;
+
+    public JsonRpcPacketMessageHandler()
+        : base(new StreamJsonRpc.MessagePackFormatter()) { }
 
     public override bool CanRead => true;
     public override bool CanWrite => true;
 
+    public void SetWritePackageAction(WritePackageActionAsync writePackageActionAsync)
+    {
+        if (writePackageActionAsync is null)
+            throw new InvalidOperationException($"{nameof(writePackageActionAsync)} cannot be null");
+
+        this.writePackageActionAsync = writePackageActionAsync;
+    }
+
+    public ValueTask WritePackageAsync(ReadOnlyMemory<byte> payload, CancellationToken ct)
+    {
+        return packageChannel.Writer.WriteAsync(payload, ct);
+    }
+
     protected override async ValueTask<JsonRpcMessage?> ReadCoreAsync(CancellationToken ct)
     {
-        var payload = await transport.ReceiveAsync(ct).ConfigureAwait(false);
+        var payload = await packageChannel.Reader.ReadAsync(ct).ConfigureAwait(false);
 
         // Formatter expects a ReadOnlySequence<byte>.
         var seq = new ReadOnlySequence<byte>(payload);
@@ -32,6 +50,9 @@ public sealed class JsonRpcPacketMessageHandler : MessageHandlerBase
 
     protected override async ValueTask WriteCoreAsync(JsonRpcMessage content, CancellationToken ct)
     {
+        if (writePackageActionAsync is null)
+            throw new InvalidOperationException($"{nameof(SetWritePackageAction)} has not yet been called");
+
         // Serialize message into a buffer.
         var buffer = new ArrayBufferWriter<byte>(initialCapacity: 1024);
         this.Formatter.Serialize(buffer, content);
@@ -39,7 +60,7 @@ public sealed class JsonRpcPacketMessageHandler : MessageHandlerBase
         await writeGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            await transport.SendAsync(buffer.WrittenMemory, ct).ConfigureAwait(false);
+            await writePackageActionAsync(buffer.WrittenMemory, ct).ConfigureAwait(false);
         }
         finally
         {
