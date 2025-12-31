@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
+import type { WebviewMessage } from "./types";
 
 const viewType = "dependinator.webview";
 
 export type WebviewMessageHandler = (
-    message: { type: string; message?: unknown },
+    message: WebviewMessage,
     panel: vscode.WebviewPanel
 ) => void | Promise<void>;
 

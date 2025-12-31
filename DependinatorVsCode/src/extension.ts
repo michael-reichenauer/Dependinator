@@ -5,6 +5,7 @@ import {
     registerUiMessageForwarding,
     startLanguageServer
 } from "./languageServer";
+import type { WebviewMessage } from "./types";
 import { createDependinatorWebviewPanel, registerWebviewMessageHandler } from "./webview";
 
 const commandId = "dependinator.open";
@@ -43,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 activePanel = undefined;
         });
 
-        registerWebviewMessageHandler(panel, async message => {
+        registerWebviewMessageHandler(panel, async (message: WebviewMessage) => {
             if (message.type !== "lsp/message")
                 return;
 
