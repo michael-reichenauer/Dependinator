@@ -108,6 +108,18 @@
 			"problemMatcher": "$tsc"
 		},
 		{
+			"label": "Dependinator: Build Solution",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"${workspaceFolder}/Dependinator.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
 			"label": "Dependinator: Prepare WASM",
 			"type": "shell",
 			"command": "bash DependinatorVsCode/scripts/prepare-wasm.sh",
@@ -117,6 +129,7 @@
 			"label": "Dependinator: Prepare and Compile Extension",
 			"dependsOrder": "sequence",
 			"dependsOn": [
+				"Dependinator: Build Solution",
 				"Dependinator: Prepare WASM",
 				"Dependinator: Install Extension Dependencies",
 				"Dependinator: Compile Extension"
