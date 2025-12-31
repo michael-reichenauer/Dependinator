@@ -6,6 +6,8 @@ namespace Dependinator.Shared;
 
 public record VsCodeMessage(string Type, JsonElement Raw, string? Message);
 
+// Receives and sends messages from and to the VS Code Extension Host
+// Used to comunicate with the Language Server via the the extension host.
 interface IVsCodeMessageService
 {
     Task InitAsync();
@@ -15,13 +17,13 @@ interface IVsCodeMessageService
 class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
-    private readonly IJsonRpcPacketWriter jsonRpcPacketWriter;
+    private readonly IJsonRpcMessageTransport jsonRpcMessageTransport;
     DotNetObjectReference<VsCodeMessageService>? reference;
 
-    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcPacketWriter jsonRpcPacketWriter)
+    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcMessageTransport jsonRpcMessageTransport)
     {
         this.jSInterop = jSInterop;
-        this.jsonRpcPacketWriter = jsonRpcPacketWriter;
+        this.jsonRpcMessageTransport = jsonRpcMessageTransport;
     }
 
     public async Task InitAsync()
@@ -32,12 +34,12 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         reference = jSInterop.Reference(this);
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));
 
-        jsonRpcPacketWriter.SetWriteStringPackageAction(SendPackageToLspAsync);
+        jsonRpcMessageTransport.ResisterSendMessageAction(SendMessageToLspAsync);
     }
 
-    public async ValueTask SendPackageToLspAsync(string stringPackage, CancellationToken ct)
+    public async ValueTask SendMessageToLspAsync(string base64Message, CancellationToken ct)
     {
-        await jSInterop.Call<bool>("postVsCodeMessage", new { type = "lsp/message", message = stringPackage });
+        await jSInterop.Call<bool>("postVsCodeMessage", new { type = "lsp/message", message = base64Message });
     }
 
     [JSInvokable]
@@ -60,7 +62,7 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
             return;
         }
 
-        await jsonRpcPacketWriter.WriteStringPackageAsync(message, CancellationToken.None);
+        await jsonRpcMessageTransport.AddRecievedMessageAsync(message, CancellationToken.None);
     }
 
     public ValueTask DisposeAsync()

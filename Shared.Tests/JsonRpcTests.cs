@@ -8,7 +8,7 @@ public interface ICalcAdd
 {
     Task<int> AddAsync(int a, int b);
     Task<int> AddWitchCancelAsync(int a, int b, CancellationToken ct);
-    Task<int> AddWithFuncAsync(int a, int b, IProgress<int> progress);
+    Task<int> AddWithProgressAsync(int a, int b, IProgress<int> progress);
 }
 
 public sealed class CalcAddService(int extra) : ICalcAdd
@@ -28,11 +28,10 @@ public sealed class CalcAddService(int extra) : ICalcAdd
         }
     }
 
-    public async Task<int> AddWithFuncAsync(int a, int b, IProgress<int> progress)
+    public async Task<int> AddWithProgressAsync(int a, int b, IProgress<int> progress)
     {
         progress.Report(a);
         progress.Report(b);
-
         return a + b;
     }
 }
@@ -49,27 +48,28 @@ public sealed class CalcProdService(int extra) : ICalcProd
 
 public class JsonRpcTests : IAsyncDisposable
 {
-    readonly JsonRpcPacketMessageHandler packetHandlerA;
+    readonly JsonRpcMessageHandler messageHandlerA;
     readonly JsonRpc jsonRpcA;
-    readonly JsonRpcPacketMessageHandler packetHandlerB;
+    readonly JsonRpcMessageHandler messageHandlerB;
     readonly JsonRpc jsonRpcB;
 
     public JsonRpcTests()
     {
-        packetHandlerB = new JsonRpcPacketMessageHandler();
-        packetHandlerA = new JsonRpcPacketMessageHandler();
-        packetHandlerB.SetWriteStringPackageAction(packetHandlerA.WriteStringPackageAsync);
-        packetHandlerA.SetWriteStringPackageAction(packetHandlerB.WriteStringPackageAsync);
+        // Connecect the 2 sides package handlers with each other
+        messageHandlerA = new JsonRpcMessageHandler();
+        messageHandlerB = new JsonRpcMessageHandler();
+        messageHandlerA.ResisterSendMessageAction(messageHandlerB.AddRecievedMessageAsync);
+        messageHandlerB.ResisterSendMessageAction(messageHandlerA.AddRecievedMessageAsync);
 
-        jsonRpcB = new JsonRpc(packetHandlerB);
-        jsonRpcA = new JsonRpc(packetHandlerA);
+        jsonRpcB = new JsonRpc(messageHandlerB);
+        jsonRpcA = new JsonRpc(messageHandlerA);
     }
 
     public async ValueTask DisposeAsync()
     {
-        await packetHandlerA.DisposeAsync();
+        await messageHandlerA.DisposeAsync();
         jsonRpcA.Dispose();
-        await packetHandlerB.DisposeAsync();
+        await messageHandlerB.DisposeAsync();
         jsonRpcB.Dispose();
     }
 
@@ -113,7 +113,7 @@ public class JsonRpcTests : IAsyncDisposable
         List<int> progressResults = [];
         var progress = new Progress<int>(progressResults.Add);
 
-        int sum = await calcAdd.AddWithFuncAsync(3, 8, progress);
+        int sum = await calcAdd.AddWithProgressAsync(3, 8, progress);
         Assert.Equal(3 + 8, sum);
         Assert.Equal(2, progressResults.Count);
         Assert.Contains(3, progressResults);

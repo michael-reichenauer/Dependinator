@@ -23,13 +23,13 @@ internal class Program
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
 
-        builder.Services.AddSingleton<JsonRpcPacketMessageHandler>();
-        builder.Services.AddSingleton<MessageHandlerBase>(sp => sp.GetRequiredService<JsonRpcPacketMessageHandler>());
-        builder.Services.AddSingleton<IJsonRpcPacketWriter>(sp => sp.GetRequiredService<JsonRpcPacketMessageHandler>());
+        builder.Services.AddSingleton<JsonRpcMessageHandler>();
+        builder.Services.AddSingleton<MessageHandlerBase>(sp => sp.GetRequiredService<JsonRpcMessageHandler>());
+        builder.Services.AddSingleton<IJsonRpcMessageTransport>(sp => sp.GetRequiredService<JsonRpcMessageHandler>());
 
         builder.Services.AddSingleton<JsonRpc>(sp =>
         {
-            var packageHandler = sp.GetRequiredService<JsonRpcPacketMessageHandler>();
+            var packageHandler = sp.GetRequiredService<JsonRpcMessageHandler>();
             var jsonRpc = new JsonRpc(packageHandler);
             jsonRpc.StartListening();
             return jsonRpc;

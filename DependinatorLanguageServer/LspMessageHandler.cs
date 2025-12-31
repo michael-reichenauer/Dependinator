@@ -19,33 +19,36 @@ public record UIMessage(string Message)
     public static readonly string Method = "ui/message";
 }
 
+// Receives and sends messages from and to the VS Code Extension Host
+// Used to comunicate with the WebView UI via the the extension host.
 public class LspMessageHandler : IJsonRpcNotificationHandler<LspMessage>
 {
     readonly ILanguageServerFacade server;
-    readonly IJsonRpcPacketWriter jsonRpcPacketWriter;
+    readonly IJsonRpcMessageTransport jsonRpcMessageTransport;
 
     public LspMessageHandler(ILanguageServerFacade server)
     {
         this.server = server;
 
-        var serverMessageHandler = new JsonRpcPacketMessageHandler();
-        serverMessageHandler.SetWriteStringPackageAction(SendPackageToUIAsync);
-        var rpcServer = new JsonRpc(serverMessageHandler);
-        rpcServer.AddLocalRpcTarget(new ParserServiceX());
+        var jsonRpcMessageHandler = new JsonRpcMessageHandler();
+        jsonRpcMessageHandler.ResisterSendMessageAction(SendMessageToUIAsync);
 
-        rpcServer.StartListening();
-        jsonRpcPacketWriter = serverMessageHandler;
+        var jsonRpc = new JsonRpc(jsonRpcMessageHandler);
+        jsonRpc.AddLocalRpcTarget(new ParserServiceX());
+
+        jsonRpc.StartListening();
+        jsonRpcMessageTransport = jsonRpcMessageHandler;
     }
 
-    public ValueTask SendPackageToUIAsync(string stringPackage, CancellationToken ct)
+    public ValueTask SendMessageToUIAsync(string base64Message, CancellationToken ct)
     {
-        server.SendNotification(UIMessage.Method, new UIMessage(stringPackage));
+        server.SendNotification(UIMessage.Method, new UIMessage(base64Message));
         return ValueTask.CompletedTask;
     }
 
     public async Task<Unit> Handle(LspMessage request, CancellationToken ct)
     {
-        await jsonRpcPacketWriter.WriteStringPackageAsync(request.Message, ct);
+        await jsonRpcMessageTransport.AddRecievedMessageAsync(request.Message, ct);
         return Unit.Value;
     }
 }
