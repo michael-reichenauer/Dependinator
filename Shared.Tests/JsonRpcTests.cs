@@ -46,41 +46,16 @@ public sealed class CalcProdService(int extra) : ICalcProd
     public Task<int> MultiAsync(int a, int b) => Task.FromResult(a * b + extra);
 }
 
-public class JsonRpcTests : IAsyncDisposable
+public class JsonRpcTests
 {
-    readonly JsonRpcMessageHandler messageHandlerA;
-    readonly JsonRpc jsonRpcA;
-    readonly JsonRpcMessageHandler messageHandlerB;
-    readonly JsonRpc jsonRpcB;
-
-    public JsonRpcTests()
-    {
-        // Connecect the 2 sides package handlers with each other
-        messageHandlerA = new JsonRpcMessageHandler();
-        messageHandlerB = new JsonRpcMessageHandler();
-        messageHandlerA.ResisterSendMessageAction(messageHandlerB.AddRecievedMessageAsync);
-        messageHandlerB.ResisterSendMessageAction(messageHandlerA.AddRecievedMessageAsync);
-
-        jsonRpcB = new JsonRpc(messageHandlerB);
-        jsonRpcA = new JsonRpc(messageHandlerA);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await messageHandlerA.DisposeAsync();
-        jsonRpcA.Dispose();
-        await messageHandlerB.DisposeAsync();
-        jsonRpcB.Dispose();
-    }
-
     [Fact]
     public async Task TestSimpleAsync()
     {
-        jsonRpcB.AddLocalRpcTarget(new CalcAddService(0));
-        jsonRpcB.StartListening();
-        jsonRpcA.StartListening();
+        using var jsonRpcService = new JsonRpcService();
+        jsonRpcService.AddLocalRpcTarget(new CalcAddService(0));
+        jsonRpcService.StartListening();
 
-        ICalcAdd calcAdd = jsonRpcA.Attach<ICalcAdd>();
+        ICalcAdd calcAdd = jsonRpcService.GetRemoteProxy<ICalcAdd>();
 
         int sum = await calcAdd.AddAsync(3, 8);
         Assert.Equal(3 + 8, sum);
@@ -89,11 +64,11 @@ public class JsonRpcTests : IAsyncDisposable
     [Fact]
     public async Task TestCancelAsync()
     {
-        jsonRpcB.AddLocalRpcTarget(new CalcAddService(0));
-        jsonRpcB.StartListening();
-        jsonRpcA.StartListening();
+        using var jsonRpcService = new JsonRpcService();
+        jsonRpcService.AddLocalRpcTarget(new CalcAddService(0));
+        jsonRpcService.StartListening();
 
-        ICalcAdd calcAdd = jsonRpcA.Attach<ICalcAdd>();
+        ICalcAdd calcAdd = jsonRpcService.GetRemoteProxy<ICalcAdd>();
 
         // Check that cancellation token is forwarded to target and can be used there
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
@@ -105,11 +80,12 @@ public class JsonRpcTests : IAsyncDisposable
     [Fact]
     public async Task TestProgressAsync()
     {
-        jsonRpcB.AddLocalRpcTarget(new CalcAddService(0));
-        jsonRpcB.StartListening();
-        jsonRpcA.StartListening();
+        using var jsonRpcService = new JsonRpcService();
+        jsonRpcService.AddLocalRpcTarget(new CalcAddService(0));
+        jsonRpcService.StartListening();
 
-        ICalcAdd calcAdd = jsonRpcA.Attach<ICalcAdd>();
+        ICalcAdd calcAdd = jsonRpcService.GetRemoteProxy<ICalcAdd>();
+
         List<int> progressResults = [];
         var progress = new Progress<int>(progressResults.Add);
 
@@ -123,18 +99,25 @@ public class JsonRpcTests : IAsyncDisposable
     [Fact]
     public async Task TestMultipleDuplexAsync()
     {
-        jsonRpcB.AddLocalRpcTarget(new CalcAddService(100));
-        jsonRpcB.AddLocalRpcTarget(new CalcProdService(100));
-        jsonRpcB.StartListening();
+        // Two json Rpc services on each side, connected to each other
+        using var jsonRpcServiceA = new JsonRpcService();
+        using var jsonRpcServiceB = new JsonRpcService();
 
-        jsonRpcA.AddLocalRpcTarget(new CalcAddService(200));
-        jsonRpcA.AddLocalRpcTarget(new CalcProdService(200));
-        jsonRpcA.StartListening();
+        jsonRpcServiceA.RegisterSendMessageAction(jsonRpcServiceB.AddReceivedMessageAsync);
+        jsonRpcServiceB.RegisterSendMessageAction(jsonRpcServiceA.AddReceivedMessageAsync);
 
-        ICalcAdd calcAddA = jsonRpcA.Attach<ICalcAdd>();
-        ICalcProd calcProdA = jsonRpcA.Attach<ICalcProd>();
-        ICalcAdd calcAddB = jsonRpcB.Attach<ICalcAdd>();
-        ICalcProd calcProdB = jsonRpcB.Attach<ICalcProd>();
+        jsonRpcServiceA.AddLocalRpcTarget(new CalcAddService(200));
+        jsonRpcServiceA.AddLocalRpcTarget(new CalcProdService(200));
+        jsonRpcServiceA.StartListening();
+
+        jsonRpcServiceB.AddLocalRpcTarget(new CalcAddService(100));
+        jsonRpcServiceB.AddLocalRpcTarget(new CalcProdService(100));
+        jsonRpcServiceB.StartListening();
+
+        ICalcAdd calcAddA = jsonRpcServiceA.GetRemoteProxy<ICalcAdd>();
+        ICalcProd calcProdA = jsonRpcServiceA.GetRemoteProxy<ICalcProd>();
+        ICalcAdd calcAddB = jsonRpcServiceB.GetRemoteProxy<ICalcAdd>();
+        ICalcProd calcProdB = jsonRpcServiceB.GetRemoteProxy<ICalcProd>();
 
         for (int i = 0; i < 1000; i++)
         {

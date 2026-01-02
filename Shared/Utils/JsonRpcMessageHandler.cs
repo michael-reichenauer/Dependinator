@@ -5,38 +5,23 @@ using StreamJsonRpc.Protocol;
 
 namespace Dependinator.Shared.Utils;
 
-public interface IJsonRpcMessageTransport
-{
-    // Adds the message, that was recieved fromt the "other" side
-    ValueTask AddRecievedMessageAsync(ReadOnlyMemory<byte> binaryPackage, CancellationToken ct);
-
-    // Adds the message, that was recieved fromt the "other" side
-    ValueTask AddRecievedMessageAsync(string base64Message, CancellationToken ct);
-
-    // Registers the send message action, that should send the package to the "other" side
-    void RegisterSendMessageAction(WriteBinaryMessageActionAsync writePackageActionAsync);
-
-    // Registers the send message action, that should send the package to the "other" side
-    void ResisterSendMessageAction(WriteBase64MessageActionAsync writeMessageActionAsync);
-}
-
 public delegate ValueTask WriteBinaryMessageActionAsync(ReadOnlyMemory<byte> binaryMessage, CancellationToken ct);
 public delegate ValueTask WriteBase64MessageActionAsync(string base64Message, CancellationToken ct);
 
-public sealed class JsonRpcMessageHandler : MessageHandlerBase, IJsonRpcMessageTransport
+public sealed class JsonRpcMessageHandler : MessageHandlerBase
 {
     readonly SemaphoreSlim writeGate = new(1, 1);
     readonly Channel<ReadOnlyMemory<byte>> messagesChannel = Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
     WriteBinaryMessageActionAsync sendBinaryMessageActionAsync = null!;
 
     public JsonRpcMessageHandler()
-        //       : base(new StreamJsonRpc.MessagePackFormatter()) { } // More efficent
+        //       : base(new StreamJsonRpc.MessagePackFormatter()) { } // More efficient
         : base(new StreamJsonRpc.SystemTextJsonFormatter()) { }
 
     public override bool CanRead => true;
     public override bool CanWrite => true;
 
-    // Registers the write message action, that should transfere the message to the "other" side
+    // Registers the write message action, that should transfer the message to the "other" side
     public void RegisterSendMessageAction(WriteBinaryMessageActionAsync sendBinaryMessageActionAsync)
     {
         if (sendBinaryMessageActionAsync is null)
@@ -45,8 +30,8 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase, IJsonRpcMessageT
         this.sendBinaryMessageActionAsync = sendBinaryMessageActionAsync;
     }
 
-    // Registers the write message action, that should transfere the message to the "other" side
-    public void ResisterSendMessageAction(WriteBase64MessageActionAsync sendBase64MessageActionAsync)
+    // Registers the write message action, that should transfer the message to the "other" side
+    public void RegisterSendMessageAction(WriteBase64MessageActionAsync sendBase64MessageActionAsync)
     {
         if (sendBase64MessageActionAsync is null)
             throw new InvalidOperationException($"{nameof(sendBase64MessageActionAsync)} cannot be null");
@@ -58,17 +43,17 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase, IJsonRpcMessageT
         };
     }
 
-    // Adds the message, that was recieved fromt the "other" side
-    public ValueTask AddRecievedMessageAsync(ReadOnlyMemory<byte> binaryPackage, CancellationToken ct)
+    // Adds the message, that was received from the "other" side
+    public ValueTask AddReceivedMessageAsync(ReadOnlyMemory<byte> binaryPackage, CancellationToken ct)
     {
         return messagesChannel.Writer.WriteAsync(binaryPackage, ct);
     }
 
-    // Adds the message, that was recieved fromt the "other" side
-    public ValueTask AddRecievedMessageAsync(string base64Message, CancellationToken ct)
+    // Adds the message, that was received fromt the "other" side
+    public ValueTask AddReceivedMessageAsync(string base64Message, CancellationToken ct)
     {
         var binaryPackage = Convert.FromBase64String(base64Message);
-        return AddRecievedMessageAsync(binaryPackage, ct);
+        return AddReceivedMessageAsync(binaryPackage, ct);
     }
 
     protected override async ValueTask<JsonRpcMessage?> ReadCoreAsync(CancellationToken ct)
@@ -85,7 +70,7 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase, IJsonRpcMessageT
     protected override async ValueTask WriteCoreAsync(JsonRpcMessage rpcMessage, CancellationToken ct)
     {
         if (sendBinaryMessageActionAsync is null)
-            throw new InvalidOperationException($"{nameof(ResisterSendMessageAction)} has not yet been called");
+            throw new InvalidOperationException($"{nameof(RegisterSendMessageAction)} has not yet been called");
 
         // Serialize message into a buffer.
         var buffer = new ArrayBufferWriter<byte>(initialCapacity: 1024);

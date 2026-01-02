@@ -4,6 +4,7 @@ using Dependinator.Shared.Utils;
 using Dependinator.Shared.Utils.Logging;
 using Dependinator.Utils;
 using Dependinator.Wasm;
+using ICSharpCode.Decompiler.TypeSystem;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using StreamJsonRpc;
@@ -23,23 +24,15 @@ internal class Program
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
 
-        builder.Services.AddSingleton<JsonRpcMessageHandler>();
-        builder.Services.AddSingleton<MessageHandlerBase>(sp => sp.GetRequiredService<JsonRpcMessageHandler>());
-        builder.Services.AddSingleton<IJsonRpcMessageTransport>(sp => sp.GetRequiredService<JsonRpcMessageHandler>());
+        builder.Services.AddSingleton<IJsonRpcService, JsonRpcService>();
 
-        builder.Services.AddSingleton<JsonRpc>(sp =>
-        {
-            var packageHandler = sp.GetRequiredService<JsonRpcMessageHandler>();
-            var jsonRpc = new JsonRpc(packageHandler);
-            jsonRpc.StartListening();
-            return jsonRpc;
-        });
         builder.Services.AddSingleton<IParserServiceX>(sp =>
-        {
-            var jsonRpc = sp.GetRequiredService<JsonRpc>();
-            return jsonRpc.Attach<IParserServiceX>();
-        });
+            sp.GetRequiredService<IJsonRpcService>().GetRemoteProxy<IParserServiceX>()
+        );
 
-        await builder.Build().RunAsync();
+        var app = builder.Build();
+        app.Services.GetRequiredService<IJsonRpcService>().StartListening();
+
+        await app.RunAsync();
     }
 }

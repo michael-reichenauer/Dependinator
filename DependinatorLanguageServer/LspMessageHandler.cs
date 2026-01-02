@@ -20,24 +20,19 @@ public record UIMessage(string Message)
 }
 
 // Receives and sends messages from and to the VS Code Extension Host
-// Used to comunicate with the WebView UI via the the extension host.
+// Used to communicate with the WebView UI via the the extension host.
 public class LspMessageHandler : IJsonRpcNotificationHandler<LspMessage>
 {
     readonly ILanguageServerFacade server;
-    readonly IJsonRpcMessageTransport jsonRpcMessageTransport;
+    readonly JsonRpcService jsonRpcService = new();
 
     public LspMessageHandler(ILanguageServerFacade server)
     {
         this.server = server;
 
-        var jsonRpcMessageHandler = new JsonRpcMessageHandler();
-        jsonRpcMessageHandler.ResisterSendMessageAction(SendMessageToUIAsync);
-
-        var jsonRpc = new JsonRpc(jsonRpcMessageHandler);
-        jsonRpc.AddLocalRpcTarget(new ParserServiceX());
-
-        jsonRpc.StartListening();
-        jsonRpcMessageTransport = jsonRpcMessageHandler;
+        jsonRpcService.RegisterSendMessageAction(SendMessageToUIAsync);
+        jsonRpcService.AddLocalRpcTarget(new ParserServiceX());
+        jsonRpcService.StartListening();
     }
 
     public ValueTask SendMessageToUIAsync(string base64Message, CancellationToken ct)
@@ -48,7 +43,7 @@ public class LspMessageHandler : IJsonRpcNotificationHandler<LspMessage>
 
     public async Task<Unit> Handle(LspMessage request, CancellationToken ct)
     {
-        await jsonRpcMessageTransport.AddRecievedMessageAsync(request.Message, ct);
+        await jsonRpcService.AddReceivedMessageAsync(request.Message, ct);
         return Unit.Value;
     }
 }

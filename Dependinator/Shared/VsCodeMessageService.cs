@@ -7,7 +7,7 @@ namespace Dependinator.Shared;
 public record VsCodeMessage(string Type, JsonElement Raw, string? Message);
 
 // Receives and sends messages from and to the VS Code Extension Host
-// Used to comunicate with the Language Server via the the extension host.
+// Used to communicate with the Language Server via the the extension host.
 interface IVsCodeMessageService
 {
     Task InitAsync();
@@ -17,13 +17,13 @@ interface IVsCodeMessageService
 class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
-    private readonly IJsonRpcMessageTransport jsonRpcMessageTransport;
+    private readonly IJsonRpcService jsonRpcService;
     DotNetObjectReference<VsCodeMessageService>? reference;
 
-    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcMessageTransport jsonRpcMessageTransport)
+    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcService jsonRpcService)
     {
         this.jSInterop = jSInterop;
-        this.jsonRpcMessageTransport = jsonRpcMessageTransport;
+        this.jsonRpcService = jsonRpcService;
     }
 
     public async Task InitAsync()
@@ -34,7 +34,7 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         reference = jSInterop.Reference(this);
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));
 
-        jsonRpcMessageTransport.ResisterSendMessageAction(SendMessageToLspAsync);
+        jsonRpcService.RegisterSendMessageAction(SendMessageToLspAsync);
     }
 
     public async ValueTask SendMessageToLspAsync(string base64Message, CancellationToken ct)
@@ -62,7 +62,7 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
             return;
         }
 
-        await jsonRpcMessageTransport.AddRecievedMessageAsync(message, CancellationToken.None);
+        await jsonRpcService.AddReceivedMessageAsync(message, CancellationToken.None);
     }
 
     public ValueTask DisposeAsync()
