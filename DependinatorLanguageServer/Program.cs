@@ -1,7 +1,7 @@
+using Dependinator.Shared.Parsing;
+using Dependinator.Shared.Utils;
 using Dependinator.Shared.Utils.Logging;
-using MediatR;
-using OmniSharp.Extensions.JsonRpc;
-using OmniSharp.Extensions.LanguageServer.Protocol.Window;
+using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
 
 namespace DependinatorLanguageServer;
@@ -14,10 +14,14 @@ internal class Program
             options
                 .WithInput(Console.OpenStandardInput())
                 .WithOutput(Console.OpenStandardOutput())
+                .WithServices(services =>
+                {
+                    services.AddSingleton<IJsonRpcService, JsonRpcService>();
+                    services.AddSingleton<ParserServiceX>();
+                })
                 .WithHandler<LspMessageHandler>()
-                .OnInitialize((_, _, _) => Task.CompletedTask)
-                .OnInitialized(
-                    (server, _, _, _) =>
+                .OnInitialize(
+                    (server, _, _) =>
                     {
                         // Enable logging
                         ConfigLogger.Configure(
@@ -28,9 +32,15 @@ internal class Program
                                 Output: line => server.SendNotification("vscode/loginfo", new LogInfo("info", line))
                             )
                         );
+
+                        // Register remote services callable from the WebView WASM UI
+                        var jsonRpcService = server.GetRequiredService<IJsonRpcService>();
+                        jsonRpcService.AddLocalRpcTarget(server.GetRequiredService<ParserServiceX>());
+                        jsonRpcService.StartListening();
                         return Task.CompletedTask;
                     }
                 )
+                .OnInitialized((server, _, _, _) => Task.CompletedTask)
                 .OnStarted(
                     (server, _) =>
                     {
