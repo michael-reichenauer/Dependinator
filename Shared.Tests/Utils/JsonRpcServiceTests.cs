@@ -1,8 +1,4 @@
-using System;
-using System.Threading.Channels;
-using StreamJsonRpc;
-
-namespace Shared.Tests;
+namespace Shared.Tests.Utils;
 
 public interface ICalcAdd
 {
@@ -46,7 +42,7 @@ public sealed class CalcProdService(int extra) : ICalcProd
     public Task<int> MultiAsync(int a, int b) => Task.FromResult(a * b + extra);
 }
 
-public class JsonRpcTests
+public class JsonRpcServiceTests
 {
     [Fact]
     public async Task TestSimpleAsync()
