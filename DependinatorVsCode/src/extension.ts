@@ -47,6 +47,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         registerWebviewMessageHandler(panel, async (message: WebviewMessage) => {
             if (message.type !== "lsp/message")
                 return;
+            // console.log("lsp/message message:", message);
 
             // Messages from WebView UI to language server
             const client = await languageClientPromise;

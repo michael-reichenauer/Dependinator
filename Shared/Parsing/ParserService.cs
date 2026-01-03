@@ -7,6 +7,7 @@ public interface IParserServiceX
     Task<string> ParseAsync(string path);
 }
 
+[Singleton]
 public class ParserServiceX : IParserServiceX
 {
     public async Task<string> ParseAsync(string path)

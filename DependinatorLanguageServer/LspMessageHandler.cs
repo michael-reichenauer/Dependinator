@@ -1,4 +1,5 @@
 using Dependinator.Shared.Utils;
+using Dependinator.Shared.Utils.Logging;
 using MediatR;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
@@ -18,9 +19,9 @@ public record UIMessage(string Message)
 public class LspMessageHandler : IJsonRpcNotificationHandler<LspMessage>
 {
     readonly ILanguageServerFacade server;
-    readonly JsonRpcService jsonRpcService;
+    readonly IJsonRpcService jsonRpcService;
 
-    public LspMessageHandler(ILanguageServerFacade server, JsonRpcService jsonRpcService)
+    public LspMessageHandler(ILanguageServerFacade server, IJsonRpcService jsonRpcService)
     {
         this.server = server;
         this.jsonRpcService = jsonRpcService;

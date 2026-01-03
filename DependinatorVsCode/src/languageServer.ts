@@ -158,6 +158,7 @@ export function registerUiMessageForwarding(
     getWebview: () => vscode.Webview | undefined
 ): void {
     client.onNotification("ui/message", params => {
+        // console.log("ui/message:", params);
         getWebview()?.postMessage({
             type: "ui/message",
             message: params?.message

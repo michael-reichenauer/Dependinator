@@ -1,3 +1,4 @@
+using Dependinator.Shared;
 using Dependinator.Shared.Parsing;
 using Dependinator.Shared.Utils;
 using Dependinator.Shared.Utils.Logging;
@@ -16,8 +17,7 @@ internal class Program
                 .WithOutput(Console.OpenStandardOutput())
                 .WithServices(services =>
                 {
-                    services.AddSingleton<IJsonRpcService, JsonRpcService>();
-                    services.AddSingleton<ParserServiceX>();
+                    services.AddSharedServices();
                 })
                 .WithHandler<LspMessageHandler>()
                 .OnInitialize(
@@ -35,7 +35,7 @@ internal class Program
 
                         // Register remote services callable from the WebView WASM UI
                         var jsonRpcService = server.GetRequiredService<IJsonRpcService>();
-                        jsonRpcService.AddLocalRpcTarget(server.GetRequiredService<ParserServiceX>());
+                        jsonRpcService.AddLocalRpcTarget(server.GetRequiredService<IParserServiceX>());
                         jsonRpcService.StartListening();
                         return Task.CompletedTask;
                     }

@@ -18,6 +18,7 @@ public interface IJsonRpcService
     void StartListening();
 }
 
+[Singleton]
 public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
 {
     readonly JsonRpcMessageHandler messageHandler = new();

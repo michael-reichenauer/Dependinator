@@ -1,13 +1,11 @@
+using Dependinator;
 using Dependinator.Shared;
 using Dependinator.Shared.Parsing;
 using Dependinator.Shared.Utils;
 using Dependinator.Shared.Utils.Logging;
-using Dependinator.Utils;
 using Dependinator.Wasm;
-using ICSharpCode.Decompiler.TypeSystem;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using StreamJsonRpc;
 
 internal class Program
 {
@@ -23,8 +21,6 @@ internal class Program
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
-
-        builder.Services.AddSingleton<IJsonRpcService, JsonRpcService>();
 
         builder.Services.AddSingleton<IParserServiceX>(sp =>
             sp.GetRequiredService<IJsonRpcService>().GetRemoteProxy<IParserServiceX>()

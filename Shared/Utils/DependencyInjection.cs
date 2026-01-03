@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dependinator.Utils;
+namespace Dependinator.Shared.Utils;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class SingletonAttribute : Attribute { }
