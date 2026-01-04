@@ -12,6 +12,8 @@ public interface IJsonRpcService
 
     void AddLocalRpcTarget(object target);
 
+    object GetRemoteProxy(Type type);
+
     T GetRemoteProxy<T>()
         where T : class;
 
@@ -27,12 +29,14 @@ public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
     public JsonRpcService()
     {
         jsonRpc = new JsonRpc(messageHandler);
+
         // By default, this message handle is "self" connected, use ResisterSendMessageAction to register other side
         RegisterSendMessageAction(AddReceivedMessageAsync);
     }
 
     public void AddLocalRpcTarget(object target)
     {
+        Log.Info("Add remote target:", target.GetType().FullName);
         jsonRpc.AddLocalRpcTarget(target);
     }
 
@@ -64,9 +68,16 @@ public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    public object GetRemoteProxy(Type type)
+    {
+        Log.Info("Get remote proxy:", type.FullName);
+        return jsonRpc.Attach(type);
+    }
+
     public T GetRemoteProxy<T>()
         where T : class
     {
+        Log.Info("Get remote proxy:", typeof(T).FullName);
         return jsonRpc.Attach<T>();
     }
 }

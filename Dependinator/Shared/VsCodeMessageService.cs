@@ -31,6 +31,10 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         if (reference != null)
             return;
 
+        var isVsCodeWebView = await jSInterop.Call<bool>("isVsCodeWebView");
+        if (!isVsCodeWebView)
+            return;
+
         reference = jSInterop.Reference(this);
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));
 
@@ -58,7 +62,7 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 
         if (type == "ui/error")
         {
-            Log.Error("Comunication Error", message, message);
+            Log.Error("Communication Error", message, message);
             return;
         }
 

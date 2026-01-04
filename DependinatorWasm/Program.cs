@@ -21,13 +21,11 @@ internal class Program
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
-
-        builder.Services.AddSingleton<IParserServiceX>(sp =>
-            sp.GetRequiredService<IJsonRpcService>().GetRemoteProxy<IParserServiceX>()
-        );
+        builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Shared.RootClass));
 
         var app = builder.Build();
-        app.Services.GetRequiredService<IJsonRpcService>().StartListening();
+        app.Services.UseJsonRpcClasses(typeof(Dependinator.Shared.RootClass));
+        app.Services.UseJsonRpc();
 
         await app.RunAsync();
     }

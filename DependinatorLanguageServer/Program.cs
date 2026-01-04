@@ -34,9 +34,9 @@ internal class Program
                         );
 
                         // Register remote services callable from the WebView WASM UI
-                        var jsonRpcService = server.GetRequiredService<IJsonRpcService>();
-                        jsonRpcService.AddLocalRpcTarget(server.GetRequiredService<IParserServiceX>());
-                        jsonRpcService.StartListening();
+                        server.UseJsonRpcClasses(typeof(Dependinator.Shared.RootClass));
+                        server.UseJsonRpc();
+
                         return Task.CompletedTask;
                     }
                 )

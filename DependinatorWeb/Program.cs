@@ -1,5 +1,6 @@
 using Dependinator;
 using Dependinator.Shared;
+using Dependinator.Shared.Parsing;
 using Dependinator.Shared.Utils;
 using Dependinator.Shared.Utils.Logging;
 using Dependinator.Utils;
@@ -30,8 +31,11 @@ public class Program
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
+        builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Shared.RootClass));
 
         var app = builder.Build();
+        app.Services.UseJsonRpcClasses(typeof(Dependinator.Shared.RootClass));
+        app.Services.UseJsonRpc();
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())

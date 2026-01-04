@@ -35,6 +35,10 @@ export function postVsCodeMessage(message) {
   return false;
 }
 
+export function isVsCodeWebView() {
+  return !!(window.dependinator && typeof window.dependinator.postMessage === "function");
+}
+
 export function listenToVsCodeMessages(instance, functionName) {
   window.addEventListener("message", (event) => {
     if (!event || !event.data || !event.data.type) {

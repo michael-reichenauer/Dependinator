@@ -12,7 +12,3 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // DI and tests access
 
 [assembly: AssemblyDescription("Dependinator is a tool for visualizing and exploring software dependencies.")]
-
-namespace Dependinator;
-
-class RootClass { }
