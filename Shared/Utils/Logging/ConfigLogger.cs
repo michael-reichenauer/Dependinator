@@ -2,9 +2,9 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using static System.Environment;
 
-namespace Dependinator.Utils.Logging;
+namespace Dependinator.Shared.Utils.Logging;
 
-static class ConfigLogger
+public static class ConfigLogger
 {
     static readonly string LogFileName = "Dependinator.log";
     static readonly string LevelInfo = "INFO ";
@@ -28,6 +28,7 @@ static class ConfigLogger
     static string? LogPath;
     static bool isFileLog = false;
     static bool isConsoleLog = false;
+    static Action<string>? output = null;
 
     static TaskCompletionSource doneTask = new TaskCompletionSource();
 
@@ -46,6 +47,7 @@ static class ConfigLogger
     {
         isFileLog = settings.EnableFileLog;
         isConsoleLog = settings.EnableConsoleLog;
+        output = settings.Output;
 
         if (isFileLog)
         {
@@ -201,7 +203,7 @@ static class ConfigLogger
 
     private static void WriteToFile(IReadOnlyCollection<string> textLines)
     {
-        if (!isFileLog && !isConsoleLog)
+        if (!isFileLog && !isConsoleLog && output is null)
         {
             return;
         }
@@ -213,6 +215,9 @@ static class ConfigLogger
             {
                 try
                 {
+                    if (output is not null)
+                        textLines.ForEach(l => output(l));
+
                     if (isConsoleLog)
                         Console.WriteLine(textLines.Select(l => l.Length > 24 ? l[24..] : l).Join("\n"));
                     if (isFileLog)

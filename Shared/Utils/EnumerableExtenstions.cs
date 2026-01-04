@@ -1,4 +1,4 @@
-namespace Dependinator.Utils;
+namespace Dependinator.Shared.Utils;
 
 // Some useful IEnumerable extensions that are missing in .NET
 public static class EnumerableExtensions

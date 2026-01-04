@@ -29,5 +29,10 @@
     "uninstallation"
   ],
   "dotnet-test-explorer.testProjectPath": "**/*Tests.@(csproj|vbproj|fsproj)",
-  "chatgpt.openOnStartup": true
+  "chatgpt.openOnStartup": true,
+  "editor.formatOnSave": true,
+  "[csharp]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "csharpier.csharpier-vscode"
+  }
 }

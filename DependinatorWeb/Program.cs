@@ -1,7 +1,9 @@
 using Dependinator;
 using Dependinator.Shared;
+using Dependinator.Shared.Parsing;
+using Dependinator.Shared.Utils;
+using Dependinator.Shared.Utils.Logging;
 using Dependinator.Utils;
-using Dependinator.Utils.Logging;
 
 namespace DependinatorWeb;
 
@@ -10,7 +12,7 @@ public class Program
     public static void Main(string[] args)
     {
         ConfigLogger.Configure(new HostLoggingSettings(EnableFileLog: true, EnableConsoleLog: false));
-        Log.Info($"Starting Dependinator {Build.ProductVersion}, {Build.Time}, ({Build.CommitSid}) ...");
+        Log.Info($"Starting Dependinator Web {Build.ProductVersion}, {Build.Time}, ({Build.CommitSid}) ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 
         var builder = WebApplication.CreateBuilder(args);
@@ -29,8 +31,11 @@ public class Program
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
+        builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Shared.RootClass));
 
         var app = builder.Build();
+        app.Services.UseJsonRpcClasses(typeof(Dependinator.Shared.RootClass));
+        app.Services.UseJsonRpc();
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())

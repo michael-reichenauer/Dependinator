@@ -1,7 +1,9 @@
-using Dependinator.Wasm;
+using Dependinator;
 using Dependinator.Shared;
-using Dependinator.Utils;
-using Dependinator.Utils.Logging;
+using Dependinator.Shared.Parsing;
+using Dependinator.Shared.Utils;
+using Dependinator.Shared.Utils.Logging;
+using Dependinator.Wasm;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -19,7 +21,12 @@ internal class Program
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
+        builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Shared.RootClass));
 
-        await builder.Build().RunAsync();
+        var app = builder.Build();
+        app.Services.UseJsonRpcClasses(typeof(Dependinator.Shared.RootClass));
+        app.Services.UseJsonRpc();
+
+        await app.RunAsync();
     }
 }

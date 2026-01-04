@@ -1,5 +1,8 @@
-using MediatR;
-using OmniSharp.Extensions.JsonRpc;
+using Dependinator.Shared;
+using Dependinator.Shared.Parsing;
+using Dependinator.Shared.Utils;
+using Dependinator.Shared.Utils.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
 
 namespace DependinatorLanguageServer;
@@ -12,35 +15,43 @@ internal class Program
             options
                 .WithInput(Console.OpenStandardInput())
                 .WithOutput(Console.OpenStandardOutput())
-                .WithHandler<PingHandler>()
-                .OnInitialize((_, _, _) => Task.CompletedTask)
-                .OnInitialized((_, _, _, _) => Task.CompletedTask)
-                .OnStarted((server, _) =>
+                .WithServices(services =>
                 {
-                    server.SendNotification(
-                        "dependinator/serverReady",
-                        new ServerReadyParams("Language server ready")
-                    );
-                    return Task.CompletedTask;
+                    services.AddSharedServices();
                 })
+                .WithHandler<LspMessageHandler>()
+                .OnInitialize(
+                    (server, _, _) =>
+                    {
+                        // Enable logging
+                        ConfigLogger.Configure(
+                            new HostLoggingSettings(
+                                EnableFileLog: false,
+                                EnableConsoleLog: false,
+                                LogFilePath: null,
+                                Output: line => server.SendNotification("vscode/loginfo", new LogInfo("info", line))
+                            )
+                        );
+
+                        // Register remote services callable from the WebView WASM UI
+                        server.UseJsonRpcClasses(typeof(Dependinator.Shared.RootClass));
+                        server.UseJsonRpc();
+
+                        return Task.CompletedTask;
+                    }
+                )
+                .OnInitialized((server, _, _, _) => Task.CompletedTask)
+                .OnStarted(
+                    (server, _) =>
+                    {
+                        Log.Info($"Started Dependinator Language Server  ...");
+                        return Task.CompletedTask;
+                    }
+                )
         );
 
         await server.WaitForExit;
     }
 }
 
-[Method("dependinator/ping")]
-public record PingParams(string Message) : IRequest<PingResult>;
-
-public record PingResult(string Message);
-
-public record ServerReadyParams(string Message);
-
-public class PingHandler : IJsonRpcRequestHandler<PingParams, PingResult>
-{
-    public Task<PingResult> Handle(PingParams request, CancellationToken cancellationToken)
-    {
-        var message = $"pong: of '{request.Message}' from Language Server";
-        return Task.FromResult(new PingResult(message));
-    }
-}
+public record LogInfo(string Type, string Message);

@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace Dependinator.Utils;
+namespace Dependinator.Shared.Utils;
 
 // Result contains a few Try methods that return either a value or an error for functions
 // that return a R or R<T> type. This makes it possible to avoid using exceptions for flow control.
@@ -198,13 +198,13 @@ public class R
         [CallerLineNumber] int sourceLineNumber = 0
     ) => new ErrorResult(e, memberName, sourceFilePath, sourceLineNumber);
 
-    internal string ErrorMessage =>
+    public string ErrorMessage =>
         IsResultError ? resultException.Message : throw Asserter.FailFast("Result was not an error");
 
-    internal ErrorResult GetResultError() =>
+    public ErrorResult GetResultError() =>
         IsResultError ? Error(resultException) : throw Asserter.FailFast("Result was not an error");
 
-    internal Exception GetResultException() => resultException;
+    public Exception GetResultException() => resultException;
 
     public static implicit operator R(Exception e) => Error(e);
 

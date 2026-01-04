@@ -1,5 +1,6 @@
 using Dependinator.Diagrams.Svg;
 using Dependinator.Models;
+using Dependinator.Shared.Parsing;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Diagrams;
@@ -41,6 +42,7 @@ class CanvasService : ICanvasService
     readonly ISvgService svgService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInteropService;
+    readonly IParserServiceX parserServiceX;
     readonly IFileService fileService;
     readonly IRecentModelsService recentModelsService;
     readonly IInteractionService interactionService;
@@ -52,6 +54,7 @@ class CanvasService : ICanvasService
         ISvgService svgService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
+        IParserServiceX parserServiceX,
         IFileService fileService,
         IRecentModelsService recentModelsService,
         IInteractionService interactionService
@@ -63,6 +66,7 @@ class CanvasService : ICanvasService
         this.svgService = svgService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
+        this.parserServiceX = parserServiceX;
         this.fileService = fileService;
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
@@ -149,16 +153,14 @@ class CanvasService : ICanvasService
 
     public async void OpenFiles()
     {
-        var sent = await jSInteropService.Call<bool>("postVsCodeMessage", new { type = "open-file" });
-        if (!sent)
-        {
-            await jSInteropService.Call("clickElement", "inputfile");
-        }
+        await jSInteropService.Call("clickElement", "inputfile");
     }
 
     public async void PingLanguageServer()
     {
-        await jSInteropService.Call<bool>("postVsCodeMessage", new { type = "lsp-ping", message = "'ping from UI'" });
+        Log.Info("Calling with 'SomePath'");
+        var resp = await parserServiceX.ParseAsync("SomePath");
+        Log.Info("The reaponse was:", resp);
     }
 
     public void ToggleTheme()

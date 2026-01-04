@@ -1,9 +1,9 @@
 using System.Diagnostics;
 
-namespace Dependinator.Utils;
+namespace Dependinator.Shared.Utils;
 
 // Handles unhandled exceptions top ensure they are logged and program is restarted or shut down
-static class ExceptionHandling
+public static class ExceptionHandling
 {
     private static readonly TimeSpan MinTimeBeforeAutoRestart = TimeSpan.FromSeconds(10);
 

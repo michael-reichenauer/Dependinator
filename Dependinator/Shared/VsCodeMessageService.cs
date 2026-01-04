@@ -1,16 +1,15 @@
+using System.Text;
 using System.Text.Json;
-using Dependinator.Utils;
-using Dependinator.Utils.Logging;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;
 
-public record VsCodeMessage(string Type, JsonElement Raw, string? Message, string? Error, string? Path);
+public record VsCodeMessage(string Type, JsonElement Raw, string? Message);
 
+// Receives and sends messages from and to the VS Code Extension Host
+// Used to communicate with the Language Server via the the extension host.
 interface IVsCodeMessageService
 {
-    event Action<VsCodeMessage> MessageReceived;
-    VsCodeMessage? LastMessage { get; }
     Task InitAsync();
 }
 
@@ -18,16 +17,13 @@ interface IVsCodeMessageService
 class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
-    readonly IApplicationEvents applicationEvents;
+    private readonly IJsonRpcService jsonRpcService;
     DotNetObjectReference<VsCodeMessageService>? reference;
 
-    public event Action<VsCodeMessage> MessageReceived = null!;
-    public VsCodeMessage? LastMessage { get; private set; }
-
-    public VsCodeMessageService(IJSInterop jSInterop, IApplicationEvents applicationEvents)
+    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcService jsonRpcService)
     {
         this.jSInterop = jSInterop;
-        this.applicationEvents = applicationEvents;
+        this.jsonRpcService = jsonRpcService;
     }
 
     public async Task InitAsync()
@@ -35,34 +31,42 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         if (reference != null)
             return;
 
+        var isVsCodeWebView = await jSInterop.Call<bool>("isVsCodeWebView");
+        if (!isVsCodeWebView)
+            return;
+
         reference = jSInterop.Reference(this);
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));
+
+        jsonRpcService.RegisterSendMessageAction(SendMessageToLspAsync);
+    }
+
+    public async ValueTask SendMessageToLspAsync(string base64Message, CancellationToken ct)
+    {
+        await jSInterop.Call<bool>("postVsCodeMessage", new { type = "lsp/message", message = base64Message });
     }
 
     [JSInvokable]
-    public Task OnVsCodeMessage(JsonElement message)
+    public async Task OnVsCodeMessage(JsonElement raw)
     {
-        if (!message.TryGetProperty("type", out var typeElement))
-            return Task.CompletedTask;
+        if (!raw.TryGetProperty("type", out var typeElement))
+            return;
 
         var type = typeElement.GetString();
         if (string.IsNullOrWhiteSpace(type))
-            return Task.CompletedTask;
+            return;
 
-        var info = new VsCodeMessage(
-            type,
-            message,
-            TryGetString(message, "message"),
-            TryGetString(message, "error"),
-            TryGetString(message, "path")
-        );
+        var message = TryGetString(raw, "message");
+        if (message is null)
+            return;
 
-        LastMessage = info;
-        MessageReceived?.Invoke(info);
-        applicationEvents.TriggerUIStateChanged();
+        if (type == "ui/error")
+        {
+            Log.Error("Communication Error", message, message);
+            return;
+        }
 
-        Log.Info("VS Code message:", info.Type, info.Message ?? info.Error ?? info.Path);
-        return Task.CompletedTask;
+        await jsonRpcService.AddReceivedMessageAsync(message, CancellationToken.None);
     }
 
     public ValueTask DisposeAsync()
@@ -71,9 +75,9 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 
-    static string? TryGetString(JsonElement message, string propertyName)
+    static string? TryGetString(JsonElement raw, string propertyName)
     {
-        if (!message.TryGetProperty(propertyName, out var value))
+        if (!raw.TryGetProperty(propertyName, out var value))
             return null;
         return value.ValueKind == JsonValueKind.String ? value.GetString() : value.ToString();
     }

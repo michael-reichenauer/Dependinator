@@ -1,25 +1,24 @@
 using Microsoft.Extensions.DependencyInjection;
-using MudBlazor.Services;
 
-namespace Dependinator.Utils;
+namespace Dependinator;
 
-public static class DependinatorServiceCollectionExtensions
+public static class AssemblyServiceCollectionExtensions
 {
-    public static IServiceCollection AddDependinatorServices<TAssemblyMarker>(this IServiceCollection services)
+    public static IServiceCollection AddAssemblyServices(this IServiceCollection services, Type assemblyType)
     {
-        services.AddSingleton<IEmbeddedResources, EmbeddedResources<TAssemblyMarker>>();
-        services.AddMudServices();
-
         services.Scan(scan =>
-            scan.FromAssembliesOf(typeof(Dependinator.RootClass))
+            scan.FromAssembliesOf(assemblyType)
                 .AddClasses(c => c.WithAttribute<SingletonAttribute>(), publicOnly: false)
                 .AsImplementedInterfaces()
+                .AsSelf()
                 .WithSingletonLifetime()
                 .AddClasses(c => c.WithAttribute<ScopedAttribute>(), publicOnly: false)
                 .AsImplementedInterfaces()
+                .AsSelf()
                 .WithScopedLifetime()
                 .AddClasses(c => c.WithAttribute<TransientAttribute>(), publicOnly: false)
                 .AsImplementedInterfaces()
+                .AsSelf()
                 .WithTransientLifetime()
         );
 
