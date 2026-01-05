@@ -13,20 +13,59 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <link rel="stylesheet" href="css/app.css" />
     <link href="Dependinator.Wasm.styles.css" rel="stylesheet" />
     <style>
         body {
             overflow: hidden;
+        }
+
+        #app {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .loading-progress {
+            position: relative;
+            display: block;
+            width: 8rem;
+            height: 8rem;
+            margin: 20vh auto 1rem auto;
+        }
+
+        .loading-progress circle {
+            fill: none;
+            stroke: #e0e0e0;
+            stroke-width: 0.6rem;
+            transform-origin: 50% 50%;
+            transform: rotate(-90deg);
+        }
+
+        .loading-progress circle:last-child {
+            stroke: #1b6ec2;
+            stroke-dasharray: calc(3.141 * 2 * 40);
+            stroke-dashoffset: calc(3.141 * 2 * 40);
+            transition: stroke-dashoffset 0.25s ease-in-out;
+        }
+
+        .loading-progress-text {
+            position: absolute;
+            inset: calc(20vh + 6.5rem) 0 auto 0;
+            text-align: center;
+            font-weight: 600;
+            color: #1b6ec2;
+        }
+
+        .loading-progress-text:after {
+            content: var(--blazor-load-percentage, "Loading");
         }
     </style>
 </head>
 
 <body oncontextmenu="return false;" style="background-color:#000000;">
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
+        <svg class="loading-progress" viewBox="0 0 100 100">
+            <circle r="40" cx="50" cy="50" />
+            <circle r="40" cx="50" cy="50" />
         </svg>
         <div class="loading-progress-text"></div>
     </div>
