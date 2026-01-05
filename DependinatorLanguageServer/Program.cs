@@ -18,10 +18,12 @@ internal class Program
                 .WithServices(services =>
                 {
                     services.AddSharedServices();
+                    services.AddSingleton<WorkspaceFolderService>();
                 })
                 .WithHandler<LspMessageHandler>()
+                .WithHandler<WorkspaceFolderChangeHandler>()
                 .OnInitialize(
-                    (server, _, _) =>
+                    (server, initializeParams, ct) =>
                     {
                         // Enable logging
                         ConfigLogger.Configure(
@@ -36,6 +38,9 @@ internal class Program
                         // Register remote services callable from the WebView WASM UI
                         server.UseJsonRpcClasses(typeof(Dependinator.Shared.RootClass));
                         server.UseJsonRpc();
+
+                        var workspaceFolderService = server.Services.GetRequiredService<WorkspaceFolderService>();
+                        workspaceFolderService.InitializeFrom(initializeParams, ct);
 
                         return Task.CompletedTask;
                     }
