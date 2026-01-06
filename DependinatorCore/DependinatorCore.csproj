@@ -7,4 +7,9 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Scrutor" />
+    <PackageReference Include="StreamJsonRpc" />
+  </ItemGroup>
+
 </Project>

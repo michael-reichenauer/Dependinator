@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
     <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+    <ProjectReference Include="..\DependinatorCore\DependinatorCore.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="../Dependinator/bin/$(Configuration)/$(TargetFramework)/Dependinator.dll">
