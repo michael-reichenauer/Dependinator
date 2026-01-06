@@ -1,4 +1,6 @@
-namespace DependinatorCore.Tests.Utils;
+using DependinatorCore.Rpc;
+
+namespace DependinatorCore.Tests.Rpc;
 
 public interface ICalcAdd
 {

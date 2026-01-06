@@ -1,6 +1,5 @@
 using DependinatorCore;
-using DependinatorCore.Parsing;
-using DependinatorCore.Utils;
+using DependinatorCore.Rpc;
 using DependinatorCore.Utils.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
@@ -31,7 +30,7 @@ internal class Program
                                 EnableFileLog: false,
                                 EnableConsoleLog: false,
                                 LogFilePath: null,
-                                Output: line => server.SendNotification("vscode/loginfo", new LogInfo("info", line))
+                                Output: line => server.SendNotification("vscode/log", new LogInfo("info", line))
                             )
                         );
 

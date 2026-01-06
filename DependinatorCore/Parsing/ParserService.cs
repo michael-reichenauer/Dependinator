@@ -1,4 +1,5 @@
 using System;
+using DependinatorCore.Rpc;
 
 namespace DependinatorCore.Parsing;
 
@@ -13,7 +14,7 @@ public class ParserServiceX : IParserServiceX
 {
     public async Task<string> ParseAsync(string path)
     {
-        Log.Info("Recived path:", path);
+        Log.Info("Received path:", path);
         await Task.CompletedTask;
         return path + path;
     }

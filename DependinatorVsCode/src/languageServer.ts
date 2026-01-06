@@ -131,7 +131,7 @@ export async function startLanguageServer(
 }
 
 export function registerLanguageClientLogging(client: LanguageClient): void {
-    client.onNotification("vscode/loginfo", params => {
+    client.onNotification("vscode/log", params => {
         const type = typeof params?.Type === "string" ? params.Type.toLowerCase() : "";
         const message = params?.Message ?? params?.message ?? "";
 

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DependinatorCore.Utils;
+namespace DependinatorCore.Rpc;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 public class JsonRpcAttribute : Attribute { }

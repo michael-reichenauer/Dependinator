@@ -1,9 +1,9 @@
 using Dependinator;
 using Dependinator.Shared;
-using DependinatorCore.Parsing;
+using Dependinator.Wasm;
+using DependinatorCore.Rpc;
 using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
-using Dependinator.Wasm;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
