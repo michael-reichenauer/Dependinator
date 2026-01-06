@@ -15,9 +15,7 @@
         "ui",
         "workspace"
     ],
-    "activationEvents": [
-        "onCommand:dependinator.open"
-    ],
+    "activationEvents": [],
     "main": "./dist/node/extension.js",
     "browser": "./dist/web/extension.js",
     "contributes": {
