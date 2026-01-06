@@ -1,4 +1,4 @@
-namespace Shared.Tests.Utils;
+namespace DependinatorCore.Tests.Utils;
 
 public interface ICalcAdd
 {
