@@ -1,6 +1,6 @@
 using StreamJsonRpc;
 
-namespace Dependinator.Shared.Utils;
+namespace DependinatorCore.Utils;
 
 public interface IJsonRpcService
 {

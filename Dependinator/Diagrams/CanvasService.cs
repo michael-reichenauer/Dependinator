@@ -1,6 +1,6 @@
 using Dependinator.Diagrams.Svg;
 using Dependinator.Models;
-using Dependinator.Shared.Parsing;
+using DependinatorCore.Parsing;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Diagrams;

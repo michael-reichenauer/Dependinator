@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Dependinator.Shared.Utils;
+namespace DependinatorCore.Utils;
 
 public class JsonX
 {

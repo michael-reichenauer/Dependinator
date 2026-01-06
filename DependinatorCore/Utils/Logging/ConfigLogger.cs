@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using static System.Environment;
 
-namespace Dependinator.Shared.Utils.Logging;
+namespace DependinatorCore.Utils.Logging;
 
 public static class ConfigLogger
 {

@@ -1,5 +1,5 @@
 // ReSharper disable once CheckNamespace
-namespace Dependinator.Shared.Utils;
+namespace DependinatorCore.Utils;
 
 public static class TaskExtensions
 {

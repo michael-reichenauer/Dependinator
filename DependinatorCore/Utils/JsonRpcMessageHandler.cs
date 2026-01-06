@@ -3,7 +3,7 @@ using System.Threading.Channels;
 using StreamJsonRpc;
 using StreamJsonRpc.Protocol;
 
-namespace Dependinator.Shared.Utils;
+namespace DependinatorCore.Utils;
 
 public delegate ValueTask WriteBinaryMessageActionAsync(ReadOnlyMemory<byte> binaryMessage, CancellationToken ct);
 public delegate ValueTask WriteBase64MessageActionAsync(string base64Message, CancellationToken ct);

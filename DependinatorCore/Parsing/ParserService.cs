@@ -1,6 +1,6 @@
 using System;
 
-namespace Dependinator.Shared.Parsing;
+namespace DependinatorCore.Parsing;
 
 [JsonRpc]
 public interface IParserServiceX

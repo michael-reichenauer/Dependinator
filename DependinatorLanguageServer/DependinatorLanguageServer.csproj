@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Shared/Shared.csproj" />
     <ProjectReference Include="../DependinatorCore/DependinatorCore.csproj" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dependinator;
+namespace DependinatorCore;
 
 public static class AssemblyServiceCollectionExtensions
 {

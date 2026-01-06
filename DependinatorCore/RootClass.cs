@@ -1,3 +1,3 @@
-namespace Dependinator.Shared;
+namespace DependinatorCore;
 
 public class RootClass { }

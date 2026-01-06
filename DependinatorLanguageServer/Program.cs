@@ -1,7 +1,7 @@
-using Dependinator.Shared;
-using Dependinator.Shared.Parsing;
-using Dependinator.Shared.Utils;
-using Dependinator.Shared.Utils.Logging;
+using DependinatorCore;
+using DependinatorCore.Parsing;
+using DependinatorCore.Utils;
+using DependinatorCore.Utils.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
 
@@ -17,7 +17,7 @@ internal class Program
                 .WithOutput(Console.OpenStandardOutput())
                 .WithServices(services =>
                 {
-                    services.AddSharedServices();
+                    services.AddDependinatorCoreServices();
                     services.AddSingleton<WorkspaceFolderService>();
                 })
                 .WithHandler<LspMessageHandler>()
@@ -36,7 +36,7 @@ internal class Program
                         );
 
                         // Register remote services callable from the WebView WASM UI
-                        server.UseJsonRpcClasses(typeof(Dependinator.Shared.RootClass));
+                        server.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
                         server.UseJsonRpc();
 
                         var workspaceFolderService = server.Services.GetRequiredService<WorkspaceFolderService>();
