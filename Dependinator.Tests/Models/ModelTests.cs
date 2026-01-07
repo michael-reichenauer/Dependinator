@@ -1,5 +1,5 @@
 using Dependinator.Models;
-using Dependinator.Tests.Parsing.Utils;
+using Dependinator.Tests.Utils;
 
 namespace Dependinator.Tests.Models;
 
@@ -39,5 +39,5 @@ public class ModelTests
         await VerifyJson(dto);
     }
 
-    record ModelDto(IReadOnlyList<Dependinator.Parsing.Node> Nodes, IReadOnlyList<Dependinator.Parsing.Link> Links);
+    record ModelDto(IReadOnlyList<DependinatorCore.Parsing.Node> Nodes, IReadOnlyList<DependinatorCore.Parsing.Link> Links);
 }

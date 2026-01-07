@@ -1,9 +1,8 @@
 using Dependinator;
 using Dependinator.Shared;
-using Dependinator.Shared.Parsing;
-using Dependinator.Shared.Utils;
-using Dependinator.Shared.Utils.Logging;
-using Dependinator.Utils;
+using DependinatorCore.Rpc;
+using DependinatorCore.Utils;
+using DependinatorCore.Utils.Logging;
 
 namespace DependinatorWeb;
 
@@ -31,10 +30,10 @@ public class Program
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
-        builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Shared.RootClass));
+        builder.Services.AddJsonRpcInterfaces(typeof(DependinatorCore.RootClass));
 
         var app = builder.Build();
-        app.Services.UseJsonRpcClasses(typeof(Dependinator.Shared.RootClass));
+        app.Services.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
         app.Services.UseJsonRpc();
 
         // Configure the HTTP request pipeline.

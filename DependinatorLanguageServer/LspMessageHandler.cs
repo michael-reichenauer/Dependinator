@@ -1,5 +1,4 @@
-using Dependinator.Shared.Utils;
-using Dependinator.Shared.Utils.Logging;
+using DependinatorCore.Rpc;
 using MediatR;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;

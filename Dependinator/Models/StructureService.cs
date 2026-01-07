@@ -1,5 +1,3 @@
-using ICSharpCode.Decompiler.CSharp.Syntax;
-
 namespace Dependinator.Models;
 
 interface IStructureService

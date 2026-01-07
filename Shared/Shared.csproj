@@ -7,8 +7,4 @@
     <AssemblyName>Dependinator.Shared</AssemblyName>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="StreamJsonRpc" />
-    <PackageReference Include="Scrutor" />
-  </ItemGroup>
 </Project>

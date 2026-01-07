@@ -1,21 +1,15 @@
+using DependinatorCore.Shared;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Shared;
 
-interface IFileService
+interface IBrowserFileService
 {
-    Task<bool> Exists(string path);
-    Task<R> WriteAsync<T>(string path, T content);
-    Task<R<T>> ReadAsync<T>(string path);
-    Task<R<Stream>> ReadStreamAsync(string path);
-    Task<R> DeleteAsync(string path);
     Task<IReadOnlyList<string>> AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
-
-    Task<R<IReadOnlyList<string>>> GetFilePathsAsync();
 }
 
 [Scoped]
-class FileService : IFileService
+class FileService : IBrowserFileService, IFileService
 {
     public static readonly string DBCollectionName = "Files";
 

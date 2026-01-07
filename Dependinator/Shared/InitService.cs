@@ -1,5 +1,4 @@
 using Dependinator.Diagrams;
-using Dependinator.Utils.UI;
 
 namespace Dependinator.Shared;
 

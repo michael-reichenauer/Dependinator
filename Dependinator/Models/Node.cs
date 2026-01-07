@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using System.Web;
-using Dependinator.Parsing;
+using DependinatorCore.Parsing;
 
 namespace Dependinator.Models;
 
