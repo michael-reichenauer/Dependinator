@@ -1,9 +1,9 @@
 using DependinatorCore.Parsing;
 using DependinatorCore.Parsing.Assemblies;
-using Dependinator.Tests.Parsing.Utils;
+using DependinatorCore.Tests.Parsing.Utils;
 using Mono.Cecil;
 
-namespace Dependinator.Tests.Parsing.Assemblies;
+namespace DependinatorCore.Tests.Parsing.Assemblies;
 
 public class MemberTestData
 {

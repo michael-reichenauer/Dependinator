@@ -1,7 +1,7 @@
 using DependinatorCore.Parsing.Assemblies;
 using Mono.Cecil;
 
-namespace Dependinator.Tests.Parsing.Utils;
+namespace DependinatorCore.Tests.Parsing.Utils;
 
 class AssemblyHelper
 {

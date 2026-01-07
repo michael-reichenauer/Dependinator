@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -10,7 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="**/_Snapshots/**/*.cs" />
+    <None Include="**/_Snapshots/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Verify.Xunit" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -33,5 +38,4 @@
   <ItemGroup>
     <Folder Include="Utils/" />
   </ItemGroup>
-
 </Project>

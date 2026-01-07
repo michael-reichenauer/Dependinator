@@ -4,5 +4,6 @@ global using static DependinatorCore.Utils.Result;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Dependinator")]
+[assembly: InternalsVisibleTo("DependinatorCore.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

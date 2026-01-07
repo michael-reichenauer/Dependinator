@@ -1,4 +1,3 @@
-global using static Dependinator.Tests.Parsing.Utils.Reference;
 global using static Dependinator.Tests.VerifierExtensions;
 global using DependinatorCore.Utils;
 global using static DependinatorCore.Utils.Result;

@@ -1,7 +1,7 @@
 using Dependinator.Models;
 using DependinatorCore.Parsing;
 using DependinatorCore.Parsing.Assemblies;
-using Dependinator.Tests.Parsing.Utils;
+using Dependinator.Tests.Utils;
 using Mono.Cecil;
 
 namespace Dependinator.Tests;
@@ -29,8 +29,19 @@ public static class TestHelper
         var typeParser = new TypeParser(linkHandler, xmlDockParser, items);
         var memberParser = new MemberParser(linkHandler, xmlDockParser, items);
 
-        TypeDefinition testDataType = AssemblyHelper.GetTypeDefinition<T>();
+        TypeDefinition testDataType = GetTypeDefinition<T>();
         var types = await typeParser.AddTypeAsync(testDataType).ToListAsync();
         await memberParser.AddTypesMembersAsync(types);
     }
+
+    static TypeDefinition GetTypeDefinition<T>()
+    {
+        var assemblyDefinition = AssemblyDefinition.ReadAssembly(typeof(T).Assembly.Location);
+        return GetAssemblyTypes(assemblyDefinition).Single(t => t.FullName == typeof(T).FullName);
+    }
+
+    static IEnumerable<TypeDefinition> GetAssemblyTypes(AssemblyDefinition assemblyDefinition) =>
+        assemblyDefinition.MainModule.Types.Where(type =>
+            !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
+        );
 }
