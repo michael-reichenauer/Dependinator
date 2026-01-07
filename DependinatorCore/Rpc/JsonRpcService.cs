@@ -42,6 +42,7 @@ public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
 
     public ValueTask AddReceivedMessageAsync(string base64Message, CancellationToken ct)
     {
+        var length = base64Message.Length;
         return messageHandler.AddReceivedMessageAsync(base64Message, ct);
     }
 

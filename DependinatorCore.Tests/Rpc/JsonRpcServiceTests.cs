@@ -1,10 +1,15 @@
+using System.Diagnostics.Eventing.Reader;
+using System.Text;
 using DependinatorCore.Rpc;
+using DependinatorCore.Utils.Logging;
+using Xunit.Abstractions;
 
 namespace DependinatorCore.Tests.Rpc;
 
 public interface ICalcAdd
 {
     Task<int> AddAsync(int a, int b);
+    Task<string> AddStringsAsync(string a, string b);
     Task<int> AddWitchCancelAsync(int a, int b, CancellationToken ct);
     Task<int> AddWithProgressAsync(int a, int b, IProgress<int> progress);
 }
@@ -12,6 +17,8 @@ public interface ICalcAdd
 public sealed class CalcAddService(int extra) : ICalcAdd
 {
     public Task<int> AddAsync(int a, int b) => Task.FromResult(a + b + extra);
+
+    public Task<string> AddStringsAsync(string a, string b) => Task.FromResult(a + b + extra);
 
     public async Task<int> AddWitchCancelAsync(int a, int b, CancellationToken ct)
     {
@@ -46,17 +53,45 @@ public sealed class CalcProdService(int extra) : ICalcProd
 
 public class JsonRpcServiceTests
 {
+    // public JsonRpcServiceTests(ITestOutputHelper output)
+    // {
+    //     ConfigLogger.Configure(
+    //         new HostLoggingSettings(
+    //             EnableFileLog: false,
+    //             EnableConsoleLog: false,
+    //             LogFilePath: null,
+    //             Output: line => output.WriteLine(line)
+    //         )
+    //     );
+    // }
+
     [Fact]
-    public async Task TestSimpleAsync()
+    public async Task TestCallAsync()
+    {
+        using var jsonRpcService = new JsonRpcService();
+        jsonRpcService.AddLocalRpcTarget(new CalcAddService(0));
+        jsonRpcService.StartListening();
+        ICalcAdd calcAdd = jsonRpcService.GetRemoteProxy<ICalcAdd>();
+
+        int sum = await calcAdd.AddAsync(3, 8);
+        Assert.Equal(3 + 8, sum);
+    }
+
+    [Fact]
+    public async Task TestLargeCallAsync()
     {
         using var jsonRpcService = new JsonRpcService();
         jsonRpcService.AddLocalRpcTarget(new CalcAddService(0));
         jsonRpcService.StartListening();
 
         ICalcAdd calcAdd = jsonRpcService.GetRemoteProxy<ICalcAdd>();
+        var aBuilder = new StringBuilder();
+        for (var i = 0; i < 100_000; i++)
+            aBuilder.Append("abcdefghijklmnopqrst");
+        var a = aBuilder.ToString();
 
-        int sum = await calcAdd.AddAsync(3, 8);
-        Assert.Equal(3 + 8, sum);
+        string sum = await calcAdd.AddStringsAsync(a, a);
+        Assert.Equal(a + a + 0, sum);
     }
 
     [Fact]
@@ -69,7 +104,7 @@ public class JsonRpcServiceTests
         ICalcAdd calcAdd = jsonRpcService.GetRemoteProxy<ICalcAdd>();
 
         // Check that cancellation token is forwarded to target and can be used there
-        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(1000));
         CancellationToken ct = cts.Token;
         int sum = await calcAdd.AddWitchCancelAsync(3, 8, ct);
         Assert.Equal(3 + 8 + 899, sum);
