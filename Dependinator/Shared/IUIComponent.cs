@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 
-namespace Dependinator.Utils.UI;
+namespace Dependinator.Shared;
 
 interface IUIComponent
 {

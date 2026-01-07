@@ -1,6 +1,6 @@
 ﻿// using System;
 
-// namespace Dependinator.Utils.UI
+// namespace Dependinator.Shared
 // {
 //     /// <summary>
 //     ///     Provides Debounce() methods.
@@ -29,7 +29,7 @@
 //         /// <param name="interval">Timeout in Milliseconds</param>
 //         /// <param name="action">Action<object> to fire when debounced event fires</object></param>
 //         /// <param name="param">optional parameter</param>
-//         /// <param name="priority">optional priorty for the dispatcher</param>
+//         /// <param name="priority">optional priority for the dispatcher</param>
 //         /// <param name="disp">optional dispatcher. If not passed or null CurrentDispatcher is used.</param>
 //         public void Debounce(TimeSpan interval, Action<object> action,
 //             object param = null,

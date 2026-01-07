@@ -1,4 +1,6 @@
-﻿namespace Dependinator.Parsing.Assemblies;
+﻿using DependinatorCore.Shared;
+
+namespace Dependinator.Parsing.Assemblies;
 
 [Transient]
 internal class AssemblyParserService : IParser

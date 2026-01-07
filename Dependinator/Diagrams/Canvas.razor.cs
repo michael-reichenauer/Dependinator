@@ -1,5 +1,4 @@
 using Dependinator.Diagrams.Icons;
-using Dependinator.Utils.UI;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 

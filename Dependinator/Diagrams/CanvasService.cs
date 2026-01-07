@@ -1,6 +1,7 @@
 using Dependinator.Diagrams.Svg;
 using Dependinator.Models;
 using DependinatorCore.Parsing;
+using DependinatorCore.Shared;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Diagrams;
@@ -44,6 +45,7 @@ class CanvasService : ICanvasService
     readonly IJSInterop jSInteropService;
     readonly IParserServiceX parserServiceX;
     readonly IFileService fileService;
+    readonly IBrowserFileService browserFileService;
     readonly IRecentModelsService recentModelsService;
     readonly IInteractionService interactionService;
 
@@ -56,6 +58,7 @@ class CanvasService : ICanvasService
         IJSInterop jSInteropService,
         IParserServiceX parserServiceX,
         IFileService fileService,
+        IBrowserFileService browserFileService,
         IRecentModelsService recentModelsService,
         IInteractionService interactionService
     )
@@ -68,6 +71,7 @@ class CanvasService : ICanvasService
         this.jSInteropService = jSInteropService;
         this.parserServiceX = parserServiceX;
         this.fileService = fileService;
+        this.browserFileService = browserFileService;
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
     }
@@ -124,7 +128,7 @@ class CanvasService : ICanvasService
 
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
-        var paths = await fileService.AddAsync(browserFiles);
+        var paths = await browserFileService.AddAsync(browserFiles);
 
         var modelPath = paths.First();
         await LoadAsync(modelPath);
@@ -160,7 +164,7 @@ class CanvasService : ICanvasService
     {
         Log.Info("Calling with 'SomePath'");
         var resp = await parserServiceX.ParseAsync("SomePath");
-        Log.Info("The reaponse was:", resp);
+        Log.Info("The response was:", resp);
     }
 
     public void ToggleTheme()

@@ -1,3 +1,5 @@
+using DependinatorCore.Shared;
+
 namespace Dependinator.Models;
 
 interface IPersistenceService

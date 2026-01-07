@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.JSInterop;
 
-namespace Dependinator.Utils;
+namespace Dependinator.Shared;
 
 interface IDatabase
 {
@@ -62,7 +62,7 @@ class Database : IDatabase
 
     private async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
     {
-        // For big values, the normal JSInterop call canot handle big return values,
+        // For big values, the normal JSInterop call cannot handle big return values,
         // so we use a value handler, where values are returned in chunks using callback from js
         var valueHandler = new ValueHandler();
         using var valueHandlerRef = jSInterop.Reference(valueHandler);
@@ -84,7 +84,7 @@ class Database : IDatabase
         return value!;
     }
 
-    // This class is used when a javascript function returns a value that could larger than 20k
+    // This class is used when a javascript function returns a value that could be larger than 20k
     class ValueHandler
     {
         readonly StringBuilder sb = new();

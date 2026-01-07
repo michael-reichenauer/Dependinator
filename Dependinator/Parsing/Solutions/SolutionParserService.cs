@@ -1,4 +1,6 @@
-﻿namespace Dependinator.Parsing.Solutions;
+﻿using DependinatorCore.Shared;
+
+namespace Dependinator.Parsing.Solutions;
 
 [Transient]
 internal class SolutionParserService : IParser

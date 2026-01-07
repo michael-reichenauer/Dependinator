@@ -18,6 +18,7 @@
     "hoverable",
     "hoverableedit",
     "Hsts",
+    "inputfile",
     "Invokable",
     "linejoin",
     "Mediat",
@@ -29,6 +30,7 @@
     "polyline",
     "Rezise",
     "selectpoint",
+    "svgcanvas",
     "Svgs",
     "uninstallation",
     "XMLDOC"
