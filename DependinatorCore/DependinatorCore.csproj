@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ICSharpCode.Decompiler" />
+    <PackageReference Include="Microsoft.Build" />
+    <PackageReference Include="Mono.Cecil" />
+    <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Scrutor" />
     <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>

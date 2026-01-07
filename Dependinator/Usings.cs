@@ -2,6 +2,7 @@ global using Dependinator.Shared;
 global using DependinatorCore.Utils;
 global using DependinatorCore.Utils.Logging;
 global using static DependinatorCore.Utils.Result;
+global using Parsing = DependinatorCore.Parsing;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 

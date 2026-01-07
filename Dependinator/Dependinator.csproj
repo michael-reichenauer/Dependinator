@@ -16,12 +16,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="ICSharpCode.Decompiler" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
-    <PackageReference Include="Microsoft.Build" />
-    <PackageReference Include="Mono.Cecil" />
     <PackageReference Include="MudBlazor" />
-    <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Scrutor" />
   </ItemGroup>
   <ItemGroup>

@@ -1,4 +1,4 @@
-using Dependinator.Parsing;
+using DependinatorCore.Parsing;
 
 namespace Dependinator.Tests.Parsing.Utils;
 

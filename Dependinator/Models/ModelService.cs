@@ -321,7 +321,7 @@ class ModelService : IModelService
 
         if (
             !Try(
-                out Dependinator.Parsing.Source? source,
+                out DependinatorCore.Parsing.Source? source,
                 out var e,
                 await parserService.GetSourceAsync(modelPath, nodeName)
             )

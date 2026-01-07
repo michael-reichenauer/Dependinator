@@ -22,11 +22,11 @@ class Reference
         var typeDefinition = AssemblyHelper.GetTypeDefinition<T>();
         if (memberName is null)
         {
-            return Dependinator.Parsing.Assemblies.Name.GetTypeFullName(typeDefinition);
+            return DependinatorCore.Parsing.Assemblies.Name.GetTypeFullName(typeDefinition);
         }
         if (TryGetMember(typeDefinition, memberName, out var member))
         {
-            return Dependinator.Parsing.Assemblies.Name.GetMemberFullName(member);
+            return DependinatorCore.Parsing.Assemblies.Name.GetMemberFullName(member);
         }
 
         throw new Exception($"Invalid reference '{typeof(T).FullName}', '{memberName}'");
