@@ -33,7 +33,8 @@
     "svgcanvas",
     "Svgs",
     "uninstallation",
-    "XMLDOC"
+    "XMLDOC",
+    "Xunit"
   ],
   "dotnet-test-explorer.testProjectPath": "**/*Tests.@(csproj|vbproj|fsproj)",
   "chatgpt.openOnStartup": true,

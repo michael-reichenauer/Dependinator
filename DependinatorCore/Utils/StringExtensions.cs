@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace Dependinator.Utils;
+namespace DependinatorCore.Utils;
 
 public static class StringExtensions
 {

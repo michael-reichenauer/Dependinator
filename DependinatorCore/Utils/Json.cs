@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace DependinatorCore.Utils;
 
-public class JsonX
+public class Json
 {
     static readonly JsonSerializerOptions JsonSettings = new()
     {

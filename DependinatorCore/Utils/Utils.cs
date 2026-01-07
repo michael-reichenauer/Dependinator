@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Dependinator.Utils;
+namespace DependinatorCore.Utils;
 
 public static class Util
 {

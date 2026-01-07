@@ -1,6 +1,6 @@
-namespace Dependinator.Models;
+namespace DependinatorCore.Utils;
 
-static class Sorter
+public static class Sorter
 {
     // Bubble sort
     public static void Sort<T>(IList<T> list, Func<T, T, int> comparer)

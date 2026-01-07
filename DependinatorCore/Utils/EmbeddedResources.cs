@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Dependinator.Utils;
+namespace DependinatorCore.Utils;
 
 public interface IEmbeddedResources
 {
@@ -8,7 +8,7 @@ public interface IEmbeddedResources
     Stream? TryOpenResource(string name);
 }
 
-internal class EmbeddedResources<T> : IEmbeddedResources
+public class EmbeddedResources<T> : IEmbeddedResources
 {
     static readonly Assembly assembly = typeof(T).Assembly;
 

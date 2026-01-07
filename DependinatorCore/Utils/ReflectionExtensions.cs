@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Dependinator.Utils;
+namespace DependinatorCore.Utils;
 
 /// <summary>
 ///     Method used to extract information from internal Microsoft classes using reflection

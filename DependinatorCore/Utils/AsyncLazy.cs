@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Dependinator.Utils;
+namespace DependinatorCore.Utils;
 
 public class AsyncLazy<T> : Lazy<Task<T>>
 {

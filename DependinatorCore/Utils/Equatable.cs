@@ -1,4 +1,4 @@
-namespace Dependinator.Utils
+namespace DependinatorCore.Utils
 {
     internal interface IEquatable
     {
