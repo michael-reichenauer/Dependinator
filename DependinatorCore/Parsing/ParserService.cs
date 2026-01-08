@@ -8,7 +8,7 @@ internal interface IParserService
 {
     DateTime GetDataTime(string path);
 
-    R<ChannelReader<Item>> Parse(string path);
+    Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
@@ -33,7 +33,7 @@ class ParserService : IParserService
         return parser.GetDataTime(path);
     }
 
-    public R<ChannelReader<Item>> Parse(string path)
+    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
     {
         Log.Debug($"Parse {path} ...");
         Channel<Item> channel = Channel.CreateUnbounded<Item>();
@@ -42,15 +42,14 @@ class ParserService : IParserService
         if (!Try(out var parser, out var e, GetParser(path)))
             return R.Error($"File not supported: {path}", e);
 
-        Task.Run(async () =>
-            {
-                using var t = Timing.Start($"Parsed {path}");
-                await parser.ParseAsync(path, items);
-                channel.Writer.Complete();
-            })
-            .RunInBackground();
+        await Task.Run(async () =>
+        {
+            using var t = Timing.Start($"Parsed {path}");
+            await parser.ParseAsync(path, items);
+            channel.Writer.Complete();
+        });
 
-        return channel.Reader;
+        return await channel.Reader.ReadAllAsync().ToListAsync();
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)

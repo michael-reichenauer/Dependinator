@@ -350,17 +350,18 @@ class ModelService : IModelService
         using var _ = Timing.Start($"Parsed and added model items {path}");
         //var path = "/workspaces/Dependinator/Dependinator.sln";
 
-        if (!Try(out var reader, out var e, parserService.Parse(path)))
+        Log.Info("Parsing ...");
+
+        if (!Try(out var items, out var e, await parserService.ParseAsync(path)))
             return e;
 
-        Log.Info("Adding...");
         lock (model.Lock)
         {
             model.UpdateStamp = DateTime.UtcNow;
             model.ClearCachedSvg();
         }
 
-        await AddOrUpdateAllItems(reader);
+        await AddOrUpdateAllItems(items);
 
         return R.Ok;
     }
@@ -429,26 +430,25 @@ class ModelService : IModelService
         return new ModelInfo(path, modelDto.ViewRect, modelDto.Zoom);
     }
 
-    private async Task AddOrUpdateAllItems(ChannelReader<Parsing.Item> reader)
+    private async Task AddOrUpdateAllItems(IReadOnlyList<Parsing.Item> items)
     {
-        var itemsCount = 0;
-        var t = Timing.Start();
+        using var _ = Timing.Start($"Added or updated {items.Count} items");
         await Task.Run(async () =>
         {
-            while (await reader.WaitToReadAsync())
-            {
-                var batchItems = new List<Parsing.Item>();
-                while (reader.TryRead(out var item))
-                {
-                    batchItems.Add(item);
-                    itemsCount++;
-                    if (batchItems.Count >= 500)
-                        break;
-                }
-                AddOrUpdateItems(batchItems);
-            }
+            AddOrUpdateItems(items);
+            // while (await reader.WaitToReadAsync())
+            // {
+            //     var batchItems = new List<Parsing.Item>();
+            //     while (reader.TryRead(out var item))
+            //     {
+            //         batchItems.Add(item);
+            //         itemsCount++;
+            //         if (batchItems.Count >= 500)
+            //             break;
+            //     }
+            //     AddOrUpdateItems(batchItems);
+            // }
         });
-        t.Log($"Added or updated {itemsCount} items");
     }
 
     void AddOrUpdateItems(IReadOnlyList<Parsing.Item> parsedItems)
