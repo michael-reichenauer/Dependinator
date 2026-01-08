@@ -8,7 +8,7 @@ internal interface IParserService
 {
     DateTime GetDataTime(string path);
 
-    R<ChannelReader<IItem>> Parse(string path);
+    R<ChannelReader<Item>> Parse(string path);
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
@@ -33,10 +33,10 @@ class ParserService : IParserService
         return parser.GetDataTime(path);
     }
 
-    public R<ChannelReader<IItem>> Parse(string path)
+    public R<ChannelReader<Item>> Parse(string path)
     {
         Log.Debug($"Parse {path} ...");
-        Channel<IItem> channel = Channel.CreateUnbounded<IItem>();
+        Channel<Item> channel = Channel.CreateUnbounded<Item>();
         IItems items = new ChannelItemsAdapter(channel.Writer);
 
         if (!Try(out var parser, out var e, GetParser(path)))
@@ -95,15 +95,10 @@ class ParserService : IParserService
         return R<IParser>.From(parser);
     }
 
-    sealed class ChannelItemsAdapter : IItems
+    sealed class ChannelItemsAdapter(ChannelWriter<Item> writer) : IItems
     {
-        readonly ChannelWriter<IItem> writer;
+        public async Task SendAsync(Node node) => await writer.WriteAsync(new Item(node, null));
 
-        public ChannelItemsAdapter(ChannelWriter<IItem> writer)
-        {
-            this.writer = writer;
-        }
-
-        public async Task SendAsync(IItem item) => await writer.WriteAsync(item);
+        public async Task SendAsync(Link link) => await writer.WriteAsync(new Item(null, link));
     }
 }

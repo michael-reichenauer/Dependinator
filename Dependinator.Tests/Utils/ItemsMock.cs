@@ -4,20 +4,24 @@ namespace Dependinator.Tests.Utils;
 
 class ItemsMock : IItems
 {
-    readonly List<IItem> items = [];
+    public int Count => Nodes.Count + Links.Count;
+    public int NodeCount => Nodes.Count;
+    public int LinkCount => Links.Count;
 
-    public int Count => items.Count;
-    public int NodeCount => items.OfType<Node>().Count();
-    public int LinkCount => items.OfType<Link>().Count();
+    public IReadOnlyList<Node> Nodes => [];
+    public IReadOnlyList<Link> Links => [];
 
-    public IReadOnlyList<Link> Links => items.OfType<Link>().ToList();
-    public IReadOnlyList<Node> Nodes => items.OfType<Node>().ToList();
-
-    public Task SendAsync(IItem item)
+    public Task SendAsync(Node node)
     {
-        items.Add(item);
+        Nodes.Add(node);
         return Task.CompletedTask;
     }
 
-    public Node GetNode(string nodeName) => items.OfType<Node>().Single(n => n.Name == nodeName);
+    public Task SendAsync(Link link)
+    {
+        Links.Add(link);
+        return Task.CompletedTask;
+    }
+
+    public Node GetNode(string nodeName) => Nodes.Single(n => n.Name == nodeName);
 }

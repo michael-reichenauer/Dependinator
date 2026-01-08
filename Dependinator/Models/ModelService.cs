@@ -328,7 +328,7 @@ class ModelService : IModelService
         )
             return e;
 
-        var sourceText = source.Text.Replace("\t", "  "); // The autoformater removes this in Blazor code.
+        var sourceText = source.Text.Replace("\t", "  "); // The auto formatter removes this in Blazor code.
         return new Source(source.Path, sourceText, source.LineNumber);
     }
 
@@ -429,7 +429,7 @@ class ModelService : IModelService
         return new ModelInfo(path, modelDto.ViewRect, modelDto.Zoom);
     }
 
-    private async Task AddOrUpdateAllItems(ChannelReader<Parsing.IItem> reader)
+    private async Task AddOrUpdateAllItems(ChannelReader<Parsing.Item> reader)
     {
         var itemsCount = 0;
         var t = Timing.Start();
@@ -437,7 +437,7 @@ class ModelService : IModelService
         {
             while (await reader.WaitToReadAsync())
             {
-                var batchItems = new List<Parsing.IItem>();
+                var batchItems = new List<Parsing.Item>();
                 while (reader.TryRead(out var item))
                 {
                     batchItems.Add(item);
@@ -451,21 +451,16 @@ class ModelService : IModelService
         t.Log($"Added or updated {itemsCount} items");
     }
 
-    void AddOrUpdateItems(IReadOnlyList<Parsing.IItem> parsedItems)
+    void AddOrUpdateItems(IReadOnlyList<Parsing.Item> parsedItems)
     {
         lock (model.Lock)
         {
             foreach (var parsedItem in parsedItems)
             {
-                switch (parsedItem)
-                {
-                    case Parsing.Node parsedNode:
-                        modelStructureService.AddOrUpdateNode(parsedNode);
-                        break;
-                    case Parsing.Link parsedLink:
-                        modelStructureService.AddOrUpdateLink(parsedLink);
-                        break;
-                }
+                if (parsedItem.Node is not null)
+                    modelStructureService.AddOrUpdateNode(parsedItem.Node);
+                if (parsedItem.Link is not null)
+                    modelStructureService.AddOrUpdateLink(parsedItem.Link);
             }
         }
     }
