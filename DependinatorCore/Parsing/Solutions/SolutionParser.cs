@@ -1,6 +1,5 @@
 ﻿using DependinatorCore.Parsing.Assemblies;
 using DependinatorCore.Shared;
-using ICSharpCode.Decompiler.TypeSystem;
 
 namespace DependinatorCore.Parsing.Solutions;
 
