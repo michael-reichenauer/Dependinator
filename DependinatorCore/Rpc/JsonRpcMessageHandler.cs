@@ -28,7 +28,15 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
 
     public JsonRpcMessageHandler()
         //       : base(new StreamJsonRpc.MessagePackFormatter()) { } // More efficient
-        : base(new StreamJsonRpc.SystemTextJsonFormatter()) { }
+        : base(CreateFormatter()) { }
+
+    static IJsonRpcMessageFormatter CreateFormatter()
+    {
+        var formatter = new SystemTextJsonFormatter();
+        formatter.JsonSerializerOptions.Converters.Add(new ResultJsonConverter());
+        formatter.JsonSerializerOptions.Converters.Add(new ResultJsonConverterFactory());
+        return formatter;
+    }
 
     public override bool CanRead => true;
     public override bool CanWrite => true;

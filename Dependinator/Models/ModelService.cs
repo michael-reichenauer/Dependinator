@@ -319,17 +319,14 @@ class ModelService : IModelService
             nodeName = node.Name;
         }
 
-        var s = await parserService.GetSourceAsync(modelPath, nodeName);
-        if (s.error is not null)
-            return R.Error(s.error);
-        var source = s.value!;
-        // !Try(
-        //     out DependinatorCore.Parsing.Source? source,
-        //     out var e,
-        //     await parserService.GetSourceAsync(modelPath, nodeName)
-        // )
-        // )
-        //     return e;
+        if (
+            !Try(
+                out DependinatorCore.Parsing.Source? source,
+                out var e,
+                await parserService.GetSourceAsync(modelPath, nodeName)
+            )
+        )
+            return e;
 
         var sourceText = source.Text.Replace("\t", "  "); // The auto formatter removes this in Blazor code.
         return new Source(source.Path, sourceText, source.LineNumber);
@@ -355,13 +352,8 @@ class ModelService : IModelService
 
         Log.Info("Parsing ...");
 
-        var result = await parserService.ParseAsync(path);
-        if (result.error is not null)
-            return R.Error(result.error);
-        var items = result.value!;
-
-        // if (!Try(out var items, out var e, await parserService.ParseAsync(path)))
-        //     return e;
+        if (!Try(out var items, out var e, await parserService.ParseAsync(path)))
+            return e;
 
         lock (model.Lock)
         {

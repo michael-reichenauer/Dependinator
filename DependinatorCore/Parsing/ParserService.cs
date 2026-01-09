@@ -5,18 +5,16 @@ namespace DependinatorCore.Parsing;
 
 record ModelPaths(string ModelPath, string WorkFolderPath);
 
-record RemoteResult<T>(T? value, string? error);
-
 [JsonRpc]
 internal interface IParserService
 {
     //DateTime GetDataTime(string path);
 
-    Task<RemoteResult<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
+    Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
 
-    Task<RemoteResult<Source>> GetSourceAsync(string path, string nodeName);
+    Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
-    Task<RemoteResult<string>> TryGetNodeAsync(string path, Source source);
+    Task<R<string>> TryGetNodeAsync(string path, Source source);
 }
 
 [Transient]
@@ -37,14 +35,14 @@ class ParserService : IParserService
     //     return parser.GetDataTime(path);
     // }
 
-    public async Task<RemoteResult<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
+    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
     {
         Log.Info($"Parse {path} ...");
         Channel<Item> channel = Channel.CreateUnbounded<Item>();
         IItems items = new ChannelItemsAdapter(channel.Writer);
 
         if (!Try(out var parser, out var e, GetParser(path)))
-            return new RemoteResult<IReadOnlyList<Parsing.Item>>(null, $"File not supported: {path}, {e}");
+            return R.Error($"File not supported: {path}", e);
 
         await Task.Run(async () =>
         {
@@ -53,23 +51,20 @@ class ParserService : IParserService
             channel.Writer.Complete();
         });
 
-        return new RemoteResult<IReadOnlyList<Parsing.Item>>(await channel.Reader.ReadAllAsync().ToListAsync(), null);
+        return await channel.Reader.ReadAllAsync().ToListAsync();
     }
 
-    public async Task<RemoteResult<Source>> GetSourceAsync(string path, string nodeName)
+    public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
         Log.Debug($"Get source for {nodeName} in model {path}...");
 
         if (!Try(out var parser, out var e, GetParser(path)))
-            return new RemoteResult<Source>(null, $"File not supported: {path}, {e}");
+            return R.Error($"File not supported: {path}", e);
 
-        if (!Try(out var source, out var e2, await parser.GetSourceAsync(path, nodeName)))
-            return new RemoteResult<Source>(null, e2.ErrorMessage);
-
-        return new RemoteResult<Source>(source, null);
+        return await parser.GetSourceAsync(path, nodeName);
     }
 
-    public Task<RemoteResult<string>> TryGetNodeAsync(string path, Source source)
+    public Task<R<string>> TryGetNodeAsync(string path, Source source)
     {
         throw new NotImplementedException();
         // Log.Debug($"Get node for {source} in model {modelPaths}...");
