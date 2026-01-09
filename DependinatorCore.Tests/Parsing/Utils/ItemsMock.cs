@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using DependinatorCore.Parsing;
 
 namespace DependinatorCore.Tests.Parsing.Utils;
@@ -5,11 +6,9 @@ namespace DependinatorCore.Tests.Parsing.Utils;
 class ItemsMock : IItems
 {
     public int Count => Nodes.Count + Links.Count;
-    public int NodeCount => Nodes.Count;
-    public int LinkCount => Links.Count;
 
-    public IReadOnlyList<Node> Nodes => [];
-    public IReadOnlyList<Link> Links => [];
+    public ConcurrentBag<Node> Nodes { get; } = [];
+    public ConcurrentBag<Link> Links { get; } = [];
 
     public Task SendAsync(Node node)
     {

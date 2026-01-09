@@ -27,5 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+    <ProjectReference Include="..\DependinatorCore.Tests\DependinatorCore.Tests.csproj" />
   </ItemGroup>
 </Project>
