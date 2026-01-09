@@ -1,12 +1,14 @@
 ﻿using System.Threading.Channels;
+using DependinatorCore.Rpc;
 
 namespace DependinatorCore.Parsing;
 
 record ModelPaths(string ModelPath, string WorkFolderPath);
 
+[JsonRpc]
 internal interface IParserService
 {
-    DateTime GetDataTime(string path);
+    //DateTime GetDataTime(string path);
 
     Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
 
@@ -25,17 +27,17 @@ class ParserService : IParserService
         this.parsers = parsers;
     }
 
-    public DateTime GetDataTime(string path)
-    {
-        if (!Try(out var parser, GetParser(path)))
-            return DateTime.MinValue;
+    // public DateTime GetDataTime(string path)
+    // {
+    //     if (!Try(out var parser, GetParser(path)))
+    //         return DateTime.MinValue;
 
-        return parser.GetDataTime(path);
-    }
+    //     return parser.GetDataTime(path);
+    // }
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
     {
-        Log.Debug($"Parse {path} ...");
+        Log.Info($"Parse {path} ...");
         Channel<Item> channel = Channel.CreateUnbounded<Item>();
         IItems items = new ChannelItemsAdapter(channel.Writer);
 

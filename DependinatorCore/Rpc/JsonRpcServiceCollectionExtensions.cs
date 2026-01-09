@@ -9,27 +9,34 @@ public static class JsonRpcServiceCollectionExtensions
 {
     public static IServiceCollection AddJsonRpcInterfaces(this IServiceCollection services, Type assemblyType)
     {
+        Log.Info("AddJsonRpcInterfaces");
         assemblyType
             .Assembly.GetTypes()
             .Where(IsRemoteInterface)
-            .ForEach(i => services.AddSingleton(i, (sp) => sp.GetRequiredService<IJsonRpcService>().GetRemoteProxy(i)));
+            .ForEach(i => services.AddScoped(i, (sp) => sp.GetRequiredService<IJsonRpcService>().GetRemoteProxy(i)));
         return services;
     }
 
     public static IServiceProvider UseJsonRpcClasses(this IServiceProvider serviceProvider, Type assemblyType)
     {
+        Log.Info("UseJsonRpcClasses");
         var jsonRpcService = serviceProvider.GetRequiredService<IJsonRpcService>();
 
         assemblyType
             .Assembly.GetTypes()
             .Where(IsRemoteClass)
-            .ForEach(c => jsonRpcService.AddLocalRpcTarget(serviceProvider.GetRequiredService(c)));
+            .ForEach(c =>
+            {
+                Log.Info("Add target", c.FullName);
+                jsonRpcService.AddLocalRpcTarget(serviceProvider.GetRequiredService(c));
+            });
 
         return serviceProvider;
     }
 
     public static IServiceProvider UseJsonRpc(this IServiceProvider serviceProvider)
     {
+        Log.Info("UseJsonRpc");
         serviceProvider.GetRequiredService<IJsonRpcService>().StartListening();
         return serviceProvider;
     }

@@ -120,7 +120,7 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
     protected override async ValueTask<JsonRpcMessage?> ReadCoreAsync(CancellationToken ct)
     {
         var payload = await messagesChannel.Reader.ReadAsync(ct).ConfigureAwait(false);
-        // Log.Info($"Read message {payload.Length} bytes");
+        Log.Info($"Read message {payload.Length} bytes");
 
         // Formatter expects a ReadOnlySequence<byte>.
         var seq = new ReadOnlySequence<byte>(payload);
@@ -141,7 +141,7 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
         await writeGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            // Log.Info($"Write message {buffer.WrittenMemory.Length} bytes");
+            Log.Info($"Write message {buffer.WrittenMemory.Length} bytes");
             await SendBinaryMessageAsync(buffer.WrittenMemory, ct);
         }
         finally
@@ -183,7 +183,7 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
             binaryMessage.Slice(offset, payloadLength).Span.CopyTo(chunk.AsSpan(ChunkHeaderSize));
 
             // Send sub chunk
-            // Log.Info($"Send binary message {chunk.Length} bytes");
+            // Log.Info($"Send binary chunk message {chunk.Length} bytes");
             await sendBinaryMessageActionAsync(chunk, ct).ConfigureAwait(false);
         }
     }

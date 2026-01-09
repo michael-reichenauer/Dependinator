@@ -24,9 +24,6 @@ internal class Program
         builder.Services.AddJsonRpcInterfaces(typeof(DependinatorCore.RootClass));
 
         var app = builder.Build();
-        app.Services.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
-        app.Services.UseJsonRpc();
-
         await app.RunAsync();
     }
 }
