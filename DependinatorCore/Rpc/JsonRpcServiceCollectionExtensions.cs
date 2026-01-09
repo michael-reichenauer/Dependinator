@@ -19,7 +19,7 @@ public static class JsonRpcServiceCollectionExtensions
 
     public static IServiceProvider UseJsonRpcClasses(this IServiceProvider serviceProvider, Type assemblyType)
     {
-        Log.Info("UseJsonRpcClasses");
+        Log.Info("UseJsonRpcClasses", assemblyType.FullName);
         var jsonRpcService = serviceProvider.GetRequiredService<IJsonRpcService>();
 
         assemblyType
