@@ -25,11 +25,7 @@ public static class JsonRpcServiceCollectionExtensions
         assemblyType
             .Assembly.GetTypes()
             .Where(IsRemoteClass)
-            .ForEach(c =>
-            {
-                Log.Info("Add target", c.FullName);
-                jsonRpcService.AddLocalRpcTarget(serviceProvider.GetRequiredService(c));
-            });
+            .ForEach(c => jsonRpcService.AddLocalRpcTarget(serviceProvider.GetRequiredService(c)));
 
         return serviceProvider;
     }
