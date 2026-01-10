@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Dependinator.Shared
+namespace Shared
 {
     public class WeatherForecast
     {
