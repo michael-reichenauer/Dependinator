@@ -17,7 +17,7 @@ internal class Program
                 .WithServices(services =>
                 {
                     services.AddDependinatorCoreServices();
-                    services.AddSingleton<WorkspaceFolderService>();
+                    services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();
                 })
                 .WithHandler<LspMessageHandler>()
                 .WithHandler<WorkspaceFolderChangeHandler>()
@@ -38,7 +38,7 @@ internal class Program
                         server.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
                         server.UseJsonRpc();
 
-                        var workspaceFolderService = server.Services.GetRequiredService<WorkspaceFolderService>();
+                        var workspaceFolderService = server.Services.GetRequiredService<IWorkspaceFolderService>();
                         workspaceFolderService.InitializeFrom(initializeParams, ct);
 
                         return Task.CompletedTask;

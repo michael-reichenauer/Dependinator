@@ -1,18 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using DependinatorCore.Utils.Logging;
-using OmniSharp.Extensions.LanguageServer.Protocol;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
 namespace DependinatorLanguageServer;
 
-public class WorkspaceFolderService
+public interface IWorkspaceFolderService
+{
+    void InitializeFrom(InitializeParams initializeParams, CancellationToken ct);
+    void AddFolders(IEnumerable<WorkspaceFolder> folders, CancellationToken ct);
+    void RemoveFolders(IEnumerable<WorkspaceFolder> folders);
+}
+
+public class WorkspaceFolderService : IWorkspaceFolderService
 {
     const int DefaultMaxDepth = 3;
-    const int DefaultMaxFilesPerRoot = 25;
+    const int DefaultMaxFilesPerRoot = 300;
     const long MaxContentBytes = 256 * 1024;
     static readonly HashSet<string> IgnoredDirectoryNames = new(StringComparer.OrdinalIgnoreCase)
     {
