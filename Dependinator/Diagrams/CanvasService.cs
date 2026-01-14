@@ -163,7 +163,7 @@ class CanvasService : ICanvasService
     public async void PingLanguageServer()
     {
         Log.Info("Calling with 'SomePath'");
-        var resp = await parserServiceX.ParseAsync("SomePath");
+        var resp = await parserServiceX.ParseXXAsync("SomePath");
         Log.Info("The response was:", resp);
     }
 

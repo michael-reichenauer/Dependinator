@@ -14,4 +14,16 @@
   <ItemGroup>
     <ProjectReference Include="../DependinatorCore/DependinatorCore.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="../Dependinator/bin/$(Configuration)/$(TargetFramework)/Dependinator.dll">
+      <LogicalName>Example/Dependinator.dll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource
+      Include="../Dependinator/bin/$(Configuration)/$(TargetFramework)/Dependinator.pdb"
+      Condition="Exists('../Dependinator/bin/$(Configuration)/$(TargetFramework)/Dependinator.pdb')"
+    >
+      <LogicalName>Example/Dependinator.pdb</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

@@ -5,9 +5,9 @@ namespace DependinatorCore.Parsing.Assemblies;
 [Transient]
 internal class AssemblyParserService : IParser
 {
-    readonly IFileService fileService;
+    readonly IParserFileService fileService;
 
-    public AssemblyParserService(IFileService fileService)
+    public AssemblyParserService(IParserFileService fileService)
     {
         this.fileService = fileService;
     }

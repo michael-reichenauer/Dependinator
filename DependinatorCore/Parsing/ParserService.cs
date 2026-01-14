@@ -17,7 +17,7 @@ internal interface IParserService
     Task<R<string>> TryGetNodeAsync(string path, Source source);
 }
 
-[Transient]
+[Singleton]
 class ParserService : IParserService
 {
     readonly IEnumerable<IParser> parsers;
@@ -37,7 +37,6 @@ class ParserService : IParserService
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
     {
-        Log.Info($"Parse {path} ...");
         Channel<Item> channel = Channel.CreateUnbounded<Item>();
         IItems items = new ChannelItemsAdapter(channel.Writer);
 
@@ -87,8 +86,6 @@ class ParserService : IParserService
 
     R<IParser> GetParser(string path)
     {
-        // return new CustomParser();
-
         var parser = parsers.FirstOrDefault(p => p.CanSupport(path));
         if (parser == null)
             return R.Error($"No supported parser for {path}");

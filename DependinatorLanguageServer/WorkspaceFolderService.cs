@@ -1,3 +1,4 @@
+using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
@@ -12,8 +13,8 @@ public interface IWorkspaceFolderService
 
 public class WorkspaceFolderService : IWorkspaceFolderService
 {
-    const int DefaultMaxDepth = 3;
-    const int DefaultMaxFilesPerRoot = 300;
+    const int DefaultMaxDepth = 10;
+    const int DefaultMaxFilesPerRoot = 3000;
     const long MaxContentBytes = 256 * 1024;
     static readonly HashSet<string> IgnoredDirectoryNames = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -121,8 +122,11 @@ public class WorkspaceFolderService : IWorkspaceFolderService
         CancellationToken ct
     )
     {
+        using var _ = Timing.Start("Logged files");
         foreach (var rootPath in rootPaths)
         {
+            Log.Info("Log files in:", rootPath);
+
             if (ct.IsCancellationRequested)
                 return;
 
@@ -146,6 +150,11 @@ public class WorkspaceFolderService : IWorkspaceFolderService
         }
     }
 
+    static bool IsParsable(string path) =>
+        Path.GetExtension(path).IsSameIc(".exe")
+        || Path.GetExtension(path).IsSameIc(".dll")
+        || Path.GetExtension(path).IsSameIc(".sln");
+
     static IEnumerable<string> EnumerateFiles(string rootPath, int maxDepth, CancellationToken ct)
     {
         var stack = new Stack<(string path, int depth)>();
@@ -163,6 +172,7 @@ public class WorkspaceFolderService : IWorkspaceFolderService
             IEnumerable<string> files;
             try
             {
+                // Log.Info("List files in dir", currentPath);
                 files = Directory.EnumerateFiles(currentPath);
             }
             catch (Exception ex)
@@ -171,7 +181,7 @@ public class WorkspaceFolderService : IWorkspaceFolderService
                 continue;
             }
 
-            foreach (var file in files)
+            foreach (var file in files.Where(IsParsable))
                 yield return file;
 
             if (depth == maxDepth)

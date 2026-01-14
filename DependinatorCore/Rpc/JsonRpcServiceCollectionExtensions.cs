@@ -13,7 +13,7 @@ public static class JsonRpcServiceCollectionExtensions
         assemblyType
             .Assembly.GetTypes()
             .Where(IsRemoteInterface)
-            .ForEach(i => services.AddScoped(i, (sp) => sp.GetRequiredService<IJsonRpcService>().GetRemoteProxy(i)));
+            .ForEach(i => services.AddSingleton(i, (sp) => sp.GetRequiredService<IJsonRpcService>().GetRemoteProxy(i)));
         return services;
     }
 
@@ -25,7 +25,9 @@ public static class JsonRpcServiceCollectionExtensions
         assemblyType
             .Assembly.GetTypes()
             .Where(IsRemoteClass)
-            .ForEach(c => jsonRpcService.AddLocalRpcTarget(serviceProvider.GetRequiredService(c)));
+            .ForEach(c =>
+                jsonRpcService.AddLocalRpcTarget(c.GetRemoteInterface(), serviceProvider.GetRequiredService(c))
+            );
 
         return serviceProvider;
     }
@@ -41,6 +43,9 @@ public static class JsonRpcServiceCollectionExtensions
 
     static bool IsRemoteClass(this Type type) =>
         type.IsClass && type.GetInterfaces().Any(i => i.HasAttribute<JsonRpcAttribute>());
+
+    static Type GetRemoteInterface(this Type type) =>
+        type.GetInterfaces().First(i => i.HasAttribute<JsonRpcAttribute>());
 
     static bool HasAttribute(this Type type, Type attributeType) => type.IsDefined(attributeType, inherit: true);
 

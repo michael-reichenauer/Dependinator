@@ -1,6 +1,4 @@
 using Dependinator.Diagrams;
-using DependinatorCore;
-using DependinatorCore.Rpc;
 
 namespace Dependinator.Shared;
 
@@ -18,8 +16,6 @@ class InitService : IInitService
     readonly IDatabase database;
     readonly ICanvasService canvasService;
     readonly IVsCodeMessageService vsCodeMessageService;
-    readonly IServiceProvider serviceProvider;
-    bool jsonRpcInitialized;
 
     public InitService(
         IScreenService screenService,
@@ -27,8 +23,7 @@ class InitService : IInitService
         IRecentModelsService recentModelsService,
         IDatabase database,
         ICanvasService canvasService,
-        IVsCodeMessageService vsCodeMessageService,
-        IServiceProvider serviceProvider
+        IVsCodeMessageService vsCodeMessageService
     )
     {
         this.screenService = screenService;
@@ -37,27 +32,15 @@ class InitService : IInitService
         this.database = database;
         this.canvasService = canvasService;
         this.vsCodeMessageService = vsCodeMessageService;
-        this.serviceProvider = serviceProvider;
     }
 
     public async Task InitAsync(IUIComponent component)
     {
-        EnsureJsonRpcInitialized();
         await database.Init([FileService.DBCollectionName]);
         await screenService.InitAsync(component);
         await mouseEventService.InitAsync();
         await recentModelsService.InitAsync();
         await canvasService.InitAsync();
         await vsCodeMessageService.InitAsync();
-    }
-
-    void EnsureJsonRpcInitialized()
-    {
-        if (jsonRpcInitialized)
-            return;
-
-        serviceProvider.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
-        serviceProvider.UseJsonRpc();
-        jsonRpcInitialized = true;
     }
 }

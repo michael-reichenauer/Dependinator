@@ -33,6 +33,8 @@ public class Program
         builder.Services.AddJsonRpcInterfaces(typeof(DependinatorCore.RootClass));
 
         var app = builder.Build();
+        app.Services.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
+        app.Services.UseJsonRpc();
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())

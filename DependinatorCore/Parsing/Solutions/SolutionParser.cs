@@ -9,13 +9,13 @@ internal class SolutionParser : IDisposable
 
     readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
     readonly bool isReadSymbols;
-    readonly IFileService fileService;
+    readonly IParserFileService fileService;
     readonly List<Node> parentNodesToSend = new List<Node>();
 
     readonly string solutionFilePath;
     readonly IItems items;
 
-    public SolutionParser(string solutionFilePath, IItems items, bool isReadSymbols, IFileService fileService)
+    public SolutionParser(string solutionFilePath, IItems items, bool isReadSymbols, IParserFileService fileService)
     {
         this.solutionFilePath = solutionFilePath;
         this.items = items;

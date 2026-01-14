@@ -10,17 +10,20 @@ public interface IJsonRpcService
     // Adds the message, that was received from the "other" side
     ValueTask AddReceivedMessageAsync(string base64Message, CancellationToken ct);
 
-    void AddLocalRpcTarget(object target);
+    void AddLocalRpcTarget<TInterface>(TInterface target)
+        where TInterface : class;
 
-    object GetRemoteProxy(Type type);
+    void AddLocalRpcTarget(Type type, object target);
 
     T GetRemoteProxy<T>()
         where T : class;
 
+    object GetRemoteProxy(Type type);
+
     void StartListening();
 }
 
-[Scoped]
+[Singleton]
 public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
 {
     readonly JsonRpcMessageHandler messageHandler = new();
@@ -34,15 +37,26 @@ public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
         RegisterSendMessageAction(AddReceivedMessageAsync);
     }
 
-    public void AddLocalRpcTarget(object target)
+    public void AddLocalRpcTarget<TInterface>(TInterface target)
+        where TInterface : class
     {
-        Log.Info("Add remote target:", target.GetType().FullName);
-        jsonRpc.AddLocalRpcTarget(target);
+        AddLocalRpcTarget(typeof(TInterface), target);
+    }
+
+    public void AddLocalRpcTarget(Type interfaceType, object target)
+    {
+        Log.Info("Add remote target:", interfaceType.FullName, target.GetType().FullName);
+
+        if (!interfaceType.IsInterface)
+            throw new ArgumentException("RPC target type must be an interface.", nameof(interfaceType));
+
+        var options = new JsonRpcTargetOptions { MethodNameTransform = name => $"{interfaceType.FullName}.{name}" };
+
+        jsonRpc.AddLocalRpcTarget(interfaceType, target, options);
     }
 
     public ValueTask AddReceivedMessageAsync(string base64Message, CancellationToken ct)
     {
-        var length = base64Message.Length;
         return messageHandler.AddReceivedMessageAsync(base64Message, ct);
     }
 
@@ -69,16 +83,20 @@ public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public object GetRemoteProxy(Type type)
+    public object GetRemoteProxy(Type interfaceType)
     {
-        Log.Info("Get remote proxy:", type.FullName);
-        return jsonRpc.Attach(type);
+        Log.Info("Get remote proxy:", interfaceType.FullName);
+        if (!interfaceType.IsInterface)
+            throw new ArgumentException("RPC type must be an interface.", nameof(interfaceType));
+
+        var options = new JsonRpcProxyOptions { MethodNameTransform = name => $"{interfaceType.FullName}.{name}" };
+
+        return jsonRpc.Attach(interfaceType, options);
     }
 
     public T GetRemoteProxy<T>()
         where T : class
     {
-        Log.Info("Get remote proxy:", typeof(T).FullName);
-        return jsonRpc.Attach<T>();
+        return (T)GetRemoteProxy(typeof(T));
     }
 }

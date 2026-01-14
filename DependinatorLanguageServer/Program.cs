@@ -1,5 +1,6 @@
 using DependinatorCore;
 using DependinatorCore.Rpc;
+using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
@@ -18,6 +19,7 @@ internal class Program
                 {
                     services.AddDependinatorCoreServices();
                     services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();
+                    services.AddSingleton<IEmbeddedResources, EmbeddedResources<Program>>();
                 })
                 .WithHandler<LspMessageHandler>()
                 .WithHandler<WorkspaceFolderChangeHandler>()
@@ -33,6 +35,7 @@ internal class Program
                                 Output: line => server.SendNotification("vscode/log", new LogInfo("info", line))
                             )
                         );
+                        Log.Info($"Starting Dependinator Language Server  ...");
 
                         // Register remote services callable from the WebView WASM UI
                         server.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
@@ -48,7 +51,7 @@ internal class Program
                 .OnStarted(
                     (server, _) =>
                     {
-                        Log.Info($"Started Dependinator Language Server  ...");
+                        Log.Info($"Started Dependinator Language Server");
                         return Task.CompletedTask;
                     }
                 )
