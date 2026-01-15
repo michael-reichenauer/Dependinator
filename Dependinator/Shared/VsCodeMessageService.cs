@@ -18,6 +18,7 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
     private readonly IJsonRpcService jsonRpcService;
+    private readonly TaskCompletionSource<bool> lspReadyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
     DotNetObjectReference<VsCodeMessageService>? reference;
 
     public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcService jsonRpcService)
@@ -44,7 +45,7 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 
     public async ValueTask SendMessageToLspAsync(string base64Message, CancellationToken ct)
     {
-        // await lspIsReady !!!
+        await lspReadyTcs.Task.WaitAsync(ct);
 
         await jSInterop.Call<bool>("postVsCodeMessage", new { type = "lsp/message", message = base64Message });
     }
@@ -62,7 +63,7 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         if (type == "ui/lspready")
         {
             Log.Info("Lsp ready received");
-            // Signal LSP is ready
+            lspReadyTcs.TrySetResult(true);
 
             return;
         }
