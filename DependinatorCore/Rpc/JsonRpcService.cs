@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using StreamJsonRpc;
 
 namespace DependinatorCore.Rpc;
@@ -21,6 +22,8 @@ public interface IJsonRpcService
     object GetRemoteProxy(Type type);
 
     void StartListening();
+
+    Task CheckConnectionAsync(TimeSpan timeout);
 }
 
 [Singleton]
@@ -32,6 +35,9 @@ public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
     public JsonRpcService()
     {
         jsonRpc = new JsonRpc(messageHandler);
+
+        // Add support for checking remote connection
+        AddLocalRpcTarget<IJsonRpcConnectionCheckService>(new JsonRpcConnectionCheckService());
 
         // By default, this message handle is "self" connected, use ResisterSendMessageAction to register other side
         RegisterSendMessageAction(AddReceivedMessageAsync);
@@ -83,6 +89,12 @@ public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    public T GetRemoteProxy<T>()
+        where T : class
+    {
+        return (T)GetRemoteProxy(typeof(T));
+    }
+
     public object GetRemoteProxy(Type interfaceType)
     {
         Log.Info("Get remote proxy:", interfaceType.FullName);
@@ -94,9 +106,42 @@ public class JsonRpcService : IJsonRpcService, IAsyncDisposable, IDisposable
         return jsonRpc.Attach(interfaceType, options);
     }
 
-    public T GetRemoteProxy<T>()
-        where T : class
+    public async Task CheckConnectionAsync(TimeSpan timeout)
     {
-        return (T)GetRemoteProxy(typeof(T));
+        var connectionCheckService = GetRemoteProxy<IJsonRpcConnectionCheckService>();
+
+        var startTime = Stopwatch.StartNew();
+        while (startTime.Elapsed < timeout)
+        {
+            var id = Guid.NewGuid().ToString();
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+            var ct = cts.Token;
+            try
+            {
+                // Need to use "WithCancellation" since JsonRpc does not support request cancellation properly
+                var result = await connectionCheckService.CheckConnectionAsync(id).WithCancellation(ct);
+                if (result == id)
+                    return;
+            }
+            catch
+            {
+                // Ignoring error, lets retry again
+            }
+
+            Thread.Sleep(100);
+        }
+
+        throw new TimeoutException("Failed to connect using RPC to other side");
+    }
+
+    interface IJsonRpcConnectionCheckService
+    {
+        Task<string> CheckConnectionAsync(string id);
+    }
+
+    class JsonRpcConnectionCheckService : IJsonRpcConnectionCheckService
+    {
+        public Task<string> CheckConnectionAsync(string id) => Task.FromResult(id);
     }
 }

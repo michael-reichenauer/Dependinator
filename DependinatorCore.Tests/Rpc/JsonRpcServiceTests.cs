@@ -174,6 +174,9 @@ public class JsonRpcServiceTests
         jsonRpcServiceB.AddLocalRpcTarget<ICalcProd>(new CalcProdService(430));
         jsonRpcServiceB.StartListening();
 
+        await jsonRpcServiceA.CheckConnectionAsync(TimeSpan.FromSeconds(1));
+        await jsonRpcServiceB.CheckConnectionAsync(TimeSpan.FromSeconds(1));
+
         ICalcAdd calcAddA = jsonRpcServiceA.GetRemoteProxy<ICalcAdd>(); // A->B
         ICalcProd calcProdA = jsonRpcServiceA.GetRemoteProxy<ICalcProd>(); // A->B
 
@@ -211,5 +214,32 @@ public class JsonRpcServiceTests
 
         int sumMini = await miniCalcAdd.AddAsync(3, 8);
         Assert.Equal(3 + 8 + 200, sumMini);
+    }
+
+    [Fact]
+    public async Task TestConnectionCheckAsync()
+    {
+        using var jsonRpcService = new JsonRpcService();
+        jsonRpcService.StartListening();
+        await jsonRpcService.CheckConnectionAsync(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task TestConnectionCheckTimeoutAsync()
+    {
+        using var jsonRpcService = new JsonRpcService();
+
+        // Ensure connection cannot occur
+        jsonRpcService.RegisterSendMessageAction((_, __) => ValueTask.CompletedTask);
+
+        // Check that CheckConnectionAsync will timeout
+        jsonRpcService.StartListening();
+        var ex = await Assert.ThrowsAsync<TimeoutException>(() =>
+            jsonRpcService.CheckConnectionAsync(TimeSpan.FromSeconds(1))
+        );
+
+        // Now enable communication anc check again
+        jsonRpcService.RegisterSendMessageAction(jsonRpcService.AddReceivedMessageAsync);
+        await jsonRpcService.CheckConnectionAsync(TimeSpan.FromSeconds(1));
     }
 }
