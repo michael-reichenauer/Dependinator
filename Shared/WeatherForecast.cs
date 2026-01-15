@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Shared
+﻿namespace Shared
 {
     public class WeatherForecast
     {

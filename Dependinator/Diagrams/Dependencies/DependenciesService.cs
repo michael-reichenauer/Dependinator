@@ -1,6 +1,5 @@
 using Dependinator.Diagrams.Icons;
 using Dependinator.Models;
-using Dependinator.Shared;
 using MudBlazor;
 
 namespace Dependinator.Diagrams.Dependencies;

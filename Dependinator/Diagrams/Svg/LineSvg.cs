@@ -1,4 +1,3 @@
-using System;
 using Dependinator.Models;
 
 namespace Dependinator.Diagrams.Svg;
