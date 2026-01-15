@@ -39,10 +39,13 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));
 
         jsonRpcService.RegisterSendMessageAction(SendMessageToLspAsync);
+        Log.Info("Registered message handler");
     }
 
     public async ValueTask SendMessageToLspAsync(string base64Message, CancellationToken ct)
     {
+        // await lspIsReady !!!
+
         await jSInterop.Call<bool>("postVsCodeMessage", new { type = "lsp/message", message = base64Message });
     }
 
@@ -55,6 +58,14 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         var type = typeElement.GetString();
         if (string.IsNullOrWhiteSpace(type))
             return;
+
+        if (type == "ui/lspready")
+        {
+            Log.Info("Lsp ready received");
+            // Signal LSP is ready
+
+            return;
+        }
 
         var message = TryGetString(raw, "message");
         if (message is null)

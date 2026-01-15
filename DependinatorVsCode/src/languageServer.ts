@@ -20,26 +20,28 @@ export async function startLanguageServer(
         "DependinatorLanguageServer.csproj"
     );
     const serverDllCandidates: vscode.Uri[] = [
-        workspaceFolder
-            ? vscode.Uri.joinPath(
-                workspaceFolder,
-                "DependinatorLanguageServer",
-                "bin",
-                "Debug",
-                "net10.0",
-                "DependinatorLanguageServer.dll"
-            )
-            : undefined,
-        workspaceFolder
-            ? vscode.Uri.joinPath(
-                workspaceFolder,
-                "DependinatorLanguageServer",
-                "bin",
-                "Release",
-                "net10.0",
-                "DependinatorLanguageServer.dll"
-            )
-            : undefined,
+
+        // These opened language serve in open foled in debugged Extension
+        // workspaceFolder
+        //     ? vscode.Uri.joinPath(
+        //         workspaceFolder,
+        //         "DependinatorLanguageServer",
+        //         "bin",
+        //         "Debug",
+        //         "net10.0",
+        //         "DependinatorLanguageServer.dll"
+        //     )
+        //     : undefined,
+        // workspaceFolder
+        //     ? vscode.Uri.joinPath(
+        //         workspaceFolder,
+        //         "DependinatorLanguageServer",
+        //         "bin",
+        //         "Release",
+        //         "net10.0",
+        //         "DependinatorLanguageServer.dll"
+        //     )
+        //     : undefined,
         vscode.Uri.joinPath(
             context.extensionUri,
             "server",
@@ -164,6 +166,13 @@ export function registerUiMessageForwarding(
             message: params?.message
         });
     });
+    client.onNotification("ui/lspready", params => {
+        console.log("ui/lspready:", params);
+        getWebview()?.postMessage({
+            type: "ui/lspready",
+            message: params?.message
+        });
+    });
 }
 
 async function fileExists(uri: vscode.Uri): Promise<boolean> {
@@ -176,9 +185,12 @@ async function fileExists(uri: vscode.Uri): Promise<boolean> {
 }
 
 async function firstExisting(uris: vscode.Uri[]): Promise<vscode.Uri | undefined> {
+    console.log("Candidate paths: ", uris);
     for (const uri of uris) {
-        if (await fileExists(uri))
+        if (await fileExists(uri)) {
+            console.log("Exist path: ", uri);
             return uri;
+        }
     }
     return undefined;
 }

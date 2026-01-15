@@ -23,6 +23,13 @@ internal class Program
                 })
                 .WithHandler<LspMessageHandler>()
                 .WithHandler<WorkspaceFolderChangeHandler>()
+                .OnStarted(
+                    (server, _) =>
+                    {
+                        Log.Info($"Started Dependinator Language Server");
+                        return Task.CompletedTask;
+                    }
+                )
                 .OnInitialize(
                     (server, initializeParams, ct) =>
                     {
@@ -35,11 +42,12 @@ internal class Program
                                 Output: line => server.SendNotification("vscode/log", new LogInfo("info", line))
                             )
                         );
-                        Log.Info($"Starting Dependinator Language Server  ...");
+                        Log.Info($"Initializing Dependinator Language Server  ...");
 
                         // Register remote services callable from the WebView WASM UI
                         server.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
                         server.UseJsonRpc();
+                        Log.Info("Initialized JsonRpc");
 
                         var workspaceFolderService = server.Services.GetRequiredService<IWorkspaceFolderService>();
                         workspaceFolderService.InitializeFrom(initializeParams, ct);
@@ -47,11 +55,12 @@ internal class Program
                         return Task.CompletedTask;
                     }
                 )
-                .OnInitialized((server, _, _, _) => Task.CompletedTask)
-                .OnStarted(
-                    (server, _) =>
+                .OnInitialized(
+                    (server, _, _, _) =>
                     {
-                        Log.Info($"Started Dependinator Language Server");
+                        Log.Info($"Initialized Dependinator Language Server");
+                        server.SendNotification(LspReady.Method, new LspReady());
+                        Log.Info($"Sent 'ui/lspready' from lsp");
                         return Task.CompletedTask;
                     }
                 )
@@ -62,3 +71,8 @@ internal class Program
 }
 
 public record LogInfo(string Type, string Message);
+
+public record LspReady()
+{
+    public static readonly string Method = "ui/lspready";
+}
