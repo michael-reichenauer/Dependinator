@@ -17,8 +17,8 @@ interface IVsCodeMessageService
 class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
-    private readonly IJsonRpcService jsonRpcService;
-    private readonly TaskCompletionSource<bool> lspReadyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    readonly IJsonRpcService jsonRpcService;
+    readonly TaskCompletionSource<bool> lspReadyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
     DotNetObjectReference<VsCodeMessageService>? reference;
 
     public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcService jsonRpcService)
@@ -60,11 +60,10 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         if (string.IsNullOrWhiteSpace(type))
             return;
 
-        if (type == "ui/lspready")
+        if (type == "ui/lspReady")
         {
             Log.Info("Lsp ready received");
             lspReadyTcs.TrySetResult(true);
-
             return;
         }
 

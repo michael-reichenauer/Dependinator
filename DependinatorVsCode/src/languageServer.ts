@@ -4,6 +4,7 @@ import type { LanguageClient, LanguageClientOptions, ServerOptions } from "vscod
 export async function startLanguageServer(
     context: vscode.ExtensionContext
 ): Promise<LanguageClient | undefined> {
+    console.log("Starting Language Server in Extension");
     // Prefer a prebuilt DLL; fallback to `dotnet run` without build/restore noise.
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
     const workspaceProject = workspaceFolder
@@ -21,7 +22,7 @@ export async function startLanguageServer(
     );
     const serverDllCandidates: vscode.Uri[] = [
 
-        // These opened language serve in open foled in debugged Extension
+        // These opened language server in open folder in debugged Extension
         // workspaceFolder
         //     ? vscode.Uri.joinPath(
         //         workspaceFolder,
@@ -127,7 +128,9 @@ export async function startLanguageServer(
         clientOptions
     );
 
+    console.log("Starting lsp client ...");
     await client.start();
+    console.log("Started lsp client");
     context.subscriptions.push(client);
     return client;
 }
@@ -166,10 +169,10 @@ export function registerUiMessageForwarding(
             message: params?.message
         });
     });
-    client.onNotification("ui/lspready", params => {
-        console.log("ui/lspready:", params);
+    client.onNotification("ui/lspReady", params => {
+        console.log("ui/lspReady:", params);
         getWebview()?.postMessage({
-            type: "ui/lspready",
+            type: "ui/lspReady",
             message: params?.message
         });
     });
@@ -185,10 +188,10 @@ async function fileExists(uri: vscode.Uri): Promise<boolean> {
 }
 
 async function firstExisting(uris: vscode.Uri[]): Promise<vscode.Uri | undefined> {
-    console.log("Candidate paths: ", uris);
+    console.log("Lsp candidate paths: ", uris);
     for (const uri of uris) {
         if (await fileExists(uri)) {
-            console.log("Exist path: ", uri);
+            console.log("Lsp Exist path: ", uri);
             return uri;
         }
     }

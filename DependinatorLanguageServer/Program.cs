@@ -39,7 +39,7 @@ internal class Program
                                 EnableFileLog: false,
                                 EnableConsoleLog: false,
                                 LogFilePath: null,
-                                Output: line => server.SendNotification("vscode/log", new LogInfo("info", line))
+                                Output: line => server.SendNotification(LogInfo.Method, new LogInfo("info", line))
                             )
                         );
                         Log.Info($"Initializing Dependinator Language Server  ...");
@@ -60,7 +60,7 @@ internal class Program
                     {
                         Log.Info($"Initialized Dependinator Language Server");
                         server.SendNotification(LspReady.Method, new LspReady());
-                        Log.Info($"Sent 'ui/lspready' from lsp");
+                        Log.Info($"Sent 'ui/lspReady' from lsp");
                         return Task.CompletedTask;
                     }
                 )
@@ -70,9 +70,12 @@ internal class Program
     }
 }
 
-public record LogInfo(string Type, string Message);
+public record LogInfo(string Type, string Message)
+{
+    public static readonly string Method = "vscode/log";
+}
 
 public record LspReady()
 {
-    public static readonly string Method = "ui/lspready";
+    public static readonly string Method = "ui/lspReady";
 }
