@@ -45,6 +45,7 @@ class ModelService : IModelService
     readonly IStructureService modelStructureService;
     readonly IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
+    readonly IProgressService progressService;
     readonly ICommandService commandService;
 
     public ModelService(
@@ -53,6 +54,7 @@ class ModelService : IModelService
         IStructureService modelStructureService,
         IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
+        IProgressService progressService,
         ICommandService commandService
     )
     {
@@ -61,6 +63,7 @@ class ModelService : IModelService
         this.modelStructureService = modelStructureService;
         this.persistenceService = persistenceService;
         this.applicationEvents = applicationEvents;
+        this.progressService = progressService;
         this.commandService = commandService;
         this.applicationEvents.SaveNeeded += TriggerSave;
     }
@@ -234,6 +237,7 @@ class ModelService : IModelService
         Clear();
 
         Log.Info("Loading ...", path);
+        using var __ = progressService.Start("Loading model ...");
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
@@ -267,9 +271,11 @@ class ModelService : IModelService
 
     async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
     {
+        using var progress = progressService.Start("Loading cached model ...");
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
             return e;
 
+        progress.SetText("Updating diagram...");
         var modelInfo = await LoadCachedModelDataAsync(path, model);
         CheckLineVisibility();
 
@@ -345,6 +351,7 @@ class ModelService : IModelService
     async Task<R> ParseAndUpdateAsync(string path)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
+        using var progress = progressService.Start("Parsing ...");
         //var path = "/workspaces/Dependinator/Dependinator.sln";
 
         Log.Info("Parsing ...");
@@ -352,6 +359,7 @@ class ModelService : IModelService
         if (!Try(out var items, out var e, await ParseAsync(path)))
             return e;
 
+        progress.SetText("Updating diagram...");
         lock (model.Lock)
         {
             model.UpdateStamp = DateTime.UtcNow;

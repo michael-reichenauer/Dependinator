@@ -1,0 +1,24 @@
+.app-progress-discreet {
+    position: fixed;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    opacity: 0.45;
+    z-index: 1200;
+    pointer-events: none;
+}
+
+.app-progress-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    z-index: 1500;
+    pointer-events: auto;
+}
+
+.app-progress-panel {
+    padding: 1.25rem 1.5rem;
+    min-width: 260px;
+}
