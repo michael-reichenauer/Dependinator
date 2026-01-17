@@ -1,5 +1,6 @@
 using DependinatorCore;
 using DependinatorCore.Rpc;
+using DependinatorCore.Shared;
 using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +44,7 @@ internal class Program
                             )
                         );
                         Log.Info($"Initializing Dependinator Language Server  ...");
+                        server.Services.GetRequiredService<IHost>().SetIsVsCodeExt();
 
                         // Register remote services callable from the WebView WASM UI
                         server.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using DependinatorCore.Rpc;
+using DependinatorCore.Shared;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;
@@ -18,13 +19,15 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
     readonly IJsonRpcService jsonRpcService;
+    private readonly IHost host;
     readonly TaskCompletionSource<bool> lspReadyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
     DotNetObjectReference<VsCodeMessageService>? reference;
 
-    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcService jsonRpcService)
+    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcService jsonRpcService, IHost host)
     {
         this.jSInterop = jSInterop;
         this.jsonRpcService = jsonRpcService;
+        this.host = host;
     }
 
     public async Task InitAsync()
@@ -35,6 +38,7 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         var isVsCodeWebView = await jSInterop.Call<bool>("isVsCodeWebView");
         if (!isVsCodeWebView)
             return;
+        host.SetIsVsCodeExt();
 
         reference = jSInterop.Reference(this);
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));

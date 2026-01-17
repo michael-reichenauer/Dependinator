@@ -13,4 +13,7 @@ public static class Enums
     {
         return Enum.TryParse<TEnum>(text ?? "", out var value) ? value : defaultValue;
     }
+
+    public static string Name<TEnum>(this TEnum value)
+        where TEnum : struct, Enum => Enum.GetName(value) ?? value.ToString();
 }
