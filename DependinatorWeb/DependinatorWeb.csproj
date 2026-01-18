@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+    <ProjectReference Include="..\DependinatorCore\DependinatorCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

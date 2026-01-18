@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace DependinatorCore.Rpc;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-public class JsonRpcAttribute : Attribute { }
+public class RpcAttribute : Attribute { }
 
 public static class JsonRpcServiceCollectionExtensions
 {
@@ -39,13 +39,12 @@ public static class JsonRpcServiceCollectionExtensions
         return serviceProvider;
     }
 
-    static bool IsRemoteInterface(this Type type) => type.IsInterface && type.HasAttribute<JsonRpcAttribute>();
+    static bool IsRemoteInterface(this Type type) => type.IsInterface && type.HasAttribute<RpcAttribute>();
 
     static bool IsRemoteClass(this Type type) =>
-        type.IsClass && type.GetInterfaces().Any(i => i.HasAttribute<JsonRpcAttribute>());
+        type.IsClass && type.GetInterfaces().Any(i => i.HasAttribute<RpcAttribute>());
 
-    static Type GetRemoteInterface(this Type type) =>
-        type.GetInterfaces().First(i => i.HasAttribute<JsonRpcAttribute>());
+    static Type GetRemoteInterface(this Type type) => type.GetInterfaces().First(i => i.HasAttribute<RpcAttribute>());
 
     static bool HasAttribute(this Type type, Type attributeType) => type.IsDefined(attributeType, inherit: true);
 

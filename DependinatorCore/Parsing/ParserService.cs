@@ -5,7 +5,7 @@ namespace DependinatorCore.Parsing;
 
 record ModelPaths(string ModelPath, string WorkFolderPath);
 
-[JsonRpc]
+[Rpc]
 internal interface IParserService
 {
     //DateTime GetDataTime(string path);

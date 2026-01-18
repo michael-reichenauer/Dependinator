@@ -52,7 +52,7 @@ internal class Program
                         Log.Info("Initialized JsonRpc");
 
                         var workspaceFolderService = server.Services.GetRequiredService<IWorkspaceFolderService>();
-                        workspaceFolderService.InitializeFrom(initializeParams, ct);
+                        workspaceFolderService.Initialize(initializeParams, ct);
 
                         return Task.CompletedTask;
                     }

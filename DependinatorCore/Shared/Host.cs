@@ -13,7 +13,7 @@ enum HostType
 interface IHost
 {
     HostType Type { get; }
-    bool VscExtWasm { get; }
+    bool IsVscExtWasm { get; }
     void SetIsVsCodeExt();
 }
 
@@ -31,7 +31,7 @@ class Host : IHost
 
     public HostType Type => hostType;
 
-    public bool VscExtWasm => hostType == HostType.VscExtWasm;
+    public bool IsVscExtWasm => hostType == HostType.VscExtWasm;
 
     public void SetIsVsCodeExt()
     {

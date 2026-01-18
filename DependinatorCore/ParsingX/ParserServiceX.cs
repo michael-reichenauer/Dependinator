@@ -2,7 +2,7 @@ using DependinatorCore.Rpc;
 
 namespace DependinatorCore.Parsing;
 
-[JsonRpc]
+[Rpc]
 public interface IParserServiceX
 {
     Task<string> ParseXXAsync(string path);
