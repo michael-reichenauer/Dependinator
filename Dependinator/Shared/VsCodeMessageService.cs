@@ -1,5 +1,6 @@
 using System.Text.Json;
 using DependinatorCore.Rpc;
+using DependinatorCore.Shared;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;
@@ -17,13 +18,16 @@ interface IVsCodeMessageService
 class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
-    private readonly IJsonRpcService jsonRpcService;
+    readonly IJsonRpcService jsonRpcService;
+    private readonly IHost host;
+    readonly TaskCompletionSource<bool> lspReadyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
     DotNetObjectReference<VsCodeMessageService>? reference;
 
-    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcService jsonRpcService)
+    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcService jsonRpcService, IHost host)
     {
         this.jSInterop = jSInterop;
         this.jsonRpcService = jsonRpcService;
+        this.host = host;
     }
 
     public async Task InitAsync()
@@ -34,15 +38,19 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         var isVsCodeWebView = await jSInterop.Call<bool>("isVsCodeWebView");
         if (!isVsCodeWebView)
             return;
+        host.SetIsVsCodeExt();
 
         reference = jSInterop.Reference(this);
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));
 
         jsonRpcService.RegisterSendMessageAction(SendMessageToLspAsync);
+        Log.Info("Registered message handler");
     }
 
     public async ValueTask SendMessageToLspAsync(string base64Message, CancellationToken ct)
     {
+        await lspReadyTcs.Task.WaitAsync(ct);
+
         await jSInterop.Call<bool>("postVsCodeMessage", new { type = "lsp/message", message = base64Message });
     }
 
@@ -55,6 +63,13 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         var type = typeElement.GetString();
         if (string.IsNullOrWhiteSpace(type))
             return;
+
+        if (type == "ui/lspReady")
+        {
+            Log.Info("Lsp ready received");
+            lspReadyTcs.TrySetResult(true);
+            return;
+        }
 
         var message = TryGetString(raw, "message");
         if (message is null)

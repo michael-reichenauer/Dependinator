@@ -48,10 +48,10 @@ internal class AssemblyParser : IDisposable
         string parentName,
         IItems items,
         bool isReadSymbols,
-        IFileService fileService
+        IParserFileService fileService
     )
     {
-        if (!await fileService.Exists(assemblyPath))
+        if (!await fileService.ExistsAsync(assemblyPath))
             return R.Error($"No file at '{assemblyPath}'");
 
         var assemblyDefinition = await GetAssemblyAsync(assemblyPath, fileService, isReadSymbols);
@@ -123,6 +123,7 @@ internal class AssemblyParser : IDisposable
 
         foreach (var type in assemblyTypes)
         {
+            await Task.Yield();
             await typeParser.AddTypeAsync(type).ForEachAsync(t => typeInfos.Add(t));
         }
     }
@@ -149,7 +150,7 @@ internal class AssemblyParser : IDisposable
 
     static async Task<AssemblyDefinition?> GetAssemblyAsync(
         string assemblyPath,
-        IFileService fileService,
+        IParserFileService fileService,
         bool isSymbols
     )
     {

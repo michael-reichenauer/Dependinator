@@ -164,7 +164,7 @@ class InteractionService : IInteractionService
 
     void OnClick(PointerEvent e)
     {
-        Log.Info("mouse click", e.TargetId);
+        // Log.Info("mouse click", e.TargetId);
         var pointerId = PointerId.Parse(e.TargetId);
         dependenciesService.Clicked(pointerId);
 
@@ -173,7 +173,7 @@ class InteractionService : IInteractionService
 
     void OnDblClick(PointerEvent e)
     {
-        Log.Info($"OnDoubleClick {e.Type}");
+        // Log.Info($"OnDoubleClick {e.Type}");
     }
 
     void OnMouseDown(PointerEvent e)

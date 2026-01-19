@@ -1,0 +1,33 @@
+@inject IProgressService progressService
+@inject IApplicationEvents applicationEvents
+@implements IDisposable
+
+@if (progressService.IsDiscreetActive)
+{
+    <div class="app-progress-discreet">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Tertiary" />
+    </div>
+}
+
+@if (progressService.IsProminentActive)
+{
+    <div class="app-progress-overlay" role="presentation">
+        <div class="app-progress-panel" style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+            <MudProgressCircular Indeterminate="true" Size="Size.Large" Color="Color.Tertiary" />
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Dark" Style="color: #111111;">
+                @ProminentText
+            </MudText>
+        </div>
+    </div>
+}
+
+@code {
+    string ProminentText =>
+    string.IsNullOrWhiteSpace(progressService.ProminentText) ? "" : progressService.ProminentText;
+
+    protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

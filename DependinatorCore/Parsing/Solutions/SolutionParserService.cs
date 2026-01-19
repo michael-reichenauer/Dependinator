@@ -5,9 +5,9 @@ namespace DependinatorCore.Parsing.Solutions;
 [Transient]
 internal class SolutionParserService : IParser
 {
-    readonly IFileService fileService;
+    readonly IParserFileService fileService;
 
-    public SolutionParserService(IFileService fileService)
+    public SolutionParserService(IParserFileService fileService)
     {
         this.fileService = fileService;
     }

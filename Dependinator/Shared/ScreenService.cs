@@ -97,7 +97,7 @@ class ScreenService : IScreenService
         {
             applicationEvents.TriggerUIStateChanged();
             applicationEvents.TriggerSaveNeeded();
-            Log.Info($"Resized: {newSwgRect}");
+            // Log.Info($"Resized: {newSwgRect}");
         }
     }
 

@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -13,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+    <ProjectReference Include="..\DependinatorCore\DependinatorCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,5 +26,4 @@
       <LogicalName>Example/Dependinator.pdb</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-
 </Project>

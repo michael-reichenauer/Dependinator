@@ -1,9 +1,7 @@
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace DependinatorCore.Parsing;
 
 interface IItems
 {
-    Task SendAsync(IItem item);
+    Task SendAsync(Node node);
+    Task SendAsync(Link link);
 }

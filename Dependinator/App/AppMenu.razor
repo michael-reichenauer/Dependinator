@@ -20,12 +20,9 @@
         Fit to Screen
     </MudMenuItem>
 
-    @if (!Build.IsWebAssembly)
-    {
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh">
-            Refresh
-        </MudMenuItem>
-    }
+    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh">
+        Refresh
+    </MudMenuItem>
 
     <MudDivider />
 

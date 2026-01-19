@@ -1,5 +1,4 @@
-﻿using System.Reflection.Emit;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 
 namespace DependinatorCore.Parsing.Assemblies;
 

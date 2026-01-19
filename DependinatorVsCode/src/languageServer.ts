@@ -4,6 +4,7 @@ import type { LanguageClient, LanguageClientOptions, ServerOptions } from "vscod
 export async function startLanguageServer(
     context: vscode.ExtensionContext
 ): Promise<LanguageClient | undefined> {
+    console.log("Starting Language Server in Extension");
     // Prefer a prebuilt DLL; fallback to `dotnet run` without build/restore noise.
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
     const workspaceProject = workspaceFolder
@@ -20,26 +21,28 @@ export async function startLanguageServer(
         "DependinatorLanguageServer.csproj"
     );
     const serverDllCandidates: vscode.Uri[] = [
-        workspaceFolder
-            ? vscode.Uri.joinPath(
-                workspaceFolder,
-                "DependinatorLanguageServer",
-                "bin",
-                "Debug",
-                "net10.0",
-                "DependinatorLanguageServer.dll"
-            )
-            : undefined,
-        workspaceFolder
-            ? vscode.Uri.joinPath(
-                workspaceFolder,
-                "DependinatorLanguageServer",
-                "bin",
-                "Release",
-                "net10.0",
-                "DependinatorLanguageServer.dll"
-            )
-            : undefined,
+
+        // These opened language server in open folder in debugged Extension
+        // workspaceFolder
+        //     ? vscode.Uri.joinPath(
+        //         workspaceFolder,
+        //         "DependinatorLanguageServer",
+        //         "bin",
+        //         "Debug",
+        //         "net10.0",
+        //         "DependinatorLanguageServer.dll"
+        //     )
+        //     : undefined,
+        // workspaceFolder
+        //     ? vscode.Uri.joinPath(
+        //         workspaceFolder,
+        //         "DependinatorLanguageServer",
+        //         "bin",
+        //         "Release",
+        //         "net10.0",
+        //         "DependinatorLanguageServer.dll"
+        //     )
+        //     : undefined,
         vscode.Uri.joinPath(
             context.extensionUri,
             "server",
@@ -125,7 +128,9 @@ export async function startLanguageServer(
         clientOptions
     );
 
+    console.log("Starting lsp client ...");
     await client.start();
+    console.log("Started lsp client");
     context.subscriptions.push(client);
     return client;
 }
@@ -164,6 +169,13 @@ export function registerUiMessageForwarding(
             message: params?.message
         });
     });
+    client.onNotification("ui/lspReady", params => {
+        console.log("ui/lspReady:", params);
+        getWebview()?.postMessage({
+            type: "ui/lspReady",
+            message: params?.message
+        });
+    });
 }
 
 async function fileExists(uri: vscode.Uri): Promise<boolean> {
@@ -176,9 +188,12 @@ async function fileExists(uri: vscode.Uri): Promise<boolean> {
 }
 
 async function firstExisting(uris: vscode.Uri[]): Promise<vscode.Uri | undefined> {
+    console.log("Lsp candidate paths: ", uris);
     for (const uri of uris) {
-        if (await fileExists(uri))
+        if (await fileExists(uri)) {
+            console.log("Lsp Exist path: ", uri);
             return uri;
+        }
     }
     return undefined;
 }

@@ -35,7 +35,7 @@ class FileService : IBrowserFileService, IFileService
 
     public async Task<bool> Exists(string path)
     {
-        if (path == Models.ExampleModel.Path)
+        if (path == ExampleModel.Path)
             return true;
 
         if (hostFileSystem.Exists(path))
@@ -103,9 +103,9 @@ class FileService : IBrowserFileService, IFileService
     public async Task<R<Stream>> ReadStreamAsync(string path)
     {
         Log.Info("ReadStream:", path);
-        if (path == Models.ExampleModel.Path)
+        if (path == ExampleModel.Path)
         {
-            return embeddedResources.OpenResource(Models.ExampleModel.Path);
+            return embeddedResources.OpenResourceStream(ExampleModel.Path);
         }
 
         if (path.StartsWith(hostStoragePaths.WebFilesPrefix))

@@ -1,6 +1,7 @@
 using Dependinator;
 using Dependinator.Shared;
 using DependinatorCore.Rpc;
+using DependinatorCore.Shared;
 using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
 
@@ -35,6 +36,7 @@ public class Program
         var app = builder.Build();
         app.Services.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
         app.Services.UseJsonRpc();
+        app.Services.GetRequiredService<IWorkspaceFileService>().SetWorkspaceFolders(["/workspaces/Dependinator"]);
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())

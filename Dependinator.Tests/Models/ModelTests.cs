@@ -1,5 +1,5 @@
 using Dependinator.Models;
-using Dependinator.Tests.Utils;
+using DependinatorCore.Tests.Parsing.Utils;
 
 namespace Dependinator.Tests.Models;
 
@@ -35,9 +35,12 @@ public class ModelTests
     {
         var items = new ItemsMock();
         await TestHelper.ParseType<ModelTestData>(items);
-        var dto = new ModelDto(items.Nodes, items.Links);
+        var dto = new ModelDto(items.Nodes.ToList(), items.Links.ToList());
         await VerifyJson(dto);
     }
 
-    record ModelDto(IReadOnlyList<DependinatorCore.Parsing.Node> Nodes, IReadOnlyList<DependinatorCore.Parsing.Link> Links);
+    record ModelDto(
+        IReadOnlyList<DependinatorCore.Parsing.Node> Nodes,
+        IReadOnlyList<DependinatorCore.Parsing.Link> Links
+    );
 }

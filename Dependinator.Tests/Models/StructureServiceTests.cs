@@ -1,7 +1,5 @@
 using Dependinator.Models;
 using DependinatorCore.Parsing;
-using Moq;
-using ModelNode = Dependinator.Models.Node;
 using ParsingLink = DependinatorCore.Parsing.Link;
 using ParsingNode = DependinatorCore.Parsing.Node;
 
@@ -71,8 +69,12 @@ public class StructureServiceTests
         Assert.True(model.TryGetLink(new LinkId("Source", "Target"), out var link));
         Assert.Equal("Source", link.Source.Name);
         Assert.Equal("Target", link.Target.Name);
-        lineService.Verify(s => s.AddLinesFromSourceToTarget(It.Is<Dependinator.Models.Link>(l =>
-            l.Source.Name == "Source" && l.Target.Name == "Target"
-        )), Times.Once);
+        lineService.Verify(
+            s =>
+                s.AddLinesFromSourceToTarget(
+                    It.Is<Dependinator.Models.Link>(l => l.Source.Name == "Source" && l.Target.Name == "Target")
+                ),
+            Times.Once
+        );
     }
 }

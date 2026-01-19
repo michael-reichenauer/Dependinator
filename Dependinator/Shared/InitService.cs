@@ -36,11 +36,11 @@ class InitService : IInitService
 
     public async Task InitAsync(IUIComponent component)
     {
+        await vsCodeMessageService.InitAsync();
         await database.Init([FileService.DBCollectionName]);
         await screenService.InitAsync(component);
         await mouseEventService.InitAsync();
         await recentModelsService.InitAsync();
         await canvasService.InitAsync();
-        await vsCodeMessageService.InitAsync();
     }
 }

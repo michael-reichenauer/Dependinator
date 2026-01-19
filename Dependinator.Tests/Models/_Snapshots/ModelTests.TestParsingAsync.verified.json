@@ -1,29 +1,12 @@
 ﻿{
   "Nodes": [
     {
-      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-      "Attributes": {
-        "Description": "",
-        "Type": "Type",
-        "Parent": "Dependinator*Tests.Dependinator.Tests.Models"
-      }
-    },
-    {
-      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
       "Attributes": {
         "Description": "",
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "MemberType": "Field"
-      }
-    },
-    {
-      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
-      "Attributes": {
-        "Description": "",
-        "Type": "Member",
-        "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "MemberType": "Method"
+        "MemberType": "Constructor"
       }
     },
     {
@@ -36,12 +19,29 @@
       }
     },
     {
-      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "Attributes": {
         "Description": "",
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "MemberType": "Constructor"
+        "MemberType": "Method"
+      }
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
+      "Attributes": {
+        "Description": "",
+        "Type": "Member",
+        "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+        "MemberType": "Field"
+      }
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+      "Attributes": {
+        "Description": "",
+        "Type": "Type",
+        "Parent": "Dependinator*Tests.Dependinator.Tests.Models"
       }
     }
   ],

@@ -76,24 +76,14 @@
       "Color": "Green"
     },
     {
-      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
       "Attributes": {
         "Description": "",
-        "MemberType": "Field"
+        "MemberType": "Constructor"
       },
-      "Color": "Red"
-    },
-    {
-      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
-      "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-      "Type": "Member",
-      "Attributes": {
-        "Description": "",
-        "MemberType": "Method"
-      },
-      "Color": "Blue"
+      "Color": "Teal"
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.SecondFunction()",
@@ -106,14 +96,24 @@
       "Color": "Yellow"
     },
     {
-      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
       "Attributes": {
         "Description": "",
-        "MemberType": "Constructor"
+        "MemberType": "Method"
       },
-      "Color": "Teal"
+      "Color": "Blue"
+    },
+    {
+      "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
+      "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+      "Type": "Member",
+      "Attributes": {
+        "Description": "",
+        "MemberType": "Field"
+      },
+      "Color": "Red"
     }
   ],
   "Links": [

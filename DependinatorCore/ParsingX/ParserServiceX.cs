@@ -1,18 +1,17 @@
-using System;
 using DependinatorCore.Rpc;
 
 namespace DependinatorCore.Parsing;
 
-[JsonRpc]
+[Rpc]
 public interface IParserServiceX
 {
-    Task<string> ParseAsync(string path);
+    Task<string> ParseXXAsync(string path);
 }
 
 [Singleton]
 public class ParserServiceX : IParserServiceX
 {
-    public async Task<string> ParseAsync(string path)
+    public async Task<string> ParseXXAsync(string path)
     {
         Log.Info("Received path:", path);
         await Task.CompletedTask;
