@@ -44,10 +44,13 @@ internal class MethodParser
         methodBodyNodes.Add(new MethodBodyNode(memberName, method, false));
     }
 
-    public Task AddAllMethodBodyLinksAsync()
+    public async Task AddAllMethodBodyLinksAsync()
     {
-        methodBodyNodes.ForEach(async l => await AddMethodBodyLinksAsync(l));
-        return Task.CompletedTask;
+        foreach (var l in methodBodyNodes)
+        {
+            await Task.Yield();
+            await AddMethodBodyLinksAsync(l);
+        }
     }
 
     async Task AddMethodBodyLinksAsync(MethodBodyNode methodBodyNode)

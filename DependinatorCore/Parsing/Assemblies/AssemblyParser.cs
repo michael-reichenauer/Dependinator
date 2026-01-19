@@ -123,6 +123,7 @@ internal class AssemblyParser : IDisposable
 
         foreach (var type in assemblyTypes)
         {
+            await Task.Yield();
             await typeParser.AddTypeAsync(type).ForEachAsync(t => typeInfos.Add(t));
         }
     }

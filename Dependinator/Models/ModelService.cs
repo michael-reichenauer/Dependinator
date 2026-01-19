@@ -275,7 +275,7 @@ class ModelService : IModelService
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
             return e;
 
-        progress.SetText("Updating diagram...");
+        progress.SetText("Updating ...");
         var modelInfo = await LoadCachedModelDataAsync(path, model);
         CheckLineVisibility();
 
@@ -284,9 +284,6 @@ class ModelService : IModelService
 
     public async Task<R> RefreshAsync()
     {
-        // if (Build.IsWebAssembly) // Not yet supported
-        //     return R.Ok;
-
         var path = "";
         lock (model.Lock)
         {
@@ -359,7 +356,7 @@ class ModelService : IModelService
         if (!Try(out var items, out var e, await ParseAsync(path)))
             return e;
 
-        progress.SetText("Updating diagram...");
+        progress.SetText("Updating ...");
         lock (model.Lock)
         {
             model.UpdateStamp = DateTime.UtcNow;
@@ -446,7 +443,11 @@ class ModelService : IModelService
         using var _ = Timing.Start($"Added or updated {items.Count} items");
         await Task.Run(async () =>
         {
-            AddOrUpdateItems(items);
+            foreach (var batch in items.Chunk(100))
+            {
+                await Task.Yield();
+                AddOrUpdateItems(batch);
+            }
             // while (await reader.WaitToReadAsync())
             // {
             //     var batchItems = new List<Parsing.Item>();
