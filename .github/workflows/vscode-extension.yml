@@ -1,0 +1,48 @@
+name: Build VS Code Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish to VS Code Marketplace (requires VSCE_PAT)
+        type: boolean
+        default: false
+
+jobs:
+  build-vsix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install npm dependencies
+        run: npm ci
+        working-directory: DependinatorVsCode
+
+      - name: Package extension
+        run: npm run package
+        working-directory: DependinatorVsCode
+
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependinator-vsix
+          path: DependinatorVsCode/*.vsix
+          if-no-files-found: error
+
+      - name: Publish to Marketplace
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+        run: npx vsce publish -p "$VSCE_PAT"
+        working-directory: DependinatorVsCode
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}

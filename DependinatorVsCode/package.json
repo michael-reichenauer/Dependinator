@@ -5,6 +5,7 @@
     "version": "0.0.1",
     "publisher": "dependinator",
     "license": "MIT",
+    "icon": "media/icon-192.png",
     "engines": {
         "vscode": "^1.84.0"
     },
@@ -30,7 +31,11 @@
         "compile": "tsc -p tsconfig.node.json && tsc -p tsconfig.web.json",
         "watch": "tsc -w -p tsconfig.node.json",
         "watch:web": "tsc -w -p tsconfig.web.json",
-        "vscode:prepublish": "npm run compile"
+        "prepare:wasm": "bash scripts/prepare-wasm.sh",
+        "prepare:server": "bash scripts/prepare-server.sh",
+        "build:extension": "npm run prepare:wasm && npm run prepare:server && npm run compile",
+        "package": "vsce package",
+        "vscode:prepublish": "npm run build:extension"
     },
     "dependencies": {
         "vscode-languageclient": "^9.0.1"
@@ -38,6 +43,7 @@
     "devDependencies": {
         "@types/node": "^20.14.10",
         "@types/vscode": "^1.84.0",
+        "@vscode/vsce": "^3.2.0",
         "typescript": "^5.4.5"
     }
 }
