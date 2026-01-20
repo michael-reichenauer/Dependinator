@@ -14,12 +14,16 @@ export async function startLanguageServer(
             "DependinatorLanguageServer.csproj"
         )
         : undefined;
+    console.log("workspaceProject", workspaceProject);
+
     const extensionProject = vscode.Uri.joinPath(
         context.extensionUri,
         "..",
         "DependinatorLanguageServer",
         "DependinatorLanguageServer.csproj"
     );
+    console.log("extensionProject", extensionProject);
+
     const serverExeName = process.platform === "win32" ? "DependinatorLanguageServer.exe" : "DependinatorLanguageServer";
     const runtimeIdentifier = getRuntimeIdentifier();
     const serverExeCandidates: vscode.Uri[] = [
@@ -37,6 +41,7 @@ export async function startLanguageServer(
             serverExeName
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
+    console.log("serverExeCandidates", serverExeCandidates);
 
     const serverDllCandidates: vscode.Uri[] = [
         vscode.Uri.joinPath(
@@ -63,6 +68,7 @@ export async function startLanguageServer(
             "DependinatorLanguageServer.dll"
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
+    console.log("serverDllCandidates", serverExeCandidates);
 
     let serverCommand = "dotnet";
     let serverArgs: string[] | undefined;
@@ -131,9 +137,9 @@ export async function startLanguageServer(
         clientOptions
     );
 
-    console.log("Starting lsp client ...");
+    console.log("Starting lsp client ...", serverOptions);
     await client.start();
-    console.log("Started lsp client");
+    console.log("Started lsp client", serverOptions);
     context.subscriptions.push(client);
     return client;
 }
