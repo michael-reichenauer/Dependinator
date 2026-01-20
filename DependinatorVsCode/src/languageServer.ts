@@ -21,28 +21,6 @@ export async function startLanguageServer(
         "DependinatorLanguageServer.csproj"
     );
     const serverDllCandidates: vscode.Uri[] = [
-
-        // These opened language server in open folder in debugged Extension
-        // workspaceFolder
-        //     ? vscode.Uri.joinPath(
-        //         workspaceFolder,
-        //         "DependinatorLanguageServer",
-        //         "bin",
-        //         "Debug",
-        //         "net10.0",
-        //         "DependinatorLanguageServer.dll"
-        //     )
-        //     : undefined,
-        // workspaceFolder
-        //     ? vscode.Uri.joinPath(
-        //         workspaceFolder,
-        //         "DependinatorLanguageServer",
-        //         "bin",
-        //         "Release",
-        //         "net10.0",
-        //         "DependinatorLanguageServer.dll"
-        //     )
-        //     : undefined,
         vscode.Uri.joinPath(
             context.extensionUri,
             "server",
