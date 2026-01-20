@@ -20,6 +20,24 @@ export async function startLanguageServer(
         "DependinatorLanguageServer",
         "DependinatorLanguageServer.csproj"
     );
+    const serverExeName = process.platform === "win32" ? "DependinatorLanguageServer.exe" : "DependinatorLanguageServer";
+    const runtimeIdentifier = getRuntimeIdentifier();
+    const serverExeCandidates: vscode.Uri[] = [
+        runtimeIdentifier
+            ? vscode.Uri.joinPath(
+                context.extensionUri,
+                "server",
+                runtimeIdentifier,
+                serverExeName
+            )
+            : undefined,
+        vscode.Uri.joinPath(
+            context.extensionUri,
+            "server",
+            serverExeName
+        )
+    ].filter((candidate): candidate is vscode.Uri => !!candidate);
+
     const serverDllCandidates: vscode.Uri[] = [
         vscode.Uri.joinPath(
             context.extensionUri,
@@ -46,27 +64,34 @@ export async function startLanguageServer(
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
 
+    let serverCommand = "dotnet";
     let serverArgs: string[] | undefined;
-    const serverDll = await firstExisting(serverDllCandidates);
-    if (serverDll) {
-        serverArgs = [serverDll.fsPath];
+    const serverExe = await firstExisting(serverExeCandidates);
+    if (serverExe) {
+        serverCommand = serverExe.fsPath;
+        serverArgs = [];
     } else {
-        const projectCandidates = [workspaceProject, extensionProject].filter(
-            (candidate): candidate is vscode.Uri => !!candidate
-        );
-        const project = await firstExisting(projectCandidates);
-        if (project) {
-            serverArgs = [
-                "run",
-                "--project",
-                project.fsPath,
-                "--no-build",
-                "--no-restore",
-                "--nologo"
-            ];
+        const serverDll = await firstExisting(serverDllCandidates);
+        if (serverDll) {
+            serverArgs = [serverDll.fsPath];
         } else {
-            console.warn("Dependinator language server project not found.");
-            return undefined;
+            const projectCandidates = [workspaceProject, extensionProject].filter(
+                (candidate): candidate is vscode.Uri => !!candidate
+            );
+            const project = await firstExisting(projectCandidates);
+            if (project) {
+                serverArgs = [
+                    "run",
+                    "--project",
+                    project.fsPath,
+                    "--no-build",
+                    "--no-restore",
+                    "--nologo"
+                ];
+            } else {
+                console.warn("Dependinator language server project not found.");
+                return undefined;
+            }
         }
     }
 
@@ -82,13 +107,13 @@ export async function startLanguageServer(
     const executableOptions = workspaceFolder ? { cwd: workspaceFolder.fsPath, env: environment } : { env: environment };
     const serverOptions: ServerOptions = {
         run: {
-            command: "dotnet",
+            command: serverCommand,
             args: serverArgs,
             transport: TransportKind.stdio,
             options: executableOptions
         },
         debug: {
-            command: "dotnet",
+            command: serverCommand,
             args: serverArgs,
             transport: TransportKind.stdio,
             options: executableOptions
@@ -174,4 +199,23 @@ async function firstExisting(uris: vscode.Uri[]): Promise<vscode.Uri | undefined
         }
     }
     return undefined;
+}
+
+function getRuntimeIdentifier(): string | undefined {
+    const platform = process.platform;
+    const arch = process.arch;
+    const archSuffix = arch === "x64" ? "x64" : arch === "arm64" ? "arm64" : undefined;
+    if (!archSuffix)
+        return undefined;
+
+    switch (platform) {
+        case "win32":
+            return `win-${archSuffix}`;
+        case "linux":
+            return `linux-${archSuffix}`;
+        case "darwin":
+            return `osx-${archSuffix}`;
+        default:
+            return undefined;
+    }
 }

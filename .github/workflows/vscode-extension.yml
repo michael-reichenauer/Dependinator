@@ -11,6 +11,15 @@ on:
 jobs:
   build-vsix:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - linux-x64
+          - linux-arm64
+          - win32-x64
+          - win32-arm64
+          - darwin-x64
+          - darwin-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,19 +39,19 @@ jobs:
         working-directory: DependinatorVsCode
 
       - name: Package extension
-        run: npm run package
+        run: npm run package:${{ matrix.target }}
         working-directory: DependinatorVsCode
 
       - name: Upload VSIX
         uses: actions/upload-artifact@v4
         with:
-          name: dependinator-vsix
+          name: dependinator-${{ matrix.target }}-vsix
           path: DependinatorVsCode/*.vsix
           if-no-files-found: error
 
       - name: Publish to Marketplace
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
-        run: npx vsce publish -p "$VSCE_PAT"
+        run: npx vsce publish --target ${{ matrix.target }} -p "$VSCE_PAT"
         working-directory: DependinatorVsCode
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

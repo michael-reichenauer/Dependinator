@@ -19,13 +19,17 @@ This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
 - Use `scripts/prepare-wasm.sh --aot` if you want full AOT and compressed artifacts (requires Python).
 - `publisher` in `package.json` must match your VS Code Marketplace publisher name before publishing.
 - Packaging requires the .NET 10 SDK (see `global.json`) and Node 20+.
+- Installed extensions use a self-contained language server, so `dotnet` is not required at runtime.
 
 ## Build a VSIX locally
 
 1. From `DependinatorVsCode/`, install dependencies:
    - `npm install`
-2. Create the VSIX (builds WASM assets, publishes the language server, compiles TS):
-   - `npm run package`
+2. Create a per-platform VSIX (builds WASM assets, publishes the language server, compiles TS):
+   - `npm run package:linux-x64`
+   - `npm run package:win32-x64`
+   - `npm run package:darwin-arm64`
+   - `npm run package:darwin-x64`
 3. The output is `DependinatorVsCode/dependinator-<version>.vsix`.
 
 ## Publish to the Marketplace
@@ -38,5 +42,5 @@ This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
 
 ## GitHub workflow
 
-The `Build VS Code Extension` workflow builds the VSIX artifact.
+The `Build VS Code Extension` workflow builds a VSIX per target.
 To publish from CI, add the `VSCE_PAT` secret and trigger the workflow with `publish` set to true.
