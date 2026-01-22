@@ -68,7 +68,7 @@ export async function startLanguageServer(
             "DependinatorLanguageServer.dll"
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
-    console.log("serverDllCandidates", serverExeCandidates);
+    console.log("serverDllCandidates", serverDllCandidates);
 
     let serverCommand = "dotnet";
     let serverArgs: string[] | undefined;

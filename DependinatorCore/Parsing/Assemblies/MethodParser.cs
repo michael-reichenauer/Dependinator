@@ -32,9 +32,9 @@ internal class MethodParser
             await linkHandler.AddLinkToTypeAsync(memberName, returnType);
         }
 
-        method
+        await method
             .Parameters.Select(parameter => parameter.ParameterType)
-            .ForEach(async parameterType => await linkHandler.AddLinkToTypeAsync(memberName, parameterType));
+            .ForEachAsync(parameterType => linkHandler.AddLinkToTypeAsync(memberName, parameterType));
 
         methodBodyNodes.Add(new MethodBodyNode(memberName, method, false));
     }
@@ -67,8 +67,8 @@ internal class MethodParser
 
             MethodBody body = method.Body;
 
-            body.Variables.ForEach(async variable =>
-                await AddLinkToMethodVariableAsync(memberName, variable, methodBodyNode.IsMoveNext)
+            await body.Variables.ForEachAsync(variable =>
+                AddLinkToMethodVariableAsync(memberName, variable, methodBodyNode.IsMoveNext)
             );
 
             foreach (Instruction instruction in body.Instructions)
@@ -124,8 +124,8 @@ internal class MethodParser
     {
         if (method is GenericInstanceMethod genericMethod)
         {
-            genericMethod.GenericArguments.ForEach(async genericArg =>
-                await linkHandler.AddLinkToTypeAsync(memberName, genericArg)
+            await genericMethod.GenericArguments.ForEachAsync(genericArg =>
+                linkHandler.AddLinkToTypeAsync(memberName, genericArg)
             );
         }
 
@@ -143,8 +143,8 @@ internal class MethodParser
         TypeReference returnType = method.ReturnType;
         await linkHandler.AddLinkToTypeAsync(memberName, returnType);
 
-        method
+        await method
             .Parameters.Select(parameter => parameter.ParameterType)
-            .ForEach(async parameterType => await linkHandler.AddLinkToTypeAsync(memberName, parameterType));
+            .ForEachAsync(parameterType => linkHandler.AddLinkToTypeAsync(memberName, parameterType));
     }
 }

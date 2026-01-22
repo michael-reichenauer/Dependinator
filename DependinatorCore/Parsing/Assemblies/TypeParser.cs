@@ -104,10 +104,9 @@ internal class TypeParser
         return false;
     }
 
-    public Task AddTypesLinksAsync(IEnumerable<TypeData> typeInfos)
+    public async Task AddTypesLinksAsync(IEnumerable<TypeData> typeInfos)
     {
-        typeInfos.ForEach(async t => await AddLinksToBaseTypesAsync(t));
-        return Task.CompletedTask;
+        await typeInfos.ForEachAsync(AddLinksToBaseTypesAsync);
     }
 
     public async Task AddLinksToBaseTypesAsync(TypeData typeData)
@@ -126,8 +125,8 @@ internal class TypeParser
                 await linkHandler.AddLinkToTypeAsync(sourceNode.Name, baseType);
             }
 
-            type.Interfaces.ForEach(async interfaceType =>
-                await linkHandler.AddLinkToTypeAsync(sourceNode.Name, interfaceType.InterfaceType)
+            await type.Interfaces.ForEachAsync(interfaceType =>
+                linkHandler.AddLinkToTypeAsync(sourceNode.Name, interfaceType.InterfaceType)
             );
         }
         catch (Exception e)

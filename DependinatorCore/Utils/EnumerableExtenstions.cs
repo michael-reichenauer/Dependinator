@@ -12,6 +12,14 @@ public static class EnumerableExtensions
         }
     }
 
+    public static async Task ForEachAsync<T>(this IEnumerable<T> enumeration, Func<T, Task> func)
+    {
+        foreach (T item in enumeration)
+        {
+            await func(item);
+        }
+    }
+
     // Calls acton for each item in the enumeration
     public static async Task ForEachAsync<T>(this IAsyncEnumerable<T> enumeration, Action<T> action)
     {

@@ -22,7 +22,7 @@ internal class LinkHandler
     {
         if (targetType is GenericInstanceType genericType)
         {
-            genericType.GenericArguments.ForEach(async argType => await AddLinkToTypeAsync(sourceName, argType));
+            await genericType.GenericArguments.ForEachAsync(argType => AddLinkToTypeAsync(sourceName, argType));
         }
 
         if (IsIgnoredReference(targetType))

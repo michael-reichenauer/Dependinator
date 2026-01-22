@@ -77,14 +77,14 @@ internal class AssemblyParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        return await Task.Run(async () =>
-        {
-            await ParseAssemblyModuleAsync();
-            await ParseAssemblyReferencesAsync([]);
-            await ParseTypesAsync();
-            await ParseTypeMembersAsync();
-            return R.Ok;
-        });
+        // return await Task.Run(async () =>
+        // {
+        await ParseAssemblyModuleAsync();
+        await ParseAssemblyReferencesAsync([]);
+        await ParseTypesAsync();
+        await ParseTypeMembersAsync();
+        return R.Ok;
+        // });
     }
 
     public async Task ParseAssemblyModuleAsync()

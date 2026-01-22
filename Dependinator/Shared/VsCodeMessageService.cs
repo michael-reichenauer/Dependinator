@@ -66,7 +66,7 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 
         if (type == "ui/lspReady")
         {
-            Log.Info("Lsp ready received");
+            Log.Info("Lsp ready received !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             lspReadyTcs.TrySetResult(true);
             return;
         }
