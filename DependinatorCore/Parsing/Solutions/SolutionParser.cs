@@ -268,42 +268,12 @@ internal class SolutionParser : IDisposable
 
     async Task ParseSolutionAssembliesAsync()
     {
-        ParallelOptions option = GetParallelOptions();
-
         var internalModules = assemblyParsers.Select(p => p.ModuleName).ToList();
         // Log.Debug($"Solution: {internalModules.Count} internal modules:\n  {string.Join("\n  ", internalModules)}");
 
         await Task.WhenAll(assemblyParsers.Select(parser => parser.ParseAssemblyModuleAsync()));
-        Log.Info("After ParseAssemblyModuleAsync");
         await Task.WhenAll(assemblyParsers.Select(parser => parser.ParseAssemblyReferencesAsync(internalModules)));
-        Log.Info("After ParseAssemblyReferencesAsync");
         await Task.WhenAll(assemblyParsers.Select(parser => parser.ParseTypesAsync()));
-        Log.Info("After ParseTypesAsync");
         await Task.WhenAll(assemblyParsers.Select(parser => parser.ParseTypeMembersAsync()));
-        Log.Info("After ParseTypeMembersAsync");
-
-        // await Parallel.ForEachAsync(
-        //     assemblyParsers,
-        //     option,
-        //     async (parser, _) => await parser.ParseAssemblyModuleAsync()
-        // );
-        // await Parallel.ForEachAsync(
-        //     assemblyParsers,
-        //     option,
-        //     async (parser, _) => await parser.ParseAssemblyReferencesAsync(internalModules)
-        // );
-        // await Parallel.ForEachAsync(assemblyParsers, option, async (parser, _) => await parser.ParseTypesAsync());
-        // await Parallel.ForEachAsync(assemblyParsers, option, async (parser, _) => await parser.ParseTypeMembersAsync());
-    }
-
-    static ParallelOptions GetParallelOptions()
-    {
-        // Leave room for UI thread
-        int workerThreadsCount = Math.Max(Environment.ProcessorCount - 1, 1);
-
-        // workerThreadsCount = 1;
-        var option = new ParallelOptions { MaxDegreeOfParallelism = workerThreadsCount };
-        // Log.Debug($"Parallelism: {workerThreadsCount}");
-        return option;
     }
 }

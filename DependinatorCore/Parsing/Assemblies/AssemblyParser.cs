@@ -58,6 +58,7 @@ internal class AssemblyParser : IDisposable
         if (assemblyDefinition is null)
             return R.Error($"Failed to read assembly {assemblyPath}");
 
+        Log.Info("Parsing assembly ", assemblyPath);
         return new AssemblyParser(assemblyPath, assemblyDefinition, projectPath, parentName, items);
     }
 
