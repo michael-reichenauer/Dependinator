@@ -25,6 +25,10 @@
             {
                 "command": "dependinator.open",
                 "title": "Dependinator: Open"
+            },
+            {
+                "command": "dependinator.installInDevContainer",
+                "title": "Dependinator: Install in Dev Container"
             }
         ]
     },

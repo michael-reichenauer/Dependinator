@@ -9,6 +9,8 @@ import type { WebviewMessage } from "./types";
 import { createDependinatorWebviewPanel, registerWebviewMessageHandler } from "./webview";
 
 const commandId = "dependinator.open";
+const installInDevContainerCommandId = "dependinator.installInDevContainer";
+const extensionId = "michaelreichenauer.dependinator";
 
 // Track the LSP client and the last active webview to route notifications.
 let languageClient: LanguageClient | undefined;
@@ -16,6 +18,37 @@ let languageClientPromise: Promise<LanguageClient | undefined> | undefined;
 let activePanel: vscode.WebviewPanel | undefined;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    const installCommand = vscode.commands.registerCommand(installInDevContainerCommandId, async () => {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
+        const isRemoteWorkspace = !!workspaceFolder && workspaceFolder.scheme !== "file";
+        const isRemoteExtensionHost = context.extensionUri.scheme !== "file";
+
+        if (isRemoteExtensionHost) {
+            vscode.window.showInformationMessage("Dependinator is already installed in the dev container.");
+            return;
+        }
+
+        if (!isRemoteWorkspace) {
+            vscode.window.showInformationMessage(
+                "Open a Dev Container workspace to install Dependinator in the container."
+            );
+            return;
+        }
+
+        try {
+            await vscode.commands.executeCommand("workbench.view.extensions");
+            await vscode.commands.executeCommand("workbench.extensions.search", `@id:${extensionId}`);
+        } catch (error) {
+            console.warn("Failed to open Extensions view for dev container install.", error);
+            await vscode.commands.executeCommand("workbench.view.extensions");
+        }
+
+        vscode.window.showInformationMessage(
+            "In the Extensions view, select Dependinator and choose Install in Dev Container."
+        );
+    });
+    context.subscriptions.push(installCommand);
+
     // Web extensions can't start a .NET process, so skip the server there.
     const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
     languageClientPromise = isWeb

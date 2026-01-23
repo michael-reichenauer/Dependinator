@@ -7,6 +7,19 @@ export async function startLanguageServer(
     console.log("Starting Language Server in Extension");
     // Prefer a prebuilt DLL; fallback to `dotnet run` without build/restore noise.
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const isRemoteWorkspace = !!workspaceFolder && workspaceFolder.scheme !== "file";
+    const isRemoteExtensionHost = context.extensionUri.scheme !== "file";
+    // Avoid launching a server that can't access the workspace filesystem.
+    if (isRemoteWorkspace && !isRemoteExtensionHost) {
+        const action = await vscode.window.showWarningMessage(
+            "Dependinator language server needs to run in the dev container. Install the extension in the dev container to enable it.",
+            "Install in Dev Container"
+        );
+        if (action === "Install in Dev Container") {
+            await vscode.commands.executeCommand("dependinator.installInDevContainer");
+        }
+        return undefined;
+    }
     const workspaceProject = workspaceFolder
         ? vscode.Uri.joinPath(
             workspaceFolder,
@@ -110,7 +123,9 @@ export async function startLanguageServer(
         NUGET_XMLDOC_MODE: "skip",
         DOTNET_CLI_TELEMETRY_OPTOUT: "1"
     };
-    const executableOptions = workspaceFolder ? { cwd: workspaceFolder.fsPath, env: environment } : { env: environment };
+    const executableOptions = workspaceFolder
+        ? { cwd: workspaceFolder.fsPath, env: environment }
+        : { env: environment };
     const serverOptions: ServerOptions = {
         run: {
             command: serverCommand,
