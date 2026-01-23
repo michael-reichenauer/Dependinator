@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Dependinator;
+namespace DependinatorCore;
 
 public static class Build
 {
@@ -14,6 +14,8 @@ public static class Build
     public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
     public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
     public static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+    public static string Info => $"{Version}, {Time}, ({CommitSid}, {RuntimeInformation.RuntimeIdentifier})";
 
     public static Version GetVersion() => typeof(Build).Assembly.GetName().Version!;
 

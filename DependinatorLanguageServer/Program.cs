@@ -26,13 +26,7 @@ internal class Program
                     })
                     .WithHandler<LspMessageHandler>()
                     .WithHandler<WorkspaceFolderChangeHandler>()
-                    .OnStarted(
-                        (server, _) =>
-                        {
-                            Log.Info($"Started Dependinator Language Server ++++++++++++++++++++++++++++++++");
-                            return Task.CompletedTask;
-                        }
-                    )
+                    .OnStarted((_, _) => Task.CompletedTask)
                     .OnInitialize(
                         (server, initializeParams, ct) =>
                         {
@@ -45,13 +39,14 @@ internal class Program
                                     Output: line => server.SendNotification(LogInfo.Method, new LogInfo("info", line))
                                 )
                             );
-                            Log.Info($"Initializing Dependinator Language Server  ...");
+                            Log.Info($"#### Starting Dependinator LSP {Build.Info} ...");
+
                             server.Services.GetRequiredService<IHost>().SetIsVsCodeExt();
 
                             // Register remote services callable from the WebView WASM UI
                             server.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
                             server.UseJsonRpc();
-                            Log.Info("Initialized JsonRpc -----------------------------");
+                            Log.Info("Initialized JsonRpc");
 
                             var workspaceFolderService = server.Services.GetRequiredService<IWorkspaceFolderService>();
                             workspaceFolderService.Initialize(initializeParams, ct);

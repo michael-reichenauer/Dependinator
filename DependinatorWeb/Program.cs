@@ -1,5 +1,6 @@
 using Dependinator;
 using Dependinator.Shared;
+using DependinatorCore;
 using DependinatorCore.Rpc;
 using DependinatorCore.Shared;
 using DependinatorCore.Utils;
@@ -12,7 +13,7 @@ public class Program
     public static void Main(string[] args)
     {
         ConfigLogger.Configure(new HostLoggingSettings(EnableFileLog: true, EnableConsoleLog: false));
-        Log.Info($"Starting Dependinator Web {Build.ProductVersion}, {Build.Time}, ({Build.CommitSid}) ...");
+        Log.Info($"#### Starting Dependinator Web {Build.Info} ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 
         var builder = WebApplication.CreateBuilder(args);
