@@ -269,7 +269,6 @@ internal class SolutionParser : IDisposable
     async Task ParseSolutionAssembliesAsync()
     {
         var internalModules = assemblyParsers.Select(p => p.ModuleName).ToList();
-        // Log.Debug($"Solution: {internalModules.Count} internal modules:\n  {string.Join("\n  ", internalModules)}");
 
         await Task.WhenAll(assemblyParsers.Select(parser => parser.ParseAssemblyModuleAsync()));
         await Task.WhenAll(assemblyParsers.Select(parser => parser.ParseAssemblyReferencesAsync(internalModules)));
