@@ -33,7 +33,7 @@ export function registerWebviewMessageHandler(
     panel.webview.onDidReceiveMessage(message => {
         if (!message || typeof message.type !== "string")
             return;
-        // console.log("message from ui:", message);
+        // console.log("DPR: message from ui:", message);
         return handler(message, panel);
     });
 }

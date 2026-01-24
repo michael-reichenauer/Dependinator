@@ -95,7 +95,6 @@ export async function startLanguageServer(
         if (serverDll) {
             serverArgs = [serverDll.fsPath];
             console.log("DPR: Using server dll:", serverDll.fsPath);
-
         } else {
             const projectCandidates = [workspaceProject, extensionProject].filter(
                 (candidate): candidate is vscode.Uri => !!candidate
@@ -110,6 +109,7 @@ export async function startLanguageServer(
                     "--no-restore",
                     "--nologo"
                 ];
+                console.log("DPR: Using server project:", project.fsPath);
             } else {
                 console.warn("Dependinator language server project not found.");
                 return undefined;
