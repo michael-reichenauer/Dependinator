@@ -4,7 +4,7 @@ import type { LanguageClient, LanguageClientOptions, ServerOptions } from "vscod
 export async function startLanguageServer(
     context: vscode.ExtensionContext
 ): Promise<LanguageClient | undefined> {
-    console.log("Starting Language Server in Extension");
+    console.log("DPR: Starting Language Server in Extension");
     // Prefer a prebuilt DLL; fallback to `dotnet run` without build/restore noise.
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
     const isRemoteWorkspace = !!workspaceFolder && workspaceFolder.scheme !== "file";
@@ -27,7 +27,7 @@ export async function startLanguageServer(
             "DependinatorLanguageServer.csproj"
         )
         : undefined;
-    console.log("workspaceProject", workspaceProject);
+    console.log("DPR: workspaceProject", workspaceProject);
 
     const extensionProject = vscode.Uri.joinPath(
         context.extensionUri,
@@ -35,7 +35,7 @@ export async function startLanguageServer(
         "DependinatorLanguageServer",
         "DependinatorLanguageServer.csproj"
     );
-    console.log("extensionProject", extensionProject);
+    console.log("DPR: extensionProject", extensionProject);
 
     const serverExeName = process.platform === "win32" ? "DependinatorLanguageServer.exe" : "DependinatorLanguageServer";
     const runtimeIdentifier = getRuntimeIdentifier();
@@ -54,7 +54,7 @@ export async function startLanguageServer(
             serverExeName
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
-    console.log("serverExeCandidates", serverExeCandidates);
+    console.log("DPR: serverExeCandidates", serverExeCandidates);
 
     const serverDllCandidates: vscode.Uri[] = [
         vscode.Uri.joinPath(
@@ -81,7 +81,7 @@ export async function startLanguageServer(
             "DependinatorLanguageServer.dll"
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
-    console.log("serverDllCandidates", serverDllCandidates);
+    console.log("DPR: serverDllCandidates", serverDllCandidates);
 
     let serverCommand = "dotnet";
     let serverArgs: string[] | undefined;
@@ -89,10 +89,13 @@ export async function startLanguageServer(
     if (serverExe) {
         serverCommand = serverExe.fsPath;
         serverArgs = [];
+        console.log("DPR: Using server exe:", serverExe.fsPath);
     } else {
         const serverDll = await firstExisting(serverDllCandidates);
         if (serverDll) {
             serverArgs = [serverDll.fsPath];
+            console.log("DPR: Using server dll:", serverDll.fsPath);
+
         } else {
             const projectCandidates = [workspaceProject, extensionProject].filter(
                 (candidate): candidate is vscode.Uri => !!candidate
@@ -152,9 +155,9 @@ export async function startLanguageServer(
         clientOptions
     );
 
-    console.log("Starting lsp client ...", serverOptions);
+    console.log("DPR: Starting lsp client ...", serverOptions);
     await client.start();
-    console.log("Started lsp client", serverOptions);
+    console.log("DPR: Started lsp client", serverOptions);
     context.subscriptions.push(client);
     return client;
 }
@@ -187,14 +190,14 @@ export function registerUiMessageForwarding(
     getWebview: () => vscode.Webview | undefined
 ): void {
     client.onNotification("ui/message", params => {
-        // console.log("ui/message:", params);
+        // console.log("DPR: ui/message:", params);
         getWebview()?.postMessage({
             type: "ui/message",
             message: params?.message
         });
     });
     client.onNotification("ui/lspReady", params => {
-        console.log("ui/lspReady:", params);
+        console.log("DPR: ui/lspReady:", params);
         getWebview()?.postMessage({
             type: "ui/lspReady",
             message: params?.message
@@ -212,10 +215,10 @@ async function fileExists(uri: vscode.Uri): Promise<boolean> {
 }
 
 async function firstExisting(uris: vscode.Uri[]): Promise<vscode.Uri | undefined> {
-    console.log("Lsp candidate paths: ", uris);
+    console.log("DPR: Lsp candidate paths: ", uris);
     for (const uri of uris) {
         if (await fileExists(uri)) {
-            console.log("Lsp Exist path: ", uri);
+            console.log("DPR: Lsp Exist path: ", uri);
             return uri;
         }
     }
