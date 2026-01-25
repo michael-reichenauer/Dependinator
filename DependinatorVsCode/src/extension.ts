@@ -16,6 +16,26 @@ const extensionId = "michaelreichenauer.dependinator";
 let languageClient: LanguageClient | undefined;
 let languageClientPromise: Promise<LanguageClient | undefined> | undefined;
 let activePanel: vscode.WebviewPanel | undefined;
+let lspReady = false;
+let resolveLspReady: (() => void) | undefined;
+const lspReadyPromise = new Promise<void>(resolve => {
+    resolveLspReady = resolve;
+});
+
+function markLspReady(_params: unknown): void {
+    if (lspReady)
+        return;
+
+    lspReady = true;
+    resolveLspReady?.();
+    resolveLspReady = undefined;
+}
+
+async function waitForLspReady(): Promise<void> {
+    if (lspReady)
+        return;
+    await lspReadyPromise;
+}
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     console.log("DPR: #### Activate extension");
@@ -66,7 +86,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             return;
 
         registerLanguageClientLogging(client);
-        registerUiMessageForwarding(client, () => activePanel?.webview);
+        registerUiMessageForwarding(client, () => activePanel?.webview, markLspReady);
     });
 
     // Command opens the webview hosting the WASM UI.
@@ -89,7 +109,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             const client = await languageClientPromise;
             if (!client) {
                 console.error("No client to send", message);
-                // Forward error message back to WebvView UI
+                // Forward error message back to WebView UI
                 panel.webview.postMessage({
                     type: "ui/error",
                     message: "Language server unavailable"
@@ -98,13 +118,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             }
 
             try {
+                await waitForLspReady();
                 // Forward messages to language server (from WebView UI)
                 await client.sendNotification("lsp/message", {
                     message: message.message
                 });
             } catch (error) {
                 console.error("Failed to send", message);
-                // Forward error message back to WebvView UI
+                // Forward error message back to WebView UI
                 panel.webview.postMessage({
                     type: "ui/error",
                     message: String(error)

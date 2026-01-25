@@ -187,7 +187,8 @@ export function registerLanguageClientLogging(client: LanguageClient): void {
 
 export function registerUiMessageForwarding(
     client: LanguageClient,
-    getWebview: () => vscode.Webview | undefined
+    getWebview: () => vscode.Webview | undefined,
+    onLspReady?: (params: unknown) => void
 ): void {
     client.onNotification("ui/message", params => {
         // console.log("DPR: ui/message:", params);
@@ -198,10 +199,7 @@ export function registerUiMessageForwarding(
     });
     client.onNotification("ui/lspReady", params => {
         console.log("DPR: ui/lspReady:", params);
-        getWebview()?.postMessage({
-            type: "ui/lspReady",
-            message: params?.message
-        });
+        onLspReady?.(params);
     });
 }
 
