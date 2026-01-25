@@ -92,6 +92,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Command opens the webview hosting the WASM UI.
     const disposable = vscode.commands.registerCommand(commandId, () => {
         console.log("DPR: Running command Open Dependinator ...");
+        if (activePanel) {
+            activePanel.reveal(activePanel.viewColumn ?? vscode.ViewColumn.One);
+            return;
+        }
         const panel = createDependinatorWebviewPanel(context);
 
         activePanel = panel;
