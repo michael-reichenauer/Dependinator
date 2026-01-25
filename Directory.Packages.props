@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <ItemGroup>
-    <PackageVersion Include="CSharpier.MsBuild" Version="1.2.1">
+    <PackageVersion Include="CSharpier.MsBuild" Version="1.2.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
@@ -13,19 +13,29 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.1" />
     <PackageVersion Include="MudBlazor" Version="8.15.0" />
-    <PackageVersion Include="Scrutor" Version="6.1.0" />
+    <PackageVersion Include="Scrutor" Version="7.0.0" />
     <PackageVersion Include="ICSharpCode.Decompiler" Version="9.1.0.7988" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.1" />
     <PackageVersion Include="Microsoft.Build" Version="18.0.2" />
     <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageVersion Include="OmniSharp.Extensions.LanguageServer" Version="0.19.1" />
     <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.22.23" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="Verify.Xunit" Version="31.8.0" />
+    <PackageVersion Include="Verify.Xunit" Version="31.9.0" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
+    <DefineConstants>$(DefineConstants);NATIVEAOT</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RunAOTCompilation)' == 'true'">
+    <DefineConstants>$(DefineConstants);WASM_AOT</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup>
     <!-- If you already have NoWarn, just add 7035 or CS7035 to it: -->
     <NoWarn>$(NoWarn);7035</NoWarn>

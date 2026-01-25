@@ -1,44 +1,44 @@
-using System.Configuration;
+using DependinatorCore.Shared;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Shared;
 
-interface IFileService
+interface IBrowserFileService
 {
-    Task<bool> Exists(string path);
-    Task<R> WriteAsync<T>(string path, T content);
-    Task<R<T>> ReadAsync<T>(string path);
-    Task<R<Stream>> ReadStreamAsync(string path);
-    Task<R> DeleteAsync(string path);
     Task<IReadOnlyList<string>> AddAsync(IReadOnlyList<IBrowserFile> browserFiles);
-
-    Task<R<IReadOnlyList<string>>> GetFilePathsAsync();
 }
 
 [Scoped]
-class FileService : IFileService
+class FileService : IBrowserFileService, IFileService
 {
-    static readonly string WebFilesPrefix = "/.dependinator/web-files/";
-
     public static readonly string DBCollectionName = "Files";
 
     const long MaxFileSize = 1024 * 1024 * 10; // 10 MB
 
     readonly IDatabase database;
     readonly IEmbeddedResources embeddedResources;
+    readonly IHostFileSystem hostFileSystem;
+    readonly IHostStoragePaths hostStoragePaths;
 
-    public FileService(IDatabase database, IEmbeddedResources embeddedResources)
+    public FileService(
+        IDatabase database,
+        IEmbeddedResources embeddedResources,
+        IHostFileSystem hostFileSystem,
+        IHostStoragePaths hostStoragePaths
+    )
     {
         this.database = database;
         this.embeddedResources = embeddedResources;
+        this.hostFileSystem = hostFileSystem;
+        this.hostStoragePaths = hostStoragePaths;
     }
 
     public async Task<bool> Exists(string path)
     {
-        if (path == Models.ExampleModel.Path)
+        if (path == ExampleModel.Path)
             return true;
 
-        if (File.Exists(path))
+        if (hostFileSystem.Exists(path))
             return true;
 
         if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName)))
@@ -82,7 +82,7 @@ class FileService : IFileService
                 using var webFileStream = file.OpenReadStream(MaxFileSize);
                 var filesStream = new MemoryStream();
                 await webFileStream.CopyToAsync(filesStream);
-                var modelPath = $"{WebFilesPrefix}{file.Name}";
+                var modelPath = $"{hostStoragePaths.WebFilesPrefix}{file.Name}";
                 var binPath = BinPath(modelPath);
 
                 var fileBytes = filesStream.ToArray();
@@ -103,12 +103,12 @@ class FileService : IFileService
     public async Task<R<Stream>> ReadStreamAsync(string path)
     {
         Log.Info("ReadStream:", path);
-        if (path == Models.ExampleModel.Path)
+        if (path == ExampleModel.Path)
         {
-            return embeddedResources.OpenResource(Models.ExampleModel.Path);
+            return embeddedResources.OpenResourceStream(ExampleModel.Path);
         }
 
-        if (path.StartsWith(WebFilesPrefix))
+        if (path.StartsWith(hostStoragePaths.WebFilesPrefix))
         {
             var binPath = BinPath(path);
             if (!Try(out var fileBase64, out var e, await ReadAsync<string>(binPath)))
@@ -119,7 +119,7 @@ class FileService : IFileService
             return filesStream;
         }
 
-        if (!Try(out var fileStream, out var e2, () => File.OpenRead(path)))
+        if (!Try(out var fileStream, out var e2, () => hostFileSystem.OpenRead(path)))
             return e2;
         return fileStream;
     }

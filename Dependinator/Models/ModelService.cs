@@ -1,6 +1,3 @@
-using System.Reflection;
-using System.Threading.Channels;
-
 namespace Dependinator.Models;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
@@ -48,6 +45,7 @@ class ModelService : IModelService
     readonly IStructureService modelStructureService;
     readonly IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
+    readonly IProgressService progressService;
     readonly ICommandService commandService;
 
     public ModelService(
@@ -56,6 +54,7 @@ class ModelService : IModelService
         IStructureService modelStructureService,
         IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
+        IProgressService progressService,
         ICommandService commandService
     )
     {
@@ -64,6 +63,7 @@ class ModelService : IModelService
         this.modelStructureService = modelStructureService;
         this.persistenceService = persistenceService;
         this.applicationEvents = applicationEvents;
+        this.progressService = progressService;
         this.commandService = commandService;
         this.applicationEvents.SaveNeeded += TriggerSave;
     }
@@ -237,6 +237,7 @@ class ModelService : IModelService
         Clear();
 
         Log.Info("Loading ...", path);
+        using var __ = progressService.Start("Loading model ...");
         using var _ = Timing.Start("Load model", path);
 
         // Try read cached model (with ui layout)
@@ -270,9 +271,11 @@ class ModelService : IModelService
 
     async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
     {
+        using var progress = progressService.Start("Loading cached model ...");
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
             return e;
 
+        progress.SetText("Updating ...");
         var modelInfo = await LoadCachedModelDataAsync(path, model);
         CheckLineVisibility();
 
@@ -281,16 +284,13 @@ class ModelService : IModelService
 
     public async Task<R> RefreshAsync()
     {
-        if (Build.IsWebAssembly) // Not yet supported
-            return R.Ok;
-
         var path = "";
         lock (model.Lock)
         {
             path = model.Path;
         }
 
-        if (!Try(out var e, await ParseAsync(path)))
+        if (!Try(out var e, await ParseAndUpdateAsync(path)))
             return e;
         lock (model.Lock)
         {
@@ -321,20 +321,20 @@ class ModelService : IModelService
 
         if (
             !Try(
-                out Dependinator.Parsing.Source? source,
+                out DependinatorCore.Parsing.Source? source,
                 out var e,
                 await parserService.GetSourceAsync(modelPath, nodeName)
             )
         )
             return e;
 
-        var sourceText = source.Text.Replace("\t", "  "); // The autoformater removes this in Blazor code.
+        var sourceText = source.Text.Replace("\t", "  "); // The auto formatter removes this in Blazor code.
         return new Source(source.Path, sourceText, source.LineNumber);
     }
 
     async Task<R<ModelInfo>> ParseNewModelAsync(string path)
     {
-        if (!Try(out var e, await ParseAsync(path)))
+        if (!Try(out var e, await ParseAndUpdateAsync(path)))
             return e;
 
         lock (model.Lock)
@@ -345,24 +345,33 @@ class ModelService : IModelService
         return new ModelInfo(path, Rect.None, 0);
     }
 
-    async Task<R> ParseAsync(string path)
+    async Task<R> ParseAndUpdateAsync(string path)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
+        using var progress = progressService.Start("Parsing ...");
         //var path = "/workspaces/Dependinator/Dependinator.sln";
 
-        if (!Try(out var reader, out var e, parserService.Parse(path)))
+        Log.Info("Parsing ...");
+
+        if (!Try(out var items, out var e, await ParseAsync(path)))
             return e;
 
-        Log.Info("Adding...");
+        progress.SetText("Updating ...");
         lock (model.Lock)
         {
             model.UpdateStamp = DateTime.UtcNow;
             model.ClearCachedSvg();
         }
 
-        await AddOrUpdateAllItems(reader);
+        await AddOrUpdateAllItems(items);
 
         return R.Ok;
+    }
+
+    async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
+    {
+        using var _ = Timing.Start($"Parsed {path}");
+        return await parserService.ParseAsync(path);
     }
 
     public void TriggerSave()
@@ -429,43 +438,41 @@ class ModelService : IModelService
         return new ModelInfo(path, modelDto.ViewRect, modelDto.Zoom);
     }
 
-    private async Task AddOrUpdateAllItems(ChannelReader<Parsing.IItem> reader)
+    private async Task AddOrUpdateAllItems(IReadOnlyList<Parsing.Item> items)
     {
-        var itemsCount = 0;
-        var t = Timing.Start();
+        using var _ = Timing.Start($"Added or updated {items.Count} items");
         await Task.Run(async () =>
         {
-            while (await reader.WaitToReadAsync())
+            foreach (var batch in items.Chunk(100))
             {
-                var batchItems = new List<Parsing.IItem>();
-                while (reader.TryRead(out var item))
-                {
-                    batchItems.Add(item);
-                    itemsCount++;
-                    if (batchItems.Count >= 500)
-                        break;
-                }
-                AddOrUpdateItems(batchItems);
+                await Task.Yield();
+                AddOrUpdateItems(batch);
             }
+            // while (await reader.WaitToReadAsync())
+            // {
+            //     var batchItems = new List<Parsing.Item>();
+            //     while (reader.TryRead(out var item))
+            //     {
+            //         batchItems.Add(item);
+            //         itemsCount++;
+            //         if (batchItems.Count >= 500)
+            //             break;
+            //     }
+            //     AddOrUpdateItems(batchItems);
+            // }
         });
-        t.Log($"Added or updated {itemsCount} items");
     }
 
-    void AddOrUpdateItems(IReadOnlyList<Parsing.IItem> parsedItems)
+    void AddOrUpdateItems(IReadOnlyList<Parsing.Item> parsedItems)
     {
         lock (model.Lock)
         {
             foreach (var parsedItem in parsedItems)
             {
-                switch (parsedItem)
-                {
-                    case Parsing.Node parsedNode:
-                        modelStructureService.AddOrUpdateNode(parsedNode);
-                        break;
-                    case Parsing.Link parsedLink:
-                        modelStructureService.AddOrUpdateLink(parsedLink);
-                        break;
-                }
+                if (parsedItem.Node is not null)
+                    modelStructureService.AddOrUpdateNode(parsedItem.Node);
+                if (parsedItem.Link is not null)
+                    modelStructureService.AddOrUpdateLink(parsedItem.Link);
             }
         }
     }

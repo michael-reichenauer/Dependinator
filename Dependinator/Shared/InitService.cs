@@ -1,5 +1,4 @@
 using Dependinator.Diagrams;
-using Dependinator.Utils.UI;
 
 namespace Dependinator.Shared;
 
@@ -16,13 +15,15 @@ class InitService : IInitService
     readonly IRecentModelsService recentModelsService;
     readonly IDatabase database;
     readonly ICanvasService canvasService;
+    readonly IVsCodeMessageService vsCodeMessageService;
 
     public InitService(
         IScreenService screenService,
         IPointerEventService mouseEventService,
         IRecentModelsService recentModelsService,
         IDatabase database,
-        ICanvasService canvasService
+        ICanvasService canvasService,
+        IVsCodeMessageService vsCodeMessageService
     )
     {
         this.screenService = screenService;
@@ -30,10 +31,12 @@ class InitService : IInitService
         this.recentModelsService = recentModelsService;
         this.database = database;
         this.canvasService = canvasService;
+        this.vsCodeMessageService = vsCodeMessageService;
     }
 
     public async Task InitAsync(IUIComponent component)
     {
+        await vsCodeMessageService.InitAsync();
         await database.Init([FileService.DBCollectionName]);
         await screenService.InitAsync(component);
         await mouseEventService.InitAsync();

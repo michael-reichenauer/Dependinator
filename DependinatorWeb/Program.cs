@@ -1,7 +1,10 @@
 using Dependinator;
-using Dependinator.Utils;
-using Dependinator.Utils.Logging;
-using MudBlazor.Services;
+using Dependinator.Shared;
+using DependinatorCore;
+using DependinatorCore.Rpc;
+using DependinatorCore.Shared;
+using DependinatorCore.Utils;
+using DependinatorCore.Utils.Logging;
 
 namespace DependinatorWeb;
 
@@ -9,8 +12,8 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        Dependinator.Utils.Logging.ConfigLogger.Enable(isFileLog: true, isConsoleLog: false);
-        Log.Info($"Starting Dependinator {Build.ProductVersion}, {Build.Time}, ({Build.CommitSid}) ...");
+        ConfigLogger.Configure(new HostLoggingSettings(EnableFileLog: true, EnableConsoleLog: false));
+        Log.Info($"#### Starting Dependinator Web {Build.Info} ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 
         var builder = WebApplication.CreateBuilder(args);
@@ -22,27 +25,19 @@ public class Program
                 options.Listen(System.Net.IPAddress.Loopback, 5000); // Listen on port 5000 for HTTP on IPv4
             });
         }
-        builder.Services.AddSingleton<IEmbeddedResources, EmbeddedResources<Program>>();
 
         // Add services to the container.
         builder.Services.AddRazorPages();
         builder.Services.AddServerSideBlazor();
-        builder.Services.AddMudServices();
-
-        builder.Services.Scan(i =>
-            i.FromAssembliesOf(typeof(Dependinator.RootClass))
-                .AddClasses(c => c.WithAttribute<SingletonAttribute>(), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithSingletonLifetime()
-                .AddClasses(c => c.WithAttribute<ScopedAttribute>(), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-                .AddClasses(c => c.WithAttribute<TransientAttribute>(), publicOnly: false)
-                .AsImplementedInterfaces()
-                .WithTransientLifetime()
-        );
+        builder.Services.AddDependinatorServices<Program>();
+        builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
+        builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
+        builder.Services.AddJsonRpcInterfaces(typeof(DependinatorCore.RootClass));
 
         var app = builder.Build();
+        app.Services.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
+        app.Services.UseJsonRpc();
+        app.Services.GetRequiredService<IWorkspaceFileService>().SetWorkspaceFolders(["/workspaces/Dependinator"]);
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())

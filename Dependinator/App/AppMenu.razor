@@ -1,3 +1,4 @@
+@using DependinatorCore
 @inject ICanvasService srv
 @inject Dependinator.Models.IModelService modelService
 @inject IApplicationEvents applicationEvents
@@ -20,17 +21,18 @@
         Fit to Screen
     </MudMenuItem>
 
-    @if (!Build.IsWebAssembly)
-    {
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh">
-            Refresh
-        </MudMenuItem>
-    }
+    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh">
+        Refresh
+    </MudMenuItem>
 
     <MudDivider />
 
     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.OpenFiles">
         Browse Files ...
+    </MudMenuItem>
+
+    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="srv.PingLanguageServer">
+        Ping Language Server
     </MudMenuItem>
 
     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.ToggleTheme">

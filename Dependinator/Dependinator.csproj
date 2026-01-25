@@ -5,8 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Dependinator</RootNamespace>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AssemblyVersion>0.5.*</AssemblyVersion>
-    <Deterministic>false</Deterministic>
   </PropertyGroup>
   <ItemGroup>
     <SupportedPlatform Include="browser" />
@@ -16,11 +14,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="ICSharpCode.Decompiler" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
-    <PackageReference Include="Microsoft.Build" />
-    <PackageReference Include="Mono.Cecil" />
     <PackageReference Include="MudBlazor" />
-    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Scrutor" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Shared/Shared.csproj" />
+    <ProjectReference Include="../DependinatorCore/DependinatorCore.csproj" />
   </ItemGroup>
 </Project>

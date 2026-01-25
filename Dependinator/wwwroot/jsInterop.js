@@ -27,6 +27,28 @@ export function clickElement(elementId) {
   document.getElementById(elementId).click();
 }
 
+export function postVsCodeMessage(message) {
+  if (window.dependinator && typeof window.dependinator.postMessage === "function") {
+    window.dependinator.postMessage(message);
+    return true;
+  }
+  return false;
+}
+
+export function isVsCodeWebView() {
+  return !!(window.dependinator && typeof window.dependinator.postMessage === "function");
+}
+
+export function listenToVsCodeMessages(instance, functionName) {
+  window.addEventListener("message", (event) => {
+    if (!event || !event.data || !event.data.type) {
+      return;
+    }
+
+    instance.invokeMethodAsync(functionName, event.data);
+  });
+}
+
 export function getBoundingRectangle(elementId) {
   var element = document.getElementById(elementId);
   if (element == null) {
@@ -56,7 +78,7 @@ export function getWindowSizeDetails(parm) {
 
 export function addMouseEventListener(elementId, eventName, instance, functionName) {
   function eventHandler(event) {
-    // console.log("mouse", event);
+    // console.log("DPR: mouse", event);
     instance.invokeMethodAsync(functionName, {
       Type: eventName,
       TargetId: event.target.id,

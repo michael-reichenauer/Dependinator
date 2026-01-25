@@ -88,6 +88,59 @@
 			"command": "host start",
 			"isBackground": true,
 			"problemMatcher": "$func-dotnet-watch"
+		},
+		{
+			"label": "Dependinator: Install Extension Dependencies",
+			"type": "shell",
+			"command": "npm install",
+			"options": {
+				"cwd": "${workspaceFolder}/DependinatorVsCode"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Dependinator: Compile Extension",
+			"type": "shell",
+			"command": "npm run compile",
+			"options": {
+				"cwd": "${workspaceFolder}/DependinatorVsCode"
+			},
+			"problemMatcher": "$tsc"
+		},
+		{
+			"label": "Dependinator: Build Solution",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"${workspaceFolder}/Dependinator.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "Dependinator: Prepare WASM",
+			"type": "shell",
+			"command": "bash DependinatorVsCode/scripts/prepare-wasm.sh",
+			"problemMatcher": []
+		},
+		{
+			"label": "Dependinator: Prepare LSP",
+			"type": "shell",
+			"command": "bash DependinatorVsCode/scripts/prepare-server.sh",
+			"problemMatcher": []
+		},
+		{
+			"label": "Dependinator: Prepare and Compile Extension",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"Dependinator: Prepare WASM",
+				"Dependinator: Prepare LSP",
+				"Dependinator: Install Extension Dependencies",
+				"Dependinator: Compile Extension"
+			],
+			"problemMatcher": []
 		}
 	]
 }

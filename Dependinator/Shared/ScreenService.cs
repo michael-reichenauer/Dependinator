@@ -1,5 +1,4 @@
 using Dependinator.Models;
-using Dependinator.Utils.UI;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Diagrams;
@@ -98,7 +97,7 @@ class ScreenService : IScreenService
         {
             applicationEvents.TriggerUIStateChanged();
             applicationEvents.TriggerSaveNeeded();
-            Log.Info($"Resized: {newSwgRect}");
+            // Log.Info($"Resized: {newSwgRect}");
         }
     }
 

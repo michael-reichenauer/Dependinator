@@ -1,0 +1,8 @@
+dist/
+node_modules/
+media/
+!media/.gitkeep
+.publish/
+server/
+artifacts/
+*.vsix

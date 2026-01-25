@@ -1,17 +1,14 @@
 global using Dependinator.Shared;
-global using Dependinator.Utils;
-global using Dependinator.Utils.Logging;
-global using static Dependinator.Utils.Result;
+global using DependinatorCore.Utils;
+global using DependinatorCore.Utils.Logging;
+global using static DependinatorCore.Utils.Result;
+global using Parsing = DependinatorCore.Parsing;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Client")]
+[assembly: InternalsVisibleTo("Dependinator.Wasm")]
 [assembly: InternalsVisibleTo("DependinatorWeb")]
 [assembly: InternalsVisibleTo("Dependinator.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // DI and tests access
 
 [assembly: AssemblyDescription("Dependinator is a tool for visualizing and exploring software dependencies.")]
-
-namespace Dependinator;
-
-class RootClass { }

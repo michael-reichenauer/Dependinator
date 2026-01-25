@@ -27,8 +27,8 @@ jobs:
         run: dotnet workload install wasm-tools --skip-manifest-update
       - name: Restore
         run: dotnet restore Dependinator.sln
-      - name: Publish Client
-        run: dotnet publish Client/Client.csproj -c Release -o Client/publish
+      - name: Publish Dependinator WASM
+        run: dotnet publish DependinatorWasm/DependinatorWasm.csproj -c Release -o DependinatorWasm/publish
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -38,7 +38,7 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "Client/publish/wwwroot" # Prebuilt app content
+          app_location: "DependinatorWasm/publish/wwwroot" # Prebuilt app content
           api_location: "" # No API deploy
           skip_app_build: true
           skip_api_build: true

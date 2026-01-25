@@ -1,5 +1,7 @@
 using Dependinator.Diagrams.Svg;
 using Dependinator.Models;
+using DependinatorCore.Parsing;
+using DependinatorCore.Shared;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Diagrams;
@@ -20,6 +22,7 @@ interface ICanvasService
 
     Task InitAsync();
     void OpenFiles();
+    void PingLanguageServer();
     void ToggleTheme();
     public void Remove();
     void Refresh();
@@ -40,7 +43,9 @@ class CanvasService : ICanvasService
     readonly ISvgService svgService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInteropService;
+    readonly IParserServiceX parserServiceX;
     readonly IFileService fileService;
+    readonly IBrowserFileService browserFileService;
     readonly IRecentModelsService recentModelsService;
     readonly IInteractionService interactionService;
 
@@ -51,7 +56,9 @@ class CanvasService : ICanvasService
         ISvgService svgService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
+        IParserServiceX parserServiceX,
         IFileService fileService,
+        IBrowserFileService browserFileService,
         IRecentModelsService recentModelsService,
         IInteractionService interactionService
     )
@@ -62,7 +69,9 @@ class CanvasService : ICanvasService
         this.svgService = svgService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
+        this.parserServiceX = parserServiceX;
         this.fileService = fileService;
+        this.browserFileService = browserFileService;
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
     }
@@ -119,7 +128,7 @@ class CanvasService : ICanvasService
 
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
-        var paths = await fileService.AddAsync(browserFiles);
+        var paths = await browserFileService.AddAsync(browserFiles);
 
         var modelPath = paths.First();
         await LoadAsync(modelPath);
@@ -149,6 +158,13 @@ class CanvasService : ICanvasService
     public async void OpenFiles()
     {
         await jSInteropService.Call("clickElement", "inputfile");
+    }
+
+    public async void PingLanguageServer()
+    {
+        Log.Info("Calling with 'SomePath'");
+        var resp = await parserServiceX.ParseXXAsync("SomePath");
+        Log.Info("The response was:", resp);
     }
 
     public void ToggleTheme()
