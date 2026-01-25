@@ -58,6 +58,7 @@ internal class AssemblyParser : IDisposable
         if (assemblyDefinition is null)
             return R.Error($"Failed to read assembly {assemblyPath}");
 
+        Log.Info("Parsing assembly", assemblyPath);
         return new AssemblyParser(assemblyPath, assemblyDefinition, projectPath, parentName, items);
     }
 
@@ -77,14 +78,11 @@ internal class AssemblyParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
-        return await Task.Run(async () =>
-        {
-            await ParseAssemblyModuleAsync();
-            await ParseAssemblyReferencesAsync([]);
-            await ParseTypesAsync();
-            await ParseTypeMembersAsync();
-            return R.Ok;
-        });
+        await ParseAssemblyModuleAsync();
+        await ParseAssemblyReferencesAsync([]);
+        await ParseTypesAsync();
+        await ParseTypeMembersAsync();
+        return R.Ok;
     }
 
     public async Task ParseAssemblyModuleAsync()

@@ -11,6 +11,7 @@ export type WebviewMessageHandler = (
 export function createDependinatorWebviewPanel(
     context: vscode.ExtensionContext
 ): vscode.WebviewPanel {
+    console.log("DPR: createDependinatorWebviewPanel ...");
     const panel = vscode.window.createWebviewPanel(
         viewType,
         "Dependinator",
@@ -30,10 +31,11 @@ export function registerWebviewMessageHandler(
     panel: vscode.WebviewPanel,
     handler: WebviewMessageHandler
 ): void {
+    console.log("DPR: registerWebviewMessageHandler");
     panel.webview.onDidReceiveMessage(message => {
         if (!message || typeof message.type !== "string")
             return;
-        // console.log("message from ui:", message);
+        // console.log("DPR: message from ui:", message);
         return handler(message, panel);
     });
 }

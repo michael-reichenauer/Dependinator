@@ -1,5 +1,6 @@
 ﻿using System.Threading.Channels;
 using DependinatorCore.Rpc;
+using ICSharpCode.Decompiler.TypeSystem;
 
 namespace DependinatorCore.Parsing;
 
@@ -37,20 +38,30 @@ class ParserService : IParserService
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
     {
-        Channel<Item> channel = Channel.CreateUnbounded<Item>();
-        IItems items = new ChannelItemsAdapter(channel.Writer);
-
-        if (!Try(out var parser, out var e, GetParser(path)))
-            return R.Error($"File not supported: {path}", e);
-
-        await Task.Run(async () =>
+        try
         {
+            Channel<Item> channel = Channel.CreateUnbounded<Item>();
+            var items = new ChannelItemsAdapter(channel.Writer);
+
+            if (!Try(out var parser, out var e, GetParser(path)))
+                return R.Error($"File not supported: {path}", e);
+
+            // await Task.Run(async () =>
+            // {
             using var t = Timing.Start($"Parsed {path}");
             await parser.ParseAsync(path, items);
             channel.Writer.Complete();
-        });
+            // });
 
-        return await channel.Reader.ReadAllAsync().ToListAsync();
+            var allItems = await channel.Reader.ReadAllAsync().ToListAsync();
+            Log.Info($"Returning {allItems.Count} items ({items.NodeCount} nodes, {items.LinkCount} links)");
+            return allItems;
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, "Error in parser");
+            return R.Error("Failed to parse", e);
+        }
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
@@ -95,8 +106,33 @@ class ParserService : IParserService
 
     sealed class ChannelItemsAdapter(ChannelWriter<Item> writer) : IItems
     {
-        public async Task SendAsync(Node node) => await writer.WriteAsync(new Item(node, null));
+        public int NodeCount;
+        public int LinkCount;
 
-        public async Task SendAsync(Link link) => await writer.WriteAsync(new Item(null, link));
+        public async Task SendAsync(Node node)
+        {
+            try
+            {
+                NodeCount++;
+                await writer.WriteAsync(new Item(node, null));
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, "Error sending node");
+            }
+        }
+
+        public async Task SendAsync(Link link)
+        {
+            try
+            {
+                LinkCount++;
+                await writer.WriteAsync(new Item(null, link));
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, "Error sending link");
+            }
+        }
     }
 }

@@ -1,0 +1,10 @@
+.publish/**
+.vscode-test/**
+artifacts/**
+scripts/**
+src/**
+tsconfig*.json
+**/*.ts
+**/*.map
+*.vsix
+.gitignore

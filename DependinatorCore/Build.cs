@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Dependinator;
+namespace DependinatorCore;
 
 public static class Build
 {
@@ -15,7 +15,42 @@ public static class Build
     public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
     public static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
+    public static string Info =>
+        $"{Version}, {Time}, ({CommitSid}, {RuntimeInformation.RuntimeIdentifier}, {BuildMode}, {AotJitMode})";
+
     public static Version GetVersion() => typeof(Build).Assembly.GetName().Version!;
+
+    public static bool IsDebug
+    {
+#if DEBUG
+        get => true;
+#else
+        get => false;
+#endif
+    }
+
+    public static bool IsNativeAot
+    {
+#if NATIVEAOT
+        get => true;
+#else
+        get => false;
+#endif
+    }
+
+    public static bool IsWasmAot
+    {
+#if WASM_AOT
+        get => true;
+#else
+        get => false;
+#endif
+    }
+
+    public static string BuildMode => IsDebug ? "IsDebug" : "IsRelease";
+
+    public static bool IsAot => IsNativeAot || IsWasmAot;
+    public static string AotJitMode => IsAot ? "IsAot" : "IsNotAot";
 
     public static Version GetProductVersion()
     {

@@ -28,12 +28,12 @@ internal class MemberParser
 
     public async Task AddTypesMembersAsync(IEnumerable<TypeData> typeInfos)
     {
-        typeInfos.ForEach(async t => await AddTypeMembersAsync(t));
+        await typeInfos.ForEachAsync(AddTypeMembersAsync);
 
         await methodParser.AddAllMethodBodyLinksAsync();
     }
 
-    Task AddTypeMembersAsync(TypeData typeData)
+    async Task AddTypeMembersAsync(TypeData typeData)
     {
         TypeDefinition type = typeData.Type;
         Node typeNode = typeData.Node;
@@ -41,14 +41,15 @@ internal class MemberParser
         if (typeData.IsAsyncStateType)
         {
             methodParser.AddAsyncStateType(typeData);
-            return Task.CompletedTask;
+            return;
         }
 
         try
         {
-            type.Fields.Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(async member =>
-                    await AddMemberAsync(
+            await type
+                .Fields.Where(member => !Name.IsCompilerGenerated(member.Name))
+                .ForEachAsync(member =>
+                    AddMemberAsync(
                         member,
                         typeNode,
                         member.Attributes.HasFlag(FieldAttributes.Private),
@@ -56,9 +57,10 @@ internal class MemberParser
                     )
                 );
 
-            type.Events.Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(async member =>
-                    await AddMemberAsync(
+            await type
+                .Events.Where(member => !Name.IsCompilerGenerated(member.Name))
+                .ForEachAsync(member =>
+                    AddMemberAsync(
                         member,
                         typeNode,
                         (member.AddMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
@@ -67,9 +69,10 @@ internal class MemberParser
                     )
                 );
 
-            type.Properties.Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(async member =>
-                    await AddMemberAsync(
+            await type
+                .Properties.Where(member => !Name.IsCompilerGenerated(member.Name))
+                .ForEachAsync(member =>
+                    AddMemberAsync(
                         member,
                         typeNode,
                         (member.GetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
@@ -78,9 +81,10 @@ internal class MemberParser
                     )
                 );
 
-            type.Methods.Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(async member =>
-                    await AddMemberAsync(
+            await type
+                .Methods.Where(member => !Name.IsCompilerGenerated(member.Name))
+                .ForEachAsync(member =>
+                    AddMemberAsync(
                         member,
                         typeNode,
                         member.Attributes.HasFlag(MethodAttributes.Private),
@@ -88,14 +92,14 @@ internal class MemberParser
                     )
                 );
 
-            type.Methods.Where(member => Name.IsCompilerGenerated(member.Name))
-                .ForEach(async member => await AddCompilerGeneratedMemberAsync(member, typeNode, type));
+            await type
+                .Methods.Where(member => Name.IsCompilerGenerated(member.Name))
+                .ForEachAsync(member => AddCompilerGeneratedMemberAsync(member, typeNode, type));
         }
         catch (Exception e) when (e.IsNotFatal())
         {
             Log.Exception(e, $"Failed to parse type members for {type}");
         }
-        return Task.CompletedTask;
     }
 
     async Task AddMemberAsync(IMemberDefinition memberInfo, Node parentTypeNode, bool isPrivate, MemberType memberType)

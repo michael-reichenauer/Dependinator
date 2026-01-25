@@ -126,11 +126,17 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "Dependinator: Prepare LSP",
+			"type": "shell",
+			"command": "bash DependinatorVsCode/scripts/prepare-server.sh",
+			"problemMatcher": []
+		},
+		{
 			"label": "Dependinator: Prepare and Compile Extension",
 			"dependsOrder": "sequence",
 			"dependsOn": [
-				"Dependinator: Build Solution",
 				"Dependinator: Prepare WASM",
+				"Dependinator: Prepare LSP",
 				"Dependinator: Install Extension Dependencies",
 				"Dependinator: Compile Extension"
 			],

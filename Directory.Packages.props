@@ -28,6 +28,14 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Verify.Xunit" Version="31.9.0" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
+    <DefineConstants>$(DefineConstants);NATIVEAOT</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RunAOTCompilation)' == 'true'">
+    <DefineConstants>$(DefineConstants);WASM_AOT</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup>
     <!-- If you already have NoWarn, just add 7035 or CS7035 to it: -->
     <NoWarn>$(NoWarn);7035</NoWarn>

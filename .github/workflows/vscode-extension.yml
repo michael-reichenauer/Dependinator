@@ -1,0 +1,98 @@
+name: Build VS Code Extension
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish to VS Code Marketplace (requires VSCE_PAT)
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    outputs:
+      new_sha: ${{ steps.set-outputs.outputs.new_sha }}
+      new_version: ${{ steps.set-outputs.outputs.new_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump extension version
+        run: |
+          cd DependinatorVsCode
+          npm version patch -m "Bump VS Code extension to %s"
+
+      - name: Push version commit and tag
+        run: git push origin HEAD:${GITHUB_REF_NAME} --follow-tags
+
+      - name: Set outputs
+        id: set-outputs
+        run: |
+          echo "new_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "new_version=$(node -p \"require('./DependinatorVsCode/package.json').version\")" >> $GITHUB_OUTPUT
+
+  build-vsix:
+    needs: bump-version
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - linux-x64
+          - linux-arm64
+          - win32-x64
+          - win32-arm64
+          - darwin-x64
+          - darwin-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump-version.outputs.new_sha }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install npm dependencies
+        run: npm ci
+        working-directory: DependinatorVsCode
+
+      - name: Package extension
+        run: npm run package:${{ matrix.target }}
+        working-directory: DependinatorVsCode
+
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependinator-${{ matrix.target }}-vsix
+          path: DependinatorVsCode/*.vsix
+          if-no-files-found: error
+
+      - name: Publish to Marketplace
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+        run: npx vsce publish --target ${{ matrix.target }} -p "$VSCE_PAT"
+        working-directory: DependinatorVsCode
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}

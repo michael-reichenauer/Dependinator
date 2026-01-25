@@ -4,9 +4,22 @@ import type { LanguageClient, LanguageClientOptions, ServerOptions } from "vscod
 export async function startLanguageServer(
     context: vscode.ExtensionContext
 ): Promise<LanguageClient | undefined> {
-    console.log("Starting Language Server in Extension");
+    console.log("DPR: Starting Language Server in Extension");
     // Prefer a prebuilt DLL; fallback to `dotnet run` without build/restore noise.
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const isRemoteWorkspace = !!workspaceFolder && workspaceFolder.scheme !== "file";
+    const isRemoteExtensionHost = context.extensionUri.scheme !== "file";
+    // Avoid launching a server that can't access the workspace filesystem.
+    if (isRemoteWorkspace && !isRemoteExtensionHost) {
+        const action = await vscode.window.showWarningMessage(
+            "Dependinator language server needs to run in the dev container. Install the extension in the dev container to enable it.",
+            "Install in Dev Container"
+        );
+        if (action === "Install in Dev Container") {
+            await vscode.commands.executeCommand("dependinator.installInDevContainer");
+        }
+        return undefined;
+    }
     const workspaceProject = workspaceFolder
         ? vscode.Uri.joinPath(
             workspaceFolder,
@@ -14,35 +27,36 @@ export async function startLanguageServer(
             "DependinatorLanguageServer.csproj"
         )
         : undefined;
+    console.log("DPR: workspaceProject", workspaceProject);
+
     const extensionProject = vscode.Uri.joinPath(
         context.extensionUri,
         "..",
         "DependinatorLanguageServer",
         "DependinatorLanguageServer.csproj"
     );
-    const serverDllCandidates: vscode.Uri[] = [
+    console.log("DPR: extensionProject", extensionProject);
 
-        // These opened language server in open folder in debugged Extension
-        // workspaceFolder
-        //     ? vscode.Uri.joinPath(
-        //         workspaceFolder,
-        //         "DependinatorLanguageServer",
-        //         "bin",
-        //         "Debug",
-        //         "net10.0",
-        //         "DependinatorLanguageServer.dll"
-        //     )
-        //     : undefined,
-        // workspaceFolder
-        //     ? vscode.Uri.joinPath(
-        //         workspaceFolder,
-        //         "DependinatorLanguageServer",
-        //         "bin",
-        //         "Release",
-        //         "net10.0",
-        //         "DependinatorLanguageServer.dll"
-        //     )
-        //     : undefined,
+    const serverExeName = process.platform === "win32" ? "DependinatorLanguageServer.exe" : "DependinatorLanguageServer";
+    const runtimeIdentifier = getRuntimeIdentifier();
+    const serverExeCandidates: vscode.Uri[] = [
+        runtimeIdentifier
+            ? vscode.Uri.joinPath(
+                context.extensionUri,
+                "server",
+                runtimeIdentifier,
+                serverExeName
+            )
+            : undefined,
+        vscode.Uri.joinPath(
+            context.extensionUri,
+            "server",
+            serverExeName
+        )
+    ].filter((candidate): candidate is vscode.Uri => !!candidate);
+    console.log("DPR: serverExeCandidates", serverExeCandidates);
+
+    const serverDllCandidates: vscode.Uri[] = [
         vscode.Uri.joinPath(
             context.extensionUri,
             "server",
@@ -67,28 +81,39 @@ export async function startLanguageServer(
             "DependinatorLanguageServer.dll"
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
+    console.log("DPR: serverDllCandidates", serverDllCandidates);
 
+    let serverCommand = "dotnet";
     let serverArgs: string[] | undefined;
-    const serverDll = await firstExisting(serverDllCandidates);
-    if (serverDll) {
-        serverArgs = [serverDll.fsPath];
+    const serverExe = await firstExisting(serverExeCandidates);
+    if (serverExe) {
+        serverCommand = serverExe.fsPath;
+        serverArgs = [];
+        console.log("DPR: Using server exe:", serverExe.fsPath);
     } else {
-        const projectCandidates = [workspaceProject, extensionProject].filter(
-            (candidate): candidate is vscode.Uri => !!candidate
-        );
-        const project = await firstExisting(projectCandidates);
-        if (project) {
-            serverArgs = [
-                "run",
-                "--project",
-                project.fsPath,
-                "--no-build",
-                "--no-restore",
-                "--nologo"
-            ];
+        const serverDll = await firstExisting(serverDllCandidates);
+        if (serverDll) {
+            serverArgs = [serverDll.fsPath];
+            console.log("DPR: Using server dll:", serverDll.fsPath);
         } else {
-            console.warn("Dependinator language server project not found.");
-            return undefined;
+            const projectCandidates = [workspaceProject, extensionProject].filter(
+                (candidate): candidate is vscode.Uri => !!candidate
+            );
+            const project = await firstExisting(projectCandidates);
+            if (project) {
+                serverArgs = [
+                    "run",
+                    "--project",
+                    project.fsPath,
+                    "--no-build",
+                    "--no-restore",
+                    "--nologo"
+                ];
+                console.log("DPR: Using server project:", project.fsPath);
+            } else {
+                console.warn("Dependinator language server project not found.");
+                return undefined;
+            }
         }
     }
 
@@ -101,16 +126,18 @@ export async function startLanguageServer(
         NUGET_XMLDOC_MODE: "skip",
         DOTNET_CLI_TELEMETRY_OPTOUT: "1"
     };
-    const executableOptions = workspaceFolder ? { cwd: workspaceFolder.fsPath, env: environment } : { env: environment };
+    const executableOptions = workspaceFolder
+        ? { cwd: workspaceFolder.fsPath, env: environment }
+        : { env: environment };
     const serverOptions: ServerOptions = {
         run: {
-            command: "dotnet",
+            command: serverCommand,
             args: serverArgs,
             transport: TransportKind.stdio,
             options: executableOptions
         },
         debug: {
-            command: "dotnet",
+            command: serverCommand,
             args: serverArgs,
             transport: TransportKind.stdio,
             options: executableOptions
@@ -128,9 +155,9 @@ export async function startLanguageServer(
         clientOptions
     );
 
-    console.log("Starting lsp client ...");
+    console.log("DPR: Starting lsp client ...", serverOptions);
     await client.start();
-    console.log("Started lsp client");
+    console.log("DPR: Started lsp client", serverOptions);
     context.subscriptions.push(client);
     return client;
 }
@@ -160,21 +187,19 @@ export function registerLanguageClientLogging(client: LanguageClient): void {
 
 export function registerUiMessageForwarding(
     client: LanguageClient,
-    getWebview: () => vscode.Webview | undefined
+    getWebview: () => vscode.Webview | undefined,
+    onLspReady?: (params: unknown) => void
 ): void {
     client.onNotification("ui/message", params => {
-        // console.log("ui/message:", params);
+        // console.log("DPR: ui/message:", params);
         getWebview()?.postMessage({
             type: "ui/message",
             message: params?.message
         });
     });
     client.onNotification("ui/lspReady", params => {
-        console.log("ui/lspReady:", params);
-        getWebview()?.postMessage({
-            type: "ui/lspReady",
-            message: params?.message
-        });
+        console.log("DPR: ui/lspReady:", params);
+        onLspReady?.(params);
     });
 }
 
@@ -188,12 +213,31 @@ async function fileExists(uri: vscode.Uri): Promise<boolean> {
 }
 
 async function firstExisting(uris: vscode.Uri[]): Promise<vscode.Uri | undefined> {
-    console.log("Lsp candidate paths: ", uris);
+    console.log("DPR: Lsp candidate paths: ", uris);
     for (const uri of uris) {
         if (await fileExists(uri)) {
-            console.log("Lsp Exist path: ", uri);
+            console.log("DPR: Lsp Exist path: ", uri);
             return uri;
         }
     }
     return undefined;
+}
+
+function getRuntimeIdentifier(): string | undefined {
+    const platform = process.platform;
+    const arch = process.arch;
+    const archSuffix = arch === "x64" ? "x64" : arch === "arm64" ? "arm64" : undefined;
+    if (!archSuffix)
+        return undefined;
+
+    switch (platform) {
+        case "win32":
+            return `win-${archSuffix}`;
+        case "linux":
+            return `linux-${archSuffix}`;
+        case "darwin":
+            return `osx-${archSuffix}`;
+        default:
+            return undefined;
+    }
 }
