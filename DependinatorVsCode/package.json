@@ -32,9 +32,7 @@
         ]
     },
     "scripts": {
-        "bump:version": "node scripts/bump-version.js",
         "compile": "tsc -p tsconfig.node.json && tsc -p tsconfig.web.json",
-        "prebuild:extension": "npm run bump:version",
         "watch": "tsc -w -p tsconfig.node.json",
         "watch:web": "tsc -w -p tsconfig.web.json",
         "prepare:wasm": "bash scripts/prepare-wasm.sh",
