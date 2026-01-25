@@ -44,8 +44,8 @@ jobs:
       - name: Set outputs
         id: set-outputs
         run: |
-          echo "new_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-          echo "new_version=$(node -p \"require('./DependinatorVsCode/package.json').version\")" >> $GITHUB_OUTPUT
+          echo "new_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "new_version=$(node -p 'require(\"./DependinatorVsCode/package.json\").version')" >> "$GITHUB_OUTPUT"
 
   build-vsix:
     needs: bump-version
