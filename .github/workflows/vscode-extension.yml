@@ -34,9 +34,18 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump extension version
+        id: bump_version
         run: |
           cd DependinatorVsCode
-          npm version patch -m "Bump VS Code extension to %s"
+          npm version patch --no-git-tag-version
+          VERSION=$(node -p 'require("./package.json").version')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag version
+        run: |
+          git add DependinatorVsCode/package.json DependinatorVsCode/package-lock.json
+          git commit -m "Bump VS Code extension to v${{ steps.bump_version.outputs.version }}"
+          git tag "v${{ steps.bump_version.outputs.version }}"
 
       - name: Push version commit and tag
         run: git push origin HEAD:${GITHUB_REF_NAME} --follow-tags
@@ -45,7 +54,7 @@ jobs:
         id: set-outputs
         run: |
           echo "new_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "new_version=$(node -p 'require(\"./DependinatorVsCode/package.json\").version')" >> "$GITHUB_OUTPUT"
+          echo "new_version=${{ steps.bump_version.outputs.version }}" >> "$GITHUB_OUTPUT"
 
   build-vsix:
     needs: bump-version
