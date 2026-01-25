@@ -16,8 +16,7 @@ This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
 
 - In vscode.dev, the UI can load, but the .NET language server will be disabled.
 - Use `Dependinator: Install in Dev Container` to jump to the Extensions view and install the extension in a dev container.
-- The default script disables native WASM runtime compilation to avoid needing Python.
-- Use `scripts/prepare-wasm.sh --aot` if you want full AOT and compressed artifacts (requires Python).
+- WASM assets are published in Release without AOT.
 - `publisher` in `package.json` must match your VS Code Marketplace publisher name before publishing.
 - Packaging requires the .NET 10 SDK (see `global.json`) and Node 20+.
 - Installed extensions use a self-contained language server, so `dotnet` is not required at runtime.

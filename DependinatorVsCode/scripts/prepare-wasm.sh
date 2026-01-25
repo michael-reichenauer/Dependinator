@@ -8,23 +8,10 @@ publish_root="$repo_root/DependinatorVsCode/.publish"
 publish_dir="$publish_root/wwwroot"
 target_dir="$repo_root/DependinatorVsCode/media"
 
-enable_aot=false
-if [ "${1:-}" = "--aot" ]; then
-    enable_aot=true
-fi
-
 publish_args=(
     "-c" "Release"
     "-p:PublishDir=$publish_root/"
 )
-
-if [ "$enable_aot" = false ]; then
-    publish_args+=("-p:RunAOTCompilation=")
-    publish_args+=(
-        "-p:WasmGenerateCompressedArtifacts=false"
-        "-p:WasmBuildNative=false"
-    )
-fi
 
 dotnet publish "$wasm_project" "${publish_args[@]}"
 

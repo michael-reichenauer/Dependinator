@@ -9,8 +9,8 @@
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <RunAOTCompilation>true</RunAOTCompilation>
-    <PublishTrimmed>true</PublishTrimmed>
+    <PublishTrimmed>false</PublishTrimmed>
+    <WasmBuildNative>false</WasmBuildNative>
     <WasmGenerateCompressedArtifacts>true</WasmGenerateCompressedArtifacts>
   </PropertyGroup>
   <ItemGroup>
