@@ -1,0 +1,3 @@
+#!/bin/bash
+./build-vscode
+npm run install:vsix --prefix ./DependinatorVsCode
