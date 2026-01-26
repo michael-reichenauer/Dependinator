@@ -56,5 +56,26 @@ public class DecompilerTests
         Assert.Equal(17, source2.LineNumber);
     }
 
+    [Fact]
+    public async Task GetNodeNameAsync()
+    {
+        Decompiler decompiler = new();
+        AssemblyDefinition assemblyDefinition = AssemblyHelper.GetAssemblyDefinition<DecompilerTestClass>();
+        var assemblyTypes = GetAssemblyTypes(assemblyDefinition);
+
+        // Find first type in specified file
+        var isFound = decompiler.TryGetNodeNameForSourceFile(assemblyTypes, CurrentFilePath(), out var nodeName);
+
+        Assert.True(isFound);
+        Assert.Equal(Reference.NodeName<DecompilerTestClass>(), nodeName);
+    }
+
+    IEnumerable<TypeDefinition> GetAssemblyTypes(AssemblyDefinition assemblyDefinition)
+    {
+        return assemblyDefinition.MainModule.Types.Where(type =>
+            !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
+        );
+    }
+
     static string CurrentFilePath([CallerFilePath] string sourceFilePath = "") => sourceFilePath;
 }
