@@ -23,13 +23,23 @@
         "commands": [
             {
                 "command": "dependinator.open",
-                "title": "Dependinator: Open"
+                "title": "Dependinator: Open",
+                "icon": "$(type-hierarchy-sub)"
             },
             {
                 "command": "dependinator.installInDevContainer",
                 "title": "Dependinator: Install in Dev Container"
             }
-        ]
+        ],
+        "menus": {
+            "editor/title": [
+                {
+                    "command": "dependinator.open",
+                    "group": "navigation",
+                    "when": "editorTextFocus"
+                }
+            ]
+        }
     },
     "scripts": {
         "compile": "tsc -p tsconfig.node.json && tsc -p tsconfig.web.json",
