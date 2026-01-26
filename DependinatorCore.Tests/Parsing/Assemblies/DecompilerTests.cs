@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using DependinatorCore.Parsing.Assemblies;
 using DependinatorCore.Tests.Parsing.Utils;
 using Mono.Cecil;
@@ -25,10 +26,13 @@ public class DecompilerTests
         AssemblyDefinition assemblyDefinition = AssemblyHelper.GetAssemblyDefinition<DecompilerTestClass>();
 
         string nodeName = Reference.NodeName<DecompilerTestClass>();
+
         if (!Try(out var source, out var e, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName)))
             Assert.Fail(e.ErrorMessage);
 
         await Verify(source.Text, extension: "cs");
+        Assert.Equal(CurrentFilePath(), source.Path);
+        Assert.Equal(13, source.LineNumber); // Note: Line number is of first member function in type !!
     }
 
     [Fact]
@@ -37,10 +41,20 @@ public class DecompilerTests
         Decompiler decompiler = new();
         AssemblyDefinition assemblyDefinition = AssemblyHelper.GetAssemblyDefinition<DecompilerTestClass>();
 
-        string nodeName = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.FirstFunction));
-        if (!Try(out var source, out var e, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName)))
-            Assert.Fail(e.ErrorMessage);
+        string nodeName1 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.FirstFunction));
+        if (!Try(out var source1, out var e1, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName1)))
+            Assert.Fail(e1.ErrorMessage);
 
-        await Verify(source.Text, extension: "cs");
+        await Verify(source1.Text, extension: "cs");
+        Assert.Equal(CurrentFilePath(), source1.Path);
+        Assert.Equal(13, source1.LineNumber);
+
+        string nodeName2 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.SecondFunction));
+        if (!Try(out var source2, out var e2, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName2)))
+            Assert.Fail(e2.ErrorMessage);
+        Assert.Equal(CurrentFilePath(), source2.Path);
+        Assert.Equal(17, source2.LineNumber);
     }
+
+    static string CurrentFilePath([CallerFilePath] string sourceFilePath = "") => sourceFilePath;
 }

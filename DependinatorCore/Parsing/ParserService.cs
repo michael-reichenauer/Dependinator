@@ -74,25 +74,14 @@ class ParserService : IParserService
         return await parser.GetSourceAsync(path, nodeName);
     }
 
-    public Task<R<string>> TryGetNodeAsync(string path, Source source)
+    public async Task<R<string>> TryGetNodeAsync(string path, Source source)
     {
-        throw new NotImplementedException();
-        // Log.Debug($"Get node for {source} in model {modelPaths}...");
+        Log.Debug($"Get node for {source} in model {path}...");
 
-        // if (!TryGetParser(modelPaths, out IParser parser))
-        // {
-        //     return Error.From($"File not supported: {modelPaths}");
-        // }
+        if (!Try(out var parser, out var e, GetParser(path)))
+            return R.Error($"File not supported: {path}", e);
 
-        // NodeDataSource nodeSource = new NodeDataSource(source.Text, source.LineNumber, source.Path);
-
-        // string nodeName = await parser.GetNodeAsync(modelPaths.ModelPath, nodeSource);
-        // if (nodeName == null)
-        // {
-        //     return M.NoValue;
-        // }
-
-        // return (DataNodeName)nodeName;
+        return await parser.GetNodeAsync(path, source);
     }
 
     R<IParser> GetParser(string path)
