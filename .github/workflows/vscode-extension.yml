@@ -48,7 +48,7 @@ jobs:
           git tag "v${{ steps.bump_version.outputs.version }}"
 
       - name: Push version commit and tag
-        run: git push origin HEAD:${GITHUB_REF_NAME} --follow-tags
+        run: git push origin HEAD:${GITHUB_REF_NAME} --tags
 
       - name: Set outputs
         id: set-outputs
