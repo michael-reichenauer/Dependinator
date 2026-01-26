@@ -44,7 +44,7 @@ jobs:
       - name: Commit and tag version
         run: |
           git add DependinatorVsCode/package.json DependinatorVsCode/package-lock.json
-          git commit -m "Bump VS Code extension to v${{ steps.bump_version.outputs.version }}"
+          git commit -m "VS Code extension v${{ steps.bump_version.outputs.version }}"
           git tag "v${{ steps.bump_version.outputs.version }}"
 
       - name: Push version commit and tag
