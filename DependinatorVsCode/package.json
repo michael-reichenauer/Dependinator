@@ -38,7 +38,7 @@
         "prepare:wasm": "bash scripts/prepare-wasm.sh",
         "prepare:server": "bash scripts/prepare-server.sh",
         "build:extension": "npm run prepare:wasm && npm run prepare:server && npm run compile",
-        "package": "vsce package",
+        "package": "vsce package --out dependinator.vsix",
         "package:linux-x64": "VSCODE_TARGET=linux-x64 vsce package --target linux-x64",
         "package:linux-arm64": "VSCODE_TARGET=linux-arm64 vsce package --target linux-arm64",
         "package:win32-x64": "VSCODE_TARGET=win32-x64 vsce package --target win32-x64",
