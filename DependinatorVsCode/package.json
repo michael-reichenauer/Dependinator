@@ -1,7 +1,7 @@
 {
     "name": "dependinator",
     "displayName": "Dependinator",
-    "description": "Dependinator UI hosted in a VS Code webview.",
+    "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
     "version": "0.5.3",
     "publisher": "michaelreichenauer",
     "license": "MIT",
