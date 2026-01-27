@@ -63,10 +63,15 @@ public class DecompilerTests
 
         // Find first type in specified file
         var fileLocation = new FileLocation(CurrentFilePath(), 0);
-        var isFound = decompiler.TryGetNodeNameForSourceFile(module, fileLocation, out var nodeName);
-
+        var isFound = decompiler.TryGetNodeNameForFileLocation(module, fileLocation, out var nodeName);
         Assert.True(isFound);
         Assert.Equal(Reference.NodeName<DecompilerTestClass>(), nodeName);
+
+        // // Find FirstFunction() in specified file
+        // var fileLocation2 = new FileLocation(CurrentFilePath(), 13);
+        // var isFound2 = decompiler.TryGetNodeNameForFileLocation(module, fileLocation, out var nodeName2);
+        // Assert.True(isFound2);
+        // Assert.Equal(Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.FirstFunction)), nodeName2);
     }
 
     static string CurrentFilePath([CallerFilePath] string sourceFilePath = "") => sourceFilePath;

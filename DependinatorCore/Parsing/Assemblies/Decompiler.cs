@@ -38,7 +38,7 @@ class Decompiler
         return R.Error("Failed to locate source for:\n{nodeName}");
     }
 
-    public bool TryGetNodeNameForSourceFile(ModuleDefinition module, FileLocation fileLocation, out string nodeName)
+    public bool TryGetNodeNameForFileLocation(ModuleDefinition module, FileLocation fileLocation, out string nodeName)
     {
         var assemblyTypes = GetAssemblyTypes(module);
 
