@@ -65,9 +65,15 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
         if (message is null)
             return;
 
+        if (type == "ui/ShowNode")
+        {
+            Log.Info("Show node", message);
+            return;
+        }
+
         if (type == "ui/error")
         {
-            Log.Error("Communication Error", message, message);
+            Log.Error("Communication Error", message);
             return;
         }
 

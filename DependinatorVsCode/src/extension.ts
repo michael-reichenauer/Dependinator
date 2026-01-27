@@ -22,6 +22,50 @@ const lspReadyPromise = new Promise<void>(resolve => {
     resolveLspReady = resolve;
 });
 
+function isCSharpDocument(document: vscode.TextDocument): boolean {
+    if (document.languageId === "csharp")
+        return true;
+
+    return document.fileName.toLowerCase().endsWith(".cs");
+}
+
+function getDocumentPath(document: vscode.TextDocument): string | undefined {
+    if (document.uri.scheme === "file" || document.uri.scheme === "vscode-remote")
+        return document.uri.fsPath;
+
+    const uri = document.uri.toString();
+    return uri.length > 0 ? uri : undefined;
+}
+
+function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
+    console.log("DPR: sendShowNodeForEditor");
+    if (!editor || !activePanel) {
+        console.log("DPR: No editor", editor, activePanel);
+        return;
+    }
+    // if (vscode.window.activeTextEditor !== editor) {
+    //     console.log("DPR: Not not same text editor", vscode.window.activeTextEditor, editor);
+    //     return;
+    // }
+    if (!isCSharpDocument(editor.document)) {
+        console.log("DPR: Not not C#");
+        return;
+    }
+
+    const path = getDocumentPath(editor.document);
+    if (!path) {
+        console.log("DPR: No path");
+        return;
+    }
+
+    const line = editor.selection.active.line + 1;
+    activePanel.webview.postMessage({
+        type: "ui/ShowNode",
+        message: `${path}@${line}`
+    });
+    console.log("DPR: Posted ui/ShowNode");
+}
+
 function markLspReady(_params: unknown): void {
     if (lspReady)
         return;
@@ -90,10 +134,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     });
 
     // Command opens the webview hosting the WASM UI.
-    const disposable = vscode.commands.registerCommand(commandId, () => {
+    const disposable = vscode.commands.registerCommand(commandId, async () => {
         console.log("DPR: Running command Open Dependinator ...");
+        const activeTextEditor = vscode.window.activeTextEditor;
         if (activePanel) {
             activePanel.reveal(activePanel.viewColumn ?? vscode.ViewColumn.One);
+            sendShowNodeForEditor(activeTextEditor);
             return;
         }
         const panel = createDependinatorWebviewPanel(context);
@@ -136,6 +182,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 });
             }
         });
+
+        console.log("DPR: Await ready after starting view");
+        await waitForLspReady();
+        console.log("DPR: Awaited ready after starting view");
+        sendShowNodeForEditor(activeTextEditor);
     });
 
     context.subscriptions.push(disposable);
