@@ -329,7 +329,7 @@ class ModelService : IModelService
             return e;
 
         var sourceText = source.Text.Replace("\t", "  "); // The auto formatter removes this in Blazor code.
-        return new Source(source.Path, sourceText, source.LineNumber);
+        return new Source(sourceText, new FileLocation(source.Location.Path, source.Location.Line));
     }
 
     async Task<R<ModelInfo>> ParseNewModelAsync(string path)

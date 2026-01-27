@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
+using DependinatorCore.Parsing;
 using DependinatorCore.Parsing.Assemblies;
 using DependinatorCore.Tests.Parsing.Utils;
-using Mono.Cecil;
 
 namespace DependinatorCore.Tests.Parsing.Assemblies;
 
@@ -31,8 +31,8 @@ public class DecompilerTests
             Assert.Fail(e.ErrorMessage);
 
         await Verify(source.Text, extension: "cs");
-        Assert.Equal(CurrentFilePath(), source.Path);
-        Assert.Equal(13, source.LineNumber); // Note: Line number is of first member function in type !!
+        Assert.Equal(CurrentFilePath(), source.Location.Path);
+        Assert.Equal(13, source.Location.Line); // Note: Line number is of first member function in type !!
     }
 
     [Fact]
@@ -45,14 +45,14 @@ public class DecompilerTests
             Assert.Fail(e1.ErrorMessage);
 
         await Verify(source1.Text, extension: "cs");
-        Assert.Equal(CurrentFilePath(), source1.Path);
-        Assert.Equal(13, source1.LineNumber);
+        Assert.Equal(CurrentFilePath(), source1.Location.Path);
+        Assert.Equal(13, source1.Location.Line);
 
         string nodeName2 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.SecondFunction));
         if (!Try(out var source2, out var e2, decompiler.TryGetSource(module, nodeName2)))
             Assert.Fail(e2.ErrorMessage);
-        Assert.Equal(CurrentFilePath(), source2.Path);
-        Assert.Equal(17, source2.LineNumber);
+        Assert.Equal(CurrentFilePath(), source2.Location.Path);
+        Assert.Equal(17, source2.Location.Line);
     }
 
     [Fact]
@@ -62,7 +62,8 @@ public class DecompilerTests
         var module = AssemblyHelper.GetModule<DecompilerTestClass>();
 
         // Find first type in specified file
-        var isFound = decompiler.TryGetNodeNameForSourceFile(module, CurrentFilePath(), out var nodeName);
+        var fileLocation = new FileLocation(CurrentFilePath(), 0);
+        var isFound = decompiler.TryGetNodeNameForSourceFile(module, fileLocation, out var nodeName);
 
         Assert.True(isFound);
         Assert.Equal(Reference.NodeName<DecompilerTestClass>(), nodeName);

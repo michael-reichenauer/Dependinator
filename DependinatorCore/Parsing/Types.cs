@@ -31,9 +31,9 @@ class LinkAttributes
     public NodeType TargetType { get; init; } = NodeType.None;
 }
 
-record Source(string Path, string Text, int LineNumber);
+record Source(string Text, FileLocation Location);
 
-record SourceLocation(string Path, int LineNumber);
+record FileLocation(string Path, int Line);
 
 enum NodeType
 {

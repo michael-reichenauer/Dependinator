@@ -17,10 +17,10 @@ class Decompiler
 
             if (TryGetFileLocation(type, out FileLocation fileLocation))
             {
-                return new Source(fileLocation.Path, codeText, fileLocation.Line);
+                return new Source(codeText, fileLocation);
             }
 
-            return new Source("", codeText, 0);
+            return new Source(codeText, new FileLocation("", 0));
         }
         else if (TryGetMember(module, nodeName, out IMemberDefinition member))
         {
@@ -28,25 +28,25 @@ class Decompiler
 
             if (TryGetFilePath(member, out FileLocation fileLocation))
             {
-                return new Source(fileLocation.Path, codeText, fileLocation.Line);
+                return new Source(codeText, fileLocation);
             }
 
-            return new Source("", codeText, 0);
+            return new Source(codeText, new FileLocation("", 0));
         }
 
         Log.Debug($"Failed to locate source for:\n{nodeName}");
         return R.Error("Failed to locate source for:\n{nodeName}");
     }
 
-    public bool TryGetNodeNameForSourceFile(ModuleDefinition module, string sourceFilePath, out string nodeName)
+    public bool TryGetNodeNameForSourceFile(ModuleDefinition module, FileLocation fileLocation, out string nodeName)
     {
         var assemblyTypes = GetAssemblyTypes(module);
 
         foreach (TypeDefinition type in assemblyTypes)
         {
-            if (TryGetFileLocation(type, out FileLocation fileLocation))
+            if (TryGetFileLocation(type, out FileLocation typeFileLocation))
             {
-                if (fileLocation.Path.StartsWithIc(sourceFilePath))
+                if (typeFileLocation.Path.StartsWithIc(fileLocation.Path))
                 {
                     nodeName = Name.GetTypeFullName(type);
                     return true;
@@ -196,8 +196,6 @@ class Decompiler
 
         return TryGetFileLocation(member.DeclaringType, out fileLocation);
     }
-
-    record FileLocation(string Path, int Line);
 
     static FileLocation ToFileLocation(SequencePoint sequencePoint) =>
         new(sequencePoint.Document.Url, sequencePoint.StartLine);

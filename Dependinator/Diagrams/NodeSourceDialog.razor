@@ -4,10 +4,10 @@
 <MudDialog Class="node-source-dialog">
   <DialogContent>
     <div class="node-source-dialog__header">
-      @if (!string.IsNullOrEmpty(Source.Path))
+      @if (!string.IsNullOrEmpty(Source.Location.Path))
       {
         <MudText Typo="Typo.caption" Class="node-source-dialog__path">
-          // File: @Source.Path
+          // File: @Source.Location.Path
         </MudText>
       }
     </div>

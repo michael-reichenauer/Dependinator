@@ -137,10 +137,10 @@ internal class AssemblyParser : IDisposable
         return decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName);
     }
 
-    public R<string> TryGetNode(string sourceFilePath)
+    public R<string> TryGetNode(FileLocation fileLocation)
     {
-        if (!decompiler.TryGetNodeNameForSourceFile(assemblyDefinition.MainModule, sourceFilePath, out var nodeName))
-            return R.Error($"Failed to get node {sourceFilePath}");
+        if (!decompiler.TryGetNodeNameForSourceFile(assemblyDefinition.MainModule, fileLocation, out var nodeName))
+            return R.Error($"Failed to get node {fileLocation.Path}");
         return nodeName;
     }
 

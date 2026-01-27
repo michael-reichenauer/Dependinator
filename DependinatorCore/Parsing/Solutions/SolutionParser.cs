@@ -74,7 +74,7 @@ internal class SolutionParser : IDisposable
             if (!Try(out var source, out var e, assemblyParser.TryGetSource(nodeName)))
                 return e;
 
-            return new Source(source.Path, source.Text, source.LineNumber);
+            return source;
         });
     }
 
@@ -87,14 +87,14 @@ internal class SolutionParser : IDisposable
 
         foreach (AssemblyParser parser in assemblyParsers)
         {
-            if (Try(out var nodeName, parser.TryGetNode(source.Path)))
+            if (Try(out var nodeName, parser.TryGetNode(source.Location)))
                 return nodeName;
         }
 
-        string sourceFilePath = Path.GetDirectoryName(source.Path) ?? "";
+        string sourceFilePath = Path.GetDirectoryName(source.Location.Path) ?? "";
         foreach (AssemblyParser parser in assemblyParsers)
         {
-            if (Try(out var nodeName, parser.TryGetNode(sourceFilePath)))
+            if (Try(out var nodeName, parser.TryGetNode(new FileLocation(sourceFilePath, source.Location.Line))))
                 return GetParentName(nodeName);
         }
 
