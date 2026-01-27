@@ -38,12 +38,10 @@ class Decompiler
         return R.Error("Failed to locate source for:\n{nodeName}");
     }
 
-    public bool TryGetNodeNameForSourceFile(
-        IEnumerable<TypeDefinition> assemblyTypes,
-        string sourceFilePath,
-        out string nodeName
-    )
+    public bool TryGetNodeNameForSourceFile(ModuleDefinition module, string sourceFilePath, out string nodeName)
     {
+        var assemblyTypes = GetAssemblyTypes(module);
+
         foreach (TypeDefinition type in assemblyTypes)
         {
             if (TryGetFileLocation(type, out FileLocation fileLocation))
@@ -123,6 +121,13 @@ class Decompiler
 
         member = default!;
         return false;
+    }
+
+    IEnumerable<TypeDefinition> GetAssemblyTypes(ModuleDefinition module)
+    {
+        return module.Types.Where(type =>
+            !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
+        );
     }
 
     static bool TryGetMethod(TypeDefinition type, string fullName, out IMemberDefinition method)

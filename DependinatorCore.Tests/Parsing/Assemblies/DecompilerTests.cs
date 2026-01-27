@@ -23,11 +23,11 @@ public class DecompilerTests
     public async Task GetTypeSourceAsync()
     {
         Decompiler decompiler = new();
-        AssemblyDefinition assemblyDefinition = AssemblyHelper.GetAssemblyDefinition<DecompilerTestClass>();
+        var module = AssemblyHelper.GetModule<DecompilerTestClass>();
 
         string nodeName = Reference.NodeName<DecompilerTestClass>();
 
-        if (!Try(out var source, out var e, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName)))
+        if (!Try(out var source, out var e, decompiler.TryGetSource(module, nodeName)))
             Assert.Fail(e.ErrorMessage);
 
         await Verify(source.Text, extension: "cs");
@@ -39,10 +39,9 @@ public class DecompilerTests
     public async Task GetMemberSourceAsync()
     {
         Decompiler decompiler = new();
-        AssemblyDefinition assemblyDefinition = AssemblyHelper.GetAssemblyDefinition<DecompilerTestClass>();
-
+        var module = AssemblyHelper.GetModule<DecompilerTestClass>();
         string nodeName1 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.FirstFunction));
-        if (!Try(out var source1, out var e1, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName1)))
+        if (!Try(out var source1, out var e1, decompiler.TryGetSource(module, nodeName1)))
             Assert.Fail(e1.ErrorMessage);
 
         await Verify(source1.Text, extension: "cs");
@@ -50,7 +49,7 @@ public class DecompilerTests
         Assert.Equal(13, source1.LineNumber);
 
         string nodeName2 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.SecondFunction));
-        if (!Try(out var source2, out var e2, decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName2)))
+        if (!Try(out var source2, out var e2, decompiler.TryGetSource(module, nodeName2)))
             Assert.Fail(e2.ErrorMessage);
         Assert.Equal(CurrentFilePath(), source2.Path);
         Assert.Equal(17, source2.LineNumber);
@@ -60,21 +59,13 @@ public class DecompilerTests
     public async Task GetNodeNameAsync()
     {
         Decompiler decompiler = new();
-        AssemblyDefinition assemblyDefinition = AssemblyHelper.GetAssemblyDefinition<DecompilerTestClass>();
-        var assemblyTypes = GetAssemblyTypes(assemblyDefinition);
+        var module = AssemblyHelper.GetModule<DecompilerTestClass>();
 
         // Find first type in specified file
-        var isFound = decompiler.TryGetNodeNameForSourceFile(assemblyTypes, CurrentFilePath(), out var nodeName);
+        var isFound = decompiler.TryGetNodeNameForSourceFile(module, CurrentFilePath(), out var nodeName);
 
         Assert.True(isFound);
         Assert.Equal(Reference.NodeName<DecompilerTestClass>(), nodeName);
-    }
-
-    IEnumerable<TypeDefinition> GetAssemblyTypes(AssemblyDefinition assemblyDefinition)
-    {
-        return assemblyDefinition.MainModule.Types.Where(type =>
-            !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
-        );
     }
 
     static string CurrentFilePath([CallerFilePath] string sourceFilePath = "") => sourceFilePath;

@@ -33,6 +33,8 @@ class LinkAttributes
 
 record Source(string Path, string Text, int LineNumber);
 
+record SourceLocation(string Path, int LineNumber);
+
 enum NodeType
 {
     None,
