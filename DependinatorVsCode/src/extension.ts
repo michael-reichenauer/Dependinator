@@ -183,10 +183,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             }
         });
 
-        console.log("DPR: Await ready after starting view");
-        await waitForLspReady();
-        console.log("DPR: Awaited ready after starting view");
-        sendShowNodeForEditor(activeTextEditor);
+        // await waitForLspReady();
+        // sendShowNodeForEditor(activeTextEditor);
     });
 
     context.subscriptions.push(disposable);

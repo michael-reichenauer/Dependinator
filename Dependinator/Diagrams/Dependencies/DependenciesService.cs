@@ -33,7 +33,7 @@ class DependenciesService(
     ISelectionService selectionService,
     IApplicationEvents applicationEvents,
     IModelService modelService,
-    IPanZoomService panZoomService
+    INavigationService navigationService
 ) : IDependenciesService
 {
     private string selectedId = "";
@@ -120,26 +120,7 @@ class DependenciesService(
     public async void ShowNode(NodeId nodeId)
     {
         Close();
-        selectionService.Unselect();
-        applicationEvents.TriggerUIStateChanged();
-        await Task.Yield();
-
-        Pos pos = Pos.None;
-        double zoom = 0;
-        if (
-            !modelService.UseNodeN(
-                nodeId,
-                node =>
-                {
-                    (pos, zoom) = node.GetCenterPosAndZoom();
-                }
-            )
-        )
-            return;
-
-        await panZoomService.PanZoomToAsync(pos, zoom);
-        selectionService.Select(nodeId);
-        applicationEvents.TriggerUIStateChanged();
+        await navigationService.ShowNodeAsync(nodeId);
     }
 
     private void Close()
