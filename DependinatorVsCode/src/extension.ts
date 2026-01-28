@@ -151,6 +151,46 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         registerWebviewMessageHandler(panel, async (message: WebviewMessage) => {
+            if (message.type === "vscode/ShowEditor") {
+                const fileLocation = String(message.message ?? "");
+                console.log("Show editor for", fileLocation);
+                // Show the editor for fileLocation, which has the form of "<file-path>@<file-line>";
+                if (fileLocation.length === 0) {
+                    console.warn("ShowEditor called with empty file location");
+                    return;
+                }
+
+                const atIndex = fileLocation.lastIndexOf("@");
+                const filePath = atIndex > 0 ? fileLocation.slice(0, atIndex) : fileLocation;
+                const lineText = atIndex > 0 ? fileLocation.slice(atIndex + 1) : "";
+                const parsedLine = Number.parseInt(lineText, 10);
+                const line = Number.isFinite(parsedLine) && parsedLine > 0 ? parsedLine : 1;
+
+                const uri = filePath.startsWith("file:")
+                    || filePath.startsWith("vscode-remote:")
+                    || filePath.startsWith("vscode-userdata:")
+                    ? vscode.Uri.parse(filePath)
+                    : vscode.Uri.file(filePath);
+
+                try {
+                    const document = await vscode.workspace.openTextDocument(uri);
+                    const editor = await vscode.window.showTextDocument(document, {
+                        preview: false
+                    });
+                    const lineIndex = Math.max(0, line - 1);
+                    const position = new vscode.Position(lineIndex, 0);
+                    editor.selection = new vscode.Selection(position, position);
+                    editor.revealRange(
+                        new vscode.Range(position, position),
+                        vscode.TextEditorRevealType.InCenter
+                    );
+                } catch (error) {
+                    console.error("Failed to open editor for", fileLocation, error);
+                    vscode.window.showErrorMessage(`Dependinator: Could not open ${fileLocation}`);
+                }
+                return;
+            }
+
             if (message.type !== "lsp/message")
                 return;
             // console.log("DPR: lsp/message message:", message);

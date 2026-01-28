@@ -1,16 +1,16 @@
 namespace Dependinator.Shared;
 
-interface IVsCodeIntegrationService
+interface IVsCodeReceiveService
 {
     Task ReceivedMessageAsync(string type, string message);
 }
 
 [Scoped]
-class VsCodeIntegrationService : IVsCodeIntegrationService
+class VsCodeReceiveService : IVsCodeReceiveService
 {
     readonly INavigationService navigationService;
 
-    public VsCodeIntegrationService(INavigationService navigationService)
+    public VsCodeReceiveService(INavigationService navigationService)
     {
         this.navigationService = navigationService;
     }

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Dependinator.Diagrams;
 using DependinatorCore.Rpc;
 using DependinatorCore.Shared;
 using Microsoft.JSInterop;
@@ -21,14 +20,14 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
     readonly IJSInterop jSInterop;
     readonly IJsonRpcService jsonRpcService;
     readonly IHost host;
-    readonly IVsCodeIntegrationService vsCodeIntegrationService;
+    readonly IVsCodeReceiveService vsCodeIntegrationService;
     DotNetObjectReference<VsCodeMessageService>? reference;
 
     public VsCodeMessageService(
         IJSInterop jSInterop,
         IJsonRpcService jsonRpcService,
         IHost host,
-        IVsCodeIntegrationService vsCodeIntegrationService
+        IVsCodeReceiveService vsCodeIntegrationService
     )
     {
         this.jSInterop = jSInterop;

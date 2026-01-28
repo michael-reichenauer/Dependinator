@@ -14,6 +14,8 @@ internal interface IParserService
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
+    Task<R<FileLocation>> GetFileLocationAsync(string path, string nodeName);
+
     Task<R<string>> TryGetNodeAsync(string path, FileLocation fileLocation);
 }
 
@@ -71,6 +73,16 @@ class ParserService : IParserService
             return R.Error($"File not supported: {path}", e);
 
         return await parser.GetSourceAsync(path, nodeName);
+    }
+
+    public async Task<R<FileLocation>> GetFileLocationAsync(string path, string nodeName)
+    {
+        Log.Debug($"Get file location for {nodeName} in model {path}...");
+
+        if (!Try(out var source, out var e, await GetSourceAsync(path, nodeName)))
+            return e;
+
+        return source.Location;
     }
 
     public async Task<R<string>> TryGetNodeAsync(string path, FileLocation fileLocation)

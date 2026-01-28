@@ -1,7 +1,6 @@
 using Dependinator.Diagrams;
 using Dependinator.Models;
 using DependinatorCore.Parsing;
-using Microsoft.VisualBasic;
 using FileLocation = DependinatorCore.Parsing.FileLocation;
 
 namespace Dependinator.Shared;
@@ -10,6 +9,7 @@ interface INavigationService
 {
     Task ShowNodeAsync(NodeId nodeId);
     Task ShowNodeAsync(string fileLocation);
+    Task ShowEditor(NodeId nodeId);
 }
 
 [Scoped]
@@ -18,7 +18,8 @@ class NavigationService(
     IModelService modelService,
     IPanZoomService panZoomService,
     ISelectionService selectionService,
-    IParserService parserService
+    IParserService parserService,
+    IVsCodeSendService vsCodeSendService
 ) : INavigationService
 {
     public async Task ShowNodeAsync(NodeId nodeId)
@@ -62,6 +63,31 @@ class NavigationService(
         }
 
         await ShowNodeAsync(NodeId.FromName(nodeName));
+    }
+
+    public async Task ShowEditor(NodeId nodeId)
+    {
+        Log.Info("ShowEditor for", nodeId);
+        string modelPath = null!;
+        var nodeName = "";
+        using (var model = modelService.UseModel())
+        {
+            modelPath = model.Path;
+            if (!model.TryGetNode(nodeId, out var node))
+            {
+                Log.Warn($"Failed find node for {nodeId}");
+                return;
+            }
+            nodeName = node.Name;
+        }
+
+        if (!Try(out var fileLocation, out var e, await parserService.GetFileLocationAsync(modelPath, nodeName)))
+        {
+            Log.Warn($"Failed to find node for {fileLocation}, {e.ErrorMessage}");
+            return;
+        }
+
+        await vsCodeSendService.ShowEditorAsync(fileLocation);
     }
 
     static FileLocation ParseFileLocation(string fileLocation)
