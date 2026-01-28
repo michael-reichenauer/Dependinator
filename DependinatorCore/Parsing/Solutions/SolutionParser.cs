@@ -78,7 +78,7 @@ internal class SolutionParser : IDisposable
         });
     }
 
-    public async Task<R<string>> TryGetNodeAsync(Source source)
+    public async Task<R<string>> TryGetNodeAsync(FileLocation fileLocation)
     {
         await Task.Yield();
 
@@ -87,14 +87,14 @@ internal class SolutionParser : IDisposable
 
         foreach (AssemblyParser parser in assemblyParsers)
         {
-            if (Try(out var nodeName, parser.TryGetNode(source.Location)))
+            if (Try(out var nodeName, parser.TryGetNode(fileLocation)))
                 return nodeName;
         }
 
-        string sourceFilePath = Path.GetDirectoryName(source.Location.Path) ?? "";
+        string sourceFilePath = Path.GetDirectoryName(fileLocation.Path) ?? "";
         foreach (AssemblyParser parser in assemblyParsers)
         {
-            if (Try(out var nodeName, parser.TryGetNode(new FileLocation(sourceFilePath, source.Location.Line))))
+            if (Try(out var nodeName, parser.TryGetNode(new FileLocation(sourceFilePath, fileLocation.Line))))
                 return GetParentName(nodeName);
         }
 

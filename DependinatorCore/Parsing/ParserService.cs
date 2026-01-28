@@ -1,6 +1,5 @@
 ﻿using System.Threading.Channels;
 using DependinatorCore.Rpc;
-using ICSharpCode.Decompiler.TypeSystem;
 
 namespace DependinatorCore.Parsing;
 
@@ -15,7 +14,7 @@ internal interface IParserService
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
-    Task<R<string>> TryGetNodeAsync(string path, Source source);
+    Task<R<string>> TryGetNodeAsync(string path, FileLocation fileLocation);
 }
 
 [Singleton]
@@ -74,14 +73,14 @@ class ParserService : IParserService
         return await parser.GetSourceAsync(path, nodeName);
     }
 
-    public async Task<R<string>> TryGetNodeAsync(string path, Source source)
+    public async Task<R<string>> TryGetNodeAsync(string path, FileLocation fileLocation)
     {
-        Log.Debug($"Get node for {source} in model {path}...");
+        Log.Debug($"Get node for {fileLocation.Path} in model {path}...");
 
         if (!Try(out var parser, out var e, GetParser(path)))
             return R.Error($"File not supported: {path}", e);
 
-        return await parser.GetNodeAsync(path, source);
+        return await parser.GetNodeAsync(path, fileLocation);
     }
 
     R<IParser> GetParser(string path)

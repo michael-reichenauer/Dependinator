@@ -47,7 +47,7 @@ class JsonFileParserService : IParser
     public Task<R<Source>> GetSourceAsync(string path, string nodeName) =>
         Task.FromResult((R<Source>)new Source("", new FileLocation(path, 0)));
 
-    public Task<R<string>> GetNodeAsync(string path, Source source) => Task.FromResult((R<string>)"");
+    public Task<R<string>> GetNodeAsync(string path, FileLocation fileLocation) => Task.FromResult((R<string>)"");
 
     public DateTime GetDataTime(string path) => File.GetLastWriteTime(path);
 
