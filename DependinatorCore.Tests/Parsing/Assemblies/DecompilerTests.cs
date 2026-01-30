@@ -31,7 +31,7 @@ public class DecompilerTests
 
         await Verify(source.Text, extension: "cs");
         Assert.Equal(CurrentFilePath(), source.Location.Path);
-        Assert.Equal(13, source.Location.Line); // Note: Line number is of first member function in type !!
+        Assert.Equal(12, source.Location.Line); // Note: Line number is of first member function in type !!
     }
 
     [Fact]
@@ -45,13 +45,13 @@ public class DecompilerTests
 
         await Verify(source1.Text, extension: "cs");
         Assert.Equal(CurrentFilePath(), source1.Location.Path);
-        Assert.Equal(13, source1.Location.Line);
+        Assert.Equal(12, source1.Location.Line);
 
         string nodeName2 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.SecondFunction));
         if (!Try(out var source2, out var e2, decompiler.TryGetSource(module, nodeName2)))
             Assert.Fail(e2.ErrorMessage);
         Assert.Equal(CurrentFilePath(), source2.Location.Path);
-        Assert.Equal(17, source2.Location.Line);
+        Assert.Equal(16, source2.Location.Line);
     }
 
     [Fact]
