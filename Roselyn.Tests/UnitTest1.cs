@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using Xunit.Abstractions;
 
@@ -85,8 +86,11 @@ public class UnitTest1
                 if (ifaces.Length > 0)
                     interfaces = string.Join(", ", ifaces);
 
+                var spans = GetLocationSpans(type).ToList();
+                var spansTexts = string.Join(", ", spans.Select(s => s.ToString()));
+
                 _output.WriteLine(
-                    $"Type: {type.DeclaredAccessibility} {type.TypeKind} {fqTypeName} : {baseName}, {interfaces}"
+                    $"Type: {type.DeclaredAccessibility} {type.TypeKind} {fqTypeName} : {baseName}, {interfaces} ({spansTexts})"
                 );
 
                 // 5) Members
@@ -99,6 +103,38 @@ public class UnitTest1
                     _output2.WriteLine($"    - {FormatMember(member)}");
                 }
             }
+        }
+    }
+
+    static IEnumerable<FileLinePositionSpan> GetLocationSpans(INamedTypeSymbol typeSymbol)
+    {
+        var typeSpans = GetTypeDeclarationSpans(typeSymbol);
+        if (typeSpans.Any())
+            return typeSpans;
+        return GetTypeLocationSpans(typeSymbol);
+    }
+
+    static IEnumerable<FileLinePositionSpan> GetTypeDeclarationSpans(INamedTypeSymbol typeSymbol)
+    {
+        foreach (var syntaxRef in typeSymbol.DeclaringSyntaxReferences)
+        {
+            var syntax = syntaxRef.GetSyntax();
+            if (syntax is TypeDeclarationSyntax typeDecl)
+            {
+                yield return typeDecl.GetLocation().GetLineSpan();
+            }
+            else if (syntax is BaseTypeDeclarationSyntax baseTypeDecl)
+            {
+                yield return baseTypeDecl.GetLocation().GetLineSpan();
+            }
+        }
+    }
+
+    static IEnumerable<FileLinePositionSpan> GetTypeLocationSpans(INamedTypeSymbol typeSymbol)
+    {
+        foreach (var location in typeSymbol.Locations.Where(l => l.IsInSource))
+        {
+            yield return location.GetLineSpan();
         }
     }
 
