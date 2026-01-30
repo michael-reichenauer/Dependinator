@@ -181,10 +181,6 @@ class Decompiler
 
     static bool TryGetFileLocationSpan(TypeDefinition type, out FileLocationSpan fileLocationSpan)
     {
-        if (type.FullName == "DependinatorCore.Tests.Parsing.Assemblies.DecompilerTests")
-        {
-            var a = 0;
-        }
         fileLocationSpan = default!;
         if (!type.Methods.Any())
             return false;
