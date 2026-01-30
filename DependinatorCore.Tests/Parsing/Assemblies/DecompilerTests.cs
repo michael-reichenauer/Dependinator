@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using DependinatorCore.Parsing;
 using DependinatorCore.Parsing.Assemblies;
 using DependinatorCore.Tests.Parsing.Utils;
 
@@ -61,17 +60,27 @@ public class DecompilerTests
         Decompiler decompiler = new();
         var module = AssemblyHelper.GetModule<DecompilerTestClass>();
 
-        // Find first type in specified file
-        var fileLocation = new FileLocation(CurrentFilePath(), 0);
-        var isFound = decompiler.TryGetNodeNameForFileLocation(module, fileLocation, out var nodeName);
-        Assert.True(isFound);
-        Assert.Equal(Reference.NodeName<DecompilerTestClass>(), nodeName);
+        // // Find first type in specified file
+        var fileLocation1 = decompiler.TryGetSource(module, Reference.NodeName<DecompilerTestClass>());
+        Assert.False(fileLocation1.IsResultError);
+        var isFound11 = decompiler.TryGetNodeNameForFileLocation(
+            module,
+            fileLocation1.GetResultValue().Location,
+            out var nodeName1
+        );
+        Assert.True(isFound11);
+        Assert.Equal(Reference.NodeName<DecompilerTestClass>(), nodeName1);
 
-        // // Find FirstFunction() in specified file
-        // var fileLocation2 = new FileLocation(CurrentFilePath(), 13);
-        // var isFound2 = decompiler.TryGetNodeNameForFileLocation(module, fileLocation, out var nodeName2);
-        // Assert.True(isFound2);
-        // Assert.Equal(Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.FirstFunction)), nodeName2);
+        // Find FirstFunction() in specified file
+        var fileLocation2 = decompiler.TryGetSource(module, Reference.NodeName<DecompilerTests>());
+        Assert.False(fileLocation2.IsResultError);
+        var isFound22 = decompiler.TryGetNodeNameForFileLocation(
+            module,
+            fileLocation2.GetResultValue().Location,
+            out var nodeName2
+        );
+        Assert.True(isFound22);
+        Assert.Equal(Reference.NodeName<DecompilerTests>(), nodeName2);
     }
 
     static string CurrentFilePath([CallerFilePath] string sourceFilePath = "") => sourceFilePath;
