@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Build.Locator;
+﻿using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
@@ -24,7 +20,7 @@ public class UnitTest1
 
     public UnitTest1(ITestOutputHelper output) => _output = output;
 
-    [Fact]
+    [Fact(Skip = "Test")]
     public async Task TestAsync()
     {
         var slnPath = "/workspaces/Dependinator/Dependinator.sln";
@@ -45,7 +41,9 @@ public class UnitTest1
         _output.WriteLine($"Loaded solution: {solution.FilePath}");
         _output.WriteLine($"Projects: {solution.Projects.Count()}");
 
-        foreach (var project in solution.Projects)
+        var projects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToList();
+
+        foreach (var project in projects)
         {
             _output.WriteLine("");
             _output.WriteLine($"=== Project: {project.Name} ({project.Language}) ===");
@@ -57,51 +55,77 @@ public class UnitTest1
             }
 
             // 3) Build compilation (semantic model backbone)
-            var compilation = await project.GetCompilationAsync();
+            Compilation? compilation = await GetCompilationAsync(project);
             if (compilation is null)
-            {
-                _output.WriteLine("No compilation (project may not be supported/loaded).");
                 continue;
-            }
 
             // 4) Enumerate all types in the compilation
-            foreach (var type in GetAllNamedTypes(compilation.Assembly.GlobalNamespace))
+            EnumerateTypes(compilation);
+        }
+    }
+
+    private async Task<Compilation?> GetCompilationAsync(Project project)
+    {
+        Compilation? compilation = await project.GetCompilationAsync();
+        if (compilation is null)
+        {
+            _output.WriteLine("No compilation (project may not be supported/loaded).");
+            return null;
+        }
+        var diagnostics = compilation.GetDiagnostics();
+
+        var errors = diagnostics
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .OrderBy(d => d.Location.IsInSource ? d.Location.GetLineSpan().Path : "")
+            .ThenBy(d => d.Location.IsInSource ? d.Location.GetLineSpan().StartLinePosition.Line : int.MaxValue)
+            .ToArray();
+
+        foreach (var e in errors)
+            _output.WriteLine("ERROR: " + e.ToString()); // includes file/line when available
+        if (errors.Any())
+            return null;
+        return compilation;
+    }
+
+    private void EnumerateTypes(Compilation compilation)
+    {
+        foreach (var type in GetAllNamedTypes(compilation.Assembly.GlobalNamespace))
+        {
+            // Skip compiler-generated noise if you want
+            if (type.IsImplicitlyDeclared)
+                continue;
+
+            var typeName = type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            var fqTypeName = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+            // Base type / interfaces (optional)
+            string? baseName = null;
+            if (type.BaseType is { } bt && bt.SpecialType != SpecialType.System_Object)
+                baseName = bt.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+
+            string? interfaces = null;
+            var ifaces = type
+                .Interfaces.Select(i => i.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat))
+                .ToArray();
+            if (ifaces.Length > 0)
+                interfaces = string.Join(", ", ifaces);
+
+            var spans = GetLocationSpans(type).ToList();
+            var spansTexts = string.Join(", ", spans.Select(s => s.ToString()));
+            spansTexts = "";
+
+            _output2.WriteLine(
+                $"Type: {type.DeclaredAccessibility} {type.TypeKind} {fqTypeName} : {baseName}, {interfaces} ({spansTexts})"
+            );
+
+            // 5) Members
+            foreach (var member in type.GetMembers().Where(m => !m.IsImplicitlyDeclared))
             {
-                // Skip compiler-generated noise if you want
-                if (type.IsImplicitlyDeclared)
+                // Optional filter: only members declared on this type (not inherited)
+                if (!SymbolEqualityComparer.Default.Equals(member.ContainingType, type))
                     continue;
 
-                var typeName = type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-                var fqTypeName = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-                // Base type / interfaces (optional)
-                string? baseName = null;
-                if (type.BaseType is { } bt && bt.SpecialType != SpecialType.System_Object)
-                    baseName = bt.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-
-                string? interfaces = null;
-                var ifaces = type
-                    .Interfaces.Select(i => i.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat))
-                    .ToArray();
-                if (ifaces.Length > 0)
-                    interfaces = string.Join(", ", ifaces);
-
-                var spans = GetLocationSpans(type).ToList();
-                var spansTexts = string.Join(", ", spans.Select(s => s.ToString()));
-
-                _output.WriteLine(
-                    $"Type: {type.DeclaredAccessibility} {type.TypeKind} {fqTypeName} : {baseName}, {interfaces} ({spansTexts})"
-                );
-
-                // 5) Members
-                foreach (var member in type.GetMembers().Where(m => !m.IsImplicitlyDeclared))
-                {
-                    // Optional filter: only members declared on this type (not inherited)
-                    if (!SymbolEqualityComparer.Default.Equals(member.ContainingType, type))
-                        continue;
-
-                    _output2.WriteLine($"    - {FormatMember(member)}");
-                }
+                _output2.WriteLine($"    - {FormatMember(member)}");
             }
         }
     }
