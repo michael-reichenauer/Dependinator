@@ -21,6 +21,12 @@
       ExcludeAssets="runtime"
       PrivateAssets="all"
     />
+    <PackageReference
+      Include="Microsoft.NET.StringTools"
+      Version="17.6.3"
+      ExcludeAssets="runtime"
+      PrivateAssets="all"
+    />
   </ItemGroup>
 
   <ItemGroup>
