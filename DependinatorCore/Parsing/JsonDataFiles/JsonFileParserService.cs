@@ -90,7 +90,7 @@ class JsonFileParserService : IParser
         new()
         {
             Type = Enums.To<NodeType>(node.Attributes?.Type, NodeType.None),
-            Description = node.Attributes?.Description ?? "",
+            Description = node.Attributes?.Description,
             Parent = node.Parent,
         };
 

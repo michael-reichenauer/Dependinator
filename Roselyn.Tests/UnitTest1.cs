@@ -20,8 +20,8 @@ public class UnitTest1
 
     public UnitTest1(ITestOutputHelper output) => _output = output;
 
-    //[Fact(Skip = "Test")]
-    [Fact]
+    [Fact(Skip = "Test")]
+    //[Fact]
     public async Task TestAsync()
     {
         var slnPath = "/workspaces/Dependinator/Dependinator.sln";

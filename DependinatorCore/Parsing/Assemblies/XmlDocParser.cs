@@ -14,15 +14,15 @@ internal class XmlDocParser
         descriptions = new Lazy<IReadOnlyDictionary<string, string>>(GetDescriptions);
     }
 
-    public string GetDescription(string nodeName)
+    public string? GetDescription(string nodeName)
     {
         // Adjust for inner types using '/' as separators
         nodeName = nodeName.Replace("/", ".");
 
-        if (descriptions.Value.TryGetValue(nodeName, out string? description))
-            return description;
+        if (!descriptions.Value.TryGetValue(nodeName, out string? description))
+            return null;
 
-        return "";
+        return description;
     }
 
     IReadOnlyDictionary<string, string> GetDescriptions()
