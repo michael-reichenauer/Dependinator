@@ -144,7 +144,7 @@ class Node : IItem
 
     public void Update(Parsing.Node node)
     {
-        Type = node.Attributes.Type;
+        Type = node.Attributes.Type ?? Type;
         IsPrivate = node.Attributes.IsPrivate;
         Description = node.Attributes.Description ?? Description;
         MemberType = node.Attributes.MemberType;
