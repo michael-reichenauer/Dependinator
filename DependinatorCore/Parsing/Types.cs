@@ -35,6 +35,10 @@ record Source(string Text, FileLocation Location);
 
 record FileLocation(string Path, int Line);
 
+record FileSpan(string Path, int StarLine, int EndLine);
+
+record NodeFileSpan(string NodeName, FileSpan FileSpan);
+
 enum NodeType
 {
     None,
