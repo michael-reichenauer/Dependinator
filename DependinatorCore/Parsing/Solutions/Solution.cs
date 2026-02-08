@@ -11,6 +11,7 @@ internal class Solution
 
     public Solution(string solutionFilePath)
     {
+        MSBuildLocatorHelper.Register();
         SolutionFilePath = solutionFilePath;
         SolutionDirectory = Path.GetDirectoryName(solutionFilePath) ?? "";
 

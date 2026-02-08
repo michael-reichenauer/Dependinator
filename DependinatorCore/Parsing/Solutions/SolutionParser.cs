@@ -29,6 +29,7 @@ internal class SolutionParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
+        MSBuildLocatorHelper.Register();
         Log.Info("Parsing solution", solutionFilePath);
         parentNodesToSend.Add(CreateSolutionNode());
 
@@ -50,6 +51,7 @@ internal class SolutionParser : IDisposable
 
     public async Task<R<Source>> TryGetSourceAsync(string nodeName)
     {
+        MSBuildLocatorHelper.Register();
         if (!Try(out var e, await CreateAssemblyParsersAsync(true)))
             return e;
 
@@ -80,6 +82,7 @@ internal class SolutionParser : IDisposable
 
     public async Task<R<string>> TryGetNodeAsync(FileLocation fileLocation)
     {
+        MSBuildLocatorHelper.Register();
         await Task.Yield();
 
         if (!Try(out var e, await CreateAssemblyParsersAsync(true)))
@@ -103,6 +106,7 @@ internal class SolutionParser : IDisposable
 
     public static IReadOnlyList<string> GetDataFilePaths(string solutionFilePath)
     {
+        MSBuildLocatorHelper.Register();
         Solution solution = new Solution(solutionFilePath);
 
         return solution.GetDataFilePaths();

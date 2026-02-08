@@ -1,4 +1,3 @@
-using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
@@ -15,7 +14,7 @@ class SourceParser : ISourceParser
 {
     public async Task<R<IReadOnlyList<NodeFileSpan>>> GetNodesAsync(string slnPath)
     {
-        RegisterMSBuild();
+        MSBuildLocatorHelper.Register();
         using var workspace = MSBuildWorkspace.Create();
 
         var solution = await workspace.OpenSolutionAsync(slnPath);
@@ -115,23 +114,6 @@ class SourceParser : ISourceParser
         foreach (var location in typeSymbol.Locations.Where(l => l.IsInSource))
         {
             yield return location.GetLineSpan();
-        }
-    }
-
-    static void RegisterMSBuild()
-    {
-        if (MSBuildLocator.IsRegistered)
-            return;
-
-        var instances = MSBuildLocator.QueryVisualStudioInstances().ToArray();
-
-        VisualStudioInstance instance;
-        if (instances.Length == 0)
-            instance = MSBuildLocator.RegisterDefaults(); // fallback
-        else
-        {
-            instance = instances.OrderByDescending(i => i.Version).First();
-            MSBuildLocator.RegisterInstance(instance);
         }
     }
 
