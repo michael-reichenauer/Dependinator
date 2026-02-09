@@ -51,25 +51,13 @@ class NavigationService(
         Log.Info("ShowNodeAsync for", fileLocation);
         var location = ParseFileLocation(fileLocation);
 
-        Models.Node? foundNode = null;
-        using (var model = modelService.UseModel())
-        {
-            foreach (var node in model.Items.Values.OfType<Models.Node>().Where(n => n.FileSpan is not null))
-            {
-                if (node.FileSpan!.Path.StartsWith(location.Path))
-                {
-                    foundNode = node;
-                    break;
-                }
-            }
-        }
-        if (foundNode is null)
+        if (!TryGetNodeIdForFileLocation(location, out var nodeId))
         {
             Log.Warn($"Failed to find node for {fileLocation}");
             return;
         }
-        Log.Info("Found node", foundNode.LongName);
-        await ShowNodeAsync(foundNode.Id);
+        Log.Info("Found node", nodeId);
+        await ShowNodeAsync(nodeId);
     }
 
     public async Task ShowEditor(NodeId nodeId)
@@ -102,5 +90,34 @@ class NavigationService(
         var path = parts[0];
         var line = Math.Max(0, (parts.Length == 2 ? int.Parse(parts[1]) : 0) - 1);
         return new FileLocation(path, line);
+    }
+
+    bool TryGetNodeIdForFileLocation(FileLocation fileLocation, out NodeId nodeId)
+    {
+        nodeId = null!;
+        List<Models.Node> nodeCandidates = [];
+        using (var model = modelService.UseModel())
+        {
+            nodeCandidates = model
+                .Items.Values.OfType<Models.Node>()
+                .Where(n => n.FileSpan is not null)
+                .Where(n => n.FileSpan!.Path.StartsWithIc(fileLocation.Path))
+                .OrderBy(n => n.FileSpan!.StarLine)
+                .ToList();
+        }
+
+        if (!nodeCandidates.Any())
+            return false;
+
+        var currentNode = nodeCandidates.First();
+        foreach (var node in nodeCandidates)
+        {
+            if (fileLocation.Line < node.FileSpan!.StarLine)
+                break;
+            currentNode = node;
+        }
+
+        nodeId = currentNode.Id;
+        return true;
     }
 }
