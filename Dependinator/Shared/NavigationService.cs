@@ -93,14 +93,14 @@ class NavigationService(
         }
         Log.Info("Show editor for", fileSpan.Path, fileSpan.StarLine);
 
-        await vsCodeSendService.ShowEditorAsync(new FileLocation(fileSpan.Path, fileSpan.StarLine));
+        await vsCodeSendService.ShowEditorAsync(new FileLocation(fileSpan.Path, fileSpan.StarLine + 1));
     }
 
     static FileLocation ParseFileLocation(string fileLocation)
     {
         var parts = fileLocation.Split('@');
         var path = parts[0];
-        var line = parts.Length == 2 ? int.Parse(parts[1]) : 0;
+        var line = Math.Max(0, (parts.Length == 2 ? int.Parse(parts[1]) : 0) - 1);
         return new FileLocation(path, line);
     }
 }
