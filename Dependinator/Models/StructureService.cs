@@ -15,7 +15,10 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
     public void TryUpdateNode(Parsing.Node parsedNode)
     {
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
+        {
+            Log.Info("Failed to find", Json.Serialize(parsedNode));
             return; // New node
+        }
 
         node.Update(parsedNode);
         node.UpdateStamp = model.UpdateStamp;
