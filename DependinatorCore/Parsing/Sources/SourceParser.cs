@@ -6,13 +6,13 @@ namespace DependinatorCore.Parsing.Sources;
 
 interface ISourceParser
 {
-    Task<R<IReadOnlyList<NodeFileSpan>>> GetNodesAsync(string slnPath);
+    Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string slnPath);
 }
 
 [Transient]
 class SourceParser : ISourceParser
 {
-    public async Task<R<IReadOnlyList<NodeFileSpan>>> GetNodesAsync(string slnPath)
+    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string slnPath)
     {
         MSBuildLocatorHelper.Register();
         using var workspace = MSBuildWorkspace.Create();
@@ -28,7 +28,7 @@ class SourceParser : ISourceParser
             return GetNodesAsync(compilation);
         });
 
-        List<NodeFileSpan> solutionNodes = [];
+        List<Parsing.Item> solutionNodes = [];
         await foreach (var nodesTasks in Task.WhenEach(projectNodesTasks))
         {
             if (!Try(out var projectNodes, out var e, await nodesTasks))
@@ -57,7 +57,7 @@ class SourceParser : ISourceParser
         return compilation;
     }
 
-    R<IReadOnlyList<NodeFileSpan>> GetNodesAsync(Compilation compilation)
+    R<IReadOnlyList<Parsing.Item>> GetNodesAsync(Compilation compilation)
     {
         var nodeSpans = GetAllNamedTypes(compilation.Assembly.GlobalNamespace)
             .Where(t => !t.IsImplicitlyDeclared)
@@ -74,13 +74,23 @@ class SourceParser : ISourceParser
                 if (!spans.Any())
                     return null;
                 var firstSpan = spans.First();
-                return new NodeFileSpan(
-                    nodeName.FullName,
-                    new FileSpan(firstSpan.Path, firstSpan.StartLinePosition.Line, firstSpan.EndLinePosition.Line)
+                return new Parsing.Item(
+                    new Node(
+                        nodeName.FullName,
+                        new NodeAttributes
+                        {
+                            FileSpan = new FileSpan(
+                                firstSpan.Path,
+                                firstSpan.StartLinePosition.Line,
+                                firstSpan.EndLinePosition.Line
+                            ),
+                        }
+                    ),
+                    null
                 );
             })
             .Where(nfs => nfs is not null)
-            .Cast<NodeFileSpan>()
+            .Cast<Parsing.Item>()
             .ToList();
         return nodeSpans;
     }

@@ -2,6 +2,7 @@ namespace Dependinator.Models;
 
 interface IStructureService
 {
+    void TryUpdateNode(Parsing.Node parsedNode);
     void AddOrUpdateNode(Parsing.Node parsedNode);
     void AddOrUpdateLink(Parsing.Link parsedLink);
     void SetNodeDto(NodeDto nodeDto);
@@ -11,11 +12,22 @@ interface IStructureService
 [Transient]
 class StructureService(IModel model, ILineService linesService) : IStructureService
 {
+    public void TryUpdateNode(Parsing.Node parsedNode)
+    {
+        if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
+            return; // New node
+
+        node.Update(parsedNode);
+        node.UpdateStamp = model.UpdateStamp;
+    }
+
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
         var parentName = parsedNode.Attributes.Parent;
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
         { // New node, add it to the model and parent
+            if (parentName is null)
+                return;
             var parent = GetOrCreateParent(parentName);
 
             node = new Node(parsedNode.Name, parent);
@@ -33,7 +45,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         node.Update(parsedNode);
         node.UpdateStamp = model.UpdateStamp;
 
-        if (!node.IsRoot && node.Parent.Name != parentName)
+        if (parentName is not null && !node.IsRoot && node.Parent.Name != parentName)
         { // The node has changed parent, remove it from the old parent and add it to the new parent
             node.Parent.RemoveChild(node);
             var parent = GetOrCreateNode(parentName);

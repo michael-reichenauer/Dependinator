@@ -20,9 +20,10 @@ class NodeAttributes
 {
     public string? Description { get; init; }
     public NodeType? Type { get; init; }
-    public string Parent { get; init; } = "";
-    public bool IsPrivate { get; init; }
-    public MemberType MemberType { get; init; }
+    public string? Parent { get; init; }
+    public bool? IsPrivate { get; init; }
+    public MemberType? MemberType { get; init; }
+    public FileSpan? FileSpan { get; init; }
 }
 
 class LinkAttributes
@@ -36,8 +37,6 @@ record Source(string Text, FileLocation Location);
 record FileLocation(string Path, int Line);
 
 record FileSpan(string Path, int StarLine, int EndLine);
-
-record NodeFileSpan(string NodeName, FileSpan FileSpan);
 
 enum NodeType
 {

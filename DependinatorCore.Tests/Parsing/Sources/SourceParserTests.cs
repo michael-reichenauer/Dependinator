@@ -10,7 +10,7 @@ public class SourceParserTests
         var slnPath = "/workspaces/Dependinator/Dependinator.sln";
 
         var sourceParser = new SourceParser();
-        if (!Try(out var nodes, out var e, await sourceParser.GetNodesAsync(slnPath)))
+        if (!Try(out var nodes, out var e, await sourceParser.ParseAsync(slnPath)))
             Assert.Fail(e.AllErrorMessages());
 
         var x = nodes;

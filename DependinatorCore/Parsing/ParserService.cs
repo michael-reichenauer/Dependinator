@@ -11,7 +11,7 @@ internal interface IParserService
 {
     Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
 
-    Task<R<IReadOnlyList<Parsing.NodeFileSpan>>> ParseNodeFileSpanInfoAsync(string path);
+    Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path);
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
@@ -93,9 +93,9 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
         return R<IParser>.From(parser);
     }
 
-    public async Task<R<IReadOnlyList<NodeFileSpan>>> ParseNodeFileSpanInfoAsync(string path)
+    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path)
     {
-        return await sourceParser.GetNodesAsync(path);
+        return await sourceParser.ParseAsync(path);
     }
 
     sealed class ChannelItemsAdapter(ChannelWriter<Item> writer) : IItems

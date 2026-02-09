@@ -69,6 +69,7 @@ class Node : IItem
     public DateTime UpdateStamp { get; set; }
     public bool IsPrivate { get; set; }
     public MemberType MemberType { get; set; }
+    public FileSpan? FileSpan { get; set; }
     public NodeType Type
     {
         get => type;
@@ -145,9 +146,10 @@ class Node : IItem
     public void Update(Parsing.Node node)
     {
         Type = node.Attributes.Type ?? Type;
-        IsPrivate = node.Attributes.IsPrivate;
+        IsPrivate = node.Attributes.IsPrivate ?? IsPrivate;
         Description = node.Attributes.Description ?? Description;
-        MemberType = node.Attributes.MemberType;
+        MemberType = node.Attributes.MemberType ?? MemberType;
+        FileSpan = node.Attributes.FileSpan ?? FileSpan;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)
