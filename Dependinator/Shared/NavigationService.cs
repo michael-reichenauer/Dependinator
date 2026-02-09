@@ -18,7 +18,6 @@ class NavigationService(
     IModelService modelService,
     IPanZoomService panZoomService,
     ISelectionService selectionService,
-    IParserService parserService,
     IVsCodeSendService vsCodeSendService
 ) : INavigationService
 {
@@ -51,43 +50,50 @@ class NavigationService(
     {
         Log.Info("ShowNodeAsync for", fileLocation);
         var location = ParseFileLocation(fileLocation);
-        string modelPath = null!;
+
+        Models.Node? foundNode = null;
         using (var model = modelService.UseModel())
         {
-            modelPath = model.Path;
+            foreach (var node in model.Items.Values.OfType<Models.Node>().Where(n => n.FileSpan is not null))
+            {
+                if (node.FileSpan!.Path.StartsWith(location.Path))
+                {
+                    foundNode = node;
+                    break;
+                }
+            }
         }
-        if (!Try(out var nodeName, out var e, await parserService.TryGetNodeAsync(modelPath, location)))
+        if (foundNode is null)
         {
-            Log.Warn($"Failed to find node for {fileLocation}, {e.ErrorMessage}");
+            Log.Warn($"Failed to find node for {fileLocation}");
             return;
         }
-
-        await ShowNodeAsync(NodeId.FromName(nodeName));
+        Log.Info("Found node", foundNode.LongName);
+        await ShowNodeAsync(foundNode.Id);
     }
 
     public async Task ShowEditor(NodeId nodeId)
     {
         Log.Info("ShowEditor for", nodeId);
-        string modelPath = null!;
-        var nodeName = "";
+
+        FileSpan? fileSpan;
         using (var model = modelService.UseModel())
         {
-            modelPath = model.Path;
             if (!model.TryGetNode(nodeId, out var node))
             {
                 Log.Warn($"Failed find node for {nodeId}");
                 return;
             }
-            nodeName = node.Name;
+            if (node.FileSpan is null)
+            {
+                Log.Warn($"Failed find node file span {nodeId}");
+                return;
+            }
+            fileSpan = node.FileSpan;
         }
+        Log.Info("Show editor for", fileSpan.Path, fileSpan.StarLine);
 
-        if (!Try(out var fileLocation, out var e, await parserService.GetFileLocationAsync(modelPath, nodeName)))
-        {
-            Log.Warn($"Failed to find node for {fileLocation}, {e.ErrorMessage}");
-            return;
-        }
-
-        await vsCodeSendService.ShowEditorAsync(fileLocation);
+        await vsCodeSendService.ShowEditorAsync(new FileLocation(fileSpan.Path, fileSpan.StarLine));
     }
 
     static FileLocation ParseFileLocation(string fileLocation)

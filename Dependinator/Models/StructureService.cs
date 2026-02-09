@@ -16,7 +16,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
     {
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
         {
-            Log.Info("Failed to find", Json.Serialize(parsedNode));
+            Log.Info("Failed to find node corresponding to source", parsedNode.Name);
             return; // New node
         }
 
