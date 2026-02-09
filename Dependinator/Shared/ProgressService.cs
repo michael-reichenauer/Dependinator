@@ -57,7 +57,7 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
         }
     }
 
-    public IProgressScope StartDiscreet() => Start(ProgressKind.Discreet, text: null);
+    public IProgressScope StartDiscreet() => Start(ProgressKind.Discreet, text: ".");
 
     public IProgressScope Start(string? text = null) => Start(ProgressKind.Prominent, text);
 

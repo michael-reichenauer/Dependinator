@@ -368,9 +368,11 @@ class ModelService : IModelService
 
     async Task<R> ParseSourceAndUpdateAsync(string path)
     {
+        using var __ = progressService.StartDiscreet();
+        await Task.Yield();
         using var _ = Timing.Start($"Parsed source and added model items {path}");
 
-        Log.Info("Parsing ...");
+        Log.Info("Parsing source ...");
 
         if (!Try(out var items, out var e, await ParseSourceAsync(path)))
             return e;
