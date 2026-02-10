@@ -290,22 +290,6 @@ export async function getDatabaseValueStream(databaseName, collectionName, id) {
   return new TextEncoder().encode(text);
 }
 
-export async function getDatabaseValue(databaseName, collectionName, id, instance, functionName) {
-  const text = await getDatabaseValueText(databaseName, collectionName, id);
-  if (text == null) {
-    return false;
-  }
-
-  // The value needs to be sent as chunks if larger than packet size limit, which seems to be about 30k.
-  const chunkSize = 20000;
-  for (let i = 0; i < text.length; i += chunkSize) {
-    const chunk = text.substring(i, i + chunkSize);
-    await instance.invokeMethodAsync(functionName, chunk);
-  }
-
-  return true;
-}
-
 export async function deleteDatabaseValue(databaseName, collectionName, id) {
   const db = await getDatabase(databaseName);
   const transaction = db.transaction(collectionName, "readwrite");

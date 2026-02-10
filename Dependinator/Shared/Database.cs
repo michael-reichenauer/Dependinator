@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using Microsoft.JSInterop;
 
@@ -84,20 +83,12 @@ class Database : IDatabase
 
     private async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
     {
-        using var timing = Timing.Start($"Got {databaseName}.{collectionName}.{id} ...");
-        Log.Info($"Getting {databaseName}.{collectionName}.{id} ...");
-
         var streamResult = await GetDatabaseValueWithStreamAsync<T>(databaseName, collectionName, id);
         if (streamResult.IsNone)
             return R.None;
-        if (Try(out var streamValue, out var streamError, streamResult))
-            return streamValue;
-
-        Log.Info(
-            $"Stream interop failed for {databaseName}.{collectionName}.{id}. "
-                + $"Reason: {streamError?.ErrorMessage}. Falling back to chunked interop."
-        );
-        return await GetDatabaseValueWithChunkCallbackAsync<T>(databaseName, collectionName, id);
+        if (!Try(out var streamValue, out var streamError, streamResult))
+            return streamError;
+        return streamValue;
     }
 
     private async ValueTask<R<T>> GetDatabaseValueWithStreamAsync<T>(
@@ -137,68 +128,6 @@ class Database : IDatabase
         catch (Exception ex)
         {
             return R.Error(ex);
-        }
-    }
-
-    private async ValueTask<R<T>> GetDatabaseValueWithChunkCallbackAsync<T>(
-        string databaseName,
-        string collectionName,
-        string id
-    )
-    {
-        // Fallback path for runtimes where stream interop fails.
-        var valueHandler = new ValueHandler();
-        using var valueHandlerRef = jSInterop.Reference(valueHandler);
-
-        bool hasValue;
-        try
-        {
-            hasValue = await jSInterop.Call<bool>(
-                "getDatabaseValue",
-                databaseName,
-                collectionName,
-                id,
-                valueHandlerRef,
-                nameof(valueHandler.OnValue)
-            );
-        }
-        catch (Exception ex)
-        {
-            return R.Error(ex);
-        }
-
-        if (!hasValue)
-            return R.None;
-
-        var valueText = valueHandler.GetValue();
-        Log.Info($"Got value {valueText.Length} bytes");
-        if (!Try(out var value, out var e, () => JsonSerializer.Deserialize<T>(valueText, options)))
-            return e;
-        return value!;
-    }
-
-    // This class is used when a javascript function returns a value that could be larger than 20k
-    class ValueHandler
-    {
-        readonly StringBuilder sb = new();
-        readonly object sync = new();
-
-        public string GetValue()
-        {
-            lock (sync)
-            {
-                return sb.ToString();
-            }
-        }
-
-        [JSInvokable]
-        public ValueTask OnValue(string value)
-        {
-            lock (sync)
-            {
-                sb.Append(value);
-            }
-            return ValueTask.CompletedTask;
         }
     }
 }

@@ -279,7 +279,6 @@ class ModelService : IModelService
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
             return e;
 
-        progress.SetText("Updating ...");
         var modelInfo = await LoadCachedModelDataAsync(path, model);
         CheckLineVisibility();
 
@@ -356,7 +355,6 @@ class ModelService : IModelService
             if (!Try(out var items, out var e, await ParseAsync(path)))
                 return e;
 
-            progress.SetText("Updating ...");
             lock (model.Lock)
             {
                 model.Path = path;

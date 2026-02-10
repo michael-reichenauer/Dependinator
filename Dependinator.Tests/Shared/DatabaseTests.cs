@@ -29,32 +29,18 @@ public class DatabaseTests
     }
 
     [Fact]
-    public async Task GetAsync_ShouldFallbackToChunkedInterop_WhenStreamInteropFails()
+    public async Task GetAsync_ShouldReturnNone_WhenJsInteropReturnsNoValue()
     {
-        var jsInterop = new FakeJsInterop(
-            (functionName, args) =>
-            {
-                if (functionName == "getDatabaseValueStream")
-                    throw new JSException("stream failed");
-
-                Assert.Equal("getDatabaseValue", functionName);
-                var valueHandlerRef = args![3]!;
-                var valueHandler = valueHandlerRef.GetType().GetProperty("Value")!.GetValue(valueHandlerRef)!;
-                var onValueMethod = valueHandler.GetType().GetMethod("OnValue")!;
-                _ = onValueMethod.Invoke(valueHandler, ["{\"Id\":\"item-1\",\"Value\":\"fallback\"}"]);
-                return true;
-            }
-        );
+        var jsInterop = new FakeJsInterop((_, _) => null);
         var sut = new Database(jsInterop);
 
         var result = await sut.GetAsync<string>("Files", "item-1");
 
-        Assert.True(Try(out var value, out var e, result), e?.ErrorMessage);
-        Assert.Equal("fallback", value);
+        Assert.True(result.IsNone);
     }
 
     [Fact]
-    public async Task GetAsync_ShouldReturnError_WhenStreamAndChunkedInteropThrow()
+    public async Task GetAsync_ShouldReturnError_WhenStreamInteropThrows()
     {
         var jsInterop = new FakeJsInterop((_, _) => throw new JSException("read failed"));
         var sut = new Database(jsInterop);
