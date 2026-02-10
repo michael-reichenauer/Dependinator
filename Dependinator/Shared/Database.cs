@@ -62,6 +62,8 @@ class Database : IDatabase
 
     private async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
     {
+        using var _ = Timing.Start($"Got {databaseName}.{collectionName}.{id} ...");
+        Log.Info($"Getting {databaseName}.{collectionName}.{id} ...");
         // For big values, the normal JSInterop call cannot handle big return values,
         // so we use a value handler, where values are returned in chunks using callback from js
         var valueHandler = new ValueHandler();
@@ -77,8 +79,8 @@ class Database : IDatabase
         );
         if (!result)
             return R.None;
-
         var valueText = valueHandler.GetValue();
+        Log.Info($"Got value {valueText.Length} bytes");
         if (!Try(out var value, out var e, () => JsonSerializer.Deserialize<T>(valueText, options)))
             return e;
         return value!;
