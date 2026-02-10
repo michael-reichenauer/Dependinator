@@ -1,3 +1,5 @@
+using DependinatorCore.Shared;
+
 namespace Dependinator.Models;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
@@ -47,6 +49,7 @@ class ModelService : IModelService
     readonly IApplicationEvents applicationEvents;
     readonly IProgressService progressService;
     readonly ICommandService commandService;
+    readonly IHost host;
 
     public ModelService(
         IModel model,
@@ -55,7 +58,8 @@ class ModelService : IModelService
         IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
         IProgressService progressService,
-        ICommandService commandService
+        ICommandService commandService,
+        IHost host
     )
     {
         this.model = model;
@@ -65,6 +69,7 @@ class ModelService : IModelService
         this.applicationEvents = applicationEvents;
         this.progressService = progressService;
         this.commandService = commandService;
+        this.host = host;
         this.applicationEvents.SaveNeeded += TriggerSave;
     }
 
@@ -368,6 +373,9 @@ class ModelService : IModelService
 
     async Task<R> ParseSourceAndUpdateAsync(string path)
     {
+        if (!host.IsVscExtWasm) // Parse source currently only supported when running as VS Code extension
+            return R.Ok;
+
         using var __ = progressService.StartDiscreet();
         await Task.Yield();
         using var _ = Timing.Start($"Parsed source and added model items {path}");
