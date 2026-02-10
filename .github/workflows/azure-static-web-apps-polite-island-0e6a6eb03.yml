@@ -21,10 +21,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.100"
+          dotnet-version: "10.0.101"
           global-json-file: global.json
       - name: Install WASM workload
-        run: dotnet workload install wasm-tools --skip-manifest-update
+        run: dotnet workload restore Dependinator.sln
       - name: Restore
         run: dotnet restore Dependinator.sln
       - name: Publish Dependinator WASM
