@@ -1,6 +1,8 @@
+#if !BROWSER_WASM
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
+#endif
 
 namespace DependinatorCore.Parsing.Sources;
 
@@ -9,6 +11,18 @@ interface ISourceParser
     Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string slnPath);
 }
 
+#if BROWSER_WASM
+[Transient]
+class SourceParser : ISourceParser
+{
+    public Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string slnPath)
+    {
+        return Task.FromResult<R<IReadOnlyList<Parsing.Item>>>(
+            R.Error($"Source parsing is not supported in browser runtime: {slnPath}.")
+        );
+    }
+}
+#else
 [Transient]
 class SourceParser : ISourceParser
 {
@@ -170,3 +184,4 @@ class SourceParser : ISourceParser
         }
     }
 }
+#endif
