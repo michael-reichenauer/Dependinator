@@ -38,23 +38,20 @@ function getDocumentPath(document: vscode.TextDocument): string | undefined {
 }
 
 function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
-    console.log("DPR: sendShowNodeForEditor");
+    console.log("DEP: sendShowNodeForEditor");
     if (!editor || !activePanel) {
-        console.log("DPR: No editor", editor, activePanel);
+        console.log("DEP: No editor", editor, activePanel);
         return;
     }
-    // if (vscode.window.activeTextEditor !== editor) {
-    //     console.log("DPR: Not not same text editor", vscode.window.activeTextEditor, editor);
-    //     return;
-    // }
+
     if (!isCSharpDocument(editor.document)) {
-        console.log("DPR: Not not C#");
+        console.log("DEP: Not not C#");
         return;
     }
 
     const path = getDocumentPath(editor.document);
     if (!path) {
-        console.log("DPR: No path");
+        console.log("DEP: No path");
         return;
     }
 
@@ -63,7 +60,23 @@ function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
         type: "ui/ShowNode",
         message: `${path}@${line}`
     });
-    console.log("DPR: Posted ui/ShowNode");
+    console.log("DEP: Posted ui/ShowNode");
+}
+
+function getTargetViewColumnForShowEditor(panel: vscode.WebviewPanel): vscode.ViewColumn {
+    const panelColumn = panel.viewColumn;
+    const otherGroup = vscode.window.tabGroups.all.find(group => {
+        const groupColumn = group.viewColumn;
+        return groupColumn !== undefined
+            && panelColumn !== undefined
+            && groupColumn !== panelColumn;
+    });
+
+    if (otherGroup?.viewColumn !== undefined)
+        return otherGroup.viewColumn;
+
+    // Fall back to a split so the Dependinator webview stays visible.
+    return vscode.ViewColumn.Beside;
 }
 
 function markLspReady(_params: unknown): void {
@@ -82,9 +95,9 @@ async function waitForLspReady(): Promise<void> {
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    console.log("DPR: #### Activate extension");
+    console.log("DEP: #### Activate extension");
     const installCommand = vscode.commands.registerCommand(installInDevContainerCommandId, async () => {
-        console.log("DPR: Running command installInDevContainerCommandId");
+        console.log("DEP: Running command installInDevContainerCommandId");
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
         const isRemoteWorkspace = !!workspaceFolder && workspaceFolder.scheme !== "file";
         const isRemoteExtensionHost = context.extensionUri.scheme !== "file";
@@ -114,7 +127,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         );
     });
     context.subscriptions.push(installCommand);
-    console.log("DPR: vscode.env.uiKind", vscode.env.uiKind);
+    console.log("DEP: vscode.env.uiKind", vscode.env.uiKind);
     // Web extensions can't start a .NET process, so skip the server there.
     const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
     languageClientPromise = isWeb
@@ -135,7 +148,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Command opens the webview hosting the WASM UI.
     const disposable = vscode.commands.registerCommand(commandId, async () => {
-        console.log("DPR: Running command Open Dependinator ...");
+        console.log("DEP: Running command Open Dependinator ...");
         const activeTextEditor = vscode.window.activeTextEditor;
         if (activePanel) {
             activePanel.reveal(activePanel.viewColumn ?? vscode.ViewColumn.One);
@@ -175,7 +188,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 try {
                     const document = await vscode.workspace.openTextDocument(uri);
                     const editor = await vscode.window.showTextDocument(document, {
-                        preview: false
+                        preview: false,
+                        viewColumn: getTargetViewColumnForShowEditor(panel)
                     });
                     const lineIndex = Math.max(0, line - 1);
                     const position = new vscode.Position(lineIndex, 0);
@@ -193,7 +207,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             if (message.type !== "lsp/message")
                 return;
-            // console.log("DPR: lsp/message message:", message);
+            // console.log("DEP: lsp/message message:", message);
 
             // Messages from WebView UI to language server
             const client = await languageClientPromise;
@@ -231,7 +245,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 export async function deactivate(): Promise<void> {
-    console.log("DPR: deactivate Extension");
+    console.log("DEP: deactivate Extension");
     if (languageClient) {
         await languageClient.stop();
     }

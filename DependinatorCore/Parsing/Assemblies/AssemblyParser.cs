@@ -88,7 +88,7 @@ internal class AssemblyParser : IDisposable
     public async Task ParseAssemblyModuleAsync()
     {
         string nodeName = Name.GetModuleName(assemblyDefinition!);
-        string assemblyDescription = GetAssemblyDescription(assemblyDefinition!);
+        string? assemblyDescription = GetAssemblyDescription(assemblyDefinition!);
         var assemblyNode = new Node(
             nodeName,
             new()
@@ -179,7 +179,7 @@ internal class AssemblyParser : IDisposable
         );
     }
 
-    static string GetAssemblyDescription(AssemblyDefinition assembly)
+    static string? GetAssemblyDescription(AssemblyDefinition assembly)
     {
         Collection<CustomAttribute> attributes = assembly.CustomAttributes;
 
@@ -189,6 +189,6 @@ internal class AssemblyParser : IDisposable
 
         CustomAttributeArgument? argument = descriptionAttribute?.ConstructorArguments.FirstOrDefault();
 
-        return argument?.Value as string ?? "";
+        return argument?.Value as string;
     }
 }

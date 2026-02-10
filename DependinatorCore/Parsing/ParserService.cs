@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using DependinatorCore.Parsing.Sources;
 using DependinatorCore.Rpc;
 
 namespace DependinatorCore.Parsing;
@@ -8,9 +9,9 @@ record ModelPaths(string ModelPath, string WorkFolderPath);
 [Rpc]
 internal interface IParserService
 {
-    //DateTime GetDataTime(string path);
-
     Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
+
+    Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path);
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
@@ -20,22 +21,10 @@ internal interface IParserService
 }
 
 [Singleton]
-class ParserService : IParserService
+class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : IParserService
 {
-    readonly IEnumerable<IParser> parsers;
-
-    public ParserService(IEnumerable<IParser> parsers)
-    {
-        this.parsers = parsers;
-    }
-
-    // public DateTime GetDataTime(string path)
-    // {
-    //     if (!Try(out var parser, GetParser(path)))
-    //         return DateTime.MinValue;
-
-    //     return parser.GetDataTime(path);
-    // }
+    readonly IEnumerable<IParser> parsers = parsers;
+    private readonly ISourceParser sourceParser = sourceParser;
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
     {
@@ -102,6 +91,11 @@ class ParserService : IParserService
             return R.Error($"No supported parser for {path}");
 
         return R<IParser>.From(parser);
+    }
+
+    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path)
+    {
+        return await sourceParser.ParseAsync(path);
     }
 
     sealed class ChannelItemsAdapter(ChannelWriter<Item> writer) : IItems

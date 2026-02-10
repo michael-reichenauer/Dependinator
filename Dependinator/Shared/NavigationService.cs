@@ -18,7 +18,6 @@ class NavigationService(
     IModelService modelService,
     IPanZoomService panZoomService,
     ISelectionService selectionService,
-    IParserService parserService,
     IVsCodeSendService vsCodeSendService
 ) : INavigationService
 {
@@ -51,50 +50,74 @@ class NavigationService(
     {
         Log.Info("ShowNodeAsync for", fileLocation);
         var location = ParseFileLocation(fileLocation);
-        string modelPath = null!;
-        using (var model = modelService.UseModel())
+
+        if (!TryGetNodeIdForFileLocation(location, out var nodeId))
         {
-            modelPath = model.Path;
-        }
-        if (!Try(out var nodeName, out var e, await parserService.TryGetNodeAsync(modelPath, location)))
-        {
-            Log.Warn($"Failed to find node for {fileLocation}, {e.ErrorMessage}");
+            Log.Warn($"Failed to find node for {fileLocation}");
             return;
         }
-
-        await ShowNodeAsync(NodeId.FromName(nodeName));
+        Log.Info("Found node", nodeId);
+        await ShowNodeAsync(nodeId);
     }
 
     public async Task ShowEditor(NodeId nodeId)
     {
         Log.Info("ShowEditor for", nodeId);
-        string modelPath = null!;
-        var nodeName = "";
+
+        FileSpan? fileSpan;
         using (var model = modelService.UseModel())
         {
-            modelPath = model.Path;
             if (!model.TryGetNode(nodeId, out var node))
             {
                 Log.Warn($"Failed find node for {nodeId}");
                 return;
             }
-            nodeName = node.Name;
+            if (node.FileSpan is null)
+            {
+                Log.Warn($"Failed find node file span {nodeId}");
+                return;
+            }
+            fileSpan = node.FileSpan;
         }
+        Log.Info("Show editor for", fileSpan.Path, fileSpan.StarLine);
 
-        if (!Try(out var fileLocation, out var e, await parserService.GetFileLocationAsync(modelPath, nodeName)))
-        {
-            Log.Warn($"Failed to find node for {fileLocation}, {e.ErrorMessage}");
-            return;
-        }
-
-        await vsCodeSendService.ShowEditorAsync(fileLocation);
+        await vsCodeSendService.ShowEditorAsync(new FileLocation(fileSpan.Path, fileSpan.StarLine + 1));
     }
 
     static FileLocation ParseFileLocation(string fileLocation)
     {
         var parts = fileLocation.Split('@');
         var path = parts[0];
-        var line = parts.Length == 2 ? int.Parse(parts[1]) : 0;
+        var line = Math.Max(0, (parts.Length == 2 ? int.Parse(parts[1]) : 0) - 1);
         return new FileLocation(path, line);
+    }
+
+    bool TryGetNodeIdForFileLocation(FileLocation fileLocation, out NodeId nodeId)
+    {
+        nodeId = null!;
+        List<Models.Node> nodeCandidates = [];
+        using (var model = modelService.UseModel())
+        {
+            nodeCandidates = model
+                .Items.Values.OfType<Models.Node>()
+                .Where(n => n.FileSpan is not null)
+                .Where(n => n.FileSpan!.Path.StartsWithIc(fileLocation.Path))
+                .OrderBy(n => n.FileSpan!.StarLine)
+                .ToList();
+        }
+
+        if (!nodeCandidates.Any())
+            return false;
+
+        var currentNode = nodeCandidates.First();
+        foreach (var node in nodeCandidates)
+        {
+            if (fileLocation.Line < node.FileSpan!.StarLine)
+                break;
+            currentNode = node;
+        }
+
+        nodeId = currentNode.Id;
+        return true;
     }
 }

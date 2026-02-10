@@ -40,7 +40,7 @@ internal class TypeParser
             string name = Name.GetTypeFullName(type);
             bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
             string parentName = NodeName.From(name).ParentName.FullName;
-            string description = xmlDockParser.GetDescription(name);
+            string? description = xmlDockParser.GetDescription(name);
 
             if (await IsNameSpaceDocTypeAsync(type, description))
             {
@@ -79,7 +79,7 @@ internal class TypeParser
         await items.SendAsync(typeNode);
     }
 
-    private async Task<bool> IsNameSpaceDocTypeAsync(TypeDefinition type, string description)
+    private async Task<bool> IsNameSpaceDocTypeAsync(TypeDefinition type, string? description)
     {
         if (type.Name.IsSameIc("NamespaceDoc"))
         {

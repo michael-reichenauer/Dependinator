@@ -115,6 +115,7 @@ class CanvasService : ICanvasService
     {
         DiagramName = $"Loading {modelPath} ...";
         applicationEvents.TriggerUIStateChanged();
+        await Task.Yield();
 
         if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath)))
             return;

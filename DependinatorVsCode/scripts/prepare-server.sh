@@ -71,4 +71,11 @@ if [ -d "$target_root" ]; then
 fi
 mkdir -p "$target_dir"
 
-dotnet publish "$server_project" -c Release -r "$rid" --self-contained true -p:PublishSingleFile=true -o "$target_dir"
+dotnet publish "$server_project" -c Release -r "$rid" --self-contained true -o "$target_dir"
+
+# MSBuildWorkspace requires Roslyn build host files to exist on disk next to the server.
+build_host_dll="$target_dir/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll"
+if [ ! -f "$build_host_dll" ]; then
+    echo "Expected Roslyn build host file is missing: $build_host_dll"
+    exit 1
+fi

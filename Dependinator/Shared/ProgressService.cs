@@ -15,19 +15,14 @@ interface IProgressService
 }
 
 [Scoped]
-class ProgressService : IProgressService
+class ProgressService(IApplicationEvents applicationEvents) : IProgressService
 {
     readonly object syncRoot = new();
-    readonly IApplicationEvents applicationEvents;
+    readonly IApplicationEvents applicationEvents = applicationEvents;
     readonly Dictionary<Guid, ProgressEntry> prominentEntries = new();
-    int discreetCount;
+
     long updateStamp;
     string? prominentText;
-
-    public ProgressService(IApplicationEvents applicationEvents)
-    {
-        this.applicationEvents = applicationEvents;
-    }
 
     public bool IsDiscreetActive
     {
@@ -35,7 +30,7 @@ class ProgressService : IProgressService
         {
             lock (syncRoot)
             {
-                return discreetCount > 0;
+                return FindLatestKind() is ProgressKind.Discreet;
             }
         }
     }
@@ -46,7 +41,7 @@ class ProgressService : IProgressService
         {
             lock (syncRoot)
             {
-                return prominentEntries.Count > 0;
+                return FindLatestKind() is ProgressKind.Prominent;
             }
         }
     }
@@ -62,7 +57,7 @@ class ProgressService : IProgressService
         }
     }
 
-    public IProgressScope StartDiscreet() => Start(ProgressKind.Discreet, text: null);
+    public IProgressScope StartDiscreet() => Start(ProgressKind.Discreet, text: ".");
 
     public IProgressScope Start(string? text = null) => Start(ProgressKind.Prominent, text);
 
@@ -71,36 +66,21 @@ class ProgressService : IProgressService
         var id = Guid.NewGuid();
         lock (syncRoot)
         {
-            if (kind == ProgressKind.Discreet)
-            {
-                discreetCount++;
-            }
-            else
-            {
-                var entry = new ProgressEntry(++updateStamp, NormalizeText(text));
-                prominentEntries[id] = entry;
-                prominentText = FindLatestText();
-            }
+            var entry = new ProgressEntry(kind, ++updateStamp, NormalizeText(text));
+            prominentEntries[id] = entry;
+            prominentText = FindLatestText();
         }
 
         applicationEvents.TriggerUIStateChanged();
         return new ProgressScope(this, kind, id);
     }
 
-    void Stop(ProgressKind kind, Guid id)
+    void Stop(ProgressKind _, Guid id)
     {
         var changed = false;
         lock (syncRoot)
         {
-            if (kind == ProgressKind.Discreet)
-            {
-                if (discreetCount > 0)
-                {
-                    discreetCount--;
-                    changed = true;
-                }
-            }
-            else if (prominentEntries.Remove(id))
+            if (prominentEntries.Remove(id))
             {
                 prominentText = FindLatestText();
                 changed = true;
@@ -113,15 +93,12 @@ class ProgressService : IProgressService
 
     void SetText(ProgressKind kind, Guid id, string text)
     {
-        if (kind != ProgressKind.Prominent)
-            return;
-
         var changed = false;
         lock (syncRoot)
         {
             if (!prominentEntries.TryGetValue(id, out var entry))
                 return;
-
+            entry.Kind = kind;
             entry.Text = NormalizeText(text);
             entry.UpdateStamp = ++updateStamp;
             prominentText = FindLatestText();
@@ -134,7 +111,11 @@ class ProgressService : IProgressService
 
     string? NormalizeText(string? text) => string.IsNullOrWhiteSpace(text) ? null : text;
 
-    string? FindLatestText()
+    string? FindLatestText() => FindLatest()?.Text;
+
+    ProgressKind? FindLatestKind() => FindLatest()?.Kind;
+
+    ProgressEntry? FindLatest()
     {
         ProgressEntry? selected = null;
         foreach (var entry in prominentEntries.Values)
@@ -146,7 +127,7 @@ class ProgressService : IProgressService
                 selected = entry;
         }
 
-        return selected?.Text;
+        return selected;
     }
 
     sealed class ProgressScope : IProgressScope
@@ -175,16 +156,11 @@ class ProgressService : IProgressService
         }
     }
 
-    sealed class ProgressEntry
+    sealed class ProgressEntry(ProgressService.ProgressKind Kind, long updateStamp, string? text)
     {
-        public ProgressEntry(long updateStamp, string? text)
-        {
-            UpdateStamp = updateStamp;
-            Text = text;
-        }
-
-        public long UpdateStamp { get; set; }
-        public string? Text { get; set; }
+        public ProgressKind Kind { get; set; } = Kind;
+        public long UpdateStamp { get; set; } = updateStamp;
+        public string? Text { get; set; } = text;
     }
 
     enum ProgressKind
