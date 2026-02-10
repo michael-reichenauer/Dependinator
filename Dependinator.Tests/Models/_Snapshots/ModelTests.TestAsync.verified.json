@@ -9,7 +9,6 @@
       "ParentName": "",
       "Type": "Root",
       "Attributes": {
-        "Description": "",
         "MemberType": "None"
       },
       "Boundary": {
@@ -24,7 +23,6 @@
       "ParentName": "",
       "Type": "Parent",
       "Attributes": {
-        "Description": "",
         "MemberType": "None"
       },
       "Boundary": {
@@ -40,7 +38,6 @@
       "ParentName": "Dependinator*Tests",
       "Type": "Parent",
       "Attributes": {
-        "Description": "",
         "MemberType": "None"
       },
       "Color": "Cyan"
@@ -50,7 +47,6 @@
       "ParentName": "Dependinator*Tests.Dependinator",
       "Type": "Parent",
       "Attributes": {
-        "Description": "",
         "MemberType": "None"
       },
       "Color": "Yellow"
@@ -60,7 +56,6 @@
       "ParentName": "Dependinator*Tests.Dependinator.Tests",
       "Type": "Parent",
       "Attributes": {
-        "Description": "",
         "MemberType": "None"
       },
       "Color": "Red"
@@ -70,7 +65,7 @@
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models",
       "Type": "Type",
       "Attributes": {
-        "Description": "",
+        "IsPrivate": false,
         "MemberType": "None"
       },
       "Color": "Green"
@@ -80,7 +75,7 @@
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
       "Attributes": {
-        "Description": "",
+        "IsPrivate": false,
         "MemberType": "Constructor"
       },
       "Color": "Teal"
@@ -90,7 +85,7 @@
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
       "Attributes": {
-        "Description": "",
+        "IsPrivate": false,
         "MemberType": "Method"
       },
       "Color": "Yellow"
@@ -100,7 +95,7 @@
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
       "Attributes": {
-        "Description": "",
+        "IsPrivate": false,
         "MemberType": "Method"
       },
       "Color": "Blue"
@@ -110,7 +105,7 @@
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
       "Attributes": {
-        "Description": "",
+        "IsPrivate": false,
         "MemberType": "Field"
       },
       "Color": "Red"

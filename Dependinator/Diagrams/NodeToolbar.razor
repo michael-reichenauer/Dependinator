@@ -29,7 +29,7 @@
     <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
     @if (CanShowSource)
     {
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync" />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowEditorAsync" />
     }
 
     @if (!IsIconMode)
@@ -50,6 +50,7 @@
   [Inject] IDialogService dialogService { get; set; } = null!;
   [Inject] IDependenciesService dependenciesService { get; set; } = null!;
   [Inject] Models.IModelService modelService { get; set; } = null!;
+  [Inject] INavigationService navigationService { get; set; } = null!;
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
@@ -72,6 +73,14 @@
 
   void ShowReferences() => dependenciesService.ShowReferences();
   void ShowDependencies() => dependenciesService.ShowDependencies();
+
+  async Task ShowEditorAsync()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    await navigationService.ShowEditor(Models.NodeId.FromId(selectionService.SelectedId.Id));
+  }
+
   async Task ShowSourceAsync()
   {
     if (!selectionService.SelectedId.IsNode)

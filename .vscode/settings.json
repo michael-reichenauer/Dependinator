@@ -6,6 +6,7 @@
   "azureFunctions.preDeployTask": "publish (functions)",
   "cSpell.words": [
     "Blazor",
+    "cctor",
     "dasharray",
     "Debouncer",
     "Decompile",

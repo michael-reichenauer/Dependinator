@@ -19,14 +19,21 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 {
     readonly IJSInterop jSInterop;
     readonly IJsonRpcService jsonRpcService;
-    private readonly IHost host;
+    readonly IHost host;
+    readonly IVsCodeReceiveService vsCodeIntegrationService;
     DotNetObjectReference<VsCodeMessageService>? reference;
 
-    public VsCodeMessageService(IJSInterop jSInterop, IJsonRpcService jsonRpcService, IHost host)
+    public VsCodeMessageService(
+        IJSInterop jSInterop,
+        IJsonRpcService jsonRpcService,
+        IHost host,
+        IVsCodeReceiveService vsCodeIntegrationService
+    )
     {
         this.jSInterop = jSInterop;
         this.jsonRpcService = jsonRpcService;
         this.host = host;
+        this.vsCodeIntegrationService = vsCodeIntegrationService;
     }
 
     public async Task InitAsync()
@@ -67,11 +74,17 @@ class VsCodeMessageService : IVsCodeMessageService, IAsyncDisposable
 
         if (type == "ui/error")
         {
-            Log.Error("Communication Error", message, message);
+            Log.Error("Communication Error", message);
             return;
         }
 
-        await jsonRpcService.AddReceivedMessageAsync(message, CancellationToken.None);
+        if (type == "ui/message")
+        {
+            await jsonRpcService.AddReceivedMessageAsync(message, CancellationToken.None);
+            return;
+        }
+
+        await vsCodeIntegrationService.ReceivedMessageAsync(type, message);
     }
 
     public ValueTask DisposeAsync()

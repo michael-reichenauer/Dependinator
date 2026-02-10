@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using Microsoft.JSInterop;
 
@@ -18,6 +17,7 @@ class Database : IDatabase
 {
     const int CurrentVersion = 2;
     const string DatabaseName = "Dependinator";
+    const long MaxReadStreamSizeBytes = 1024L * 1024 * 50; // 50 MB
     static readonly JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
 
     record Pair<T>(string Id, T Value);
@@ -36,15 +36,29 @@ class Database : IDatabase
 
     public async Task<R<IReadOnlyList<string>>> GetKeysAsync(string collectionName)
     {
-        var keys = await jSInterop.Call<IReadOnlyList<string>>("getDatabaseAllKeys", DatabaseName, collectionName);
-        return keys?.ToList() ?? [];
+        try
+        {
+            var keys = await jSInterop.Call<IReadOnlyList<string>>("getDatabaseAllKeys", DatabaseName, collectionName);
+            return keys?.ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
     }
 
     public async Task<R> SetAsync<T>(string collectionName, string id, T value)
     {
-        var pair = new Pair<T>(id, value);
-        await jSInterop.Call("setDatabaseValue", DatabaseName, collectionName, pair);
-        return R.Ok;
+        try
+        {
+            var pair = new Pair<T>(id, value);
+            await jSInterop.Call("setDatabaseValue", DatabaseName, collectionName, pair);
+            return R.Ok;
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
     }
 
     public async Task<R<T>> GetAsync<T>(string collectionName, string id)
@@ -56,46 +70,64 @@ class Database : IDatabase
 
     public async Task<R> DeleteAsync(string collectionName, string id)
     {
-        await jSInterop.Call("deleteDatabaseValue", DatabaseName, collectionName, id);
-        return R.Ok;
+        try
+        {
+            await jSInterop.Call("deleteDatabaseValue", DatabaseName, collectionName, id);
+            return R.Ok;
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
     }
 
     private async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
     {
-        // For big values, the normal JSInterop call cannot handle big return values,
-        // so we use a value handler, where values are returned in chunks using callback from js
-        var valueHandler = new ValueHandler();
-        using var valueHandlerRef = jSInterop.Reference(valueHandler);
-
-        var result = await jSInterop.Call<bool>(
-            "getDatabaseValue",
-            databaseName,
-            collectionName,
-            id,
-            valueHandlerRef,
-            nameof(valueHandler.OnValue)
-        );
-        if (!result)
+        var streamResult = await GetDatabaseValueWithStreamAsync<T>(databaseName, collectionName, id);
+        if (streamResult.IsNone)
             return R.None;
-
-        var valueText = valueHandler.GetValue();
-        if (!Try(out var value, out var e, () => JsonSerializer.Deserialize<T>(valueText, options)))
-            return e;
-        return value!;
+        if (!Try(out var streamValue, out var streamError, streamResult))
+            return streamError;
+        return streamValue;
     }
 
-    // This class is used when a javascript function returns a value that could be larger than 20k
-    class ValueHandler
+    private async ValueTask<R<T>> GetDatabaseValueWithStreamAsync<T>(
+        string databaseName,
+        string collectionName,
+        string id
+    )
     {
-        readonly StringBuilder sb = new();
-
-        public string GetValue() => sb.ToString();
-
-        [JSInvokable]
-        public ValueTask OnValue(string value)
+        IJSStreamReference? valueStreamRef;
+        try
         {
-            sb.Append(value);
-            return ValueTask.CompletedTask;
+            valueStreamRef = await jSInterop.Call<IJSStreamReference?>(
+                "getDatabaseValueStream",
+                databaseName,
+                collectionName,
+                id
+            );
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
+
+        if (valueStreamRef is null)
+            return R.None;
+
+        try
+        {
+            await using var _ = valueStreamRef;
+            await using var stream = await valueStreamRef.OpenReadStreamAsync(MaxReadStreamSizeBytes);
+            var value = await JsonSerializer.DeserializeAsync<T>(stream, options);
+            if (value is null)
+                return R.Error($"Deserialized null value for {databaseName}.{collectionName}.{id}");
+
+            return value;
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
         }
     }
 }

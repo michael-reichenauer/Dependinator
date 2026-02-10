@@ -7,14 +7,10 @@ class AssemblyHelper
 {
     public static TypeDefinition GetTypeDefinition<T>()
     {
-        var assemblyDefinition = GetAssemblyDefinition<T>();
-        return GetAssemblyTypes(assemblyDefinition).Single(t => t.FullName == typeof(T).FullName);
+        return GetAssemblyTypes(GetModule<T>()).Single(t => t.FullName == typeof(T).FullName);
     }
 
-    static IEnumerable<TypeDefinition> GetAssemblyTypes(AssemblyDefinition assemblyDefinition) =>
-        assemblyDefinition.MainModule.Types.Where(type =>
-            !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
-        );
+    public static ModuleDefinition GetModule<T>() => GetAssemblyDefinition<T>().MainModule;
 
     public static AssemblyDefinition GetAssemblyDefinition<T>()
     {
@@ -23,4 +19,9 @@ class AssemblyHelper
         var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
         return assemblyDefinition;
     }
+
+    static IEnumerable<TypeDefinition> GetAssemblyTypes(ModuleDefinition module) =>
+        module.Types.Where(type =>
+            !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
+        );
 }

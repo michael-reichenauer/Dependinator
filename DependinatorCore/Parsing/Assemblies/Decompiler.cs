@@ -1,11 +1,16 @@
-﻿using System.Reflection.PortableExecutable;
+﻿using System.Diagnostics.Eventing.Reader;
+using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.Metadata;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Collections.Generic;
 
 namespace DependinatorCore.Parsing.Assemblies;
+
+record FileLocationSpan(string Path, int StartLine, int EndLine);
 
 class Decompiler
 {
@@ -15,49 +20,55 @@ class Decompiler
         {
             string codeText = GetDecompiledText(module, type);
 
-            if (TryGetFileLocation(type, out FileLocation fileLocation))
+            if (TryGetFileLocationSpan(type, out FileLocationSpan fileLocationSpan))
             {
-                return new Source(fileLocation.Path, codeText, fileLocation.Line);
+                return new Source(codeText, new FileLocation(fileLocationSpan.Path, fileLocationSpan.StartLine));
             }
 
-            return new Source("", codeText, 0);
+            return new Source(codeText, new FileLocation("", 0));
         }
         else if (TryGetMember(module, nodeName, out IMemberDefinition member))
         {
             string codeText = GetDecompiledText(module, member);
 
-            if (TryGetFilePath(member, out FileLocation fileLocation))
+            if (TryGetFilePath(member, out FileLocationSpan fileLocationSpan))
             {
-                return new Source(fileLocation.Path, codeText, fileLocation.Line);
+                return new Source(codeText, new FileLocation(fileLocationSpan.Path, fileLocationSpan.StartLine));
             }
 
-            return new Source("", codeText, 0);
+            return new Source(codeText, new FileLocation("", 0));
         }
 
         Log.Debug($"Failed to locate source for:\n{nodeName}");
         return R.Error("Failed to locate source for:\n{nodeName}");
     }
 
-    public bool TryGetNodeNameForSourceFile(
-        IEnumerable<TypeDefinition> assemblyTypes,
-        string sourceFilePath,
-        out string nodeName
-    )
+    record TypeLocationSpan(TypeDefinition Type, FileLocationSpan? FileLocationSpan);
+
+    public bool TryGetNodeNameForFileLocation(ModuleDefinition module, FileLocation fileLocation, out string nodeName)
     {
-        foreach (TypeDefinition type in assemblyTypes)
+        nodeName = null!;
+        var assemblyTypes = GetAssemblyTypes(module);
+        var typeLocationSpans = assemblyTypes
+            .Select(t => TryGetFileLocationSpan(t, out var span) ? new TypeLocationSpan(t, span) : null)
+            .Where(tls => tls is not null)
+            .Where(tls => tls?.FileLocationSpan?.Path.StartsWithIc(fileLocation.Path) ?? false)
+            .OrderBy(tls => tls!.FileLocationSpan!.StartLine)
+            .ToList();
+
+        if (!typeLocationSpans.Any())
+            return false;
+
+        TypeLocationSpan typeLocationSpan = typeLocationSpans.First()!;
+        foreach (var tls in typeLocationSpans)
         {
-            if (TryGetFileLocation(type, out FileLocation fileLocation))
-            {
-                if (fileLocation.Path.StartsWithIc(sourceFilePath))
-                {
-                    nodeName = Name.GetTypeFullName(type);
-                    return true;
-                }
-            }
+            if (fileLocation.Line < tls!.FileLocationSpan!.StartLine)
+                break;
+            typeLocationSpan = tls;
         }
 
-        nodeName = "";
-        return false;
+        nodeName = Name.GetTypeFullName(typeLocationSpan.Type);
+        return true;
     }
 
     static bool TryGetType(ModuleDefinition module, string nodeName, out TypeDefinition type)
@@ -125,6 +136,13 @@ class Decompiler
         return false;
     }
 
+    IEnumerable<TypeDefinition> GetAssemblyTypes(ModuleDefinition module)
+    {
+        return module.Types.Where(type =>
+            !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
+        );
+    }
+
     static bool TryGetMethod(TypeDefinition type, string fullName, out IMemberDefinition method)
     {
         method = type.Methods.FirstOrDefault(m => Name.GetMethodFullName(m) == fullName)!;
@@ -161,41 +179,51 @@ class Decompiler
         return decompiler.DecompileAsString([handle]);
     }
 
-    static bool TryGetFileLocation(TypeDefinition type, out FileLocation fileLocation)
+    static bool TryGetFileLocationSpan(TypeDefinition type, out FileLocationSpan fileLocationSpan)
     {
+        fileLocationSpan = default!;
+        if (!type.Methods.Any())
+            return false;
+
+        string path = null!;
+        int startLine = int.MaxValue;
+        int endLine = 0;
         foreach (MethodDefinition method in type.Methods)
         {
-            SequencePoint? sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
-            if (sequencePoint != null)
+            if (TryGetFileLocationSpan(method.DebugInformation.SequencePoints, out var methodSpan))
             {
-                fileLocation = ToFileLocation(sequencePoint);
-                return true;
+                path ??= methodSpan.Path;
+                startLine = Math.Min(startLine, methodSpan.StartLine);
+                endLine = Math.Max(endLine, methodSpan.EndLine);
             }
         }
 
-        fileLocation = default!;
-        return false;
+        fileLocationSpan = new FileLocationSpan(path, startLine, endLine);
+        return path is not null;
     }
 
-    bool TryGetFilePath(IMemberDefinition member, out FileLocation fileLocation)
+    static bool TryGetFileLocationSpan(Collection<SequencePoint> sequencePoints, out FileLocationSpan fileLocationSpan)
     {
-        if (member is MethodDefinition method)
-        {
-            SequencePoint? sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
-            if (sequencePoint != null)
-            {
-                fileLocation = ToFileLocation(sequencePoint);
-                return true;
-            }
-        }
-
-        return TryGetFileLocation(member.DeclaringType, out fileLocation);
+        fileLocationSpan = default!;
+        if (!sequencePoints.Any())
+            return false;
+        var path = sequencePoints.First().Document.Url;
+        var startLine = sequencePoints.Min(sp => sp.StartLine);
+        var endLine = sequencePoints.Max(sp => sp.EndLine);
+        fileLocationSpan = new FileLocationSpan(path, startLine, endLine);
+        return true;
     }
 
-    record FileLocation(string Path, int Line);
+    static bool TryGetFilePath(IMemberDefinition member, out FileLocationSpan fileLocationSpan)
+    {
+        if (
+            member is MethodDefinition method
+            && TryGetFileLocationSpan(method.DebugInformation.SequencePoints, out fileLocationSpan)
+        )
+            return true;
 
-    static FileLocation ToFileLocation(SequencePoint sequencePoint) =>
-        new(sequencePoint.Document.Url, sequencePoint.StartLine);
+        return TryGetFileLocationSpan(member.DeclaringType, out fileLocationSpan);
+    }
 
     static CSharpDecompiler CreateDecompiler(ModuleDefinition module)
     {

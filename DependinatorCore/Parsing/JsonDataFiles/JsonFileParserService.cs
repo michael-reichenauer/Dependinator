@@ -45,9 +45,9 @@ class JsonFileParserService : IParser
     }
 
     public Task<R<Source>> GetSourceAsync(string path, string nodeName) =>
-        Task.FromResult((R<Source>)new Source(path, "", 0));
+        Task.FromResult((R<Source>)new Source("", new FileLocation(path, 0)));
 
-    public Task<R<string>> GetNodeAsync(string path, Source source) => Task.FromResult((R<string>)"");
+    public Task<R<string>> GetNodeAsync(string path, FileLocation fileLocation) => Task.FromResult((R<string>)"");
 
     public DateTime GetDataTime(string path) => File.GetLastWriteTime(path);
 
@@ -89,17 +89,13 @@ class JsonFileParserService : IParser
     static NodeAttributes ToNodeAttributes(JsonTypes.Node node) =>
         new()
         {
-            Type = Enums.To<NodeType>(node.Attributes?.Type, NodeType.None),
-            Description = node.Attributes?.Description ?? "",
+            Type = Enums.ToOrNull<NodeType>(node.Attributes?.Type),
+            Description = node.Attributes?.Description,
             Parent = node.Parent,
         };
 
     static Link ToLinkData(JsonTypes.Link link) =>
-        new(
-            link.Source,
-            link.Target,
-            new() { TargetType = Enums.To<NodeType>(link.Attributes?.TargetType, NodeType.None) }
-        );
+        new(link.Source, link.Target, new() { TargetType = Enums.ToOrNull<NodeType>(link.Attributes?.TargetType) });
 
     static void ValidateVersion(JsonReader reader)
     {

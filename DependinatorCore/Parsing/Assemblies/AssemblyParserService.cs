@@ -31,7 +31,7 @@ internal class AssemblyParserService : IParser
         return await Task.Run(() => p.TryGetSource(nodeName));
     }
 
-    public Task<R<string>> GetNodeAsync(string path, Source source) => Task.FromResult((R<string>)"");
+    public Task<R<string>> GetNodeAsync(string path, FileLocation fileLocation) => Task.FromResult((R<string>)"");
 
     public DateTime GetDataTime(string path) => File.GetLastWriteTime(path);
 }

@@ -29,6 +29,7 @@ internal class SolutionParser : IDisposable
 
     public async Task<R> ParseAsync()
     {
+        MSBuildLocatorHelper.Register();
         Log.Info("Parsing solution", solutionFilePath);
         parentNodesToSend.Add(CreateSolutionNode());
 
@@ -50,6 +51,7 @@ internal class SolutionParser : IDisposable
 
     public async Task<R<Source>> TryGetSourceAsync(string nodeName)
     {
+        MSBuildLocatorHelper.Register();
         if (!Try(out var e, await CreateAssemblyParsersAsync(true)))
             return e;
 
@@ -74,12 +76,13 @@ internal class SolutionParser : IDisposable
             if (!Try(out var source, out var e, assemblyParser.TryGetSource(nodeName)))
                 return e;
 
-            return new Source(source.Path, source.Text, source.LineNumber);
+            return source;
         });
     }
 
-    public async Task<R<string>> TryGetNodeAsync(Source source)
+    public async Task<R<string>> TryGetNodeAsync(FileLocation fileLocation)
     {
+        MSBuildLocatorHelper.Register();
         await Task.Yield();
 
         if (!Try(out var e, await CreateAssemblyParsersAsync(true)))
@@ -87,14 +90,14 @@ internal class SolutionParser : IDisposable
 
         foreach (AssemblyParser parser in assemblyParsers)
         {
-            if (Try(out var nodeName, parser.TryGetNode(source.Path)))
+            if (Try(out var nodeName, parser.TryGetNode(fileLocation)))
                 return nodeName;
         }
 
-        string sourceFilePath = Path.GetDirectoryName(source.Path) ?? "";
+        string sourceFilePath = Path.GetDirectoryName(fileLocation.Path) ?? "";
         foreach (AssemblyParser parser in assemblyParsers)
         {
-            if (Try(out var nodeName, parser.TryGetNode(sourceFilePath)))
+            if (Try(out var nodeName, parser.TryGetNode(new FileLocation(sourceFilePath, fileLocation.Line))))
                 return GetParentName(nodeName);
         }
 
@@ -103,6 +106,7 @@ internal class SolutionParser : IDisposable
 
     public static IReadOnlyList<string> GetDataFilePaths(string solutionFilePath)
     {
+        MSBuildLocatorHelper.Register();
         Solution solution = new Solution(solutionFilePath);
 
         return solution.GetDataFilePaths();
