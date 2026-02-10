@@ -78,7 +78,7 @@ export function getWindowSizeDetails(parm) {
 
 export function addMouseEventListener(elementId, eventName, instance, functionName) {
   function eventHandler(event) {
-    // console.log("DPR: mouse", event);
+    // console.log("DEP: mouse", event);
     instance.invokeMethodAsync(functionName, {
       Type: eventName,
       TargetId: event.target.id,
