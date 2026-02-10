@@ -12,10 +12,11 @@ export function createDependinatorWebviewPanel(
     context: vscode.ExtensionContext
 ): vscode.WebviewPanel {
     console.log("DEP: createDependinatorWebviewPanel ...");
+    const targetColumn = getTargetViewColumnForWebview();
     const panel = vscode.window.createWebviewPanel(
         viewType,
         "Dependinator",
-        vscode.ViewColumn.One,
+        targetColumn,
         {
             enableScripts: true,
             retainContextWhenHidden: true,
@@ -25,6 +26,22 @@ export function createDependinatorWebviewPanel(
 
     panel.webview.html = getWebviewHtml(panel.webview, context.extensionUri);
     return panel;
+}
+
+function getTargetViewColumnForWebview(): vscode.ViewColumn {
+    const activeColumn = vscode.window.tabGroups.activeTabGroup.viewColumn;
+    const otherGroup = vscode.window.tabGroups.all.find(group => {
+        const groupColumn = group.viewColumn;
+        return groupColumn !== undefined
+            && activeColumn !== undefined
+            && groupColumn !== activeColumn;
+    });
+
+    if (otherGroup?.viewColumn !== undefined)
+        return otherGroup.viewColumn;
+
+    // Create a split if there is no other group yet.
+    return vscode.ViewColumn.Beside;
 }
 
 export function registerWebviewMessageHandler(
