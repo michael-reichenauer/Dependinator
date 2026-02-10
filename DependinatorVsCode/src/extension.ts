@@ -63,6 +63,22 @@ function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
     console.log("DEP: Posted ui/ShowNode");
 }
 
+function getTargetViewColumnForShowEditor(panel: vscode.WebviewPanel): vscode.ViewColumn {
+    const panelColumn = panel.viewColumn;
+    const otherGroup = vscode.window.tabGroups.all.find(group => {
+        const groupColumn = group.viewColumn;
+        return groupColumn !== undefined
+            && panelColumn !== undefined
+            && groupColumn !== panelColumn;
+    });
+
+    if (otherGroup?.viewColumn !== undefined)
+        return otherGroup.viewColumn;
+
+    // Fall back to a split so the Dependinator webview stays visible.
+    return vscode.ViewColumn.Beside;
+}
+
 function markLspReady(_params: unknown): void {
     if (lspReady)
         return;
@@ -172,7 +188,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 try {
                     const document = await vscode.workspace.openTextDocument(uri);
                     const editor = await vscode.window.showTextDocument(document, {
-                        preview: false
+                        preview: false,
+                        viewColumn: getTargetViewColumnForShowEditor(panel)
                     });
                     const lineIndex = Math.max(0, line - 1);
                     const position = new vscode.Position(lineIndex, 0);
