@@ -36,15 +36,29 @@ class Database : IDatabase
 
     public async Task<R<IReadOnlyList<string>>> GetKeysAsync(string collectionName)
     {
-        var keys = await jSInterop.Call<IReadOnlyList<string>>("getDatabaseAllKeys", DatabaseName, collectionName);
-        return keys?.ToList() ?? [];
+        try
+        {
+            var keys = await jSInterop.Call<IReadOnlyList<string>>("getDatabaseAllKeys", DatabaseName, collectionName);
+            return keys?.ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
     }
 
     public async Task<R> SetAsync<T>(string collectionName, string id, T value)
     {
-        var pair = new Pair<T>(id, value);
-        await jSInterop.Call("setDatabaseValue", DatabaseName, collectionName, pair);
-        return R.Ok;
+        try
+        {
+            var pair = new Pair<T>(id, value);
+            await jSInterop.Call("setDatabaseValue", DatabaseName, collectionName, pair);
+            return R.Ok;
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
     }
 
     public async Task<R<T>> GetAsync<T>(string collectionName, string id)
@@ -56,8 +70,15 @@ class Database : IDatabase
 
     public async Task<R> DeleteAsync(string collectionName, string id)
     {
-        await jSInterop.Call("deleteDatabaseValue", DatabaseName, collectionName, id);
-        return R.Ok;
+        try
+        {
+            await jSInterop.Call("deleteDatabaseValue", DatabaseName, collectionName, id);
+            return R.Ok;
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
     }
 
     private async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
@@ -69,14 +90,23 @@ class Database : IDatabase
         var valueHandler = new ValueHandler();
         using var valueHandlerRef = jSInterop.Reference(valueHandler);
 
-        var result = await jSInterop.Call<bool>(
-            "getDatabaseValue",
-            databaseName,
-            collectionName,
-            id,
-            valueHandlerRef,
-            nameof(valueHandler.OnValue)
-        );
+        bool result;
+        try
+        {
+            result = await jSInterop.Call<bool>(
+                "getDatabaseValue",
+                databaseName,
+                collectionName,
+                id,
+                valueHandlerRef,
+                nameof(valueHandler.OnValue)
+            );
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
+
         if (!result)
             return R.None;
         var valueText = valueHandler.GetValue();
@@ -90,13 +120,23 @@ class Database : IDatabase
     class ValueHandler
     {
         readonly StringBuilder sb = new();
+        readonly object sync = new();
 
-        public string GetValue() => sb.ToString();
+        public string GetValue()
+        {
+            lock (sync)
+            {
+                return sb.ToString();
+            }
+        }
 
         [JSInvokable]
         public ValueTask OnValue(string value)
         {
-            sb.Append(value);
+            lock (sync)
+            {
+                sb.Append(value);
+            }
             return ValueTask.CompletedTask;
         }
     }

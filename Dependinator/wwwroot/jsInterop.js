@@ -151,103 +151,163 @@ export function addPointerEventListener(elementId, eventName, instance, function
   document.getElementById(elementId).addEventListener(eventName, eventHandler)
 }
 
+const openDatabases = new Map();
 
-export function initializeDatabase(databaseName, currentVersion, collectionNames) {
-  const db = indexedDB.open(databaseName, currentVersion);
+function formatDatabaseError(prefix, error) {
+  const detail = error?.message ?? "unknown error";
+  return new Error(`${prefix}: ${detail}`);
+}
 
-  db.onupgradeneeded = function () {
-    collectionNames.forEach(collectionName => {
-      db.result.createObjectStore(collectionName, { keyPath: "id" });
-    });
+function openDatabase(databaseName, version, onUpgradeNeeded) {
+  return new Promise((resolve, reject) => {
+    const request = version == null ? indexedDB.open(databaseName) : indexedDB.open(databaseName, version);
+    let isSettled = false;
+
+    request.onupgradeneeded = (event) => {
+      try {
+        if (onUpgradeNeeded) {
+          onUpgradeNeeded(request.result, event);
+        }
+      } catch (error) {
+        isSettled = true;
+        reject(formatDatabaseError(`Failed upgrading database '${databaseName}'`, error));
+      }
+    };
+
+    request.onsuccess = () => {
+      if (isSettled) {
+        request.result.close();
+        return;
+      }
+
+      const db = request.result;
+      db.onversionchange = () => {
+        db.close();
+        openDatabases.delete(databaseName);
+      };
+      resolve(db);
+    };
+
+    request.onerror = () => {
+      isSettled = true;
+      reject(formatDatabaseError(`Failed opening database '${databaseName}'`, request.error));
+    };
+
+    request.onblocked = () => {
+      isSettled = true;
+      reject(new Error(`Opening database '${databaseName}' was blocked by another open connection`));
+    };
+  });
+}
+
+async function getDatabase(databaseName) {
+  let databasePromise = openDatabases.get(databaseName);
+  if (!databasePromise) {
+    databasePromise = openDatabase(databaseName);
+    openDatabases.set(databaseName, databasePromise);
+  }
+
+  try {
+    return await databasePromise;
+  } catch (error) {
+    openDatabases.delete(databaseName);
+    throw error;
   }
 }
 
-export async function setDatabaseValue(databaseName, collectionName, value) {
-  let request = new Promise((resolve) => {
-    const db = indexedDB.open(databaseName);
+function awaitRequest(request, description) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(formatDatabaseError(description, request.error));
+  });
+}
 
-    db.onsuccess = function () {
-      const transaction = db.result.transaction(collectionName, "readwrite");
-      const collection = transaction.objectStore(collectionName)
+function awaitTransaction(transaction, description) {
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(formatDatabaseError(description, transaction.error));
+    transaction.onabort = () => reject(formatDatabaseError(description, transaction.error));
+  });
+}
 
-      const result = collection.put(value);
-      result.onsuccess = function () {
-        resolve(true);
-      }
+export async function initializeDatabase(databaseName, currentVersion, collectionNames) {
+  const existingDatabasePromise = openDatabases.get(databaseName);
+  if (existingDatabasePromise) {
+    try {
+      const existingDatabase = await existingDatabasePromise;
+      existingDatabase.close();
+    } catch (_) {
+      // Ignore and continue with a fresh open below.
+    } finally {
+      openDatabases.delete(databaseName);
     }
+  }
+
+  const database = await openDatabase(databaseName, currentVersion, (db) => {
+    collectionNames.forEach(collectionName => {
+      if (!db.objectStoreNames.contains(collectionName)) {
+        db.createObjectStore(collectionName, { keyPath: "id" });
+      }
+    });
   });
 
-  await request;
+  openDatabases.set(databaseName, Promise.resolve(database));
+}
+
+export async function setDatabaseValue(databaseName, collectionName, value) {
+  const db = await getDatabase(databaseName);
+  const transaction = db.transaction(collectionName, "readwrite");
+  const collection = transaction.objectStore(collectionName);
+  const transactionCompletion = awaitTransaction(transaction, `Failed committing write to ${databaseName}.${collectionName}`);
+
+  await awaitRequest(collection.put(value), `Failed writing value to ${databaseName}.${collectionName}`);
+  await transactionCompletion;
 }
 
 export async function getDatabaseValue(databaseName, collectionName, id, instance, functionName) {
-  let request = new Promise((resolve) => {
-    const db = indexedDB.open(databaseName);
-    db.onsuccess = function () {
-      const transaction = db.result.transaction(collectionName, "readonly");
-      const collection = transaction.objectStore(collectionName);
-      const result = collection.get(id);
+  const db = await getDatabase(databaseName);
+  const transaction = db.transaction(collectionName, "readonly");
+  const collection = transaction.objectStore(collectionName);
+  const value = await awaitRequest(
+    collection.get(id),
+    `Failed reading value ${databaseName}.${collectionName}.${id}`
+  );
 
-      result.onsuccess = async function (e) {
-        const value = result.result;
+  if (value == null) {
+    return false;
+  }
 
-        if (value == null) {
-          resolve(false);
-          return;
-        }
+  // The value needs to be sent as chunks if larger than packet size limit, which seems to be about 30k.
+  const chunkSize = 20000;
+  const text = JSON.stringify(value);
+  for (let i = 0; i < text.length; i += chunkSize) {
+    const chunk = text.substring(i, i + chunkSize);
+    await instance.invokeMethodAsync(functionName, chunk);
+  }
 
-        // The value needs to sent as chunks if larger than packet size limit, which seems to be 30k
-        const chunkSize = 20000;
-        const text = JSON.stringify(value);
-        var count = 0;
-        for (let i = 0; i < text.length; i += chunkSize) {
-          const chunk = text.substring(i, i + chunkSize);
-          await instance.invokeMethodAsync(functionName, chunk);
-          count++;
-        }
-
-        resolve(true);
-      }
-    }
-  });
-
-  return await request;
+  return true;
 }
 
 export async function deleteDatabaseValue(databaseName, collectionName, id) {
-  let request = new Promise((resolve) => {
-    let db = indexedDB.open(databaseName);
+  const db = await getDatabase(databaseName);
+  const transaction = db.transaction(collectionName, "readwrite");
+  const collection = transaction.objectStore(collectionName);
+  const transactionCompletion = awaitTransaction(
+    transaction,
+    `Failed committing delete for ${databaseName}.${collectionName}.${id}`
+  );
 
-    db.onsuccess = function () {
-      let transaction = db.result.transaction(collectionName, "readwrite");
-      let collection = transaction.objectStore(collectionName);
-
-      const result = collection.delete(id);
-      result.onsuccess = function () {
-        resolve(true);
-      }
-    }
-  });
-
-  await request;
+  await awaitRequest(collection.delete(id), `Failed deleting value ${databaseName}.${collectionName}.${id}`);
+  await transactionCompletion;
 }
 
 export async function getDatabaseAllKeys(databaseName, collectionName) {
-  let requestX = new Promise((resolve) => {
-    let db = indexedDB.open(databaseName);
+  const db = await getDatabase(databaseName);
+  const transaction = db.transaction([collectionName], "readonly");
+  const objectStore = transaction.objectStore(collectionName);
 
-    db.onsuccess = function (event) {
-      let transaction = db.result.transaction([collectionName], 'readonly');
-      let objectStore = transaction.objectStore(collectionName);
-      let keysRequest = objectStore.getAllKeys();
-
-      keysRequest.onsuccess = function () {
-        resolve(keysRequest.result);
-      };
-    };
-  });
-
-  return await requestX;
+  const keys = await awaitRequest(objectStore.getAllKeys(), `Failed reading keys for ${databaseName}.${collectionName}`);
+  return keys;
 }
 
 export function initializeFileDropZone(dropZoneElement, inputFileElement) {

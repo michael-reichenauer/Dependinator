@@ -5,6 +5,7 @@
       "Attributes": {
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+        "IsPrivate": false,
         "MemberType": "Constructor"
       }
     },
@@ -13,6 +14,7 @@
       "Attributes": {
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+        "IsPrivate": false,
         "MemberType": "Method"
       }
     },
@@ -21,6 +23,7 @@
       "Attributes": {
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+        "IsPrivate": false,
         "MemberType": "Method"
       }
     },
@@ -29,6 +32,7 @@
       "Attributes": {
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
+        "IsPrivate": false,
         "MemberType": "Field"
       }
     },
@@ -36,7 +40,8 @@
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Attributes": {
         "Type": "Type",
-        "Parent": "Dependinator*Tests.Dependinator.Tests.Models"
+        "Parent": "Dependinator*Tests.Dependinator.Tests.Models",
+        "IsPrivate": false
       }
     }
   ],
@@ -45,7 +50,6 @@
       "Source": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "Target": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
       "Attributes": {
-        "Description": "",
         "TargetType": "Member"
       }
     }
