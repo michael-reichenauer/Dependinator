@@ -30,8 +30,14 @@
             "name": "VSCodeExt Dependinator",
             "type": "extensionHost",
             "request": "launch",
-            "extensionDevelopmentPath": "${workspaceFolder}/DependinatorVsCode",
-            "preLaunchTask": "Dependinator: Prepare and Compile Extension"
+            "preLaunchTask": "Dependinator: Prepare and Compile Extension",
+            "args": [
+                "--disable-extension",
+                "github.copilot-chat",
+                "--disable-extension",
+                "openai.chatgpt",
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ]
         }
     ],
     "compounds": [

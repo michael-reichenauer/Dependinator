@@ -88,7 +88,7 @@ internal class AssemblyParser : IDisposable
     public async Task ParseAssemblyModuleAsync()
     {
         string nodeName = Name.GetModuleName(assemblyDefinition!);
-        string assemblyDescription = GetAssemblyDescription(assemblyDefinition!);
+        string? assemblyDescription = GetAssemblyDescription(assemblyDefinition!);
         var assemblyNode = new Node(
             nodeName,
             new()
@@ -137,12 +137,10 @@ internal class AssemblyParser : IDisposable
         return decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName);
     }
 
-    public R<string> TryGetNode(string sourceFilePath)
+    public R<string> TryGetNode(FileLocation fileLocation)
     {
-        var assemblyTypes = GetAssemblyTypes();
-
-        if (!decompiler.TryGetNodeNameForSourceFile(assemblyTypes, sourceFilePath, out var nodeName))
-            return R.Error($"Failed to get node {sourceFilePath}");
+        if (!decompiler.TryGetNodeNameForFileLocation(assemblyDefinition.MainModule, fileLocation, out var nodeName))
+            return R.Error($"Failed to get node {fileLocation.Path}");
         return nodeName;
     }
 
@@ -181,7 +179,7 @@ internal class AssemblyParser : IDisposable
         );
     }
 
-    static string GetAssemblyDescription(AssemblyDefinition assembly)
+    static string? GetAssemblyDescription(AssemblyDefinition assembly)
     {
         Collection<CustomAttribute> attributes = assembly.CustomAttributes;
 
@@ -191,6 +189,6 @@ internal class AssemblyParser : IDisposable
 
         CustomAttributeArgument? argument = descriptionAttribute?.ConstructorArguments.FirstOrDefault();
 
-        return argument?.Value as string ?? "";
+        return argument?.Value as string;
     }
 }

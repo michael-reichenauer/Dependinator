@@ -2,7 +2,9 @@ namespace Dependinator.Models;
 
 interface IItem { }
 
-public record Source(string Path, string Text, int LineNumber);
+public record Source(string Text, FileLocation Location);
+
+public record FileLocation(string Path, int Line);
 
 record Pos(double X, double Y)
 {

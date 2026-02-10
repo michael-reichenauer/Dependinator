@@ -1,6 +1,6 @@
 ﻿using System.Threading.Channels;
+using DependinatorCore.Parsing.Sources;
 using DependinatorCore.Rpc;
-using ICSharpCode.Decompiler.TypeSystem;
 
 namespace DependinatorCore.Parsing;
 
@@ -9,32 +9,22 @@ record ModelPaths(string ModelPath, string WorkFolderPath);
 [Rpc]
 internal interface IParserService
 {
-    //DateTime GetDataTime(string path);
-
     Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
+
+    Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path);
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
-    Task<R<string>> TryGetNodeAsync(string path, Source source);
+    Task<R<FileLocation>> GetFileLocationAsync(string path, string nodeName);
+
+    Task<R<string>> TryGetNodeAsync(string path, FileLocation fileLocation);
 }
 
 [Singleton]
-class ParserService : IParserService
+class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : IParserService
 {
-    readonly IEnumerable<IParser> parsers;
-
-    public ParserService(IEnumerable<IParser> parsers)
-    {
-        this.parsers = parsers;
-    }
-
-    // public DateTime GetDataTime(string path)
-    // {
-    //     if (!Try(out var parser, GetParser(path)))
-    //         return DateTime.MinValue;
-
-    //     return parser.GetDataTime(path);
-    // }
+    readonly IEnumerable<IParser> parsers = parsers;
+    private readonly ISourceParser sourceParser = sourceParser;
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
     {
@@ -74,25 +64,24 @@ class ParserService : IParserService
         return await parser.GetSourceAsync(path, nodeName);
     }
 
-    public Task<R<string>> TryGetNodeAsync(string path, Source source)
+    public async Task<R<FileLocation>> GetFileLocationAsync(string path, string nodeName)
     {
-        throw new NotImplementedException();
-        // Log.Debug($"Get node for {source} in model {modelPaths}...");
+        Log.Debug($"Get file location for {nodeName} in model {path}...");
 
-        // if (!TryGetParser(modelPaths, out IParser parser))
-        // {
-        //     return Error.From($"File not supported: {modelPaths}");
-        // }
+        if (!Try(out var source, out var e, await GetSourceAsync(path, nodeName)))
+            return e;
 
-        // NodeDataSource nodeSource = new NodeDataSource(source.Text, source.LineNumber, source.Path);
+        return source.Location;
+    }
 
-        // string nodeName = await parser.GetNodeAsync(modelPaths.ModelPath, nodeSource);
-        // if (nodeName == null)
-        // {
-        //     return M.NoValue;
-        // }
+    public async Task<R<string>> TryGetNodeAsync(string path, FileLocation fileLocation)
+    {
+        Log.Debug($"Get node for {fileLocation.Path} in model {path}...");
 
-        // return (DataNodeName)nodeName;
+        if (!Try(out var parser, out var e, GetParser(path)))
+            return R.Error($"File not supported: {path}", e);
+
+        return await parser.GetNodeAsync(path, fileLocation);
     }
 
     R<IParser> GetParser(string path)
@@ -102,6 +91,11 @@ class ParserService : IParserService
             return R.Error($"No supported parser for {path}");
 
         return R<IParser>.From(parser);
+    }
+
+    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path)
+    {
+        return await sourceParser.ParseAsync(path);
     }
 
     sealed class ChannelItemsAdapter(ChannelWriter<Item> writer) : IItems

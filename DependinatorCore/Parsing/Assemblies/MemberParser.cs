@@ -109,7 +109,7 @@ internal class MemberParser
             string memberName = Name.GetMemberFullName(memberInfo);
 
             string parentName = GetParentName(memberName);
-            string description = xmlDocParser.GetDescription(memberName);
+            string? description = xmlDocParser.GetDescription(memberName);
             bool isConstructor = memberName.Contains(".ctor(") || memberName.Contains(".cctor(");
 
             var memberNode = new Node(

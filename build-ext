@@ -1,0 +1,4 @@
+#!/bin/bash
+npm install --prefix ./DependinatorVsCode
+npm version patch --no-git-tag-version --prefix ./DependinatorVsCode
+npm run package --prefix ./DependinatorVsCode

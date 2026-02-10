@@ -21,14 +21,16 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.100"
+          dotnet-version: "10.0.101"
           global-json-file: global.json
       - name: Install WASM workload
-        run: dotnet workload install wasm-tools --skip-manifest-update
+        run: dotnet workload restore Dependinator.sln
       - name: Restore
-        run: dotnet restore Dependinator.sln
+        run: dotnet restore DependinatorWasm/DependinatorWasm.csproj -p:IsBrowserWasm=true
       - name: Publish Dependinator WASM
-        run: dotnet publish DependinatorWasm/DependinatorWasm.csproj -c Release -o DependinatorWasm/publish
+        run: |
+          rm -rf DependinatorWasm/publish
+          dotnet publish DependinatorWasm/DependinatorWasm.csproj -c Release --no-restore -p:IsBrowserWasm=true -o DependinatorWasm/publish
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1

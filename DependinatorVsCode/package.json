@@ -1,8 +1,8 @@
 {
     "name": "dependinator",
     "displayName": "Dependinator",
-    "description": "Dependinator UI hosted in a VS Code webview.",
-    "version": "0.5.0",
+    "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
+    "version": "0.5.4",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
@@ -23,13 +23,23 @@
         "commands": [
             {
                 "command": "dependinator.open",
-                "title": "Dependinator: Open"
+                "title": "Dependinator: Open",
+                "icon": "$(type-hierarchy-sub)"
             },
             {
                 "command": "dependinator.installInDevContainer",
                 "title": "Dependinator: Install in Dev Container"
             }
-        ]
+        ],
+        "menus": {
+            "editor/title": [
+                {
+                    "command": "dependinator.open",
+                    "group": "navigation",
+                    "when": "true"
+                }
+            ]
+        }
     },
     "scripts": {
         "compile": "tsc -p tsconfig.node.json && tsc -p tsconfig.web.json",
@@ -38,7 +48,8 @@
         "prepare:wasm": "bash scripts/prepare-wasm.sh",
         "prepare:server": "bash scripts/prepare-server.sh",
         "build:extension": "npm run prepare:wasm && npm run prepare:server && npm run compile",
-        "package": "vsce package",
+        "package": "vsce package --out dependinator.vsix",
+        "install:vsix": "code --install-extension dependinator.vsix --force",
         "package:linux-x64": "VSCODE_TARGET=linux-x64 vsce package --target linux-x64",
         "package:linux-arm64": "VSCODE_TARGET=linux-arm64 vsce package --target linux-arm64",
         "package:win32-x64": "VSCODE_TARGET=win32-x64 vsce package --target win32-x64",
@@ -51,8 +62,8 @@
         "vscode-languageclient": "^9.0.1"
     },
     "devDependencies": {
-        "@types/node": "^20.14.10",
-        "@types/vscode": "^1.84.0",
+        "@types/node": "^20.19.33",
+        "@types/vscode": "^1.109.0",
         "@vscode/vsce": "^3.2.0",
         "typescript": "^5.4.5"
     }

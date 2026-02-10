@@ -31,10 +31,10 @@ internal class SolutionParserService : IParser
         return source;
     }
 
-    public async Task<R<string>> GetNodeAsync(string path, Source source)
+    public async Task<R<string>> GetNodeAsync(string path, FileLocation fileLocation)
     {
         using var solutionParser = new SolutionParser(path, null!, true, fileService);
-        if (!Try(out var nodeName, out var e, await solutionParser.TryGetNodeAsync(source)))
+        if (!Try(out var nodeName, out var e, await solutionParser.TryGetNodeAsync(fileLocation)))
             return e;
         return nodeName;
     }

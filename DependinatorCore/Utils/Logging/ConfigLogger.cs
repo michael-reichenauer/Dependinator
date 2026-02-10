@@ -183,7 +183,7 @@ public static class ConfigLogger
             extensionIndex = filePath.Length - 1;
         }
         string className = filePath.Substring(classStartIndex + 1, extensionIndex - classStartIndex - 1);
-        string msgLine = $"{timeStamp} DPR: {level}:\"{msg}\"";
+        string msgLine = $"{timeStamp} DEP: {level}:\"{msg}\"";
 
         string line = $"{msgLine, -100} {{{memberName}() {filePath}:{lineNumber}}}";
         return line;
