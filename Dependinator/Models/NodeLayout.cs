@@ -93,7 +93,7 @@ class NodeLayout
             if (child.Type != Parsing.NodeType.Member)
                 continue;
 
-            if (child.IsPrivate)
+            if (child.IsPrivate ?? false)
                 rightColumn.Add(child);
             else
                 leftColumn.Add(child);

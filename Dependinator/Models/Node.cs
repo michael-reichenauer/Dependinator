@@ -4,42 +4,6 @@ using DependinatorCore.Parsing;
 
 namespace Dependinator.Models;
 
-[Serializable]
-record NodeDto
-{
-    public required string Name { get; init; }
-    public required string ParentName { get; init; }
-    public required string Type { get; init; }
-    public NodeAttributes Attributes { get; init; } = new();
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public Rect? Boundary { get; init; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public double? Zoom { get; init; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public Pos? Offset { get; init; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string? Color { get; init; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public bool IsUserSetHidden { get; set; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public bool IsParentSetHidden { get; set; }
-}
-
-[Serializable]
-record NodeAttributes
-{
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public string? Description { get; init; }
-    public bool IsPrivate { get; init; }
-    public string? MemberType { get; set; }
-}
-
 class Node : IItem
 {
     public Node(string name, Node parent)
@@ -67,9 +31,13 @@ class Node : IItem
     public Node Parent { get; private set; }
     NodeType type = NodeType.None;
     public DateTime UpdateStamp { get; set; }
-    public bool IsPrivate { get; set; }
+    public bool? IsPrivate { get; set; }
     public MemberType MemberType { get; set; }
-    public FileSpan? FileSpan { get; set; }
+    FileSpan? fileSpan;
+
+    public FileSpan? FileSpan => // Allow using a few levels up
+        fileSpan ?? Parent?.fileSpan ?? Parent?.Parent?.fileSpan ?? Parent?.Parent?.Parent?.fileSpan;
+
     public NodeType Type
     {
         get => type;
@@ -117,9 +85,12 @@ class Node : IItem
             Type = Type.ToString(),
             Attributes = new()
             {
-                Description = Description,
+                Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
                 MemberType = MemberType.ToString(),
+                FileSpan = fileSpan is null
+                    ? null
+                    : new FileSpanDto(fileSpan.Path, fileSpan.StarLine, fileSpan.EndLine),
             },
             Boundary = Boundary != Rect.None ? Boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
@@ -132,15 +103,24 @@ class Node : IItem
     public void SetFromDto(NodeDto dto)
     {
         Type = Enums.To<NodeType>(dto.Type, NodeType.None);
+
         Description = dto.Attributes.Description ?? "";
         IsPrivate = dto.Attributes.IsPrivate;
+        MemberType = Enum.TryParse<MemberType>(dto.Attributes.MemberType, out var value) ? value : MemberType.None;
+        fileSpan = dto.Attributes.FileSpan is null
+            ? null
+            : new FileSpan(
+                dto.Attributes.FileSpan.Path,
+                dto.Attributes.FileSpan.StarLine,
+                dto.Attributes.FileSpan.EndLine
+            );
+
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
         Color = dto.Color ?? Color;
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
-        MemberType = Enum.TryParse<MemberType>(dto.Attributes.MemberType, out var value) ? value : MemberType.None;
     }
 
     public void Update(Parsing.Node node)
@@ -149,7 +129,7 @@ class Node : IItem
         IsPrivate = node.Attributes.IsPrivate ?? IsPrivate;
         Description = node.Attributes.Description ?? Description;
         MemberType = node.Attributes.MemberType ?? MemberType;
-        FileSpan = node.Attributes.FileSpan ?? FileSpan;
+        fileSpan = node.Attributes.FileSpan ?? fileSpan;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)
