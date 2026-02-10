@@ -37,6 +37,7 @@ interface IModelService
     void CheckLineVisibility();
 }
 
+// Model service
 [Transient]
 class ModelService : IModelService
 {
