@@ -1,3 +1,4 @@
+using System.Text;
 using Dependinator.Shared;
 using Microsoft.JSInterop;
 using static DependinatorCore.Utils.Result;
@@ -7,18 +8,15 @@ namespace Dependinator.Tests.Shared;
 public class DatabaseTests
 {
     [Fact]
-    public async Task GetAsync_ShouldReturnValue_WhenJsInteropReturnsChunkedJson()
+    public async Task GetAsync_ShouldReturnValue_WhenJsInteropReturnsStream()
     {
+        var json = "{\"Id\":\"item-1\",\"Value\":\"payload\"}";
+        var streamReference = new FakeJsStreamReference(Encoding.UTF8.GetBytes(json));
         var jsInterop = new FakeJsInterop(
             (functionName, args) =>
             {
-                Assert.Equal("getDatabaseValue", functionName);
-                var valueHandlerRef = args![3]!;
-                var valueHandler = valueHandlerRef.GetType().GetProperty("Value")!.GetValue(valueHandlerRef)!;
-                var onValueMethod = valueHandler.GetType().GetMethod("OnValue")!;
-
-                _ = onValueMethod.Invoke(valueHandler, ["{\"Id\":\"item-1\",\"Value\":\"payload\"}"]);
-                return true;
+                Assert.Equal("getDatabaseValueStream", functionName);
+                return streamReference;
             }
         );
 
@@ -31,7 +29,32 @@ public class DatabaseTests
     }
 
     [Fact]
-    public async Task GetAsync_ShouldReturnError_WhenJsInteropThrows()
+    public async Task GetAsync_ShouldFallbackToChunkedInterop_WhenStreamInteropFails()
+    {
+        var jsInterop = new FakeJsInterop(
+            (functionName, args) =>
+            {
+                if (functionName == "getDatabaseValueStream")
+                    throw new JSException("stream failed");
+
+                Assert.Equal("getDatabaseValue", functionName);
+                var valueHandlerRef = args![3]!;
+                var valueHandler = valueHandlerRef.GetType().GetProperty("Value")!.GetValue(valueHandlerRef)!;
+                var onValueMethod = valueHandler.GetType().GetMethod("OnValue")!;
+                _ = onValueMethod.Invoke(valueHandler, ["{\"Id\":\"item-1\",\"Value\":\"fallback\"}"]);
+                return true;
+            }
+        );
+        var sut = new Database(jsInterop);
+
+        var result = await sut.GetAsync<string>("Files", "item-1");
+
+        Assert.True(Try(out var value, out var e, result), e?.ErrorMessage);
+        Assert.Equal("fallback", value);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldReturnError_WhenStreamAndChunkedInteropThrow()
     {
         var jsInterop = new FakeJsInterop((_, _) => throw new JSException("read failed"));
         var sut = new Database(jsInterop);
@@ -87,6 +110,20 @@ public class DatabaseTests
             where TValue : class
         {
             return DotNetObjectReference.Create(value);
+        }
+    }
+
+    sealed class FakeJsStreamReference(byte[] content) : IJSStreamReference
+    {
+        public long Length => content.LongLength;
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+        public ValueTask<Stream> OpenReadStreamAsync(long maxAllowedSize = 512000, CancellationToken cancellationToken = default)
+        {
+            if (Length > maxAllowedSize)
+                throw new ArgumentOutOfRangeException(nameof(maxAllowedSize));
+            return ValueTask.FromResult<Stream>(new MemoryStream(content, writable: false));
         }
     }
 }

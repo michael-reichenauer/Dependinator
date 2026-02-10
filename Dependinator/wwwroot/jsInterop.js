@@ -264,7 +264,7 @@ export async function setDatabaseValue(databaseName, collectionName, value) {
   await transactionCompletion;
 }
 
-export async function getDatabaseValue(databaseName, collectionName, id, instance, functionName) {
+async function getDatabaseValueText(databaseName, collectionName, id) {
   const db = await getDatabase(databaseName);
   const transaction = db.transaction(collectionName, "readonly");
   const collection = transaction.objectStore(collectionName);
@@ -274,12 +274,30 @@ export async function getDatabaseValue(databaseName, collectionName, id, instanc
   );
 
   if (value == null) {
+    return null;
+  }
+
+  return JSON.stringify(value);
+}
+
+export async function getDatabaseValueStream(databaseName, collectionName, id) {
+  const text = await getDatabaseValueText(databaseName, collectionName, id);
+  if (text == null) {
+    return null;
+  }
+
+  // When the call result type is IJSStreamReference, Blazor can wrap typed arrays/blobs as stream references.
+  return new TextEncoder().encode(text);
+}
+
+export async function getDatabaseValue(databaseName, collectionName, id, instance, functionName) {
+  const text = await getDatabaseValueText(databaseName, collectionName, id);
+  if (text == null) {
     return false;
   }
 
   // The value needs to be sent as chunks if larger than packet size limit, which seems to be about 30k.
   const chunkSize = 20000;
-  const text = JSON.stringify(value);
   for (let i = 0; i < text.length; i += chunkSize) {
     const chunk = text.substring(i, i + chunkSize);
     await instance.invokeMethodAsync(functionName, chunk);

@@ -18,6 +18,7 @@ class Database : IDatabase
 {
     const int CurrentVersion = 2;
     const string DatabaseName = "Dependinator";
+    const long MaxReadStreamSizeBytes = 1024L * 1024 * 50; // 50 MB
     static readonly JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
 
     record Pair<T>(string Id, T Value);
@@ -83,17 +84,76 @@ class Database : IDatabase
 
     private async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
     {
-        using var _ = Timing.Start($"Got {databaseName}.{collectionName}.{id} ...");
+        using var timing = Timing.Start($"Got {databaseName}.{collectionName}.{id} ...");
         Log.Info($"Getting {databaseName}.{collectionName}.{id} ...");
-        // For big values, the normal JSInterop call cannot handle big return values,
-        // so we use a value handler, where values are returned in chunks using callback from js
+
+        var streamResult = await GetDatabaseValueWithStreamAsync<T>(databaseName, collectionName, id);
+        if (streamResult.IsNone)
+            return R.None;
+        if (Try(out var streamValue, out var streamError, streamResult))
+            return streamValue;
+
+        Log.Info(
+            $"Stream interop failed for {databaseName}.{collectionName}.{id}. "
+                + $"Reason: {streamError?.ErrorMessage}. Falling back to chunked interop."
+        );
+        return await GetDatabaseValueWithChunkCallbackAsync<T>(databaseName, collectionName, id);
+    }
+
+    private async ValueTask<R<T>> GetDatabaseValueWithStreamAsync<T>(
+        string databaseName,
+        string collectionName,
+        string id
+    )
+    {
+        IJSStreamReference? valueStreamRef;
+        try
+        {
+            valueStreamRef = await jSInterop.Call<IJSStreamReference?>(
+                "getDatabaseValueStream",
+                databaseName,
+                collectionName,
+                id
+            );
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
+
+        if (valueStreamRef is null)
+            return R.None;
+
+        try
+        {
+            await using var _ = valueStreamRef;
+            await using var stream = await valueStreamRef.OpenReadStreamAsync(MaxReadStreamSizeBytes);
+            var value = await JsonSerializer.DeserializeAsync<T>(stream, options);
+            if (value is null)
+                return R.Error($"Deserialized null value for {databaseName}.{collectionName}.{id}");
+
+            return value;
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
+    }
+
+    private async ValueTask<R<T>> GetDatabaseValueWithChunkCallbackAsync<T>(
+        string databaseName,
+        string collectionName,
+        string id
+    )
+    {
+        // Fallback path for runtimes where stream interop fails.
         var valueHandler = new ValueHandler();
         using var valueHandlerRef = jSInterop.Reference(valueHandler);
 
-        bool result;
+        bool hasValue;
         try
         {
-            result = await jSInterop.Call<bool>(
+            hasValue = await jSInterop.Call<bool>(
                 "getDatabaseValue",
                 databaseName,
                 collectionName,
@@ -107,8 +167,9 @@ class Database : IDatabase
             return R.Error(ex);
         }
 
-        if (!result)
+        if (!hasValue)
             return R.None;
+
         var valueText = valueHandler.GetValue();
         Log.Info($"Got value {valueText.Length} bytes");
         if (!Try(out var value, out var e, () => JsonSerializer.Deserialize<T>(valueText, options)))
