@@ -72,12 +72,12 @@ class NavigationService(
                 Log.Warn($"Failed find node for {nodeId}");
                 return;
             }
-            if (node.FileSpan is null)
+            if (node.FileSpanOrParentSpan is null)
             {
                 Log.Warn($"Failed find node file span {nodeId}");
                 return;
             }
-            fileSpan = node.FileSpan;
+            fileSpan = node.FileSpanOrParentSpan;
         }
         Log.Info("Show editor for", fileSpan.Path, fileSpan.StarLine);
 
@@ -101,7 +101,7 @@ class NavigationService(
             nodeCandidates = model
                 .Items.Values.OfType<Models.Node>()
                 .Where(n => n.FileSpan is not null)
-                .Where(n => n.FileSpan!.Path.StartsWithIc(fileLocation.Path))
+                .Where(n => n.FileSpan!.Path.IsSameIc(fileLocation.Path))
                 .OrderBy(n => n.FileSpan!.StarLine)
                 .ToList();
         }
@@ -112,11 +112,13 @@ class NavigationService(
         var currentNode = nodeCandidates.First();
         foreach (var node in nodeCandidates)
         {
+            if (node.FileSpan!.StarLine == currentNode.FileSpan!.StarLine)
+                continue;
             if (fileLocation.Line < node.FileSpan!.StarLine)
                 break;
             currentNode = node;
         }
-
+        Log.Info($"Found {currentNode.Name}, {currentNode.FileSpan}");
         nodeId = currentNode.Id;
         return true;
     }
