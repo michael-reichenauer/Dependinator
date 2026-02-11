@@ -223,6 +223,7 @@ class Model : IModel
     public void ClearNotUpdated()
     {
         var links = Items.Values.OfType<Link>().Where(l => l.UpdateStamp != UpdateStamp).ToList();
+        Log.Info($"Remove {links.Count} links");
         foreach (var link in links)
             RemoveLink(link);
 
@@ -230,6 +231,7 @@ class Model : IModel
             .Values.OfType<Node>()
             .Where(n => n.UpdateStamp != UpdateStamp && n.Children.Count == 0)
             .ToList();
+        Log.Info($"Remove {nodes.Count} nodes");
         foreach (var node in nodes)
             RemoveNode(node);
     }
