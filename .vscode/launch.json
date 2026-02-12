@@ -32,6 +32,8 @@
             "request": "launch",
             "preLaunchTask": "Dependinator: Prepare and Compile Extension",
             "args": [
+                "--new-window",
+                "${workspaceFolder}/debug.code-workspace",
                 "--disable-extension",
                 "github.copilot-chat",
                 "--disable-extension",
