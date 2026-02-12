@@ -35,7 +35,8 @@ class Node : IItem
     public MemberType MemberType { get; set; }
     FileSpan? fileSpan;
 
-    public FileSpan? FileSpan => // Allow using a few levels up
+    public FileSpan? FileSpan => fileSpan;
+    public FileSpan? FileSpanOrParentSpan => // Allow using a few levels up
         fileSpan ?? Parent?.fileSpan ?? Parent?.Parent?.fileSpan ?? Parent?.Parent?.Parent?.fileSpan;
 
     public NodeType Type

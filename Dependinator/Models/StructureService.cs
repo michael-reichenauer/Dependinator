@@ -63,6 +63,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         if (model.TryGetLink(linkId, out var link))
         {
             link.UpdateStamp = model.UpdateStamp;
+            link.Source.UpdateStamp = model.UpdateStamp;
+            link.Target.UpdateStamp = model.UpdateStamp;
             return;
         }
 

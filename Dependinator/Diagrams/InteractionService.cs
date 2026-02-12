@@ -8,7 +8,7 @@ interface IInteractionService
 {
     string Cursor { get; }
     bool IsContainer { get; }
-    bool IsTypeOrMember { get; }
+    bool CanShowSource { get; }
     bool IsEditNodeMode { get; set; }
     Task InitAsync();
     void NodePanZoomToFit();
@@ -69,7 +69,7 @@ class InteractionService : IInteractionService
         }
     }
 
-    public bool IsTypeOrMember
+    public bool CanShowSource
     {
         get
         {
@@ -77,7 +77,7 @@ class InteractionService : IInteractionService
                 return false;
             if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
                 return false;
-            return node.FileSpan is not null;
+            return node.FileSpanOrParentSpan is not null;
             //return node.Type is Parsing.NodeType.Type or Parsing.NodeType.Member;
         }
     }

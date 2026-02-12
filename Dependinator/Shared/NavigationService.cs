@@ -18,32 +18,54 @@ class NavigationService(
     IModelService modelService,
     IPanZoomService panZoomService,
     ISelectionService selectionService,
+    IScreenService screenService,
     IVsCodeSendService vsCodeSendService
 ) : INavigationService
 {
+    readonly SemaphoreSlim showNodeLock = new(1, 1);
+    long showNodeRequestId = 0;
+
     public async Task ShowNodeAsync(NodeId nodeId)
     {
-        Log.Info("ShowNodeAsync for", nodeId);
-        selectionService.Unselect();
-        applicationEvents.TriggerUIStateChanged();
-        await Task.Yield();
+        var requestId = Interlocked.Increment(ref showNodeRequestId);
+        await showNodeLock.WaitAsync();
+        try
+        {
+            if (!IsLatestShowNodeRequest(requestId))
+                return;
 
-        Pos pos = Pos.None;
-        double zoom = 0;
-        if (
-            !modelService.UseNodeN(
-                nodeId,
-                node =>
-                {
-                    (pos, zoom) = node.GetCenterPosAndZoom();
-                }
-            )
-        )
-            return;
+            Log.Info("ShowNodeAsync for", nodeId);
+            selectionService.Unselect();
+            applicationEvents.TriggerUIStateChanged();
+            await Task.Yield();
+            if (!IsLatestShowNodeRequest(requestId))
+                return;
 
-        await panZoomService.PanZoomToAsync(pos, zoom);
-        selectionService.Select(nodeId);
-        applicationEvents.TriggerUIStateChanged();
+            Pos pos;
+            double zoom;
+            using (var model = modelService.UseModel())
+            {
+                if (!model.TryGetNode(nodeId, out var node))
+                    return;
+                (pos, zoom) = node.GetCenterPosAndZoom();
+            }
+
+            if (zoom <= 0)
+                return;
+
+            if (!await panZoomService.PanZoomToAsync(pos, zoom))
+                return;
+            if (!IsLatestShowNodeRequest(requestId))
+                return;
+
+            selectionService.Select(nodeId);
+            applicationEvents.TriggerUIStateChanged();
+            await LogShowNodeCenteringAsync(nodeId, pos, zoom, requestId);
+        }
+        finally
+        {
+            showNodeLock.Release();
+        }
     }
 
     public async Task ShowNodeAsync(string fileLocation)
@@ -72,12 +94,12 @@ class NavigationService(
                 Log.Warn($"Failed find node for {nodeId}");
                 return;
             }
-            if (node.FileSpan is null)
+            if (node.FileSpanOrParentSpan is null)
             {
                 Log.Warn($"Failed find node file span {nodeId}");
                 return;
             }
-            fileSpan = node.FileSpan;
+            fileSpan = node.FileSpanOrParentSpan;
         }
         Log.Info("Show editor for", fileSpan.Path, fileSpan.StarLine);
 
@@ -101,7 +123,7 @@ class NavigationService(
             nodeCandidates = model
                 .Items.Values.OfType<Models.Node>()
                 .Where(n => n.FileSpan is not null)
-                .Where(n => n.FileSpan!.Path.StartsWithIc(fileLocation.Path))
+                .Where(n => n.FileSpan!.Path.IsSameIc(fileLocation.Path))
                 .OrderBy(n => n.FileSpan!.StarLine)
                 .ToList();
         }
@@ -112,12 +134,60 @@ class NavigationService(
         var currentNode = nodeCandidates.First();
         foreach (var node in nodeCandidates)
         {
+            if (node.FileSpan!.StarLine == currentNode.FileSpan!.StarLine)
+                continue;
             if (fileLocation.Line < node.FileSpan!.StarLine)
                 break;
             currentNode = node;
         }
-
+        Log.Info($"Found {currentNode.Name}, {currentNode.FileSpan}");
         nodeId = currentNode.Id;
         return true;
+    }
+
+    bool IsLatestShowNodeRequest(long requestId) => requestId == Volatile.Read(ref showNodeRequestId);
+
+    async Task LogShowNodeCenteringAsync(NodeId nodeId, Pos targetPos, double targetZoom, long requestId)
+    {
+        if (!IsLatestShowNodeRequest(requestId))
+            return;
+
+        await Task.Yield(); // Allow one render cycle before reading DOM bounds.
+        if (!IsLatestShowNodeRequest(requestId))
+            return;
+
+        var nodeElementId = PointerId.FromNode(nodeId).ElementId;
+        if (!Try(out var nodeRect, out var _, await screenService.GetBoundingRectangle(nodeElementId)))
+        {
+            Log.Debug($"ShowNode Centering: node bounds unavailable for {nodeId} ({nodeElementId})");
+            return;
+        }
+        if (!Try(out var svgRect, out var _, await screenService.GetBoundingRectangle("svgcanvas")))
+        {
+            Log.Debug($"ShowNode Centering: canvas bounds unavailable for {nodeId}");
+            return;
+        }
+
+        var nodeCenterX = nodeRect.X + nodeRect.Width / 2;
+        var nodeCenterY = nodeRect.Y + nodeRect.Height / 2;
+        var svgCenterX = svgRect.X + svgRect.Width / 2;
+        var svgCenterY = svgRect.Y + svgRect.Height / 2;
+        var dxPixels = nodeCenterX - svgCenterX;
+        var dyPixels = nodeCenterY - svgCenterY;
+        var distPixels = Math.Sqrt(dxPixels * dxPixels + dyPixels * dyPixels);
+
+        var currentOffset = modelService.Offset;
+        var currentZoom = modelService.Zoom;
+        var modelCenterPos = new Pos(
+            currentOffset.X + screenService.SvgRect.Width / 2 * currentZoom,
+            currentOffset.Y + screenService.SvgRect.Height / 2 * currentZoom
+        );
+        var modelDx = modelCenterPos.X - targetPos.X;
+        var modelDy = modelCenterPos.Y - targetPos.Y;
+
+        Log.Debug(
+            $"ShowNode Centering: node={nodeId} pxDelta=({dxPixels:0.##},{dyPixels:0.##}) pxDist={distPixels:0.##} "
+                + $"modelDelta=({modelDx:0.##},{modelDy:0.##}) targetZoom={targetZoom:0.####} zoom={currentZoom:0.####}"
+        );
     }
 }

@@ -6,7 +6,7 @@ interface IPanZoomService
 {
     void PanZoomToFit(Rect bounds, double maxZoom = 1, bool noCommand = false);
     void PanZoom(Rect viewRect, double zoom);
-    Task PanZoomToAsync(Pos pos, double zoom);
+    Task<bool> PanZoomToAsync(Pos pos, double zoom);
     void Zoom(PointerEvent e);
     void Pan(PointerEvent e);
 }
@@ -21,9 +21,11 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
     const double GoToZoomSpeed = 1.02;
     const int GoToMoveStepCount = 50;
     static readonly int GoToDelay = 5;
+    long goToRequestId = 0;
 
     public void Zoom(PointerEvent e)
     {
+        Interlocked.Increment(ref goToRequestId);
         using var model = modelService.UseModel();
 
         if (e.DeltaY == 0)
@@ -52,6 +54,7 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
 
     public void Pan(PointerEvent e)
     {
+        Interlocked.Increment(ref goToRequestId);
         using var model = modelService.UseModel();
 
         var (dx, dy) = (e.MovementX * model.Zoom, e.MovementY * model.Zoom);
@@ -72,24 +75,38 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
         Log.Info($"PanZoom newOffset={newOffset} newZoom={newZoom}");
     }
 
-    public async Task PanZoomToAsync(Pos targetPos, double targetZoom)
+    public async Task<bool> PanZoomToAsync(Pos targetPos, double targetZoom)
     {
-        var (startPos, startZoom) = GetPosAndZoom();
-        var startViewRect = ToViewRect(startPos, startZoom);
+        var requestId = Interlocked.Increment(ref goToRequestId);
+        if (targetZoom <= 0)
+            return false;
 
-        var targetViewRect = ToViewRect(targetPos, targetZoom);
+        await screenService.CheckResizeAsync();
+        if (!IsCurrentGoToRequest(requestId))
+            return false;
+
+        var animationRect = screenService.SvgRect;
+        if (!IsValidSvgRect(animationRect))
+            return false;
+
+        var (startPos, startZoom) = GetPosAndZoom(animationRect);
+
+        var targetViewRect = ToViewRect(targetPos, targetZoom, animationRect);
 
         var currentPos = startPos;
         var currentZoom = startZoom;
-        var currentViewRect = ToViewRect(currentPos, currentZoom);
+        var currentViewRect = ToViewRect(currentPos, currentZoom, animationRect);
 
         // Zoom out until the target viewRect fits within the current viewRect
         while (!RectWithin(targetViewRect, currentViewRect))
         {
-            currentZoom *= GoToZoomSpeed;
-            currentViewRect = ToViewRect(currentPos, currentZoom);
+            if (!IsCurrentGoToRequest(requestId))
+                return false;
 
-            GoTo(currentPos, currentZoom);
+            currentZoom *= GoToZoomSpeed;
+            currentViewRect = ToViewRect(currentPos, currentZoom, animationRect);
+
+            GoTo(currentPos, currentZoom, animationRect);
             await Task.Delay(GoToDelay);
         }
 
@@ -97,25 +114,48 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
         var yd = (targetPos.Y - currentPos.Y) / currentZoom / GoToMoveStepCount;
         for (var i = 0; i < GoToMoveStepCount; i++)
         {
+            if (!IsCurrentGoToRequest(requestId))
+                return false;
+
             var x = currentPos.X + xd * currentZoom;
             var y = currentPos.Y + yd * currentZoom;
             currentPos = new Pos(x, y);
-            GoTo(currentPos, currentZoom);
+            GoTo(currentPos, currentZoom, animationRect);
             await Task.Delay(GoToDelay);
         }
 
-        GoTo(targetPos, currentZoom);
+        if (!IsCurrentGoToRequest(requestId))
+            return false;
+        GoTo(targetPos, currentZoom, animationRect);
 
         // Zoom until pos
         while (currentZoom > targetZoom)
         {
+            if (!IsCurrentGoToRequest(requestId))
+                return false;
+
             currentZoom *= 1 / GoToZoomSpeed;
-            GoTo(targetPos, currentZoom);
+            GoTo(targetPos, currentZoom, animationRect);
             await Task.Delay(GoToDelay);
         }
 
-        GoTo(targetPos, targetZoom);
+        if (!IsCurrentGoToRequest(requestId))
+            return false;
+
+        await screenService.CheckResizeAsync();
+        if (!IsCurrentGoToRequest(requestId))
+            return false;
+
+        var finalRect = screenService.SvgRect;
+        if (!IsValidSvgRect(finalRect))
+            return false;
+        GoTo(targetPos, targetZoom, finalRect);
+        return true;
     }
+
+    static bool IsValidSvgRect(Rect svgRect) => svgRect.Width > 0 && svgRect.Height > 0;
+
+    bool IsCurrentGoToRequest(long requestId) => requestId == Volatile.Read(ref goToRequestId);
 
     bool RectWithin(Rect r1, Rect r2)
     {
@@ -136,18 +176,28 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
         modelService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
     }
 
-    (Pos, double) GetPosAndZoom()
+    void GoTo(Pos pos, double zoom, Rect svgRect)
+    {
+        var offset = ToOffset(pos, zoom, svgRect);
+        modelService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
+    }
+
+    (Pos, double) GetPosAndZoom(Rect svgRect)
     {
         using var model = modelService.UseModel();
         var zoom = model.Zoom;
-        var pos = ToPos(model.Offset, zoom);
+        var pos = ToPos(model.Offset, zoom, svgRect);
         return (pos, zoom);
     }
 
     Rect ToViewRect(Pos pos, double zoom)
     {
-        var offset = ToOffset(pos, zoom);
-        var svgRect = screenService.SvgRect;
+        return ToViewRect(pos, zoom, screenService.SvgRect);
+    }
+
+    Rect ToViewRect(Pos pos, double zoom, Rect svgRect)
+    {
+        var offset = ToOffset(pos, zoom, svgRect);
         var x = offset.X;
         var y = offset.Y;
         var width = svgRect.Width * zoom;
@@ -157,7 +207,11 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
 
     Pos ToPos(Pos offset, double zoom)
     {
-        var svgRect = screenService.SvgRect;
+        return ToPos(offset, zoom, screenService.SvgRect);
+    }
+
+    Pos ToPos(Pos offset, double zoom, Rect svgRect)
+    {
         var x = offset.X + svgRect.Width / 2 * zoom;
         var y = offset.Y + svgRect.Height / 2 * zoom;
         return new Pos(x, y);
@@ -165,7 +219,11 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
 
     Pos ToOffset(Pos pos, double zoom)
     {
-        var svgRect = screenService.SvgRect;
+        return ToOffset(pos, zoom, screenService.SvgRect);
+    }
+
+    static Pos ToOffset(Pos pos, double zoom, Rect svgRect)
+    {
         var x = pos.X - svgRect.Width / 2 * zoom;
         var y = pos.Y - svgRect.Height / 2 * zoom;
         return new Pos(x, y);
@@ -173,6 +231,7 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
 
     public void PanZoom(Rect viewRect, double zoom)
     {
+        Interlocked.Increment(ref goToRequestId);
         var svgRect = screenService.SvgRect;
         Log.Info($"PanZoom viewRect={viewRect} svgRect={svgRect} zoom={zoom}");
 
@@ -194,6 +253,7 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
 
     public void PanZoomToFit(Rect totalBounds, double maxZoom = 1, bool noCommand = false)
     {
+        Interlocked.Increment(ref goToRequestId);
         using var model = modelService.UseModel();
 
         Rect b = totalBounds;

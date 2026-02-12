@@ -294,7 +294,7 @@ class ModelService : IModelService
             path = model.Path;
         }
 
-        if (!Try(out var e, await ParseAndUpdateAsync(path)))
+        if (!Try(out var e, await ParseAndUpdateAsync(path, true)))
             return e;
         lock (model.Lock)
         {
@@ -344,13 +344,14 @@ class ModelService : IModelService
         return new ModelInfo(path, Rect.None, 0);
     }
 
-    async Task<R> ParseAndUpdateAsync(string path)
+    async Task<R> ParseAndUpdateAsync(string path, bool isRefresh = false)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
-        using (var progress = progressService.Start("Parsing ..."))
+        using (var progress = isRefresh ? progressService.StartDiscreet() : progressService.Start("Parsing"))
         {
             // Let the renderer process the progress state before potentially CPU-heavy parse work starts.
             await Task.Yield();
+
             Log.Info("Parsing ...");
 
             if (!Try(out var items, out var e, await ParseAsync(path)))
