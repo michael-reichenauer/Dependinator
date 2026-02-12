@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ICSharpCode.Decompiler.CSharp.Transforms;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;
@@ -107,9 +108,9 @@ class Database : IDatabase
                 id
             );
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return R.Error(ex);
+            return R.None;
         }
 
         if (valueStreamRef is null)
@@ -127,6 +128,7 @@ class Database : IDatabase
         }
         catch (Exception ex)
         {
+            Log.Info("Failed to read stream", id);
             return R.Error(ex);
         }
     }
