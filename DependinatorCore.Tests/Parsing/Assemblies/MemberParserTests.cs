@@ -34,13 +34,12 @@ public class MemberParserTests
         var types = await typeParser.AddTypeAsync(testDataType).ToListAsync();
         await memberParser.AddTypesMembersAsync(types);
 
-        var recordMember = items.GetNode(Ref<MemberTestData>(nameof(MemberTestData.SubRecord)));
-
         var typeNode = items.GetNode(Ref<MemberTestData>());
         var constructorNode = items.GetNode(Ref<MemberTestData>(".ctor"));
         var numberNode = items.GetNode(Ref<MemberTestData>(nameof(MemberTestData.number)));
         var functionNode1 = items.GetNode(Ref<MemberTestData>(nameof(MemberTestData.FirstFunction)));
         var functionNode2 = items.GetNode(Ref<MemberTestData>(nameof(MemberTestData.SecondFunction)));
+        var recordMember = items.GetNode(Ref<MemberTestData.SubRecord>());
         var methodLink = items.GetLink(
             Ref<MemberTestData>(nameof(MemberTestData.FirstFunction)),
             Ref<MemberTestData>(nameof(MemberTestData.number))

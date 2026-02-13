@@ -12,6 +12,11 @@ class Reference
         return new Reference() { Name = NodeName<T>(memberName), IsMember = !string.IsNullOrEmpty(memberName) };
     }
 
+    public static Reference RefSubType<T>(string memberName)
+    {
+        return new Reference() { Name = NodeName<T>(memberName), IsMember = false };
+    }
+
     internal static object From(Action firstFunction)
     {
         throw new NotImplementedException();

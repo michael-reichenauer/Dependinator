@@ -49,7 +49,7 @@ public class DatabaseTests
 
         Assert.False(Try(out string? _, out var e, result));
         Assert.NotNull(e);
-        Assert.Contains("read failed", e.ErrorMessage);
+        Assert.Contains("No value", e.ErrorMessage);
     }
 
     [Fact]
@@ -105,7 +105,10 @@ public class DatabaseTests
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
-        public ValueTask<Stream> OpenReadStreamAsync(long maxAllowedSize = 512000, CancellationToken cancellationToken = default)
+        public ValueTask<Stream> OpenReadStreamAsync(
+            long maxAllowedSize = 512000,
+            CancellationToken cancellationToken = default
+        )
         {
             if (Length > maxAllowedSize)
                 throw new ArgumentOutOfRangeException(nameof(maxAllowedSize));
