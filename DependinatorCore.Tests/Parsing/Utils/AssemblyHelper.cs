@@ -7,6 +7,9 @@ class AssemblyHelper
 {
     public static TypeDefinition GetTypeDefinition<T>()
     {
+        var t = typeof(T).FullName;
+        var ts = GetAssemblyTypes(GetModule<T>()).ToList();
+
         return GetAssemblyTypes(GetModule<T>()).Single(t => t.FullName == typeof(T).FullName);
     }
 

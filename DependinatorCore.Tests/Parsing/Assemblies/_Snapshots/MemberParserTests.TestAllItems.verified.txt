@@ -1,0 +1,46 @@
+﻿[
+  {
+    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.ctor(),
+    Attributes: {
+      Type: Member,
+      Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
+      IsPrivate: false,
+      MemberType: Constructor
+    }
+  },
+  {
+    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SecondFunction(),
+    Attributes: {
+      Type: Member,
+      Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
+      IsPrivate: false,
+      MemberType: Method
+    }
+  },
+  {
+    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.FirstFunction(),
+    Attributes: {
+      Type: Member,
+      Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
+      IsPrivate: false,
+      MemberType: Method
+    }
+  },
+  {
+    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.number,
+    Attributes: {
+      Type: Member,
+      Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
+      IsPrivate: false,
+      MemberType: Field
+    }
+  },
+  {
+    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
+    Attributes: {
+      Type: Type,
+      Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies,
+      IsPrivate: false
+    }
+  }
+]
