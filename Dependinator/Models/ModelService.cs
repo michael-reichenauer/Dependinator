@@ -36,6 +36,7 @@ interface IModelService
     void ClearCache();
     Rect GetBounds();
     void CheckLineVisibility();
+    Task ResetNodeLayout(NodeId nodeId);
 }
 
 // Model service
@@ -335,6 +336,19 @@ class ModelService : IModelService
 
         var sourceText = source.Text.Replace("\t", "  "); // The auto formatter removes this in Blazor code.
         return new Source(sourceText, new FileLocation(source.Location.Path, source.Location.Line));
+    }
+
+    public async Task ResetNodeLayout(NodeId nodeId)
+    {
+        using (var model = UseModel())
+        {
+            if (!model.TryGetNode(nodeId, out Node node))
+                return;
+            NodeLayout.AdjustChildren(node);
+        }
+
+        applicationEvents.TriggerUIStateChanged();
+        applicationEvents.TriggerSaveNeeded();
     }
 
     async Task<R<ModelInfo>> ParseNewModelAsync(string path)

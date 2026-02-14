@@ -41,6 +41,7 @@ class NodeLayout
 
         var childrenCount = parent.Children.Count;
         parent.ContainerZoom = GetContainerZoom(childrenCount);
+        parent.ContainerOffset = Pos.None;
 
         int columnsCount = (int)Math.Floor(parent.Boundary.Width / parent.ContainerZoom / DefaultWidth) - 2;
         int rowsCount = (int)Math.Floor(parent.Boundary.Height / parent.ContainerZoom / DefaultHeight) - 2;

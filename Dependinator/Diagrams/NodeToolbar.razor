@@ -10,36 +10,41 @@
       <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
                    OnClick="ShowProperties">
         Properties …</MudMenuItem>
-        @if (!IsNodeHidden)
-        {
-          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
-                       OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled">
-            Hide Node …</MudMenuItem>
-          }
-      else
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
+                     OnClick="ResetLayout">
+          Reset Layout</MudMenuItem>
+          @if (!IsNodeHidden)
           {
-            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility"
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
                          OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled">
-              Show Node …</MudMenuItem>
+              Hide Node …</MudMenuItem>
             }
-          </MudMenu>
+      else
+            {
+              <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility"
+                           OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled">
+                Show Node …</MudMenuItem>
+              }
+            </MudMenu>
 
 
-          <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
-          <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
-          @if (CanShowSource)
-          {
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowEditorAsync" />
-          }
+            <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
+            <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+            @if (CanShowSource)
+            {
+              <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowEditorAsync" />
+            }
 
-          @if (!IsIconMode)
-          {
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" />
-            <MudToggleIconButton @bind-Toggled="interactionService.IsEditNodeMode" Icon="@MudBlazor.Icons.Material.Outlined.Edit"
-                                 ToggledIcon="@MudBlazor.Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
-          }
-        </MudButtonGroup>
-      }
+            @if (!IsIconMode)
+            {
+              <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" />
+              <MudToggleIconButton @bind-Toggled="interactionService.IsEditNodeMode" Icon="@MudBlazor.Icons.Material.Outlined.Edit"
+                                   ToggledIcon="@MudBlazor.Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
+              <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes" OnClick="ResetLayout" />
+
+            }
+          </MudButtonGroup>
+        }
 
 @code {
   const double ToolbarOffset = 58;
@@ -70,6 +75,15 @@
   void ShowProperties() =>
   dialogService.ShowAsync<NodeProperties>("Node Properties",
   new DialogOptions { CloseOnEscapeKey = true });
+
+  async Task ResetLayout()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
+    selectionService.Unselect();
+    await modelService.ResetNodeLayout(nodeId);
+  }
 
   void ShowReferences() => dependenciesService.ShowReferences();
   void ShowDependencies() => dependenciesService.ShowDependencies();
