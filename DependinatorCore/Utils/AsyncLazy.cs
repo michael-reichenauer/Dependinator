@@ -2,29 +2,15 @@ using System.Runtime.CompilerServices;
 
 namespace DependinatorCore.Utils;
 
-public class AsyncLazy<TZT> : Lazy<Task<TZT>>
+public class AsyncLazy<T> : Lazy<Task<T>>
 {
-    public AsyncLazy(Func<TZT> valueFactory)
+    public AsyncLazy(Func<T> valueFactory)
         : base(() => Task.Factory.StartNew(valueFactory)) { }
 
-    public AsyncLazy(Func<Task<TZT>> taskFactory)
+    public AsyncLazy(Func<Task<T>> taskFactory)
         : base(() => Task.Factory.StartNew(() => taskFactory()).Unwrap()) { }
 
-    public TaskAwaiter<TZT> GetAwaiter()
-    {
-        return Value.GetAwaiter();
-    }
-}
-
-public class AsyncLazyX<TZT, TR> : Lazy<Task<TZT>>
-{
-    public AsyncLazyX(Func<TZT> valueFactory)
-        : base(() => Task.Factory.StartNew(valueFactory)) { }
-
-    public AsyncLazyX(Func<Task<TZT>> taskFactory)
-        : base(() => Task.Factory.StartNew(() => taskFactory()).Unwrap()) { }
-
-    public TaskAwaiter<TZT> GetAwaiter()
+    public TaskAwaiter<T> GetAwaiter()
     {
         return Value.GetAwaiter();
     }
