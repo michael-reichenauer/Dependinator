@@ -16,7 +16,7 @@ class NodeEditService(IModelService modelService) : INodeEditService
 {
     const double MaxZoom = 1.0;
     const double MinZoom = 1.0 / 10.0;
-    const double Margin = 25;
+    const double Margin = 50;
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
 

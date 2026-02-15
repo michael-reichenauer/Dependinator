@@ -1,27 +1,51 @@
 namespace Dependinator.Models;
 
+enum NodeLayoutDensity
+{
+    Spacious,
+    Balanced,
+    Compact,
+}
+
 class NodeLayout
 {
     const double DefaultWidth = 100;
     const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
-    const int margin = 10;
-    const double MemberNodeWidth = 150;
-    const double MemberNodeHeight = 10;
-    const double MemberVerticalSpacing = 5;
+    const double RegularHorizontalGap = 70;
+    const double RegularVerticalGap = 70;
+    const double RootGap = 10;
+    const double MemberNodeWidth = 100;
+    const double MemberNodeHeight = 18;
+    const double MemberHorizontalGap = 26;
+    const double MemberVerticalGap = 6;
+    const double MemberAspectBias = 0.45;
+    const double EmptyCellPenaltyWeight = 0.15;
+    const double MinimumZoom = 1.0 / 40.0;
+    const double MaximumZoom = 1.0;
+    const double MinimumDimension = 0.0001;
+
+    public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
+
+    public static void SetDensity(NodeLayoutDensity density) => Density = density;
 
     public static Rect GetNextChildRect(Node node)
     {
         if (!node.IsRoot)
             return Rect.None;
 
-        var childSize = DefaultSize;
-        var b = node.Boundary;
-        int columns = (int)Math.Floor((b.Width / node.ContainerZoom) / (childSize.Width + margin));
+        var density = GetDensityProfile();
+        var rootGap = RootGap * density.GapScale;
+        var layoutWidth = node.Boundary.Width / Math.Max(MinimumDimension, node.ContainerZoom);
+        var columns = Math.Max(1, (int)Math.Floor((layoutWidth - rootGap) / (DefaultWidth + rootGap)));
 
-        var x = margin + (childSize.Width + margin) * (node.Children.Count % columns);
-        var y = margin + (childSize.Height + margin) * (node.Children.Count / columns);
-        return new Rect(x, y, childSize.Width, childSize.Height);
+        var index = node.Children.Count;
+        var column = index % columns;
+        var row = index / columns;
+
+        var x = rootGap + column * (DefaultWidth + rootGap);
+        var y = rootGap + row * (DefaultHeight + rootGap);
+        return new Rect(x, y, DefaultWidth, DefaultHeight);
     }
 
     public static void AdjustChildren(Node parent)
@@ -31,146 +55,165 @@ class NodeLayout
         if (parent.Children.Count == 0)
             return;
 
-        if (parent.Children.Any(child => child.Type == Parsing.NodeType.Member))
+        if (IsTypeWithMembers(parent))
         {
-            ArrangeMemberChildren(parent);
+            ArrangeTypeChildren(parent);
             return;
         }
 
         Sorter.Sort(parent.Children, CompareChildren);
-
-        var childrenCount = parent.Children.Count;
-        parent.ContainerZoom = GetContainerZoom(childrenCount);
-        parent.ContainerOffset = Pos.None;
-
-        int columnsCount = Math.Max(
-            1,
-            (int)Math.Floor(parent.Boundary.Width / parent.ContainerZoom / DefaultWidth) - 2
-        );
-        int rowsCount = Math.Max(1, (int)Math.Floor(parent.Boundary.Height / parent.ContainerZoom / DefaultHeight) - 2);
-
-        var marginX = (DefaultWidth / parent.ContainerZoom - (DefaultWidth * columnsCount)) / (columnsCount + 1);
-        var marginY = (DefaultHeight / parent.ContainerZoom - (DefaultHeight * rowsCount)) / (rowsCount + 1);
-
-        var columnsNeeded = Math.Min(columnsCount, Math.Max(1, (int)Math.Ceiling(childrenCount / (double)rowsCount)));
-        var startColumn = Math.Min(columnsCount - 1, Math.Max(0, (columnsCount + 1) / 2 - columnsNeeded));
-        int midRow = rowsCount / 2;
-
-        var index = 0;
-        for (int column = startColumn; index < parent.Children.Count; column++)
-        {
-            for (int offset = 0; offset <= (rowsCount + 1) / 2; offset++)
-            {
-                var row = midRow - offset;
-                if (row < 0 || index >= parent.Children.Count)
-                    break;
-                var child = parent.Children[index++];
-                AdjustChild(child, column, row, marginX, marginY);
-                if (offset == 0)
-                    continue;
-
-                row = midRow + offset;
-                if (row >= rowsCount || index >= parent.Children.Count)
-                    break;
-                child = parent.Children[index++];
-                AdjustChild(child, column, row, marginX, marginY);
-            }
-        }
+        var density = GetDensityProfile();
+        ArrangeChildren(parent, parent.Children, RegularMetrics(density));
     }
 
-    private static void AdjustChild(Node child, int column, int row, double marginX, double marginY)
+    static bool IsTypeWithMembers(Node parent) =>
+        parent.Type == Parsing.NodeType.Type && parent.Children.Any(child => child.Type == Parsing.NodeType.Member);
+
+    static void ArrangeChildren(Node parent, IReadOnlyList<Node> children, LayoutMetrics metrics)
     {
-        var x = column * (DefaultWidth + marginX) + marginX;
-        var y = row * (DefaultHeight + marginY) + marginY;
-        child.Boundary = new Rect(x, y, DefaultWidth, DefaultHeight);
+        var columns = FindBestColumnCount(parent, children.Count, metrics);
+
+        for (var index = 0; index < children.Count; index++)
+        {
+            var column = index % columns;
+            var row = index / columns;
+            var x = metrics.HorizontalGap + column * (metrics.Width + metrics.HorizontalGap);
+            var y = metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
+            children[index].Boundary = new Rect(x, y, metrics.Width, metrics.Height);
+        }
+
+        ApplyContainerTransform(parent, GetChildrenBounds(children), GetDensityProfile().TargetLinearCoverage);
     }
 
-    static void ArrangeMemberChildren(Node parent)
+    static void ArrangeTypeChildren(Node parent)
     {
-        Sorter.Sort(parent.Children, CompareMemberChildren);
+        var density = GetDensityProfile();
+        var memberMetrics = MemberMetrics(density);
+        var regularMetrics = RegularMetrics(density);
 
-        var leftColumn = new List<Node>();
-        var rightColumn = new List<Node>();
+        var members = parent.Children.Where(c => c.Type == Parsing.NodeType.Member).ToList();
+        var nonMembers = parent.Children.Where(c => c.Type != Parsing.NodeType.Member).ToList();
 
-        foreach (var child in parent.Children)
-        {
-            if (child.Type != Parsing.NodeType.Member)
-                continue;
+        Sorter.Sort(members, CompareMemberChildren);
+        Sorter.Sort(nonMembers, CompareChildren);
 
-            if (child.IsPrivate ?? false)
-                rightColumn.Add(child);
-            else
-                leftColumn.Add(child);
-        }
+        var publicMembers = members.Where(m => !(m.IsPrivate ?? false)).ToList();
+        var privateMembers = members.Where(m => m.IsPrivate ?? false).ToList();
 
-        parent.ContainerZoom = GetMemberContainerZoom(leftColumn.Count, rightColumn.Count);
+        var startY = Math.Max(memberMetrics.VerticalGap, regularMetrics.VerticalGap);
+        var cursorX = Math.Max(memberMetrics.HorizontalGap, regularMetrics.HorizontalGap);
 
-        var layoutWidth = parent.Boundary.Width / parent.ContainerZoom;
-        var layoutCenter = layoutWidth / 2;
+        cursorX = ArrangeGroup(parent, publicMembers, memberMetrics, cursorX, startY);
+        if (publicMembers.Count > 0 && privateMembers.Count > 0)
+            cursorX += memberMetrics.HorizontalGap;
+        cursorX = ArrangeGroup(parent, privateMembers, memberMetrics, cursorX, startY);
+        if (members.Count > 0 && nonMembers.Count > 0)
+            cursorX += regularMetrics.HorizontalGap;
+        _ = ArrangeGroup(parent, nonMembers, regularMetrics, cursorX, startY);
 
-        if (leftColumn.Count > 0)
-        {
-            var maxLeftStart = Math.Max(margin, layoutCenter - MemberNodeWidth);
-            var leftColumnStart = Math.Min(margin, maxLeftStart);
-            ArrangeColumn(leftColumn, leftColumnStart, MemberNodeWidth, MemberNodeHeight, MemberVerticalSpacing);
-        }
-
-        if (rightColumn.Count > 0)
-        {
-            ArrangeColumn(rightColumn, layoutCenter, MemberNodeWidth, MemberNodeHeight, MemberVerticalSpacing);
-        }
+        ApplyContainerTransform(parent, GetChildrenBounds(parent.Children), density.TargetLinearCoverage);
     }
 
-    static void ArrangeColumn(
-        IReadOnlyList<Node> columnNodes,
+    static double ArrangeGroup(
+        Node parent,
+        IReadOnlyList<Node> nodes,
+        LayoutMetrics metrics,
         double startX,
-        double width,
-        double nodeHeight,
-        double verticalSpacing
+        double startY
     )
     {
-        for (int index = 0; index < columnNodes.Count; index++)
+        if (nodes.Count == 0)
+            return startX;
+
+        var columns = FindBestColumnCount(parent, nodes.Count, metrics);
+        var (layoutWidth, _) = LayoutSize(columns, (int)Math.Ceiling(nodes.Count / (double)columns), metrics);
+
+        for (var index = 0; index < nodes.Count; index++)
         {
-            var node = columnNodes[index];
-            var y = margin + index * (nodeHeight + verticalSpacing);
-            node.Boundary = new Rect(startX, y, width, nodeHeight);
+            var column = index % columns;
+            var row = index / columns;
+            var x = startX + metrics.HorizontalGap + column * (metrics.Width + metrics.HorizontalGap);
+            var y = startY + metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
+            nodes[index].Boundary = new Rect(x, y, metrics.Width, metrics.Height);
         }
+
+        return startX + layoutWidth;
     }
 
-    static double GetContainerZoom(int childrenCount) =>
-        childrenCount switch
-        {
-            <= 1 => 1 / 2.0,
-            <= 4 => 1 / 5.0,
-            <= 9 => 1 / 7.0,
-            <= 16 => 1 / 6.0,
-            <= 25 => 1 / 10.0,
-            <= 36 => 1 / 13.0,
-            _ => 1 / 15.0,
-        };
-
-    static double GetMemberContainerZoom(int leftChildrenCount, int rightChildrenCount)
+    static int FindBestColumnCount(Node parent, int childrenCount, LayoutMetrics metrics)
     {
-        if (rightChildrenCount == 0)
-        {
-            return leftChildrenCount switch
-            {
-                <= 8 => 1 / 2.0,
-                <= 16 => 1 / 2.5,
-                <= 25 => 1 / 3.5,
-                <= 36 => 1 / 4.5,
-                _ => Node.DefaultContainerZoom,
-            };
-        }
-        var largestColumnCount = Math.Max(leftChildrenCount, rightChildrenCount);
+        if (childrenCount <= 1)
+            return 1;
 
-        return largestColumnCount switch
+        var parentAspect = parent.Boundary.Height <= 0 ? 1.0 : parent.Boundary.Width / parent.Boundary.Height;
+        var targetAspect = Math.Max(0.2, parentAspect * metrics.AspectBias);
+
+        var bestColumns = 1;
+        var bestScore = double.MaxValue;
+
+        for (var columns = 1; columns <= childrenCount; columns++)
         {
-            <= 19 => 1 / 3.0,
-            <= 25 => 1 / 3.5,
-            <= 36 => 1 / 5.0,
-            _ => Node.DefaultContainerZoom,
-        };
+            var rows = (int)Math.Ceiling(childrenCount / (double)columns);
+            var (layoutWidth, layoutHeight) = LayoutSize(columns, rows, metrics);
+            var gridAspect = layoutWidth / Math.Max(MinimumDimension, layoutHeight);
+
+            var aspectError = Math.Abs(Math.Log(gridAspect / targetAspect));
+            var emptyCells = columns * rows - childrenCount;
+            var emptyCellPenalty = emptyCells / (double)childrenCount;
+            var score = aspectError + EmptyCellPenaltyWeight * emptyCellPenalty;
+
+            if (score >= bestScore)
+                continue;
+
+            bestScore = score;
+            bestColumns = columns;
+        }
+        return bestColumns;
+    }
+
+    static (double Width, double Height) LayoutSize(int columns, int rows, LayoutMetrics metrics)
+    {
+        var width = columns * metrics.Width + (columns + 1) * metrics.HorizontalGap;
+        var height = rows * metrics.Height + (rows + 1) * metrics.VerticalGap;
+        return (width, height);
+    }
+
+    static Rect GetChildrenBounds(IReadOnlyList<Node> children)
+    {
+        var first = children[0].Boundary;
+        var minX = first.X;
+        var minY = first.Y;
+        var maxX = first.X + first.Width;
+        var maxY = first.Y + first.Height;
+
+        for (var index = 1; index < children.Count; index++)
+        {
+            var boundary = children[index].Boundary;
+            minX = Math.Min(minX, boundary.X);
+            minY = Math.Min(minY, boundary.Y);
+            maxX = Math.Max(maxX, boundary.X + boundary.Width);
+            maxY = Math.Max(maxY, boundary.Y + boundary.Height);
+        }
+
+        return new Rect(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    static void ApplyContainerTransform(Node parent, Rect contentBounds, double targetLinearCoverage)
+    {
+        var availableWidth = Math.Max(MinimumDimension, parent.Boundary.Width);
+        var availableHeight = Math.Max(MinimumDimension, parent.Boundary.Height);
+        var contentWidth = Math.Max(MinimumDimension, contentBounds.Width);
+        var contentHeight = Math.Max(MinimumDimension, contentBounds.Height);
+
+        var zoomX = (availableWidth * targetLinearCoverage) / contentWidth;
+        var zoomY = (availableHeight * targetLinearCoverage) / contentHeight;
+        var zoom = Math.Clamp(Math.Min(zoomX, zoomY), MinimumZoom, MaximumZoom);
+
+        var offsetX = (availableWidth - contentWidth * zoom) / 2 - contentBounds.X * zoom;
+        var offsetY = (availableHeight - contentHeight * zoom) / 2 - contentBounds.Y * zoom;
+
+        parent.ContainerZoom = zoom;
+        parent.ContainerOffset = new Pos(offsetX, offsetY);
     }
 
     static int CompareChildren(Node c1, Node c2)
@@ -218,4 +261,40 @@ class NodeLayout
             : v2 > v1 ? 1
             : 0;
     }
+
+    static LayoutMetrics RegularMetrics(DensityProfile density) =>
+        new(
+            DefaultWidth,
+            DefaultHeight,
+            RegularHorizontalGap * density.GapScale,
+            RegularVerticalGap * density.GapScale,
+            1.0
+        );
+
+    static LayoutMetrics MemberMetrics(DensityProfile density) =>
+        new(
+            MemberNodeWidth,
+            MemberNodeHeight,
+            MemberHorizontalGap * density.GapScale,
+            MemberVerticalGap * density.GapScale,
+            MemberAspectBias
+        );
+
+    static DensityProfile GetDensityProfile() =>
+        Density switch
+        {
+            NodeLayoutDensity.Spacious => new DensityProfile(GapScale: 1.35, TargetLinearCoverage: 0.42),
+            NodeLayoutDensity.Compact => new DensityProfile(GapScale: 0.72, TargetLinearCoverage: 0.62),
+            _ => new DensityProfile(GapScale: 1.0, TargetLinearCoverage: 0.5),
+        };
+
+    readonly record struct LayoutMetrics(
+        double Width,
+        double Height,
+        double HorizontalGap,
+        double VerticalGap,
+        double AspectBias
+    );
+
+    readonly record struct DensityProfile(double GapScale, double TargetLinearCoverage);
 }
