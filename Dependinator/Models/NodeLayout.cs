@@ -43,8 +43,11 @@ class NodeLayout
         parent.ContainerZoom = GetContainerZoom(childrenCount);
         parent.ContainerOffset = Pos.None;
 
-        int columnsCount = (int)Math.Floor(parent.Boundary.Width / parent.ContainerZoom / DefaultWidth) - 2;
-        int rowsCount = (int)Math.Floor(parent.Boundary.Height / parent.ContainerZoom / DefaultHeight) - 2;
+        int columnsCount = Math.Max(
+            1,
+            (int)Math.Floor(parent.Boundary.Width / parent.ContainerZoom / DefaultWidth) - 2
+        );
+        int rowsCount = Math.Max(1, (int)Math.Floor(parent.Boundary.Height / parent.ContainerZoom / DefaultHeight) - 2);
 
         var marginX = (DefaultWidth / parent.ContainerZoom - (DefaultWidth * columnsCount)) / (columnsCount + 1);
         var marginY = (DefaultHeight / parent.ContainerZoom - (DefaultHeight * rowsCount)) / (rowsCount + 1);
@@ -137,13 +140,13 @@ class NodeLayout
     static double GetContainerZoom(int childrenCount) =>
         childrenCount switch
         {
-            <= 1 => 1 / 3.0,
-            <= 4 => 1 / 4.0,
-            <= 9 => 1 / 5.0,
+            <= 1 => 1 / 2.0,
+            <= 4 => 1 / 5.0,
+            <= 9 => 1 / 7.0,
             <= 16 => 1 / 6.0,
-            <= 25 => 1 / 7.0,
-            <= 36 => 1 / 8.0,
-            _ => Node.DefaultContainerZoom,
+            <= 25 => 1 / 10.0,
+            <= 36 => 1 / 13.0,
+            _ => 1 / 15.0,
         };
 
     static double GetMemberContainerZoom(int leftChildrenCount, int rightChildrenCount)

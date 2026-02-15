@@ -36,7 +36,7 @@ interface IModelService
     void ClearCache();
     Rect GetBounds();
     void CheckLineVisibility();
-    Task ResetNodeLayout(NodeId nodeId);
+    Task LayoutNode(NodeId nodeId, bool recursively = false);
 }
 
 // Model service
@@ -338,17 +338,25 @@ class ModelService : IModelService
         return new Source(sourceText, new FileLocation(source.Location.Path, source.Location.Line));
     }
 
-    public async Task ResetNodeLayout(NodeId nodeId)
+    public async Task LayoutNode(NodeId nodeId, bool recursively = false)
     {
         using (var model = UseModel())
         {
             if (!model.TryGetNode(nodeId, out Node node))
                 return;
-            NodeLayout.AdjustChildren(node);
+
+            LayoutNode(node, recursively);
         }
 
         applicationEvents.TriggerUIStateChanged();
         applicationEvents.TriggerSaveNeeded();
+    }
+
+    void LayoutNode(Node node, bool recursively)
+    {
+        NodeLayout.AdjustChildren(node);
+        if (recursively)
+            node.Children.ForEach(n => LayoutNode(n, recursively));
     }
 
     async Task<R<ModelInfo>> ParseNewModelAsync(string path)
