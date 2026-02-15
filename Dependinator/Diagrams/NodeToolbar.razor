@@ -4,185 +4,203 @@
 
 @if (HasSelectedLine)
 {
-    <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="mud-toolbar" Style="@CssPosition">
-        <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
-            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet" OnClick="ShowProperties">
-                Properties …
-            </MudMenuItem>
-            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes" OnClick="LayoutChildren">
-                Layout Children
-            </MudMenuItem>
-            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes" OnClick="LayoutDescendants">
-                Layout Descendants
-            </MudMenuItem>
+  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Class="mud-toolbar"
+                  Style="@CssPosition">
+    <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter">
+      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
+                   OnClick="ShowProperties">
+        Properties …
+      </MudMenuItem>
+      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
+                   OnClick="LayoutChildren">
+        Layout Children
+      </MudMenuItem>
+      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
+                   OnClick="LayoutDescendants">
+        Layout Descendants
+      </MudMenuItem>
 
-            <MudDivider />
-            <MudMenuItem IconColor="Color.Secondary" Icon="@DensityIcon(Models.NodeLayoutDensity.Spacious)" OnClick="() => SetLayoutDensityAsync(Models.NodeLayoutDensity.Spacious)">
-                Density: Spacious
-            </MudMenuItem>
-            <MudMenuItem IconColor="Color.Secondary" Icon="@DensityIcon(Models.NodeLayoutDensity.Balanced)" OnClick="() => SetLayoutDensityAsync(Models.NodeLayoutDensity.Balanced)">
-                Density: Balanced
-            </MudMenuItem>
-            <MudMenuItem IconColor="Color.Secondary" Icon="@DensityIcon(Models.NodeLayoutDensity.Compact)" OnClick="() => SetLayoutDensityAsync(Models.NodeLayoutDensity.Compact)">
-                Density: Compact
-            </MudMenuItem>
+      @* <MudDivider />
+      <MudMenuItem IconColor="Color.Secondary" Icon="@DensityIcon(Models.NodeLayoutDensity.Spacious)"
+                   OnClick="() => SetLayoutDensityAsync(Models.NodeLayoutDensity.Spacious)">
+        Density: Spacious
+      </MudMenuItem>
+      <MudMenuItem IconColor="Color.Secondary" Icon="@DensityIcon(Models.NodeLayoutDensity.Balanced)"
+                   OnClick="() => SetLayoutDensityAsync(Models.NodeLayoutDensity.Balanced)">
+        Density: Balanced
+      </MudMenuItem>
+      <MudMenuItem IconColor="Color.Secondary" Icon="@DensityIcon(Models.NodeLayoutDensity.Compact)"
+                   OnClick="() => SetLayoutDensityAsync(Models.NodeLayoutDensity.Compact)">
+        Density: Compact
+      </MudMenuItem> *@
 
-            <MudDivider />
-            @if (!IsNodeHidden)
-            {
-                <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff" OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled">
-                    Hide Node …
-                </MudMenuItem>
-            }
-            else
-            {
-                <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility" OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled">
-                    Show Node …
-                </MudMenuItem>
-            }
-        </MudMenu>
+      <MudDivider />
+      @if (!IsNodeHidden)
+      {
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
+                     OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled">
+          Hide Node …
+        </MudMenuItem>
+      }
+      else
+      {
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility"
+                     OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled">
+          Show Node …
+        </MudMenuItem>
+      }
+    </MudMenu>
 
-        <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
-        <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
-        @if (CanShowSource)
-        {
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowEditorAsync" />
-        }
+    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
+    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+    @if (CanShowSource)
+    {
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowEditorAsync" />
+    }
 
-        @if (!IsIconMode)
-        {
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" />
-            <MudToggleIconButton @bind-Toggled="interactionService.IsEditNodeMode" Icon="@MudBlazor.Icons.Material.Outlined.Edit" ToggledIcon="@MudBlazor.Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes" OnClick="LayoutChildren" />
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes" OnClick="LayoutDescendants" />
-        }
-    </MudButtonGroup>
+    @if (!IsIconMode)
+    {
+      <MudToggleIconButton @bind-Toggled="interactionService.IsEditNodeMode" Icon="@MudBlazor.Icons.Material.Outlined.Edit"
+                           ToggledIcon="@MudBlazor.Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
+      @if (interactionService.IsEditNodeMode)
+      {
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" />
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes" OnClick="LayoutChildren" />
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes" OnClick="LayoutDescendants" />
+      }
+
+    }
+  </MudButtonGroup>
 }
 
 @code {
-    const double ToolbarOffset = 58;
+  const double ToolbarOffset = 58;
 
-    [Inject]
-    IApplicationEvents applicationEvents { get; set; } = null!;
+  [Inject]
+  IApplicationEvents applicationEvents { get; set; } = null!;
 
-    [Inject]
-    IInteractionService interactionService { get; set; } = null!;
+  [Inject]
+  IInteractionService interactionService { get; set; } = null!;
 
-    [Inject]
-    ISelectionService selectionService { get; set; } = null!;
+  [Inject]
+  ISelectionService selectionService { get; set; } = null!;
 
-    [Inject]
-    IDialogService dialogService { get; set; } = null!;
+  [Inject]
+  IDialogService dialogService { get; set; } = null!;
 
-    [Inject]
-    IDependenciesService dependenciesService { get; set; } = null!;
+  [Inject]
+  IDependenciesService dependenciesService { get; set; } = null!;
 
-    [Inject]
-    Models.IModelService modelService { get; set; } = null!;
+  [Inject]
+  Models.IModelService modelService { get; set; } = null!;
 
-    [Inject]
-    INavigationService navigationService { get; set; } = null!;
+  [Inject]
+  INavigationService navigationService { get; set; } = null!;
 
-    [Inject]
-    IConfigService configService { get; set; } = null!;
+  [Inject]
+  IConfigService configService { get; set; } = null!;
 
-    bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
-    bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
-    bool HasSelectedLine => selectionService.SelectedNodePosition != Models.Pos.None;
-    bool IsIconMode => !interactionService.IsContainer;
-    bool CanShowSource => interactionService.CanShowSource;
+  bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
+  bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
+  bool HasSelectedLine => selectionService.SelectedNodePosition != Models.Pos.None;
+  bool IsIconMode => !interactionService.IsContainer;
+  bool CanShowSource => interactionService.CanShowSource;
 
-    string CssPosition =>
-        $"position:fixed;left:{selectionService.SelectedNodePosition.X}px;"
-        + $"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset}px;";
+  string CssPosition =>
+      $"position:fixed;left:{selectionService.SelectedNodePosition.X}px;"
+      + $"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset}px;";
 
-    protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
-    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
-    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
 
-    void ShowProperties() =>
-        dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions { CloseOnEscapeKey = true });
+  void ShowProperties() =>
+      dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions { CloseOnEscapeKey = true });
 
-    async Task LayoutChildren()
-    {
-        if (!selectionService.SelectedId.IsNode)
-            return;
-        var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
-        selectionService.Unselect();
-        await modelService.LayoutNode(nodeId);
-    }
+  async Task LayoutChildren()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
+    selectionService.Unselect();
+    await modelService.LayoutNode(nodeId);
+    selectionService.Select(nodeId);
+    selectionService.SetEditMode(true);
+  }
 
-    async Task LayoutDescendants()
-    {
-        if (!selectionService.SelectedId.IsNode)
-            return;
-        var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
-        selectionService.Unselect();
-        await modelService.LayoutNode(nodeId, true);
-    }
+  async Task LayoutDescendants()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
+    selectionService.Unselect();
+    await modelService.LayoutNode(nodeId, true);
+    selectionService.Select(nodeId);
+    selectionService.SetEditMode(true);
+  }
 
-    async Task SetLayoutDensityAsync(Models.NodeLayoutDensity density)
-    {
-        Models.NodeLayout.SetDensity(density);
-        await configService.SetAsync(config => config.LayoutDensity = density);
-        applicationEvents.TriggerUIStateChanged();
-    }
+  async Task SetLayoutDensityAsync(Models.NodeLayoutDensity density)
+  {
+    Models.NodeLayout.SetDensity(density);
+    await configService.SetAsync(config => config.LayoutDensity = density);
+    applicationEvents.TriggerUIStateChanged();
+  }
 
-    string DensityIcon(Models.NodeLayoutDensity density) =>
-        Models.NodeLayout.Density == density
-            ? MudBlazor.Icons.Material.Filled.CheckCircle
-            : MudBlazor.Icons.Material.Outlined.Circle;
+  string DensityIcon(Models.NodeLayoutDensity density) =>
+      Models.NodeLayout.Density == density
+          ? MudBlazor.Icons.Material.Filled.CheckCircle
+          : MudBlazor.Icons.Material.Outlined.Circle;
 
-    void ShowReferences() => dependenciesService.ShowReferences();
+  void ShowReferences() => dependenciesService.ShowReferences();
 
-    void ShowDependencies() => dependenciesService.ShowDependencies();
+  void ShowDependencies() => dependenciesService.ShowDependencies();
 
-    async Task ShowEditorAsync()
-    {
-        if (!selectionService.SelectedId.IsNode)
-            return;
-        await navigationService.ShowEditor(Models.NodeId.FromId(selectionService.SelectedId.Id));
-    }
+  async Task ShowEditorAsync()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    await navigationService.ShowEditor(Models.NodeId.FromId(selectionService.SelectedId.Id));
+  }
 
-    async Task ShowSourceAsync()
-    {
-        if (!selectionService.SelectedId.IsNode)
-            return;
+  async Task ShowSourceAsync()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
 
-        string selectedId = selectionService.SelectedId.Id;
-        var nodeId = Models.NodeId.FromId(selectedId);
+    string selectedId = selectionService.SelectedId.Id;
+    var nodeId = Models.NodeId.FromId(selectedId);
 
-        string nodeTitle = selectedId;
-        modelService.UseNode(
-            selectedId,
-            node =>
-            {
-                nodeTitle = node.LongName;
-            }
-        );
-
-        if (!Try(out var source, out var e, await modelService.GetSourceAsync(nodeId)))
+    string nodeTitle = selectedId;
+    modelService.UseNode(
+        selectedId,
+        node =>
         {
-            await dialogService.ShowMessageBox("Source unavailable", e.ErrorMessage);
-            return;
+          nodeTitle = node.LongName;
         }
+    );
 
-        var parameters = new DialogParameters
-        {
-            [nameof(NodeSourceDialog.Source)] = source,
-        };
-
-        var options = new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            FullWidth = true,
-            MaxWidth = MaxWidth.ExtraLarge,
-        };
-
-        await dialogService.ShowAsync<NodeSourceDialog>(nodeTitle, parameters, options);
+    if (!Try(out var source, out var e, await modelService.GetSourceAsync(nodeId)))
+    {
+      await dialogService.ShowMessageBox("Source unavailable", e.ErrorMessage);
+      return;
     }
 
-    void ToggleNodeHide() => selectionService.ToggleNodeHide();
+    var parameters = new DialogParameters
+    {
+      [nameof(NodeSourceDialog.Source)] = source,
+    };
+
+    var options = new DialogOptions
+    {
+      CloseOnEscapeKey = true,
+      FullWidth = true,
+      MaxWidth = MaxWidth.ExtraLarge,
+    };
+
+    await dialogService.ShowAsync<NodeSourceDialog>(nodeTitle, parameters, options);
+  }
+
+  void ToggleNodeHide() => selectionService.ToggleNodeHide();
 }
