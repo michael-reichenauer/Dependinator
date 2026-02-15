@@ -1,5 +1,5 @@
+using System.IO.Compression;
 using System.Text.Json;
-using ICSharpCode.Decompiler.CSharp.Transforms;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;
@@ -16,7 +16,7 @@ interface IDatabase
 [Scoped]
 class Database : IDatabase
 {
-    const int CurrentVersion = 2;
+    const int CurrentVersion = 3;
     const string DatabaseName = "Dependinator";
     const long MaxReadStreamSizeBytes = 1024L * 1024 * 50; // 50 MB
     static readonly JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
@@ -52,8 +52,13 @@ class Database : IDatabase
     {
         try
         {
-            var pair = new Pair<T>(id, value);
+            var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(value, options);
+            var compressedValue = CompressToBase64(jsonBytes);
+            var pair = new Pair<string>(id, compressedValue);
             await jSInterop.Call("setDatabaseValue", DatabaseName, collectionName, pair);
+            Log.Info(
+                $"Wrote '{id}': {jsonBytes.Length}=>{compressedValue.Length} bytes ({Math.Round(100.0 * compressedValue.Length / jsonBytes.Length)}%)"
+            );
             return R.Ok;
         }
         catch (Exception ex)
@@ -64,9 +69,24 @@ class Database : IDatabase
 
     public async Task<R<T>> GetAsync<T>(string collectionName, string id)
     {
-        if (!Try(out var pair, out var e, await GetDatabaseValueAsync<Pair<T>>(DatabaseName, collectionName, id)))
+        if (!Try(out var pair, out var e, await GetDatabaseValueAsync<Pair<string>>(DatabaseName, collectionName, id)))
             return e;
-        return pair.Value;
+        try
+        {
+            var compressedValue = pair.Value;
+            var jsonBytes = DecompressFromBase64(pair.Value);
+            var value = JsonSerializer.Deserialize<T>(jsonBytes, options);
+            if (value is null)
+                return R.Error($"Deserialized null value for {DatabaseName}.{collectionName}.{id}");
+            Log.Info(
+                $"Read '{id}': {jsonBytes.Length}<={compressedValue.Length} bytes ({Math.Round(100.0 * compressedValue.Length / jsonBytes.Length)}%)"
+            );
+            return value;
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
     }
 
     public async Task<R> DeleteAsync(string collectionName, string id)
@@ -131,5 +151,24 @@ class Database : IDatabase
             Log.Info("Failed to read stream", id);
             return R.Error(ex);
         }
+    }
+
+    static string CompressToBase64(byte[] jsonBytes)
+    {
+        using var output = new MemoryStream();
+        using (var gzip = new GZipStream(output, CompressionLevel.SmallestSize, leaveOpen: true))
+            gzip.Write(jsonBytes);
+
+        return Convert.ToBase64String(output.ToArray());
+    }
+
+    static byte[] DecompressFromBase64(string base64)
+    {
+        var compressedBytes = Convert.FromBase64String(base64);
+        using var input = new MemoryStream(compressedBytes);
+        using var gzip = new GZipStream(input, CompressionMode.Decompress);
+        using var output = new MemoryStream();
+        gzip.CopyTo(output);
+        return output.ToArray();
     }
 }
