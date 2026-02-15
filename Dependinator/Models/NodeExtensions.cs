@@ -34,4 +34,14 @@ static class NodeExtensions
 
         throw new InvalidOperationException($"Node {first} and {second} do not have a common ancestor");
     }
+
+    public static bool EnsureLayoutForPath(this Node node)
+    {
+        var needsLayout = node.Ancestors().Reverse().Where(ancestor => ancestor.IsChildrenLayoutRequired).ToList();
+        if (needsLayout.Count == 0)
+            return false;
+
+        needsLayout.ForEach(NodeLayout.AdjustChildren);
+        return true;
+    }
 }

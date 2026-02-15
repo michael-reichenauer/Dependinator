@@ -179,7 +179,7 @@
         node =>
         {
           nodeTitle = node.LongName;
-          nodeFileSpan = node.FileSpan;
+          nodeFileSpan = node.FileSpanOrParentSpan;
         }
     );
     if (nodeFileSpan is not null && host.IsVscExtWasm)

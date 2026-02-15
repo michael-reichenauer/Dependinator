@@ -73,6 +73,10 @@ class NavigationService(
         {
             if (!model.TryGetNode(nodeId, out var node))
                 return false;
+
+            if (node.EnsureLayoutForPath())
+                model.ClearCachedSvg();
+
             (pos, zoom) = node.GetCenterPosAndZoom();
         }
         if (zoom <= 0)
