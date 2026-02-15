@@ -278,7 +278,7 @@ class ModelService : IModelService
 
     async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
     {
-        using var progress = progressService.Start("Loading cached model ...");
+        using var progress = progressService.Start("Loading ...");
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
             return e;
 
