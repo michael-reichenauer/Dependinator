@@ -5,15 +5,15 @@
 @implements IDisposable
 
 <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Secondary" Dense="true" Class="@MenuClass"
-    AnchorOrigin="Origin.BottomCenter">
+         AnchorOrigin="Origin.BottomCenter">
 
     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo" Disabled="@(!modelService.CanUndo)"
-        OnClick="modelService.Undo">
+                 OnClick="modelService.Undo">
         Undo
     </MudMenuItem>
 
     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo" Disabled="@(!modelService.CanRedo)"
-        OnClick="modelService.Redo">
+                 OnClick="modelService.Redo">
         Redo
     </MudMenuItem>
 
@@ -25,19 +25,16 @@
         Refresh
     </MudMenuItem>
 
+    @* 
     <MudDivider />
-
+ 
     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.OpenFiles">
         Browse Files ...
     </MudMenuItem>
 
-    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="srv.PingLanguageServer">
-        Ping Language Server
-    </MudMenuItem>
-
     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.ToggleTheme">
         Toggle Dark/Light Theme
-    </MudMenuItem>
+    </MudMenuItem> *@
 
     <MudDivider />
 
@@ -53,7 +50,7 @@
     {
         var isCurrent = path == currentPath;
         <MudMenuItem IconColor="@(isCurrent? Color.Secondary: Color.Default)" Icon="@Icons.Material.Outlined.Schema"
-            Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)" OnClick="() => srv.LoadAsync(path)">
+                     Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)" OnClick="() => srv.LoadAsync(path)">
             @Path.GetFileNameWithoutExtension(path)
         </MudMenuItem>
     }

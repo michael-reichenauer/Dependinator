@@ -119,7 +119,7 @@ class SourceParser : ISourceParser
 
     private string GetTypeFullName(string fqTypeName, Compilation compilation)
     {
-        var fullName = fqTypeName.TrimPrefix("global::").Replace("&", "");
+        var fullName = fqTypeName.TrimPrefix("global::").Replace("&", "").Replace(" ", "");
         var moduleName = compilation.AssemblyName?.Replace(".", "*");
         return $"{moduleName}.{fullName}";
     }

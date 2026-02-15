@@ -7,7 +7,9 @@ class AssemblyHelper
 {
     public static TypeDefinition GetTypeDefinition<T>()
     {
-        return GetAssemblyTypes(GetModule<T>()).Single(t => t.FullName == typeof(T).FullName);
+        var fullName = FullName(typeof(T));
+
+        return GetAssemblyTypes(GetModule<T>()).Single(t => FullName(t) == fullName);
     }
 
     public static ModuleDefinition GetModule<T>() => GetAssemblyDefinition<T>().MainModule;
@@ -21,7 +23,23 @@ class AssemblyHelper
     }
 
     static IEnumerable<TypeDefinition> GetAssemblyTypes(ModuleDefinition module) =>
-        module.Types.Where(type =>
-            !Name.IsCompilerGenerated(type.Name) && !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "")
-        );
+        module.Types.SelectMany(GetAssemblyTypes);
+
+    static IEnumerable<TypeDefinition> GetAssemblyTypes(TypeDefinition type)
+    {
+        if (IsCompilerGenerated(type))
+            yield break;
+
+        yield return type;
+
+        foreach (var nested in type.NestedTypes.SelectMany(GetAssemblyTypes))
+            yield return nested;
+    }
+
+    static bool IsCompilerGenerated(TypeDefinition type) =>
+        Name.IsCompilerGenerated(type.Name) || Name.IsCompilerGenerated(type.DeclaringType?.Name ?? "");
+
+    static string FullName(TypeDefinition type) => type.FullName.Replace('+', '.').Replace('/', '.');
+
+    static string FullName(Type type) => type.FullName!.Replace('+', '.').Replace('/', '.');
 }

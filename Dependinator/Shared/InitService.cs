@@ -1,4 +1,5 @@
 using Dependinator.Diagrams;
+using Dependinator.Models;
 
 namespace Dependinator.Shared;
 
@@ -13,6 +14,7 @@ class InitService : IInitService
     readonly IScreenService screenService;
     readonly IPointerEventService mouseEventService;
     readonly IRecentModelsService recentModelsService;
+    readonly IConfigService configService;
     readonly IDatabase database;
     readonly ICanvasService canvasService;
     readonly IVsCodeMessageService vsCodeMessageService;
@@ -21,6 +23,7 @@ class InitService : IInitService
         IScreenService screenService,
         IPointerEventService mouseEventService,
         IRecentModelsService recentModelsService,
+        IConfigService configService,
         IDatabase database,
         ICanvasService canvasService,
         IVsCodeMessageService vsCodeMessageService
@@ -29,6 +32,7 @@ class InitService : IInitService
         this.screenService = screenService;
         this.mouseEventService = mouseEventService;
         this.recentModelsService = recentModelsService;
+        this.configService = configService;
         this.database = database;
         this.canvasService = canvasService;
         this.vsCodeMessageService = vsCodeMessageService;
@@ -38,6 +42,8 @@ class InitService : IInitService
     {
         await vsCodeMessageService.InitAsync();
         await database.Init([FileService.DBCollectionName]);
+        var config = await configService.GetAsync();
+        NodeLayout.SetDensity(config.LayoutDensity);
         await screenService.InitAsync(component);
         await mouseEventService.InitAsync();
         await recentModelsService.InitAsync();
