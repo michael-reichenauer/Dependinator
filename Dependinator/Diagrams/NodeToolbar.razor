@@ -1,5 +1,8 @@
 ﻿@using Dependinator.Diagrams.Dependencies
 @using Dependinator.Diagrams.Icons
+@using DependinatorCore
+@using DependinatorCore.Parsing
+@using DependinatorCore.Shared
 @using MudBlazor
 
 @if (HasSelectedLine)
@@ -55,7 +58,7 @@
     <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
     @if (CanShowSource)
     {
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowEditorAsync" />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync" />
     }
 
     @if (!IsIconMode)
@@ -99,6 +102,9 @@
 
   [Inject]
   IConfigService configService { get; set; } = null!;
+
+  [Inject]
+  IHost host { get; set; } = null!;
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
@@ -157,12 +163,6 @@
 
   void ShowDependencies() => dependenciesService.ShowDependencies();
 
-  async Task ShowEditorAsync()
-  {
-    if (!selectionService.SelectedId.IsNode)
-      return;
-    await navigationService.ShowEditor(Models.NodeId.FromId(selectionService.SelectedId.Id));
-  }
 
   async Task ShowSourceAsync()
   {
@@ -171,6 +171,7 @@
 
     string selectedId = selectionService.SelectedId.Id;
     var nodeId = Models.NodeId.FromId(selectedId);
+    FileSpan? nodeFileSpan = null;
 
     string nodeTitle = selectedId;
     modelService.UseNode(
@@ -178,9 +179,14 @@
         node =>
         {
           nodeTitle = node.LongName;
+          nodeFileSpan = node.FileSpan;
         }
     );
-
+    if (nodeFileSpan is not null && host.IsVscExtWasm)
+    {
+      await navigationService.ShowEditor(Models.NodeId.FromId(selectionService.SelectedId.Id));
+      return;
+    }
     if (!Try(out var source, out var e, await modelService.GetSourceAsync(nodeId)))
     {
       await dialogService.ShowMessageBox("Source unavailable", e.ErrorMessage);

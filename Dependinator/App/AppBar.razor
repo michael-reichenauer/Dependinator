@@ -12,7 +12,7 @@
                    OnClick="modelService.Redo" />
 
     <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Color="Color.Inherit" OnClick="srv.PanZoomToFit" />
-    @if (!Build.IsWebAssembly)
+    @if (!Build.IsWasm)
     {
         <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Color="Color.Inherit" OnClick="srv.Refresh" />
     }

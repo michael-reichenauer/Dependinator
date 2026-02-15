@@ -1,3 +1,5 @@
+using DependinatorCore.Parsing;
+
 namespace Dependinator.Models;
 
 interface IStructureService
@@ -72,6 +74,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
         var source = model.GetNode(NodeId.FromName(parsedLink.Source));
         var target = model.GetNode(NodeId.FromName(parsedLink.Target));
+        if (parsedLink.Attributes.TargetType is not null && parsedLink.Attributes.TargetType is not NodeType.None)
+            target.Type = (NodeType)parsedLink.Attributes.TargetType;
 
         link = new Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
@@ -113,6 +117,9 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
         var source = model.GetNode(NodeId.FromName(linkDto.SourceName));
         var target = model.GetNode(NodeId.FromName(linkDto.TargetName));
+        var targetType = Enums.To<NodeType>(linkDto.TargetType, NodeType.None);
+        if (targetType is not NodeType.None)
+            target.Type = targetType;
 
         var link = new Link(source, target);
         link.UpdateStamp = model.UpdateStamp;

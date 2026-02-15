@@ -78,7 +78,8 @@ class InteractionService : IInteractionService
             if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
                 return false;
             return node.FileSpanOrParentSpan is not null;
-            //return node.Type is Parsing.NodeType.Type or Parsing.NodeType.Member;
+            // return node.FileSpanOrParentSpan is not null
+            //     || node.Type is Parsing.NodeType.Type or Parsing.NodeType.Member;
         }
     }
 
