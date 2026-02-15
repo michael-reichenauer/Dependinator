@@ -182,8 +182,20 @@ internal static class Name
     static string GetTypeName(TypeReference typeInfo)
     {
         string name = typeInfo.FullName;
-        //string fixedName = name.Replace("/", "."); // Nested types
-        string fixedName = name.Replace("&", ""); // Reference parameter types
+
+        string fixedName = name.Replace("/", "."); // Nested types
+        fixedName = fixedName.Replace("&", ""); // Reference parameter types
+
+        if (typeInfo.HasGenericParameters)
+        {
+            // Replace the "TypeName`1" or "TypeName'2", ... markers with the generic arguments
+            var index = fixedName.IndexOf('`');
+            if (index > 0)
+            {
+                fixedName =
+                    $"{fixedName[..index]}<{string.Join(',', typeInfo.GenericParameters.Select(gp => gp.FullName))}>";
+            }
+        }
 
         string module = GetModuleName(typeInfo);
         string typeFullName = $"{module}.{fixedName}";

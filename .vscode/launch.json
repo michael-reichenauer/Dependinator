@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Web Dependinator",
+            "name": "WebServer Dependinator",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -12,11 +12,11 @@
             "cwd": "${workspaceFolder}/DependinatorWeb",
             "stopAtEntry": false,
             // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-                "uriFormat": "%s"
-            },
+            // "serverReadyAction": {
+            //     "action": "openExternally",
+            //     "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+            //     "uriFormat": "%s"
+            // },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
@@ -27,11 +27,13 @@
             "console": "internalConsole"
         },
         {
-            "name": "VSCodeExt Dependinator",
+            "name": "VscExt Dependinator",
             "type": "extensionHost",
             "request": "launch",
             "preLaunchTask": "Dependinator: Prepare and Compile Extension",
             "args": [
+                "--new-window",
+                "${workspaceFolder}/debug.code-workspace",
                 "--disable-extension",
                 "github.copilot-chat",
                 "--disable-extension",
@@ -40,13 +42,13 @@
             ]
         }
     ],
-    "compounds": [
-        {
-            "name": "Wasm/Server",
-            "configurations": [
-                "Attach to .NET Functions",
-                "Launch and Debug Standalone Blazor WebAssembly App"
-            ]
-        }
-    ]
+    // "compounds": [
+    //     {
+    //         "name": "Wasm/Server",
+    //         "configurations": [
+    //             "Attach to .NET Functions",
+    //             "Launch and Debug Standalone Blazor WebAssembly App"
+    //         ]
+    //     }
+    // ]
 }

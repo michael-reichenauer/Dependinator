@@ -63,11 +63,6 @@ class NodeName
             .Replace("$", "")
             .Replace("%", "")
             .Replace("/", ".")
-            .Replace("`1", "<T>")
-            .Replace("`2", "<T,T>")
-            .Replace("`3", "<T,T,T>")
-            .Replace("`4", "<T,T,T,T>")
-            .Replace("`5", "<T,T,T,T,T>")
             .Replace("op_Equality", "==")
             .Replace("op_Inequality", "!=");
 }

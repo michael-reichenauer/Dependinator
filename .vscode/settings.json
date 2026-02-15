@@ -3,6 +3,7 @@
   "azureFunctions.projectLanguage": "C#",
   "azureFunctions.projectRuntime": "~4",
   "debug.internalConsoleOptions": "neverOpen",
+  "task.saveBeforeRun": "always",
   "azureFunctions.preDeployTask": "publish (functions)",
   "cSpell.words": [
     "Blazor",

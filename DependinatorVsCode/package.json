@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.5.4",
+    "version": "0.5.8",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
@@ -63,7 +63,7 @@
     },
     "devDependencies": {
         "@types/node": "^20.19.33",
-        "@types/vscode": "^1.109.0",
+        "@types/vscode": "^1.84.0",
         "@vscode/vsce": "^3.2.0",
         "typescript": "^5.4.5"
     }

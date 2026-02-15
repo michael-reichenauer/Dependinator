@@ -12,6 +12,11 @@ class Reference
         return new Reference() { Name = NodeName<T>(memberName), IsMember = !string.IsNullOrEmpty(memberName) };
     }
 
+    public static Reference RefSubType<T>(string memberName)
+    {
+        return new Reference() { Name = NodeName<T>(memberName), IsMember = false };
+    }
+
     internal static object From(Action firstFunction)
     {
         throw new NotImplementedException();
@@ -43,6 +48,9 @@ class Reference
         if (TryGetField(typeDefinition, memberName, out member))
             return true;
 
+        if (TryGetNestedType(typeDefinition, memberName, out member))
+            return true;
+
         member = default!;
         return false;
     }
@@ -63,5 +71,11 @@ class Reference
     {
         field = type.Fields.FirstOrDefault(m => m.Name == memberName)!;
         return field != null;
+    }
+
+    static bool TryGetNestedType(TypeDefinition type, string memberName, out IMemberDefinition nestedType)
+    {
+        nestedType = type.NestedTypes.FirstOrDefault(m => m.Name == memberName)!;
+        return nestedType != null;
     }
 }

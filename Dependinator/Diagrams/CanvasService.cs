@@ -22,7 +22,6 @@ interface ICanvasService
 
     Task InitAsync();
     void OpenFiles();
-    void PingLanguageServer();
     void ToggleTheme();
     public void Remove();
     void Refresh();
@@ -43,7 +42,6 @@ class CanvasService : ICanvasService
     readonly ISvgService svgService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInteropService;
-    readonly IParserServiceX parserServiceX;
     readonly IFileService fileService;
     readonly IBrowserFileService browserFileService;
     readonly IRecentModelsService recentModelsService;
@@ -56,7 +54,6 @@ class CanvasService : ICanvasService
         ISvgService svgService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
-        IParserServiceX parserServiceX,
         IFileService fileService,
         IBrowserFileService browserFileService,
         IRecentModelsService recentModelsService,
@@ -69,7 +66,6 @@ class CanvasService : ICanvasService
         this.svgService = svgService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
-        this.parserServiceX = parserServiceX;
         this.fileService = fileService;
         this.browserFileService = browserFileService;
         this.recentModelsService = recentModelsService;
@@ -159,13 +155,6 @@ class CanvasService : ICanvasService
     public async void OpenFiles()
     {
         await jSInteropService.Call("clickElement", "inputfile");
-    }
-
-    public async void PingLanguageServer()
-    {
-        Log.Info("Calling with 'SomePath'");
-        var resp = await parserServiceX.ParseXXAsync("SomePath");
-        Log.Info("The response was:", resp);
     }
 
     public void ToggleTheme()

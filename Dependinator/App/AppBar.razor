@@ -6,10 +6,10 @@
 <MudAppBar Dense="true" Elevation="5">
     <AppMenu />
     <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="Color.Inherit" Disabled="@(!modelService.CanUndo)"
-        OnClick="modelService.Undo" />
+                   OnClick="modelService.Undo" />
 
     <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="Color.Inherit" Disabled="@(!modelService.CanRedo)"
-        OnClick="modelService.Redo" />
+                   OnClick="modelService.Redo" />
 
     <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Color="Color.Inherit" OnClick="srv.PanZoomToFit" />
     @if (!Build.IsWebAssembly)

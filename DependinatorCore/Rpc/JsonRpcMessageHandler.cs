@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Buffers.Binary;
+using System.IO.Compression;
 using System.Threading.Channels;
 using StreamJsonRpc;
 using StreamJsonRpc.Protocol;
@@ -11,11 +12,17 @@ public delegate ValueTask WriteBase64MessageActionAsync(string base64Message, Ca
 
 public sealed class JsonRpcMessageHandler : MessageHandlerBase
 {
-    const int MaxChunkSize = 10 * 1024;
+    const int MaxChunkSize = 1000 * 1024;
     const int ChunkPrefixLength = 4;
     const int ChunkHeaderSize = ChunkPrefixLength + sizeof(int) + sizeof(int);
     const int MaxChunkPayloadSize = MaxChunkSize - ChunkHeaderSize;
+    const int CompressionPrefixLength = 4;
+    const int CompressionHeaderSize = CompressionPrefixLength + sizeof(int);
+    const int MinCompressionPayloadSize = 64 * 1024;
+    const int MinCompressionSavingsBytes = 1024;
     static ReadOnlySpan<byte> ChunkPrefix => "DNK1"u8;
+    static ReadOnlySpan<byte> CompressionPrefix => "DNG1"u8;
+    static readonly bool IsCompressionSupported = CheckCompressionSupport();
 
     readonly SemaphoreSlim writeGate = new(1, 1);
     readonly object readGate = new();
@@ -58,7 +65,7 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
 
         this.sendBinaryMessageActionAsync = async (binaryMessage, ct) =>
         {
-            var base64Message = Convert.ToBase64String(binaryMessage.ToArray());
+            var base64Message = Convert.ToBase64String(binaryMessage.Span);
             await sendBase64MessageActionAsync(base64Message, ct).ConfigureAwait(false);
         };
     }
@@ -121,6 +128,35 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
             }
         }
 
+        if (messageToWrite.Value.Span.StartsWith(CompressionPrefix))
+        {
+            if (!IsCompressionSupported)
+            {
+                Log.Error("Received compressed RPC message but compression is not supported on this platform");
+                return ValueTask.CompletedTask;
+            }
+
+            if (!TryReadCompressedHeader(messageToWrite.Value, out var uncompressedLength, out var compressedPayload))
+            {
+                Log.Error("Invalid compressed message header");
+                return ValueTask.CompletedTask;
+            }
+
+            if (!TryDecompressMessage(compressedPayload, uncompressedLength, out var decompressed))
+            {
+                Log.Error("Failed to decompress RPC message");
+                return ValueTask.CompletedTask;
+            }
+
+            Log.Info(
+                $"Received {messageToWrite.Value.Length} bytes ({Math.Ceiling((double)messageToWrite.Value.Length / MaxChunkPayloadSize)} chunks)"
+            );
+            Log.Info(
+                $"Decompressed message {messageToWrite.Value.Length} -> {decompressed.Length} bytes ({Math.Round(100.0 * messageToWrite.Value.Length / decompressed.Length)}%)"
+            );
+            messageToWrite = decompressed;
+        }
+
         // Write total message
         return messagesChannel.Writer.WriteAsync(messageToWrite.Value, ct);
     }
@@ -149,8 +185,20 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
         await writeGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            Log.Info($"Write message {buffer.WrittenMemory.Length} bytes");
-            await SendBinaryMessageAsync(buffer.WrittenMemory, ct);
+            var payloadToSend = buffer.WrittenMemory;
+            if (IsCompressionSupported && TryCompressMessage(payloadToSend, out var compressedMessage))
+            {
+                payloadToSend = compressedMessage;
+                Log.Info(
+                    $"Write message {buffer.WrittenMemory.Length} bytes compressed to {payloadToSend.Length} bytes"
+                );
+            }
+            else
+            {
+                Log.Info($"Write message {payloadToSend.Length} bytes");
+            }
+
+            await SendBinaryMessageAsync(payloadToSend, ct);
         }
         finally
         {
@@ -229,6 +277,127 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
             return false;
 
         payload = message.Slice(ChunkHeaderSize);
+        return true;
+    }
+
+    static bool TryDecompressMessage(
+        ReadOnlyMemory<byte> compressedPayload,
+        int uncompressedLength,
+        out ReadOnlyMemory<byte> decompressedMessage
+    )
+    {
+        decompressedMessage = default;
+        try
+        {
+            using var input = new MemoryStream(compressedPayload.ToArray(), writable: false);
+            using var gzip = new GZipStream(input, CompressionMode.Decompress, leaveOpen: false);
+
+            var decompressed = new byte[uncompressedLength];
+            gzip.ReadExactly(decompressed);
+
+            // Ensure the payload does not decompress to more bytes than declared in the header.
+            if (gzip.ReadByte() != -1)
+                return false;
+
+            decompressedMessage = decompressed;
+            return true;
+        }
+        catch (Exception ex)
+            when (ex is PlatformNotSupportedException
+                || ex is InvalidDataException
+                || ex is EndOfStreamException
+                || ex is IOException
+            )
+        {
+            return false;
+        }
+    }
+
+    static bool CheckCompressionSupport()
+    {
+        var source = new byte[] { 1, 2, 3, 4 };
+        try
+        {
+            using var compressed = new MemoryStream();
+            using (var gzip = new GZipStream(compressed, CompressionLevel.Fastest, leaveOpen: true))
+            {
+                gzip.Write(source);
+            }
+
+            compressed.Position = 0;
+            using var decompress = new GZipStream(compressed, CompressionMode.Decompress, leaveOpen: false);
+            Span<byte> roundtrip = stackalloc byte[4];
+            decompress.ReadExactly(roundtrip);
+            return roundtrip.SequenceEqual(source);
+        }
+        catch (PlatformNotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    static bool TryCompressMessage(ReadOnlyMemory<byte> message, out ReadOnlyMemory<byte> compressedMessage)
+    {
+        compressedMessage = default;
+        if (message.Length < MinCompressionPayloadSize)
+            return false;
+
+        byte[] compressedBuffer;
+        try
+        {
+            using var output = new MemoryStream(capacity: CompressionHeaderSize + message.Length / 2);
+            var header = new byte[CompressionHeaderSize];
+            WriteCompressedHeader(header, message.Length);
+            output.Write(header);
+
+            using (var gzip = new GZipStream(output, CompressionLevel.Fastest, leaveOpen: true))
+            {
+                gzip.Write(message.Span);
+            }
+
+            compressedBuffer = output.ToArray();
+        }
+        catch (PlatformNotSupportedException)
+        {
+            return false;
+        }
+
+        if (message.Length - compressedBuffer.Length < MinCompressionSavingsBytes)
+            return false;
+
+        compressedMessage = compressedBuffer;
+        return true;
+    }
+
+    static void WriteCompressedHeader(Span<byte> header, int uncompressedLength)
+    {
+        CompressionPrefix.CopyTo(header);
+        BinaryPrimitives.WriteInt32LittleEndian(header.Slice(CompressionPrefixLength, sizeof(int)), uncompressedLength);
+    }
+
+    static bool TryReadCompressedHeader(
+        ReadOnlyMemory<byte> message,
+        out int uncompressedLength,
+        out ReadOnlyMemory<byte> compressedPayload
+    )
+    {
+        uncompressedLength = 0;
+        compressedPayload = default;
+
+        if (message.Length <= CompressionHeaderSize)
+            return false;
+
+        var span = message.Span;
+        if (!span.StartsWith(CompressionPrefix))
+            return false;
+
+        uncompressedLength = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(CompressionPrefixLength, sizeof(int)));
+
+        var compressedPayloadLength = message.Length - CompressionHeaderSize;
+        if (uncompressedLength <= 0 || compressedPayloadLength <= 0)
+            return false;
+
+        compressedPayload = message.Slice(CompressionHeaderSize);
         return true;
     }
 

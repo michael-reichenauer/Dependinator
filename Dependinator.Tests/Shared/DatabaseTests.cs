@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Text;
 using Dependinator.Shared;
 using Microsoft.JSInterop;
@@ -10,7 +11,8 @@ public class DatabaseTests
     [Fact]
     public async Task GetAsync_ShouldReturnValue_WhenJsInteropReturnsStream()
     {
-        var json = "{\"Id\":\"item-1\",\"Value\":\"payload\"}";
+        var compressedPayload = CompressToBase64(Encoding.UTF8.GetBytes("\"payload\""));
+        var json = $"{{\"Id\":\"item-1\",\"Value\":\"{compressedPayload}\"}}";
         var streamReference = new FakeJsStreamReference(Encoding.UTF8.GetBytes(json));
         var jsInterop = new FakeJsInterop(
             (functionName, args) =>
@@ -49,7 +51,7 @@ public class DatabaseTests
 
         Assert.False(Try(out string? _, out var e, result));
         Assert.NotNull(e);
-        Assert.Contains("read failed", e.ErrorMessage);
+        Assert.Contains("No value", e.ErrorMessage);
     }
 
     [Fact]
@@ -63,6 +65,33 @@ public class DatabaseTests
         Assert.False(Try(out var e, result));
         Assert.NotNull(e);
         Assert.Contains("write failed", e.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task SetAsync_ShouldStoreCompressedValue()
+    {
+        object? savedPair = null;
+        var jsInterop = new FakeJsInterop(
+            (functionName, args) =>
+            {
+                if (functionName == "setDatabaseValue")
+                    savedPair = args![2];
+
+                return null;
+            }
+        );
+        var sut = new Database(jsInterop);
+
+        var result = await sut.SetAsync("Files", "item-1", "payload");
+
+        Assert.True(Try(out var e, result), e?.ErrorMessage);
+        Assert.NotNull(savedPair);
+        var pairType = savedPair!.GetType();
+        var id = (string)pairType.GetProperty("Id")!.GetValue(savedPair)!;
+        var compressedValue = (string)pairType.GetProperty("Value")!.GetValue(savedPair)!;
+        var decompressedValue = DecompressFromBase64(compressedValue);
+        Assert.Equal("item-1", id);
+        Assert.Equal("\"payload\"", Encoding.UTF8.GetString(decompressedValue));
     }
 
     [Fact]
@@ -105,11 +134,33 @@ public class DatabaseTests
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
-        public ValueTask<Stream> OpenReadStreamAsync(long maxAllowedSize = 512000, CancellationToken cancellationToken = default)
+        public ValueTask<Stream> OpenReadStreamAsync(
+            long maxAllowedSize = 512000,
+            CancellationToken cancellationToken = default
+        )
         {
             if (Length > maxAllowedSize)
                 throw new ArgumentOutOfRangeException(nameof(maxAllowedSize));
             return ValueTask.FromResult<Stream>(new MemoryStream(content, writable: false));
         }
+    }
+
+    static string CompressToBase64(byte[] bytes)
+    {
+        using var output = new MemoryStream();
+        using (var gzip = new GZipStream(output, CompressionLevel.SmallestSize, leaveOpen: true))
+            gzip.Write(bytes);
+
+        return Convert.ToBase64String(output.ToArray());
+    }
+
+    static byte[] DecompressFromBase64(string base64)
+    {
+        var compressedBytes = Convert.FromBase64String(base64);
+        using var input = new MemoryStream(compressedBytes);
+        using var gzip = new GZipStream(input, CompressionMode.Decompress);
+        using var output = new MemoryStream();
+        gzip.CopyTo(output);
+        return output.ToArray();
     }
 }

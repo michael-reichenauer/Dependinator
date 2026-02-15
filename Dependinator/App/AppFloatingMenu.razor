@@ -5,25 +5,27 @@
     <AppMenu />
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
-    @if (modelService.CanUndo)
-    {
-        <MudIconButton Icon="@Icons.Material.Outlined.Undo" OnClick="modelService.Undo" />
-    }
-    else
-    {
-        <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="Color.Inherit" OnClick="modelService.Undo" />
-    }
+        @if (modelService.CanUndo)
+        {
+            <MudIconButton Icon="@Icons.Material.Outlined.Undo" OnClick="modelService.Undo" />
+        }
+        else
+        {
+            <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="Color.Inherit" OnClick="modelService.Undo" />
+        }
 
-    @if (modelService.CanRedo)
-    {
-        <MudIconButton Icon="@Icons.Material.Outlined.Redo" OnClick="modelService.Redo" />
-    }
-    else
-    {
-        <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="Color.Inherit" OnClick="modelService.Redo" />
-    } 
+        @if (modelService.CanRedo)
+        {
+            <MudIconButton Icon="@Icons.Material.Outlined.Redo" OnClick="modelService.Redo" />
+        }
+        else
+        {
+            <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="Color.Inherit" OnClick="modelService.Redo" />
+        }
+
+        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh" />
     </MudHidden>
-    
+
 </MudButtonGroup>
 
 @code {

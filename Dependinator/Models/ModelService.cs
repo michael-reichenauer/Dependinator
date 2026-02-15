@@ -1,3 +1,4 @@
+using DependinatorCore;
 using DependinatorCore.Shared;
 
 namespace Dependinator.Models;
@@ -35,6 +36,7 @@ interface IModelService
     void ClearCache();
     Rect GetBounds();
     void CheckLineVisibility();
+    Task LayoutNode(NodeId nodeId, bool recursively = false);
 }
 
 // Model service
@@ -276,7 +278,7 @@ class ModelService : IModelService
 
     async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
     {
-        using var progress = progressService.Start("Loading cached model ...");
+        using var progress = progressService.Start("Loading ...");
         if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
             return e;
 
@@ -294,7 +296,7 @@ class ModelService : IModelService
             path = model.Path;
         }
 
-        if (!Try(out var e, await ParseAndUpdateAsync(path)))
+        if (!Try(out var e, await ParseAndUpdateAsync(path, true)))
             return e;
         lock (model.Lock)
         {
@@ -336,6 +338,27 @@ class ModelService : IModelService
         return new Source(sourceText, new FileLocation(source.Location.Path, source.Location.Line));
     }
 
+    public async Task LayoutNode(NodeId nodeId, bool recursively = false)
+    {
+        using (var model = UseModel())
+        {
+            if (!model.TryGetNode(nodeId, out Node node))
+                return;
+
+            LayoutNode(node, recursively);
+        }
+
+        applicationEvents.TriggerUIStateChanged();
+        applicationEvents.TriggerSaveNeeded();
+    }
+
+    void LayoutNode(Node node, bool recursively)
+    {
+        NodeLayout.AdjustChildren(node);
+        if (recursively)
+            node.Children.ForEach(n => LayoutNode(n, recursively));
+    }
+
     async Task<R<ModelInfo>> ParseNewModelAsync(string path)
     {
         if (!Try(out var e, await ParseAndUpdateAsync(path)))
@@ -344,13 +367,14 @@ class ModelService : IModelService
         return new ModelInfo(path, Rect.None, 0);
     }
 
-    async Task<R> ParseAndUpdateAsync(string path)
+    async Task<R> ParseAndUpdateAsync(string path, bool isRefresh = false)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
-        using (var progress = progressService.Start("Parsing ..."))
+        using (var progress = isRefresh ? progressService.StartDiscreet() : progressService.Start("Parsing"))
         {
             // Let the renderer process the progress state before potentially CPU-heavy parse work starts.
             await Task.Yield();
+
             Log.Info("Parsing ...");
 
             if (!Try(out var items, out var e, await ParseAsync(path)))
@@ -372,7 +396,7 @@ class ModelService : IModelService
 
     async Task<R> ParseSourceAndUpdateAsync(string path)
     {
-        if (!host.IsVscExtWasm) // Parse source currently only supported when running as VS Code extension
+        if (!host.IsVscExtWasm && Build.IsWebAssembly) // Parse source currently only supported when running as VS Code extension
             return R.Ok;
 
         using var __ = progressService.StartDiscreet();
