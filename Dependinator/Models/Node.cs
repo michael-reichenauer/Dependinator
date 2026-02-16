@@ -74,6 +74,7 @@ class Node : IItem
     public string ShortName { get; private set; } = "";
     public string HtmlShortName { get; private set; } = "";
     public string HtmlLongName { get; private set; } = "";
+    public string? HtmlDescription { get; private set; }
     public bool IsHidden => IsUserSetHidden || IsParentSetHidden;
     public bool IsUserSetHidden { get; set; }
     public bool IsParentSetHidden { get; set; }
@@ -115,6 +116,7 @@ class Node : IItem
                 dto.Attributes.FileSpan.StarLine,
                 dto.Attributes.FileSpan.EndLine
             );
+        HtmlDescription = dto.Attributes.Description;
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
@@ -130,7 +132,11 @@ class Node : IItem
         IsPrivate = node.Attributes.IsPrivate ?? IsPrivate;
         Description = node.Attributes.Description ?? Description;
         MemberType = node.Attributes.MemberType ?? MemberType;
-        fileSpan = node.Attributes.FileSpan ?? fileSpan;
+        fileSpan = node.Attributes.FileSpan == NoValue.FileSpan ? null : node.Attributes.FileSpan ?? fileSpan;
+        HtmlDescription =
+            node.Attributes.Description == NoValue.String ? null
+            : node.Attributes.Description is not null ? HttpUtility.HtmlEncode(Description)
+            : HtmlDescription;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)
