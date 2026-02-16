@@ -95,7 +95,8 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path)
     {
-        return await sourceParser.ParseAsync(path);
+        using var _ = Timing.Start("Parsed sources");
+        return await sourceParser.ParseSolutionAsync(path);
     }
 
     sealed class ChannelItemsAdapter(ChannelWriter<Item> writer) : IItems
