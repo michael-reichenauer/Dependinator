@@ -1,5 +1,5 @@
 #if !BROWSER_WASM
-using System.Diagnostics.Eventing.Reader;
+using DependinatorCore.Parsing.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;

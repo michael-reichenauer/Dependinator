@@ -173,8 +173,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
     }
 
     static Parsing.Node DefaultParentNode(string name) =>
-        new(name, new() { Type = Parsing.NodeType.Parent, Parent = Parsing.NodeName.ParseParentName(name) });
+        new(name, new() { Type = Parsing.NodeType.Parent, Parent = Parsing.Utils.NodeName.ParseParentName(name) });
 
     static Parsing.Node DefaultParsingNode(string name) =>
-        new(name, new() { Type = Parsing.NodeType.None, Parent = Parsing.NodeName.ParseParentName(name) });
+        new(name, new() { Type = Parsing.NodeType.None, Parent = Parsing.Utils.NodeName.ParseParentName(name) });
 }

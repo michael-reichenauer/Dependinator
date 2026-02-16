@@ -250,7 +250,7 @@ class NodeSvg
         string? htmlDescription
     )
     {
-        var title = string.IsNullOrEmpty(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
+        var title = string.IsNullOrWhiteSpace(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
         return $"""
             <g class="{cssClass}" id="{elementId}">
               <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>

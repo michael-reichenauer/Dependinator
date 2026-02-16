@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.Eventing.Reader;
-using System.Reflection.PortableExecutable;
-using System.Runtime.CompilerServices;
+﻿using System.Reflection.PortableExecutable;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.Metadata;

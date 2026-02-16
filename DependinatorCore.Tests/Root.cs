@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using ICSharpCode.Decompiler.TypeSystem;
 
 namespace DependinatorCore.Tests;
 

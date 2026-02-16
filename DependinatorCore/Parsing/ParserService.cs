@@ -1,10 +1,9 @@
 ﻿using System.Threading.Channels;
 using DependinatorCore.Parsing.Sources;
+using DependinatorCore.Parsing.Utils;
 using DependinatorCore.Rpc;
 
 namespace DependinatorCore.Parsing;
-
-record ModelPaths(string ModelPath, string WorkFolderPath);
 
 // Parses the a solution or assemblies to extract code structure and meta data.
 // Uses both reflection to parse binaries for structure and Roselyn to parse source for more meta data.

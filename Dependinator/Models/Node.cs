@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using System.Web;
 using DependinatorCore.Parsing;
 
@@ -49,7 +48,7 @@ class Node : IItem
         }
     }
 
-    public string Description { get; set; } = "";
+    public string? Description { get; set; }
 
     public string Color { get; set; } = "";
 
@@ -106,7 +105,7 @@ class Node : IItem
     {
         Type = Enums.To<NodeType>(dto.Type, NodeType.None);
 
-        Description = dto.Attributes.Description ?? "";
+        Description = dto.Attributes.Description;
         IsPrivate = dto.Attributes.IsPrivate;
         MemberType = Enum.TryParse<MemberType>(dto.Attributes.MemberType, out var value) ? value : MemberType.None;
         fileSpan = dto.Attributes.FileSpan is null
