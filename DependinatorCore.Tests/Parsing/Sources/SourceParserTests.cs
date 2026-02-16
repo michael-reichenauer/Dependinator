@@ -4,6 +4,7 @@ using DependinatorCore.Tests.Parsing.Utils;
 
 namespace DependinatorCore.Tests.Parsing.Sources;
 
+// Some Type Comment
 public class SourceTestData
 {
     public int number;
@@ -19,7 +20,17 @@ public class SourceTestData
 public class SourceParserTests
 {
     [Fact]
-    public async Task TestAsync()
+    public async Task TestSourceParserAsync()
+    {
+        var sourceParser = new SourceParser();
+        if (!Try(out var allSourceNodes, out var e, await sourceParser.ParseProjectAsync(Root.ProjectFilePath)))
+            Assert.Fail(e.AllErrorMessages());
+        var sourceNodes = allSourceNodes.Where(sn => sn.Node!.Name.Contains(typeof(SourceTestData).FullName!)).ToList();
+        Assert.NotEmpty(sourceNodes);
+    }
+
+    [Fact]
+    public async Task TestBothAsync()
     {
         var sourceParser = new SourceParser();
         if (!Try(out var allSourceNodes, out var e, await sourceParser.ParseProjectAsync(Root.ProjectFilePath)))
