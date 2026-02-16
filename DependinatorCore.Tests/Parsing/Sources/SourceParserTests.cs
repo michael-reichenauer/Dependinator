@@ -5,6 +5,7 @@ using DependinatorCore.Tests.Parsing.Utils;
 namespace DependinatorCore.Tests.Parsing.Sources;
 
 // Some Type Comment
+// Second Row
 public class SourceTestData
 {
     public int number;
@@ -27,6 +28,9 @@ public class SourceParserTests
             Assert.Fail(e.AllErrorMessages());
         var sourceNodes = allSourceNodes.Where(sn => sn.Node!.Name.Contains(typeof(SourceTestData).FullName!)).ToList();
         Assert.NotEmpty(sourceNodes);
+
+        var typeNode = sourceNodes.First(n => n.Node!.Name.EndsWith(typeof(SourceTestData).FullName!));
+        Assert.Equal("Some Type Comment\nSecond Row", typeNode.Node!.Attributes.Description);
     }
 
     [Fact]

@@ -129,11 +129,13 @@ class SourceParser : ISourceParser
                 continue;
 
             var firstTypeSpan = typeSpans.First();
+            var typeComment = TypeCommentExtractor.GetTypeComment(type, firstTypeSpan);
             yield return new Parsing.Item(
                 new Node(
                     fullTypeName,
                     new NodeAttributes
                     {
+                        Description = typeComment,
                         FileSpan = new FileSpan(
                             firstTypeSpan.Path,
                             firstTypeSpan.StartLinePosition.Line,
