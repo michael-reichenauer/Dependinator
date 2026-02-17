@@ -38,6 +38,9 @@
                                 @if (item.NodeId != Models.NodeId.Empty)
                                 {
                                     <div style="justify-self: end;">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Expand" Size="Size.Small"
+                                                       Color="Color.Inherit" Class="ml-3 hover-button"
+                                                       OnClick="() => srv.ToggleExpandAll(item)" />
                                         <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
                                                        Color="Color.Inherit" Class="ml-3 hover-button"
                                                        OnClick="() => srv.ShowNodeAsync(item.NodeId)" />

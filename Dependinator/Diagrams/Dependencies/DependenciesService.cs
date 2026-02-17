@@ -20,6 +20,7 @@ interface IDependenciesService
 
     void SetSelected(TreeItem selectedItem);
     Task ShowNodeAsync(NodeId nodeId);
+    Task ToggleExpandAll(TreeItem treeItem);
     bool CanShowEditor(NodeId nodeId);
     Task ShowEditorAsync(NodeId nodeId);
     void ShowDirectLine(NodeId nodeId);
@@ -139,6 +140,14 @@ class DependenciesService(
     public async Task ShowEditorAsync(NodeId nodeId)
     {
         await navigationService.ShowEditor(nodeId);
+    }
+
+    public async Task ToggleExpandAll(TreeItem treeItem)
+    {
+        bool shouldExpand = treeItem.GetThisAndDescendants().Any(ti => !ti.Expanded);
+        treeItem.GetThisAndDescendants().ForEach(ti => ti.Expanded = shouldExpand);
+
+        applicationEvents.TriggerUIStateChanged();
     }
 
     private void Close()
