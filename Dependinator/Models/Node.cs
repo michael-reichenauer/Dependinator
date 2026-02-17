@@ -106,6 +106,7 @@ class Node : IItem
         Type = Enums.To<NodeType>(dto.Type, NodeType.None);
 
         Description = dto.Attributes.Description;
+        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
         IsPrivate = dto.Attributes.IsPrivate;
         MemberType = Enum.TryParse<MemberType>(dto.Attributes.MemberType, out var value) ? value : MemberType.None;
         fileSpan = dto.Attributes.FileSpan is null
@@ -115,7 +116,6 @@ class Node : IItem
                 dto.Attributes.FileSpan.StarLine,
                 dto.Attributes.FileSpan.EndLine
             );
-        HtmlDescription = dto.Attributes.Description;
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
@@ -129,13 +129,10 @@ class Node : IItem
     {
         Type = node.Attributes.Type ?? Type;
         IsPrivate = node.Attributes.IsPrivate ?? IsPrivate;
-        Description = node.Attributes.Description ?? Description;
+        Description = node.Attributes.Description == NoValue.String ? null : node.Attributes.Description ?? Description;
+        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
         MemberType = node.Attributes.MemberType ?? MemberType;
         fileSpan = node.Attributes.FileSpan == NoValue.FileSpan ? null : node.Attributes.FileSpan ?? fileSpan;
-        HtmlDescription =
-            node.Attributes.Description == NoValue.String ? null
-            : node.Attributes.Description is not null ? HttpUtility.HtmlEncode(Description)
-            : HtmlDescription;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)
