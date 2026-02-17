@@ -390,6 +390,8 @@ class ModelService : IModelService
             await AddOrUpdateAllItems(items);
         }
 
+        CheckLineVisibility();
+
         ParseSourceAndUpdateAsync(path).RunInBackground();
         return R.Ok;
     }
