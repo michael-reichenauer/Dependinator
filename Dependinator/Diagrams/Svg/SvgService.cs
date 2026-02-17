@@ -94,7 +94,7 @@ class SvgService : ISvgService
     {
         var geometry = CalculateNodeGeometry(node, context);
 
-        if (!RectsOverlap(context.TileBounds, geometry.TileRect))
+        if (!RectOverlap(context.TileBounds, geometry.TileRect))
             return "";
 
         if (node.Type == Parsing.NodeType.Member)
@@ -143,7 +143,7 @@ class SvgService : ISvgService
             NodeLayout.AdjustChildren(node);
     }
 
-    static bool RectsOverlap(Rect first, Rect second)
+    static bool RectOverlap(Rect first, Rect second)
     {
         if (first.X + first.Width <= second.X || second.X + second.Width <= first.X)
             return false;
