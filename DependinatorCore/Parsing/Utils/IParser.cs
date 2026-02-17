@@ -1,4 +1,4 @@
-﻿namespace DependinatorCore.Parsing;
+﻿namespace DependinatorCore.Parsing.Utils;
 
 interface IParser
 {

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using DependinatorCore.Parsing;
+using DependinatorCore.Parsing.Utils;
 
 namespace DependinatorCore.Tests.Parsing.Utils;
 

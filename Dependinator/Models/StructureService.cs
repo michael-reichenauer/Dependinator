@@ -1,3 +1,5 @@
+using DependinatorCore.Parsing;
+
 namespace Dependinator.Models;
 
 interface IStructureService
@@ -34,7 +36,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
             var parent = GetOrCreateParent(parentName);
 
             node = new Node(parsedNode.Name, parent);
-            node.Boundary = NodeLayout.GetNextChildRect(parent);
+            node.Boundary = parent.IsChildrenLayoutCustomized ? Rect.None : NodeLayout.GetNextChildRect(parent);
 
             node.Update(parsedNode);
             node.UpdateStamp = model.UpdateStamp;
@@ -72,6 +74,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
         var source = model.GetNode(NodeId.FromName(parsedLink.Source));
         var target = model.GetNode(NodeId.FromName(parsedLink.Target));
+        if (parsedLink.Attributes.TargetType is not null && parsedLink.Attributes.TargetType is not NodeType.None)
+            target.Type = (NodeType)parsedLink.Attributes.TargetType;
 
         link = new Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
@@ -94,11 +98,9 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         var parent = GetOrCreateParent(parentName);
 
         var node = new Node(nodeDto.Name, parent);
-        if (nodeDto.Boundary is null)
-        {
-            node.Boundary = NodeLayout.GetNextChildRect(parent);
-        }
         node.SetFromDto(nodeDto);
+        if (node.Boundary == Rect.None && !parent.IsChildrenLayoutCustomized)
+            node.Boundary = NodeLayout.GetNextChildRect(parent);
         node.UpdateStamp = model.UpdateStamp;
 
         model.AddNode(node);
@@ -113,6 +115,9 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
         var source = model.GetNode(NodeId.FromName(linkDto.SourceName));
         var target = model.GetNode(NodeId.FromName(linkDto.TargetName));
+        var targetType = Enums.To<NodeType>(linkDto.TargetType, NodeType.None);
+        if (targetType is not NodeType.None)
+            target.Type = targetType;
 
         var link = new Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
@@ -166,8 +171,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
     }
 
     static Parsing.Node DefaultParentNode(string name) =>
-        new(name, new() { Type = Parsing.NodeType.Parent, Parent = Parsing.NodeName.ParseParentName(name) });
+        new(name, new() { Type = Parsing.NodeType.Parent, Parent = Parsing.Utils.NodeName.ParseParentName(name) });
 
     static Parsing.Node DefaultParsingNode(string name) =>
-        new(name, new() { Type = Parsing.NodeType.None, Parent = Parsing.NodeName.ParseParentName(name) });
+        new(name, new() { Type = Parsing.NodeType.None, Parent = Parsing.Utils.NodeName.ParseParentName(name) });
 }

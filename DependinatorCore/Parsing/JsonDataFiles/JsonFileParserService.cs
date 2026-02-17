@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using DependinatorCore.Parsing.Utils;
+using Newtonsoft.Json;
 
 namespace DependinatorCore.Parsing.JsonDataFiles;
 

@@ -1,4 +1,5 @@
-﻿using DependinatorCore.Shared;
+﻿using DependinatorCore.Parsing.Utils;
+using DependinatorCore.Shared;
 
 namespace DependinatorCore.Parsing.Assemblies;
 

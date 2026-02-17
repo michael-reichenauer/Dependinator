@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using System.Web;
 using DependinatorCore.Parsing;
 
@@ -49,7 +48,7 @@ class Node : IItem
         }
     }
 
-    public string Description { get; set; } = "";
+    public string? Description { get; set; }
 
     public string Color { get; set; } = "";
 
@@ -57,6 +56,7 @@ class Node : IItem
     public bool IsSelected { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
     public bool IsChildrenLayoutRequired { get; set; } = false;
+    public bool IsChildrenLayoutCustomized { get; set; } = false;
 
     public Rect Boundary { get; set; } = Rect.None;
     public Double ContainerZoom { get; set; } = DefaultContainerZoom;
@@ -74,6 +74,7 @@ class Node : IItem
     public string ShortName { get; private set; } = "";
     public string HtmlShortName { get; private set; } = "";
     public string HtmlLongName { get; private set; } = "";
+    public string? HtmlDescription { get; private set; }
     public bool IsHidden => IsUserSetHidden || IsParentSetHidden;
     public bool IsUserSetHidden { get; set; }
     public bool IsParentSetHidden { get; set; }
@@ -99,13 +100,15 @@ class Node : IItem
             Color = Color,
             IsUserSetHidden = IsUserSetHidden,
             IsParentSetHidden = IsParentSetHidden,
+            IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
         };
 
     public void SetFromDto(NodeDto dto)
     {
         Type = Enums.To<NodeType>(dto.Type, NodeType.None);
 
-        Description = dto.Attributes.Description ?? "";
+        Description = dto.Attributes.Description;
+        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
         IsPrivate = dto.Attributes.IsPrivate;
         MemberType = Enum.TryParse<MemberType>(dto.Attributes.MemberType, out var value) ? value : MemberType.None;
         fileSpan = dto.Attributes.FileSpan is null
@@ -122,15 +125,17 @@ class Node : IItem
         Color = dto.Color ?? Color;
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
+        IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
     }
 
     public void Update(Parsing.Node node)
     {
         Type = node.Attributes.Type ?? Type;
         IsPrivate = node.Attributes.IsPrivate ?? IsPrivate;
-        Description = node.Attributes.Description ?? Description;
+        Description = node.Attributes.Description == NoValue.String ? null : node.Attributes.Description ?? Description;
+        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
         MemberType = node.Attributes.MemberType ?? MemberType;
-        fileSpan = node.Attributes.FileSpan ?? fileSpan;
+        fileSpan = node.Attributes.FileSpan == NoValue.FileSpan ? null : node.Attributes.FileSpan ?? fileSpan;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)

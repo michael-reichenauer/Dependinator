@@ -54,3 +54,10 @@ enum NodeType
     Type,
     Member,
 }
+
+static class NoValue
+{
+    public static readonly int Int = int.MinValue;
+    public static readonly string String = "\u0000";
+    public static readonly FileSpan FileSpan = new(NoValue.String, NoValue.Int, NoValue.Int);
+}

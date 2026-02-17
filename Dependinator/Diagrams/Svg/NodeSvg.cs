@@ -26,7 +26,7 @@ class NodeSvg
         var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
-        var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName);
+        var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName, node.HtmlDescription);
         var selectedOverlay = SelectedNodeSvg(node, geometry);
 
         return $"""
@@ -50,7 +50,7 @@ class NodeSvg
         var selectedOverlay = SelectedNodeSvg(node, geometry);
 
         var innerGeometry = new Rect(0, 0, geometry.Width, geometry.Height);
-        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName);
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName, node.HtmlDescription);
 
         return $"""
             <svg x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" viewBox="{0} {0} {geometry.Width:0.##} {geometry.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
@@ -71,7 +71,13 @@ class NodeSvg
         var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
-        var hoverGroup = BuildHoverGroup(elementId, "hoverable", layout.Bounds, node.HtmlLongName);
+        var hoverGroup = BuildHoverGroup(
+            elementId,
+            "hoverable",
+            layout.Bounds,
+            node.HtmlLongName,
+            node.HtmlDescription
+        );
         var selectedOverlay = SelectedNodeSvg(node, layout.Bounds);
 
         return $"""
@@ -236,13 +242,22 @@ class NodeSvg
         return (border, background);
     }
 
-    static string BuildHoverGroup(string elementId, string cssClass, Rect geometry, string title) =>
-        $"""
+    static string BuildHoverGroup(
+        string elementId,
+        string cssClass,
+        Rect geometry,
+        string htmlLongName,
+        string? htmlDescription
+    )
+    {
+        var title = string.IsNullOrWhiteSpace(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
+        return $"""
             <g class="{cssClass}" id="{elementId}">
               <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
               <title>{title}</title>
             </g>
             """.Trim();
+    }
 
     static string SelectedNodeSvg(Node node, Rect geometry)
     {

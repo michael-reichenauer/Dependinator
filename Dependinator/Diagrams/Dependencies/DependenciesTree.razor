@@ -15,7 +15,7 @@
 </style>
 
 <MudPopover Open="IsShowExplorer" Fixed="true" Class="px-4 pt-4 ml-1" MaxHeight="MaxHeight"
-    AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft">
+            AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft">
     <MudStack>
         <MudStack Row="true">
             <MudIcon Icon="@srv.TreeIcon" Class="ml-n5" />
@@ -28,10 +28,10 @@
                         var item = (TreeItem)treeItem;
                     }
                     <MudTreeViewItem Items="@item.Children" Icon="@item.Icon"
-                        OnClick="() => srv.SetSelected(item.Value!)" @bind-Expanded="@item.Expanded">
+                                     OnClick="() => srv.SetSelected(item.Value!)" @bind-Expanded="@item.Expanded">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
-                                class="hover-element">
+                                 class="hover-element">
 
                                 <MudText Style="justify-self: start;">@item.Text</MudText>
 
@@ -39,11 +39,17 @@
                                 {
                                     <div style="justify-self: end;">
                                         <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
-                                            Color="Color.Inherit" Class="ml-3 hover-button"
-                                            OnClick="() => srv.ShowNode(item.NodeId)" />
-                                        <MudIconButton Icon="@Dependinator.Diagrams.Icons.Icon.DirectConnection" Size="Size.Small"
-                                            Color="Color.Inherit" Class="ml hover-button"
-                                            OnClick="() => srv.ShowDirectLine(item.NodeId)" />
+                                                       Color="Color.Inherit" Class="ml-3 hover-button"
+                                                       OnClick="() => srv.ShowNodeAsync(item.NodeId)" />
+                                        @if (srv.CanShowEditor(item.NodeId))
+                                        {
+                                            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" Size="Size.Small"
+                                                           Color="Color.Inherit" Class="ml-3 hover-button"
+                                                           OnClick="() => srv.ShowEditorAsync(item.NodeId)" />
+                                        }
+                                        <MudIconButton Icon="@Dependinator.Diagrams.Icons.Icon.DirectConnection"
+                                                       Size="Size.Small" Color="Color.Inherit" Class="ml-3 hover-button"
+                                                       OnClick="() => srv.ShowDirectLine(item.NodeId)" />
                                     </div>
                                 }
                             </div>

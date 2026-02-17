@@ -58,4 +58,46 @@ public class NodeTests
 
         Assert.Equal(new Rect(0, 0, 15, 10), bounds);
     }
+
+    [Fact]
+    public void EnsureLayoutForPath_ShouldStabilizeCenterPosAndZoomForDeferredLayout()
+    {
+        var root = new ModelNode("", null!)
+        {
+            Type = NodeType.Root,
+            Boundary = new Rect(0, 0, 1000, 1000),
+            ContainerZoom = 1,
+        };
+        var parent = new ModelNode("Parent", root) { Type = NodeType.Type, Boundary = new Rect(100, 100, 100, 100) };
+        root.AddChild(parent);
+
+        var child = new ModelNode("Child", parent) { Type = NodeType.Type, Boundary = Rect.None };
+        parent.AddChild(child);
+
+        var (beforePos, beforeZoom) = child.GetCenterPosAndZoom();
+        var didLayout = child.EnsureLayoutForPath();
+        var (afterPos, afterZoom) = child.GetCenterPosAndZoom();
+
+        Assert.True(didLayout);
+        Assert.False(parent.IsChildrenLayoutRequired);
+        Assert.NotEqual(beforePos, afterPos);
+        Assert.NotEqual(beforeZoom, afterZoom);
+    }
+
+    [Fact]
+    public void EnsureLayoutForPath_ShouldReturnFalseWhenNoAncestorNeedsLayout()
+    {
+        var root = new ModelNode("", null!)
+        {
+            Type = NodeType.Root,
+            Boundary = new Rect(0, 0, 1000, 1000),
+            ContainerZoom = 1,
+        };
+        var child = new ModelNode("Child", root) { Boundary = new Rect(100, 100, 100, 100) };
+        root.AddChild(child);
+
+        var didLayout = child.EnsureLayoutForPath();
+
+        Assert.False(didLayout);
+    }
 }
