@@ -56,6 +56,10 @@
 
     <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
     <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen"
+                   OnClick="interactionService.DecreaseNodeSize" />
+    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize" />
+
     @if (CanShowSource)
     {
       <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync" />

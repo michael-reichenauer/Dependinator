@@ -12,6 +12,8 @@ interface IInteractionService
     bool IsEditNodeMode { get; set; }
     Task InitAsync();
     void NodePanZoomToFit();
+    void IncreaseNodeSize();
+    void DecreaseNodeSize();
 }
 
 [Scoped]
@@ -108,6 +110,24 @@ class InteractionService : IInteractionService
         if (!selectionService.IsSelected)
             return;
         nodeEditService.PanZoomToFit(selectionService.SelectedId);
+    }
+
+    public void IncreaseNodeSize()
+    {
+        if (!selectionService.IsSelected)
+            return;
+        var nodeId = NodeId.FromId(selectionService.SelectedId.Id);
+
+        nodeEditService.IncreaseNodeSize(nodeId);
+    }
+
+    public void DecreaseNodeSize()
+    {
+        if (!selectionService.IsSelected)
+            return;
+        var nodeId = NodeId.FromId(selectionService.SelectedId.Id);
+
+        nodeEditService.DecreaseNodeSize(nodeId);
     }
 
     public Task InitAsync()
