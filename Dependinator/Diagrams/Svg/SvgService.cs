@@ -85,8 +85,9 @@ class SvgService : ISvgService
         var childNodeSvg = node
             .Children.Select(child => RenderNode(child, childrenContext))
             .Where(svg => svg.Length > 0);
+        var linesSvg = RenderNodeLines(node, childrenCanvasOffset, context.Zoom, childrenZoom);
 
-        return childNodeSvg.Concat(RenderNodeLines(node, childrenCanvasOffset, context.Zoom, childrenZoom)).Join("\n");
+        return linesSvg.Concat(childNodeSvg).Join("\n");
     }
 
     static string RenderNode(Node node, RenderContext context)
