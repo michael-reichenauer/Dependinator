@@ -24,6 +24,8 @@ class NodeLayout
     const double MinimumZoom = 1.0 / 40.0;
     const double MaximumZoom = 1.0;
     const double MinimumDimension = 0.0001;
+    const int PlacementScanLimit = 5000;
+    const double PlacementPadding = 4;
 
     public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
 
@@ -48,12 +50,18 @@ class NodeLayout
         return new Rect(x, y, DefaultWidth, DefaultHeight);
     }
 
-    public static void AdjustChildren(Node parent)
+    public static void AdjustChildren(Node parent, bool forceAllChildren = false)
     {
         parent.IsChildrenLayoutRequired = false;
 
         if (parent.Children.Count == 0)
             return;
+
+        if (!forceAllChildren && parent.IsChildrenLayoutCustomized)
+        {
+            ArrangeOnlyNewChildren(parent);
+            return;
+        }
 
         if (IsTypeWithMembers(parent))
         {
@@ -112,6 +120,153 @@ class NodeLayout
         _ = ArrangeGroup(parent, nonMembers, regularMetrics, cursorX, startY);
 
         ApplyContainerTransform(parent, GetChildrenBounds(parent.Children), density.TargetLinearCoverage);
+    }
+
+    static void ArrangeOnlyNewChildren(Node parent)
+    {
+        var newChildren = parent.Children.Where(child => child.Boundary == Rect.None).ToList();
+        if (newChildren.Count == 0)
+            return;
+
+        var density = GetDensityProfile();
+        var memberMetrics = MemberMetrics(density);
+        var regularMetrics = RegularMetrics(density);
+        var occupied = parent
+            .Children.Where(child => child.Boundary != Rect.None)
+            .Select(child => child.Boundary)
+            .ToList();
+
+        if (IsTypeWithMembers(parent))
+        {
+            ArrangeOnlyNewTypeChildren(parent, newChildren, occupied, memberMetrics, regularMetrics);
+            return;
+        }
+
+        Sorter.Sort(newChildren, CompareChildren);
+        PlaceNodesInFreeSlots(parent, newChildren, occupied, regularMetrics, regularMetrics.HorizontalGap);
+    }
+
+    static void ArrangeOnlyNewTypeChildren(
+        Node parent,
+        IReadOnlyList<Node> newChildren,
+        List<Rect> occupied,
+        LayoutMetrics memberMetrics,
+        LayoutMetrics regularMetrics
+    )
+    {
+        var newMembers = newChildren.Where(c => c.Type == Parsing.NodeType.Member).ToList();
+        var newNonMembers = newChildren.Where(c => c.Type != Parsing.NodeType.Member).ToList();
+
+        Sorter.Sort(newMembers, CompareMemberChildren);
+        Sorter.Sort(newNonMembers, CompareChildren);
+
+        var existingMembers = parent
+            .Children.Where(c => c.Boundary != Rect.None && c.Type == Parsing.NodeType.Member)
+            .ToList();
+        var existingPublicMembers = existingMembers
+            .Where(m => !(m.IsPrivate ?? false))
+            .Select(m => m.Boundary)
+            .ToList();
+        var existingPrivateMembers = existingMembers.Where(m => m.IsPrivate ?? false).Select(m => m.Boundary).ToList();
+        var existingNonMembers = parent
+            .Children.Where(c => c.Boundary != Rect.None && c.Type != Parsing.NodeType.Member)
+            .Select(c => c.Boundary)
+            .ToList();
+
+        var newPublicMembers = newMembers.Where(m => !(m.IsPrivate ?? false)).ToList();
+        var newPrivateMembers = newMembers.Where(m => m.IsPrivate ?? false).ToList();
+
+        var minStartX = Math.Max(memberMetrics.HorizontalGap, regularMetrics.HorizontalGap);
+        var publicStartX = PreferredStartX(existingPublicMembers, minStartX);
+        PlaceNodesInFreeSlots(parent, newPublicMembers, occupied, memberMetrics, publicStartX);
+
+        var publicRight = MaxRight(existingPublicMembers, newPublicMembers.Select(m => m.Boundary));
+        var privateStartX = PreferredStartX(
+            existingPrivateMembers,
+            Math.Max(minStartX, publicRight + memberMetrics.HorizontalGap)
+        );
+        PlaceNodesInFreeSlots(parent, newPrivateMembers, occupied, memberMetrics, privateStartX);
+
+        var membersRight = MaxRight(
+            existingPublicMembers.Concat(existingPrivateMembers),
+            newPublicMembers.Concat(newPrivateMembers).Select(m => m.Boundary)
+        );
+        var nonMemberStartX = PreferredStartX(
+            existingNonMembers,
+            Math.Max(minStartX, membersRight + regularMetrics.HorizontalGap)
+        );
+        PlaceNodesInFreeSlots(parent, newNonMembers, occupied, regularMetrics, nonMemberStartX);
+    }
+
+    static void PlaceNodesInFreeSlots(
+        Node parent,
+        IReadOnlyList<Node> nodes,
+        List<Rect> occupied,
+        LayoutMetrics metrics,
+        double preferredStartX
+    )
+    {
+        foreach (var node in nodes)
+        {
+            var boundary = FindNextFreeRect(parent, occupied, metrics, preferredStartX);
+            node.Boundary = boundary;
+            occupied.Add(boundary);
+        }
+    }
+
+    static Rect FindNextFreeRect(
+        Node parent,
+        IReadOnlyList<Rect> occupied,
+        LayoutMetrics metrics,
+        double preferredStartX
+    )
+    {
+        var startX = Math.Max(metrics.HorizontalGap, preferredStartX);
+        var layoutWidth = parent.Boundary.Width / Math.Max(MinimumDimension, parent.ContainerZoom);
+        var horizontalSpan = Math.Max(metrics.Width, layoutWidth - startX);
+        var columns = Math.Max(1, (int)Math.Floor(horizontalSpan / (metrics.Width + metrics.HorizontalGap)));
+
+        for (var index = 0; index < PlacementScanLimit; index++)
+        {
+            var column = index % columns;
+            var row = index / columns;
+            var x = startX + column * (metrics.Width + metrics.HorizontalGap);
+            var y = metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
+            var candidate = new Rect(x, y, metrics.Width, metrics.Height);
+            if (occupied.All(existing => !Overlaps(candidate, existing)))
+                return candidate;
+        }
+
+        var fallbackX =
+            occupied.Count == 0 ? startX : occupied.Max(rect => rect.X + rect.Width) + metrics.HorizontalGap;
+        return new Rect(fallbackX, metrics.VerticalGap, metrics.Width, metrics.Height);
+    }
+
+    static bool Overlaps(Rect first, Rect second)
+    {
+        var x1 = first.X - PlacementPadding;
+        var y1 = first.Y - PlacementPadding;
+        var x2 = first.X + first.Width + PlacementPadding;
+        var y2 = first.Y + first.Height + PlacementPadding;
+
+        var sx1 = second.X - PlacementPadding;
+        var sy1 = second.Y - PlacementPadding;
+        var sx2 = second.X + second.Width + PlacementPadding;
+        var sy2 = second.Y + second.Height + PlacementPadding;
+
+        return x1 < sx2 && x2 > sx1 && y1 < sy2 && y2 > sy1;
+    }
+
+    static double PreferredStartX(IEnumerable<Rect> existing, double fallback)
+    {
+        var list = existing.ToList();
+        return list.Count == 0 ? fallback : list.Min(rect => rect.X);
+    }
+
+    static double MaxRight(IEnumerable<Rect> existing, IEnumerable<Rect> added)
+    {
+        var all = existing.Concat(added).ToList();
+        return all.Count == 0 ? 0 : all.Max(rect => rect.X + rect.Width);
     }
 
     static double ArrangeGroup(

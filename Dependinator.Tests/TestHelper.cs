@@ -1,6 +1,6 @@
 using Dependinator.Models;
-using DependinatorCore.Parsing;
 using DependinatorCore.Parsing.Assemblies;
+using DependinatorCore.Parsing.Utils;
 using DependinatorCore.Tests.Parsing.Utils;
 using Mono.Cecil;
 

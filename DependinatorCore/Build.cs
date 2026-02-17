@@ -10,7 +10,7 @@ public static class Build
     public static readonly string Time = GetTime().IsoZone();
     public static readonly string CommitSid = GetCommitId().Sid();
 
-    public static readonly bool IsWebAssembly = RuntimeInformation.ProcessArchitecture == Architecture.Wasm;
+    public static readonly bool IsWasm = RuntimeInformation.ProcessArchitecture == Architecture.Wasm;
     public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
     public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
     public static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);

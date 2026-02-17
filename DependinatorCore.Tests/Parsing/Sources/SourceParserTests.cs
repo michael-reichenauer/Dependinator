@@ -1,18 +1,57 @@
+using DependinatorCore.Parsing.Assemblies;
 using DependinatorCore.Parsing.Sources;
+using DependinatorCore.Tests.Parsing.Utils;
 
 namespace DependinatorCore.Tests.Parsing.Sources;
+
+// Some Type Comment
+// Second Row
+public class SourceTestData
+{
+    public int number;
+
+    public int FirstFunction(string name)
+    {
+        return name.Length;
+    }
+
+    public void SecondFunction() { }
+}
 
 public class SourceParserTests
 {
     [Fact]
-    public async Task TestAsync()
+    public async Task TestSourceParserAsync()
     {
-        var slnPath = "/workspaces/Dependinator/Dependinator.sln";
-
         var sourceParser = new SourceParser();
-        if (!Try(out var nodes, out var e, await sourceParser.ParseAsync(slnPath)))
+        if (!Try(out var allSourceNodes, out var e, await sourceParser.ParseProjectAsync(Root.ProjectFilePath)))
             Assert.Fail(e.AllErrorMessages());
+        var sourceNodes = allSourceNodes.Where(sn => sn.Node!.Name.Contains(typeof(SourceTestData).FullName!)).ToList();
+        Assert.NotEmpty(sourceNodes);
 
-        var x = nodes;
+        var typeNode = sourceNodes.First(n => n.Node!.Name.EndsWith(typeof(SourceTestData).FullName!));
+        Assert.Equal("Some Type Comment\nSecond Row", typeNode.Node!.Attributes.Description);
+    }
+
+    [Fact]
+    public async Task TestBothAsync()
+    {
+        var sourceParser = new SourceParser();
+        if (!Try(out var allSourceNodes, out var e, await sourceParser.ParseProjectAsync(Root.ProjectFilePath)))
+            Assert.Fail(e.AllErrorMessages());
+        var sourceNodes = allSourceNodes.Where(sn => sn.Node!.Name.Contains(typeof(SourceTestData).FullName!)).ToList();
+        Assert.NotEmpty(sourceNodes);
+
+        var reflectionItems = new ItemsMock();
+        var xmlDockParser = new XmlDocParser("");
+        var linkHandler = new LinkHandler(reflectionItems);
+        var typeParser = new TypeParser(linkHandler, xmlDockParser, reflectionItems);
+        var memberParser = new MemberParser(linkHandler, xmlDockParser, reflectionItems);
+
+        var testDataType = AssemblyHelper.GetTypeDefinition<SourceTestData>();
+        var types = await typeParser.AddTypeAsync(testDataType).ToListAsync();
+        await memberParser.AddTypesMembersAsync(types);
+        var reflectionNodes = reflectionItems.Nodes;
+        Assert.NotEmpty(reflectionNodes);
     }
 }

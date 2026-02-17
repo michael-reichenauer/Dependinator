@@ -72,7 +72,7 @@
     void SelectNode(Models.Node node)
     {
         applicationEvents.TriggerUIStateChanged();
-        dependenciesService.ShowNode(node.Id);
+        dependenciesService.ShowNodeAsync(node.Id);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

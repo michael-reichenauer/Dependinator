@@ -1,4 +1,5 @@
-﻿using Microsoft.Build.Construction;
+﻿using DependinatorCore.Parsing.Utils;
+using Microsoft.Build.Construction;
 
 namespace DependinatorCore.Parsing.Solutions;
 

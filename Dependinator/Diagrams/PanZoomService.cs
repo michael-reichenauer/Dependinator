@@ -90,6 +90,8 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
             return false;
 
         var (startPos, startZoom) = GetPosAndZoom(animationRect);
+        Log.Info($"StartPos:  {startPos},  StartZoom:  {startZoom}");
+        Log.Info($"TargetPos: {targetPos}, TargetZoom: {targetZoom}");
 
         var targetViewRect = ToViewRect(targetPos, targetZoom, animationRect);
 
@@ -150,6 +152,9 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
         if (!IsValidSvgRect(finalRect))
             return false;
         GoTo(targetPos, targetZoom, finalRect);
+
+        var (endPos, endZoom) = GetPosAndZoom(animationRect);
+        Log.Info($"EndPos:  {endPos},  EndZoom:  {endZoom}");
         return true;
     }
 

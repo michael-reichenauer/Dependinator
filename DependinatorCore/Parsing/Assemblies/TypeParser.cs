@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using DependinatorCore.Parsing.Utils;
+using Mono.Cecil;
 
 namespace DependinatorCore.Parsing.Assemblies;
 

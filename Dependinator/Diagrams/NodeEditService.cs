@@ -9,6 +9,8 @@ interface INodeEditService
     void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void ZoomSelectedNode(PointerEvent e, PointerId pointerId);
     void PanZoomToFit(PointerId pointerId);
+    void IncreaseNodeSize(NodeId nodeId);
+    void DecreaseNodeSize(NodeId nodeId);
 }
 
 [Scoped]
@@ -19,6 +21,7 @@ class NodeEditService(IModelService modelService) : INodeEditService
     const double Margin = 50;
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
+    const double sizeDiff = 10.0;
 
     public void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
@@ -29,6 +32,8 @@ class NodeEditService(IModelService modelService) : INodeEditService
                 var nodeZoom = node.GetZoom() * zoom;
                 var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
                 var newBoundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
 
                 modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
             }
@@ -50,6 +55,44 @@ class NodeEditService(IModelService modelService) : INodeEditService
                 };
 
                 modelService.Do(new NodeEditCommand(node.Id) { ContainerOffset = newContainerOffset });
+            }
+        );
+    }
+
+    public void IncreaseNodeSize(NodeId nodeId)
+    {
+        modelService.UseNodeN(
+            nodeId,
+            node =>
+            {
+                var newBoundary = node.Boundary with
+                {
+                    Width = node.Boundary.Width + sizeDiff,
+                    Height = node.Boundary.Height + sizeDiff,
+                };
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
+
+                modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
+            }
+        );
+    }
+
+    public void DecreaseNodeSize(NodeId nodeId)
+    {
+        modelService.UseNodeN(
+            nodeId,
+            node =>
+            {
+                var newBoundary = node.Boundary with
+                {
+                    Width = node.Boundary.Width - sizeDiff,
+                    Height = node.Boundary.Height - sizeDiff,
+                };
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
+
+                modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
             }
         );
     }
@@ -126,6 +169,8 @@ class NodeEditService(IModelService modelService) : INodeEditService
                     X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
                     Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y),
                 };
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
 
                 modelService.Do(
                     new NodeEditCommand(node.Id) { Boundary = newBoundary, ContainerOffset = newContainerOffset }

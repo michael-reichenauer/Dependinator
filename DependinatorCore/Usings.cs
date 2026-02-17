@@ -1,6 +1,7 @@
 global using DependinatorCore.Utils;
 global using DependinatorCore.Utils.Logging;
 global using static DependinatorCore.Utils.Result;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Dependinator")]
@@ -10,3 +11,5 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("DependinatorCore.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+
+[assembly: AssemblyDescription("DependinatorCore contains the core functionality, like e.g. parsing.")]

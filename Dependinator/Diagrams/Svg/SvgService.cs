@@ -85,15 +85,17 @@ class SvgService : ISvgService
         var childNodeSvg = node
             .Children.Select(child => RenderNode(child, childrenContext))
             .Where(svg => svg.Length > 0);
+        var linesSvg = RenderNodeLines(node, childrenCanvasOffset, context.Zoom, childrenZoom);
+        var directLinesSvg = RenderDirectNodeLines(node, childrenCanvasOffset, childrenZoom);
 
-        return childNodeSvg.Concat(RenderNodeLines(node, childrenCanvasOffset, context.Zoom, childrenZoom)).Join("\n");
+        return linesSvg.Concat(childNodeSvg).Concat(directLinesSvg).Join("\n");
     }
 
     static string RenderNode(Node node, RenderContext context)
     {
         var geometry = CalculateNodeGeometry(node, context);
 
-        if (!RectsOverlap(context.TileBounds, geometry.TileRect))
+        if (!RectOverlap(context.TileBounds, geometry.TileRect))
             return "";
 
         if (node.Type == Parsing.NodeType.Member)
@@ -142,7 +144,7 @@ class SvgService : ISvgService
             NodeLayout.AdjustChildren(node);
     }
 
-    static bool RectsOverlap(Rect first, Rect second)
+    static bool RectOverlap(Rect first, Rect second)
     {
         if (first.X + first.Width <= second.X || second.X + second.Width <= first.X)
             return false;
@@ -169,7 +171,10 @@ class SvgService : ISvgService
                 yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
             }
         }
+    }
 
+    static IEnumerable<string> RenderDirectNodeLines(Node node, Pos nodeCanvasPos, double childrenZoom)
+    {
         foreach (var directLine in node.DirectLines)
         {
             var svg = LineSvg.GetDirectLineSvg(directLine, node, nodeCanvasPos, childrenZoom);

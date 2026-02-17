@@ -41,20 +41,16 @@ class NavigationService(
             if (!IsLatestShowNodeRequest(requestId))
                 return;
 
-            Pos pos;
-            double zoom;
-            using (var model = modelService.UseModel())
-            {
-                if (!model.TryGetNode(nodeId, out var node))
-                    return;
-                (pos, zoom) = node.GetCenterPosAndZoom();
-            }
-
-            if (zoom <= 0)
+            if (!TryGetNodePosAndZoom(nodeId, out var pos, out var zoom))
                 return;
 
+            Log.Info($"Start Node Pos: {pos}, Zoom: {zoom}");
             if (!await panZoomService.PanZoomToAsync(pos, zoom))
                 return;
+            if (!TryGetNodePosAndZoom(nodeId, out pos, out zoom))
+                return;
+            Log.Info($"End Node Pos: {pos}, Zoom: {zoom}");
+
             if (!IsLatestShowNodeRequest(requestId))
                 return;
 
@@ -66,6 +62,27 @@ class NavigationService(
         {
             showNodeLock.Release();
         }
+    }
+
+    private bool TryGetNodePosAndZoom(NodeId nodeId, out Pos pos, out double zoom)
+    {
+        pos = Pos.None;
+        zoom = 0.0;
+
+        using (var model = modelService.UseModel())
+        {
+            if (!model.TryGetNode(nodeId, out var node))
+                return false;
+
+            if (node.EnsureLayoutForPath())
+                model.ClearCachedSvg();
+
+            (pos, zoom) = node.GetCenterPosAndZoom();
+        }
+        if (zoom <= 0)
+            return false;
+
+        return true;
     }
 
     public async Task ShowNodeAsync(string fileLocation)

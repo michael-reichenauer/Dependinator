@@ -1,7 +1,6 @@
-﻿using Dependinator.Diagrams;
-using Dependinator.Models;
+﻿using Dependinator.Models;
 
-namespace Dependinator;
+namespace Dependinator.Diagrams;
 
 interface ISelectionService
 {

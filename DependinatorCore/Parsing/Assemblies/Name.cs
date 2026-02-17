@@ -220,6 +220,9 @@ internal static class Name
         if (index > -1)
             typeName = typeName.Substring(index + 1);
 
+        if (IgnoredTypes.IsIgnoredSystemType(p.ParameterType))
+            typeName = typeName.ToLower();
+
         return typeName;
     }
 

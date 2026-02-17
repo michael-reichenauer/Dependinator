@@ -354,7 +354,7 @@ class ModelService : IModelService
 
     void LayoutNode(Node node, bool recursively)
     {
-        NodeLayout.AdjustChildren(node);
+        NodeLayout.AdjustChildren(node, forceAllChildren: true);
         if (recursively)
             node.Children.ForEach(n => LayoutNode(n, recursively));
     }
@@ -396,7 +396,7 @@ class ModelService : IModelService
 
     async Task<R> ParseSourceAndUpdateAsync(string path)
     {
-        if (!host.IsVscExtWasm && Build.IsWebAssembly) // Parse source currently only supported when running as VS Code extension
+        if (!host.IsVscExtWasm && Build.IsWasm) // Parse source currently only supported when running as VS Code extension
             return R.Ok;
 
         using var __ = progressService.StartDiscreet();

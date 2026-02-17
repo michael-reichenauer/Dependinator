@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using DependinatorCore.Parsing.Utils;
 using DependinatorCore.Shared;
 using Mono.Cecil;
 using Mono.Cecil.Cil;

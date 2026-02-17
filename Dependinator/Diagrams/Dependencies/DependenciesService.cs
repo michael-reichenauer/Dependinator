@@ -19,7 +19,9 @@ interface IDependenciesService
     IReadOnlyList<TreeItem> TreeItems { get; }
 
     void SetSelected(TreeItem selectedItem);
-    void ShowNode(NodeId nodeId);
+    Task ShowNodeAsync(NodeId nodeId);
+    bool CanShowEditor(NodeId nodeId);
+    Task ShowEditorAsync(NodeId nodeId);
     void ShowDirectLine(NodeId nodeId);
     bool TryGetLine(LineId lineId, out Line line);
     void HideDirectLine(LineId lineId);
@@ -117,10 +119,26 @@ class DependenciesService(
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public async void ShowNode(NodeId nodeId)
+    public async Task ShowNodeAsync(NodeId nodeId)
     {
         Close();
         await navigationService.ShowNodeAsync(nodeId);
+    }
+
+    public bool CanShowEditor(NodeId nodeId)
+    {
+        return modelService.UseNodeN(
+            nodeId,
+            n =>
+            {
+                return n.FileSpanOrParentSpan is not null;
+            }
+        );
+    }
+
+    public async Task ShowEditorAsync(NodeId nodeId)
+    {
+        await navigationService.ShowEditor(nodeId);
     }
 
     private void Close()
