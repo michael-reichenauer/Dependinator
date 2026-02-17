@@ -28,6 +28,9 @@ record NodeDto
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsParentSetHidden { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsChildrenLayoutCustomized { get; set; }
 }
 
 [Serializable]

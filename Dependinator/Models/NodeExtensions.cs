@@ -41,7 +41,7 @@ static class NodeExtensions
         if (needsLayout.Count == 0)
             return false;
 
-        needsLayout.ForEach(NodeLayout.AdjustChildren);
+        needsLayout.ForEach(ancestor => NodeLayout.AdjustChildren(ancestor));
         return true;
     }
 }

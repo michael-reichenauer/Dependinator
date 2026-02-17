@@ -354,7 +354,7 @@ class ModelService : IModelService
 
     void LayoutNode(Node node, bool recursively)
     {
-        NodeLayout.AdjustChildren(node);
+        NodeLayout.AdjustChildren(node, forceAllChildren: true);
         if (recursively)
             node.Children.ForEach(n => LayoutNode(n, recursively));
     }

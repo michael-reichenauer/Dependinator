@@ -36,7 +36,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
             var parent = GetOrCreateParent(parentName);
 
             node = new Node(parsedNode.Name, parent);
-            node.Boundary = NodeLayout.GetNextChildRect(parent);
+            node.Boundary = parent.IsChildrenLayoutCustomized ? Rect.None : NodeLayout.GetNextChildRect(parent);
 
             node.Update(parsedNode);
             node.UpdateStamp = model.UpdateStamp;
@@ -98,11 +98,9 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         var parent = GetOrCreateParent(parentName);
 
         var node = new Node(nodeDto.Name, parent);
-        if (nodeDto.Boundary is null)
-        {
-            node.Boundary = NodeLayout.GetNextChildRect(parent);
-        }
         node.SetFromDto(nodeDto);
+        if (node.Boundary == Rect.None && !parent.IsChildrenLayoutCustomized)
+            node.Boundary = NodeLayout.GetNextChildRect(parent);
         node.UpdateStamp = model.UpdateStamp;
 
         model.AddNode(node);

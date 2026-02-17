@@ -29,6 +29,8 @@ class NodeEditService(IModelService modelService) : INodeEditService
                 var nodeZoom = node.GetZoom() * zoom;
                 var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
                 var newBoundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
 
                 modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
             }
@@ -126,6 +128,8 @@ class NodeEditService(IModelService modelService) : INodeEditService
                     X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
                     Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y),
                 };
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
 
                 modelService.Do(
                     new NodeEditCommand(node.Id) { Boundary = newBoundary, ContainerOffset = newContainerOffset }

@@ -56,6 +56,7 @@ class Node : IItem
     public bool IsSelected { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
     public bool IsChildrenLayoutRequired { get; set; } = false;
+    public bool IsChildrenLayoutCustomized { get; set; } = false;
 
     public Rect Boundary { get; set; } = Rect.None;
     public Double ContainerZoom { get; set; } = DefaultContainerZoom;
@@ -99,6 +100,7 @@ class Node : IItem
             Color = Color,
             IsUserSetHidden = IsUserSetHidden,
             IsParentSetHidden = IsParentSetHidden,
+            IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
         };
 
     public void SetFromDto(NodeDto dto)
@@ -123,6 +125,7 @@ class Node : IItem
         Color = dto.Color ?? Color;
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
+        IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
     }
 
     public void Update(Parsing.Node node)

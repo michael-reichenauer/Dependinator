@@ -151,6 +151,49 @@ public class NodeLayoutTests
     }
 
     [Fact]
+    public void AdjustChildren_WhenLayoutIsCustomized_ShouldOnlyPlaceNewChildren()
+    {
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var parent = new ModelNode("Parent", root)
+        {
+            Type = NodeType.Namespace,
+            Boundary = new Rect(0, 0, 1200, 800),
+            ContainerZoom = 0.25,
+            ContainerOffset = new Pos(111, 222),
+            IsChildrenLayoutCustomized = true,
+        };
+        root.AddChild(parent);
+
+        var existing1 = new ModelNode("A", parent) { Type = NodeType.Type, Boundary = new Rect(100, 100, 100, 100) };
+        var existing2 = new ModelNode("B", parent) { Type = NodeType.Type, Boundary = new Rect(280, 100, 100, 100) };
+        parent.AddChild(existing1);
+        parent.AddChild(existing2);
+
+        var existing1Before = existing1.Boundary;
+        var existing2Before = existing2.Boundary;
+        var zoomBefore = parent.ContainerZoom;
+        var offsetBefore = parent.ContainerOffset;
+
+        var added = new ModelNode("C", parent) { Type = NodeType.Type, Boundary = Rect.None };
+        parent.AddChild(added);
+
+        NodeLayout.AdjustChildren(parent);
+
+        Assert.Equal(existing1Before, existing1.Boundary);
+        Assert.Equal(existing2Before, existing2.Boundary);
+        Assert.Equal(zoomBefore, parent.ContainerZoom);
+        Assert.Equal(offsetBefore, parent.ContainerOffset);
+
+        Assert.NotEqual(Rect.None, added.Boundary);
+        Assert.Equal(NodeLayout.DefaultSize.Width, added.Boundary.Width);
+        Assert.Equal(NodeLayout.DefaultSize.Height, added.Boundary.Height);
+        Assert.False(IsOverlapping(added.Boundary, existing1.Boundary));
+        Assert.False(IsOverlapping(added.Boundary, existing2.Boundary));
+    }
+
+    [Fact]
     public void GetNextChildRect_RootNode_ShouldPlaceChildrenRowByRow()
     {
         NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
@@ -219,5 +262,14 @@ public class NodeLayoutTests
 
         var pair = sameRowPairs.OrderBy(p => p.right.Boundary.X - p.left.Boundary.X).First();
         return pair.right.Boundary.X - (pair.left.Boundary.X + pair.left.Boundary.Width);
+    }
+
+    static bool IsOverlapping(Rect first, Rect second)
+    {
+        if (first.X + first.Width <= second.X || second.X + second.Width <= first.X)
+            return false;
+        if (first.Y + first.Height <= second.Y || second.Y + second.Height <= first.Y)
+            return false;
+        return true;
     }
 }
