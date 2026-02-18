@@ -20,13 +20,14 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsBrowserWasm)' != 'true'">
+    <Compile Remove="Parsing/Sources/Browser/**/*.cs" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(IsBrowserWasm)' == 'true'">
-    <DefineConstants>$(DefineConstants);BROWSER_WASM</DefineConstants>
-  </PropertyGroup>
+  <ItemGroup Condition="'$(IsBrowserWasm)' == 'true'">
+    <Compile Remove="Parsing/Sources/Roslyn/**/*.cs" />
+  </ItemGroup>
 
 </Project>

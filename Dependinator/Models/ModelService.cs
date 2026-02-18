@@ -432,7 +432,9 @@ class ModelService : IModelService
     async Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path)
     {
         using var _ = Timing.Start($"Parsed source {path}");
-        return await parserService.ParseSourceAsync(path);
+        if (host.IsVscExtWasm || !Build.IsWasm)
+            return await parserService.ParseSourceAsync(path);
+        return new List<Parsing.Item>();
     }
 
     public void TriggerSave()

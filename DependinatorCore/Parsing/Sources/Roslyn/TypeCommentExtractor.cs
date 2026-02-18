@@ -1,12 +1,9 @@
-#if !BROWSER_WASM
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-#endif
 
 namespace DependinatorCore.Parsing.Sources;
 
-#if !BROWSER_WASM
 static class TypeCommentExtractor
 {
     public static string? GetTypeComment(INamedTypeSymbol typeSymbol, FileLinePositionSpan declarationSpan)
@@ -108,4 +105,3 @@ static class TypeCommentExtractor
         return [];
     }
 }
-#endif

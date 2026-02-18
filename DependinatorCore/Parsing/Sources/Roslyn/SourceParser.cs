@@ -1,37 +1,10 @@
-#if !BROWSER_WASM
 using DependinatorCore.Parsing.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
-#endif
 
 namespace DependinatorCore.Parsing.Sources;
 
-interface ISourceParser
-{
-    Task<R<IReadOnlyList<Parsing.Item>>> ParseSolutionAsync(string slnPath, bool isSkipTests = true);
-    Task<R<IReadOnlyList<Parsing.Item>>> ParseProjectAsync(string projectPath);
-}
-
-#if BROWSER_WASM
-[Transient]
-class SourceParser : ISourceParser
-{
-    public Task<R<IReadOnlyList<Parsing.Item>>> ParseSolutionAsync(string slnPath, bool isSkipTests = true)
-    {
-        return Task.FromResult<R<IReadOnlyList<Parsing.Item>>>(
-            R.Error($"Source parsing is not supported in browser runtime: {slnPath}.")
-        );
-    }
-
-    public Task<R<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
-    {
-        return Task.FromResult<R<IReadOnlyList<Parsing.Item>>>(
-            R.Error($"Source parsing is not supported in browser runtime: {projectPath}.")
-        );
-    }
-}
-#else
 [Transient]
 class SourceParser : ISourceParser
 {
@@ -73,7 +46,7 @@ class SourceParser : ISourceParser
         return solutionNodes;
     }
 
-    public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
+    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseProjectAsync(string projectPath)
     {
         MSBuildLocatorHelper.Register();
         using var workspace = MSBuildWorkspace.Create();
@@ -244,4 +217,3 @@ class SourceParser : ISourceParser
         }
     }
 }
-#endif
