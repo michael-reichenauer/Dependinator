@@ -23,26 +23,21 @@ class SourceParser : ISourceParser
         using var workspace = MSBuildWorkspace.Create();
 
         var solution = await workspace.OpenSolutionAsync(slnPath);
+
         var projects = solution
             .Projects.Where(p => p.Language == LanguageNames.CSharp)
-            .Where(p => !IsTestProject(p) || !isSkipTests)
-            .ToList();
+            .Where(p => !IsTestProject(p) || !isSkipTests);
 
-        var projectNodesTasks = projects.Select(async project =>
-        {
-            if (!Try(out var compilation, out var e, await GetCompilationAsync(project)))
-                return e;
-
-            return GetNodesAsync(compilation);
-        });
+        var parseProjectTasks = projects.Select(ParseProjectAsync);
 
         List<Parsing.Item> solutionNodes = [];
-        await foreach (var nodesTasks in Task.WhenEach(projectNodesTasks))
+        await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
         {
-            if (!Try(out var projectNodes, out var e, await nodesTasks))
+            if (!Try(out var items, out var e, await parseProjectTask))
                 continue;
-            solutionNodes.AddRange(projectNodes);
+            solutionNodes.AddRange(items);
         }
+
         return solutionNodes;
     }
 
@@ -52,15 +47,15 @@ class SourceParser : ISourceParser
         using var workspace = MSBuildWorkspace.Create();
 
         var project = await workspace.OpenProjectAsync(projectPath);
+        return await ParseProjectAsync(project);
+    }
+
+    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseProjectAsync(Project project)
+    {
         if (!Try(out var compilation, out var e, await GetCompilationAsync(project)))
             return e;
 
-        return GetNodesAsync(compilation);
-    }
-
-    bool IsTestProject(Project project)
-    {
-        return project.Name.EndsWith("Test") || project.Name.EndsWith(".Tests");
+        return EnumerateProjectCompilation(compilation).ToList();
     }
 
     static async Task<R<Compilation>> GetCompilationAsync(Project project)
@@ -82,12 +77,7 @@ class SourceParser : ISourceParser
         return compilation;
     }
 
-    R<IReadOnlyList<Parsing.Item>> GetNodesAsync(Compilation compilation)
-    {
-        return EnumerateNodes(compilation).ToList();
-    }
-
-    IEnumerable<Parsing.Item> EnumerateNodes(Compilation compilation)
+    IEnumerable<Parsing.Item> EnumerateProjectCompilation(Compilation compilation)
     {
         var moduleName = compilation.AssemblyName?.Replace(".", "*")!;
 
@@ -216,4 +206,6 @@ class SourceParser : ISourceParser
                 yield return t;
         }
     }
+
+    static bool IsTestProject(Project project) => project.Name.EndsWith("Test") || project.Name.EndsWith(".Tests");
 }

@@ -1,6 +1,6 @@
 ﻿[
   {
-    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.Deconstruct(String),
+    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.Deconstruct(string),
     Attributes: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
@@ -36,7 +36,7 @@
     }
   },
   {
-    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.Equals(Object),
+    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.Equals(object),
     Attributes: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
@@ -72,7 +72,7 @@
     }
   },
   {
-    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.PrintMembers(StringBuilder),
+    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.PrintMembers(stringbuilder),
     Attributes: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
@@ -90,7 +90,7 @@
     }
   },
   {
-    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.ctor(String),
+    Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.ctor(string),
     Attributes: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
