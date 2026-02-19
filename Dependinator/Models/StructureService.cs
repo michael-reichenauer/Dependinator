@@ -28,12 +28,9 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
-        var parentName = parsedNode.Attributes.Parent;
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
         { // New node, add it to the model and parent
-            if (parentName is null)
-                return;
-            var parent = GetOrCreateParent(parentName);
+            var parent = GetOrCreateParent(parsedNode.Name, parsedNode.Attributes.IsModule);
 
             node = new Node(parsedNode.Name, parent);
             node.Boundary = parent.IsChildrenLayoutCustomized ? Rect.None : NodeLayout.GetNextChildRect(parent);
@@ -50,12 +47,12 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         node.Update(parsedNode);
         node.UpdateStamp = model.UpdateStamp;
 
-        if (parentName is not null && !node.IsRoot && node.Parent.Name != parentName)
-        { // The node has changed parent, remove it from the old parent and add it to the new parent
-            node.Parent.RemoveChild(node);
-            var parent = GetOrCreateNode(parentName);
-            parent.AddChild(node);
-        }
+        // if (parentName is not null && !node.IsRoot && node.Parent.Name != parentName)
+        // { // The node has changed parent, remove it from the old parent and add it to the new parent
+        //     node.Parent.RemoveChild(node);
+        //     var parent = GetOrCreateNode(parentName);
+        //     parent.AddChild(node);
+        // }
     }
 
     public void AddOrUpdateLink(Parsing.Link parsedLink)
@@ -94,8 +91,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         if (nodeDto.Name == "") // Root node already exists
             return;
 
-        var parentName = nodeDto.ParentName;
-        var parent = GetOrCreateParent(parentName);
+        //var parentName = nodeDto.ParentName;
+        var parent = GetOrCreateParent(nodeDto.Name, nodeDto.Attributes.IsModule);
 
         var node = new Node(nodeDto.Name, parent);
         node.SetFromDto(nodeDto);
@@ -144,17 +141,25 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         return item;
     }
 
-    Node GetOrCreateParent(string name)
+    Node GetOrCreateParent(string nodeName, bool? isExternal)
     {
-        var nodeId = NodeId.FromName(name);
+        var parentName = GetParentName(nodeName, isExternal);
+        var nodeId = NodeId.FromName(parentName);
         if (!model.TryGetNode(nodeId, out var item))
         {
-            var parent = DefaultParentNode(name);
+            var parent = DefaultParentNode(parentName);
             AddOrUpdateNode(parent);
             return model.GetNode(nodeId);
         }
 
         return item;
+    }
+
+    string GetParentName(string nodeName, bool? isExternal)
+    {
+        var parentName = Parsing.Utils.NodeName.ParseParentName(nodeName);
+
+        return parentName;
     }
 
     void EnsureSourceAndTargetExists(string sourceName, string targetName)
