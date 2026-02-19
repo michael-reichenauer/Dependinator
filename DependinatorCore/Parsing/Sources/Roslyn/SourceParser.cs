@@ -19,26 +19,27 @@ class SourceParser : ISourceParser
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseSolutionAsync(string slnPath, bool isSkipTests = true)
     {
-        MSBuildLocatorHelper.Register();
-        using var workspace = MSBuildWorkspace.Create();
+        return new List<Parsing.Item>();
+        // MSBuildLocatorHelper.Register();
+        // using var workspace = MSBuildWorkspace.Create();
 
-        var solution = await workspace.OpenSolutionAsync(slnPath);
+        // var solution = await workspace.OpenSolutionAsync(slnPath);
 
-        var projects = solution
-            .Projects.Where(p => p.Language == LanguageNames.CSharp)
-            .Where(p => !IsTestProject(p) || !isSkipTests);
+        // var projects = solution
+        //     .Projects.Where(p => p.Language == LanguageNames.CSharp)
+        //     .Where(p => !IsTestProject(p) || !isSkipTests);
 
-        var parseProjectTasks = projects.Select(ParseProjectAsync);
+        // var parseProjectTasks = projects.Select(ParseProjectAsync);
 
-        List<Parsing.Item> solutionNodes = [];
-        await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
-        {
-            if (!Try(out var items, out var e, await parseProjectTask))
-                continue;
-            solutionNodes.AddRange(items);
-        }
+        // List<Parsing.Item> solutionNodes = [];
+        // await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
+        // {
+        //     if (!Try(out var items, out var e, await parseProjectTask))
+        //         continue;
+        //     solutionNodes.AddRange(items);
+        // }
 
-        return solutionNodes;
+        // return solutionNodes;
     }
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseProjectAsync(string projectPath)
