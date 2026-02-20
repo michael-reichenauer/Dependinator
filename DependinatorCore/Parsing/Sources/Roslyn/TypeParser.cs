@@ -26,43 +26,25 @@ static class TypeParser
             null
         );
 
-        foreach (var item in ParseTypeLinks(type, fullTypeName, moduleName))
+        foreach (var item in ParseTypeLinks(type, fullTypeName))
             yield return item;
 
         foreach (var item in ParseTypeMembers(type, fullTypeName))
             yield return item;
     }
 
-    static IEnumerable<Item> ParseTypeLinks(INamedTypeSymbol type, string fullTypeName, string moduleName)
+    internal static IEnumerable<Item> ParseTypeLinks(INamedTypeSymbol type, string fullTypeName)
     {
-        var links = new List<Item>();
+        if (type.BaseType is { } baseType && baseType.SpecialType != SpecialType.System_Object)
+            yield return LinkParser.Parse(baseType, fullTypeName);
 
-        try
-        {
-            if (type.BaseType is { } baseType && baseType.SpecialType != SpecialType.System_Object)
-                links.Add(ParseTypeLink(fullTypeName, Names.GetFullTypeName(baseType, moduleName)));
-
-            foreach (var interfaceType in type.Interfaces)
-                links.Add(ParseTypeLink(fullTypeName, Names.GetFullTypeName(interfaceType, moduleName)));
-        }
-        catch (Exception e)
-        {
-            Log.Exception(e, $"Failed to add base type for {type} in {fullTypeName}");
-        }
-
-        foreach (var link in links)
-            yield return link;
+        foreach (var interfaceType in type.Interfaces)
+            yield return LinkParser.Parse(interfaceType, fullTypeName);
     }
 
-    static Item ParseTypeLink(string sourceTypeName, string targetTypeName)
+    internal static IEnumerable<Item> ParseTypeMembers(INamedTypeSymbol type, string fullTypeName)
     {
-        var link = new Link(sourceTypeName, targetTypeName, new LinkAttributes { TargetType = NodeType.Type });
-        return new Item(null, link);
-    }
-
-    static IEnumerable<Item> ParseTypeMembers(INamedTypeSymbol type, string fullTypeName)
-    {
-        foreach (ISymbol member in type.GetMembers().Where(m => !m.IsImplicitlyDeclared))
+        foreach (ISymbol member in GetMemberSymbols(type))
         {
             if (!SymbolEqualityComparer.Default.Equals(member.ContainingType, type))
                 yield break;
@@ -72,5 +54,10 @@ static class TypeParser
             foreach (var item in MemberParser.ParseTypeMember(member, fullTypeName))
                 yield return item;
         }
+    }
+
+    internal static IEnumerable<ISymbol> GetMemberSymbols(INamedTypeSymbol type)
+    {
+        return type.GetMembers().Where(m => !m.IsImplicitlyDeclared);
     }
 }

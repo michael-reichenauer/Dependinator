@@ -44,14 +44,14 @@ class MemberParser
         var name = Names.GetFullMemberName(member, fullTypeName);
         var fileSpan = Locations.GetFirstFileSpanOrNoValue(member);
         var leadingComment = CommentExtractor.GetLeadingCommentOrNoValue(member, fileSpan);
-        var memberType = ToMemberType(member);
+        var (nodeType, memberType) = NodeTypes.ToTypes(member);
 
         return new Item(
             new Node(
                 name,
                 new NodeAttributes
                 {
-                    Type = NodeType.Member,
+                    Type = nodeType,
                     MemberType = memberType,
                     Description = leadingComment,
                     FileSpan = fileSpan,
@@ -60,14 +60,4 @@ class MemberParser
             null
         );
     }
-
-    static MemberType ToMemberType(ISymbol member) =>
-        member switch
-        {
-            IMethodSymbol => MemberType.Method,
-            IPropertySymbol => MemberType.Property,
-            IFieldSymbol => MemberType.Field,
-            IEventSymbol => MemberType.Event,
-            _ => MemberType.None,
-        };
 }

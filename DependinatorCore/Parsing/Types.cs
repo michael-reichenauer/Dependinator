@@ -30,7 +30,8 @@ class NodeAttributes
 class LinkAttributes
 {
     public string? Description { get; init; }
-    public NodeType? TargetType { get; init; } = NodeType.None;
+    public NodeType? TargetType { get; init; }
+    public MemberType? MemberType { get; init; }
 }
 
 record Source(string Text, FileLocation Location);
