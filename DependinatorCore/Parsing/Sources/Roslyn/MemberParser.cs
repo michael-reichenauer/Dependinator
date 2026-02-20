@@ -1,3 +1,4 @@
+using DependinatorCore.Parsing.Sources.Roslyn;
 using Microsoft.CodeAnalysis;
 
 namespace DependinatorCore.Parsing.Sources;

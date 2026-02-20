@@ -1,3 +1,4 @@
+using DependinatorCore.Parsing.Sources.Roslyn;
 using Microsoft.CodeAnalysis;
 
 namespace DependinatorCore.Parsing.Sources;
@@ -26,8 +27,38 @@ static class TypeParser
             null
         );
 
+        foreach (var item in ParseTypeLinks(type, fullTypeName, moduleName))
+            yield return item;
+
         foreach (var item in ParseTypeMembers(type, fullTypeName))
             yield return item;
+    }
+
+    static IEnumerable<Parsing.Item> ParseTypeLinks(INamedTypeSymbol type, string fullTypeName, string moduleName)
+    {
+        var links = new List<Parsing.Item>();
+
+        try
+        {
+            if (type.BaseType is { } baseType && baseType.SpecialType != SpecialType.System_Object)
+                links.Add(ParseTypeLink(fullTypeName, Names.GetFullTypeName(baseType, moduleName)));
+
+            foreach (var interfaceType in type.Interfaces)
+                links.Add(ParseTypeLink(fullTypeName, Names.GetFullTypeName(interfaceType, moduleName)));
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, $"Failed to add base type for {type} in {fullTypeName}");
+        }
+
+        foreach (var link in links)
+            yield return link;
+    }
+
+    static Parsing.Item ParseTypeLink(string sourceTypeName, string targetTypeName)
+    {
+        var link = new Link(sourceTypeName, targetTypeName, new LinkAttributes { TargetType = NodeType.Type });
+        return new Parsing.Item(null, link);
     }
 
     static IEnumerable<Parsing.Item> ParseTypeMembers(INamedTypeSymbol type, string fullTypeName)
