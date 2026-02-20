@@ -6,9 +6,6 @@ class MemberParser
 {
     public static IEnumerable<Parsing.Item> ParseTypeMember(ISymbol member, string fullTypeName)
     {
-        if (member is INamedTypeSymbol)
-            yield break;
-
         var items = member switch
         {
             IMethodSymbol m => ParseMethod(m, fullTypeName),
@@ -46,7 +43,7 @@ class MemberParser
     {
         var name = Names.GetFullMemberName(member, fullTypeName);
         var fileSpan = Locations.GetFirstFileSpanOrNoValue(member);
-        var leadingComment = CommentExtractor.GetCommentOrNoValue(member, fileSpan);
+        var leadingComment = CommentExtractor.GetLeadingCommentOrNoValue(member, fileSpan);
         var memberType = ToMemberType(member);
 
         return new Parsing.Item(

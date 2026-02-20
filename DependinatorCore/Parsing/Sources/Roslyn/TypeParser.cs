@@ -11,7 +11,7 @@ static class TypeParser
             yield break;
 
         var fileSpan = Locations.GetFirstFileSpanOrNoValue(type);
-        var leadingComment = CommentExtractor.GetCommentOrNoValue(type, fileSpan);
+        var leadingComment = CommentExtractor.GetLeadingCommentOrNoValue(type, fileSpan);
 
         yield return new Parsing.Item(
             new Node(
@@ -26,12 +26,18 @@ static class TypeParser
             null
         );
 
+        foreach (var item in ParseTypeMembers(type, fullTypeName))
+            yield return item;
+    }
+
+    static IEnumerable<Parsing.Item> ParseTypeMembers(INamedTypeSymbol type, string fullTypeName)
+    {
         foreach (ISymbol member in type.GetMembers().Where(m => !m.IsImplicitlyDeclared))
         {
             if (!SymbolEqualityComparer.Default.Equals(member.ContainingType, type))
                 yield break;
             if (member is INamedTypeSymbol)
-                yield break; // Nested type, handled by SourceParser and TypeParser
+                yield break; // Nested type, handled by GetAllNamedTypes in SourceParser
 
             foreach (var item in MemberParser.ParseTypeMember(member, fullTypeName))
                 yield return item;

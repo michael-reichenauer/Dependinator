@@ -6,7 +6,7 @@ namespace DependinatorCore.Parsing.Sources;
 
 static class CommentExtractor
 {
-    public static string? GetCommentOrNoValue(ISymbol symbol, FileSpan fileSpan)
+    public static string? GetLeadingCommentOrNoValue(ISymbol symbol, FileSpan fileSpan)
     {
         if (fileSpan == NoValue.FileSpan)
             return NoValue.String;
