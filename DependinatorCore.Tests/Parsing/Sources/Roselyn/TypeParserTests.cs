@@ -1,8 +1,6 @@
 using DependinatorCore.Parsing;
 using DependinatorCore.Parsing.Sources.Roslyn;
 using DependinatorCore.Utils.Logging;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.MSBuild;
 
 namespace DependinatorCore.Tests.Parsing.Sources.Roselyn;
 
@@ -12,30 +10,13 @@ public class SourceTestBaseType { }
 
 public class SourceTestDerivedType : SourceTestBaseType, SourceTestInterface { }
 
-public class TypeParserTests : IAsyncLifetime
+[Collection(nameof(RoslynCollection))]
+public class TypeParserTests(RoslynFixture fixture)
 {
-    MSBuildWorkspace workspace = null!;
-    IReadOnlyList<INamedTypeSymbol> allTestTypes = null!;
-
-    public async Task InitializeAsync()
-    {
-        workspace = Compiler.CreateWorkspace();
-        var project = await workspace.OpenProjectAsync(Root.ProjectFilePath);
-        if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
-            throw new Exception("Failed to get compilation for test project");
-        allTestTypes = Compiler.GetAllTypes(compilation).ToList();
-    }
-
-    public Task DisposeAsync()
-    {
-        workspace.Dispose();
-        return Task.CompletedTask;
-    }
-
     [Fact]
-    public async Task Test()
+    public void Test()
     {
-        foreach (var type in allTestTypes)
+        foreach (var type in fixture.AllTestTypes)
         {
             foreach (var item in TypeParser.ParseType(type, "TestType"))
             {
