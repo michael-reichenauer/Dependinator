@@ -18,8 +18,8 @@ record Node(string Name, NodeAttributes Attributes);
 
 class NodeAttributes
 {
-    public string? Description { get; init; }
     public NodeType? Type { get; init; }
+    public string? Description { get; init; }
     public string? Parent { get; init; }
     public bool? IsPrivate { get; init; }
     public MemberType? MemberType { get; init; }

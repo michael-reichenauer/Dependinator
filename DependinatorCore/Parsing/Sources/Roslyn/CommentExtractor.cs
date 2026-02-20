@@ -4,31 +4,55 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace DependinatorCore.Parsing.Sources;
 
-static class TypeCommentExtractor
+static class CommentExtractor
 {
-    public static string? GetTypeComment(INamedTypeSymbol typeSymbol, FileLinePositionSpan declarationSpan)
+    public static string? GetCommentOrNoValue(ISymbol symbol, FileSpan fileSpan)
     {
-        foreach (var syntaxRef in typeSymbol.DeclaringSyntaxReferences)
+        if (fileSpan == NoValue.FileSpan)
+            return NoValue.String;
+
+        foreach (var syntaxRef in symbol.DeclaringSyntaxReferences)
         {
-            if (syntaxRef.GetSyntax() is not BaseTypeDeclarationSyntax typeDecl)
+            if (!TryGetDeclarationNode(syntaxRef.GetSyntax(), out var declarationNode))
                 continue;
 
-            var lineSpan = typeDecl.GetLocation().GetLineSpan();
-            if (
-                lineSpan.Path != declarationSpan.Path
-                || lineSpan.StartLinePosition.Line != declarationSpan.StartLinePosition.Line
-            )
+            var lineSpan = declarationNode.GetLocation().GetLineSpan();
+            if (!IsMatchingFileSpan(lineSpan, fileSpan))
                 continue;
 
-            return GetLeadingComment(typeDecl);
+            return GetLeadingComment(declarationNode);
         }
 
-        return null;
+        return NoValue.String;
     }
 
-    static string? GetLeadingComment(BaseTypeDeclarationSyntax typeDecl)
+    static bool TryGetDeclarationNode(SyntaxNode syntaxNode, out SyntaxNode declarationNode)
     {
-        var leadingTrivia = typeDecl.GetLeadingTrivia();
+        foreach (var node in syntaxNode.AncestorsAndSelf())
+        {
+            if (node is MemberDeclarationSyntax or EnumMemberDeclarationSyntax)
+            {
+                declarationNode = node;
+                return true;
+            }
+        }
+
+        declarationNode = null!;
+        return false;
+    }
+
+    static bool IsMatchingFileSpan(FileLinePositionSpan lineSpan, FileSpan fileSpan)
+    {
+        if (lineSpan.Path != fileSpan.Path)
+            return false;
+
+        return fileSpan.EndLine >= lineSpan.StartLinePosition.Line
+            && fileSpan.StarLine <= lineSpan.EndLinePosition.Line;
+    }
+
+    static string? GetLeadingComment(SyntaxNode declarationNode)
+    {
+        var leadingTrivia = declarationNode.GetLeadingTrivia();
         List<string> commentLines = [];
         var isInsideCommentBlock = false;
         var endOfLineCount = 0;

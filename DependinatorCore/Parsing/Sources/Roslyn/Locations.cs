@@ -5,17 +5,27 @@ namespace DependinatorCore.Parsing.Sources;
 
 class Locations
 {
-    public static IEnumerable<FileLinePositionSpan> GetLocationSpans(INamedTypeSymbol typeSymbol)
+    public static FileSpan GetFirstFileSpanOrNoValue(ISymbol symbol)
     {
-        var typeSpans = GetTypeDeclarationSpans(typeSymbol);
-        if (typeSpans.Any())
-            return typeSpans;
-        return GetTypeLocationSpans(typeSymbol);
+        var spans = GetLocationSpans(symbol);
+        if (!spans.Any())
+            return NoValue.FileSpan;
+        var firstSpan = spans.First();
+
+        return new FileSpan(firstSpan.Path, firstSpan.StartLinePosition.Line, firstSpan.EndLinePosition.Line);
     }
 
-    static IEnumerable<FileLinePositionSpan> GetTypeDeclarationSpans(INamedTypeSymbol typeSymbol)
+    public static IEnumerable<FileLinePositionSpan> GetLocationSpans(ISymbol symbol)
     {
-        foreach (var syntaxRef in typeSymbol.DeclaringSyntaxReferences)
+        var typeSpans = GetTypeDeclarationSpans(symbol);
+        if (typeSpans.Any())
+            return typeSpans;
+        return GetTypeLocationSpans(symbol);
+    }
+
+    static IEnumerable<FileLinePositionSpan> GetTypeDeclarationSpans(ISymbol symbol)
+    {
+        foreach (var syntaxRef in symbol.DeclaringSyntaxReferences)
         {
             var syntax = syntaxRef.GetSyntax();
             if (syntax is TypeDeclarationSyntax typeDecl)
@@ -29,9 +39,9 @@ class Locations
         }
     }
 
-    static IEnumerable<FileLinePositionSpan> GetTypeLocationSpans(INamedTypeSymbol typeSymbol)
+    static IEnumerable<FileLinePositionSpan> GetTypeLocationSpans(ISymbol symbol)
     {
-        foreach (var location in typeSymbol.Locations.Where(l => l.IsInSource))
+        foreach (var location in symbol.Locations.Where(l => l.IsInSource))
         {
             yield return location.GetLineSpan();
         }

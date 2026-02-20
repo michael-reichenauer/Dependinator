@@ -8,8 +8,10 @@ namespace DependinatorCore.Tests.Parsing.Sources;
 // Second Row
 public class SourceTestData
 {
+    // Number Field Comment
     public int number;
 
+    // First Function Comment
     public int FirstFunction(string name)
     {
         return name.Length;
@@ -31,6 +33,12 @@ public class SourceParserTests
 
         var typeNode = sourceNodes.First(n => n.Node!.Name.EndsWith(typeof(SourceTestData).FullName!));
         Assert.Equal("Some Type Comment\nSecond Row", typeNode.Node!.Attributes.Description);
+
+        var fieldNode = sourceNodes.First(n => n.Node!.Name.Contains(".number"));
+        Assert.Equal("Number Field Comment", fieldNode.Node!.Attributes.Description);
+
+        var firstFunctionNode = sourceNodes.First(n => n.Node!.Name.Contains("FirstFunction("));
+        Assert.Equal("First Function Comment", firstFunctionNode.Node!.Attributes.Description);
     }
 
     [Fact]

@@ -10,9 +10,10 @@ namespace DependinatorCore.Parsing;
 [Rpc]
 internal interface IParserService
 {
+    // Parse assemblies
     Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
 
-    Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path);
+    Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string solutionPath);
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
