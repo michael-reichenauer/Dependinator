@@ -377,7 +377,7 @@ class ModelService : IModelService
 
             Log.Info("Parsing ...");
 
-            if (!Try(out var items, out var e, await ParseAsync(path)))
+            if (!Try(out var items, out var e, await ParseSourceAsync(path)))
                 return e;
 
             lock (model.Lock)
@@ -392,7 +392,7 @@ class ModelService : IModelService
 
         CheckLineVisibility();
 
-        ParseSourceAndUpdateAsync(path).RunInBackground();
+        // ParseSourceAndUpdateAsync(path).RunInBackground();
         return R.Ok;
     }
 
@@ -415,7 +415,7 @@ class ModelService : IModelService
             model.ClearCachedSvg();
         }
 
-        await UpdateAllItems(items);
+        await AddOrUpdateAllItems(items);
 
         applicationEvents.TriggerUIStateChanged();
         applicationEvents.TriggerSaveNeeded();

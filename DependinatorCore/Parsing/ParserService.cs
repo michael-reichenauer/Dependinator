@@ -29,30 +29,31 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
     {
-        try
-        {
-            Channel<Item> channel = Channel.CreateUnbounded<Item>();
-            var items = new ChannelItemsAdapter(channel.Writer);
+        return new List<Parsing.Item>();
+        // try
+        // {
+        //     Channel<Item> channel = Channel.CreateUnbounded<Item>();
+        //     var items = new ChannelItemsAdapter(channel.Writer);
 
-            if (!Try(out var parser, out var e, GetParser(path)))
-                return R.Error($"File not supported: {path}", e);
+        //     if (!Try(out var parser, out var e, GetParser(path)))
+        //         return R.Error($"File not supported: {path}", e);
 
-            // await Task.Run(async () =>
-            // {
-            using var t = Timing.Start($"Parsed {path}");
-            await parser.ParseAsync(path, items);
-            channel.Writer.Complete();
-            // });
+        //     // await Task.Run(async () =>
+        //     // {
+        //     using var t = Timing.Start($"Parsed {path}");
+        //     await parser.ParseAsync(path, items);
+        //     channel.Writer.Complete();
+        //     // });
 
-            var allItems = await channel.Reader.ReadAllAsync().ToListAsync();
-            Log.Info($"Returning {allItems.Count} items ({items.NodeCount} nodes, {items.LinkCount} links)");
-            return allItems;
-        }
-        catch (Exception e)
-        {
-            Log.Exception(e, "Error in parser");
-            return R.Error("Failed to parse", e);
-        }
+        //     var allItems = await channel.Reader.ReadAllAsync().ToListAsync();
+        //     Log.Info($"Returning {allItems.Count} items ({items.NodeCount} nodes, {items.LinkCount} links)");
+        //     return allItems;
+        // }
+        // catch (Exception e)
+        // {
+        //     Log.Exception(e, "Error in parser");
+        //     return R.Error("Failed to parse", e);
+        // }
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)

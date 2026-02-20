@@ -45,8 +45,16 @@ public class SourceParserTests
         var reflectionItems = new ItemsMock();
         var xmlDockParser = new XmlDocParser("");
         var linkHandler = new LinkHandler(reflectionItems);
-        var typeParser = new TypeParser(linkHandler, xmlDockParser, reflectionItems);
-        var memberParser = new MemberParser(linkHandler, xmlDockParser, reflectionItems);
+        var typeParser = new DependinatorCore.Parsing.Assemblies.TypeParser(
+            linkHandler,
+            xmlDockParser,
+            reflectionItems
+        );
+        var memberParser = new DependinatorCore.Parsing.Assemblies.MemberParser(
+            linkHandler,
+            xmlDockParser,
+            reflectionItems
+        );
 
         var testDataType = AssemblyHelper.GetTypeDefinition<SourceTestData>();
         var types = await typeParser.AddTypeAsync(testDataType).ToListAsync();
