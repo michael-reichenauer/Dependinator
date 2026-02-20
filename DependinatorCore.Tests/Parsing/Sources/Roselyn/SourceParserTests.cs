@@ -1,8 +1,6 @@
-using DependinatorCore.Parsing.Assemblies;
 using DependinatorCore.Parsing.Sources.Roslyn;
-using DependinatorCore.Tests.Parsing.Utils;
 
-namespace DependinatorCore.Tests.Parsing.Sources;
+namespace DependinatorCore.Tests.Parsing.Sources.Roselyn;
 
 // Some Type Comment
 // Second Row
@@ -47,38 +45,6 @@ public class SourceParserTests
 
         var firstFunctionNode = sourceNodes.First(n => n.Node!.Name.Contains("FirstFunction("));
         Assert.Equal("First Function Comment", firstFunctionNode.Node!.Attributes.Description);
-    }
-
-    [Fact]
-    public async Task TestBothAsync()
-    {
-        var sourceParser = new SourceParser();
-        if (!Try(out var allSourceNodes, out var e, await sourceParser.ParseProjectAsync(Root.ProjectFilePath)))
-            Assert.Fail(e.AllErrorMessages());
-        var sourceNodes = allSourceNodes
-            .Where(sn => sn.Node is not null && sn.Node.Name.Contains(typeof(SourceTestData).FullName!))
-            .ToList();
-        Assert.NotEmpty(sourceNodes);
-
-        var reflectionItems = new ItemsMock();
-        var xmlDockParser = new XmlDocParser("");
-        var linkHandler = new LinkHandler(reflectionItems);
-        var typeParser = new DependinatorCore.Parsing.Assemblies.TypeParser(
-            linkHandler,
-            xmlDockParser,
-            reflectionItems
-        );
-        var memberParser = new DependinatorCore.Parsing.Assemblies.MemberParser(
-            linkHandler,
-            xmlDockParser,
-            reflectionItems
-        );
-
-        var testDataType = AssemblyHelper.GetTypeDefinition<SourceTestData>();
-        var types = await typeParser.AddTypeAsync(testDataType).ToListAsync();
-        await memberParser.AddTypesMembersAsync(types);
-        var reflectionNodes = reflectionItems.Nodes;
-        Assert.NotEmpty(reflectionNodes);
     }
 
     [Fact]

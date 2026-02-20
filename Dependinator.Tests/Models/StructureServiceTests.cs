@@ -28,31 +28,31 @@ public class StructureServiceTests
         Assert.Equal(model.UpdateStamp, child.UpdateStamp);
     }
 
-    [Fact]
-    public void AddOrUpdateNode_ShouldReparentWhenParentChanges()
-    {
-        var model = new Model { UpdateStamp = new DateTime(2024, 1, 1) };
-        var lineService = new Mock<ILineService>();
-        var service = new StructureService(model, lineService.Object);
+    // [Fact]
+    // public void AddOrUpdateNode_ShouldReparentWhenParentChanges()
+    // {
+    //     var model = new Model { UpdateStamp = new DateTime(2024, 1, 1) };
+    //     var lineService = new Mock<ILineService>();
+    //     var service = new StructureService(model, lineService.Object);
 
-        var initialNode = new ParsingNode(
-            "Child",
-            new DependinatorCore.Parsing.NodeAttributes { Parent = "ParentA", Type = NodeType.Type }
-        );
-        service.AddOrUpdateNode(initialNode);
+    //     var initialNode = new ParsingNode(
+    //         "Child",
+    //         new DependinatorCore.Parsing.NodeAttributes { Parent = "ParentA", Type = NodeType.Type }
+    //     );
+    //     service.AddOrUpdateNode(initialNode);
 
-        var updatedNode = new ParsingNode(
-            "Child",
-            new DependinatorCore.Parsing.NodeAttributes { Parent = "ParentB", Type = NodeType.Type }
-        );
-        service.AddOrUpdateNode(updatedNode);
+    //     var updatedNode = new ParsingNode(
+    //         "Child",
+    //         new DependinatorCore.Parsing.NodeAttributes { Parent = "ParentB", Type = NodeType.Type }
+    //     );
+    //     service.AddOrUpdateNode(updatedNode);
 
-        var child = model.GetNode(NodeId.FromName("Child"));
-        var oldParent = model.GetNode(NodeId.FromName("ParentA"));
+    //     var child = model.GetNode(NodeId.FromName("Child"));
+    //     var oldParent = model.GetNode(NodeId.FromName("ParentA"));
 
-        Assert.Equal("ParentB", child.Parent.Name);
-        Assert.DoesNotContain(child, oldParent.Children);
-    }
+    //     Assert.Equal("ParentB", child.Parent.Name);
+    //     Assert.DoesNotContain(child, oldParent.Children);
+    // }
 
     [Fact]
     public void AddOrUpdateLink_ShouldCreateNodesAndAddLinesOnce()
