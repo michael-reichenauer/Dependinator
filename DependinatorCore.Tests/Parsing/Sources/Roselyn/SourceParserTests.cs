@@ -18,12 +18,6 @@ public class SourceTestData
     public void SecondFunction() { }
 }
 
-public interface SourceTestInterface { }
-
-public class SourceTestBaseType { }
-
-public class SourceTestDerivedType : SourceTestBaseType, SourceTestInterface { }
-
 public class SourceParserTests
 {
     [Fact]
