@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace DependinatorCore.Parsing.Sources;
+namespace DependinatorCore.Parsing.Sources.Roslyn;
 
 static class Names
 {

@@ -1,5 +1,5 @@
 using DependinatorCore.Parsing.Assemblies;
-using DependinatorCore.Parsing.Sources;
+using DependinatorCore.Parsing.Sources.Roslyn;
 using DependinatorCore.Tests.Parsing.Utils;
 
 namespace DependinatorCore.Tests.Parsing.Sources;

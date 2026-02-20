@@ -1,11 +1,10 @@
-using DependinatorCore.Parsing.Sources.Roslyn;
 using Microsoft.CodeAnalysis;
 
-namespace DependinatorCore.Parsing.Sources;
+namespace DependinatorCore.Parsing.Sources.Roslyn;
 
 class MemberParser
 {
-    public static IEnumerable<Parsing.Item> ParseTypeMember(ISymbol member, string fullTypeName)
+    public static IEnumerable<Item> ParseTypeMember(ISymbol member, string fullTypeName)
     {
         var items = member switch
         {
@@ -20,34 +19,34 @@ class MemberParser
             yield return item;
     }
 
-    static IEnumerable<Parsing.Item> ParseEvent(IEventSymbol member, string fullTypeName)
+    static IEnumerable<Item> ParseEvent(IEventSymbol member, string fullTypeName)
     {
         yield return ParseMember(member, fullTypeName);
     }
 
-    static IEnumerable<Parsing.Item> ParseField(IFieldSymbol member, string fullTypeName)
+    static IEnumerable<Item> ParseField(IFieldSymbol member, string fullTypeName)
     {
         yield return ParseMember(member, fullTypeName);
     }
 
-    static IEnumerable<Parsing.Item> ParseProperty(IPropertySymbol member, string fullTypeName)
+    static IEnumerable<Item> ParseProperty(IPropertySymbol member, string fullTypeName)
     {
         yield return ParseMember(member, fullTypeName);
     }
 
-    static IEnumerable<Parsing.Item> ParseMethod(IMethodSymbol member, string fullTypeName)
+    static IEnumerable<Item> ParseMethod(IMethodSymbol member, string fullTypeName)
     {
         yield return ParseMember(member, fullTypeName);
     }
 
-    static Parsing.Item ParseMember(ISymbol member, string fullTypeName)
+    static Item ParseMember(ISymbol member, string fullTypeName)
     {
         var name = Names.GetFullMemberName(member, fullTypeName);
         var fileSpan = Locations.GetFirstFileSpanOrNoValue(member);
         var leadingComment = CommentExtractor.GetLeadingCommentOrNoValue(member, fileSpan);
         var memberType = ToMemberType(member);
 
-        return new Parsing.Item(
+        return new Item(
             new Node(
                 name,
                 new NodeAttributes

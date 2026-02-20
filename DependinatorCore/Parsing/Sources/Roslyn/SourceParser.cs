@@ -2,7 +2,7 @@ using DependinatorCore.Parsing.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 
-namespace DependinatorCore.Parsing.Sources;
+namespace DependinatorCore.Parsing.Sources.Roslyn;
 
 [Transient]
 class SourceParser : ISourceParser
@@ -16,7 +16,7 @@ class SourceParser : ISourceParser
             | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
     );
 
-    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseSolutionAsync(string slnPath, bool isSkipTests = true)
+    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string slnPath, bool isSkipTests = true)
     {
         MSBuildLocatorHelper.Register();
         using var workspace = MSBuildWorkspace.Create();
@@ -29,7 +29,7 @@ class SourceParser : ISourceParser
 
         var parseProjectTasks = projects.Select(ParseProjectAsync);
 
-        List<Parsing.Item> solutionNodes = [];
+        List<Item> solutionNodes = [];
         await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
         {
             if (!Try(out var items, out var e, await parseProjectTask))
@@ -40,7 +40,7 @@ class SourceParser : ISourceParser
         return solutionNodes;
     }
 
-    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseProjectAsync(string projectPath)
+    public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
     {
         MSBuildLocatorHelper.Register();
         using var workspace = MSBuildWorkspace.Create();
@@ -49,7 +49,7 @@ class SourceParser : ISourceParser
         return await ParseProjectAsync(project);
     }
 
-    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseProjectAsync(Project project)
+    public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(Project project)
     {
         if (!Try(out var compilation, out var e, await GetCompilationAsync(project)))
             return e;
@@ -76,7 +76,7 @@ class SourceParser : ISourceParser
         return compilation;
     }
 
-    static IEnumerable<Parsing.Item> ParseProjectCompilation(Compilation compilation)
+    static IEnumerable<Item> ParseProjectCompilation(Compilation compilation)
     {
         var moduleName = Names.GetModuleName(compilation);
 
