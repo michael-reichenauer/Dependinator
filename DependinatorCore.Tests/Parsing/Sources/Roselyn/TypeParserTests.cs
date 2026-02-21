@@ -13,7 +13,7 @@ public class SourceTestBaseType { }
 public class SourceTestType : SourceTestBaseType, SourceTestInterface
 {
     // Number Field Comment
-    public int number;
+    public int firstField;
 
     // First Function Comment
     public int FirstFunction(string name)
@@ -27,15 +27,25 @@ public class SourceTestType : SourceTestBaseType, SourceTestInterface
 [Collection(nameof(RoslynCollection))]
 public class TypeParserTests(RoslynFixture fixture)
 {
-    [Fact]
-    public async Task TestParseType()
-    {
-        var items = TypeParser.ParseType(fixture.Type<SourceTestType>(), fixture.ModelName).ToList();
+    readonly RoslynFixture fixture = fixture;
+    readonly IReadOnlyList<Item> items = TypeParser
+        .ParseType(fixture.Type<SourceTestType>(), fixture.ModelName)
+        .ToList();
 
-        var typeNode = items.Node<SourceTestType>();
+    [Fact]
+    public void TestTypeFunction()
+    {
+        var firstFunctionNode = items.Node<SourceTestType>(nameof(SourceTestType.FirstFunction));
+        Assert.Equal("First Function Comment", firstFunctionNode.Attributes.Description);
+    }
+
+    [Fact]
+    public void TestParseCommentsType()
+    {
+        var typeNode = items.Node<SourceTestType>(null);
         Assert.Equal("Some Type Comment\nSecond Row", typeNode.Attributes.Description);
 
-        var numberNode = items.Node<SourceTestType>(nameof(SourceTestType.number));
+        var numberNode = items.Node<SourceTestType>(nameof(SourceTestType.firstField));
         Assert.Equal("Number Field Comment", numberNode.Attributes.Description);
 
         var firstFunctionNode = items.Node<SourceTestType>(nameof(SourceTestType.FirstFunction));
@@ -45,9 +55,7 @@ public class TypeParserTests(RoslynFixture fixture)
     [Fact]
     public async Task TestTypeBaseAndInterfaceLinksAsync()
     {
-        var items = TypeParser.ParseType(fixture.Type<SourceTestType>(), fixture.ModelName).ToList();
-
-        Assert.Equal(2, items.LinksFrom<SourceTestType>().Count);
+        Assert.Equal(2, items.LinksFrom<SourceTestType>(null).Count);
 
         var typeToBaseLink = items.Link<SourceTestType, SourceTestBaseType>(null, null);
         Assert.Equal(NodeType.Type, typeToBaseLink.Attributes.TargetType);
