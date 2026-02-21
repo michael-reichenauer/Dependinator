@@ -45,6 +45,7 @@ class MemberParser
         var fileSpan = Locations.GetFirstFileSpanOrNoValue(member);
         var leadingComment = CommentExtractor.GetLeadingCommentOrNoValue(member, fileSpan);
         var nodeType = NodeTypes.ToTypes(member);
+        var isPrivate = SymbolUtils.GetIsPrivate(member);
 
         return new Item(
             new Node(
@@ -54,6 +55,7 @@ class MemberParser
                     Type = nodeType,
                     Description = leadingComment,
                     FileSpan = fileSpan,
+                    IsPrivate = isPrivate,
                 }
             ),
             null

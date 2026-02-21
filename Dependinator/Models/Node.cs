@@ -90,7 +90,7 @@ class Node : IItem
                 IsPrivate = IsPrivate,
                 FileSpan = fileSpan is null
                     ? null
-                    : new FileSpanDto(fileSpan.Path, fileSpan.StarLine, fileSpan.EndLine),
+                    : new FileSpanDto(fileSpan.Path, fileSpan.StartLine, fileSpan.EndLine),
             },
             Boundary = Boundary != Rect.None ? Boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,

@@ -21,7 +21,7 @@ public class SourceTestType : SourceTestBaseType, SourceTestInterface
         return name.Length;
     }
 
-    public void SecondFunction() { }
+    void SecondFunction() { }
 }
 
 [Collection(nameof(RoslynCollection))]
@@ -33,23 +33,27 @@ public class TypeParserTests(RoslynFixture fixture)
         .ToList();
 
     [Fact]
-    public void TestTypeFunction()
-    {
-        var firstFunctionNode = items.Node<SourceTestType>(nameof(SourceTestType.FirstFunction));
-        Assert.Equal("First Function Comment", firstFunctionNode.Properties.Description);
-    }
+    public void TestTypeFunction() { }
 
     [Fact]
-    public void TestParseCommentsType()
+    public void TestParseType()
     {
         var typeNode = items.Node<SourceTestType>(null);
         Assert.Equal("Some Type Comment\nSecond Row", typeNode.Properties.Description);
+        Assert.False(typeNode.Properties.IsPrivate);
 
         var numberNode = items.Node<SourceTestType>(nameof(SourceTestType.firstField));
         Assert.Equal("Number Field Comment", numberNode.Properties.Description);
 
         var firstFunctionNode = items.Node<SourceTestType>(nameof(SourceTestType.FirstFunction));
         Assert.Equal("First Function Comment", firstFunctionNode.Properties.Description);
+        Assert.Equal(Util.CurrentFilePath(), firstFunctionNode.Properties.FileSpan!.Path);
+        Assert.True(firstFunctionNode.Properties.FileSpan!.StartLine > 0);
+        Assert.False(firstFunctionNode.Properties.IsPrivate);
+
+        var secondFunctionNode = items.Node<SourceTestType>("SecondFunction");
+        Assert.Null(secondFunctionNode.Properties.Description);
+        Assert.True(secondFunctionNode.Properties.IsPrivate);
     }
 
     [Fact]

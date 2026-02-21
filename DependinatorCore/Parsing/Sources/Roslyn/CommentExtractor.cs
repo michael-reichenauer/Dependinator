@@ -47,7 +47,7 @@ static class CommentExtractor
             return false;
 
         return fileSpan.EndLine >= lineSpan.StartLinePosition.Line
-            && fileSpan.StarLine <= lineSpan.EndLinePosition.Line;
+            && fileSpan.StartLine <= lineSpan.EndLinePosition.Line;
     }
 
     static string? GetLeadingComment(SyntaxNode declarationNode)

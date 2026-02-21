@@ -12,6 +12,7 @@ static class TypeParser
 
         var fileSpan = Locations.GetFirstFileSpanOrNoValue(type);
         var leadingComment = CommentExtractor.GetLeadingCommentOrNoValue(type, fileSpan);
+        var isPrivate = SymbolUtils.GetIsPrivate(type);
 
         yield return new Item(
             new Node(
@@ -21,6 +22,7 @@ static class TypeParser
                     Type = NodeType.Type,
                     Description = leadingComment,
                     FileSpan = fileSpan,
+                    IsPrivate = isPrivate,
                 }
             ),
             null

@@ -118,9 +118,9 @@ class NavigationService(
             }
             fileSpan = node.FileSpanOrParentSpan;
         }
-        Log.Info("Show editor for", fileSpan.Path, fileSpan.StarLine);
+        Log.Info("Show editor for", fileSpan.Path, fileSpan.StartLine);
 
-        await vsCodeSendService.ShowEditorAsync(new FileLocation(fileSpan.Path, fileSpan.StarLine + 1));
+        await vsCodeSendService.ShowEditorAsync(new FileLocation(fileSpan.Path, fileSpan.StartLine + 1));
     }
 
     static FileLocation ParseFileLocation(string fileLocation)
@@ -141,7 +141,7 @@ class NavigationService(
                 .Items.Values.OfType<Models.Node>()
                 .Where(n => n.FileSpan is not null)
                 .Where(n => n.FileSpan!.Path.IsSameIc(fileLocation.Path))
-                .OrderBy(n => n.FileSpan!.StarLine)
+                .OrderBy(n => n.FileSpan!.StartLine)
                 .ToList();
         }
 
@@ -151,9 +151,9 @@ class NavigationService(
         var currentNode = nodeCandidates.First();
         foreach (var node in nodeCandidates)
         {
-            if (node.FileSpan!.StarLine == currentNode.FileSpan!.StarLine)
+            if (node.FileSpan!.StartLine == currentNode.FileSpan!.StartLine)
                 continue;
-            if (fileLocation.Line < node.FileSpan!.StarLine)
+            if (fileLocation.Line < node.FileSpan!.StartLine)
                 break;
             currentNode = node;
         }
