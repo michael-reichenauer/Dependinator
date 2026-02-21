@@ -15,7 +15,7 @@ class NodeSvg
     public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 
     public static bool IsShowIcon(Parsing.NodeType nodeType, double zoom) =>
-        nodeType == Parsing.NodeType.Member || zoom <= MinContainerZoom;
+        nodeType.IsMember || zoom <= MinContainerZoom;
 
     public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
@@ -175,7 +175,7 @@ class NodeSvg
         AnchorPreference preference = AnchorPreference.Default
     )
     {
-        if (node.Type == Parsing.NodeType.Member)
+        if (node.Type.IsMember)
         {
             var metrics = GetMemberAnchorMetrics(node);
             if (role == LineAnchorRole.Source)
@@ -332,24 +332,21 @@ class NodeSvg
 
     static string IconName(Node node)
     {
-        return node.MemberType switch
+        return node.Type switch
         {
-            Parsing.MemberType.Event => "EventIcon",
-            Parsing.MemberType.Field => "FieldIcon",
-            Parsing.MemberType.Property => "PropertyIcon",
-            Parsing.MemberType.Method => "MethodIcon",
-            Parsing.MemberType.Constructor => "ConstructorIcon",
-            _ => node.Type switch
-            {
-                Parsing.NodeType.Solution => "SolutionIcon",
-                Parsing.NodeType.Externals => "ExternalsIcon",
-                Parsing.NodeType.Assembly => "ModuleIcon",
-                Parsing.NodeType.Namespace => "FilesIcon",
-                Parsing.NodeType.Parent => "FilesIcon",
-                Parsing.NodeType.Type => "TypeIcon",
-                Parsing.NodeType.Member => "MemberIcon",
-                _ => "ModuleIcon",
-            },
+            Parsing.NodeType.EventMember => "EventIcon",
+            Parsing.NodeType.FieldMember => "FieldIcon",
+            Parsing.NodeType.PropertyMember => "PropertyIcon",
+            Parsing.NodeType.MethodMember => "MethodIcon",
+            Parsing.NodeType.ConstructorMember => "ConstructorIcon",
+            Parsing.NodeType.Solution => "SolutionIcon",
+            Parsing.NodeType.Externals => "ExternalsIcon",
+            Parsing.NodeType.Assembly => "ModuleIcon",
+            Parsing.NodeType.Namespace => "FilesIcon",
+            Parsing.NodeType.Parent => "FilesIcon",
+            Parsing.NodeType.Type => "TypeIcon",
+
+            _ => "ModuleIcon",
         };
     }
 

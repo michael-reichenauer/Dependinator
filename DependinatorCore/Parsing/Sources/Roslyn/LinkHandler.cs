@@ -7,13 +7,9 @@ static class LinkParser
     public static Item Parse(ISymbol symbol, string sourceName)
     {
         var targetName = Names.GetFullName(symbol);
-        var (nodeType, memberType) = NodeTypes.ToTypes(symbol);
+        var nodeType = NodeTypes.ToTypes(symbol);
 
-        var link = new Link(
-            sourceName,
-            targetName,
-            new LinkProperties { TargetType = nodeType, MemberType = memberType }
-        );
+        var link = new Link(sourceName, targetName, new LinkProperties { TargetType = nodeType });
         return new Item(null, link);
     }
 }

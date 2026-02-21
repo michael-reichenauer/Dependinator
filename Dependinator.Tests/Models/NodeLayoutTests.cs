@@ -62,8 +62,7 @@ public class NodeLayoutTests
         {
             var child = new ModelNode($"Member{i}", parent)
             {
-                Type = NodeType.Member,
-                MemberType = (MemberType)(i % 5),
+                Type = NodeType.MethodMember,
                 IsPrivate = i >= 8,
                 Boundary = new Rect(i * 2, i * 3, 60, 60),
             };
@@ -106,7 +105,10 @@ public class NodeLayoutTests
         var privateMembers = members.Where(m => m.IsPrivate ?? false).ToList();
         var maxPublicX = publicMembers.Max(m => m.Boundary.X + m.Boundary.Width);
         var minPrivateX = privateMembers.Min(m => m.Boundary.X);
-        Assert.True(minPrivateX > maxPublicX, $"Expected separated visibility columns but got {minPrivateX} <= {maxPublicX}");
+        Assert.True(
+            minPrivateX > maxPublicX,
+            $"Expected separated visibility columns but got {minPrivateX} <= {maxPublicX}"
+        );
 
         var displayedBounds = GetDisplayedBounds(parent);
         var parentArea = parent.Boundary.Width * parent.Boundary.Height;
@@ -141,8 +143,14 @@ public class NodeLayoutTests
             var compactGap = HorizontalGap(parent.Children);
             var compactZoom = parent.ContainerZoom;
 
-            Assert.True(spaciousGap > compactGap, $"Expected spacious gap > compact gap, got {spaciousGap} <= {compactGap}");
-            Assert.True(compactZoom > spaciousZoom, $"Expected compact zoom > spacious zoom, got {compactZoom} <= {spaciousZoom}");
+            Assert.True(
+                spaciousGap > compactGap,
+                $"Expected spacious gap > compact gap, got {spaciousGap} <= {compactGap}"
+            );
+            Assert.True(
+                compactZoom > spaciousZoom,
+                $"Expected compact zoom > spacious zoom, got {compactZoom} <= {spaciousZoom}"
+            );
         }
         finally
         {

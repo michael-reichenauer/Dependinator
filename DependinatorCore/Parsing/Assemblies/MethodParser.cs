@@ -141,7 +141,7 @@ internal class MethodParser(LinkHandler linkHandler)
         if (Name.IsCompilerGenerated(methodName))
             return;
 
-        await linkHandler.AddLinkAsync(memberName, methodName, NodeType.Member);
+        await linkHandler.AddLinkAsync(memberName, methodName, NodeType.MethodMember);
 
         TypeReference returnType = referencedMethod.ReturnType;
         if (method.DeclaringType != returnType)

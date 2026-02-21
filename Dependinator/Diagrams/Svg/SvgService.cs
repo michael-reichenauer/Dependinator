@@ -98,7 +98,7 @@ class SvgService : ISvgService
         if (!RectOverlap(context.TileBounds, geometry.TileRect))
             return "";
 
-        if (node.Type == Parsing.NodeType.Member)
+        if (node.Type.IsMember)
             return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom);
 
         if (NodeSvg.IsShowIcon(node.Type, context.Zoom))

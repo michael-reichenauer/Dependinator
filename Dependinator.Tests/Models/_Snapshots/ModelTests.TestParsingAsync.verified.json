@@ -3,37 +3,33 @@
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
       "Properties": {
-        "Type": "Member",
+        "Type": "ConstructorMember",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "IsPrivate": false,
-        "MemberType": "Constructor"
+        "IsPrivate": false
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.SecondFunction()",
       "Properties": {
-        "Type": "Member",
+        "Type": "MethodMember",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "IsPrivate": false,
-        "MemberType": "Method"
+        "IsPrivate": false
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "Properties": {
-        "Type": "Member",
+        "Type": "MethodMember",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "IsPrivate": false,
-        "MemberType": "Method"
+        "IsPrivate": false
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
       "Properties": {
-        "Type": "Member",
+        "Type": "FieldMember",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "IsPrivate": false,
-        "MemberType": "Field"
+        "IsPrivate": false
       }
     },
     {
@@ -50,7 +46,7 @@
       "Source": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "Target": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
       "Properties": {
-        "TargetType": "Member"
+        "TargetType": "MethodMember"
       }
     }
   ]

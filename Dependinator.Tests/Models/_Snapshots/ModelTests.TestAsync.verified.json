@@ -8,9 +8,7 @@
       "Name": "",
       "ParentName": "",
       "Type": "Root",
-      "Properties": {
-        "MemberType": "None"
-      },
+      "Properties": {},
       "Boundary": {
         "Width": 1000,
         "Height": 1000
@@ -22,9 +20,7 @@
       "Name": "Dependinator*Tests",
       "ParentName": "",
       "Type": "Parent",
-      "Properties": {
-        "MemberType": "None"
-      },
+      "Properties": {},
       "Boundary": {
         "X": 10,
         "Y": 10,
@@ -37,27 +33,21 @@
       "Name": "Dependinator*Tests.Dependinator",
       "ParentName": "Dependinator*Tests",
       "Type": "Parent",
-      "Properties": {
-        "MemberType": "None"
-      },
+      "Properties": {},
       "Color": "Cyan"
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests",
       "ParentName": "Dependinator*Tests.Dependinator",
       "Type": "Parent",
-      "Properties": {
-        "MemberType": "None"
-      },
+      "Properties": {},
       "Color": "Yellow"
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models",
       "ParentName": "Dependinator*Tests.Dependinator.Tests",
       "Type": "Parent",
-      "Properties": {
-        "MemberType": "None"
-      },
+      "Properties": {},
       "Color": "Red"
     },
     {
@@ -65,48 +55,43 @@
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models",
       "Type": "Type",
       "Properties": {
-        "IsPrivate": false,
-        "MemberType": "None"
+        "IsPrivate": false
       },
       "Color": "Green"
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-      "Type": "Member",
+      "Type": "ConstructorMember",
       "Properties": {
-        "IsPrivate": false,
-        "MemberType": "Constructor"
+        "IsPrivate": false
       },
       "Color": "Teal"
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.SecondFunction()",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-      "Type": "Member",
+      "Type": "MethodMember",
       "Properties": {
-        "IsPrivate": false,
-        "MemberType": "Method"
+        "IsPrivate": false
       },
       "Color": "Yellow"
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-      "Type": "Member",
+      "Type": "MethodMember",
       "Properties": {
-        "IsPrivate": false,
-        "MemberType": "Method"
+        "IsPrivate": false
       },
       "Color": "Blue"
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-      "Type": "Member",
+      "Type": "MethodMember",
       "Properties": {
-        "IsPrivate": false,
-        "MemberType": "Field"
+        "IsPrivate": false
       },
       "Color": "Red"
     }
@@ -115,7 +100,7 @@
     {
       "SourceName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "TargetName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
-      "TargetType": "Member"
+      "TargetType": "MethodMember"
     }
   ]
 }

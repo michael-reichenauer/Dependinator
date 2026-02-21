@@ -44,7 +44,7 @@ class MemberParser
         var name = Names.GetFullMemberName(member, fullTypeName);
         var fileSpan = Locations.GetFirstFileSpanOrNoValue(member);
         var leadingComment = CommentExtractor.GetLeadingCommentOrNoValue(member, fileSpan);
-        var (nodeType, memberType) = NodeTypes.ToTypes(member);
+        var nodeType = NodeTypes.ToTypes(member);
 
         return new Item(
             new Node(
@@ -52,7 +52,6 @@ class MemberParser
                 new NodeProperties
                 {
                     Type = nodeType,
-                    MemberType = memberType,
                     Description = leadingComment,
                     FileSpan = fileSpan,
                 }

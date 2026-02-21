@@ -31,7 +31,6 @@ class Node : IItem
     NodeType type = NodeType.None;
     public DateTime UpdateStamp { get; set; }
     public bool? IsPrivate { get; set; }
-    public MemberType MemberType { get; set; }
     FileSpan? fileSpan;
 
     public FileSpan? FileSpan => fileSpan;
@@ -89,7 +88,6 @@ class Node : IItem
             {
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
-                MemberType = MemberType.ToString(),
                 FileSpan = fileSpan is null
                     ? null
                     : new FileSpanDto(fileSpan.Path, fileSpan.StarLine, fileSpan.EndLine),
@@ -110,7 +108,6 @@ class Node : IItem
         Description = dto.Properties.Description;
         HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
         IsPrivate = dto.Properties.IsPrivate;
-        MemberType = Enum.TryParse<MemberType>(dto.Properties.MemberType, out var value) ? value : MemberType.None;
         fileSpan = dto.Properties.FileSpan is null
             ? null
             : new FileSpan(
@@ -134,7 +131,6 @@ class Node : IItem
         IsPrivate = node.Properties.IsPrivate ?? IsPrivate;
         Description = node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description;
         HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
-        MemberType = node.Properties.MemberType ?? MemberType;
         fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
     }
 
