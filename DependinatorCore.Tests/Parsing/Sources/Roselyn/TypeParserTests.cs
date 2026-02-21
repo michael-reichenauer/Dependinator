@@ -4,24 +4,26 @@ using DependinatorCore.Tests.Parsing.Utils;
 
 namespace DependinatorCore.Tests.Parsing.Sources.Roselyn;
 
-public interface SourceTestInterface { }
+public interface ISourceTestInterface { }
 
 public class SourceTestBaseType { }
 
 // Some Type Comment
 // Second Row
-public class SourceTestType : SourceTestBaseType, SourceTestInterface
+public class SourceTestType : SourceTestBaseType, ISourceTestInterface
 {
     // Number Field Comment
-    public int firstField;
+    public int field1;
+
+    public SourceTestBaseType field2 = null!;
 
     // First Function Comment
-    public int FirstFunction(string name)
+    public int Function1(string name, ISourceTestInterface sourceTestInterface)
     {
         return name.Length;
     }
 
-    void SecondFunction() { }
+    void Function2() { }
 }
 
 [Collection(nameof(RoslynCollection))]
@@ -41,19 +43,41 @@ public class TypeParserTests(RoslynFixture fixture)
         var typeNode = items.Node<SourceTestType>(null);
         Assert.Equal("Some Type Comment\nSecond Row", typeNode.Properties.Description);
         Assert.False(typeNode.Properties.IsPrivate);
+    }
 
-        var numberNode = items.Node<SourceTestType>(nameof(SourceTestType.firstField));
-        Assert.Equal("Number Field Comment", numberNode.Properties.Description);
+    [Fact]
+    public void TestFields()
+    {
+        var field1Node = items.Node<SourceTestType>(nameof(SourceTestType.field1));
+        Assert.Equal("Number Field Comment", field1Node.Properties.Description);
+        Assert.False(items.LinksFrom<SourceTestType>(nameof(SourceTestType.field1)).Any());
 
-        var firstFunctionNode = items.Node<SourceTestType>(nameof(SourceTestType.FirstFunction));
-        Assert.Equal("First Function Comment", firstFunctionNode.Properties.Description);
-        Assert.Equal(Util.CurrentFilePath(), firstFunctionNode.Properties.FileSpan!.Path);
-        Assert.True(firstFunctionNode.Properties.FileSpan!.StartLine > 0);
-        Assert.False(firstFunctionNode.Properties.IsPrivate);
+        var field2Node = items.Node<SourceTestType>(nameof(SourceTestType.field2));
+        Assert.Null(field2Node.Properties.Description);
+        Assert.Equal(1, items.LinksFrom<SourceTestType>(nameof(SourceTestType.field2)).Count());
+        Assert.Equal(
+            NodeType.Type,
+            items.Link<SourceTestType, SourceTestBaseType>(nameof(SourceTestType.field2), null).Properties.TargetType
+        );
+    }
 
-        var secondFunctionNode = items.Node<SourceTestType>("SecondFunction");
-        Assert.Null(secondFunctionNode.Properties.Description);
-        Assert.True(secondFunctionNode.Properties.IsPrivate);
+    [Fact]
+    public void TestFunctions()
+    {
+        var function1Node = items.Node<SourceTestType>(nameof(SourceTestType.Function1));
+        Assert.Equal("First Function Comment", function1Node.Properties.Description);
+        Assert.Equal(Util.CurrentFilePath(), function1Node.Properties.FileSpan!.Path);
+        Assert.True(function1Node.Properties.FileSpan!.StartLine > 0);
+        Assert.False(function1Node.Properties.IsPrivate);
+        // Assert.Equal(1, items.LinksFrom<SourceTestType>(nameof(SourceTestType.Function1)).Count());
+        // Assert.Equal(
+        //     NodeType.Type,
+        //     items.Link<SourceTestType, ISourceTestInterface>(nameof(SourceTestType.field2), null).Properties.TargetType
+        // );
+
+        var function2Node = items.Node<SourceTestType>("Function2");
+        Assert.Null(function2Node.Properties.Description);
+        Assert.True(function2Node.Properties.IsPrivate);
     }
 
     [Fact]
@@ -64,7 +88,7 @@ public class TypeParserTests(RoslynFixture fixture)
         var typeToBaseLink = items.Link<SourceTestType, SourceTestBaseType>(null, null);
         Assert.Equal(NodeType.Type, typeToBaseLink.Properties.TargetType);
 
-        var typeToInterfaceLink = items.Link<SourceTestType, SourceTestInterface>(null, null);
+        var typeToInterfaceLink = items.Link<SourceTestType, ISourceTestInterface>(null, null);
         Assert.Equal(NodeType.Type, typeToInterfaceLink.Properties.TargetType);
     }
 }

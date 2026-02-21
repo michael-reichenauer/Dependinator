@@ -26,7 +26,12 @@ class MemberParser
 
     static IEnumerable<Item> ParseField(IFieldSymbol member, string fullTypeName)
     {
+        var sourceName = Names.GetFullMemberName(member, fullTypeName);
         yield return ParseMember(member, fullTypeName);
+
+        // Get the field type
+        if (member.Type is INamedTypeSymbol fieldType && !IgnoredTypes.IsIgnoredSystemType(fieldType))
+            yield return LinkParser.Parse(fieldType, sourceName);
     }
 
     static IEnumerable<Item> ParseProperty(IPropertySymbol member, string fullTypeName)
@@ -60,5 +65,31 @@ class MemberParser
             ),
             null
         );
+    }
+}
+
+internal class IgnoredTypes
+{
+    public static bool IsIgnoredSystemType(INamedTypeSymbol type)
+    {
+        if (type.ContainingModule.Name == "System.Runtime.dll")
+            return true;
+
+        return false;
+        // if (type.FullName.StartsWith("__Blazor"))
+        //     return true;
+
+        // return IsSystemIgnoredModuleName(targetType.Scope.Name);
+    }
+
+    public static bool IsSystemIgnoredModuleName(string moduleName)
+    {
+        return moduleName == "mscorlib"
+            || moduleName == "PresentationFramework"
+            || moduleName == "PresentationCore"
+            || moduleName == "WindowsBase"
+            || moduleName == "System"
+            || moduleName.StartsWith("Microsoft.")
+            || moduleName.StartsWith("System.");
     }
 }
