@@ -16,7 +16,7 @@ static class TypeParser
         yield return new Item(
             new Node(
                 fullTypeName,
-                new NodeAttributes
+                new NodeProperties
                 {
                     Type = NodeType.Type,
                     Description = leadingComment,

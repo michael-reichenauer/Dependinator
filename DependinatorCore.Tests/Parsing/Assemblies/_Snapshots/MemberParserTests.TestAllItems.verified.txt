@@ -1,7 +1,7 @@
 ﻿[
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.Deconstruct(string),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -10,7 +10,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.ctor(SubRecord),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -19,7 +19,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.<Clone>$(),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -28,7 +28,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.Equals(SubRecord),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -37,7 +37,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.Equals(object),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -46,7 +46,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.GetHashCode(),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -55,7 +55,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.op_Equality(SubRecord,SubRecord),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -64,7 +64,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.op_Inequality(SubRecord,SubRecord),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -73,7 +73,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.PrintMembers(stringbuilder),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -82,7 +82,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.ToString(),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -91,7 +91,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.ctor(string),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -100,7 +100,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.Name,
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -109,7 +109,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord.EqualityContract,
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
       IsPrivate: false,
@@ -118,7 +118,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.ctor(),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
       IsPrivate: false,
@@ -127,7 +127,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SecondFunction(),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
       IsPrivate: false,
@@ -136,7 +136,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.FirstFunction(),
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
       IsPrivate: false,
@@ -145,7 +145,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.number,
-    Attributes: {
+    Properties: {
       Type: Member,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
       IsPrivate: false,
@@ -154,7 +154,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData.SubRecord,
-    Attributes: {
+    Properties: {
       Type: Type,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
       IsPrivate: false
@@ -162,7 +162,7 @@
   },
   {
     Name: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies.MemberTestData,
-    Attributes: {
+    Properties: {
       Type: Type,
       Parent: DependinatorCore*Tests.DependinatorCore.Tests.Parsing.Assemblies,
       IsPrivate: false

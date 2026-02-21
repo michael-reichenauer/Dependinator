@@ -2,7 +2,7 @@
   "Nodes": [
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
-      "Attributes": {
+      "Properties": {
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
         "IsPrivate": false,
@@ -11,7 +11,7 @@
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.SecondFunction()",
-      "Attributes": {
+      "Properties": {
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
         "IsPrivate": false,
@@ -20,7 +20,7 @@
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
-      "Attributes": {
+      "Properties": {
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
         "IsPrivate": false,
@@ -29,7 +29,7 @@
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
-      "Attributes": {
+      "Properties": {
         "Type": "Member",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
         "IsPrivate": false,
@@ -38,7 +38,7 @@
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-      "Attributes": {
+      "Properties": {
         "Type": "Type",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models",
         "IsPrivate": false
@@ -49,7 +49,7 @@
     {
       "Source": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "Target": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
-      "Attributes": {
+      "Properties": {
         "TargetType": "Member"
       }
     }

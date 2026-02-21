@@ -49,7 +49,7 @@ class MemberParser
         return new Item(
             new Node(
                 name,
-                new NodeAttributes
+                new NodeProperties
                 {
                     Type = nodeType,
                     MemberType = memberType,

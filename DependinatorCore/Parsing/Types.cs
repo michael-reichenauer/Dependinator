@@ -12,11 +12,11 @@ enum MemberType
 
 record Item(Node? Node, Link? Link);
 
-record Link(string Source, string Target, LinkAttributes Attributes);
+record Link(string Source, string Target, LinkProperties Properties);
 
-record Node(string Name, NodeAttributes Attributes);
+record Node(string Name, NodeProperties Properties);
 
-class NodeAttributes
+class NodeProperties
 {
     public NodeType? Type { get; init; }
     public string? Description { get; init; }
@@ -27,7 +27,7 @@ class NodeAttributes
     public bool? IsModule { get; init; }
 }
 
-class LinkAttributes
+class LinkProperties
 {
     public string? Description { get; init; }
     public NodeType? TargetType { get; init; }

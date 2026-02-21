@@ -8,7 +8,7 @@
       "Name": "",
       "ParentName": "",
       "Type": "Root",
-      "Attributes": {
+      "Properties": {
         "MemberType": "None"
       },
       "Boundary": {
@@ -22,7 +22,7 @@
       "Name": "Dependinator*Tests",
       "ParentName": "",
       "Type": "Parent",
-      "Attributes": {
+      "Properties": {
         "MemberType": "None"
       },
       "Boundary": {
@@ -37,7 +37,7 @@
       "Name": "Dependinator*Tests.Dependinator",
       "ParentName": "Dependinator*Tests",
       "Type": "Parent",
-      "Attributes": {
+      "Properties": {
         "MemberType": "None"
       },
       "Color": "Cyan"
@@ -46,7 +46,7 @@
       "Name": "Dependinator*Tests.Dependinator.Tests",
       "ParentName": "Dependinator*Tests.Dependinator",
       "Type": "Parent",
-      "Attributes": {
+      "Properties": {
         "MemberType": "None"
       },
       "Color": "Yellow"
@@ -55,7 +55,7 @@
       "Name": "Dependinator*Tests.Dependinator.Tests.Models",
       "ParentName": "Dependinator*Tests.Dependinator.Tests",
       "Type": "Parent",
-      "Attributes": {
+      "Properties": {
         "MemberType": "None"
       },
       "Color": "Red"
@@ -64,7 +64,7 @@
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models",
       "Type": "Type",
-      "Attributes": {
+      "Properties": {
         "IsPrivate": false,
         "MemberType": "None"
       },
@@ -74,7 +74,7 @@
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
-      "Attributes": {
+      "Properties": {
         "IsPrivate": false,
         "MemberType": "Constructor"
       },
@@ -84,7 +84,7 @@
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.SecondFunction()",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
-      "Attributes": {
+      "Properties": {
         "IsPrivate": false,
         "MemberType": "Method"
       },
@@ -94,7 +94,7 @@
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
-      "Attributes": {
+      "Properties": {
         "IsPrivate": false,
         "MemberType": "Method"
       },
@@ -104,7 +104,7 @@
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
       "ParentName": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
       "Type": "Member",
-      "Attributes": {
+      "Properties": {
         "IsPrivate": false,
         "MemberType": "Field"
       },

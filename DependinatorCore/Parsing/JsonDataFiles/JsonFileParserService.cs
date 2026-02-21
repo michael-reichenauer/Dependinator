@@ -87,7 +87,7 @@ class JsonFileParserService : IParser
 
     static Node ToNodeData(JsonTypes.Node node) => new(node.Name, ToNodeAttributes(node));
 
-    static NodeAttributes ToNodeAttributes(JsonTypes.Node node) =>
+    static NodeProperties ToNodeAttributes(JsonTypes.Node node) =>
         new()
         {
             Type = Enums.ToOrNull<NodeType>(node.Attributes?.Type),

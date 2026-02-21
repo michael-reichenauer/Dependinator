@@ -30,7 +30,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
     {
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
         { // New node, add it to the model and parent
-            var parent = GetOrCreateParent(parsedNode.Name, parsedNode.Attributes.IsModule);
+            var parent = GetOrCreateParent(parsedNode.Name, parsedNode.Properties.IsModule);
 
             node = new Node(parsedNode.Name, parent);
             node.Boundary = parent.IsChildrenLayoutCustomized ? Rect.None : NodeLayout.GetNextChildRect(parent);
@@ -71,8 +71,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
         var source = model.GetNode(NodeId.FromName(parsedLink.Source));
         var target = model.GetNode(NodeId.FromName(parsedLink.Target));
-        if (parsedLink.Attributes.TargetType is not null && parsedLink.Attributes.TargetType is not NodeType.None)
-            target.Type = (NodeType)parsedLink.Attributes.TargetType;
+        if (parsedLink.Properties.TargetType is not null && parsedLink.Properties.TargetType is not NodeType.None)
+            target.Type = (NodeType)parsedLink.Properties.TargetType;
 
         link = new Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
@@ -92,7 +92,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
             return;
 
         //var parentName = nodeDto.ParentName;
-        var parent = GetOrCreateParent(nodeDto.Name, nodeDto.Attributes.IsModule);
+        var parent = GetOrCreateParent(nodeDto.Name, nodeDto.Properties.IsModule);
 
         var node = new Node(nodeDto.Name, parent);
         node.SetFromDto(nodeDto);

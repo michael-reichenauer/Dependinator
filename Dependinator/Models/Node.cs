@@ -85,7 +85,7 @@ class Node : IItem
             Name = Name,
             ParentName = Parent?.Name ?? "",
             Type = Type.ToString(),
-            Attributes = new()
+            Properties = new()
             {
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
@@ -107,16 +107,16 @@ class Node : IItem
     {
         Type = Enums.To<NodeType>(dto.Type, NodeType.None);
 
-        Description = dto.Attributes.Description;
+        Description = dto.Properties.Description;
         HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
-        IsPrivate = dto.Attributes.IsPrivate;
-        MemberType = Enum.TryParse<MemberType>(dto.Attributes.MemberType, out var value) ? value : MemberType.None;
-        fileSpan = dto.Attributes.FileSpan is null
+        IsPrivate = dto.Properties.IsPrivate;
+        MemberType = Enum.TryParse<MemberType>(dto.Properties.MemberType, out var value) ? value : MemberType.None;
+        fileSpan = dto.Properties.FileSpan is null
             ? null
             : new FileSpan(
-                dto.Attributes.FileSpan.Path,
-                dto.Attributes.FileSpan.StarLine,
-                dto.Attributes.FileSpan.EndLine
+                dto.Properties.FileSpan.Path,
+                dto.Properties.FileSpan.StarLine,
+                dto.Properties.FileSpan.EndLine
             );
 
         Boundary = dto.Boundary ?? Rect.None;
@@ -130,12 +130,12 @@ class Node : IItem
 
     public void Update(Parsing.Node node)
     {
-        Type = node.Attributes.Type ?? Type;
-        IsPrivate = node.Attributes.IsPrivate ?? IsPrivate;
-        Description = node.Attributes.Description == NoValue.String ? null : node.Attributes.Description ?? Description;
+        Type = node.Properties.Type ?? Type;
+        IsPrivate = node.Properties.IsPrivate ?? IsPrivate;
+        Description = node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description;
         HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
-        MemberType = node.Attributes.MemberType ?? MemberType;
-        fileSpan = node.Attributes.FileSpan == NoValue.FileSpan ? null : node.Attributes.FileSpan ?? fileSpan;
+        MemberType = node.Properties.MemberType ?? MemberType;
+        fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)

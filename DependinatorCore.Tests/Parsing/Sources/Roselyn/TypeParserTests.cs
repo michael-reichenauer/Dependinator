@@ -36,20 +36,20 @@ public class TypeParserTests(RoslynFixture fixture)
     public void TestTypeFunction()
     {
         var firstFunctionNode = items.Node<SourceTestType>(nameof(SourceTestType.FirstFunction));
-        Assert.Equal("First Function Comment", firstFunctionNode.Attributes.Description);
+        Assert.Equal("First Function Comment", firstFunctionNode.Properties.Description);
     }
 
     [Fact]
     public void TestParseCommentsType()
     {
         var typeNode = items.Node<SourceTestType>(null);
-        Assert.Equal("Some Type Comment\nSecond Row", typeNode.Attributes.Description);
+        Assert.Equal("Some Type Comment\nSecond Row", typeNode.Properties.Description);
 
         var numberNode = items.Node<SourceTestType>(nameof(SourceTestType.firstField));
-        Assert.Equal("Number Field Comment", numberNode.Attributes.Description);
+        Assert.Equal("Number Field Comment", numberNode.Properties.Description);
 
         var firstFunctionNode = items.Node<SourceTestType>(nameof(SourceTestType.FirstFunction));
-        Assert.Equal("First Function Comment", firstFunctionNode.Attributes.Description);
+        Assert.Equal("First Function Comment", firstFunctionNode.Properties.Description);
     }
 
     [Fact]
@@ -58,9 +58,9 @@ public class TypeParserTests(RoslynFixture fixture)
         Assert.Equal(2, items.LinksFrom<SourceTestType>(null).Count);
 
         var typeToBaseLink = items.Link<SourceTestType, SourceTestBaseType>(null, null);
-        Assert.Equal(NodeType.Type, typeToBaseLink.Attributes.TargetType);
+        Assert.Equal(NodeType.Type, typeToBaseLink.Properties.TargetType);
 
         var typeToInterfaceLink = items.Link<SourceTestType, SourceTestInterface>(null, null);
-        Assert.Equal(NodeType.Type, typeToInterfaceLink.Attributes.TargetType);
+        Assert.Equal(NodeType.Type, typeToInterfaceLink.Properties.TargetType);
     }
 }

@@ -12,7 +12,7 @@ static class LinkParser
         var link = new Link(
             sourceName,
             targetName,
-            new LinkAttributes { TargetType = nodeType, MemberType = memberType }
+            new LinkProperties { TargetType = nodeType, MemberType = memberType }
         );
         return new Item(null, link);
     }
