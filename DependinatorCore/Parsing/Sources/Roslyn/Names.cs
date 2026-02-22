@@ -13,6 +13,11 @@ static class Names
             | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
     );
 
+    public static string GetSolutionName(string solutionPath)
+    {
+        return Path.GetFileName(solutionPath).Replace(".", "*");
+    }
+
     public static string GetModuleName(Compilation compilation)
     {
         var name = compilation.Options.ModuleName ?? compilation.AssemblyName;

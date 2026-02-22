@@ -14,6 +14,8 @@ interface IStructureService
 [Transient]
 class StructureService(IModel model, ILineService linesService) : IStructureService
 {
+    static readonly string ExternalsNodeName = "$Externals";
+
     public void TryUpdateNode(Parsing.Node parsedNode)
     {
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
@@ -30,7 +32,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
     {
         if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
         { // New node, add it to the model and parent
-            var parent = GetOrCreateParent(parsedNode.Name, parsedNode.Properties.IsModule);
+            var parent = GetOrCreateParent(parsedNode);
 
             node = new Node(parsedNode.Name, parent);
             node.Boundary = parent.IsChildrenLayoutCustomized ? Rect.None : NodeLayout.GetNextChildRect(parent);
@@ -47,12 +49,14 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         node.Update(parsedNode);
         node.UpdateStamp = model.UpdateStamp;
 
-        // if (parentName is not null && !node.IsRoot && node.Parent.Name != parentName)
-        // { // The node has changed parent, remove it from the old parent and add it to the new parent
-        //     node.Parent.RemoveChild(node);
-        //     var parent = GetOrCreateNode(parentName);
-        //     parent.AddChild(node);
-        // }
+        var parentName = parsedNode.Properties.Parent;
+
+        if (parentName is not null && !node.IsRoot && node.Parent.Name != parentName)
+        { // The node has changed parent, remove it from the old parent and add it to the new parent
+            node.Parent.RemoveChild(node);
+            var parent = GetOrCreateNode(parentName);
+            parent.AddChild(node);
+        }
     }
 
     public void AddOrUpdateLink(Parsing.Link parsedLink)
@@ -91,8 +95,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         if (nodeDto.Name == "") // Root node already exists
             return;
 
-        //var parentName = nodeDto.ParentName;
-        var parent = GetOrCreateParent(nodeDto.Name, nodeDto.Properties.IsModule);
+        var parent = GetOrCreateParent(nodeDto);
 
         var node = new Node(nodeDto.Name, parent);
         node.SetFromDto(nodeDto);
@@ -141,13 +144,24 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         return item;
     }
 
-    Node GetOrCreateParent(string nodeName, bool? isExternal)
+    Node GetOrCreateParent(Parsing.Node parsedNode)
     {
-        var parentName = GetParentName(nodeName, isExternal);
+        var parentName = parsedNode.Properties.Parent;
+        if (parentName is null)
+        {
+            parentName = Parsing.Utils.NodeName.ParseParentName(parsedNode.Name);
+            if (
+                parentName == ""
+                && parsedNode.Properties.Type is not (NodeType.Externals or NodeType.Solution or NodeType.Assembly)
+            )
+                parentName = ExternalsNodeName;
+        }
+
         var nodeId = NodeId.FromName(parentName);
         if (!model.TryGetNode(nodeId, out var item))
         {
-            var parent = DefaultParentNode(parentName);
+            var parentTyp = parentName == ExternalsNodeName ? Parsing.NodeType.Externals : Parsing.NodeType.Parent;
+            var parent = DefaultParentNode(parentName, parentTyp);
             AddOrUpdateNode(parent);
             return model.GetNode(nodeId);
         }
@@ -155,11 +169,20 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         return item;
     }
 
-    string GetParentName(string nodeName, bool? isExternal)
+    Node GetOrCreateParent(NodeDto nodeDto)
     {
-        var parentName = Parsing.Utils.NodeName.ParseParentName(nodeName);
+        var parentName = nodeDto.ParentName;
 
-        return parentName;
+        var nodeId = NodeId.FromName(parentName);
+        if (!model.TryGetNode(nodeId, out var item))
+        {
+            var parentTyp = Parsing.NodeType.None;
+            var parent = DefaultParentNode(parentName, parentTyp);
+            AddOrUpdateNode(parent);
+            return model.GetNode(nodeId);
+        }
+
+        return item;
     }
 
     void EnsureSourceAndTargetExists(string sourceName, string targetName)
@@ -175,9 +198,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         }
     }
 
-    static Parsing.Node DefaultParentNode(string name) =>
-        new(name, new() { Type = Parsing.NodeType.Parent, Parent = Parsing.Utils.NodeName.ParseParentName(name) });
+    static Parsing.Node DefaultParentNode(string name, Parsing.NodeType nodeType) =>
+        new(name, new() { Type = nodeType });
 
-    static Parsing.Node DefaultParsingNode(string name) =>
-        new(name, new() { Type = Parsing.NodeType.None, Parent = Parsing.Utils.NodeName.ParseParentName(name) });
+    static Parsing.Node DefaultParsingNode(string name) => new(name, new() { Type = Parsing.NodeType.None });
 }

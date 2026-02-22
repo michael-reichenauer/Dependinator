@@ -13,7 +13,6 @@ class NodeProperties
     public string? Parent { get; init; }
     public bool? IsPrivate { get; init; }
     public FileSpan? FileSpan { get; init; }
-    public bool? IsModule { get; init; }
 }
 
 class LinkProperties
