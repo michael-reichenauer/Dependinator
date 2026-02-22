@@ -59,6 +59,8 @@ class MemberParser
 
             yield return LinkParser.Parse(parameterType, memberNode.Node!.Name);
         }
+
+        // Parse links to method body fields types and references to other types and methods
     }
 
     static Item ParseMember(ISymbol member, string fullTypeName)

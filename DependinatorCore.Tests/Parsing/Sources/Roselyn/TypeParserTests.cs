@@ -23,10 +23,21 @@ public class SourceTestType : SourceTestBaseType, ISourceTestInterface
     // Function1 comment
     public int Function1(string name, ISourceTestInterface sourceTestInterface)
     {
-        return name.Length;
+        SourceTestBaseType methodField1 = null!;
+
+        OtherClass methodField2 = new OtherClass();
+
+        var length = methodField2.GetLength(name);
+
+        return length;
     }
 
     void Function2() { }
+}
+
+public class OtherClass
+{
+    public int GetLength(string name) => name.Length;
 }
 
 [Collection(nameof(RoslynCollection))]
