@@ -4,12 +4,11 @@ namespace DependinatorCore.Parsing.Sources.Roslyn;
 
 static class LinkParser
 {
-    public static Item Parse(ISymbol symbol, string sourceName)
+    public static Link Parse(string sourceName, ISymbol symbol)
     {
         var targetName = Names.GetFullName(symbol);
         var nodeType = NodeTypes.ToTypes(symbol);
 
-        var link = new Link(sourceName, targetName, new LinkProperties { TargetType = nodeType });
-        return new Item(null, link);
+        return new Link(sourceName, targetName, new LinkProperties { TargetType = nodeType });
     }
 }
