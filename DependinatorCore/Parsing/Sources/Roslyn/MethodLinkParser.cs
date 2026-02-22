@@ -149,7 +149,19 @@ class MethodLinkParser
         if (symbol is null)
             yield break;
 
-        if (symbol is IMethodSymbol methodSymbol)
+        if (symbol is IFieldSymbol fieldSymbol) // Method field
+        {
+            if (fieldSymbol.ContainingType is INamedTypeSymbol fieldType && IgnoredTypes.IsIgnoredSystemType(fieldType))
+                yield break;
+
+            foreach (var fieldTypeLink in AddTypeLinks(fieldSymbol.Type, member, fullMethodName))
+                yield return fieldTypeLink;
+
+            var fieldItem = LinkParser.Parse(fullMethodName, fieldSymbol);
+            yield return fieldItem;
+        }
+
+        if (symbol is IMethodSymbol methodSymbol) // Method call to other method
         {
             if (methodSymbol.MethodKind == MethodKind.LocalFunction)
                 yield break;
@@ -167,32 +179,20 @@ class MethodLinkParser
             var methodItem = LinkParser.Parse(fullMethodName, methodSymbol);
             yield return methodItem;
 
-            foreach (var tl in AddTypeLinks(methodSymbol.ReturnType, member, fullMethodName))
-                yield return tl;
+            foreach (var returnTypeLink in AddTypeLinks(methodSymbol.ReturnType, member, fullMethodName))
+                yield return returnTypeLink;
 
             foreach (var parameter in methodSymbol.Parameters)
             {
-                foreach (var tl in AddTypeLinks(parameter.Type, member, fullMethodName))
-                    yield return tl;
+                foreach (var parameterTypeLink in AddTypeLinks(parameter.Type, member, fullMethodName))
+                    yield return parameterTypeLink;
             }
 
-            foreach (var typeArg in methodSymbol.TypeArguments)
+            foreach (var genericTypeArg in methodSymbol.TypeArguments)
             {
-                foreach (var tl in AddTypeLinks(typeArg, member, fullMethodName))
-                    yield return tl;
+                foreach (var genericTypeLink in AddTypeLinks(genericTypeArg, member, fullMethodName))
+                    yield return genericTypeLink;
             }
-        }
-
-        if (symbol is IFieldSymbol fieldSymbol)
-        {
-            if (fieldSymbol.ContainingType is INamedTypeSymbol fieldType && IgnoredTypes.IsIgnoredSystemType(fieldType))
-                yield break;
-
-            foreach (var t4 in AddTypeLinks(fieldSymbol.Type, member, fullMethodName))
-                yield return t4;
-
-            var fieldItem = LinkParser.Parse(fullMethodName, fieldSymbol);
-            yield return fieldItem;
         }
     }
 

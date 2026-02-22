@@ -37,10 +37,14 @@ static class TypeParser
 
     internal static IEnumerable<Item> ParseTypeLinks(INamedTypeSymbol type, string fullTypeName)
     {
-        if (type.BaseType is { } baseType && baseType.SpecialType != SpecialType.System_Object)
+        if (
+            type.BaseType is { } baseType
+            && baseType.SpecialType != SpecialType.System_Object
+            && !IgnoredTypes.IsIgnoredSystemType(baseType)
+        )
             yield return new Item(null, LinkParser.Parse(fullTypeName, baseType));
 
-        foreach (var interfaceType in type.Interfaces)
+        foreach (var interfaceType in type.Interfaces.Where(it => !IgnoredTypes.IsIgnoredSystemType(it)))
             yield return new Item(null, LinkParser.Parse(fullTypeName, interfaceType));
     }
 
