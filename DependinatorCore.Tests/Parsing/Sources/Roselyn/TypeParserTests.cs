@@ -8,16 +8,19 @@ public interface ISourceTestInterface { }
 
 public class SourceTestBaseType { }
 
-// Some Type Comment
-// Second Row
+// SourceTestType comment
+// Second row comment
 public class SourceTestType : SourceTestBaseType, ISourceTestInterface
 {
-    // Number Field Comment
+    // Field1 comment
     public int field1;
-
     public SourceTestBaseType field2 = null!;
 
-    // First Function Comment
+    // Property1 comment
+    public int Property1 { get; set; }
+    public ISourceTestInterface Property2 { get; set; } = null!;
+
+    // Function1 comment
     public int Function1(string name, ISourceTestInterface sourceTestInterface)
     {
         return name.Length;
@@ -35,13 +38,10 @@ public class TypeParserTests(RoslynFixture fixture)
         .ToList();
 
     [Fact]
-    public void TestTypeFunction() { }
-
-    [Fact]
     public void TestParseType()
     {
         var typeNode = items.Node<SourceTestType>(null);
-        Assert.Equal("Some Type Comment\nSecond Row", typeNode.Properties.Description);
+        Assert.Equal("SourceTestType comment\nSecond row comment", typeNode.Properties.Description);
         Assert.False(typeNode.Properties.IsPrivate);
     }
 
@@ -49,12 +49,12 @@ public class TypeParserTests(RoslynFixture fixture)
     public void TestFields()
     {
         var field1Node = items.Node<SourceTestType>(nameof(SourceTestType.field1));
-        Assert.Equal("Number Field Comment", field1Node.Properties.Description);
+        Assert.Equal("Field1 comment", field1Node.Properties.Description);
         Assert.False(items.LinksFrom<SourceTestType>(nameof(SourceTestType.field1)).Any());
 
         var field2Node = items.Node<SourceTestType>(nameof(SourceTestType.field2));
         Assert.Null(field2Node.Properties.Description);
-        Assert.Equal(1, items.LinksFrom<SourceTestType>(nameof(SourceTestType.field2)).Count());
+        Assert.Single(items.LinksFrom<SourceTestType>(nameof(SourceTestType.field2)));
         Assert.Equal(
             NodeType.Type,
             items.Link<SourceTestType, SourceTestBaseType>(nameof(SourceTestType.field2), null).Properties.TargetType
@@ -62,22 +62,43 @@ public class TypeParserTests(RoslynFixture fixture)
     }
 
     [Fact]
+    public void TestProperties()
+    {
+        var propertyNode = items.Node<SourceTestType>(nameof(SourceTestType.Property1));
+        Assert.Equal("Property1 comment", propertyNode.Properties.Description);
+        Assert.False(items.LinksFrom<SourceTestType>(nameof(SourceTestType.Property1)).Any());
+
+        var property2Node = items.Node<SourceTestType>(nameof(SourceTestType.Property2));
+        Assert.Null(property2Node.Properties.Description);
+        Assert.Single(items.LinksFrom<SourceTestType>(nameof(SourceTestType.Property2)));
+        Assert.Equal(
+            NodeType.Type,
+            items
+                .Link<SourceTestType, ISourceTestInterface>(nameof(SourceTestType.Property2), null)
+                .Properties.TargetType
+        );
+    }
+
+    [Fact]
     public void TestFunctions()
     {
         var function1Node = items.Node<SourceTestType>(nameof(SourceTestType.Function1));
-        Assert.Equal("First Function Comment", function1Node.Properties.Description);
+        Assert.Equal("Function1 comment", function1Node.Properties.Description);
         Assert.Equal(Util.CurrentFilePath(), function1Node.Properties.FileSpan!.Path);
         Assert.True(function1Node.Properties.FileSpan!.StartLine > 0);
         Assert.False(function1Node.Properties.IsPrivate);
-        // Assert.Equal(1, items.LinksFrom<SourceTestType>(nameof(SourceTestType.Function1)).Count());
-        // Assert.Equal(
-        //     NodeType.Type,
-        //     items.Link<SourceTestType, ISourceTestInterface>(nameof(SourceTestType.field2), null).Properties.TargetType
-        // );
+        Assert.Single(items.LinksFrom<SourceTestType>(nameof(SourceTestType.Function1)));
+        Assert.Equal(
+            NodeType.Type,
+            items
+                .Link<SourceTestType, ISourceTestInterface>(nameof(SourceTestType.Function1), null)
+                .Properties.TargetType
+        );
 
         var function2Node = items.Node<SourceTestType>("Function2");
         Assert.Null(function2Node.Properties.Description);
         Assert.True(function2Node.Properties.IsPrivate);
+        Assert.False(items.LinksFrom<SourceTestType>("Function2").Any());
     }
 
     [Fact]

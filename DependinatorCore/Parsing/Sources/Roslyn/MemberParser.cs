@@ -26,22 +26,39 @@ class MemberParser
 
     static IEnumerable<Item> ParseField(IFieldSymbol member, string fullTypeName)
     {
-        var sourceName = Names.GetFullMemberName(member, fullTypeName);
-        yield return ParseMember(member, fullTypeName);
+        var memberNode = ParseMember(member, fullTypeName);
+        yield return memberNode;
 
-        // Get the field type
+        // Handle field link
         if (member.Type is INamedTypeSymbol fieldType && !IgnoredTypes.IsIgnoredSystemType(fieldType))
-            yield return LinkParser.Parse(fieldType, sourceName);
+            yield return LinkParser.Parse(fieldType, memberNode.Node!.Name);
     }
 
     static IEnumerable<Item> ParseProperty(IPropertySymbol member, string fullTypeName)
     {
-        yield return ParseMember(member, fullTypeName);
+        var memberNode = ParseMember(member, fullTypeName);
+        yield return memberNode;
+
+        // Handle property link
+        if (member.Type is INamedTypeSymbol fieldType && !IgnoredTypes.IsIgnoredSystemType(fieldType))
+            yield return LinkParser.Parse(fieldType, memberNode.Node!.Name);
     }
 
     static IEnumerable<Item> ParseMethod(IMethodSymbol member, string fullTypeName)
     {
+        var memberNode = ParseMember(member, fullTypeName);
         yield return ParseMember(member, fullTypeName);
+
+        // Get links for method parameters
+        foreach (var parameter in member.Parameters)
+        {
+            if (parameter.Type is not INamedTypeSymbol parameterType)
+                continue;
+            if (IgnoredTypes.IsIgnoredSystemType(parameterType))
+                continue;
+
+            yield return LinkParser.Parse(parameterType, memberNode.Node!.Name);
+        }
     }
 
     static Item ParseMember(ISymbol member, string fullTypeName)
