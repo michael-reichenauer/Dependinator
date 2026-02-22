@@ -23,8 +23,6 @@ public class SourceTestType : SourceTestBaseType, ISourceTestInterface
     // Function1 comment
     public int Function1(string name, ISourceTestInterface sourceTestInterface)
     {
-        SourceTestBaseType methodField1 = null!;
-
         OtherClass methodField2 = new OtherClass();
 
         var length = methodField2.GetLength(name);
@@ -45,7 +43,7 @@ public class TypeParserTests(RoslynFixture fixture)
 {
     readonly RoslynFixture fixture = fixture;
     readonly IReadOnlyList<Item> items = TypeParser
-        .ParseType(fixture.Type<SourceTestType>(), fixture.ModelName)
+        .ParseType(fixture.Type<SourceTestType>(), fixture.Compilation, fixture.ModelName)
         .ToList();
 
     [Fact]
@@ -98,11 +96,24 @@ public class TypeParserTests(RoslynFixture fixture)
         Assert.Equal(Util.CurrentFilePath(), function1Node.Properties.FileSpan!.Path);
         Assert.True(function1Node.Properties.FileSpan!.StartLine > 0);
         Assert.False(function1Node.Properties.IsPrivate);
-        Assert.Single(items.LinksFrom<SourceTestType>(nameof(SourceTestType.Function1)));
+
+        var linksFromFunction1 = items.LinksFrom<SourceTestType>(nameof(SourceTestType.Function1));
+        Assert.Equal(3, linksFromFunction1.Count);
         Assert.Equal(
             NodeType.Type,
-            items
+            items // Parameter link to ISourceTestInterface interface
                 .Link<SourceTestType, ISourceTestInterface>(nameof(SourceTestType.Function1), null)
+                .Properties.TargetType
+        );
+
+        Assert.Equal(
+            NodeType.Type, // Field link to OtherClass type
+            items.Link<SourceTestType, OtherClass>(nameof(SourceTestType.Function1), null).Properties.TargetType
+        );
+        Assert.Equal(
+            NodeType.MethodMember,
+            items // Method call link to OtherClass.GetLength() method
+                .Link<SourceTestType, OtherClass>(nameof(SourceTestType.Function1), nameof(OtherClass.GetLength))
                 .Properties.TargetType
         );
 

@@ -50,7 +50,7 @@ class SourceParser : ISourceParser
 
         foreach (var type in Compiler.GetAllTypes(compilation).Where(t => !t.IsImplicitlyDeclared))
         {
-            foreach (var item in TypeParser.ParseType(type, moduleName))
+            foreach (var item in TypeParser.ParseType(type, compilation, moduleName))
                 yield return item;
         }
     }
