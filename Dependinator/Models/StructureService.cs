@@ -51,11 +51,9 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
         var parentName = parsedNode.Properties.Parent;
 
-        if (parentName is not null && !node.IsRoot && node.Parent.Name != parentName)
+        if (parentName is not null && node.Parent.Name != parentName)
         { // The node has changed parent, remove it from the old parent and add it to the new parent
-            node.Parent.RemoveChild(node);
-            var parent = GetOrCreateNode(parentName);
-            parent.AddChild(node);
+            MoveNodeToParent(node, parentName);
         }
     }
 
@@ -81,13 +79,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         link = new Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
 
-        model.AddLink(link);
-        target.AddTargetLink(link);
-        if (source.AddSourceLink(link))
-        {
-            linesService.AddLinesFromSourceToTarget(link);
-        }
-        return;
+        AddLink(link);
     }
 
     public void SetNodeDto(NodeDto nodeDto)
@@ -122,13 +114,33 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         var link = new Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
 
+        AddLink(link);
+    }
+
+    void MoveNodeToParent(Node node, string parentName)
+    {
+        // Link lines need to be re-adjusted, so first remove all links and lines
+        var lines = node.SourceLines.Concat(node.TargetLines).Concat(node.DirectLines).ToList();
+        var links = lines.SelectMany(line => line.Links).ToList();
+
+        links.ForEach(model.RemoveLink);
+
+        node.Parent.RemoveChild(node);
+        var parent = GetOrCreateNode(parentName);
+        parent.AddChild(node);
+
+        // Re-add link and lines again
+        links.ForEach(AddLink);
+    }
+
+    void AddLink(Link link)
+    {
         model.AddLink(link);
-        target.AddTargetLink(link);
-        if (source.AddSourceLink(link))
+        link.Target.AddTargetLink(link);
+        if (link.Source.AddSourceLink(link))
         {
             linesService.AddLinesFromSourceToTarget(link);
         }
-        return;
     }
 
     Node GetOrCreateNode(string name)

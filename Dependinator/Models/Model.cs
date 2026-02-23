@@ -37,6 +37,7 @@ interface IModel : IDisposable
     void AddNode(Node node);
     Node GetNode(NodeId id);
     void AddLink(Link link);
+    void RemoveLink(Link link);
     Link GetLink(LinkId id);
     bool TryGetLink(LinkId id, out Link link);
     void AddLine(Line line);
@@ -236,7 +237,7 @@ class Model : IModel
             RemoveNode(node);
     }
 
-    private void RemoveLink(Link link)
+    public void RemoveLink(Link link)
     {
         Items.Remove(link.Id);
 
