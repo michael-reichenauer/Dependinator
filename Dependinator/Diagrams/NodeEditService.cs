@@ -5,6 +5,8 @@ namespace Dependinator.Diagrams;
 interface INodeEditService
 {
     void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
+    void SnapSelectedNodeToGrid(PointerId pointerId);
+    void SnapResizedSelectedNodeToGrid(PointerId pointerId);
     void PanSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void ZoomSelectedNode(PointerEvent e, PointerId pointerId);
@@ -22,6 +24,13 @@ class NodeEditService(IModelService modelService) : INodeEditService
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
     const double sizeDiff = 10.0;
+    const double MoveGridSize = 20.0;
+
+    static double SnapToGrid(double value) => Math.Round(value / MoveGridSize) * MoveGridSize;
+
+    static double SnapToGridUp(double value) => Math.Ceiling(value / MoveGridSize) * MoveGridSize;
+
+    static double SnapToGridDown(double value) => Math.Floor(value / MoveGridSize) * MoveGridSize;
 
     public void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
@@ -36,6 +45,53 @@ class NodeEditService(IModelService modelService) : INodeEditService
                     node.Parent.IsChildrenLayoutCustomized = true;
 
                 modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
+            }
+        );
+    }
+
+    public void SnapSelectedNodeToGrid(PointerId pointerId)
+    {
+        modelService.UseNode(
+            pointerId.Id,
+            node =>
+            {
+                var snappedX = SnapToGrid(node.Boundary.X);
+                var snappedY = SnapToGrid(node.Boundary.Y);
+                if (snappedX == node.Boundary.X && snappedY == node.Boundary.Y)
+                    return;
+
+                var newBoundary = node.Boundary with { X = snappedX, Y = snappedY };
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
+
+                modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
+            }
+        );
+    }
+
+    public void SnapResizedSelectedNodeToGrid(PointerId pointerId)
+    {
+        modelService.UseNode(
+            pointerId.Id,
+            node =>
+            {
+                var oldBoundary = node.Boundary;
+                var newBoundary = SnapResizeBoundaryToGrid(oldBoundary, pointerId.NodeResizeType);
+                if (newBoundary == oldBoundary)
+                    return;
+
+                var newContainerOffset = node.ContainerOffset with
+                {
+                    X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
+                    Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y),
+                };
+
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
+
+                modelService.Do(
+                    new NodeEditCommand(node.Id) { Boundary = newBoundary, ContainerOffset = newContainerOffset }
+                );
             }
         );
     }
@@ -67,8 +123,8 @@ class NodeEditService(IModelService modelService) : INodeEditService
             {
                 var newBoundary = node.Boundary with
                 {
-                    Width = node.Boundary.Width + sizeDiff,
-                    Height = node.Boundary.Height + sizeDiff,
+                    Width = SnapToGridUp(node.Boundary.Width + sizeDiff),
+                    Height = SnapToGridUp(node.Boundary.Height + sizeDiff),
                 };
                 if (!node.IsRoot)
                     node.Parent.IsChildrenLayoutCustomized = true;
@@ -86,8 +142,8 @@ class NodeEditService(IModelService modelService) : INodeEditService
             {
                 var newBoundary = node.Boundary with
                 {
-                    Width = node.Boundary.Width - sizeDiff,
-                    Height = node.Boundary.Height - sizeDiff,
+                    Width = SnapToGridDown(node.Boundary.Width - sizeDiff),
+                    Height = SnapToGridDown(node.Boundary.Height - sizeDiff),
                 };
                 if (!node.IsRoot)
                     node.Parent.IsChildrenLayoutCustomized = true;
@@ -251,5 +307,55 @@ class NodeEditService(IModelService modelService) : INodeEditService
                 modelService.Do(new NodeEditCommand(node.Id) { ContainerOffset = newOffset, ContainerZoom = newZoom });
             }
         );
+    }
+
+    static Rect SnapResizeBoundaryToGrid(Rect boundary, NodeResizeType resizeType)
+    {
+        var left = boundary.X;
+        var top = boundary.Y;
+        var right = boundary.X + boundary.Width;
+        var bottom = boundary.Y + boundary.Height;
+
+        switch (resizeType)
+        {
+            case NodeResizeType.TopLeft:
+                left = SnapToGrid(left);
+                top = SnapToGrid(top);
+                break;
+            case NodeResizeType.TopMiddle:
+                top = SnapToGrid(top);
+                break;
+            case NodeResizeType.TopRight:
+                right = SnapToGrid(right);
+                top = SnapToGrid(top);
+                break;
+            case NodeResizeType.MiddleLeft:
+                left = SnapToGrid(left);
+                break;
+            case NodeResizeType.MiddleRight:
+                right = SnapToGrid(right);
+                break;
+            case NodeResizeType.BottomLeft:
+                left = SnapToGrid(left);
+                bottom = SnapToGrid(bottom);
+                break;
+            case NodeResizeType.BottomMiddle:
+                bottom = SnapToGrid(bottom);
+                break;
+            case NodeResizeType.BottomRight:
+                right = SnapToGrid(right);
+                bottom = SnapToGrid(bottom);
+                break;
+            default:
+                return boundary;
+        }
+
+        return boundary with
+        {
+            X = left,
+            Y = top,
+            Width = right - left,
+            Height = bottom - top,
+        };
     }
 }

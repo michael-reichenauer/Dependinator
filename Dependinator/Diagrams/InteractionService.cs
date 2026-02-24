@@ -32,6 +32,8 @@ class InteractionService : IInteractionService
     readonly Timer moveTimer;
     bool moveTimerRunning = false;
     bool isMoving = false;
+    bool isDraggingSelectedNode = false;
+    bool isResizingSelectedNode = false;
     PointerId mouseDownId = PointerId.Empty;
     double Zoom => modelService.Zoom;
     readonly Debouncer zoomToolbarDebouncer = new();
@@ -200,6 +202,8 @@ class InteractionService : IInteractionService
 
     void OnMouseDown(PointerEvent e)
     {
+        isDraggingSelectedNode = false;
+        isResizingSelectedNode = false;
         moveTimerRunning = true;
         moveTimer.Change(MoveDelay, Timeout.Infinite);
         mouseDownId = PointerId.Parse(e.TargetId);
@@ -234,6 +238,7 @@ class InteractionService : IInteractionService
 
         if (mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {
+            isResizingSelectedNode = true;
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
             selectionService.UpdateSelectedPositionAsync();
             return;
@@ -245,6 +250,7 @@ class InteractionService : IInteractionService
             && mouseDownId.IsNode
         )
         {
+            isDraggingSelectedNode = true;
             nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
             selectionService.UpdateSelectedPositionAsync();
             return;
@@ -256,6 +262,20 @@ class InteractionService : IInteractionService
 
     void OnMouseUp(PointerEvent e)
     {
+        if (isResizingSelectedNode && mouseDownId.IsResize)
+        {
+            nodeEditService.SnapResizedSelectedNodeToGrid(mouseDownId);
+            selectionService.UpdateSelectedPositionAsync();
+            isResizingSelectedNode = false;
+        }
+
+        if (isDraggingSelectedNode && mouseDownId.IsNode)
+        {
+            nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
+            selectionService.UpdateSelectedPositionAsync();
+            isDraggingSelectedNode = false;
+        }
+
         mouseDownId = PointerId.Empty;
 
         if (moveTimerRunning)
