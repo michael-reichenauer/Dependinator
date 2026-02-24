@@ -1,9 +1,8 @@
-using DependinatorCore.Parsing.Sources.Roslyn;
-using DependinatorRoslyn.Tests;
+using DependinatorRoslyn.Parsing;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 
-namespace DependinatorRoslyn.Tests.Parsing.Sources.Roselyn;
+namespace DependinatorRoslyn.Tests.Parsing;
 
 [CollectionDefinition(nameof(RoslynCollection))]
 public sealed class RoslynCollection : ICollectionFixture<RoslynFixture> { }

@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace DependinatorCore.Parsing.Sources.Roslyn;
+namespace DependinatorRoslyn.Parsing;
 
 class MethodLinkParser
 {

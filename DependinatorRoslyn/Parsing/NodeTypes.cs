@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace DependinatorCore.Parsing.Sources.Roslyn;
+namespace DependinatorRoslyn.Parsing;
 
 static class NodeTypes
 {

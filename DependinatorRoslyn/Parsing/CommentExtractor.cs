@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace DependinatorCore.Parsing.Sources.Roslyn;
+namespace DependinatorRoslyn.Parsing;
 
 static class CommentExtractor
 {

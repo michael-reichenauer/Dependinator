@@ -2,7 +2,7 @@ using DependinatorCore.Parsing.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 
-namespace DependinatorCore.Parsing.Sources.Roslyn;
+namespace DependinatorRoslyn.Parsing;
 
 class Compiler
 {

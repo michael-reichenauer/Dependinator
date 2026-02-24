@@ -1,8 +1,8 @@
 using DependinatorCore.Parsing;
-using DependinatorCore.Parsing.Sources.Roslyn;
+using DependinatorRoslyn.Parsing;
 using DependinatorRoslyn.Tests.Parsing.Utils;
 
-namespace DependinatorRoslyn.Tests.Parsing.Sources.Roselyn;
+namespace DependinatorRoslyn.Tests.Parsing;
 
 public interface ISourceTestInterface { }
 
