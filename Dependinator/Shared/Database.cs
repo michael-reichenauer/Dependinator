@@ -56,9 +56,9 @@ class Database : IDatabase
             var compressedValue = CompressToBase64(jsonBytes);
             var pair = new Pair<string>(id, compressedValue);
             await jSInterop.Call("setDatabaseValue", DatabaseName, collectionName, pair);
-            Log.Info(
-                $"Wrote '{id}': {jsonBytes.Length}=>{compressedValue.Length} bytes ({Math.Round(100.0 * compressedValue.Length / jsonBytes.Length)}%)"
-            );
+            // Log.Info(
+            //     $"Wrote '{id}': {jsonBytes.Length}=>{compressedValue.Length} bytes ({Math.Round(100.0 * compressedValue.Length / jsonBytes.Length)}%)"
+            // );
             return R.Ok;
         }
         catch (Exception ex)
@@ -78,9 +78,9 @@ class Database : IDatabase
             var value = JsonSerializer.Deserialize<T>(jsonBytes, options);
             if (value is null)
                 return R.Error($"Deserialized null value for {DatabaseName}.{collectionName}.{id}");
-            Log.Info(
-                $"Read '{id}': {jsonBytes.Length}<={compressedValue.Length} bytes ({Math.Round(100.0 * compressedValue.Length / jsonBytes.Length)}%)"
-            );
+            // Log.Info(
+            //     $"Read '{id}': {jsonBytes.Length}<={compressedValue.Length} bytes ({Math.Round(100.0 * compressedValue.Length / jsonBytes.Length)}%)"
+            // );
             return value;
         }
         catch (Exception ex)
