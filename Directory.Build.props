@@ -1,9 +1,0 @@
-<Project>
-  <!-- Keep browser-wasm builds for shared projects in a separate obj path to avoid parallel writes when both WASM and non-WASM variants are built in the same solution build. -->
-  <PropertyGroup Condition="'$(IsBrowserWasm)' == 'true' and ('$(MSBuildProjectName)' == 'Dependinator' or '$(MSBuildProjectName)' == 'DependinatorCore')">
-    <IntermediateOutputPath>obj/browserwasm/$(Configuration)/</IntermediateOutputPath>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(ManagePackageVersionsCentrally)' == 'true'">
-    <PackageReference Include="Microsoft.NET.StringTools" ExcludeAssets="runtime" PrivateAssets="all" />
-  </ItemGroup>
-</Project>

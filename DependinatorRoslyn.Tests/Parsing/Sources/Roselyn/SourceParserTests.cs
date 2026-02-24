@@ -1,6 +1,7 @@
 using DependinatorCore.Parsing.Sources.Roslyn;
+using DependinatorRoslyn.Tests;
 
-namespace DependinatorCore.Tests.Parsing.Sources.Roselyn;
+namespace DependinatorRoslyn.Tests.Parsing.Sources.Roselyn;
 
 // Some Type Comment
 // Second Row

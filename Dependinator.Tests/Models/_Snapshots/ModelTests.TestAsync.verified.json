@@ -17,9 +17,9 @@
       "Color": "Gray"
     },
     {
-      "Name": "Dependinator*Tests",
+      "Name": "$Externals",
       "ParentName": "",
-      "Type": "Parent",
+      "Type": "Externals",
       "Properties": {},
       "Boundary": {
         "X": 10,
@@ -27,6 +27,13 @@
         "Width": 100,
         "Height": 100
       },
+      "Color": "Purple"
+    },
+    {
+      "Name": "Dependinator*Tests",
+      "ParentName": "$Externals",
+      "Type": "Parent",
+      "Properties": {},
       "Color": "Purple"
     },
     {

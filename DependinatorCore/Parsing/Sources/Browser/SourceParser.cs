@@ -1,8 +1,8 @@
 using System.IO.Compression;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DependinatorCore.Parsing.Sources;
 
-[Transient]
 class SourceParser(HttpClient httpClient) : ISourceParser
 {
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseSolutionAsync(string solutionPath)
@@ -36,5 +36,14 @@ class SourceParser(HttpClient httpClient) : ISourceParser
         return Task.FromResult<R<IReadOnlyList<Parsing.Item>>>(
             R.Error($"Source parsing is not supported in browser runtime: {projectPath}.")
         );
+    }
+}
+
+public static class BrowserSourceParserServiceCollectionExtensions
+{
+    public static IServiceCollection AddDependinatorBrowserSourceParser(this IServiceCollection services)
+    {
+        services.AddTransient<ISourceParser, SourceParser>();
+        return services;
     }
 }

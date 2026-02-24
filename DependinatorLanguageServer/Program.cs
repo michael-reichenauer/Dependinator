@@ -3,6 +3,7 @@ using DependinatorCore.Rpc;
 using DependinatorCore.Shared;
 using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
+using DependinatorRoslyn;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
 
@@ -21,6 +22,7 @@ internal class Program
                     .WithServices(services =>
                     {
                         services.AddDependinatorCoreServices();
+                        services.AddDependinatorRoslynServices();
                         services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();
                         services.AddSingleton<IEmbeddedResources, EmbeddedResources<Program>>();
                     })

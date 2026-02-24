@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis;
 
 namespace DependinatorCore.Parsing.Sources.Roslyn;
 
-[Transient]
 class SourceParser : ISourceParser
 {
     public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath)

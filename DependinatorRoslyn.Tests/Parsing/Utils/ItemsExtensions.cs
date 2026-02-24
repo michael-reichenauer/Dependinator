@@ -1,7 +1,7 @@
 using DependinatorCore.Parsing;
 using DependinatorCore.Parsing.Sources.Roslyn;
 
-namespace DependinatorCore.Tests.Parsing.Utils;
+namespace DependinatorRoslyn.Tests.Parsing.Utils;
 
 static class ItemsExtensions
 {

@@ -5,6 +5,7 @@ using DependinatorCore.Rpc;
 using DependinatorCore.Shared;
 using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
+using DependinatorRoslyn;
 
 namespace DependinatorWeb;
 
@@ -33,6 +34,7 @@ public class Program
             options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(5);
         });
         builder.Services.AddDependinatorServices<Program>();
+        builder.Services.AddDependinatorRoslynServices();
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
         builder.Services.AddJsonRpcInterfaces(typeof(DependinatorCore.RootClass));

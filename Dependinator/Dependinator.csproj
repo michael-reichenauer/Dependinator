@@ -20,9 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Shared/Shared.csproj" GlobalPropertiesToRemove="IsBrowserWasm" />
-    <ProjectReference
-      Include="../DependinatorCore/DependinatorCore.csproj"
-      AdditionalProperties="IsBrowserWasm=$(IsBrowserWasm)"
-    />
+    <ProjectReference Include="../DependinatorCore/DependinatorCore.csproj" />
   </ItemGroup>
 </Project>

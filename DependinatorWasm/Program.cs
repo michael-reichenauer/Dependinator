@@ -2,6 +2,7 @@ using Dependinator;
 using Dependinator.Shared;
 using Dependinator.Wasm;
 using DependinatorCore;
+using DependinatorCore.Parsing.Sources;
 using DependinatorCore.Rpc;
 using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
@@ -22,6 +23,7 @@ internal class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
         builder.Services.AddDependinatorServices<Program>();
+        builder.Services.AddDependinatorBrowserSourceParser();
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
         builder.Services.AddJsonRpcInterfaces(typeof(DependinatorCore.RootClass));
