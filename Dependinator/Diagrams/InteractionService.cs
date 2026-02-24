@@ -182,7 +182,7 @@ class InteractionService : IInteractionService
     {
         if (selectionService.IsSelected)
         {
-            zoomToolbarDebouncer.Debounce(20, () => selectionService.UpdateSelectedPositionAsync());
+            zoomToolbarDebouncer.Debounce(20, () => selectionService.UpdateSelectedPositionAsync(true));
         }
     }
 
@@ -240,7 +240,7 @@ class InteractionService : IInteractionService
         {
             isResizingSelectedNode = true;
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
-            selectionService.UpdateSelectedPositionAsync();
+            selectionService.UpdateSelectedPositionAsync(false);
             return;
         }
 
@@ -252,12 +252,12 @@ class InteractionService : IInteractionService
         {
             isDraggingSelectedNode = true;
             nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
-            selectionService.UpdateSelectedPositionAsync();
+            selectionService.UpdateSelectedPositionAsync(false);
             return;
         }
 
         panZoomService.Pan(e);
-        selectionService.UpdateSelectedPositionAsync();
+        selectionService.UpdateSelectedPositionAsync(false);
     }
 
     void OnMouseUp(PointerEvent e)
@@ -265,14 +265,14 @@ class InteractionService : IInteractionService
         if (isResizingSelectedNode && mouseDownId.IsResize)
         {
             nodeEditService.SnapResizedSelectedNodeToGrid(mouseDownId);
-            selectionService.UpdateSelectedPositionAsync();
+            selectionService.UpdateSelectedPositionAsync(true);
             isResizingSelectedNode = false;
         }
 
         if (isDraggingSelectedNode && mouseDownId.IsNode)
         {
             nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
-            selectionService.UpdateSelectedPositionAsync();
+            selectionService.UpdateSelectedPositionAsync(true);
             isDraggingSelectedNode = false;
         }
 
