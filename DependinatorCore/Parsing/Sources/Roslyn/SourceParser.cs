@@ -1,3 +1,5 @@
+using System.IO.Compression;
+using DependinatorCore.Shared;
 using Microsoft.CodeAnalysis;
 
 namespace DependinatorCore.Parsing.Sources.Roslyn;
@@ -5,27 +7,30 @@ namespace DependinatorCore.Parsing.Sources.Roslyn;
 [Transient]
 class SourceParser : ISourceParser
 {
-    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string slnPath, bool isSkipTests = true)
+    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath)
     {
         using var workspace = Compiler.CreateWorkspace();
 
-        Solution solution = await workspace.OpenSolutionAsync(slnPath);
-        var solutionName = Names.GetSolutionName(slnPath);
+        Solution solution = await workspace.OpenSolutionAsync(solutionPath);
 
-        var projects = solution
-            .Projects.Where(p => p.Language == LanguageNames.CSharp)
-            .Where(p => !IsTestProject(p) || !isSkipTests);
+        var solutionName = Names.GetSolutionName(solutionPath);
+        var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution });
 
-        var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionName));
+        var projects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).Where(p => !IsTestProject(p));
+
+        var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionNode.Name));
 
         List<Item> solutionNodes = [];
-        solutionNodes.Add(new Item(new Node(solutionName, new() { Type = NodeType.Solution }), null));
+        solutionNodes.Add(new Item(solutionNode, null));
+
         await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
         {
             if (!Try(out var items, out var e, await parseProjectTask))
                 continue;
             solutionNodes.AddRange(items);
         }
+
+        await WriteCompressedExampleModelAsync(solutionNodes, solutionPath);
 
         return solutionNodes;
     }
@@ -56,6 +61,21 @@ class SourceParser : ISourceParser
             foreach (var item in TypeParser.ParseType(type, compilation, moduleName))
                 yield return item;
         }
+    }
+
+    static async Task WriteCompressedExampleModelAsync(IReadOnlyList<Item> solutionNodes, string solutionPath)
+    {
+        if (Build.IsWasm || solutionPath != ExampleModel.SolutionExample)
+            return;
+
+        string outputPath = ExampleModel.EmbeddedBrowserExamplePath;
+        var json = Json.Serialize(solutionNodes);
+
+        await using var file = File.Create(outputPath);
+        await using var gzip = new GZipStream(file, CompressionLevel.SmallestSize);
+        await using var writer = new StreamWriter(gzip);
+        await writer.WriteAsync(json);
+        Log.Info($"Wrote example model {json.Length} json size to {outputPath}");
     }
 
     static bool IsTestProject(Project project) => project.Name.EndsWith("Test") || project.Name.EndsWith(".Tests");
