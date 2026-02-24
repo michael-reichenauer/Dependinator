@@ -16,26 +16,12 @@
       </MudMenuItem>
       <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
                    OnClick="LayoutChildren">
-        Layout Children
+        Reset Children Layout
       </MudMenuItem>
-      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
+      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DeveloperBoardOff"
                    OnClick="LayoutDescendants">
-        Layout Descendants
+        Reset All Descendants Layout
       </MudMenuItem>
-
-      @* <MudDivider />
-      <MudMenuItem IconColor="Color.Secondary" Icon="@DensityIcon(Models.NodeLayoutDensity.Spacious)"
-                   OnClick="() => SetLayoutDensityAsync(Models.NodeLayoutDensity.Spacious)">
-        Density: Spacious
-      </MudMenuItem>
-      <MudMenuItem IconColor="Color.Secondary" Icon="@DensityIcon(Models.NodeLayoutDensity.Balanced)"
-                   OnClick="() => SetLayoutDensityAsync(Models.NodeLayoutDensity.Balanced)">
-        Density: Balanced
-      </MudMenuItem>
-      <MudMenuItem IconColor="Color.Secondary" Icon="@DensityIcon(Models.NodeLayoutDensity.Compact)"
-                   OnClick="() => SetLayoutDensityAsync(Models.NodeLayoutDensity.Compact)">
-        Density: Compact
-      </MudMenuItem> *@
 
       <MudDivider />
       @if (!IsNodeHidden)
@@ -72,16 +58,28 @@
       @if (interactionService.IsEditNodeMode)
       {
         <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" />
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes" OnClick="LayoutChildren" />
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes" OnClick="LayoutDescendants" />
       }
 
     }
   </MudButtonGroup>
 }
 
+<MudMessageBox @ref="mbox" Title="Reset Descendants" CancelText="Cancel">
+  <MessageContent>
+    Do you want to reset layout of all children and their descendants?
+  </MessageContent>
+  <YesButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Error"
+               StartIcon="@MudBlazor.Icons.Material.Filled.DeveloperBoardOff">
+      Reset
+    </MudButton>
+  </YesButton>
+</MudMessageBox>
+
+
 @code {
   const double ToolbarOffset = 58;
+  private MudMessageBox mbox { get; set; } = null!;
 
   [Inject]
   IApplicationEvents applicationEvents { get; set; } = null!;
@@ -134,21 +132,27 @@
     if (!selectionService.SelectedId.IsNode)
       return;
     var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
+    var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId);
     selectionService.Select(nodeId);
-    selectionService.SetEditMode(true);
+    selectionService.SetEditMode(isEdit);
   }
 
   async Task LayoutDescendants()
   {
     if (!selectionService.SelectedId.IsNode)
       return;
+    if (await mbox.ShowAsync() != true)
+    {
+      return;
+    }
     var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
+    var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId, true);
     selectionService.Select(nodeId);
-    selectionService.SetEditMode(true);
+    selectionService.SetEditMode(isEdit);
   }
 
   async Task SetLayoutDensityAsync(Models.NodeLayoutDensity density)
