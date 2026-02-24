@@ -13,13 +13,7 @@ internal interface IParserService
     // Parse assemblies
     Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
 
-    Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string solutionPath);
-
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
-
-    Task<R<FileLocation>> GetFileLocationAsync(string path, string nodeName);
-
-    Task<R<string>> TryGetNodeAsync(string path, FileLocation fileLocation);
 }
 
 [Singleton]
@@ -30,7 +24,9 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
 
     public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
     {
-        return new List<Parsing.Item>();
+        using var _ = Timing.Start("Parsed sources");
+        return await sourceParser.ParseSolutionAsync(path);
+
         // try
         // {
         //     Channel<Item> channel = Channel.CreateUnbounded<Item>();
@@ -67,26 +63,6 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
         return await parser.GetSourceAsync(path, nodeName);
     }
 
-    public async Task<R<FileLocation>> GetFileLocationAsync(string path, string nodeName)
-    {
-        Log.Debug($"Get file location for {nodeName} in model {path}...");
-
-        if (!Try(out var source, out var e, await GetSourceAsync(path, nodeName)))
-            return e;
-
-        return source.Location;
-    }
-
-    public async Task<R<string>> TryGetNodeAsync(string path, FileLocation fileLocation)
-    {
-        Log.Debug($"Get node for {fileLocation.Path} in model {path}...");
-
-        if (!Try(out var parser, out var e, GetParser(path)))
-            return R.Error($"File not supported: {path}", e);
-
-        return await parser.GetNodeAsync(path, fileLocation);
-    }
-
     R<IParser> GetParser(string path)
     {
         var parser = parsers.FirstOrDefault(p => p.CanSupport(path));
@@ -94,12 +70,6 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
             return R.Error($"No supported parser for {path}");
 
         return R<IParser>.From(parser);
-    }
-
-    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path)
-    {
-        using var _ = Timing.Start("Parsed sources");
-        return await sourceParser.ParseSolutionAsync(path);
     }
 
     sealed class ChannelItemsAdapter(ChannelWriter<Item> writer) : IItems

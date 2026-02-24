@@ -377,7 +377,7 @@ class ModelService : IModelService
 
             Log.Info("Parsing ...");
 
-            if (!Try(out var items, out var e, await ParseSourceAsync(path)))
+            if (!Try(out var items, out var e, await ParseAsync(path)))
                 return e;
 
             lock (model.Lock)
@@ -407,7 +407,7 @@ class ModelService : IModelService
 
         Log.Info("Parsing source ...");
 
-        if (!Try(out var items, out var e, await ParseSourceAsync(path)))
+        if (!Try(out var items, out var e, await ParseAsync(path)))
             return e;
 
         lock (model.Lock)
@@ -427,14 +427,6 @@ class ModelService : IModelService
     {
         using var _ = Timing.Start($"Parsed {path}");
         return await parserService.ParseAsync(path);
-    }
-
-    async Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path)
-    {
-        using var _ = Timing.Start($"Parsed source {path}");
-        //if (host.IsVscExtWasm || !Build.IsWasm)
-        return await parserService.ParseSourceAsync(path);
-        /// return new List<Parsing.Item>();
     }
 
     public void TriggerSave()
