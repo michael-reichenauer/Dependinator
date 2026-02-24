@@ -5,6 +5,7 @@ namespace Dependinator.Diagrams;
 interface INodeEditService
 {
     void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
+    void SnapSelectedNodeToGrid(PointerId pointerId);
     void PanSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void ZoomSelectedNode(PointerEvent e, PointerId pointerId);
@@ -22,6 +23,7 @@ class NodeEditService(IModelService modelService) : INodeEditService
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
     const double sizeDiff = 10.0;
+    const double MoveGridSize = 20.0;
 
     public void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
@@ -32,6 +34,26 @@ class NodeEditService(IModelService modelService) : INodeEditService
                 var nodeZoom = node.GetZoom() * zoom;
                 var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
                 var newBoundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
+
+                modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
+            }
+        );
+    }
+
+    public void SnapSelectedNodeToGrid(PointerId pointerId)
+    {
+        modelService.UseNode(
+            pointerId.Id,
+            node =>
+            {
+                var snappedX = Math.Round(node.Boundary.X / MoveGridSize) * MoveGridSize;
+                var snappedY = Math.Round(node.Boundary.Y / MoveGridSize) * MoveGridSize;
+                if (snappedX == node.Boundary.X && snappedY == node.Boundary.Y)
+                    return;
+
+                var newBoundary = node.Boundary with { X = snappedX, Y = snappedY };
                 if (!node.IsRoot)
                     node.Parent.IsChildrenLayoutCustomized = true;
 
