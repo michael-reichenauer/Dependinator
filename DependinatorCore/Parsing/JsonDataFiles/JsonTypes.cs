@@ -32,16 +32,16 @@ public static class JsonTypes
 
         // Optional data like parent, type, ...
         public string Parent { get; set; } = "";
-        public NodeAttributes? Attributes { get; set; }
+        public NodeProperties? Properties { get; set; }
     }
 
-    public class NodeAttributes
+    public class NodeProperties
     {
         public string? Description { get; set; }
         public string? Type { get; set; } = "";
     }
 
-    public class LinkAttributes
+    public class LinkProperties
     {
         public string? Description { get; set; }
         public string? TargetType { get; set; } = "";
@@ -58,6 +58,6 @@ public static class JsonTypes
         public string Target { get; set; } = "";
 
         // Optional attributes like target type, ...
-        public LinkAttributes? Attributes { get; set; }
+        public LinkProperties? Properties { get; set; }
     }
 }

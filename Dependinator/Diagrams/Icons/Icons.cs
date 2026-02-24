@@ -100,7 +100,11 @@ static class Icon
         { Parsing.NodeType.Solution, SolutionIcon },
         { Parsing.NodeType.Externals, ExternalsIcon },
         { Parsing.NodeType.Type, TypeIcon },
-        { Parsing.NodeType.Member, MemberIcon },
+        { Parsing.NodeType.MethodMember, MemberIcon },
+        { Parsing.NodeType.FieldMember, MemberIcon },
+        { Parsing.NodeType.ConstructorMember, MemberIcon },
+        { Parsing.NodeType.EventMember, MemberIcon },
+        { Parsing.NodeType.PropertyMember, MemberIcon },
     };
 
     public static string GetIcon(Parsing.NodeType iconName)

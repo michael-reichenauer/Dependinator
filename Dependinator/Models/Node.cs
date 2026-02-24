@@ -31,7 +31,6 @@ class Node : IItem
     NodeType type = NodeType.None;
     public DateTime UpdateStamp { get; set; }
     public bool? IsPrivate { get; set; }
-    public MemberType MemberType { get; set; }
     FileSpan? fileSpan;
 
     public FileSpan? FileSpan => fileSpan;
@@ -85,14 +84,13 @@ class Node : IItem
             Name = Name,
             ParentName = Parent?.Name ?? "",
             Type = Type.ToString(),
-            Attributes = new()
+            Properties = new()
             {
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
-                MemberType = MemberType.ToString(),
                 FileSpan = fileSpan is null
                     ? null
-                    : new FileSpanDto(fileSpan.Path, fileSpan.StarLine, fileSpan.EndLine),
+                    : new FileSpanDto(fileSpan.Path, fileSpan.StartLine, fileSpan.EndLine),
             },
             Boundary = Boundary != Rect.None ? Boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
@@ -107,16 +105,15 @@ class Node : IItem
     {
         Type = Enums.To<NodeType>(dto.Type, NodeType.None);
 
-        Description = dto.Attributes.Description;
+        Description = dto.Properties.Description;
         HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
-        IsPrivate = dto.Attributes.IsPrivate;
-        MemberType = Enum.TryParse<MemberType>(dto.Attributes.MemberType, out var value) ? value : MemberType.None;
-        fileSpan = dto.Attributes.FileSpan is null
+        IsPrivate = dto.Properties.IsPrivate;
+        fileSpan = dto.Properties.FileSpan is null
             ? null
             : new FileSpan(
-                dto.Attributes.FileSpan.Path,
-                dto.Attributes.FileSpan.StarLine,
-                dto.Attributes.FileSpan.EndLine
+                dto.Properties.FileSpan.Path,
+                dto.Properties.FileSpan.StarLine,
+                dto.Properties.FileSpan.EndLine
             );
 
         Boundary = dto.Boundary ?? Rect.None;
@@ -130,12 +127,11 @@ class Node : IItem
 
     public void Update(Parsing.Node node)
     {
-        Type = node.Attributes.Type ?? Type;
-        IsPrivate = node.Attributes.IsPrivate ?? IsPrivate;
-        Description = node.Attributes.Description == NoValue.String ? null : node.Attributes.Description ?? Description;
+        Type = node.Properties.Type ?? Type;
+        IsPrivate = node.Properties.IsPrivate ?? IsPrivate;
+        Description = node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description;
         HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
-        MemberType = node.Attributes.MemberType ?? MemberType;
-        fileSpan = node.Attributes.FileSpan == NoValue.FileSpan ? null : node.Attributes.FileSpan ?? fileSpan;
+        fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)

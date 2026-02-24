@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace DependinatorCore.Utils;
 
@@ -25,4 +26,6 @@ public static class Util
     {
         Task.Delay(1).ContinueWith(_ => action().RunInBackground()).RunInBackground();
     }
+
+    public static string CurrentFilePath([CallerFilePath] string sourceFilePath = "") => sourceFilePath;
 }

@@ -5,6 +5,7 @@ using DependinatorCore.Rpc;
 using DependinatorCore.Shared;
 using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
+using DependinatorRoslyn;
 
 namespace DependinatorWeb;
 
@@ -28,11 +29,14 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddRazorPages();
-        builder.Services.AddServerSideBlazor().AddCircuitOptions(options =>
-        {
-            options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(5);
-        });
+        builder
+            .Services.AddServerSideBlazor()
+            .AddCircuitOptions(options =>
+            {
+                options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(5);
+            });
         builder.Services.AddDependinatorServices<Program>();
+        builder.Services.AddDependinatorRoslynServices();
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
         builder.Services.AddJsonRpcInterfaces(typeof(DependinatorCore.RootClass));

@@ -36,7 +36,8 @@ class NodeName
         shortName = nodeType == NodeType.Assembly && !shortName.EndsWith(".dll") ? shortName + ".dll" : shortName;
         longName = nodeType == NodeType.Assembly && !shortName.EndsWith(".dll") ? longName + ".dll" : longName;
 
-        return (longName, shortName);
+        //return (longName, shortName);
+        return (nodeName, shortName);
     }
 
     static string ToNiceParameters(string fullName)

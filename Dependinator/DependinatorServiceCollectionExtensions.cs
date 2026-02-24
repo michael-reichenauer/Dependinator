@@ -11,7 +11,6 @@ public static class DependinatorServiceCollectionExtensions
         services.AddMudServices();
         services.AddDependinatorCoreServices();
 
-        services.AddSingleton<IEmbeddedResources, EmbeddedResources<TEntryAssemblyMarker>>();
         services.AddAssemblyServices(typeof(DependinatorServiceCollectionExtensions));
 
         return services;

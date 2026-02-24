@@ -47,7 +47,7 @@ internal class LinkHandler
         if (IsIgnoredTargetName(targetNodeName))
             return;
 
-        await SendLinkAsync(sourceName, targetNodeName, NodeType.Member);
+        await SendLinkAsync(sourceName, targetNodeName, NodeType.MethodMember);
     }
 
     private async Task SendLinkAsync(string sourceName, string targetName, NodeType targetType)

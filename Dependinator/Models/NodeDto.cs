@@ -9,7 +9,7 @@ record NodeDto
     public required string Name { get; init; }
     public required string ParentName { get; init; }
     public required string Type { get; init; }
-    public NodeAttributesDto Attributes { get; init; } = new();
+    public NodePropertiesDto Properties { get; init; } = new();
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Rect? Boundary { get; init; }
@@ -34,13 +34,16 @@ record NodeDto
 }
 
 [Serializable]
-record NodeAttributesDto
+record NodePropertiesDto
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Description { get; init; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool? IsPrivate { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool? IsModule { get; init; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? MemberType { get; set; }

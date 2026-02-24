@@ -392,7 +392,7 @@ class ModelService : IModelService
 
         CheckLineVisibility();
 
-        ParseSourceAndUpdateAsync(path).RunInBackground();
+        // ParseSourceAndUpdateAsync(path).RunInBackground();
         return R.Ok;
     }
 
@@ -407,7 +407,7 @@ class ModelService : IModelService
 
         Log.Info("Parsing source ...");
 
-        if (!Try(out var items, out var e, await ParseSourceAsync(path)))
+        if (!Try(out var items, out var e, await ParseAsync(path)))
             return e;
 
         lock (model.Lock)
@@ -415,7 +415,7 @@ class ModelService : IModelService
             model.ClearCachedSvg();
         }
 
-        await UpdateAllItems(items);
+        await AddOrUpdateAllItems(items);
 
         applicationEvents.TriggerUIStateChanged();
         applicationEvents.TriggerSaveNeeded();
@@ -427,12 +427,6 @@ class ModelService : IModelService
     {
         using var _ = Timing.Start($"Parsed {path}");
         return await parserService.ParseAsync(path);
-    }
-
-    async Task<R<IReadOnlyList<Parsing.Item>>> ParseSourceAsync(string path)
-    {
-        using var _ = Timing.Start($"Parsed source {path}");
-        return await parserService.ParseSourceAsync(path);
     }
 
     public void TriggerSave()
