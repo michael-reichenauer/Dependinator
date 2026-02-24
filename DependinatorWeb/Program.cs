@@ -29,10 +29,12 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddRazorPages();
-        builder.Services.AddServerSideBlazor().AddCircuitOptions(options =>
-        {
-            options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(5);
-        });
+        builder
+            .Services.AddServerSideBlazor()
+            .AddCircuitOptions(options =>
+            {
+                options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(5);
+            });
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddDependinatorRoslynServices();
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();

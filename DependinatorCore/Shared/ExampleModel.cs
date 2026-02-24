@@ -12,7 +12,7 @@ static class ExampleModel
 
     //public static string OtherSolutionExample = "/workspaces/DepExt/Dependinator.sln";
 
-    public static string Path => IsWebAssembly ? EmbeddedExample : SolutionExample;
+    public static string Path => SolutionExample;
 
     //public static string Path => OtherSolutionExample;
 

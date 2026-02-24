@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 
 namespace DependinatorCore.Parsing.Sources.Roslyn;
 
+[Transient]
 class SourceParser : ISourceParser
 {
     public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath)
@@ -29,7 +30,7 @@ class SourceParser : ISourceParser
             solutionNodes.AddRange(items);
         }
 
-        await WriteCompressedExampleModelAsync(solutionNodes, solutionPath);
+        // await WriteCompressedExampleModelAsync(solutionNodes, solutionPath);
 
         return solutionNodes;
     }
