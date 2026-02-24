@@ -9,9 +9,14 @@ public class SolutionParserTests
     public async Task ParseAsync_ShouldParseSolution_WhenMicrosoftBuildRuntimeAssemblyIsNotInOutput()
     {
         var items = new Parsing.Utils.ItemsMock();
-        var parserFileService = new ParserFileService(new EmbeddedResources<ParserFileService>());
+        var parserFileService = new ParserFileService();
 
-        using var parser = new SolutionParser("/workspaces/Dependinator/Dependinator.sln", items, false, parserFileService);
+        using var parser = new SolutionParser(
+            "/workspaces/Dependinator/Dependinator.sln",
+            items,
+            false,
+            parserFileService
+        );
         if (!Try(out var e, await parser.ParseAsync()))
             Assert.Fail(e.AllErrorMessages());
 

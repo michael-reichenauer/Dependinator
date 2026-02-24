@@ -1,7 +1,6 @@
 using DependinatorCore;
 using DependinatorCore.Rpc;
 using DependinatorCore.Shared;
-using DependinatorCore.Utils;
 using DependinatorCore.Utils.Logging;
 using DependinatorRoslyn;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +23,6 @@ internal class Program
                         services.AddDependinatorCoreServices();
                         services.AddDependinatorRoslynServices();
                         services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();
-                        services.AddSingleton<IEmbeddedResources, EmbeddedResources<Program>>();
                     })
                     .WithHandler<LspMessageHandler>()
                     .WithHandler<WorkspaceFolderChangeHandler>()
