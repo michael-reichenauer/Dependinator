@@ -30,7 +30,11 @@ class MemberParser
         yield return memberNode;
 
         // Handle field link
-        if (member.Type is INamedTypeSymbol fieldType && !IgnoredTypes.IsIgnoredSystemType(fieldType))
+        if (
+            member.Type is INamedTypeSymbol fieldType
+            && !IsSameAsContainingType(fieldType, member)
+            && IgnoredTypes.IsIgnoredSystemType(fieldType)
+        )
             yield return new Item(null, LinkParser.Parse(memberNode.Node!.Name, fieldType));
     }
 
@@ -40,7 +44,11 @@ class MemberParser
         yield return memberNode;
 
         // Handle property link
-        if (member.Type is INamedTypeSymbol propertyType && !IgnoredTypes.IsIgnoredSystemType(propertyType))
+        if (
+            member.Type is INamedTypeSymbol propertyType
+            && !IsSameAsContainingType(propertyType, member)
+            && !IgnoredTypes.IsIgnoredSystemType(propertyType)
+        )
             yield return new Item(null, LinkParser.Parse(memberNode.Node!.Name, propertyType));
     }
 
@@ -78,5 +86,10 @@ class MemberParser
             ),
             null
         );
+    }
+
+    static bool IsSameAsContainingType(INamedTypeSymbol type, ISymbol member)
+    {
+        return SymbolEqualityComparer.Default.Equals(type, member.ContainingType);
     }
 }
