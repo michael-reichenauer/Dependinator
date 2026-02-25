@@ -38,6 +38,18 @@ class TreeItem : TreeItemData<TreeItem>
     public NodeId NodeId { get; init; } = NodeId.Empty!;
     public override List<TreeItemData<TreeItem>>? Children { get; set; } = [];
 
+    public IEnumerable<TreeItem> GetThisAndDescendants()
+    {
+        yield return this;
+        if (Children is null)
+            yield break;
+        foreach (var child in Children.Cast<TreeItem>())
+        {
+            foreach (var grandChild in child.GetThisAndDescendants())
+                yield return grandChild;
+        }
+    }
+
     public override bool Expanded
     {
         get => isExpanded;

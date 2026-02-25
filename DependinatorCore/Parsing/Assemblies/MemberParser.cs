@@ -54,7 +54,7 @@ internal class MemberParser
                         member,
                         typeNode,
                         member.Attributes.HasFlag(FieldAttributes.Private),
-                        MemberType.Field
+                        NodeType.FieldMember
                     )
                 );
 
@@ -66,7 +66,7 @@ internal class MemberParser
                         typeNode,
                         (member.AddMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
                             && (member.RemoveMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true),
-                        MemberType.Event
+                        NodeType.EventMember
                     )
                 );
 
@@ -78,7 +78,7 @@ internal class MemberParser
                         typeNode,
                         (member.GetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)
                             && (member.SetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true),
-                        MemberType.Property
+                        NodeType.PropertyMember
                     )
                 );
 
@@ -89,7 +89,7 @@ internal class MemberParser
                         member,
                         typeNode,
                         member.Attributes.HasFlag(MethodAttributes.Private),
-                        MemberType.Method
+                        NodeType.MethodMember
                     )
                 );
 
@@ -103,7 +103,7 @@ internal class MemberParser
         }
     }
 
-    async Task AddMemberAsync(IMemberDefinition memberInfo, Node parentTypeNode, bool isPrivate, MemberType memberType)
+    async Task AddMemberAsync(IMemberDefinition memberInfo, Node parentTypeNode, bool isPrivate, NodeType nodeType)
     {
         try
         {
@@ -117,11 +117,10 @@ internal class MemberParser
                 memberName,
                 new()
                 {
-                    Type = NodeType.Member,
+                    Type = isConstructor ? NodeType.ConstructorMember : nodeType,
                     Description = description,
                     Parent = parentName,
                     IsPrivate = isPrivate,
-                    MemberType = isConstructor ? MemberType.Constructor : memberType,
                 }
             );
 

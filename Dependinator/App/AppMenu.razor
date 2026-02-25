@@ -25,21 +25,10 @@
         Refresh
     </MudMenuItem>
 
-    @* 
-    <MudDivider />
- 
-    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.OpenFiles">
-        Browse Files ...
-    </MudMenuItem>
-
-    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.OpenInBrowser" OnClick="srv.ToggleTheme">
-        Toggle Dark/Light Theme
-    </MudMenuItem> *@
-
     <MudDivider />
 
-    <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeleteForever" OnClick="@OnRemove">
-        Remove Current Model
+    <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff" OnClick="@OnRemove">
+        Reset Model
     </MudMenuItem>
 
     <MudDivider />
@@ -62,13 +51,14 @@
 
 </MudMenu>
 
-<MudMessageBox @ref="mbox" Title="Remove Model" CancelText="Cancel">
+<MudMessageBox @ref="mbox" Title="Reset Model" CancelText="Cancel">
     <MessageContent>
-        Do you want to remove model?
+        <MudText>Do you want to reset model?</MudText>
+        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be reset.</MudText>
     </MessageContent>
     <YesButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">
-            Remove
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
+            Reset
         </MudButton>
     </YesButton>
 </MudMessageBox>

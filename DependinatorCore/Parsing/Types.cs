@@ -1,42 +1,31 @@
 namespace DependinatorCore.Parsing;
 
-enum MemberType
-{
-    None,
-    Field,
-    Event,
-    Property,
-    Method,
-    Constructor,
-}
-
 record Item(Node? Node, Link? Link);
 
-record Link(string Source, string Target, LinkAttributes Attributes);
+record Link(string Source, string Target, LinkProperties Properties);
 
-record Node(string Name, NodeAttributes Attributes);
+record Node(string Name, NodeProperties Properties);
 
-class NodeAttributes
+class NodeProperties
 {
-    public string? Description { get; init; }
     public NodeType? Type { get; init; }
+    public string? Description { get; init; }
     public string? Parent { get; init; }
     public bool? IsPrivate { get; init; }
-    public MemberType? MemberType { get; init; }
     public FileSpan? FileSpan { get; init; }
 }
 
-class LinkAttributes
+class LinkProperties
 {
     public string? Description { get; init; }
-    public NodeType? TargetType { get; init; } = NodeType.None;
+    public NodeType? TargetType { get; init; }
 }
 
 record Source(string Text, FileLocation Location);
 
 record FileLocation(string Path, int Line);
 
-record FileSpan(string Path, int StarLine, int EndLine);
+record FileSpan(string Path, int StartLine, int EndLine);
 
 enum NodeType
 {
@@ -52,7 +41,11 @@ enum NodeType
     Exe,
     Namespace,
     Type,
-    Member,
+    FieldMember,
+    ConstructorMember,
+    EventMember,
+    PropertyMember,
+    MethodMember,
 }
 
 static class NoValue

@@ -148,12 +148,12 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
                 return ValueTask.CompletedTask;
             }
 
-            Log.Info(
-                $"Received {messageToWrite.Value.Length} bytes ({Math.Ceiling((double)messageToWrite.Value.Length / MaxChunkPayloadSize)} chunks)"
-            );
-            Log.Info(
-                $"Decompressed message {messageToWrite.Value.Length} -> {decompressed.Length} bytes ({Math.Round(100.0 * messageToWrite.Value.Length / decompressed.Length)}%)"
-            );
+            // Log.Info(
+            //     $"Received {messageToWrite.Value.Length} bytes ({Math.Ceiling((double)messageToWrite.Value.Length / MaxChunkPayloadSize)} chunks)"
+            // );
+            // Log.Info(
+            //     $"Decompressed message {messageToWrite.Value.Length} -> {decompressed.Length} bytes ({Math.Round(100.0 * messageToWrite.Value.Length / decompressed.Length)}%)"
+            // );
             messageToWrite = decompressed;
         }
 
@@ -164,7 +164,7 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
     protected override async ValueTask<JsonRpcMessage?> ReadCoreAsync(CancellationToken ct)
     {
         var payload = await messagesChannel.Reader.ReadAsync(ct).ConfigureAwait(false);
-        Log.Info($"Read message {payload.Length} bytes");
+        // Log.Info($"Read message {payload.Length} bytes");
 
         // Formatter expects a ReadOnlySequence<byte>.
         var seq = new ReadOnlySequence<byte>(payload);
@@ -189,13 +189,13 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
             if (IsCompressionSupported && TryCompressMessage(payloadToSend, out var compressedMessage))
             {
                 payloadToSend = compressedMessage;
-                Log.Info(
-                    $"Write message {buffer.WrittenMemory.Length} bytes compressed to {payloadToSend.Length} bytes"
-                );
+                // Log.Info(
+                //     $"Write message {buffer.WrittenMemory.Length} bytes compressed to {payloadToSend.Length} bytes"
+                // );
             }
             else
             {
-                Log.Info($"Write message {payloadToSend.Length} bytes");
+                // Log.Info($"Write message {payloadToSend.Length} bytes");
             }
 
             await SendBinaryMessageAsync(payloadToSend, ct);

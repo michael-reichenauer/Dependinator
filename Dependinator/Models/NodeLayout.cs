@@ -75,7 +75,7 @@ class NodeLayout
     }
 
     static bool IsTypeWithMembers(Node parent) =>
-        parent.Type == Parsing.NodeType.Type && parent.Children.Any(child => child.Type == Parsing.NodeType.Member);
+        parent.Type == Parsing.NodeType.Type && parent.Children.Any(child => child.Type.IsMember);
 
     static void ArrangeChildren(Node parent, IReadOnlyList<Node> children, LayoutMetrics metrics)
     {
@@ -99,8 +99,8 @@ class NodeLayout
         var memberMetrics = MemberMetrics(density);
         var regularMetrics = RegularMetrics(density);
 
-        var members = parent.Children.Where(c => c.Type == Parsing.NodeType.Member).ToList();
-        var nonMembers = parent.Children.Where(c => c.Type != Parsing.NodeType.Member).ToList();
+        var members = parent.Children.Where(c => c.Type.IsMember).ToList();
+        var nonMembers = parent.Children.Where(c => !c.Type.IsMember).ToList();
 
         Sorter.Sort(members, CompareMemberChildren);
         Sorter.Sort(nonMembers, CompareChildren);
@@ -154,22 +154,20 @@ class NodeLayout
         LayoutMetrics regularMetrics
     )
     {
-        var newMembers = newChildren.Where(c => c.Type == Parsing.NodeType.Member).ToList();
-        var newNonMembers = newChildren.Where(c => c.Type != Parsing.NodeType.Member).ToList();
+        var newMembers = newChildren.Where(c => c.Type.IsMember).ToList();
+        var newNonMembers = newChildren.Where(c => !c.Type.IsMember).ToList();
 
         Sorter.Sort(newMembers, CompareMemberChildren);
         Sorter.Sort(newNonMembers, CompareChildren);
 
-        var existingMembers = parent
-            .Children.Where(c => c.Boundary != Rect.None && c.Type == Parsing.NodeType.Member)
-            .ToList();
+        var existingMembers = parent.Children.Where(c => c.Boundary != Rect.None && c.Type.IsMember).ToList();
         var existingPublicMembers = existingMembers
             .Where(m => !(m.IsPrivate ?? false))
             .Select(m => m.Boundary)
             .ToList();
         var existingPrivateMembers = existingMembers.Where(m => m.IsPrivate ?? false).Select(m => m.Boundary).ToList();
         var existingNonMembers = parent
-            .Children.Where(c => c.Boundary != Rect.None && c.Type != Parsing.NodeType.Member)
+            .Children.Where(c => c.Boundary != Rect.None && !c.Type.IsMember)
             .Select(c => c.Boundary)
             .ToList();
 
@@ -411,7 +409,7 @@ class NodeLayout
 
     static int CompareMemberChildren(Node c1, Node c2)
     {
-        var (v1, v2) = ((int)c1.MemberType, (int)c2.MemberType);
+        var (v1, v2) = ((int)c1.Type, (int)c2.Type);
         return v1 < v2 ? -1
             : v2 > v1 ? 1
             : 0;

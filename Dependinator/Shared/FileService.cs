@@ -16,19 +16,12 @@ class FileService : IBrowserFileService, IFileService
     const long MaxFileSize = 1024 * 1024 * 10; // 10 MB
 
     readonly IDatabase database;
-    readonly IEmbeddedResources embeddedResources;
     readonly IHostFileSystem hostFileSystem;
     readonly IHostStoragePaths hostStoragePaths;
 
-    public FileService(
-        IDatabase database,
-        IEmbeddedResources embeddedResources,
-        IHostFileSystem hostFileSystem,
-        IHostStoragePaths hostStoragePaths
-    )
+    public FileService(IDatabase database, IHostFileSystem hostFileSystem, IHostStoragePaths hostStoragePaths)
     {
         this.database = database;
-        this.embeddedResources = embeddedResources;
         this.hostFileSystem = hostFileSystem;
         this.hostStoragePaths = hostStoragePaths;
     }
@@ -103,10 +96,6 @@ class FileService : IBrowserFileService, IFileService
     public async Task<R<Stream>> ReadStreamAsync(string path)
     {
         Log.Info("ReadStream:", path);
-        if (path == ExampleModel.Path)
-        {
-            return embeddedResources.OpenResourceStream(ExampleModel.Path);
-        }
 
         if (path.StartsWith(hostStoragePaths.WebFilesPrefix))
         {

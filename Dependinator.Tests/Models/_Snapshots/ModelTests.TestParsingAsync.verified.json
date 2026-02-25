@@ -2,43 +2,39 @@
   "Nodes": [
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.ctor()",
-      "Attributes": {
-        "Type": "Member",
+      "Properties": {
+        "Type": "ConstructorMember",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "IsPrivate": false,
-        "MemberType": "Constructor"
+        "IsPrivate": false
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.SecondFunction()",
-      "Attributes": {
-        "Type": "Member",
+      "Properties": {
+        "Type": "MethodMember",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "IsPrivate": false,
-        "MemberType": "Method"
+        "IsPrivate": false
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
-      "Attributes": {
-        "Type": "Member",
+      "Properties": {
+        "Type": "MethodMember",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "IsPrivate": false,
-        "MemberType": "Method"
+        "IsPrivate": false
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
-      "Attributes": {
-        "Type": "Member",
+      "Properties": {
+        "Type": "FieldMember",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-        "IsPrivate": false,
-        "MemberType": "Field"
+        "IsPrivate": false
       }
     },
     {
       "Name": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData",
-      "Attributes": {
+      "Properties": {
         "Type": "Type",
         "Parent": "Dependinator*Tests.Dependinator.Tests.Models",
         "IsPrivate": false
@@ -49,8 +45,8 @@
     {
       "Source": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.FirstFunction()",
       "Target": "Dependinator*Tests.Dependinator.Tests.Models.ModelTestData.number",
-      "Attributes": {
-        "TargetType": "Member"
+      "Properties": {
+        "TargetType": "MethodMember"
       }
     }
   ]

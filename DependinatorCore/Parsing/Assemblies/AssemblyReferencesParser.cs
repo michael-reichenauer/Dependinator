@@ -17,6 +17,7 @@ internal class AssemblyReferencesParser
     public async Task AddReferencesAsync(AssemblyDefinition assembly, IReadOnlyList<string> internalModules)
     {
         string sourceAssemblyName = Name.GetModuleName(assembly);
+        Log.Info($"### Source assembly: {sourceAssemblyName}");
 
         var externalReferences = GetExternalAssemblyReferences(assembly, internalModules);
 
@@ -27,6 +28,7 @@ internal class AssemblyReferencesParser
         foreach (AssemblyNameReference reference in externalReferences)
         {
             string referenceName = Name.GetModuleName(reference);
+            Log.Info($"Reference: {referenceName}");
             string parent = await GetReferenceParentAsync(referencesRootName, referenceName);
 
             var referenceNode = new Node(referenceName, new() { Type = NodeType.Assembly, Parent = parent });

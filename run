@@ -9,7 +9,7 @@ port="${PORT:-5000}"
 host="${HOST:-127.0.0.1}"
 
 rm -rf "$publish_dir"
-dotnet publish "$project" -c Release -p:IsBrowserWasm=true -o "$publish_dir"
+dotnet publish "$project" -c Release -o "$publish_dir"
 
 if command -v swa >/dev/null 2>&1; then
     swa start "$wwwroot_dir" --port "$port" --host "$host" --swa-config-location "$config_dir"

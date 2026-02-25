@@ -15,8 +15,7 @@ class PersistenceService(IFileService fileService) : IPersistenceService
     {
         return Task.Run(async () =>
         {
-            using var _ = Timing.Start($"Wrote model '{modelPath}'");
-
+            // using var _ = Timing.Start($"Wrote model '{modelPath}'");
             await fileService.WriteAsync(modelPath, model);
 
             return R.Ok;
@@ -27,8 +26,7 @@ class PersistenceService(IFileService fileService) : IPersistenceService
     {
         return Task.Run<R<ModelDto>>(async () =>
         {
-            using var _ = Timing.Start($"Read model '{modelPath}'");
-
+            // using var _ = Timing.Start($"Read model '{modelPath}'");
             if (!Try(out var model, out var e2, await fileService.ReadAsync<ModelDto>(modelPath)))
                 return e2;
             if (model.FormatVersion != ModelDto.CurrentFormatVersion)

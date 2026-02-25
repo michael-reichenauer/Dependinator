@@ -3,19 +3,14 @@ using Mono.Cecil.Cil;
 
 namespace DependinatorCore.Parsing.Assemblies;
 
-internal class MethodParser
+internal class MethodParser(LinkHandler linkHandler)
 {
     record MethodBodyNode(string MemberName, MethodDefinition Method, bool IsMoveNext);
 
     readonly Dictionary<string, TypeDefinition> asyncStates = new Dictionary<string, TypeDefinition>();
 
-    readonly LinkHandler linkHandler;
+    readonly LinkHandler linkHandler = linkHandler;
     readonly List<MethodBodyNode> methodBodyNodes = new List<MethodBodyNode>();
-
-    public MethodParser(LinkHandler linkHandler)
-    {
-        this.linkHandler = linkHandler;
-    }
 
     public int IlCount { get; private set; } = 0;
 
@@ -29,11 +24,13 @@ internal class MethodParser
         if (!method.IsConstructor)
         {
             TypeReference returnType = method.ReturnType;
-            await linkHandler.AddLinkToTypeAsync(memberName, returnType);
+            if (method.ReturnType != method.DeclaringType)
+                await linkHandler.AddLinkToTypeAsync(memberName, returnType);
         }
 
         await method
-            .Parameters.Select(parameter => parameter.ParameterType)
+            .Parameters.Where(parameter => parameter.ParameterType != method.DeclaringType)
+            .Select(parameter => parameter.ParameterType)
             .ForEachAsync(parameterType => linkHandler.AddLinkToTypeAsync(memberName, parameterType));
 
         methodBodyNodes.Add(new MethodBodyNode(memberName, method, false));
@@ -68,7 +65,7 @@ internal class MethodParser
             MethodBody body = method.Body;
 
             await body.Variables.ForEachAsync(variable =>
-                AddLinkToMethodVariableAsync(memberName, variable, methodBodyNode.IsMoveNext)
+                AddLinkToMethodVariableAsync(method, memberName, variable, methodBodyNode.IsMoveNext)
             );
 
             foreach (Instruction instruction in body.Instructions)
@@ -76,11 +73,12 @@ internal class MethodParser
                 IlCount++;
                 if (instruction.Operand is MethodReference methodCall)
                 {
-                    await AddLinkToCallMethodAsync(memberName, methodCall);
+                    await AddLinkToCallMethodAsync(method, memberName, methodCall);
                 }
                 else if (instruction.Operand is FieldDefinition field)
                 {
-                    await linkHandler.AddLinkToTypeAsync(memberName, field.FieldType);
+                    if (method.DeclaringType != field.FieldType)
+                        await linkHandler.AddLinkToTypeAsync(memberName, field.FieldType);
 
                     await linkHandler.AddLinkToMemberAsync(memberName, field);
                 }
@@ -92,7 +90,12 @@ internal class MethodParser
         }
     }
 
-    async Task AddLinkToMethodVariableAsync(string memberName, VariableDefinition variable, bool isMoveNext)
+    async Task AddLinkToMethodVariableAsync(
+        MethodDefinition method,
+        string memberName,
+        VariableDefinition variable,
+        bool isMoveNext
+    )
     {
         if (
             !isMoveNext
@@ -103,8 +106,8 @@ internal class MethodParser
             // There is a async state type with this name
             await AddAsyncStateLinksAsync(memberName, asyncType);
         }
-
-        await linkHandler.AddLinkToTypeAsync(memberName, variable.VariableType);
+        if (method.DeclaringType != variable.VariableType)
+            await linkHandler.AddLinkToTypeAsync(memberName, variable.VariableType);
     }
 
     async Task AddAsyncStateLinksAsync(string memberName, TypeDefinition asyncType)
@@ -120,31 +123,33 @@ internal class MethodParser
         }
     }
 
-    async Task AddLinkToCallMethodAsync(string memberName, MethodReference method)
+    async Task AddLinkToCallMethodAsync(MethodDefinition method, string memberName, MethodReference referencedMethod)
     {
-        if (method is GenericInstanceMethod genericMethod)
+        if (referencedMethod is GenericInstanceMethod genericMethod)
         {
             await genericMethod.GenericArguments.ForEachAsync(genericArg =>
                 linkHandler.AddLinkToTypeAsync(memberName, genericArg)
             );
         }
 
-        TypeReference declaringType = method.DeclaringType;
+        TypeReference declaringType = referencedMethod.DeclaringType;
 
         if (IgnoredTypes.IsIgnoredSystemType(declaringType))
             return; // Ignore "System" and "Microsoft" types
 
-        string methodName = Name.GetMethodFullName(method);
+        string methodName = Name.GetMethodFullName(referencedMethod);
         if (Name.IsCompilerGenerated(methodName))
             return;
 
-        await linkHandler.AddLinkAsync(memberName, methodName, NodeType.Member);
+        await linkHandler.AddLinkAsync(memberName, methodName, NodeType.MethodMember);
 
-        TypeReference returnType = method.ReturnType;
-        await linkHandler.AddLinkToTypeAsync(memberName, returnType);
+        TypeReference returnType = referencedMethod.ReturnType;
+        if (method.DeclaringType != returnType)
+            await linkHandler.AddLinkToTypeAsync(memberName, returnType);
 
-        await method
+        await referencedMethod
             .Parameters.Select(parameter => parameter.ParameterType)
+            .Where(pt => pt != method.DeclaringType)
             .ForEachAsync(parameterType => linkHandler.AddLinkToTypeAsync(memberName, parameterType));
     }
 }

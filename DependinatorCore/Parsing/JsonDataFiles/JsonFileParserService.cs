@@ -87,16 +87,16 @@ class JsonFileParserService : IParser
 
     static Node ToNodeData(JsonTypes.Node node) => new(node.Name, ToNodeAttributes(node));
 
-    static NodeAttributes ToNodeAttributes(JsonTypes.Node node) =>
+    static NodeProperties ToNodeAttributes(JsonTypes.Node node) =>
         new()
         {
-            Type = Enums.ToOrNull<NodeType>(node.Attributes?.Type),
-            Description = node.Attributes?.Description,
+            Type = Enums.ToOrNull<NodeType>(node.Properties?.Type),
+            Description = node.Properties?.Description,
             Parent = node.Parent,
         };
 
     static Link ToLinkData(JsonTypes.Link link) =>
-        new(link.Source, link.Target, new() { TargetType = Enums.ToOrNull<NodeType>(link.Attributes?.TargetType) });
+        new(link.Source, link.Target, new() { TargetType = Enums.ToOrNull<NodeType>(link.Properties?.TargetType) });
 
     static void ValidateVersion(JsonReader reader)
     {
