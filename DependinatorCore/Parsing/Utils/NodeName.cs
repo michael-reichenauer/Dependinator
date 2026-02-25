@@ -6,6 +6,7 @@ internal class NodeName : Equatable<NodeName>
 
     public static NodeName Root = From("");
     static readonly char[] PartsSeparators = "./".ToCharArray();
+    static readonly char[] NameSeparators = "(<".ToCharArray();
     readonly Lazy<DisplayParts> displayParts;
 
     readonly Lazy<NodeName> parentName;
@@ -32,7 +33,7 @@ internal class NodeName : Equatable<NodeName>
 
     public static string ParseParentName(string name)
     {
-        var parametersIndex = name.IndexOf('(');
+        var parametersIndex = name.IndexOfAny(NameSeparators);
         if (parametersIndex > 0)
             name = name[..parametersIndex];
         int index = name.LastIndexOfAny(PartsSeparators);
