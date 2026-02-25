@@ -13,6 +13,7 @@ interface ISelectionService
     bool IsSelectedLineDirect { get; }
 
     Task UpdateSelectedPositionAsync();
+    void HideSelectedPosition();
     bool IsSelectedNodeMovable(double zoom);
     bool IsSelectedNodeHidden();
     bool IsSelectedNodeParentHidden();
@@ -61,6 +62,15 @@ class SelectionService : ISelectionService
     public Pos SelectedNodePosition => selectedId.IsNode ? SelectedPosition : Pos.None;
     public Pos SelectedLinePosition => selectedId.IsLine ? SelectedPosition : Pos.None;
     public bool IsSelectedLineDirect => IsSelected && selectedId.IsLine && isSelectedLineDirect;
+
+    public void HideSelectedPosition()
+    {
+        if (!IsSelected)
+            return;
+
+        selectedPosition = Models.Pos.None;
+        return;
+    }
 
     public async Task UpdateSelectedPositionAsync()
     {

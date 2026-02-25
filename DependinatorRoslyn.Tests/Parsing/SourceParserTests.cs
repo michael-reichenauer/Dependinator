@@ -1,5 +1,5 @@
 using DependinatorRoslyn.Parsing;
-using DependinatorRoslyn.Tests;
+using DependinatorRoslyn.Tests.Parsing.Utils;
 
 namespace DependinatorRoslyn.Tests.Parsing;
 
@@ -22,14 +22,27 @@ public class SourceTestData
 public class SourceParserTests
 {
     [Fact]
-    public async Task TestSourceParserAsync()
+    public async Task TestProjectSourceParserAsync()
     {
         var sourceParser = new SourceParser();
-        if (!Try(out var allSourceNodes, out var e, await sourceParser.ParseProjectAsync(Root.ProjectFilePath)))
+        if (!Try(out var items, out var e, await sourceParser.ParseProjectAsync(Root.ProjectFilePath)))
             Assert.Fail(e.AllErrorMessages());
-        var sourceNodes = allSourceNodes
-            .Where(sn => sn.Node is not null && sn.Node.Name.Contains(typeof(SourceTestData).FullName!))
-            .ToList();
-        Assert.NotEmpty(sourceNodes);
+
+        var SourceTestDataNodes = items.NodesContained<SourceTestData>(null);
+        Assert.NotEmpty(SourceTestDataNodes);
+    }
+
+    [Fact]
+    public async Task TestSolutionSourceParserAsync()
+    {
+        var sourceParser = new SourceParser();
+        if (!Try(out var items, out var e, await sourceParser.ParseSolutionAsync(Root.SolutionFilePath)))
+            Assert.Fail(e.AllErrorMessages());
+
+        var nodes = items.NodesContained(typeof(TypeParser), null);
+        Assert.NotEmpty(nodes);
+
+        var links = items.LinksToContained(typeof(TypeParser), null);
+        Assert.NotEmpty(links);
     }
 }

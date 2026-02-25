@@ -13,11 +13,21 @@ static class ItemsExtensions
         public IReadOnlyList<Link> Links() =>
             items.Where(i => i.Link is not null).Select(i => i.Link).Cast<Link>().ToList();
 
-        public Node Node<T>(string? memberName)
+        public Node Node<T>(string? memberName) => items.Node(typeof(T), memberName);
+
+        public Node Node(Type type, string? memberName)
         {
-            var name = GetName<T>(memberName);
+            var name = GetName(type, memberName);
 
             return items.Nodes().Single(n => IsSame(n.Name, name));
+        }
+
+        public IReadOnlyList<Node> NodesContained<T>(string? memberName) => items.NodesContained(typeof(T), memberName);
+
+        public IReadOnlyList<Node> NodesContained(Type type, string? memberName)
+        {
+            var name = GetName(type, memberName);
+            return items.Nodes().Where(n => IsSameOrContained(n.Name, name)).ToList();
         }
 
         public Link Link<TSource, TTarget>(string? sourceMemberName, string? targetMemberName)
@@ -42,15 +52,36 @@ static class ItemsExtensions
             return items.Links().Where(i => IsSame(i.Target, targetName)).ToList();
         }
 
-        static string GetName<T>(string? memberName)
+        public IReadOnlyList<Link> LinksFromContained<TSource>(string? sourceMemberName) =>
+            items.LinksFromContained(typeof(TSource), sourceMemberName);
+
+        public IReadOnlyList<Link> LinksFromContained(Type sourceType, string? sourceMemberName)
         {
-            var typeName = Names.GetFullName<T>();
+            var sourceName = GetName(sourceType, sourceMemberName);
+
+            return items.Links().Where(l => IsSameOrContained(l.Source, sourceName)).ToList();
+        }
+
+        public IReadOnlyList<Link> LinksToContained<TTarget>(string? targetMemberName) =>
+            items.LinksToContained(typeof(TTarget), targetMemberName);
+
+        public IReadOnlyList<Link> LinksToContained(Type targetType, string? targetMemberName)
+        {
+            var targetName = GetName(targetType, targetMemberName);
+
+            return items.Links().Where(i => IsSameOrContained(i.Target, targetName)).ToList();
+        }
+
+        static string GetName<T>(string? memberName) => GetName(typeof(T), memberName);
+
+        static string GetName(Type type, string? memberName)
+        {
+            var typeName = Names.GetFullName(type);
 
             if (memberName is not null)
             {
                 // if member is a method, we add a '(' to make IsSame() below possible to handle method names
-                var methods = typeof(T)
-                    .GetMethods(
+                var methods = type.GetMethods(
                         System.Reflection.BindingFlags.Instance
                             | System.Reflection.BindingFlags.Static
                             | System.Reflection.BindingFlags.Public
@@ -76,6 +107,11 @@ static class ItemsExtensions
                 return nodeName.StartsWith(name); // the '(') was added by GetName<T>() above
 
             return nodeName == name;
+        }
+
+        static bool IsSameOrContained(string nodeName, string name)
+        {
+            return nodeName.StartsWith(name);
         }
     }
 }

@@ -175,6 +175,7 @@ class InteractionService : IInteractionService
         }
 
         panZoomService.Zoom(e);
+        selectionService.HideSelectedPosition();
         UpdateToolbar();
     }
 
@@ -182,7 +183,7 @@ class InteractionService : IInteractionService
     {
         if (selectionService.IsSelected)
         {
-            zoomToolbarDebouncer.Debounce(20, () => selectionService.UpdateSelectedPositionAsync());
+            zoomToolbarDebouncer.Debounce(300, () => selectionService.UpdateSelectedPositionAsync());
         }
     }
 
@@ -240,7 +241,7 @@ class InteractionService : IInteractionService
         {
             isResizingSelectedNode = true;
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
-            selectionService.UpdateSelectedPositionAsync();
+            selectionService.HideSelectedPosition();
             return;
         }
 
@@ -252,12 +253,12 @@ class InteractionService : IInteractionService
         {
             isDraggingSelectedNode = true;
             nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
-            selectionService.UpdateSelectedPositionAsync();
+            selectionService.HideSelectedPosition();
             return;
         }
 
         panZoomService.Pan(e);
-        selectionService.UpdateSelectedPositionAsync();
+        selectionService.HideSelectedPosition();
     }
 
     void OnMouseUp(PointerEvent e)

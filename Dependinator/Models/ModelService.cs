@@ -256,6 +256,8 @@ class ModelService : IModelService
             applicationEvents.TriggerUIStateChanged();
             return parsedModelInfo;
         }
+
+        RefreshAsync().RunInBackground();
         return modelInfo;
     }
 
