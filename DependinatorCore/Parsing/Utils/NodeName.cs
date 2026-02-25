@@ -32,6 +32,9 @@ internal class NodeName : Equatable<NodeName>
 
     public static string ParseParentName(string name)
     {
+        var parametersIndex = name.IndexOf('(');
+        if (parametersIndex > 0)
+            name = name[..parametersIndex];
         int index = name.LastIndexOfAny(PartsSeparators);
         return index > -1 ? name[..index] : "";
     }
