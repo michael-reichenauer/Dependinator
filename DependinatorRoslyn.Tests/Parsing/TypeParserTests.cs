@@ -33,6 +33,14 @@ public class SourceTestType : SourceTestBaseType, ISourceTestInterface
     void Function2() { }
 }
 
+// Enum comment
+enum EnumTestType
+{
+    Root,
+    Parent,
+    Solution,
+}
+
 public class OtherClass
 {
     public int GetLength(string name) => name.Length;
@@ -121,6 +129,21 @@ public class TypeParserTests(RoslynFixture fixture)
         Assert.Null(function2Node.Properties.Description);
         Assert.True(function2Node.Properties.IsPrivate);
         Assert.False(items.LinksFrom<SourceTestType>("Function2").Any());
+    }
+
+    [Fact]
+    public void TestEnums()
+    {
+        IReadOnlyList<Item> enumItems = TypeParser
+            .ParseType(fixture.Type<EnumTestType>(), fixture.Compilation, fixture.ModelName)
+            .ToList();
+
+        var enumNode = enumItems.Node<EnumTestType>(null);
+        Assert.Equal("Enum comment", enumNode.Properties.Description);
+
+        Assert.Equal(4, enumItems.NodesContained<EnumTestType>(null).Count);
+        Assert.Empty(enumItems.LinksFromContained<EnumTestType>(null));
+        Assert.Empty(enumItems.LinksToContained<EnumTestType>(null));
     }
 
     [Fact]
