@@ -12,7 +12,8 @@ interface ISelectionService
     Pos SelectedLinePosition { get; }
     bool IsSelectedLineDirect { get; }
 
-    Task UpdateSelectedPositionAsync(bool isShow);
+    Task UpdateSelectedPositionAsync();
+    void HideSelectedPosition();
     bool IsSelectedNodeMovable(double zoom);
     bool IsSelectedNodeHidden();
     bool IsSelectedNodeParentHidden();
@@ -62,15 +63,19 @@ class SelectionService : ISelectionService
     public Pos SelectedLinePosition => selectedId.IsLine ? SelectedPosition : Pos.None;
     public bool IsSelectedLineDirect => IsSelected && selectedId.IsLine && isSelectedLineDirect;
 
-    public async Task UpdateSelectedPositionAsync(bool isShow)
+    public void HideSelectedPosition()
     {
         if (!IsSelected)
             return;
-        if (!isShow)
-        {
-            selectedPosition = Models.Pos.None;
+
+        selectedPosition = Models.Pos.None;
+        return;
+    }
+
+    public async Task UpdateSelectedPositionAsync()
+    {
+        if (!IsSelected)
             return;
-        }
 
         var id = SelectedId.ElementId;
         if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(id)))
@@ -161,7 +166,7 @@ class SelectionService : ISelectionService
                 selectedId = pointerId;
                 this.isEditMode = false;
                 isSelectedLineDirect = false;
-                await UpdateSelectedPositionAsync(true);
+                await UpdateSelectedPositionAsync();
             }
         }
 
@@ -203,7 +208,7 @@ class SelectionService : ISelectionService
             );
             selectedId = pointerId;
             this.isEditMode = false;
-            await UpdateSelectedPositionAsync(true);
+            await UpdateSelectedPositionAsync();
         }
     }
 
