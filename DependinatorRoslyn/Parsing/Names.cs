@@ -45,7 +45,7 @@ static class Names
 
     public static string GetFullMemberName(ISymbol symbol, string fullTypeName)
     {
-        var memberName = symbol.ToDisplayString(MemberFormat);
+        var memberName = symbol.ToDisplayString(MemberFormat).Replace(" ", "");
         return $"{fullTypeName}.{memberName}";
     }
 
@@ -64,7 +64,7 @@ static class Names
 
     public static string GetFullName<T>() => GetFullName(typeof(T));
 
-    static string GetFullName(Type type)
+    public static string GetFullName(Type type)
     {
         var moduleName = SanitizeModuleName(type.Module.Name);
         return ToFullTypeName(moduleName, type.FullName!);
