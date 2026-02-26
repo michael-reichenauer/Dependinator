@@ -41,17 +41,23 @@
 
     void ShowReferences() => dependenciesService.ShowReferences();
     void ShowDependencies() => dependenciesService.ShowDependencies();
-    void AddSegmentPoint()
+    async Task AddSegmentPoint()
     {
         if (!selectionService.SelectedId.IsLine)
             return;
-        lineEditService.AddSegmentPoint(Models.LineId.FromId(selectionService.SelectedId.Id));
+        await lineEditService.AddSegmentPoint(
+            Models.LineId.FromId(selectionService.SelectedId.Id),
+            selectionService.SelectedLineClickPosition
+        );
     }
-    void RemoveSegmentPoint()
+    async Task RemoveSegmentPoint()
     {
         if (!selectionService.SelectedId.IsLine)
             return;
-        lineEditService.RemoveLastSegmentPoint(Models.LineId.FromId(selectionService.SelectedId.Id));
+        await lineEditService.RemoveSegmentPoint(
+            Models.LineId.FromId(selectionService.SelectedId.Id),
+            selectionService.SelectedLineClickPosition
+        );
     }
     void CloseDirectLine()
     {
