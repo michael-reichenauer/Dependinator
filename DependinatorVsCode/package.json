@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.5.17",
+    "version": "0.5.18",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
