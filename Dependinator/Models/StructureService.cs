@@ -9,6 +9,7 @@ interface IStructureService
     void AddOrUpdateLink(Parsing.Link parsedLink);
     void SetNodeDto(NodeDto nodeDto);
     void SetLinkDto(LinkDto linkDto);
+    void SetLineLayoutDto(LineDto lineLayoutDto);
 }
 
 [Transient]
@@ -115,6 +116,14 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         link.UpdateStamp = model.UpdateStamp;
 
         AddLink(link);
+    }
+
+    public void SetLineLayoutDto(LineDto lineLayoutDto)
+    {
+        if (!model.TryGetLine(LineId.FromId(lineLayoutDto.LineId), out var line))
+            return;
+
+        line.SetSegmentPoints(lineLayoutDto.SegmentPoints);
     }
 
     void MoveNodeToParent(Node node, string parentName)

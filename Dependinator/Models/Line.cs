@@ -2,6 +2,13 @@ namespace Dependinator.Models;
 
 record LinePos(double X1, double Y1, double X2, double Y2);
 
+[Serializable]
+record LineDto
+{
+    public required string LineId { get; init; }
+    public required IReadOnlyList<Pos> SegmentPoints { get; init; }
+}
+
 class Line : IItem
 {
     const double DirectStrokeWidth = 2;
@@ -11,6 +18,7 @@ class Line : IItem
     const double MaxStrokeWidth = 3;
 
     readonly Dictionary<Id, Link> links = new();
+    readonly List<Pos> segmentPoints = [];
     double strokeWidth = BaseStrokeWidth;
     bool isHidden;
 
@@ -34,6 +42,7 @@ class Line : IItem
     public double StrokeWidth => strokeWidth;
     public bool IsSelected { get; internal set; }
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
+    public IReadOnlyList<Pos> SegmentPoints => segmentPoints;
 
     public bool IsUpHill { get; internal set; } // Used to determine the direction of the line for placing the toolbar
     public bool IsHidden
@@ -64,6 +73,12 @@ class Line : IItem
     }
 
     public override string ToString() => $"{Source}->{Target} ({links.Count})";
+
+    public void SetSegmentPoints(IEnumerable<Pos> points)
+    {
+        segmentPoints.Clear();
+        segmentPoints.AddRange(points);
+    }
 
     void UpdateStrokeWidth()
     {

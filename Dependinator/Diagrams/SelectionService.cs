@@ -10,6 +10,7 @@ interface ISelectionService
     Pos SelectedPosition { get; }
     Pos SelectedNodePosition { get; }
     Pos SelectedLinePosition { get; }
+    Pos SelectedLineClickPosition { get; }
     bool IsSelectedLineDirect { get; }
 
     Task UpdateSelectedPositionAsync();
@@ -37,6 +38,7 @@ class SelectionService : ISelectionService
     readonly IScreenService screenService;
 
     Pos selectedPosition = Pos.None;
+    Pos selectedLineClickPosition = Pos.None;
     double clickedRelativePosition = 0.5;
     PointerId selectedId = PointerId.Empty;
     bool isEditMode = false;
@@ -61,6 +63,7 @@ class SelectionService : ISelectionService
     public Pos SelectedPosition => IsSelected ? selectedPosition : Pos.None;
     public Pos SelectedNodePosition => selectedId.IsNode ? SelectedPosition : Pos.None;
     public Pos SelectedLinePosition => selectedId.IsLine ? SelectedPosition : Pos.None;
+    public Pos SelectedLineClickPosition => selectedId.IsLine ? selectedLineClickPosition : Pos.None;
     public bool IsSelectedLineDirect => IsSelected && selectedId.IsLine && isSelectedLineDirect;
 
     public void HideSelectedPosition()
@@ -138,7 +141,11 @@ class SelectionService : ISelectionService
     public async void Select(PointerId pointerId, PointerEvent e)
     {
         if (IsSelected && selectedId.Id == pointerId.Id)
+        {
+            if (pointerId.IsLine)
+                await TrySelectOrRefreshLineAsync(pointerId, e, isNewSelection: false);
             return;
+        }
 
         if (IsSelected)
             Unselect(); // Clicked on some other item or outside the diagram
@@ -166,49 +173,14 @@ class SelectionService : ISelectionService
                 selectedId = pointerId;
                 this.isEditMode = false;
                 isSelectedLineDirect = false;
+                selectedLineClickPosition = Pos.None;
                 await UpdateSelectedPositionAsync();
             }
         }
 
         if (pointerId.IsLine)
         {
-            Log.Info("Select line at", e);
-
-            if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
-            {
-                Log.Info("Selected line is not visible on the screen");
-                return;
-            }
-            Log.Info("Line bound", bound);
-
-            var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);
-            // var (x1, y1, x2, y2) = (bound.X, bound.Bottom, bound.Right, bound.Y);
-            var (x, y) = (e.ClientX, e.ClientY);
-
-            modelService.UseLine(
-                pointerId.Id,
-                line =>
-                {
-                    line.IsSelected = true;
-                    isSelectedLineDirect = line.IsDirect;
-
-                    // Calculate the clicked relative position on the line, this is used to
-                    // show the toolbar at the clicked position on the line
-                    if (line.IsUpHill)
-                        (y1, y2) = (y2, y1);
-                    var dx = x2 - x1;
-                    var dy = y2 - y1;
-                    var len2 = dx * dx + dy * dy;
-                    var t = ((x - x1) * dx + (y - y1) * dy) / len2; // projection factor t ∈ [0,1]
-                    t = Math.Max(0, Math.Min(1, t));
-                    clickedRelativePosition = t;
-
-                    return true;
-                }
-            );
-            selectedId = pointerId;
-            this.isEditMode = false;
-            await UpdateSelectedPositionAsync();
+            await TrySelectOrRefreshLineAsync(pointerId, e, isNewSelection: true);
         }
     }
 
@@ -241,7 +213,58 @@ class SelectionService : ISelectionService
         selectedId = PointerId.Empty;
         this.isEditMode = false;
         isSelectedLineDirect = false;
+        selectedLineClickPosition = Pos.None;
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    async Task<bool> TrySelectOrRefreshLineAsync(PointerId pointerId, PointerEvent e, bool isNewSelection)
+    {
+        Log.Info("Select line at", e);
+
+        if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
+        {
+            Log.Info("Selected line is not visible on the screen");
+            return false;
+        }
+        Log.Info("Line bound", bound);
+
+        var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);
+        var (x, y) = (e.ClientX, e.ClientY);
+        selectedLineClickPosition = new Pos(x, y);
+
+        modelService.UseLine(
+            pointerId.Id,
+            line =>
+            {
+                if (isNewSelection)
+                    line.IsSelected = true;
+                isSelectedLineDirect = line.IsDirect;
+
+                // Calculate the clicked relative position on the line, this is used to
+                // show the toolbar at the clicked position on the line
+                if (line.IsUpHill)
+                    (y1, y2) = (y2, y1);
+                var dx = x2 - x1;
+                var dy = y2 - y1;
+                var len2 = dx * dx + dy * dy;
+                if (len2 > 0)
+                {
+                    var t = ((x - x1) * dx + (y - y1) * dy) / len2; // projection factor t ∈ [0,1]
+                    clickedRelativePosition = Math.Max(0, Math.Min(1, t));
+                }
+
+                return true;
+            }
+        );
+
+        if (isNewSelection)
+        {
+            selectedId = pointerId;
+            this.isEditMode = false;
+        }
+
+        await UpdateSelectedPositionAsync();
+        return true;
     }
 
     // Returns true if the node is movable, i.e. the node is not too large (to zoomed in) for the current screen.

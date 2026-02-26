@@ -8,6 +8,7 @@ class DColors
     // Item (node and line)
     static readonly string ItemColorDarkSelected = "#4DA6FF";
     static readonly string ItemColorLightSelected = "#1A73E8";
+    static readonly string ItemLineSelected = "#a7cff7";
 
     // Tests
     static readonly string TextDark = "#FFFFFF";
@@ -73,6 +74,7 @@ class DColors
     public static readonly string Text = IsDark ? TextDark : TextLight;
 
     public static readonly string Selected = IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
+    public static readonly string LineSelected = ItemLineSelected;
     public static readonly string ToolBarIcon = MudBlazor.Colors.DeepPurple.Lighten5;
 
     public static string ColorBasedOnName(string name)

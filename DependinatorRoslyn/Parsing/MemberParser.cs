@@ -33,7 +33,7 @@ class MemberParser
         if (
             member.Type is INamedTypeSymbol fieldType
             && !IsSameAsContainingType(fieldType, member)
-            && IgnoredTypes.IsIgnoredSystemType(fieldType)
+            && !IgnoredTypes.IsIgnoredSystemType(fieldType)
         )
             yield return new Item(null, LinkParser.Parse(memberNode.Node!.Name, fieldType));
     }

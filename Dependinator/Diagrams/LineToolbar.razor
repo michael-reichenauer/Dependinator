@@ -7,6 +7,7 @@
 @inject ISelectionService selectionService
 @inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
+@inject ILineEditService lineEditService
 
 @if (HasSelectedLine)
 {
@@ -22,6 +23,8 @@
             {
                 <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
                 <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint" />
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint" />
             }
         </MudButtonGroup>
     </MudStack>
@@ -38,6 +41,24 @@
 
     void ShowReferences() => dependenciesService.ShowReferences();
     void ShowDependencies() => dependenciesService.ShowDependencies();
+    async Task AddSegmentPoint()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        await lineEditService.AddSegmentPoint(
+            Models.LineId.FromId(selectionService.SelectedId.Id),
+            selectionService.SelectedLineClickPosition
+        );
+    }
+    async Task RemoveSegmentPoint()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        await lineEditService.RemoveSegmentPoint(
+            Models.LineId.FromId(selectionService.SelectedId.Id),
+            selectionService.SelectedLineClickPosition
+        );
+    }
     void CloseDirectLine()
     {
         if (!selectionService.SelectedId.IsLine)
