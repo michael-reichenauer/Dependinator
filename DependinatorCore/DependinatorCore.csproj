@@ -3,6 +3,7 @@
     <AssemblyVersion>0.5.*</AssemblyVersion>
     <Deterministic>false</Deterministic>
     <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Dependinator.Core</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>

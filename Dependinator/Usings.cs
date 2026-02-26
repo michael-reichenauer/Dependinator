@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Dependinator.Wasm")]
-[assembly: InternalsVisibleTo("DependinatorWeb")]
+[assembly: InternalsVisibleTo("Dependinator.Web")]
 [assembly: InternalsVisibleTo("Dependinator.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // DI and tests access
 

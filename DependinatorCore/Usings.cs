@@ -5,12 +5,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Dependinator")]
-[assembly: InternalsVisibleTo("DependinatorLanguageServer")]
-[assembly: InternalsVisibleTo("DependinatorRoslyn")]
-[assembly: InternalsVisibleTo("DependinatorRoslyn.Tests")]
-[assembly: InternalsVisibleTo("DependinatorWeb")]
-[assembly: InternalsVisibleTo("DependinatorWasm")]
-[assembly: InternalsVisibleTo("DependinatorCore.Tests")]
+[assembly: InternalsVisibleTo("Dependinator.Lsp")]
+[assembly: InternalsVisibleTo("Dependinator.Roslyn")]
+[assembly: InternalsVisibleTo("Dependinator.Roslyn.Tests")]
+[assembly: InternalsVisibleTo("Dependinator.Web")]
+[assembly: InternalsVisibleTo("Dependinator.Wasm")]
+[assembly: InternalsVisibleTo("Dependinator.Core.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
