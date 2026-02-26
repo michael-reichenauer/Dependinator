@@ -23,8 +23,8 @@ export async function startLanguageServer(
     const workspaceProject = workspaceFolder
         ? vscode.Uri.joinPath(
             workspaceFolder,
-            "DependinatorLanguageServer",
-            "DependinatorLanguageServer.csproj"
+            "Dependinator.Lsp",
+            "Dependinator.Lsp.csproj"
         )
         : undefined;
     console.log("DEP: workspaceProject", workspaceProject);
@@ -32,12 +32,12 @@ export async function startLanguageServer(
     const extensionProject = vscode.Uri.joinPath(
         context.extensionUri,
         "..",
-        "DependinatorLanguageServer",
-        "DependinatorLanguageServer.csproj"
+        "Dependinator.Lsp",
+        "Dependinator.Lsp.csproj"
     );
     console.log("DEP: extensionProject", extensionProject);
 
-    const serverExeName = process.platform === "win32" ? "DependinatorLanguageServer.exe" : "DependinatorLanguageServer";
+    const serverExeName = process.platform === "win32" ? "Dependinator.Lsp.exe" : "Dependinator.Lsp";
     const runtimeIdentifier = getRuntimeIdentifier();
     const serverExeCandidates: vscode.Uri[] = [
         runtimeIdentifier
@@ -60,25 +60,25 @@ export async function startLanguageServer(
         vscode.Uri.joinPath(
             context.extensionUri,
             "server",
-            "DependinatorLanguageServer.dll"
+            "Dependinator.Lsp.dll"
         ),
         vscode.Uri.joinPath(
             context.extensionUri,
             "..",
-            "DependinatorLanguageServer",
+            "Dependinator.Lsp",
             "bin",
             "Debug",
             "net10.0",
-            "DependinatorLanguageServer.dll"
+            "Dependinator.Lsp.dll"
         ),
         vscode.Uri.joinPath(
             context.extensionUri,
             "..",
-            "DependinatorLanguageServer",
+            "Dependinator.Lsp",
             "bin",
             "Release",
             "net10.0",
-            "DependinatorLanguageServer.dll"
+            "Dependinator.Lsp.dll"
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
     console.log("DEP: serverDllCandidates", serverDllCandidates);

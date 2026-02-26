@@ -1,5 +1,5 @@
+using Dependinator.Core.Shared;
 using Dependinator.Models;
-using DependinatorCore.Shared;
 
 namespace Dependinator.Shared;
 

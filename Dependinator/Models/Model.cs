@@ -1,4 +1,4 @@
-using DependinatorCore.Parsing;
+using Dependinator.Core.Parsing;
 
 namespace Dependinator.Models;
 

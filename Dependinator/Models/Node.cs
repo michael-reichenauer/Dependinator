@@ -1,5 +1,5 @@
 using System.Web;
-using DependinatorCore.Parsing;
+using Dependinator.Core.Parsing;
 
 namespace Dependinator.Models;
 

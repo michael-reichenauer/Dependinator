@@ -1,5 +1,5 @@
 using Dependinator.Models;
-using DependinatorCore.Parsing;
+using Dependinator.Core.Parsing;
 using ModelNode = Dependinator.Models.Node;
 
 namespace Dependinator.Tests.Models;

@@ -1,4 +1,4 @@
-using DependinatorCore.Shared;
+using Dependinator.Core.Shared;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Shared;

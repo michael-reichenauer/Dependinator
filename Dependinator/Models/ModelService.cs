@@ -1,5 +1,5 @@
-using DependinatorCore;
-using DependinatorCore.Shared;
+using Dependinator.Core;
+using Dependinator.Core.Shared;
 
 namespace Dependinator.Models;
 
@@ -329,7 +329,7 @@ class ModelService : IModelService
 
         if (
             !Try(
-                out DependinatorCore.Parsing.Source? source,
+                out Dependinator.Core.Parsing.Source? source,
                 out var e,
                 await parserService.GetSourceAsync(modelPath, nodeName)
             )

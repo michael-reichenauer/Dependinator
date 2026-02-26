@@ -2,7 +2,7 @@
   "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
   "configurations": {
     "dependinator-test": {
-      "appLocation": "DependinatorWasm",
+      "appLocation": "Dependinator.Wasm",
       "apiLocation": "Api",
       "outputLocation": "bin/wwwroot",
       "apiLanguage": "dotnetisolated",
