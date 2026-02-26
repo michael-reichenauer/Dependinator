@@ -134,11 +134,11 @@ class MethodLinkParser
 
     static IEnumerable<Link> AddTypeLinks(ITypeSymbol? type, IMethodSymbol member, string fullMethodName)
     {
-        if (type is not INamedTypeSymbol namedType)
-            yield break;
-        if (IgnoredTypes.IsIgnoredSystemType(namedType))
-            yield break;
-        if (SymbolEqualityComparer.Default.Equals(namedType, member.ContainingType))
+        if (
+            type is not INamedTypeSymbol namedType
+            || IgnoredTypes.IsIgnoredSystemType(namedType)
+            || SymbolEqualityComparer.Default.Equals(namedType, member.ContainingType)
+        )
             yield break;
 
         yield return LinkParser.Parse(fullMethodName, namedType);
