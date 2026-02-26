@@ -7,7 +7,7 @@
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/DependinatorWeb/DependinatorWeb.csproj",
+				"${workspaceFolder}/Dependinator.Web/Dependinator.Web.csproj",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],

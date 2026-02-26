@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <AssemblyName>Dependinator.Core.Tests</AssemblyName>
-    <RootNamespace>Dependinator.Core.Tests</RootNamespace>
+    <AssemblyName>Dependinator.Roslyn.Tests</AssemblyName>
+    <RootNamespace>Dependinator.Roslyn.Tests</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -11,14 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="**/_Snapshots/**/*.cs" />
-    <None Include="**/_Snapshots/**/*.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Moq" />
-    <PackageReference Include="Verify.Xunit" />
+    <PackageReference Include="Microsoft.Build.Locator" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="Microsoft.Build.Framework" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.StringTools" ExcludeAssets="runtime" PrivateAssets="all" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -35,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DependinatorCore\DependinatorCore.csproj" />
+    <ProjectReference Include="..\Dependinator.Core\Dependinator.Core.csproj" />
+    <ProjectReference Include="..\Dependinator.Roslyn\Dependinator.Roslyn.csproj" />
   </ItemGroup>
 </Project>

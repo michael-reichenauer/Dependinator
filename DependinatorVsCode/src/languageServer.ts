@@ -23,8 +23,8 @@ export async function startLanguageServer(
     const workspaceProject = workspaceFolder
         ? vscode.Uri.joinPath(
             workspaceFolder,
-            "DependinatorLanguageServer",
-            "DependinatorLanguageServer.csproj"
+            "Dependinator.Lsp",
+            "Dependinator.Lsp.csproj"
         )
         : undefined;
     console.log("DEP: workspaceProject", workspaceProject);
@@ -32,8 +32,8 @@ export async function startLanguageServer(
     const extensionProject = vscode.Uri.joinPath(
         context.extensionUri,
         "..",
-        "DependinatorLanguageServer",
-        "DependinatorLanguageServer.csproj"
+        "Dependinator.Lsp",
+        "Dependinator.Lsp.csproj"
     );
     console.log("DEP: extensionProject", extensionProject);
 
@@ -65,7 +65,7 @@ export async function startLanguageServer(
         vscode.Uri.joinPath(
             context.extensionUri,
             "..",
-            "DependinatorLanguageServer",
+            "Dependinator.Lsp",
             "bin",
             "Debug",
             "net10.0",
@@ -74,7 +74,7 @@ export async function startLanguageServer(
         vscode.Uri.joinPath(
             context.extensionUri,
             "..",
-            "DependinatorLanguageServer",
+            "Dependinator.Lsp",
             "bin",
             "Release",
             "net10.0",

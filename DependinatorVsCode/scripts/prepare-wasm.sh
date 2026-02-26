@@ -3,7 +3,7 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/../.." && pwd)"
-wasm_project="$repo_root/DependinatorWasm/DependinatorWasm.csproj"
+wasm_project="$repo_root/Dependinator.Wasm/Dependinator.Wasm.csproj"
 publish_root="$repo_root/DependinatorVsCode/.publish"
 publish_dir="$publish_root/wwwroot"
 target_dir="$repo_root/DependinatorVsCode/media"

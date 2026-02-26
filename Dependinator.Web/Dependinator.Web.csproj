@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
-    <ProjectReference Include="..\DependinatorCore\DependinatorCore.csproj" />
-    <ProjectReference Include="..\DependinatorRoslyn\DependinatorRoslyn.csproj" />
+    <ProjectReference Include="..\Dependinator.Core\Dependinator.Core.csproj" />
+    <ProjectReference Include="..\Dependinator.Roslyn\Dependinator.Roslyn.csproj" />
   </ItemGroup>
 </Project>

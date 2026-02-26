@@ -7,9 +7,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/DependinatorWeb/bin/Debug/net10.0/Dependinator.Web.dll",
+            "program": "${workspaceFolder}/Dependinator.Web/bin/Debug/net10.0/Dependinator.Web.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/DependinatorWeb",
+            "cwd": "${workspaceFolder}/Dependinator.Web",
             "stopAtEntry": false,
             // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
             // "serverReadyAction": {
@@ -21,7 +21,7 @@
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
             "sourceFileMap": {
-                "/Views": "${workspaceFolder}/DependinatorWeb/Views"
+                "/Views": "${workspaceFolder}/Dependinator.Web/Views"
             },
             "dotnetRunMessages": true,
             "console": "internalConsole"

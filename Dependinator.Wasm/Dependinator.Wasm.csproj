@@ -22,6 +22,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" GlobalPropertiesToRemove="IsBrowserWasm" />
     <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
-    <ProjectReference Include="..\DependinatorCore\DependinatorCore.csproj" />
+    <ProjectReference Include="..\Dependinator.Core\Dependinator.Core.csproj" />
   </ItemGroup>
 </Project>

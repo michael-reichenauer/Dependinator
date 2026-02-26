@@ -8,7 +8,7 @@ static class ExampleModel
     public static string SolutionExample = "/workspaces/Dependinator/Dependinator.sln";
     public static string EmbeddedBrowserExampleName = "example.model";
     public static string EmbeddedBrowserExamplePath =
-        $"/workspaces/Dependinator/DependinatorWasm/wwwroot/{EmbeddedBrowserExampleName}";
+        $"/workspaces/Dependinator/Dependinator.Wasm/wwwroot/{EmbeddedBrowserExampleName}";
 
     //public static string OtherSolutionExample = "/workspaces/DepExt/Dependinator.sln";
 
