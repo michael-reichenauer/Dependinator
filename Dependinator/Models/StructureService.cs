@@ -9,7 +9,7 @@ interface IStructureService
     void AddOrUpdateLink(Parsing.Link parsedLink);
     void SetNodeDto(NodeDto nodeDto);
     void SetLinkDto(LinkDto linkDto);
-    void SetLineLayoutDto(LineLayoutDto lineLayoutDto);
+    void SetLineLayoutDto(LineDto lineLayoutDto);
 }
 
 [Transient]
@@ -118,7 +118,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         AddLink(link);
     }
 
-    public void SetLineLayoutDto(LineLayoutDto lineLayoutDto)
+    public void SetLineLayoutDto(LineDto lineLayoutDto)
     {
         if (!model.TryGetLine(LineId.FromId(lineLayoutDto.LineId), out var line))
             return;

@@ -13,8 +13,6 @@
 {
     <MudStack Style="@containerPosition" Spacing="1">
         <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled">
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint" />
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint" />
             @if (selectionService.IsSelectedLineDirect)
             {
                 <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine" />
@@ -25,6 +23,8 @@
             {
                 <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
                 <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint" />
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint" />
             }
         </MudButtonGroup>
     </MudStack>

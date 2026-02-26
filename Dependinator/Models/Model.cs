@@ -14,14 +14,7 @@ record ModelDto
     public Rect ViewRect { get; init; } = Rect.None;
     public required IReadOnlyList<NodeDto> Nodes { get; init; }
     public required IReadOnlyList<LinkDto> Links { get; init; }
-    public IReadOnlyList<LineLayoutDto> LineLayouts { get; init; } = [];
-}
-
-[Serializable]
-record LineLayoutDto
-{
-    public required string LineId { get; init; }
-    public required IReadOnlyList<Pos> SegmentPoints { get; init; }
+    public IReadOnlyList<LineDto> Lines { get; init; } = [];
 }
 
 interface IModel : IDisposable
@@ -115,12 +108,12 @@ class Model : IModel
             ViewRect = ViewRect,
             Nodes = [.. Items.Values.OfType<Models.Node>().Select(n => n.ToDto())],
             Links = [.. Items.Values.OfType<Models.Link>().Select(l => l.ToDto())],
-            LineLayouts =
+            Lines =
             [
                 .. Items
                     .Values.OfType<Line>()
                     .Where(l => !l.IsDirect && l.SegmentPoints.Count > 0)
-                    .Select(l => new LineLayoutDto() { LineId = l.Id.Value, SegmentPoints = [.. l.SegmentPoints] }),
+                    .Select(l => new LineDto() { LineId = l.Id.Value, SegmentPoints = [.. l.SegmentPoints] }),
             ],
         };
 

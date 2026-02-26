@@ -2,6 +2,13 @@ namespace Dependinator.Models;
 
 record LinePos(double X1, double Y1, double X2, double Y2);
 
+[Serializable]
+record LineDto
+{
+    public required string LineId { get; init; }
+    public required IReadOnlyList<Pos> SegmentPoints { get; init; }
+}
+
 class Line : IItem
 {
     const double DirectStrokeWidth = 2;
