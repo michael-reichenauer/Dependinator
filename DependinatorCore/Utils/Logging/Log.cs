@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
-namespace DependinatorCore.Utils.Logging;
+namespace Dependinator.Core.Utils.Logging;
 
 public static class Log
 {

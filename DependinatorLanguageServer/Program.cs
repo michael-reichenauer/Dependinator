@@ -1,12 +1,12 @@
-using DependinatorCore;
-using DependinatorCore.Rpc;
-using DependinatorCore.Shared;
-using DependinatorCore.Utils.Logging;
-using DependinatorRoslyn;
+using Dependinator.Core;
+using Dependinator.Core.Rpc;
+using Dependinator.Core.Shared;
+using Dependinator.Core.Utils.Logging;
+using Dependinator.Roslyn;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
 
-namespace DependinatorLanguageServer;
+namespace Dependinator.Lsp;
 
 internal class Program
 {
@@ -44,7 +44,7 @@ internal class Program
                             server.Services.GetRequiredService<IHost>().SetIsVsCodeExt();
 
                             // Register remote services callable from the WebView WASM UI
-                            server.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
+                            server.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
                             server.UseJsonRpc();
                             Log.Info("Initialized JsonRpc");
 

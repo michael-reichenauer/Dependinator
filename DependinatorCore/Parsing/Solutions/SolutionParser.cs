@@ -1,8 +1,8 @@
-﻿using DependinatorCore.Parsing.Assemblies;
-using DependinatorCore.Parsing.Utils;
-using DependinatorCore.Shared;
+﻿using Dependinator.Core.Parsing.Assemblies;
+using Dependinator.Core.Parsing.Utils;
+using Dependinator.Core.Shared;
 
-namespace DependinatorCore.Parsing.Solutions;
+namespace Dependinator.Core.Parsing.Solutions;
 
 internal class SolutionParser : IDisposable
 {

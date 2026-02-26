@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
-using DependinatorCore.Parsing;
-using DependinatorCore.Parsing.Utils;
+using Dependinator.Core.Parsing;
+using Dependinator.Core.Parsing.Utils;
 
-namespace DependinatorCore.Tests.Parsing.Utils;
+namespace Dependinator.Core.Tests.Parsing.Utils;
 
 class ItemsMock : IItems
 {

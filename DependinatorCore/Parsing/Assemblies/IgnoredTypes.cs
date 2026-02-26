@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 
-namespace DependinatorCore.Parsing.Assemblies;
+namespace Dependinator.Core.Parsing.Assemblies;
 
 internal class IgnoredTypes
 {

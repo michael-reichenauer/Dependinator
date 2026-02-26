@@ -1,7 +1,7 @@
-﻿using DependinatorCore.Parsing.Utils;
+﻿using Dependinator.Core.Parsing.Utils;
 using Mono.Cecil;
 
-namespace DependinatorCore.Parsing.Assemblies;
+namespace Dependinator.Core.Parsing.Assemblies;
 
 internal class AssemblyReferencesParser
 {

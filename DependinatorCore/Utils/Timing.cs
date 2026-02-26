@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace DependinatorCore.Utils;
+namespace Dependinator.Core.Utils;
 
 // Measure time and log it.
 public class Timing : IDisposable

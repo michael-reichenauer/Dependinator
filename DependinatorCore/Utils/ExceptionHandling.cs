@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace DependinatorCore.Utils;
+namespace Dependinator.Core.Utils;
 
 // Handles unhandled exceptions top ensure they are logged and program is restarted or shut down
 public static class ExceptionHandling

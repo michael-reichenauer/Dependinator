@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace DependinatorCore.Utils;
+namespace Dependinator.Core.Utils;
 
 public class FatalExceptionEventArgs : EventArgs
 {

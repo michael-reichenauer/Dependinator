@@ -1,4 +1,4 @@
-namespace DependinatorCore.Parsing;
+namespace Dependinator.Core.Parsing;
 
 record Item(Node? Node, Link? Link);
 

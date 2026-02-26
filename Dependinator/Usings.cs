@@ -1,8 +1,8 @@
+global using Dependinator.Core.Utils;
+global using Dependinator.Core.Utils.Logging;
+global using static Dependinator.Core.Utils.Result;
 global using Dependinator.Shared;
-global using DependinatorCore.Utils;
-global using DependinatorCore.Utils.Logging;
-global using static DependinatorCore.Utils.Result;
-global using Parsing = DependinatorCore.Parsing;
+global using Parsing = Dependinator.Core.Parsing;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 

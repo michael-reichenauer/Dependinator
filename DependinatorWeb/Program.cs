@@ -1,13 +1,13 @@
 using Dependinator;
 using Dependinator.Shared;
-using DependinatorCore;
-using DependinatorCore.Rpc;
-using DependinatorCore.Shared;
-using DependinatorCore.Utils;
-using DependinatorCore.Utils.Logging;
-using DependinatorRoslyn;
+using Dependinator.Core;
+using Dependinator.Core.Rpc;
+using Dependinator.Core.Shared;
+using Dependinator.Core.Utils;
+using Dependinator.Core.Utils.Logging;
+using Dependinator.Roslyn;
 
-namespace DependinatorWeb;
+namespace Dependinator.Web;
 
 public class Program
 {
@@ -39,10 +39,10 @@ public class Program
         builder.Services.AddDependinatorRoslynServices();
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
-        builder.Services.AddJsonRpcInterfaces(typeof(DependinatorCore.RootClass));
+        builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Core.RootClass));
 
         var app = builder.Build();
-        app.Services.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
+        app.Services.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
         app.Services.UseJsonRpc();
         app.Services.GetRequiredService<IWorkspaceFileService>().SetWorkspaceFolders(["/workspaces/Dependinator"]);
 

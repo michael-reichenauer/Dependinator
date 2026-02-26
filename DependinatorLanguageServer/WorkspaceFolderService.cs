@@ -1,7 +1,7 @@
-using DependinatorCore.Shared;
+using Dependinator.Core.Shared;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
-namespace DependinatorLanguageServer;
+namespace Dependinator.Lsp;
 
 interface IWorkspaceFolderService
 {

@@ -1,6 +1,6 @@
 using System.Text.Json;
-using DependinatorCore.Rpc;
-using DependinatorCore.Shared;
+using Dependinator.Core.Rpc;
+using Dependinator.Core.Shared;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Shared;

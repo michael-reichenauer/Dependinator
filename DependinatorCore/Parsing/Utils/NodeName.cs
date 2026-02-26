@@ -1,4 +1,4 @@
-﻿namespace DependinatorCore.Parsing.Utils;
+﻿namespace Dependinator.Core.Parsing.Utils;
 
 internal class NodeName : Equatable<NodeName>
 {

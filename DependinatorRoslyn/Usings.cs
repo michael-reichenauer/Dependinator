@@ -1,9 +1,9 @@
-global using DependinatorCore;
-global using DependinatorCore.Parsing;
-global using DependinatorCore.Parsing.Sources;
-global using DependinatorCore.Utils;
-global using DependinatorCore.Utils.Logging;
-global using static DependinatorCore.Utils.Result;
+global using Dependinator.Core;
+global using Dependinator.Core.Parsing;
+global using Dependinator.Core.Parsing.Sources;
+global using Dependinator.Core.Utils;
+global using Dependinator.Core.Utils.Logging;
+global using static Dependinator.Core.Utils.Result;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Dependinator.Roslyn.Tests")]

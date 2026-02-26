@@ -1,4 +1,4 @@
-﻿namespace DependinatorCore.Tests.Parsing.Assemblies;
+﻿namespace Dependinator.Core.Tests.Parsing.Assemblies;
 
 public class DecompilerTestClass
 {

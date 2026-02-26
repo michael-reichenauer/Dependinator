@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace DependinatorCore.Shared;
+namespace Dependinator.Core.Shared;
 
 enum HostType
 {

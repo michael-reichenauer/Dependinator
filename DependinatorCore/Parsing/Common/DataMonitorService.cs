@@ -1,7 +1,7 @@
 ﻿// using System.Runtime.Versioning;
 // using Microsoft.AspNetCore.Components;
 
-// namespace DependinatorCore.Parsing.Common;
+// namespace Dependinator.Core.Parsing.Common;
 
 // [UnsupportedOSPlatform("browser")]
 // [Singleton]

@@ -1,6 +1,6 @@
 using Microsoft.Build.Locator;
 
-namespace DependinatorCore.Parsing.Utils;
+namespace Dependinator.Core.Parsing.Utils;
 
 internal static class MSBuildLocatorHelper
 {

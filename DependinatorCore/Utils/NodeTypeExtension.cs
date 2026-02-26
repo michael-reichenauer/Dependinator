@@ -1,6 +1,6 @@
-using DependinatorCore.Parsing;
+using Dependinator.Core.Parsing;
 
-namespace DependinatorCore.Utils;
+namespace Dependinator.Core.Utils;
 
 static class NodeTypeExtension
 {

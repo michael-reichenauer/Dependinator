@@ -5,7 +5,7 @@ using System.Threading.Channels;
 using StreamJsonRpc;
 using StreamJsonRpc.Protocol;
 
-namespace DependinatorCore.Rpc;
+namespace Dependinator.Core.Rpc;
 
 public delegate ValueTask WriteBinaryMessageActionAsync(ReadOnlyMemory<byte> binaryMessage, CancellationToken ct);
 public delegate ValueTask WriteBase64MessageActionAsync(string base64Message, CancellationToken ct);

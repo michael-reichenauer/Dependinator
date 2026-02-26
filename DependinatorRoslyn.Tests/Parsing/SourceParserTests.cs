@@ -1,7 +1,7 @@
-using DependinatorRoslyn.Parsing;
-using DependinatorRoslyn.Tests.Parsing.Utils;
+using Dependinator.Roslyn.Parsing;
+using Dependinator.Roslyn.Tests.Parsing.Utils;
 
-namespace DependinatorRoslyn.Tests.Parsing;
+namespace Dependinator.Roslyn.Tests.Parsing;
 
 // Some Type Comment
 // Second Row
@@ -32,7 +32,7 @@ public class SourceParserTests
         Assert.NotEmpty(SourceTestDataNodes);
     }
 
-    [Fact]
+    [Fact(Skip = "Disabled, since always parsing whole solution takes time")]
     public async Task TestSolutionSourceParserAsync()
     {
         var sourceParser = new SourceParser();

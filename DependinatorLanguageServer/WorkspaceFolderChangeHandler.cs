@@ -2,7 +2,7 @@ using MediatR;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 
-namespace DependinatorLanguageServer;
+namespace Dependinator.Lsp;
 
 [Method("workspace/didChangeWorkspaceFolders")]
 class WorkspaceFolderChangeHandler(IWorkspaceFolderService workspaceFolderService)

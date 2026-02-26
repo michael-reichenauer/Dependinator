@@ -1,4 +1,4 @@
-namespace DependinatorCore.Utils;
+namespace Dependinator.Core.Utils;
 
 public static class Enums
 {

@@ -1,7 +1,7 @@
 using System.IO.Compression;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DependinatorCore.Parsing.Sources;
+namespace Dependinator.Core.Parsing.Sources;
 
 class SourceParser(HttpClient httpClient) : ISourceParser
 {

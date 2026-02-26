@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace DependinatorCore.Parsing.Assemblies;
+namespace Dependinator.Core.Parsing.Assemblies;
 
 internal class MethodParser(LinkHandler linkHandler)
 {

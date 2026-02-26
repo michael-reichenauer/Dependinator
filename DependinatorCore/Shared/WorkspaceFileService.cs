@@ -1,6 +1,6 @@
-using DependinatorCore.Rpc;
+using Dependinator.Core.Rpc;
 
-namespace DependinatorCore.Shared;
+namespace Dependinator.Core.Shared;
 
 [Rpc]
 interface IWorkspaceFileService

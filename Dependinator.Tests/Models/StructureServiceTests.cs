@@ -1,7 +1,7 @@
 using Dependinator.Models;
-using DependinatorCore.Parsing;
-using ParsingLink = DependinatorCore.Parsing.Link;
-using ParsingNode = DependinatorCore.Parsing.Node;
+using Dependinator.Core.Parsing;
+using ParsingLink = Dependinator.Core.Parsing.Link;
+using ParsingNode = Dependinator.Core.Parsing.Node;
 
 namespace Dependinator.Tests.Models;
 
@@ -16,7 +16,7 @@ public class StructureServiceTests
 
         var parsedNode = new ParsingNode(
             "Parent.Child",
-            new DependinatorCore.Parsing.NodeProperties { Parent = "Parent", Type = NodeType.Type }
+            new Dependinator.Core.Parsing.NodeProperties { Parent = "Parent", Type = NodeType.Type }
         );
 
         service.AddOrUpdateNode(parsedNode);
@@ -37,13 +37,13 @@ public class StructureServiceTests
 
     //     var initialNode = new ParsingNode(
     //         "Child",
-    //         new DependinatorCore.Parsing.NodeAttributes { Parent = "ParentA", Type = NodeType.Type }
+    //         new Dependinator.Core.Parsing.NodeAttributes { Parent = "ParentA", Type = NodeType.Type }
     //     );
     //     service.AddOrUpdateNode(initialNode);
 
     //     var updatedNode = new ParsingNode(
     //         "Child",
-    //         new DependinatorCore.Parsing.NodeAttributes { Parent = "ParentB", Type = NodeType.Type }
+    //         new Dependinator.Core.Parsing.NodeAttributes { Parent = "ParentB", Type = NodeType.Type }
     //     );
     //     service.AddOrUpdateNode(updatedNode);
 
@@ -61,7 +61,7 @@ public class StructureServiceTests
         var lineService = new Mock<ILineService>();
         var service = new StructureService(model, lineService.Object);
 
-        var parsedLink = new ParsingLink("Source", "Target", new DependinatorCore.Parsing.LinkProperties());
+        var parsedLink = new ParsingLink("Source", "Target", new Dependinator.Core.Parsing.LinkProperties());
 
         service.AddOrUpdateLink(parsedLink);
         service.AddOrUpdateLink(parsedLink);

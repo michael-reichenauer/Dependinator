@@ -1,6 +1,6 @@
 using ICSharpCode.Decompiler.Metadata;
 
-namespace DependinatorCore.Parsing.Assemblies;
+namespace Dependinator.Core.Parsing.Assemblies;
 
 sealed class InMemoryAssemblyResolver : ICSharpCode.Decompiler.Metadata.IAssemblyResolver
 {

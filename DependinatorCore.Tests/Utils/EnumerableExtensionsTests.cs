@@ -1,4 +1,4 @@
-namespace DependinatorCore.Tests.Utils;
+namespace Dependinator.Core.Tests.Utils;
 
 public class EnumerableExtensionsTests
 {

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace DependinatorCore.Utils;
+namespace Dependinator.Core.Utils;
 
 public class Json
 {

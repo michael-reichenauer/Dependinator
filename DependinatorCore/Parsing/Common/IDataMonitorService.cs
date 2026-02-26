@@ -1,4 +1,4 @@
-﻿// namespace DependinatorCore.Parsing.Common;
+﻿// namespace Dependinator.Core.Parsing.Common;
 
 // internal interface IDataMonitorService
 // {

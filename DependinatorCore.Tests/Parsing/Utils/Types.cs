@@ -1,4 +1,4 @@
-namespace DependinatorCore.Tests.Parsing.Utils;
+namespace Dependinator.Core.Tests.Parsing.Utils;
 
 // class Types
 // {

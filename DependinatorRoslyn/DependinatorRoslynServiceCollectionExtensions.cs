@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DependinatorRoslyn;
+namespace Dependinator.Roslyn;
 
 public static class DependinatorRoslynServiceCollectionExtensions
 {

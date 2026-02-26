@@ -1,6 +1,6 @@
 using Dependinator.Shared;
 
-namespace DependinatorWeb;
+namespace Dependinator.Web;
 
 class LocalHostFileSystem : IHostFileSystem
 {

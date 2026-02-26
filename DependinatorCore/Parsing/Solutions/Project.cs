@@ -1,6 +1,6 @@
 ﻿using Microsoft.Build.Construction;
 
-namespace DependinatorCore.Parsing.Solutions;
+namespace Dependinator.Core.Parsing.Solutions;
 
 internal class Project
 {

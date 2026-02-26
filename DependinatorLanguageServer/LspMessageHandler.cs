@@ -1,9 +1,9 @@
-using DependinatorCore.Rpc;
+using Dependinator.Core.Rpc;
 using MediatR;
 using OmniSharp.Extensions.JsonRpc;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 
-namespace DependinatorLanguageServer;
+namespace Dependinator.Lsp;
 
 [Method("lsp/message")]
 public record LspMessage(string Message) : IRequest;

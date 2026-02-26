@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
-using DependinatorCore.Parsing.Utils;
-using DependinatorCore.Shared;
+using Dependinator.Core.Parsing.Utils;
+using Dependinator.Core.Shared;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
 
-namespace DependinatorCore.Parsing.Assemblies;
+namespace Dependinator.Core.Parsing.Assemblies;
 
 internal class AssemblyParser : IDisposable
 {

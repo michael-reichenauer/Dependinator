@@ -1,7 +1,7 @@
-﻿using DependinatorCore.Parsing.Utils;
+﻿using Dependinator.Core.Parsing.Utils;
 using Newtonsoft.Json;
 
-namespace DependinatorCore.Parsing.JsonDataFiles;
+namespace Dependinator.Core.Parsing.JsonDataFiles;
 
 [Transient]
 class JsonFileParserService : IParser

@@ -1,4 +1,4 @@
-namespace DependinatorCore.Shared;
+namespace Dependinator.Core.Shared;
 
 public interface IFileService
 {

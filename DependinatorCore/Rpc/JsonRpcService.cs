@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using StreamJsonRpc;
 
-namespace DependinatorCore.Rpc;
+namespace Dependinator.Core.Rpc;
 
 public interface IJsonRpcService
 {

@@ -1,8 +1,8 @@
-using DependinatorCore.Parsing.Utils;
+using Dependinator.Core.Parsing.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 
-namespace DependinatorRoslyn.Parsing;
+namespace Dependinator.Roslyn.Parsing;
 
 class Compiler
 {

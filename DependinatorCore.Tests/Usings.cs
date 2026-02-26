@@ -1,6 +1,6 @@
-global using static DependinatorCore.Tests.Parsing.Utils.Reference;
-global using DependinatorCore.Utils;
-global using static DependinatorCore.Utils.Result;
+global using static Dependinator.Core.Tests.Parsing.Utils.Reference;
+global using Dependinator.Core.Utils;
+global using static Dependinator.Core.Utils.Result;
 global using VerifyTests;
 global using Xunit;
 

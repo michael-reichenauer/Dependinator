@@ -1,4 +1,4 @@
-namespace DependinatorCore.Utils.Logging;
+namespace Dependinator.Core.Utils.Logging;
 
 public interface IHostLoggingSettings
 {

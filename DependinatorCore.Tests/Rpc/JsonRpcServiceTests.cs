@@ -1,9 +1,9 @@
 using System.Text;
-using DependinatorCore.Rpc;
+using Dependinator.Core.Rpc;
 using StreamJsonRpc;
 using StreamJsonRpc.Protocol;
 
-namespace DependinatorCore.Tests.Rpc;
+namespace Dependinator.Core.Tests.Rpc;
 
 public interface ICalcAdd
 {

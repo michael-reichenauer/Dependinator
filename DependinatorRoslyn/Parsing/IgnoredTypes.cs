@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace DependinatorRoslyn.Parsing;
+namespace Dependinator.Roslyn.Parsing;
 
 class IgnoredTypes
 {

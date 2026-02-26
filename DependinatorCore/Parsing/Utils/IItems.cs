@@ -1,4 +1,4 @@
-namespace DependinatorCore.Parsing.Utils;
+namespace Dependinator.Core.Parsing.Utils;
 
 interface IItems
 {

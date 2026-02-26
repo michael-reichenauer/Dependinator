@@ -1,4 +1,4 @@
-﻿namespace DependinatorCore.Parsing.JsonDataFiles;
+﻿namespace Dependinator.Core.Parsing.JsonDataFiles;
 
 public static class JsonTypes
 {

@@ -1,8 +1,8 @@
 using System.IO.Compression;
-using DependinatorCore.Shared;
+using Dependinator.Core.Shared;
 using Microsoft.CodeAnalysis;
 
-namespace DependinatorRoslyn.Parsing;
+namespace Dependinator.Roslyn.Parsing;
 
 [Transient]
 class SourceParser : ISourceParser

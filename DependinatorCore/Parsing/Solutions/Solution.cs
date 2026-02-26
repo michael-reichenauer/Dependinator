@@ -1,7 +1,7 @@
-﻿using DependinatorCore.Parsing.Utils;
+﻿using Dependinator.Core.Parsing.Utils;
 using Microsoft.Build.Construction;
 
-namespace DependinatorCore.Parsing.Solutions;
+namespace Dependinator.Core.Parsing.Solutions;
 
 /// <summary>
 ///     Represents the solution loaded from a sln file.

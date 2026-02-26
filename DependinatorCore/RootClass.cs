@@ -1,3 +1,3 @@
-namespace DependinatorCore;
+namespace Dependinator.Core;
 
 public class RootClass { }

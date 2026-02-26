@@ -1,11 +1,11 @@
 using Dependinator;
 using Dependinator.Shared;
 using Dependinator.Wasm;
-using DependinatorCore;
-using DependinatorCore.Parsing.Sources;
-using DependinatorCore.Rpc;
-using DependinatorCore.Utils;
-using DependinatorCore.Utils.Logging;
+using Dependinator.Core;
+using Dependinator.Core.Parsing.Sources;
+using Dependinator.Core.Rpc;
+using Dependinator.Core.Utils;
+using Dependinator.Core.Utils.Logging;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -26,10 +26,10 @@ internal class Program
         builder.Services.AddDependinatorBrowserSourceParser();
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
-        builder.Services.AddJsonRpcInterfaces(typeof(DependinatorCore.RootClass));
+        builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Core.RootClass));
 
         var app = builder.Build();
-        app.Services.UseJsonRpcClasses(typeof(DependinatorCore.RootClass));
+        app.Services.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
         app.Services.UseJsonRpc();
 
         await app.RunAsync();

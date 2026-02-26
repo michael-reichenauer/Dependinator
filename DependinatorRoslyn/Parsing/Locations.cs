@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace DependinatorRoslyn.Parsing;
+namespace Dependinator.Roslyn.Parsing;
 
 class Locations
 {

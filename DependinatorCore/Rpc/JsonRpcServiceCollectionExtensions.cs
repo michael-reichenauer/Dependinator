@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DependinatorCore.Rpc;
+namespace Dependinator.Core.Rpc;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 public class RpcAttribute : Attribute { }

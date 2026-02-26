@@ -1,7 +1,7 @@
-﻿using DependinatorCore.Parsing.Utils;
-using DependinatorCore.Shared;
+﻿using Dependinator.Core.Parsing.Utils;
+using Dependinator.Core.Shared;
 
-namespace DependinatorCore.Parsing.Assemblies;
+namespace Dependinator.Core.Parsing.Assemblies;
 
 [Transient]
 internal class AssemblyParserService : IParser

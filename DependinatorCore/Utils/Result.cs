@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace DependinatorCore.Utils;
+namespace Dependinator.Core.Utils;
 
 // Result contains a few Try methods that return either a value or an error for functions
 // that return a R or R<T> type. This makes it possible to avoid using exceptions for flow control.

@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace DependinatorCore.Tests;
+namespace Dependinator.Core.Tests;
 
 static class VerifyConfig
 {

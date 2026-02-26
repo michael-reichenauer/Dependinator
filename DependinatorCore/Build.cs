@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace DependinatorCore;
+namespace Dependinator.Core;
 
 public static class Build
 {

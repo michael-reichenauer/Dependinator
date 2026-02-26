@@ -1,4 +1,4 @@
-using DependinatorCore.Shared;
+using Dependinator.Core.Shared;
 
 namespace Dependinator.Diagrams;
 

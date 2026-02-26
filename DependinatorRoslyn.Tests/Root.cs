@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace DependinatorRoslyn.Tests;
+namespace Dependinator.Roslyn.Tests;
 
 static class Root
 {

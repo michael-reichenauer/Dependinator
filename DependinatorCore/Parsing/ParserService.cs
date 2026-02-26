@@ -1,9 +1,9 @@
 ﻿using System.Threading.Channels;
-using DependinatorCore.Parsing.Sources;
-using DependinatorCore.Parsing.Utils;
-using DependinatorCore.Rpc;
+using Dependinator.Core.Parsing.Sources;
+using Dependinator.Core.Parsing.Utils;
+using Dependinator.Core.Rpc;
 
-namespace DependinatorCore.Parsing;
+namespace Dependinator.Core.Parsing;
 
 // Parses the a solution or assemblies to extract code structure and meta data.
 // Uses both reflection to parse binaries for structure and Roselyn to parse source for more meta data.

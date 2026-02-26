@@ -1,7 +1,7 @@
-using DependinatorCore.Parsing.Solutions;
-using DependinatorCore.Shared;
+using Dependinator.Core.Parsing.Solutions;
+using Dependinator.Core.Shared;
 
-namespace DependinatorCore.Tests.Parsing.Solutions;
+namespace Dependinator.Core.Tests.Parsing.Solutions;
 
 public class SolutionParserTests
 {

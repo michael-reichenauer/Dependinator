@@ -1,6 +1,6 @@
 using Mono.Cecil;
 
-namespace DependinatorCore.Tests.Parsing.Utils;
+namespace Dependinator.Core.Tests.Parsing.Utils;
 
 class Reference
 {
@@ -27,11 +27,11 @@ class Reference
         var typeDefinition = AssemblyHelper.GetTypeDefinition<T>();
         if (memberName is null)
         {
-            return DependinatorCore.Parsing.Assemblies.Name.GetTypeFullName(typeDefinition);
+            return Dependinator.Core.Parsing.Assemblies.Name.GetTypeFullName(typeDefinition);
         }
         if (TryGetMember(typeDefinition, memberName, out var member))
         {
-            return DependinatorCore.Parsing.Assemblies.Name.GetMemberFullName(member);
+            return Dependinator.Core.Parsing.Assemblies.Name.GetMemberFullName(member);
         }
 
         throw new Exception($"Invalid reference '{typeof(T).FullName}', '{memberName}'");

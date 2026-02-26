@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace DependinatorCore.Utils;
+namespace Dependinator.Core.Utils;
 
 // public interface IEmbeddedResources
 // {

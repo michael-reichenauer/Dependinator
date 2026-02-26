@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
-using DependinatorCore.Parsing.Assemblies;
-using DependinatorCore.Tests.Parsing.Utils;
+using Dependinator.Core.Parsing.Assemblies;
+using Dependinator.Core.Tests.Parsing.Utils;
 
-namespace DependinatorCore.Tests.Parsing.Assemblies;
+namespace Dependinator.Core.Tests.Parsing.Assemblies;
 
 public class DecompilerTestClass
 {

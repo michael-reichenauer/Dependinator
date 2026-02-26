@@ -1,4 +1,4 @@
-namespace DependinatorCore.Parsing.Sources;
+namespace Dependinator.Core.Parsing.Sources;
 
 interface ISourceParser
 {
