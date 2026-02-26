@@ -5,7 +5,7 @@ namespace Dependinator.Models;
 [Serializable]
 record ModelDto
 {
-    public static string CurrentFormatVersion = "6";
+    public static string CurrentFormatVersion = "7";
 
     public string FormatVersion { get; init; } = CurrentFormatVersion;
     public required string Name { get; init; }
@@ -14,6 +14,14 @@ record ModelDto
     public Rect ViewRect { get; init; } = Rect.None;
     public required IReadOnlyList<NodeDto> Nodes { get; init; }
     public required IReadOnlyList<LinkDto> Links { get; init; }
+    public IReadOnlyList<LineLayoutDto> LineLayouts { get; init; } = [];
+}
+
+[Serializable]
+record LineLayoutDto
+{
+    public required string LineId { get; init; }
+    public required IReadOnlyList<Pos> SegmentPoints { get; init; }
 }
 
 interface IModel : IDisposable
@@ -107,6 +115,13 @@ class Model : IModel
             ViewRect = ViewRect,
             Nodes = [.. Items.Values.OfType<Models.Node>().Select(n => n.ToDto())],
             Links = [.. Items.Values.OfType<Models.Link>().Select(l => l.ToDto())],
+            LineLayouts =
+            [
+                .. Items
+                    .Values.OfType<Line>()
+                    .Where(l => !l.IsDirect && l.SegmentPoints.Count > 0)
+                    .Select(l => new LineLayoutDto() { LineId = l.Id.Value, SegmentPoints = [.. l.SegmentPoints] }),
+            ],
         };
 
     public void SetFromDto(string path, ModelDto modelDto)

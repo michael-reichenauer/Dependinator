@@ -553,6 +553,7 @@ class ModelService : IModelService
         {
             modelDto.Nodes.ForEach(modelStructureService.SetNodeDto);
             modelDto.Links.ForEach(modelStructureService.SetLinkDto);
+            modelDto.LineLayouts.ForEach(modelStructureService.SetLineLayoutDto);
         }
     }
 }
