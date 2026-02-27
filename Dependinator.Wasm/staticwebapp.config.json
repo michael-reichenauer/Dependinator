@@ -12,7 +12,7 @@
                             "clientSecretSettingName": "ENTRA_EXTERNAL_ID_CLIENT_SECRET"
                         },
                         "openIdConnectConfiguration": {
-                            "wellKnownOpenIdConfiguration": "https://<ENTRA_EXTERNAL_ID_ISSUER>/.well-known/openid-configuration"
+                            "wellKnownOpenIdConfiguration": "https://dependinator.ciamlogin.com/6c5f5248-641e-4c17-858b-7591bee24fe3/v2.0/.well-known/openid-configuration"
                         }
                     },
                     "login": {
