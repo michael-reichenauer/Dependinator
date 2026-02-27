@@ -26,11 +26,11 @@ jobs:
       - name: Install WASM workload
         run: dotnet workload restore Dependinator.sln
       - name: Restore
-        run: dotnet restore Dependinator.Wasm/Dependinator.Wasm.csproj -p:IsBrowserWasm=true
+        run: dotnet restore Dependinator.Wasm/Dependinator.Wasm.csproj
       - name: Publish Dependinator WASM
         run: |
           rm -rf Dependinator.Wasm/publish
-          dotnet publish Dependinator.Wasm/Dependinator.Wasm.csproj -c Release --no-restore -p:IsBrowserWasm=true -o Dependinator.Wasm/publish
+          dotnet publish Dependinator.Wasm/Dependinator.Wasm.csproj -c Release --no-restore -o Dependinator.Wasm/publish
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1

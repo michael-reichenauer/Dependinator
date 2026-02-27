@@ -5,7 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Dependinator.Wasm</RootNamespace>
     <AssemblyName>Dependinator.Wasm</AssemblyName>
-    <IsBrowserWasm>true</IsBrowserWasm>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
@@ -20,7 +19,7 @@
     <PackageReference Include="MudBlazor" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Shared.csproj" GlobalPropertiesToRemove="IsBrowserWasm" />
+    <ProjectReference Include="..\Shared\Shared.csproj" />
     <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
     <ProjectReference Include="..\Dependinator.Core\Dependinator.Core.csproj" />
   </ItemGroup>
