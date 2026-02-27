@@ -1,5 +1,31 @@
 {
     "navigationFallback": {
         "rewrite": "/index.html"
+    },
+    "auth": {
+        "identityProviders": {
+            "customOpenIdConnectProviders": {
+                "entraExternalId": {
+                    "registration": {
+                        "clientIdSettingName": "ENTRA_EXTERNAL_ID_CLIENT_ID",
+                        "clientCredential": {
+                            "clientSecretSettingName": "ENTRA_EXTERNAL_ID_CLIENT_SECRET"
+                        },
+                        "openIdConnectConfiguration": {
+                            "wellKnownOpenIdConfiguration": "https://<ENTRA_EXTERNAL_ID_ISSUER>/.well-known/openid-configuration"
+                        }
+                    },
+                    "login": {
+                        "nameClaimType": "email",
+                        "scopes": [
+                            "openid",
+                            "profile",
+                            "email"
+                        ],
+                        "loginParameterNames": []
+                    }
+                }
+            }
+        }
     }
 }

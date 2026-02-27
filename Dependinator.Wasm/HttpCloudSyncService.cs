@@ -27,7 +27,7 @@ sealed class HttpCloudSyncService : ICloudSyncService
         this.options = options.Value;
     }
 
-    public bool IsAvailable => true;
+    public bool IsAvailable => options.Enabled;
 
     public void Login()
     {

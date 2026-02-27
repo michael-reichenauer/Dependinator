@@ -9,6 +9,7 @@ The existing local browser cache remains in place. Cloud sync is an extra manual
 ## Confirmed Decisions
 
 - Auth provider: Microsoft Entra External ID
+- SWA custom OIDC provider name: `entraExternalId`
 - Hosting plan: Azure Static Web Apps Standard
 - API runtime: Azure Functions isolated worker on `net8.0` or `net9.0`
 - Storage: Azure Blob Storage
