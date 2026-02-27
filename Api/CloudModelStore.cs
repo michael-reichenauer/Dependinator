@@ -19,12 +19,10 @@ public interface ICloudModelStore
 
 public sealed class BlobCloudModelStore : ICloudModelStore
 {
-    readonly BlobServiceClient blobServiceClient;
     readonly CloudSyncOptions options;
 
-    public BlobCloudModelStore(BlobServiceClient blobServiceClient, IOptions<CloudSyncOptions> options)
+    public BlobCloudModelStore(IOptions<CloudSyncOptions> options)
     {
-        this.blobServiceClient = blobServiceClient;
         this.options = options.Value;
     }
 
@@ -106,9 +104,21 @@ public sealed class BlobCloudModelStore : ICloudModelStore
 
     async Task<BlobContainerClient> GetContainerClientAsync(CancellationToken cancellationToken)
     {
+        BlobServiceClient blobServiceClient = CreateBlobServiceClient();
         BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(options.ContainerName);
         await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
         return containerClient;
+    }
+
+    BlobServiceClient CreateBlobServiceClient()
+    {
+        string? connectionString = options.StorageConnectionString;
+        if (string.IsNullOrWhiteSpace(connectionString))
+            connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("No blob storage connection string was configured.");
+
+        return new BlobServiceClient(connectionString);
     }
 
     async Task<long> GetExistingBlobSizeAsync(BlobClient blobClient, CancellationToken cancellationToken)
