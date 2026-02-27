@@ -45,18 +45,18 @@
             "properties": {
                 "dependinator.cloudSync.baseUrl": {
                     "type": "string",
-                    "default": "",
-                    "description": "Base URL for the Dependinator cloud sync site, for example https://dependinator.com."
+                    "default": "https://dependinator.com",
+                    "description": "Base URL for the Dependinator cloud sync site. Leave as default for production; override only for dev/testing."
                 },
                 "dependinator.cloudSync.openIdConfigurationUrl": {
                     "type": "string",
-                    "default": "",
-                    "description": "OpenID configuration URL for the Entra External ID user flow used by VS Code cloud sync."
+                    "default": "https://dependinator.ciamlogin.com/6c5f5248-641e-4c17-858b-7591bee24fe3/v2.0/.well-known/openid-configuration",
+                    "description": "OpenID configuration URL for the Entra External ID user flow used by VS Code cloud sync. Leave as default for production; override only for dev/testing."
                 },
                 "dependinator.cloudSync.clientId": {
                     "type": "string",
-                    "default": "",
-                    "description": "Client ID of the Entra External ID public client app registration used by VS Code cloud sync."
+                    "default": "55db228d-5c84-41ac-864c-0c9c9f22a725",
+                    "description": "Client ID of the Entra External ID public client app registration used by VS Code cloud sync. Leave as default for production; override only for dev/testing."
                 }
             }
         }

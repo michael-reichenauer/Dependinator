@@ -85,6 +85,10 @@ Then configure these VS Code settings:
 - `dependinator.cloudSync.clientId`
   - The client ID of the VS Code public client app registration
 
+The extension now ships with production defaults for these values, so normal users do not need to configure them manually.
+
+Only set these VS Code settings when you want to override production for local/dev testing.
+
 Then set the matching API validation settings in Azure Static Web Apps:
 
 - `CloudSync__OpenIdConfigurationUrl`

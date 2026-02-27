@@ -76,10 +76,14 @@ export function createCloudSyncBridge(context: vscode.ExtensionContext): CloudSy
 
 class CloudSyncBridgeImpl implements CloudSyncBridge {
     readonly context: vscode.ExtensionContext;
+    readonly outputChannel: vscode.OutputChannel;
     openIdConfigurationPromise: Promise<OpenIdConfiguration> | undefined;
+    lastLoggedConfigurationSource: string | undefined;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
+        this.outputChannel = vscode.window.createOutputChannel("Dependinator");
+        context.subscriptions.push(this.outputChannel);
     }
 
     async handleWebviewMessage(message: WebviewMessage, panel: vscode.WebviewPanel): Promise<boolean> {
@@ -239,6 +243,9 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             configuration.get<string>("cloudSync.openIdConfigurationUrl")
         );
         const clientId = (configuration.get<string>("cloudSync.clientId") ?? "").trim();
+        const configurationSource = this.getConfigurationSource(configuration);
+        this.logConfigurationSource(configurationSource);
+
         if (!baseUrl || !openIdConfigurationUrl || !clientId)
             return undefined;
 
@@ -514,6 +521,38 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             return "";
 
         return normalizedValue.endsWith("/") ? normalizedValue : `${normalizedValue}/`;
+    }
+
+    getConfigurationSource(configuration: vscode.WorkspaceConfiguration): string {
+        const settingKeys = [
+            "cloudSync.baseUrl",
+            "cloudSync.openIdConfigurationUrl",
+            "cloudSync.clientId"
+        ];
+        for (const settingKey of settingKeys) {
+            const inspected = configuration.inspect<string>(settingKey);
+            if (inspected?.workspaceFolderValue !== undefined || inspected?.workspaceValue !== undefined)
+                return "workspace override";
+            if (inspected?.globalValue !== undefined)
+                return "user override";
+        }
+
+        return "production defaults";
+    }
+
+    logConfigurationSource(source: string): void {
+        if (this.lastLoggedConfigurationSource === source)
+            return;
+
+        this.lastLoggedConfigurationSource = source;
+        if (source === "production defaults") {
+            this.outputChannel.appendLine("Dependinator: Using production cloud sync config.");
+            console.log("DEP: Using production cloud sync config.");
+            return;
+        }
+
+        this.outputChannel.appendLine(`Dependinator: Using ${source} cloud sync config.`);
+        console.log(`DEP: Using ${source} cloud sync config.`);
     }
 
     toErrorMessage(error: unknown): string {

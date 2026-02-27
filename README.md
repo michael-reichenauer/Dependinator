@@ -34,3 +34,4 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
   - `dependinator.cloudSync.baseUrl`
   - `dependinator.cloudSync.openIdConfigurationUrl`
   - `dependinator.cloudSync.clientId`
+- The VS Code extension ships with production defaults for those settings; users only need to change them for dev/testing overrides.
