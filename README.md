@@ -26,5 +26,11 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
   - `CloudSync__ContainerName`
   - `CloudSync__MaxUserQuotaBytes`
   - `CloudSync__StorageConnectionString`
+  - `CloudSync__OpenIdConfigurationUrl`
+  - `CloudSync__BearerAudience`
 - Required callback URL in the identity provider registration:
   - `https://<your-site>/.auth/login/entraExternalId/callback`
+- VS Code extension-host sync uses separate extension settings:
+  - `dependinator.cloudSync.baseUrl`
+  - `dependinator.cloudSync.openIdConfigurationUrl`
+  - `dependinator.cloudSync.clientId`

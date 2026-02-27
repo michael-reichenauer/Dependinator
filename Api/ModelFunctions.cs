@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -8,12 +7,12 @@ namespace Api;
 
 public sealed class ModelFunctions
 {
-    readonly IStaticWebAppsPrincipalParser principalParser;
+    readonly ICloudSyncUserProvider userProvider;
     readonly ICloudModelStore cloudModelStore;
 
-    public ModelFunctions(IStaticWebAppsPrincipalParser principalParser, ICloudModelStore cloudModelStore)
+    public ModelFunctions(ICloudSyncUserProvider userProvider, ICloudModelStore cloudModelStore)
     {
-        this.principalParser = principalParser;
+        this.userProvider = userProvider;
         this.cloudModelStore = cloudModelStore;
     }
 
@@ -24,7 +23,8 @@ public sealed class ModelFunctions
         CancellationToken cancellationToken
     )
     {
-        if (!TryGetCurrentUser(request, out CloudUserInfo? user))
+        CloudUserInfo? user = await GetCurrentUserAsync(request, cancellationToken);
+        if (user is null)
             return await ResponseFactory.ErrorAsync(
                 request,
                 HttpStatusCode.Unauthorized,
@@ -51,7 +51,8 @@ public sealed class ModelFunctions
         CancellationToken cancellationToken
     )
     {
-        if (!TryGetCurrentUser(request, out CloudUserInfo? user))
+        CloudUserInfo? user = await GetCurrentUserAsync(request, cancellationToken);
+        if (user is null)
             return await ResponseFactory.ErrorAsync(
                 request,
                 HttpStatusCode.Unauthorized,
@@ -118,9 +119,8 @@ public sealed class ModelFunctions
         }
     }
 
-    bool TryGetCurrentUser(HttpRequestData request, [NotNullWhen(true)] out CloudUserInfo? user)
+    Task<CloudUserInfo?> GetCurrentUserAsync(HttpRequestData request, CancellationToken cancellationToken)
     {
-        user = principalParser.TryGetCurrentUser(request);
-        return user is not null;
+        return userProvider.TryGetCurrentUserAsync(request, cancellationToken);
     }
 }

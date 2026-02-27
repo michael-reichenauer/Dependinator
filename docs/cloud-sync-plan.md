@@ -94,7 +94,7 @@ Suggested implementations:
 
 ## Future VS Code Direction
 
-This is important for later sessions.
+This is now partially implemented and still important for later sessions.
 
 When the UI runs inside the VS Code webview, the WASM UI should not call the cloud API directly.
 
@@ -108,7 +108,7 @@ Instead:
 In other words:
 
 - standalone browser host -> direct HTTP to SWA API
-- VS Code webview host -> RPC/message bridge to extension host -> HTTP to API
+- VS Code webview host -> RPC/message bridge to extension host -> HTTP to API with bearer token auth
 
 This keeps the UI host-agnostic and avoids coupling cloud sync to the browser sandbox limitations inside VS Code.
 
@@ -118,6 +118,17 @@ This keeps the UI host-agnostic and avoids coupling cloud sync to the browser sa
 - The VS Code webview host may not have the same network or auth capabilities.
 - The extension host is a better place to manage future API communication and auth/token handling.
 - Keeping sync behind an interface prevents rework when VS Code sync is added later.
+
+## Current VS Code Auth Shape
+
+- The VS Code extension host performs cloud sync network calls.
+- The extension host stores the current sign-in token in VS Code secret storage.
+- The extension host currently signs in with Entra External ID using device authorization flow.
+- The API accepts either:
+  - SWA-authenticated browser requests via `x-ms-client-principal`
+  - bearer tokens validated against Entra OIDC metadata
+
+This keeps the deployed browser experience unchanged while enabling sync from the VS Code webview host.
 
 ## Suggested Implementation Phases
 
@@ -155,9 +166,10 @@ This keeps the UI host-agnostic and avoids coupling cloud sync to the browser sa
 
 ### Phase 6: Future VS Code Sync
 
-- Add an RPC-backed sync implementation for the VS Code webview host
-- Route API calls through the extension host
+- Expand the existing RPC-backed sync implementation for the VS Code webview host
+- Keep API calls in the extension host by default
 - Reuse the same API contract and `ICloudSyncService` interface
+- If needed later, let the LSP prepare data but not own API communication
 
 ## Notes For Future Sessions
 

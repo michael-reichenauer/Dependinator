@@ -62,13 +62,13 @@
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudDownload" OnClick="SyncDownAsync">
                 Sync Down
             </MudMenuItem>
-            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="Logout">
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="LogoutAsync">
                 Logout
             </MudMenuItem>
         }
         else
         {
-            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Login" OnClick="Login">
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Login" OnClick="LoginAsync">
                 Login
             </MudMenuItem>
         }
@@ -159,14 +159,26 @@
         authState = state;
     }
 
-    void Login()
+    async Task LoginAsync()
     {
-        cloudSyncService.Login();
+        if (!Try(out var state, out var error, await cloudSyncService.LoginAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        authState = state;
     }
 
-    void Logout()
+    async Task LogoutAsync()
     {
-        cloudSyncService.Logout();
+        if (!Try(out var state, out var error, await cloudSyncService.LogoutAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        authState = state;
     }
 
     async Task SyncUpAsync()

@@ -11,6 +11,8 @@ var host = new HostBuilder()
         services.ConfigureFunctionsApplicationInsights();
         services.AddOptions<CloudSyncOptions>().BindConfiguration(CloudSyncOptions.SectionName);
         services.AddSingleton<ICloudModelStore, BlobCloudModelStore>();
+        services.AddSingleton<ICloudSyncBearerTokenValidator, CloudSyncBearerTokenValidator>();
+        services.AddSingleton<ICloudSyncUserProvider, CloudSyncUserProvider>();
         services.AddSingleton<IStaticWebAppsPrincipalParser, StaticWebAppsPrincipalParser>();
     })
     .Build();

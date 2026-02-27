@@ -7,8 +7,8 @@ interface ICloudSyncService
 {
     bool IsAvailable { get; }
 
-    void Login();
-    void Logout();
+    Task<R<CloudAuthState>> LoginAsync();
+    Task<R<CloudAuthState>> LogoutAsync();
     Task<R<CloudAuthState>> GetAuthStateAsync();
     Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto);
     Task<R<ModelDto>> PullAsync(string modelPath);
@@ -21,9 +21,15 @@ class NoCloudSyncService : ICloudSyncService
 
     public bool IsAvailable => false;
 
-    public void Login() { }
+    public Task<R<CloudAuthState>> LoginAsync()
+    {
+        return Task.FromResult<R<CloudAuthState>>(R.Error("Cloud sync is not available in this host."));
+    }
 
-    public void Logout() { }
+    public Task<R<CloudAuthState>> LogoutAsync()
+    {
+        return Task.FromResult<R<CloudAuthState>>(R.Error("Cloud sync is not available in this host."));
+    }
 
     public Task<R<CloudAuthState>> GetAuthStateAsync()
     {

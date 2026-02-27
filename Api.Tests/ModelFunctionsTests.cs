@@ -8,7 +8,7 @@ public class ModelFunctionsTests
     public async Task GetModelAsync_ShouldReturnUnauthorized_WhenNoPrincipalHeaderExists()
     {
         Mock<ICloudModelStore> store = new(MockBehavior.Strict);
-        ModelFunctions sut = new(new StaticWebAppsPrincipalParser(), store.Object);
+        ModelFunctions sut = new(new StubUserProvider(null), store.Object);
         TestHttpRequestData request = new(new TestFunctionContext());
 
         HttpResponseData response = await sut.GetModelAsync(request, "model-key", CancellationToken.None);
@@ -23,7 +23,7 @@ public class ModelFunctionsTests
         Mock<ICloudModelStore> store = new(MockBehavior.Strict);
         store.Setup(s => s.GetAsync(user, "model-key", CancellationToken.None)).ReturnsAsync((CloudModelDocument?)null);
 
-        ModelFunctions sut = new(new StubPrincipalParser(user), store.Object);
+        ModelFunctions sut = new(new StubUserProvider(user), store.Object);
         TestHttpRequestData request = new(new TestFunctionContext());
 
         HttpResponseData response = await sut.GetModelAsync(request, "model-key", CancellationToken.None);
@@ -36,7 +36,7 @@ public class ModelFunctionsTests
     {
         CloudUserInfo user = new("user-123", "user@example.com");
         Mock<ICloudModelStore> store = new(MockBehavior.Strict);
-        ModelFunctions sut = new(new StubPrincipalParser(user), store.Object);
+        ModelFunctions sut = new(new StubUserProvider(user), store.Object);
 
         CloudModelDocument payload = new(
             ModelKey: "other-key",
@@ -53,8 +53,14 @@ public class ModelFunctionsTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    sealed class StubPrincipalParser(CloudUserInfo user) : IStaticWebAppsPrincipalParser
+    sealed class StubUserProvider(CloudUserInfo? user) : ICloudSyncUserProvider
     {
-        public CloudUserInfo? TryGetCurrentUser(Microsoft.Azure.Functions.Worker.Http.HttpRequestData request) => user;
+        public Task<CloudUserInfo?> TryGetCurrentUserAsync(
+            Microsoft.Azure.Functions.Worker.Http.HttpRequestData request,
+            CancellationToken cancellationToken
+        )
+        {
+            return Task.FromResult(user);
+        }
     }
 }

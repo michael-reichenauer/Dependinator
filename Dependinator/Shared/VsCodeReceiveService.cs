@@ -9,10 +9,12 @@ interface IVsCodeReceiveService
 class VsCodeReceiveService : IVsCodeReceiveService
 {
     readonly INavigationService navigationService;
+    readonly IVsCodeCloudSyncProxy vsCodeCloudSyncProxy;
 
-    public VsCodeReceiveService(INavigationService navigationService)
+    public VsCodeReceiveService(INavigationService navigationService, IVsCodeCloudSyncProxy vsCodeCloudSyncProxy)
     {
         this.navigationService = navigationService;
+        this.vsCodeCloudSyncProxy = vsCodeCloudSyncProxy;
     }
 
     public async Task ReceivedMessageAsync(string type, string message)
@@ -21,6 +23,9 @@ class VsCodeReceiveService : IVsCodeReceiveService
         {
             case "ui/ShowNode":
                 await navigationService.ShowNodeAsync(message);
+                break;
+            case "ui/cloudSync/response":
+                await vsCodeCloudSyncProxy.HandleResponseAsync(message);
                 break;
         }
     }

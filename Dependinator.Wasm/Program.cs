@@ -30,7 +30,8 @@ internal class Program
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
         builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Core.RootClass));
-        builder.Services.AddScoped<ICloudSyncService, HttpCloudSyncService>();
+        builder.Services.AddScoped<HttpCloudSyncService>();
+        builder.Services.AddScoped<ICloudSyncService, HybridCloudSyncService>();
 
         var app = builder.Build();
         app.Services.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));

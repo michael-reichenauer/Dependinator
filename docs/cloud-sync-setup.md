@@ -25,6 +25,8 @@ Set these application settings in the Static Web App:
 - `CloudSync__ContainerName`
 - `CloudSync__MaxUserQuotaBytes`
 - `CloudSync__StorageConnectionString`
+- `CloudSync__OpenIdConfigurationUrl`
+- `CloudSync__BearerAudience`
 
 Do not use `AzureWebJobsStorage` for your application blob storage in the deployed Static Web App.
 
@@ -33,6 +35,8 @@ Azure Static Web Apps managed Functions reserve `AzureWeb...` settings for the p
 Use `CloudSync__StorageConnectionString` for the storage account that should hold synced models.
 
 `AzureWebJobsStorage` remains valid for local Functions development in `Api/local.settings.json`.
+
+`CloudSync__OpenIdConfigurationUrl` and `CloudSync__BearerAudience` are used by the API to validate bearer tokens from the VS Code extension host.
 
 ## OIDC Metadata Placeholder
 
@@ -61,3 +65,34 @@ Notes:
 
 - `./run-sync` uses same-origin `/api` through SWA CLI, which is closer to production than calling the Functions host directly.
 - Local auth emulation can still require some manual verification depending on your provider setup.
+
+## VS Code Extension Sync
+
+The VS Code webview host cannot rely on SWA browser cookies for cloud sync.
+
+For VS Code cloud sync, create a separate Entra External ID app registration for a public client:
+
+1. In the external tenant, create a new app registration, for example `Dependinator VS Code Sync`.
+2. Enable public client flows on that app registration.
+3. Use the same user flow/OpenID metadata URL that the site uses.
+
+Then configure these VS Code settings:
+
+- `dependinator.cloudSync.baseUrl`
+  - Example: `https://dependinator.com`
+- `dependinator.cloudSync.openIdConfigurationUrl`
+  - The exact `.../.well-known/openid-configuration` URL for the Entra External ID user flow
+- `dependinator.cloudSync.clientId`
+  - The client ID of the VS Code public client app registration
+
+Then set the matching API validation settings in Azure Static Web Apps:
+
+- `CloudSync__OpenIdConfigurationUrl`
+  - The same OpenID metadata URL used by the VS Code setting
+- `CloudSync__BearerAudience`
+  - The same client ID used by the VS Code setting
+
+Notes:
+
+- VS Code sign-in currently uses device authorization flow because the extension host performs the network calls directly.
+- The browser-hosted WASM app still uses the SWA login flow at `/.auth/login/entraExternalId`.

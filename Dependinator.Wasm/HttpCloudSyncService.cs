@@ -29,14 +29,16 @@ sealed class HttpCloudSyncService : ICloudSyncService
 
     public bool IsAvailable => options.Enabled;
 
-    public void Login()
+    public Task<R<CloudAuthState>> LoginAsync()
     {
         NavigateToAuthPath(options.LoginPath, "post_login_redirect_uri");
+        return Task.FromResult<R<CloudAuthState>>(new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null));
     }
 
-    public void Logout()
+    public Task<R<CloudAuthState>> LogoutAsync()
     {
         NavigateToAuthPath(options.LogoutPath, "post_logout_redirect_uri");
+        return Task.FromResult<R<CloudAuthState>>(new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null));
     }
 
     public async Task<R<CloudAuthState>> GetAuthStateAsync()

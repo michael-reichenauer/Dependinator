@@ -7,21 +7,21 @@ namespace Api;
 
 public sealed class AuthFunctions
 {
-    readonly IStaticWebAppsPrincipalParser principalParser;
+    readonly ICloudSyncUserProvider userProvider;
 
-    public AuthFunctions(IStaticWebAppsPrincipalParser principalParser)
+    public AuthFunctions(ICloudSyncUserProvider userProvider)
     {
-        this.principalParser = principalParser;
+        this.userProvider = userProvider;
     }
 
     [Function("GetCurrentUser")]
-    public Task<HttpResponseData> GetCurrentUserAsync(
+    public async Task<HttpResponseData> GetCurrentUserAsync(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "auth/me")] HttpRequestData request,
         CancellationToken cancellationToken
     )
     {
-        CloudUserInfo? user = principalParser.TryGetCurrentUser(request);
+        CloudUserInfo? user = await userProvider.TryGetCurrentUserAsync(request, cancellationToken);
         CloudAuthState authState = new(IsAvailable: true, IsAuthenticated: user is not null, User: user);
-        return ResponseFactory.JsonAsync(request, HttpStatusCode.OK, authState, cancellationToken);
+        return await ResponseFactory.JsonAsync(request, HttpStatusCode.OK, authState, cancellationToken);
     }
 }
