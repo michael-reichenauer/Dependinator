@@ -25,6 +25,6 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
   - `ENTRA_EXTERNAL_ID_CLIENT_SECRET`
   - `CloudSync__ContainerName`
   - `CloudSync__MaxUserQuotaBytes`
-  - `AzureWebJobsStorage`
+  - `CloudSync__StorageConnectionString`
 - Required callback URL in the identity provider registration:
   - `https://<your-site>/.auth/login/entraExternalId/callback`

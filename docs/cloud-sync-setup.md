@@ -24,8 +24,15 @@ Set these application settings in the Static Web App:
 - `ENTRA_EXTERNAL_ID_CLIENT_SECRET`
 - `CloudSync__ContainerName`
 - `CloudSync__MaxUserQuotaBytes`
+- `CloudSync__StorageConnectionString`
 
-The Functions API uses `AzureWebJobsStorage` for blob storage unless `CloudSync__StorageConnectionString` is provided.
+Do not use `AzureWebJobsStorage` for your application blob storage in the deployed Static Web App.
+
+Azure Static Web Apps managed Functions reserve `AzureWeb...` settings for the platform runtime.
+
+Use `CloudSync__StorageConnectionString` for the storage account that should hold synced models.
+
+`AzureWebJobsStorage` remains valid for local Functions development in `Api/local.settings.json`.
 
 ## OIDC Metadata Placeholder
 
