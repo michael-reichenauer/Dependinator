@@ -1,5 +1,7 @@
 @using Dependinator.Core
 @inject ICanvasService srv
+@inject ISnackbar snackbar
+@inject ICloudSyncService cloudSyncService
 @inject Dependinator.Models.IModelService modelService
 @inject IApplicationEvents applicationEvents
 @implements IDisposable
@@ -37,11 +39,39 @@
     }
     @foreach (var path in RecentModelPaths)
     {
-        var isCurrent = path == currentPath;
-        <MudMenuItem IconColor="@(isCurrent? Color.Secondary: Color.Default)" Icon="@Icons.Material.Outlined.Schema"
+        bool isCurrent = path == currentPath;
+        <MudMenuItem IconColor="@(isCurrent ? Color.Secondary : Color.Default)" Icon="@Icons.Material.Outlined.Schema"
                      Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)" OnClick="() => srv.LoadAsync(path)">
             @Path.GetFileNameWithoutExtension(path)
         </MudMenuItem>
+    }
+
+    @if (cloudSyncService.IsAvailable)
+    {
+        <MudDivider />
+
+        <MudMenuItem Disabled="true" Icon="@Icons.Material.Outlined.Cloud">
+            @CloudStatusText
+        </MudMenuItem>
+
+        @if (authState.IsAuthenticated)
+        {
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudUpload" OnClick="SyncUpAsync">
+                Sync Up
+            </MudMenuItem>
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudDownload" OnClick="SyncDownAsync">
+                Sync Down
+            </MudMenuItem>
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="Logout">
+                Logout
+            </MudMenuItem>
+        }
+        else
+        {
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Login" OnClick="Login">
+                Login
+            </MudMenuItem>
+        }
     }
 
     <MudDivider />
@@ -71,45 +101,126 @@
     </MessageContent>
 </MudMessageBox>
 
-@code {
-    private Action? uiStateChangedHandler;
-    private MudMessageBox mbox { get; set; } = null!;
-    private MudMessageBox aboutBox { get; set; } = null!;
+<MudMessageBox @ref="syncDownBox" Title="Replace Local Cached Model" CancelText="Cancel">
+    <MessageContent>
+        <MudText>Download the cloud copy and overwrite the local cached model?</MudText>
+        <MudText Typo="Typo.body2">The current local cached layout data will be replaced.</MudText>
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudDownload">
+            Replace
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
 
-    private IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
+@code {
+    Action? uiStateChangedHandler;
+    MudMessageBox mbox { get; set; } = null!;
+    MudMessageBox aboutBox { get; set; } = null!;
+    MudMessageBox syncDownBox { get; set; } = null!;
+    global::Shared.CloudAuthState authState = new(IsAvailable: false, IsAuthenticated: false, User: null);
+
+    IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
+    string CloudStatusText =>
+        authState.IsAuthenticated ? $"Cloud: {authState.User?.Email ?? authState.User?.UserId}" : "Cloud: not signed in";
 
     [Parameter]
     public string MenuClass { get; set; } = "ml-n3";
 
-    private async void OnRemove()
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        uiStateChangedHandler = () => InvokeAsync(StateHasChanged);
+        applicationEvents.UIStateChanged += uiStateChangedHandler;
+
+        await RefreshAuthStateAsync();
+    }
+
+    async void OnRemove()
     {
         if (await mbox.ShowAsync() != true)
-        {
             return;
-        }
 
         srv.Remove();
     }
 
-    protected override void OnInitialized()
+    async Task RefreshAuthStateAsync()
     {
-        base.OnInitialized();
+        if (!cloudSyncService.IsAvailable)
+            return;
 
-        uiStateChangedHandler = () => InvokeAsync(StateHasChanged);
-        applicationEvents.UIStateChanged += uiStateChangedHandler;
+        if (!Try(out var state, out var error, await cloudSyncService.GetAuthStateAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Warning);
+            return;
+        }
+
+        authState = state;
+    }
+
+    void Login()
+    {
+        cloudSyncService.Login();
+    }
+
+    void Logout()
+    {
+        cloudSyncService.Logout();
+    }
+
+    async Task SyncUpAsync()
+    {
+        if (!Try(out var modelDto, out var error, modelService.GetCurrentModelDto()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Warning);
+            return;
+        }
+
+        if (!Try(out var metadata, out var pushError, await cloudSyncService.PushAsync(modelService.ModelPath, modelDto)))
+        {
+            snackbar.Add(pushError.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        snackbar.Add($"Synced {metadata.CompressedSizeBytes} bytes to the cloud.", Severity.Success);
+    }
+
+    async Task SyncDownAsync()
+    {
+        if (await syncDownBox.ShowAsync() != true)
+            return;
+
+        if (string.IsNullOrWhiteSpace(modelService.ModelPath))
+        {
+            snackbar.Add("Model is not loaded.", Severity.Warning);
+            return;
+        }
+
+        if (!Try(out var modelDto, out var error, await cloudSyncService.PullAsync(modelService.ModelPath)))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        if (!Try(out var modelInfo, out var replaceError, await modelService.ReplaceCurrentModelAsync(modelDto)))
+        {
+            snackbar.Add(replaceError.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(modelInfo.Path)}.", Severity.Success);
     }
 
     public void Dispose()
     {
         if (uiStateChangedHandler is null)
-        {
             return;
-        }
 
         applicationEvents.UIStateChanged -= uiStateChangedHandler;
     }
 
-    private async Task ShowAbout()
+    async Task ShowAbout()
     {
         await aboutBox.ShowAsync();
     }

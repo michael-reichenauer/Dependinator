@@ -1,8 +1,10 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "AzureWebJobsStorage": "",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "CloudSync__ContainerName": "dependinator-models-local",
+    "CloudSync__MaxUserQuotaBytes": "10485760"
   },
   "Host": {
     "LocalHttpPort": 7071,

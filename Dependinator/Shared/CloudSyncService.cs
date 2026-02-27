@@ -7,6 +7,8 @@ interface ICloudSyncService
 {
     bool IsAvailable { get; }
 
+    void Login();
+    void Logout();
     Task<R<CloudAuthState>> GetAuthStateAsync();
     Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto);
     Task<R<ModelDto>> PullAsync(string modelPath);
@@ -18,6 +20,10 @@ class NoCloudSyncService : ICloudSyncService
     static readonly CloudAuthState unavailableState = new(IsAvailable: false, IsAuthenticated: false, User: null);
 
     public bool IsAvailable => false;
+
+    public void Login() { }
+
+    public void Logout() { }
 
     public Task<R<CloudAuthState>> GetAuthStateAsync()
     {
