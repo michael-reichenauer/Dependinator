@@ -27,6 +27,8 @@ jobs:
         run: dotnet workload restore Dependinator.sln
       - name: Restore
         run: dotnet restore Dependinator.Wasm/Dependinator.Wasm.csproj
+      - name: Build API
+        run: dotnet build Api/Api.csproj -c Release
       - name: Publish Dependinator WASM
         run: |
           rm -rf Dependinator.Wasm/publish
@@ -41,9 +43,9 @@ jobs:
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           app_location: "Dependinator.Wasm/publish/wwwroot" # Prebuilt app content
-          api_location: "" # No API deploy
+          api_location: "Api"
           skip_app_build: true
-          skip_api_build: true
+          skip_api_build: false
           ###### End of Repository/Build Configurations ######
           production_branch: "main"
 

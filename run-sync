@@ -1,0 +1,44 @@
+#!/bin/bash
+set -euo pipefail
+
+project="./Dependinator.Wasm/Dependinator.Wasm.csproj"
+publish_dir="./Dependinator.Wasm/publish"
+wwwroot_dir="$publish_dir/wwwroot"
+config_dir="./Dependinator.Wasm"
+api_dir="./Api"
+azurite_dir="./.azurite"
+port="${PORT:-5000}"
+host="${HOST:-127.0.0.1}"
+local_settings="$api_dir/local.settings.json"
+local_settings_example="$api_dir/local.settings.example.json"
+azurite_pid=""
+
+cleanup() {
+    if [[ -n "$azurite_pid" ]] && kill -0 "$azurite_pid" 2>/dev/null; then
+        kill "$azurite_pid" 2>/dev/null || true
+    fi
+}
+
+trap cleanup EXIT INT TERM
+
+rm -rf "$publish_dir"
+dotnet publish "$project" -c Release -o "$publish_dir"
+
+if [[ ! -f "$local_settings" && -f "$local_settings_example" ]]; then
+    cp "$local_settings_example" "$local_settings"
+fi
+
+mkdir -p "$azurite_dir"
+
+if command -v azurite >/dev/null 2>&1; then
+    azurite --silent --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
+else
+    npx --yes azurite --silent --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
+fi
+azurite_pid="$!"
+
+if command -v swa >/dev/null 2>&1; then
+    swa start "$wwwroot_dir" --api-location "$api_dir" --port "$port" --host "$host" --swa-config-location "$config_dir"
+else
+    npx --yes @azure/static-web-apps-cli start "$wwwroot_dir" --api-location "$api_dir" --port "$port" --host "$host" --swa-config-location "$config_dir"
+fi
