@@ -402,7 +402,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
     ): Promise<JsonResponse<T>> {
         const url = new URL(path, configuration.baseUrl).toString();
         const headers: Record<string, string> = {
-            Authorization: `Bearer ${token}`
+            "X-Dependinator-Authorization": `Bearer ${token}`
         };
         let serializedBody: string | undefined;
         if (body !== undefined) {

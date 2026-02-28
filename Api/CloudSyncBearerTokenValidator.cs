@@ -16,6 +16,7 @@ public interface ICloudSyncBearerTokenValidator
 
 public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidator
 {
+    const string CustomAuthorizationHeaderName = "X-Dependinator-Authorization";
     const string AuthorizationHeaderName = "Authorization";
     readonly CloudSyncOptions options;
     readonly ConfigurationManager<OpenIdConnectConfiguration>? configurationManager;
@@ -92,7 +93,20 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     static bool TryGetBearerToken(FunctionsHttpRequestData request, out string? token)
     {
         token = null;
-        if (!request.Headers.TryGetValues(AuthorizationHeaderName, out IEnumerable<string>? values))
+        if (TryReadBearerToken(request, CustomAuthorizationHeaderName, out token))
+            return true;
+
+        return TryReadBearerToken(request, AuthorizationHeaderName, out token);
+    }
+
+    static bool TryReadBearerToken(
+        FunctionsHttpRequestData request,
+        string headerName,
+        out string? token
+    )
+    {
+        token = null;
+        if (!request.Headers.TryGetValues(headerName, out IEnumerable<string>? values))
             return false;
 
         string? authorizationHeader = values.FirstOrDefault();
