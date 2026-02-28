@@ -170,6 +170,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
         await this.startDeviceLoginAsync(deviceResponse.body);
         const token = await this.pollForTokenAsync(deviceResponse.body, configuration, openIdConfiguration);
         await this.context.secrets.store(tokenSecretName, token);
+        this.outputChannel.appendLine("Dependinator: Cloud sync token acquired in VS Code extension host.");
         return await this.getAuthStateFromTokenAsync(token, configuration);
     }
 
@@ -194,8 +195,16 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             "GET",
             "/api/auth/me"
         );
-        if (response.ok && response.body)
+        if (response.ok && response.body?.IsAuthenticated)
             return response.body;
+
+        if (response.ok && response.body && !response.body.IsAuthenticated) {
+            this.outputChannel.appendLine(
+                "Dependinator: Stored VS Code cloud sync token was not accepted by the API. Check CloudSync__OpenIdConfigurationUrl and CloudSync__BearerAudience in Azure Static Web Apps."
+            );
+            await this.context.secrets.delete(tokenSecretName);
+            return this.createSignedOutState(true);
+        }
 
         if (response.status === 401 || response.status === 403) {
             await this.context.secrets.delete(tokenSecretName);
@@ -296,8 +305,17 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             "GET",
             "/api/auth/me"
         );
-        if (response.ok && response.body)
+        if (response.ok && response.body?.IsAuthenticated)
             return response.body;
+
+        if (response.ok && response.body && !response.body.IsAuthenticated) {
+            this.outputChannel.appendLine(
+                "Dependinator: Token acquisition succeeded, but the API returned unauthenticated. Check CloudSync__OpenIdConfigurationUrl and CloudSync__BearerAudience in Azure Static Web Apps."
+            );
+            throw new Error(
+                "Cloud sync login completed, but the API did not accept the bearer token. Check CloudSync__OpenIdConfigurationUrl and CloudSync__BearerAudience in Azure Static Web Apps."
+            );
+        }
 
         throw new Error(this.readProtocolError(response.status, response.body));
     }
