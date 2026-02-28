@@ -74,7 +74,9 @@ For VS Code cloud sync, create a separate Entra External ID app registration for
 
 1. In the external tenant, create a new app registration, for example `Dependinator VS Code Sync`.
 2. Enable public client flows on that app registration.
-3. Use the same user flow/OpenID metadata URL that the site uses.
+3. Under `Expose an API`, set the Application ID URI to the default `api://<client-id>` form if it is not already set.
+4. Add a scope named `access_as_user`.
+5. Use the same user flow/OpenID metadata URL that the site uses.
 
 Then configure these VS Code settings:
 
@@ -99,4 +101,5 @@ Then set the matching API validation settings in Azure Static Web Apps:
 Notes:
 
 - VS Code sign-in currently uses device authorization flow because the extension host performs the network calls directly.
+- The extension requests an API access token for `api://<client-id>/access_as_user`.
 - The browser-hosted WASM app still uses the SWA login flow at `/.auth/login/entraExternalId`.

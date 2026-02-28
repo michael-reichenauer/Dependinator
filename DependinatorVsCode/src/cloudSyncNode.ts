@@ -52,6 +52,7 @@ type DeviceAuthorizationResponse = {
 };
 
 type DeviceTokenResponse = {
+    access_token?: string;
     id_token?: string;
     error?: string;
     error_description?: string;
@@ -67,8 +68,8 @@ export type CloudSyncBridge = {
     handleWebviewMessage(message: WebviewMessage, panel: vscode.WebviewPanel): Promise<boolean>;
 };
 
-const tokenSecretName = "dependinator.cloudSync.idToken";
-const scope = "openid profile email offline_access";
+const tokenSecretName = "dependinator.cloudSync.accessToken";
+const openIdScopes = ["openid", "profile", "email", "offline_access"];
 
 export function createCloudSyncBridge(context: vscode.ExtensionContext): CloudSyncBridge {
     return new CloudSyncBridgeImpl(context);
@@ -161,7 +162,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             openIdConfiguration.device_authorization_endpoint,
             {
                 client_id: configuration.clientId,
-                scope
+                scope: this.buildRequestedScope(configuration)
             }
         );
         if (!deviceResponse.ok || !deviceResponse.body)
@@ -170,7 +171,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
         await this.startDeviceLoginAsync(deviceResponse.body);
         const token = await this.pollForTokenAsync(deviceResponse.body, configuration, openIdConfiguration);
         await this.context.secrets.store(tokenSecretName, token);
-        this.outputChannel.appendLine("Dependinator: Cloud sync token acquired in VS Code extension host.");
+        this.outputChannel.appendLine("Dependinator: Cloud sync access token acquired in VS Code extension host.");
         return await this.getAuthStateFromTokenAsync(token, configuration);
     }
 
@@ -369,8 +370,8 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
                 }
             );
 
-            if (tokenResponse.ok && tokenResponse.body?.id_token)
-                return tokenResponse.body.id_token;
+            if (tokenResponse.ok && tokenResponse.body?.access_token)
+                return tokenResponse.body.access_token;
 
             const error = tokenResponse.body?.error;
             switch (error) {
@@ -539,6 +540,11 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             return "";
 
         return normalizedValue.endsWith("/") ? normalizedValue : `${normalizedValue}/`;
+    }
+
+    buildRequestedScope(configuration: CloudSyncConfig): string {
+        const apiScope = `api://${configuration.clientId}/access_as_user`;
+        return [...openIdScopes, apiScope].join(" ");
     }
 
     getConfigurationSource(configuration: vscode.WorkspaceConfiguration): string {

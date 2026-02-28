@@ -35,3 +35,4 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
   - `dependinator.cloudSync.openIdConfigurationUrl`
   - `dependinator.cloudSync.clientId`
 - The VS Code extension ships with production defaults for those settings; users only need to change them for dev/testing overrides.
+- The VS Code app registration must expose an API scope named `access_as_user` so the extension can request a bearer token for `/api`.
