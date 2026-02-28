@@ -139,8 +139,15 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
         if (securityToken is JwtSecurityToken jwtToken)
         {
             string? tenantId = jwtToken.Claims.FirstOrDefault(c => c.Type == "tid")?.Value;
+            if (string.IsNullOrWhiteSpace(tenantId))
+                tenantId = TryGetTenantIdFromIssuer(issuer) ?? TryGetTenantIdFromIssuer(configuration.Issuer);
+
             if (!string.IsNullOrWhiteSpace(tenantId))
+            {
                 validIssuers.Add(NormalizeIssuer($"https://sts.windows.net/{tenantId}/"));
+                validIssuers.Add(NormalizeIssuer($"https://{tenantId}.ciamlogin.com/{tenantId}/v2.0"));
+                validIssuers.Add(NormalizeIssuer($"https://{tenantId}.ciamlogin.com/{tenantId}"));
+            }
         }
 
         string normalizedIssuer = NormalizeIssuer(issuer);
@@ -160,5 +167,25 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
         return issuer.EndsWith("/v2.0", StringComparison.OrdinalIgnoreCase)
             ? issuer[..^"/v2.0".Length]
             : issuer;
+    }
+
+    static string? TryGetTenantIdFromIssuer(string issuer)
+    {
+        if (!Uri.TryCreate(issuer, UriKind.Absolute, out Uri? issuerUri))
+            return null;
+
+        string host = issuerUri.Host;
+        if (host.EndsWith(".ciamlogin.com", StringComparison.OrdinalIgnoreCase))
+        {
+            string subdomain = host[..^".ciamlogin.com".Length];
+            if (!string.IsNullOrWhiteSpace(subdomain))
+                return subdomain;
+        }
+
+        string[] segments = issuerUri.AbsolutePath.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length > 0 && !string.IsNullOrWhiteSpace(segments[0]))
+            return segments[0];
+
+        return null;
     }
 }
