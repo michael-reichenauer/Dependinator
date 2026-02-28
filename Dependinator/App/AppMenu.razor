@@ -53,6 +53,9 @@
         <MudMenuItem Disabled="true" Icon="@Icons.Material.Outlined.Cloud">
             @CloudStatusText
         </MudMenuItem>
+        <MudMenuItem Disabled="true" Icon="@SyncStatusIcon">
+            @SyncStatusText
+        </MudMenuItem>
 
         @if (authState.IsAuthenticated)
         {
@@ -119,10 +122,24 @@
     MudMessageBox aboutBox { get; set; } = null!;
     MudMessageBox syncDownBox { get; set; } = null!;
     global::Shared.CloudAuthState authState = new(IsAvailable: false, IsAuthenticated: false, User: null);
+    DateTimeOffset? lastSyncAt;
+    string? lastSyncDirection;
+    string? lastSyncSummary;
 
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
     string CloudStatusText =>
-        authState.IsAuthenticated ? $"Cloud: {authState.User?.Email ?? authState.User?.UserId}" : "Cloud: not signed in";
+        authState.IsAuthenticated ? $"Cloud: signed in as {authState.User?.Email ?? authState.User?.UserId}" : "Cloud: not signed in";
+    string SyncStatusText =>
+        lastSyncAt is null
+            ? "Sync: no sync this session"
+            : $"Sync: {lastSyncDirection} {lastSyncAt.Value.LocalDateTime:t} - {lastSyncSummary}";
+    string SyncStatusIcon => lastSyncDirection switch
+    {
+        "up" => Icons.Material.Outlined.CloudUpload,
+        "down" => Icons.Material.Outlined.CloudDownload,
+        "error" => Icons.Material.Outlined.CloudOff,
+        _ => Icons.Material.Outlined.CloudQueue,
+    };
 
     [Parameter]
     public string MenuClass { get; set; } = "ml-n3";
@@ -163,38 +180,46 @@
     {
         if (!Try(out var state, out var error, await cloudSyncService.LoginAsync()))
         {
+            SetSyncStatus("error", "login failed");
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;
         }
 
         authState = state;
+        if (authState.IsAuthenticated)
+            SetSyncStatus("up", "ready");
     }
 
     async Task LogoutAsync()
     {
         if (!Try(out var state, out var error, await cloudSyncService.LogoutAsync()))
         {
+            SetSyncStatus("error", "logout failed");
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;
         }
 
         authState = state;
+        ClearSyncStatus();
     }
 
     async Task SyncUpAsync()
     {
         if (!Try(out var modelDto, out var error, modelService.GetCurrentModelDto()))
         {
+            SetSyncStatus("error", "local model unavailable");
             snackbar.Add(error.ErrorMessage, Severity.Warning);
             return;
         }
 
         if (!Try(out var metadata, out var pushError, await cloudSyncService.PushAsync(modelService.ModelPath, modelDto)))
         {
+            SetSyncStatus("error", "upload failed");
             snackbar.Add(pushError.ErrorMessage, Severity.Error);
             return;
         }
 
+        SetSyncStatus("up", $"{Path.GetFileNameWithoutExtension(metadata.NormalizedPath)}");
         snackbar.Add($"Synced {metadata.CompressedSizeBytes} bytes to the cloud.", Severity.Success);
     }
 
@@ -205,22 +230,26 @@
 
         if (string.IsNullOrWhiteSpace(modelService.ModelPath))
         {
+            SetSyncStatus("error", "model not loaded");
             snackbar.Add("Model is not loaded.", Severity.Warning);
             return;
         }
 
         if (!Try(out var modelDto, out var error, await cloudSyncService.PullAsync(modelService.ModelPath)))
         {
+            SetSyncStatus("error", "download failed");
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;
         }
 
         if (!Try(out var modelInfo, out var replaceError, await modelService.ReplaceCurrentModelAsync(modelDto)))
         {
+            SetSyncStatus("error", "replace failed");
             snackbar.Add(replaceError.ErrorMessage, Severity.Error);
             return;
         }
 
+        SetSyncStatus("down", Path.GetFileNameWithoutExtension(modelInfo.Path));
         snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(modelInfo.Path)}.", Severity.Success);
     }
 
@@ -235,5 +264,19 @@
     async Task ShowAbout()
     {
         await aboutBox.ShowAsync();
+    }
+
+    void SetSyncStatus(string direction, string summary)
+    {
+        lastSyncAt = DateTimeOffset.Now;
+        lastSyncDirection = direction;
+        lastSyncSummary = summary;
+    }
+
+    void ClearSyncStatus()
+    {
+        lastSyncAt = null;
+        lastSyncDirection = null;
+        lastSyncSummary = null;
     }
 }
