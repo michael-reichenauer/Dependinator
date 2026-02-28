@@ -26,6 +26,12 @@ static class CloudModelSerializer
         );
     }
 
+    public static string GetContentHash(ModelDto modelDto)
+    {
+        byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(modelDto, serializerOptions);
+        return Convert.ToHexString(SHA256.HashData(jsonBytes)).ToLowerInvariant();
+    }
+
     public static R<ModelDto> ReadModel(CloudModelDocument document)
     {
         try
