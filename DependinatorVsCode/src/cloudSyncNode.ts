@@ -53,7 +53,6 @@ type DeviceAuthorizationResponse = {
 
 type DeviceTokenResponse = {
     access_token?: string;
-    id_token?: string;
     error?: string;
     error_description?: string;
 };
@@ -172,7 +171,6 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
         const token = await this.pollForTokenAsync(deviceResponse.body, configuration, openIdConfiguration);
         await this.context.secrets.store(tokenSecretName, token);
         this.outputChannel.appendLine("Dependinator: Cloud sync access token acquired in VS Code extension host.");
-        this.logTokenClaims(token);
         return await this.getAuthStateFromTokenAsync(token, configuration);
     }
 
@@ -497,19 +495,6 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             throw new Error("Cloud sync token format was invalid.");
 
         return JSON.parse(this.base64UrlDecode(tokenParts[1])) as Record<string, unknown>;
-    }
-
-    logTokenClaims(token: string): void {
-        try {
-            const claims = this.readTokenClaims(token);
-            this.outputChannel.appendLine(
-                `Dependinator: Access token claims aud=${String(claims.aud ?? "")}, iss=${String(claims.iss ?? "")}, ver=${String(claims.ver ?? "")}, scp=${String(claims.scp ?? "")}, sub=${String(claims.sub ?? claims.oid ?? "")}`
-            );
-        } catch (error) {
-            this.outputChannel.appendLine(
-                `Dependinator: Failed to decode access token claims. ${this.toErrorMessage(error)}`
-            );
-        }
     }
 
     base64UrlDecode(value: string): string {
