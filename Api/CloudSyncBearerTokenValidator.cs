@@ -53,20 +53,25 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
             OpenIdConnectConfiguration configuration = await configurationManager.GetConfigurationAsync(
                 cancellationToken
             );
+            IReadOnlyCollection<string> validAudiences = GetValidAudiences(options.BearerAudience);
             TokenValidationParameters validationParameters = new()
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKeys = configuration.SigningKeys,
                 ValidateIssuer = true,
-                ValidIssuer = configuration.Issuer,
+                IssuerValidator = (issuer, securityToken, parameters) =>
+                    ValidateIssuer(issuer, securityToken, configuration),
                 ValidateAudience = true,
-                ValidAudience = options.BearerAudience,
+                ValidAudiences = validAudiences,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromMinutes(2),
             };
 
             ClaimsPrincipal principal = tokenHandler.ValidateToken(token, validationParameters, out _);
-            string? userId = FindClaimValue(principal, "sub") ?? FindClaimValue(principal, ClaimTypes.NameIdentifier);
+            string? userId =
+                FindClaimValue(principal, "sub")
+                ?? FindClaimValue(principal, "oid")
+                ?? FindClaimValue(principal, ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
                 return null;
 
@@ -104,5 +109,56 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     static string? FindClaimValue(ClaimsPrincipal principal, string claimType)
     {
         return principal.FindFirst(claimType)?.Value;
+    }
+
+    static IReadOnlyCollection<string> GetValidAudiences(string? configuredAudience)
+    {
+        if (string.IsNullOrWhiteSpace(configuredAudience))
+            return Array.Empty<string>();
+
+        string trimmedAudience = configuredAudience.Trim();
+        string apiAudience = trimmedAudience.StartsWith("api://", StringComparison.OrdinalIgnoreCase)
+            ? trimmedAudience
+            : $"api://{trimmedAudience}";
+
+        return [trimmedAudience, apiAudience];
+    }
+
+    static string ValidateIssuer(
+        string issuer,
+        SecurityToken securityToken,
+        OpenIdConnectConfiguration configuration
+    )
+    {
+        HashSet<string> validIssuers = new(StringComparer.OrdinalIgnoreCase)
+        {
+            NormalizeIssuer(configuration.Issuer),
+            NormalizeIssuer(RemoveV2Suffix(configuration.Issuer)),
+        };
+
+        if (securityToken is JwtSecurityToken jwtToken)
+        {
+            string? tenantId = jwtToken.Claims.FirstOrDefault(c => c.Type == "tid")?.Value;
+            if (!string.IsNullOrWhiteSpace(tenantId))
+                validIssuers.Add(NormalizeIssuer($"https://sts.windows.net/{tenantId}/"));
+        }
+
+        string normalizedIssuer = NormalizeIssuer(issuer);
+        if (validIssuers.Contains(normalizedIssuer))
+            return issuer;
+
+        throw new SecurityTokenInvalidIssuerException($"Issuer '{issuer}' is not valid.");
+    }
+
+    static string NormalizeIssuer(string issuer)
+    {
+        return issuer.TrimEnd('/');
+    }
+
+    static string RemoveV2Suffix(string issuer)
+    {
+        return issuer.EndsWith("/v2.0", StringComparison.OrdinalIgnoreCase)
+            ? issuer[..^"/v2.0".Length]
+            : issuer;
     }
 }
