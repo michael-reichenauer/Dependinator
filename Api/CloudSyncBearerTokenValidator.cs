@@ -19,19 +19,29 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     const string CustomAuthorizationHeaderName = "X-Dependinator-Authorization";
     const string AuthorizationHeaderName = "Authorization";
     readonly CloudSyncOptions options;
-    readonly ConfigurationManager<OpenIdConnectConfiguration>? configurationManager;
+    readonly IConfigurationManager<OpenIdConnectConfiguration>? configurationManager;
     readonly JwtSecurityTokenHandler tokenHandler = new();
 
     public CloudSyncBearerTokenValidator(IOptions<CloudSyncOptions> options)
+        : this(options, null) { }
+
+    internal CloudSyncBearerTokenValidator(
+        IOptions<CloudSyncOptions> options,
+        IConfigurationManager<OpenIdConnectConfiguration>? configurationManager
+    )
     {
         this.options = options.Value;
+        this.configurationManager = configurationManager;
 
         if (
+            this.configurationManager is null
+            && (
             !string.IsNullOrWhiteSpace(this.options.OpenIdConfigurationUrl)
             && !string.IsNullOrWhiteSpace(this.options.BearerAudience)
+            )
         )
         {
-            configurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
+            this.configurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
                 this.options.OpenIdConfigurationUrl,
                 new OpenIdConnectConfigurationRetriever()
             );
