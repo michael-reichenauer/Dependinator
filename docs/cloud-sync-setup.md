@@ -65,6 +65,7 @@ Notes:
 
 - `./run-sync` uses same-origin `/api` through SWA CLI, which is closer to production than calling the Functions host directly.
 - Local auth emulation can still require some manual verification depending on your provider setup.
+- `.azurite/` is local emulator state only and is intentionally ignored by Git.
 
 ## VS Code Extension Sync
 
