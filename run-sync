@@ -12,10 +12,18 @@ host="${HOST:-127.0.0.1}"
 local_settings="$api_dir/local.settings.json"
 local_settings_example="$api_dir/local.settings.example.json"
 azurite_pid=""
+func_pid=""
+
+port_is_open() {
+    bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
+}
 
 cleanup() {
     if [[ -n "$azurite_pid" ]] && kill -0 "$azurite_pid" 2>/dev/null; then
         kill "$azurite_pid" 2>/dev/null || true
+    fi
+    if [[ -n "$func_pid" ]] && kill -0 "$func_pid" 2>/dev/null; then
+        kill "$func_pid" 2>/dev/null || true
     fi
 }
 
@@ -28,6 +36,12 @@ if [[ ! -f "$local_settings" && -f "$local_settings_example" ]]; then
     cp "$local_settings_example" "$local_settings"
 fi
 
+if ! command -v func >/dev/null 2>&1; then
+    echo "Azure Functions Core Tools ('func') is required for local API runs." >&2
+    echo "Install it from https://learn.microsoft.com/azure/azure-functions/functions-run-local or your package manager." >&2
+    exit 1
+fi
+
 mkdir -p "$azurite_dir"
 
 if command -v azurite >/dev/null 2>&1; then
@@ -37,8 +51,26 @@ else
 fi
 azurite_pid="$!"
 
+(
+    cd "$api_dir"
+    func start --port 7071
+) &
+func_pid="$!"
+
+for _ in $(seq 1 120); do
+    if port_is_open 7071; then
+        break
+    fi
+    sleep 0.5
+done
+
+if ! port_is_open 7071; then
+    echo "Azure Functions host did not start on port 7071." >&2
+    exit 1
+fi
+
 if command -v swa >/dev/null 2>&1; then
-    swa start "$wwwroot_dir" --api-location "$api_dir" --port "$port" --host "$host" --swa-config-location "$config_dir"
+    swa start "$wwwroot_dir" --api-devserver-url "http://127.0.0.1:7071" --port "$port" --host "$host" --swa-config-location "$config_dir"
 else
-    npx --yes @azure/static-web-apps-cli start "$wwwroot_dir" --api-location "$api_dir" --port "$port" --host "$host" --swa-config-location "$config_dir"
+    npx --yes @azure/static-web-apps-cli start "$wwwroot_dir" --api-devserver-url "http://127.0.0.1:7071" --port "$port" --host "$host" --swa-config-location "$config_dir"
 fi
