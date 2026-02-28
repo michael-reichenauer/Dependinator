@@ -45,7 +45,7 @@
             "properties": {
                 "dependinator.cloudSync.baseUrl": {
                     "type": "string",
-                    "default": "https://dependinator.com",
+                    "default": "https://polite-island-0e6a6eb03-dev.westeurope.4.azurestaticapps.net",
                     "description": "Base URL for the Dependinator cloud sync site. Leave as default for production; override only for dev/testing."
                 },
                 "dependinator.cloudSync.openIdConfigurationUrl": {
