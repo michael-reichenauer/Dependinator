@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Net.Sockets;
 using Api;
 using Microsoft.Extensions.Options;
@@ -75,6 +76,8 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
 
     Process? process;
     string? tempDirectory;
+    readonly ConcurrentQueue<string> standardOutput = new();
+    readonly ConcurrentQueue<string> standardError = new();
 
     public string ConnectionString { get; private set; } = string.Empty;
 
@@ -99,9 +102,14 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
                 CreateNoWindow = true,
             },
         };
+        process.OutputDataReceived += (_, e) => EnqueueLine(standardOutput, e.Data);
+        process.ErrorDataReceived += (_, e) => EnqueueLine(standardError, e.Data);
 
         if (!process.Start())
             throw new InvalidOperationException("Failed to start Azurite.");
+
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
 
         ConnectionString =
             $"DefaultEndpointsProtocol=http;AccountName={DevStoreAccountName};AccountKey={DevStoreAccountKey};BlobEndpoint=http://127.0.0.1:{blobPort}/{DevStoreAccountName};";
@@ -165,11 +173,16 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
         return process.ExitCode == 0;
     }
 
-    static async Task WaitForPortAsync(int port)
+    async Task WaitForPortAsync(int port)
     {
         DateTime deadline = DateTime.UtcNow.AddSeconds(15);
         while (DateTime.UtcNow < deadline)
         {
+            if (process is { HasExited: true })
+                throw new InvalidOperationException(
+                    $"Azurite exited before it started listening on port {port}.{Environment.NewLine}{FormatDiagnostics()}"
+                );
+
             try
             {
                 using TcpClient client = new();
@@ -182,7 +195,9 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
             }
         }
 
-        throw new TimeoutException($"Timed out waiting for Azurite on port {port}.");
+        throw new TimeoutException(
+            $"Timed out waiting for Azurite on port {port}.{Environment.NewLine}{FormatDiagnostics()}"
+        );
     }
 
     static int GetFreePort()
@@ -192,5 +207,21 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
         return port;
+    }
+
+    static void EnqueueLine(ConcurrentQueue<string> queue, string? line)
+    {
+        if (string.IsNullOrWhiteSpace(line))
+            return;
+
+        queue.Enqueue(line);
+        while (queue.Count > 50 && queue.TryDequeue(out _)) { }
+    }
+
+    string FormatDiagnostics()
+    {
+        string output = string.Join(Environment.NewLine, standardOutput);
+        string error = string.Join(Environment.NewLine, standardError);
+        return $"Azurite stdout:{Environment.NewLine}{output}{Environment.NewLine}Azurite stderr:{Environment.NewLine}{error}";
     }
 }
