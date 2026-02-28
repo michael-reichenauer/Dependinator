@@ -26,7 +26,9 @@ jobs:
       - name: Install WASM workload
         run: dotnet workload restore Dependinator.sln
       - name: Restore
-        run: dotnet restore Dependinator.Wasm/Dependinator.Wasm.csproj
+        run: dotnet restore Dependinator.sln
+      - name: Test
+        run: dotnet test Dependinator.sln --no-restore
       - name: Publish Dependinator WASM
         run: |
           rm -rf Dependinator.Wasm/publish
