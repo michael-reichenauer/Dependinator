@@ -10,13 +10,9 @@ public class SolutionParserTests
     {
         var items = new Parsing.Utils.ItemsMock();
         var parserFileService = new ParserFileService();
+        string solutionPath = Root.SolutionFilePath;
 
-        using var parser = new SolutionParser(
-            "/workspaces/Dependinator/Dependinator.sln",
-            items,
-            false,
-            parserFileService
-        );
+        using var parser = new SolutionParser(solutionPath, items, false, parserFileService);
         if (!Try(out var e, await parser.ParseAsync()))
             Assert.Fail(e.AllErrorMessages());
 

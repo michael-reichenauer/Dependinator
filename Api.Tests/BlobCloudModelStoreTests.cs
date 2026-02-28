@@ -175,7 +175,7 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
 
     async Task WaitForPortAsync(int port)
     {
-        DateTime deadline = DateTime.UtcNow.AddSeconds(15);
+        DateTime deadline = DateTime.UtcNow.AddSeconds(60);
         while (DateTime.UtcNow < deadline)
         {
             if (process is { HasExited: true })
