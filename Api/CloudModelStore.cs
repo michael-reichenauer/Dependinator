@@ -154,7 +154,11 @@ public sealed class BlobCloudModelStore : ICloudModelStore
 
     static string GetBlobName(CloudUserInfo user, string modelKey) => $"{GetUserPrefix(user)}{modelKey}.json.gz";
 
-    static string GetUserPrefix(CloudUserInfo user) => $"users/{Uri.EscapeDataString(user.UserId)}/models/";
+    static string GetUserPrefix(CloudUserInfo user)
+    {
+        string storageKey = CloudUserStorageKey.Create(user);
+        return $"users/{Uri.EscapeDataString(storageKey)}/models/";
+    }
 
     static string GetMetadataValue(IDictionary<string, string> metadata, string key)
     {
