@@ -1,5 +1,5 @@
 using Dependinator.Models;
-using DependinatorCore.Parsing;
+using Dependinator.Core.Parsing;
 using ModelNode = Dependinator.Models.Node;
 
 namespace Dependinator.Tests.Models;
@@ -34,6 +34,7 @@ public class NodeLayoutTests
             {
                 Assert.Equal(NodeLayout.DefaultSize.Width, child.Boundary.Width);
                 Assert.Equal(NodeLayout.DefaultSize.Height, child.Boundary.Height);
+                AssertGridAligned(child.Boundary);
             }
         );
         Assert.InRange(parent.ContainerZoom, 0.0001, 1.0);
@@ -92,6 +93,7 @@ public class NodeLayoutTests
         Assert.Equal(NodeLayout.DefaultSize.Height, nestedType1.Boundary.Height);
         Assert.Equal(NodeLayout.DefaultSize.Width, nestedType2.Boundary.Width);
         Assert.Equal(NodeLayout.DefaultSize.Height, nestedType2.Boundary.Height);
+        Assert.All(parent.Children, child => AssertGridAligned(child.Boundary));
 
         var xCount = members.Select(c => c.Boundary.X).Distinct().Count();
         var yCount = members.Select(c => c.Boundary.Y).Distinct().Count();
@@ -197,6 +199,7 @@ public class NodeLayoutTests
         Assert.NotEqual(Rect.None, added.Boundary);
         Assert.Equal(NodeLayout.DefaultSize.Width, added.Boundary.Width);
         Assert.Equal(NodeLayout.DefaultSize.Height, added.Boundary.Height);
+        AssertGridAligned(added.Boundary);
         Assert.False(IsOverlapping(added.Boundary, existing1.Boundary));
         Assert.False(IsOverlapping(added.Boundary, existing2.Boundary));
     }
@@ -221,6 +224,8 @@ public class NodeLayoutTests
 
         Assert.Equal(NodeLayout.DefaultSize.Width, first.Width);
         Assert.Equal(NodeLayout.DefaultSize.Height, first.Height);
+        AssertGridAligned(first);
+        AssertGridAligned(second);
         Assert.Equal(first.Y, second.Y);
         Assert.True(second.X > first.X);
     }
@@ -279,5 +284,18 @@ public class NodeLayoutTests
         if (first.Y + first.Height <= second.Y || second.Y + second.Height <= first.Y)
             return false;
         return true;
+    }
+
+    static void AssertGridAligned(Rect rect)
+    {
+        AssertGridAligned(rect.X, nameof(rect.X));
+        AssertGridAligned(rect.Y, nameof(rect.Y));
+    }
+
+    static void AssertGridAligned(double value, string name)
+    {
+        var grid = NodeGrid.SnapSize;
+        var snapped = Math.Round(value / grid) * grid;
+        Assert.True(Math.Abs(value - snapped) < 0.001, $"Expected {name}={value} to align to {grid} grid");
     }
 }

@@ -1,7 +1,7 @@
+using Dependinator.Core.Parsing;
 using Dependinator.Diagrams;
 using Dependinator.Models;
-using DependinatorCore.Parsing;
-using FileLocation = DependinatorCore.Parsing.FileLocation;
+using FileLocation = Dependinator.Core.Parsing.FileLocation;
 
 namespace Dependinator.Shared;
 

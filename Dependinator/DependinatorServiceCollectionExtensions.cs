@@ -1,4 +1,4 @@
-using DependinatorCore;
+using Dependinator.Core;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 

@@ -1,3 +1,4 @@
+using Dependinator.Diagrams;
 using Dependinator.Models;
 
 namespace Dependinator.Diagrams.Svg;
@@ -9,11 +10,15 @@ class LineSvg
         if (!ShouldRender(line, parentZoom, childrenZoom))
             return "";
 
-        var endpoints = CalculateLineEndpoints(line, nodeCanvasPos, parentZoom, childrenZoom);
+        if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
+            return "";
+
+        var endpoints = LinePathGeometry.ToRendered(localEndpoints, nodeCanvasPos, childrenZoom);
+        var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var elementId = PointerId.FromLine(line.Id).ElementId;
         UpdateLineOrientation(line, endpoints);
 
-        return BuildLineSvg(line, endpoints, elementId);
+        return BuildLineSvg(line, endpoints, polylinePoints, elementId);
     }
 
     public static string GetDirectLineSvg(Line line, Node ancestor, Pos nodeCanvasPos, double childrenZoom)
@@ -21,23 +26,15 @@ class LineSvg
         if (line.RenderAncestor != ancestor)
             return "";
 
-        var (sourceAnchor, targetAnchor) = DirectLineCalculator.GetAnchorsRelativeToAncestor(
-            ancestor,
-            line.Source,
-            line.Target
-        );
+        if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
+            return "";
 
-        var endpoints = new LineEndpoints(
-            nodeCanvasPos.X + sourceAnchor.X * childrenZoom,
-            nodeCanvasPos.Y + sourceAnchor.Y * childrenZoom,
-            nodeCanvasPos.X + targetAnchor.X * childrenZoom,
-            nodeCanvasPos.Y + targetAnchor.Y * childrenZoom
-        );
-
+        var endpoints = LinePathGeometry.ToRendered(localEndpoints, nodeCanvasPos, childrenZoom);
+        var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var elementId = PointerId.FromLine(line.Id).ElementId;
         UpdateLineOrientation(line, endpoints);
 
-        return BuildLineSvg(line, endpoints, elementId);
+        return BuildLineSvg(line, endpoints, polylinePoints, elementId);
     }
 
     static bool ShouldRender(Line line, double parentZoom, double childrenZoom)
@@ -52,85 +49,12 @@ class LineSvg
         return true;
     }
 
-    static LineEndpoints CalculateLineEndpoints(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
-    {
-        var sourceBoundary = line.Source.Boundary;
-        var targetBoundary = line.Target.Boundary;
-
-        var sourceAnchor = NodeSvg.GetLineAnchor(line.Source, NodeSvg.LineAnchorRole.Source);
-        var targetAnchor = NodeSvg.GetLineAnchor(line.Target, NodeSvg.LineAnchorRole.Target);
-
-        return GetRelation(line) switch
-        {
-            LineRelation.ParentToChild => ParentToChildEndpoints(
-                line,
-                nodeCanvasPos,
-                parentZoom,
-                childrenZoom,
-                sourceBoundary,
-                targetAnchor
-            ),
-            LineRelation.ChildToParent => ChildToParentEndpoints(
-                line,
-                nodeCanvasPos,
-                parentZoom,
-                childrenZoom,
-                sourceAnchor,
-                targetBoundary
-            ),
-            _ => SiblingEndpoints(nodeCanvasPos, childrenZoom, sourceAnchor, targetAnchor),
-        };
-    }
-
-    static LineEndpoints ParentToChildEndpoints(
+    static string BuildLineSvg(
         Line line,
-        Pos nodeCanvasPos,
-        double parentZoom,
-        double childrenZoom,
-        Rect sourceBoundary,
-        (double X, double Y) targetAnchor
+        LinePathGeometry.LineEndpoints endpoints,
+        IReadOnlyList<Pos> polylinePoints,
+        string elementId
     )
-    {
-        var parent = line.Source;
-        var x1 = nodeCanvasPos.X - parent.ContainerOffset.X * parentZoom;
-        var y1 = nodeCanvasPos.Y + sourceBoundary.Height / 2 * parentZoom - parent.ContainerOffset.Y * parentZoom;
-        var x2 = nodeCanvasPos.X + targetAnchor.X * childrenZoom;
-        var y2 = nodeCanvasPos.Y + targetAnchor.Y * childrenZoom;
-        return new LineEndpoints(x1, y1, x2, y2);
-    }
-
-    static LineEndpoints ChildToParentEndpoints(
-        Line line,
-        Pos nodeCanvasPos,
-        double parentZoom,
-        double childrenZoom,
-        (double X, double Y) sourceAnchor,
-        Rect targetBoundary
-    )
-    {
-        var parent = line.Target;
-        var x1 = nodeCanvasPos.X + sourceAnchor.X * childrenZoom;
-        var y1 = nodeCanvasPos.Y + sourceAnchor.Y * childrenZoom;
-        var x2 = nodeCanvasPos.X + targetBoundary.Width * parentZoom - parent.ContainerOffset.X * parentZoom;
-        var y2 = nodeCanvasPos.Y + targetBoundary.Height / 2 * parentZoom - parent.ContainerOffset.Y * parentZoom;
-        return new LineEndpoints(x1, y1, x2, y2);
-    }
-
-    static LineEndpoints SiblingEndpoints(
-        Pos nodeCanvasPos,
-        double childrenZoom,
-        (double X, double Y) sourceAnchor,
-        (double X, double Y) targetAnchor
-    )
-    {
-        var x1 = nodeCanvasPos.X + sourceAnchor.X * childrenZoom;
-        var y1 = nodeCanvasPos.Y + sourceAnchor.Y * childrenZoom;
-        var x2 = nodeCanvasPos.X + targetAnchor.X * childrenZoom;
-        var y2 = nodeCanvasPos.Y + targetAnchor.Y * childrenZoom;
-        return new LineEndpoints(x1, y1, x2, y2);
-    }
-
-    static string BuildLineSvg(Line line, LineEndpoints endpoints, string elementId)
     {
         var color =
             line.IsDirect ? DColors.DirectLine
@@ -145,59 +69,67 @@ class LineSvg
         var strokeWidth = line.StrokeWidth;
         var circleRadius = strokeWidth + 1.5;
         var dashArray = line.IsDirect ? " stroke-dasharray=\"6,6\"" : "";
-        var selectedSvg = SelectedLineSvg(line, endpoints);
+        var points = ToPolylinePoints(polylinePoints);
+        var selectedSvg = SelectedLineSvg(line, polylinePoints);
 
         return $"""
-            <line x1="{endpoints.X1}" y1="{endpoints.Y1}" x2="{endpoints.X2}" y2="{endpoints.Y2}" stroke-width="{strokeWidth}" stroke="{color}" marker-end="url(#{markerId})"{dashArray} />
+            <polyline points="{points}" fill="none" stroke-width="{strokeWidth}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
             <circle cx="{endpoints.X1}" cy="{endpoints.Y1}" r="{circleRadius}" fill="{color}" />
             <g class="hoverable" id="{elementId}">
-              <line id="{elementId}" x1="{endpoints.X1}" y1="{endpoints.Y1}" x2="{endpoints.X2}" y2="{endpoints.Y2}" stroke-width="{strokeWidth
-                + 10}" stroke="black" stroke-opacity="0" />
+              <polyline id="{elementId}" points="{points}" fill="none" stroke-width="{strokeWidth
+                + 10}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
               <title>{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})</title>
             </g>
             {selectedSvg}
             """;
     }
 
-    static string SelectedLineSvg(Line line, LineEndpoints endpoints)
+    static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints)
     {
         if (!line.IsSelected)
             return "";
 
-        var color = DColors.Selected;
+        var color = DColors.LineSelected;
+        var segmentControlColor = DColors.Selected;
         var strokeWidth = line.StrokeWidth;
         var circleRadius = strokeWidth + 3;
+        var points = ToPolylinePoints(polylinePoints);
+        var start = polylinePoints.First();
+        var end = polylinePoints.Last();
+        var handlesSvg = string.Join(
+            "\n",
+            line.SegmentPoints.Select(
+                (point, index) =>
+                {
+                    var renderedPoint = polylinePoints[index + 1];
+                    var handleId = PointerId.FromLinePoint(line.Id, index).ElementId;
+                    return $"""
+                    <g class="selectpoint">
+                      <circle cx="{renderedPoint.X}" cy="{renderedPoint.Y}" r="{circleRadius
+                        + 1}" fill="{segmentControlColor}" />
+                      <circle id="{handleId}" cx="{renderedPoint.X}" cy="{renderedPoint.Y}" r="{circleRadius
+                        + 8}" fill="black" fill-opacity="0" />
+                    </g>
+                    """;
+                }
+            )
+        );
 
         return $"""
-            <line x1="{endpoints.X1}" y1="{endpoints.Y1}" x2="{endpoints.X2}" y2="{endpoints.Y2}" stroke="{color}" stroke-width="{strokeWidth
-                + 5}" stroke-dasharray="3,50"/>
-            <circle cx="{endpoints.X1}" cy="{endpoints.Y1}" r="{circleRadius}" fill="{color}" />
-            <circle cx="{endpoints.X2}" cy="{endpoints.Y2}" r="{circleRadius}" fill="{color}" />
+            <polyline points="{points}" fill="none" stroke="{color}" stroke-width="{strokeWidth
+                + 5}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3,50"/>
+            <circle cx="{start.X}" cy="{start.Y}" r="{circleRadius}" fill="{color}" />
+            <circle cx="{end.X}" cy="{end.Y}" r="{circleRadius}" fill="{color}" />
+            {handlesSvg}
             """;
     }
 
-    static void UpdateLineOrientation(Line line, LineEndpoints endpoints)
+    static void UpdateLineOrientation(Line line, LinePathGeometry.LineEndpoints endpoints)
     {
         line.IsUpHill =
             endpoints.X1 <= endpoints.X2 && endpoints.Y1 >= endpoints.Y2
             || endpoints.X1 >= endpoints.X2 && endpoints.Y1 <= endpoints.Y2;
     }
 
-    static LineRelation GetRelation(Line line)
-    {
-        if (line.Target.Parent == line.Source)
-            return LineRelation.ParentToChild;
-        if (line.Source.Parent == line.Target)
-            return LineRelation.ChildToParent;
-        return LineRelation.Sibling;
-    }
-
-    enum LineRelation
-    {
-        ParentToChild,
-        ChildToParent,
-        Sibling,
-    }
-
-    readonly record struct LineEndpoints(double X1, double Y1, double X2, double Y2);
+    static string ToPolylinePoints(IReadOnlyList<Pos> points) => string.Join(" ", points.Select(p => $"{p.X},{p.Y}"));
 }

@@ -2,7 +2,7 @@ using System.IO.Compression;
 using System.Text;
 using Dependinator.Shared;
 using Microsoft.JSInterop;
-using static DependinatorCore.Utils.Result;
+using static Dependinator.Core.Utils.Result;
 
 namespace Dependinator.Tests.Shared;
 

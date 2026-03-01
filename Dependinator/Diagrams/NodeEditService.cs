@@ -24,13 +24,12 @@ class NodeEditService(IModelService modelService) : INodeEditService
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
     const double sizeDiff = 10.0;
-    const double MoveGridSize = 20.0;
 
-    static double SnapToGrid(double value) => Math.Round(value / MoveGridSize) * MoveGridSize;
+    static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 
-    static double SnapToGridUp(double value) => Math.Ceiling(value / MoveGridSize) * MoveGridSize;
+    static double SnapToGridUp(double value) => Math.Ceiling(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 
-    static double SnapToGridDown(double value) => Math.Floor(value / MoveGridSize) * MoveGridSize;
+    static double SnapToGridDown(double value) => Math.Floor(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 
     public void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {

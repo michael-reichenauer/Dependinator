@@ -22,6 +22,7 @@ class InteractionService : IInteractionService
     readonly IPointerEventService mouseEventService;
     readonly IPanZoomService panZoomService;
     readonly INodeEditService nodeEditService;
+    readonly ILineEditService lineEditService;
     readonly IApplicationEvents applicationEvents;
     readonly ISelectionService selectionService;
     readonly IModelService modelService;
@@ -34,6 +35,7 @@ class InteractionService : IInteractionService
     bool isMoving = false;
     bool isDraggingSelectedNode = false;
     bool isResizingSelectedNode = false;
+    bool isDraggingSelectedLinePoint = false;
     PointerId mouseDownId = PointerId.Empty;
     double Zoom => modelService.Zoom;
     readonly Debouncer zoomToolbarDebouncer = new();
@@ -42,6 +44,7 @@ class InteractionService : IInteractionService
         IPointerEventService mouseEventService,
         IPanZoomService panZoomService,
         INodeEditService nodeEditService,
+        ILineEditService lineEditService,
         IApplicationEvents applicationEvents,
         ISelectionService selectionService,
         IModelService modelService,
@@ -51,6 +54,7 @@ class InteractionService : IInteractionService
         this.mouseEventService = mouseEventService;
         this.panZoomService = panZoomService;
         this.nodeEditService = nodeEditService;
+        this.lineEditService = lineEditService;
         this.applicationEvents = applicationEvents;
         this.selectionService = selectionService;
         this.modelService = modelService;
@@ -205,6 +209,7 @@ class InteractionService : IInteractionService
     {
         isDraggingSelectedNode = false;
         isResizingSelectedNode = false;
+        isDraggingSelectedLinePoint = false;
         moveTimerRunning = true;
         moveTimer.Change(MoveDelay, Timeout.Infinite);
         mouseDownId = PointerId.Parse(e.TargetId);
@@ -231,6 +236,18 @@ class InteractionService : IInteractionService
     {
         if (!e.IsLeftButton)
             return;
+        if (
+            mouseDownId.IsLinePoint
+            && selectionService.SelectedId.IsLine
+            && mouseDownId.Id == selectionService.SelectedId.Id
+        )
+        {
+            isDraggingSelectedLinePoint = true;
+            lineEditService.MoveSegmentPoint(e, Zoom, mouseDownId);
+            selectionService.HideSelectedPosition();
+            return;
+        }
+
         if (IsEditNodeMode && mouseDownId.Id == selectionService.SelectedId.Id)
         {
             nodeEditService.PanSelectedNode(e, Zoom, mouseDownId);
@@ -263,6 +280,13 @@ class InteractionService : IInteractionService
 
     void OnMouseUp(PointerEvent e)
     {
+        if (isDraggingSelectedLinePoint && mouseDownId.IsLinePoint)
+        {
+            lineEditService.SnapSegmentPointToGrid(mouseDownId);
+            selectionService.UpdateSelectedPositionAsync();
+            isDraggingSelectedLinePoint = false;
+        }
+
         if (isResizingSelectedNode && mouseDownId.IsResize)
         {
             nodeEditService.SnapResizedSelectedNodeToGrid(mouseDownId);

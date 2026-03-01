@@ -26,28 +26,36 @@ class NodeLayout
     const double MinimumDimension = 0.0001;
     const int PlacementScanLimit = 5000;
     const double PlacementPadding = 4;
+    static readonly DensityProfile SpaciousProfile = new(GapScale: 1.35, TargetLinearCoverage: 0.42);
+    static readonly DensityProfile CompactProfile = new(GapScale: 0.72, TargetLinearCoverage: 0.62);
+    static readonly DensityProfile BalancedProfile = new(GapScale: 1.0, TargetLinearCoverage: 0.5);
+    static readonly DensityProfile RootProfile = new(GapScale: 5.00, TargetLinearCoverage: 0.42);
 
     public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
 
     public static void SetDensity(NodeLayoutDensity density) => Density = density;
 
-    public static Rect GetNextChildRect(Node node)
+    static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
+
+    static Rect SnapPositionToGrid(Rect rect) => rect with { X = SnapToGrid(rect.X), Y = SnapToGrid(rect.Y) };
+
+    public static Rect GetNextChildRect(Node parentNode)
     {
-        if (!node.IsRoot)
+        if (!parentNode.IsRoot)
             return Rect.None;
 
-        var density = GetDensityProfile();
+        var density = RootProfile;
         var rootGap = RootGap * density.GapScale;
-        var layoutWidth = node.Boundary.Width / Math.Max(MinimumDimension, node.ContainerZoom);
+        var layoutWidth = parentNode.Boundary.Width / Math.Max(MinimumDimension, parentNode.ContainerZoom);
         var columns = Math.Max(1, (int)Math.Floor((layoutWidth - rootGap) / (DefaultWidth + rootGap)));
 
-        var index = node.Children.Count;
+        var index = parentNode.Children.Count;
         var column = index % columns;
         var row = index / columns;
 
         var x = rootGap + column * (DefaultWidth + rootGap);
         var y = rootGap + row * (DefaultHeight + rootGap);
-        return new Rect(x, y, DefaultWidth, DefaultHeight);
+        return SnapPositionToGrid(new Rect(x, y, DefaultWidth, DefaultHeight));
     }
 
     public static void AdjustChildren(Node parent, bool forceAllChildren = false)
@@ -87,7 +95,7 @@ class NodeLayout
             var row = index / columns;
             var x = metrics.HorizontalGap + column * (metrics.Width + metrics.HorizontalGap);
             var y = metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
-            children[index].Boundary = new Rect(x, y, metrics.Width, metrics.Height);
+            children[index].Boundary = SnapPositionToGrid(new Rect(x, y, metrics.Width, metrics.Height));
         }
 
         ApplyContainerTransform(parent, GetChildrenBounds(children), GetDensityProfile().TargetLinearCoverage);
@@ -230,14 +238,14 @@ class NodeLayout
             var row = index / columns;
             var x = startX + column * (metrics.Width + metrics.HorizontalGap);
             var y = metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
-            var candidate = new Rect(x, y, metrics.Width, metrics.Height);
+            var candidate = SnapPositionToGrid(new Rect(x, y, metrics.Width, metrics.Height));
             if (occupied.All(existing => !Overlaps(candidate, existing)))
                 return candidate;
         }
 
         var fallbackX =
             occupied.Count == 0 ? startX : occupied.Max(rect => rect.X + rect.Width) + metrics.HorizontalGap;
-        return new Rect(fallbackX, metrics.VerticalGap, metrics.Width, metrics.Height);
+        return SnapPositionToGrid(new Rect(fallbackX, metrics.VerticalGap, metrics.Width, metrics.Height));
     }
 
     static bool Overlaps(Rect first, Rect second)
@@ -287,7 +295,7 @@ class NodeLayout
             var row = index / columns;
             var x = startX + metrics.HorizontalGap + column * (metrics.Width + metrics.HorizontalGap);
             var y = startY + metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
-            nodes[index].Boundary = new Rect(x, y, metrics.Width, metrics.Height);
+            nodes[index].Boundary = SnapPositionToGrid(new Rect(x, y, metrics.Width, metrics.Height));
         }
 
         return startX + layoutWidth;
@@ -436,9 +444,9 @@ class NodeLayout
     static DensityProfile GetDensityProfile() =>
         Density switch
         {
-            NodeLayoutDensity.Spacious => new DensityProfile(GapScale: 1.35, TargetLinearCoverage: 0.42),
-            NodeLayoutDensity.Compact => new DensityProfile(GapScale: 0.72, TargetLinearCoverage: 0.62),
-            _ => new DensityProfile(GapScale: 1.0, TargetLinearCoverage: 0.5),
+            NodeLayoutDensity.Spacious => SpaciousProfile,
+            NodeLayoutDensity.Compact => CompactProfile,
+            _ => BalancedProfile,
         };
 
     readonly record struct LayoutMetrics(

@@ -1,5 +1,5 @@
-using DependinatorCore;
-using DependinatorCore.Shared;
+using Dependinator.Core;
+using Dependinator.Core.Shared;
 
 namespace Dependinator.Models;
 
@@ -8,6 +8,7 @@ record ModelInfo(string Path, Rect ViewRect, double Zoom);
 interface IModelService
 {
     string ModelName { get; }
+    string ModelPath { get; }
     Pos Offset { get; }
     double Zoom { get; }
 
@@ -37,6 +38,8 @@ interface IModelService
     Rect GetBounds();
     void CheckLineVisibility();
     Task LayoutNode(NodeId nodeId, bool recursively = false);
+    R<ModelDto> GetCurrentModelDto();
+    Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
 }
 
 // Model service
@@ -81,6 +84,7 @@ class ModelService : IModelService
     public Pos Offset => Use(m => m.Offset);
     public double Zoom => Use(m => m.Zoom);
     public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
+    public string ModelPath => Use(m => m.Path);
 
     public void ClearCache()
     {
@@ -240,6 +244,34 @@ class ModelService : IModelService
         }
     }
 
+    public R<ModelDto> GetCurrentModelDto()
+    {
+        lock (model.Lock)
+        {
+            if (string.IsNullOrWhiteSpace(model.Path))
+                return R.Error("Model is not loaded");
+
+            return model.ToDto();
+        }
+    }
+
+    public async Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto)
+    {
+        string modelPath;
+        lock (model.Lock)
+        {
+            modelPath = model.Path;
+        }
+
+        if (string.IsNullOrWhiteSpace(modelPath))
+            return R.Error("Model is not loaded");
+
+        if (!Try(out var error, await persistenceService.WriteAsync(modelPath, modelDto)))
+            return error;
+
+        return await LoadAsync(modelPath);
+    }
+
     public async Task<R<ModelInfo>> LoadAsync(string path)
     {
         Clear();
@@ -329,7 +361,7 @@ class ModelService : IModelService
 
         if (
             !Try(
-                out DependinatorCore.Parsing.Source? source,
+                out Dependinator.Core.Parsing.Source? source,
                 out var e,
                 await parserService.GetSourceAsync(modelPath, nodeName)
             )
@@ -553,6 +585,7 @@ class ModelService : IModelService
         {
             modelDto.Nodes.ForEach(modelStructureService.SetNodeDto);
             modelDto.Links.ForEach(modelStructureService.SetLinkDto);
+            modelDto.Lines.ForEach(modelStructureService.SetLineLayoutDto);
         }
     }
 }

@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.5.17",
+    "version": "0.5.19",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
@@ -39,6 +39,26 @@
                     "when": "true"
                 }
             ]
+        },
+        "configuration": {
+            "title": "Dependinator",
+            "properties": {
+                "dependinator.cloudSync.baseUrl": {
+                    "type": "string",
+                    "default": "https://dependinator.com",
+                    "description": "Base URL for the Dependinator cloud sync site. Leave as default for production; override only for dev/testing."
+                },
+                "dependinator.cloudSync.openIdConfigurationUrl": {
+                    "type": "string",
+                    "default": "https://dependinator.ciamlogin.com/6c5f5248-641e-4c17-858b-7591bee24fe3/v2.0/.well-known/openid-configuration",
+                    "description": "OpenID configuration URL for the Entra External ID user flow used by VS Code cloud sync. Leave as default for production; override only for dev/testing."
+                },
+                "dependinator.cloudSync.clientId": {
+                    "type": "string",
+                    "default": "55db228d-5c84-41ac-864c-0c9c9f22a725",
+                    "description": "Client ID of the Entra External ID public client app registration used by VS Code cloud sync. Leave as default for production; override only for dev/testing."
+                }
+            }
         }
     },
     "scripts": {

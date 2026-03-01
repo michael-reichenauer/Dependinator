@@ -19,7 +19,7 @@
     <PackageReference Include="Scrutor" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../Shared/Shared.csproj" GlobalPropertiesToRemove="IsBrowserWasm" />
-    <ProjectReference Include="../DependinatorCore/DependinatorCore.csproj" />
+    <ProjectReference Include="../Shared/Shared.csproj" />
+    <ProjectReference Include="../Dependinator.Core/Dependinator.Core.csproj" />
   </ItemGroup>
 </Project>

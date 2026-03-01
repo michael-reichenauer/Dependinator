@@ -21,6 +21,9 @@ let resolveLspReady: (() => void) | undefined;
 const lspReadyPromise = new Promise<void>(resolve => {
     resolveLspReady = resolve;
 });
+type CloudSyncBridge = {
+    handleWebviewMessage(message: WebviewMessage, panel: vscode.WebviewPanel): Promise<boolean>;
+};
 
 function isCSharpDocument(document: vscode.TextDocument): boolean {
     if (document.languageId === "csharp")
@@ -130,6 +133,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     console.log("DEP: vscode.env.uiKind", vscode.env.uiKind);
     // Web extensions can't start a .NET process, so skip the server there.
     const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
+    const cloudSyncBridgePromise: Promise<CloudSyncBridge | undefined> = isWeb
+        ? Promise.resolve(undefined)
+        : import("./cloudSyncNode")
+            .then(module => module.createCloudSyncBridge(context))
+            .catch(error => {
+                console.error("Dependinator cloud sync bridge failed to initialize", error);
+                return undefined;
+            });
     languageClientPromise = isWeb
         ? Promise.resolve(undefined)
         : startLanguageServer(context).catch(error => {
@@ -164,6 +175,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         registerWebviewMessageHandler(panel, async (message: WebviewMessage) => {
+            const cloudSyncBridge = await cloudSyncBridgePromise;
+            if (cloudSyncBridge && await cloudSyncBridge.handleWebviewMessage(message, panel))
+                return;
+
             if (message.type === "vscode/ShowEditor") {
                 const fileLocation = String(message.message ?? "");
                 console.log("Show editor for", fileLocation);

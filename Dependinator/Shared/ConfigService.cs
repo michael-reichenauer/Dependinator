@@ -1,5 +1,5 @@
+using Dependinator.Core.Shared;
 using Dependinator.Models;
-using DependinatorCore.Shared;
 
 namespace Dependinator.Shared;
 
@@ -7,6 +7,7 @@ class Config
 {
     public List<string> RecentPaths { get; set; } = [];
     public NodeLayoutDensity LayoutDensity { get; set; } = NodeLayoutDensity.Balanced;
+    public Dictionary<string, CloudSyncModelState> CloudSyncStates { get; set; } = [];
 }
 
 interface IConfigService

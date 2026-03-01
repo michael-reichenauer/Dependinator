@@ -1,5 +1,5 @@
 using Dependinator.Models;
-using DependinatorCore.Tests.Parsing.Utils;
+using Dependinator.Core.Tests.Parsing.Utils;
 
 namespace Dependinator.Tests.Models;
 
@@ -40,7 +40,7 @@ public class ModelTests
     }
 
     record ModelDto(
-        IReadOnlyList<DependinatorCore.Parsing.Node> Nodes,
-        IReadOnlyList<DependinatorCore.Parsing.Link> Links
+        IReadOnlyList<Dependinator.Core.Parsing.Node> Nodes,
+        IReadOnlyList<Dependinator.Core.Parsing.Link> Links
     );
 }

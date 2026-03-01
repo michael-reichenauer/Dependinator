@@ -1,4 +1,4 @@
 #!/bin/bash
 export DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
 export DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1
-dotnet watch --project ./DependinatorWeb/DependinatorWeb.csproj
+dotnet watch --project ./Dependinator.Web/Dependinator.Web.csproj

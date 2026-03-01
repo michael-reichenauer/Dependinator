@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Dependinator.Lsp</AssemblyName>
+    <RootNamespace>Dependinator.Lsp</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OmniSharp.Extensions.LanguageServer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Dependinator.Core/Dependinator.Core.csproj" />
+    <ProjectReference Include="../Dependinator.Roslyn/Dependinator.Roslyn.csproj" />
+  </ItemGroup>
+</Project>
