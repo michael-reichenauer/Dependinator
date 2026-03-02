@@ -17,6 +17,8 @@ local_settings="$api_dir/local.settings.json"
 local_settings_example="$api_dir/local.settings.example.json"
 azurite_pid=""
 func_pid=""
+cloud_sync_openid_configuration_url="https://dependinator.ciamlogin.com/6c5f5248-641e-4c17-858b-7591bee24fe3/v2.0/.well-known/openid-configuration"
+cloud_sync_bearer_audience="55db228d-5c84-41ac-864c-0c9c9f22a725"
 
 # Try opening a TCP connection to localhost on the port passed as the
 # function's first argument. A successful connection means something is
@@ -72,6 +74,8 @@ azurite_pid="$!"
 # Parentheses create a subshell so the `cd` does not affect the rest of this script.
 (
     cd "$api_dir"
+    CloudSync__OpenIdConfigurationUrl="$cloud_sync_openid_configuration_url" \
+    CloudSync__BearerAudience="$cloud_sync_bearer_audience" \
     func start --port 7071
 ) &
 func_pid="$!"

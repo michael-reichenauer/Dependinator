@@ -64,7 +64,8 @@ What it does:
 Notes:
 
 - `./run-sync` uses same-origin `/api` through SWA CLI, which is closer to production than calling the Functions host directly.
-- Local auth emulation can still require some manual verification depending on your provider setup.
+- Browser-hosted local testing uses SWA local auth emulation.
+- VS Code extension-host local testing still signs in through the production Entra public client, and `./run-sync` injects the matching `CloudSync__OpenIdConfigurationUrl` and `CloudSync__BearerAudience` into the local Functions host so bearer-token auth works against the local API/Azurite setup too.
 - `.azurite/` is local emulator state only and is intentionally ignored by Git.
 
 ## VS Code Extension Sync
