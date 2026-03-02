@@ -1,6 +1,9 @@
 #!/bin/bash
+# Exit on errors (`-e`), treat unset variables as errors (`-u`),
+# and fail a pipeline if any command in it fails (`pipefail`).
 set -euo pipefail
 
+# Paths and runtime settings used by the script.
 project="./Dependinator.Wasm/Dependinator.Wasm.csproj"
 publish_dir="./Dependinator.Wasm/publish"
 wwwroot_dir="$publish_dir/wwwroot"
@@ -14,11 +17,17 @@ local_settings_example="$api_dir/local.settings.example.json"
 azurite_pid=""
 func_pid=""
 
+# Try opening a TCP connection to localhost on the port passed as the
+# function's first argument. A successful connection means something is
+# already listening on that port.
 port_is_open() {
     bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
 }
 
+# Stop background processes that this script started, if they are still running.
 cleanup() {
+    # `kill -0` does not stop the process; it only checks whether the PID exists
+    # and is accessible to the current user.
     if [[ -n "$azurite_pid" ]] && kill -0 "$azurite_pid" 2>/dev/null; then
         kill "$azurite_pid" 2>/dev/null || true
     fi
@@ -27,15 +36,19 @@ cleanup() {
     fi
 }
 
+# Always run cleanup when the script exits, including Ctrl+C (`INT`) and `TERM`.
 trap cleanup EXIT INT TERM
 
+# Rebuild the static web assets from scratch into a clean publish folder.
 rm -rf "$publish_dir"
 dotnet publish "$project" -c Release -o "$publish_dir"
 
+# Seed local settings from the checked-in example if the local file is missing.
 if [[ ! -f "$local_settings" && -f "$local_settings_example" ]]; then
     cp "$local_settings_example" "$local_settings"
 fi
 
+# The Functions host is required for the local `/api` backend used by `run-sync`.
 if ! command -v func >/dev/null 2>&1; then
     echo "Azure Functions Core Tools ('func') is required for local API runs." >&2
     echo "Install it from https://learn.microsoft.com/azure/azure-functions/functions-run-local or your package manager." >&2
@@ -44,19 +57,25 @@ fi
 
 mkdir -p "$azurite_dir"
 
+# Start Azurite in the background. Prefer a globally installed binary and fall
+# back to `npx` if it is not available.
 if command -v azurite >/dev/null 2>&1; then
     azurite --silent --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
 else
     npx --yes azurite --silent --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
 fi
+# `$!` is the PID of the most recent background command.
 azurite_pid="$!"
 
+# Run the Azure Functions host from the API directory in the background.
+# Parentheses create a subshell so the `cd` does not affect the rest of this script.
 (
     cd "$api_dir"
     func start --port 7071
 ) &
 func_pid="$!"
 
+# Wait up to 60 seconds (120 * 0.5s) for the Functions host to accept connections.
 for _ in $(seq 1 120); do
     if port_is_open 7071; then
         break
@@ -64,11 +83,14 @@ for _ in $(seq 1 120); do
     sleep 0.5
 done
 
+# Fail early if the API never came up, instead of starting SWA with a broken backend.
 if ! port_is_open 7071; then
     echo "Azure Functions host did not start on port 7071." >&2
     exit 1
 fi
 
+# Serve the published app through the Static Web Apps CLI and point API requests
+# at the local Functions host.
 if command -v swa >/dev/null 2>&1; then
     swa start "$wwwroot_dir" --api-devserver-url "http://127.0.0.1:7071" --port "$port" --host "$host" --swa-config-location "$config_dir"
 else
