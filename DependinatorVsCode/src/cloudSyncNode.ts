@@ -73,6 +73,9 @@ export type CloudSyncBridge = {
 
 const tokenSecretName = "dependinator.cloudSync.accessToken";
 const openIdScopes = ["openid", "profile", "email", "offline_access"];
+const productionOpenIdConfigurationUrl =
+    "https://dependinator.ciamlogin.com/6c5f5248-641e-4c17-858b-7591bee24fe3/v2.0/.well-known/openid-configuration";
+const productionClientId = "55db228d-5c84-41ac-864c-0c9c9f22a725";
 
 export function createCloudSyncBridge(context: vscode.ExtensionContext): CloudSyncBridge {
     return new CloudSyncBridgeImpl(context);
@@ -155,9 +158,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
     async loginAsync(): Promise<CloudAuthState> {
         const configuration = this.readConfiguration();
         if (!configuration)
-            throw new Error(
-                "VS Code cloud sync is not configured. Set dependinator.cloudSync.baseUrl, dependinator.cloudSync.openIdConfigurationUrl, and dependinator.cloudSync.clientId."
-            );
+            throw new Error("VS Code cloud sync is not configured. Set dependinator.cloudSync.baseUrl.");
 
         const openIdConfiguration = await this.getOpenIdConfigurationAsync(configuration);
         if (!openIdConfiguration.device_authorization_endpoint)
@@ -269,10 +270,8 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
     readConfiguration(): CloudSyncConfig | undefined {
         const configuration = vscode.workspace.getConfiguration("dependinator");
         const baseUrl = this.normalizeUrl(configuration.get<string>("cloudSync.baseUrl"));
-        const openIdConfigurationUrl = this.normalizeUrl(
-            configuration.get<string>("cloudSync.openIdConfigurationUrl")
-        );
-        const clientId = (configuration.get<string>("cloudSync.clientId") ?? "").trim();
+        const openIdConfigurationUrl = this.normalizeUrl(productionOpenIdConfigurationUrl);
+        const clientId = productionClientId;
         const configurationSource = this.getConfigurationSource(configuration);
         this.logConfigurationSource(configurationSource);
 
@@ -289,9 +288,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
     requireConfiguration(): CloudSyncConfig {
         const configuration = this.readConfiguration();
         if (!configuration)
-            throw new Error(
-                "VS Code cloud sync is not configured. Set dependinator.cloudSync.baseUrl, dependinator.cloudSync.openIdConfigurationUrl, and dependinator.cloudSync.clientId."
-            );
+            throw new Error("VS Code cloud sync is not configured. Set dependinator.cloudSync.baseUrl.");
 
         return configuration;
     }
@@ -568,11 +565,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
     }
 
     getConfigurationSource(configuration: vscode.WorkspaceConfiguration): string {
-        const settingKeys = [
-            "cloudSync.baseUrl",
-            "cloudSync.openIdConfigurationUrl",
-            "cloudSync.clientId"
-        ];
+        const settingKeys = ["cloudSync.baseUrl"];
         for (const settingKey of settingKeys) {
             const inspected = configuration.inspect<string>(settingKey);
             if (inspected?.workspaceFolderValue !== undefined || inspected?.workspaceValue !== undefined)

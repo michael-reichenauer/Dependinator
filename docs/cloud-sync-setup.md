@@ -79,25 +79,19 @@ For VS Code cloud sync, create a separate Entra External ID app registration for
 4. Add a scope named `access_as_user`.
 5. Use the same user flow/OpenID metadata URL that the site uses.
 
-Then configure these VS Code settings:
+Then configure this VS Code setting if you need to override production:
 
 - `dependinator.cloudSync.baseUrl`
   - Example: `https://dependinator.com`
-- `dependinator.cloudSync.openIdConfigurationUrl`
-  - The exact `.../.well-known/openid-configuration` URL for the Entra External ID user flow
-- `dependinator.cloudSync.clientId`
-  - The client ID of the VS Code public client app registration
 
-The extension now ships with production defaults for these values, so normal users do not need to configure them manually.
-
-Only set these VS Code settings when you want to override production for local/dev testing.
+The extension keeps the production OpenID metadata URL and VS Code client ID in internal constants, so normal users do not configure them manually.
 
 Then set the matching API validation settings in Azure Static Web Apps:
 
 - `CloudSync__OpenIdConfigurationUrl`
-  - The same OpenID metadata URL used by the VS Code setting
+  - The same OpenID metadata URL compiled into the VS Code extension
 - `CloudSync__BearerAudience`
-  - The same client ID used by the VS Code setting
+  - The same client ID compiled into the VS Code extension
 
 Notes:
 
