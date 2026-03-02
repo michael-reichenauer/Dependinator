@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Exit on errors (`-e`), treat unset variables as errors (`-u`),
 # and fail a pipeline if any command in it fails (`pipefail`).
 set -euo pipefail

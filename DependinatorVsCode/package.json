@@ -45,8 +45,23 @@
             "properties": {
                 "dependinator.cloudSync.baseUrl": {
                     "type": "string",
+                    "enum": [
+                        "https://dependinator.com",
+                        "https://polite-island-0e6a6eb03-dev.westeurope.4.azurestaticapps.net",
+                        "http://127.0.0.1:7071"
+                    ],
+                    "enumItemLabels": [
+                        "Production",
+                        "Dev",
+                        "Local"
+                    ],
+                    "enumDescriptions": [
+                        "Uses the production Dependinator cloud sync service.",
+                        "Uses the deployed development Azure Static Web Apps environment.",
+                        "Uses the local Azure Functions host for development."
+                    ],
                     "default": "https://dependinator.com",
-                    "description": "Base URL for the Dependinator cloud sync site. Leave as default for production; override only for dev/testing."
+                    "description": "Base URL for the Dependinator cloud sync site. Select the production, dev, or local endpoint."
                 }
             }
         }
