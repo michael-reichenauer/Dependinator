@@ -20,6 +20,10 @@ type CloudModelMetadata = {
     CompressedSizeBytes: number;
 };
 
+type CloudModelList = {
+    Models: CloudModelMetadata[];
+};
+
 type CloudModelDocument = {
     ModelKey: string;
     NormalizedPath: string;
@@ -118,6 +122,8 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
                     return this.createSuccessEnvelope(request, await this.logoutAsync());
                 case "getAuthState":
                     return this.createSuccessEnvelope(request, await this.getAuthStateAsync());
+                case "list":
+                    return this.createSuccessEnvelope(request, await this.listAsync());
                 case "push":
                     return this.createSuccessEnvelope(
                         request,
@@ -223,6 +229,21 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             "PUT",
             `/api/models/${encodeURIComponent(document.ModelKey)}`,
             document
+        );
+        if (!response.ok || !response.body)
+            throw new Error(this.readProtocolError(response.status, response.body));
+
+        return response.body;
+    }
+
+    async listAsync(): Promise<CloudModelList> {
+        const configuration = this.requireConfiguration();
+        const token = await this.requireTokenAsync();
+        const response = await this.sendApiAsync<CloudModelList>(
+            configuration,
+            token,
+            "GET",
+            "/api/models"
         );
         if (!response.ok || !response.body)
             throw new Error(this.readProtocolError(response.status, response.body));

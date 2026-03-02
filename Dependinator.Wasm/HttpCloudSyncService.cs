@@ -46,6 +46,11 @@ sealed class HttpCloudSyncService : ICloudSyncService
         return await SendAsync<CloudAuthState>(HttpMethod.Get, "/api/auth/me");
     }
 
+    public async Task<R<CloudModelList>> ListAsync()
+    {
+        return await SendAsync<CloudModelList>(HttpMethod.Get, "/api/models");
+    }
+
     public async Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
     {
         CloudModelDocument document = CloudModelSerializer.CreateDocument(modelPath, modelDto);

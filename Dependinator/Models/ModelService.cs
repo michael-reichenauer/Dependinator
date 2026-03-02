@@ -39,6 +39,7 @@ interface IModelService
     void CheckLineVisibility();
     Task LayoutNode(NodeId nodeId, bool recursively = false);
     R<ModelDto> GetCurrentModelDto();
+    Task<R> WriteModelAsync(string modelPath, ModelDto modelDto);
     Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
 }
 
@@ -266,10 +267,15 @@ class ModelService : IModelService
         if (string.IsNullOrWhiteSpace(modelPath))
             return R.Error("Model is not loaded");
 
-        if (!Try(out var error, await persistenceService.WriteAsync(modelPath, modelDto)))
+        if (!Try(out var error, await WriteModelAsync(modelPath, modelDto)))
             return error;
 
         return await LoadAsync(modelPath);
+    }
+
+    public Task<R> WriteModelAsync(string modelPath, ModelDto modelDto)
+    {
+        return persistenceService.WriteAsync(modelPath, modelDto);
     }
 
     public async Task<R<ModelInfo>> LoadAsync(string path)

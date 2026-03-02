@@ -11,6 +11,7 @@ interface IVsCodeCloudSyncProxy
     Task<R<CloudAuthState>> LoginAsync();
     Task<R<CloudAuthState>> LogoutAsync();
     Task<R<CloudAuthState>> GetAuthStateAsync();
+    Task<R<CloudModelList>> ListAsync();
     Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto);
     Task<R<ModelDto>> PullAsync(string modelPath);
     Task HandleResponseAsync(string message);
@@ -40,6 +41,11 @@ class VsCodeCloudSyncProxy(IJSInterop jSInterop) : IVsCodeCloudSyncProxy
     public async Task<R<CloudAuthState>> GetAuthStateAsync()
     {
         return await SendAndReadAsync<CloudAuthState>("getAuthState");
+    }
+
+    public async Task<R<CloudModelList>> ListAsync()
+    {
+        return await SendAndReadAsync<CloudModelList>("list");
     }
 
     public async Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)

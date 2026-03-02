@@ -17,6 +17,8 @@ public sealed record CloudModelMetadata(
     long CompressedSizeBytes
 );
 
+public sealed record CloudModelList(IReadOnlyList<CloudModelMetadata> Models);
+
 public sealed record CloudModelDocument(
     string ModelKey,
     string NormalizedPath,

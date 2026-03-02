@@ -16,6 +16,30 @@ public sealed class ModelFunctions
         this.cloudModelStore = cloudModelStore;
     }
 
+    [Function("ListModels")]
+    public async Task<HttpResponseData> ListModelsAsync(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "models")] HttpRequestData request,
+        CancellationToken cancellationToken
+    )
+    {
+        CloudUserInfo? user = await GetCurrentUserAsync(request, cancellationToken);
+        if (user is null)
+            return await ResponseFactory.ErrorAsync(
+                request,
+                HttpStatusCode.Unauthorized,
+                "User is not authenticated.",
+                cancellationToken
+            );
+
+        IReadOnlyList<CloudModelMetadata> models = await cloudModelStore.ListAsync(user, cancellationToken);
+        return await ResponseFactory.JsonAsync(
+            request,
+            HttpStatusCode.OK,
+            new CloudModelList(models),
+            cancellationToken
+        );
+    }
+
     [Function("GetModel")]
     public async Task<HttpResponseData> GetModelAsync(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "models/{modelKey}")] HttpRequestData request,

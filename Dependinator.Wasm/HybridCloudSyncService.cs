@@ -39,6 +39,12 @@ sealed class HybridCloudSyncService : ICloudSyncService
         return await service.GetAuthStateAsync();
     }
 
+    public async Task<R<CloudModelList>> ListAsync()
+    {
+        ICloudSyncService service = await GetActiveServiceAsync();
+        return await service.ListAsync();
+    }
+
     public async Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
     {
         ICloudSyncService service = await GetActiveServiceAsync();
@@ -81,6 +87,8 @@ sealed class HybridCloudSyncService : ICloudSyncService
         public Task<R<CloudAuthState>> LogoutAsync() => proxy.LogoutAsync();
 
         public Task<R<CloudAuthState>> GetAuthStateAsync() => proxy.GetAuthStateAsync();
+
+        public Task<R<CloudModelList>> ListAsync() => proxy.ListAsync();
 
         public Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
         {

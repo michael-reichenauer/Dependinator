@@ -60,6 +60,26 @@
 
         @if (authState.IsAuthenticated)
         {
+            @if (cloudModels.Count > 0)
+            {
+                <MudMenuItem Disabled="true" Icon="@Icons.Material.Outlined.CloudQueue">
+                    Cloud Models
+                </MudMenuItem>
+                @foreach (var cloudModel in cloudModels)
+                {
+                    bool isCurrentCloudModel = string.Equals(
+                        cloudModel.NormalizedPath,
+                        CurrentNormalizedModelPath,
+                        StringComparison.OrdinalIgnoreCase
+                    );
+                    <MudMenuItem IconColor="@(isCurrentCloudModel ? Color.Secondary : Color.Default)"
+                                 Icon="@Icons.Material.Outlined.Schema"
+                                 Style="@(isCurrentCloudModel ? "color: var(--mud-palette-primary);" : null)"
+                                 OnClick="() => LoadCloudModelAsync(cloudModel)">
+                        @Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)
+                    </MudMenuItem>
+                }
+            }
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudUpload" OnClick="SyncUpAsync">
                 Sync Up
             </MudMenuItem>
@@ -125,8 +145,11 @@
     global::Shared.CloudAuthState authState = new(IsAvailable: false, IsAuthenticated: false, User: null);
     CloudSyncModelState? syncState;
     bool hasLocalChangesSinceLastSync;
+    IReadOnlyList<global::Shared.CloudModelMetadata> cloudModels = [];
 
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
+    string? CurrentNormalizedModelPath =>
+        string.IsNullOrWhiteSpace(modelService.ModelPath) ? null : global::Shared.CloudModelPath.Normalize(modelService.ModelPath);
     string CloudStatusText =>
         authState.IsAuthenticated ? $"Cloud: signed in as {authState.User?.Email ?? authState.User?.UserId}" : "Cloud: not signed in";
     string SyncStatusText =>
@@ -156,6 +179,7 @@
 
         await RefreshAuthStateAsync();
         await RefreshSyncStateAsync();
+        await RefreshCloudModelsAsync();
     }
 
     async void OnRemove()
@@ -178,6 +202,7 @@
         }
 
         authState = state;
+        await RefreshCloudModelsAsync();
     }
 
     async Task RefreshSyncStateAsync()
@@ -206,6 +231,24 @@
         hasLocalChangesSinceLastSync = !string.Equals(currentHash, latestSyncHash, StringComparison.OrdinalIgnoreCase);
     }
 
+    async Task RefreshCloudModelsAsync()
+    {
+        if (!cloudSyncService.IsAvailable || !authState.IsAuthenticated)
+        {
+            cloudModels = [];
+            return;
+        }
+
+        if (!Try(out var modelList, out var error, await cloudSyncService.ListAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Warning);
+            cloudModels = [];
+            return;
+        }
+
+        cloudModels = modelList.Models;
+    }
+
     async Task LoginAsync()
     {
         if (!Try(out var state, out var error, await cloudSyncService.LoginAsync()))
@@ -216,6 +259,7 @@
 
         authState = state;
         await RefreshSyncStateAsync();
+        await RefreshCloudModelsAsync();
     }
 
     async Task LogoutAsync()
@@ -227,6 +271,7 @@
         }
 
         authState = state;
+        cloudModels = [];
     }
 
     async Task SyncUpAsync()
@@ -245,6 +290,7 @@
 
         await cloudSyncStateService.RecordPushAsync(modelService.ModelPath, metadata);
         await RefreshSyncStateAsync();
+        await RefreshCloudModelsAsync();
         snackbar.Add($"Synced {metadata.CompressedSizeBytes} bytes to the cloud.", Severity.Success);
     }
 
@@ -273,7 +319,32 @@
 
         await cloudSyncStateService.RecordPullAsync(modelInfo.Path, CloudModelSerializer.GetContentHash(modelDto));
         await RefreshSyncStateAsync();
+        await RefreshCloudModelsAsync();
         snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(modelInfo.Path)}.", Severity.Success);
+    }
+
+    async Task LoadCloudModelAsync(global::Shared.CloudModelMetadata cloudModel)
+    {
+        if (!Try(out var modelDto, out var error, await cloudSyncService.PullAsync(cloudModel.NormalizedPath)))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        if (!Try(out var writeError, await modelService.WriteModelAsync(cloudModel.NormalizedPath, modelDto)))
+        {
+            snackbar.Add(writeError.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        await srv.LoadAsync(cloudModel.NormalizedPath);
+        await cloudSyncStateService.RecordPullAsync(
+            cloudModel.NormalizedPath,
+            CloudModelSerializer.GetContentHash(modelDto)
+        );
+        await RefreshSyncStateAsync();
+        await RefreshCloudModelsAsync();
+        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.", Severity.Success);
     }
 
     public void Dispose()
