@@ -48,7 +48,7 @@
                     "enum": [
                         "https://dependinator.com",
                         "https://polite-island-0e6a6eb03-dev.westeurope.4.azurestaticapps.net",
-                        "http://127.0.0.1:7071"
+                        "http://127.0.0.1:5000"
                     ],
                     "enumItemLabels": [
                         "Production",

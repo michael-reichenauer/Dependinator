@@ -1,4 +1,5 @@
 @using Dependinator.Core
+@using Dependinator.Core.Utils
 @inject ICanvasService srv
 @inject ISnackbar snackbar
 @inject ICloudSyncService cloudSyncService
@@ -41,7 +42,7 @@
     @foreach (var path in RecentModelPaths)
     {
         bool isCurrent = path == currentPath;
-        <MudMenuItem IconColor="@(isCurrent ? Color.Secondary : Color.Default)" Icon="@Icons.Material.Outlined.Schema"
+        <MudMenuItem IconColor="@(isCurrent? Color.Secondary: Color.Default)" Icon="@Icons.Material.Outlined.Schema"
                      Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)" OnClick="() => srv.LoadAsync(path)">
             @Path.GetFileNameWithoutExtension(path)
         </MudMenuItem>
@@ -72,7 +73,7 @@
                         CurrentNormalizedModelPath,
                         StringComparison.OrdinalIgnoreCase
                     );
-                    <MudMenuItem IconColor="@(isCurrentCloudModel ? Color.Secondary : Color.Default)"
+                    <MudMenuItem IconColor="@(isCurrentCloudModel? Color.Secondary: Color.Default)"
                                  Icon="@Icons.Material.Outlined.Schema"
                                  Style="@(isCurrentCloudModel ? "color: var(--mud-palette-primary);" : null)"
                                  OnClick="() => LoadCloudModelAsync(cloudModel)">
@@ -138,18 +139,26 @@
 </MudMessageBox>
 
 @code {
+    const int UiStateRefreshThrottleMilliseconds = 5000;
+
     Action? uiStateChangedHandler;
+    readonly Debouncer uiStateRefreshDebouncer = new();
     MudMessageBox mbox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
     MudMessageBox syncDownBox { get; set; } = null!;
     global::Shared.CloudAuthState authState = new(IsAvailable: false, IsAuthenticated: false, User: null);
     CloudSyncModelState? syncState;
     bool hasLocalChangesSinceLastSync;
+    bool isUiStateRefreshInProgress;
+    bool isUiStateRefreshQueued;
+    DateTimeOffset lastSyncStateRefreshUtc = DateTimeOffset.MinValue;
+    bool isDisposed;
     IReadOnlyList<global::Shared.CloudModelMetadata> cloudModels = [];
 
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
     string? CurrentNormalizedModelPath =>
-        string.IsNullOrWhiteSpace(modelService.ModelPath) ? null : global::Shared.CloudModelPath.Normalize(modelService.ModelPath);
+        string.IsNullOrWhiteSpace(modelService.ModelPath) ? null :
+global::Shared.CloudModelPath.Normalize(modelService.ModelPath);
     string CloudStatusText =>
         authState.IsAuthenticated ? $"Cloud: signed in as {authState.User?.Email ?? authState.User?.UserId}" : "Cloud: not signed in";
     string SyncStatusText =>
@@ -159,13 +168,14 @@
             false when string.IsNullOrWhiteSpace(modelService.ModelPath) => "Sync: model not loaded",
             _ => "Sync: no sync recorded",
         };
-    string SyncStatusIcon => TryGetLatestSync(syncState, out _, out string? latestSyncDirectionForIcon, out _) ? latestSyncDirectionForIcon switch
-    {
-        "up" => Icons.Material.Outlined.CloudUpload,
-        "down" => Icons.Material.Outlined.CloudDownload,
-        "error" => Icons.Material.Outlined.CloudOff,
-        _ => Icons.Material.Outlined.CloudQueue,
-    } : Icons.Material.Outlined.CloudQueue;
+    string SyncStatusIcon => TryGetLatestSync(syncState, out _, out string? latestSyncDirectionForIcon, out _) ?
+latestSyncDirectionForIcon switch
+{
+    "up" => Icons.Material.Outlined.CloudUpload,
+    "down" => Icons.Material.Outlined.CloudDownload,
+    "error" => Icons.Material.Outlined.CloudOff,
+    _ => Icons.Material.Outlined.CloudQueue,
+} : Icons.Material.Outlined.CloudQueue;
 
     [Parameter]
     public string MenuClass { get; set; } = "ml-n3";
@@ -174,7 +184,7 @@
     {
         await base.OnInitializedAsync();
 
-        uiStateChangedHandler = () => InvokeAsync(HandleUiStateChangedAsync);
+        uiStateChangedHandler = HandleUiStateChanged;
         applicationEvents.UIStateChanged += uiStateChangedHandler;
 
         await RefreshAuthStateAsync();
@@ -211,6 +221,7 @@
         {
             syncState = null;
             hasLocalChangesSinceLastSync = false;
+            lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
             return;
         }
 
@@ -218,17 +229,20 @@
         if (!TryGetLatestSync(syncState, out _, out _, out string? latestSyncHash))
         {
             hasLocalChangesSinceLastSync = false;
+            lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
             return;
         }
 
         if (!Try(out var modelDto, out var _, modelService.GetCurrentModelDto()))
         {
             hasLocalChangesSinceLastSync = false;
+            lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
             return;
         }
 
         string currentHash = CloudModelSerializer.GetContentHash(modelDto);
         hasLocalChangesSinceLastSync = !string.Equals(currentHash, latestSyncHash, StringComparison.OrdinalIgnoreCase);
+        lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
     }
 
     async Task RefreshCloudModelsAsync()
@@ -344,11 +358,15 @@
         );
         await RefreshSyncStateAsync();
         await RefreshCloudModelsAsync();
-        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.", Severity.Success);
+        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.",
+Severity.Success);
     }
 
     public void Dispose()
     {
+        isDisposed = true;
+        uiStateRefreshDebouncer.Dispose();
+
         if (uiStateChangedHandler is null)
             return;
 
@@ -360,10 +378,48 @@
         await aboutBox.ShowAsync();
     }
 
-    async Task HandleUiStateChangedAsync()
+    void HandleUiStateChanged()
     {
-        await RefreshSyncStateAsync();
-        StateHasChanged();
+        isUiStateRefreshQueued = true;
+        ScheduleUiStateRefresh();
+    }
+
+    void ScheduleUiStateRefresh()
+    {
+        if (isDisposed || isUiStateRefreshInProgress)
+            return;
+
+        TimeSpan elapsedSinceLastRefresh = DateTimeOffset.UtcNow - lastSyncStateRefreshUtc;
+        if (elapsedSinceLastRefresh >= TimeSpan.FromMilliseconds(UiStateRefreshThrottleMilliseconds))
+        {
+            _ = InvokeAsync(RefreshUiStateAsync);
+            return;
+        }
+
+        TimeSpan remainingDelay = TimeSpan.FromMilliseconds(UiStateRefreshThrottleMilliseconds) - elapsedSinceLastRefresh;
+        int delayMilliseconds = Math.Max(1, (int)Math.Ceiling(remainingDelay.TotalMilliseconds));
+        uiStateRefreshDebouncer.Debounce(delayMilliseconds, () => _ = InvokeAsync(RefreshUiStateAsync));
+    }
+
+    async Task RefreshUiStateAsync()
+    {
+        if (isDisposed || isUiStateRefreshInProgress || !isUiStateRefreshQueued)
+            return;
+
+        isUiStateRefreshInProgress = true;
+        isUiStateRefreshQueued = false;
+
+        try
+        {
+            await RefreshSyncStateAsync();
+            StateHasChanged();
+        }
+        finally
+        {
+            isUiStateRefreshInProgress = false;
+            if (isUiStateRefreshQueued)
+                ScheduleUiStateRefresh();
+        }
     }
 
     static bool TryGetLatestSync(

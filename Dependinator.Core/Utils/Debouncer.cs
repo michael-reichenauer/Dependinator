@@ -1,6 +1,6 @@
 ﻿namespace Dependinator.Core.Utils;
 
-public class Debouncer
+public sealed class Debouncer : IDisposable
 {
     private readonly Timer timer;
     private Action? action;
