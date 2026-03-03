@@ -291,6 +291,10 @@ class ModelService : IModelService
             Log.Info("Failed to read cached model", e.ErrorMessage);
             var parsedModelInfo = await ParseNewModelAsync(path);
             TriggerSave();
+            lock (model.Lock)
+            {
+                model.ClearCachedSvg();
+            }
             applicationEvents.TriggerUIStateChanged();
             return parsedModelInfo;
         }
@@ -341,6 +345,7 @@ class ModelService : IModelService
         lock (model.Lock)
         {
             model.ClearNotUpdated();
+            model.ClearCachedSvg();
         }
 
         TriggerSave();
