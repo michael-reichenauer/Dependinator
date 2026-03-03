@@ -1,7 +1,7 @@
 using Dependinator.Models;
 using Shared;
 
-namespace Dependinator.Shared;
+namespace Dependinator.Shared.CloudSync;
 
 interface ICloudSyncService
 {

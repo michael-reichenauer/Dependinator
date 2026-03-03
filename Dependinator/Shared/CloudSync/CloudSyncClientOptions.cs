@@ -1,4 +1,4 @@
-namespace Dependinator.Wasm;
+namespace Dependinator.Shared.CloudSync;
 
 public sealed class CloudSyncClientOptions
 {

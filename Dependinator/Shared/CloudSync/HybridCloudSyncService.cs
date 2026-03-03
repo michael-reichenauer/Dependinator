@@ -1,19 +1,15 @@
 using Dependinator.Models;
-using Dependinator.Core.Utils;
-using Dependinator.Shared;
+using Dependinator.Wasm;
 using Shared;
 
-namespace Dependinator.Wasm;
+namespace Dependinator.Shared.CloudSync;
 
 sealed class HybridCloudSyncService : ICloudSyncService
 {
     readonly HttpCloudSyncService httpCloudSyncService;
     readonly IVsCodeCloudSyncProxy vsCodeCloudSyncProxy;
 
-    public HybridCloudSyncService(
-        HttpCloudSyncService httpCloudSyncService,
-        IVsCodeCloudSyncProxy vsCodeCloudSyncProxy
-    )
+    public HybridCloudSyncService(HttpCloudSyncService httpCloudSyncService, IVsCodeCloudSyncProxy vsCodeCloudSyncProxy)
     {
         this.httpCloudSyncService = httpCloudSyncService;
         this.vsCodeCloudSyncProxy = vsCodeCloudSyncProxy;

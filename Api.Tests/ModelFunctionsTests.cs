@@ -1,5 +1,3 @@
-using Api;
-
 namespace Api.Tests;
 
 public class ModelFunctionsTests
@@ -46,7 +44,11 @@ public class ModelFunctionsTests
             CompressedSizeBytes: 4,
             CompressedContentBase64: Convert.ToBase64String([1, 2, 3, 4])
         );
-        TestHttpRequestData request = new(new TestFunctionContext(), method: "PUT", bodyText: JsonSerializer.Serialize(payload));
+        TestHttpRequestData request = new(
+            new TestFunctionContext(),
+            method: "PUT",
+            bodyText: JsonSerializer.Serialize(payload)
+        );
 
         HttpResponseData response = await sut.PutModelAsync(request, "model-key", CancellationToken.None);
 

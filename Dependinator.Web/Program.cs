@@ -1,11 +1,10 @@
-using Dependinator;
-using Dependinator.Shared;
 using Dependinator.Core;
 using Dependinator.Core.Rpc;
 using Dependinator.Core.Shared;
 using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using Dependinator.Roslyn;
+using Dependinator.Shared;
 
 namespace Dependinator.Web;
 

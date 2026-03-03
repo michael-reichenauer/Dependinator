@@ -1,5 +1,5 @@
 using Dependinator.Models;
-using Dependinator.Shared;
+using Dependinator.Shared.CloudSync;
 using Shared;
 using static Dependinator.Core.Utils.Result;
 

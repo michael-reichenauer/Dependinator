@@ -1,6 +1,6 @@
 using Shared;
 
-namespace Dependinator.Shared;
+namespace Dependinator.Shared.CloudSync;
 
 class CloudSyncModelState
 {

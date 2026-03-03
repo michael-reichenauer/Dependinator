@@ -1,4 +1,5 @@
 using Dependinator.Shared;
+using Dependinator.Shared.CloudSync;
 using Shared;
 
 namespace Dependinator.Tests.Shared;

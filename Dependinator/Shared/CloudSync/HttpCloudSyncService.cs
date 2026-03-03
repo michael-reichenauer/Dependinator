@@ -1,12 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
-using Dependinator.Core.Utils;
 using Dependinator.Models;
-using Dependinator.Shared;
+using Dependinator.Shared.CloudSync;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using Shared;
-using static Dependinator.Core.Utils.Result;
 
 namespace Dependinator.Wasm;
 
@@ -32,13 +30,17 @@ sealed class HttpCloudSyncService : ICloudSyncService
     public Task<R<CloudAuthState>> LoginAsync()
     {
         NavigateToAuthPath(options.LoginPath, "post_login_redirect_uri");
-        return Task.FromResult<R<CloudAuthState>>(new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null));
+        return Task.FromResult<R<CloudAuthState>>(
+            new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null)
+        );
     }
 
     public Task<R<CloudAuthState>> LogoutAsync()
     {
         NavigateToAuthPath(options.LogoutPath, "post_logout_redirect_uri");
-        return Task.FromResult<R<CloudAuthState>>(new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null));
+        return Task.FromResult<R<CloudAuthState>>(
+            new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null)
+        );
     }
 
     public async Task<R<CloudAuthState>> GetAuthStateAsync()

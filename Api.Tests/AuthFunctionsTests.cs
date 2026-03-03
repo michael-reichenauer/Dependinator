@@ -1,9 +1,4 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Net;
-using System.Security.Claims;
-using System.Text;
-using System.Text.Json;
-using Api;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -69,7 +64,7 @@ public class AuthFunctionsTests
         CloudSyncOptions options = new() { BearerAudience = ClientId };
         OpenIdConnectConfiguration configuration = new()
         {
-            Issuer = $"https://dependinator.ciamlogin.com/{TenantId}/v2.0"
+            Issuer = $"https://dependinator.ciamlogin.com/{TenantId}/v2.0",
         };
         configuration.SigningKeys.Add(signingKey);
 
@@ -82,12 +77,7 @@ public class AuthFunctionsTests
 
     static string CreateToken(string issuer, string audience, string sub, string email)
     {
-        List<Claim> claims =
-        [
-            new("sub", sub),
-            new("email", email),
-            new("scp", "access_as_user"),
-        ];
+        List<Claim> claims = [new("sub", sub), new("email", email), new("scp", "access_as_user")];
 
         JwtSecurityToken token = new(
             issuer: issuer,
