@@ -5,23 +5,30 @@ using Shared;
 
 namespace Dependinator.Shared.CloudSync;
 
-interface IVsCodeCloudSyncProxy
+interface IVsCodeCloudSyncProxy : ICloudSyncService
 {
     Task<bool> IsAvailableAsync();
-    Task<R<CloudAuthState>> LoginAsync();
-    Task<R<CloudAuthState>> LogoutAsync();
-    Task<R<CloudAuthState>> GetAuthStateAsync();
-    Task<R<CloudModelList>> ListAsync();
-    Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto);
-    Task<R<ModelDto>> PullAsync(string modelPath);
     Task HandleResponseAsync(string message);
 }
 
 [Scoped]
-class VsCodeCloudSyncProxy(IJSInterop jSInterop) : IVsCodeCloudSyncProxy
+class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
 {
     static readonly JsonSerializerOptions serializerOptions = new() { PropertyNameCaseInsensitive = true };
+    readonly IJSInterop jSInterop;
+    readonly TimeSpan requestTimeout;
     readonly ConcurrentDictionary<string, TaskCompletionSource<CloudSyncEnvelope>> pendingRequests = new();
+
+    public VsCodeCloudSyncProxy(IJSInterop jSInterop)
+        : this(jSInterop, TimeSpan.FromSeconds(15)) { }
+
+    internal VsCodeCloudSyncProxy(IJSInterop jSInterop, TimeSpan requestTimeout)
+    {
+        this.jSInterop = jSInterop;
+        this.requestTimeout = requestTimeout;
+    }
+
+    public bool IsAvailable => true;
 
     public async Task<bool> IsAvailableAsync()
     {
@@ -88,32 +95,47 @@ class VsCodeCloudSyncProxy(IJSInterop jSInterop) : IVsCodeCloudSyncProxy
         TaskCompletionSource<CloudSyncEnvelope> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
         pendingRequests[requestId] = tcs;
 
-        string requestJson = JsonSerializer.Serialize(
-            new CloudSyncEnvelope(requestId, action, JsonSerializer.Serialize(payload, serializerOptions), null),
-            serializerOptions
-        );
+        try
+        {
+            string requestJson = JsonSerializer.Serialize(
+                new CloudSyncEnvelope(requestId, action, JsonSerializer.Serialize(payload, serializerOptions), null),
+                serializerOptions
+            );
 
-        bool isPosted = await jSInterop.Call<bool>(
-            "postVsCodeMessage",
-            new { type = "cloudSync/request", message = requestJson }
-        );
-        if (!isPosted)
+            bool isPosted = await jSInterop.Call<bool>(
+                "postVsCodeMessage",
+                new { type = "cloudSync/request", message = requestJson }
+            );
+            if (!isPosted)
+            {
+                pendingRequests.TryRemove(requestId, out _);
+                return R.Error("VS Code cloud sync bridge is not available.");
+            }
+
+            Task completedTask = await Task.WhenAny(tcs.Task, Task.Delay(requestTimeout));
+            if (completedTask != tcs.Task)
+            {
+                pendingRequests.TryRemove(requestId, out _);
+                return R.Error($"VS Code cloud sync action '{action}' timed out.");
+            }
+
+            CloudSyncEnvelope response = await tcs.Task;
+            if (!string.IsNullOrWhiteSpace(response.Error))
+                return R.Error(response.Error);
+            if (string.IsNullOrWhiteSpace(response.Payload))
+                return R.Error($"VS Code cloud sync action '{action}' returned no payload.");
+
+            T? value = JsonSerializer.Deserialize<T>(response.Payload, serializerOptions);
+            if (value is null)
+                return R.Error($"VS Code cloud sync action '{action}' returned an invalid payload.");
+
+            return value;
+        }
+        catch (Exception ex)
         {
             pendingRequests.TryRemove(requestId, out _);
-            return R.Error("VS Code cloud sync bridge is not available.");
+            return R.Error(ex);
         }
-
-        CloudSyncEnvelope response = await tcs.Task;
-        if (!string.IsNullOrWhiteSpace(response.Error))
-            return R.Error(response.Error);
-        if (string.IsNullOrWhiteSpace(response.Payload))
-            return R.Error($"VS Code cloud sync action '{action}' returned no payload.");
-
-        T? value = JsonSerializer.Deserialize<T>(response.Payload, serializerOptions);
-        if (value is null)
-            return R.Error($"VS Code cloud sync action '{action}' returned an invalid payload.");
-
-        return value;
     }
 
     sealed record CloudSyncEnvelope(string RequestId, string Action, string? Payload, string? Error);

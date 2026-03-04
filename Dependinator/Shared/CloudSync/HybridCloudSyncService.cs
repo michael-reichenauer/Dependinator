@@ -16,80 +16,30 @@ sealed class HybridCloudSyncService : ICloudSyncService
 
     public bool IsAvailable => httpCloudSyncService.IsAvailable;
 
-    public async Task<R<CloudAuthState>> LoginAsync()
-    {
-        ICloudSyncService service = await GetActiveServiceAsync();
-        return await service.LoginAsync();
-    }
+    public Task<R<CloudAuthState>> LoginAsync() => ForwardAsync(service => service.LoginAsync());
 
-    public async Task<R<CloudAuthState>> LogoutAsync()
-    {
-        ICloudSyncService service = await GetActiveServiceAsync();
-        return await service.LogoutAsync();
-    }
+    public Task<R<CloudAuthState>> LogoutAsync() => ForwardAsync(service => service.LogoutAsync());
 
-    public async Task<R<CloudAuthState>> GetAuthStateAsync()
-    {
-        ICloudSyncService service = await GetActiveServiceAsync();
-        return await service.GetAuthStateAsync();
-    }
+    public Task<R<CloudAuthState>> GetAuthStateAsync() => ForwardAsync(service => service.GetAuthStateAsync());
 
-    public async Task<R<CloudModelList>> ListAsync()
-    {
-        ICloudSyncService service = await GetActiveServiceAsync();
-        return await service.ListAsync();
-    }
+    public Task<R<CloudModelList>> ListAsync() => ForwardAsync(service => service.ListAsync());
 
-    public async Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
-    {
-        ICloudSyncService service = await GetActiveServiceAsync();
-        return await service.PushAsync(modelPath, modelDto);
-    }
+    public Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto) =>
+        ForwardAsync(service => service.PushAsync(modelPath, modelDto));
 
-    public async Task<R<ModelDto>> PullAsync(string modelPath)
-    {
-        ICloudSyncService service = await GetActiveServiceAsync();
-        return await service.PullAsync(modelPath);
-    }
-
-    ICloudSyncService GetActiveService()
-    {
-        return httpCloudSyncService;
-    }
+    public Task<R<ModelDto>> PullAsync(string modelPath) => ForwardAsync(service => service.PullAsync(modelPath));
 
     async Task<ICloudSyncService> GetActiveServiceAsync()
     {
         if (await vsCodeCloudSyncProxy.IsAvailableAsync())
-            return new VsCodeCloudSyncProxyAdapter(vsCodeCloudSyncProxy, httpCloudSyncService.IsAvailable);
+            return vsCodeCloudSyncProxy;
 
-        return GetActiveService();
+        return httpCloudSyncService;
     }
 
-    sealed class VsCodeCloudSyncProxyAdapter : ICloudSyncService
+    async Task<R<T>> ForwardAsync<T>(Func<ICloudSyncService, Task<R<T>>> action)
     {
-        readonly IVsCodeCloudSyncProxy proxy;
-
-        public VsCodeCloudSyncProxyAdapter(IVsCodeCloudSyncProxy proxy, bool isAvailable)
-        {
-            this.proxy = proxy;
-            IsAvailable = isAvailable;
-        }
-
-        public bool IsAvailable { get; }
-
-        public Task<R<CloudAuthState>> LoginAsync() => proxy.LoginAsync();
-
-        public Task<R<CloudAuthState>> LogoutAsync() => proxy.LogoutAsync();
-
-        public Task<R<CloudAuthState>> GetAuthStateAsync() => proxy.GetAuthStateAsync();
-
-        public Task<R<CloudModelList>> ListAsync() => proxy.ListAsync();
-
-        public Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
-        {
-            return proxy.PushAsync(modelPath, modelDto);
-        }
-
-        public Task<R<ModelDto>> PullAsync(string modelPath) => proxy.PullAsync(modelPath);
+        ICloudSyncService service = await GetActiveServiceAsync();
+        return await action(service);
     }
 }

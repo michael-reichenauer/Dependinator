@@ -23,8 +23,10 @@ public class CloudSyncStateServiceTests
         CloudSyncModelState? state = await sut.GetAsync("C:/repo/Model.json");
 
         Assert.NotNull(state);
-        Assert.Equal(metadata.UpdatedUtc, state.LastPushUtc);
-        Assert.Equal("hash-123", state.LastPushContentHash);
+        Assert.NotNull(state.LatestSync);
+        Assert.Equal(CloudSyncDirection.Up, state.LatestSync.Direction);
+        Assert.Equal(metadata.UpdatedUtc, state.LatestSync.Utc);
+        Assert.Equal("hash-123", state.LatestSync.ContentHash);
     }
 
     [Fact]
@@ -37,22 +39,50 @@ public class CloudSyncStateServiceTests
         CloudSyncModelState? state = await sut.GetAsync("/models/sample.model");
 
         Assert.NotNull(state);
-        Assert.Equal("pull-hash", state.LastPullContentHash);
-        Assert.NotNull(state.LastPullUtc);
+        Assert.NotNull(state.LatestSync);
+        Assert.Equal(CloudSyncDirection.Down, state.LatestSync.Direction);
+        Assert.Equal("pull-hash", state.LatestSync.ContentHash);
+        Assert.NotEqual(default, state.LatestSync.Utc);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldNormalizeLegacyPushPullState()
+    {
+        InMemoryConfigService configService = new();
+        DateTimeOffset pushUtc = new(2026, 3, 1, 10, 0, 0, TimeSpan.Zero);
+        DateTimeOffset pullUtc = new(2026, 3, 2, 10, 0, 0, TimeSpan.Zero);
+        configService.Config.CloudSyncStates[CloudModelPath.CreateKey("/models/sample.model")] = new CloudSyncModelState()
+        {
+            LastPushUtc = pushUtc,
+            LastPushContentHash = "push-hash",
+            LastPullUtc = pullUtc,
+            LastPullContentHash = "pull-hash",
+        };
+        CloudSyncStateService sut = new(configService);
+
+        CloudSyncModelState? state = await sut.GetAsync("/models/sample.model");
+
+        Assert.NotNull(state);
+        Assert.NotNull(state.LatestSync);
+        Assert.Equal(CloudSyncDirection.Down, state.LatestSync.Direction);
+        Assert.Equal(pullUtc, state.LatestSync.Utc);
+        Assert.Equal("pull-hash", state.LatestSync.ContentHash);
+        Assert.Null(state.LastPushUtc);
+        Assert.Null(state.LastPullUtc);
     }
 
     sealed class InMemoryConfigService : IConfigService
     {
-        readonly Config config = new();
+        public Config Config { get; } = new();
 
         public Task<Config> GetAsync()
         {
-            return Task.FromResult(config);
+            return Task.FromResult(Config);
         }
 
         public Task SetAsync(Action<Config> updateAction)
         {
-            updateAction(config);
+            updateAction(Config);
             return Task.CompletedTask;
         }
     }

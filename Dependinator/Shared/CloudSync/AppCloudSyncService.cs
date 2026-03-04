@@ -6,24 +6,6 @@ using Shared;
 
 namespace Dependinator.Shared.CloudSync;
 
-enum CloudSyncDirection
-{
-    Up,
-    Down,
-}
-
-enum CloudSyncState
-{
-    NotAvailable,
-    NotAuthenticated,
-    HasLocalChanges,
-    HasRemoteChanges,
-    HasConflicts,
-    IsSynced,
-}
-
-sealed record CloudSyncLatest(DateTimeOffset Utc, CloudSyncDirection Direction, string? ContentHash);
-
 interface IAppCloudSyncService
 {
     event Action Changed;
@@ -78,7 +60,7 @@ class AppCloudSyncService(
     public bool IsAvailable => cloudSyncService.IsAvailable;
     public CloudAuthState AuthState => authState;
     public CloudSyncModelState? SyncState => syncState;
-    public CloudSyncLatest? LatestSync => GetLatestSync(syncState);
+    public CloudSyncLatest? LatestSync => syncState?.GetLatestSync();
     public bool HasLocalChangesSinceLastSync => hasLocalChangesSinceLastSync;
     public bool HasRemoteChangesSinceLastSync => hasRemoteChangesSinceLastSync;
     public IReadOnlyList<CloudModelMetadata> CloudModels => cloudModels;
@@ -287,7 +269,7 @@ class AppCloudSyncService(
     async Task<R> RefreshSyncStateForCurrentModelAsync()
     {
         syncState = await cloudSyncStateService.GetAsync(modelService.ModelPath);
-        CloudSyncLatest? latestSync = GetLatestSync(syncState);
+        CloudSyncLatest? latestSync = syncState?.GetLatestSync();
         CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelService.ModelPath);
         hasRemoteChangesSinceLastSync = HasRemoteChangesComparedToLatestSync(latestSync, currentCloudModel);
 
@@ -402,20 +384,6 @@ class AppCloudSyncService(
             return;
 
         Changed?.Invoke();
-    }
-
-    static CloudSyncLatest? GetLatestSync(CloudSyncModelState? state)
-    {
-        if (state is null)
-            return null;
-
-        if (state.LastPushUtc is null && state.LastPullUtc is null)
-            return null;
-
-        if (state.LastPushUtc >= state.LastPullUtc)
-            return new(state.LastPushUtc ?? default, CloudSyncDirection.Up, state.LastPushContentHash);
-
-        return new(state.LastPullUtc ?? default, CloudSyncDirection.Down, state.LastPullContentHash);
     }
 
     static bool HasRemoteChangesComparedToLatestSync(CloudSyncLatest? latestSync, CloudModelMetadata? currentCloudModel)
