@@ -51,20 +51,10 @@
         {
             <MudDivider />
 
-            <MudMenuItem Disabled="true" Icon="@Icons.Material.Outlined.Cloud">
-                @CloudStatusText
-            </MudMenuItem>
-            <MudMenuItem Disabled="true" Icon="@SyncStatusIcon">
-                @SyncStatusText
-            </MudMenuItem>
-
             @if (AuthState.IsAuthenticated)
             {
                 @if (CloudModels.Count > 0)
                 {
-                    <MudMenuItem Disabled="true" Icon="@Icons.Material.Outlined.CloudQueue">
-                        Cloud Models
-                    </MudMenuItem>
                     @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
                     {
                         bool isCurrentCloudModel = string.Equals(
@@ -80,12 +70,7 @@
                         </MudMenuItem>
                     }
                 }
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudUpload" OnClick="SyncUpAsync">
-                    Sync Up
-                </MudMenuItem>
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudDownload" OnClick="SyncDownAsync">
-                    Sync Down
-                </MudMenuItem>
+
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="LogoutAsync">
                     Logout
                 </MudMenuItem>
@@ -105,7 +90,7 @@
     </MudMenu>
 
     <MudIconButton Icon="@CloudIcon" Color="@CloudIconColor" Disabled="@(!appCloudSyncService.IsAvailable)"
-                   title="@CloudStatusText" OnClick="ToggleCloudAuthAsync" />
+                   title="@CLoudText" OnClick="ToggleCloudAuthAsync" />
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         @if (modelService.CanUndo)
@@ -179,13 +164,14 @@
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
     IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
     string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
-    string CloudStatusText =>
+    string CLoudText => $"{cloudStatusText}<br>{syncStatusText}";
+    string cloudStatusText =>
         !appCloudSyncService.IsAvailable
             ? "Cloud sync unavailable"
             : AuthState.IsAuthenticated
                 ? $"Cloud signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}"
                 : "Cloud not signed in";
-    string SyncStatusText =>
+    string syncStatusText =>
         appCloudSyncService.LatestSync switch
         {
             { } latestSync =>
