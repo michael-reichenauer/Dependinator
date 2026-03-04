@@ -17,9 +17,8 @@ enum CloudSyncState
     NotAvailable,
     NotAuthenticated,
     HasLocalChanges,
-
-    // HasRemoteChanges,
-    // HasConflicts,
+    HasRemoteChanges,
+    HasConflicts,
     IsSynced,
 }
 
@@ -34,6 +33,7 @@ interface IAppCloudSyncService
     CloudSyncModelState? SyncState { get; }
     CloudSyncLatest? LatestSync { get; }
     bool HasLocalChangesSinceLastSync { get; }
+    bool HasRemoteChangesSinceLastSync { get; }
     IReadOnlyList<CloudModelMetadata> CloudModels { get; }
     string? CurrentNormalizedModelPath { get; }
 
@@ -69,6 +69,7 @@ class AppCloudSyncService(
     CloudAuthState authState = new(IsAvailable: false, IsAuthenticated: false, User: null);
     CloudSyncModelState? syncState;
     bool hasLocalChangesSinceLastSync;
+    bool hasRemoteChangesSinceLastSync;
     IReadOnlyList<CloudModelMetadata> cloudModels = [];
 
     public event Action Changed = null!;
@@ -79,6 +80,7 @@ class AppCloudSyncService(
     public CloudSyncLatest? LatestSync =>
         TryGetLatestSync(syncState, out CloudSyncLatest? latestSync) ? latestSync : null;
     public bool HasLocalChangesSinceLastSync => hasLocalChangesSinceLastSync;
+    public bool HasRemoteChangesSinceLastSync => hasRemoteChangesSinceLastSync;
     public IReadOnlyList<CloudModelMetadata> CloudModels => cloudModels;
     public string? CurrentNormalizedModelPath =>
         string.IsNullOrWhiteSpace(modelService.ModelPath) ? null : CloudModelPath.Normalize(modelService.ModelPath);
@@ -119,8 +121,12 @@ class AppCloudSyncService(
             return CloudSyncState.NotAvailable;
         if (!AuthState.IsAuthenticated)
             return CloudSyncState.NotAuthenticated;
+        if (HasLocalChangesSinceLastSync && HasRemoteChangesSinceLastSync)
+            return CloudSyncState.HasConflicts;
         if (HasLocalChangesSinceLastSync)
             return CloudSyncState.HasLocalChanges;
+        if (HasRemoteChangesSinceLastSync)
+            return CloudSyncState.HasRemoteChanges;
         return CloudSyncState.IsSynced;
     }
 
@@ -133,8 +139,6 @@ class AppCloudSyncService(
 
         authState = state;
         if (!Try(out error, await RefreshSyncStateCoreAsync()))
-            return error;
-        if (!Try(out error, await RefreshCloudModelsCoreAsync()))
             return error;
 
         NotifyChanged();
@@ -150,6 +154,7 @@ class AppCloudSyncService(
 
         authState = state;
         cloudModels = [];
+        hasRemoteChangesSinceLastSync = false;
         NotifyChanged();
         return R.Ok;
     }
@@ -172,8 +177,6 @@ class AppCloudSyncService(
 
         await cloudSyncStateService.RecordPushAsync(modelService.ModelPath, metadata);
         if (!Try(out error, await RefreshSyncStateCoreAsync()))
-            return error;
-        if (!Try(out error, await RefreshCloudModelsCoreAsync()))
             return error;
 
         NotifyChanged();
@@ -201,8 +204,6 @@ class AppCloudSyncService(
 
         await cloudSyncStateService.RecordPullAsync(modelInfo.Path, CloudModelSerializer.GetContentHash(modelDto));
         if (!Try(out error, await RefreshSyncStateCoreAsync()))
-            return error;
-        if (!Try(out error, await RefreshCloudModelsCoreAsync()))
             return error;
 
         NotifyChanged();
@@ -232,8 +233,6 @@ class AppCloudSyncService(
         );
         if (!Try(out error, await RefreshSyncStateCoreAsync()))
             return error;
-        if (!Try(out error, await RefreshCloudModelsCoreAsync()))
-            return error;
 
         NotifyChanged();
         return cloudModel;
@@ -257,26 +256,41 @@ class AppCloudSyncService(
             return error;
 
         authState = state;
-        return await RefreshCloudModelsCoreAsync();
+        if (!authState.IsAuthenticated)
+            cloudModels = [];
+
+        return R.Ok;
     }
 
-    Task<R> RefreshSyncStateCoreAsync()
+    async Task<R> RefreshSyncStateCoreAsync()
     {
+        if (!cloudSyncService.IsAvailable || !authState.IsAuthenticated)
+            cloudModels = [];
+        else if (!Try(out ErrorResult? error, await RefreshCloudModelsCoreAsync()))
+            return error;
+
         if (!cloudSyncService.IsAvailable || string.IsNullOrWhiteSpace(modelService.ModelPath))
         {
             syncState = null;
             hasLocalChangesSinceLastSync = false;
+            hasRemoteChangesSinceLastSync = false;
             lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
-            return Task.FromResult<R>(R.Ok);
+            return R.Ok;
         }
 
-        return RefreshSyncStateForCurrentModelAsync();
+        return await RefreshSyncStateForCurrentModelAsync();
     }
 
     async Task<R> RefreshSyncStateForCurrentModelAsync()
     {
         syncState = await cloudSyncStateService.GetAsync(modelService.ModelPath);
-        if (!TryGetLatestSync(syncState, out CloudSyncLatest latestSync))
+        CloudSyncLatest? latestSync = TryGetLatestSync(syncState, out CloudSyncLatest? computedLatestSync)
+            ? computedLatestSync
+            : null;
+        CloudModelMetadata? currentCloudModel = TryGetCurrentCloudModel(cloudModels, modelService.ModelPath);
+        hasRemoteChangesSinceLastSync = HasRemoteChangesComparedToLatestSync(latestSync, currentCloudModel);
+
+        if (latestSync is null)
         {
             hasLocalChangesSinceLastSync = false;
             lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
@@ -391,6 +405,26 @@ class AppCloudSyncService(
 
         latestSync = new(state.LastPullUtc ?? default, CloudSyncDirection.Down, state.LastPullContentHash);
         return true;
+    }
+
+    static bool HasRemoteChangesComparedToLatestSync(CloudSyncLatest? latestSync, CloudModelMetadata? currentCloudModel)
+    {
+        if (latestSync is null || currentCloudModel is null)
+            return false;
+
+        return !string.Equals(
+            currentCloudModel.ContentHash,
+            latestSync.ContentHash,
+            StringComparison.OrdinalIgnoreCase
+        );
+    }
+
+    static CloudModelMetadata? TryGetCurrentCloudModel(IReadOnlyList<CloudModelMetadata> cloudModels, string modelPath)
+    {
+        string normalizedModelPath = CloudModelPath.Normalize(modelPath);
+        return cloudModels.FirstOrDefault(cloudModel =>
+            string.Equals(cloudModel.NormalizedPath, normalizedModelPath, StringComparison.OrdinalIgnoreCase)
+        );
     }
 
     public void Dispose()

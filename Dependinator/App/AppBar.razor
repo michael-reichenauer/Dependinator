@@ -89,8 +89,18 @@
         </MudMenuItem>
     </MudMenu>
 
-    <MudIconButton Icon="@CloudIcon" Color="@CloudIconColor" Disabled="@(!appCloudSyncService.IsAvailable)"
-                   title="@CLoudText" OnClick="ToggleCloudAuthAsync" />
+    <MudTooltip>
+        <TooltipContent>
+            <div>@cloudStatusText</div>
+            <div>@syncStatusText</div>
+        </TooltipContent>
+        <ChildContent>
+            <span>
+                <MudIconButton Icon="@CloudIcon" Color="@CloudIconColor" Disabled="@(!appCloudSyncService.IsAvailable)"
+                               OnClick="ToggleCloudAuthAsync" />
+            </span>
+        </ChildContent>
+    </MudTooltip>
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         @if (modelService.CanUndo)
@@ -138,8 +148,8 @@
 
 <MudMessageBox @ref="syncDownBox" Title="Replace Local Cached Model" CancelText="Cancel">
     <MessageContent>
-        <MudText>Download the cloud copy and overwrite the local cached model?</MudText>
-        <MudText Typo="Typo.body2">The current local cached layout data will be replaced.</MudText>
+        <MudText>@syncDownPrompt</MudText>
+        <MudText Typo="Typo.body2">@syncDownPromptDetail</MudText>
     </MessageContent>
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudDownload">
@@ -157,25 +167,33 @@
     static readonly CloudIconInfo NotAvailable = new(Icons.Material.Outlined.CloudOff, Color.Inherit);
     static readonly CloudIconInfo NotAuthenticated = new(Icons.Material.Outlined.CloudQueue, Color.Inherit);
     static readonly CloudIconInfo HasLocalChanges = new(Icons.Material.Outlined.CloudUpload, Color.Info);
-    // static readonly CloudIconInfo HasRemoteChanges = new(Icons.Material.Outlined.CloudDownload, Color.Warning);
+    static readonly CloudIconInfo HasRemoteChanges = new(Icons.Material.Outlined.CloudDownload, Color.Warning);
+    static readonly CloudIconInfo HasConflicts = new(Icons.Material.Outlined.SyncProblem, Color.Error);
     static readonly CloudIconInfo IsSynced = new(Icons.Material.Filled.CloudDone, Color.Success);
 
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
     IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
     string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
-    string CLoudText => $"{cloudStatusText}<br>{syncStatusText}";
     string cloudStatusText =>
         !appCloudSyncService.IsAvailable
             ? "Cloud sync unavailable"
             : AuthState.IsAuthenticated
                 ? $"Cloud signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}"
                 : "Cloud not signed in";
+    string syncDownPrompt =>
+        appCloudSyncService.GetCloudSyncState() is CloudSyncState.HasConflicts
+            ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
+            : "Download the cloud copy and overwrite the local cached model?";
+    string syncDownPromptDetail =>
+        appCloudSyncService.GetCloudSyncState() is CloudSyncState.HasConflicts
+            ? "Both the local cached model and the cloud copy have changed since the last sync."
+            : "The current local cached layout data will be replaced.";
     string syncStatusText =>
         appCloudSyncService.LatestSync switch
         {
             { } latestSync =>
-                $"Sync: {GetSyncDirectionText(latestSync.Direction)} {latestSync.Utc.LocalDateTime:g} - {(appCloudSyncService.HasLocalChangesSinceLastSync ? "local changes" : "in sync")}",
+                $"Sync: {GetSyncDirectionText(latestSync.Direction)} {latestSync.Utc.LocalDateTime:g} - {GetSyncStatusDescription()}",
             null when string.IsNullOrWhiteSpace(modelService.ModelPath) => "Sync: model not loaded",
             _ => "Sync: no sync recorded",
         };
@@ -206,7 +224,8 @@
         CloudSyncState.NotAvailable => NotAvailable,
         CloudSyncState.NotAuthenticated => NotAuthenticated,
         CloudSyncState.HasLocalChanges => HasLocalChanges,
-        //CloudSyncState.HasRemoteChanges => HasRemoteChanges,
+        CloudSyncState.HasRemoteChanges => HasRemoteChanges,
+        CloudSyncState.HasConflicts => HasConflicts,
         CloudSyncState.IsSynced => IsSynced,
         _ => NotAvailable
     };
@@ -224,8 +243,12 @@
         if (state is CloudSyncState.NotAvailable)
             return;
 
-        if (state is CloudSyncState.NotAuthenticated) await LoginAsync();
-        if (state is CloudSyncState.HasLocalChanges) await SyncUpAsync();
+        if (state is CloudSyncState.NotAuthenticated)
+            await LoginAsync();
+        else if (state is CloudSyncState.HasLocalChanges)
+            await SyncUpAsync();
+        else if (state is CloudSyncState.HasRemoteChanges or CloudSyncState.HasConflicts)
+            await SyncDownAsync();
     }
 
     async Task LoginAsync()
@@ -315,4 +338,13 @@
             CloudSyncDirection.Down => "down",
             _ => "unknown",
         };
+
+    string GetSyncStatusDescription() =>
+        appCloudSyncService.HasLocalChangesSinceLastSync && appCloudSyncService.HasRemoteChangesSinceLastSync
+            ? "local and remote changes conflict"
+            : appCloudSyncService.HasLocalChangesSinceLastSync
+                ? "local changes pending upload"
+                : appCloudSyncService.HasRemoteChangesSinceLastSync
+                    ? "remote changes pending download"
+                    : "in sync";
 }
