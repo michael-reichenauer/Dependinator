@@ -1,8 +1,18 @@
+@using Dependinator.Shared.CloudSync
 @inject ICanvasService srv
+@inject IAppCloudSyncService appCloudSyncService
+@inject ISnackbar snackbar
 @inject Dependinator.Models.IModelService modelService
+@implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
     <AppMenu />
+
+    <MudIconButton Icon="@CloudIcon"
+                   Color="@CloudIconColor"
+                   Disabled="@(!appCloudSyncService.IsAvailable)"
+                   title="@CloudStatusText"
+                   OnClick="ToggleCloudAuthAsync" />
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         @if (modelService.CanUndo)
@@ -31,10 +41,57 @@
 @code {
     [Inject] IApplicationEvents applicationEvents { get; set; } = null!;
 
-    string CssClass => "app-floating-menu";
     string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
+    string CloudStatusText =>
+        !appCloudSyncService.IsAvailable ? "Cloud sync unavailable"
+        : appCloudSyncService.AuthState.IsAuthenticated
+            ? $"Cloud signed in as {appCloudSyncService.AuthState.User?.Email ?? appCloudSyncService.AuthState.User?.UserId}"
+            : "Cloud not signed in";
+    string CloudIcon =>
+        !appCloudSyncService.IsAvailable ? Icons.Material.Outlined.CloudOff
+        : !appCloudSyncService.AuthState.IsAuthenticated ? Icons.Material.Outlined.CloudQueue
+        : appCloudSyncService.HasLocalChangesSinceLastSync ? Icons.Material.Outlined.CloudUpload
+        : Icons.Material.Outlined.CloudDone;
+    MudBlazor.Color CloudIconColor =>
+        !appCloudSyncService.IsAvailable ? Color.Inherit
+        : !appCloudSyncService.AuthState.IsAuthenticated ? Color.Inherit
+        : appCloudSyncService.HasLocalChangesSinceLastSync ? Color.Warning
+        : Color.Success;
 
-    protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        applicationEvents.UIStateChanged += OnUiStateChanged;
+        appCloudSyncService.Changed += OnUiStateChanged;
+
+        if (!Try(out var error, await appCloudSyncService.InitializeAsync()))
+            snackbar.Add(error.ErrorMessage, Severity.Warning);
+    }
+
     void OnUiStateChanged() => InvokeAsync(StateHasChanged);
-    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+
+    public void Dispose()
+    {
+        applicationEvents.UIStateChanged -= OnUiStateChanged;
+        appCloudSyncService.Changed -= OnUiStateChanged;
+    }
+
+    async Task ToggleCloudAuthAsync()
+    {
+        if (!appCloudSyncService.IsAvailable)
+            return;
+
+        if (
+            !Try(
+                out var error,
+                appCloudSyncService.AuthState.IsAuthenticated
+                    ? await appCloudSyncService.LogoutAsync()
+                    : await appCloudSyncService.LoginAsync()
+            )
+        )
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+        }
+    }
 }

@@ -1,10 +1,8 @@
 @using Dependinator.Core
-@using Dependinator.Core.Utils
 @using Dependinator.Shared.CloudSync
 @inject ICanvasService srv
 @inject ISnackbar snackbar
-@inject ICloudSyncService cloudSyncService
-@inject ICloudSyncStateService cloudSyncStateService
+@inject IAppCloudSyncService appCloudSyncService
 @inject Dependinator.Models.IModelService modelService
 @inject IApplicationEvents applicationEvents
 @implements IDisposable
@@ -43,13 +41,15 @@
     @foreach (var path in RecentModelPaths)
     {
         bool isCurrent = path == currentPath;
-        <MudMenuItem IconColor="@(isCurrent? Color.Secondary: Color.Default)" Icon="@Icons.Material.Outlined.Schema"
-                     Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)" OnClick="() => srv.LoadAsync(path)">
+        <MudMenuItem IconColor="@(isCurrent ? Color.Secondary : Color.Default)"
+                     Icon="@Icons.Material.Outlined.Schema"
+                     Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)"
+                     OnClick="() => srv.LoadAsync(path)">
             @Path.GetFileNameWithoutExtension(path)
         </MudMenuItem>
     }
 
-    @if (cloudSyncService.IsAvailable)
+    @if (appCloudSyncService.IsAvailable)
     {
         <MudDivider />
 
@@ -60,21 +60,21 @@
             @SyncStatusText
         </MudMenuItem>
 
-        @if (authState.IsAuthenticated)
+        @if (AuthState.IsAuthenticated)
         {
-            @if (cloudModels.Count > 0)
+            @if (CloudModels.Count > 0)
             {
                 <MudMenuItem Disabled="true" Icon="@Icons.Material.Outlined.CloudQueue">
                     Cloud Models
                 </MudMenuItem>
-                @foreach (var cloudModel in cloudModels)
+                @foreach (var cloudModel in CloudModels)
                 {
                     bool isCurrentCloudModel = string.Equals(
                         cloudModel.NormalizedPath,
-                        CurrentNormalizedModelPath,
+                        appCloudSyncService.CurrentNormalizedModelPath,
                         StringComparison.OrdinalIgnoreCase
                     );
-                    <MudMenuItem IconColor="@(isCurrentCloudModel? Color.Secondary: Color.Default)"
+                    <MudMenuItem IconColor="@(isCurrentCloudModel ? Color.Secondary : Color.Default)"
                                  Icon="@Icons.Material.Outlined.Schema"
                                  Style="@(isCurrentCloudModel ? "color: var(--mud-palette-primary);" : null)"
                                  OnClick="() => LoadCloudModelAsync(cloudModel)">
@@ -140,43 +140,30 @@
 </MudMessageBox>
 
 @code {
-    const int UiStateRefreshThrottleMilliseconds = 5000;
-
-    Action? uiStateChangedHandler;
-    readonly Debouncer uiStateRefreshDebouncer = new();
     MudMessageBox mbox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
     MudMessageBox syncDownBox { get; set; } = null!;
-    global::Shared.CloudAuthState authState = new(IsAvailable: false, IsAuthenticated: false, User: null);
-    CloudSyncModelState? syncState;
-    bool hasLocalChangesSinceLastSync;
-    bool isUiStateRefreshInProgress;
-    bool isUiStateRefreshQueued;
-    DateTimeOffset lastSyncStateRefreshUtc = DateTimeOffset.MinValue;
-    bool isDisposed;
-    IReadOnlyList<global::Shared.CloudModelMetadata> cloudModels = [];
 
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
-    string? CurrentNormalizedModelPath =>
-        string.IsNullOrWhiteSpace(modelService.ModelPath) ? null :
-global::Shared.CloudModelPath.Normalize(modelService.ModelPath);
+    global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
+    IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
     string CloudStatusText =>
-        authState.IsAuthenticated ? $"Cloud: signed in as {authState.User?.Email ?? authState.User?.UserId}" : "Cloud: not signed in";
+        AuthState.IsAuthenticated ? $"Cloud: signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}" : "Cloud: not signed in";
     string SyncStatusText =>
-        TryGetLatestSync(syncState, out DateTimeOffset latestSyncUtc, out string? latestSyncDirection, out _) switch
+        appCloudSyncService.LatestSync switch
         {
-            true => $"Sync: {latestSyncDirection} {latestSyncUtc.LocalDateTime:g} - {(hasLocalChangesSinceLastSync ? "local changes" : "in sync")}",
-            false when string.IsNullOrWhiteSpace(modelService.ModelPath) => "Sync: model not loaded",
+            { } latestSync =>
+                $"Sync: {GetSyncDirectionText(latestSync.Direction)} {latestSync.Utc.LocalDateTime:g} - {(appCloudSyncService.HasLocalChangesSinceLastSync ? "local changes" : "in sync")}",
+            null when string.IsNullOrWhiteSpace(modelService.ModelPath) => "Sync: model not loaded",
             _ => "Sync: no sync recorded",
         };
-    string SyncStatusIcon => TryGetLatestSync(syncState, out _, out string? latestSyncDirectionForIcon, out _) ?
-latestSyncDirectionForIcon switch
-{
-    "up" => Icons.Material.Outlined.CloudUpload,
-    "down" => Icons.Material.Outlined.CloudDownload,
-    "error" => Icons.Material.Outlined.CloudOff,
-    _ => Icons.Material.Outlined.CloudQueue,
-} : Icons.Material.Outlined.CloudQueue;
+    string SyncStatusIcon =>
+        appCloudSyncService.LatestSync?.Direction switch
+        {
+            CloudSyncDirection.Up => Icons.Material.Outlined.CloudUpload,
+            CloudSyncDirection.Down => Icons.Material.Outlined.CloudDownload,
+            _ => Icons.Material.Outlined.CloudQueue,
+        };
 
     [Parameter]
     public string MenuClass { get; set; } = "ml-n3";
@@ -185,12 +172,11 @@ latestSyncDirectionForIcon switch
     {
         await base.OnInitializedAsync();
 
-        uiStateChangedHandler = HandleUiStateChanged;
-        applicationEvents.UIStateChanged += uiStateChangedHandler;
+        applicationEvents.UIStateChanged += OnStateChanged;
+        appCloudSyncService.Changed += OnStateChanged;
 
-        await RefreshAuthStateAsync();
-        await RefreshSyncStateAsync();
-        await RefreshCloudModelsAsync();
+        if (!Try(out var error, await appCloudSyncService.InitializeAsync()))
+            snackbar.Add(error.ErrorMessage, Severity.Warning);
     }
 
     async void OnRemove()
@@ -201,111 +187,26 @@ latestSyncDirectionForIcon switch
         srv.Remove();
     }
 
-    async Task RefreshAuthStateAsync()
-    {
-        if (!cloudSyncService.IsAvailable)
-            return;
-
-        if (!Try(out var state, out var error, await cloudSyncService.GetAuthStateAsync()))
-        {
-            snackbar.Add(error.ErrorMessage, Severity.Warning);
-            return;
-        }
-
-        authState = state;
-        await RefreshCloudModelsAsync();
-    }
-
-    async Task RefreshSyncStateAsync()
-    {
-        if (!cloudSyncService.IsAvailable || string.IsNullOrWhiteSpace(modelService.ModelPath))
-        {
-            syncState = null;
-            hasLocalChangesSinceLastSync = false;
-            lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
-            return;
-        }
-
-        syncState = await cloudSyncStateService.GetAsync(modelService.ModelPath);
-        if (!TryGetLatestSync(syncState, out _, out _, out string? latestSyncHash))
-        {
-            hasLocalChangesSinceLastSync = false;
-            lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
-            return;
-        }
-
-        if (!Try(out var modelDto, out var _, modelService.GetCurrentModelDto()))
-        {
-            hasLocalChangesSinceLastSync = false;
-            lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
-            return;
-        }
-
-        string currentHash = CloudModelSerializer.GetContentHash(modelDto);
-        hasLocalChangesSinceLastSync = !string.Equals(currentHash, latestSyncHash, StringComparison.OrdinalIgnoreCase);
-        lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
-    }
-
-    async Task RefreshCloudModelsAsync()
-    {
-        if (!cloudSyncService.IsAvailable || !authState.IsAuthenticated)
-        {
-            cloudModels = [];
-            return;
-        }
-
-        if (!Try(out var modelList, out var error, await cloudSyncService.ListAsync()))
-        {
-            snackbar.Add(error.ErrorMessage, Severity.Warning);
-            cloudModels = [];
-            return;
-        }
-
-        cloudModels = modelList.Models;
-    }
-
     async Task LoginAsync()
     {
-        if (!Try(out var state, out var error, await cloudSyncService.LoginAsync()))
-        {
+        if (!Try(out var error, await appCloudSyncService.LoginAsync()))
             snackbar.Add(error.ErrorMessage, Severity.Error);
-            return;
-        }
-
-        authState = state;
-        await RefreshSyncStateAsync();
-        await RefreshCloudModelsAsync();
     }
 
     async Task LogoutAsync()
     {
-        if (!Try(out var state, out var error, await cloudSyncService.LogoutAsync()))
+        if (!Try(out var error, await appCloudSyncService.LogoutAsync()))
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+    }
+
+    async Task SyncUpAsync()
+    {
+        if (!Try(out var metadata, out var error, await appCloudSyncService.SyncUpAsync()))
         {
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;
         }
 
-        authState = state;
-        cloudModels = [];
-    }
-
-    async Task SyncUpAsync()
-    {
-        if (!Try(out var modelDto, out var error, modelService.GetCurrentModelDto()))
-        {
-            snackbar.Add(error.ErrorMessage, Severity.Warning);
-            return;
-        }
-
-        if (!Try(out var metadata, out var pushError, await cloudSyncService.PushAsync(modelService.ModelPath, modelDto)))
-        {
-            snackbar.Add(pushError.ErrorMessage, Severity.Error);
-            return;
-        }
-
-        await cloudSyncStateService.RecordPushAsync(modelService.ModelPath, metadata);
-        await RefreshSyncStateAsync();
-        await RefreshCloudModelsAsync();
         snackbar.Add($"Synced {metadata.CompressedSizeBytes} bytes to the cloud.", Severity.Success);
     }
 
@@ -320,58 +221,30 @@ latestSyncDirectionForIcon switch
             return;
         }
 
-        if (!Try(out var modelDto, out var error, await cloudSyncService.PullAsync(modelService.ModelPath)))
+        if (!Try(out var modelInfo, out var error, await appCloudSyncService.SyncDownAsync()))
         {
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;
         }
 
-        if (!Try(out var modelInfo, out var replaceError, await modelService.ReplaceCurrentModelAsync(modelDto)))
-        {
-            snackbar.Add(replaceError.ErrorMessage, Severity.Error);
-            return;
-        }
-
-        await cloudSyncStateService.RecordPullAsync(modelInfo.Path, CloudModelSerializer.GetContentHash(modelDto));
-        await RefreshSyncStateAsync();
-        await RefreshCloudModelsAsync();
         snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(modelInfo.Path)}.", Severity.Success);
     }
 
     async Task LoadCloudModelAsync(global::Shared.CloudModelMetadata cloudModel)
     {
-        if (!Try(out var modelDto, out var error, await cloudSyncService.PullAsync(cloudModel.NormalizedPath)))
+        if (!Try(out _, out var error, await appCloudSyncService.LoadCloudModelAsync(cloudModel)))
         {
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;
         }
 
-        if (!Try(out var writeError, await modelService.WriteModelAsync(cloudModel.NormalizedPath, modelDto)))
-        {
-            snackbar.Add(writeError.ErrorMessage, Severity.Error);
-            return;
-        }
-
-        await srv.LoadAsync(cloudModel.NormalizedPath);
-        await cloudSyncStateService.RecordPullAsync(
-            cloudModel.NormalizedPath,
-            CloudModelSerializer.GetContentHash(modelDto)
-        );
-        await RefreshSyncStateAsync();
-        await RefreshCloudModelsAsync();
-        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.",
-Severity.Success);
+        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.", Severity.Success);
     }
 
     public void Dispose()
     {
-        isDisposed = true;
-        uiStateRefreshDebouncer.Dispose();
-
-        if (uiStateChangedHandler is null)
-            return;
-
-        applicationEvents.UIStateChanged -= uiStateChangedHandler;
+        applicationEvents.UIStateChanged -= OnStateChanged;
+        appCloudSyncService.Changed -= OnStateChanged;
     }
 
     async Task ShowAbout()
@@ -379,77 +252,13 @@ Severity.Success);
         await aboutBox.ShowAsync();
     }
 
-    void HandleUiStateChanged()
-    {
-        isUiStateRefreshQueued = true;
-        ScheduleUiStateRefresh();
-    }
+    void OnStateChanged() => InvokeAsync(StateHasChanged);
 
-    void ScheduleUiStateRefresh()
-    {
-        if (isDisposed || isUiStateRefreshInProgress)
-            return;
-
-        TimeSpan elapsedSinceLastRefresh = DateTimeOffset.UtcNow - lastSyncStateRefreshUtc;
-        if (elapsedSinceLastRefresh >= TimeSpan.FromMilliseconds(UiStateRefreshThrottleMilliseconds))
+    static string GetSyncDirectionText(CloudSyncDirection direction) =>
+        direction switch
         {
-            _ = InvokeAsync(RefreshUiStateAsync);
-            return;
-        }
-
-        TimeSpan remainingDelay = TimeSpan.FromMilliseconds(UiStateRefreshThrottleMilliseconds) - elapsedSinceLastRefresh;
-        int delayMilliseconds = Math.Max(1, (int)Math.Ceiling(remainingDelay.TotalMilliseconds));
-        uiStateRefreshDebouncer.Debounce(delayMilliseconds, () => _ = InvokeAsync(RefreshUiStateAsync));
-    }
-
-    async Task RefreshUiStateAsync()
-    {
-        if (isDisposed || isUiStateRefreshInProgress || !isUiStateRefreshQueued)
-            return;
-
-        isUiStateRefreshInProgress = true;
-        isUiStateRefreshQueued = false;
-
-        try
-        {
-            await RefreshSyncStateAsync();
-            StateHasChanged();
-        }
-        finally
-        {
-            isUiStateRefreshInProgress = false;
-            if (isUiStateRefreshQueued)
-                ScheduleUiStateRefresh();
-        }
-    }
-
-    static bool TryGetLatestSync(
-        CloudSyncModelState? state,
-        out DateTimeOffset latestSyncUtc,
-        out string? latestSyncDirection,
-        out string? latestSyncHash
-    )
-    {
-        latestSyncUtc = default;
-        latestSyncDirection = null;
-        latestSyncHash = null;
-        if (state is null)
-            return false;
-
-        if (state.LastPushUtc is null && state.LastPullUtc is null)
-            return false;
-
-        if (state.LastPushUtc >= state.LastPullUtc)
-        {
-            latestSyncUtc = state.LastPushUtc ?? default;
-            latestSyncDirection = "up";
-            latestSyncHash = state.LastPushContentHash;
-            return true;
-        }
-
-        latestSyncUtc = state.LastPullUtc ?? default;
-        latestSyncDirection = "down";
-        latestSyncHash = state.LastPullContentHash;
-        return true;
-    }
+            CloudSyncDirection.Up => "up",
+            CloudSyncDirection.Down => "down",
+            _ => "unknown",
+        };
 }
