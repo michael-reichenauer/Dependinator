@@ -40,10 +40,9 @@
         }
         @foreach (string path in RecentModelPaths)
         {
-            bool isCurrent = path == currentPath;
-            <MudMenuItem IconColor="@(isCurrent? Color.Secondary: Color.Default)" Icon="@Icons.Material.Outlined.Schema"
-                         Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)" OnClick="() => srv.LoadAsync(path)">
-                @Path.GetFileNameWithoutExtension(path)
+            <MudMenuItem IconColor="@GetMenuItemIconColor(path == currentPath)" Icon="@Icons.Material.Outlined.Schema"
+                         Style="@GetCurrentItemStyle(path == currentPath)" OnClick="() => srv.LoadAsync(path)">
+                @GetModelDisplayName(path)
             </MudMenuItem>
         }
 
@@ -57,16 +56,10 @@
                 {
                     @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
                     {
-                        bool isCurrentCloudModel = string.Equals(
-                            cloudModel.NormalizedPath,
-                            appCloudSyncService.CurrentNormalizedModelPath,
-                            StringComparison.OrdinalIgnoreCase
-                        );
-                        <MudMenuItem IconColor="@(isCurrentCloudModel? Color.Secondary: Color.Default)"
-                                     Icon="@Icons.Material.Outlined.Schema"
-                                     Style="@(isCurrentCloudModel ? "color: var(--mud-palette-primary);" : null)"
+                        <MudMenuItem IconColor="@GetMenuItemIconColor(IsCurrentCloudModel(cloudModel))"
+                                     Icon="@Icons.Material.Outlined.Schema" Style="@GetCurrentItemStyle(IsCurrentCloudModel(cloudModel))"
                                      OnClick="() => LoadCloudModelAsync(cloudModel)">
-                            @Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)
+                            @GetModelDisplayName(cloudModel.NormalizedPath)
                         </MudMenuItem>
                     }
                 }
@@ -91,13 +84,13 @@
 
     <MudTooltip>
         <TooltipContent>
-            <div>@cloudStatusText</div>
-            <div>@syncStatusText</div>
+            <div>@CloudStatusText</div>
+            <div>@SyncStatusText</div>
         </TooltipContent>
         <ChildContent>
             <span>
-                <MudIconButton Icon="@CloudIcon" Color="@CloudIconColor" Disabled="@(!appCloudSyncService.IsAvailable)"
-                               OnClick="ToggleCloudAuthAsync" />
+                <MudIconButton Icon="@CurrentCloudIconInfo.Icon" Color="@CurrentCloudIconInfo.Color"
+                               Disabled="@(!appCloudSyncService.IsAvailable)" OnClick="ToggleCloudAuthAsync" />
             </span>
         </ChildContent>
     </MudTooltip>
@@ -148,8 +141,8 @@
 
 <MudMessageBox @ref="syncDownBox" Title="Replace Local Cached Model" CancelText="Cancel">
     <MessageContent>
-        <MudText>@syncDownPrompt</MudText>
-        <MudText Typo="Typo.body2">@syncDownPromptDetail</MudText>
+        <MudText>@SyncDownPrompt</MudText>
+        <MudText Typo="Typo.body2">@SyncDownPromptDetail</MudText>
     </MessageContent>
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudDownload">
@@ -174,39 +167,33 @@
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
     IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
+    CloudSyncState CurrentCloudSyncState => appCloudSyncService.GetCloudSyncState();
+    CloudSyncLatest? LatestSync => appCloudSyncService.LatestSync;
+    CloudIconInfo CurrentCloudIconInfo => GetCloudIconInfo(CurrentCloudSyncState);
+    bool HasSyncConflicts => CurrentCloudSyncState is CloudSyncState.HasConflicts;
     string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
-    string cloudStatusText =>
+    string CloudStatusText =>
         !appCloudSyncService.IsAvailable
             ? "Cloud sync unavailable"
             : AuthState.IsAuthenticated
                 ? $"Cloud signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}"
                 : "Cloud not signed in";
-    string syncDownPrompt =>
-        appCloudSyncService.GetCloudSyncState() is CloudSyncState.HasConflicts
+    string SyncDownPrompt =>
+        HasSyncConflicts
             ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
             : "Download the cloud copy and overwrite the local cached model?";
-    string syncDownPromptDetail =>
-        appCloudSyncService.GetCloudSyncState() is CloudSyncState.HasConflicts
+    string SyncDownPromptDetail =>
+        HasSyncConflicts
             ? "Both the local cached model and the cloud copy have changed since the last sync."
             : "The current local cached layout data will be replaced.";
-    string syncStatusText =>
-        appCloudSyncService.LatestSync switch
+    string SyncStatusText =>
+        LatestSync switch
         {
             { } latestSync =>
-                $"Sync: {GetSyncDirectionText(latestSync.Direction)} {latestSync.Utc.LocalDateTime:g} - {GetSyncStatusDescription()}",
+                $"Sync: {GetSyncDirectionText(latestSync.Direction)} {latestSync.Utc.LocalDateTime:g} - {GetSyncStatusDescription(CurrentCloudSyncState)}",
             null when string.IsNullOrWhiteSpace(modelService.ModelPath) => "Sync: model not loaded",
             _ => "Sync: no sync recorded",
         };
-    string SyncStatusIcon =>
-        appCloudSyncService.LatestSync?.Direction switch
-        {
-            CloudSyncDirection.Up => Icons.Material.Outlined.CloudUpload,
-            CloudSyncDirection.Down => Icons.Material.Outlined.CloudDownload,
-            _ => Icons.Material.Outlined.CloudQueue,
-        };
-
-    string CloudIcon => GetCloudIconInfo().Icon;
-    MudBlazor.Color CloudIconColor => GetCloudIconInfo().Color;
 
     protected override async Task OnInitializedAsync()
     {
@@ -219,7 +206,7 @@
             snackbar.Add(error.ErrorMessage, Severity.Warning);
     }
 
-    CloudIconInfo GetCloudIconInfo() => appCloudSyncService.GetCloudSyncState() switch
+    static CloudIconInfo GetCloudIconInfo(CloudSyncState state) => state switch
     {
         CloudSyncState.NotAvailable => NotAvailable,
         CloudSyncState.NotAuthenticated => NotAuthenticated,
@@ -238,17 +225,22 @@
 
     async Task ToggleCloudAuthAsync()
     {
-        var state = appCloudSyncService.GetCloudSyncState();
-
-        if (state is CloudSyncState.NotAvailable)
-            return;
-
-        if (state is CloudSyncState.NotAuthenticated)
-            await LoginAsync();
-        else if (state is CloudSyncState.HasLocalChanges)
-            await SyncUpAsync();
-        else if (state is CloudSyncState.HasRemoteChanges or CloudSyncState.HasConflicts)
-            await SyncDownAsync();
+        switch (CurrentCloudSyncState)
+        {
+            case CloudSyncState.NotAvailable:
+            case CloudSyncState.IsSynced:
+                return;
+            case CloudSyncState.NotAuthenticated:
+                await LoginAsync();
+                return;
+            case CloudSyncState.HasLocalChanges:
+                await SyncUpAsync();
+                return;
+            case CloudSyncState.HasRemoteChanges:
+            case CloudSyncState.HasConflicts:
+                await SyncDownAsync();
+                return;
+        }
     }
 
     async Task LoginAsync()
@@ -331,6 +323,19 @@
 
     void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
+    static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
+
+    static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
+
+    static string GetModelDisplayName(string modelPath) => Path.GetFileNameWithoutExtension(modelPath);
+
+    bool IsCurrentCloudModel(global::Shared.CloudModelMetadata cloudModel) =>
+        string.Equals(
+            cloudModel.NormalizedPath,
+            appCloudSyncService.CurrentNormalizedModelPath,
+            StringComparison.OrdinalIgnoreCase
+        );
+
     static string GetSyncDirectionText(CloudSyncDirection direction) =>
         direction switch
         {
@@ -339,12 +344,12 @@
             _ => "unknown",
         };
 
-    string GetSyncStatusDescription() =>
-        appCloudSyncService.HasLocalChangesSinceLastSync && appCloudSyncService.HasRemoteChangesSinceLastSync
-            ? "local and remote changes conflict"
-            : appCloudSyncService.HasLocalChangesSinceLastSync
-                ? "local changes pending upload"
-                : appCloudSyncService.HasRemoteChangesSinceLastSync
-                    ? "remote changes pending download"
-                    : "in sync";
+    static string GetSyncStatusDescription(CloudSyncState state) =>
+        state switch
+        {
+            CloudSyncState.HasConflicts => "local and remote changes conflict",
+            CloudSyncState.HasLocalChanges => "local changes pending upload",
+            CloudSyncState.HasRemoteChanges => "remote changes pending download",
+            _ => "in sync",
+        };
 }
