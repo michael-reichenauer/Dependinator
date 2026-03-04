@@ -57,6 +57,7 @@ class AppCloudSyncService(
 ) : IAppCloudSyncService, IDisposable
 {
     const int UiStateRefreshThrottleMilliseconds = 5000;
+    static readonly CloudAuthState unavailableAuthState = new(IsAvailable: false, IsAuthenticated: false, User: null);
 
     readonly SemaphoreSlim initializeLock = new(1, 1);
     readonly Debouncer uiStateRefreshDebouncer = new();
@@ -66,7 +67,7 @@ class AppCloudSyncService(
     bool isUiStateRefreshQueued;
     bool isDisposed;
     DateTimeOffset lastSyncStateRefreshUtc = DateTimeOffset.MinValue;
-    CloudAuthState authState = new(IsAvailable: false, IsAuthenticated: false, User: null);
+    CloudAuthState authState = unavailableAuthState;
     CloudSyncModelState? syncState;
     bool hasLocalChangesSinceLastSync;
     bool hasRemoteChangesSinceLastSync;
@@ -77,8 +78,7 @@ class AppCloudSyncService(
     public bool IsAvailable => cloudSyncService.IsAvailable;
     public CloudAuthState AuthState => authState;
     public CloudSyncModelState? SyncState => syncState;
-    public CloudSyncLatest? LatestSync =>
-        TryGetLatestSync(syncState, out CloudSyncLatest? latestSync) ? latestSync : null;
+    public CloudSyncLatest? LatestSync => GetLatestSync(syncState);
     public bool HasLocalChangesSinceLastSync => hasLocalChangesSinceLastSync;
     public bool HasRemoteChangesSinceLastSync => hasRemoteChangesSinceLastSync;
     public IReadOnlyList<CloudModelMetadata> CloudModels => cloudModels;
@@ -105,7 +105,12 @@ class AppCloudSyncService(
                 return error;
             }
 
-            await RefreshSyncStateCoreAsync();
+            if (!Try(out error, await RefreshSyncStateCoreAsync()))
+            {
+                NotifyChanged();
+                return error;
+            }
+
             NotifyChanged();
             return R.Ok;
         }
@@ -138,11 +143,7 @@ class AppCloudSyncService(
             return error;
 
         authState = state;
-        if (!Try(out error, await RefreshSyncStateCoreAsync()))
-            return error;
-
-        NotifyChanged();
-        return R.Ok;
+        return await RefreshSnapshotAndNotifyAsync();
     }
 
     public async Task<R> LogoutAsync()
@@ -153,8 +154,7 @@ class AppCloudSyncService(
             return error;
 
         authState = state;
-        cloudModels = [];
-        hasRemoteChangesSinceLastSync = false;
+        ResetSyncSnapshot(clearCloudModels: true);
         NotifyChanged();
         return R.Ok;
     }
@@ -176,10 +176,9 @@ class AppCloudSyncService(
             return error;
 
         await cloudSyncStateService.RecordPushAsync(modelService.ModelPath, metadata);
-        if (!Try(out error, await RefreshSyncStateCoreAsync()))
+        if (!Try(out error, await RefreshSnapshotAndNotifyAsync()))
             return error;
 
-        NotifyChanged();
         return metadata;
     }
 
@@ -203,10 +202,9 @@ class AppCloudSyncService(
             return error;
 
         await cloudSyncStateService.RecordPullAsync(modelInfo.Path, CloudModelSerializer.GetContentHash(modelDto));
-        if (!Try(out error, await RefreshSyncStateCoreAsync()))
+        if (!Try(out error, await RefreshSnapshotAndNotifyAsync()))
             return error;
 
-        NotifyChanged();
         return modelInfo;
     }
 
@@ -231,10 +229,9 @@ class AppCloudSyncService(
             cloudModel.NormalizedPath,
             CloudModelSerializer.GetContentHash(modelDto)
         );
-        if (!Try(out error, await RefreshSyncStateCoreAsync()))
+        if (!Try(out error, await RefreshSnapshotAndNotifyAsync()))
             return error;
 
-        NotifyChanged();
         return cloudModel;
     }
 
@@ -243,12 +240,21 @@ class AppCloudSyncService(
         _ = await InitializeAsync();
     }
 
+    async Task<R> RefreshSnapshotAndNotifyAsync()
+    {
+        if (!Try(out ErrorResult? error, await RefreshSyncStateCoreAsync()))
+            return error;
+
+        NotifyChanged();
+        return R.Ok;
+    }
+
     async Task<R> RefreshAuthStateCoreAsync()
     {
         if (!cloudSyncService.IsAvailable)
         {
-            authState = new(IsAvailable: false, IsAuthenticated: false, User: null);
-            cloudModels = [];
+            authState = unavailableAuthState;
+            ResetSyncSnapshot(clearCloudModels: true);
             return R.Ok;
         }
 
@@ -257,7 +263,7 @@ class AppCloudSyncService(
 
         authState = state;
         if (!authState.IsAuthenticated)
-            cloudModels = [];
+            ResetSyncSnapshot(clearCloudModels: true);
 
         return R.Ok;
     }
@@ -271,10 +277,7 @@ class AppCloudSyncService(
 
         if (!cloudSyncService.IsAvailable || string.IsNullOrWhiteSpace(modelService.ModelPath))
         {
-            syncState = null;
-            hasLocalChangesSinceLastSync = false;
-            hasRemoteChangesSinceLastSync = false;
-            lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
+            ResetSyncSnapshot(clearCloudModels: false);
             return R.Ok;
         }
 
@@ -284,23 +287,21 @@ class AppCloudSyncService(
     async Task<R> RefreshSyncStateForCurrentModelAsync()
     {
         syncState = await cloudSyncStateService.GetAsync(modelService.ModelPath);
-        CloudSyncLatest? latestSync = TryGetLatestSync(syncState, out CloudSyncLatest? computedLatestSync)
-            ? computedLatestSync
-            : null;
-        CloudModelMetadata? currentCloudModel = TryGetCurrentCloudModel(cloudModels, modelService.ModelPath);
+        CloudSyncLatest? latestSync = GetLatestSync(syncState);
+        CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelService.ModelPath);
         hasRemoteChangesSinceLastSync = HasRemoteChangesComparedToLatestSync(latestSync, currentCloudModel);
 
         if (latestSync is null)
         {
             hasLocalChangesSinceLastSync = false;
-            lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
+            MarkSyncStateRefreshed();
             return R.Ok;
         }
 
         if (!Try(out ModelDto? modelDto, out _, modelService.GetCurrentModelDto()))
         {
             hasLocalChangesSinceLastSync = false;
-            lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
+            MarkSyncStateRefreshed();
             return R.Ok;
         }
 
@@ -310,7 +311,7 @@ class AppCloudSyncService(
             latestSync.ContentHash,
             StringComparison.OrdinalIgnoreCase
         );
-        lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
+        MarkSyncStateRefreshed();
         return R.Ok;
     }
 
@@ -330,6 +331,22 @@ class AppCloudSyncService(
 
         cloudModels = modelList.Models;
         return R.Ok;
+    }
+
+    void ResetSyncSnapshot(bool clearCloudModels)
+    {
+        syncState = null;
+        hasLocalChangesSinceLastSync = false;
+        hasRemoteChangesSinceLastSync = false;
+        if (clearCloudModels)
+            cloudModels = [];
+
+        MarkSyncStateRefreshed();
+    }
+
+    void MarkSyncStateRefreshed()
+    {
+        lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
     }
 
     void HandleUiStateChanged()
@@ -369,8 +386,7 @@ class AppCloudSyncService(
 
         try
         {
-            _ = await RefreshSyncStateCoreAsync();
-            NotifyChanged();
+            _ = await RefreshSnapshotAndNotifyAsync();
         }
         finally
         {
@@ -388,23 +404,18 @@ class AppCloudSyncService(
         Changed?.Invoke();
     }
 
-    static bool TryGetLatestSync(CloudSyncModelState? state, out CloudSyncLatest latestSync)
+    static CloudSyncLatest? GetLatestSync(CloudSyncModelState? state)
     {
-        latestSync = null!;
         if (state is null)
-            return false;
+            return null;
 
         if (state.LastPushUtc is null && state.LastPullUtc is null)
-            return false;
+            return null;
 
         if (state.LastPushUtc >= state.LastPullUtc)
-        {
-            latestSync = new(state.LastPushUtc ?? default, CloudSyncDirection.Up, state.LastPushContentHash);
-            return true;
-        }
+            return new(state.LastPushUtc ?? default, CloudSyncDirection.Up, state.LastPushContentHash);
 
-        latestSync = new(state.LastPullUtc ?? default, CloudSyncDirection.Down, state.LastPullContentHash);
-        return true;
+        return new(state.LastPullUtc ?? default, CloudSyncDirection.Down, state.LastPullContentHash);
     }
 
     static bool HasRemoteChangesComparedToLatestSync(CloudSyncLatest? latestSync, CloudModelMetadata? currentCloudModel)
@@ -419,7 +430,7 @@ class AppCloudSyncService(
         );
     }
 
-    static CloudModelMetadata? TryGetCurrentCloudModel(IReadOnlyList<CloudModelMetadata> cloudModels, string modelPath)
+    static CloudModelMetadata? GetCurrentCloudModel(IReadOnlyList<CloudModelMetadata> cloudModels, string modelPath)
     {
         string normalizedModelPath = CloudModelPath.Normalize(modelPath);
         return cloudModels.FirstOrDefault(cloudModel =>

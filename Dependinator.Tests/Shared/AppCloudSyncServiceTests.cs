@@ -51,7 +51,63 @@ public class AppCloudSyncServiceTests
         Assert.True(sut.HasRemoteChangesSinceLastSync);
     }
 
+    [Fact]
+    public async Task InitializeAsync_ShouldReturnError_WhenCloudModelsRefreshFails()
+    {
+        string modelPath = "/models/sample.model";
+        SutContext context = CreateSutContext(modelPath, CreateModelDto("local"), syncState: null, cloudModels: []);
+        context.CloudSyncService
+            .Setup(x => x.ListAsync())
+            .ReturnsAsync(R.Error("Cloud model list failed."));
+
+        R result = await context.Sut.InitializeAsync();
+
+        Assert.False(result);
+        Assert.Equal("Cloud model list failed.", result.ErrorMessage);
+        Assert.Empty(context.Sut.CloudModels);
+    }
+
+    [Fact]
+    public async Task LogoutAsync_ShouldClearSyncSnapshot()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        string syncedHash = CloudModelSerializer.GetContentHash(syncedModel);
+        CloudSyncModelState syncState = new()
+        {
+            LastPullUtc = new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
+            LastPullContentHash = syncedHash,
+        };
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
+        SutContext context = CreateSutContext(modelPath, CreateModelDto("local"), syncState, [cloudModel]);
+        context.CloudSyncService
+            .Setup(x => x.LogoutAsync())
+            .ReturnsAsync(new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null));
+
+        await context.Sut.InitializeAsync();
+
+        R result = await context.Sut.LogoutAsync();
+
+        Assert.True(result);
+        Assert.Null(context.Sut.SyncState);
+        Assert.Null(context.Sut.LatestSync);
+        Assert.False(context.Sut.HasLocalChangesSinceLastSync);
+        Assert.False(context.Sut.HasRemoteChangesSinceLastSync);
+        Assert.Empty(context.Sut.CloudModels);
+        Assert.Equal(CloudSyncState.NotAuthenticated, context.Sut.GetCloudSyncState());
+    }
+
     static AppCloudSyncService CreateSut(
+        string modelPath,
+        ModelDto currentModelDto,
+        CloudSyncModelState? syncState,
+        IReadOnlyList<CloudModelMetadata> cloudModels
+    )
+    {
+        return CreateSutContext(modelPath, currentModelDto, syncState, cloudModels).Sut;
+    }
+
+    static SutContext CreateSutContext(
         string modelPath,
         ModelDto currentModelDto,
         CloudSyncModelState? syncState,
@@ -75,14 +131,26 @@ public class AppCloudSyncServiceTests
         modelService.SetupGet(x => x.ModelPath).Returns(modelPath);
         modelService.Setup(x => x.GetCurrentModelDto()).Returns(currentModelDto);
 
-        return new AppCloudSyncService(
-            canvasService.Object,
-            cloudSyncService.Object,
-            cloudSyncStateService.Object,
-            modelService.Object,
-            applicationEvents
+        return new SutContext(
+            new AppCloudSyncService(
+                canvasService.Object,
+                cloudSyncService.Object,
+                cloudSyncStateService.Object,
+                modelService.Object,
+                applicationEvents
+            ),
+            cloudSyncService,
+            cloudSyncStateService,
+            modelService
         );
     }
+
+    sealed record SutContext(
+        AppCloudSyncService Sut,
+        Mock<ICloudSyncService> CloudSyncService,
+        Mock<ICloudSyncStateService> CloudSyncStateService,
+        Mock<IModelService> ModelService
+    );
 
     static CloudModelMetadata CreateCloudModelMetadata(string modelPath, ModelDto modelDto)
     {
