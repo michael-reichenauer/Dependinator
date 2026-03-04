@@ -12,6 +12,17 @@ enum CloudSyncDirection
     Down,
 }
 
+enum CloudSyncState
+{
+    NotAvailable,
+    NotAuthenticated,
+    HasLocalChanges,
+
+    // HasRemoteChanges,
+    // HasConflicts,
+    IsSynced,
+}
+
 sealed record CloudSyncLatest(DateTimeOffset Utc, CloudSyncDirection Direction, string? ContentHash);
 
 interface IAppCloudSyncService
@@ -25,6 +36,8 @@ interface IAppCloudSyncService
     bool HasLocalChangesSinceLastSync { get; }
     IReadOnlyList<CloudModelMetadata> CloudModels { get; }
     string? CurrentNormalizedModelPath { get; }
+
+    CloudSyncState GetCloudSyncState();
 
     Task<R> InitializeAsync();
     Task<R> LoginAsync();
@@ -98,6 +111,17 @@ class AppCloudSyncService(
         {
             initializeLock.Release();
         }
+    }
+
+    public CloudSyncState GetCloudSyncState()
+    {
+        if (!IsAvailable)
+            return CloudSyncState.NotAvailable;
+        if (!AuthState.IsAuthenticated)
+            return CloudSyncState.NotAuthenticated;
+        if (HasLocalChangesSinceLastSync)
+            return CloudSyncState.HasLocalChanges;
+        return CloudSyncState.IsSynced;
     }
 
     public async Task<R> LoginAsync()

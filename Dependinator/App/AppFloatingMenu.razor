@@ -1,4 +1,5 @@
 @using Dependinator.Shared.CloudSync
+@using ICSharpCode.Decompiler.CSharp.Syntax
 @inject ICanvasService srv
 @inject IAppCloudSyncService appCloudSyncService
 @inject ISnackbar snackbar
@@ -8,11 +9,8 @@
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
     <AppMenu />
 
-    <MudIconButton Icon="@CloudIcon"
-                   Color="@CloudIconColor"
-                   Disabled="@(!appCloudSyncService.IsAvailable)"
-                   title="@CloudStatusText"
-                   OnClick="ToggleCloudAuthAsync" />
+    <MudIconButton Icon="@CloudIcon" Color="@CloudIconColor" Disabled="@(!appCloudSyncService.IsAvailable)"
+                   title="@CloudStatusText" OnClick="ToggleCloudAuthAsync" />
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         @if (modelService.CanUndo)
@@ -39,6 +37,14 @@
 </MudButtonGroup>
 
 @code {
+    record CloudIconInfo(string Icon, MudBlazor.Color Color);
+    static readonly CloudIconInfo NotAvailable = new(Icons.Material.Outlined.CloudOff, Color.Inherit);
+    static readonly CloudIconInfo NotAuthenticated = new(Icons.Material.Outlined.CloudQueue, Color.Inherit);
+    static readonly CloudIconInfo HasLocalChanges = new(Icons.Material.Outlined.CloudUpload, Color.Info);
+    // static readonly CloudIconInfo HasRemoteChanges = new(Icons.Material.Outlined.CloudDownload, Color.Warning);
+    static readonly CloudIconInfo IsSynced = new(Icons.Material.Filled.CloudDone, Color.Success);
+
+
     [Inject] IApplicationEvents applicationEvents { get; set; } = null!;
 
     string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
@@ -47,16 +53,10 @@
         : appCloudSyncService.AuthState.IsAuthenticated
             ? $"Cloud signed in as {appCloudSyncService.AuthState.User?.Email ?? appCloudSyncService.AuthState.User?.UserId}"
             : "Cloud not signed in";
-    string CloudIcon =>
-        !appCloudSyncService.IsAvailable ? Icons.Material.Outlined.CloudOff
-        : !appCloudSyncService.AuthState.IsAuthenticated ? Icons.Material.Outlined.CloudQueue
-        : appCloudSyncService.HasLocalChangesSinceLastSync ? Icons.Material.Outlined.CloudUpload
-        : Icons.Material.Outlined.CloudDone;
-    MudBlazor.Color CloudIconColor =>
-        !appCloudSyncService.IsAvailable ? Color.Inherit
-        : !appCloudSyncService.AuthState.IsAuthenticated ? Color.Inherit
-        : appCloudSyncService.HasLocalChangesSinceLastSync ? Color.Warning
-        : Color.Success;
+
+    string CloudIcon => GetCloudIconInfo().Icon;
+    MudBlazor.Color CloudIconColor => GetCloudIconInfo().Color;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,6 +71,18 @@
 
     void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
+    CloudIconInfo GetCloudIconInfo() => appCloudSyncService.GetCloudSyncState() switch
+    {
+        CloudSyncState.NotAvailable => NotAvailable,
+        CloudSyncState.NotAuthenticated => NotAuthenticated,
+        CloudSyncState.HasLocalChanges => HasLocalChanges,
+        //CloudSyncState.HasRemoteChanges => HasRemoteChanges,
+        CloudSyncState.IsSynced => IsSynced,
+        _ => NotAvailable
+    };
+
+
+
     public void Dispose()
     {
         applicationEvents.UIStateChanged -= OnUiStateChanged;
@@ -79,19 +91,25 @@
 
     async Task ToggleCloudAuthAsync()
     {
-        if (!appCloudSyncService.IsAvailable)
+        var state = appCloudSyncService.GetCloudSyncState();
+
+        if (state is CloudSyncState.NotAvailable)
             return;
 
-        if (
-            !Try(
-                out var error,
-                appCloudSyncService.AuthState.IsAuthenticated
-                    ? await appCloudSyncService.LogoutAsync()
-                    : await appCloudSyncService.LoginAsync()
-            )
-        )
-        {
+        if (state is CloudSyncState.NotAuthenticated) await LoginAsync();
+        if (state is CloudSyncState.HasLocalChanges) await SyncUpAsync();
+    }
+
+    async Task LoginAsync()
+    {
+        if (!Try(out var error, await appCloudSyncService.LoginAsync()))
             snackbar.Add(error.ErrorMessage, Severity.Error);
-        }
+
+        snackbar.Add($"Cloud sync is enabled.", Severity.Success);
+    }
+    async Task SyncUpAsync()
+    {
+        if (!Try(out var metadata, out var error, await appCloudSyncService.SyncUpAsync()))
+            snackbar.Add(error.ErrorMessage, Severity.Error);
     }
 }

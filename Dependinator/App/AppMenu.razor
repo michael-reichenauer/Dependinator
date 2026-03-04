@@ -41,10 +41,8 @@
     @foreach (var path in RecentModelPaths)
     {
         bool isCurrent = path == currentPath;
-        <MudMenuItem IconColor="@(isCurrent ? Color.Secondary : Color.Default)"
-                     Icon="@Icons.Material.Outlined.Schema"
-                     Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)"
-                     OnClick="() => srv.LoadAsync(path)">
+        <MudMenuItem IconColor="@(isCurrent? Color.Secondary: Color.Default)" Icon="@Icons.Material.Outlined.Schema"
+                     Style="@(isCurrent ? "color: var(--mud-palette-primary);" : null)" OnClick="() => srv.LoadAsync(path)">
             @Path.GetFileNameWithoutExtension(path)
         </MudMenuItem>
     }
@@ -74,7 +72,7 @@
                         appCloudSyncService.CurrentNormalizedModelPath,
                         StringComparison.OrdinalIgnoreCase
                     );
-                    <MudMenuItem IconColor="@(isCurrentCloudModel ? Color.Secondary : Color.Default)"
+                    <MudMenuItem IconColor="@(isCurrentCloudModel? Color.Secondary: Color.Default)"
                                  Icon="@Icons.Material.Outlined.Schema"
                                  Style="@(isCurrentCloudModel ? "color: var(--mud-palette-primary);" : null)"
                                  OnClick="() => LoadCloudModelAsync(cloudModel)">
@@ -191,12 +189,15 @@
     {
         if (!Try(out var error, await appCloudSyncService.LoginAsync()))
             snackbar.Add(error.ErrorMessage, Severity.Error);
+        snackbar.Add($"Cloud sync is enabled.", Severity.Success);
     }
 
     async Task LogoutAsync()
     {
         if (!Try(out var error, await appCloudSyncService.LogoutAsync()))
             snackbar.Add(error.ErrorMessage, Severity.Error);
+
+        snackbar.Add($"Cloud sync is disabled.", Severity.Info);
     }
 
     async Task SyncUpAsync()
@@ -206,8 +207,6 @@
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;
         }
-
-        snackbar.Add($"Synced {metadata.CompressedSizeBytes} bytes to the cloud.", Severity.Success);
     }
 
     async Task SyncDownAsync()
@@ -238,7 +237,8 @@
             return;
         }
 
-        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.", Severity.Success);
+        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.",
+Severity.Success);
     }
 
     public void Dispose()
