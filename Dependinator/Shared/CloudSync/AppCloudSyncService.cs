@@ -80,7 +80,6 @@ class AppCloudSyncService(
         string.IsNullOrWhiteSpace(modelService.ModelPath) ? null : CloudModelPath.Normalize(modelService.ModelPath);
 
     // Initializes service state once and wires UI refresh events.
-
     public async Task<R> InitializeAsync()
     {
         if (isInitialized)
