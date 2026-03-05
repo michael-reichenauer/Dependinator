@@ -255,8 +255,7 @@ class AppCloudSyncService(
 
         string pulledContentHash = CloudModelSerializer.GetContentHash(modelDto);
         string localContentHash = TryGetCurrentModelContentHash(out var hash) ? hash : pulledContentHash;
-        CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelInfo.Path);
-        string remoteContentHash = currentCloudModel?.ContentHash ?? pulledContentHash;
+        string remoteContentHash = pulledContentHash;
         await cloudSyncStateService.RecordPullAsync(modelInfo.Path, localContentHash, remoteContentHash);
         if (!Try(out error, await RefreshSyncStateCoreAsync()))
             return error;
@@ -280,7 +279,7 @@ class AppCloudSyncService(
         await canvasService.LoadAsync(normalizedPath);
         string pulledContentHash = CloudModelSerializer.GetContentHash(modelDto);
         string localContentHash = TryGetCurrentModelContentHash(out var hash) ? hash : pulledContentHash;
-        await cloudSyncStateService.RecordPullAsync(normalizedPath, localContentHash, cloudModel.ContentHash);
+        await cloudSyncStateService.RecordPullAsync(normalizedPath, localContentHash, pulledContentHash);
         if (!Try(out error, await RefreshSyncStateCoreAsync()))
             return error;
 

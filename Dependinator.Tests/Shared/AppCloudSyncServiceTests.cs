@@ -293,7 +293,7 @@ public class AppCloudSyncServiceTests
         string modelPath = "/models/sample.model";
         ModelDto localLoadedModel = CreateModelDto("local-loaded");
         ModelDto remotePulledModel = CreateModelDto("remote-pulled");
-        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, remotePulledModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("stale-remote-list"));
         SutContext context = CreateSutContext(modelPath, localLoadedModel, syncState: null, [cloudModel]);
 
         context.CloudSyncService
