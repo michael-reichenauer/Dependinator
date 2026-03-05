@@ -35,13 +35,11 @@
         </MudMenuItem>
 
         <MudDivider />
-        @{
-            string? currentPath = RecentModelPaths.Count > 0 ? RecentModelPaths[0] : null;
-        }
         @foreach (string path in RecentModelPaths)
         {
-            <MudMenuItem IconColor="@GetMenuItemIconColor(path == currentPath)" Icon="@Icons.Material.Outlined.Schema"
-                         Style="@GetCurrentItemStyle(path == currentPath)" OnClick="() => srv.LoadAsync(path)">
+            bool isCurrent = IsCurrentRecentModel(path);
+            <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
+                         Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => srv.LoadAsync(path)">
                 @GetModelDisplayName(path)
             </MudMenuItem>
         }
@@ -56,8 +54,9 @@
                 {
                     @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
                     {
-                        <MudMenuItem IconColor="@GetMenuItemIconColor(IsCurrentCloudModel(cloudModel))"
-                                     Icon="@Icons.Material.Outlined.Schema" Style="@GetCurrentItemStyle(IsCurrentCloudModel(cloudModel))"
+                        bool isCurrent = IsCurrentCloudModel(cloudModel);
+                        <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
+                                     Style="@GetCurrentItemStyle(isCurrent)"
                                      OnClick="() => LoadCloudModelAsync(cloudModel)">
                             @GetModelDisplayName(cloudModel.NormalizedPath)
                         </MudMenuItem>
@@ -96,24 +95,10 @@
     </MudTooltip>
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
-        @if (modelService.CanUndo)
-        {
-            <MudIconButton Icon="@Icons.Material.Outlined.Undo" OnClick="modelService.Undo" />
-        }
-        else
-        {
-            <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="Color.Inherit" OnClick="modelService.Undo" />
-        }
-
-        @if (modelService.CanRedo)
-        {
-            <MudIconButton Icon="@Icons.Material.Outlined.Redo" OnClick="modelService.Redo" />
-        }
-        else
-        {
-            <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="Color.Inherit" OnClick="modelService.Redo" />
-        }
-
+        <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="@GetToolbarButtonColor(modelService.CanUndo)"
+                       OnClick="modelService.Undo" />
+        <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(modelService.CanRedo)"
+                       OnClick="modelService.Redo" />
         <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh" />
     </MudHidden>
 
@@ -165,6 +150,8 @@
     static readonly CloudIconInfo IsSynced = new(Icons.Material.Filled.CloudDone, Color.Success);
 
     IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
+    string? CurrentRecentModelPath => RecentModelPaths.Count > 0 ? RecentModelPaths[0] : null;
+    string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
     IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
     CloudSyncState CurrentCloudSyncState => appCloudSyncService.GetCloudSyncState();
@@ -251,12 +238,12 @@
             return;
         }
 
-        snackbar.Add($"Cloud sync is enabled.", Severity.Success);
+        snackbar.Add("Cloud sync is enabled.", Severity.Success);
     }
 
     async Task SyncUpAsync()
     {
-        if (!Try(out var metadata, out var error, await appCloudSyncService.SyncUpAsync()))
+        if (!Try(out _, out var error, await appCloudSyncService.SyncUpAsync()))
         {
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;
@@ -271,7 +258,7 @@
             return;
         }
 
-        snackbar.Add($"Cloud sync is disabled.", Severity.Info);
+        snackbar.Add("Cloud sync is disabled.", Severity.Info);
     }
 
     async Task SyncDownAsync()
@@ -316,23 +303,23 @@
         srv.Remove();
     }
 
-    async Task ShowAbout()
-    {
-        await aboutBox.ShowAsync();
-    }
+    Task ShowAbout() => aboutBox.ShowAsync();
 
     void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
+    static MudBlazor.Color GetToolbarButtonColor(bool isEnabled) => isEnabled ? Color.Default : Color.Inherit;
 
     static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
 
     static string GetModelDisplayName(string modelPath) => Path.GetFileNameWithoutExtension(modelPath);
 
+    bool IsCurrentRecentModel(string path) => string.Equals(path, CurrentRecentModelPath, StringComparison.Ordinal);
+
     bool IsCurrentCloudModel(global::Shared.CloudModelMetadata cloudModel) =>
         string.Equals(
             cloudModel.NormalizedPath,
-            appCloudSyncService.CurrentNormalizedModelPath,
+            CurrentCloudModelPath,
             StringComparison.OrdinalIgnoreCase
         );
 

@@ -163,16 +163,11 @@ class AppCloudSyncService(
         if (!Try(out ModelDto? modelDto, out ErrorResult? error, modelService.GetCurrentModelDto()))
             return error;
 
-        if (
-            !Try(
-                out CloudModelMetadata? metadata,
-                out error,
-                await cloudSyncService.PushAsync(modelService.ModelPath, modelDto)
-            )
-        )
+        string modelPath = modelService.ModelPath;
+        if (!Try(out CloudModelMetadata? metadata, out error, await cloudSyncService.PushAsync(modelPath, modelDto)))
             return error;
 
-        await cloudSyncStateService.RecordPushAsync(modelService.ModelPath, metadata);
+        await cloudSyncStateService.RecordPushAsync(modelPath, metadata);
         if (!Try(out error, await RefreshSnapshotAndNotifyAsync()))
             return error;
 
@@ -183,16 +178,11 @@ class AppCloudSyncService(
     {
         await EnsureInitializedAsync();
 
-        if (string.IsNullOrWhiteSpace(modelService.ModelPath))
+        string modelPath = modelService.ModelPath;
+        if (string.IsNullOrWhiteSpace(modelPath))
             return R.Error("Model is not loaded.");
 
-        if (
-            !Try(
-                out ModelDto? modelDto,
-                out ErrorResult? error,
-                await cloudSyncService.PullAsync(modelService.ModelPath)
-            )
-        )
+        if (!Try(out ModelDto? modelDto, out ErrorResult? error, await cloudSyncService.PullAsync(modelPath)))
             return error;
 
         if (!Try(out ModelInfo? modelInfo, out error, await modelService.ReplaceCurrentModelAsync(modelDto)))
@@ -210,23 +200,15 @@ class AppCloudSyncService(
     {
         await EnsureInitializedAsync();
 
-        if (
-            !Try(
-                out ModelDto? modelDto,
-                out ErrorResult? error,
-                await cloudSyncService.PullAsync(cloudModel.NormalizedPath)
-            )
-        )
+        string normalizedPath = cloudModel.NormalizedPath;
+        if (!Try(out ModelDto? modelDto, out ErrorResult? error, await cloudSyncService.PullAsync(normalizedPath)))
             return error;
 
-        if (!Try(out error, await modelService.WriteModelAsync(cloudModel.NormalizedPath, modelDto)))
+        if (!Try(out error, await modelService.WriteModelAsync(normalizedPath, modelDto)))
             return error;
 
-        await canvasService.LoadAsync(cloudModel.NormalizedPath);
-        await cloudSyncStateService.RecordPullAsync(
-            cloudModel.NormalizedPath,
-            CloudModelSerializer.GetContentHash(modelDto)
-        );
+        await canvasService.LoadAsync(normalizedPath);
+        await cloudSyncStateService.RecordPullAsync(normalizedPath, CloudModelSerializer.GetContentHash(modelDto));
         if (!Try(out error, await RefreshSnapshotAndNotifyAsync()))
             return error;
 
@@ -234,10 +216,7 @@ class AppCloudSyncService(
     }
 
     // Ensures one-time initialization is complete before calling public operations.
-    async Task EnsureInitializedAsync()
-    {
-        _ = await InitializeAsync();
-    }
+    async Task EnsureInitializedAsync() => _ = await InitializeAsync();
 
     // Rebuilds sync snapshot and notifies listeners when no transport error occurs.
     async Task<R> RefreshSnapshotAndNotifyAsync()
@@ -272,51 +251,27 @@ class AppCloudSyncService(
     // Refreshes cached cloud model list and current-model sync state.
     async Task<R> RefreshSyncStateCoreAsync()
     {
-        if (!cloudSyncService.IsAvailable || !authState.IsAuthenticated)
-            cloudModels = [];
-        else if (!Try(out ErrorResult? error, await RefreshCloudModelsCoreAsync()))
+        if (!Try(out ErrorResult? error, await RefreshCloudModelsCoreAsync()))
             return error;
 
-        if (!cloudSyncService.IsAvailable || string.IsNullOrWhiteSpace(modelService.ModelPath))
+        string modelPath = modelService.ModelPath;
+        if (!cloudSyncService.IsAvailable || string.IsNullOrWhiteSpace(modelPath))
         {
             ResetSyncSnapshot(clearCloudModels: false);
             return R.Ok;
         }
 
-        return await RefreshSyncStateForCurrentModelAsync();
+        return await RefreshSyncStateForCurrentModelAsync(modelPath);
     }
 
     // Loads latest local sync marker and compares against current model hash to determine drift.
-
-    async Task<R> RefreshSyncStateForCurrentModelAsync()
+    async Task<R> RefreshSyncStateForCurrentModelAsync(string modelPath)
     {
-        syncState = await cloudSyncStateService.GetAsync(modelService.ModelPath);
+        syncState = await cloudSyncStateService.GetAsync(modelPath);
         CloudSyncLatest? latestSync = syncState?.LatestSync;
-        CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelService.ModelPath);
+        CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelPath);
         hasRemoteChangesSinceLastSync = HasRemoteChangesComparedToLatestSync(latestSync, currentCloudModel);
-
-        Log.Info("RefreshSyncStateForCurrentModelAsync");
-
-        if (latestSync is null)
-        {
-            hasLocalChangesSinceLastSync = false;
-            MarkSyncStateRefreshed();
-            return R.Ok;
-        }
-
-        if (!Try(out ModelDto? modelDto, out _, modelService.GetCurrentModelDto()))
-        {
-            hasLocalChangesSinceLastSync = false;
-            MarkSyncStateRefreshed();
-            return R.Ok;
-        }
-
-        string currentHash = CloudModelSerializer.GetContentHash(modelDto);
-        hasLocalChangesSinceLastSync = !string.Equals(
-            currentHash,
-            latestSync.ContentHash,
-            StringComparison.OrdinalIgnoreCase
-        );
+        hasLocalChangesSinceLastSync = HasLocalChangesComparedToLatestSync(latestSync);
         MarkSyncStateRefreshed();
         return R.Ok;
     }
@@ -338,6 +293,18 @@ class AppCloudSyncService(
 
         cloudModels = modelList.Models;
         return R.Ok;
+    }
+
+    bool HasLocalChangesComparedToLatestSync(CloudSyncLatest? latestSync)
+    {
+        if (latestSync is null)
+            return false;
+
+        if (!Try(out ModelDto? modelDto, out _, modelService.GetCurrentModelDto()))
+            return false;
+
+        string currentHash = CloudModelSerializer.GetContentHash(modelDto);
+        return !string.Equals(currentHash, latestSync.ContentHash, StringComparison.OrdinalIgnoreCase);
     }
 
     // Clears computed sync flags and optionally clears remote model list cache.
