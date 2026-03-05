@@ -16,8 +16,11 @@ public class AppCloudSyncServiceTests
         string syncedHash = CloudModelSerializer.GetContentHash(syncedModel);
         CloudSyncModelState syncState = new()
         {
-            LastPullUtc = new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
-            LastPullContentHash = syncedHash,
+            LatestSync = new CloudSyncLatest(
+                new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
+                CloudSyncDirection.Down,
+                syncedHash
+            ),
         };
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         AppCloudSyncService sut = CreateSut(modelPath, syncedModel, syncState, [cloudModel]);
@@ -37,8 +40,11 @@ public class AppCloudSyncServiceTests
         string syncedHash = CloudModelSerializer.GetContentHash(syncedModel);
         CloudSyncModelState syncState = new()
         {
-            LastPullUtc = new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
-            LastPullContentHash = syncedHash,
+            LatestSync = new CloudSyncLatest(
+                new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
+                CloudSyncDirection.Down,
+                syncedHash
+            ),
         };
         ModelDto localModel = CreateModelDto("local");
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
@@ -75,8 +81,11 @@ public class AppCloudSyncServiceTests
         string syncedHash = CloudModelSerializer.GetContentHash(syncedModel);
         CloudSyncModelState syncState = new()
         {
-            LastPullUtc = new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
-            LastPullContentHash = syncedHash,
+            LatestSync = new CloudSyncLatest(
+                new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
+                CloudSyncDirection.Down,
+                syncedHash
+            ),
         };
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         SutContext context = CreateSutContext(modelPath, CreateModelDto("local"), syncState, [cloudModel]);

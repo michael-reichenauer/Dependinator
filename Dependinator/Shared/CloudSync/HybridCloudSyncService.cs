@@ -29,17 +29,11 @@ sealed class HybridCloudSyncService : ICloudSyncService
 
     public Task<R<ModelDto>> PullAsync(string modelPath) => ForwardAsync(service => service.PullAsync(modelPath));
 
-    async Task<ICloudSyncService> GetActiveServiceAsync()
-    {
-        if (await vsCodeCloudSyncProxy.IsAvailableAsync())
-            return vsCodeCloudSyncProxy;
-
-        return httpCloudSyncService;
-    }
-
     async Task<R<T>> ForwardAsync<T>(Func<ICloudSyncService, Task<R<T>>> action)
     {
-        ICloudSyncService service = await GetActiveServiceAsync();
+        var isVsCodeProxyAvailable = await vsCodeCloudSyncProxy.IsAvailableAsync();
+
+        ICloudSyncService service = isVsCodeProxyAvailable ? vsCodeCloudSyncProxy : httpCloudSyncService;
         return await action(service);
     }
 }

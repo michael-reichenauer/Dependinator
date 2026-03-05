@@ -46,17 +46,13 @@ public class CloudSyncStateServiceTests
     }
 
     [Fact]
-    public async Task GetAsync_ShouldNormalizeLegacyPushPullState()
+    public async Task GetAsync_ShouldReturnPersistedLatestSync()
     {
         InMemoryConfigService configService = new();
-        DateTimeOffset pushUtc = new(2026, 3, 1, 10, 0, 0, TimeSpan.Zero);
         DateTimeOffset pullUtc = new(2026, 3, 2, 10, 0, 0, TimeSpan.Zero);
         configService.Config.CloudSyncStates[CloudModelPath.CreateKey("/models/sample.model")] = new CloudSyncModelState()
         {
-            LastPushUtc = pushUtc,
-            LastPushContentHash = "push-hash",
-            LastPullUtc = pullUtc,
-            LastPullContentHash = "pull-hash",
+            LatestSync = new CloudSyncLatest(pullUtc, CloudSyncDirection.Down, "pull-hash"),
         };
         CloudSyncStateService sut = new(configService);
 
@@ -67,8 +63,6 @@ public class CloudSyncStateServiceTests
         Assert.Equal(CloudSyncDirection.Down, state.LatestSync.Direction);
         Assert.Equal(pullUtc, state.LatestSync.Utc);
         Assert.Equal("pull-hash", state.LatestSync.ContentHash);
-        Assert.Null(state.LastPushUtc);
-        Assert.Null(state.LastPullUtc);
     }
 
     sealed class InMemoryConfigService : IConfigService

@@ -1,5 +1,3 @@
-using Dependinator.Core;
-using Dependinator.Core.Utils;
 using Dependinator.Diagrams;
 using Dependinator.Models;
 using Shared;
@@ -60,7 +58,7 @@ class AppCloudSyncService(
     public bool IsAvailable => cloudSyncService.IsAvailable;
     public CloudAuthState AuthState => authState;
     public CloudSyncModelState? SyncState => syncState;
-    public CloudSyncLatest? LatestSync => syncState?.GetLatestSync();
+    public CloudSyncLatest? LatestSync => syncState?.LatestSync;
     public bool HasLocalChangesSinceLastSync => hasLocalChangesSinceLastSync;
     public bool HasRemoteChangesSinceLastSync => hasRemoteChangesSinceLastSync;
     public IReadOnlyList<CloudModelMetadata> CloudModels => cloudModels;
@@ -269,9 +267,11 @@ class AppCloudSyncService(
     async Task<R> RefreshSyncStateForCurrentModelAsync()
     {
         syncState = await cloudSyncStateService.GetAsync(modelService.ModelPath);
-        CloudSyncLatest? latestSync = syncState?.GetLatestSync();
+        CloudSyncLatest? latestSync = syncState?.LatestSync;
         CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelService.ModelPath);
         hasRemoteChangesSinceLastSync = HasRemoteChangesComparedToLatestSync(latestSync, currentCloudModel);
+
+        Log.Info("RefreshSyncStateForCurrentModelAsync");
 
         if (latestSync is null)
         {
