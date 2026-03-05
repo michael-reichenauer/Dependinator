@@ -4,6 +4,7 @@ using Shared;
 
 namespace Dependinator.Shared.CloudSync;
 
+// UI-facing service contract for cloud sync operations and derived sync state.
 interface IAppCloudSyncService
 {
     event Action Changed;
@@ -17,16 +18,29 @@ interface IAppCloudSyncService
     IReadOnlyList<CloudModelMetadata> CloudModels { get; }
     string? CurrentNormalizedModelPath { get; }
 
+    // Returns a simplified state derived from auth and local/remote change flags.
     CloudSyncState GetCloudSyncState();
 
     Task<R> InitializeAsync();
+
+    // Starts authentication flow and refreshes derived sync state.
     Task<R> LoginAsync();
+
+    // Starts logout flow and clears cloud-backed state from UI cache.
     Task<R> LogoutAsync();
+
+    // Pushes the active model to cloud and updates the local sync marker.
     Task<R<CloudModelMetadata>> SyncUpAsync();
+
+    // Pulls current model from cloud and replaces the active local model.
     Task<R<ModelInfo>> SyncDownAsync();
+
+    // Downloads a selected remote model and opens it in the canvas.
     Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel);
 }
 
+// Aggregates cloud sync concerns for the app: transport selection, auth state, model lists, and
+// local/remote drift detection used by the user-facing sync indicator.
 [Scoped]
 class AppCloudSyncService(
     ICanvasService canvasService,
@@ -64,6 +78,8 @@ class AppCloudSyncService(
     public IReadOnlyList<CloudModelMetadata> CloudModels => cloudModels;
     public string? CurrentNormalizedModelPath =>
         string.IsNullOrWhiteSpace(modelService.ModelPath) ? null : CloudModelPath.Normalize(modelService.ModelPath);
+
+    // Initializes service state once and wires UI refresh events.
 
     public async Task<R> InitializeAsync()
     {
@@ -115,6 +131,7 @@ class AppCloudSyncService(
         return CloudSyncState.IsSynced;
     }
 
+    // Triggers login through transport and refreshes snapshot state afterwards.
     public async Task<R> LoginAsync()
     {
         await EnsureInitializedAsync();
@@ -139,6 +156,7 @@ class AppCloudSyncService(
         return R.Ok;
     }
 
+    // Pushes current model DTO to cloud and records the successful sync baseline.
     public async Task<R<CloudModelMetadata>> SyncUpAsync()
     {
         await EnsureInitializedAsync();
@@ -188,6 +206,7 @@ class AppCloudSyncService(
         return modelInfo;
     }
 
+    // Loads a selected cloud model into workspace and records local baseline on success.
     public async Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel)
     {
         await EnsureInitializedAsync();
@@ -215,11 +234,13 @@ class AppCloudSyncService(
         return cloudModel;
     }
 
+    // Ensures one-time initialization is complete before calling public operations.
     async Task EnsureInitializedAsync()
     {
         _ = await InitializeAsync();
     }
 
+    // Rebuilds sync snapshot and notifies listeners when no transport error occurs.
     async Task<R> RefreshSnapshotAndNotifyAsync()
     {
         if (!Try(out ErrorResult? error, await RefreshSyncStateCoreAsync()))
@@ -229,6 +250,7 @@ class AppCloudSyncService(
         return R.Ok;
     }
 
+    // Refreshes authentication state and invalidates local cloud snapshot when unauthenticated.
     async Task<R> RefreshAuthStateCoreAsync()
     {
         if (!cloudSyncService.IsAvailable)
@@ -248,6 +270,7 @@ class AppCloudSyncService(
         return R.Ok;
     }
 
+    // Refreshes cached cloud model list and current-model sync state.
     async Task<R> RefreshSyncStateCoreAsync()
     {
         if (!cloudSyncService.IsAvailable || !authState.IsAuthenticated)
@@ -263,6 +286,8 @@ class AppCloudSyncService(
 
         return await RefreshSyncStateForCurrentModelAsync();
     }
+
+    // Loads latest local sync marker and compares against current model hash to determine drift.
 
     async Task<R> RefreshSyncStateForCurrentModelAsync()
     {
@@ -297,6 +322,7 @@ class AppCloudSyncService(
         return R.Ok;
     }
 
+    // Reads remote model metadata list for the current authenticated user.
     async Task<R> RefreshCloudModelsCoreAsync()
     {
         if (!cloudSyncService.IsAvailable || !authState.IsAuthenticated)
@@ -315,6 +341,7 @@ class AppCloudSyncService(
         return R.Ok;
     }
 
+    // Clears computed sync flags and optionally clears remote model list cache.
     void ResetSyncSnapshot(bool clearCloudModels)
     {
         syncState = null;
@@ -326,11 +353,13 @@ class AppCloudSyncService(
         MarkSyncStateRefreshed();
     }
 
+    // Tracks last sync-state refresh time for UI debounce calculations.
     void MarkSyncStateRefreshed()
     {
         lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
     }
 
+    // Debounces sync-state refreshes when canvas/UI signals change.
     void HandleUiStateChanged()
     {
         if (!isInitialized)
@@ -340,6 +369,7 @@ class AppCloudSyncService(
         ScheduleUiStateRefresh();
     }
 
+    // Schedules a delayed refresh based on throttle window to avoid excessive recomputation.
     void ScheduleUiStateRefresh()
     {
         if (isDisposed || isUiStateRefreshInProgress)
@@ -358,6 +388,7 @@ class AppCloudSyncService(
         uiStateRefreshDebouncer.Debounce(delayMilliseconds, () => _ = RefreshUiStateAsync());
     }
 
+    // Refreshes sync state in the background while avoiding overlapping refresh loops.
     async Task RefreshUiStateAsync()
     {
         if (isDisposed || isUiStateRefreshInProgress || !isUiStateRefreshQueued)
@@ -378,6 +409,7 @@ class AppCloudSyncService(
         }
     }
 
+    // Notifies all listeners if the service is still active.
     void NotifyChanged()
     {
         if (isDisposed)
@@ -386,6 +418,7 @@ class AppCloudSyncService(
         Changed?.Invoke();
     }
 
+    // Compares remote model hash against the latest known local sync marker.
     static bool HasRemoteChangesComparedToLatestSync(CloudSyncLatest? latestSync, CloudModelMetadata? currentCloudModel)
     {
         if (latestSync is null || currentCloudModel is null)
@@ -398,6 +431,7 @@ class AppCloudSyncService(
         );
     }
 
+    // Finds remote metadata that matches the active local model path.
     static CloudModelMetadata? GetCurrentCloudModel(IReadOnlyList<CloudModelMetadata> cloudModels, string modelPath)
     {
         string normalizedModelPath = CloudModelPath.Normalize(modelPath);
@@ -406,6 +440,7 @@ class AppCloudSyncService(
         );
     }
 
+    // Stops listeners and disposes service-level resources.
     public void Dispose()
     {
         isDisposed = true;

@@ -7,6 +7,7 @@ using Shared;
 
 namespace Dependinator.Shared.CloudSync;
 
+// HTTP transport implementation for cloud sync used in browser-hosted app modes.
 sealed class HttpCloudSyncService : ICloudSyncService
 {
     readonly HttpClient httpClient;
@@ -24,7 +25,10 @@ sealed class HttpCloudSyncService : ICloudSyncService
         this.options = options.Value;
     }
 
+    // Returns true when cloud sync HTTP transport is enabled.
     public bool IsAvailable => options.Enabled;
+
+    // Starts browser auth flow by navigating to the configured login endpoint.
 
     public Task<R<CloudAuthState>> LoginAsync()
     {
@@ -34,6 +38,7 @@ sealed class HttpCloudSyncService : ICloudSyncService
         );
     }
 
+    // Starts browser logout flow by navigating to the configured logout endpoint.
     public Task<R<CloudAuthState>> LogoutAsync()
     {
         NavigateToAuthPath(options.LogoutPath, "post_logout_redirect_uri");
@@ -42,22 +47,26 @@ sealed class HttpCloudSyncService : ICloudSyncService
         );
     }
 
+    // Reads authenticated user context from the API.
     public async Task<R<CloudAuthState>> GetAuthStateAsync()
     {
         return await SendAsync<CloudAuthState>(HttpMethod.Get, "/api/auth/me");
     }
 
+    // Lists remote models for the signed-in user.
     public async Task<R<CloudModelList>> ListAsync()
     {
         return await SendAsync<CloudModelList>(HttpMethod.Get, "/api/models");
     }
 
+    // Uploads current model DTO as a compressed document via PUT.
     public async Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
     {
         CloudModelDocument document = CloudModelSerializer.CreateDocument(modelPath, modelDto);
         return await SendAsync<CloudModelMetadata>(HttpMethod.Put, $"/api/models/{document.ModelKey}", document);
     }
 
+    // Fetches a compressed remote model document and converts it back to local DTO.
     public async Task<R<ModelDto>> PullAsync(string modelPath)
     {
         string modelKey = CloudModelPath.CreateKey(modelPath);
@@ -73,6 +82,7 @@ sealed class HttpCloudSyncService : ICloudSyncService
         return CloudModelSerializer.ReadModel(document);
     }
 
+    // Generic JSON helper for API calls with mapped error handling.
     async Task<R<T>> SendAsync<T>(HttpMethod method, string path, object? content = null)
     {
         try
@@ -100,6 +110,8 @@ sealed class HttpCloudSyncService : ICloudSyncService
         }
     }
 
+    // Redirects the browser to a server auth endpoint with a return-url query parameter.
+
     void NavigateToAuthPath(string authPath, string redirectParameterName)
     {
         if (string.IsNullOrWhiteSpace(authPath))
@@ -110,6 +122,7 @@ sealed class HttpCloudSyncService : ICloudSyncService
         navigationManager.NavigateTo($"{absoluteAuthPath}?{redirectParameterName}={redirectUri}", forceLoad: true);
     }
 
+    // Builds absolute API URI when a base address override is configured.
     string BuildApiUri(string path)
     {
         string normalizedPath = path.StartsWith("/", StringComparison.Ordinal) ? path : $"/{path}";
@@ -119,6 +132,7 @@ sealed class HttpCloudSyncService : ICloudSyncService
         return new Uri(new Uri(options.ApiBaseAddress), normalizedPath).ToString();
     }
 
+    // Parses structured API errors and falls back to status-based user messages.
     static async Task<string> ReadErrorMessageAsync(HttpResponseMessage response)
     {
         ErrorResponse? errorResponse = await response.Content.ReadFromJsonAsync<ErrorResponse>();

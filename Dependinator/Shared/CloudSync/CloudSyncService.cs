@@ -3,6 +3,7 @@ using Shared;
 
 namespace Dependinator.Shared.CloudSync;
 
+// Abstraction over all cloud-sync transports used by the app.
 interface ICloudSyncService
 {
     bool IsAvailable { get; }
@@ -15,6 +16,7 @@ interface ICloudSyncService
     Task<R<ModelDto>> PullAsync(string modelPath);
 }
 
+// Fallback implementation used when cloud sync is not supported in the current host.
 [Scoped]
 class NoCloudSyncService : ICloudSyncService
 {
@@ -47,6 +49,7 @@ class NoCloudSyncService : ICloudSyncService
         return Task.FromResult<R<CloudModelMetadata>>(R.Error("Cloud sync is not available in this host."));
     }
 
+    // Cloud pull attempt is rejected when no host transport is available.
     public Task<R<ModelDto>> PullAsync(string modelPath)
     {
         return Task.FromResult<R<ModelDto>>(R.Error("Cloud sync is not available in this host."));

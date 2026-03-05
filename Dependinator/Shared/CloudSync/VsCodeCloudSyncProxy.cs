@@ -5,12 +5,14 @@ using Shared;
 
 namespace Dependinator.Shared.CloudSync;
 
+// Bridge interface used by the Blazor app to communicate with the VS Code extension host.
 interface IVsCodeCloudSyncProxy : ICloudSyncService
 {
     Task<bool> IsAvailableAsync();
     Task HandleResponseAsync(string message);
 }
 
+// Implements ICloudSyncService by forwarding calls through VS Code webview messages.
 [Scoped]
 class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
 {
@@ -30,37 +32,44 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
 
     public bool IsAvailable => true;
 
+    // Checks whether the active host exposes the VS Code bridge object.
     public async Task<bool> IsAvailableAsync()
     {
         return await jSInterop.Call<bool>("isVsCodeWebView");
     }
 
+    // Starts extension-hosted login flow.
     public async Task<R<CloudAuthState>> LoginAsync()
     {
         return await SendAndReadAsync<CloudAuthState>("login");
     }
 
+    // Starts extension-hosted logout flow.
     public async Task<R<CloudAuthState>> LogoutAsync()
     {
         return await SendAndReadAsync<CloudAuthState>("logout");
     }
 
+    // Fetches auth info from extension host side.
     public async Task<R<CloudAuthState>> GetAuthStateAsync()
     {
         return await SendAndReadAsync<CloudAuthState>("getAuthState");
     }
 
+    // Lists remote models via extension host bridge.
     public async Task<R<CloudModelList>> ListAsync()
     {
         return await SendAndReadAsync<CloudModelList>("list");
     }
 
+    // Pushes model payload to extension host and returns updated metadata.
     public async Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
     {
         CloudModelDocument document = CloudModelSerializer.CreateDocument(modelPath, modelDto);
         return await SendAndReadAsync<CloudModelMetadata>("push", document);
     }
 
+    // Requests a remote model payload and decodes the response document locally.
     public async Task<R<ModelDto>> PullAsync(string modelPath)
     {
         string modelKey = CloudModelPath.CreateKey(modelPath);
@@ -77,6 +86,7 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
         return CloudModelSerializer.ReadModel(document);
     }
 
+    // Completes pending bridge requests when extension sends async responses.
     public Task HandleResponseAsync(string message)
     {
         CloudSyncEnvelope? envelope = JsonSerializer.Deserialize<CloudSyncEnvelope>(message, serializerOptions);
@@ -88,6 +98,8 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
 
         return Task.CompletedTask;
     }
+
+    // Sends a request packet, stores a completion source by request id, and waits for reply or timeout.
 
     async Task<R<T>> SendAndReadAsync<T>(string action, object? payload = null)
     {
