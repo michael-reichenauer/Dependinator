@@ -19,4 +19,10 @@ enum CloudSyncState
 }
 
 // Most recent sync marker stored for a model.
-sealed record CloudSyncLatest(DateTimeOffset Utc, CloudSyncDirection Direction, string? ContentHash);
+sealed record CloudSyncLatest(
+    DateTimeOffset Utc,
+    CloudSyncDirection Direction,
+    string? ContentHash,
+    string? LocalContentHash = null,
+    string? RemoteContentHash = null
+);

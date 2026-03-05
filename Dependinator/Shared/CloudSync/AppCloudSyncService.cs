@@ -8,14 +8,14 @@ sealed record AppCloudSyncTimings(
     TimeSpan ActiveRefreshInterval,
     TimeSpan AutoSyncMinInterval,
     TimeSpan IdleRefreshInterval,
-    int IdleRefreshCount
+    TimeSpan MaxIdleRefreshDuration
 )
 {
     public static readonly AppCloudSyncTimings Default = new(
         ActiveRefreshInterval: TimeSpan.FromSeconds(10),
         AutoSyncMinInterval: TimeSpan.FromSeconds(10),
-        IdleRefreshInterval: TimeSpan.FromMinutes(1),
-        IdleRefreshCount: 5
+        IdleRefreshInterval: TimeSpan.FromSeconds(15),
+        MaxIdleRefreshDuration: TimeSpan.FromMinutes(5)
     );
 }
 
@@ -229,10 +229,12 @@ class AppCloudSyncService(
         if (!Try(out CloudModelMetadata? metadata, out error, await cloudSyncService.PushAsync(modelPath, modelDto)))
             return error;
 
-        await cloudSyncStateService.RecordPushAsync(modelPath, metadata);
+        string localContentHash = CloudModelSerializer.GetContentHash(modelDto);
+        await cloudSyncStateService.RecordPushAsync(modelPath, metadata, localContentHash);
         if (!Try(out error, await RefreshSyncStateCoreAsync()))
             return error;
 
+        Log.Info("SyncUpCoreAsync");
         if (notifyChanged)
             NotifyChanged();
 
@@ -251,10 +253,15 @@ class AppCloudSyncService(
         if (!Try(out ModelInfo? modelInfo, out error, await modelService.ReplaceCurrentModelAsync(modelDto)))
             return error;
 
-        await cloudSyncStateService.RecordPullAsync(modelInfo.Path, CloudModelSerializer.GetContentHash(modelDto));
+        string pulledContentHash = CloudModelSerializer.GetContentHash(modelDto);
+        string localContentHash = TryGetCurrentModelContentHash(out var hash) ? hash : pulledContentHash;
+        CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelInfo.Path);
+        string remoteContentHash = currentCloudModel?.ContentHash ?? pulledContentHash;
+        await cloudSyncStateService.RecordPullAsync(modelInfo.Path, localContentHash, remoteContentHash);
         if (!Try(out error, await RefreshSyncStateCoreAsync()))
             return error;
 
+        Log.Info("SyncDownCoreAsync");
         if (notifyChanged)
             NotifyChanged();
 
@@ -271,7 +278,9 @@ class AppCloudSyncService(
             return error;
 
         await canvasService.LoadAsync(normalizedPath);
-        await cloudSyncStateService.RecordPullAsync(normalizedPath, CloudModelSerializer.GetContentHash(modelDto));
+        string pulledContentHash = CloudModelSerializer.GetContentHash(modelDto);
+        string localContentHash = TryGetCurrentModelContentHash(out var hash) ? hash : pulledContentHash;
+        await cloudSyncStateService.RecordPullAsync(normalizedPath, localContentHash, cloudModel.ContentHash);
         if (!Try(out error, await RefreshSyncStateCoreAsync()))
             return error;
 
@@ -453,8 +462,12 @@ class AppCloudSyncService(
         if (!Try(out ModelDto? modelDto, out _, modelService.GetCurrentModelDto()))
             return false;
 
+        string? localBaselineHash = latestSync.LocalContentHash ?? latestSync.ContentHash;
+        if (string.IsNullOrWhiteSpace(localBaselineHash))
+            return false;
+
         string currentHash = CloudModelSerializer.GetContentHash(modelDto);
-        return !string.Equals(currentHash, latestSync.ContentHash, StringComparison.OrdinalIgnoreCase);
+        return !string.Equals(currentHash, localBaselineHash, StringComparison.OrdinalIgnoreCase);
     }
 
     // Clears computed sync flags and optionally clears remote model list cache.
@@ -554,9 +567,21 @@ class AppCloudSyncService(
     {
         try
         {
-            for (int checkIndex = 0; checkIndex < syncTimings.IdleRefreshCount; checkIndex++)
+            if (syncTimings.IdleRefreshInterval <= TimeSpan.Zero || syncTimings.MaxIdleRefreshDuration <= TimeSpan.Zero)
+                return;
+
+            DateTimeOffset idleChecksEndUtc = utcNow() + syncTimings.MaxIdleRefreshDuration;
+            while (true)
             {
-                await delayAsync(syncTimings.IdleRefreshInterval, cancellationToken);
+                TimeSpan remainingIdleDuration = idleChecksEndUtc - utcNow();
+                if (remainingIdleDuration <= TimeSpan.Zero)
+                    return;
+
+                TimeSpan delayDuration =
+                    remainingIdleDuration < syncTimings.IdleRefreshInterval
+                        ? remainingIdleDuration
+                        : syncTimings.IdleRefreshInterval;
+                await delayAsync(delayDuration, cancellationToken);
                 if (cancellationToken.IsCancellationRequested || isDisposed)
                     return;
 
@@ -612,11 +637,21 @@ class AppCloudSyncService(
         if (latestSync is null || currentCloudModel is null)
             return false;
 
-        return !string.Equals(
-            currentCloudModel.ContentHash,
-            latestSync.ContentHash,
-            StringComparison.OrdinalIgnoreCase
-        );
+        string? remoteBaselineHash = latestSync.RemoteContentHash ?? latestSync.ContentHash;
+        if (string.IsNullOrWhiteSpace(remoteBaselineHash))
+            return false;
+
+        return !string.Equals(currentCloudModel.ContentHash, remoteBaselineHash, StringComparison.OrdinalIgnoreCase);
+    }
+
+    bool TryGetCurrentModelContentHash(out string contentHash)
+    {
+        contentHash = string.Empty;
+        if (!Try(out ModelDto? currentModelDto, out _, modelService.GetCurrentModelDto()))
+            return false;
+
+        contentHash = CloudModelSerializer.GetContentHash(currentModelDto);
+        return true;
     }
 
     // Finds remote metadata that matches the active local model path.

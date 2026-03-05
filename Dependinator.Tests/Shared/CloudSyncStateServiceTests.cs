@@ -27,6 +27,8 @@ public class CloudSyncStateServiceTests
         Assert.Equal(CloudSyncDirection.Up, state.LatestSync.Direction);
         Assert.Equal(metadata.UpdatedUtc, state.LatestSync.Utc);
         Assert.Equal("hash-123", state.LatestSync.ContentHash);
+        Assert.Equal("hash-123", state.LatestSync.LocalContentHash);
+        Assert.Equal("hash-123", state.LatestSync.RemoteContentHash);
     }
 
     [Fact]
@@ -42,6 +44,8 @@ public class CloudSyncStateServiceTests
         Assert.NotNull(state.LatestSync);
         Assert.Equal(CloudSyncDirection.Down, state.LatestSync.Direction);
         Assert.Equal("pull-hash", state.LatestSync.ContentHash);
+        Assert.Equal("pull-hash", state.LatestSync.LocalContentHash);
+        Assert.Equal("pull-hash", state.LatestSync.RemoteContentHash);
         Assert.NotEqual(default, state.LatestSync.Utc);
     }
 
@@ -63,6 +67,8 @@ public class CloudSyncStateServiceTests
         Assert.Equal(CloudSyncDirection.Down, state.LatestSync.Direction);
         Assert.Equal(pullUtc, state.LatestSync.Utc);
         Assert.Equal("pull-hash", state.LatestSync.ContentHash);
+        Assert.Null(state.LatestSync.LocalContentHash);
+        Assert.Null(state.LatestSync.RemoteContentHash);
     }
 
     sealed class InMemoryConfigService : IConfigService

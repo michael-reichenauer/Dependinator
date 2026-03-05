@@ -161,7 +161,7 @@ public class AppCloudSyncServiceTests
             ActiveRefreshInterval: TimeSpan.FromMilliseconds(5),
             AutoSyncMinInterval: TimeSpan.FromMilliseconds(80),
             IdleRefreshInterval: TimeSpan.FromHours(1),
-            IdleRefreshCount: 0
+            MaxIdleRefreshDuration: TimeSpan.Zero
         );
         SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], timings);
 
@@ -187,7 +187,7 @@ public class AppCloudSyncServiceTests
             ActiveRefreshInterval: TimeSpan.FromMilliseconds(5),
             AutoSyncMinInterval: TimeSpan.FromHours(1),
             IdleRefreshInterval: TimeSpan.FromMilliseconds(20),
-            IdleRefreshCount: 3
+            MaxIdleRefreshDuration: TimeSpan.FromMilliseconds(60)
         );
         SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], timings);
 
@@ -216,7 +216,7 @@ public class AppCloudSyncServiceTests
             ActiveRefreshInterval: TimeSpan.FromMilliseconds(5),
             AutoSyncMinInterval: TimeSpan.FromMilliseconds(10),
             IdleRefreshInterval: TimeSpan.FromHours(1),
-            IdleRefreshCount: 0
+            MaxIdleRefreshDuration: TimeSpan.Zero
         );
         SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], timings);
         List<string> errorMessages = [];
@@ -287,6 +287,28 @@ public class AppCloudSyncServiceTests
         Assert.Equal(CloudSyncState.NotAuthenticated, context.Sut.GetCloudSyncState());
     }
 
+    [Fact]
+    public async Task SyncDownAsync_ShouldStaySynced_WhenLoadedLocalHashDiffersFromRemoteHash()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto localLoadedModel = CreateModelDto("local-loaded");
+        ModelDto remotePulledModel = CreateModelDto("remote-pulled");
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, remotePulledModel);
+        SutContext context = CreateSutContext(modelPath, localLoadedModel, syncState: null, [cloudModel]);
+
+        context.CloudSyncService
+            .Setup(x => x.PullAsync(modelPath))
+            .ReturnsAsync(remotePulledModel);
+
+        await context.Sut.InitializeAsync();
+        R<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
+
+        Assert.True(syncDownResult);
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+        Assert.False(context.Sut.HasLocalChangesSinceLastSync);
+        Assert.False(context.Sut.HasRemoteChangesSinceLastSync);
+    }
+
     static AppCloudSyncService CreateSut(
         string modelPath,
         ModelDto currentModelDto,
@@ -332,10 +354,10 @@ public class AppCloudSyncServiceTests
 
         cloudSyncStateService.Setup(x => x.GetAsync(modelPath)).ReturnsAsync(syncState);
         cloudSyncStateService
-            .Setup(x => x.RecordPushAsync(It.IsAny<string>(), It.IsAny<CloudModelMetadata>()))
+            .Setup(x => x.RecordPushAsync(It.IsAny<string>(), It.IsAny<CloudModelMetadata>(), It.IsAny<string?>()))
             .Returns(Task.CompletedTask);
         cloudSyncStateService
-            .Setup(x => x.RecordPullAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.RecordPullAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()))
             .Returns(Task.CompletedTask);
 
         modelService.SetupGet(x => x.ModelPath).Returns(modelPath);
@@ -385,7 +407,7 @@ public class AppCloudSyncServiceTests
             ActiveRefreshInterval: TimeSpan.FromMilliseconds(5),
             AutoSyncMinInterval: TimeSpan.FromMilliseconds(5),
             IdleRefreshInterval: TimeSpan.FromHours(1),
-            IdleRefreshCount: 0
+            MaxIdleRefreshDuration: TimeSpan.Zero
         );
     }
 

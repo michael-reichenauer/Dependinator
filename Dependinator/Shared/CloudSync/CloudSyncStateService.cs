@@ -15,10 +15,10 @@ interface ICloudSyncStateService
     Task<CloudSyncModelState?> GetAsync(string modelPath);
 
     // Stores sync metadata after a successful push operation.
-    Task RecordPushAsync(string modelPath, CloudModelMetadata metadata);
+    Task RecordPushAsync(string modelPath, CloudModelMetadata metadata, string? localContentHash = null);
 
     // Stores sync metadata after a successful pull operation.
-    Task RecordPullAsync(string modelPath, string contentHash);
+    Task RecordPullAsync(string modelPath, string localContentHash, string? remoteContentHash = null);
 }
 
 // Persists cloud sync progress in the shared Config object so the UI can
@@ -37,22 +37,37 @@ class CloudSyncStateService(IConfigService configService) : ICloudSyncStateServi
     }
 
     // Writes a push event snapshot as the latest sync marker.
-    public Task RecordPushAsync(string modelPath, CloudModelMetadata metadata)
+    public Task RecordPushAsync(string modelPath, CloudModelMetadata metadata, string? localContentHash = null)
     {
         return configService.SetAsync(config =>
         {
             CloudSyncModelState state = GetOrCreateState(config, modelPath);
-            state.LatestSync = new CloudSyncLatest(metadata.UpdatedUtc, CloudSyncDirection.Up, metadata.ContentHash);
+            string localHash = localContentHash ?? metadata.ContentHash;
+            string remoteHash = metadata.ContentHash;
+            state.LatestSync = new CloudSyncLatest(
+                metadata.UpdatedUtc,
+                CloudSyncDirection.Up,
+                remoteHash,
+                LocalContentHash: localHash,
+                RemoteContentHash: remoteHash
+            );
         });
     }
 
     // Writes a pull event snapshot as the latest sync marker.
-    public Task RecordPullAsync(string modelPath, string contentHash)
+    public Task RecordPullAsync(string modelPath, string localContentHash, string? remoteContentHash = null)
     {
         return configService.SetAsync(config =>
         {
             CloudSyncModelState state = GetOrCreateState(config, modelPath);
-            state.LatestSync = new CloudSyncLatest(DateTimeOffset.UtcNow, CloudSyncDirection.Down, contentHash);
+            string remoteHash = remoteContentHash ?? localContentHash;
+            state.LatestSync = new CloudSyncLatest(
+                DateTimeOffset.UtcNow,
+                CloudSyncDirection.Down,
+                remoteHash,
+                LocalContentHash: localContentHash,
+                RemoteContentHash: remoteHash
+            );
         });
     }
 

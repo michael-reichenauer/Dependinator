@@ -56,8 +56,7 @@
                     {
                         bool isCurrent = IsCurrentCloudModel(cloudModel);
                         <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
-                                     Style="@GetCurrentItemStyle(isCurrent)"
-                                     OnClick="() => LoadCloudModelAsync(cloudModel)">
+                                     Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => LoadCloudModelAsync(cloudModel)">
                             @GetModelDisplayName(cloudModel.NormalizedPath)
                         </MudMenuItem>
                     }
@@ -153,7 +152,7 @@
     static readonly CloudIconInfo NotAvailable = new(Icons.Material.Outlined.CloudOff, Color.Inherit);
     static readonly CloudIconInfo NotAuthenticated = new(Icons.Material.Outlined.CloudQueue, Color.Inherit);
     static readonly CloudIconInfo HasLocalChanges = new(Icons.Material.Outlined.CloudUpload, Color.Info);
-    static readonly CloudIconInfo HasRemoteChanges = new(Icons.Material.Outlined.CloudDownload, Color.Warning);
+    static readonly CloudIconInfo HasRemoteChanges = new(Icons.Material.Outlined.CloudDownload, Color.Info);
     static readonly CloudIconInfo HasConflicts = new(Icons.Material.Outlined.SyncProblem, Color.Error);
     static readonly CloudIconInfo IsSynced = new(Icons.Material.Filled.CloudDone, Color.Success);
 
@@ -166,6 +165,7 @@
     CloudSyncLatest? LatestSync => appCloudSyncService.LatestSync;
     CloudIconInfo CurrentCloudIconInfo => GetCloudIconInfo(CurrentCloudSyncState);
     bool HasSyncConflicts => CurrentCloudSyncState is CloudSyncState.HasConflicts;
+    CloudSyncState previousCloudSyncState = CloudSyncState.NotAvailable;
     string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
     string CloudStatusText =>
         !appCloudSyncService.IsAvailable
@@ -330,7 +330,38 @@
 
     Task ShowAbout() => aboutBox.ShowAsync();
 
-    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+    void OnUiStateChanged() => _ = InvokeAsync(HandleUiStateChangedAsync);
+
+    Task HandleUiStateChangedAsync()
+    {
+        CloudSyncState currentCloudSyncState = CurrentCloudSyncState;
+        if (
+            currentCloudSyncState is CloudSyncState.HasConflicts
+            && previousCloudSyncState is not CloudSyncState.HasConflicts
+        )
+        {
+            ShowSyncConflictSnackbar();
+        }
+
+        previousCloudSyncState = currentCloudSyncState;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    void ShowSyncConflictSnackbar()
+    {
+        snackbar.Add(
+            "Cloud sync conflict detected. Choose Use Cloud or Keep Local.",
+            Severity.Error,
+            options =>
+            {
+                options.Action = "Resolve";
+                options.RequireInteraction = true;
+                options.OnClick = _ => InvokeAsync(ToggleCloudAuthAsync);
+            },
+            key: "cloud-sync-conflict"
+        );
+    }
 
     void OnBackgroundSyncError(string errorMessage)
     {
