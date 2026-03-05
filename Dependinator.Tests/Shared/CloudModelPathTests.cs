@@ -5,11 +5,11 @@ namespace Dependinator.Tests.Shared;
 public class CloudModelPathTests
 {
     [Fact]
-    public void Normalize_ShouldReplaceBackslashesAndCollapseRepeatedSeparators()
+    public void Normalize_ShouldReplaceBackslashesAndCollapseRepeatedSeparators_ReturnFileNameOnly()
     {
         string normalizedPath = CloudModelPath.Normalize(@"  C:\\repo\\src///Model.json  ");
 
-        Assert.Equal("C:/repo/src/Model.json", normalizedPath);
+        Assert.Equal("Model.json", normalizedPath);
     }
 
     [Fact]

@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+using System.IO;
 using System.Text;
 
 namespace Shared;
@@ -38,14 +38,36 @@ public static class CloudModelPath
         while (normalizedPath.Contains("//", StringComparison.Ordinal))
             normalizedPath = normalizedPath.Replace("//", "/", StringComparison.Ordinal);
 
-        return normalizedPath;
+        return Path.GetFileName(normalizedPath);
     }
 
     public static string CreateKey(string modelPath)
     {
         string normalizedPath = Normalize(modelPath);
-        byte[] normalizedBytes = Encoding.UTF8.GetBytes(normalizedPath);
-        byte[] hashBytes = SHA256.HashData(normalizedBytes);
-        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(normalizedPath))
+            throw new ArgumentException("Model path must include a file name.", nameof(modelPath));
+
+        StringBuilder keyBuilder = new(normalizedPath.Length);
+        foreach (char character in normalizedPath)
+        {
+            if (char.IsWhiteSpace(character))
+            {
+                keyBuilder.Append('-');
+            }
+            else if (character is '<' or '>' or ':' or '\"' or '/' or '\\' or '|' or '?' or '*' or '\0')
+            {
+                keyBuilder.Append('-');
+            }
+            else
+            {
+                keyBuilder.Append(character);
+            }
+        }
+
+        string key = keyBuilder.ToString().Trim('.').ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Model path does not produce a valid cloud key.", nameof(modelPath));
+
+        return key;
     }
 }
