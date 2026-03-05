@@ -4,10 +4,26 @@ using Shared;
 
 namespace Dependinator.Shared.CloudSync;
 
+sealed record AppCloudSyncTimings(
+    TimeSpan ActiveRefreshInterval,
+    TimeSpan AutoSyncMinInterval,
+    TimeSpan IdleRefreshInterval,
+    int IdleRefreshCount
+)
+{
+    public static readonly AppCloudSyncTimings Default = new(
+        ActiveRefreshInterval: TimeSpan.FromSeconds(10),
+        AutoSyncMinInterval: TimeSpan.FromSeconds(10),
+        IdleRefreshInterval: TimeSpan.FromMinutes(1),
+        IdleRefreshCount: 5
+    );
+}
+
 // UI-facing service contract for cloud sync operations and derived sync state.
 interface IAppCloudSyncService
 {
     event Action Changed;
+    event Action<string> BackgroundSyncError;
 
     bool IsAvailable { get; }
     CloudAuthState AuthState { get; }
@@ -47,20 +63,31 @@ class AppCloudSyncService(
     ICloudSyncService cloudSyncService,
     ICloudSyncStateService cloudSyncStateService,
     IModelService modelService,
-    IApplicationEvents applicationEvents
+    IApplicationEvents applicationEvents,
+    AppCloudSyncTimings? appCloudSyncTimings = null,
+    Func<DateTimeOffset>? utcNowProvider = null,
+    Func<TimeSpan, CancellationToken, Task>? delayAsyncProvider = null
 ) : IAppCloudSyncService, IDisposable
 {
-    const int UiStateRefreshThrottleMilliseconds = 5000;
     static readonly CloudAuthState unavailableAuthState = new(IsAvailable: false, IsAuthenticated: false, User: null);
 
+    readonly AppCloudSyncTimings syncTimings = appCloudSyncTimings ?? AppCloudSyncTimings.Default;
+    readonly Func<DateTimeOffset> utcNow = utcNowProvider ?? (() => DateTimeOffset.UtcNow);
+    readonly Func<TimeSpan, CancellationToken, Task> delayAsync = delayAsyncProvider ?? TaskDelayAsync;
     readonly SemaphoreSlim initializeLock = new(1, 1);
+    readonly SemaphoreSlim syncOperationLock = new(1, 1);
     readonly Debouncer uiStateRefreshDebouncer = new();
+    readonly object idleRefreshLock = new();
+    readonly object backgroundErrorLock = new();
+    readonly HashSet<string> reportedBackgroundErrors = [];
 
     bool isInitialized;
     bool isUiStateRefreshInProgress;
     bool isUiStateRefreshQueued;
     bool isDisposed;
+    CancellationTokenSource? idleRefreshCancellationTokenSource;
     DateTimeOffset lastSyncStateRefreshUtc = DateTimeOffset.MinValue;
+    DateTimeOffset lastAutoSyncAttemptUtc = DateTimeOffset.MinValue;
     CloudAuthState authState = unavailableAuthState;
     CloudSyncModelState? syncState;
     bool hasLocalChangesSinceLastSync;
@@ -68,6 +95,7 @@ class AppCloudSyncService(
     IReadOnlyList<CloudModelMetadata> cloudModels = [];
 
     public event Action Changed = null!;
+    public event Action<string> BackgroundSyncError = null!;
 
     public bool IsAvailable => cloudSyncService.IsAvailable;
     public CloudAuthState AuthState => authState;
@@ -139,7 +167,7 @@ class AppCloudSyncService(
             return error;
 
         authState = state;
-        return await RefreshSnapshotAndNotifyAsync();
+        return await RefreshSnapshotAndNotifyAsync(allowAutoSync: false);
     }
 
     public async Task<R> LogoutAsync()
@@ -151,6 +179,7 @@ class AppCloudSyncService(
 
         authState = state;
         ResetSyncSnapshot(clearCloudModels: true);
+        CancelIdleRefreshLoop();
         NotifyChanged();
         return R.Ok;
     }
@@ -159,7 +188,40 @@ class AppCloudSyncService(
     public async Task<R<CloudModelMetadata>> SyncUpAsync()
     {
         await EnsureInitializedAsync();
+        return await ExecuteSyncOperationAsync(() => SyncUpCoreAsync(notifyChanged: true));
+    }
 
+    public async Task<R<ModelInfo>> SyncDownAsync()
+    {
+        await EnsureInitializedAsync();
+        return await ExecuteSyncOperationAsync(() => SyncDownCoreAsync(notifyChanged: true));
+    }
+
+    // Loads a selected cloud model into workspace and records local baseline on success.
+    public async Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel)
+    {
+        await EnsureInitializedAsync();
+        return await ExecuteSyncOperationAsync(() => LoadCloudModelCoreAsync(cloudModel, notifyChanged: true));
+    }
+
+    // Ensures one-time initialization is complete before calling public operations.
+    async Task EnsureInitializedAsync() => _ = await InitializeAsync();
+
+    async Task<R<T>> ExecuteSyncOperationAsync<T>(Func<Task<R<T>>> syncOperation)
+    {
+        await syncOperationLock.WaitAsync();
+        try
+        {
+            return await syncOperation();
+        }
+        finally
+        {
+            syncOperationLock.Release();
+        }
+    }
+
+    async Task<R<CloudModelMetadata>> SyncUpCoreAsync(bool notifyChanged)
+    {
         if (!Try(out ModelDto? modelDto, out ErrorResult? error, modelService.GetCurrentModelDto()))
             return error;
 
@@ -168,16 +230,17 @@ class AppCloudSyncService(
             return error;
 
         await cloudSyncStateService.RecordPushAsync(modelPath, metadata);
-        if (!Try(out error, await RefreshSnapshotAndNotifyAsync()))
+        if (!Try(out error, await RefreshSyncStateCoreAsync()))
             return error;
+
+        if (notifyChanged)
+            NotifyChanged();
 
         return metadata;
     }
 
-    public async Task<R<ModelInfo>> SyncDownAsync()
+    async Task<R<ModelInfo>> SyncDownCoreAsync(bool notifyChanged)
     {
-        await EnsureInitializedAsync();
-
         string modelPath = modelService.ModelPath;
         if (string.IsNullOrWhiteSpace(modelPath))
             return R.Error("Model is not loaded.");
@@ -189,17 +252,17 @@ class AppCloudSyncService(
             return error;
 
         await cloudSyncStateService.RecordPullAsync(modelInfo.Path, CloudModelSerializer.GetContentHash(modelDto));
-        if (!Try(out error, await RefreshSnapshotAndNotifyAsync()))
+        if (!Try(out error, await RefreshSyncStateCoreAsync()))
             return error;
+
+        if (notifyChanged)
+            NotifyChanged();
 
         return modelInfo;
     }
 
-    // Loads a selected cloud model into workspace and records local baseline on success.
-    public async Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel)
+    async Task<R<CloudModelMetadata>> LoadCloudModelCoreAsync(CloudModelMetadata cloudModel, bool notifyChanged)
     {
-        await EnsureInitializedAsync();
-
         string normalizedPath = cloudModel.NormalizedPath;
         if (!Try(out ModelDto? modelDto, out ErrorResult? error, await cloudSyncService.PullAsync(normalizedPath)))
             return error;
@@ -209,22 +272,109 @@ class AppCloudSyncService(
 
         await canvasService.LoadAsync(normalizedPath);
         await cloudSyncStateService.RecordPullAsync(normalizedPath, CloudModelSerializer.GetContentHash(modelDto));
-        if (!Try(out error, await RefreshSnapshotAndNotifyAsync()))
+        if (!Try(out error, await RefreshSyncStateCoreAsync()))
             return error;
+
+        if (notifyChanged)
+            NotifyChanged();
 
         return cloudModel;
     }
 
-    // Ensures one-time initialization is complete before calling public operations.
-    async Task EnsureInitializedAsync() => _ = await InitializeAsync();
-
-    // Rebuilds sync snapshot and notifies listeners when no transport error occurs.
-    async Task<R> RefreshSnapshotAndNotifyAsync()
+    // Rebuilds sync snapshot and optionally performs automatic sync work before notifying listeners.
+    async Task<R> RefreshSnapshotAndNotifyAsync(bool allowAutoSync)
     {
         if (!Try(out ErrorResult? error, await RefreshSyncStateCoreAsync()))
             return error;
 
+        if (allowAutoSync && !Try(out error, await TryAutoSyncIfNeededAsync()))
+            return error;
+
         NotifyChanged();
+        return R.Ok;
+    }
+
+    async Task<R> TryAutoSyncIfNeededAsync()
+    {
+        if (!ShouldEvaluateAutoSync())
+            return R.Ok;
+
+        if (!IsAutoSyncAttemptDue())
+            return R.Ok;
+
+        AutoSyncAction autoSyncAction = DetermineAutoSyncAction();
+        if (autoSyncAction is AutoSyncAction.None)
+            return R.Ok;
+
+        lastAutoSyncAttemptUtc = utcNow();
+        return autoSyncAction switch
+        {
+            AutoSyncAction.Push => await TryAutoSyncUpAsync(),
+            AutoSyncAction.Pull => await TryAutoSyncDownAsync(),
+            _ => R.Ok,
+        };
+    }
+
+    bool ShouldEvaluateAutoSync()
+    {
+        if (!cloudSyncService.IsAvailable || !authState.IsAuthenticated)
+            return false;
+
+        return !string.IsNullOrWhiteSpace(modelService.ModelPath);
+    }
+
+    bool IsAutoSyncAttemptDue()
+    {
+        TimeSpan elapsedSinceLastAutoSync = utcNow() - lastAutoSyncAttemptUtc;
+        return elapsedSinceLastAutoSync >= syncTimings.AutoSyncMinInterval;
+    }
+
+    AutoSyncAction DetermineAutoSyncAction()
+    {
+        string modelPath = modelService.ModelPath;
+        if (string.IsNullOrWhiteSpace(modelPath))
+            return AutoSyncAction.None;
+
+        CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelPath);
+        CloudSyncLatest? latestSync = syncState?.LatestSync;
+        if (latestSync is null)
+            return currentCloudModel is null ? AutoSyncAction.Push : AutoSyncAction.Pull;
+
+        if (hasLocalChangesSinceLastSync && hasRemoteChangesSinceLastSync)
+            return AutoSyncAction.None;
+        if (hasLocalChangesSinceLastSync)
+            return AutoSyncAction.Push;
+        if (hasRemoteChangesSinceLastSync)
+            return AutoSyncAction.Pull;
+
+        return AutoSyncAction.None;
+    }
+
+    async Task<R> TryAutoSyncUpAsync()
+    {
+        if (
+            !Try(
+                out _,
+                out ErrorResult? error,
+                await ExecuteSyncOperationAsync(() => SyncUpCoreAsync(notifyChanged: false))
+            )
+        )
+            return error;
+
+        return R.Ok;
+    }
+
+    async Task<R> TryAutoSyncDownAsync()
+    {
+        if (
+            !Try(
+                out _,
+                out ErrorResult? error,
+                await ExecuteSyncOperationAsync(() => SyncDownCoreAsync(notifyChanged: false))
+            )
+        )
+            return error;
+
         return R.Ok;
     }
 
@@ -322,13 +472,22 @@ class AppCloudSyncService(
     // Tracks last sync-state refresh time for UI debounce calculations.
     void MarkSyncStateRefreshed()
     {
-        lastSyncStateRefreshUtc = DateTimeOffset.UtcNow;
+        lastSyncStateRefreshUtc = utcNow();
     }
 
     // Debounces sync-state refreshes when canvas/UI signals change.
     void HandleUiStateChanged()
     {
         if (!isInitialized)
+            return;
+
+        QueueUiStateRefresh();
+        RestartIdleRefreshLoop();
+    }
+
+    void QueueUiStateRefresh()
+    {
+        if (isDisposed)
             return;
 
         isUiStateRefreshQueued = true;
@@ -341,15 +500,14 @@ class AppCloudSyncService(
         if (isDisposed || isUiStateRefreshInProgress)
             return;
 
-        TimeSpan elapsedSinceLastRefresh = DateTimeOffset.UtcNow - lastSyncStateRefreshUtc;
-        if (elapsedSinceLastRefresh >= TimeSpan.FromMilliseconds(UiStateRefreshThrottleMilliseconds))
+        TimeSpan elapsedSinceLastRefresh = utcNow() - lastSyncStateRefreshUtc;
+        if (elapsedSinceLastRefresh >= syncTimings.ActiveRefreshInterval)
         {
             _ = RefreshUiStateAsync();
             return;
         }
 
-        TimeSpan remainingDelay =
-            TimeSpan.FromMilliseconds(UiStateRefreshThrottleMilliseconds) - elapsedSinceLastRefresh;
+        TimeSpan remainingDelay = syncTimings.ActiveRefreshInterval - elapsedSinceLastRefresh;
         int delayMilliseconds = Math.Max(1, (int)Math.Ceiling(remainingDelay.TotalMilliseconds));
         uiStateRefreshDebouncer.Debounce(delayMilliseconds, () => _ = RefreshUiStateAsync());
     }
@@ -365,7 +523,9 @@ class AppCloudSyncService(
 
         try
         {
-            _ = await RefreshSnapshotAndNotifyAsync();
+            R refreshResult = await RefreshSnapshotAndNotifyAsync(allowAutoSync: true);
+            if (!Try(out ErrorResult? error, refreshResult))
+                NotifyBackgroundSyncError(error.ErrorMessage);
         }
         finally
         {
@@ -375,6 +535,53 @@ class AppCloudSyncService(
         }
     }
 
+    void RestartIdleRefreshLoop()
+    {
+        CancellationTokenSource idleRefreshTokenSource = new();
+        CancellationTokenSource? previousTokenSource;
+        lock (idleRefreshLock)
+        {
+            previousTokenSource = idleRefreshCancellationTokenSource;
+            idleRefreshCancellationTokenSource = idleRefreshTokenSource;
+        }
+
+        previousTokenSource?.Cancel();
+        previousTokenSource?.Dispose();
+        _ = RunIdleRefreshLoopAsync(idleRefreshTokenSource.Token);
+    }
+
+    async Task RunIdleRefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            for (int checkIndex = 0; checkIndex < syncTimings.IdleRefreshCount; checkIndex++)
+            {
+                await delayAsync(syncTimings.IdleRefreshInterval, cancellationToken);
+                if (cancellationToken.IsCancellationRequested || isDisposed)
+                    return;
+
+                QueueUiStateRefresh();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignore cancellation since it is used to restart idle checks on new UI activity.
+        }
+    }
+
+    void CancelIdleRefreshLoop()
+    {
+        CancellationTokenSource? tokenSourceToCancel;
+        lock (idleRefreshLock)
+        {
+            tokenSourceToCancel = idleRefreshCancellationTokenSource;
+            idleRefreshCancellationTokenSource = null;
+        }
+
+        tokenSourceToCancel?.Cancel();
+        tokenSourceToCancel?.Dispose();
+    }
+
     // Notifies all listeners if the service is still active.
     void NotifyChanged()
     {
@@ -382,6 +589,21 @@ class AppCloudSyncService(
             return;
 
         Changed?.Invoke();
+    }
+
+    void NotifyBackgroundSyncError(string errorMessage)
+    {
+        if (isDisposed || string.IsNullOrWhiteSpace(errorMessage))
+            return;
+
+        bool shouldNotify;
+        lock (backgroundErrorLock)
+        {
+            shouldNotify = reportedBackgroundErrors.Add(errorMessage);
+        }
+
+        if (shouldNotify)
+            BackgroundSyncError?.Invoke(errorMessage);
     }
 
     // Compares remote model hash against the latest known local sync marker.
@@ -411,7 +633,19 @@ class AppCloudSyncService(
     {
         isDisposed = true;
         applicationEvents.UIStateChanged -= HandleUiStateChanged;
+        CancelIdleRefreshLoop();
         uiStateRefreshDebouncer.Dispose();
         initializeLock.Dispose();
+        syncOperationLock.Dispose();
+    }
+
+    static Task TaskDelayAsync(TimeSpan delay, CancellationToken cancellationToken) =>
+        Task.Delay(delay, cancellationToken);
+
+    enum AutoSyncAction
+    {
+        None,
+        Push,
+        Pull,
     }
 }

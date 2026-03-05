@@ -136,10 +136,18 @@
     </YesButton>
 </MudMessageBox>
 
+<MudMessageBox @ref="syncConflictBox" Title="Sync Conflict" YesText="Use Cloud" NoText="Keep Local" CancelText="Cancel">
+    <MessageContent>
+        <MudText>Both local and cloud copies changed since last sync.</MudText>
+        <MudText Typo="Typo.body2">Choose which copy should win.</MudText>
+    </MessageContent>
+</MudMessageBox>
+
 @code {
     MudMessageBox mbox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
     MudMessageBox syncDownBox { get; set; } = null!;
+    MudMessageBox syncConflictBox { get; set; } = null!;
 
     record CloudIconInfo(string Icon, MudBlazor.Color Color);
     static readonly CloudIconInfo NotAvailable = new(Icons.Material.Outlined.CloudOff, Color.Inherit);
@@ -188,6 +196,7 @@
 
         applicationEvents.UIStateChanged += OnUiStateChanged;
         appCloudSyncService.Changed += OnUiStateChanged;
+        appCloudSyncService.BackgroundSyncError += OnBackgroundSyncError;
 
         if (!Try(out var error, await appCloudSyncService.InitializeAsync()))
             snackbar.Add(error.ErrorMessage, Severity.Warning);
@@ -208,6 +217,7 @@
     {
         applicationEvents.UIStateChanged -= OnUiStateChanged;
         appCloudSyncService.Changed -= OnUiStateChanged;
+        appCloudSyncService.BackgroundSyncError -= OnBackgroundSyncError;
     }
 
     async Task ToggleCloudAuthAsync()
@@ -224,8 +234,10 @@
                 await SyncUpAsync();
                 return;
             case CloudSyncState.HasRemoteChanges:
-            case CloudSyncState.HasConflicts:
                 await SyncDownAsync();
+                return;
+            case CloudSyncState.HasConflicts:
+                await ResolveConflictAsync();
                 return;
         }
     }
@@ -261,9 +273,22 @@
         snackbar.Add("Cloud sync is disabled.", Severity.Info);
     }
 
-    async Task SyncDownAsync()
+    async Task ResolveConflictAsync()
     {
-        if (await syncDownBox.ShowAsync() != true)
+        bool? selection = await syncConflictBox.ShowAsync();
+        if (selection is true)
+        {
+            await SyncDownAsync(skipConfirmation: true);
+            return;
+        }
+
+        if (selection is false)
+            await SyncUpAsync();
+    }
+
+    async Task SyncDownAsync(bool skipConfirmation = false)
+    {
+        if (!skipConfirmation && await syncDownBox.ShowAsync() != true)
             return;
 
         if (string.IsNullOrWhiteSpace(modelService.ModelPath))
@@ -306,6 +331,11 @@
     Task ShowAbout() => aboutBox.ShowAsync();
 
     void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+    void OnBackgroundSyncError(string errorMessage)
+    {
+        _ = InvokeAsync(() => snackbar.Add(errorMessage, Severity.Warning));
+    }
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
     static MudBlazor.Color GetToolbarButtonColor(bool isEnabled) => isEnabled ? Color.Default : Color.Inherit;
