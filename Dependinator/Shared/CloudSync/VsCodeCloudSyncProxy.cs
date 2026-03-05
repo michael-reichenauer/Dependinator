@@ -19,15 +19,17 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
     static readonly JsonSerializerOptions serializerOptions = new() { PropertyNameCaseInsensitive = true };
     readonly IJSInterop jSInterop;
     readonly TimeSpan requestTimeout;
+    readonly TimeSpan loginRequestTimeout;
     readonly ConcurrentDictionary<string, TaskCompletionSource<CloudSyncEnvelope>> pendingRequests = new();
 
     public VsCodeCloudSyncProxy(IJSInterop jSInterop)
-        : this(jSInterop, TimeSpan.FromSeconds(15)) { }
+        : this(jSInterop, TimeSpan.FromSeconds(15), TimeSpan.FromMinutes(5)) { }
 
-    internal VsCodeCloudSyncProxy(IJSInterop jSInterop, TimeSpan requestTimeout)
+    internal VsCodeCloudSyncProxy(IJSInterop jSInterop, TimeSpan requestTimeout, TimeSpan? loginRequestTimeout = null)
     {
         this.jSInterop = jSInterop;
         this.requestTimeout = requestTimeout;
+        this.loginRequestTimeout = loginRequestTimeout ?? TimeSpan.FromMinutes(5);
     }
 
     public bool IsAvailable => true;
@@ -41,7 +43,7 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
     // Starts extension-hosted login flow.
     public async Task<R<CloudAuthState>> LoginAsync()
     {
-        return await SendAndReadAsync<CloudAuthState>("login");
+        return await SendAndReadAsync<CloudAuthState>("login", timeoutOverride: loginRequestTimeout);
     }
 
     // Starts extension-hosted logout flow.
@@ -101,7 +103,7 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
 
     // Sends a request packet, stores a completion source by request id, and waits for reply or timeout.
 
-    async Task<R<T>> SendAndReadAsync<T>(string action, object? payload = null)
+    async Task<R<T>> SendAndReadAsync<T>(string action, object? payload = null, TimeSpan? timeoutOverride = null)
     {
         string requestId = Guid.NewGuid().ToString("N");
         TaskCompletionSource<CloudSyncEnvelope> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -124,7 +126,8 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
                 return R.Error("VS Code cloud sync bridge is not available.");
             }
 
-            Task completedTask = await Task.WhenAny(tcs.Task, Task.Delay(requestTimeout));
+            TimeSpan effectiveTimeout = timeoutOverride ?? requestTimeout;
+            Task completedTask = await Task.WhenAny(tcs.Task, Task.Delay(effectiveTimeout));
             if (completedTask != tcs.Task)
             {
                 pendingRequests.TryRemove(requestId, out _);

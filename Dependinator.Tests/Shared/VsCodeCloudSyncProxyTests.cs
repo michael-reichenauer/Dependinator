@@ -25,6 +25,28 @@ public class VsCodeCloudSyncProxyTests
         Assert.Contains("timed out", error.ErrorMessage);
     }
 
+    [Fact]
+    public async Task LoginAsync_ShouldReturnError_WhenResponseTimesOut()
+    {
+        FakeJsInterop jsInterop = new((functionName, _) => functionName switch
+        {
+            "isVsCodeWebView" => true,
+            "postVsCodeMessage" => true,
+            _ => throw new InvalidOperationException($"Unexpected JS call: {functionName}"),
+        });
+        VsCodeCloudSyncProxy sut = new(
+            jsInterop,
+            requestTimeout: TimeSpan.FromSeconds(1),
+            loginRequestTimeout: TimeSpan.FromMilliseconds(10)
+        );
+
+        R<global::Shared.CloudAuthState> result = await sut.LoginAsync();
+
+        Assert.False(Try(out global::Shared.CloudAuthState? _, out ErrorResult? error, result));
+        Assert.NotNull(error);
+        Assert.Contains("timed out", error.ErrorMessage);
+    }
+
     sealed class FakeJsInterop(Func<string, object?[]?, object?> onCall) : IJSInterop
     {
         public ValueTask Call(string functionName, params object?[]? args)
