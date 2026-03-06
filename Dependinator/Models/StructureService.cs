@@ -7,6 +7,7 @@ interface IStructureService
     void TryUpdateNode(Parsing.Node parsedNode);
     void AddOrUpdateNode(Parsing.Node parsedNode);
     void AddOrUpdateLink(Parsing.Link parsedLink);
+    void ClearNotUpdated();
     void SetNodeDto(NodeDto nodeDto);
     void SetLinkDto(LinkDto linkDto);
     void SetLineLayoutDto(LineDto lineLayoutDto);
@@ -126,6 +127,22 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         line.SetSegmentPoints(lineLayoutDto.SegmentPoints);
     }
 
+    public void ClearNotUpdated()
+    {
+        var links = model.Items.Values.OfType<Link>().Where(l => l.UpdateStamp != model.UpdateStamp).ToList();
+        Log.Info($"Remove {links.Count} links");
+        foreach (var link in links)
+            model.RemoveLink(link);
+
+        var nodes = model
+            .Items.Values.OfType<Node>()
+            .Where(n => n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0)
+            .ToList();
+        Log.Info($"Remove {nodes.Count} nodes");
+        foreach (var node in nodes)
+            RemoveNode(node);
+    }
+
     void MoveNodeToParent(Node node, string parentName)
     {
         // Link lines need to be re-adjusted, so first remove all links and lines
@@ -223,4 +240,13 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         new(name, new() { Type = nodeType });
 
     static Parsing.Node DefaultParsingNode(string name) => new(name, new() { Type = Parsing.NodeType.None });
+
+    void RemoveNode(Node node)
+    {
+        model.Items.Remove(node.Id);
+        var parent = node.Parent;
+        parent.RemoveChild(node);
+        if (parent.UpdateStamp != model.UpdateStamp && parent.Children.Count == 0 && !parent.IsRoot)
+            RemoveNode(parent);
+    }
 }

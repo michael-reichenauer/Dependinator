@@ -8,6 +8,8 @@ public class ModelCleanupTests
     public void ClearNotUpdated_ShouldRemoveStaleNodesAndParents()
     {
         var model = new Model();
+        var lineService = new Mock<ILineService>();
+        var structureService = new StructureService(model, lineService.Object);
         var stamp = new DateTime(2024, 1, 1);
         model.UpdateStamp = stamp;
 
@@ -23,7 +25,7 @@ public class ModelCleanupTests
         model.Root.AddChild(current);
         model.AddNode(current);
 
-        model.ClearNotUpdated();
+        structureService.ClearNotUpdated();
 
         Assert.False(model.TryGetNode(NodeId.FromName("Child"), out _));
         Assert.False(model.TryGetNode(NodeId.FromName("Parent"), out _));
@@ -34,6 +36,8 @@ public class ModelCleanupTests
     public void ClearNotUpdated_ShouldRemoveStaleLinksAndLines()
     {
         var model = new Model();
+        var lineService = new Mock<ILineService>();
+        var structureService = new StructureService(model, lineService.Object);
         var stamp = new DateTime(2024, 1, 1);
         model.UpdateStamp = stamp;
 
@@ -51,7 +55,7 @@ public class ModelCleanupTests
         model.AddLine(line);
         model.AddLink(link);
 
-        model.ClearNotUpdated();
+        structureService.ClearNotUpdated();
 
         Assert.False(model.TryGetLink(new LinkId("Source", "Target"), out _));
         Assert.False(model.TryGetLine(LineId.From("Source", "Target"), out _));

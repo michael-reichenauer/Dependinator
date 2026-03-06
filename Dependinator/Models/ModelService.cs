@@ -354,7 +354,7 @@ class ModelService : IModelService, IDisposable
             return e;
         lock (model.Lock)
         {
-            model.ClearNotUpdated();
+            modelStructureService.ClearNotUpdated();
             model.ClearCachedSvg();
         }
 

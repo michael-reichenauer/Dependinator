@@ -50,7 +50,6 @@ interface IModel : IDisposable
 
     void Clear();
     void ClearCachedSvg();
-    void ClearNotUpdated();
 
     ModelDto SerializeToDto();
     void SetFromDto(string path, ModelDto modelDto);
@@ -217,22 +216,6 @@ class Model : IModel
         Tiles.ClearCache();
     }
 
-    public void ClearNotUpdated()
-    {
-        var links = Items.Values.OfType<Link>().Where(l => l.UpdateStamp != UpdateStamp).ToList();
-        Log.Info($"Remove {links.Count} links");
-        foreach (var link in links)
-            RemoveLink(link);
-
-        var nodes = Items
-            .Values.OfType<Node>()
-            .Where(n => n.UpdateStamp != UpdateStamp && n.Children.Count == 0)
-            .ToList();
-        Log.Info($"Remove {nodes.Count} nodes");
-        foreach (var node in nodes)
-            RemoveNode(node);
-    }
-
     public void RemoveLink(Link link)
     {
         Items.Remove(link.Id);
@@ -254,15 +237,6 @@ class Model : IModel
         line.RenderAncestor?.RemoveDirectLine(line);
         line.Target.Remove(line);
         line.Source.Remove(line);
-    }
-
-    private void RemoveNode(Node node)
-    {
-        Items.Remove(node.Id);
-        var parent = node.Parent;
-        parent.RemoveChild(node);
-        if (parent.UpdateStamp != UpdateStamp && parent.Children.Count == 0 && !parent.IsRoot)
-            RemoveNode(parent);
     }
 
     void InitModel()
