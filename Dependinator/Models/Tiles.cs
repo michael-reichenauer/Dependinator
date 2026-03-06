@@ -42,7 +42,16 @@ record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
     public override string ToString() => $"(({X},{Y},{Z}))";
 }
 
-class Tiles
+interface ITileCache
+{
+    bool TryGetLastUsed(Rect viewRect, double zoom, out Tile tile);
+    bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile);
+    void SetCached(Tile tile, Rect viewRect, double zoom);
+    void ClearCache();
+}
+
+[Scoped]
+class Tiles(IModelStateLock modelStateLock) : ITileCache
 {
     readonly Dictionary<TileKey, Tile> tiles = [];
     int currentScreenTileWidth = 0;
@@ -54,42 +63,54 @@ class Tiles
 
     public bool TryGetLastUsed(Rect viewRect, double zoom, out Tile tile)
     {
-        if (viewRect == lastUsedViewRect && zoom == lastUsedZoom)
-        { // No change, just reuse
-            tile = lastUsedTile;
-            return true;
-        }
+        using (var _ = modelStateLock.Use())
+        {
+            if (viewRect == lastUsedViewRect && zoom == lastUsedZoom)
+            { // No change, just reuse
+                tile = lastUsedTile;
+                return true;
+            }
 
-        ClearLastUsed();
-        tile = Tile.Empty;
-        return false;
+            ClearLastUsed();
+            tile = Tile.Empty;
+            return false;
+        }
     }
 
     public bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile)
     {
-        ValidateScreenTileSize(key);
-        var isCached = tiles.TryGetValue(key, out tile!);
-        if (isCached)
+        using (var _ = modelStateLock.Use())
         {
-            SetLastUsed(viewRect, zoom, tile);
-        }
+            ValidateScreenTileSize(key);
+            var isCached = tiles.TryGetValue(key, out tile!);
+            if (isCached)
+            {
+                SetLastUsed(viewRect, zoom, tile);
+            }
 
-        return isCached;
+            return isCached;
+        }
     }
 
     public void SetCached(Tile tile, Rect viewRect, double zoom)
     {
-        ValidateScreenTileSize(tile.Key);
-        tiles[tile.Key] = tile;
-        SetCurrentScreenTileSize(tile);
-        SetLastUsed(viewRect, zoom, tile);
+        using (var _ = modelStateLock.Use())
+        {
+            ValidateScreenTileSize(tile.Key);
+            tiles[tile.Key] = tile;
+            SetCurrentScreenTileSize(tile);
+            SetLastUsed(viewRect, zoom, tile);
+        }
     }
 
     public void ClearCache()
     {
-        tiles.Clear();
-        SetCurrentScreenTileSize(Tile.Empty);
-        ClearLastUsed();
+        using (var _ = modelStateLock.Use())
+        {
+            tiles.Clear();
+            SetCurrentScreenTileSize(Tile.Empty);
+            ClearLastUsed();
+        }
     }
 
     void ClearLastUsed()

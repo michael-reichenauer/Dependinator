@@ -11,10 +11,12 @@ interface ISvgService
 class SvgService : ISvgService
 {
     readonly IModelService modelService;
+    readonly ITileCache tileCache;
 
-    public SvgService(IModelService modelService)
+    public SvgService(IModelService modelService, ITileCache tileCache)
     {
         this.modelService = modelService;
+        this.tileCache = tileCache;
     }
 
     public Tile GetTile(Rect viewRect, double zoom)
@@ -30,20 +32,20 @@ class SvgService : ISvgService
         model.ViewRect = viewRect;
         model.Zoom = zoom;
 
-        if (model.Tiles.TryGetLastUsed(viewRect, zoom, out var tile))
+        if (tileCache.TryGetLastUsed(viewRect, zoom, out var tile))
             return tile; // Same tile as last call
 
         var tileKey = TileKey.From(viewRect, zoom);
-        if (model.Tiles.TryGetCached(tileKey, viewRect, zoom, out tile))
+        if (tileCache.TryGetCached(tileKey, viewRect, zoom, out tile))
             return tile;
         // Log.Info("/n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         // Log.Info($"Not Cached {tileKey}, for viewRect {viewRect} viewZoom: {zoom}, Tile:{tileKey.GetTileRect()}");
 
         // Create a new tile and cache it
         tile = CreateModelTile(model, tileKey);
-        model.Tiles.SetCached(tile, viewRect, zoom);
+        tileCache.SetCached(tile, viewRect, zoom);
 
-        // Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars, Tiles: {model.Tiles}");
+        // Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars");
         return tile;
     }
 

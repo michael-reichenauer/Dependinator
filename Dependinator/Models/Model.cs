@@ -27,8 +27,6 @@ interface IModel : IDisposable
     double Zoom { get; set; }
     Pos Offset { get; set; }
 
-    Tiles Tiles { get; }
-
     IDictionary<Id, IItem> Items { get; }
 
     IModel UseModel();
@@ -58,16 +56,25 @@ interface IModel : IDisposable
 [Scoped]
 class Model : IModel
 {
-    private readonly object syncRoot = new();
+    readonly IModelStateLock modelStateLock;
+    readonly ITileCache tileCache;
 
     public Model()
+        : this(new ModelStateLock()) { }
+
+    internal Model(IModelStateLock modelStateLock)
+        : this(modelStateLock, new Tiles(modelStateLock)) { }
+
+    public Model(IModelStateLock modelStateLock, ITileCache tileCache)
     {
+        this.modelStateLock = modelStateLock;
+        this.tileCache = tileCache;
         InitModel();
     }
 
     public IModel UseModel()
     {
-        Monitor.Enter(syncRoot);
+        modelStateLock.Enter();
         return this;
     }
 
@@ -75,7 +82,7 @@ class Model : IModel
     {
         try
         {
-            Monitor.Exit(syncRoot);
+            modelStateLock.Exit();
         }
         catch
         {
@@ -91,8 +98,6 @@ class Model : IModel
 
     public Node Root { get; private set; } = null!;
     public IDictionary<Id, IItem> Items { get; } = new Dictionary<Id, IItem>();
-
-    public Tiles Tiles { get; } = new();
 
     public ModelDto SerializeToDto() =>
         new()
@@ -197,7 +202,7 @@ class Model : IModel
 
     public void ClearCachedSvg()
     {
-        Tiles.ClearCache();
+        tileCache.ClearCache();
     }
 
     public void RemoveLink(Link link)
