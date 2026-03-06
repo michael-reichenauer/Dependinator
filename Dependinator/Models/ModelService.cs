@@ -97,7 +97,7 @@ class ModelService : IModelService, IDisposable
 
     public void ClearCache()
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             model.ClearCachedSvg();
         }
@@ -129,47 +129,36 @@ class ModelService : IModelService, IDisposable
         TriggerSave();
     }
 
-    public IModel UseModel()
-    {
-        Monitor.Enter(model.Lock);
-        return model;
-    }
+    public IModel UseModel() => model.UseModel();
 
     T Use<T>(Func<IModel, T> readFunc)
     {
-        lock (model.Lock)
-        {
-            return readFunc(model);
-        }
+        using var _ = model.UseModel();
+
+        return readFunc(model);
     }
 
     public Rect GetBounds()
     {
-        lock (model.Lock)
-        {
-            return model.Root.GetTotalBounds();
-        }
+        using var _ = model.UseModel();
+        return model.Root.GetTotalBounds();
     }
 
     public bool TryNode(string id, out Node node)
     {
-        lock (model.Lock)
-        {
-            return model.TryGetNode(NodeId.FromId(id), out node);
-        }
+        using var _ = model.UseModel();
+        return model.TryGetNode(NodeId.FromId(id), out node);
     }
 
     public bool TryGetNode(string id, out Node node)
     {
-        lock (model.Lock)
-        {
-            return model.TryGetNode(NodeId.FromId(id), out node);
-        }
+        using var _ = model.UseModel();
+        return model.TryGetNode(NodeId.FromId(id), out node);
     }
 
     public bool UseNodeN(NodeId id, Action<Node> updateAction)
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             if (!model.TryGetNode(id, out var node))
                 return false;
@@ -184,7 +173,7 @@ class ModelService : IModelService, IDisposable
 
     public bool UseNodeN(NodeId id, Func<Node, bool> updateAction)
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             if (!model.TryGetNode(id, out var node))
                 return false;
@@ -200,7 +189,7 @@ class ModelService : IModelService, IDisposable
 
     public bool UseLineN(LineId id, Func<Line, bool> updateAction)
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             if (!model.TryGetLine(id, out var line))
                 return false;
@@ -216,7 +205,7 @@ class ModelService : IModelService, IDisposable
 
     public bool UseLineN(LineId id, Action<Line> updateAction)
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             if (!model.TryGetLine(id, out var line))
                 return false;
@@ -239,23 +228,20 @@ class ModelService : IModelService, IDisposable
 
     public (Rect, double) GetLatestView()
     {
-        lock (model.Lock)
-        {
-            return (model.ViewRect, model.Zoom);
-        }
+        using var _ = model.UseModel();
+
+        return (model.ViewRect, model.Zoom);
     }
 
     public void Clear()
     {
-        lock (model.Lock)
-        {
-            model.Clear();
-        }
+        using var _ = model.UseModel();
+        model.Clear();
     }
 
     public R<ModelDto> GetCurrentModelDto()
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             if (string.IsNullOrWhiteSpace(model.Path))
                 return R.Error("Model is not loaded");
@@ -267,7 +253,7 @@ class ModelService : IModelService, IDisposable
     public async Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto)
     {
         string modelPath;
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             modelPath = model.Path;
         }
@@ -301,7 +287,7 @@ class ModelService : IModelService, IDisposable
             Log.Info("Failed to read cached model", e.ErrorMessage);
             var parsedModelInfo = await ParseNewModelAsync(path);
             TriggerSave();
-            lock (model.Lock)
+            using (var __ = model.UseModel())
             {
                 model.ClearCachedSvg();
             }
@@ -315,7 +301,7 @@ class ModelService : IModelService, IDisposable
 
     public void CheckLineVisibility()
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             foreach (var line in model.Items.Values.OfType<Line>())
             {
@@ -345,14 +331,14 @@ class ModelService : IModelService, IDisposable
     public async Task<R> RefreshAsync()
     {
         var path = "";
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             path = model.Path;
         }
 
         if (!Try(out var e, await ParseAndUpdateAsync(path, true)))
             return e;
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             modelStructureService.ClearNotUpdated();
             model.ClearCachedSvg();
@@ -368,7 +354,7 @@ class ModelService : IModelService, IDisposable
         string modelPath;
         string nodeName;
 
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             modelPath = model.Path;
             if (string.IsNullOrEmpty(modelPath))
@@ -435,7 +421,7 @@ class ModelService : IModelService, IDisposable
             if (!Try(out var items, out var e, await ParseAsync(path)))
                 return e;
 
-            lock (model.Lock)
+            using (var __ = model.UseModel())
             {
                 model.Path = path;
                 model.UpdateStamp = DateTime.UtcNow;
@@ -456,16 +442,16 @@ class ModelService : IModelService, IDisposable
         if (!host.IsVscExtWasm && Build.IsWasm) // Parse source currently only supported when running as VS Code extension
             return R.Ok;
 
-        using var __ = progressService.StartDiscreet();
+        using var _ = progressService.StartDiscreet();
         await Task.Yield();
-        using var _ = Timing.Start($"Parsed source and added model items {path}");
+        using var __ = Timing.Start($"Parsed source and added model items {path}");
 
         Log.Info("Parsing source ...");
 
         if (!Try(out var items, out var e, await ParseAsync(path)))
             return e;
 
-        lock (model.Lock)
+        using (var ___ = model.UseModel())
         {
             model.ClearCachedSvg();
         }
@@ -486,7 +472,7 @@ class ModelService : IModelService, IDisposable
 
     public void TriggerSave()
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             if (model.Items.Count == 1)
                 return;
@@ -499,7 +485,7 @@ class ModelService : IModelService, IDisposable
     {
         ModelDto modelData;
         string modelPath;
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             modelPath = model.Path;
             modelData = model.SerializeToDto();
@@ -513,7 +499,7 @@ class ModelService : IModelService, IDisposable
 
     async Task<ModelInfo> LoadCachedModelDataAsync(string path, ModelDto modelDto)
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             model.SetFromDto(path, modelDto);
         }
@@ -537,7 +523,7 @@ class ModelService : IModelService, IDisposable
 
     void AddOrUpdateItems(IReadOnlyList<Parsing.Item> parsedItems)
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             foreach (var parsedItem in parsedItems)
             {
@@ -551,7 +537,7 @@ class ModelService : IModelService, IDisposable
 
     void SetNodeAndLinkDtos(ModelDto modelDto)
     {
-        lock (model.Lock)
+        using (var _ = model.UseModel())
         {
             modelDto.Nodes.ForEach(modelStructureService.SetNodeDto);
             modelDto.Links.ForEach(modelStructureService.SetLinkDto);

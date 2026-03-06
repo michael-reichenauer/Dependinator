@@ -20,8 +20,6 @@ record ModelDto
 
 interface IModel : IDisposable
 {
-    object Lock { get; }
-
     DateTime UpdateStamp { get; set; }
     string Path { get; set; }
     Node Root { get; }
@@ -32,6 +30,8 @@ interface IModel : IDisposable
     Tiles Tiles { get; }
 
     IDictionary<Id, IItem> Items { get; }
+
+    IModel UseModel();
 
     bool ContainsKey(Id linkId);
 
@@ -65,8 +65,25 @@ class Model : IModel
         InitModel();
     }
 
+    public IModel UseModel()
+    {
+        Monitor.Enter(syncRoot);
+        return this;
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            Monitor.Exit(syncRoot);
+        }
+        catch
+        {
+            // Ignore, already released (when shutting down and DI calls dispose)
+        }
+    }
+
     public string Path { get; set; } = "";
-    public object Lock => syncRoot;
     public DateTime UpdateStamp { get; set; }
 
     public Rect ViewRect { get; set; } = Rect.None;
@@ -123,18 +140,6 @@ class Model : IModel
         Offset = modelDto.Offset;
         ViewRect = modelDto.ViewRect;
         // Nodes and links will be set by model service in separate worker thread
-    }
-
-    public void Dispose()
-    {
-        try
-        {
-            Monitor.Exit(Lock);
-        }
-        catch
-        {
-            // Ignore, already released (when shutting down and DI calls dispose)
-        }
     }
 
     public bool ContainsKey(Id id) => Items.ContainsKey(id);
