@@ -85,35 +85,14 @@ class Model : IModel
 
     public string Path { get; set; } = "";
     public DateTime UpdateStamp { get; set; }
-
     public Rect ViewRect { get; set; } = Rect.None;
-    double zoom = 0;
-    Pos offset = Pos.None;
-
-    public double Zoom
-    {
-        get => zoom;
-        set
-        {
-            // Log.Info($"Set model zoom to {value}\n{Util.CallStack(4)}");
-            zoom = value;
-        }
-    }
-    public Pos Offset
-    {
-        get => offset;
-        set
-        {
-            // Log.Info($"Set model offset to {value}\n{Util.CallStack(4)}");
-            offset = value;
-        }
-    }
-
-    public Tiles Tiles { get; } = new();
-
-    public IDictionary<Id, IItem> Items { get; } = new Dictionary<Id, IItem>();
+    public double Zoom { get; set; } = 0;
+    public Pos Offset { get; set; } = Pos.None;
 
     public Node Root { get; private set; } = null!;
+    public IDictionary<Id, IItem> Items { get; } = new Dictionary<Id, IItem>();
+
+    public Tiles Tiles { get; } = new();
 
     public ModelDto SerializeToDto() =>
         new()
