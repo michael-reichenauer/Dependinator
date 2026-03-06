@@ -31,10 +31,7 @@ interface IModel : IDisposable
 
     Tiles Tiles { get; }
 
-    IDictionary<Id, IItem> Items { get; } // Ta bort
-    bool IsSaving { get; set; }
-    DateTime ModifiedTime { get; set; }
-    CancellationTokenSource SaveCancelSource { get; set; }
+    IDictionary<Id, IItem> Items { get; }
 
     bool ContainsKey(Id linkId);
 
@@ -71,7 +68,6 @@ class Model : IModel
 
     public string Path { get; set; } = "";
     public object Lock => syncRoot;
-    public bool IsSaving { get; set; } = false;
     public DateTime UpdateStamp { get; set; }
 
     public Rect ViewRect { get; set; } = Rect.None;
@@ -102,8 +98,6 @@ class Model : IModel
     public IDictionary<Id, IItem> Items { get; } = new Dictionary<Id, IItem>();
 
     public Node Root { get; private set; } = null!;
-    public DateTime ModifiedTime { get; set; } = DateTime.MinValue;
-    public CancellationTokenSource SaveCancelSource { get; set; } = new();
 
     public ModelDto SerializeToDto() =>
         new()
@@ -157,21 +151,7 @@ class Model : IModel
         return true;
     }
 
-    public void AddNode(Node node)
-    {
-        if (Items.ContainsKey(node.Id))
-            return;
-        Items[node.Id] = node;
-    }
-
     public Node GetNode(NodeId id) => (Node)Items[id];
-
-    public void AddLink(Link link)
-    {
-        if (Items.ContainsKey(link.Id))
-            return;
-        Items[link.Id] = link;
-    }
 
     public Link GetLink(LinkId id) => (Link)Items[id];
 
@@ -184,13 +164,6 @@ class Model : IModel
         }
         link = (Link)item;
         return true;
-    }
-
-    public void AddLine(Line line)
-    {
-        if (Items.ContainsKey(line.Id))
-            return;
-        Items[line.Id] = line;
     }
 
     public Line GetLine(LineId id) => (Line)Items[id];
@@ -206,12 +179,31 @@ class Model : IModel
         return true;
     }
 
+    public void AddNode(Node node)
+    {
+        if (Items.ContainsKey(node.Id))
+            return;
+        Items[node.Id] = node;
+    }
+
+    public void AddLink(Link link)
+    {
+        if (Items.ContainsKey(link.Id))
+            return;
+        Items[link.Id] = link;
+    }
+
+    public void AddLine(Line line)
+    {
+        if (Items.ContainsKey(line.Id))
+            return;
+        Items[line.Id] = line;
+    }
+
     public void Clear()
     {
         Items.Clear();
         Path = "";
-        IsSaving = false;
-        ModifiedTime = DateTime.MinValue;
         ViewRect = Rect.None;
         Zoom = 0;
         Offset = Pos.None;

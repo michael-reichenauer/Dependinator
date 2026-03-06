@@ -1,5 +1,6 @@
 using Dependinator.Core;
 using Dependinator.Core.Shared;
+using Dependinator.Core.Utils;
 
 namespace Dependinator.Models;
 
@@ -45,10 +46,10 @@ interface IModelService
 
 // Model service
 [Transient]
-class ModelService : IModelService
+class ModelService : IModelService, IDisposable
 {
     static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
-    static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10) - SaveDelay;
+    static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10);
     readonly IModel model;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
@@ -57,6 +58,7 @@ class ModelService : IModelService
     readonly IProgressService progressService;
     readonly ICommandService commandService;
     readonly IHost host;
+    readonly Debouncer saveDebouncer = new();
 
     public ModelService(
         IModel model,
@@ -78,6 +80,12 @@ class ModelService : IModelService
         this.commandService = commandService;
         this.host = host;
         this.applicationEvents.SaveNeeded += TriggerSave;
+    }
+
+    public void Dispose()
+    {
+        applicationEvents.SaveNeeded -= TriggerSave;
+        saveDebouncer.Dispose();
     }
 
     public bool CanUndo => commandService.CanUndo;
@@ -478,52 +486,26 @@ class ModelService : IModelService
 
     public void TriggerSave()
     {
-        CancellationToken ct;
         lock (model.Lock)
         {
             if (model.Items.Count == 1)
                 return;
-
-            if (!model.IsSaving)
-            {
-                model.IsSaving = true;
-                model.ModifiedTime = DateTime.Now;
-                model.SaveCancelSource = new CancellationTokenSource();
-                ct = model.SaveCancelSource.Token;
-            }
-            else
-            {
-                if (DateTime.Now - model.ModifiedTime > MaxSaveDelay)
-                    return; // Time to save (not postponing more)
-
-                model.SaveCancelSource.Cancel(); // Postpone the save a bit more
-                model.SaveCancelSource = new CancellationTokenSource();
-                ct = model.SaveCancelSource.Token;
-            }
         }
 
-        Task.Delay(SaveDelay, ct)
-            .ContinueWith(t =>
-            {
-                if (!t.IsCanceled)
-                    Task.Run(() => Save(ct)).RunInBackground();
-            });
+        saveDebouncer.Debounce(SaveDelay, MaxSaveDelay, Save);
     }
 
-    void Save(CancellationToken ct)
+    void Save()
     {
-        if (ct.IsCancellationRequested)
-            return;
-
         ModelDto modelData;
-        string modelPath = model.Path;
+        string modelPath;
         lock (model.Lock)
         {
             modelPath = model.Path;
             modelData = model.SerializeToDto();
-            model.IsSaving = false;
         }
-        if (model.Path == "")
+
+        if (modelPath == "")
             return;
 
         persistenceService.WriteAsync(modelPath, modelData).RunInBackground();
