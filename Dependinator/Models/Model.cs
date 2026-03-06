@@ -47,7 +47,6 @@ interface IModel : IDisposable
     void RemoveLink(Link link);
 
     void Clear();
-    void ClearCachedSvg();
 
     ModelDto SerializeToDto();
     void SetFromDto(string path, ModelDto modelDto);
@@ -57,18 +56,13 @@ interface IModel : IDisposable
 class Model : IModel
 {
     readonly IModelStateLock modelStateLock;
-    readonly ITileCache tileCache;
 
     public Model()
         : this(new ModelStateLock()) { }
 
-    internal Model(IModelStateLock modelStateLock)
-        : this(modelStateLock, new Tiles(modelStateLock)) { }
-
-    public Model(IModelStateLock modelStateLock, ITileCache tileCache)
+    public Model(IModelStateLock modelStateLock)
     {
         this.modelStateLock = modelStateLock;
-        this.tileCache = tileCache;
         InitModel();
     }
 
@@ -195,14 +189,8 @@ class Model : IModel
         ViewRect = Rect.None;
         Zoom = 0;
         Offset = Pos.None;
-        ClearCachedSvg();
 
         InitModel();
-    }
-
-    public void ClearCachedSvg()
-    {
-        tileCache.ClearCache();
     }
 
     public void RemoveLink(Link link)

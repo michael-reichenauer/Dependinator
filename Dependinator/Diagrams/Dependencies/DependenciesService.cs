@@ -36,6 +36,7 @@ class DependenciesService(
     ISelectionService selectionService,
     IApplicationEvents applicationEvents,
     IModelService modelService,
+    ITileCache tileCache,
     INavigationService navigationService
 ) : IDependenciesService
 {
@@ -89,7 +90,7 @@ class DependenciesService(
         ancestor.AddDirectLine(directLine);
         model.AddLine(directLine);
 
-        model.ClearCachedSvg();
+        tileCache.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -113,7 +114,7 @@ class DependenciesService(
         line.Target.Remove(line);
         line.Source.Remove(line);
         model.Items.Remove(line.Id);
-        model.ClearCachedSvg();
+        tileCache.ClearCache();
 
         if (shouldUnselect)
             selectionService.Unselect();

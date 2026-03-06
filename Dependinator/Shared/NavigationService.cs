@@ -16,6 +16,7 @@ interface INavigationService
 class NavigationService(
     IApplicationEvents applicationEvents,
     IModelService modelService,
+    ITileCache tileCache,
     IPanZoomService panZoomService,
     ISelectionService selectionService,
     IScreenService screenService,
@@ -75,7 +76,7 @@ class NavigationService(
                 return false;
 
             if (node.EnsureLayoutForPath())
-                model.ClearCachedSvg();
+                tileCache.ClearCache();
 
             (pos, zoom) = node.GetCenterPosAndZoom();
         }

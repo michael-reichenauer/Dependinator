@@ -50,13 +50,14 @@ class ModelService : IModelService, IDisposable
 {
     static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
     static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10);
-    readonly IModel model;
+    readonly IModel privateModel;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
     readonly IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
     readonly IProgressService progressService;
     readonly ICommandService commandService;
+    readonly ITileCache tileCache;
     readonly IHost host;
     readonly Debouncer saveDebouncer = new();
 
@@ -68,16 +69,18 @@ class ModelService : IModelService, IDisposable
         IApplicationEvents applicationEvents,
         IProgressService progressService,
         ICommandService commandService,
+        ITileCache tileCache,
         IHost host
     )
     {
-        this.model = model;
+        this.privateModel = model;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
         this.persistenceService = persistenceService;
         this.applicationEvents = applicationEvents;
         this.progressService = progressService;
         this.commandService = commandService;
+        this.tileCache = tileCache;
         this.host = host;
         this.applicationEvents.SaveNeeded += TriggerSave;
     }
@@ -97,10 +100,7 @@ class ModelService : IModelService, IDisposable
 
     public void ClearCache()
     {
-        using (var _ = model.UseModel())
-        {
-            model.ClearCachedSvg();
-        }
+        tileCache.ClearCache();
         TriggerSave();
     }
 
@@ -110,7 +110,7 @@ class ModelService : IModelService, IDisposable
         {
             commandService.Do(model, command);
             if (isClearCache)
-                model.ClearCachedSvg();
+                tileCache.ClearCache();
         }
 
         applicationEvents.TriggerUIStateChanged();
@@ -129,42 +129,46 @@ class ModelService : IModelService, IDisposable
         TriggerSave();
     }
 
-    public IModel UseModel() => model.UseModel();
+    public IModel UseModel()
+    {
+        privateModel.UseModel();
+        return privateModel;
+    }
 
     T Use<T>(Func<IModel, T> readFunc)
     {
-        using var _ = model.UseModel();
+        using var model = UseModel();
 
         return readFunc(model);
     }
 
     public Rect GetBounds()
     {
-        using var _ = model.UseModel();
+        using var model = UseModel();
         return model.Root.GetTotalBounds();
     }
 
     public bool TryNode(string id, out Node node)
     {
-        using var _ = model.UseModel();
+        using var model = UseModel();
         return model.TryGetNode(NodeId.FromId(id), out node);
     }
 
     public bool TryGetNode(string id, out Node node)
     {
-        using var _ = model.UseModel();
+        using var model = UseModel();
         return model.TryGetNode(NodeId.FromId(id), out node);
     }
 
     public bool UseNodeN(NodeId id, Action<Node> updateAction)
     {
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             if (!model.TryGetNode(id, out var node))
                 return false;
 
             updateAction(node);
-            model.ClearCachedSvg();
+            tileCache.ClearCache();
         }
 
         TriggerSave();
@@ -173,14 +177,14 @@ class ModelService : IModelService, IDisposable
 
     public bool UseNodeN(NodeId id, Func<Node, bool> updateAction)
     {
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             if (!model.TryGetNode(id, out var node))
                 return false;
 
             if (!updateAction(node))
                 return false;
-            model.ClearCachedSvg();
+            tileCache.ClearCache();
         }
 
         TriggerSave();
@@ -189,14 +193,14 @@ class ModelService : IModelService, IDisposable
 
     public bool UseLineN(LineId id, Func<Line, bool> updateAction)
     {
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             if (!model.TryGetLine(id, out var line))
                 return false;
 
             if (!updateAction(line))
                 return false;
-            model.ClearCachedSvg();
+            tileCache.ClearCache();
         }
 
         TriggerSave();
@@ -205,13 +209,13 @@ class ModelService : IModelService, IDisposable
 
     public bool UseLineN(LineId id, Action<Line> updateAction)
     {
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             if (!model.TryGetLine(id, out var line))
                 return false;
 
             updateAction(line);
-            model.ClearCachedSvg();
+            tileCache.ClearCache();
         }
 
         TriggerSave();
@@ -228,20 +232,23 @@ class ModelService : IModelService, IDisposable
 
     public (Rect, double) GetLatestView()
     {
-        using var _ = model.UseModel();
+        using var model = UseModel();
 
         return (model.ViewRect, model.Zoom);
     }
 
     public void Clear()
     {
-        using var _ = model.UseModel();
-        model.Clear();
+        using (var model = UseModel())
+        {
+            model.Clear();
+        }
+        tileCache.ClearCache();
     }
 
     public R<ModelDto> GetCurrentModelDto()
     {
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             if (string.IsNullOrWhiteSpace(model.Path))
                 return R.Error("Model is not loaded");
@@ -253,7 +260,7 @@ class ModelService : IModelService, IDisposable
     public async Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto)
     {
         string modelPath;
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             modelPath = model.Path;
         }
@@ -287,10 +294,7 @@ class ModelService : IModelService, IDisposable
             Log.Info("Failed to read cached model", e.ErrorMessage);
             var parsedModelInfo = await ParseNewModelAsync(path);
             TriggerSave();
-            using (var __ = model.UseModel())
-            {
-                model.ClearCachedSvg();
-            }
+            tileCache.ClearCache();
             applicationEvents.TriggerUIStateChanged();
             return parsedModelInfo;
         }
@@ -301,7 +305,7 @@ class ModelService : IModelService, IDisposable
 
     public void CheckLineVisibility()
     {
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             foreach (var line in model.Items.Values.OfType<Line>())
             {
@@ -331,18 +335,18 @@ class ModelService : IModelService, IDisposable
     public async Task<R> RefreshAsync()
     {
         var path = "";
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             path = model.Path;
         }
 
         if (!Try(out var e, await ParseAndUpdateAsync(path, true)))
             return e;
-        using (var _ = model.UseModel())
+        using (var _ = UseModel())
         {
             modelStructureService.ClearNotUpdated();
-            model.ClearCachedSvg();
         }
+        tileCache.ClearCache();
 
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
@@ -354,7 +358,7 @@ class ModelService : IModelService, IDisposable
         string modelPath;
         string nodeName;
 
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             modelPath = model.Path;
             if (string.IsNullOrEmpty(modelPath))
@@ -421,12 +425,13 @@ class ModelService : IModelService, IDisposable
             if (!Try(out var items, out var e, await ParseAsync(path)))
                 return e;
 
-            using (var __ = model.UseModel())
+            using (var model = UseModel())
             {
                 model.Path = path;
                 model.UpdateStamp = DateTime.UtcNow;
-                model.ClearCachedSvg();
             }
+
+            tileCache.ClearCache();
 
             await AddOrUpdateAllItems(items);
         }
@@ -451,10 +456,7 @@ class ModelService : IModelService, IDisposable
         if (!Try(out var items, out var e, await ParseAsync(path)))
             return e;
 
-        using (var ___ = model.UseModel())
-        {
-            model.ClearCachedSvg();
-        }
+        tileCache.ClearCache();
 
         await AddOrUpdateAllItems(items);
 
@@ -472,7 +474,7 @@ class ModelService : IModelService, IDisposable
 
     public void TriggerSave()
     {
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             if (model.Items.Count == 1)
                 return;
@@ -485,7 +487,7 @@ class ModelService : IModelService, IDisposable
     {
         ModelDto modelData;
         string modelPath;
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             modelPath = model.Path;
             modelData = model.SerializeToDto();
@@ -499,7 +501,7 @@ class ModelService : IModelService, IDisposable
 
     async Task<ModelInfo> LoadCachedModelDataAsync(string path, ModelDto modelDto)
     {
-        using (var _ = model.UseModel())
+        using (var model = UseModel())
         {
             model.SetFromDto(path, modelDto);
         }
@@ -523,7 +525,7 @@ class ModelService : IModelService, IDisposable
 
     void AddOrUpdateItems(IReadOnlyList<Parsing.Item> parsedItems)
     {
-        using (var _ = model.UseModel())
+        using (var _ = UseModel())
         {
             foreach (var parsedItem in parsedItems)
             {
@@ -537,7 +539,7 @@ class ModelService : IModelService, IDisposable
 
     void SetNodeAndLinkDtos(ModelDto modelDto)
     {
-        using (var _ = model.UseModel())
+        using (var _ = UseModel())
         {
             modelDto.Nodes.ForEach(modelStructureService.SetNodeDto);
             modelDto.Links.ForEach(modelStructureService.SetLinkDto);
