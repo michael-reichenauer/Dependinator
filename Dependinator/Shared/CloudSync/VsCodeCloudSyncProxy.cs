@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Dependinator.Core;
 using Dependinator.Models;
 using Shared;
 
@@ -37,6 +38,8 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
     // Checks whether the active host exposes the VS Code bridge object.
     public async Task<bool> IsAvailableAsync()
     {
+        if (!Build.IsWasm)
+            return false;
         return await jSInterop.Call<bool>("isVsCodeWebView");
     }
 

@@ -190,13 +190,21 @@
             _ => "Sync: no sync recorded",
         };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await base.OnInitializedAsync();
+        base.OnInitialized();
 
         applicationEvents.UIStateChanged += OnUiStateChanged;
         appCloudSyncService.Changed += OnUiStateChanged;
         appCloudSyncService.BackgroundSyncError += OnBackgroundSyncError;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (!firstRender)
+            return;
 
         if (!Try(out var error, await appCloudSyncService.InitializeAsync()))
             snackbar.Add(error.ErrorMessage, Severity.Warning);
