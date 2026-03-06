@@ -6,12 +6,13 @@ namespace Dependinator.Models;
 record ModelDto
 {
     public static string CurrentFormatVersion = "7";
-
     public string FormatVersion { get; init; } = CurrentFormatVersion;
+
     public required string Name { get; init; }
     public double Zoom { get; init; } = 0;
     public Pos Offset { get; init; } = Pos.None;
     public Rect ViewRect { get; init; } = Rect.None;
+
     public required IReadOnlyList<NodeDto> Nodes { get; init; }
     public required IReadOnlyList<LinkDto> Links { get; init; }
     public IReadOnlyList<LineDto> Lines { get; init; } = [];
@@ -19,37 +20,42 @@ record ModelDto
 
 interface IModel : IDisposable
 {
-    string Path { get; set; }
     object Lock { get; }
+
+    DateTime UpdateStamp { get; set; }
+    string Path { get; set; }
     Node Root { get; }
     Rect ViewRect { get; set; }
     double Zoom { get; set; }
-    DateTime UpdateStamp { get; set; }
-
     Pos Offset { get; set; }
+
     Tiles Tiles { get; }
+
     IDictionary<Id, IItem> Items { get; } // Ta bort
     bool IsSaving { get; set; }
     DateTime ModifiedTime { get; set; }
     CancellationTokenSource SaveCancelSource { get; set; }
 
-    bool TryGetNode(string id, out Node node);
+    bool ContainsKey(Id linkId);
+
     bool TryGetNode(NodeId id, out Node node);
-    void AddNode(Node node);
     Node GetNode(NodeId id);
-    void AddLink(Link link);
-    void RemoveLink(Link link);
-    Link GetLink(LinkId id);
     bool TryGetLink(LinkId id, out Link link);
-    void AddLine(Line line);
-    Line GetLine(LineId id);
+    Link GetLink(LinkId id);
     bool TryGetLine(LineId id, out Line line);
-    bool TryGetLine(string id, out Line line);
+    Line GetLine(LineId id);
+
+    void AddNode(Node node);
+    void AddLink(Link link);
+    void AddLine(Line line);
+
+    void RemoveLink(Link link);
+
     void Clear();
     void ClearCachedSvg();
-    bool ContainsKey(Id linkId);
     void ClearNotUpdated();
-    ModelDto ToDto();
+
+    ModelDto SerializeToDto();
     void SetFromDto(string path, ModelDto modelDto);
 }
 
@@ -99,7 +105,7 @@ class Model : IModel
     public DateTime ModifiedTime { get; set; } = DateTime.MinValue;
     public CancellationTokenSource SaveCancelSource { get; set; } = new();
 
-    public ModelDto ToDto() =>
+    public ModelDto SerializeToDto() =>
         new()
         {
             Name = Path,
@@ -139,11 +145,6 @@ class Model : IModel
     }
 
     public bool ContainsKey(Id id) => Items.ContainsKey(id);
-
-    public bool TryGetNode(string id, out Node node)
-    {
-        return TryGetNode(NodeId.FromId(id), out node);
-    }
 
     public bool TryGetNode(NodeId id, out Node node)
     {
@@ -193,11 +194,6 @@ class Model : IModel
     }
 
     public Line GetLine(LineId id) => (Line)Items[id];
-
-    public bool TryGetLine(string id, out Line line)
-    {
-        return TryGetLine(LineId.FromId(id), out line);
-    }
 
     public bool TryGetLine(LineId id, out Line link)
     {

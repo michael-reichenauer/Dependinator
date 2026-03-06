@@ -96,7 +96,7 @@ class DependenciesService(
     public bool TryGetLine(LineId lineId, out Line line)
     {
         using var model = modelService.UseModel();
-        return model.TryGetLine(lineId.Value, out line);
+        return model.TryGetLine(LineId.FromId(lineId.Value), out line);
     }
 
     public void HideDirectLine(LineId lineId)
@@ -192,14 +192,14 @@ class DependenciesService(
 
         using (var model = modelService.UseModel())
         {
-            if (model.TryGetNode(selectedId, out var selectedNode))
+            if (model.TryGetNode(NodeId.FromId(selectedId), out var selectedNode))
             {
                 Title = selectedNode.HtmlShortName;
                 var items = GetNodeItems(selectedNode, treeType);
                 treeItems.AddRange(items);
                 return treeItems;
             }
-            if (model.TryGetLine(selectedId, out var selectedLine))
+            if (model.TryGetLine(LineId.FromId(selectedId), out var selectedLine))
             {
                 Title = selectedLine.HtmlShortName;
                 var items = GetLineItems(selectedLine, treeType);

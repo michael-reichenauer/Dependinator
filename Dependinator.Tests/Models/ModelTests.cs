@@ -1,5 +1,5 @@
-using Dependinator.Models;
 using Dependinator.Core.Tests.Parsing.Utils;
+using Dependinator.Models;
 
 namespace Dependinator.Tests.Models;
 
@@ -26,7 +26,7 @@ public class ModelTests
         var model = new Model();
         TestHelper.AddItems(model, items);
 
-        var modelDto = model.ToDto();
+        var modelDto = model.SerializeToDto();
         await VerifyJson(modelDto);
     }
 

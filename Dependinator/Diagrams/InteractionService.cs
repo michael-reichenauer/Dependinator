@@ -161,7 +161,7 @@ class InteractionService : IInteractionService
 
                 using (var model = modelService.UseModel())
                 {
-                    if (model.TryGetNode(targetId.Id, out var node))
+                    if (model.TryGetNode(NodeId.FromId(targetId.Id), out var node))
                     {
                         var ancestor = node.Ancestors().FirstOrDefault(n => n.Id == selectId);
                         if (ancestor != null)

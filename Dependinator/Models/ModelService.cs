@@ -252,7 +252,7 @@ class ModelService : IModelService
             if (string.IsNullOrWhiteSpace(model.Path))
                 return R.Error("Model is not loaded");
 
-            return model.ToDto();
+            return model.SerializeToDto();
         }
     }
 
@@ -270,7 +270,9 @@ class ModelService : IModelService
         if (!Try(out var error, await WriteModelAsync(modelPath, modelDto)))
             return error;
 
-        return await LoadAsync(modelPath);
+        var modelInfo = await LoadCachedModelDataAsync(modelPath, modelDto);
+        CheckLineVisibility();
+        return modelInfo;
     }
 
     public Task<R> WriteModelAsync(string modelPath, ModelDto modelDto)
@@ -518,7 +520,7 @@ class ModelService : IModelService
         lock (model.Lock)
         {
             modelPath = model.Path;
-            modelData = model.ToDto();
+            modelData = model.SerializeToDto();
             model.IsSaving = false;
         }
         if (model.Path == "")
@@ -561,31 +563,6 @@ class ModelService : IModelService
                     modelStructureService.AddOrUpdateNode(parsedItem.Node);
                 if (parsedItem.Link is not null)
                     modelStructureService.AddOrUpdateLink(parsedItem.Link);
-            }
-        }
-    }
-
-    async Task UpdateAllItems(IReadOnlyList<Parsing.Item> items)
-    {
-        using var _ = Timing.Start($"Updated {items.Count} items");
-        await Task.Run(async () =>
-        {
-            foreach (var batch in items.Chunk(100))
-            {
-                await Task.Yield();
-                UpdateItems(batch);
-            }
-        });
-    }
-
-    void UpdateItems(IReadOnlyList<Parsing.Item> parsedItems)
-    {
-        lock (model.Lock)
-        {
-            foreach (var parsedItem in parsedItems)
-            {
-                if (parsedItem.Node is not null)
-                    modelStructureService.TryUpdateNode(parsedItem.Node);
             }
         }
     }
