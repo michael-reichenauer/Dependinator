@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace Shared;
 
 public sealed record CloudUserInfo(string UserId, string? Email);

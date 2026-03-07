@@ -23,7 +23,7 @@ public class ModelTests
         var items = new ItemsMock();
         await TestHelper.ParseType<ModelTestData>(items);
 
-        var model = new Model();
+        using var model = new ModelMgr(new ModelStateLock()).UseModel();
         TestHelper.AddItems(model, items);
 
         var modelDto = model.SerializeToDto();

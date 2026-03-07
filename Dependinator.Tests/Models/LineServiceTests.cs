@@ -7,8 +7,8 @@ public class LineServiceTests
     [Fact]
     public void AddLinesFromSourceToTarget_ShouldCreateSingleLineForSiblings()
     {
-        var model = new Model();
-        var lineService = new LineService(model);
+        using var model = new ModelMgr(new ModelStateLock()).UseModel();
+        var lineService = new LineService();
 
         var parent = new Node("Parent", model.Root);
         model.TryAddNode(parent);
@@ -22,7 +22,7 @@ public class LineServiceTests
         model.TryAddNode(target);
 
         var link = new Link(source, target);
-        lineService.AddLinesFromSourceToTarget(link);
+        lineService.AddLinesFromSourceToTarget(model, link);
 
         Assert.True(model.Lines.TryGetValue(LineId.From("Source", "Target"), out var line));
         Assert.Single(link.Lines);
@@ -32,8 +32,8 @@ public class LineServiceTests
     [Fact]
     public void AddLinesFromSourceToTarget_ShouldConnectAcrossParents()
     {
-        var model = new Model();
-        var lineService = new LineService(model);
+        using var model = new ModelMgr(new ModelStateLock()).UseModel();
+        var lineService = new LineService();
 
         var parentA = new Node("ParentA", model.Root);
         var parentB = new Node("ParentB", model.Root);
@@ -50,7 +50,7 @@ public class LineServiceTests
         model.TryAddNode(target);
 
         var link = new Link(source, target);
-        lineService.AddLinesFromSourceToTarget(link);
+        lineService.AddLinesFromSourceToTarget(model, link);
 
         Assert.Equal(3, link.Lines.Count);
         Assert.True(model.Lines.TryGetValue(LineId.From("Source", "ParentA"), out _));

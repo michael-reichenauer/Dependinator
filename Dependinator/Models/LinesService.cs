@@ -2,22 +2,22 @@ namespace Dependinator.Models;
 
 interface ILineService
 {
-    void AddLinesFromSourceToTarget(Link link);
+    void AddLinesFromSourceToTarget(IModel model, Link link);
 }
 
 [Transient]
-class LineService(IModel model) : ILineService
+class LineService() : ILineService
 {
-    public void AddLinesFromSourceToTarget(Link link)
+    public void AddLinesFromSourceToTarget(IModel model, Link link)
     {
         Node commonAncestor = GetCommonAncestor(link);
 
         // Add lines from source and target nodes upp to its parent for all ancestors until just before the common ancestor
-        var sourceAncestor = AddAncestorLines(link, link.Source, commonAncestor);
-        var targetAncestor = AddDescendantLines(link, link.Target, commonAncestor);
+        var sourceAncestor = AddAncestorLines(model, link, link.Source, commonAncestor);
+        var targetAncestor = AddDescendantLines(model, link, link.Target, commonAncestor);
 
         // Connect 'sibling' nodes that are ancestors to source and target (or are source/target if they are siblings)
-        AddDirectLine(sourceAncestor, targetAncestor, link);
+        AddDirectLine(model, sourceAncestor, targetAncestor, link);
     }
 
     static Node GetCommonAncestor(Link link)
@@ -26,7 +26,7 @@ class LineService(IModel model) : ILineService
         return link.Source.Ancestors().First(targetAncestors.Contains);
     }
 
-    Node AddAncestorLines(Link link, Node source, Node commonAncestor)
+    Node AddAncestorLines(IModel model, Link link, Node source, Node commonAncestor)
     {
         // Add lines from source node upp to all ancestors until just before common ancestors
         Node currentSource = source;
@@ -34,14 +34,14 @@ class LineService(IModel model) : ILineService
         {
             if (parent == commonAncestor)
                 break;
-            AddDirectLine(currentSource, parent, link);
+            AddDirectLine(model, currentSource, parent, link);
             currentSource = parent;
         }
 
         return currentSource;
     }
 
-    Node AddDescendantLines(Link link, Node target, Node commonAncestor)
+    Node AddDescendantLines(IModel model, Link link, Node target, Node commonAncestor)
     {
         // Add lines from just below commonAncestor node down to all descendants until target
         Node currentTarget = target;
@@ -49,14 +49,14 @@ class LineService(IModel model) : ILineService
         {
             if (parent == commonAncestor)
                 break;
-            AddDirectLine(parent, currentTarget, link);
+            AddDirectLine(model, parent, currentTarget, link);
             currentTarget = parent;
         }
 
         return currentTarget;
     }
 
-    void AddDirectLine(Node source, Node target, Link link)
+    void AddDirectLine(IModel model, Node source, Node target, Link link)
     {
         if (source.Name == target.Name)
             return;

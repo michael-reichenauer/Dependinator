@@ -31,8 +31,6 @@ interface IModel : IDisposable
     IReadOnlyDictionary<LinkId, Link> Links { get; }
     IReadOnlyDictionary<LineId, Line> Lines { get; }
 
-    IModel UseModel();
-
     void TryAddNode(Node node);
     void TryAddLink(Link link);
     void TryAddLine(Line line);
@@ -47,27 +45,31 @@ interface IModel : IDisposable
     void SetFromDto(string path, ModelDto modelDto);
 }
 
+interface IModelMgr
+{
+    IModel UseModel();
+}
+
 [Scoped]
-class Model : IModel
+class ModelMgr : IModelMgr
 {
     readonly IModelStateLock modelStateLock;
 
-    public Model()
-        : this(new ModelStateLock()) { }
+    readonly Model model;
 
-    public Model(IModelStateLock modelStateLock)
+    public ModelMgr(IModelStateLock modelStateLock)
     {
+        model = new(DisposeModel);
         this.modelStateLock = modelStateLock;
-        InitModel();
     }
 
     public IModel UseModel()
     {
         modelStateLock.Enter();
-        return this;
+        return model;
     }
 
-    public void Dispose()
+    void DisposeModel()
     {
         try
         {
@@ -78,6 +80,19 @@ class Model : IModel
             // Ignore, already released (when shutting down and DI calls dispose)
         }
     }
+}
+
+class Model : IModel
+{
+    readonly Action disposeAction;
+
+    public Model(Action disposeAction)
+    {
+        this.disposeAction = disposeAction;
+        InitModel();
+    }
+
+    public void Dispose() => disposeAction();
 
     public string Path { get; set; } = "";
     public DateTime UpdateStamp { get; set; }

@@ -10,16 +10,17 @@ public class StructureServiceTests
     [Fact]
     public void AddOrUpdateNode_ShouldCreateParentAndChild()
     {
-        var model = new Model { UpdateStamp = new DateTime(2024, 1, 1) };
+        using var model = new ModelMgr(new ModelStateLock()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
         var lineService = new Mock<ILineService>();
-        var service = new StructureService(model, lineService.Object);
+        var service = new StructureService(lineService.Object);
 
         var parsedNode = new ParsingNode(
             "Parent.Child",
             new Dependinator.Core.Parsing.NodeProperties { Parent = "Parent", Type = NodeType.Type }
         );
 
-        service.AddOrUpdateNode(parsedNode);
+        service.AddOrUpdateNode(model, parsedNode);
 
         Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Parent"), out var parent));
         Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Parent.Child"), out var child));
@@ -57,14 +58,14 @@ public class StructureServiceTests
     [Fact]
     public void AddOrUpdateLink_ShouldCreateNodesAndAddLinesOnce()
     {
-        var model = new Model();
+        using var model = new ModelMgr(new ModelStateLock()).UseModel();
         var lineService = new Mock<ILineService>();
-        var service = new StructureService(model, lineService.Object);
+        var service = new StructureService(lineService.Object);
 
         var parsedLink = new ParsingLink("Source", "Target", new Dependinator.Core.Parsing.LinkProperties());
 
-        service.AddOrUpdateLink(parsedLink);
-        service.AddOrUpdateLink(parsedLink);
+        service.AddOrUpdateLink(model, parsedLink);
+        service.AddOrUpdateLink(model, parsedLink);
 
         Assert.True(model.Links.TryGetValue(new LinkId("Source", "Target"), out var link));
         Assert.Equal("Source", link.Source.Name);
@@ -72,6 +73,7 @@ public class StructureServiceTests
         lineService.Verify(
             s =>
                 s.AddLinesFromSourceToTarget(
+                    model,
                     It.Is<Dependinator.Models.Link>(l => l.Source.Name == "Source" && l.Target.Name == "Target")
                 ),
             Times.Once

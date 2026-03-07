@@ -1,6 +1,4 @@
-using Dependinator.Core;
 using Dependinator.Core.Shared;
-using Dependinator.Core.Utils;
 
 namespace Dependinator.Models;
 
@@ -50,7 +48,7 @@ class ModelService : IModelService, IDisposable
 {
     static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
     static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10);
-    readonly IModel privateModel;
+    readonly IModelMgr modelMgr;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
     readonly IPersistenceService persistenceService;
@@ -62,7 +60,7 @@ class ModelService : IModelService, IDisposable
     readonly Debouncer saveDebouncer = new();
 
     public ModelService(
-        IModel model,
+        IModelMgr modelMgr,
         Parsing.IParserService parserService,
         IStructureService modelStructureService,
         IPersistenceService persistenceService,
@@ -73,7 +71,7 @@ class ModelService : IModelService, IDisposable
         IHost host
     )
     {
-        this.privateModel = model;
+        this.modelMgr = modelMgr;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
         this.persistenceService = persistenceService;
@@ -131,8 +129,7 @@ class ModelService : IModelService, IDisposable
 
     public IModel UseModel()
     {
-        privateModel.UseModel();
-        return privateModel;
+        return modelMgr.UseModel();
     }
 
     T Use<T>(Func<IModel, T> readFunc)
@@ -340,9 +337,9 @@ class ModelService : IModelService, IDisposable
 
         if (!Try(out var e, await ParseAndUpdateAsync(path, true)))
             return e;
-        using (var _ = UseModel())
+        using (var model = UseModel())
         {
-            modelStructureService.ClearNotUpdated();
+            modelStructureService.ClearNotUpdated(model);
         }
         tileCache.ClearCache();
 
@@ -492,25 +489,25 @@ class ModelService : IModelService, IDisposable
 
     void AddOrUpdateItems(IReadOnlyList<Parsing.Item> parsedItems)
     {
-        using (var _ = UseModel())
+        using (var model = UseModel())
         {
             foreach (var parsedItem in parsedItems)
             {
                 if (parsedItem.Node is not null)
-                    modelStructureService.AddOrUpdateNode(parsedItem.Node);
+                    modelStructureService.AddOrUpdateNode(model, parsedItem.Node);
                 if (parsedItem.Link is not null)
-                    modelStructureService.AddOrUpdateLink(parsedItem.Link);
+                    modelStructureService.AddOrUpdateLink(model, parsedItem.Link);
             }
         }
     }
 
     void SetNodeAndLinkDtos(ModelDto modelDto)
     {
-        using (var _ = UseModel())
+        using (var model = UseModel())
         {
-            modelDto.Nodes.ForEach(modelStructureService.SetNodeDto);
-            modelDto.Links.ForEach(modelStructureService.SetLinkDto);
-            modelDto.Lines.ForEach(modelStructureService.SetLineLayoutDto);
+            modelDto.Nodes.ForEach(n => modelStructureService.SetNodeDto(model, n));
+            modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));
+            modelDto.Lines.ForEach(l => modelStructureService.SetLineLayoutDto(model, l));
         }
     }
 }
