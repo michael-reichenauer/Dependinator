@@ -71,13 +71,13 @@ class DependenciesService(
 
         using var model = modelService.UseModel();
 
-        if (!model.TryGetNode(sourceId, out var sourceNode))
+        if (!model.Nodes.TryGetValue(sourceId, out var sourceNode))
             return;
-        if (!model.TryGetNode(targetId, out var targetNode))
+        if (!model.Nodes.TryGetValue(targetId, out var targetNode))
             return;
 
         var directLineId = LineId.FromDirect(sourceNode.Name, targetNode.Name);
-        if (model.TryGetLine(directLineId, out var existingLine))
+        if (model.Lines.TryGetValue(directLineId, out var existingLine))
             return;
 
         var ancestor = sourceNode.LowestCommonAncestor(targetNode);
@@ -88,7 +88,7 @@ class DependenciesService(
         };
 
         ancestor.AddDirectLine(directLine);
-        model.AddLine(directLine);
+        model.TryAddLine(directLine);
 
         tileCache.ClearCache();
         applicationEvents.TriggerUIStateChanged();
@@ -97,7 +97,7 @@ class DependenciesService(
     public bool TryGetLine(LineId lineId, out Line line)
     {
         using var model = modelService.UseModel();
-        return model.TryGetLine(LineId.FromId(lineId.Value), out line);
+        return model.Lines.TryGetValue(LineId.FromId(lineId.Value), out line!);
     }
 
     public void HideDirectLine(LineId lineId)
@@ -106,14 +106,11 @@ class DependenciesService(
 
         using var model = modelService.UseModel();
 
-        if (!model.TryGetLine(lineId, out var line))
+        if (!model.Lines.TryGetValue(lineId, out var line))
             return;
 
-        line.RenderAncestor?.RemoveDirectLine(line);
-        line.RenderAncestor = null;
-        line.Target.Remove(line);
-        line.Source.Remove(line);
-        model.Items.Remove(line.Id);
+        model.RemoveLine(line);
+
         tileCache.ClearCache();
 
         if (shouldUnselect)
@@ -193,14 +190,14 @@ class DependenciesService(
 
         using (var model = modelService.UseModel())
         {
-            if (model.TryGetNode(NodeId.FromId(selectedId), out var selectedNode))
+            if (model.Nodes.TryGetValue(NodeId.FromId(selectedId), out var selectedNode))
             {
                 Title = selectedNode.HtmlShortName;
                 var items = GetNodeItems(selectedNode, treeType);
                 treeItems.AddRange(items);
                 return treeItems;
             }
-            if (model.TryGetLine(LineId.FromId(selectedId), out var selectedLine))
+            if (model.Lines.TryGetValue(LineId.FromId(selectedId), out var selectedLine))
             {
                 Title = selectedLine.HtmlShortName;
                 var items = GetLineItems(selectedLine, treeType);

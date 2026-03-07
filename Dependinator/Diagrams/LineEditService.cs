@@ -27,7 +27,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
 
         using (var model = modelService.UseModel())
         {
-            if (!model.TryGetLine(lineId, out var line))
+            if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
             if (!LinePathGeometry.TryGetLocalEndpoints(line, out var endpoints))
                 return;
@@ -54,7 +54,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
 
         using (var model = modelService.UseModel())
         {
-            if (!model.TryGetLine(lineId, out var line))
+            if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
             if (line.SegmentPoints.Count == 0)
                 return;
@@ -80,7 +80,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
         IReadOnlyList<Pos> updatedPoints;
         using (var model = modelService.UseModel())
         {
-            if (!model.TryGetLine(LineId.FromId(pointerId.Id), out var line))
+            if (!model.Lines.TryGetValue(LineId.FromId(pointerId.Id), out var line))
                 return;
             if (!LinePathGeometry.TryGetOwnerNode(line, out var owner))
                 return;
@@ -107,7 +107,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
         IReadOnlyList<Pos> updatedPoints;
         using (var model = modelService.UseModel())
         {
-            if (!model.TryGetLine(LineId.FromId(pointerId.Id), out var line))
+            if (!model.Lines.TryGetValue(LineId.FromId(pointerId.Id), out var line))
                 return;
             if (pointerId.LinePointIndex < 0 || pointerId.LinePointIndex >= line.SegmentPoints.Count)
                 return;

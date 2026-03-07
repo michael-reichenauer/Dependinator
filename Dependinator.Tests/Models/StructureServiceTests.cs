@@ -1,5 +1,5 @@
-using Dependinator.Models;
 using Dependinator.Core.Parsing;
+using Dependinator.Models;
 using ParsingLink = Dependinator.Core.Parsing.Link;
 using ParsingNode = Dependinator.Core.Parsing.Node;
 
@@ -21,8 +21,8 @@ public class StructureServiceTests
 
         service.AddOrUpdateNode(parsedNode);
 
-        Assert.True(model.TryGetNode(NodeId.FromName("Parent"), out var parent));
-        Assert.True(model.TryGetNode(NodeId.FromName("Parent.Child"), out var child));
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Parent"), out var parent));
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Parent.Child"), out var child));
         Assert.Equal("Parent", child.Parent.Name);
         Assert.Contains(child, parent.Children);
         Assert.Equal(model.UpdateStamp, child.UpdateStamp);
@@ -66,7 +66,7 @@ public class StructureServiceTests
         service.AddOrUpdateLink(parsedLink);
         service.AddOrUpdateLink(parsedLink);
 
-        Assert.True(model.TryGetLink(new LinkId("Source", "Target"), out var link));
+        Assert.True(model.Links.TryGetValue(new LinkId("Source", "Target"), out var link));
         Assert.Equal("Source", link.Source.Name);
         Assert.Equal("Target", link.Target.Name);
         lineService.Verify(

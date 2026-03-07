@@ -151,20 +151,20 @@ class ModelService : IModelService, IDisposable
     public bool TryNode(string id, out Node node)
     {
         using var model = UseModel();
-        return model.TryGetNode(NodeId.FromId(id), out node);
+        return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
     }
 
     public bool TryGetNode(string id, out Node node)
     {
         using var model = UseModel();
-        return model.TryGetNode(NodeId.FromId(id), out node);
+        return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
     }
 
     public bool UseNodeN(NodeId id, Action<Node> updateAction)
     {
         using (var model = UseModel())
         {
-            if (!model.TryGetNode(id, out var node))
+            if (!model.Nodes.TryGetValue(id, out var node))
                 return false;
 
             updateAction(node);
@@ -179,7 +179,7 @@ class ModelService : IModelService, IDisposable
     {
         using (var model = UseModel())
         {
-            if (!model.TryGetNode(id, out var node))
+            if (!model.Nodes.TryGetValue(id, out var node))
                 return false;
 
             if (!updateAction(node))
@@ -195,7 +195,7 @@ class ModelService : IModelService, IDisposable
     {
         using (var model = UseModel())
         {
-            if (!model.TryGetLine(id, out var line))
+            if (!model.Lines.TryGetValue(id, out var line))
                 return false;
 
             if (!updateAction(line))
@@ -211,7 +211,7 @@ class ModelService : IModelService, IDisposable
     {
         using (var model = UseModel())
         {
-            if (!model.TryGetLine(id, out var line))
+            if (!model.Lines.TryGetValue(id, out var line))
                 return false;
 
             updateAction(line);
@@ -305,18 +305,16 @@ class ModelService : IModelService, IDisposable
 
     public void CheckLineVisibility()
     {
-        using (var model = UseModel())
+        using var model = UseModel();
+        foreach (var line in model.Lines.Values)
         {
-            foreach (var line in model.Items.Values.OfType<Line>())
+            if (line.IsDirect)
             {
-                if (line.IsDirect)
-                {
-                    line.IsHidden = false;
-                    continue;
-                }
-
-                line.IsHidden = line.Links.All(link => link.Source.IsHidden || link.Target.IsHidden);
+                line.IsHidden = false;
+                continue;
             }
+
+            line.IsHidden = line.Links.All(link => link.Source.IsHidden || link.Target.IsHidden);
         }
     }
 
@@ -364,7 +362,7 @@ class ModelService : IModelService, IDisposable
             if (string.IsNullOrEmpty(modelPath))
                 return R.Error("Model is not loaded");
 
-            if (!model.TryGetNode(nodeId, out var node))
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
                 return R.Error($"Failed to locate node '{nodeId.Value}' in the current model");
 
             nodeName = node.Name;
@@ -387,7 +385,7 @@ class ModelService : IModelService, IDisposable
     {
         using (var model = UseModel())
         {
-            if (!model.TryGetNode(nodeId, out Node node))
+            if (!model.Nodes.TryGetValue(nodeId, out Node? node))
                 return;
 
             LayoutNode(node, recursively);
@@ -438,31 +436,6 @@ class ModelService : IModelService, IDisposable
 
         CheckLineVisibility();
 
-        // ParseSourceAndUpdateAsync(path).RunInBackground();
-        return R.Ok;
-    }
-
-    async Task<R> ParseSourceAndUpdateAsync(string path)
-    {
-        if (!host.IsVscExtWasm && Build.IsWasm) // Parse source currently only supported when running as VS Code extension
-            return R.Ok;
-
-        using var _ = progressService.StartDiscreet();
-        await Task.Yield();
-        using var __ = Timing.Start($"Parsed source and added model items {path}");
-
-        Log.Info("Parsing source ...");
-
-        if (!Try(out var items, out var e, await ParseAsync(path)))
-            return e;
-
-        tileCache.ClearCache();
-
-        await AddOrUpdateAllItems(items);
-
-        applicationEvents.TriggerUIStateChanged();
-        applicationEvents.TriggerSaveNeeded();
-
         return R.Ok;
     }
 
@@ -474,12 +447,6 @@ class ModelService : IModelService, IDisposable
 
     public void TriggerSave()
     {
-        using (var model = UseModel())
-        {
-            if (model.Items.Count == 1)
-                return;
-        }
-
         saveDebouncer.Debounce(SaveDelay, MaxSaveDelay, Save);
     }
 

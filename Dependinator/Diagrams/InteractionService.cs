@@ -161,7 +161,7 @@ class InteractionService : IInteractionService
 
                 using (var model = modelService.UseModel())
                 {
-                    if (model.TryGetNode(NodeId.FromId(targetId.Id), out var node))
+                    if (model.Nodes.TryGetValue(NodeId.FromId(targetId.Id), out var node))
                     {
                         var ancestor = node.Ancestors().FirstOrDefault(n => n.Id == selectId);
                         if (ancestor != null)
@@ -224,7 +224,7 @@ class InteractionService : IInteractionService
         var selectId = NodeId.FromId(selectionService.SelectedId.Id);
 
         using var model = modelService.UseModel();
-        if (!model.TryGetNode(downId, out var node))
+        if (!model.Nodes.TryGetValue(downId, out var node))
             return;
         var ancestorId = node.Ancestors().FirstOrDefault(n => n.Id == selectId && !n.IsRoot);
         if (ancestorId == null)

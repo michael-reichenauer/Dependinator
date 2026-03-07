@@ -27,24 +27,19 @@ interface IModel : IDisposable
     double Zoom { get; set; }
     Pos Offset { get; set; }
 
-    IDictionary<Id, IItem> Items { get; }
+    IReadOnlyDictionary<NodeId, Node> Nodes { get; }
+    IReadOnlyDictionary<LinkId, Link> Links { get; }
+    IReadOnlyDictionary<LineId, Line> Lines { get; }
 
     IModel UseModel();
 
-    bool ContainsKey(Id linkId);
+    void TryAddNode(Node node);
+    void TryAddLink(Link link);
+    void TryAddLine(Line line);
 
-    bool TryGetNode(NodeId id, out Node node);
-    Node GetNode(NodeId id);
-    bool TryGetLink(LinkId id, out Link link);
-    Link GetLink(LinkId id);
-    bool TryGetLine(LineId id, out Line line);
-    Line GetLine(LineId id);
-
-    void AddNode(Node node);
-    void AddLink(Link link);
-    void AddLine(Line line);
-
+    void RemoveNode(Node node);
     void RemoveLink(Link link);
+    void RemoveLine(Line line);
 
     void Clear();
 
@@ -91,7 +86,14 @@ class Model : IModel
     public Pos Offset { get; set; } = Pos.None;
 
     public Node Root { get; private set; } = null!;
-    public IDictionary<Id, IItem> Items { get; } = new Dictionary<Id, IItem>();
+
+    Dictionary<NodeId, Node> nodes { get; } = [];
+    Dictionary<LinkId, Link> links { get; } = [];
+    Dictionary<LineId, Line> lines { get; } = [];
+
+    public IReadOnlyDictionary<NodeId, Node> Nodes => nodes;
+    public IReadOnlyDictionary<LinkId, Link> Links => links;
+    public IReadOnlyDictionary<LineId, Line> Lines => lines;
 
     public ModelDto SerializeToDto() =>
         new()
@@ -100,13 +102,12 @@ class Model : IModel
             Zoom = Zoom,
             Offset = Offset,
             ViewRect = ViewRect,
-            Nodes = [.. Items.Values.OfType<Models.Node>().Select(n => n.ToDto())],
-            Links = [.. Items.Values.OfType<Models.Link>().Select(l => l.ToDto())],
+            Nodes = [.. nodes.Values.Select(n => n.ToDto())],
+            Links = [.. links.Values.Select(l => l.ToDto())],
             Lines =
             [
-                .. Items
-                    .Values.OfType<Line>()
-                    .Where(l => !l.IsDirect && l.SegmentPoints.Count > 0)
+                .. lines
+                    .Values.Where(l => !l.IsDirect && l.SegmentPoints.Count > 0)
                     .Select(l => new LineDto() { LineId = l.Id.Value, SegmentPoints = [.. l.SegmentPoints] }),
             ],
         };
@@ -120,71 +121,32 @@ class Model : IModel
         // Nodes and links will be set by model service in separate worker thread
     }
 
-    public bool ContainsKey(Id id) => Items.ContainsKey(id);
-
-    public bool TryGetNode(NodeId id, out Node node)
+    public void TryAddNode(Node node)
     {
-        if (!Items.TryGetValue(id, out var item))
-        {
-            node = null!;
-            return false;
-        }
-        node = (Node)item;
-        return true;
-    }
-
-    public Node GetNode(NodeId id) => (Node)Items[id];
-
-    public Link GetLink(LinkId id) => (Link)Items[id];
-
-    public bool TryGetLink(LinkId id, out Link link)
-    {
-        if (!Items.TryGetValue(id, out var item))
-        {
-            link = null!;
-            return false;
-        }
-        link = (Link)item;
-        return true;
-    }
-
-    public Line GetLine(LineId id) => (Line)Items[id];
-
-    public bool TryGetLine(LineId id, out Line link)
-    {
-        if (!Items.TryGetValue(id, out var item))
-        {
-            link = null!;
-            return false;
-        }
-        link = (Line)item;
-        return true;
-    }
-
-    public void AddNode(Node node)
-    {
-        if (Items.ContainsKey(node.Id))
+        if (nodes.ContainsKey(node.Id))
             return;
-        Items[node.Id] = node;
+        nodes[node.Id] = node;
     }
 
-    public void AddLink(Link link)
+    public void TryAddLink(Link link)
     {
-        if (Items.ContainsKey(link.Id))
+        if (links.ContainsKey(link.Id))
             return;
-        Items[link.Id] = link;
+        links[link.Id] = link;
     }
 
-    public void AddLine(Line line)
+    public void TryAddLine(Line line)
     {
-        if (Items.ContainsKey(line.Id))
+        if (lines.ContainsKey(line.Id))
             return;
-        Items[line.Id] = line;
+        lines[line.Id] = line;
     }
 
     public void Clear()
     {
-        Items.Clear();
+        nodes.Clear();
+        links.Clear();
+        lines.Clear();
         Path = "";
         ViewRect = Rect.None;
         Zoom = 0;
@@ -193,9 +155,16 @@ class Model : IModel
         InitModel();
     }
 
+    public void RemoveNode(Node node)
+    {
+        var parent = node.Parent;
+        nodes.Remove(node.Id);
+        parent?.RemoveChild(node);
+    }
+
     public void RemoveLink(Link link)
     {
-        Items.Remove(link.Id);
+        links.Remove(link.Id);
 
         foreach (var line in link.Lines)
         {
@@ -208,9 +177,9 @@ class Model : IModel
         }
     }
 
-    private void RemoveLine(Line line)
+    public void RemoveLine(Line line)
     {
-        Items.Remove(line.Id);
+        lines.Remove(line.Id);
         line.RenderAncestor?.RemoveDirectLine(line);
         line.Target.Remove(line);
         line.Source.Remove(line);
@@ -218,15 +187,13 @@ class Model : IModel
 
     void InitModel()
     {
-        Root = DefaultRootNode();
-        Items[Root.Id] = Root;
-    }
-
-    static Node DefaultRootNode() =>
-        new("", null!)
+        Root = new("", null!)
         {
             Type = NodeType.Root,
             Boundary = new Rect(0, 0, 1000, 1000),
             ContainerZoom = 1,
         };
+
+        nodes[Root.Id] = Root;
+    }
 }

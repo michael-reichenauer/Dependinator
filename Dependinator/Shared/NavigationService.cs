@@ -72,7 +72,7 @@ class NavigationService(
 
         using (var model = modelService.UseModel())
         {
-            if (!model.TryGetNode(nodeId, out var node))
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
                 return false;
 
             if (node.EnsureLayoutForPath())
@@ -107,7 +107,7 @@ class NavigationService(
         FileSpan? fileSpan;
         using (var model = modelService.UseModel())
         {
-            if (!model.TryGetNode(nodeId, out var node))
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
             {
                 Log.Warn($"Failed find node for {nodeId}");
                 return;
@@ -139,8 +139,7 @@ class NavigationService(
         using (var model = modelService.UseModel())
         {
             nodeCandidates = model
-                .Items.Values.OfType<Models.Node>()
-                .Where(n => n.FileSpan is not null)
+                .Nodes.Values.Where(n => n.FileSpan is not null)
                 .Where(n => n.FileSpan!.Path.IsSameIc(fileLocation.Path))
                 .OrderBy(n => n.FileSpan!.StartLine)
                 .ToList();

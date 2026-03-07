@@ -68,7 +68,7 @@ class LineService(IModel model) : ILineService
             source.SourceLines.Add(line);
             target.TargetLines.Add(line);
 
-            model.AddLine(line);
+            model.TryAddLine(line);
         }
 
         line.Add(link);

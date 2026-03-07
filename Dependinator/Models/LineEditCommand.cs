@@ -14,7 +14,7 @@ class LineEditCommand : Command
 
     public override void Execute(IModel model)
     {
-        if (!model.TryGetLine(lineId, out var line) || SegmentPoints is null)
+        if (!model.Lines.TryGetValue(lineId, out var line) || SegmentPoints is null)
             return;
 
         SegmentPointsCopy = [.. line.SegmentPoints];
@@ -23,7 +23,7 @@ class LineEditCommand : Command
 
     public override void Unexecute(IModel model)
     {
-        if (!model.TryGetLine(lineId, out var line) || SegmentPointsCopy is null)
+        if (!model.Lines.TryGetValue(lineId, out var line) || SegmentPointsCopy is null)
             return;
 
         (SegmentPoints, SegmentPointsCopy) = (SegmentPointsCopy, SegmentPoints);

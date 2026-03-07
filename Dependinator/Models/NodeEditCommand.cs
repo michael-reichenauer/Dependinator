@@ -18,7 +18,7 @@ class NodeEditCommand : Command
 
     public override void Execute(IModel model)
     {
-        if (!model.TryGetNode(nodeId, out var node))
+        if (!model.Nodes.TryGetValue(nodeId, out var node))
             return;
 
         if (Boundary != null)
@@ -31,7 +31,7 @@ class NodeEditCommand : Command
 
     public override void Unexecute(IModel model)
     {
-        if (!model.TryGetNode(nodeId, out var node))
+        if (!model.Nodes.TryGetValue(nodeId, out var node))
             return;
 
         if (BoundaryCopy != null)

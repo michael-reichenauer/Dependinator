@@ -20,7 +20,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
     public void TryUpdateNode(Parsing.Node parsedNode)
     {
-        if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
+        if (!model.Nodes.TryGetValue(NodeId.FromName(parsedNode.Name), out var node))
         {
             Log.Info("Failed to find node corresponding to source", parsedNode.Name);
             return; // New node
@@ -32,7 +32,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {
-        if (!model.TryGetNode(NodeId.FromName(parsedNode.Name), out var node))
+        if (!model.Nodes.TryGetValue(NodeId.FromName(parsedNode.Name), out var node))
         { // New node, add it to the model and parent
             var parent = GetOrCreateParent(parsedNode);
 
@@ -42,7 +42,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
             node.Update(parsedNode);
             node.UpdateStamp = model.UpdateStamp;
 
-            model.AddNode(node);
+            model.TryAddNode(node);
             parent.AddChild(node);
 
             return;
@@ -63,7 +63,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
     {
         var linkId = new LinkId(parsedLink.Source, parsedLink.Target);
 
-        if (model.TryGetLink(linkId, out var link))
+        if (model.Links.TryGetValue(linkId, out var link))
         {
             link.UpdateStamp = model.UpdateStamp;
             link.Source.UpdateStamp = model.UpdateStamp;
@@ -73,8 +73,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
         EnsureSourceAndTargetExists(parsedLink.Source, parsedLink.Target);
 
-        var source = model.GetNode(NodeId.FromName(parsedLink.Source));
-        var target = model.GetNode(NodeId.FromName(parsedLink.Target));
+        var source = model.Nodes[NodeId.FromName(parsedLink.Source)];
+        var target = model.Nodes[NodeId.FromName(parsedLink.Target)];
         if (parsedLink.Properties.TargetType is not null && parsedLink.Properties.TargetType is not NodeType.None)
             target.Type = (NodeType)parsedLink.Properties.TargetType;
 
@@ -97,7 +97,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
             node.Boundary = NodeLayout.GetNextChildRect(parent);
         node.UpdateStamp = model.UpdateStamp;
 
-        model.AddNode(node);
+        model.TryAddNode(node);
         parent.AddChild(node);
 
         return;
@@ -107,8 +107,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
     {
         EnsureSourceAndTargetExists(linkDto.SourceName, linkDto.TargetName);
 
-        var source = model.GetNode(NodeId.FromName(linkDto.SourceName));
-        var target = model.GetNode(NodeId.FromName(linkDto.TargetName));
+        var source = model.Nodes[NodeId.FromName(linkDto.SourceName)];
+        var target = model.Nodes[NodeId.FromName(linkDto.TargetName)];
         var targetType = Enums.To<NodeType>(linkDto.TargetType, NodeType.None);
         if (targetType is not NodeType.None)
             target.Type = targetType;
@@ -121,7 +121,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
     public void SetLineLayoutDto(LineDto lineLayoutDto)
     {
-        if (!model.TryGetLine(LineId.FromId(lineLayoutDto.LineId), out var line))
+        if (!model.Lines.TryGetValue(LineId.FromId(lineLayoutDto.LineId), out var line))
             return;
 
         line.SetSegmentPoints(lineLayoutDto.SegmentPoints);
@@ -129,15 +129,12 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
     public void ClearNotUpdated()
     {
-        var links = model.Items.Values.OfType<Link>().Where(l => l.UpdateStamp != model.UpdateStamp).ToList();
+        var links = model.Links.Values.Where(l => l.UpdateStamp != model.UpdateStamp).ToList();
         Log.Info($"Remove {links.Count} links");
         foreach (var link in links)
             model.RemoveLink(link);
 
-        var nodes = model
-            .Items.Values.OfType<Node>()
-            .Where(n => n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0)
-            .ToList();
+        var nodes = model.Nodes.Values.Where(n => n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0).ToList();
         Log.Info($"Remove {nodes.Count} nodes");
         foreach (var node in nodes)
             RemoveNode(node);
@@ -161,7 +158,7 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
     void AddLink(Link link)
     {
-        model.AddLink(link);
+        model.TryAddLink(link);
         link.Target.AddTargetLink(link);
         if (link.Source.AddSourceLink(link))
         {
@@ -172,11 +169,11 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
     Node GetOrCreateNode(string name)
     {
         var nodeId = NodeId.FromName(name);
-        if (!model.TryGetNode(nodeId, out var item))
+        if (!model.Nodes.TryGetValue(nodeId, out var item))
         {
             var parent = DefaultParsingNode(name);
             AddOrUpdateNode(parent);
-            return model.GetNode(nodeId);
+            return model.Nodes[nodeId];
         }
 
         return item;
@@ -196,12 +193,12 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         }
 
         var nodeId = NodeId.FromName(parentName);
-        if (!model.TryGetNode(nodeId, out var item))
+        if (!model.Nodes.TryGetValue(nodeId, out var item))
         {
             var parentTyp = parentName == ExternalsNodeName ? Parsing.NodeType.Externals : Parsing.NodeType.Parent;
             var parent = DefaultParentNode(parentName, parentTyp);
             AddOrUpdateNode(parent);
-            return model.GetNode(nodeId);
+            return model.Nodes[nodeId];
         }
 
         return item;
@@ -212,12 +209,12 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
         var parentName = nodeDto.ParentName;
 
         var nodeId = NodeId.FromName(parentName);
-        if (!model.TryGetNode(nodeId, out var item))
+        if (!model.Nodes.TryGetValue(nodeId, out var item))
         {
             var parentTyp = Parsing.NodeType.None;
             var parent = DefaultParentNode(parentName, parentTyp);
             AddOrUpdateNode(parent);
-            return model.GetNode(nodeId);
+            return model.Nodes[nodeId];
         }
 
         return item;
@@ -225,12 +222,12 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
     void EnsureSourceAndTargetExists(string sourceName, string targetName)
     {
-        if (!model.ContainsKey(NodeId.FromName(sourceName)))
+        if (!model.Nodes.ContainsKey(NodeId.FromName(sourceName)))
         {
             AddOrUpdateNode(DefaultParsingNode(sourceName));
         }
 
-        if (!model.ContainsKey(NodeId.FromName(targetName)))
+        if (!model.Nodes.ContainsKey(NodeId.FromName(targetName)))
         {
             AddOrUpdateNode(DefaultParsingNode(targetName));
         }
@@ -243,9 +240,8 @@ class StructureService(IModel model, ILineService linesService) : IStructureServ
 
     void RemoveNode(Node node)
     {
-        model.Items.Remove(node.Id);
         var parent = node.Parent;
-        parent.RemoveChild(node);
+        model.RemoveNode(node);
         if (parent.UpdateStamp != model.UpdateStamp && parent.Children.Count == 0 && !parent.IsRoot)
             RemoveNode(parent);
     }
