@@ -15,7 +15,7 @@ interface INavigationService
 [Scoped]
 class NavigationService(
     IApplicationEvents applicationEvents,
-    IModelService modelService,
+    IModelMgr modelMgr,
     ITilesMgr tilesMgr,
     IPanZoomService panZoomService,
     ISelectionService selectionService,
@@ -70,7 +70,7 @@ class NavigationService(
         pos = Pos.None;
         zoom = 0.0;
 
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out var node))
                 return false;
@@ -105,7 +105,7 @@ class NavigationService(
         Log.Info("ShowEditor for", nodeId);
 
         FileSpan? fileSpan;
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out var node))
             {
@@ -136,7 +136,7 @@ class NavigationService(
     {
         nodeId = null!;
         List<Models.Node> nodeCandidates = [];
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
             nodeCandidates = model
                 .Nodes.Values.Where(n => n.FileSpan is not null)
@@ -193,8 +193,8 @@ class NavigationService(
         var dyPixels = nodeCenterY - svgCenterY;
         var distPixels = Math.Sqrt(dxPixels * dxPixels + dyPixels * dyPixels);
 
-        var currentOffset = modelService.Offset;
-        var currentZoom = modelService.Zoom;
+        var (currentOffset, currentZoom) = modelMgr.WithModel(m => (m.Offset, m.Zoom));
+
         var modelCenterPos = new Pos(
             currentOffset.X + screenService.SvgRect.Width / 2 * currentZoom,
             currentOffset.Y + screenService.SvgRect.Height / 2 * currentZoom

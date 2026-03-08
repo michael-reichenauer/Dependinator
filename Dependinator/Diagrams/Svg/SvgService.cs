@@ -10,31 +10,31 @@ interface ISvgService
 [Transient]
 class SvgService : ISvgService
 {
-    readonly IModelService modelService;
+    readonly IModelMgr modelMgr;
     readonly ITilesMgr tilesMgr;
 
-    public SvgService(IModelService modelService, ITilesMgr tilesMgr)
+    public SvgService(IModelMgr modelMgr, ITilesMgr tilesMgr)
     {
-        this.modelService = modelService;
+        this.modelMgr = modelMgr;
         this.tilesMgr = tilesMgr;
     }
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
         //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
-        using var model = modelService.UseModel();
+        using (var model = modelMgr.UseModel())
+        {
+            if (model.Root.Children.Count == 0)
+                return Tile.Empty;
+            if (viewRect.Width == 0 || viewRect.Height == 0)
+                return Tile.Empty;
 
-        if (model.Root.Children.Count == 0)
-            return Tile.Empty;
-        if (viewRect.Width == 0 || viewRect.Height == 0)
-            return Tile.Empty;
-
-        model.ViewRect = viewRect;
-        model.Zoom = zoom;
+            model.ViewRect = viewRect;
+            model.Zoom = zoom;
+        }
 
         TileKey tileKey;
         Tile tile;
-
         using (var tiles = tilesMgr.UseTiles())
         {
             if (tiles.TryGetLastUsed(viewRect, zoom, out tile))
@@ -48,7 +48,10 @@ class SvgService : ISvgService
         }
 
         // Create a new tile and cache it
-        tile = CreateModelTile(model, tileKey);
+        using (var model = modelMgr.UseModel())
+        {
+            tile = CreateModelTile(model, tileKey);
+        }
         using (var tiles = tilesMgr.UseTiles())
         {
             tiles.SetCached(tile, viewRect, zoom);
