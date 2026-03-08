@@ -16,7 +16,7 @@ interface INodeEditService
 }
 
 [Scoped]
-class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEditService
+class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INodeEditService
 {
     const double MaxZoom = 1.0;
     const double MinZoom = 1.0 / 10.0;
@@ -48,7 +48,7 @@ class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEdi
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
 
-        modelService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     public void SnapSelectedNodeToGrid(PointerId pointerId)
@@ -69,7 +69,7 @@ class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEdi
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
-        modelService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     public void SnapResizedSelectedNodeToGrid(PointerId pointerId)
@@ -98,7 +98,7 @@ class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEdi
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
 
-        modelService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary, ContainerOffset = newContainerOffset });
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary, ContainerOffset = newContainerOffset });
     }
 
     public void PanSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
@@ -120,7 +120,7 @@ class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEdi
             };
         }
 
-        modelService.Do(new NodeEditCommand(nodeId) { ContainerOffset = newContainerOffset });
+        commandService.Do(new NodeEditCommand(nodeId) { ContainerOffset = newContainerOffset });
     }
 
     public void IncreaseNodeSize(NodeId nodeId)
@@ -139,7 +139,7 @@ class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEdi
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
 
-        modelService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     public void DecreaseNodeSize(NodeId nodeId)
@@ -158,7 +158,7 @@ class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEdi
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
 
-        modelService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     public void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
@@ -242,7 +242,7 @@ class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEdi
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
 
-        modelService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary, ContainerOffset = newContainerOffset });
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary, ContainerOffset = newContainerOffset });
     }
 
     public void ZoomSelectedNode(PointerEvent e, PointerId pointerId)
@@ -281,7 +281,9 @@ class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEdi
             newContainerOffset = new Pos(x, y);
         }
 
-        modelService.Do(new NodeEditCommand(nodeId) { ContainerOffset = newContainerOffset, ContainerZoom = newZoom });
+        commandService.Do(
+            new NodeEditCommand(nodeId) { ContainerOffset = newContainerOffset, ContainerZoom = newZoom }
+        );
     }
 
     public void PanZoomToFit(PointerId pointerId)
@@ -320,7 +322,7 @@ class NodeEditService(IModelMgr modelMgr, IModelService modelService) : INodeEdi
             newOffset = new Pos(x, y);
         }
 
-        modelService.Do(new NodeEditCommand(nodeId) { ContainerOffset = newOffset, ContainerZoom = newZoom });
+        commandService.Do(new NodeEditCommand(nodeId) { ContainerOffset = newOffset, ContainerZoom = newZoom });
     }
 
     static Rect SnapResizeBoundaryToGrid(Rect boundary, NodeResizeType resizeType)

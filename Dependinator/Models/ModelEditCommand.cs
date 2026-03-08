@@ -15,7 +15,7 @@ class ModelEditCommand : Command
             (OffsetCopy, model.Offset) = (model.Offset, Offset);
     }
 
-    public override void Unexecute(IModel model)
+    public override void Revert(IModel model)
     {
         if (ZoomCopy != null)
             (Zoom, model.Zoom, ZoomCopy) = (model.Zoom, (double)ZoomCopy, null);
