@@ -21,13 +21,6 @@ interface IModelService
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
     Task<R<Source>> GetSourceAsync(NodeId nodeId);
-    bool UseNodeN(NodeId id, Action<Node> updateAction);
-    bool UseNode(string id, Func<Node, bool> useAction);
-    bool UseNodeN(NodeId id, Func<Node, bool> updateAction);
-    bool UseLine(string id, Func<Line, bool> useAction);
-    bool UseLineN(LineId id, Func<Line, bool> updateAction);
-    bool UseLine(string id, Action<Line> useAction);
-    bool UseLineN(LineId id, Action<Line> updateAction);
     void Clear();
     void ClearCache();
     Rect GetBounds();
@@ -141,74 +134,6 @@ class ModelService : IModelService, IDisposable
         using var model = modelMgr.UseModel();
         return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
     }
-
-    public bool UseNodeN(NodeId id, Action<Node> updateAction)
-    {
-        using (var model = modelMgr.UseModel())
-        {
-            if (!model.Nodes.TryGetValue(id, out var node))
-                return false;
-
-            updateAction(node);
-            tilesMgr.ClearCache();
-        }
-
-        TriggerSave();
-        return true;
-    }
-
-    public bool UseNodeN(NodeId id, Func<Node, bool> updateAction)
-    {
-        using (var model = modelMgr.UseModel())
-        {
-            if (!model.Nodes.TryGetValue(id, out var node))
-                return false;
-
-            if (!updateAction(node))
-                return false;
-            tilesMgr.ClearCache();
-        }
-
-        TriggerSave();
-        return true;
-    }
-
-    public bool UseLineN(LineId id, Func<Line, bool> updateAction)
-    {
-        using (var model = modelMgr.UseModel())
-        {
-            if (!model.Lines.TryGetValue(id, out var line))
-                return false;
-
-            if (!updateAction(line))
-                return false;
-            tilesMgr.ClearCache();
-        }
-
-        TriggerSave();
-        return true;
-    }
-
-    public bool UseLineN(LineId id, Action<Line> updateAction)
-    {
-        using (var model = modelMgr.UseModel())
-        {
-            if (!model.Lines.TryGetValue(id, out var line))
-                return false;
-
-            updateAction(line);
-            tilesMgr.ClearCache();
-        }
-
-        TriggerSave();
-        return true;
-    }
-
-    public bool UseNode(string id, Func<Node, bool> updateAction) => UseNodeN(NodeId.FromId(id), updateAction);
-
-    public bool UseLine(string id, Action<Line> updateAction) => UseLineN(LineId.FromId(id), updateAction);
-
-    public bool UseLine(string id, Func<Line, bool> updateAction) => UseLineN(LineId.FromId(id), updateAction);
 
     public (Rect, double) GetLatestView()
     {
