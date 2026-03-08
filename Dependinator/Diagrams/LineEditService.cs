@@ -11,7 +11,7 @@ interface ILineEditService
 }
 
 [Scoped]
-class LineEditService(IModelService modelService, IScreenService screenService) : ILineEditService
+class LineEditService(IModelMgr modelMgr, IModelService modelService, IScreenService screenService) : ILineEditService
 {
     static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 
@@ -25,7 +25,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
         if (worldHint is null)
             return;
 
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
@@ -52,7 +52,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
         if (worldHint is null)
             return;
 
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
@@ -78,7 +78,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
             return;
 
         IReadOnlyList<Pos> updatedPoints;
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Lines.TryGetValue(LineId.FromId(pointerId.Id), out var line))
                 return;
@@ -105,7 +105,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
             return;
 
         IReadOnlyList<Pos> updatedPoints;
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Lines.TryGetValue(LineId.FromId(pointerId.Id), out var line))
                 return;
@@ -134,8 +134,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
 
         var localX = screenPos.X - svgBound.X;
         var localY = screenPos.Y - svgBound.Y;
-        var zoom = modelService.Zoom;
-        var offset = modelService.Offset;
+        var (zoom, offset) = modelMgr.WithModel(m => (m.Zoom, m.Offset));
         return new Pos(offset.X + localX * zoom, offset.Y + localY * zoom);
     }
 

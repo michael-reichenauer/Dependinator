@@ -104,7 +104,7 @@ class ModelService : IModelService, IDisposable
 
     public void Do(Command command, bool isClearCache = true)
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             commandService.Do(model, command);
             if (isClearCache)
@@ -117,13 +117,13 @@ class ModelService : IModelService, IDisposable
 
     public void Undo()
     {
-        commandService.Undo(UseModel);
+        commandService.Undo(modelMgr.UseModel);
         TriggerSave();
     }
 
     public void Redo()
     {
-        commandService.Redo(UseModel);
+        commandService.Redo(modelMgr.UseModel);
         TriggerSave();
     }
 
@@ -134,32 +134,32 @@ class ModelService : IModelService, IDisposable
 
     T Use<T>(Func<IModel, T> readFunc)
     {
-        using var model = UseModel();
+        using var model = modelMgr.UseModel();
 
         return readFunc(model);
     }
 
     public Rect GetBounds()
     {
-        using var model = UseModel();
+        using var model = modelMgr.UseModel();
         return model.Root.GetTotalBounds();
     }
 
     public bool TryNode(string id, out Node node)
     {
-        using var model = UseModel();
+        using var model = modelMgr.UseModel();
         return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
     }
 
     public bool TryGetNode(string id, out Node node)
     {
-        using var model = UseModel();
+        using var model = modelMgr.UseModel();
         return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
     }
 
     public bool UseNodeN(NodeId id, Action<Node> updateAction)
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(id, out var node))
                 return false;
@@ -174,7 +174,7 @@ class ModelService : IModelService, IDisposable
 
     public bool UseNodeN(NodeId id, Func<Node, bool> updateAction)
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(id, out var node))
                 return false;
@@ -190,7 +190,7 @@ class ModelService : IModelService, IDisposable
 
     public bool UseLineN(LineId id, Func<Line, bool> updateAction)
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Lines.TryGetValue(id, out var line))
                 return false;
@@ -206,7 +206,7 @@ class ModelService : IModelService, IDisposable
 
     public bool UseLineN(LineId id, Action<Line> updateAction)
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Lines.TryGetValue(id, out var line))
                 return false;
@@ -229,14 +229,14 @@ class ModelService : IModelService, IDisposable
 
     public (Rect, double) GetLatestView()
     {
-        using var model = UseModel();
+        using var model = modelMgr.UseModel();
 
         return (model.ViewRect, model.Zoom);
     }
 
     public void Clear()
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             model.Clear();
         }
@@ -245,7 +245,7 @@ class ModelService : IModelService, IDisposable
 
     public R<ModelDto> GetCurrentModelDto()
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (string.IsNullOrWhiteSpace(model.Path))
                 return R.Error("Model is not loaded");
@@ -257,7 +257,7 @@ class ModelService : IModelService, IDisposable
     public async Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto)
     {
         string modelPath;
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             modelPath = model.Path;
         }
@@ -302,7 +302,7 @@ class ModelService : IModelService, IDisposable
 
     public void CheckLineVisibility()
     {
-        using var model = UseModel();
+        using var model = modelMgr.UseModel();
         foreach (var line in model.Lines.Values)
         {
             if (line.IsDirect)
@@ -330,14 +330,14 @@ class ModelService : IModelService, IDisposable
     public async Task<R> RefreshAsync()
     {
         var path = "";
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             path = model.Path;
         }
 
         if (!Try(out var e, await ParseAndUpdateAsync(path, true)))
             return e;
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             modelStructureService.ClearNotUpdated(model);
         }
@@ -353,7 +353,7 @@ class ModelService : IModelService, IDisposable
         string modelPath;
         string nodeName;
 
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             modelPath = model.Path;
             if (string.IsNullOrEmpty(modelPath))
@@ -380,7 +380,7 @@ class ModelService : IModelService, IDisposable
 
     public async Task LayoutNode(NodeId nodeId, bool recursively = false)
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out Node? node))
                 return;
@@ -420,7 +420,7 @@ class ModelService : IModelService, IDisposable
             if (!Try(out var items, out var e, await ParseAsync(path)))
                 return e;
 
-            using (var model = UseModel())
+            using (var model = modelMgr.UseModel())
             {
                 model.Path = path;
                 model.UpdateStamp = DateTime.UtcNow;
@@ -451,7 +451,7 @@ class ModelService : IModelService, IDisposable
     {
         ModelDto modelData;
         string modelPath;
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             modelPath = model.Path;
             modelData = model.SerializeToDto();
@@ -465,7 +465,7 @@ class ModelService : IModelService, IDisposable
 
     async Task<ModelInfo> LoadCachedModelDataAsync(string path, ModelDto modelDto)
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             model.SetFromDto(path, modelDto);
         }
@@ -489,7 +489,7 @@ class ModelService : IModelService, IDisposable
 
     void AddOrUpdateItems(IReadOnlyList<Parsing.Item> parsedItems)
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             foreach (var parsedItem in parsedItems)
             {
@@ -503,7 +503,7 @@ class ModelService : IModelService, IDisposable
 
     void SetNodeAndLinkDtos(ModelDto modelDto)
     {
-        using (var model = UseModel())
+        using (var model = modelMgr.UseModel())
         {
             modelDto.Nodes.ForEach(n => modelStructureService.SetNodeDto(model, n));
             modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));

@@ -206,8 +206,11 @@
         if (!firstRender)
             return;
 
-        if (!Try(out var error, await appCloudSyncService.InitializeAsync()))
-            snackbar.Add(error.ErrorMessage, Severity.Warning);
+        if (Build.IsWasm)
+        {
+            if (!Try(out var error, await appCloudSyncService.InitializeAsync()))
+                snackbar.Add(error.ErrorMessage, Severity.Warning);
+        }
     }
 
     static CloudIconInfo GetCloudIconInfo(CloudSyncState state) => state switch

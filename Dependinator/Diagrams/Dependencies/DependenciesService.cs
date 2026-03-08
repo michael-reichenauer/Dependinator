@@ -35,7 +35,7 @@ interface IDependenciesService
 class DependenciesService(
     ISelectionService selectionService,
     IApplicationEvents applicationEvents,
-    IModelService modelService,
+    IModelMgr modelMgr,
     ITilesMgr tilesMgr,
     INavigationService navigationService
 ) : IDependenciesService
@@ -69,7 +69,7 @@ class DependenciesService(
         var (sourceId, targetId) =
             treeType is TreeType.Dependencies ? (thisNodeId, otherNodeId) : (otherNodeId, thisNodeId);
 
-        using var model = modelService.UseModel();
+        using var model = modelMgr.UseModel();
 
         if (!model.Nodes.TryGetValue(sourceId, out var sourceNode))
             return;
@@ -96,7 +96,7 @@ class DependenciesService(
 
     public bool TryGetLine(LineId lineId, out Line line)
     {
-        using var model = modelService.UseModel();
+        using var model = modelMgr.UseModel();
         return model.Lines.TryGetValue(LineId.FromId(lineId.Value), out line!);
     }
 
@@ -104,7 +104,7 @@ class DependenciesService(
     {
         var shouldUnselect = selectionService.SelectedId.IsLine && selectionService.SelectedId.Id == lineId.Value;
 
-        using var model = modelService.UseModel();
+        using var model = modelMgr.UseModel();
 
         if (!model.Lines.TryGetValue(lineId, out var line))
             return;
@@ -126,13 +126,8 @@ class DependenciesService(
 
     public bool CanShowEditor(NodeId nodeId)
     {
-        return modelService.UseNodeN(
-            nodeId,
-            n =>
-            {
-                return n.FileSpanOrParentSpan is not null;
-            }
-        );
+        using var model = modelMgr.UseModel();
+        return model.Nodes.TryGetValue(nodeId, out var node) && node.FileSpanOrParentSpan is not null;
     }
 
     public async Task ShowEditorAsync(NodeId nodeId)
@@ -188,7 +183,7 @@ class DependenciesService(
 
         selectedId = selectionService.SelectedId.Id;
 
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
             if (model.Nodes.TryGetValue(NodeId.FromId(selectedId), out var selectedNode))
             {
