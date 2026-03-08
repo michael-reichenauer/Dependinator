@@ -11,12 +11,12 @@ interface ISvgService
 class SvgService : ISvgService
 {
     readonly IModelService modelService;
-    readonly ITileCache tileCache;
+    readonly ITilesMgr tilesMgr;
 
-    public SvgService(IModelService modelService, ITileCache tileCache)
+    public SvgService(IModelService modelService, ITilesMgr tilesMgr)
     {
         this.modelService = modelService;
-        this.tileCache = tileCache;
+        this.tilesMgr = tilesMgr;
     }
 
     public Tile GetTile(Rect viewRect, double zoom)
@@ -32,18 +32,27 @@ class SvgService : ISvgService
         model.ViewRect = viewRect;
         model.Zoom = zoom;
 
-        if (tileCache.TryGetLastUsed(viewRect, zoom, out var tile))
-            return tile; // Same tile as last call
+        TileKey tileKey;
+        Tile tile;
 
-        var tileKey = TileKey.From(viewRect, zoom);
-        if (tileCache.TryGetCached(tileKey, viewRect, zoom, out tile))
-            return tile;
-        // Log.Info("/n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-        // Log.Info($"Not Cached {tileKey}, for viewRect {viewRect} viewZoom: {zoom}, Tile:{tileKey.GetTileRect()}");
+        using (var tiles = tilesMgr.UseTiles())
+        {
+            if (tiles.TryGetLastUsed(viewRect, zoom, out tile))
+                return tile; // Same tile as last call
+
+            tileKey = TileKey.From(viewRect, zoom);
+            if (tiles.TryGetCached(tileKey, viewRect, zoom, out tile))
+                return tile;
+            // Log.Info("/n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            // Log.Info($"Not Cached {tileKey}, for viewRect {viewRect} viewZoom: {zoom}, Tile:{tileKey.GetTileRect()}");
+        }
 
         // Create a new tile and cache it
         tile = CreateModelTile(model, tileKey);
-        tileCache.SetCached(tile, viewRect, zoom);
+        using (var tiles = tilesMgr.UseTiles())
+        {
+            tiles.SetCached(tile, viewRect, zoom);
+        }
 
         // Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars");
         return tile;

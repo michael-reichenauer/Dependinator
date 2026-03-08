@@ -22,11 +22,14 @@ public class ModelTests
     {
         var items = new ItemsMock();
         await TestHelper.ParseType<ModelTestData>(items);
+        var modelMgr = new ModelMgr(new StateMgr());
 
-        using var model = new ModelMgr(new ModelStateLock()).UseModel();
-        TestHelper.AddItems(model, items);
+        var modelDto = modelMgr.WithModel(model =>
+        {
+            TestHelper.AddItems(model, items);
+            return model.SerializeToDto();
+        });
 
-        var modelDto = model.SerializeToDto();
         await VerifyJson(modelDto);
     }
 

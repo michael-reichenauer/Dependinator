@@ -7,7 +7,7 @@ public class ModelCleanupTests
     [Fact]
     public void ClearNotUpdated_ShouldRemoveStaleNodesAndParents()
     {
-        using var model = new ModelMgr(new ModelStateLock()).UseModel();
+        using var model = new ModelMgr(new StateMgr()).UseModel();
         var lineService = new Mock<ILineService>();
         var structureService = new StructureService(lineService.Object);
         var stamp = new DateTime(2024, 1, 1);
@@ -35,7 +35,7 @@ public class ModelCleanupTests
     [Fact]
     public void ClearNotUpdated_ShouldRemoveStaleLinksAndLines()
     {
-        using var model = new ModelMgr(new ModelStateLock()).UseModel();
+        using var model = new ModelMgr(new StateMgr()).UseModel();
         var lineService = new Mock<ILineService>();
         var structureService = new StructureService(lineService.Object);
         var stamp = new DateTime(2024, 1, 1);

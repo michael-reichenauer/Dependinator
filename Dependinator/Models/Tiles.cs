@@ -42,7 +42,7 @@ record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
     public override string ToString() => $"(({X},{Y},{Z}))";
 }
 
-interface ITileCache
+interface ITileCache : IDisposable
 {
     bool TryGetLastUsed(Rect viewRect, double zoom, out Tile tile);
     bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile);
@@ -50,9 +50,10 @@ interface ITileCache
     void ClearCache();
 }
 
-[Scoped]
-class Tiles(IModelStateLock modelStateLock) : ITileCache
+class TileCache : ITileCache
 {
+    readonly Action disposeAction;
+
     readonly Dictionary<TileKey, Tile> tiles = [];
     int currentScreenTileWidth = 0;
     int currentScreenTileHeight = 0;
@@ -61,56 +62,51 @@ class Tiles(IModelStateLock modelStateLock) : ITileCache
     double lastUsedZoom = 0;
     Tile lastUsedTile = Tile.Empty;
 
+    public TileCache(Action disposeAction)
+    {
+        this.disposeAction = disposeAction;
+    }
+
+    public void Dispose() => disposeAction();
+
     public bool TryGetLastUsed(Rect viewRect, double zoom, out Tile tile)
     {
-        using (var _ = modelStateLock.Use())
-        {
-            if (viewRect == lastUsedViewRect && zoom == lastUsedZoom)
-            { // No change, just reuse
-                tile = lastUsedTile;
-                return true;
-            }
-
-            ClearLastUsed();
-            tile = Tile.Empty;
-            return false;
+        if (viewRect == lastUsedViewRect && zoom == lastUsedZoom)
+        { // No change, just reuse
+            tile = lastUsedTile;
+            return true;
         }
+
+        ClearLastUsed();
+        tile = Tile.Empty;
+        return false;
     }
 
     public bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile)
     {
-        using (var _ = modelStateLock.Use())
+        ValidateScreenTileSize(key);
+        var isCached = tiles.TryGetValue(key, out tile!);
+        if (isCached)
         {
-            ValidateScreenTileSize(key);
-            var isCached = tiles.TryGetValue(key, out tile!);
-            if (isCached)
-            {
-                SetLastUsed(viewRect, zoom, tile);
-            }
-
-            return isCached;
+            SetLastUsed(viewRect, zoom, tile);
         }
+
+        return isCached;
     }
 
     public void SetCached(Tile tile, Rect viewRect, double zoom)
     {
-        using (var _ = modelStateLock.Use())
-        {
-            ValidateScreenTileSize(tile.Key);
-            tiles[tile.Key] = tile;
-            SetCurrentScreenTileSize(tile);
-            SetLastUsed(viewRect, zoom, tile);
-        }
+        ValidateScreenTileSize(tile.Key);
+        tiles[tile.Key] = tile;
+        SetCurrentScreenTileSize(tile);
+        SetLastUsed(viewRect, zoom, tile);
     }
 
     public void ClearCache()
     {
-        using (var _ = modelStateLock.Use())
-        {
-            tiles.Clear();
-            SetCurrentScreenTileSize(Tile.Empty);
-            ClearLastUsed();
-        }
+        tiles.Clear();
+        SetCurrentScreenTileSize(Tile.Empty);
+        ClearLastUsed();
     }
 
     void ClearLastUsed()

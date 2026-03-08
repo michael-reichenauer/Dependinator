@@ -7,7 +7,7 @@ public class LineServiceTests
     [Fact]
     public void AddLinesFromSourceToTarget_ShouldCreateSingleLineForSiblings()
     {
-        using var model = new ModelMgr(new ModelStateLock()).UseModel();
+        using var model = new ModelMgr(new StateMgr()).UseModel();
         var lineService = new LineService();
 
         var parent = new Node("Parent", model.Root);
@@ -32,7 +32,7 @@ public class LineServiceTests
     [Fact]
     public void AddLinesFromSourceToTarget_ShouldConnectAcrossParents()
     {
-        using var model = new ModelMgr(new ModelStateLock()).UseModel();
+        using var model = new ModelMgr(new StateMgr()).UseModel();
         var lineService = new LineService();
 
         var parentA = new Node("ParentA", model.Root);

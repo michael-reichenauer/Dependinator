@@ -14,14 +14,14 @@ interface ICommandService
 class CommandService : ICommandService
 {
     readonly IApplicationEvents applicationEvents;
-    readonly ITileCache tileCache;
+    readonly ITilesMgr tilesMgr;
     readonly Stack<Command> undoStack = [];
     readonly Stack<Command> redoStack = [];
 
-    public CommandService(IApplicationEvents applicationEvents, ITileCache tileCache)
+    public CommandService(IApplicationEvents applicationEvents, ITilesMgr tilesMgr)
     {
         this.applicationEvents = applicationEvents;
-        this.tileCache = tileCache;
+        this.tilesMgr = tilesMgr;
     }
 
     public bool CanUndo => undoStack.Any();
@@ -73,8 +73,8 @@ class CommandService : ICommandService
         using (var model = useModel())
         {
             command.Unexecute(model);
-            tileCache.ClearCache();
         }
+        tilesMgr.ClearCache();
         applicationEvents.TriggerUndoneRedone();
         applicationEvents.TriggerUIStateChanged();
     }
@@ -108,8 +108,8 @@ class CommandService : ICommandService
             using (var model = useModel())
             {
                 subCommand.Unexecute(model);
-                tileCache.ClearCache();
             }
+            tilesMgr.ClearCache();
 
             applicationEvents.TriggerUndoneRedone();
             applicationEvents.TriggerUIStateChanged();
@@ -127,8 +127,8 @@ class CommandService : ICommandService
             using (var model = useModel())
             {
                 subCommand.Execute(model);
-                tileCache.ClearCache();
             }
+            tilesMgr.ClearCache();
 
             applicationEvents.TriggerUndoneRedone();
             applicationEvents.TriggerUIStateChanged();

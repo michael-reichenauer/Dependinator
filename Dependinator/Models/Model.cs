@@ -45,43 +45,6 @@ interface IModel : IDisposable
     void SetFromDto(string path, ModelDto modelDto);
 }
 
-interface IModelMgr
-{
-    IModel UseModel();
-}
-
-[Scoped]
-class ModelMgr : IModelMgr
-{
-    readonly IModelStateLock modelStateLock;
-
-    readonly Model model;
-
-    public ModelMgr(IModelStateLock modelStateLock)
-    {
-        model = new(DisposeModel);
-        this.modelStateLock = modelStateLock;
-    }
-
-    public IModel UseModel()
-    {
-        modelStateLock.Enter();
-        return model;
-    }
-
-    void DisposeModel()
-    {
-        try
-        {
-            modelStateLock.Exit();
-        }
-        catch
-        {
-            // Ignore, already released (when shutting down and DI calls dispose)
-        }
-    }
-}
-
 class Model : IModel
 {
     readonly Action disposeAction;

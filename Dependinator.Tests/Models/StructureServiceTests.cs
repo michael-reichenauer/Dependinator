@@ -10,7 +10,7 @@ public class StructureServiceTests
     [Fact]
     public void AddOrUpdateNode_ShouldCreateParentAndChild()
     {
-        using var model = new ModelMgr(new ModelStateLock()).UseModel();
+        using var model = new ModelMgr(new StateMgr()).UseModel();
         model.UpdateStamp = new DateTime(2024, 1, 1);
         var lineService = new Mock<ILineService>();
         var service = new StructureService(lineService.Object);
@@ -58,7 +58,7 @@ public class StructureServiceTests
     [Fact]
     public void AddOrUpdateLink_ShouldCreateNodesAndAddLinesOnce()
     {
-        using var model = new ModelMgr(new ModelStateLock()).UseModel();
+        using var model = new ModelMgr(new StateMgr()).UseModel();
         var lineService = new Mock<ILineService>();
         var service = new StructureService(lineService.Object);
 
