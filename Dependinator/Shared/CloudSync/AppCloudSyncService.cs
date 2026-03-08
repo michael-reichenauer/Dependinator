@@ -63,6 +63,7 @@ class AppCloudSyncService(
     ICloudSyncService cloudSyncService,
     ICloudSyncStateService cloudSyncStateService,
     IModelService modelService,
+    IModelMgr modelMgr,
     IApplicationEvents applicationEvents,
     AppCloudSyncTimings? appCloudSyncTimings = null,
     Func<DateTimeOffset>? utcNowProvider = null,
@@ -105,7 +106,7 @@ class AppCloudSyncService(
     public bool HasRemoteChangesSinceLastSync => hasRemoteChangesSinceLastSync;
     public IReadOnlyList<CloudModelMetadata> CloudModels => cloudModels;
     public string? CurrentNormalizedModelPath =>
-        string.IsNullOrWhiteSpace(modelService.ModelPath) ? null : CloudModelPath.Normalize(modelService.ModelPath);
+        string.IsNullOrWhiteSpace(modelMgr.ModelPath) ? null : CloudModelPath.Normalize(modelMgr.ModelPath);
 
     // Initializes service state once and wires UI refresh events.
     public async Task<R> InitializeAsync()
@@ -225,7 +226,7 @@ class AppCloudSyncService(
         if (!Try(out ModelDto? modelDto, out ErrorResult? error, modelService.GetCurrentModelDto()))
             return error;
 
-        string modelPath = modelService.ModelPath;
+        string modelPath = modelMgr.ModelPath;
         if (!Try(out CloudModelMetadata? metadata, out error, await cloudSyncService.PushAsync(modelPath, modelDto)))
             return error;
 
@@ -243,7 +244,7 @@ class AppCloudSyncService(
 
     async Task<R<ModelInfo>> SyncDownCoreAsync(bool notifyChanged)
     {
-        string modelPath = modelService.ModelPath;
+        string modelPath = modelMgr.ModelPath;
         if (string.IsNullOrWhiteSpace(modelPath))
             return R.Error("Model is not loaded.");
 
@@ -328,7 +329,7 @@ class AppCloudSyncService(
         if (!cloudSyncService.IsAvailable || !authState.IsAuthenticated)
             return false;
 
-        return !string.IsNullOrWhiteSpace(modelService.ModelPath);
+        return !string.IsNullOrWhiteSpace(modelMgr.ModelPath);
     }
 
     bool IsAutoSyncAttemptDue()
@@ -339,7 +340,7 @@ class AppCloudSyncService(
 
     AutoSyncAction DetermineAutoSyncAction()
     {
-        string modelPath = modelService.ModelPath;
+        string modelPath = modelMgr.ModelPath;
         if (string.IsNullOrWhiteSpace(modelPath))
             return AutoSyncAction.None;
 
@@ -412,7 +413,7 @@ class AppCloudSyncService(
         if (!Try(out ErrorResult? error, await RefreshCloudModelsCoreAsync()))
             return error;
 
-        string modelPath = modelService.ModelPath;
+        string modelPath = modelMgr.ModelPath;
         if (!cloudSyncService.IsAvailable || string.IsNullOrWhiteSpace(modelPath))
         {
             ResetSyncSnapshot(clearCloudModels: false);

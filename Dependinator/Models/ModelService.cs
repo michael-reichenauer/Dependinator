@@ -1,19 +1,13 @@
-using Dependinator.Core.Shared;
-
 namespace Dependinator.Models;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
 
 interface IModelService
 {
-    string ModelPath { get; }
-
     Task<R<ModelInfo>> LoadAsync(string path);
-    (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
     void Clear();
     void ClearCache();
-    Rect GetBounds();
     void CheckLineVisibility();
     Task LayoutNode(NodeId nodeId, bool recursively = false);
     R<ModelDto> GetCurrentModelDto();
@@ -21,12 +15,12 @@ interface IModelService
     Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
 }
 
-// Model service
 [Transient]
 class ModelService : IModelService, IDisposable
 {
     static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
     static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10);
+
     readonly ITilesMgr tilesMgr;
     readonly IModelMgr modelMgr;
     readonly Parsing.IParserService parserService;
@@ -63,38 +57,16 @@ class ModelService : IModelService, IDisposable
         saveDebouncer.Dispose();
     }
 
-    public string ModelPath => Use(m => m.Path);
-
     public void ClearCache()
     {
         tilesMgr.ClearCache();
         TriggerSave();
     }
 
-    T Use<T>(Func<IModel, T> readFunc)
-    {
-        using var model = modelMgr.UseModel();
-
-        return readFunc(model);
-    }
-
-    public Rect GetBounds()
-    {
-        using var model = modelMgr.UseModel();
-        return model.Root.GetTotalBounds();
-    }
-
     public bool TryNode(string id, out Node node)
     {
         using var model = modelMgr.UseModel();
         return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
-    }
-
-    public (Rect, double) GetLatestView()
-    {
-        using var model = modelMgr.UseModel();
-
-        return (model.ViewRect, model.Zoom);
     }
 
     public void Clear()

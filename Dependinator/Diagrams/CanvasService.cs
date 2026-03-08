@@ -141,7 +141,7 @@ class CanvasService : ICanvasService
         }
         else
         {
-            var bound = modelService.GetBounds();
+            var bound = modelMgr.WithModel(m => m.Root.GetTotalBounds());
             panZoomService.PanZoomToFit(bound, 1, true);
         }
     }
@@ -177,7 +177,7 @@ class CanvasService : ICanvasService
 
     public void PanZoomToFit()
     {
-        var bound = modelService.GetBounds();
+        var bound = modelMgr.WithModel(m => m.Root.GetTotalBounds());
         panZoomService.PanZoomToFit(bound, Math.Min(1, Zoom));
         applicationEvents.TriggerUIStateChanged();
     }

@@ -124,7 +124,13 @@ public class AppCloudSyncServiceTests
         string modelPath = "/models/sample.model";
         ModelDto localModel = CreateModelDto("local");
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
-        SutContext context = CreateSutContext(modelPath, localModel, syncState: null, [cloudModel], CreateFastTimings());
+        SutContext context = CreateSutContext(
+            modelPath,
+            localModel,
+            syncState: null,
+            [cloudModel],
+            CreateFastTimings()
+        );
 
         await context.Sut.InitializeAsync();
         context.ApplicationEvents.TriggerUIStateChanged();
@@ -139,7 +145,13 @@ public class AppCloudSyncServiceTests
     {
         string modelPath = "/models/sample.model";
         ModelDto localModel = CreateModelDto("local");
-        SutContext context = CreateSutContext(modelPath, localModel, syncState: null, cloudModels: [], CreateFastTimings());
+        SutContext context = CreateSutContext(
+            modelPath,
+            localModel,
+            syncState: null,
+            cloudModels: [],
+            CreateFastTimings()
+        );
 
         await context.Sut.InitializeAsync();
         context.ApplicationEvents.TriggerUIStateChanged();
@@ -221,8 +233,8 @@ public class AppCloudSyncServiceTests
         SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], timings);
         List<string> errorMessages = [];
         context.Sut.BackgroundSyncError += message => errorMessages.Add(message);
-        context.CloudSyncService
-            .Setup(x => x.PushAsync(It.IsAny<string>(), It.IsAny<ModelDto>()))
+        context
+            .CloudSyncService.Setup(x => x.PushAsync(It.IsAny<string>(), It.IsAny<ModelDto>()))
             .Callback(() => context.Counters.PushCalls++)
             .ReturnsAsync(R.Error("Push failed."));
 
@@ -243,9 +255,7 @@ public class AppCloudSyncServiceTests
     {
         string modelPath = "/models/sample.model";
         SutContext context = CreateSutContext(modelPath, CreateModelDto("local"), syncState: null, cloudModels: []);
-        context.CloudSyncService
-            .Setup(x => x.ListAsync())
-            .ReturnsAsync(R.Error("Cloud model list failed."));
+        context.CloudSyncService.Setup(x => x.ListAsync()).ReturnsAsync(R.Error("Cloud model list failed."));
 
         R result = await context.Sut.InitializeAsync();
 
@@ -270,8 +280,8 @@ public class AppCloudSyncServiceTests
         };
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         SutContext context = CreateSutContext(modelPath, CreateModelDto("local"), syncState, [cloudModel]);
-        context.CloudSyncService
-            .Setup(x => x.LogoutAsync())
+        context
+            .CloudSyncService.Setup(x => x.LogoutAsync())
             .ReturnsAsync(new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null));
 
         await context.Sut.InitializeAsync();
@@ -296,9 +306,7 @@ public class AppCloudSyncServiceTests
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("stale-remote-list"));
         SutContext context = CreateSutContext(modelPath, localLoadedModel, syncState: null, [cloudModel]);
 
-        context.CloudSyncService
-            .Setup(x => x.PullAsync(modelPath))
-            .ReturnsAsync(remotePulledModel);
+        context.CloudSyncService.Setup(x => x.PullAsync(modelPath)).ReturnsAsync(remotePulledModel);
 
         await context.Sut.InitializeAsync();
         R<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
@@ -332,6 +340,7 @@ public class AppCloudSyncServiceTests
         Mock<ICloudSyncService> cloudSyncService = new();
         Mock<ICloudSyncStateService> cloudSyncStateService = new();
         Mock<IModelService> modelService = new();
+        Mock<IModelMgr> modelMgr = new();
         ApplicationEvents applicationEvents = new();
         SyncCallCounters counters = new();
 
@@ -360,7 +369,7 @@ public class AppCloudSyncServiceTests
             .Setup(x => x.RecordPullAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()))
             .Returns(Task.CompletedTask);
 
-        modelService.SetupGet(x => x.ModelPath).Returns(modelPath);
+        modelMgr.SetupGet(x => x.ModelPath).Returns(modelPath);
         modelService.Setup(x => x.GetCurrentModelDto()).Returns(currentModelDto);
         modelService
             .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()))
@@ -374,6 +383,7 @@ public class AppCloudSyncServiceTests
                 cloudSyncService.Object,
                 cloudSyncStateService.Object,
                 modelService.Object,
+                modelMgr.Object,
                 applicationEvents,
                 timings
             ),

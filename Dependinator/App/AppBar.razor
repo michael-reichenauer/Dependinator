@@ -3,7 +3,7 @@
 @inject ICanvasService srv
 @inject IAppCloudSyncService appCloudSyncService
 @inject ISnackbar snackbar
-@inject Dependinator.Models.IModelService modelService
+@inject Dependinator.Models.IModelMgr modelMgr
 @inject Dependinator.Models.ICommandService commandService
 @inject IApplicationEvents applicationEvents
 @implements IDisposable
@@ -187,7 +187,7 @@
         {
             { } latestSync =>
                 $"Sync: {GetSyncDirectionText(latestSync.Direction)} {latestSync.Utc.LocalDateTime:g} - {GetSyncStatusDescription(CurrentCloudSyncState)}",
-            null when string.IsNullOrWhiteSpace(modelService.ModelPath) => "Sync: model not loaded",
+            null when string.IsNullOrWhiteSpace(modelMgr.ModelPath) => "Sync: model not loaded",
             _ => "Sync: no sync recorded",
         };
 
@@ -303,7 +303,7 @@
         if (!skipConfirmation && await syncDownBox.ShowAsync() != true)
             return;
 
-        if (string.IsNullOrWhiteSpace(modelService.ModelPath))
+        if (string.IsNullOrWhiteSpace(modelMgr.ModelPath))
         {
             snackbar.Add("Model is not loaded.", Severity.Warning);
             return;
