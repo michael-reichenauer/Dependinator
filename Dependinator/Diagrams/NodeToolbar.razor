@@ -99,6 +99,9 @@
   Models.IModelService modelService { get; set; } = null!;
 
   [Inject]
+  Models.IModelMgr modelMgr { get; set; } = null!;
+
+  [Inject]
   INavigationService navigationService { get; set; } = null!;
 
   [Inject]
@@ -181,8 +184,8 @@
     FileSpan? nodeFileSpan = null;
 
     string nodeTitle = selectedId;
-    modelService.UseNode(
-        selectedId,
+    modelMgr.TryWithNode(
+        nodeId,
         node =>
         {
           nodeTitle = node.LongName;

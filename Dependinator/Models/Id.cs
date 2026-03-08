@@ -45,6 +45,8 @@ public record LinkId(string sourceName, string targetName) : Id(Id.ToId($"{sourc
 
 public record LineId : Id
 {
+    public static LineId Empty = new("");
+
     private LineId(string Value)
         : base(Value) { }
 

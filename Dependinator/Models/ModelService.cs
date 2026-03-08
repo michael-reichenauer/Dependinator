@@ -17,14 +17,10 @@ interface IModelService
     void Undo();
     void Redo();
 
-    IModel UseModel();
-
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
     Task<R<Source>> GetSourceAsync(NodeId nodeId);
-    bool TryGetNode(string id, out Node node);
-    bool UseNode(string id, Action<Node> useAction);
     bool UseNodeN(NodeId id, Action<Node> updateAction);
     bool UseNode(string id, Func<Node, bool> useAction);
     bool UseNodeN(NodeId id, Func<Node, bool> updateAction);
@@ -127,11 +123,6 @@ class ModelService : IModelService, IDisposable
         TriggerSave();
     }
 
-    public IModel UseModel()
-    {
-        return modelMgr.UseModel();
-    }
-
     T Use<T>(Func<IModel, T> readFunc)
     {
         using var model = modelMgr.UseModel();
@@ -146,12 +137,6 @@ class ModelService : IModelService, IDisposable
     }
 
     public bool TryNode(string id, out Node node)
-    {
-        using var model = modelMgr.UseModel();
-        return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
-    }
-
-    public bool TryGetNode(string id, out Node node)
     {
         using var model = modelMgr.UseModel();
         return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
@@ -218,8 +203,6 @@ class ModelService : IModelService, IDisposable
         TriggerSave();
         return true;
     }
-
-    public bool UseNode(string id, Action<Node> updateAction) => UseNodeN(NodeId.FromId(id), updateAction);
 
     public bool UseNode(string id, Func<Node, bool> updateAction) => UseNodeN(NodeId.FromId(id), updateAction);
 
