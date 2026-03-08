@@ -1,8 +1,5 @@
 namespace Dependinator.Models;
 
-[Serializable]
-record LinkDto(string SourceName, string TargetName, string TargetType);
-
 class Link : IItem
 {
     public List<Line> Lines { get; } = new();
