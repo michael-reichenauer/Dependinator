@@ -1,8 +1,8 @@
-﻿namespace Dependinator.Models;
+﻿namespace Dependinator.Models.Commands;
 
-class NodeEditCommand : Command
+class NodeEditCommand(NodeId nodeId) : Command
 {
-    readonly NodeId nodeId;
+    readonly NodeId nodeId = nodeId;
 
     public Rect? Boundary { get; set; }
     public Rect? BoundaryCopy { get; set; }
@@ -10,11 +10,6 @@ class NodeEditCommand : Command
     public Double? ContainerZoomCopy { get; set; }
     public Pos? ContainerOffset { get; set; }
     public Pos? ContainerOffsetCopy { get; set; }
-
-    public NodeEditCommand(NodeId nodeId)
-    {
-        this.nodeId = nodeId;
-    }
 
     public override void Execute(IModel model)
     {

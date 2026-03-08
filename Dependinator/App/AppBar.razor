@@ -1,10 +1,11 @@
 @using Dependinator.Core
+@using Dependinator.Models.Commands
 @using Dependinator.Shared.CloudSync
 @inject ICanvasService srv
 @inject IAppCloudSyncService appCloudSyncService
 @inject ISnackbar snackbar
 @inject Dependinator.Models.IModelMgr modelMgr
-@inject Dependinator.Models.ICommandService commandService
+@inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
 @implements IDisposable
 

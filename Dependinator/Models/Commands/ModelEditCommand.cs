@@ -1,3 +1,5 @@
+using Dependinator.Models.Commands;
+
 namespace Dependinator.Models;
 
 class ModelEditCommand : Command

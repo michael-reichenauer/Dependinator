@@ -1,16 +1,13 @@
+using Dependinator.Models.Commands;
+
 namespace Dependinator.Models;
 
-class LineEditCommand : Command
+class LineEditCommand(LineId lineId) : Command
 {
-    readonly LineId lineId;
+    readonly LineId lineId = lineId;
 
     public IReadOnlyList<Pos>? SegmentPoints { get; set; }
     public IReadOnlyList<Pos>? SegmentPointsCopy { get; set; }
-
-    public LineEditCommand(LineId lineId)
-    {
-        this.lineId = lineId;
-    }
 
     public override void Execute(IModel model)
     {
