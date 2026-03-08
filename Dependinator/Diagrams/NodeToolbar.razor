@@ -197,25 +197,6 @@
       await navigationService.ShowEditor(Models.NodeId.FromId(selectionService.SelectedId.Id));
       return;
     }
-    if (!Try(out var source, out var e, await modelService.GetSourceAsync(nodeId)))
-    {
-      await dialogService.ShowMessageBox("Source unavailable", e.ErrorMessage);
-      return;
-    }
-
-    var parameters = new DialogParameters
-    {
-      [nameof(NodeSourceDialog.Source)] = source,
-    };
-
-    var options = new DialogOptions
-    {
-      CloseOnEscapeKey = true,
-      FullWidth = true,
-      MaxWidth = MaxWidth.ExtraLarge,
-    };
-
-    await dialogService.ShowAsync<NodeSourceDialog>(nodeTitle, parameters, options);
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();

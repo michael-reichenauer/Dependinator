@@ -38,6 +38,7 @@ class CanvasService : ICanvasService
     readonly IScreenService screenService;
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
+    readonly IModelMgr modelMgr;
     readonly ISvgService svgService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInteropService;
@@ -50,6 +51,7 @@ class CanvasService : ICanvasService
         IScreenService screenService,
         IPanZoomService panZoomService,
         IModelService modelService,
+        IModelMgr modelMgr,
         ISvgService svgService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
@@ -62,6 +64,7 @@ class CanvasService : ICanvasService
         this.screenService = screenService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
+        this.modelMgr = modelMgr;
         this.svgService = svgService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
@@ -85,8 +88,8 @@ class CanvasService : ICanvasService
     public string Cursor => interactionService.Cursor;
 
     public Rect SvgRect => screenService.SvgRect;
-    public Pos Offset => modelService.Offset;
-    public double Zoom => modelService.Zoom;
+    public Pos Offset => modelMgr.WithModel(m => m.Offset);
+    public double Zoom => modelMgr.WithModel(m => m.Zoom);
     public double ActualZoom => LevelZoom != 0 ? Zoom / LevelZoom : 0;
 
     public string SvgViewBox =>
@@ -115,7 +118,7 @@ class CanvasService : ICanvasService
         if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath)))
             return;
 
-        DiagramName = modelService.ModelName;
+        DiagramName = modelMgr.WithModel(m => Path.GetFileNameWithoutExtension(m.Path));
         PanZoomModel(modelInfo);
 
         await recentModelsService.AddModelAsync(modelInfo.Path);

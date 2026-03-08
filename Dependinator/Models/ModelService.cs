@@ -6,10 +6,7 @@ record ModelInfo(string Path, Rect ViewRect, double Zoom);
 
 interface IModelService
 {
-    string ModelName { get; }
     string ModelPath { get; }
-    Pos Offset { get; }
-    double Zoom { get; }
 
     void Do(Command command, bool isClearCache = true);
     bool CanUndo { get; }
@@ -20,7 +17,6 @@ interface IModelService
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
-    Task<R<Source>> GetSourceAsync(NodeId nodeId);
     void Clear();
     void ClearCache();
     Rect GetBounds();
@@ -80,9 +76,7 @@ class ModelService : IModelService, IDisposable
 
     public bool CanUndo => commandService.CanUndo;
     public bool CanRedo => commandService.CanRedo;
-    public Pos Offset => Use(m => m.Offset);
-    public double Zoom => Use(m => m.Zoom);
-    public string ModelName => Use(m => Path.GetFileNameWithoutExtension(m.Path));
+
     public string ModelPath => Use(m => m.Path);
 
     public void ClearCache()
@@ -254,36 +248,6 @@ class ModelService : IModelService, IDisposable
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
         return R.Ok;
-    }
-
-    public async Task<R<Source>> GetSourceAsync(NodeId nodeId)
-    {
-        string modelPath;
-        string nodeName;
-
-        using (var model = modelMgr.UseModel())
-        {
-            modelPath = model.Path;
-            if (string.IsNullOrEmpty(modelPath))
-                return R.Error("Model is not loaded");
-
-            if (!model.Nodes.TryGetValue(nodeId, out var node))
-                return R.Error($"Failed to locate node '{nodeId.Value}' in the current model");
-
-            nodeName = node.Name;
-        }
-
-        if (
-            !Try(
-                out Dependinator.Core.Parsing.Source? source,
-                out var e,
-                await parserService.GetSourceAsync(modelPath, nodeName)
-            )
-        )
-            return e;
-
-        var sourceText = source.Text.Replace("\t", "  "); // The auto formatter removes this in Blazor code.
-        return new Source(sourceText, new FileLocation(source.Location.Path, source.Location.Line));
     }
 
     public async Task LayoutNode(NodeId nodeId, bool recursively = false)
