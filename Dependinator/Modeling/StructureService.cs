@@ -7,7 +7,6 @@ namespace Dependinator.Modeling;
 
 interface IStructureService
 {
-    void TryUpdateNode(IModel model, Parsing.Node parsedNode);
     void AddOrUpdateNode(IModel model, Parsing.Node parsedNode);
     void AddOrUpdateLink(IModel model, Parsing.Link parsedLink);
     void ClearNotUpdated(IModel model);
@@ -20,18 +19,6 @@ interface IStructureService
 class StructureService(ILineService linesService) : IStructureService
 {
     static readonly string ExternalsNodeName = "$Externals";
-
-    public void TryUpdateNode(IModel model, Parsing.Node parsedNode)
-    {
-        if (!model.Nodes.TryGetValue(NodeId.FromName(parsedNode.Name), out var node))
-        {
-            Log.Info("Failed to find node corresponding to source", parsedNode.Name);
-            return; // New node
-        }
-
-        node.Update(parsedNode);
-        node.UpdateStamp = model.UpdateStamp;
-    }
 
     public void AddOrUpdateNode(IModel model, Parsing.Node parsedNode)
     {
