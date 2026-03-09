@@ -1,6 +1,6 @@
 using Dependinator.Diagrams;
-using Dependinator.Models;
-using Dependinator.Models.Persistence;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Persistence;
 using Shared;
 
 namespace Dependinator.Shared.CloudSync;

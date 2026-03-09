@@ -1,6 +1,6 @@
 using Dependinator.Diagrams.Tiles;
 
-namespace Dependinator.Models.Commands;
+namespace Dependinator.Modeling.Commands;
 
 interface ICommandService
 {

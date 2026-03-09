@@ -1,7 +1,7 @@
 using Dependinator.Core.Parsing;
 using Dependinator.Diagrams;
 using Dependinator.Diagrams.Tiles;
-using Dependinator.Models;
+using Dependinator.Modeling;
 using Dependinator.Shared.Types;
 using FileLocation = Dependinator.Core.Parsing.FileLocation;
 
@@ -137,7 +137,7 @@ class NavigationService(
     bool TryGetNodeIdForFileLocation(FileLocation fileLocation, out NodeId nodeId)
     {
         nodeId = null!;
-        List<Models.Node> nodeCandidates = [];
+        List<Modeling.Node> nodeCandidates = [];
         using (var model = modelMgr.UseModel())
         {
             nodeCandidates = model

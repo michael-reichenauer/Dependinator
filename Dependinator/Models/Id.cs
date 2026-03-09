@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Dependinator.Models;
+namespace Dependinator.Modeling;
 
 public record Id(string Value)
 {

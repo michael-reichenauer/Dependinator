@@ -1,5 +1,5 @@
 using Dependinator.Core.Shared;
-using Dependinator.Models;
+using Dependinator.Modeling;
 using Dependinator.Shared.CloudSync;
 
 namespace Dependinator.Shared;

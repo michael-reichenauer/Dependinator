@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Dependinator.Shared.Types;
 
-namespace Dependinator.Models.Persistence;
+namespace Dependinator.Modeling.Persistence;
 
 // When caching the node, the NodeDto contains the cached data
 [Serializable]

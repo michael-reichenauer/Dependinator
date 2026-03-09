@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Dependinator.Core;
-using Dependinator.Models.Persistence;
+using Dependinator.Modeling.Persistence;
 using Shared;
 
 namespace Dependinator.Shared.CloudSync;

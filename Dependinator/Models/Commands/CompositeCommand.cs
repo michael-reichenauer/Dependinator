@@ -1,4 +1,4 @@
-namespace Dependinator.Models.Commands;
+namespace Dependinator.Modeling.Commands;
 
 class CompositeCommand : Command
 {

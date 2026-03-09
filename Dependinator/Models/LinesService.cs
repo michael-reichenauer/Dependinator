@@ -1,4 +1,4 @@
-namespace Dependinator.Models;
+namespace Dependinator.Modeling;
 
 interface ILineService
 {

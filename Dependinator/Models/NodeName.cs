@@ -1,6 +1,6 @@
 using Dependinator.Core.Parsing;
 
-namespace Dependinator.Models;
+namespace Dependinator.Modeling;
 
 class NodeName
 {

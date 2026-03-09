@@ -1,8 +1,8 @@
 using Dependinator.Diagrams.Tiles;
-using Dependinator.Models.Persistence;
+using Dependinator.Modeling.Persistence;
 using Dependinator.Shared.Types;
 
-namespace Dependinator.Models;
+namespace Dependinator.Modeling;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
 

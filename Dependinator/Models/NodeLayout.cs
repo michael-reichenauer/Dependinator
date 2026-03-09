@@ -1,6 +1,6 @@
 using Dependinator.Shared.Types;
 
-namespace Dependinator.Models;
+namespace Dependinator.Modeling;
 
 enum NodeLayoutDensity
 {

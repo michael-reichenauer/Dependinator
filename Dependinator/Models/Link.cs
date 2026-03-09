@@ -1,7 +1,7 @@
-using Dependinator.Models.Persistence;
+using Dependinator.Modeling.Persistence;
 using Dependinator.Shared.Types;
 
-namespace Dependinator.Models;
+namespace Dependinator.Modeling;
 
 class Link : IItem
 {

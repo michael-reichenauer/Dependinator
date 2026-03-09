@@ -1,4 +1,4 @@
-namespace Dependinator.Models.Commands;
+namespace Dependinator.Modeling.Commands;
 
 abstract class Command
 {

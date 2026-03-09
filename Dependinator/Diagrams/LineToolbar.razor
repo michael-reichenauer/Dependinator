@@ -46,7 +46,7 @@
         if (!selectionService.SelectedId.IsLine)
             return;
         await lineEditService.AddSegmentPoint(
-            Models.LineId.FromId(selectionService.SelectedId.Id),
+            Modeling.LineId.FromId(selectionService.SelectedId.Id),
             selectionService.SelectedLineClickPosition
         );
     }
@@ -55,7 +55,7 @@
         if (!selectionService.SelectedId.IsLine)
             return;
         await lineEditService.RemoveSegmentPoint(
-            Models.LineId.FromId(selectionService.SelectedId.Id),
+            Modeling.LineId.FromId(selectionService.SelectedId.Id),
             selectionService.SelectedLineClickPosition
         );
     }
@@ -63,7 +63,7 @@
     {
         if (!selectionService.SelectedId.IsLine)
             return;
-        var lineId = Models.LineId.FromId(selectionService.SelectedId.Id);
+        var lineId = Modeling.LineId.FromId(selectionService.SelectedId.Id);
         dependenciesService.HideDirectLine(lineId);
     }
     void PanToSource()
@@ -80,17 +80,17 @@
         SelectNode(line.Target);
     }
 
-    bool TryGetSelectedLine(out Models.Line line)
+    bool TryGetSelectedLine(out Modeling.Line line)
     {
         line = null!;
         if (!selectionService.SelectedId.IsLine)
             return false;
-        var lineId = Models.LineId.FromId(selectionService.SelectedId.Id);
+        var lineId = Modeling.LineId.FromId(selectionService.SelectedId.Id);
         var found = dependenciesService.TryGetLine(lineId, out line);
         return found && line is not null;
     }
 
-    void SelectNode(Models.Node node)
+    void SelectNode(Modeling.Node node)
     {
         applicationEvents.TriggerUIStateChanged();
         dependenciesService.ShowNodeAsync(node.Id);

@@ -1,6 +1,6 @@
 using Dependinator.Diagrams.Icons;
 using Dependinator.Diagrams.Tiles;
-using Dependinator.Models;
+using Dependinator.Modeling;
 using MudBlazor;
 
 namespace Dependinator.Diagrams.Dependencies;

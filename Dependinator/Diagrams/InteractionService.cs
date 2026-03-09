@@ -1,6 +1,6 @@
-﻿using Dependinator.Diagrams.Dependencies;
+using Dependinator.Diagrams.Dependencies;
 using Dependinator.Diagrams.Svg;
-using Dependinator.Models;
+using Dependinator.Modeling;
 
 namespace Dependinator.Diagrams;
 

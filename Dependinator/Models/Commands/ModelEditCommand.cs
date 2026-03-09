@@ -1,6 +1,6 @@
 using Dependinator.Shared.Types;
 
-namespace Dependinator.Models.Commands;
+namespace Dependinator.Modeling.Commands;
 
 class ModelEditCommand : Command
 {

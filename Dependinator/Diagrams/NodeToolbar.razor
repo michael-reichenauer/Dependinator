@@ -96,10 +96,10 @@
   IDependenciesService dependenciesService { get; set; } = null!;
 
   [Inject]
-  Models.IModelService modelService { get; set; } = null!;
+  Modeling.IModelService modelService { get; set; } = null!;
 
   [Inject]
-  Models.IModelMgr modelMgr { get; set; } = null!;
+  Modeling.IModelMgr modelMgr { get; set; } = null!;
 
   [Inject]
   INavigationService navigationService { get; set; } = null!;
@@ -133,7 +133,7 @@
   {
     if (!selectionService.SelectedId.IsNode)
       return;
-    var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
+    var nodeId = Modeling.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId);
@@ -149,7 +149,7 @@
     {
       return;
     }
-    var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
+    var nodeId = Modeling.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId, true);
@@ -157,15 +157,15 @@
     selectionService.SetEditMode(isEdit);
   }
 
-  async Task SetLayoutDensityAsync(Models.NodeLayoutDensity density)
+  async Task SetLayoutDensityAsync(Modeling.NodeLayoutDensity density)
   {
-    Models.NodeLayout.SetDensity(density);
+    Modeling.NodeLayout.SetDensity(density);
     await configService.SetAsync(config => config.LayoutDensity = density);
     applicationEvents.TriggerUIStateChanged();
   }
 
-  string DensityIcon(Models.NodeLayoutDensity density) =>
-      Models.NodeLayout.Density == density
+  string DensityIcon(Modeling.NodeLayoutDensity density) =>
+      Modeling.NodeLayout.Density == density
           ? MudBlazor.Icons.Material.Filled.CheckCircle
           : MudBlazor.Icons.Material.Outlined.Circle;
 
@@ -180,7 +180,7 @@
       return;
 
     string selectedId = selectionService.SelectedId.Id;
-    var nodeId = Models.NodeId.FromId(selectedId);
+    var nodeId = Modeling.NodeId.FromId(selectedId);
     FileSpan? nodeFileSpan = null;
 
     string nodeTitle = selectedId;
@@ -194,7 +194,7 @@
     );
     if (nodeFileSpan is not null && host.IsVscExtWasm)
     {
-      await navigationService.ShowEditor(Models.NodeId.FromId(selectionService.SelectedId.Id));
+      await navigationService.ShowEditor(Modeling.NodeId.FromId(selectionService.SelectedId.Id));
       return;
     }
   }

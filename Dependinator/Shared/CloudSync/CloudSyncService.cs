@@ -1,4 +1,4 @@
-using Dependinator.Models.Persistence;
+using Dependinator.Modeling.Persistence;
 using Shared;
 
 namespace Dependinator.Shared.CloudSync;

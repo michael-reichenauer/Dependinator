@@ -1,6 +1,6 @@
 using Dependinator.Shared.Types;
 
-namespace Dependinator.Models.Persistence;
+namespace Dependinator.Modeling.Persistence;
 
 [Serializable]
 record ModelDto

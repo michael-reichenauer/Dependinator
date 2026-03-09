@@ -1,4 +1,4 @@
-using Dependinator.Models;
+using Dependinator.Modeling;
 using MudBlazor;
 
 namespace Dependinator.Diagrams.Dependencies;
