@@ -2,6 +2,7 @@ using Dependinator.Core.Parsing;
 using Dependinator.Diagrams;
 using Dependinator.Diagrams.Tiles;
 using Dependinator.Models;
+using Dependinator.Shared.Types;
 using FileLocation = Dependinator.Core.Parsing.FileLocation;
 
 namespace Dependinator.Shared;

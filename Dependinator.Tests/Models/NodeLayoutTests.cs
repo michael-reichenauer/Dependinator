@@ -1,5 +1,6 @@
-using Dependinator.Models;
 using Dependinator.Core.Parsing;
+using Dependinator.Models;
+using Dependinator.Shared.Types;
 using ModelNode = Dependinator.Models.Node;
 
 namespace Dependinator.Tests.Models;

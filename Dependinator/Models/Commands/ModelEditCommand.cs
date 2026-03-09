@@ -1,3 +1,5 @@
+using Dependinator.Shared.Types;
+
 namespace Dependinator.Models.Commands;
 
 class ModelEditCommand : Command

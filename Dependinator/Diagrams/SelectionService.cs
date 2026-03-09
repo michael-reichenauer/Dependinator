@@ -1,4 +1,5 @@
 ﻿using Dependinator.Models;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Diagrams;
 
@@ -74,7 +75,7 @@ class SelectionService : ISelectionService
         if (!IsSelected)
             return;
 
-        selectedPosition = Models.Pos.None;
+        selectedPosition = Pos.None;
         return;
     }
 

@@ -1,4 +1,4 @@
-namespace Dependinator.Models;
+namespace Dependinator.Shared.Types;
 
 interface IItem { }
 

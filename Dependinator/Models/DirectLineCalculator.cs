@@ -1,4 +1,5 @@
 using Dependinator.Diagrams.Svg;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Models;
 

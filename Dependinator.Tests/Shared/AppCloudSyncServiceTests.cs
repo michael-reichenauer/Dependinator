@@ -2,6 +2,7 @@ using Dependinator.Diagrams;
 using Dependinator.Models;
 using Dependinator.Shared;
 using Dependinator.Shared.CloudSync;
+using Dependinator.Shared.Types;
 using Shared;
 
 namespace Dependinator.Tests.Shared;

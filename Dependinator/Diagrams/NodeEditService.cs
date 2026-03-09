@@ -1,5 +1,6 @@
 using Dependinator.Models;
 using Dependinator.Models.Commands;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Diagrams;
 

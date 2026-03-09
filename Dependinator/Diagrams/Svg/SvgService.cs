@@ -1,5 +1,6 @@
 using Dependinator.Diagrams.Tiles;
 using Dependinator.Models;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Diagrams.Svg;
 

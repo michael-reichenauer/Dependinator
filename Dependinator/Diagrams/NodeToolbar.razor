@@ -112,7 +112,7 @@
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
-  bool HasSelectedLine => selectionService.SelectedNodePosition != Models.Pos.None;
+  bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
   bool IsIconMode => !interactionService.IsContainer;
   bool CanShowSource => interactionService.CanShowSource;
 

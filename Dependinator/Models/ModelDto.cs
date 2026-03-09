@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Models;
 

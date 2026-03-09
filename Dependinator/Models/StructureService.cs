@@ -1,4 +1,5 @@
 using Dependinator.Core.Parsing;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Models;
 

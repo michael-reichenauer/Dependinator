@@ -32,7 +32,7 @@
 
 
 @code {
-    bool HasSelectedLine => selectionService.SelectedLinePosition != Models.Pos.None;
+    bool HasSelectedLine => selectionService.SelectedLinePosition != Shared.Types.Pos.None;
 
     bool isIcon => !interactionService.IsContainer;
     double left => selectionService.SelectedLinePosition.X;

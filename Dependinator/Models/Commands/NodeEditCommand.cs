@@ -1,4 +1,6 @@
-﻿namespace Dependinator.Models.Commands;
+﻿using Dependinator.Shared.Types;
+
+namespace Dependinator.Models.Commands;
 
 class NodeEditCommand(NodeId nodeId) : Command
 {
