@@ -1,5 +1,3 @@
-using Dependinator.Modeling;
-
 namespace Dependinator.Diagrams.Tiles;
 
 interface ITilesMgr

@@ -1,5 +1,6 @@
 using Dependinator.Modeling;
 using Dependinator.Modeling.Models;
+using Dependinator.Shared;
 
 namespace Dependinator.Tests.Models;
 

@@ -1,6 +1,7 @@
 using Dependinator.Core.Parsing;
 using Dependinator.Modeling;
 using Dependinator.Modeling.Models;
+using Dependinator.Shared;
 using ParsingLink = Dependinator.Core.Parsing.Link;
 using ParsingNode = Dependinator.Core.Parsing.Node;
 
