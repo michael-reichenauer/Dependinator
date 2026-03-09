@@ -1,6 +1,6 @@
 using Dependinator.Core.Shared;
 
-namespace Dependinator.Models;
+namespace Dependinator.Models.Persistence;
 
 interface IPersistenceService
 {

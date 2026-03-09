@@ -1,3 +1,4 @@
+using Dependinator.Models.Persistence;
 using Dependinator.Shared.Types;
 
 namespace Dependinator.Models;

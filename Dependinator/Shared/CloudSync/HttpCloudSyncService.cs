@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using Dependinator.Models;
+using Dependinator.Models.Persistence;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using Shared;

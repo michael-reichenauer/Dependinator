@@ -1,5 +1,6 @@
 using Dependinator.Diagrams;
 using Dependinator.Models;
+using Dependinator.Models.Persistence;
 using Dependinator.Shared;
 using Dependinator.Shared.CloudSync;
 using Dependinator.Shared.Types;
