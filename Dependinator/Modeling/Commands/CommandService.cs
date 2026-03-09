@@ -1,4 +1,5 @@
 using Dependinator.Diagrams.Tiles;
+using Dependinator.Modeling.Models;
 
 namespace Dependinator.Modeling.Commands;
 

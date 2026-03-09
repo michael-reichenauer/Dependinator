@@ -1,6 +1,4 @@
-using Dependinator.Modeling.Models;
-
-namespace Dependinator.Modeling;
+namespace Dependinator.Modeling.Models;
 
 interface IModelMgr
 {
@@ -12,7 +10,7 @@ interface IModelMgr
     bool TryWithNode(NodeId nodeId, Action<Node> action);
     bool TryWithNode(NodeId nodeId, Func<Node, bool> action);
     bool TryWithLink(LinkId linkId, Action<Link> action);
-    bool TryWithLing(LinkId linkId, Func<Link, bool> action);
+    bool TryWithLink(LinkId linkId, Func<Link, bool> action);
     bool TryWithLine(LineId lineId, Action<Line> action);
     bool TryWithLine(LineId lineId, Func<Line, bool> action);
 }
@@ -70,7 +68,7 @@ class ModelMgr(IStateMgr stateMgr) : IModelMgr
         return true;
     }
 
-    public bool TryWithLing(LinkId linkId, Func<Link, bool> action)
+    public bool TryWithLink(LinkId linkId, Func<Link, bool> action)
     {
         using var model = UseModel();
         if (!model.Links.TryGetValue(linkId, out var link))
