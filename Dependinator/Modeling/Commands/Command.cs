@@ -1,3 +1,5 @@
+using Dependinator.Modeling.Models;
+
 namespace Dependinator.Modeling.Commands;
 
 abstract class Command

@@ -1,4 +1,5 @@
 using Dependinator.Core.Parsing;
+using Dependinator.Modeling.Models;
 using Dependinator.Modeling.Persistence;
 using Dependinator.Shared.Types;
 
@@ -38,7 +39,7 @@ class StructureService(ILineService linesService) : IStructureService
         { // New node, add it to the model and parent
             var parent = GetOrCreateParent(model, parsedNode);
 
-            node = new Node(parsedNode.Name, parent);
+            node = new Models.Node(parsedNode.Name, parent);
             node.Boundary = parent.IsChildrenLayoutCustomized ? Rect.None : NodeLayout.GetNextChildRect(parent);
 
             node.Update(parsedNode);
@@ -80,7 +81,7 @@ class StructureService(ILineService linesService) : IStructureService
         if (parsedLink.Properties.TargetType is not null && parsedLink.Properties.TargetType is not NodeType.None)
             target.Type = (NodeType)parsedLink.Properties.TargetType;
 
-        link = new Link(source, target);
+        link = new Models.Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
 
         AddLink(model, link);
@@ -93,7 +94,7 @@ class StructureService(ILineService linesService) : IStructureService
 
         var parent = GetOrCreateParent(model, nodeDto);
 
-        var node = new Node(nodeDto.Name, parent);
+        var node = new Models.Node(nodeDto.Name, parent);
         node.SetFromDto(nodeDto);
         if (node.Boundary == Rect.None && !parent.IsChildrenLayoutCustomized)
             node.Boundary = NodeLayout.GetNextChildRect(parent);
@@ -115,7 +116,7 @@ class StructureService(ILineService linesService) : IStructureService
         if (targetType is not NodeType.None)
             target.Type = targetType;
 
-        var link = new Link(source, target);
+        var link = new Models.Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
 
         AddLink(model, link);
@@ -142,7 +143,7 @@ class StructureService(ILineService linesService) : IStructureService
             RemoveNode(model, node);
     }
 
-    void MoveNodeToParent(IModel model, Node node, string parentName)
+    void MoveNodeToParent(IModel model, Models.Node node, string parentName)
     {
         // Link lines need to be re-adjusted, so first remove all links and lines
         var lines = node.SourceLines.Concat(node.TargetLines).Concat(node.DirectLines).ToList();
@@ -158,7 +159,7 @@ class StructureService(ILineService linesService) : IStructureService
         links.ForEach(l => AddLink(model, l));
     }
 
-    void AddLink(IModel model, Link link)
+    void AddLink(IModel model, Models.Link link)
     {
         model.TryAddLink(link);
         link.Target.AddTargetLink(link);
@@ -168,7 +169,7 @@ class StructureService(ILineService linesService) : IStructureService
         }
     }
 
-    Node GetOrCreateNode(IModel model, string name)
+    Models.Node GetOrCreateNode(IModel model, string name)
     {
         var nodeId = NodeId.FromName(name);
         if (!model.Nodes.TryGetValue(nodeId, out var item))
@@ -181,7 +182,7 @@ class StructureService(ILineService linesService) : IStructureService
         return item;
     }
 
-    Node GetOrCreateParent(IModel model, Parsing.Node parsedNode)
+    Models.Node GetOrCreateParent(IModel model, Parsing.Node parsedNode)
     {
         var parentName = parsedNode.Properties.Parent;
         if (parentName is null)
@@ -206,7 +207,7 @@ class StructureService(ILineService linesService) : IStructureService
         return item;
     }
 
-    Node GetOrCreateParent(IModel model, NodeDto nodeDto)
+    Models.Node GetOrCreateParent(IModel model, NodeDto nodeDto)
     {
         var parentName = nodeDto.ParentName;
 
@@ -240,7 +241,7 @@ class StructureService(ILineService linesService) : IStructureService
 
     static Parsing.Node DefaultParsingNode(string name) => new(name, new() { Type = Parsing.NodeType.None });
 
-    void RemoveNode(IModel model, Node node)
+    void RemoveNode(IModel model, Models.Node node)
     {
         var parent = node.Parent;
         model.RemoveNode(node);

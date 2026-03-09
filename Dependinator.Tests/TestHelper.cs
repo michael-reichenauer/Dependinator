@@ -2,6 +2,7 @@ using Dependinator.Core.Parsing.Assemblies;
 using Dependinator.Core.Parsing.Utils;
 using Dependinator.Core.Tests.Parsing.Utils;
 using Dependinator.Modeling;
+using Dependinator.Modeling.Models;
 using Mono.Cecil;
 
 namespace Dependinator.Tests;

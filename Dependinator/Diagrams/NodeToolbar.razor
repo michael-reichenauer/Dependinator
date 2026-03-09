@@ -133,7 +133,7 @@
   {
     if (!selectionService.SelectedId.IsNode)
       return;
-    var nodeId = Modeling.NodeId.FromId(selectionService.SelectedId.Id);
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId);
@@ -149,7 +149,7 @@
     {
       return;
     }
-    var nodeId = Modeling.NodeId.FromId(selectionService.SelectedId.Id);
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId, true);
@@ -180,7 +180,7 @@
       return;
 
     string selectedId = selectionService.SelectedId.Id;
-    var nodeId = Modeling.NodeId.FromId(selectedId);
+    var nodeId = Modeling.Models.NodeId.FromId(selectedId);
     FileSpan? nodeFileSpan = null;
 
     string nodeTitle = selectedId;
@@ -194,7 +194,7 @@
     );
     if (nodeFileSpan is not null && host.IsVscExtWasm)
     {
-      await navigationService.ShowEditor(Modeling.NodeId.FromId(selectionService.SelectedId.Id));
+      await navigationService.ShowEditor(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
       return;
     }
   }

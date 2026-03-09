@@ -1,5 +1,6 @@
 using Dependinator.Core.Parsing;
 using Dependinator.Modeling;
+using Dependinator.Modeling.Models;
 using ParsingLink = Dependinator.Core.Parsing.Link;
 using ParsingNode = Dependinator.Core.Parsing.Node;
 
@@ -74,7 +75,7 @@ public class StructureServiceTests
             s =>
                 s.AddLinesFromSourceToTarget(
                     model,
-                    It.Is<Dependinator.Modeling.Link>(l => l.Source.Name == "Source" && l.Target.Name == "Target")
+                    It.Is<Modeling.Models.Link>(l => l.Source.Name == "Source" && l.Target.Name == "Target")
                 ),
             Times.Once
         );
