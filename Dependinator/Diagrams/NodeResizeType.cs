@@ -1,4 +1,4 @@
-namespace Dependinator.Modeling;
+namespace Dependinator.Diagrams;
 
 public enum NodeResizeType
 {

@@ -76,7 +76,7 @@ class NavigationService(
             if (!model.Nodes.TryGetValue(nodeId, out var node))
                 return false;
 
-            if (node.EnsureLayoutForPath())
+            if (EnsureLayoutForPath(node))
                 applicationEvents.TriggerModelChanged();
 
             (pos, zoom) = node.GetCenterPosAndZoom();
@@ -123,6 +123,16 @@ class NavigationService(
         Log.Info("Show editor for", fileSpan.Path, fileSpan.StartLine);
 
         await vsCodeSendService.ShowEditorAsync(new FileLocation(fileSpan.Path, fileSpan.StartLine + 1));
+    }
+
+    static bool EnsureLayoutForPath(Modeling.Models.Node node)
+    {
+        var needsLayout = node.Ancestors().Reverse().Where(ancestor => ancestor.IsChildrenLayoutRequired).ToList();
+        if (needsLayout.Count == 0)
+            return false;
+
+        needsLayout.ForEach(ancestor => NodeLayout.AdjustChildren(ancestor));
+        return true;
     }
 
     static FileLocation ParseFileLocation(string fileLocation)

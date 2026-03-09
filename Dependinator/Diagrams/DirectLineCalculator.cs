@@ -2,7 +2,7 @@ using Dependinator.Diagrams.Svg;
 using Dependinator.Modeling.Models;
 using Dependinator.Shared.Types;
 
-namespace Dependinator.Modeling;
+namespace Dependinator.Diagrams;
 
 static class DirectLineCalculator
 {
