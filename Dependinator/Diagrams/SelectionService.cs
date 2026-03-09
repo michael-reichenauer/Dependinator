@@ -311,6 +311,7 @@ class SelectionService : ISelectionService
 
         modelService.CheckLineVisibility();
 
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
     }
 
