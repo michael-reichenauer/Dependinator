@@ -26,14 +26,14 @@ public class JSInterop : IJSInterop, IAsyncDisposable
 
     public async ValueTask Call(string functionName, params object?[]? args)
     {
-        Log.Info("Call", functionName);
+        //Log.Info("Call", functionName);
         IJSObjectReference module = await GetModuleAsync();
         await module.InvokeVoidAsync(functionName, args);
     }
 
     public async ValueTask<T> Call<T>(string functionName, params object?[]? args)
     {
-        Log.Info("Call", functionName);
+        //Log.Info("Call", functionName);
         IJSObjectReference module = await GetModuleAsync();
         return await module.InvokeAsync<T>(functionName, args);
     }

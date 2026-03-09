@@ -161,6 +161,8 @@ class Node : IItem
 
     internal Rect GetTotalBounds()
     {
+        if (IsChildrenLayoutRequired)
+            NodeLayout.AdjustChildren(this);
         // Calculate the total bounds of the children
         (double x1, double y1, double x2, double y2) = Children.Aggregate(
             (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue),

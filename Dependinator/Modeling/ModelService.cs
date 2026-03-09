@@ -19,7 +19,7 @@ interface IModelService
     Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
 }
 
-[Transient]
+[Scoped]
 class ModelService : IModelService, IDisposable
 {
     static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
