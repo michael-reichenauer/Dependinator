@@ -299,25 +299,21 @@ class ModelService : IModelService, IDisposable
 
     void AddOrUpdateItems(IReadOnlyList<Parsing.Item> parsedItems)
     {
-        using (var model = modelMgr.UseModel())
+        using var model = modelMgr.UseModel();
+        foreach (var parsedItem in parsedItems)
         {
-            foreach (var parsedItem in parsedItems)
-            {
-                if (parsedItem.Node is not null)
-                    modelStructureService.AddOrUpdateNode(model, parsedItem.Node);
-                if (parsedItem.Link is not null)
-                    modelStructureService.AddOrUpdateLink(model, parsedItem.Link);
-            }
+            if (parsedItem.Node is not null)
+                modelStructureService.AddOrUpdateNode(model, parsedItem.Node);
+            if (parsedItem.Link is not null)
+                modelStructureService.AddOrUpdateLink(model, parsedItem.Link);
         }
     }
 
     void SetNodeAndLinkDtos(ModelDto modelDto)
     {
-        using (var model = modelMgr.UseModel())
-        {
-            modelDto.Nodes.ForEach(n => modelStructureService.SetNodeDto(model, n));
-            modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));
-            modelDto.Lines.ForEach(l => modelStructureService.SetLineLayoutDto(model, l));
-        }
+        using var model = modelMgr.UseModel();
+        modelDto.Nodes.ForEach(n => modelStructureService.SetNodeDto(model, n));
+        modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));
+        modelDto.Lines.ForEach(l => modelStructureService.SetLineLayoutDto(model, l));
     }
 }
