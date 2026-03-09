@@ -1,3 +1,5 @@
+using Dependinator.Diagrams.Tiles;
+
 namespace Dependinator.Models.Commands;
 
 interface ICommandService

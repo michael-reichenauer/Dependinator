@@ -1,5 +1,6 @@
 using Dependinator.Core.Parsing;
 using Dependinator.Diagrams;
+using Dependinator.Diagrams.Tiles;
 using Dependinator.Models;
 using FileLocation = Dependinator.Core.Parsing.FileLocation;
 

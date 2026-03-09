@@ -1,3 +1,5 @@
+using Dependinator.Diagrams.Tiles;
+
 namespace Dependinator.Models;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);

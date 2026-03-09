@@ -1,6 +1,4 @@
-using Dependinator.Models.Commands;
-
-namespace Dependinator.Models;
+namespace Dependinator.Models.Commands;
 
 class LineEditCommand(LineId lineId) : Command
 {
