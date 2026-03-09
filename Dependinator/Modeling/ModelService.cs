@@ -1,4 +1,3 @@
-using Dependinator.Diagrams.Tiles;
 using Dependinator.Modeling.Models;
 using Dependinator.Modeling.Persistence;
 using Dependinator.Shared.Types;
@@ -26,7 +25,6 @@ class ModelService : IModelService, IDisposable
     static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(0.5);
     static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10);
 
-    readonly ITilesMgr tilesMgr;
     readonly IModelMgr modelMgr;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
@@ -37,7 +35,6 @@ class ModelService : IModelService, IDisposable
     readonly Debouncer saveDebouncer = new();
 
     public ModelService(
-        ITilesMgr tilesMgr,
         IModelMgr modelMgr,
         Parsing.IParserService parserService,
         IStructureService modelStructureService,
@@ -46,7 +43,6 @@ class ModelService : IModelService, IDisposable
         IProgressService progressService
     )
     {
-        this.tilesMgr = tilesMgr;
         this.modelMgr = modelMgr;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
@@ -64,7 +60,7 @@ class ModelService : IModelService, IDisposable
 
     public void ClearCache()
     {
-        tilesMgr.ClearCache();
+        applicationEvents.TriggerModelChanged();
         TriggerSave();
     }
 
@@ -80,7 +76,7 @@ class ModelService : IModelService, IDisposable
         {
             model.Clear();
         }
-        tilesMgr.ClearCache();
+        applicationEvents.TriggerModelChanged();
     }
 
     public R<ModelDto> GetCurrentModelDto()
@@ -131,7 +127,7 @@ class ModelService : IModelService, IDisposable
             Log.Info("Failed to read cached model", e.ErrorMessage);
             var parsedModelInfo = await ParseNewModelAsync(path);
             TriggerSave();
-            tilesMgr.ClearCache();
+            applicationEvents.TriggerModelChanged();
             applicationEvents.TriggerUIStateChanged();
             return parsedModelInfo;
         }
@@ -181,8 +177,8 @@ class ModelService : IModelService, IDisposable
         {
             modelStructureService.ClearNotUpdated(model);
         }
-        tilesMgr.ClearCache();
 
+        applicationEvents.TriggerModelChanged();
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
         return R.Ok;
@@ -198,6 +194,7 @@ class ModelService : IModelService, IDisposable
             LayoutNode(node, recursively);
         }
 
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
         applicationEvents.TriggerSaveNeeded();
     }
@@ -236,8 +233,7 @@ class ModelService : IModelService, IDisposable
                 model.UpdateStamp = DateTime.UtcNow;
             }
 
-            tilesMgr.ClearCache();
-
+            applicationEvents.TriggerModelChanged();
             await AddOrUpdateAllItems(items);
         }
 

@@ -1,5 +1,4 @@
 using Dependinator.Diagrams.Icons;
-using Dependinator.Diagrams.Tiles;
 using Dependinator.Modeling;
 using Dependinator.Modeling.Models;
 using MudBlazor;
@@ -38,7 +37,6 @@ class DependenciesService(
     ISelectionService selectionService,
     IApplicationEvents applicationEvents,
     IModelMgr modelMgr,
-    ITilesMgr tilesMgr,
     INavigationService navigationService
 ) : IDependenciesService
 {
@@ -92,7 +90,7 @@ class DependenciesService(
         ancestor.AddDirectLine(directLine);
         model.TryAddLine(directLine);
 
-        tilesMgr.ClearCache();
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -113,7 +111,7 @@ class DependenciesService(
 
         model.RemoveLine(line);
 
-        tilesMgr.ClearCache();
+        applicationEvents.TriggerModelChanged();
 
         if (shouldUnselect)
             selectionService.Unselect();

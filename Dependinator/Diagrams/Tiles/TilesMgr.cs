@@ -4,13 +4,24 @@ interface ITilesMgr
 {
     ITileCache UseTiles();
     void WithTiles(Action<ITileCache> tileCacheAction);
-    void ClearCache();
 }
 
 [Scoped]
-class TilesMgr(IStateMgr stateMgr) : ITilesMgr
+class TilesMgr : ITilesMgr, IDisposable
 {
-    readonly ITileCache tilesCache = new TileCache(stateMgr.Exit);
+    readonly ITileCache tilesCache;
+    readonly IStateMgr stateMgr;
+    readonly IApplicationEvents applicationEvents;
+
+    public TilesMgr(IStateMgr stateMgr, IApplicationEvents applicationEvents)
+    {
+        this.stateMgr = stateMgr;
+        this.applicationEvents = applicationEvents;
+        tilesCache = new TileCache(stateMgr.Exit);
+        applicationEvents.ModelChanged += ClearCache;
+    }
+
+    public void Dispose() => applicationEvents.ModelChanged -= ClearCache;
 
     public ITileCache UseTiles()
     {
@@ -24,7 +35,7 @@ class TilesMgr(IStateMgr stateMgr) : ITilesMgr
         tileCacheAction(tilesCache);
     }
 
-    public void ClearCache()
+    void ClearCache()
     {
         using var tilesCache = UseTiles();
         tilesCache.ClearCache();

@@ -1,4 +1,3 @@
-using Dependinator.Diagrams.Tiles;
 using Dependinator.Modeling.Models;
 
 namespace Dependinator.Modeling.Commands;
@@ -14,7 +13,7 @@ interface ICommandService
 }
 
 [Scoped]
-class CommandService(IApplicationEvents applicationEvents, ITilesMgr tilesMgr, IModelMgr modelMgr) : ICommandService
+class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) : ICommandService
 {
     readonly Stack<Command> undoStack = [];
     readonly Stack<Command> redoStack = [];
@@ -26,7 +25,7 @@ class CommandService(IApplicationEvents applicationEvents, ITilesMgr tilesMgr, I
     {
         modelMgr.WithModel(m => command.Execute(m));
         if (isClearCache)
-            tilesMgr.ClearCache();
+            applicationEvents.TriggerModelChanged();
 
         // Check if command can be combined with previous command (e.g. multiple edits in a row)
         if (undoStack.Any())
@@ -72,7 +71,7 @@ class CommandService(IApplicationEvents applicationEvents, ITilesMgr tilesMgr, I
         {
             command.Revert(model);
         }
-        tilesMgr.ClearCache();
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUndoneRedone();
         applicationEvents.TriggerUIStateChanged();
         applicationEvents.TriggerSaveNeeded();
@@ -109,7 +108,7 @@ class CommandService(IApplicationEvents applicationEvents, ITilesMgr tilesMgr, I
             {
                 subCommand.Revert(model);
             }
-            tilesMgr.ClearCache();
+            applicationEvents.TriggerModelChanged();
 
             applicationEvents.TriggerUndoneRedone();
             applicationEvents.TriggerUIStateChanged();
@@ -128,8 +127,8 @@ class CommandService(IApplicationEvents applicationEvents, ITilesMgr tilesMgr, I
             {
                 subCommand.Execute(model);
             }
-            tilesMgr.ClearCache();
 
+            applicationEvents.TriggerModelChanged();
             applicationEvents.TriggerUndoneRedone();
             applicationEvents.TriggerUIStateChanged();
             await Task.Delay(2);

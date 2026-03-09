@@ -1,6 +1,5 @@
 using Dependinator.Core.Parsing;
 using Dependinator.Diagrams;
-using Dependinator.Diagrams.Tiles;
 using Dependinator.Modeling;
 using Dependinator.Modeling.Models;
 using Dependinator.Shared.Types;
@@ -19,7 +18,6 @@ interface INavigationService
 class NavigationService(
     IApplicationEvents applicationEvents,
     IModelMgr modelMgr,
-    ITilesMgr tilesMgr,
     IPanZoomService panZoomService,
     ISelectionService selectionService,
     IScreenService screenService,
@@ -79,7 +77,7 @@ class NavigationService(
                 return false;
 
             if (node.EnsureLayoutForPath())
-                tilesMgr.ClearCache();
+                applicationEvents.TriggerModelChanged();
 
             (pos, zoom) = node.GetCenterPosAndZoom();
         }
