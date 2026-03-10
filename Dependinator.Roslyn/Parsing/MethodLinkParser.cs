@@ -167,6 +167,13 @@ class MethodLinkParser
                 yield break;
 
             var invokedMethodSymbol = methodSymbol;
+
+            foreach (var genericTypeArg in invokedMethodSymbol.TypeArguments)
+            {
+                foreach (var genericTypeLink in AddTypeLinks(genericTypeArg, member, fullMethodName))
+                    yield return genericTypeLink;
+            }
+
             methodSymbol = methodSymbol.OriginalDefinition;
 
             if (methodSymbol.IsImplicitlyDeclared && methodSymbol.MethodKind == MethodKind.Constructor)
@@ -187,14 +194,6 @@ class MethodLinkParser
             {
                 foreach (var parameterTypeLink in AddTypeLinks(parameter.Type, member, fullMethodName))
                     yield return parameterTypeLink;
-            }
-
-            // Keep the link to the generic method definition, but inspect the invoked symbol
-            // so constructed generic calls still emit links to their concrete type arguments.
-            foreach (var genericTypeArg in invokedMethodSymbol.TypeArguments)
-            {
-                foreach (var genericTypeLink in AddTypeLinks(genericTypeArg, member, fullMethodName))
-                    yield return genericTypeLink;
             }
         }
     }
