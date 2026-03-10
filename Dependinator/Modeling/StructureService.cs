@@ -1,6 +1,6 @@
 using Dependinator.Core.Parsing;
+using Dependinator.Modeling.Dtos;
 using Dependinator.Modeling.Models;
-using Dependinator.Modeling.Persistence;
 using Dependinator.Shared.Types;
 
 namespace Dependinator.Modeling;

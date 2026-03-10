@@ -1,4 +1,4 @@
-using Dependinator.Modeling.Persistence;
+using Dependinator.Modeling.Dtos;
 using Dependinator.Shared.Types;
 
 namespace Dependinator.Modeling.Models;

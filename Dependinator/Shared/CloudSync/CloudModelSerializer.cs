@@ -1,7 +1,7 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Dependinator.Modeling.Persistence;
+using Dependinator.Modeling.Dtos;
 using Shared;
 
 namespace Dependinator.Shared.CloudSync;

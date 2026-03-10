@@ -1,6 +1,6 @@
 using Dependinator.Shared.Types;
 
-namespace Dependinator.Modeling.Persistence;
+namespace Dependinator.Modeling.Dtos;
 
 [Serializable]
 record ModelDto
@@ -16,17 +16,4 @@ record ModelDto
     public required IReadOnlyList<NodeDto> Nodes { get; init; }
     public required IReadOnlyList<LinkDto> Links { get; init; }
     public IReadOnlyList<LineDto> Lines { get; init; } = [];
-}
-
-[Serializable]
-record FileSpanDto(string Path, int StarLine, int EndLine);
-
-[Serializable]
-record LinkDto(string SourceName, string TargetName, string TargetType);
-
-[Serializable]
-record LineDto
-{
-    public required string LineId { get; init; }
-    public required IReadOnlyList<Pos> SegmentPoints { get; init; }
 }

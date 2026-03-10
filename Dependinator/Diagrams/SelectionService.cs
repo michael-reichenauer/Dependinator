@@ -174,6 +174,7 @@ class SelectionService : ISelectionService
                 this.isEditMode = false;
                 isSelectedLineDirect = false;
                 selectedLineClickPosition = Pos.None;
+                applicationEvents.TriggerModelChanged();
                 await UpdateSelectedPositionAsync();
             }
         }
@@ -208,6 +209,7 @@ class SelectionService : ISelectionService
         this.isEditMode = false;
         isSelectedLineDirect = false;
         selectedLineClickPosition = Pos.None;
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -257,6 +259,7 @@ class SelectionService : ISelectionService
             this.isEditMode = false;
         }
 
+        applicationEvents.TriggerModelChanged();
         await UpdateSelectedPositionAsync();
         return true;
     }
