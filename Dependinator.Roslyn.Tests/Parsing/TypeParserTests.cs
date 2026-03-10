@@ -27,6 +27,8 @@ public class SourceTestType : SourceTestBaseType, ISourceTestInterface
 
         var length = methodField2.GetLength(name);
 
+        Function2<EnumTestType>();
+
         return length;
     }
 
@@ -106,22 +108,34 @@ public class TypeParserTests(RoslynFixture fixture)
         Assert.False(function1Node.Properties.IsPrivate);
 
         var linksFromFunction1 = items.LinksFrom<SourceTestType>(nameof(SourceTestType.Function1));
-        Assert.Equal(3, linksFromFunction1.Count);
+        Assert.Equal(5, linksFromFunction1.Count);
         Assert.Equal(
             NodeType.Type,
-            items // Parameter link to ISourceTestInterface interface
+            items // Function1 Parameter link to ISourceTestInterface interface
                 .Link<SourceTestType, ISourceTestInterface>(nameof(SourceTestType.Function1), null)
                 .Properties.TargetType
         );
 
         Assert.Equal(
-            NodeType.Type, // Field link to OtherClass type
+            NodeType.Type, // Function1 Field link to OtherClass type
             items.Link<SourceTestType, OtherClass>(nameof(SourceTestType.Function1), null).Properties.TargetType
         );
         Assert.Equal(
             NodeType.MethodMember,
-            items // Method call link to OtherClass.GetLength() method
+            items // Function1 Method call link to OtherClass.GetLength() method
                 .Link<SourceTestType, OtherClass>(nameof(SourceTestType.Function1), nameof(OtherClass.GetLength))
+                .Properties.TargetType
+        );
+        Assert.Equal(
+            NodeType.MethodMember,
+            items // Function1 Method call link to Function2<T>() method
+                .Link<SourceTestType, SourceTestType>(nameof(SourceTestType.Function1), "Function2")
+                .Properties.TargetType
+        );
+        Assert.Equal(
+            NodeType.MethodMember,
+            items // Function1 Method type link to EnumTestType types as part of generic parameter in Function2<EnumTestType>() call
+                .Link<SourceTestType, EnumTestType>(nameof(SourceTestType.Function1), null)
                 .Properties.TargetType
         );
 
