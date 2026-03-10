@@ -11,6 +11,7 @@ public static class Build
     public static readonly string CommitSid = GetCommitId().Sid();
 
     public static readonly bool IsWasm = RuntimeInformation.ProcessArchitecture == Architecture.Wasm;
+    public static readonly bool IsWeb = RuntimeInformation.ProcessArchitecture != Architecture.Wasm;
     public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
     public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
     public static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);

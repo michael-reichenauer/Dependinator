@@ -1,20 +1,15 @@
-using System.Runtime.InteropServices;
-
 namespace Dependinator.Core.Shared;
 
 static class ExampleModel
 {
-    public static string EmbeddedExample = "Example/Dependinator.dll";
-    public static string SolutionExample = "/workspaces/Dependinator/Dependinator.sln";
-    public static string EmbeddedBrowserExampleName = "example.model";
-    public static string EmbeddedBrowserExamplePath =
-        $"/workspaces/Dependinator/Dependinator.Wasm/wwwroot/{EmbeddedBrowserExampleName}";
+    public static string ExampleSolutionName = "/Example.sln";
+    public static string ExampleInputPath = "/workspaces/Dependinator/Dependinator.sln";
+    public static string ExampleModelName = "example.model";
+    public static string ExampleOutputPath = $"/workspaces/Dependinator/Dependinator.Wasm/wwwroot/{ExampleModelName}";
 
     //public static string OtherSolutionExample = "/workspaces/DepExt/Dependinator.sln";
 
-    public static string Path => SolutionExample;
+    public static string Path => ExampleSolutionName;
 
     //public static string Path => OtherSolutionExample;
-
-    public static readonly bool IsWebAssembly = RuntimeInformation.ProcessArchitecture == Architecture.Wasm;
 }

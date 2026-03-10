@@ -1,6 +1,5 @@
 using Dependinator.Core.Parsing;
 using Dependinator.Roslyn.Parsing;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Dependinator.Roslyn.Tests.Parsing.Utils;
 
