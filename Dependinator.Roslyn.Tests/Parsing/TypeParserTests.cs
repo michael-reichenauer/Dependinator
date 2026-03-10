@@ -99,7 +99,7 @@ public class TypeParserTests(RoslynFixture fixture)
     }
 
     [Fact]
-    public void TestFunctions()
+    public void TestFunction1()
     {
         var function1Node = items.Node<SourceTestType>(nameof(SourceTestType.Function1));
         Assert.Equal("Function1 comment", function1Node.Properties.Description);
@@ -133,12 +133,16 @@ public class TypeParserTests(RoslynFixture fixture)
                 .Properties.TargetType
         );
         Assert.Equal(
-            NodeType.MethodMember,
-            items // Function1 Method type link to EnumTestType types as part of generic parameter in Function2<EnumTestType>() call
+            NodeType.Type,
+            items // Function1 type link to EnumTestType as part of the generic argument in Function2<EnumTestType>() call
                 .Link<SourceTestType, EnumTestType>(nameof(SourceTestType.Function1), null)
                 .Properties.TargetType
         );
+    }
 
+    [Fact]
+    public void TestFunction2()
+    {
         var function2Node = items.Node<SourceTestType>("Function2");
         Assert.Null(function2Node.Properties.Description);
         Assert.True(function2Node.Properties.IsPrivate);
