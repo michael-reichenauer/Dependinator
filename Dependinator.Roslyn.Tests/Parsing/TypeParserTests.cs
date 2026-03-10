@@ -30,7 +30,7 @@ public class SourceTestType : SourceTestBaseType, ISourceTestInterface
         return length;
     }
 
-    void Function2() { }
+    void Function2<T>() { }
 }
 
 // Enum comment
