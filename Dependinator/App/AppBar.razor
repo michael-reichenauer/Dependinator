@@ -105,7 +105,7 @@
 
 </MudButtonGroup>
 
-<MudMessageBox @ref="mbox" Title="Reset Model" CancelText="Cancel">
+<MudMessageBox @ref="resetWarningBox" Title="Reset Model" CancelText="Cancel">
     <MessageContent>
         <MudText>Do you want to reset model?</MudText>
         <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be reset.</MudText>
@@ -145,7 +145,7 @@
 </MudMessageBox>
 
 @code {
-    MudMessageBox mbox { get; set; } = null!;
+    MudMessageBox resetWarningBox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
     MudMessageBox syncDownBox { get; set; } = null!;
     MudMessageBox syncConflictBox { get; set; } = null!;
@@ -335,7 +335,7 @@
 
     async Task OnRemove()
     {
-        if (await mbox.ShowAsync() != true)
+        if (await resetWarningBox.ShowAsync() != true)
             return;
 
         srv.Remove();

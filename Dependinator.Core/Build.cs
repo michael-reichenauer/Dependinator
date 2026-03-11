@@ -12,12 +12,13 @@ public static class Build
 
     public static readonly bool IsWasm = RuntimeInformation.ProcessArchitecture == Architecture.Wasm;
     public static readonly bool IsWeb = RuntimeInformation.ProcessArchitecture != Architecture.Wasm;
+
     public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
     public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
     public static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
     public static string Info =>
-        $"{Version}, {Time}, ({CommitSid}, {RuntimeInformation.RuntimeIdentifier}, {BuildMode}, {AotJitMode})";
+        $"{Version}, {Time}, ({CommitSid}, {RuntimeInformation.RuntimeIdentifier}, {BuildMode})";
 
     public static Version GetVersion() => typeof(Build).Assembly.GetName().Version!;
 
@@ -30,28 +31,7 @@ public static class Build
 #endif
     }
 
-    public static bool IsNativeAot
-    {
-#if NATIVEAOT
-        get => true;
-#else
-        get => false;
-#endif
-    }
-
-    public static bool IsWasmAot
-    {
-#if WASM_AOT
-        get => true;
-#else
-        get => false;
-#endif
-    }
-
     public static string BuildMode => IsDebug ? "IsDebug" : "IsRelease";
-
-    public static bool IsAot => IsNativeAot || IsWasmAot;
-    public static string AotJitMode => IsAot ? "IsAot" : "IsNotAot";
 
     public static Version GetProductVersion()
     {
