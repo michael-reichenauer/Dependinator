@@ -53,20 +53,19 @@
         {
             <MudDivider />
 
+            <MudMenu Label="Cloud Models" Disabled="@IsCloudModelsMenuDisabled">
+                @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
+                {
+                    bool isCurrent = IsCurrentCloudModel(cloudModel);
+                    <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
+                                 Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => LoadCloudModelAsync(cloudModel)">
+                        @GetModelDisplayName(cloudModel.NormalizedPath)
+                    </MudMenuItem>
+                }
+            </MudMenu>
+
             @if (AuthState.IsAuthenticated)
             {
-                @if (CloudModels.Count > 0)
-                {
-                    @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
-                    {
-                        bool isCurrent = IsCurrentCloudModel(cloudModel);
-                        <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
-                                     Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => LoadCloudModelAsync(cloudModel)">
-                            @GetModelDisplayName(cloudModel.NormalizedPath)
-                        </MudMenuItem>
-                    }
-                }
-
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="LogoutAsync">
                     Logout
                 </MudMenuItem>
@@ -166,6 +165,7 @@
     string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
     IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
+    bool IsCloudModelsMenuDisabled => !AuthState.IsAuthenticated || CloudModels.Count == 0;
     CloudSyncState CurrentCloudSyncState => appCloudSyncService.GetCloudSyncState();
     CloudSyncLatest? LatestSync => appCloudSyncService.LatestSync;
     CloudIconInfo CurrentCloudIconInfo => GetCloudIconInfo(CurrentCloudSyncState);

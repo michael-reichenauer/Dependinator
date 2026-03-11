@@ -8,7 +8,7 @@ interface IRecentModelsService
     Task InitAsync();
 
     IReadOnlyList<string> ModelPaths { get; }
-    string LastUsedPath { get; }
+    string? LastUsedPath { get; }
 
     Task AddModelAsync(string path);
     Task RemoveModelAsync(string path);
@@ -52,7 +52,7 @@ class RecentModelsService : IRecentModelsService
 
     public IReadOnlyList<string> ModelPaths => modelPaths;
 
-    public string LastUsedPath => modelPaths.Any() ? modelPaths[0] : ExampleModel.Path;
+    public string? LastUsedPath => modelPaths.Any() ? modelPaths[0] : null;
 
     public async Task AddModelAsync(string path)
     {

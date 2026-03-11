@@ -105,7 +105,10 @@ class CanvasService : ICanvasService
     {
         using var t = Timing.Start("InitialShow");
         await screenService.CheckResizeAsync();
-        await LoadAsync(recentModelsService.LastUsedPath);
+        var lastUsedPath = recentModelsService.LastUsedPath;
+        if (lastUsedPath is null)
+            lastUsedPath = ExampleModel.Path;
+        await LoadAsync(lastUsedPath);
     }
 
     public async Task LoadAsync(string modelPath)
@@ -147,10 +150,17 @@ class CanvasService : ICanvasService
 
     public async void Remove()
     {
-        var path = recentModelsService.LastUsedPath;
-        await fileService.DeleteAsync(path);
-        await recentModelsService.RemoveModelAsync(path);
-        await LoadAsync(recentModelsService.LastUsedPath);
+        var lastUsedPath = recentModelsService.LastUsedPath;
+        if (lastUsedPath is not null)
+        {
+            await fileService.DeleteAsync(lastUsedPath);
+            await recentModelsService.RemoveModelAsync(lastUsedPath);
+        }
+        else
+        {
+            lastUsedPath = ExampleModel.Path;
+        }
+        await LoadAsync(lastUsedPath);
     }
 
     public async void OpenFiles()

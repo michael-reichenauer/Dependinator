@@ -11,9 +11,6 @@ class SourceParser : ISourceParser
     {
         try
         {
-            if (Build.IsWeb && solutionPath == ExampleModel.ExampleSolutionName)
-                solutionPath = ExampleModel.ExampleInputPath;
-
             using var workspace = Compiler.CreateWorkspace();
 
             Solution solution = await workspace.OpenSolutionAsync(solutionPath);
@@ -84,7 +81,7 @@ class SourceParser : ISourceParser
 
     static async Task WriteCompressedExampleModelAsync(IReadOnlyList<Item> solutionNodes, string solutionPath)
     {
-        if (Build.IsWasm || solutionPath != ExampleModel.ExampleInputPath)
+        if (Build.IsWasm || solutionPath != ExampleModel.WorkingSolutionPath)
             return;
 
         string outputPath = ExampleModel.ExampleOutputPath;
