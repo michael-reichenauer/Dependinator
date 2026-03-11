@@ -19,7 +19,6 @@ interface ICanvasService
     string Cursor { get; }
     string TitleInfo { get; }
     string DiagramName { get; }
-    IReadOnlyList<string> RecentModelPaths { get; }
 
     Task InitAsync();
     void OpenFiles();
@@ -75,8 +74,6 @@ class CanvasService : ICanvasService
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
     }
-
-    public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
 
     public string DiagramName { get; set; } = "Loading ...";
     public string TitleInfo =>

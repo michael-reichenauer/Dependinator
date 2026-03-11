@@ -14,6 +14,7 @@ public static class Build
 
     public static readonly bool IsWasm = RuntimeInformation.ProcessArchitecture == Architecture.Wasm;
     public static readonly bool IsWeb = RuntimeInformation.ProcessArchitecture != Architecture.Wasm;
+    public static bool IsStandaloneWasm => IsWasm && !isVsCodeExtWasm;
     public static bool IsVsCodeExtWasm => IsWasm && isVsCodeExtWasm;
     public static bool IsVsCodeExtLsp => !IsWasm && isVsCodeExtLsp;
 

@@ -1,12 +1,13 @@
 @using Dependinator.Core
 @using Dependinator.Modeling.Commands
 @using Dependinator.Shared.CloudSync
-@inject ICanvasService srv
+@inject ICanvasService canvasService
 @inject IAppCloudSyncService appCloudSyncService
 @inject ISnackbar snackbar
 @inject Dependinator.Modeling.Models.IModelMgr modelMgr
 @inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
+@inject IRecentModelsService recentModelsService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
@@ -22,11 +23,13 @@
             Redo
         </MudMenuItem>
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen" OnClick="srv.PanZoomToFit">
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
+                     OnClick="canvasService.PanZoomToFit">
             Fit to Screen
         </MudMenuItem>
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh">
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                     OnClick="canvasService.Refresh">
             Refresh
         </MudMenuItem>
 
@@ -41,7 +44,7 @@
         {
             bool isCurrent = IsCurrentRecentModel(path);
             <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
-                         Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => srv.LoadAsync(path)">
+                         Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => canvasService.LoadAsync(path)">
                 @GetModelDisplayName(path)
             </MudMenuItem>
         }
@@ -100,7 +103,7 @@
                        OnClick="commandService.Undo" />
         <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
                        OnClick="commandService.Redo" />
-        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh" />
+        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh" />
     </MudHidden>
 
 </MudButtonGroup>
@@ -158,7 +161,7 @@
     static readonly CloudIconInfo HasConflicts = new(Icons.Material.Outlined.SyncProblem, Color.Error);
     static readonly CloudIconInfo IsSynced = new(Icons.Material.Filled.CloudDone, Color.Success);
 
-    IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
+    IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
     string? CurrentRecentModelPath => RecentModelPaths.Count > 0 ? RecentModelPaths[0] : null;
     string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
@@ -338,7 +341,7 @@
         if (await resetWarningBox.ShowAsync() != true)
             return;
 
-        srv.Remove();
+        canvasService.Remove();
     }
 
     Task ShowAbout() => aboutBox.ShowAsync();
