@@ -5,6 +5,8 @@ namespace Dependinator.Core;
 
 public static class Build
 {
+    static bool isVsCodeExtWasm = false;
+    static bool isVsCodeExtLsp = false;
     public static readonly string Version = GetVersion().ToString();
     public static readonly string ProductVersion = GetProductVersion().ToString();
     public static readonly string Time = GetTime().IsoZone();
@@ -12,6 +14,8 @@ public static class Build
 
     public static readonly bool IsWasm = RuntimeInformation.ProcessArchitecture == Architecture.Wasm;
     public static readonly bool IsWeb = RuntimeInformation.ProcessArchitecture != Architecture.Wasm;
+    public static bool IsVsCodeExtWasm => IsWasm && isVsCodeExtWasm;
+    public static bool IsVsCodeExtLsp => !IsWasm && isVsCodeExtLsp;
 
     public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
     public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
@@ -30,6 +34,10 @@ public static class Build
         get => false;
 #endif
     }
+
+    public static void SetIsVsCodeExtWasm() => isVsCodeExtWasm = true;
+
+    public static void SetIsVsCodeExtLsp() => isVsCodeExtLsp = true;
 
     public static string BuildMode => IsDebug ? "IsDebug" : "IsRelease";
 

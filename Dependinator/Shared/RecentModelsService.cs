@@ -1,3 +1,4 @@
+using Dependinator.Core;
 using Dependinator.Core.Shared;
 
 namespace Dependinator.Diagrams;
@@ -20,26 +21,23 @@ class RecentModelsService : IRecentModelsService
 
     readonly IConfigService configService;
     readonly IFileService fileService;
-    private readonly IHost host;
     private readonly IWorkspaceFileService workspaceFileService;
     List<string> modelPaths = [];
 
     public RecentModelsService(
         IConfigService configService,
         IFileService fileService,
-        IHost host,
         IWorkspaceFileService workspaceFileService
     )
     {
         this.configService = configService;
         this.fileService = fileService;
-        this.host = host;
         this.workspaceFileService = workspaceFileService;
     }
 
     public async Task InitAsync()
     {
-        if (host.IsVscExtWasm)
+        if (Build.IsVsCodeExtWasm)
         {
             Log.Info("Get solution paths:");
             var paths = await workspaceFileService.GetSolutionFiles();
@@ -58,7 +56,7 @@ class RecentModelsService : IRecentModelsService
 
     public async Task AddModelAsync(string path)
     {
-        if (host.IsVscExtWasm)
+        if (Build.IsVsCodeExtWasm)
             return;
 
         modelPaths = (await GetExistingRecentFilePathsAsync()).Prepend(path).Distinct().Take(RecentCount).ToList();
@@ -67,7 +65,7 @@ class RecentModelsService : IRecentModelsService
 
     public async Task RemoveModelAsync(string path)
     {
-        if (host.IsVscExtWasm)
+        if (Build.IsVsCodeExtWasm)
             return;
 
         modelPaths = (await GetExistingRecentFilePathsAsync())

@@ -107,8 +107,6 @@
   [Inject]
   IConfigService configService { get; set; } = null!;
 
-  [Inject]
-  IHost host { get; set; } = null!;
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
@@ -192,7 +190,7 @@
           nodeFileSpan = node.FileSpanOrParentSpan;
         }
     );
-    if (nodeFileSpan is not null && host.IsVscExtWasm)
+    if (nodeFileSpan is not null && Build.IsVsCodeExtWasm)
     {
       await navigationService.ShowEditor(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
       return;
