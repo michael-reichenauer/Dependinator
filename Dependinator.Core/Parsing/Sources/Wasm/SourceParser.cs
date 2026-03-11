@@ -1,15 +1,17 @@
 using System.IO.Compression;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dependinator.Core.Parsing.Sources;
+namespace Dependinator.Core.Parsing.Sources.Wasm;
 
 class SourceParser(HttpClient httpClient) : ISourceParser
 {
-    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseSolutionAsync(string solutionPath)
+    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath)
     {
         try
         {
-            Log.Info("Downloading example.model ...");
+            if (solutionPath != "/Example.sln")
+                return R.Error($"Parsing not supported '{solutionPath}'");
+            Log.Info("Downloading example.model ...", solutionPath);
             var compressedBytes = await httpClient.GetByteArrayAsync("example.model");
             Log.Info("Downloaded example.model");
 
@@ -18,7 +20,7 @@ class SourceParser(HttpClient httpClient) : ISourceParser
             using var reader = new StreamReader(gzip);
             var json = await reader.ReadToEndAsync();
 
-            var items = Json.Deserialize<List<Parsing.Item>>(json);
+            var items = Json.Deserialize<List<Item>>(json);
             if (items is null)
                 return R.Error($"Failed to deserialize browser example model for: {solutionPath}");
 
@@ -31,9 +33,9 @@ class SourceParser(HttpClient httpClient) : ISourceParser
         }
     }
 
-    public Task<R<IReadOnlyList<Parsing.Item>>> ParseProjectAsync(string projectPath)
+    public Task<R<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
     {
-        return Task.FromResult<R<IReadOnlyList<Parsing.Item>>>(
+        return Task.FromResult<R<IReadOnlyList<Item>>>(
             R.Error($"Source parsing is not supported in browser runtime: {projectPath}.")
         );
     }
