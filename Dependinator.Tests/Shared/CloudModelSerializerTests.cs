@@ -24,7 +24,7 @@ public class CloudModelSerializerTests
 
         CloudModelDocument document = CloudModelSerializer.CreateDocument(@" \models\sample.model ", modelDto);
 
-        Assert.Equal("sample.model", document.NormalizedPath);
+        Assert.Equal("/models/sample.model", document.NormalizedPath);
         Assert.Equal(CloudModelPath.CreateKey("/models/sample.model"), document.ModelKey);
 
         R<ModelDto> result = CloudModelSerializer.ReadModel(document);

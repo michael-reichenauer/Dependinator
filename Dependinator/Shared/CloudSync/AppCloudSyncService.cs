@@ -36,10 +36,10 @@ interface IAppCloudSyncService
     IReadOnlyList<CloudModelMetadata> CloudModels { get; }
     string? CurrentNormalizedModelPath { get; }
 
+    Task<R> RefreshSyncStateCoreAsync();
+
     // Returns a simplified state derived from auth and local/remote change flags.
     CloudSyncState GetCloudSyncState();
-
-    Task<R> InitializeAsync();
 
     // Starts authentication flow and refreshes derived sync state.
     Task<R> LoginAsync();
@@ -60,31 +60,27 @@ interface IAppCloudSyncService
 // Aggregates cloud sync concerns for the app: transport selection, auth state, model lists, and
 // local/remote drift detection used by the user-facing sync indicator.
 [Scoped]
-class AppCloudSyncService(
-    ICanvasService canvasService,
-    ICloudSyncService cloudSyncService,
-    ICloudSyncStateService cloudSyncStateService,
-    IModelService modelService,
-    IModelMgr modelMgr,
-    IApplicationEvents applicationEvents,
-    AppCloudSyncTimings? appCloudSyncTimings = null,
-    Func<DateTimeOffset>? utcNowProvider = null,
-    Func<TimeSpan, CancellationToken, Task>? delayAsyncProvider = null
-) : IAppCloudSyncService, IDisposable
+class AppCloudSyncService : IAppCloudSyncService, IDisposable
 {
+    private readonly ICanvasService canvasService;
+    private readonly ICloudSyncService cloudSyncService;
+    private readonly ICloudSyncStateService cloudSyncStateService;
+    private readonly IModelService modelService;
+    private readonly IModelMgr modelMgr;
+    private readonly IApplicationEvents applicationEvents;
+
     static readonly CloudAuthState unavailableAuthState = new(IsAvailable: false, IsAuthenticated: false, User: null);
 
-    readonly AppCloudSyncTimings syncTimings = appCloudSyncTimings ?? AppCloudSyncTimings.Default;
-    readonly Func<DateTimeOffset> utcNow = utcNowProvider ?? (() => DateTimeOffset.UtcNow);
-    readonly Func<TimeSpan, CancellationToken, Task> delayAsync = delayAsyncProvider ?? TaskDelayAsync;
-    readonly SemaphoreSlim initializeLock = new(1, 1);
+    readonly AppCloudSyncTimings syncTimings;
+    readonly Func<DateTimeOffset> utcNow;
+    readonly Func<TimeSpan, CancellationToken, Task> delayAsync;
+
     readonly SemaphoreSlim syncOperationLock = new(1, 1);
     readonly Debouncer uiStateRefreshDebouncer = new();
     readonly object idleRefreshLock = new();
     readonly object backgroundErrorLock = new();
     readonly HashSet<string> reportedBackgroundErrors = [];
 
-    bool isInitialized;
     bool isUiStateRefreshInProgress;
     bool isUiStateRefreshQueued;
     bool isDisposed;
@@ -96,6 +92,32 @@ class AppCloudSyncService(
     bool hasLocalChangesSinceLastSync;
     bool hasRemoteChangesSinceLastSync;
     IReadOnlyList<CloudModelMetadata> cloudModels = [];
+
+    public AppCloudSyncService(
+        ICanvasService canvasService,
+        ICloudSyncService cloudSyncService,
+        ICloudSyncStateService cloudSyncStateService,
+        IModelService modelService,
+        IModelMgr modelMgr,
+        IApplicationEvents applicationEvents,
+        AppCloudSyncTimings? appCloudSyncTimings = null,
+        Func<DateTimeOffset>? utcNowProvider = null,
+        Func<TimeSpan, CancellationToken, Task>? delayAsyncProvider = null
+    )
+    {
+        this.canvasService = canvasService;
+        this.cloudSyncService = cloudSyncService;
+        this.cloudSyncStateService = cloudSyncStateService;
+        this.modelService = modelService;
+        this.modelMgr = modelMgr;
+        this.applicationEvents = applicationEvents;
+
+        this.syncTimings = appCloudSyncTimings ?? AppCloudSyncTimings.Default;
+        this.utcNow = utcNowProvider ?? (() => DateTimeOffset.UtcNow);
+        this.delayAsync = delayAsyncProvider ?? TaskDelayAsync;
+
+        applicationEvents.UIStateChanged += HandleUiStateChanged;
+    }
 
     public event Action Changed = null!;
     public event Action<string> BackgroundSyncError = null!;
@@ -109,42 +131,6 @@ class AppCloudSyncService(
     public IReadOnlyList<CloudModelMetadata> CloudModels => cloudModels;
     public string? CurrentNormalizedModelPath =>
         string.IsNullOrWhiteSpace(modelMgr.ModelPath) ? null : CloudModelPath.Normalize(modelMgr.ModelPath);
-
-    // Initializes service state once and wires UI refresh events.
-    public async Task<R> InitializeAsync()
-    {
-        if (isInitialized)
-            return R.Ok;
-
-        await initializeLock.WaitAsync();
-        try
-        {
-            if (isInitialized)
-                return R.Ok;
-
-            isInitialized = true;
-            applicationEvents.UIStateChanged += HandleUiStateChanged;
-
-            if (!Try(out var error, await RefreshAuthStateCoreAsync()))
-            {
-                NotifyChanged();
-                return error;
-            }
-
-            if (!Try(out error, await RefreshSyncStateCoreAsync()))
-            {
-                NotifyChanged();
-                return error;
-            }
-
-            NotifyChanged();
-            return R.Ok;
-        }
-        finally
-        {
-            initializeLock.Release();
-        }
-    }
 
     public CloudSyncState GetCloudSyncState()
     {
@@ -164,8 +150,6 @@ class AppCloudSyncService(
     // Triggers login through transport and refreshes snapshot state afterwards.
     public async Task<R> LoginAsync()
     {
-        await EnsureInitializedAsync();
-
         if (!Try(out CloudAuthState? state, out ErrorResult? error, await cloudSyncService.LoginAsync()))
             return error;
 
@@ -175,8 +159,6 @@ class AppCloudSyncService(
 
     public async Task<R> LogoutAsync()
     {
-        await EnsureInitializedAsync();
-
         if (!Try(out CloudAuthState? state, out ErrorResult? error, await cloudSyncService.LogoutAsync()))
             return error;
 
@@ -190,25 +172,19 @@ class AppCloudSyncService(
     // Pushes current model DTO to cloud and records the successful sync baseline.
     public async Task<R<CloudModelMetadata>> SyncUpAsync()
     {
-        await EnsureInitializedAsync();
         return await ExecuteSyncOperationAsync(() => SyncUpCoreAsync(notifyChanged: true));
     }
 
     public async Task<R<ModelInfo>> SyncDownAsync()
     {
-        await EnsureInitializedAsync();
         return await ExecuteSyncOperationAsync(() => SyncDownCoreAsync(notifyChanged: true));
     }
 
     // Loads a selected cloud model into workspace and records local baseline on success.
     public async Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel)
     {
-        await EnsureInitializedAsync();
         return await ExecuteSyncOperationAsync(() => LoadCloudModelCoreAsync(cloudModel, notifyChanged: true));
     }
-
-    // Ensures one-time initialization is complete before calling public operations.
-    async Task EnsureInitializedAsync() => _ = await InitializeAsync();
 
     async Task<R<T>> ExecuteSyncOperationAsync<T>(Func<Task<R<T>>> syncOperation)
     {
@@ -410,10 +386,16 @@ class AppCloudSyncService(
     }
 
     // Refreshes cached cloud model list and current-model sync state.
-    async Task<R> RefreshSyncStateCoreAsync()
+    public async Task<R> RefreshSyncStateCoreAsync()
     {
-        if (!Try(out ErrorResult? error, await RefreshCloudModelsCoreAsync()))
+        if (!Try(out var error, await RefreshAuthStateCoreAsync()))
+        {
+            NotifyChanged();
             return error;
+        }
+
+        if (!Try(out ErrorResult? error2, await RefreshCloudModelsCoreAsync()))
+            return error2;
 
         string modelPath = modelMgr.ModelPath;
         if (!cloudSyncService.IsAvailable || string.IsNullOrWhiteSpace(modelPath))
@@ -493,9 +475,6 @@ class AppCloudSyncService(
     // Debounces sync-state refreshes when canvas/UI signals change.
     void HandleUiStateChanged()
     {
-        if (!isInitialized)
-            return;
-
         QueueUiStateRefresh();
         RestartIdleRefreshLoop();
     }
@@ -672,7 +651,6 @@ class AppCloudSyncService(
         applicationEvents.UIStateChanged -= HandleUiStateChanged;
         CancelIdleRefreshLoop();
         uiStateRefreshDebouncer.Dispose();
-        initializeLock.Dispose();
         syncOperationLock.Dispose();
     }
 

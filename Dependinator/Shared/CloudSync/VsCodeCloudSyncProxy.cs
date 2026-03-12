@@ -105,7 +105,6 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
     }
 
     // Sends a request packet, stores a completion source by request id, and waits for reply or timeout.
-
     async Task<R<T>> SendAndReadAsync<T>(string action, object? payload = null, TimeSpan? timeoutOverride = null)
     {
         string requestId = Guid.NewGuid().ToString("N");

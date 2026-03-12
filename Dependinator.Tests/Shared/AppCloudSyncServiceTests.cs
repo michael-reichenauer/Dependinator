@@ -28,7 +28,7 @@ public class AppCloudSyncServiceTests
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         AppCloudSyncService sut = CreateSut(modelPath, syncedModel, syncState, [cloudModel]);
 
-        await sut.InitializeAsync();
+        await sut.RefreshSyncStateCoreAsync();
 
         Assert.Equal(CloudSyncState.HasRemoteChanges, sut.GetCloudSyncState());
         Assert.False(sut.HasLocalChangesSinceLastSync);
@@ -52,8 +52,7 @@ public class AppCloudSyncServiceTests
         ModelDto localModel = CreateModelDto("local");
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         AppCloudSyncService sut = CreateSut(modelPath, localModel, syncState, [cloudModel]);
-
-        await sut.InitializeAsync();
+        await sut.RefreshSyncStateCoreAsync();
 
         Assert.Equal(CloudSyncState.HasConflicts, sut.GetCloudSyncState());
         Assert.True(sut.HasLocalChangesSinceLastSync);
@@ -78,7 +77,6 @@ public class AppCloudSyncServiceTests
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], CreateFastTimings());
 
-        await context.Sut.InitializeAsync();
         context.ApplicationEvents.TriggerUIStateChanged();
         await Task.Delay(50);
 
@@ -96,7 +94,6 @@ public class AppCloudSyncServiceTests
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
         SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], CreateFastTimings());
 
-        await context.Sut.InitializeAsync();
         context.ApplicationEvents.TriggerUIStateChanged();
         await WaitUntilAsync(() => context.Counters.PushCalls > 0);
 
@@ -113,7 +110,6 @@ public class AppCloudSyncServiceTests
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], CreateFastTimings());
 
-        await context.Sut.InitializeAsync();
         context.ApplicationEvents.TriggerUIStateChanged();
         await WaitUntilAsync(() => context.Counters.PullCalls > 0);
 
@@ -135,7 +131,6 @@ public class AppCloudSyncServiceTests
             CreateFastTimings()
         );
 
-        await context.Sut.InitializeAsync();
         context.ApplicationEvents.TriggerUIStateChanged();
         await WaitUntilAsync(() => context.Counters.PullCalls > 0);
 
@@ -156,7 +151,6 @@ public class AppCloudSyncServiceTests
             CreateFastTimings()
         );
 
-        await context.Sut.InitializeAsync();
         context.ApplicationEvents.TriggerUIStateChanged();
         await WaitUntilAsync(() => context.Counters.PushCalls > 0);
 
@@ -180,7 +174,6 @@ public class AppCloudSyncServiceTests
         );
         SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], timings);
 
-        await context.Sut.InitializeAsync();
         context.ApplicationEvents.TriggerUIStateChanged();
         await WaitUntilAsync(() => context.Counters.PushCalls > 0);
         int firstPushCount = context.Counters.PushCalls;
@@ -206,7 +199,6 @@ public class AppCloudSyncServiceTests
         );
         SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], timings);
 
-        await context.Sut.InitializeAsync();
         int listCallsAfterInitialize = context.Counters.ListCalls;
 
         context.ApplicationEvents.TriggerUIStateChanged();
@@ -241,7 +233,6 @@ public class AppCloudSyncServiceTests
             .Callback(() => context.Counters.PushCalls++)
             .ReturnsAsync(R.Error("Push failed."));
 
-        await context.Sut.InitializeAsync();
         context.ApplicationEvents.TriggerUIStateChanged();
         await WaitUntilAsync(() => context.Counters.PushCalls > 0);
 
@@ -251,20 +242,6 @@ public class AppCloudSyncServiceTests
 
         Assert.Single(errorMessages);
         Assert.Equal("Push failed.", errorMessages[0]);
-    }
-
-    [Fact]
-    public async Task InitializeAsync_ShouldReturnError_WhenCloudModelsRefreshFails()
-    {
-        string modelPath = "/models/sample.model";
-        SutContext context = CreateSutContext(modelPath, CreateModelDto("local"), syncState: null, cloudModels: []);
-        context.CloudSyncService.Setup(x => x.ListAsync()).ReturnsAsync(R.Error("Cloud model list failed."));
-
-        R result = await context.Sut.InitializeAsync();
-
-        Assert.False(result);
-        Assert.Equal("Cloud model list failed.", result.ErrorMessage);
-        Assert.Empty(context.Sut.CloudModels);
     }
 
     [Fact]
@@ -286,8 +263,6 @@ public class AppCloudSyncServiceTests
         context
             .CloudSyncService.Setup(x => x.LogoutAsync())
             .ReturnsAsync(new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null));
-
-        await context.Sut.InitializeAsync();
 
         R result = await context.Sut.LogoutAsync();
 
@@ -311,7 +286,6 @@ public class AppCloudSyncServiceTests
 
         context.CloudSyncService.Setup(x => x.PullAsync(modelPath)).ReturnsAsync(remotePulledModel);
 
-        await context.Sut.InitializeAsync();
         R<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
 
         Assert.True(syncDownResult);

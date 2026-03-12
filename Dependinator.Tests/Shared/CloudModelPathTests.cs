@@ -9,7 +9,7 @@ public class CloudModelPathTests
     {
         string normalizedPath = CloudModelPath.Normalize(@"  C:\\repo\\src///Model.json  ");
 
-        Assert.Equal("Model.json", normalizedPath);
+        Assert.Equal("C:/repo/src/Model.json", normalizedPath);
     }
 
     [Fact]
