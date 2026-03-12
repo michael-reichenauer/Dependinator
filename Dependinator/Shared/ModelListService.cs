@@ -3,7 +3,7 @@ using Dependinator.Core.Shared;
 
 namespace Dependinator.Diagrams;
 
-interface IRecentModelsService
+interface IModelListService
 {
     Task InitAsync();
 
@@ -15,16 +15,17 @@ interface IRecentModelsService
 }
 
 [Scoped]
-class RecentModelsService : IRecentModelsService
+class ModelListService : IModelListService
 {
     const int RecentCount = 5;
 
     readonly IConfigService configService;
     readonly IFileService fileService;
-    private readonly IWorkspaceFileService workspaceFileService;
+    readonly IWorkspaceFileService workspaceFileService;
+
     List<string> modelPaths = [];
 
-    public RecentModelsService(
+    public ModelListService(
         IConfigService configService,
         IFileService fileService,
         IWorkspaceFileService workspaceFileService
@@ -58,6 +59,7 @@ class RecentModelsService : IRecentModelsService
     {
         if (Build.IsVsCodeExtWasm)
             return;
+        var name = Path.GetFileName(path);
 
         modelPaths = (await GetExistingRecentFilePathsAsync()).Prepend(path).Distinct().Take(RecentCount).ToList();
         await configService.SetAsync(c => c.RecentPaths = modelPaths);

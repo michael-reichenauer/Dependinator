@@ -45,7 +45,7 @@ class CanvasService : ICanvasService
     readonly IJSInterop jSInteropService;
     readonly IFileService fileService;
     readonly IBrowserFileService browserFileService;
-    readonly IRecentModelsService recentModelsService;
+    readonly IModelListService recentModelsService;
     readonly IInteractionService interactionService;
 
     public CanvasService(
@@ -58,7 +58,7 @@ class CanvasService : ICanvasService
         IJSInterop jSInteropService,
         IFileService fileService,
         IBrowserFileService browserFileService,
-        IRecentModelsService recentModelsService,
+        IModelListService recentModelsService,
         IInteractionService interactionService
     )
     {

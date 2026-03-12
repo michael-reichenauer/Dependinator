@@ -7,7 +7,7 @@
 @inject Dependinator.Modeling.Models.IModelMgr modelMgr
 @inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
-@inject IRecentModelsService recentModelsService
+@inject IModelListService recentModelsService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
@@ -389,7 +389,7 @@
 
     static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
 
-    static string GetModelDisplayName(string modelPath) => Path.GetFileNameWithoutExtension(modelPath);
+    static string GetModelDisplayName(string modelPath) => Path.GetFileName(modelPath);
 
     bool IsCurrentRecentModel(string path) => string.Equals(path, CurrentRecentModelPath, StringComparison.Ordinal);
 
