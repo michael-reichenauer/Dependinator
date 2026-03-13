@@ -8,7 +8,7 @@ abstract class Command
     public virtual string Type => this.GetType().Name;
 
     public abstract void Execute(IModel model);
-    public abstract void Unexecute(IModel model);
+    public abstract void Revert(IModel model);
 
     public bool CanCombineWith(Command other)
     {

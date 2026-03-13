@@ -21,7 +21,7 @@ class LineEditCommand : Command
         line.SetSegmentPoints(SegmentPoints);
     }
 
-    public override void Unexecute(IModel model)
+    public override void Revert(IModel model)
     {
         if (!model.Lines.TryGetValue(lineId, out var line) || SegmentPointsCopy is null)
             return;

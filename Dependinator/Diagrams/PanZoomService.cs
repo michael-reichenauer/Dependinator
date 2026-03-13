@@ -12,7 +12,7 @@ interface IPanZoomService
 }
 
 [Scoped]
-class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IModelService modelService) : IPanZoomService
+class PanZoomService(IScreenService screenService, IModelMgr modelMgr, ICommandService commandService) : IPanZoomService
 {
     const double MaxZoom = 10;
     const double Margin = 10;
@@ -52,7 +52,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IModelSer
             newOffset = new Pos(x, y);
         }
 
-        modelService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom }, false);
+        commandService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom }, false);
     }
 
     public void Pan(PointerEvent e)
@@ -66,7 +66,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IModelSer
             newOffset = new Pos(model.Offset.X - dx, model.Offset.Y - dy);
         }
 
-        modelService.Do(new ModelEditCommand() { Offset = newOffset }, false);
+        commandService.Do(new ModelEditCommand() { Offset = newOffset }, false);
     }
 
     public void PanZoomOrg(Rect viewRect, double zoom)
@@ -184,13 +184,13 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IModelSer
     void GoTo(Pos pos, double zoom)
     {
         var offset = ToOffset(pos, zoom);
-        modelService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
+        commandService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
     }
 
     void GoTo(Pos pos, double zoom, Rect svgRect)
     {
         var offset = ToOffset(pos, zoom, svgRect);
-        modelService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
+        commandService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
     }
 
     (Pos, double) GetPosAndZoom(Rect svgRect)
@@ -295,6 +295,6 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IModelSer
             }
         }
 
-        modelService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom });
+        commandService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom });
     }
 }

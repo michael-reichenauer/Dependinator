@@ -11,7 +11,8 @@ interface ILineEditService
 }
 
 [Scoped]
-class LineEditService(IModelMgr modelMgr, IModelService modelService, IScreenService screenService) : ILineEditService
+class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScreenService screenService)
+    : ILineEditService
 {
     static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 
@@ -39,7 +40,7 @@ class LineEditService(IModelMgr modelMgr, IModelService modelService, IScreenSer
             updatedPoints = InsertPointAtClosestSegment(line, endpoints, localHint);
         }
 
-        modelService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
+        commandService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
     }
 
     public async Task RemoveSegmentPoint(LineId lineId, Pos screenPos)
@@ -69,7 +70,7 @@ class LineEditService(IModelMgr modelMgr, IModelService modelService, IScreenSer
             updatedPoints = line.SegmentPoints.Where((_, index) => index != removeIndex).ToList();
         }
 
-        modelService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
+        commandService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
     }
 
     public void MoveSegmentPoint(PointerEvent e, double zoom, PointerId pointerId)
@@ -96,7 +97,7 @@ class LineEditService(IModelMgr modelMgr, IModelService modelService, IScreenSer
             updatedPoints = points;
         }
 
-        modelService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
+        commandService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
     }
 
     public void SnapSegmentPointToGrid(PointerId pointerId)
@@ -122,7 +123,7 @@ class LineEditService(IModelMgr modelMgr, IModelService modelService, IScreenSer
             updatedPoints = points;
         }
 
-        modelService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
+        commandService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
     }
 
     static double GetChildrenLocalZoom(Node owner) => owner.GetZoom() / owner.ContainerZoom;

@@ -4,6 +4,7 @@
 @inject IAppCloudSyncService appCloudSyncService
 @inject ISnackbar snackbar
 @inject Dependinator.Models.IModelService modelService
+@inject Dependinator.Models.ICommandService commandService
 @inject IApplicationEvents applicationEvents
 @implements IDisposable
 
@@ -11,12 +12,12 @@
     <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Secondary" Dense="true" Class="ml-n3"
              AnchorOrigin="Origin.BottomCenter">
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
-                     Disabled="@(!modelService.CanUndo)" OnClick="modelService.Undo">
+                     Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo">
             Undo
         </MudMenuItem>
 
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
-                     Disabled="@(!modelService.CanRedo)" OnClick="modelService.Redo">
+                     Disabled="@(!commandService.CanRedo)" OnClick="commandService.Redo">
             Redo
         </MudMenuItem>
 
@@ -94,10 +95,10 @@
     </MudTooltip>
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
-        <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="@GetToolbarButtonColor(modelService.CanUndo)"
-                       OnClick="modelService.Undo" />
-        <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(modelService.CanRedo)"
-                       OnClick="modelService.Redo" />
+        <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="@GetToolbarButtonColor(commandService.CanUndo)"
+                       OnClick="commandService.Undo" />
+        <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
+                       OnClick="commandService.Redo" />
         <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="srv.Refresh" />
     </MudHidden>
 

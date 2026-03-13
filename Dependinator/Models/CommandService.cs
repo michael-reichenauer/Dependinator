@@ -5,9 +5,9 @@ interface ICommandService
     bool CanUndo { get; }
     bool CanRedo { get; }
 
-    void Do(IModel model, Command command);
-    void Redo(Func<IModel> useModel);
-    void Undo(Func<IModel> useModel);
+    void Do(Command command, bool isClearCache = true);
+    void Undo();
+    void Redo();
 }
 
 [Scoped]
@@ -15,22 +15,38 @@ class CommandService : ICommandService
 {
     readonly IApplicationEvents applicationEvents;
     readonly ITilesMgr tilesMgr;
+    private readonly IModelMgr modelMgr;
     readonly Stack<Command> undoStack = [];
     readonly Stack<Command> redoStack = [];
 
-    public CommandService(IApplicationEvents applicationEvents, ITilesMgr tilesMgr)
+    public CommandService(IApplicationEvents applicationEvents, ITilesMgr tilesMgr, IModelMgr modelMgr)
     {
         this.applicationEvents = applicationEvents;
         this.tilesMgr = tilesMgr;
+        this.modelMgr = modelMgr;
     }
 
     public bool CanUndo => undoStack.Any();
     public bool CanRedo => redoStack.Any();
 
-    public void Do(IModel model, Command command)
+    public void Do(Command command, bool isClearCache = true)
     {
-        command.Execute(model);
+        Do(command);
 
+        if (isClearCache)
+            tilesMgr.ClearCache();
+
+        applicationEvents.TriggerUndoneRedone();
+        applicationEvents.TriggerUIStateChanged();
+        applicationEvents.TriggerSaveNeeded();
+    }
+
+    void Do(Command command)
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            command.Execute(model);
+        }
         // Check if command can be combined with previous command (e.g. multiple edits in a row)
         if (undoStack.Any())
         {
@@ -53,61 +69,61 @@ class CommandService : ICommandService
 
         undoStack.Push(command);
         redoStack.Clear();
-        applicationEvents.TriggerUndoneRedone();
-        applicationEvents.TriggerUIStateChanged();
     }
 
-    public void Undo(Func<IModel> useModel)
+    public void Undo()
     {
         if (!CanUndo)
             return;
 
         if (undoStack.Peek() is CompositeCommand composite)
         {
-            UndoComposite(useModel, composite);
+            UndoComposite(composite);
             return;
         }
         var command = undoStack.Pop();
         redoStack.Push(command);
 
-        using (var model = useModel())
+        using (var model = modelMgr.UseModel())
         {
-            command.Unexecute(model);
+            command.Revert(model);
         }
         tilesMgr.ClearCache();
         applicationEvents.TriggerUndoneRedone();
         applicationEvents.TriggerUIStateChanged();
+        applicationEvents.TriggerSaveNeeded();
     }
 
-    public void Redo(Func<IModel> useModel)
+    public void Redo()
     {
         if (!CanRedo)
             return;
 
         if (redoStack.Peek() is CompositeCommand composite)
         {
-            RedoComposite(useModel, composite);
+            RedoComposite(composite);
             return;
         }
 
         var command = redoStack.Pop();
         undoStack.Push(command);
-        using (var model = useModel())
+        using (var model = modelMgr.UseModel())
         {
             command.Execute(model);
         }
 
         applicationEvents.TriggerUndoneRedone();
         applicationEvents.TriggerUIStateChanged();
+        applicationEvents.TriggerSaveNeeded();
     }
 
-    async void UndoComposite(Func<IModel> useModel, CompositeCommand composite)
+    async void UndoComposite(CompositeCommand composite)
     {
         foreach (var subCommand in composite.commands.AsEnumerable().Reverse())
         {
-            using (var model = useModel())
+            using (var model = modelMgr.UseModel())
             {
-                subCommand.Unexecute(model);
+                subCommand.Revert(model);
             }
             tilesMgr.ClearCache();
 
@@ -120,11 +136,11 @@ class CommandService : ICommandService
         redoStack.Push(command);
     }
 
-    async void RedoComposite(Func<IModel> useModel, CompositeCommand composite)
+    async void RedoComposite(CompositeCommand composite)
     {
         foreach (var subCommand in composite.commands)
         {
-            using (var model = useModel())
+            using (var model = modelMgr.UseModel())
             {
                 subCommand.Execute(model);
             }

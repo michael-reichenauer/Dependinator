@@ -8,12 +8,6 @@ interface IModelService
 {
     string ModelPath { get; }
 
-    void Do(Command command, bool isClearCache = true);
-    bool CanUndo { get; }
-    bool CanRedo { get; }
-    void Undo();
-    void Redo();
-
     Task<R<ModelInfo>> LoadAsync(string path);
     (Rect, double) GetLatestView();
     Task<R> RefreshAsync();
@@ -40,8 +34,6 @@ class ModelService : IModelService, IDisposable
     readonly IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
     readonly IProgressService progressService;
-    readonly ICommandService commandService;
-    readonly IHost host;
     readonly Debouncer saveDebouncer = new();
 
     public ModelService(
@@ -63,8 +55,6 @@ class ModelService : IModelService, IDisposable
         this.persistenceService = persistenceService;
         this.applicationEvents = applicationEvents;
         this.progressService = progressService;
-        this.commandService = commandService;
-        this.host = host;
         this.applicationEvents.SaveNeeded += TriggerSave;
     }
 
@@ -74,39 +64,11 @@ class ModelService : IModelService, IDisposable
         saveDebouncer.Dispose();
     }
 
-    public bool CanUndo => commandService.CanUndo;
-    public bool CanRedo => commandService.CanRedo;
-
     public string ModelPath => Use(m => m.Path);
 
     public void ClearCache()
     {
         tilesMgr.ClearCache();
-        TriggerSave();
-    }
-
-    public void Do(Command command, bool isClearCache = true)
-    {
-        using (var model = modelMgr.UseModel())
-        {
-            commandService.Do(model, command);
-            if (isClearCache)
-                tilesMgr.ClearCache();
-        }
-
-        applicationEvents.TriggerUIStateChanged();
-        TriggerSave();
-    }
-
-    public void Undo()
-    {
-        commandService.Undo(modelMgr.UseModel);
-        TriggerSave();
-    }
-
-    public void Redo()
-    {
-        commandService.Redo(modelMgr.UseModel);
         TriggerSave();
     }
 

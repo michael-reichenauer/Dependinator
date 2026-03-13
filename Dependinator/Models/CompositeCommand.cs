@@ -30,11 +30,11 @@ class CompositeCommand : Command
         }
     }
 
-    public override void Unexecute(IModel model)
+    public override void Revert(IModel model)
     {
         foreach (var command in commands.AsEnumerable().Reverse())
         {
-            command.Unexecute(model);
+            command.Revert(model);
         }
     }
 }

@@ -29,7 +29,7 @@ class NodeEditCommand : Command
             (ContainerOffsetCopy, node.ContainerOffset) = (node.ContainerOffset, ContainerOffset);
     }
 
-    public override void Unexecute(IModel model)
+    public override void Revert(IModel model)
     {
         if (!model.Nodes.TryGetValue(nodeId, out var node))
             return;
