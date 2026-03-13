@@ -23,10 +23,22 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
 
     public void Do(Command command, bool isClearCache = true)
     {
-        modelMgr.WithModel(m => command.Execute(m));
+        Do(command);
+
         if (isClearCache)
             applicationEvents.TriggerModelChanged();
 
+        applicationEvents.TriggerUndoneRedone();
+        applicationEvents.TriggerUIStateChanged();
+        applicationEvents.TriggerSaveNeeded();
+    }
+
+    void Do(Command command)
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            command.Execute(model);
+        }
         // Check if command can be combined with previous command (e.g. multiple edits in a row)
         if (undoStack.Any())
         {
@@ -49,9 +61,6 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
 
         undoStack.Push(command);
         redoStack.Clear();
-        applicationEvents.TriggerUndoneRedone();
-        applicationEvents.TriggerUIStateChanged();
-        applicationEvents.TriggerSaveNeeded();
     }
 
     public void Undo()
