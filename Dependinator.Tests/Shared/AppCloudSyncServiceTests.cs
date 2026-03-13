@@ -17,14 +17,7 @@ public class AppCloudSyncServiceTests
         string modelPath = "/models/sample.model";
         ModelDto syncedModel = CreateModelDto("synced");
         string syncedHash = CloudModelSerializer.GetContentHash(syncedModel);
-        CloudSyncModelState syncState = new()
-        {
-            LatestSync = new CloudSyncLatest(
-                new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
-                CloudSyncDirection.Down,
-                syncedHash
-            ),
-        };
+        CloudSyncModelState syncState = new() { Baseline = new CloudSyncBaseline(syncedHash, syncedHash) };
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         AppCloudSyncService sut = CreateSut(modelPath, syncedModel, syncState, [cloudModel]);
 
@@ -41,14 +34,7 @@ public class AppCloudSyncServiceTests
         string modelPath = "/models/sample.model";
         ModelDto syncedModel = CreateModelDto("synced");
         string syncedHash = CloudModelSerializer.GetContentHash(syncedModel);
-        CloudSyncModelState syncState = new()
-        {
-            LatestSync = new CloudSyncLatest(
-                new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
-                CloudSyncDirection.Down,
-                syncedHash
-            ),
-        };
+        CloudSyncModelState syncState = new() { Baseline = new CloudSyncBaseline(syncedHash, syncedHash) };
         ModelDto localModel = CreateModelDto("local");
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         AppCloudSyncService sut = CreateSut(modelPath, localModel, syncState, [cloudModel]);
@@ -60,20 +46,29 @@ public class AppCloudSyncServiceTests
     }
 
     [Fact]
+    public async Task GetCloudSyncState_ShouldReturnHasRemoteChanges_WhenCloudCopyIsMissingSinceLastSync()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        string syncedHash = CloudModelSerializer.GetContentHash(syncedModel);
+        CloudSyncModelState syncState = new() { Baseline = new CloudSyncBaseline(syncedHash, syncedHash) };
+        AppCloudSyncService sut = CreateSut(modelPath, syncedModel, syncState, cloudModels: []);
+
+        await sut.RefreshSyncStateCoreAsync();
+
+        Assert.Equal(CloudSyncState.HasRemoteChanges, sut.GetCloudSyncState());
+        Assert.False(sut.HasLocalChangesSinceLastSync);
+        Assert.True(sut.HasRemoteChangesSinceLastSync);
+    }
+
+    [Fact]
     public async Task AutoSync_ShouldNotPushOrPull_WhenConflictExists()
     {
         string modelPath = "/models/sample.model";
         ModelDto syncedModel = CreateModelDto("synced");
         ModelDto localModel = CreateModelDto("local");
         string syncedHash = CloudModelSerializer.GetContentHash(syncedModel);
-        CloudSyncModelState syncState = new()
-        {
-            LatestSync = new CloudSyncLatest(
-                new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
-                CloudSyncDirection.Down,
-                syncedHash
-            ),
-        };
+        CloudSyncModelState syncState = new() { Baseline = new CloudSyncBaseline(syncedHash, syncedHash) };
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], CreateFastTimings());
 
@@ -102,6 +97,27 @@ public class AppCloudSyncServiceTests
     }
 
     [Fact]
+    public async Task AutoSync_ShouldPush_WhenCloudCopyIsMissingSinceLastSync()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        SutContext context = CreateSutContext(
+            modelPath,
+            syncedModel,
+            syncState,
+            cloudModels: [],
+            timings: CreateFastTimings()
+        );
+
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.PushCalls > 0);
+
+        Assert.True(context.Counters.PushCalls > 0);
+        Assert.Equal(0, context.Counters.PullCalls);
+    }
+
+    [Fact]
     public async Task AutoSync_ShouldPull_WhenOnlyRemoteChanged()
     {
         string modelPath = "/models/sample.model";
@@ -118,7 +134,7 @@ public class AppCloudSyncServiceTests
     }
 
     [Fact]
-    public async Task AutoSync_ShouldPull_WhenNoLocalBaselineButCloudModelExists()
+    public async Task AutoSync_ShouldNotPushOrPull_WhenNoBaselineAndLocalAndCloudDiffer()
     {
         string modelPath = "/models/sample.model";
         ModelDto localModel = CreateModelDto("local");
@@ -127,15 +143,38 @@ public class AppCloudSyncServiceTests
             modelPath,
             localModel,
             syncState: null,
-            [cloudModel],
-            CreateFastTimings()
+            cloudModels: [cloudModel],
+            timings: CreateFastTimings()
         );
 
         context.ApplicationEvents.TriggerUIStateChanged();
-        await WaitUntilAsync(() => context.Counters.PullCalls > 0);
+        await Task.Delay(50);
 
-        Assert.True(context.Counters.PullCalls > 0);
+        Assert.Equal(0, context.Counters.PullCalls);
         Assert.Equal(0, context.Counters.PushCalls);
+        Assert.Equal(CloudSyncState.HasConflicts, context.Sut.GetCloudSyncState());
+    }
+
+    [Fact]
+    public async Task AutoSync_ShouldStaySynced_WhenNoBaselineAndLocalAndCloudMatch()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto sharedModel = CreateModelDto("shared");
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, sharedModel);
+        SutContext context = CreateSutContext(
+            modelPath,
+            sharedModel,
+            syncState: null,
+            cloudModels: [cloudModel],
+            timings: CreateFastTimings()
+        );
+
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await Task.Delay(50);
+
+        Assert.Equal(0, context.Counters.PullCalls);
+        Assert.Equal(0, context.Counters.PushCalls);
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
     }
 
     [Fact]
@@ -148,7 +187,7 @@ public class AppCloudSyncServiceTests
             localModel,
             syncState: null,
             cloudModels: [],
-            CreateFastTimings()
+            timings: CreateFastTimings()
         );
 
         context.ApplicationEvents.TriggerUIStateChanged();
@@ -250,14 +289,7 @@ public class AppCloudSyncServiceTests
         string modelPath = "/models/sample.model";
         ModelDto syncedModel = CreateModelDto("synced");
         string syncedHash = CloudModelSerializer.GetContentHash(syncedModel);
-        CloudSyncModelState syncState = new()
-        {
-            LatestSync = new CloudSyncLatest(
-                new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
-                CloudSyncDirection.Down,
-                syncedHash
-            ),
-        };
+        CloudSyncModelState syncState = new() { Baseline = new CloudSyncBaseline(syncedHash, syncedHash) };
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         SutContext context = CreateSutContext(modelPath, CreateModelDto("local"), syncState, [cloudModel]);
         context
@@ -282,7 +314,7 @@ public class AppCloudSyncServiceTests
         ModelDto localLoadedModel = CreateModelDto("local-loaded");
         ModelDto remotePulledModel = CreateModelDto("remote-pulled");
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("stale-remote-list"));
-        SutContext context = CreateSutContext(modelPath, localLoadedModel, syncState: null, [cloudModel]);
+        SutContext context = CreateSutContext(modelPath, localLoadedModel, syncState: null, cloudModels: [cloudModel]);
 
         context.CloudSyncService.Setup(x => x.PullAsync(modelPath)).ReturnsAsync(remotePulledModel);
 
@@ -400,13 +432,10 @@ public class AppCloudSyncServiceTests
 
     static CloudSyncModelState CreateSyncStateFromModel(ModelDto modelDto)
     {
+        string contentHash = CloudModelSerializer.GetContentHash(modelDto);
         return new CloudSyncModelState()
         {
-            LatestSync = new CloudSyncLatest(
-                new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero),
-                CloudSyncDirection.Down,
-                CloudModelSerializer.GetContentHash(modelDto)
-            ),
+            Baseline = new CloudSyncBaseline(contentHash, contentHash),
         };
     }
 

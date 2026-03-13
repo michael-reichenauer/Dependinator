@@ -14,9 +14,9 @@ sealed record AppCloudSyncTimings(
 )
 {
     public static readonly AppCloudSyncTimings Default = new(
-        ActiveRefreshInterval: TimeSpan.FromSeconds(10),
-        AutoSyncMinInterval: TimeSpan.FromSeconds(10),
-        IdleRefreshInterval: TimeSpan.FromSeconds(15),
+        ActiveRefreshInterval: TimeSpan.FromSeconds(5),
+        AutoSyncMinInterval: TimeSpan.FromSeconds(5),
+        IdleRefreshInterval: TimeSpan.FromSeconds(10),
         MaxIdleRefreshDuration: TimeSpan.FromMinutes(5)
     );
 }
@@ -208,8 +208,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
         string localContentHash = CloudModelSerializer.GetContentHash(modelDto);
         await cloudSyncStateService.RecordPushAsync(modelPath, metadata, localContentHash);
-        if (!Try(out error, await RefreshSyncStateCoreAsync()))
-            return error;
+        ApplySuccessfulSync(modelPath, localContentHash, metadata.ContentHash, metadata);
 
         Log.Info("SyncUpCoreAsync");
         if (notifyChanged)
@@ -231,11 +230,15 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
             return error;
 
         string pulledContentHash = CloudModelSerializer.GetContentHash(modelDto);
-        string localContentHash = TryGetCurrentModelContentHash(out var hash) ? hash : pulledContentHash;
+        string localContentHash = GetCurrentModelContentHashOrDefault() ?? pulledContentHash;
         string remoteContentHash = pulledContentHash;
         await cloudSyncStateService.RecordPullAsync(modelInfo.Path, localContentHash, remoteContentHash);
-        if (!Try(out error, await RefreshSyncStateCoreAsync()))
-            return error;
+        ApplySuccessfulSync(
+            modelInfo.Path,
+            localContentHash,
+            remoteContentHash,
+            CreateKnownCloudModelMetadata(modelInfo.Path, remoteContentHash)
+        );
 
         Log.Info("SyncDownCoreAsync");
         if (notifyChanged)
@@ -255,10 +258,14 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
         await canvasService.LoadAsync(normalizedPath);
         string pulledContentHash = CloudModelSerializer.GetContentHash(modelDto);
-        string localContentHash = TryGetCurrentModelContentHash(out var hash) ? hash : pulledContentHash;
+        string localContentHash = GetCurrentModelContentHashOrDefault() ?? pulledContentHash;
         await cloudSyncStateService.RecordPullAsync(normalizedPath, localContentHash, pulledContentHash);
-        if (!Try(out error, await RefreshSyncStateCoreAsync()))
-            return error;
+        ApplySuccessfulSync(
+            normalizedPath,
+            localContentHash,
+            pulledContentHash,
+            CreateKnownCloudModelMetadata(normalizedPath, pulledContentHash)
+        );
 
         if (notifyChanged)
             NotifyChanged();
@@ -317,20 +324,16 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     AutoSyncAction DetermineAutoSyncAction()
     {
         string modelPath = modelMgr.ModelPath;
-        if (string.IsNullOrWhiteSpace(modelPath))
-            return AutoSyncAction.None;
-
-        CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelPath);
-        CloudSyncLatest? latestSync = syncState?.LatestSync;
-        if (latestSync is null)
-            return currentCloudModel is null ? AutoSyncAction.Push : AutoSyncAction.Pull;
+        CloudModelMetadata? currentCloudModel = string.IsNullOrWhiteSpace(modelPath)
+            ? null
+            : GetCurrentCloudModel(cloudModels, modelPath);
 
         if (hasLocalChangesSinceLastSync && hasRemoteChangesSinceLastSync)
             return AutoSyncAction.None;
         if (hasLocalChangesSinceLastSync)
             return AutoSyncAction.Push;
         if (hasRemoteChangesSinceLastSync)
-            return AutoSyncAction.Pull;
+            return currentCloudModel is null ? AutoSyncAction.Push : AutoSyncAction.Pull;
 
         return AutoSyncAction.None;
     }
@@ -409,10 +412,15 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     async Task<R> RefreshSyncStateForCurrentModelAsync(string modelPath)
     {
         syncState = await cloudSyncStateService.GetAsync(modelPath);
-        CloudSyncLatest? latestSync = syncState?.LatestSync;
+        CloudSyncBaseline? baseline = syncState?.Baseline;
         CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelPath);
-        hasRemoteChangesSinceLastSync = HasRemoteChangesComparedToLatestSync(latestSync, currentCloudModel);
-        hasLocalChangesSinceLastSync = HasLocalChangesComparedToLatestSync(latestSync);
+        string? currentLocalContentHash = GetCurrentModelContentHashOrDefault();
+        string? currentRemoteContentHash = currentCloudModel?.ContentHash;
+        (hasLocalChangesSinceLastSync, hasRemoteChangesSinceLastSync) = CompareToBaseline(
+            baseline,
+            currentLocalContentHash,
+            currentRemoteContentHash
+        );
         MarkSyncStateRefreshed();
         return R.Ok;
     }
@@ -434,22 +442,6 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
         cloudModels = modelList.Models;
         return R.Ok;
-    }
-
-    bool HasLocalChangesComparedToLatestSync(CloudSyncLatest? latestSync)
-    {
-        if (latestSync is null)
-            return false;
-
-        if (!Try(out ModelDto? modelDto, out _, modelService.GetCurrentModelDto()))
-            return false;
-
-        string? localBaselineHash = latestSync.LocalContentHash ?? latestSync.ContentHash;
-        if (string.IsNullOrWhiteSpace(localBaselineHash))
-            return false;
-
-        string currentHash = CloudModelSerializer.GetContentHash(modelDto);
-        return !string.Equals(currentHash, localBaselineHash, StringComparison.OrdinalIgnoreCase);
     }
 
     // Clears computed sync flags and optionally clears remote model list cache.
@@ -610,27 +602,103 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
             BackgroundSyncError?.Invoke(errorMessage);
     }
 
-    // Compares remote model hash against the latest known local sync marker.
-    static bool HasRemoteChangesComparedToLatestSync(CloudSyncLatest? latestSync, CloudModelMetadata? currentCloudModel)
+    static (bool HasLocalChanges, bool HasRemoteChanges) CompareToBaseline(
+        CloudSyncBaseline? baseline,
+        string? currentLocalContentHash,
+        string? currentRemoteContentHash
+    )
     {
-        if (latestSync is null || currentCloudModel is null)
-            return false;
+        if (baseline is null)
+            return CompareWithoutBaseline(currentLocalContentHash, currentRemoteContentHash);
 
-        string? remoteBaselineHash = latestSync.RemoteContentHash ?? latestSync.ContentHash;
-        if (string.IsNullOrWhiteSpace(remoteBaselineHash))
-            return false;
-
-        return !string.Equals(currentCloudModel.ContentHash, remoteBaselineHash, StringComparison.OrdinalIgnoreCase);
+        bool hasLocalChanges = HashesDiffer(currentLocalContentHash, baseline.LocalContentHash);
+        bool hasRemoteChanges = HashesDiffer(currentRemoteContentHash, baseline.RemoteContentHash);
+        return (hasLocalChanges, hasRemoteChanges);
     }
 
-    bool TryGetCurrentModelContentHash(out string contentHash)
+    static (bool HasLocalChanges, bool HasRemoteChanges) CompareWithoutBaseline(
+        string? currentLocalContentHash,
+        string? currentRemoteContentHash
+    )
     {
-        contentHash = string.Empty;
-        if (!Try(out ModelDto? currentModelDto, out _, modelService.GetCurrentModelDto()))
+        bool hasLocalModel = !string.IsNullOrWhiteSpace(currentLocalContentHash);
+        bool hasRemoteModel = !string.IsNullOrWhiteSpace(currentRemoteContentHash);
+
+        if (!hasLocalModel && !hasRemoteModel)
+            return (false, false);
+
+        if (hasLocalModel && hasRemoteModel)
+        {
+            bool isSameContent = string.Equals(
+                currentLocalContentHash,
+                currentRemoteContentHash,
+                StringComparison.OrdinalIgnoreCase
+            );
+            return isSameContent ? (false, false) : (true, true);
+        }
+
+        return (hasLocalModel, hasRemoteModel);
+    }
+
+    static bool HashesDiffer(string? currentHash, string? baselineHash)
+    {
+        bool hasCurrentHash = !string.IsNullOrWhiteSpace(currentHash);
+        bool hasBaselineHash = !string.IsNullOrWhiteSpace(baselineHash);
+        if (!hasCurrentHash && !hasBaselineHash)
             return false;
 
-        contentHash = CloudModelSerializer.GetContentHash(currentModelDto);
-        return true;
+        return !string.Equals(currentHash, baselineHash, StringComparison.OrdinalIgnoreCase);
+    }
+
+    string? GetCurrentModelContentHashOrDefault()
+    {
+        if (!Try(out ModelDto? currentModelDto, out _, modelService.GetCurrentModelDto()))
+            return null;
+
+        return CloudModelSerializer.GetContentHash(currentModelDto);
+    }
+
+    void ApplySuccessfulSync(
+        string modelPath,
+        string localContentHash,
+        string remoteContentHash,
+        CloudModelMetadata cloudModel
+    )
+    {
+        authState = authState with { IsAvailable = cloudSyncService.IsAvailable, IsAuthenticated = true };
+        syncState = new CloudSyncModelState() { Baseline = new CloudSyncBaseline(localContentHash, remoteContentHash) };
+        hasLocalChangesSinceLastSync = false;
+        hasRemoteChangesSinceLastSync = false;
+        UpsertCloudModel(cloudModel);
+        MarkSyncStateRefreshed();
+    }
+
+    CloudModelMetadata CreateKnownCloudModelMetadata(string modelPath, string remoteContentHash)
+    {
+        string normalizedPath = CloudModelPath.Normalize(modelPath);
+        CloudModelMetadata? existingCloudModel = GetCurrentCloudModel(cloudModels, modelPath);
+        return new CloudModelMetadata(
+            ModelKey: existingCloudModel?.ModelKey ?? CloudModelPath.CreateKey(normalizedPath),
+            NormalizedPath: normalizedPath,
+            UpdatedUtc: existingCloudModel?.UpdatedUtc ?? utcNow(),
+            ContentHash: remoteContentHash,
+            CompressedSizeBytes: existingCloudModel?.CompressedSizeBytes ?? 0
+        );
+    }
+
+    void UpsertCloudModel(CloudModelMetadata cloudModel)
+    {
+        string normalizedPath = cloudModel.NormalizedPath;
+        List<CloudModelMetadata> updatedCloudModels = [.. cloudModels];
+        int existingIndex = updatedCloudModels.FindIndex(existingCloudModel =>
+            string.Equals(existingCloudModel.NormalizedPath, normalizedPath, StringComparison.OrdinalIgnoreCase)
+        );
+        if (existingIndex >= 0)
+            updatedCloudModels[existingIndex] = cloudModel;
+        else
+            updatedCloudModels.Add(cloudModel);
+
+        cloudModels = updatedCloudModels;
     }
 
     // Finds remote metadata that matches the active local model path.

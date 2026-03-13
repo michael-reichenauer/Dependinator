@@ -5,7 +5,7 @@ namespace Dependinator.Shared.CloudSync;
 // Tracks the most recent cloud sync marker for a specific local model.
 class CloudSyncModelState
 {
-    public CloudSyncLatest? LatestSync { get; set; }
+    public CloudSyncBaseline? Baseline { get; set; }
 }
 
 // Abstraction for reading and updating per-model cloud sync metadata in local config.
@@ -44,13 +44,7 @@ class CloudSyncStateService(IConfigService configService) : ICloudSyncStateServi
             CloudSyncModelState state = GetOrCreateState(config, modelPath);
             string localHash = localContentHash ?? metadata.ContentHash;
             string remoteHash = metadata.ContentHash;
-            state.LatestSync = new CloudSyncLatest(
-                metadata.UpdatedUtc,
-                CloudSyncDirection.Up,
-                remoteHash,
-                LocalContentHash: localHash,
-                RemoteContentHash: remoteHash
-            );
+            state.Baseline = new CloudSyncBaseline(localHash, remoteHash);
         });
     }
 
@@ -61,13 +55,7 @@ class CloudSyncStateService(IConfigService configService) : ICloudSyncStateServi
         {
             CloudSyncModelState state = GetOrCreateState(config, modelPath);
             string remoteHash = remoteContentHash ?? localContentHash;
-            state.LatestSync = new CloudSyncLatest(
-                DateTimeOffset.UtcNow,
-                CloudSyncDirection.Down,
-                remoteHash,
-                LocalContentHash: localContentHash,
-                RemoteContentHash: remoteHash
-            );
+            state.Baseline = new CloudSyncBaseline(localContentHash, remoteHash);
         });
     }
 

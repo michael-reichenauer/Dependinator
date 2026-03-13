@@ -1,11 +1,7 @@
 namespace Dependinator.Shared.CloudSync;
 
-// Direction of last sync operation for a given local model.
-enum CloudSyncDirection
-{
-    Up,
-    Down,
-}
+// Explicit baseline hashes used to compare the current local/cloud state.
+sealed record CloudSyncBaseline(string? LocalContentHash, string? RemoteContentHash);
 
 // UI-facing aggregate state for sync status computation.
 enum CloudSyncState
@@ -17,12 +13,3 @@ enum CloudSyncState
     HasConflicts,
     IsSynced,
 }
-
-// Most recent sync marker stored for a model.
-sealed record CloudSyncLatest(
-    DateTimeOffset Utc,
-    CloudSyncDirection Direction,
-    string? ContentHash,
-    string? LocalContentHash = null,
-    string? RemoteContentHash = null
-);

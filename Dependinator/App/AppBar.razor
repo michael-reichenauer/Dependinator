@@ -386,14 +386,6 @@
             StringComparison.OrdinalIgnoreCase
         );
 
-    static string GetSyncDirectionText(CloudSyncDirection direction) =>
-        direction switch
-        {
-            CloudSyncDirection.Up => "up",
-            CloudSyncDirection.Down => "down",
-            _ => "unknown",
-        };
-
     static string GetSyncStatusDescription(CloudSyncState state) =>
         state switch
         {

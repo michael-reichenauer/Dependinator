@@ -1,3 +1,4 @@
+using Dependinator.Diagrams.Tiles;
 using Dependinator.Modeling.Dtos;
 using Dependinator.Modeling.Models;
 using Dependinator.Shared.Types;
@@ -278,6 +279,8 @@ class ModelService : IModelService, IDisposable
         }
 
         await Task.Run(() => SetNodeAndLinkDtos(modelDto));
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
         return new ModelInfo(path, modelDto.ViewRect, modelDto.Zoom);
     }
 
