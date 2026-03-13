@@ -167,7 +167,6 @@
     IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
     bool IsCloudModelsMenuDisabled => !AuthState.IsAuthenticated || CloudModels.Count == 0;
     CloudSyncState CurrentCloudSyncState => appCloudSyncService.GetCloudSyncState();
-    CloudSyncLatest? LatestSync => appCloudSyncService.LatestSync;
     CloudIconInfo CurrentCloudIconInfo => GetCloudIconInfo(CurrentCloudSyncState);
     bool HasSyncConflicts => CurrentCloudSyncState is CloudSyncState.HasConflicts;
     CloudSyncState previousCloudSyncState = CloudSyncState.NotAvailable;
@@ -186,14 +185,7 @@
         HasSyncConflicts
             ? "Both the local cached model and the cloud copy have changed since the last sync."
             : "The current local cached layout data will be replaced.";
-    string SyncStatusText =>
-        LatestSync switch
-        {
-            { } latestSync =>
-                $"Sync: {GetSyncDirectionText(latestSync.Direction)} {latestSync.Utc.LocalDateTime:g} - {GetSyncStatusDescription(CurrentCloudSyncState)}",
-            null when string.IsNullOrWhiteSpace(modelMgr.ModelPath) => "Sync: model not loaded",
-            _ => "Sync: no sync recorded",
-        };
+    string SyncStatusText => "";
 
     protected override void OnInitialized()
     {

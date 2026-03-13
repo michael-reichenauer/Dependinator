@@ -273,6 +273,7 @@ class ModelService : IModelService, IDisposable
     {
         using (var model = modelMgr.UseModel())
         {
+            model.Clear();
             model.SetFromDto(path, modelDto);
         }
 

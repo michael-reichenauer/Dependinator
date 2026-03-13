@@ -268,7 +268,7 @@ public class AppCloudSyncServiceTests
 
         Assert.True(result);
         Assert.Null(context.Sut.SyncState);
-        Assert.Null(context.Sut.LatestSync);
+
         Assert.False(context.Sut.HasLocalChangesSinceLastSync);
         Assert.False(context.Sut.HasRemoteChangesSinceLastSync);
         Assert.Empty(context.Sut.CloudModels);

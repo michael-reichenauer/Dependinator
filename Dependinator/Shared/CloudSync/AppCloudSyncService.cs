@@ -30,7 +30,6 @@ interface IAppCloudSyncService
     bool IsAvailable { get; }
     CloudAuthState AuthState { get; }
     CloudSyncModelState? SyncState { get; }
-    CloudSyncLatest? LatestSync { get; }
     bool HasLocalChangesSinceLastSync { get; }
     bool HasRemoteChangesSinceLastSync { get; }
     IReadOnlyList<CloudModelMetadata> CloudModels { get; }
@@ -125,7 +124,6 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     public bool IsAvailable => cloudSyncService.IsAvailable;
     public CloudAuthState AuthState => authState;
     public CloudSyncModelState? SyncState => syncState;
-    public CloudSyncLatest? LatestSync => syncState?.LatestSync;
     public bool HasLocalChangesSinceLastSync => hasLocalChangesSinceLastSync;
     public bool HasRemoteChangesSinceLastSync => hasRemoteChangesSinceLastSync;
     public IReadOnlyList<CloudModelMetadata> CloudModels => cloudModels;
