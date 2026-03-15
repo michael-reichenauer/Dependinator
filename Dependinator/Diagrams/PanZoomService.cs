@@ -178,17 +178,6 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, ICommandS
             && r1.Y + r1.Height <= r2.Y + r2.Height;
     }
 
-    bool RectOverLaps(Rect r1, Rect r2)
-    {
-        return r1.X < r2.X + r2.Width && r1.X + r1.Width > r2.X && r1.Y < r2.Y + r2.Height && r1.Y + r1.Height > r2.Y;
-    }
-
-    void GoTo(Pos pos, double zoom)
-    {
-        var offset = ToOffset(pos, zoom);
-        commandService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
-    }
-
     void GoTo(Pos pos, double zoom, Rect svgRect)
     {
         var offset = ToOffset(pos, zoom, svgRect);
