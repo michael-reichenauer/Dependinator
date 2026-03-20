@@ -6,6 +6,7 @@ public static class DependinatorCoreServiceCollectionExtensions
 {
     public static IServiceCollection AddDependinatorCoreServices(this IServiceCollection services)
     {
+        services.AddTransient(typeof(Lazy<>), typeof(LazyService<>));
         services.AddAssemblyServices(typeof(DependinatorCoreServiceCollectionExtensions));
         return services;
     }

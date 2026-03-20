@@ -5,18 +5,25 @@ namespace Dependinator.Core;
 
 public static class Build
 {
+    static bool isVsCodeExtWasm = false;
+    static bool isVsCodeExtLsp = false;
     public static readonly string Version = GetVersion().ToString();
     public static readonly string ProductVersion = GetProductVersion().ToString();
     public static readonly string Time = GetTime().IsoZone();
     public static readonly string CommitSid = GetCommitId().Sid();
 
     public static readonly bool IsWasm = RuntimeInformation.ProcessArchitecture == Architecture.Wasm;
+    public static readonly bool IsWeb = RuntimeInformation.ProcessArchitecture != Architecture.Wasm;
+    public static bool IsStandaloneWasm => IsWasm && !isVsCodeExtWasm;
+    public static bool IsVsCodeExtWasm => IsWasm && isVsCodeExtWasm;
+    public static bool IsVsCodeExtLsp => !IsWasm && isVsCodeExtLsp;
+
     public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
     public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
     public static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
     public static string Info =>
-        $"{Version}, {Time}, ({CommitSid}, {RuntimeInformation.RuntimeIdentifier}, {BuildMode}, {AotJitMode})";
+        $"{Version}, {Time}, ({CommitSid}, {RuntimeInformation.RuntimeIdentifier}, {BuildMode})";
 
     public static Version GetVersion() => typeof(Build).Assembly.GetName().Version!;
 
@@ -29,28 +36,11 @@ public static class Build
 #endif
     }
 
-    public static bool IsNativeAot
-    {
-#if NATIVEAOT
-        get => true;
-#else
-        get => false;
-#endif
-    }
+    public static void SetIsVsCodeExtWasm() => isVsCodeExtWasm = true;
 
-    public static bool IsWasmAot
-    {
-#if WASM_AOT
-        get => true;
-#else
-        get => false;
-#endif
-    }
+    public static void SetIsVsCodeExtLsp() => isVsCodeExtLsp = true;
 
     public static string BuildMode => IsDebug ? "IsDebug" : "IsRelease";
-
-    public static bool IsAot => IsNativeAot || IsWasmAot;
-    public static string AotJitMode => IsAot ? "IsAot" : "IsNotAot";
 
     public static Version GetProductVersion()
     {

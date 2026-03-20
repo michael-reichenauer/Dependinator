@@ -5,7 +5,7 @@ namespace Dependinator.Core.Shared;
 [Rpc]
 interface IWorkspaceFileService
 {
-    Task<IReadOnlyList<string>> GetSolutionFiles();
+    Task<IReadOnlyList<string>> GetSolutionFilePathsAsync();
     void SetWorkspaceFolders(IReadOnlyList<string> paths);
 }
 
@@ -21,7 +21,7 @@ class WorkspaceFileService : IWorkspaceFileService
 
     IReadOnlyList<string> rootPaths = [];
 
-    public async Task<IReadOnlyList<string>> GetSolutionFiles()
+    public async Task<IReadOnlyList<string>> GetSolutionFilePathsAsync()
     {
         await Task.CompletedTask;
         var paths = EnumerateFiles(rootPaths, "*.sln").ToList();

@@ -1,7 +1,6 @@
-using System.Diagnostics;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net.Sockets;
-using Api;
 using Microsoft.Extensions.Options;
 
 namespace Api.Tests;
@@ -64,7 +63,72 @@ public sealed class BlobCloudModelStoreTests : IClassFixture<AzuriteFixture>
             CompressedContentBase64: Convert.ToBase64String([1, 2, 3, 4])
         );
 
-        await Assert.ThrowsAsync<CloudSyncQuotaExceededException>(() => sut.PutAsync(user, document, CancellationToken.None));
+        await Assert.ThrowsAsync<CloudSyncQuotaExceededException>(() =>
+            sut.PutAsync(user, document, CancellationToken.None)
+        );
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldReturnSameModel_ForDifferentProviderIdsWithSameEmail()
+    {
+        CloudSyncOptions options = new()
+        {
+            ContainerName = $"shared-email-{Guid.NewGuid():N}",
+            MaxUserQuotaBytes = 1024 * 1024,
+            StorageConnectionString = azuriteFixture.ConnectionString,
+        };
+        BlobCloudModelStore sut = new(Options.Create(options));
+        CloudUserInfo browserUser = new("swa-user-123", "user@example.com");
+        CloudUserInfo vsCodeUser = new("oid-456", "user@example.com");
+        CloudModelDocument document = new(
+            ModelKey: CloudModelPath.CreateKey("/models/test.model"),
+            NormalizedPath: "/models/test.model",
+            UpdatedUtc: DateTimeOffset.UtcNow,
+            ContentHash: "hash",
+            CompressedSizeBytes: 4,
+            CompressedContentBase64: Convert.ToBase64String([1, 2, 3, 4])
+        );
+
+        await sut.PutAsync(browserUser, document, CancellationToken.None);
+        CloudModelDocument? roundTrippedDocument = await sut.GetAsync(
+            vsCodeUser,
+            document.ModelKey,
+            CancellationToken.None
+        );
+
+        Assert.NotNull(roundTrippedDocument);
+        Assert.Equal(document.CompressedContentBase64, roundTrippedDocument.CompressedContentBase64);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldKeepModelsSeparated_ForDifferentEmails()
+    {
+        CloudSyncOptions options = new()
+        {
+            ContainerName = $"separate-email-{Guid.NewGuid():N}",
+            MaxUserQuotaBytes = 1024 * 1024,
+            StorageConnectionString = azuriteFixture.ConnectionString,
+        };
+        BlobCloudModelStore sut = new(Options.Create(options));
+        CloudUserInfo firstUser = new("swa-user-123", "first@example.com");
+        CloudUserInfo secondUser = new("oid-456", "second@example.com");
+        CloudModelDocument document = new(
+            ModelKey: CloudModelPath.CreateKey("/models/test.model"),
+            NormalizedPath: "/models/test.model",
+            UpdatedUtc: DateTimeOffset.UtcNow,
+            ContentHash: "hash",
+            CompressedSizeBytes: 4,
+            CompressedContentBase64: Convert.ToBase64String([1, 2, 3, 4])
+        );
+
+        await sut.PutAsync(firstUser, document, CancellationToken.None);
+        CloudModelDocument? roundTrippedDocument = await sut.GetAsync(
+            secondUser,
+            document.ModelKey,
+            CancellationToken.None
+        );
+
+        Assert.Null(roundTrippedDocument);
     }
 }
 
@@ -139,7 +203,12 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
             Directory.Delete(tempDirectory, recursive: true);
     }
 
-    static (string FileName, string Arguments) ResolveCommand(int blobPort, int queuePort, int tablePort, string location)
+    static (string FileName, string Arguments) ResolveCommand(
+        int blobPort,
+        int queuePort,
+        int tablePort,
+        string location
+    )
     {
         string arguments =
             $"--silent --disableProductStyleUrl --location \"{location}\" --blobPort {blobPort} --queuePort {queuePort} --tablePort {tablePort}";

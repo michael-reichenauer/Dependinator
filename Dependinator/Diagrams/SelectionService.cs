@@ -1,4 +1,6 @@
-﻿using Dependinator.Models;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Models;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Diagrams;
 
@@ -33,6 +35,7 @@ class SelectionService : ISelectionService
     const double MinCover = 0.5;
     const double MaxCover = 0.8;
 
+    readonly IModelMgr modelMgr;
     readonly IModelService modelService;
     readonly IApplicationEvents applicationEvents;
     readonly IScreenService screenService;
@@ -45,11 +48,13 @@ class SelectionService : ISelectionService
     bool isSelectedLineDirect = false;
 
     public SelectionService(
+        IModelMgr modelMgr,
         IModelService modelService,
         IApplicationEvents applicationEvents,
         IScreenService screenService
     )
     {
+        this.modelMgr = modelMgr;
         this.modelService = modelService;
         this.applicationEvents = applicationEvents;
         this.screenService = screenService;
@@ -71,7 +76,7 @@ class SelectionService : ISelectionService
         if (!IsSelected)
             return;
 
-        selectedPosition = Models.Pos.None;
+        selectedPosition = Pos.None;
         return;
     }
 
@@ -99,8 +104,8 @@ class SelectionService : ISelectionService
             x = bound.X + clickedRelativePosition * bound.Width - toolbarOffsetX;
             y = bound.Y + clickedRelativePosition * bound.Height - toolbarOffsetY;
 
-            modelService.UseLine(
-                selectedId.Id,
+            modelMgr.TryWithLine(
+                selectedId.LineId,
                 line =>
                 {
                     // For some lines based int its direction we need to flip the y coordinate
@@ -122,13 +127,8 @@ class SelectionService : ISelectionService
         if (!IsSelected)
             return;
 
-        modelService.UseNode(
-            selectedId.Id,
-            node =>
-            {
-                node.IsEditMode = isEditMode;
-            }
-        );
+        if (!modelMgr.TryWithNode(selectedId.NodeId, node => node.IsEditMode = isEditMode))
+            return;
         this.isEditMode = isEditMode;
         applicationEvents.TriggerUIStateChanged();
     }
@@ -154,11 +154,11 @@ class SelectionService : ISelectionService
 
         if (pointerId.IsNode)
         {
-            var zoom = modelService.Zoom;
+            var zoom = modelMgr.WithModel(m => m.Zoom);
 
             if (
-                modelService.UseNode(
-                    pointerId.Id,
+                modelMgr.TryWithNode(
+                    pointerId.NodeId,
                     node =>
                     {
                         if (!IsNodeMovable(node, zoom))
@@ -174,6 +174,7 @@ class SelectionService : ISelectionService
                 this.isEditMode = false;
                 isSelectedLineDirect = false;
                 selectedLineClickPosition = Pos.None;
+                applicationEvents.TriggerModelChanged();
                 await UpdateSelectedPositionAsync();
             }
         }
@@ -191,8 +192,8 @@ class SelectionService : ISelectionService
 
         if (selectedId.IsNode)
         {
-            modelService.UseNode(
-                selectedId.Id,
+            modelMgr.TryWithNode(
+                selectedId.NodeId,
                 node =>
                 {
                     node.IsSelected = false;
@@ -202,18 +203,13 @@ class SelectionService : ISelectionService
         }
         if (selectedId.IsLine)
         {
-            modelService.UseLine(
-                selectedId.Id,
-                line =>
-                {
-                    line.IsSelected = false;
-                }
-            );
+            modelMgr.TryWithLine(selectedId.LineId, line => line.IsSelected = false);
         }
         selectedId = PointerId.Empty;
         this.isEditMode = false;
         isSelectedLineDirect = false;
         selectedLineClickPosition = Pos.None;
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -232,8 +228,8 @@ class SelectionService : ISelectionService
         var (x, y) = (e.ClientX, e.ClientY);
         selectedLineClickPosition = new Pos(x, y);
 
-        modelService.UseLine(
-            pointerId.Id,
+        modelMgr.TryWithLine(
+            pointerId.LineId,
             line =>
             {
                 if (isNewSelection)
@@ -263,6 +259,7 @@ class SelectionService : ISelectionService
             this.isEditMode = false;
         }
 
+        applicationEvents.TriggerModelChanged();
         await UpdateSelectedPositionAsync();
         return true;
     }
@@ -272,7 +269,9 @@ class SelectionService : ISelectionService
     {
         if (!IsSelected || IsEditMode)
             return false;
-        if (!modelService.TryGetNode(selectedId.Id, out var node))
+
+        using var model = modelMgr.UseModel();
+        if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
             return false;
 
         if (node.IsHidden && node.Parent.IsHidden)
@@ -284,7 +283,9 @@ class SelectionService : ISelectionService
     {
         if (!IsSelected)
             return false;
-        if (!modelService.TryGetNode(selectedId.Id, out var node))
+
+        using var model = modelMgr.UseModel();
+        if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
             return false;
         return node.IsHidden;
     }
@@ -293,7 +294,9 @@ class SelectionService : ISelectionService
     {
         if (!IsSelected)
             return false;
-        if (!modelService.TryGetNode(selectedId.Id, out var node))
+
+        using var model = modelMgr.UseModel();
+        if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
             return false;
         return node.Parent.IsHidden;
     }
@@ -302,8 +305,16 @@ class SelectionService : ISelectionService
     {
         if (!IsSelected)
             return;
-        modelService.UseNode(selectedId.Id, node => node.SetHidden(!node.IsHidden, true));
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
+                return;
+            node.SetHidden(!node.IsHidden, true);
+        }
+
         modelService.CheckLineVisibility();
+
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
     }
 

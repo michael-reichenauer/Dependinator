@@ -1,6 +1,8 @@
 using Dependinator.Core.Shared;
 using Dependinator.Diagrams.Svg;
-using Dependinator.Models;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Models;
+using Dependinator.Shared.Types;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Dependinator.Diagrams;
@@ -17,7 +19,6 @@ interface ICanvasService
     string Cursor { get; }
     string TitleInfo { get; }
     string DiagramName { get; }
-    IReadOnlyList<string> RecentModelPaths { get; }
 
     Task InitAsync();
     void OpenFiles();
@@ -38,30 +39,33 @@ class CanvasService : ICanvasService
     readonly IScreenService screenService;
     readonly IPanZoomService panZoomService;
     readonly IModelService modelService;
+    readonly IModelMgr modelMgr;
     readonly ISvgService svgService;
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInteropService;
     readonly IFileService fileService;
     readonly IBrowserFileService browserFileService;
-    readonly IRecentModelsService recentModelsService;
+    readonly IModelListService recentModelsService;
     readonly IInteractionService interactionService;
 
     public CanvasService(
         IScreenService screenService,
         IPanZoomService panZoomService,
         IModelService modelService,
+        IModelMgr modelMgr,
         ISvgService svgService,
         IApplicationEvents applicationEvents,
         IJSInterop jSInteropService,
         IFileService fileService,
         IBrowserFileService browserFileService,
-        IRecentModelsService recentModelsService,
+        IModelListService recentModelsService,
         IInteractionService interactionService
     )
     {
         this.screenService = screenService;
         this.panZoomService = panZoomService;
         this.modelService = modelService;
+        this.modelMgr = modelMgr;
         this.svgService = svgService;
         this.applicationEvents = applicationEvents;
         this.jSInteropService = jSInteropService;
@@ -70,8 +74,6 @@ class CanvasService : ICanvasService
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
     }
-
-    public IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
 
     public string DiagramName { get; set; } = "Loading ...";
     public string TitleInfo =>
@@ -85,8 +87,8 @@ class CanvasService : ICanvasService
     public string Cursor => interactionService.Cursor;
 
     public Rect SvgRect => screenService.SvgRect;
-    public Pos Offset => modelService.Offset;
-    public double Zoom => modelService.Zoom;
+    public Pos Offset => modelMgr.WithModel(m => m.Offset);
+    public double Zoom => modelMgr.WithModel(m => m.Zoom);
     public double ActualZoom => LevelZoom != 0 ? Zoom / LevelZoom : 0;
 
     public string SvgViewBox =>
@@ -103,7 +105,10 @@ class CanvasService : ICanvasService
     {
         using var t = Timing.Start("InitialShow");
         await screenService.CheckResizeAsync();
-        await LoadAsync(recentModelsService.LastUsedPath);
+        var lastUsedPath = recentModelsService.LastUsedPath;
+        if (lastUsedPath is null)
+            lastUsedPath = ExampleModel.Path;
+        await LoadAsync(lastUsedPath);
     }
 
     public async Task LoadAsync(string modelPath)
@@ -115,7 +120,7 @@ class CanvasService : ICanvasService
         if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath)))
             return;
 
-        DiagramName = modelService.ModelName;
+        DiagramName = modelMgr.WithModel(m => Path.GetFileNameWithoutExtension(m.Path));
         PanZoomModel(modelInfo);
 
         await recentModelsService.AddModelAsync(modelInfo.Path);
@@ -138,17 +143,24 @@ class CanvasService : ICanvasService
         }
         else
         {
-            var bound = modelService.GetBounds();
+            var bound = modelMgr.WithModel(m => m.Root.GetTotalBounds());
             panZoomService.PanZoomToFit(bound, 1, true);
         }
     }
 
     public async void Remove()
     {
-        var path = recentModelsService.LastUsedPath;
-        await fileService.DeleteAsync(path);
-        await recentModelsService.RemoveModelAsync(path);
-        await LoadAsync(recentModelsService.LastUsedPath);
+        var lastUsedPath = recentModelsService.LastUsedPath;
+        if (lastUsedPath is not null)
+        {
+            await fileService.DeleteAsync(lastUsedPath);
+            await recentModelsService.RemoveModelAsync(lastUsedPath);
+        }
+        else
+        {
+            lastUsedPath = ExampleModel.Path;
+        }
+        await LoadAsync(lastUsedPath);
     }
 
     public async void OpenFiles()
@@ -174,7 +186,7 @@ class CanvasService : ICanvasService
 
     public void PanZoomToFit()
     {
-        var bound = modelService.GetBounds();
+        var bound = modelMgr.WithModel(m => m.Root.GetTotalBounds());
         panZoomService.PanZoomToFit(bound, Math.Min(1, Zoom));
         applicationEvents.TriggerUIStateChanged();
     }

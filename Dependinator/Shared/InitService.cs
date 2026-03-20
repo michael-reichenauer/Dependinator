@@ -1,5 +1,5 @@
 using Dependinator.Diagrams;
-using Dependinator.Models;
+using Dependinator.Modeling;
 
 namespace Dependinator.Shared;
 
@@ -13,7 +13,7 @@ class InitService : IInitService
 {
     readonly IScreenService screenService;
     readonly IPointerEventService mouseEventService;
-    readonly IRecentModelsService recentModelsService;
+    readonly IModelListService recentModelsService;
     readonly IConfigService configService;
     readonly IDatabase database;
     readonly ICanvasService canvasService;
@@ -22,7 +22,7 @@ class InitService : IInitService
     public InitService(
         IScreenService screenService,
         IPointerEventService mouseEventService,
-        IRecentModelsService recentModelsService,
+        IModelListService recentModelsService,
         IConfigService configService,
         IDatabase database,
         ICanvasService canvasService,

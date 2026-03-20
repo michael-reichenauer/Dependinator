@@ -1,7 +1,8 @@
-using Dependinator.Models;
 using Dependinator.Core.Parsing.Assemblies;
 using Dependinator.Core.Parsing.Utils;
 using Dependinator.Core.Tests.Parsing.Utils;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Models;
 using Mono.Cecil;
 
 namespace Dependinator.Tests;
@@ -14,12 +15,12 @@ public static class TestHelper
         return new Mock<T>(MockBehavior.Strict);
     }
 
-    internal static void AddItems(Model model, ItemsMock items)
+    internal static void AddItems(IModel model, ItemsMock items)
     {
-        var lineService = new LineService(model);
-        var structureService = new StructureService(model, lineService);
-        items.Nodes.ForEach(structureService.AddOrUpdateNode);
-        items.Links.ForEach(structureService.AddOrUpdateLink);
+        var lineService = new LineService();
+        var structureService = new StructureService(lineService);
+        items.Nodes.ForEach(n => structureService.AddOrUpdateNode(model, n));
+        items.Links.ForEach(l => structureService.AddOrUpdateLink(model, l));
     }
 
     internal static async Task ParseType<T>(IItems items)

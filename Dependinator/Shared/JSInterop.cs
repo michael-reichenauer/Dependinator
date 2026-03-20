@@ -26,12 +26,14 @@ public class JSInterop : IJSInterop, IAsyncDisposable
 
     public async ValueTask Call(string functionName, params object?[]? args)
     {
+        //Log.Info("Call", functionName);
         IJSObjectReference module = await GetModuleAsync();
         await module.InvokeVoidAsync(functionName, args);
     }
 
     public async ValueTask<T> Call<T>(string functionName, params object?[]? args)
     {
+        //Log.Info("Call", functionName);
         IJSObjectReference module = await GetModuleAsync();
         return await module.InvokeAsync<T>(functionName, args);
     }
@@ -47,14 +49,22 @@ public class JSInterop : IJSInterop, IAsyncDisposable
     {
         if (moduleTask.IsValueCreated)
         {
-            IJSObjectReference module = await GetModuleAsync();
             try
             {
+                IJSObjectReference module = await GetModuleAsync();
                 await module.DisposeAsync();
             }
             catch (JSDisconnectedException)
             {
                 // Ignore exception when the browser is closed
+            }
+            catch (InvalidOperationException)
+            {
+                // Ignore prerender failures when JS interop is unavailable.
+            }
+            catch (JSException)
+            {
+                // Ignore module cleanup failures when the JS runtime is unavailable.
             }
         }
     }

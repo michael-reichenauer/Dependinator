@@ -30,7 +30,6 @@ partial class Canvas : ComponentBase, IUIComponent
     static string IconDefs => Icon.IconDefs;
 
     string Cursor => srv.Cursor;
-    IReadOnlyList<string> RecentModelPaths => srv.RecentModelPaths;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

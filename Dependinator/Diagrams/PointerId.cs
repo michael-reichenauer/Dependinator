@@ -1,4 +1,4 @@
-using Dependinator.Models;
+using Dependinator.Modeling.Models;
 
 namespace Dependinator.Diagrams;
 
@@ -6,6 +6,8 @@ record PointerId
 {
     public string ElementId { get; init; } = "";
     public string Id { get; init; } = "";
+    public NodeId NodeId => string.IsNullOrEmpty(Id) ? NodeId.Empty : NodeId.FromId(Id);
+    public LineId LineId => string.IsNullOrEmpty(Id) ? LineId.Empty : LineId.FromId(Id);
     public string SubId { get; init; } = "";
     public NodeResizeType NodeResizeType { get; init; } = NodeResizeType.None;
     public int LinePointIndex { get; init; } = -1;

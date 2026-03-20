@@ -1,34 +1,410 @@
-﻿@using Dependinator.Core
-@inject ICanvasService srv
+@using Dependinator.Core
+@using Dependinator.Modeling.Commands
+@using Dependinator.Shared.CloudSync
+@inject ICanvasService canvasService
+@inject IAppCloudSyncService appCloudSyncService
+@inject ISnackbar snackbar
+@inject Dependinator.Modeling.Models.IModelMgr modelMgr
+@inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
-@inject Dependinator.Models.IModelService modelService
+@inject IModelListService modelListService
+@implements IDisposable
 
-<MudAppBar Dense="true" Elevation="5">
-    <AppMenu />
-    <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="Color.Inherit" Disabled="@(!modelService.CanUndo)"
-                   OnClick="modelService.Undo" />
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
+    <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Secondary" Dense="true" Class="ml-n3"
+             AnchorOrigin="Origin.BottomCenter">
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
+                     Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo">
+            Undo
+        </MudMenuItem>
 
-    <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="Color.Inherit" Disabled="@(!modelService.CanRedo)"
-                   OnClick="modelService.Redo" />
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
+                     Disabled="@(!commandService.CanRedo)" OnClick="commandService.Redo">
+            Redo
+        </MudMenuItem>
 
-    <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" Color="Color.Inherit" OnClick="srv.PanZoomToFit" />
-    @if (!Build.IsWasm)
-    {
-        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Color="Color.Inherit" OnClick="srv.Refresh" />
-    }
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
+                     OnClick="canvasService.PanZoomToFit">
+            Fit to Screen
+        </MudMenuItem>
 
-    <MudText Typo="Typo.h6" Class="ml-2">@DiagramName</MudText>
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                     OnClick="canvasService.Refresh">
+            Refresh
+        </MudMenuItem>
 
-</MudAppBar>
+        <MudDivider />
 
+        <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff" OnClick="OnRemove">
+            Reset Model
+        </MudMenuItem>
+
+        <MudDivider />
+
+        @foreach (string path in RecentModelPaths)
+        {
+            bool isCurrent = IsCurrentRecentModel(path);
+            <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
+                         Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => canvasService.LoadAsync(path)">
+                @GetModelDisplayName(path)
+            </MudMenuItem>
+        }
+
+        <MudDivider />
+
+        <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled">
+            @foreach (var path in modelListService.LocalPaths)
+            {
+                <MudMenuItem IconColor="Color.Default" Icon="@Icons.Material.Outlined.Schema"
+                             OnClick="() => canvasService.LoadAsync(path)">
+                    @path
+                </MudMenuItem>
+            }
+        </MudMenu>
+
+        @if (appCloudSyncService.IsAvailable)
+        {
+            <MudMenu Label=" Cloud Models" Disabled="@IsCloudModelsMenuDisabled">
+                @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
+                {
+                    bool isCurrent = IsCurrentCloudModel(cloudModel);
+                    <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
+                                 Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => LoadCloudModelAsync(cloudModel)">
+                        @GetModelDisplayName(cloudModel.NormalizedPath)
+                    </MudMenuItem>
+                }
+            </MudMenu>
+
+            <MudDivider />
+            @if (AuthState.IsAuthenticated)
+            {
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="LogoutAsync">
+                    Logout
+                </MudMenuItem>
+            }
+            else
+            {
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Login" OnClick="LoginAsync">
+                    Login
+                </MudMenuItem>
+            }
+        }
+
+        <MudDivider />
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout">
+            About
+        </MudMenuItem>
+    </MudMenu>
+
+    <MudTooltip>
+        <TooltipContent>
+            <div>@CloudStatusText</div>
+            <div>@SyncStatusText</div>
+        </TooltipContent>
+        <ChildContent>
+            <span>
+                <MudIconButton Icon="@CurrentCloudIconInfo.Icon" Color="@CurrentCloudIconInfo.Color"
+                               Disabled="@(!appCloudSyncService.IsAvailable)" OnClick="ToggleCloudAuthAsync" />
+            </span>
+        </ChildContent>
+    </MudTooltip>
+
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="@GetToolbarButtonColor(commandService.CanUndo)"
+                       OnClick="commandService.Undo" />
+        <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
+                       OnClick="commandService.Redo" />
+        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh" />
+    </MudHidden>
+
+</MudButtonGroup>
+
+<MudMessageBox @ref="resetWarningBox" Title="Reset Model" CancelText="Cancel">
+    <MessageContent>
+        <MudText>Do you want to reset model?</MudText>
+        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be reset.</MudText>
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
+            Reset
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+<MudMessageBox @ref="aboutBox" Title="About Dependinator" YesText="Close">
+    <MessageContent>
+        <MudText Typo="Typo.body1">Version: @Build.Version</MudText>
+        <MudText Typo="Typo.body1">Commit: @Build.CommitSid</MudText>
+        <MudText Typo="Typo.body1">Build Time: @Build.Time</MudText>
+    </MessageContent>
+</MudMessageBox>
+
+<MudMessageBox @ref="syncDownBox" Title="Replace Local Cached Model" CancelText="Cancel">
+    <MessageContent>
+        <MudText>@SyncDownPrompt</MudText>
+        <MudText Typo="Typo.body2">@SyncDownPromptDetail</MudText>
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudDownload">
+            Replace
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+<MudMessageBox @ref="syncConflictBox" Title="Sync Conflict" YesText="Use Cloud" NoText="Keep Local" CancelText="Cancel">
+    <MessageContent>
+        <MudText>Both local and cloud copies changed since last sync.</MudText>
+        <MudText Typo="Typo.body2">Choose which copy should win.</MudText>
+    </MessageContent>
+</MudMessageBox>
 
 @code {
-    string TitleInfo => srv.TitleInfo;
-    string DiagramName => srv.DiagramName;
+    MudMessageBox resetWarningBox { get; set; } = null!;
+    MudMessageBox aboutBox { get; set; } = null!;
+    MudMessageBox syncDownBox { get; set; } = null!;
+    MudMessageBox syncConflictBox { get; set; } = null!;
+
+    record CloudIconInfo(string Icon, MudBlazor.Color Color);
+    static readonly CloudIconInfo NotAvailable = new(Icons.Material.Outlined.CloudOff, Color.Inherit);
+    static readonly CloudIconInfo NotAuthenticated = new(Icons.Material.Outlined.CloudQueue, Color.Inherit);
+    static readonly CloudIconInfo HasLocalChanges = new(Icons.Material.Outlined.CloudUpload, Color.Info);
+    static readonly CloudIconInfo HasRemoteChanges = new(Icons.Material.Outlined.CloudDownload, Color.Info);
+    static readonly CloudIconInfo HasConflicts = new(Icons.Material.Outlined.SyncProblem, Color.Error);
+    static readonly CloudIconInfo IsSynced = new(Icons.Material.Filled.CloudDone, Color.Success);
+
+    IReadOnlyList<string> RecentModelPaths => modelListService.RecentModelPaths;
+    string? CurrentRecentModelPath => RecentModelPaths.Count > 0 ? RecentModelPaths[0] : null;
+    string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
+    global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
+    IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
+    bool IsCloudModelsMenuDisabled => !AuthState.IsAuthenticated || CloudModels.Count == 0;
+    bool IsLocalModelsMenuDisabled => modelListService.LocalPaths.Count == 0;
+    CloudSyncState CurrentCloudSyncState => appCloudSyncService.GetCloudSyncState();
+    CloudIconInfo CurrentCloudIconInfo => GetCloudIconInfo(CurrentCloudSyncState);
+    bool HasSyncConflicts => CurrentCloudSyncState is CloudSyncState.HasConflicts;
+    CloudSyncState previousCloudSyncState = CloudSyncState.NotAvailable;
+    string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
+    string CloudStatusText =>
+    !appCloudSyncService.IsAvailable
+    ? "Cloud sync unavailable"
+                : AuthState.IsAuthenticated
+    ? $"Cloud signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}"
+    : "Cloud not signed in";
+    string SyncDownPrompt =>
+    HasSyncConflicts
+    ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
+                : "Download the cloud copy and overwrite the local cached model?";
+    string SyncDownPromptDetail =>
+    HasSyncConflicts
+    ? "Both the local cached model and the cloud copy have changed since the last sync."
+                : "The current local cached layout data will be replaced.";
+    string SyncStatusText => "";
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        applicationEvents.UIStateChanged += OnUiStateChanged;
+        appCloudSyncService.Changed += OnUiStateChanged;
+        appCloudSyncService.BackgroundSyncError += OnBackgroundSyncError;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
-        if (firstRender) applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
+
+        if (!firstRender)
+            return;
     }
+
+    static CloudIconInfo GetCloudIconInfo(CloudSyncState state) => state switch
+    {
+        CloudSyncState.NotAvailable => NotAvailable,
+        CloudSyncState.NotAuthenticated => NotAuthenticated,
+        CloudSyncState.HasLocalChanges => HasLocalChanges,
+        CloudSyncState.HasRemoteChanges => HasRemoteChanges,
+        CloudSyncState.HasConflicts => HasConflicts,
+        CloudSyncState.IsSynced => IsSynced,
+        _ => NotAvailable
+    };
+
+    public void Dispose()
+    {
+        applicationEvents.UIStateChanged -= OnUiStateChanged;
+        appCloudSyncService.Changed -= OnUiStateChanged;
+        appCloudSyncService.BackgroundSyncError -= OnBackgroundSyncError;
+    }
+
+    async Task ToggleCloudAuthAsync()
+    {
+        switch (CurrentCloudSyncState)
+        {
+            case CloudSyncState.NotAvailable:
+            case CloudSyncState.IsSynced:
+                return;
+            case CloudSyncState.NotAuthenticated:
+                await LoginAsync();
+                return;
+            case CloudSyncState.HasLocalChanges:
+                await SyncUpAsync();
+                return;
+            case CloudSyncState.HasRemoteChanges:
+                await SyncDownAsync();
+                return;
+            case CloudSyncState.HasConflicts:
+                await ResolveConflictAsync();
+                return;
+        }
+    }
+
+    async Task LoginAsync()
+    {
+        if (!Try(out var error, await appCloudSyncService.LoginAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        snackbar.Add("Cloud sync is enabled.", Severity.Success);
+    }
+
+    async Task SyncUpAsync()
+    {
+        if (!Try(out _, out var error, await appCloudSyncService.SyncUpAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
+    }
+
+    async Task LogoutAsync()
+    {
+        if (!Try(out var error, await appCloudSyncService.LogoutAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        snackbar.Add("Cloud sync is disabled.", Severity.Info);
+    }
+
+    async Task ResolveConflictAsync()
+    {
+        bool? selection = await syncConflictBox.ShowAsync();
+        if (selection is true)
+        {
+            await SyncDownAsync(skipConfirmation: true);
+            return;
+        }
+
+        if (selection is false)
+            await SyncUpAsync();
+    }
+
+    async Task SyncDownAsync(bool skipConfirmation = false)
+    {
+        if (!skipConfirmation && await syncDownBox.ShowAsync() != true)
+            return;
+
+        if (string.IsNullOrWhiteSpace(modelMgr.ModelPath))
+        {
+            snackbar.Add("Model is not loaded.", Severity.Warning);
+            return;
+        }
+
+        if (!Try(out var modelInfo, out var error, await appCloudSyncService.SyncDownAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(modelInfo.Path)}.", Severity.Success);
+    }
+
+    async Task LoadCloudModelAsync(global::Shared.CloudModelMetadata cloudModel)
+    {
+        if (!Try(out _, out var error, await appCloudSyncService.LoadCloudModelAsync(cloudModel)))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        snackbar.Add(
+        $"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.",
+        Severity.Success
+        );
+    }
+
+    async Task OnRemove()
+    {
+        if (await resetWarningBox.ShowAsync() != true)
+            return;
+
+        canvasService.Remove();
+    }
+
+    Task ShowAbout() => aboutBox.ShowAsync();
+
+    void OnUiStateChanged() => _ = InvokeAsync(HandleUiStateChangedAsync);
+
+    Task HandleUiStateChangedAsync()
+    {
+        CloudSyncState currentCloudSyncState = CurrentCloudSyncState;
+        if (
+        currentCloudSyncState is CloudSyncState.HasConflicts
+        && previousCloudSyncState is not CloudSyncState.HasConflicts
+        )
+        {
+            ShowSyncConflictSnackbar();
+        }
+
+        previousCloudSyncState = currentCloudSyncState;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    void ShowSyncConflictSnackbar()
+    {
+        snackbar.Add(
+        "Cloud sync conflict detected. Choose Use Cloud or Keep Local.",
+        Severity.Error,
+        options =>
+        {
+            options.Action = "Resolve";
+            options.RequireInteraction = true;
+            options.OnClick = _ => InvokeAsync(ToggleCloudAuthAsync);
+        },
+        key: "cloud-sync-conflict"
+                );
+    }
+
+    void OnBackgroundSyncError(string errorMessage)
+    {
+        _ = InvokeAsync(() => snackbar.Add(errorMessage, Severity.Warning));
+    }
+
+    static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
+    static MudBlazor.Color GetToolbarButtonColor(bool isEnabled) => isEnabled ? Color.Default : Color.Inherit;
+
+    static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
+
+    static string GetModelDisplayName(string modelPath) => Path.GetFileName(modelPath);
+
+    bool IsCurrentRecentModel(string path) => string.Equals(path, CurrentRecentModelPath, StringComparison.Ordinal);
+
+    bool IsCurrentCloudModel(global::Shared.CloudModelMetadata cloudModel) =>
+    string.Equals(
+    cloudModel.NormalizedPath,
+    CurrentCloudModelPath,
+    StringComparison.OrdinalIgnoreCase
+    );
+
+    static string GetSyncStatusDescription(CloudSyncState state) =>
+    state switch
+    {
+        CloudSyncState.HasConflicts => "local and remote changes conflict",
+        CloudSyncState.HasLocalChanges => "local changes pending upload",
+        CloudSyncState.HasRemoteChanges => "remote changes pending download",
+        _ => "in sync",
+    };
 }

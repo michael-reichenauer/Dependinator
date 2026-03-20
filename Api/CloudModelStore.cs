@@ -9,6 +9,7 @@ namespace Api;
 
 public interface ICloudModelStore
 {
+    Task<IReadOnlyList<CloudModelMetadata>> ListAsync(CloudUserInfo user, CancellationToken cancellationToken);
     Task<CloudModelDocument?> GetAsync(CloudUserInfo user, string modelKey, CancellationToken cancellationToken);
     Task<CloudModelMetadata> PutAsync(
         CloudUserInfo user,
@@ -58,6 +59,44 @@ public sealed class BlobCloudModelStore : ICloudModelStore
         {
             return null;
         }
+    }
+
+    public async Task<IReadOnlyList<CloudModelMetadata>> ListAsync(CloudUserInfo user, CancellationToken cancellationToken)
+    {
+        BlobContainerClient containerClient = await GetContainerClientAsync(cancellationToken);
+        string prefix = GetUserPrefix(user);
+        List<CloudModelMetadata> models = [];
+
+        await foreach (
+            BlobItem blobItem in containerClient.GetBlobsAsync(
+                traits: BlobTraits.Metadata,
+                prefix: prefix,
+                cancellationToken: cancellationToken
+            )
+        )
+        {
+            string blobName = blobItem.Name;
+            if (!blobName.EndsWith(".json.gz", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            string modelKey = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(blobName));
+            IDictionary<string, string> metadata = blobItem.Metadata;
+            models.Add(
+                new CloudModelMetadata(
+                    modelKey,
+                    GetMetadataValue(metadata, "normalizedpath"),
+                    DateTimeOffset.Parse(
+                        GetMetadataValue(metadata, "updatedutc"),
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.RoundtripKind
+                    ),
+                    GetMetadataValue(metadata, "contenthash"),
+                    blobItem.Properties.ContentLength ?? 0
+                )
+            );
+        }
+
+        return models.OrderByDescending(model => model.UpdatedUtc).ToList();
     }
 
     public async Task<CloudModelMetadata> PutAsync(
@@ -154,7 +193,11 @@ public sealed class BlobCloudModelStore : ICloudModelStore
 
     static string GetBlobName(CloudUserInfo user, string modelKey) => $"{GetUserPrefix(user)}{modelKey}.json.gz";
 
-    static string GetUserPrefix(CloudUserInfo user) => $"users/{Uri.EscapeDataString(user.UserId)}/models/";
+    static string GetUserPrefix(CloudUserInfo user)
+    {
+        string storageKey = CloudUserStorageKey.Create(user);
+        return $"users/{Uri.EscapeDataString(storageKey)}/models/";
+    }
 
     static string GetMetadataValue(IDictionary<string, string> metadata, string key)
     {
