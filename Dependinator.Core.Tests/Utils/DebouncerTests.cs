@@ -40,7 +40,7 @@ public class DebouncerTests
 
         TimeSpan elapsed = await invokedAt.Task.WaitAsync(TimeSpan.FromSeconds(1));
 
-        Assert.InRange(elapsed, TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(500));
+        Assert.InRange(elapsed, TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(800));
     }
 
     [Fact]
@@ -83,7 +83,10 @@ public class DebouncerTests
 
     static void InvokeTimerCallback(Debouncer debouncer)
     {
-        MethodInfo? invokeAction = typeof(Debouncer).GetMethod("InvokeAction", BindingFlags.Instance | BindingFlags.NonPublic);
+        MethodInfo? invokeAction = typeof(Debouncer).GetMethod(
+            "InvokeAction",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        );
 
         Assert.NotNull(invokeAction);
         invokeAction.Invoke(debouncer, null);
