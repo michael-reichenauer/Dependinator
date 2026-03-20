@@ -1,7 +1,6 @@
-using System.Diagnostics;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net.Sockets;
-using Api;
 using Microsoft.Extensions.Options;
 
 namespace Api.Tests;
@@ -64,7 +63,9 @@ public sealed class BlobCloudModelStoreTests : IClassFixture<AzuriteFixture>
             CompressedContentBase64: Convert.ToBase64String([1, 2, 3, 4])
         );
 
-        await Assert.ThrowsAsync<CloudSyncQuotaExceededException>(() => sut.PutAsync(user, document, CancellationToken.None));
+        await Assert.ThrowsAsync<CloudSyncQuotaExceededException>(() =>
+            sut.PutAsync(user, document, CancellationToken.None)
+        );
     }
 
     [Fact]
@@ -202,7 +203,12 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
             Directory.Delete(tempDirectory, recursive: true);
     }
 
-    static (string FileName, string Arguments) ResolveCommand(int blobPort, int queuePort, int tablePort, string location)
+    static (string FileName, string Arguments) ResolveCommand(
+        int blobPort,
+        int queuePort,
+        int tablePort,
+        string location
+    )
     {
         string arguments =
             $"--silent --disableProductStyleUrl --location \"{location}\" --blobPort {blobPort} --queuePort {queuePort} --tablePort {tablePort}";

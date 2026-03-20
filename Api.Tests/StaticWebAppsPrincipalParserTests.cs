@@ -1,5 +1,3 @@
-using Api;
-
 namespace Api.Tests;
 
 public class StaticWebAppsPrincipalParserTests

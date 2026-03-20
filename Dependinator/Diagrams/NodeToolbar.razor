@@ -96,7 +96,10 @@
   IDependenciesService dependenciesService { get; set; } = null!;
 
   [Inject]
-  Models.IModelService modelService { get; set; } = null!;
+  Modeling.IModelService modelService { get; set; } = null!;
+
+  [Inject]
+  Modeling.Models.IModelMgr modelMgr { get; set; } = null!;
 
   [Inject]
   INavigationService navigationService { get; set; } = null!;
@@ -104,12 +107,10 @@
   [Inject]
   IConfigService configService { get; set; } = null!;
 
-  [Inject]
-  IHost host { get; set; } = null!;
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
-  bool HasSelectedLine => selectionService.SelectedNodePosition != Models.Pos.None;
+  bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
   bool IsIconMode => !interactionService.IsContainer;
   bool CanShowSource => interactionService.CanShowSource;
 
@@ -130,7 +131,7 @@
   {
     if (!selectionService.SelectedId.IsNode)
       return;
-    var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId);
@@ -146,7 +147,7 @@
     {
       return;
     }
-    var nodeId = Models.NodeId.FromId(selectionService.SelectedId.Id);
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId, true);
@@ -154,15 +155,15 @@
     selectionService.SetEditMode(isEdit);
   }
 
-  async Task SetLayoutDensityAsync(Models.NodeLayoutDensity density)
+  async Task SetLayoutDensityAsync(Modeling.NodeLayoutDensity density)
   {
-    Models.NodeLayout.SetDensity(density);
+    Modeling.NodeLayout.SetDensity(density);
     await configService.SetAsync(config => config.LayoutDensity = density);
     applicationEvents.TriggerUIStateChanged();
   }
 
-  string DensityIcon(Models.NodeLayoutDensity density) =>
-      Models.NodeLayout.Density == density
+  string DensityIcon(Modeling.NodeLayoutDensity density) =>
+      Modeling.NodeLayout.Density == density
           ? MudBlazor.Icons.Material.Filled.CheckCircle
           : MudBlazor.Icons.Material.Outlined.Circle;
 
@@ -177,42 +178,23 @@
       return;
 
     string selectedId = selectionService.SelectedId.Id;
-    var nodeId = Models.NodeId.FromId(selectedId);
+    var nodeId = Modeling.Models.NodeId.FromId(selectedId);
     FileSpan? nodeFileSpan = null;
 
     string nodeTitle = selectedId;
-    modelService.UseNode(
-        selectedId,
+    modelMgr.TryWithNode(
+        nodeId,
         node =>
         {
           nodeTitle = node.LongName;
           nodeFileSpan = node.FileSpanOrParentSpan;
         }
     );
-    if (nodeFileSpan is not null && host.IsVscExtWasm)
+    if (nodeFileSpan is not null && Build.IsVsCodeExtWasm)
     {
-      await navigationService.ShowEditor(Models.NodeId.FromId(selectionService.SelectedId.Id));
+      await navigationService.ShowEditor(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
       return;
     }
-    if (!Try(out var source, out var e, await modelService.GetSourceAsync(nodeId)))
-    {
-      await dialogService.ShowMessageBox("Source unavailable", e.ErrorMessage);
-      return;
-    }
-
-    var parameters = new DialogParameters
-    {
-      [nameof(NodeSourceDialog.Source)] = source,
-    };
-
-    var options = new DialogOptions
-    {
-      CloseOnEscapeKey = true,
-      FullWidth = true,
-      MaxWidth = MaxWidth.ExtraLarge,
-    };
-
-    await dialogService.ShowAsync<NodeSourceDialog>(nodeTitle, parameters, options);
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();

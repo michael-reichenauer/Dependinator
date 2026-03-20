@@ -1,3 +1,5 @@
+using Dependinator.Shared.CloudSync;
+
 namespace Dependinator.Shared;
 
 interface IVsCodeReceiveService

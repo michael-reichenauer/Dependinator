@@ -11,10 +11,10 @@ internal static class CloudUserStorageKey
         if (!string.IsNullOrWhiteSpace(user.Email))
         {
             string normalizedEmail = user.Email.Trim().ToLowerInvariant();
-            return $"email-{ComputeHash(normalizedEmail)}";
+            return $"email-{BlobNameSanitizer.SanitizeForBlobName(normalizedEmail)}";
         }
 
-        return user.UserId;
+        return BlobNameSanitizer.SanitizeForBlobName(user.UserId, fallbackValue: "unknown-user");
     }
 
     static string ComputeHash(string value)

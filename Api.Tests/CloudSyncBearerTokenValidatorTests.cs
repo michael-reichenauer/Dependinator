@@ -1,7 +1,4 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Api;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -80,13 +77,16 @@ public class CloudSyncBearerTokenValidatorTests
         CloudSyncOptions options = new() { BearerAudience = bearerAudience };
         OpenIdConnectConfiguration configuration = new() { Issuer = configurationIssuer };
         configuration.SigningKeys.Add(signingKey);
-        return new CloudSyncBearerTokenValidator(
-            Options.Create(options),
-            new StubConfigurationManager(configuration)
-        );
+        return new CloudSyncBearerTokenValidator(Options.Create(options), new StubConfigurationManager(configuration));
     }
 
-    static string CreateToken(string issuer, string audience, string? sub = null, string? oid = null, string? email = null)
+    static string CreateToken(
+        string issuer,
+        string audience,
+        string? sub = null,
+        string? oid = null,
+        string? email = null
+    )
     {
         List<Claim> claims = [];
         if (!string.IsNullOrWhiteSpace(sub))

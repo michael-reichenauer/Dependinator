@@ -1,4 +1,6 @@
-using Dependinator.Models;
+using Dependinator.Modeling.Commands;
+using Dependinator.Modeling.Models;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Diagrams;
 
@@ -12,7 +14,7 @@ interface IPanZoomService
 }
 
 [Scoped]
-class PanZoomService(IScreenService screenService, IModelService modelService) : IPanZoomService
+class PanZoomService(IScreenService screenService, IModelMgr modelMgr, ICommandService commandService) : IPanZoomService
 {
     const double MaxZoom = 10;
     const double Margin = 10;
@@ -26,41 +28,47 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
     public void Zoom(PointerEvent e)
     {
         Interlocked.Increment(ref goToRequestId);
-        using var model = modelService.UseModel();
+        Pos newOffset;
+        double newZoom;
+        using (var model = modelMgr.UseModel())
+        {
+            if (e.DeltaY == 0)
+                return;
+            var (mx, my) = (e.OffsetX, e.OffsetY);
 
-        if (e.DeltaY == 0)
-            return;
-        var (mx, my) = (e.OffsetX, e.OffsetY);
+            var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
+            newZoom = (e.DeltaY > 0) ? model.Zoom * speed : model.Zoom * (1 / speed);
+            if (newZoom > MaxZoom)
+                newZoom = MaxZoom;
 
-        var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
-        double newZoom = (e.DeltaY > 0) ? model.Zoom * speed : model.Zoom * (1 / speed);
-        if (newZoom > MaxZoom)
-            newZoom = MaxZoom;
+            double svgX = mx * model.Zoom + model.Offset.X;
+            double svgY = my * model.Zoom + model.Offset.Y;
 
-        double svgX = mx * model.Zoom + model.Offset.X;
-        double svgY = my * model.Zoom + model.Offset.Y;
+            var svgRect = screenService.SvgRect;
+            var w = svgRect.Width * newZoom;
+            var h = svgRect.Height * newZoom;
 
-        var svgRect = screenService.SvgRect;
-        var w = svgRect.Width * newZoom;
-        var h = svgRect.Height * newZoom;
+            var x = svgX - mx / svgRect.Width * w;
+            var y = svgY - my / svgRect.Height * h;
 
-        var x = svgX - mx / svgRect.Width * w;
-        var y = svgY - my / svgRect.Height * h;
+            newOffset = new Pos(x, y);
+        }
 
-        var newOffset = new Pos(x, y);
-
-        modelService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom }, false);
+        commandService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom }, false);
     }
 
     public void Pan(PointerEvent e)
     {
         Interlocked.Increment(ref goToRequestId);
-        using var model = modelService.UseModel();
+        Pos newOffset;
 
-        var (dx, dy) = (e.MovementX * model.Zoom, e.MovementY * model.Zoom);
-        var newOffset = new Pos(model.Offset.X - dx, model.Offset.Y - dy);
+        using (var model = modelMgr.UseModel())
+        {
+            var (dx, dy) = (e.MovementX * model.Zoom, e.MovementY * model.Zoom);
+            newOffset = new Pos(model.Offset.X - dx, model.Offset.Y - dy);
+        }
 
-        modelService.Do(new ModelEditCommand() { Offset = newOffset }, false);
+        commandService.Do(new ModelEditCommand() { Offset = newOffset }, false);
     }
 
     public void PanZoomOrg(Rect viewRect, double zoom)
@@ -69,7 +77,7 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
         var newZoom = zoom;
 
         // Apply the newZoom and newOffset to the viewRect
-        using var model = modelService.UseModel();
+        using var model = modelMgr.UseModel();
         model.Offset = newOffset;
         model.Zoom = newZoom;
         Log.Info($"PanZoom newOffset={newOffset} newZoom={newZoom}");
@@ -170,26 +178,15 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
             && r1.Y + r1.Height <= r2.Y + r2.Height;
     }
 
-    bool RectOverLaps(Rect r1, Rect r2)
-    {
-        return r1.X < r2.X + r2.Width && r1.X + r1.Width > r2.X && r1.Y < r2.Y + r2.Height && r1.Y + r1.Height > r2.Y;
-    }
-
-    void GoTo(Pos pos, double zoom)
-    {
-        var offset = ToOffset(pos, zoom);
-        modelService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
-    }
-
     void GoTo(Pos pos, double zoom, Rect svgRect)
     {
         var offset = ToOffset(pos, zoom, svgRect);
-        modelService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
+        commandService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
     }
 
     (Pos, double) GetPosAndZoom(Rect svgRect)
     {
-        using var model = modelService.UseModel();
+        using var model = modelMgr.UseModel();
         var zoom = model.Zoom;
         var pos = ToPos(model.Offset, zoom, svgRect);
         return (pos, zoom);
@@ -250,7 +247,7 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
         var newOffset = new Pos(viewRect.X, viewRect.Y);
 
         // Apply the newZoom and newOffset to the viewRect
-        using var model = modelService.UseModel();
+        using var model = modelMgr.UseModel();
         model.Offset = newOffset;
         model.Zoom = newZoom;
         Log.Info($"PanZoom newOffset={newOffset} newZoom={newZoom}");
@@ -259,33 +256,36 @@ class PanZoomService(IScreenService screenService, IModelService modelService) :
     public void PanZoomToFit(Rect totalBounds, double maxZoom = 1, bool noCommand = false)
     {
         Interlocked.Increment(ref goToRequestId);
-        using var model = modelService.UseModel();
-
-        Rect b = totalBounds;
-        var svgRect = screenService.SvgRect;
-
-        // Determine the X or y zoom that best fits the bounds (including margin)
-        var zx = (b.Width + 2 * Margin) / svgRect.Width;
-        var zy = (b.Height + 2 * Margin) / svgRect.Height;
-        var newZoom = Math.Max(maxZoom, Math.Max(zx, zy));
-
-        // Zoom width and height to fit the bounds
-        var w = svgRect.Width * newZoom;
-        var h = svgRect.Height * newZoom;
-
-        // Pan to center the bounds
-        var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
-        var y = (b.Height < h) ? b.Y - (h - b.Height) / 2 : b.Y;
-
-        var newOffset = new Pos(x, y);
-
-        if (noCommand)
+        Pos newOffset;
+        double newZoom;
+        using (var model = modelMgr.UseModel())
         {
-            model.Offset = newOffset;
-            model.Zoom = newZoom;
-            return;
+            Rect b = totalBounds;
+            var svgRect = screenService.SvgRect;
+
+            // Determine the X or y zoom that best fits the bounds (including margin)
+            var zx = (b.Width + 2 * Margin) / svgRect.Width;
+            var zy = (b.Height + 2 * Margin) / svgRect.Height;
+            newZoom = Math.Max(maxZoom, Math.Max(zx, zy));
+
+            // Zoom width and height to fit the bounds
+            var w = svgRect.Width * newZoom;
+            var h = svgRect.Height * newZoom;
+
+            // Pan to center the bounds
+            var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
+            var y = (b.Height < h) ? b.Y - (h - b.Height) / 2 : b.Y;
+
+            newOffset = new Pos(x, y);
+
+            if (noCommand)
+            {
+                model.Offset = newOffset;
+                model.Zoom = newZoom;
+                return;
+            }
         }
 
-        modelService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom });
+        commandService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom });
     }
 }

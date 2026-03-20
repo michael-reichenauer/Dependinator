@@ -9,38 +9,54 @@ class SourceParser : ISourceParser
 {
     public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath)
     {
-        using var workspace = Compiler.CreateWorkspace();
-
-        Solution solution = await workspace.OpenSolutionAsync(solutionPath);
-
-        var solutionName = Names.GetSolutionName(solutionPath);
-        var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution });
-
-        var projects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).Where(p => !IsTestProject(p));
-
-        var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionNode.Name));
-
-        List<Item> solutionNodes = [];
-        solutionNodes.Add(new Item(solutionNode, null));
-
-        await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
+        try
         {
-            if (!Try(out var items, out var e, await parseProjectTask))
-                continue;
-            solutionNodes.AddRange(items);
+            using var workspace = Compiler.CreateWorkspace();
+
+            Solution solution = await workspace.OpenSolutionAsync(solutionPath);
+
+            var solutionName = Names.GetSolutionName(solutionPath);
+            var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution });
+
+            var projects = solution
+                .Projects.Where(p => p.Language == LanguageNames.CSharp)
+                .Where(p => !IsTestProject(p));
+
+            var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionNode.Name));
+
+            List<Item> solutionNodes = [];
+            solutionNodes.Add(new Item(solutionNode, null));
+
+            await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
+            {
+                if (!Try(out var items, out var e, await parseProjectTask))
+                    continue;
+                solutionNodes.AddRange(items);
+            }
+
+            // await WriteCompressedExampleModelAsync(solutionNodes, solutionPath);
+
+            return solutionNodes;
         }
-
-        // await WriteCompressedExampleModelAsync(solutionNodes, solutionPath);
-
-        return solutionNodes;
+        catch (Exception e)
+        {
+            return R.Error(e);
+        }
     }
 
     public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
     {
-        using var workspace = Compiler.CreateWorkspace();
+        try
+        {
+            using var workspace = Compiler.CreateWorkspace();
 
-        var project = await workspace.OpenProjectAsync(projectPath);
-        return await ParseProjectAsync(project, null);
+            var project = await workspace.OpenProjectAsync(projectPath);
+            return await ParseProjectAsync(project, null);
+        }
+        catch (Exception e)
+        {
+            return R.Error(e);
+        }
     }
 
     public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
@@ -65,11 +81,12 @@ class SourceParser : ISourceParser
 
     static async Task WriteCompressedExampleModelAsync(IReadOnlyList<Item> solutionNodes, string solutionPath)
     {
-        if (Build.IsWasm || solutionPath != ExampleModel.SolutionExample)
+        if (Build.IsWasm || solutionPath != ExampleModel.WorkingSolutionPath)
             return;
 
-        string outputPath = ExampleModel.EmbeddedBrowserExamplePath;
+        string outputPath = ExampleModel.ExampleOutputPath;
         var json = Json.Serialize(solutionNodes);
+        json = json.Replace("Dependinator", "Example");
 
         await using var file = File.Create(outputPath);
         await using var gzip = new GZipStream(file, CompressionLevel.SmallestSize);

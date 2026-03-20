@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "WebServer Dependinator",
+            "name": "WebServer",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -27,7 +27,7 @@
             "console": "internalConsole"
         },
         {
-            "name": "VscExt Dependinator",
+            "name": "VSCodeExt",
             "type": "extensionHost",
             "request": "launch",
             "preLaunchTask": "Dependinator: Prepare and Compile Extension",

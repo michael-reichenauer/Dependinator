@@ -1,6 +1,5 @@
 using Dependinator.Core;
 using Dependinator.Core.Rpc;
-using Dependinator.Core.Shared;
 using Dependinator.Core.Utils.Logging;
 using Dependinator.Roslyn;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +11,7 @@ internal class Program
 {
     public static async Task Main(string[] args)
     {
+        Build.SetIsVsCodeExtLsp();
         try
         {
             var server = await LanguageServer.From(options =>
@@ -40,8 +40,6 @@ internal class Program
                                 )
                             );
                             Log.Info($"#### Starting Dependinator LSP {Build.Info} ...");
-
-                            server.Services.GetRequiredService<IHost>().SetIsVsCodeExt();
 
                             // Register remote services callable from the WebView WASM UI
                             server.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));

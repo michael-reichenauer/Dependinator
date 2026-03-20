@@ -1,4 +1,7 @@
-using Dependinator.Models;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Commands;
+using Dependinator.Modeling.Models;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Diagrams;
 
@@ -11,7 +14,8 @@ interface ILineEditService
 }
 
 [Scoped]
-class LineEditService(IModelService modelService, IScreenService screenService) : ILineEditService
+class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScreenService screenService)
+    : ILineEditService
 {
     static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 
@@ -25,9 +29,9 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
         if (worldHint is null)
             return;
 
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
-            if (!model.TryGetLine(lineId, out var line))
+            if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
             if (!LinePathGeometry.TryGetLocalEndpoints(line, out var endpoints))
                 return;
@@ -39,7 +43,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
             updatedPoints = InsertPointAtClosestSegment(line, endpoints, localHint);
         }
 
-        modelService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
+        commandService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
     }
 
     public async Task RemoveSegmentPoint(LineId lineId, Pos screenPos)
@@ -52,9 +56,9 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
         if (worldHint is null)
             return;
 
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
-            if (!model.TryGetLine(lineId, out var line))
+            if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
             if (line.SegmentPoints.Count == 0)
                 return;
@@ -69,7 +73,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
             updatedPoints = line.SegmentPoints.Where((_, index) => index != removeIndex).ToList();
         }
 
-        modelService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
+        commandService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
     }
 
     public void MoveSegmentPoint(PointerEvent e, double zoom, PointerId pointerId)
@@ -78,9 +82,9 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
             return;
 
         IReadOnlyList<Pos> updatedPoints;
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
-            if (!model.TryGetLine(LineId.FromId(pointerId.Id), out var line))
+            if (!model.Lines.TryGetValue(LineId.FromId(pointerId.Id), out var line))
                 return;
             if (!LinePathGeometry.TryGetOwnerNode(line, out var owner))
                 return;
@@ -96,7 +100,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
             updatedPoints = points;
         }
 
-        modelService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
+        commandService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
     }
 
     public void SnapSegmentPointToGrid(PointerId pointerId)
@@ -105,9 +109,9 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
             return;
 
         IReadOnlyList<Pos> updatedPoints;
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
-            if (!model.TryGetLine(LineId.FromId(pointerId.Id), out var line))
+            if (!model.Lines.TryGetValue(LineId.FromId(pointerId.Id), out var line))
                 return;
             if (pointerId.LinePointIndex < 0 || pointerId.LinePointIndex >= line.SegmentPoints.Count)
                 return;
@@ -122,7 +126,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
             updatedPoints = points;
         }
 
-        modelService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
+        commandService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
     }
 
     static double GetChildrenLocalZoom(Node owner) => owner.GetZoom() / owner.ContainerZoom;
@@ -134,8 +138,7 @@ class LineEditService(IModelService modelService, IScreenService screenService) 
 
         var localX = screenPos.X - svgBound.X;
         var localY = screenPos.Y - svgBound.Y;
-        var zoom = modelService.Zoom;
-        var offset = modelService.Offset;
+        var (zoom, offset) = modelMgr.WithModel(m => (m.Zoom, m.Offset));
         return new Pos(offset.X + localX * zoom, offset.Y + localY * zoom);
     }
 

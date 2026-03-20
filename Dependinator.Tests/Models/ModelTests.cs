@@ -1,5 +1,6 @@
-using Dependinator.Models;
 using Dependinator.Core.Tests.Parsing.Utils;
+using Dependinator.Modeling.Models;
+using Dependinator.Shared;
 
 namespace Dependinator.Tests.Models;
 
@@ -22,11 +23,14 @@ public class ModelTests
     {
         var items = new ItemsMock();
         await TestHelper.ParseType<ModelTestData>(items);
+        var modelMgr = new ModelMgr(new StateMgr());
 
-        var model = new Model();
-        TestHelper.AddItems(model, items);
+        var modelDto = modelMgr.WithModel(model =>
+        {
+            TestHelper.AddItems(model, items);
+            return model.SerializeToDto();
+        });
 
-        var modelDto = model.ToDto();
         await VerifyJson(modelDto);
     }
 

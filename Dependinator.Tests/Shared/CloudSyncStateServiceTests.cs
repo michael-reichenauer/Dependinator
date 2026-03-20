@@ -1,4 +1,5 @@
 using Dependinator.Shared;
+using Dependinator.Shared.CloudSync;
 using Shared;
 
 namespace Dependinator.Tests.Shared;
@@ -22,8 +23,7 @@ public class CloudSyncStateServiceTests
         CloudSyncModelState? state = await sut.GetAsync("C:/repo/Model.json");
 
         Assert.NotNull(state);
-        Assert.Equal(metadata.UpdatedUtc, state.LastPushUtc);
-        Assert.Equal("hash-123", state.LastPushContentHash);
+        Assert.Equal(new CloudSyncBaseline("hash-123", "hash-123"), state.Baseline);
     }
 
     [Fact]
@@ -36,22 +36,21 @@ public class CloudSyncStateServiceTests
         CloudSyncModelState? state = await sut.GetAsync("/models/sample.model");
 
         Assert.NotNull(state);
-        Assert.Equal("pull-hash", state.LastPullContentHash);
-        Assert.NotNull(state.LastPullUtc);
+        Assert.Equal(new CloudSyncBaseline("pull-hash", "pull-hash"), state.Baseline);
     }
 
     sealed class InMemoryConfigService : IConfigService
     {
-        readonly Config config = new();
+        public Config Config { get; } = new();
 
         public Task<Config> GetAsync()
         {
-            return Task.FromResult(config);
+            return Task.FromResult(Config);
         }
 
         public Task SetAsync(Action<Config> updateAction)
         {
-            updateAction(config);
+            updateAction(Config);
             return Task.CompletedTask;
         }
     }

@@ -1,4 +1,4 @@
-using Dependinator.Models;
+using Dependinator.Shared.Types;
 using Microsoft.JSInterop;
 
 namespace Dependinator.Diagrams;

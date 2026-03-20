@@ -26,18 +26,18 @@ class FileService : IBrowserFileService, IFileService
         this.hostStoragePaths = hostStoragePaths;
     }
 
-    public async Task<bool> Exists(string path)
-    {
-        if (path == ExampleModel.Path)
-            return true;
+    // public async Task<bool> Exists(string path)
+    // {
+    //     if (path == ExampleModel.Path)
+    //         return true;
 
-        if (hostFileSystem.Exists(path))
-            return true;
+    //     if (hostFileSystem.Exists(path))
+    //         return true;
 
-        if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName)))
-            return false;
-        return paths.Contains(path) || paths.Contains(BinPath(path));
-    }
+    //     if (!Try(out var paths, out var _, await database.GetKeysAsync(DBCollectionName)))
+    //         return false;
+    //     return paths.Contains(path) || paths.Contains(BinPath(path));
+    // }
 
     public async Task<R<IReadOnlyList<string>>> GetFilePathsAsync()
     {

@@ -1,5 +1,6 @@
 using Dependinator.Diagrams.Icons;
-using Dependinator.Models;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Models;
 using MudBlazor;
 
 namespace Dependinator.Diagrams.Dependencies;
@@ -35,7 +36,7 @@ interface IDependenciesService
 class DependenciesService(
     ISelectionService selectionService,
     IApplicationEvents applicationEvents,
-    IModelService modelService,
+    IModelMgr modelMgr,
     INavigationService navigationService
 ) : IDependenciesService
 {
@@ -68,15 +69,15 @@ class DependenciesService(
         var (sourceId, targetId) =
             treeType is TreeType.Dependencies ? (thisNodeId, otherNodeId) : (otherNodeId, thisNodeId);
 
-        using var model = modelService.UseModel();
+        using var model = modelMgr.UseModel();
 
-        if (!model.TryGetNode(sourceId, out var sourceNode))
+        if (!model.Nodes.TryGetValue(sourceId, out var sourceNode))
             return;
-        if (!model.TryGetNode(targetId, out var targetNode))
+        if (!model.Nodes.TryGetValue(targetId, out var targetNode))
             return;
 
         var directLineId = LineId.FromDirect(sourceNode.Name, targetNode.Name);
-        if (model.TryGetLine(directLineId, out var existingLine))
+        if (model.Lines.TryGetValue(directLineId, out var existingLine))
             return;
 
         var ancestor = sourceNode.LowestCommonAncestor(targetNode);
@@ -87,33 +88,30 @@ class DependenciesService(
         };
 
         ancestor.AddDirectLine(directLine);
-        model.AddLine(directLine);
+        model.TryAddLine(directLine);
 
-        model.ClearCachedSvg();
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
     }
 
     public bool TryGetLine(LineId lineId, out Line line)
     {
-        using var model = modelService.UseModel();
-        return model.TryGetLine(lineId.Value, out line);
+        using var model = modelMgr.UseModel();
+        return model.Lines.TryGetValue(LineId.FromId(lineId.Value), out line!);
     }
 
     public void HideDirectLine(LineId lineId)
     {
         var shouldUnselect = selectionService.SelectedId.IsLine && selectionService.SelectedId.Id == lineId.Value;
 
-        using var model = modelService.UseModel();
+        using var model = modelMgr.UseModel();
 
-        if (!model.TryGetLine(lineId, out var line))
+        if (!model.Lines.TryGetValue(lineId, out var line))
             return;
 
-        line.RenderAncestor?.RemoveDirectLine(line);
-        line.RenderAncestor = null;
-        line.Target.Remove(line);
-        line.Source.Remove(line);
-        model.Items.Remove(line.Id);
-        model.ClearCachedSvg();
+        model.RemoveLine(line);
+
+        applicationEvents.TriggerModelChanged();
 
         if (shouldUnselect)
             selectionService.Unselect();
@@ -128,13 +126,8 @@ class DependenciesService(
 
     public bool CanShowEditor(NodeId nodeId)
     {
-        return modelService.UseNodeN(
-            nodeId,
-            n =>
-            {
-                return n.FileSpanOrParentSpan is not null;
-            }
-        );
+        using var model = modelMgr.UseModel();
+        return model.Nodes.TryGetValue(nodeId, out var node) && node.FileSpanOrParentSpan is not null;
     }
 
     public async Task ShowEditorAsync(NodeId nodeId)
@@ -190,16 +183,16 @@ class DependenciesService(
 
         selectedId = selectionService.SelectedId.Id;
 
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
-            if (model.TryGetNode(selectedId, out var selectedNode))
+            if (model.Nodes.TryGetValue(NodeId.FromId(selectedId), out var selectedNode))
             {
                 Title = selectedNode.HtmlShortName;
                 var items = GetNodeItems(selectedNode, treeType);
                 treeItems.AddRange(items);
                 return treeItems;
             }
-            if (model.TryGetLine(selectedId, out var selectedLine))
+            if (model.Lines.TryGetValue(LineId.FromId(selectedId), out var selectedLine))
             {
                 Title = selectedLine.HtmlShortName;
                 var items = GetLineItems(selectedLine, treeType);

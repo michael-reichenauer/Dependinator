@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-
 namespace Shared;
 
 public sealed record CloudUserInfo(string UserId, string? Email);
@@ -16,6 +13,8 @@ public sealed record CloudModelMetadata(
     string ContentHash,
     long CompressedSizeBytes
 );
+
+public sealed record CloudModelList(IReadOnlyList<CloudModelMetadata> Models);
 
 public sealed record CloudModelDocument(
     string ModelKey,
@@ -37,13 +36,17 @@ public static class CloudModelPath
             normalizedPath = normalizedPath.Replace("//", "/", StringComparison.Ordinal);
 
         return normalizedPath;
+        //return Path.GetFileName(normalizedPath);
     }
 
     public static string CreateKey(string modelPath)
     {
         string normalizedPath = Normalize(modelPath);
-        byte[] normalizedBytes = Encoding.UTF8.GetBytes(normalizedPath);
-        byte[] hashBytes = SHA256.HashData(normalizedBytes);
-        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+        return BlobNameSanitizer.SanitizeForBlobName(
+            normalizedPath,
+            fallbackValue: null,
+            parameterName: nameof(modelPath),
+            makeLowerCase: true
+        );
     }
 }

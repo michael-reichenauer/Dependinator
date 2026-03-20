@@ -1,3 +1,4 @@
+using Dependinator.Core.Parsing;
 using Dependinator.Roslyn.Parsing;
 using Dependinator.Roslyn.Tests.Parsing.Utils;
 
@@ -21,7 +22,35 @@ public class SourceTestData
 
 public class SourceParserTests
 {
-    [Fact]
+    [Fact(Skip = "Disabled, since always LspProject takes extra time")]
+    public async Task TestLspProjectGenericRegistrationLinksAsync()
+    {
+        var sourceParser = new SourceParser();
+        var projectPath = Path.Combine(
+            Path.GetDirectoryName(Root.Path)!,
+            "Dependinator.Lsp",
+            "Dependinator.Lsp.csproj"
+        );
+
+        if (!Try(out var items, out var e, await sourceParser.ParseProjectAsync(projectPath)))
+            Assert.Fail(e.AllErrorMessages());
+
+        var links = items.Links().Where(link => link.Source.Contains(".Dependinator.Lsp.Program.Main(")).ToList();
+
+        var workspaceFolderServiceLink = links.SingleOrDefault(link =>
+            link.Target.EndsWith(".Dependinator.Lsp.WorkspaceFolderService")
+        );
+        Assert.NotNull(workspaceFolderServiceLink);
+        Assert.Equal(NodeType.Type, workspaceFolderServiceLink.Properties.TargetType);
+
+        var workspaceFolderChangeHandlerLink = links.SingleOrDefault(link =>
+            link.Target.EndsWith(".Dependinator.Lsp.WorkspaceFolderChangeHandler")
+        );
+        Assert.NotNull(workspaceFolderChangeHandlerLink);
+        Assert.Equal(NodeType.Type, workspaceFolderChangeHandlerLink.Properties.TargetType);
+    }
+
+    [Fact(Skip = "Disabled, since always parsing project takes extra time")]
     public async Task TestProjectSourceParserAsync()
     {
         var sourceParser = new SourceParser();

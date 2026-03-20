@@ -1,4 +1,7 @@
-using Dependinator.Models;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Commands;
+using Dependinator.Modeling.Models;
+using Dependinator.Shared.Types;
 
 namespace Dependinator.Diagrams;
 
@@ -16,7 +19,7 @@ interface INodeEditService
 }
 
 [Scoped]
-class NodeEditService(IModelService modelService) : INodeEditService
+class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INodeEditService
 {
     const double MaxZoom = 1.0;
     const double MinZoom = 1.0 / 10.0;
@@ -33,279 +36,296 @@ class NodeEditService(IModelService modelService) : INodeEditService
 
     public void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
-        modelService.UseNode(
-            pointerId.Id,
-            node =>
-            {
-                var nodeZoom = node.GetZoom() * zoom;
-                var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
-                var newBoundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
-                if (!node.IsRoot)
-                    node.Parent.IsChildrenLayoutCustomized = true;
+        NodeId nodeId;
+        Rect newBoundary;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+                return;
 
-                modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
-            }
-        );
+            nodeId = node.Id;
+            var nodeZoom = node.GetZoom() * zoom;
+            var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
+            newBoundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
+            if (!node.IsRoot)
+                node.Parent.IsChildrenLayoutCustomized = true;
+        }
+
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     public void SnapSelectedNodeToGrid(PointerId pointerId)
     {
-        modelService.UseNode(
-            pointerId.Id,
-            node =>
-            {
-                var snappedX = SnapToGrid(node.Boundary.X);
-                var snappedY = SnapToGrid(node.Boundary.Y);
-                if (snappedX == node.Boundary.X && snappedY == node.Boundary.Y)
-                    return;
+        NodeId nodeId;
+        Rect newBoundary;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+                return;
+            nodeId = node.Id;
+            var snappedX = SnapToGrid(node.Boundary.X);
+            var snappedY = SnapToGrid(node.Boundary.Y);
+            if (snappedX == node.Boundary.X && snappedY == node.Boundary.Y)
+                return;
 
-                var newBoundary = node.Boundary with { X = snappedX, Y = snappedY };
-                if (!node.IsRoot)
-                    node.Parent.IsChildrenLayoutCustomized = true;
-
-                modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
-            }
-        );
+            newBoundary = node.Boundary with { X = snappedX, Y = snappedY };
+            if (!node.IsRoot)
+                node.Parent.IsChildrenLayoutCustomized = true;
+        }
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     public void SnapResizedSelectedNodeToGrid(PointerId pointerId)
     {
-        modelService.UseNode(
-            pointerId.Id,
-            node =>
+        NodeId nodeId;
+        Rect newBoundary;
+        Pos newContainerOffset;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+                return;
+
+            nodeId = node.Id;
+            var oldBoundary = node.Boundary;
+            newBoundary = SnapResizeBoundaryToGrid(oldBoundary, pointerId.NodeResizeType);
+            if (newBoundary == oldBoundary)
+                return;
+
+            newContainerOffset = node.ContainerOffset with
             {
-                var oldBoundary = node.Boundary;
-                var newBoundary = SnapResizeBoundaryToGrid(oldBoundary, pointerId.NodeResizeType);
-                if (newBoundary == oldBoundary)
-                    return;
+                X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
+                Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y),
+            };
 
-                var newContainerOffset = node.ContainerOffset with
-                {
-                    X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
-                    Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y),
-                };
+            if (!node.IsRoot)
+                node.Parent.IsChildrenLayoutCustomized = true;
+        }
 
-                if (!node.IsRoot)
-                    node.Parent.IsChildrenLayoutCustomized = true;
-
-                modelService.Do(
-                    new NodeEditCommand(node.Id) { Boundary = newBoundary, ContainerOffset = newContainerOffset }
-                );
-            }
-        );
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary, ContainerOffset = newContainerOffset });
     }
 
     public void PanSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
-        modelService.UseNode(
-            pointerId.Id,
-            node =>
-            {
-                var nodeZoom = node.GetZoom() * zoom;
-                var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
-                var newContainerOffset = node.ContainerOffset with
-                {
-                    X = node.ContainerOffset.X + dx,
-                    Y = node.ContainerOffset.Y + dy,
-                };
+        NodeId nodeId;
+        Pos newContainerOffset;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+                return;
 
-                modelService.Do(new NodeEditCommand(node.Id) { ContainerOffset = newContainerOffset });
-            }
-        );
+            nodeId = node.Id;
+            var nodeZoom = node.GetZoom() * zoom;
+            var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
+            newContainerOffset = node.ContainerOffset with
+            {
+                X = node.ContainerOffset.X + dx,
+                Y = node.ContainerOffset.Y + dy,
+            };
+        }
+
+        commandService.Do(new NodeEditCommand(nodeId) { ContainerOffset = newContainerOffset });
     }
 
     public void IncreaseNodeSize(NodeId nodeId)
     {
-        modelService.UseNodeN(
-            nodeId,
-            node =>
+        Rect newBoundary;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
+                return;
+            newBoundary = node.Boundary with
             {
-                var newBoundary = node.Boundary with
-                {
-                    Width = SnapToGridUp(node.Boundary.Width + sizeDiff),
-                    Height = SnapToGridUp(node.Boundary.Height + sizeDiff),
-                };
-                if (!node.IsRoot)
-                    node.Parent.IsChildrenLayoutCustomized = true;
+                Width = SnapToGridUp(node.Boundary.Width + sizeDiff),
+                Height = SnapToGridUp(node.Boundary.Height + sizeDiff),
+            };
+            if (!node.IsRoot)
+                node.Parent.IsChildrenLayoutCustomized = true;
+        }
 
-                modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
-            }
-        );
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     public void DecreaseNodeSize(NodeId nodeId)
     {
-        modelService.UseNodeN(
-            nodeId,
-            node =>
+        Rect newBoundary;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
+                return;
+            newBoundary = node.Boundary with
             {
-                var newBoundary = node.Boundary with
-                {
-                    Width = SnapToGridDown(node.Boundary.Width - sizeDiff),
-                    Height = SnapToGridDown(node.Boundary.Height - sizeDiff),
-                };
-                if (!node.IsRoot)
-                    node.Parent.IsChildrenLayoutCustomized = true;
+                Width = SnapToGridDown(node.Boundary.Width - sizeDiff),
+                Height = SnapToGridDown(node.Boundary.Height - sizeDiff),
+            };
+            if (!node.IsRoot)
+                node.Parent.IsChildrenLayoutCustomized = true;
+        }
 
-                modelService.Do(new NodeEditCommand(node.Id) { Boundary = newBoundary });
-            }
-        );
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     public void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
-        modelService.UseNode(
-            pointerId.Id,
-            node =>
+        NodeId nodeId;
+        Rect newBoundary;
+        Pos newContainerOffset;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+                return;
+
+            nodeId = node.Id;
+            var nodeZoom = node.GetZoom() * zoom;
+            var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
+
+            var oldBoundary = node.Boundary;
+            newBoundary = pointerId.NodeResizeType switch
             {
-                var nodeZoom = node.GetZoom() * zoom;
-                var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
-
-                var oldBoundary = node.Boundary;
-                var newBoundary = pointerId.NodeResizeType switch
+                NodeResizeType.TopLeft => node.Boundary with
                 {
-                    NodeResizeType.TopLeft => node.Boundary with
-                    {
-                        X = node.Boundary.X + dx,
-                        Y = node.Boundary.Y + dy,
-                        Width = node.Boundary.Width - dx,
-                        Height = node.Boundary.Height - dy,
-                    },
-                    NodeResizeType.TopMiddle => node.Boundary with
-                    {
-                        Y = node.Boundary.Y + dy,
-                        Height = node.Boundary.Height - dy,
-                    },
-                    NodeResizeType.TopRight => node.Boundary with
-                    {
-                        X = node.Boundary.X,
-                        Y = node.Boundary.Y + dy,
-                        Width = node.Boundary.Width + dx,
-                        Height = node.Boundary.Height - dy,
-                    },
-
-                    NodeResizeType.MiddleLeft => node.Boundary with
-                    {
-                        X = node.Boundary.X + dx,
-                        Width = node.Boundary.Width - dx,
-                    },
-                    NodeResizeType.MiddleRight => node.Boundary with
-                    {
-                        X = node.Boundary.X,
-                        Width = node.Boundary.Width + dx,
-                    },
-
-                    NodeResizeType.BottomLeft => node.Boundary with
-                    {
-                        X = node.Boundary.X + dx,
-                        Y = node.Boundary.Y,
-                        Width = node.Boundary.Width - dx,
-                        Height = node.Boundary.Height + dy,
-                    },
-                    NodeResizeType.BottomMiddle => node.Boundary with
-                    {
-                        Y = node.Boundary.Y,
-                        Height = node.Boundary.Height + dy,
-                    },
-                    NodeResizeType.BottomRight => node.Boundary with
-                    {
-                        X = node.Boundary.X,
-                        Y = node.Boundary.Y,
-                        Width = node.Boundary.Width + dx,
-                        Height = node.Boundary.Height + dy,
-                    },
-
-                    _ => node.Boundary,
-                };
-
-                // Adjust container offset to ensure that children stay in place
-                var newContainerOffset = node.ContainerOffset with
+                    X = node.Boundary.X + dx,
+                    Y = node.Boundary.Y + dy,
+                    Width = node.Boundary.Width - dx,
+                    Height = node.Boundary.Height - dy,
+                },
+                NodeResizeType.TopMiddle => node.Boundary with
                 {
-                    X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
-                    Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y),
-                };
-                if (!node.IsRoot)
-                    node.Parent.IsChildrenLayoutCustomized = true;
+                    Y = node.Boundary.Y + dy,
+                    Height = node.Boundary.Height - dy,
+                },
+                NodeResizeType.TopRight => node.Boundary with
+                {
+                    X = node.Boundary.X,
+                    Y = node.Boundary.Y + dy,
+                    Width = node.Boundary.Width + dx,
+                    Height = node.Boundary.Height - dy,
+                },
 
-                modelService.Do(
-                    new NodeEditCommand(node.Id) { Boundary = newBoundary, ContainerOffset = newContainerOffset }
-                );
-            }
-        );
+                NodeResizeType.MiddleLeft => node.Boundary with
+                {
+                    X = node.Boundary.X + dx,
+                    Width = node.Boundary.Width - dx,
+                },
+                NodeResizeType.MiddleRight => node.Boundary with
+                {
+                    X = node.Boundary.X,
+                    Width = node.Boundary.Width + dx,
+                },
+
+                NodeResizeType.BottomLeft => node.Boundary with
+                {
+                    X = node.Boundary.X + dx,
+                    Y = node.Boundary.Y,
+                    Width = node.Boundary.Width - dx,
+                    Height = node.Boundary.Height + dy,
+                },
+                NodeResizeType.BottomMiddle => node.Boundary with
+                {
+                    Y = node.Boundary.Y,
+                    Height = node.Boundary.Height + dy,
+                },
+                NodeResizeType.BottomRight => node.Boundary with
+                {
+                    X = node.Boundary.X,
+                    Y = node.Boundary.Y,
+                    Width = node.Boundary.Width + dx,
+                    Height = node.Boundary.Height + dy,
+                },
+
+                _ => node.Boundary,
+            };
+
+            // Adjust container offset to ensure that children stay in place
+            newContainerOffset = node.ContainerOffset with
+            {
+                X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
+                Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y),
+            };
+            if (!node.IsRoot)
+                node.Parent.IsChildrenLayoutCustomized = true;
+        }
+
+        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary, ContainerOffset = newContainerOffset });
     }
 
     public void ZoomSelectedNode(PointerEvent e, PointerId pointerId)
     {
-        modelService.UseNode(
-            pointerId.Id,
-            node =>
-            {
-                if (e.DeltaY == 0)
-                    return;
-                //var (mx, my) = (e.OffsetX - node.ContainerOffset.X, e.OffsetY - node.ContainerOffset.Y);
-                var (mx, my) = (node.Boundary.Width, node.Boundary.Height);
-                // var (mx, my) = (node.Boundary.Width / 2 - node.ContainerOffset.X, node.Boundary.Height / 2 - node.ContainerOffset.Y);
+        NodeId nodeId;
+        double newZoom;
+        Pos newContainerOffset;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+                return;
 
-                var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
-                double newZoom = (e.DeltaY < 0) ? node.ContainerZoom * speed : node.ContainerZoom * (1 / speed);
-                if (newZoom < MinZoom)
-                    newZoom = MinZoom;
-                if (newZoom > MaxZoom)
-                    newZoom = MaxZoom;
+            nodeId = node.Id;
+            if (e.DeltaY == 0)
+                return;
+            //var (mx, my) = (e.OffsetX - node.ContainerOffset.X, e.OffsetY - node.ContainerOffset.Y);
+            var (mx, my) = (node.Boundary.Width, node.Boundary.Height);
+            // var (mx, my) = (node.Boundary.Width / 2 - node.ContainerOffset.X, node.Boundary.Height / 2 - node.ContainerOffset.Y);
 
-                double svgX = mx * node.ContainerZoom + node.ContainerOffset.X;
-                double svgY = my * node.ContainerZoom + node.ContainerOffset.Y;
+            var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
+            newZoom = (e.DeltaY < 0) ? node.ContainerZoom * speed : node.ContainerZoom * (1 / speed);
+            if (newZoom < MinZoom)
+                newZoom = MinZoom;
+            if (newZoom > MaxZoom)
+                newZoom = MaxZoom;
 
-                var w = node.Boundary.Width * newZoom;
-                var h = node.Boundary.Height * newZoom;
+            double svgX = mx * node.ContainerZoom + node.ContainerOffset.X;
+            double svgY = my * node.ContainerZoom + node.ContainerOffset.Y;
 
-                var x = svgX - mx / node.Boundary.Width * w;
-                var y = svgY - my / node.Boundary.Height * h;
+            var w = node.Boundary.Width * newZoom;
+            var h = node.Boundary.Height * newZoom;
 
-                var newContainerOffset = new Pos(x, y);
+            var x = svgX - mx / node.Boundary.Width * w;
+            var y = svgY - my / node.Boundary.Height * h;
 
-                modelService.Do(
-                    new NodeEditCommand(node.Id) { ContainerOffset = newContainerOffset, ContainerZoom = newZoom }
-                );
-            }
+            newContainerOffset = new Pos(x, y);
+        }
+
+        commandService.Do(
+            new NodeEditCommand(nodeId) { ContainerOffset = newContainerOffset, ContainerZoom = newZoom }
         );
     }
 
     public void PanZoomToFit(PointerId pointerId)
     {
-        modelService.UseNode(
-            pointerId.Id,
-            node =>
-            {
-                using var model = modelService.UseModel();
+        NodeId nodeId;
+        double newZoom;
+        Pos newOffset;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+                return;
 
-                Rect b = node.GetTotalBounds();
+            nodeId = node.Id;
+            Rect b = node.GetTotalBounds();
 
-                // Determine the X or y zoom that best fits the bounds (including margin)
-                var zx = (b.Width + 2 * Margin) / node.Boundary.Width;
-                var zy = (b.Height + 2 * Margin) / node.Boundary.Height;
-                var newZoom = 1 / Math.Max(zx, zy);
+            // Determine the X or y zoom that best fits the bounds (including margin)
+            var zx = (b.Width + 2 * Margin) / node.Boundary.Width;
+            var zy = (b.Height + 2 * Margin) / node.Boundary.Height;
+            newZoom = 1 / Math.Max(zx, zy);
 
-                var wx = node.Boundary.Width * newZoom;
-                var wy = node.Boundary.Height / newZoom;
+            var wx = node.Boundary.Width * newZoom;
+            var wy = node.Boundary.Height / newZoom;
 
-                // Zoom width and height to fit the bounds
-                var nw = (b.Width + 2 * Margin) * newZoom;
-                var nh = (b.Height + 2 * Margin) * newZoom;
-                var w = node.Boundary.Width * newZoom;
-                var h = node.Boundary.Height * newZoom;
+            // Zoom width and height to fit the bounds
+            var nw = (b.Width + 2 * Margin) * newZoom;
+            var nh = (b.Height + 2 * Margin) * newZoom;
+            var w = node.Boundary.Width * newZoom;
+            var h = node.Boundary.Height * newZoom;
 
-                // Pan to center the bounds
-                var mx = Margin;
-                var my = Margin;
-                var x = -(b.X - mx) * newZoom;
-                var y = -(b.Y - my) * newZoom;
+            // Pan to center the bounds
+            var mx = Margin;
+            var my = Margin;
+            var x = -(b.X - mx) * newZoom;
+            var y = -(b.Y - my) * newZoom;
 
-                var newOffset = new Pos(x, y);
+            newOffset = new Pos(x, y);
+        }
 
-                modelService.Do(new NodeEditCommand(node.Id) { ContainerOffset = newOffset, ContainerZoom = newZoom });
-            }
-        );
+        commandService.Do(new NodeEditCommand(nodeId) { ContainerOffset = newOffset, ContainerZoom = newZoom });
     }
 
     static Rect SnapResizeBoundaryToGrid(Rect boundary, NodeResizeType resizeType)

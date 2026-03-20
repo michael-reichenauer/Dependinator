@@ -166,6 +166,14 @@ class MethodLinkParser
             if (methodSymbol.MethodKind == MethodKind.LocalFunction)
                 yield break;
 
+            var invokedMethodSymbol = methodSymbol;
+
+            foreach (var genericTypeArg in invokedMethodSymbol.TypeArguments)
+            {
+                foreach (var genericTypeLink in AddTypeLinks(genericTypeArg, member, fullMethodName))
+                    yield return genericTypeLink;
+            }
+
             methodSymbol = methodSymbol.OriginalDefinition;
 
             if (methodSymbol.IsImplicitlyDeclared && methodSymbol.MethodKind == MethodKind.Constructor)
@@ -186,12 +194,6 @@ class MethodLinkParser
             {
                 foreach (var parameterTypeLink in AddTypeLinks(parameter.Type, member, fullMethodName))
                     yield return parameterTypeLink;
-            }
-
-            foreach (var genericTypeArg in methodSymbol.TypeArguments)
-            {
-                foreach (var genericTypeLink in AddTypeLinks(genericTypeArg, member, fullMethodName))
-                    yield return genericTypeLink;
             }
         }
     }

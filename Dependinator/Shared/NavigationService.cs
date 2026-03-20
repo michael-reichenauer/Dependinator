@@ -1,6 +1,8 @@
 using Dependinator.Core.Parsing;
 using Dependinator.Diagrams;
-using Dependinator.Models;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Models;
+using Dependinator.Shared.Types;
 using FileLocation = Dependinator.Core.Parsing.FileLocation;
 
 namespace Dependinator.Shared;
@@ -15,7 +17,7 @@ interface INavigationService
 [Scoped]
 class NavigationService(
     IApplicationEvents applicationEvents,
-    IModelService modelService,
+    IModelMgr modelMgr,
     IPanZoomService panZoomService,
     ISelectionService selectionService,
     IScreenService screenService,
@@ -69,13 +71,13 @@ class NavigationService(
         pos = Pos.None;
         zoom = 0.0;
 
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
-            if (!model.TryGetNode(nodeId, out var node))
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
                 return false;
 
-            if (node.EnsureLayoutForPath())
-                model.ClearCachedSvg();
+            if (EnsureLayoutForPath(node))
+                applicationEvents.TriggerModelChanged();
 
             (pos, zoom) = node.GetCenterPosAndZoom();
         }
@@ -104,9 +106,9 @@ class NavigationService(
         Log.Info("ShowEditor for", nodeId);
 
         FileSpan? fileSpan;
-        using (var model = modelService.UseModel())
+        using (var model = modelMgr.UseModel())
         {
-            if (!model.TryGetNode(nodeId, out var node))
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
             {
                 Log.Warn($"Failed find node for {nodeId}");
                 return;
@@ -123,6 +125,16 @@ class NavigationService(
         await vsCodeSendService.ShowEditorAsync(new FileLocation(fileSpan.Path, fileSpan.StartLine + 1));
     }
 
+    static bool EnsureLayoutForPath(Modeling.Models.Node node)
+    {
+        var needsLayout = node.Ancestors().Reverse().Where(ancestor => ancestor.IsChildrenLayoutRequired).ToList();
+        if (needsLayout.Count == 0)
+            return false;
+
+        needsLayout.ForEach(ancestor => NodeLayout.AdjustChildren(ancestor));
+        return true;
+    }
+
     static FileLocation ParseFileLocation(string fileLocation)
     {
         var parts = fileLocation.Split('@');
@@ -134,12 +146,11 @@ class NavigationService(
     bool TryGetNodeIdForFileLocation(FileLocation fileLocation, out NodeId nodeId)
     {
         nodeId = null!;
-        List<Models.Node> nodeCandidates = [];
-        using (var model = modelService.UseModel())
+        List<Modeling.Models.Node> nodeCandidates = [];
+        using (var model = modelMgr.UseModel())
         {
             nodeCandidates = model
-                .Items.Values.OfType<Models.Node>()
-                .Where(n => n.FileSpan is not null)
+                .Nodes.Values.Where(n => n.FileSpan is not null)
                 .Where(n => n.FileSpan!.Path.IsSameIc(fileLocation.Path))
                 .OrderBy(n => n.FileSpan!.StartLine)
                 .ToList();
@@ -193,8 +204,8 @@ class NavigationService(
         var dyPixels = nodeCenterY - svgCenterY;
         var distPixels = Math.Sqrt(dxPixels * dxPixels + dyPixels * dyPixels);
 
-        var currentOffset = modelService.Offset;
-        var currentZoom = modelService.Zoom;
+        var (currentOffset, currentZoom) = modelMgr.WithModel(m => (m.Offset, m.Zoom));
+
         var modelCenterPos = new Pos(
             currentOffset.X + screenService.SvgRect.Width / 2 * currentZoom,
             currentOffset.Y + screenService.SvgRect.Height / 2 * currentZoom

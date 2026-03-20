@@ -81,16 +81,20 @@ static class ItemsExtensions
             if (memberName is not null)
             {
                 // if member is a method, we add a '(' to make IsSame() below possible to handle method names
-                var methods = type.GetMethods(
+                var method = type.GetMethods(
                         System.Reflection.BindingFlags.Instance
                             | System.Reflection.BindingFlags.Static
                             | System.Reflection.BindingFlags.Public
                             | System.Reflection.BindingFlags.NonPublic
                             | System.Reflection.BindingFlags.DeclaredOnly
                     )
-                    .Where(m => !m.IsSpecialName);
-                if (methods.Any(m => m.Name == memberName))
-                    memberName += '(';
+                    .Where(m => !m.IsSpecialName)
+                    .FirstOrDefault(m => m.Name == memberName);
+                if (method is not null)
+                {
+                    var n = method.ToString();
+                    memberName = method.IsGenericMethod ? memberName += '<' : memberName += '(';
+                }
 
                 return $"{typeName}.{memberName}";
             }
@@ -102,7 +106,10 @@ static class ItemsExtensions
         // Since name (if method) does not contain the parameters, we need to use StartWith
         static bool IsSame(string nodeName, string name)
         {
-            var nameIndex = name.FindIndexBy(c => c is '(');
+            var nameIndex = name.FindIndexBy(c => c is '<');
+            if (nameIndex != -1)
+                return nodeName.StartsWith(name); // the '(') was added by GetName<T>() above
+            nameIndex = name.FindIndexBy(c => c is '(');
             if (nameIndex != -1)
                 return nodeName.StartsWith(name); // the '(') was added by GetName<T>() above
 

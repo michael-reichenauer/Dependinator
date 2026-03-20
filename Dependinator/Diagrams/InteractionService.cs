@@ -1,6 +1,7 @@
-﻿using Dependinator.Diagrams.Dependencies;
+using Dependinator.Diagrams.Dependencies;
 using Dependinator.Diagrams.Svg;
-using Dependinator.Models;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Models;
 
 namespace Dependinator.Diagrams;
 
@@ -25,7 +26,7 @@ class InteractionService : IInteractionService
     readonly ILineEditService lineEditService;
     readonly IApplicationEvents applicationEvents;
     readonly ISelectionService selectionService;
-    readonly IModelService modelService;
+    readonly IModelMgr modelMgr;
     readonly IDependenciesService dependenciesService;
 
     const int MoveDelay = 300;
@@ -37,7 +38,7 @@ class InteractionService : IInteractionService
     bool isResizingSelectedNode = false;
     bool isDraggingSelectedLinePoint = false;
     PointerId mouseDownId = PointerId.Empty;
-    double Zoom => modelService.Zoom;
+    double Zoom => modelMgr.WithModel(m => m.Zoom);
     readonly Debouncer zoomToolbarDebouncer = new();
 
     public InteractionService(
@@ -47,7 +48,7 @@ class InteractionService : IInteractionService
         ILineEditService lineEditService,
         IApplicationEvents applicationEvents,
         ISelectionService selectionService,
-        IModelService modelService,
+        IModelMgr modelMgr,
         IDependenciesService dependenciesService
     )
     {
@@ -57,7 +58,7 @@ class InteractionService : IInteractionService
         this.lineEditService = lineEditService;
         this.applicationEvents = applicationEvents;
         this.selectionService = selectionService;
-        this.modelService = modelService;
+        this.modelMgr = modelMgr;
         this.dependenciesService = dependenciesService;
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
         this.applicationEvents.UndoneRedone += UpdateToolbar;
@@ -70,7 +71,9 @@ class InteractionService : IInteractionService
         {
             if (!selectionService.IsSelected)
                 return false;
-            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
+
+            using var model = modelMgr.UseModel();
+            if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
                 return false;
             var nodeZoom = 1 / (node.GetZoom() * Zoom);
             return !NodeSvg.IsToLargeToBeSeen(nodeZoom) && !NodeSvg.IsShowIcon(node.Type, nodeZoom);
@@ -83,7 +86,8 @@ class InteractionService : IInteractionService
         {
             if (!selectionService.IsSelected)
                 return false;
-            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
+            using var model = modelMgr.UseModel();
+            if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
                 return false;
             return node.FileSpanOrParentSpan is not null;
             // return node.FileSpanOrParentSpan is not null
@@ -97,7 +101,9 @@ class InteractionService : IInteractionService
         {
             if (!selectionService.IsEditMode)
                 return false;
-            if (!modelService.TryGetNode(selectionService.SelectedId.Id, out var node))
+
+            using var model = modelMgr.UseModel();
+            if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
                 return false;
             var nodeZoom = 1 / (node.GetZoom() * Zoom);
             if (!NodeSvg.IsToLargeToBeSeen(nodeZoom) && !NodeSvg.IsShowIcon(node.Type, nodeZoom))
@@ -159,9 +165,9 @@ class InteractionService : IInteractionService
                 // Node is in edit mode, check if mouse down is inside the selected node, if so treat as selected node
                 var selectId = NodeId.FromId(selectionService.SelectedId.Id);
 
-                using (var model = modelService.UseModel())
+                using (var model = modelMgr.UseModel())
                 {
-                    if (model.TryGetNode(targetId.Id, out var node))
+                    if (model.Nodes.TryGetValue(NodeId.FromId(targetId.Id), out var node))
                     {
                         var ancestor = node.Ancestors().FirstOrDefault(n => n.Id == selectId);
                         if (ancestor != null)
@@ -223,8 +229,8 @@ class InteractionService : IInteractionService
         var downId = NodeId.FromId(mouseDownId.Id);
         var selectId = NodeId.FromId(selectionService.SelectedId.Id);
 
-        using var model = modelService.UseModel();
-        if (!model.TryGetNode(downId, out var node))
+        using var model = modelMgr.UseModel();
+        if (!model.Nodes.TryGetValue(downId, out var node))
             return;
         var ancestorId = node.Ancestors().FirstOrDefault(n => n.Id == selectId && !n.IsRoot);
         if (ancestorId == null)

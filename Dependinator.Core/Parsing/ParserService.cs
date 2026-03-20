@@ -12,8 +12,6 @@ internal interface IParserService
 {
     // Parse assemblies
     Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
-
-    Task<R<Source>> GetSourceAsync(string path, string nodeName);
 }
 
 [Singleton]
@@ -51,16 +49,6 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
         //     Log.Exception(e, "Error in parser");
         //     return R.Error("Failed to parse", e);
         // }
-    }
-
-    public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
-    {
-        Log.Debug($"Get source for {nodeName} in model {path}...");
-
-        if (!Try(out var parser, out var e, GetParser(path)))
-            return R.Error($"File not supported: {path}", e);
-
-        return await parser.GetSourceAsync(path, nodeName);
     }
 
     R<IParser> GetParser(string path)
