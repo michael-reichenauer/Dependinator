@@ -1,88 +1,100 @@
 using Dependinator.Core;
 using Dependinator.Core.Shared;
+using Dependinator.Shared.CloudSync;
 
-namespace Dependinator.Diagrams;
+namespace Dependinator.Shared;
 
 interface IModelListService
 {
     Task InitAsync();
 
-    IReadOnlyList<string> ModelPaths { get; }
+    IReadOnlyList<string> RecentModelPaths { get; }
+    IReadOnlyList<string> LocalPaths { get; }
+    IReadOnlyList<string> CloudPaths { get; }
     string? LastUsedPath { get; }
+    bool IsLocalPath(string path);
 
     Task AddModelAsync(string path);
     Task RemoveModelAsync(string path);
 }
 
 [Scoped]
-class ModelListService : IModelListService
+class ModelListService(
+    IConfigService configService,
+    IWorkspaceFileService workspaceFileService,
+    IAppCloudSyncService appCloudSyncService
+) : IModelListService
 {
     const int RecentCount = 5;
 
-    readonly IConfigService configService;
-    readonly IFileService fileService;
-    readonly IWorkspaceFileService workspaceFileService;
+    IReadOnlyList<string> recentPaths = [];
+    IReadOnlyList<string> localPaths = [];
+    IReadOnlyList<string> cloudPaths = [];
 
-    List<string> modelPaths = [];
+    public IReadOnlyList<string> RecentModelPaths => recentPaths;
+    public IReadOnlyList<string> LocalPaths => localPaths;
+    public IReadOnlyList<string> CloudPaths => cloudPaths;
+    public string? LastUsedPath => recentPaths.Any() ? recentPaths[0] : null;
 
-    public ModelListService(
-        IConfigService configService,
-        IFileService fileService,
-        IWorkspaceFileService workspaceFileService
-    )
-    {
-        this.configService = configService;
-        this.fileService = fileService;
-        this.workspaceFileService = workspaceFileService;
-    }
+    public bool IsLocalPath(string path) => LocalPaths.Contains(path);
 
     public async Task InitAsync()
     {
+        recentPaths = (await configService.GetAsync()).RecentPaths;
+        cloudPaths = GetCloudPathsAsync();
+
         if (Build.IsVsCodeExtWasm)
         {
-            Log.Info("Get solution paths:");
-            var paths = await workspaceFileService.GetSolutionFiles();
-            modelPaths = paths.ToList();
-            paths.ForEach(path => Log.Info("  Solution", path));
-            return;
+            localPaths = await GetLocalPathsAsync();
+            if (!recentPaths.Any() && localPaths.Any())
+                recentPaths = [localPaths[0]];
+        }
+        if (Build.IsWeb)
+        {
+            localPaths = [ExampleModel.WorkingSolutionPath];
+            if (!recentPaths.Any() && localPaths.Any())
+                recentPaths = [localPaths[0]];
+        }
+        if (Build.IsStandaloneWasm)
+        {
+            localPaths = [];
+            if (!recentPaths.Any() && cloudPaths.Any())
+                recentPaths = [cloudPaths[0]];
         }
 
-        modelPaths = (await GetExistingRecentFilePathsAsync()).ToList();
-        await configService.SetAsync(c => c.RecentPaths = modelPaths);
+        await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
     }
-
-    public IReadOnlyList<string> ModelPaths => modelPaths;
-
-    public string? LastUsedPath => modelPaths.Any() ? modelPaths[0] : null;
 
     public async Task AddModelAsync(string path)
     {
-        if (Build.IsVsCodeExtWasm)
-            return;
-        var name = Path.GetFileName(path);
-
-        modelPaths = (await GetExistingRecentFilePathsAsync()).Prepend(path).Distinct().Take(RecentCount).ToList();
-        await configService.SetAsync(c => c.RecentPaths = modelPaths);
+        recentPaths = (await configService.GetAsync()).RecentPaths;
+        recentPaths = recentPaths.Prepend(path).Distinct().Take(RecentCount).ToList();
+        await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
     }
 
     public async Task RemoveModelAsync(string path)
     {
-        if (Build.IsVsCodeExtWasm)
-            return;
-
-        modelPaths = (await GetExistingRecentFilePathsAsync())
-            .Where(rp => rp != path)
-            .Distinct()
-            .Take(RecentCount)
-            .ToList();
-        await configService.SetAsync(c => c.RecentPaths = modelPaths);
+        recentPaths = (await configService.GetAsync()).RecentPaths;
+        recentPaths = recentPaths.Where(rp => rp != path).Distinct().Take(RecentCount).ToList();
+        await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
     }
 
-    async Task<IReadOnlyList<string>> GetExistingRecentFilePathsAsync()
+    async Task<IReadOnlyList<string>> GetLocalPathsAsync()
     {
-        if (!Try(out var paths, out var e, await fileService.GetFilePathsAsync()))
-            return [];
-        var recentPaths = (await configService.GetAsync()).RecentPaths;
-        return recentPaths.Where(rp => paths.Contains(rp) || rp == ExampleModel.Path).ToList();
+        if (Build.IsWeb)
+            return [ExampleModel.WorkingSolutionPath];
+
+        return await workspaceFileService.GetSolutionFilePathsAsync();
+    }
+
+    IReadOnlyList<string> GetCloudPathsAsync()
+    {
+        var cloudModelPaths = appCloudSyncService
+            .CloudModels.OrderBy(cm => cm.UpdatedUtc)
+            .Select(cm => cm.NormalizedPath)
+            .ToList();
+        Log.Info("Cloud models:");
+        cloudModelPaths.ForEach(path => Log.Info("  Model", path));
+        return cloudModelPaths;
     }
 }

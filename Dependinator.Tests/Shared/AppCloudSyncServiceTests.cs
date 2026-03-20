@@ -388,10 +388,10 @@ public class AppCloudSyncServiceTests
 
         return new SutContext(
             new AppCloudSyncService(
-                canvasService.Object,
+                new Lazy<ICanvasService>(() => canvasService.Object),
                 cloudSyncService.Object,
                 cloudSyncStateService.Object,
-                modelService.Object,
+                new Lazy<IModelService>(() => modelService.Object),
                 modelMgr.Object,
                 applicationEvents,
                 timings
@@ -433,10 +433,7 @@ public class AppCloudSyncServiceTests
     static CloudSyncModelState CreateSyncStateFromModel(ModelDto modelDto)
     {
         string contentHash = CloudModelSerializer.GetContentHash(modelDto);
-        return new CloudSyncModelState()
-        {
-            Baseline = new CloudSyncBaseline(contentHash, contentHash),
-        };
+        return new CloudSyncModelState() { Baseline = new CloudSyncBaseline(contentHash, contentHash) };
     }
 
     static async Task WaitUntilAsync(Func<bool> predicate, int timeoutMilliseconds = 500)

@@ -2,6 +2,7 @@ using Dependinator.Diagrams;
 using Dependinator.Modeling;
 using Dependinator.Modeling.Dtos;
 using Dependinator.Modeling.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Shared;
 
 namespace Dependinator.Shared.CloudSync;
@@ -61,10 +62,10 @@ interface IAppCloudSyncService
 [Scoped]
 class AppCloudSyncService : IAppCloudSyncService, IDisposable
 {
-    private readonly ICanvasService canvasService;
+    private readonly Lazy<ICanvasService> canvasServiceLazy;
     private readonly ICloudSyncService cloudSyncService;
     private readonly ICloudSyncStateService cloudSyncStateService;
-    private readonly IModelService modelService;
+    private readonly Lazy<IModelService> modelServiceLazy;
     private readonly IModelMgr modelMgr;
     private readonly IApplicationEvents applicationEvents;
 
@@ -93,10 +94,10 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     IReadOnlyList<CloudModelMetadata> cloudModels = [];
 
     public AppCloudSyncService(
-        ICanvasService canvasService,
+        Lazy<ICanvasService> canvasServiceLazy,
         ICloudSyncService cloudSyncService,
         ICloudSyncStateService cloudSyncStateService,
-        IModelService modelService,
+        Lazy<IModelService> modelServiceLazy,
         IModelMgr modelMgr,
         IApplicationEvents applicationEvents,
         AppCloudSyncTimings? appCloudSyncTimings = null,
@@ -104,10 +105,10 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         Func<TimeSpan, CancellationToken, Task>? delayAsyncProvider = null
     )
     {
-        this.canvasService = canvasService;
+        this.canvasServiceLazy = canvasServiceLazy;
         this.cloudSyncService = cloudSyncService;
         this.cloudSyncStateService = cloudSyncStateService;
-        this.modelService = modelService;
+        this.modelServiceLazy = modelServiceLazy;
         this.modelMgr = modelMgr;
         this.applicationEvents = applicationEvents;
 
@@ -199,7 +200,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
     async Task<R<CloudModelMetadata>> SyncUpCoreAsync(bool notifyChanged)
     {
-        if (!Try(out ModelDto? modelDto, out ErrorResult? error, modelService.GetCurrentModelDto()))
+        if (!Try(out ModelDto? modelDto, out ErrorResult? error, modelServiceLazy.Value.GetCurrentModelDto()))
             return error;
 
         string modelPath = modelMgr.ModelPath;
@@ -226,7 +227,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         if (!Try(out ModelDto? modelDto, out ErrorResult? error, await cloudSyncService.PullAsync(modelPath)))
             return error;
 
-        if (!Try(out ModelInfo? modelInfo, out error, await modelService.ReplaceCurrentModelAsync(modelDto)))
+        if (!Try(out ModelInfo? modelInfo, out error, await modelServiceLazy.Value.ReplaceCurrentModelAsync(modelDto)))
             return error;
 
         string pulledContentHash = CloudModelSerializer.GetContentHash(modelDto);
@@ -253,10 +254,10 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         if (!Try(out ModelDto? modelDto, out ErrorResult? error, await cloudSyncService.PullAsync(normalizedPath)))
             return error;
 
-        if (!Try(out error, await modelService.WriteModelAsync(normalizedPath, modelDto)))
+        if (!Try(out error, await modelServiceLazy.Value.WriteModelAsync(normalizedPath, modelDto)))
             return error;
 
-        await canvasService.LoadAsync(normalizedPath);
+        await canvasServiceLazy.Value.LoadAsync(normalizedPath);
         string pulledContentHash = CloudModelSerializer.GetContentHash(modelDto);
         string localContentHash = GetCurrentModelContentHashOrDefault() ?? pulledContentHash;
         await cloudSyncStateService.RecordPullAsync(normalizedPath, localContentHash, pulledContentHash);
@@ -652,7 +653,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
     string? GetCurrentModelContentHashOrDefault()
     {
-        if (!Try(out ModelDto? currentModelDto, out _, modelService.GetCurrentModelDto()))
+        if (!Try(out ModelDto? currentModelDto, out _, modelServiceLazy.Value.GetCurrentModelDto()))
             return null;
 
         return CloudModelSerializer.GetContentHash(currentModelDto);

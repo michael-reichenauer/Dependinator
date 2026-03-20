@@ -1,4 +1,3 @@
-using Dependinator.Diagrams.Tiles;
 using Dependinator.Modeling.Dtos;
 using Dependinator.Modeling.Models;
 using Dependinator.Shared.Types;
@@ -27,6 +26,7 @@ class ModelService : IModelService, IDisposable
     static readonly TimeSpan MaxSaveDelay = TimeSpan.FromSeconds(10);
 
     readonly IModelMgr modelMgr;
+    readonly IModelListService modelListService;
     readonly Parsing.IParserService parserService;
     readonly IStructureService modelStructureService;
     readonly IPersistenceService persistenceService;
@@ -37,6 +37,7 @@ class ModelService : IModelService, IDisposable
 
     public ModelService(
         IModelMgr modelMgr,
+        IModelListService modelListService,
         Parsing.IParserService parserService,
         IStructureService modelStructureService,
         IPersistenceService persistenceService,
@@ -45,6 +46,7 @@ class ModelService : IModelService, IDisposable
     )
     {
         this.modelMgr = modelMgr;
+        this.modelListService = modelListService;
         this.parserService = parserService;
         this.modelStructureService = modelStructureService;
         this.persistenceService = persistenceService;
@@ -170,6 +172,12 @@ class ModelService : IModelService, IDisposable
         using (var model = modelMgr.UseModel())
         {
             path = model.Path;
+        }
+
+        if (!modelListService.IsLocalPath(path))
+        {
+            Log.Info("Not a local path", path);
+            return R.Ok;
         }
 
         if (!Try(out var e, await ParseAndUpdateAsync(path, true)))

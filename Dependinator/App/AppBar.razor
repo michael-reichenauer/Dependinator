@@ -7,7 +7,7 @@
 @inject Dependinator.Modeling.Models.IModelMgr modelMgr
 @inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
-@inject IModelListService recentModelsService
+@inject IModelListService modelListService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
@@ -40,6 +40,7 @@
         </MudMenuItem>
 
         <MudDivider />
+
         @foreach (string path in RecentModelPaths)
         {
             bool isCurrent = IsCurrentRecentModel(path);
@@ -49,11 +50,21 @@
             </MudMenuItem>
         }
 
+        <MudDivider />
+
+        <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled">
+            @foreach (var path in modelListService.LocalPaths)
+            {
+                <MudMenuItem IconColor="Color.Default" Icon="@Icons.Material.Outlined.Schema"
+                             OnClick="() => canvasService.LoadAsync(path)">
+                    @path
+                </MudMenuItem>
+            }
+        </MudMenu>
+
         @if (appCloudSyncService.IsAvailable)
         {
-            <MudDivider />
-
-            <MudMenu Label="Cloud Models" Disabled="@IsCloudModelsMenuDisabled">
+            <MudMenu Label=" Cloud Models" Disabled="@IsCloudModelsMenuDisabled">
                 @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
                 {
                     bool isCurrent = IsCurrentCloudModel(cloudModel);
@@ -64,6 +75,7 @@
                 }
             </MudMenu>
 
+            <MudDivider />
             @if (AuthState.IsAuthenticated)
             {
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="LogoutAsync">
@@ -160,31 +172,32 @@
     static readonly CloudIconInfo HasConflicts = new(Icons.Material.Outlined.SyncProblem, Color.Error);
     static readonly CloudIconInfo IsSynced = new(Icons.Material.Filled.CloudDone, Color.Success);
 
-    IReadOnlyList<string> RecentModelPaths => recentModelsService.ModelPaths;
+    IReadOnlyList<string> RecentModelPaths => modelListService.RecentModelPaths;
     string? CurrentRecentModelPath => RecentModelPaths.Count > 0 ? RecentModelPaths[0] : null;
     string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
     IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
     bool IsCloudModelsMenuDisabled => !AuthState.IsAuthenticated || CloudModels.Count == 0;
+    bool IsLocalModelsMenuDisabled => modelListService.LocalPaths.Count == 0;
     CloudSyncState CurrentCloudSyncState => appCloudSyncService.GetCloudSyncState();
     CloudIconInfo CurrentCloudIconInfo => GetCloudIconInfo(CurrentCloudSyncState);
     bool HasSyncConflicts => CurrentCloudSyncState is CloudSyncState.HasConflicts;
     CloudSyncState previousCloudSyncState = CloudSyncState.NotAvailable;
     string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
     string CloudStatusText =>
-        !appCloudSyncService.IsAvailable
-            ? "Cloud sync unavailable"
-            : AuthState.IsAuthenticated
-                ? $"Cloud signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}"
-                : "Cloud not signed in";
+    !appCloudSyncService.IsAvailable
+    ? "Cloud sync unavailable"
+                : AuthState.IsAuthenticated
+    ? $"Cloud signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}"
+    : "Cloud not signed in";
     string SyncDownPrompt =>
-        HasSyncConflicts
-            ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
-            : "Download the cloud copy and overwrite the local cached model?";
+    HasSyncConflicts
+    ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
+                : "Download the cloud copy and overwrite the local cached model?";
     string SyncDownPromptDetail =>
-        HasSyncConflicts
-            ? "Both the local cached model and the cloud copy have changed since the last sync."
-            : "The current local cached layout data will be replaced.";
+    HasSyncConflicts
+    ? "Both the local cached model and the cloud copy have changed since the last sync."
+                : "The current local cached layout data will be replaced.";
     string SyncStatusText => "";
 
     protected override void OnInitialized()
@@ -317,8 +330,8 @@
         }
 
         snackbar.Add(
-            $"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.",
-            Severity.Success
+        $"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.",
+        Severity.Success
         );
     }
 
@@ -338,8 +351,8 @@
     {
         CloudSyncState currentCloudSyncState = CurrentCloudSyncState;
         if (
-            currentCloudSyncState is CloudSyncState.HasConflicts
-            && previousCloudSyncState is not CloudSyncState.HasConflicts
+        currentCloudSyncState is CloudSyncState.HasConflicts
+        && previousCloudSyncState is not CloudSyncState.HasConflicts
         )
         {
             ShowSyncConflictSnackbar();
@@ -353,16 +366,16 @@
     void ShowSyncConflictSnackbar()
     {
         snackbar.Add(
-            "Cloud sync conflict detected. Choose Use Cloud or Keep Local.",
-            Severity.Error,
-            options =>
-            {
-                options.Action = "Resolve";
-                options.RequireInteraction = true;
-                options.OnClick = _ => InvokeAsync(ToggleCloudAuthAsync);
-            },
-            key: "cloud-sync-conflict"
-        );
+        "Cloud sync conflict detected. Choose Use Cloud or Keep Local.",
+        Severity.Error,
+        options =>
+        {
+            options.Action = "Resolve";
+            options.RequireInteraction = true;
+            options.OnClick = _ => InvokeAsync(ToggleCloudAuthAsync);
+        },
+        key: "cloud-sync-conflict"
+                );
     }
 
     void OnBackgroundSyncError(string errorMessage)
@@ -380,18 +393,18 @@
     bool IsCurrentRecentModel(string path) => string.Equals(path, CurrentRecentModelPath, StringComparison.Ordinal);
 
     bool IsCurrentCloudModel(global::Shared.CloudModelMetadata cloudModel) =>
-        string.Equals(
-            cloudModel.NormalizedPath,
-            CurrentCloudModelPath,
-            StringComparison.OrdinalIgnoreCase
-        );
+    string.Equals(
+    cloudModel.NormalizedPath,
+    CurrentCloudModelPath,
+    StringComparison.OrdinalIgnoreCase
+    );
 
     static string GetSyncStatusDescription(CloudSyncState state) =>
-        state switch
-        {
-            CloudSyncState.HasConflicts => "local and remote changes conflict",
-            CloudSyncState.HasLocalChanges => "local changes pending upload",
-            CloudSyncState.HasRemoteChanges => "remote changes pending download",
-            _ => "in sync",
-        };
+    state switch
+    {
+        CloudSyncState.HasConflicts => "local and remote changes conflict",
+        CloudSyncState.HasLocalChanges => "local changes pending upload",
+        CloudSyncState.HasRemoteChanges => "remote changes pending download",
+        _ => "in sync",
+    };
 }
