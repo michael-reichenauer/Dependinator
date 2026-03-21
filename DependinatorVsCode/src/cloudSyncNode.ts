@@ -51,7 +51,7 @@ export type CloudSyncBridge = {
 };
 
 const tokenSecretName = "dependinator.cloudSync.accessToken";
-const productionClerkDomain = "https://clerk.dependinator.com";
+const productionClerkDomain = "https://renewed-hen-98.clerk.accounts.dev";
 const callbackTimeoutMilliseconds = 5 * 60 * 1000;
 
 export function createCloudSyncBridge(context: vscode.ExtensionContext): CloudSyncBridge {
