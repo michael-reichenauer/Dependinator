@@ -11,15 +11,10 @@ public interface ICloudSyncUserProvider
 public sealed class CloudSyncUserProvider : ICloudSyncUserProvider
 {
     readonly ICloudSyncBearerTokenValidator bearerTokenValidator;
-    readonly IStaticWebAppsPrincipalParser principalParser;
 
-    public CloudSyncUserProvider(
-        ICloudSyncBearerTokenValidator bearerTokenValidator,
-        IStaticWebAppsPrincipalParser principalParser
-    )
+    public CloudSyncUserProvider(ICloudSyncBearerTokenValidator bearerTokenValidator)
     {
         this.bearerTokenValidator = bearerTokenValidator;
-        this.principalParser = principalParser;
     }
 
     public async Task<CloudUserInfo?> TryGetCurrentUserAsync(
@@ -27,10 +22,6 @@ public sealed class CloudSyncUserProvider : ICloudSyncUserProvider
         CancellationToken cancellationToken
     )
     {
-        CloudUserInfo? user = await bearerTokenValidator.TryGetCurrentUserAsync(request, cancellationToken);
-        if (user is not null)
-            return user;
-
-        return principalParser.TryGetCurrentUser(request);
+        return await bearerTokenValidator.TryGetCurrentUserAsync(request, cancellationToken);
     }
 }

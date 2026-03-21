@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Dependinator.Modeling.Dtos;
 using Microsoft.AspNetCore.Components;
@@ -12,39 +13,55 @@ sealed class HttpCloudSyncService : ICloudSyncService
 {
     readonly HttpClient httpClient;
     readonly NavigationManager navigationManager;
+    readonly IJSInterop jsInterop;
     readonly CloudSyncClientOptions options;
 
     public HttpCloudSyncService(
         HttpClient httpClient,
         NavigationManager navigationManager,
+        IJSInterop jsInterop,
         IOptions<CloudSyncClientOptions> options
     )
     {
         this.httpClient = httpClient;
         this.navigationManager = navigationManager;
+        this.jsInterop = jsInterop;
         this.options = options.Value;
     }
 
     // Returns true when cloud sync HTTP transport is enabled.
     public bool IsAvailable => options.Enabled;
 
-    // Starts browser auth flow by navigating to the configured login endpoint.
-
-    public Task<R<CloudAuthState>> LoginAsync()
+    // Starts Clerk sign-in flow by redirecting to Clerk hosted sign-in page.
+    public async Task<R<CloudAuthState>> LoginAsync()
     {
-        NavigateToAuthPath(options.LoginPath, "post_login_redirect_uri");
-        return Task.FromResult<R<CloudAuthState>>(
-            new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null)
-        );
+        try
+        {
+            string returnUrl = navigationManager.Uri;
+            await jsInterop.Call("clerkRedirectToSignIn", returnUrl);
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
+
+        return new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null);
     }
 
-    // Starts browser logout flow by navigating to the configured logout endpoint.
-    public Task<R<CloudAuthState>> LogoutAsync()
+    // Signs out via Clerk and redirects back to the current page.
+    public async Task<R<CloudAuthState>> LogoutAsync()
     {
-        NavigateToAuthPath(options.LogoutPath, "post_logout_redirect_uri");
-        return Task.FromResult<R<CloudAuthState>>(
-            new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null)
-        );
+        try
+        {
+            string returnUrl = navigationManager.Uri;
+            await jsInterop.Call("clerkSignOut", returnUrl);
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
+
+        return new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null);
     }
 
     // Reads authenticated user context from the API.
@@ -82,12 +99,17 @@ sealed class HttpCloudSyncService : ICloudSyncService
         return CloudModelSerializer.ReadModel(document);
     }
 
-    // Generic JSON helper for API calls with mapped error handling.
+    // Generic JSON helper for API calls with Bearer token from Clerk.
     async Task<R<T>> SendAsync<T>(HttpMethod method, string path, object? content = null)
     {
         try
         {
             using HttpRequestMessage request = new(method, BuildApiUri(path));
+
+            string? token = await GetClerkTokenAsync();
+            if (!string.IsNullOrWhiteSpace(token))
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             if (content is not null)
                 request.Content = JsonContent.Create(content);
 
@@ -110,16 +132,17 @@ sealed class HttpCloudSyncService : ICloudSyncService
         }
     }
 
-    // Redirects the browser to a server auth endpoint with a return-url query parameter.
-
-    void NavigateToAuthPath(string authPath, string redirectParameterName)
+    // Gets the current session JWT from Clerk via JS interop.
+    async Task<string?> GetClerkTokenAsync()
     {
-        if (string.IsNullOrWhiteSpace(authPath))
-            return;
-
-        string absoluteAuthPath = navigationManager.ToAbsoluteUri(authPath).ToString();
-        string redirectUri = Uri.EscapeDataString(navigationManager.Uri);
-        navigationManager.NavigateTo($"{absoluteAuthPath}?{redirectParameterName}={redirectUri}", forceLoad: true);
+        try
+        {
+            return await jsInterop.Call<string?>("clerkGetToken");
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     // Builds absolute API URI when a base address override is configured.

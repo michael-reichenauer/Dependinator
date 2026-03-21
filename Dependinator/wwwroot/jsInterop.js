@@ -312,6 +312,52 @@ export async function getDatabaseAllKeys(databaseName, collectionName) {
   return keys;
 }
 
+// --- Clerk authentication interop ---
+
+function getClerk() {
+  return window.Clerk ?? null;
+}
+
+export async function clerkIsLoaded() {
+  return getClerk() !== null && getClerk().loaded;
+}
+
+export async function clerkGetToken() {
+  const clerk = getClerk();
+  if (!clerk || !clerk.session)
+    return null;
+
+  return await clerk.session.getToken();
+}
+
+export async function clerkRedirectToSignIn(returnUrl) {
+  const clerk = getClerk();
+  if (!clerk)
+    return false;
+
+  await clerk.redirectToSignIn({ afterSignInUrl: returnUrl });
+  return true;
+}
+
+export async function clerkSignOut(returnUrl) {
+  const clerk = getClerk();
+  if (!clerk)
+    return false;
+
+  await clerk.signOut({ redirectUrl: returnUrl });
+  return true;
+}
+
+export async function clerkIsAuthenticated() {
+  const clerk = getClerk();
+  if (!clerk)
+    return false;
+
+  return !!clerk.user;
+}
+
+// --- End Clerk authentication interop ---
+
 export function initializeFileDropZone(dropZoneElement, inputFileElement) {
   function onDragHover(e) {
     e.preventDefault();
