@@ -314,46 +314,102 @@ export async function getDatabaseAllKeys(databaseName, collectionName) {
 
 // --- Clerk authentication interop ---
 
-function getClerk() {
-  return window.Clerk ?? null;
+// Waits for the Clerk global to exist and be fully loaded (up to 15 seconds).
+// The Clerk CDN script sets window.Clerk but it may not be .loaded yet.
+function waitForClerk(timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    function check() {
+      const c = window.Clerk;
+      if (c && c.loaded) return c;
+      // Clerk object exists but hasn't finished initializing yet
+      if (c && typeof c.load === "function") return null; // needs .load()
+      return null;
+    }
+
+    const ready = check();
+    if (ready) {
+      console.log("DEP: Clerk already loaded");
+      resolve(ready);
+      return;
+    }
+
+    const start = Date.now();
+    const interval = setInterval(async () => {
+      // If Clerk object exists but isn't loaded, try calling .load()
+      const c = window.Clerk;
+      if (c && !c.loaded && typeof c.load === "function") {
+        clearInterval(interval);
+        console.log("DEP: Clerk object found, calling .load()...");
+        try {
+          await c.load();
+          console.log("DEP: Clerk.load() completed, loaded:", c.loaded);
+          resolve(c);
+        } catch (err) {
+          console.error("DEP: Clerk.load() failed:", err);
+          reject(new Error("Clerk.load() failed: " + err.message));
+        }
+        return;
+      }
+
+      if (c && c.loaded) {
+        clearInterval(interval);
+        console.log("DEP: Clerk loaded via polling");
+        resolve(c);
+        return;
+      }
+
+      if (Date.now() - start > timeoutMs) {
+        clearInterval(interval);
+        console.error("DEP: Clerk.js did not load in time. window.Clerk =", window.Clerk);
+        reject(new Error("Clerk.js did not load in time."));
+      }
+    }, 200);
+  });
 }
 
 export async function clerkIsLoaded() {
-  return getClerk() !== null && getClerk().loaded;
+  const clerk = window.Clerk;
+  return clerk !== null && clerk !== undefined && clerk.loaded === true;
 }
 
 export async function clerkGetToken() {
-  const clerk = getClerk();
-  if (!clerk || !clerk.session)
+  try {
+    const clerk = await waitForClerk();
+    if (!clerk.session) {
+      console.log("DEP: clerkGetToken - no session");
+      return null;
+    }
+    const token = await clerk.session.getToken();
+    console.log("DEP: clerkGetToken - got token:", !!token);
+    return token;
+  } catch (err) {
+    console.error("DEP: clerkGetToken failed:", err);
     return null;
-
-  return await clerk.session.getToken();
+  }
 }
 
 export async function clerkRedirectToSignIn(returnUrl) {
-  const clerk = getClerk();
-  if (!clerk)
-    return false;
-
+  console.log("DEP: clerkRedirectToSignIn called, returnUrl:", returnUrl);
+  const clerk = await waitForClerk();
+  console.log("DEP: Clerk ready, calling redirectToSignIn...");
   await clerk.redirectToSignIn({ afterSignInUrl: returnUrl });
   return true;
 }
 
 export async function clerkSignOut(returnUrl) {
-  const clerk = getClerk();
-  if (!clerk)
-    return false;
-
+  console.log("DEP: clerkSignOut called");
+  const clerk = await waitForClerk();
   await clerk.signOut({ redirectUrl: returnUrl });
   return true;
 }
 
 export async function clerkIsAuthenticated() {
-  const clerk = getClerk();
-  if (!clerk)
+  try {
+    const clerk = await waitForClerk();
+    return !!clerk.user;
+  } catch {
     return false;
-
-  return !!clerk.user;
+  }
 }
 
 // --- End Clerk authentication interop ---
