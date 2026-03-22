@@ -37,7 +37,8 @@ type CloudModelDocument = {
 
 type CloudSyncConfig = {
     baseUrl: string;
-    clerkDomain: string;
+    clerkAccountsUrl: string;
+    clerkPublishableKey: string;
 };
 
 type JsonResponse<T> = {
@@ -51,7 +52,8 @@ export type CloudSyncBridge = {
 };
 
 const tokenSecretName = "dependinator.cloudSync.accessToken";
-const productionClerkDomain = "https://renewed-hen-98.clerk.accounts.dev";
+const productionClerkAccountsUrl = "https://renewed-hen-98.accounts.dev";
+const productionClerkPublishableKey = "pk_test_cmVuZXdlZC1oZW4tOTguY2xlcmsuYWNjb3VudHMuZGV2JA";
 const callbackTimeoutMilliseconds = 5 * 60 * 1000;
 
 export function createCloudSyncBridge(context: vscode.ExtensionContext): CloudSyncBridge {
@@ -197,8 +199,8 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
                 }
 
                 const port = address.port;
-                const callbackUrl = `http://127.0.0.1:${port}/callback`;
-                const signInUrl = `${configuration.clerkDomain}/sign-in?redirect_url=${encodeURIComponent(callbackUrl)}&state=${state}`;
+                const vsCodeCallbackUrl = `${configuration.baseUrl}?vscode_port=${port}&vscode_state=${encodeURIComponent(state)}`;
+                const signInUrl = `${configuration.clerkAccountsUrl}/sign-in?after_sign_in_url=${encodeURIComponent(vsCodeCallbackUrl)}`;
 
                 this.outputChannel.appendLine(`Dependinator: Opening browser for Clerk sign-in (callback on port ${port}).`);
                 await vscode.env.openExternal(vscode.Uri.parse(signInUrl));
@@ -310,9 +312,11 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
     readConfiguration(): CloudSyncConfig | undefined {
         const configuration = vscode.workspace.getConfiguration("dependinator");
         const baseUrl = this.normalizeUrl(configuration.get<string>("cloudSync.baseUrl"));
-        const clerkDomain = this.normalizeUrl(
-            configuration.get<string>("cloudSync.clerkDomain") || productionClerkDomain
-        );
+        const clerkAccountsUrl = (
+            configuration.get<string>("cloudSync.clerkAccountsUrl") || productionClerkAccountsUrl
+        ).replace(/\/+$/, "");
+        const clerkPublishableKey =
+            configuration.get<string>("cloudSync.clerkPublishableKey") || productionClerkPublishableKey;
         const configurationSource = this.getConfigurationSource(configuration);
         this.logConfigurationSource(configurationSource);
 
@@ -321,7 +325,8 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
 
         return {
             baseUrl,
-            clerkDomain: clerkDomain.replace(/\/+$/, "")
+            clerkAccountsUrl,
+            clerkPublishableKey
         };
     }
 

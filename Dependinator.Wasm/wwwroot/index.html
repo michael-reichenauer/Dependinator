@@ -36,13 +36,114 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-    <script src="_framework/blazor.webassembly.js"></script>
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script
         data-clerk-publishable-key="pk_test_cmVuZXdlZC1oZW4tOTguY2xlcmsuYWNjb3VudHMuZGV2JA"
         crossorigin="anonymous"
         src="https://renewed-hen-98.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
         async></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script>
+        // Startup dispatcher: handles three modes:
+        // 1. VS Code callback (vscode_port/vscode_state params) - extract token, redirect to localhost
+        // 2. Magic link redirect (dep-clerk-signin flag in localStorage) - show "close this tab", broadcast
+        // 3. Normal page load - start Blazor
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var port = params.get("vscode_port");
+            var state = params.get("vscode_state");
+
+            // --- Mode 1: VS Code callback ---
+            if (port && state) {
+                document.getElementById("app").innerHTML =
+                    "<div style='color:#ccc;font-family:sans-serif;text-align:center;margin-top:40vh;'>"
+                    + "<h2>Completing sign-in...</h2>"
+                    + "<p id='cb-status'>Waiting for authentication...</p></div>";
+
+                var start = Date.now();
+                var interval = setInterval(async function () {
+                    var c = window.Clerk;
+                    if (c && !c.loaded && typeof c.load === "function" && !c._loadCalled) {
+                        c._loadCalled = true;
+                        try { await c.load(); } catch (e) { /* will retry via polling */ }
+                    }
+                    if (c && c.loaded) {
+                        clearInterval(interval);
+                        if (!c.session) {
+                            document.getElementById("cb-status").textContent = "No session found. Please try signing in again.";
+                            return;
+                        }
+                        try {
+                            var token = await c.session.getToken();
+                            if (!token) {
+                                document.getElementById("cb-status").textContent = "Could not retrieve session token.";
+                                return;
+                            }
+                            document.getElementById("cb-status").textContent = "Redirecting back to VS Code...";
+                            window.location.href = "http://127.0.0.1:" + port + "/callback"
+                                + "?token=" + encodeURIComponent(token)
+                                + "&state=" + encodeURIComponent(state);
+                        } catch (e) {
+                            document.getElementById("cb-status").textContent = "Error: " + e.message;
+                        }
+                        return;
+                    }
+                    if (Date.now() - start > 20000) {
+                        clearInterval(interval);
+                        document.getElementById("cb-status").textContent = "Clerk did not load in time.";
+                    }
+                }, 200);
+                return;
+            }
+
+            // --- Mode 2: Magic link redirect (sign-in pending from another tab) ---
+            var signinPending = localStorage.getItem("dep-clerk-signin");
+            if (signinPending && (Date.now() - parseInt(signinPending, 10)) < 600000) {
+                document.getElementById("app").innerHTML =
+                    "<div style='color:#ccc;font-family:sans-serif;text-align:center;margin-top:40vh;'>"
+                    + "<h2>Completing sign-in...</h2>"
+                    + "<p id='ml-status'>Verifying...</p></div>";
+
+                var mlStart = Date.now();
+                var mlInterval = setInterval(async function () {
+                    var c = window.Clerk;
+                    if (c && !c.loaded && typeof c.load === "function" && !c._mlLoadCalled) {
+                        c._mlLoadCalled = true;
+                        try { await c.load(); } catch (e) { /* will retry */ }
+                    }
+                    if (c && c.loaded) {
+                        clearInterval(mlInterval);
+                        if (c.user || c.session) {
+                            // Sign-in confirmed - notify the original tab
+                            localStorage.removeItem("dep-clerk-signin");
+                            document.getElementById("ml-status").textContent =
+                                "Sign-in complete! You can close this tab.";
+                            try {
+                                var bc = new BroadcastChannel("dep-clerk-auth");
+                                bc.postMessage({ type: "signed-in" });
+                                bc.close();
+                            } catch (_) { }
+                        } else {
+                            // No session - this was a normal page load, start Blazor
+                            localStorage.removeItem("dep-clerk-signin");
+                            Blazor.start();
+                        }
+                        return;
+                    }
+                    if (Date.now() - mlStart > 15000) {
+                        clearInterval(mlInterval);
+                        // Timed out waiting for Clerk - fall back to normal Blazor
+                        localStorage.removeItem("dep-clerk-signin");
+                        Blazor.start();
+                    }
+                }, 200);
+                return;
+            }
+
+            // --- Mode 3: Normal page load ---
+            Blazor.start();
+        })();
+    </script>
 </body>
 
 </html>

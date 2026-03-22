@@ -388,18 +388,67 @@ export async function clerkGetToken() {
   }
 }
 
-export async function clerkRedirectToSignIn(returnUrl) {
-  console.log("DEP: clerkRedirectToSignIn called, returnUrl:", returnUrl);
+// Opens Clerk sign-in modal and waits for sign-in to complete (up to 5 minutes).
+// Magic links open a new tab; the new tab detects the localStorage flag, shows a
+// minimal page, and broadcasts sign-in completion. This tab reloads to pick up the session.
+export async function clerkSignIn() {
+  console.log("DEP: clerkSignIn called (modal)");
   const clerk = await waitForClerk();
-  console.log("DEP: Clerk ready, calling redirectToSignIn...");
-  await clerk.redirectToSignIn({ afterSignInUrl: returnUrl });
-  return true;
+  if (clerk.user) return true;
+
+  // Set flag so the magic-link redirect tab shows a minimal page instead of full WASM
+  localStorage.setItem("dep-clerk-signin", Date.now().toString());
+
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    function complete(success, reload) {
+      if (resolved) return;
+      resolved = true;
+      clearInterval(pollInterval);
+      try { bc.close(); } catch (_) { }
+      try { clerk.closeSignIn(); } catch (_) { }
+      localStorage.removeItem("dep-clerk-signin");
+      console.log("DEP: clerkSignIn resolved:", success, "reload:", !!reload);
+      if (reload) {
+        window.location.reload();
+      } else {
+        resolve(success);
+      }
+    }
+
+    // Listen for broadcast from the magic-link redirect tab
+    const bc = new BroadcastChannel("dep-clerk-auth");
+    bc.onmessage = (event) => {
+      if (event.data?.type === "signed-in") {
+        console.log("DEP: Sign-in detected via BroadcastChannel");
+        complete(true, true);
+      }
+    };
+
+    // Also poll clerk.user as fallback (e.g. if sign-in completes in same tab)
+    const pollInterval = setInterval(() => {
+      if (clerk.user) {
+        console.log("DEP: Sign-in detected via polling");
+        complete(true, false);
+      }
+    }, 1000);
+
+    // Open the modal sign-in UI
+    clerk.openSignIn({});
+
+    // Timeout after 5 minutes
+    setTimeout(() => {
+      console.log("DEP: Clerk sign-in timed out");
+      complete(false, false);
+    }, 300000);
+  });
 }
 
-export async function clerkSignOut(returnUrl) {
+export async function clerkSignOut() {
   console.log("DEP: clerkSignOut called");
   const clerk = await waitForClerk();
-  await clerk.signOut({ redirectUrl: returnUrl });
+  await clerk.signOut();
   return true;
 }
 

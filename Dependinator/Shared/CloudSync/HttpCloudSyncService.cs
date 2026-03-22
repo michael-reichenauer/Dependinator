@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Dependinator.Modeling.Dtos;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using Shared;
 
@@ -12,19 +11,12 @@ namespace Dependinator.Shared.CloudSync;
 sealed class HttpCloudSyncService : ICloudSyncService
 {
     readonly HttpClient httpClient;
-    readonly NavigationManager navigationManager;
     readonly IJSInterop jsInterop;
     readonly CloudSyncClientOptions options;
 
-    public HttpCloudSyncService(
-        HttpClient httpClient,
-        NavigationManager navigationManager,
-        IJSInterop jsInterop,
-        IOptions<CloudSyncClientOptions> options
-    )
+    public HttpCloudSyncService(HttpClient httpClient, IJSInterop jsInterop, IOptions<CloudSyncClientOptions> options)
     {
         this.httpClient = httpClient;
-        this.navigationManager = navigationManager;
         this.jsInterop = jsInterop;
         this.options = options.Value;
     }
@@ -32,29 +24,29 @@ sealed class HttpCloudSyncService : ICloudSyncService
     // Returns true when cloud sync HTTP transport is enabled.
     public bool IsAvailable => options.Enabled;
 
-    // Starts Clerk sign-in flow by redirecting to Clerk hosted sign-in page.
+    // Opens Clerk sign-in modal and waits for the user to complete sign-in.
     public async Task<R<CloudAuthState>> LoginAsync()
     {
         try
         {
-            string returnUrl = navigationManager.Uri;
-            await jsInterop.Call("clerkRedirectToSignIn", returnUrl);
+            bool success = await jsInterop.Call<bool>("clerkSignIn");
+            if (!success)
+                return R.Error("Sign-in was canceled or timed out.");
+
+            return await GetAuthStateAsync();
         }
         catch (Exception ex)
         {
             return R.Error(ex);
         }
-
-        return new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null);
     }
 
-    // Signs out via Clerk and redirects back to the current page.
+    // Signs out via Clerk.
     public async Task<R<CloudAuthState>> LogoutAsync()
     {
         try
         {
-            string returnUrl = navigationManager.Uri;
-            await jsInterop.Call("clerkSignOut", returnUrl);
+            await jsInterop.Call("clerkSignOut");
         }
         catch (Exception ex)
         {
