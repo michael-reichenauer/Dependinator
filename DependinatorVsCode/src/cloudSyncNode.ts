@@ -154,39 +154,50 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
                     return;
 
                 const url = new URL(req.url ?? "/", `http://localhost`);
-                if (url.pathname !== "/callback") {
-                    res.writeHead(404);
-                    res.end("Not found");
+
+                // Serve the self-contained Clerk sign-in page
+                if (url.pathname === "/") {
+                    const address = server.address();
+                    const port = typeof address === "object" && address ? address.port : 0;
+                    res.writeHead(200, { "Content-Type": "text/html" });
+                    res.end(this.buildSignInPageHtml(port, state, configuration));
                     return;
                 }
 
-                const receivedState = url.searchParams.get("state");
-                const token = url.searchParams.get("token");
+                // Handle the token callback
+                if (url.pathname === "/callback") {
+                    const receivedState = url.searchParams.get("state");
+                    const token = url.searchParams.get("token");
 
-                if (receivedState !== state) {
-                    res.writeHead(400);
-                    res.end("Invalid state parameter.");
+                    if (receivedState !== state) {
+                        res.writeHead(400);
+                        res.end("Invalid state parameter.");
+                        return;
+                    }
+
+                    if (!token) {
+                        res.writeHead(400);
+                        res.end("No token received.");
+                        return;
+                    }
+
+                    settled = true;
+                    res.writeHead(200, { "Content-Type": "text/html" });
+                    res.end(`
+                        <html><body style="background:#1e1e1e;color:#ccc;font-family:sans-serif;text-align:center;margin-top:40vh;">
+                        <h2>Dependinator sign-in successful!</h2>
+                        <p>You can close this tab and return to VS Code.</p>
+                        <script>window.close();</script>
+                        </body></html>
+                    `);
+
+                    server.close();
+                    resolve(token);
                     return;
                 }
 
-                if (!token) {
-                    res.writeHead(400);
-                    res.end("No token received.");
-                    return;
-                }
-
-                settled = true;
-                res.writeHead(200, { "Content-Type": "text/html" });
-                res.end(`
-                    <html><body>
-                    <h2>Dependinator sign-in successful!</h2>
-                    <p>You can close this tab and return to VS Code.</p>
-                    <script>window.close();</script>
-                    </body></html>
-                `);
-
-                server.close();
-                resolve(token);
+                res.writeHead(404);
+                res.end("Not found");
             });
 
             server.listen(0, "127.0.0.1", async () => {
@@ -199,11 +210,8 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
                 }
 
                 const port = address.port;
-                const vsCodeCallbackUrl = `${configuration.baseUrl}?vscode_port=${port}&vscode_state=${encodeURIComponent(state)}`;
-                const signInUrl = `${configuration.clerkAccountsUrl}/sign-in?after_sign_in_url=${encodeURIComponent(vsCodeCallbackUrl)}`;
-
                 this.outputChannel.appendLine(`Dependinator: Opening browser for Clerk sign-in (callback on port ${port}).`);
-                await vscode.env.openExternal(vscode.Uri.parse(signInUrl));
+                await vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:${port}/`));
             });
 
             setTimeout(() => {
@@ -221,6 +229,93 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
                 }
             });
         });
+    }
+
+    buildSignInPageHtml(port: number, state: string, configuration: CloudSyncConfig): string {
+        const clerkCdnBase = configuration.clerkAccountsUrl.replace(".accounts.", ".clerk.accounts.");
+        const clerkJsUrl = `${clerkCdnBase}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`;
+
+        return `<!DOCTYPE html>
+<html>
+<head>
+    <title>Dependinator — Sign In</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script
+        data-clerk-publishable-key="${configuration.clerkPublishableKey}"
+        crossorigin="anonymous"
+        src="${clerkJsUrl}"
+        async></script>
+</head>
+<body style="background:#1e1e1e;color:#ccc;font-family:sans-serif;margin:0;">
+    <div id="app" style="display:flex;justify-content:center;align-items:center;min-height:100vh;">
+        <p>Loading sign-in...</p>
+    </div>
+    <script>
+        var PORT = ${port};
+        var STATE = ${JSON.stringify(state)};
+
+        function redirectToCallback(token) {
+            window.location.href = "http://127.0.0.1:" + PORT + "/callback"
+                + "?token=" + encodeURIComponent(token)
+                + "&state=" + encodeURIComponent(STATE);
+        }
+
+        (async function () {
+            // Wait for Clerk to load
+            var start = Date.now();
+            while (true) {
+                var c = window.Clerk;
+                if (c && c.loaded) break;
+                if (c && !c.loaded && typeof c.load === "function") {
+                    try { await c.load(); break; } catch (e) { }
+                }
+                if (Date.now() - start > 20000) {
+                    document.getElementById("app").innerHTML =
+                        "<p>Failed to load sign-in service. Please try again.</p>";
+                    return;
+                }
+                await new Promise(function (r) { setTimeout(r, 200); });
+            }
+
+            var clerk = window.Clerk;
+
+            // If already signed in, get token and redirect immediately
+            if (clerk.session) {
+                try {
+                    var token = await clerk.session.getToken();
+                    if (token) { redirectToCallback(token); return; }
+                } catch (e) { }
+            }
+
+            // Mount the Clerk sign-in component
+            var appEl = document.getElementById("app");
+            appEl.innerHTML = "<div id='clerk-signin'></div>";
+            clerk.mountSignIn(document.getElementById("clerk-signin"));
+
+            // Detect sign-in completion via listener
+            clerk.addListener(async function (resources) {
+                if (resources.user && clerk.session) {
+                    try {
+                        var token = await clerk.session.getToken();
+                        if (token) redirectToCallback(token);
+                    } catch (e) { }
+                }
+            });
+
+            // Poll as fallback for cross-tab magic link completion
+            setInterval(async function () {
+                if (clerk.user && clerk.session) {
+                    try {
+                        var token = await clerk.session.getToken();
+                        if (token) redirectToCallback(token);
+                    } catch (e) { }
+                }
+            }, 1000);
+        })();
+    </script>
+</body>
+</html>`;
     }
 
     async logoutAsync(): Promise<CloudAuthState> {
