@@ -49,19 +49,22 @@
                         "https://dependinator.com",
                         "https://polite-island-0e6a6eb03-dev.westeurope.4.azurestaticapps.net",
                         "http://localhost:4280",
-                        "http://127.0.0.1:5000"
+                        "http://127.0.0.1:5000",
+                        "http://127.0.0.1:7071"
                     ],
                     "enumItemLabels": [
                         "Production",
                         "Dev",
                         "Local (SWA CLI)",
-                        "Local (Functions)"
+                        "Local (run-sync)",
+                        "Local (watch-sync)"
                     ],
                     "enumDescriptions": [
                         "Uses the production Dependinator cloud sync service.",
                         "Uses the deployed development Azure Static Web Apps environment.",
-                        "Uses the local SWA CLI (run-sync) on port 4280.",
-                        "Uses the local Azure Functions host directly on port 5000."
+                        "Uses the local SWA CLI on port 4280.",
+                        "Uses run-sync (SWA CLI on port 5000, proxies API to Functions).",
+                        "Uses watch-sync (Functions host directly on port 7071)."
                     ],
                     "default": "https://dependinator.com",
                     "description": "Base URL for the Dependinator cloud sync API. Sign-in is handled separately by the extension."

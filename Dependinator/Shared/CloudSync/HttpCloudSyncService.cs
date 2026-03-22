@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Dependinator.Modeling.Dtos;
 using Microsoft.Extensions.Options;
 using Shared;
@@ -103,7 +104,14 @@ sealed class HttpCloudSyncService : ICloudSyncService
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             if (content is not null)
-                request.Content = JsonContent.Create(content);
+            {
+                byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(content, content.GetType());
+                request.Content = new ByteArrayContent(jsonBytes);
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json")
+                {
+                    CharSet = "utf-8",
+                };
+            }
 
             using HttpResponseMessage response = await httpClient.SendAsync(request);
             if (response.IsSuccessStatusCode)

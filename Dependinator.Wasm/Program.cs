@@ -23,14 +23,17 @@ internal class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
         builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-        builder
-            .Services.AddOptions<CloudSyncClientOptions>()
-            .Bind(builder.Configuration.GetSection(CloudSyncClientOptions.SectionName));
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddDependinatorBrowserSourceParser();
         builder.Services.AddSingleton<IHostFileSystem, BrowserHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
         builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Core.RootClass));
+
+        // Cloud sync — registered after AddDependinatorServices so the explicit
+        // ICloudSyncService binding overrides Scrutor's assembly-scanned defaults.
+        builder
+            .Services.AddOptions<CloudSyncClientOptions>()
+            .Bind(builder.Configuration.GetSection(CloudSyncClientOptions.SectionName));
         builder.Services.AddScoped<HttpCloudSyncService>();
         builder.Services.AddScoped<ICloudSyncService, HybridCloudSyncService>();
 

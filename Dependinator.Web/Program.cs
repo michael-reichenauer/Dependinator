@@ -5,6 +5,7 @@ using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using Dependinator.Roslyn;
 using Dependinator.Shared;
+using Dependinator.Shared.CloudSync;
 
 namespace Dependinator.Web;
 
@@ -36,6 +37,14 @@ public class Program
             });
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddDependinatorRoslynServices();
+
+        // Cloud sync — registered after AddDependinatorServices so the explicit
+        // ICloudSyncService binding overrides Scrutor's assembly-scanned defaults.
+        builder
+            .Services.AddOptions<CloudSyncClientOptions>()
+            .Bind(builder.Configuration.GetSection(CloudSyncClientOptions.SectionName));
+        builder.Services.AddHttpClient<HttpCloudSyncService>();
+        builder.Services.AddScoped<ICloudSyncService, HybridCloudSyncService>();
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
         builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Core.RootClass));

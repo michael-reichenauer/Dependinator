@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Starts Azurite + Azure Functions host in the background, then runs
+# `dotnet watch` on the Blazor Server project with cloud sync enabled.
+
+set -euo pipefail
+
+api_dir="./Api"
+azurite_dir="./.azurite"
+local_settings="$api_dir/local.settings.json"
+local_settings_example="$api_dir/local.settings.example.json"
+azurite_pid=""
+func_pid=""
+
+port_is_open() {
+    bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
+}
+
+cleanup() {
+    if [[ -n "$azurite_pid" ]] && kill -0 "$azurite_pid" 2>/dev/null; then
+        kill "$azurite_pid" 2>/dev/null || true
+    fi
+    if [[ -n "$func_pid" ]] && kill -0 "$func_pid" 2>/dev/null; then
+        kill "$func_pid" 2>/dev/null || true
+    fi
+}
+
+trap cleanup EXIT INT TERM
+
+# Seed local settings from the checked-in example if the local file is missing.
+if [[ ! -f "$local_settings" && -f "$local_settings_example" ]]; then
+    cp "$local_settings_example" "$local_settings"
+fi
+
+if ! command -v func >/dev/null 2>&1; then
+    echo "Azure Functions Core Tools ('func') is required." >&2
+    echo "Install it from https://learn.microsoft.com/azure/azure-functions/functions-run-local" >&2
+    exit 1
+fi
+
+mkdir -p "$azurite_dir"
+
+# Start Azurite in the background.
+if command -v azurite >/dev/null 2>&1; then
+    azurite --silent --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
+else
+    npx --yes azurite --silent --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
+fi
+azurite_pid="$!"
+
+# Start the Azure Functions host on port 7071.
+(
+    cd "$api_dir"
+    func start --port 7071
+) &
+func_pid="$!"
+
+# Wait up to 60 seconds for the Functions host.
+for _ in $(seq 1 120); do
+    if port_is_open 7071; then
+        break
+    fi
+    sleep 0.5
+done
+
+if ! port_is_open 7071; then
+    echo "Azure Functions host did not start on port 7071." >&2
+    exit 1
+fi
+
+# Run dotnet watch on the Blazor Server project.
+export DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
+export DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1
+dotnet watch --project ./Dependinator.Web/Dependinator.Web.csproj
