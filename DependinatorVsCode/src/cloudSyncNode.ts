@@ -283,7 +283,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             // If already signed in, get token and redirect immediately
             if (clerk.session) {
                 try {
-                    var token = await clerk.session.getToken();
+                    var token = await clerk.session.getToken({ template: 'vscode' });
                     if (token) { redirectToCallback(token); return; }
                 } catch (e) { }
             }
@@ -297,7 +297,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             clerk.addListener(async function (resources) {
                 if (resources.user && clerk.session) {
                     try {
-                        var token = await clerk.session.getToken();
+                        var token = await clerk.session.getToken({ template: 'vscode' });
                         if (token) redirectToCallback(token);
                     } catch (e) { }
                 }
@@ -307,7 +307,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             setInterval(async function () {
                 if (clerk.user && clerk.session) {
                     try {
-                        var token = await clerk.session.getToken();
+                        var token = await clerk.session.getToken({ template: 'vscode' });
                         if (token) redirectToCallback(token);
                     } catch (e) { }
                 }
