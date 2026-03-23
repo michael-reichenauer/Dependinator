@@ -82,14 +82,15 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
         }
     }
 
+    static readonly HttpClient jwksHttpClient = new();
+
     async Task<JsonWebKeySet> GetSigningKeysAsync(CancellationToken cancellationToken)
     {
         if (cachedKeySet is not null && DateTime.UtcNow < cachedKeySetExpiry)
             return cachedKeySet;
 
         string jwksUrl = $"{options.ClerkIssuer!.TrimEnd('/')}/.well-known/jwks.json";
-        using HttpClient httpClient = new();
-        string jwksJson = await httpClient.GetStringAsync(jwksUrl, cancellationToken);
+        string jwksJson = await jwksHttpClient.GetStringAsync(jwksUrl, cancellationToken);
         cachedKeySet = new JsonWebKeySet(jwksJson);
         cachedKeySetExpiry = DateTime.UtcNow.AddHours(1);
         return cachedKeySet;

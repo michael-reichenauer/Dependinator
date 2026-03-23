@@ -13,10 +13,4 @@ public sealed class CloudSyncClientOptions
 
     // Clerk publishable key for frontend authentication.
     public string? ClerkPublishableKey { get; init; }
-
-    // Clerk sign-in page URL used for login redirection.
-    public string LoginPath { get; init; } = "";
-
-    // Clerk sign-out URL used for logout redirection.
-    public string LogoutPath { get; init; } = "";
 }

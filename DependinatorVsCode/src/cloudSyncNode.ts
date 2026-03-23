@@ -255,7 +255,10 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
         var PORT = ${port};
         var STATE = ${JSON.stringify(state)};
 
+        var redirected = false;
         function redirectToCallback(token) {
+            if (redirected) return;
+            redirected = true;
             window.location.href = "http://127.0.0.1:" + PORT + "/callback"
                 + "?token=" + encodeURIComponent(token)
                 + "&state=" + encodeURIComponent(STATE);
