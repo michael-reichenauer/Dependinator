@@ -38,6 +38,7 @@ dotnet build Dependinator.sln
 ./watch                                        # dotnet watch for Dependinator.Web (live dev)
 ./run                                          # publish Wasm in Release + serve via SWA CLI
 ./run-sync                                     # Wasm + Azurite + Functions host + SWA CLI
+./watch-sync                                   # Blazor Server + Azurite + Functions host
 
 # Test
 dotnet test Dependinator.sln                   # all tests
@@ -61,6 +62,7 @@ dotnet list Dependinator.sln package --vulnerable
 ```
 
 `./run-sync` requires `func` (Azure Functions Core Tools), `azurite`, and `swa` (SWA CLI) to be installed.
+`./watch-sync` requires `func` and `azurite` (no SWA CLI needed).
 
 ## Tooling & Conventions
 
@@ -73,11 +75,11 @@ dotnet list Dependinator.sln package --vulnerable
 
 **Parsing pipeline:** `Dependinator.Core/Parsing/` orchestrates via `ParserService`. Roslyn-specific logic lives in `Dependinator.Roslyn/Parsing/`.
 
-**Cloud sync — two auth paths:**
-- Browser/SWA: SWA session auth via `/.auth/...` and `x-ms-client-principal`
-- VS Code extension host: bearer-token auth via `X-Dependinator-Authorization` header
+**Cloud sync auth:** All hosts use Clerk for authentication. The API validates Clerk-issued JWTs via JWKS. Browser hosts (Blazor Server and WASM) use Clerk.js for sign-in and attach Bearer tokens to API requests. The VS Code extension serves a local sign-in page with Clerk.js and stores the JWT in VS Code secrets. All API calls use Bearer tokens via the `Authorization` or `X-Dependinator-Authorization` header.
 
 **Wasm cloud sync routing:** the browser-hosted `Dependinator.Wasm` calls `/api` directly; the VS Code-hosted `Dependinator.Wasm` routes cloud sync through the extension host (`DependinatorVsCode/src/cloudSyncNode.ts`), not through the LSP.
+
+**VS Code extension cloud sync:** the extension serves a self-contained Clerk sign-in page from a local HTTP callback server. The `dependinator.cloudSync.baseUrl` setting controls which API endpoint is used (production, SWA CLI, or Functions direct).
 
 **VS Code extension:** when editing functionality used by the extension, check `DependinatorVsCode/scripts/` for corresponding build steps.
 
