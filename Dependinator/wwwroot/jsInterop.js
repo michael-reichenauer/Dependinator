@@ -379,7 +379,7 @@ export async function clerkGetToken() {
       console.log("DEP: clerkGetToken - no session");
       return null;
     }
-    const token = await clerk.session.getToken();
+    const token = await clerk.session.getToken({ template: 'dependinator' });
     console.log("DEP: clerkGetToken - got token:", !!token);
     return token;
   } catch (err) {
