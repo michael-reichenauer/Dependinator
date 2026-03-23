@@ -36,8 +36,71 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script
+        data-clerk-publishable-key="pk_test_cmVuZXdlZC1oZW4tOTguY2xlcmsuYWNjb3VudHMuZGV2JA"
+        crossorigin="anonymous"
+        src="https://renewed-hen-98.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+        async></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script>
+        // Startup dispatcher — two page-load modes:
+        //
+        // Mode 1 — Magic-link redirect (dep-clerk-signin flag in localStorage)
+        //   The tab opened by clicking the magic link email for standalone WASM.
+        //   Broadcasts sign-in completion to the original tab.
+        //
+        // Mode 2 — Normal page load → Blazor.start()
+        //
+        // Note: VS Code extension sign-in is handled entirely by the extension's
+        // own local HTTP server (cloudSyncNode.ts) and does not use this page.
+
+        (function () {
+            // ── Mode 1: Magic-link redirect (standalone WASM) ──
+            var signinPending = localStorage.getItem("dep-clerk-signin");
+            if (signinPending && (Date.now() - parseInt(signinPending, 10)) < 600000) {
+                document.getElementById("app").innerHTML =
+                    "<div style='color:#ccc;font-family:sans-serif;text-align:center;margin-top:40vh;'>"
+                    + "<p>Completing sign-in...</p></div>";
+
+                var start = Date.now();
+                var iv = setInterval(async function () {
+                    var c = window.Clerk;
+                    if (c && !c.loaded && typeof c.load === "function" && !c._bootCalled) {
+                        c._bootCalled = true;
+                        try { await c.load(); } catch (_) { }
+                    }
+                    if (c && c.loaded) {
+                        clearInterval(iv);
+                        if (c.user || c.session) {
+                            localStorage.removeItem("dep-clerk-signin");
+                            document.getElementById("app").innerHTML =
+                                "<div style='color:#ccc;font-family:sans-serif;text-align:center;margin-top:40vh;'>"
+                                + "<p>Sign-in complete! You can close this tab.</p></div>";
+                            try {
+                                var bc = new BroadcastChannel("dep-clerk-auth");
+                                bc.postMessage({ type: "signed-in" });
+                                bc.close();
+                            } catch (_) { }
+                        } else {
+                            localStorage.removeItem("dep-clerk-signin");
+                            Blazor.start();
+                        }
+                        return;
+                    }
+                    if (Date.now() - start > 15000) {
+                        clearInterval(iv);
+                        localStorage.removeItem("dep-clerk-signin");
+                        Blazor.start();
+                    }
+                }, 200);
+                return;
+            }
+
+            // ── Mode 2: Normal page load ──
+            Blazor.start();
+        })();
+    </script>
 </body>
 
 </html>

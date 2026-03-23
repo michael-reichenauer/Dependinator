@@ -312,6 +312,157 @@ export async function getDatabaseAllKeys(databaseName, collectionName) {
   return keys;
 }
 
+// --- Clerk authentication interop ---
+
+// Waits for the Clerk global to exist and be fully loaded (up to 15 seconds).
+// The Clerk CDN script sets window.Clerk but it may not be .loaded yet.
+function waitForClerk(timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    function check() {
+      const c = window.Clerk;
+      if (c && c.loaded) return c;
+      // Clerk object exists but hasn't finished initializing yet
+      if (c && typeof c.load === "function") return null; // needs .load()
+      return null;
+    }
+
+    const ready = check();
+    if (ready) {
+      console.log("DEP: Clerk already loaded");
+      resolve(ready);
+      return;
+    }
+
+    const start = Date.now();
+    const interval = setInterval(async () => {
+      // If Clerk object exists but isn't loaded, try calling .load()
+      const c = window.Clerk;
+      if (c && !c.loaded && typeof c.load === "function") {
+        clearInterval(interval);
+        console.log("DEP: Clerk object found, calling .load()...");
+        try {
+          await c.load();
+          console.log("DEP: Clerk.load() completed, loaded:", c.loaded);
+          resolve(c);
+        } catch (err) {
+          console.error("DEP: Clerk.load() failed:", err);
+          reject(new Error("Clerk.load() failed: " + err.message));
+        }
+        return;
+      }
+
+      if (c && c.loaded) {
+        clearInterval(interval);
+        console.log("DEP: Clerk loaded via polling");
+        resolve(c);
+        return;
+      }
+
+      if (Date.now() - start > timeoutMs) {
+        clearInterval(interval);
+        console.error("DEP: Clerk.js did not load in time. window.Clerk =", window.Clerk);
+        reject(new Error("Clerk.js did not load in time."));
+      }
+    }, 200);
+  });
+}
+
+export async function clerkIsLoaded() {
+  const clerk = window.Clerk;
+  return clerk !== null && clerk !== undefined && clerk.loaded === true;
+}
+
+export async function clerkGetToken() {
+  try {
+    const clerk = await waitForClerk();
+    if (!clerk.session) {
+      console.log("DEP: clerkGetToken - no session");
+      return null;
+    }
+    const token = await clerk.session.getToken({ template: 'dependinator' });
+    console.log("DEP: clerkGetToken - got token:", !!token);
+    return token;
+  } catch (err) {
+    console.error("DEP: clerkGetToken failed:", err);
+    return null;
+  }
+}
+
+// Opens Clerk sign-in modal and waits for sign-in to complete (up to 5 minutes).
+// Magic links open a new tab; the new tab detects the localStorage flag, shows a
+// minimal page, and broadcasts sign-in completion. This tab reloads to pick up the session.
+export async function clerkSignIn() {
+  console.log("DEP: clerkSignIn called (modal)");
+  const clerk = await waitForClerk();
+  if (clerk.user) return true;
+
+  // Set flag so the magic-link redirect tab shows a minimal page instead of full WASM
+  localStorage.setItem("dep-clerk-signin", Date.now().toString());
+
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    function complete(success, reload) {
+      if (resolved) return;
+      resolved = true;
+      clearInterval(pollInterval);
+      try { bc.close(); } catch (_) { }
+      try { clerk.closeSignIn(); } catch (_) { }
+      localStorage.removeItem("dep-clerk-signin");
+      console.log("DEP: clerkSignIn resolved:", success, "reload:", !!reload);
+      if (reload) {
+        window.location.reload();
+      } else {
+        resolve(success);
+      }
+    }
+
+    // Listen for broadcast from the magic-link redirect tab
+    const bc = new BroadcastChannel("dep-clerk-auth");
+    bc.onmessage = (event) => {
+      if (event.data?.type === "signed-in") {
+        console.log("DEP: Sign-in detected via BroadcastChannel");
+        complete(true, true);
+      }
+    };
+
+    // Also poll clerk.user as fallback (e.g. if sign-in completes in same tab)
+    const pollInterval = setInterval(() => {
+      if (clerk.user) {
+        console.log("DEP: Sign-in detected via polling");
+        complete(true, false);
+      }
+    }, 1000);
+
+    // Open the modal sign-in UI
+    clerk.openSignIn({});
+
+    // Timeout after 5 minutes
+    setTimeout(() => {
+      console.log("DEP: Clerk sign-in timed out");
+      complete(false, false);
+    }, 300000);
+  });
+}
+
+export async function clerkSignOut() {
+  console.log("DEP: clerkSignOut called");
+  const clerk = await waitForClerk();
+  await clerk.signOut();
+  return true;
+}
+
+export async function clerkIsAuthenticated() {
+  try {
+    const clerk = await waitForClerk();
+    return !!clerk.user;
+  } catch {
+    return false;
+  }
+}
+
+// --- End Clerk authentication interop ---
+
 export function initializeFileDropZone(dropZoneElement, inputFileElement) {
   function onDragHover(e) {
     e.preventDefault();

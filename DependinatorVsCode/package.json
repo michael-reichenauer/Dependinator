@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.5.21",
+    "version": "0.5.22",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
@@ -48,20 +48,26 @@
                     "enum": [
                         "https://dependinator.com",
                         "https://polite-island-0e6a6eb03-dev.westeurope.4.azurestaticapps.net",
-                        "http://127.0.0.1:5000"
+                        "http://localhost:4280",
+                        "http://127.0.0.1:5000",
+                        "http://127.0.0.1:7071"
                     ],
                     "enumItemLabels": [
                         "Production",
                         "Dev",
-                        "Local"
+                        "Local (SWA CLI)",
+                        "Local (run-sync)",
+                        "Local (watch-sync)"
                     ],
                     "enumDescriptions": [
                         "Uses the production Dependinator cloud sync service.",
                         "Uses the deployed development Azure Static Web Apps environment.",
-                        "Uses the local Azure Functions host for development."
+                        "Uses the local SWA CLI on port 4280.",
+                        "Uses run-sync (SWA CLI on port 5000, proxies API to Functions).",
+                        "Uses watch-sync (Functions host directly on port 7071)."
                     ],
                     "default": "https://dependinator.com",
-                    "description": "Base URL for the Dependinator cloud sync site. Select the production, dev, or local endpoint."
+                    "description": "Base URL for the Dependinator cloud sync API. Sign-in is handled separately by the extension."
                 }
             }
         }

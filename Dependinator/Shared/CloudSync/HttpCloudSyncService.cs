@@ -1,7 +1,8 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Dependinator.Modeling.Dtos;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using Shared;
 
@@ -11,40 +12,49 @@ namespace Dependinator.Shared.CloudSync;
 sealed class HttpCloudSyncService : ICloudSyncService
 {
     readonly HttpClient httpClient;
-    readonly NavigationManager navigationManager;
+    readonly IJSInterop jsInterop;
     readonly CloudSyncClientOptions options;
 
-    public HttpCloudSyncService(
-        HttpClient httpClient,
-        NavigationManager navigationManager,
-        IOptions<CloudSyncClientOptions> options
-    )
+    public HttpCloudSyncService(HttpClient httpClient, IJSInterop jsInterop, IOptions<CloudSyncClientOptions> options)
     {
         this.httpClient = httpClient;
-        this.navigationManager = navigationManager;
+        this.jsInterop = jsInterop;
         this.options = options.Value;
     }
 
     // Returns true when cloud sync HTTP transport is enabled.
     public bool IsAvailable => options.Enabled;
 
-    // Starts browser auth flow by navigating to the configured login endpoint.
-
-    public Task<R<CloudAuthState>> LoginAsync()
+    // Opens Clerk sign-in modal and waits for the user to complete sign-in.
+    public async Task<R<CloudAuthState>> LoginAsync()
     {
-        NavigateToAuthPath(options.LoginPath, "post_login_redirect_uri");
-        return Task.FromResult<R<CloudAuthState>>(
-            new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null)
-        );
+        try
+        {
+            bool success = await jsInterop.Call<bool>("clerkSignIn");
+            if (!success)
+                return R.Error("Sign-in was canceled or timed out.");
+
+            return await GetAuthStateAsync();
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
     }
 
-    // Starts browser logout flow by navigating to the configured logout endpoint.
-    public Task<R<CloudAuthState>> LogoutAsync()
+    // Signs out via Clerk.
+    public async Task<R<CloudAuthState>> LogoutAsync()
     {
-        NavigateToAuthPath(options.LogoutPath, "post_logout_redirect_uri");
-        return Task.FromResult<R<CloudAuthState>>(
-            new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null)
-        );
+        try
+        {
+            await jsInterop.Call("clerkSignOut");
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
+
+        return new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null);
     }
 
     // Reads authenticated user context from the API.
@@ -82,14 +92,26 @@ sealed class HttpCloudSyncService : ICloudSyncService
         return CloudModelSerializer.ReadModel(document);
     }
 
-    // Generic JSON helper for API calls with mapped error handling.
+    // Generic JSON helper for API calls with Bearer token from Clerk.
     async Task<R<T>> SendAsync<T>(HttpMethod method, string path, object? content = null)
     {
         try
         {
             using HttpRequestMessage request = new(method, BuildApiUri(path));
+
+            string? token = await GetClerkTokenAsync();
+            if (!string.IsNullOrWhiteSpace(token))
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             if (content is not null)
-                request.Content = JsonContent.Create(content);
+            {
+                byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(content, content.GetType());
+                request.Content = new ByteArrayContent(jsonBytes);
+                request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json")
+                {
+                    CharSet = "utf-8",
+                };
+            }
 
             using HttpResponseMessage response = await httpClient.SendAsync(request);
             if (response.IsSuccessStatusCode)
@@ -110,16 +132,17 @@ sealed class HttpCloudSyncService : ICloudSyncService
         }
     }
 
-    // Redirects the browser to a server auth endpoint with a return-url query parameter.
-
-    void NavigateToAuthPath(string authPath, string redirectParameterName)
+    // Gets the current session JWT from Clerk via JS interop.
+    async Task<string?> GetClerkTokenAsync()
     {
-        if (string.IsNullOrWhiteSpace(authPath))
-            return;
-
-        string absoluteAuthPath = navigationManager.ToAbsoluteUri(authPath).ToString();
-        string redirectUri = Uri.EscapeDataString(navigationManager.Uri);
-        navigationManager.NavigateTo($"{absoluteAuthPath}?{redirectParameterName}={redirectUri}", forceLoad: true);
+        try
+        {
+            return await jsInterop.Call<string?>("clerkGetToken");
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     // Builds absolute API URI when a base address override is configured.
