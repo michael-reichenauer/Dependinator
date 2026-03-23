@@ -379,8 +379,18 @@ export async function clerkGetToken() {
       console.log("DEP: clerkGetToken - no session");
       return null;
     }
-    const token = await clerk.session.getToken({ template: 'dependinator' });
-    console.log("DEP: clerkGetToken - got token:", !!token);
+    // Try custom template first (longer expiry), fall back to default token.
+    try {
+      const token = await clerk.session.getToken({ template: 'dependinator' });
+      if (token) {
+        console.log("DEP: clerkGetToken - got token (dependinator template)");
+        return token;
+      }
+    } catch (_) {
+      console.warn("DEP: clerkGetToken - 'dependinator' template not available, using default token");
+    }
+    const token = await clerk.session.getToken();
+    console.log("DEP: clerkGetToken - got token (default):", !!token);
     return token;
   } catch (err) {
     console.error("DEP: clerkGetToken failed:", err);
