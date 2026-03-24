@@ -454,11 +454,9 @@ export async function clerkSignIn() {
       }
     }, 1000);
 
-    // Open the modal sign-in UI — pass redirectUrl so magic link emails
-    // redirect back to this app (needed for BroadcastChannel Mode 1 flow).
-    clerk.openSignIn({
-      redirectUrl: window.location.origin + "/",
-    });
+    // Open the modal sign-in UI. Magic link redirect URLs are controlled
+    // by the Clerk dashboard, not by this parameter.
+    clerk.openSignIn({});
 
     // Timeout after 5 minutes
     setTimeout(() => {
