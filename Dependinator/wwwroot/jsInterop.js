@@ -457,9 +457,10 @@ export async function clerkSignIn() {
       }
     }, 1000);
 
-    // Open the modal sign-in UI. Magic link redirect URLs are controlled
-    // by the Clerk dashboard, not by this parameter.
-    clerk.openSignIn({});
+    // Open the modal sign-in UI. Magic link redirect URLs are provided here
+    clerk.openSignIn({
+      redirectUrl: window.location.origin + "/"
+    });
 
     // Timeout after 5 minutes
     setTimeout(() => {
