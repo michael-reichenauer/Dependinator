@@ -11,9 +11,6 @@ public sealed class CloudSyncClientOptions
     // Optional explicit base URL for API endpoints when not hosted at same origin.
     public string? ApiBaseAddress { get; init; }
 
-    // Path used for hosted auth login redirection.
-    public string LoginPath { get; init; } = "/.auth/login/entraExternalId";
-
-    // Path used for hosted auth logout redirection.
-    public string LogoutPath { get; init; } = "/.auth/logout";
+    // Clerk publishable key for frontend authentication.
+    public string? ClerkPublishableKey { get; init; }
 }

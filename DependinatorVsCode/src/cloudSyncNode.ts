@@ -1,3 +1,5 @@
+import * as http from "node:http";
+import * as crypto from "node:crypto";
 import * as vscode from "vscode";
 import type { CloudSyncEnvelope, WebviewMessage } from "./types";
 
@@ -35,30 +37,8 @@ type CloudModelDocument = {
 
 type CloudSyncConfig = {
     baseUrl: string;
-    openIdConfigurationUrl: string;
-    clientId: string;
-};
-
-type OpenIdConfiguration = {
-    issuer: string;
-    token_endpoint: string;
-    device_authorization_endpoint?: string;
-};
-
-type DeviceAuthorizationResponse = {
-    device_code: string;
-    user_code: string;
-    verification_uri: string;
-    verification_uri_complete?: string;
-    expires_in: number;
-    interval?: number;
-    message?: string;
-};
-
-type DeviceTokenResponse = {
-    access_token?: string;
-    error?: string;
-    error_description?: string;
+    clerkAccountsUrl: string;
+    clerkPublishableKey: string;
 };
 
 type JsonResponse<T> = {
@@ -72,10 +52,9 @@ export type CloudSyncBridge = {
 };
 
 const tokenSecretName = "dependinator.cloudSync.accessToken";
-const openIdScopes = ["openid", "profile", "email", "offline_access"];
-const productionOpenIdConfigurationUrl =
-    "https://dependinator.ciamlogin.com/6c5f5248-641e-4c17-858b-7591bee24fe3/v2.0/.well-known/openid-configuration";
-const productionClientId = "55db228d-5c84-41ac-864c-0c9c9f22a725";
+const productionClerkAccountsUrl = "https://renewed-hen-98.accounts.dev";
+const productionClerkPublishableKey = "pk_test_cmVuZXdlZC1oZW4tOTguY2xlcmsuYWNjb3VudHMuZGV2JA";
+const callbackTimeoutMilliseconds = 5 * 60 * 1000;
 
 export function createCloudSyncBridge(context: vscode.ExtensionContext): CloudSyncBridge {
     return new CloudSyncBridgeImpl(context);
@@ -84,7 +63,6 @@ export function createCloudSyncBridge(context: vscode.ExtensionContext): CloudSy
 class CloudSyncBridgeImpl implements CloudSyncBridge {
     readonly context: vscode.ExtensionContext;
     readonly outputChannel: vscode.OutputChannel;
-    openIdConfigurationPromise: Promise<OpenIdConfiguration> | undefined;
     lastLoggedConfigurationSource: string | undefined;
 
     constructor(context: vscode.ExtensionContext) {
@@ -160,25 +138,187 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
         if (!configuration)
             throw new Error("VS Code cloud sync is not configured. Set dependinator.cloudSync.baseUrl.");
 
-        const openIdConfiguration = await this.getOpenIdConfigurationAsync(configuration);
-        if (!openIdConfiguration.device_authorization_endpoint)
-            throw new Error("The configured OpenID metadata does not support device authorization.");
-
-        const deviceResponse = await this.postFormAsync<DeviceAuthorizationResponse>(
-            openIdConfiguration.device_authorization_endpoint,
-            {
-                client_id: configuration.clientId,
-                scope: this.buildRequestedScope(configuration)
-            }
-        );
-        if (!deviceResponse.ok || !deviceResponse.body)
-            throw new Error(this.readProtocolError(deviceResponse.status, deviceResponse.body));
-
-        await this.startDeviceLoginAsync(deviceResponse.body);
-        const token = await this.pollForTokenAsync(deviceResponse.body, configuration, openIdConfiguration);
+        const token = await this.acquireTokenViaLocalCallbackAsync(configuration);
         await this.context.secrets.store(tokenSecretName, token);
-        this.outputChannel.appendLine("Dependinator: Cloud sync access token acquired in VS Code extension host.");
+        this.outputChannel.appendLine("Dependinator: Cloud sync access token acquired via Clerk sign-in.");
         return await this.getAuthStateFromTokenAsync(token, configuration);
+    }
+
+    async acquireTokenViaLocalCallbackAsync(configuration: CloudSyncConfig): Promise<string> {
+        const state = crypto.randomBytes(32).toString("hex");
+
+        return new Promise<string>((resolve, reject) => {
+            let settled = false;
+            const server = http.createServer((req, res) => {
+                if (settled)
+                    return;
+
+                const url = new URL(req.url ?? "/", `http://localhost`);
+
+                // Serve the self-contained Clerk sign-in page
+                if (url.pathname === "/") {
+                    const address = server.address();
+                    const port = typeof address === "object" && address ? address.port : 0;
+                    res.writeHead(200, { "Content-Type": "text/html" });
+                    res.end(this.buildSignInPageHtml(port, state, configuration));
+                    return;
+                }
+
+                // Handle the token callback
+                if (url.pathname === "/callback") {
+                    const receivedState = url.searchParams.get("state");
+                    const token = url.searchParams.get("token");
+
+                    if (receivedState !== state) {
+                        res.writeHead(400);
+                        res.end("Invalid state parameter.");
+                        return;
+                    }
+
+                    if (!token) {
+                        res.writeHead(400);
+                        res.end("No token received.");
+                        return;
+                    }
+
+                    settled = true;
+                    res.writeHead(200, { "Content-Type": "text/html" });
+                    res.end(`
+                        <html><body style="background:#1e1e1e;color:#ccc;font-family:sans-serif;text-align:center;margin-top:40vh;">
+                        <h2>Dependinator sign-in successful!</h2>
+                        <p>You can close this tab and return to VS Code.</p>
+                        <script>window.close();</script>
+                        </body></html>
+                    `);
+
+                    server.close();
+                    resolve(token);
+                    return;
+                }
+
+                res.writeHead(404);
+                res.end("Not found");
+            });
+
+            server.listen(0, "127.0.0.1", async () => {
+                const address = server.address();
+                if (!address || typeof address === "string") {
+                    settled = true;
+                    server.close();
+                    reject(new Error("Failed to start local callback server."));
+                    return;
+                }
+
+                const port = address.port;
+                this.outputChannel.appendLine(`Dependinator: Opening browser for Clerk sign-in (callback on port ${port}).`);
+                await vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:${port}/`));
+            });
+
+            setTimeout(() => {
+                if (!settled) {
+                    settled = true;
+                    server.close();
+                    reject(new Error("Sign-in timed out. Please try again."));
+                }
+            }, callbackTimeoutMilliseconds);
+
+            server.on("error", (error) => {
+                if (!settled) {
+                    settled = true;
+                    reject(new Error(`Local callback server error: ${error.message}`));
+                }
+            });
+        });
+    }
+
+    buildSignInPageHtml(port: number, state: string, configuration: CloudSyncConfig): string {
+        const clerkCdnBase = configuration.clerkAccountsUrl.replace(".accounts.", ".clerk.accounts.");
+        const clerkJsUrl = `${clerkCdnBase}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`;
+
+        return `<!DOCTYPE html>
+<html>
+<head>
+    <title>Dependinator — Sign In</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script
+        data-clerk-publishable-key="${configuration.clerkPublishableKey}"
+        crossorigin="anonymous"
+        src="${clerkJsUrl}"
+        async></script>
+</head>
+<body style="background:#1e1e1e;color:#ccc;font-family:sans-serif;margin:0;">
+    <div id="app" style="display:flex;justify-content:center;align-items:center;min-height:100vh;">
+        <p>Loading sign-in...</p>
+    </div>
+    <script>
+        var PORT = ${port};
+        var STATE = ${JSON.stringify(state)};
+
+        var redirected = false;
+        function redirectToCallback(token) {
+            if (redirected) return;
+            redirected = true;
+            window.location.href = "http://127.0.0.1:" + PORT + "/callback"
+                + "?token=" + encodeURIComponent(token)
+                + "&state=" + encodeURIComponent(STATE);
+        }
+
+        (async function () {
+            // Wait for Clerk to load
+            var start = Date.now();
+            while (true) {
+                var c = window.Clerk;
+                if (c && c.loaded) break;
+                if (c && !c.loaded && typeof c.load === "function") {
+                    try { await c.load(); break; } catch (e) { }
+                }
+                if (Date.now() - start > 20000) {
+                    document.getElementById("app").innerHTML =
+                        "<p>Failed to load sign-in service. Please try again.</p>";
+                    return;
+                }
+                await new Promise(function (r) { setTimeout(r, 200); });
+            }
+
+            var clerk = window.Clerk;
+
+            // If already signed in, get token and redirect immediately
+            if (clerk.session) {
+                try {
+                    var token = await clerk.session.getToken({ template: 'dependinator' });
+                    if (token) { redirectToCallback(token); return; }
+                } catch (e) { }
+            }
+
+            // Mount the Clerk sign-in component
+            var appEl = document.getElementById("app");
+            appEl.innerHTML = "<div id='clerk-signin'></div>";
+            clerk.mountSignIn(document.getElementById("clerk-signin"));
+
+            // Detect sign-in completion via listener
+            clerk.addListener(async function (resources) {
+                if (resources.user && clerk.session) {
+                    try {
+                        var token = await clerk.session.getToken({ template: 'dependinator' });
+                        if (token) redirectToCallback(token);
+                    } catch (e) { }
+                }
+            });
+
+            // Poll as fallback for cross-tab magic link completion
+            setInterval(async function () {
+                if (clerk.user && clerk.session) {
+                    try {
+                        var token = await clerk.session.getToken({ template: 'dependinator' });
+                        if (token) redirectToCallback(token);
+                    } catch (e) { }
+                }
+            }, 1000);
+        })();
+    </script>
+</body>
+</html>`;
     }
 
     async logoutAsync(): Promise<CloudAuthState> {
@@ -207,7 +347,7 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
 
         if (response.ok && response.body && !response.body.IsAuthenticated) {
             this.outputChannel.appendLine(
-                "Dependinator: Stored VS Code cloud sync token was not accepted by the API. Check CloudSync__OpenIdConfigurationUrl and CloudSync__BearerAudience in Azure Static Web Apps."
+                "Dependinator: Stored VS Code cloud sync token was not accepted by the API. Check Clerk configuration."
             );
             await this.context.secrets.delete(tokenSecretName);
             return this.createSignedOutState(true);
@@ -270,18 +410,21 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
     readConfiguration(): CloudSyncConfig | undefined {
         const configuration = vscode.workspace.getConfiguration("dependinator");
         const baseUrl = this.normalizeUrl(configuration.get<string>("cloudSync.baseUrl"));
-        const openIdConfigurationUrl = this.normalizeUrl(productionOpenIdConfigurationUrl);
-        const clientId = productionClientId;
+        const clerkAccountsUrl = (
+            configuration.get<string>("cloudSync.clerkAccountsUrl") || productionClerkAccountsUrl
+        ).replace(/\/+$/, "");
+        const clerkPublishableKey =
+            configuration.get<string>("cloudSync.clerkPublishableKey") || productionClerkPublishableKey;
         const configurationSource = this.getConfigurationSource(configuration);
         this.logConfigurationSource(configurationSource);
 
-        if (!baseUrl || !openIdConfigurationUrl || !clientId)
+        if (!baseUrl)
             return undefined;
 
         return {
             baseUrl,
-            openIdConfigurationUrl,
-            clientId
+            clerkAccountsUrl,
+            clerkPublishableKey
         };
     }
 
@@ -328,85 +471,14 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
 
         if (response.ok && response.body && !response.body.IsAuthenticated) {
             this.outputChannel.appendLine(
-                "Dependinator: Token acquisition succeeded, but the API returned unauthenticated. Check CloudSync__OpenIdConfigurationUrl and CloudSync__BearerAudience in Azure Static Web Apps."
+                "Dependinator: Token acquisition succeeded, but the API returned unauthenticated. Check Clerk issuer configuration on the API."
             );
             throw new Error(
-                "Cloud sync login completed, but the API did not accept the bearer token. Check CloudSync__OpenIdConfigurationUrl and CloudSync__BearerAudience in Azure Static Web Apps."
+                "Cloud sync login completed, but the API did not accept the token. Check Clerk configuration."
             );
         }
 
         throw new Error(this.readProtocolError(response.status, response.body));
-    }
-
-    async getOpenIdConfigurationAsync(configuration: CloudSyncConfig): Promise<OpenIdConfiguration> {
-        if (!this.openIdConfigurationPromise) {
-            this.openIdConfigurationPromise = this.fetchJsonAsync<OpenIdConfiguration>(
-                configuration.openIdConfigurationUrl
-            ).then(response => {
-                if (!response.ok || !response.body)
-                    throw new Error(this.readProtocolError(response.status, response.body));
-                return response.body;
-            });
-        }
-
-        return await this.openIdConfigurationPromise;
-    }
-
-    async startDeviceLoginAsync(response: DeviceAuthorizationResponse): Promise<void> {
-        const message = response.message?.trim()
-            || `Complete Dependinator sign-in in your browser with code ${response.user_code}.`;
-        const action = await vscode.window.showInformationMessage(
-            message,
-            "Copy Code",
-            "Open Browser"
-        );
-        if (action === "Copy Code")
-            await vscode.env.clipboard.writeText(response.user_code);
-
-        const targetUrl = response.verification_uri_complete || response.verification_uri;
-        await vscode.env.openExternal(vscode.Uri.parse(targetUrl));
-    }
-
-    async pollForTokenAsync(
-        deviceResponse: DeviceAuthorizationResponse,
-        configuration: CloudSyncConfig,
-        openIdConfiguration: OpenIdConfiguration
-    ): Promise<string> {
-        const expiresAt = Date.now() + deviceResponse.expires_in * 1000;
-        let intervalMilliseconds = Math.max(deviceResponse.interval ?? 5, 1) * 1000;
-
-        while (Date.now() < expiresAt) {
-            await this.delayAsync(intervalMilliseconds);
-
-            const tokenResponse = await this.postFormAsync<DeviceTokenResponse>(
-                openIdConfiguration.token_endpoint,
-                {
-                    client_id: configuration.clientId,
-                    grant_type: "urn:ietf:params:oauth:grant-type:device_code",
-                    device_code: deviceResponse.device_code
-                }
-            );
-
-            if (tokenResponse.ok && tokenResponse.body?.access_token)
-                return tokenResponse.body.access_token;
-
-            const error = tokenResponse.body?.error;
-            switch (error) {
-                case "authorization_pending":
-                    continue;
-                case "slow_down":
-                    intervalMilliseconds += 5000;
-                    continue;
-                case "access_denied":
-                    throw new Error("Sign-in was canceled.");
-                case "expired_token":
-                    throw new Error("Sign-in expired before it completed.");
-                default:
-                    throw new Error(this.readProtocolError(tokenResponse.status, tokenResponse.body));
-            }
-        }
-
-        throw new Error("Timed out waiting for sign-in to complete.");
     }
 
     async sendApiAsync<T>(
@@ -430,23 +502,6 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             method,
             headers,
             body: serializedBody
-        });
-
-        return await this.readJsonResponseAsync<T>(response);
-    }
-
-    async fetchJsonAsync<T>(url: string): Promise<JsonResponse<T>> {
-        const response = await fetch(url);
-        return await this.readJsonResponseAsync<T>(response);
-    }
-
-    async postFormAsync<T>(url: string, form: Record<string, string>): Promise<JsonResponse<T>> {
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams(form)
         });
 
         return await this.readJsonResponseAsync<T>(response);
@@ -559,11 +614,6 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
         return normalizedValue.endsWith("/") ? normalizedValue : `${normalizedValue}/`;
     }
 
-    buildRequestedScope(configuration: CloudSyncConfig): string {
-        const apiScope = `api://${configuration.clientId}/access_as_user`;
-        return [...openIdScopes, apiScope].join(" ");
-    }
-
     getConfigurationSource(configuration: vscode.WorkspaceConfiguration): string {
         const settingKeys = ["cloudSync.baseUrl"];
         for (const settingKey of settingKeys) {
@@ -594,9 +644,5 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
 
     toErrorMessage(error: unknown): string {
         return error instanceof Error ? error.message : String(error);
-    }
-
-    delayAsync(milliseconds: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, milliseconds));
     }
 }

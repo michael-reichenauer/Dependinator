@@ -13,24 +13,25 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
 ## Quick start
 - Build: `./build`
 - Run server (live dev): `./watch`
+- Run server with cloud sync: `./watch-sync`
 - Run WASM sample: `./run`
 - Run WASM + API + Azurite locally: `./run-sync`
 - Tests: `dotnet test Dependinator.Tests/Dependinator.Tests.csproj`
 
-## Azure Static Web Apps (optional)
+## Cloud sync
+
+Cloud sync uses [Clerk](https://clerk.com) for authentication (magic links / email OTP). The API validates Clerk-issued JWTs via JWKS.
+
+### Azure Static Web Apps deployment
+
 - See `swa-cli.config.json` for the `dependinator-test` configuration.
-- Cloud sync auth uses a custom OpenID Connect provider named `entraExternalId`.
 - Required Static Web App application settings:
-  - `ENTRA_EXTERNAL_ID_CLIENT_ID`
-  - `ENTRA_EXTERNAL_ID_CLIENT_SECRET`
+  - `CloudSync__ClerkIssuer`
   - `CloudSync__ContainerName`
   - `CloudSync__MaxUserQuotaBytes`
   - `CloudSync__StorageConnectionString`
-  - `CloudSync__OpenIdConfigurationUrl`
-  - `CloudSync__BearerAudience`
-- Required callback URL in the identity provider registration:
-  - `https://<your-site>/.auth/login/entraExternalId/callback`
-- VS Code extension-host sync exposes one override setting:
-  - `dependinator.cloudSync.baseUrl`
-- The VS Code extension keeps the production OpenID metadata URL and client ID in internal constants.
-- The VS Code app registration must expose an API scope named `access_as_user` so the extension can request a bearer token for `/api`.
+
+### VS Code extension
+
+- The `dependinator.cloudSync.baseUrl` setting controls which API endpoint the extension uses.
+- The extension serves a local Clerk sign-in page and stores the session JWT in VS Code secrets.

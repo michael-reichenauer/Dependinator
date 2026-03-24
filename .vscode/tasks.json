@@ -90,6 +90,27 @@
 			"problemMatcher": "$func-dotnet-watch"
 		},
 		{
+			"label": "start sync services",
+			"type": "shell",
+			"dependsOn": "build",
+			"command": "mkdir -p .azurite && (npx --yes azurite --silent --location .azurite &) && cd Api && func start --port 7071",
+			"isBackground": true,
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": {
+				"owner": "sync-services",
+				"pattern": {
+					"regexp": "__never_match__"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": ".",
+					"endsPattern": "Host lock lease acquired"
+				}
+			}
+		},
+		{
 			"label": "Dependinator: Install Extension Dependencies",
 			"type": "shell",
 			"command": "npm install",

@@ -1,8 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Protocols;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Shared;
 using FunctionsHttpRequestData = Microsoft.Azure.Functions.Worker.Http.HttpRequestData;
@@ -19,33 +18,26 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     const string CustomAuthorizationHeaderName = "X-Dependinator-Authorization";
     const string AuthorizationHeaderName = "Authorization";
     readonly CloudSyncOptions options;
-    readonly IConfigurationManager<OpenIdConnectConfiguration>? configurationManager;
+    readonly ILogger<CloudSyncBearerTokenValidator> logger;
     readonly JwtSecurityTokenHandler tokenHandler = new();
+    readonly IReadOnlyCollection<SecurityKey>? testSigningKeys;
+    JsonWebKeySet? cachedKeySet;
+    DateTime cachedKeySetExpiry;
 
-    public CloudSyncBearerTokenValidator(IOptions<CloudSyncOptions> options)
-        : this(options, null) { }
+    public CloudSyncBearerTokenValidator(IOptions<CloudSyncOptions> options, ILogger<CloudSyncBearerTokenValidator> logger)
+    {
+        this.options = options.Value;
+        this.logger = logger;
+    }
 
     internal CloudSyncBearerTokenValidator(
         IOptions<CloudSyncOptions> options,
-        IConfigurationManager<OpenIdConnectConfiguration>? configurationManager
+        IReadOnlyCollection<SecurityKey> signingKeys
     )
     {
         this.options = options.Value;
-        this.configurationManager = configurationManager;
-
-        if (
-            this.configurationManager is null
-            && (
-            !string.IsNullOrWhiteSpace(this.options.OpenIdConfigurationUrl)
-            && !string.IsNullOrWhiteSpace(this.options.BearerAudience)
-            )
-        )
-        {
-            this.configurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
-                this.options.OpenIdConfigurationUrl,
-                new OpenIdConnectConfigurationRetriever()
-            );
-        }
+        logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<CloudSyncBearerTokenValidator>.Instance;
+        testSigningKeys = signingKeys;
     }
 
     public async Task<CloudUserInfo?> TryGetCurrentUserAsync(
@@ -53,27 +45,26 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
         CancellationToken cancellationToken
     )
     {
-        if (configurationManager is null)
+        if (string.IsNullOrWhiteSpace(options.ClerkIssuer))
+        {
+            logger.LogWarning("CloudSync__ClerkIssuer is not configured — all auth requests will be treated as unauthenticated");
             return null;
+        }
 
         if (!TryGetBearerToken(request, out string? token))
             return null;
 
         try
         {
-            OpenIdConnectConfiguration configuration = await configurationManager.GetConfigurationAsync(
-                cancellationToken
-            );
-            IReadOnlyCollection<string> validAudiences = GetValidAudiences(options.BearerAudience);
+            IEnumerable<SecurityKey> signingKeys = testSigningKeys
+                ?? (IEnumerable<SecurityKey>)(await GetSigningKeysAsync(cancellationToken)).GetSigningKeys();
             TokenValidationParameters validationParameters = new()
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKeys = configuration.SigningKeys,
+                IssuerSigningKeys = signingKeys,
                 ValidateIssuer = true,
-                IssuerValidator = (issuer, securityToken, parameters) =>
-                    ValidateIssuer(issuer, securityToken, configuration),
-                ValidateAudience = true,
-                ValidAudiences = validAudiences,
+                ValidIssuer = options.ClerkIssuer.TrimEnd('/'),
+                ValidateAudience = false,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromMinutes(2),
             };
@@ -81,23 +72,39 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
             ClaimsPrincipal principal = tokenHandler.ValidateToken(token, validationParameters, out _);
             string? userId =
                 FindClaimValue(principal, "sub")
-                ?? FindClaimValue(principal, "oid")
                 ?? FindClaimValue(principal, ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
+            {
+                logger.LogWarning("JWT validated but contains no 'sub' or NameIdentifier claim");
                 return null;
+            }
 
             string? email =
                 FindClaimValue(principal, "email")
                 ?? FindClaimValue(principal, "preferred_username")
-                ?? FindClaimValue(principal, ClaimTypes.Email)
-                ?? FindClaimValue(principal, "emails");
+                ?? FindClaimValue(principal, ClaimTypes.Email);
 
             return new CloudUserInfo(userId, email);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Bearer token validation failed");
             return null;
         }
+    }
+
+    static readonly HttpClient jwksHttpClient = new();
+
+    async Task<JsonWebKeySet> GetSigningKeysAsync(CancellationToken cancellationToken)
+    {
+        if (cachedKeySet is not null && DateTime.UtcNow < cachedKeySetExpiry)
+            return cachedKeySet;
+
+        string jwksUrl = $"{options.ClerkIssuer!.TrimEnd('/')}/.well-known/jwks.json";
+        string jwksJson = await jwksHttpClient.GetStringAsync(jwksUrl, cancellationToken);
+        cachedKeySet = new JsonWebKeySet(jwksJson);
+        cachedKeySetExpiry = DateTime.UtcNow.AddHours(1);
+        return cachedKeySet;
     }
 
     static bool TryGetBearerToken(FunctionsHttpRequestData request, out string? token)
@@ -133,83 +140,5 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     static string? FindClaimValue(ClaimsPrincipal principal, string claimType)
     {
         return principal.FindFirst(claimType)?.Value;
-    }
-
-    static IReadOnlyCollection<string> GetValidAudiences(string? configuredAudience)
-    {
-        if (string.IsNullOrWhiteSpace(configuredAudience))
-            return Array.Empty<string>();
-
-        string trimmedAudience = configuredAudience.Trim();
-        string apiAudience = trimmedAudience.StartsWith("api://", StringComparison.OrdinalIgnoreCase)
-            ? trimmedAudience
-            : $"api://{trimmedAudience}";
-
-        return [trimmedAudience, apiAudience];
-    }
-
-    static string ValidateIssuer(
-        string issuer,
-        SecurityToken securityToken,
-        OpenIdConnectConfiguration configuration
-    )
-    {
-        HashSet<string> validIssuers = new(StringComparer.OrdinalIgnoreCase)
-        {
-            NormalizeIssuer(configuration.Issuer),
-            NormalizeIssuer(RemoveV2Suffix(configuration.Issuer)),
-        };
-
-        if (securityToken is JwtSecurityToken jwtToken)
-        {
-            string? tenantId = jwtToken.Claims.FirstOrDefault(c => c.Type == "tid")?.Value;
-            if (string.IsNullOrWhiteSpace(tenantId))
-                tenantId = TryGetTenantIdFromIssuer(issuer) ?? TryGetTenantIdFromIssuer(configuration.Issuer);
-
-            if (!string.IsNullOrWhiteSpace(tenantId))
-            {
-                validIssuers.Add(NormalizeIssuer($"https://sts.windows.net/{tenantId}/"));
-                validIssuers.Add(NormalizeIssuer($"https://{tenantId}.ciamlogin.com/{tenantId}/v2.0"));
-                validIssuers.Add(NormalizeIssuer($"https://{tenantId}.ciamlogin.com/{tenantId}"));
-            }
-        }
-
-        string normalizedIssuer = NormalizeIssuer(issuer);
-        if (validIssuers.Contains(normalizedIssuer))
-            return issuer;
-
-        throw new SecurityTokenInvalidIssuerException($"Issuer '{issuer}' is not valid.");
-    }
-
-    static string NormalizeIssuer(string issuer)
-    {
-        return issuer.TrimEnd('/');
-    }
-
-    static string RemoveV2Suffix(string issuer)
-    {
-        return issuer.EndsWith("/v2.0", StringComparison.OrdinalIgnoreCase)
-            ? issuer[..^"/v2.0".Length]
-            : issuer;
-    }
-
-    static string? TryGetTenantIdFromIssuer(string issuer)
-    {
-        if (!Uri.TryCreate(issuer, UriKind.Absolute, out Uri? issuerUri))
-            return null;
-
-        string host = issuerUri.Host;
-        if (host.EndsWith(".ciamlogin.com", StringComparison.OrdinalIgnoreCase))
-        {
-            string subdomain = host[..^".ciamlogin.com".Length];
-            if (!string.IsNullOrWhiteSpace(subdomain))
-                return subdomain;
-        }
-
-        string[] segments = issuerUri.AbsolutePath.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length > 0 && !string.IsNullOrWhiteSpace(segments[0]))
-            return segments[0];
-
-        return null;
     }
 }

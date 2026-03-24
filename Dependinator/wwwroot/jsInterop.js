@@ -312,6 +312,182 @@ export async function getDatabaseAllKeys(databaseName, collectionName) {
   return keys;
 }
 
+// --- Clerk authentication interop ---
+
+// Waits for the Clerk global to exist and be fully loaded (up to 15 seconds).
+// The Clerk CDN script sets window.Clerk but it may not be .loaded yet.
+function waitForClerk(timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    function check() {
+      const c = window.Clerk;
+      if (c && c.loaded) return c;
+      // Clerk object exists but hasn't finished initializing yet
+      if (c && typeof c.load === "function") return null; // needs .load()
+      return null;
+    }
+
+    const ready = check();
+    if (ready) {
+      console.log("DEP: Clerk already loaded");
+      resolve(ready);
+      return;
+    }
+
+    const start = Date.now();
+    const interval = setInterval(async () => {
+      // If Clerk object exists but isn't loaded, try calling .load()
+      const c = window.Clerk;
+      if (c && !c.loaded && typeof c.load === "function") {
+        clearInterval(interval);
+        console.log("DEP: Clerk object found, calling .load()...");
+        try {
+          await c.load();
+          console.log("DEP: Clerk.load() completed, loaded:", c.loaded);
+          resolve(c);
+        } catch (err) {
+          console.error("DEP: Clerk.load() failed:", err);
+          reject(new Error("Clerk.load() failed: " + err.message));
+        }
+        return;
+      }
+
+      if (c && c.loaded) {
+        clearInterval(interval);
+        console.log("DEP: Clerk loaded via polling");
+        resolve(c);
+        return;
+      }
+
+      if (Date.now() - start > timeoutMs) {
+        clearInterval(interval);
+        console.error("DEP: Clerk.js did not load in time. window.Clerk =", window.Clerk);
+        reject(new Error("Clerk.js did not load in time."));
+      }
+    }, 200);
+  });
+}
+
+export async function clerkIsLoaded() {
+  const clerk = window.Clerk;
+  return clerk !== null && clerk !== undefined && clerk.loaded === true;
+}
+
+export async function clerkGetToken() {
+  try {
+    const clerk = await waitForClerk();
+    if (!clerk.session) {
+      console.log("DEP: clerkGetToken - no session");
+      return null;
+    }
+    // Try custom template first (longer expiry), fall back to default token.
+    try {
+      const token = await clerk.session.getToken({ template: 'dependinator' });
+      if (token) {
+        console.log("DEP: clerkGetToken - got token (dependinator template)");
+        return token;
+      }
+    } catch (_) {
+      console.warn("DEP: clerkGetToken - 'dependinator' template not available, using default token");
+    }
+    const token = await clerk.session.getToken();
+    console.log("DEP: clerkGetToken - got token (default):", !!token);
+    return token;
+  } catch (err) {
+    console.error("DEP: clerkGetToken failed:", err);
+    return null;
+  }
+}
+
+// Opens Clerk sign-in modal and waits for sign-in to complete (up to 5 minutes).
+// Magic links open a new tab; the new tab detects the localStorage flag, shows a
+// minimal page, and broadcasts sign-in completion. This tab picks up the new session
+// via Clerk's cross-tab sync (addListener) without reloading.
+export async function clerkSignIn() {
+  console.log("DEP: clerkSignIn called (modal)");
+  const clerk = await waitForClerk();
+  if (clerk.user) return true;
+
+  // Set flag so the magic-link redirect tab shows a minimal page instead of full WASM.
+  // sessionStorage marks THIS tab as the initiator (survives reload, not shared with new tabs).
+  localStorage.setItem("dep-clerk-signin", Date.now().toString());
+  sessionStorage.setItem("dep-clerk-signin-initiator", "1");
+
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    let unsubscribeListener = null;
+
+    function complete(success) {
+      if (resolved) return;
+      resolved = true;
+      clearInterval(pollInterval);
+      try { bc.close(); } catch (_) { }
+      try { if (unsubscribeListener) unsubscribeListener(); } catch (_) { }
+      try { clerk.closeSignIn(); } catch (_) { }
+      localStorage.removeItem("dep-clerk-signin");
+      sessionStorage.removeItem("dep-clerk-signin-initiator");
+      console.log("DEP: clerkSignIn resolved:", success);
+      resolve(success);
+    }
+
+    // Listen for broadcast from the magic-link redirect tab.
+    // Don't resolve here — Clerk's cross-tab session sync may not have
+    // completed yet. The addListener/poll below will fire once the session
+    // is actually available in this tab.
+    const bc = new BroadcastChannel("dep-clerk-auth");
+    bc.onmessage = (event) => {
+      if (event.data?.type === "signed-in") {
+        console.log("DEP: Sign-in broadcast received from redirect tab");
+      }
+    };
+
+    // Listen for Clerk session changes (cross-tab sync after magic link verification)
+    unsubscribeListener = clerk.addListener((emission) => {
+      if (emission.user || emission.session) {
+        console.log("DEP: Sign-in detected via Clerk listener");
+        complete(true);
+      }
+    });
+
+    // Also poll clerk.user as fallback
+    const pollInterval = setInterval(() => {
+      if (clerk.user) {
+        console.log("DEP: Sign-in detected via polling");
+        complete(true);
+      }
+    }, 1000);
+
+    // Open the modal sign-in UI. Magic link redirect URLs are provided here
+    clerk.openSignIn({
+      redirectUrl: window.location.origin + "/"
+    });
+
+    // Timeout after 5 minutes
+    setTimeout(() => {
+      console.log("DEP: Clerk sign-in timed out");
+      complete(false);
+    }, 300000);
+  });
+}
+
+export async function clerkSignOut() {
+  console.log("DEP: clerkSignOut called");
+  const clerk = await waitForClerk();
+  await clerk.signOut();
+  return true;
+}
+
+export async function clerkIsAuthenticated() {
+  try {
+    const clerk = await waitForClerk();
+    return !!clerk.user;
+  } catch {
+    return false;
+  }
+}
+
+// --- End Clerk authentication interop ---
+
 export function initializeFileDropZone(dropZoneElement, inputFileElement) {
   function onDragHover(e) {
     e.preventDefault();
