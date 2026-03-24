@@ -101,7 +101,12 @@ sealed class HttpCloudSyncService : ICloudSyncService
 
             string? token = await GetClerkTokenAsync();
             if (!string.IsNullOrWhiteSpace(token))
+            {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                // Azure SWA may strip the standard Authorization header before forwarding
+                // to the managed Functions backend. Send via custom header as well.
+                request.Headers.TryAddWithoutValidation("X-Dependinator-Authorization", $"Bearer {token}");
+            }
 
             if (content is not null)
             {
