@@ -400,7 +400,8 @@ export async function clerkGetToken() {
 
 // Opens Clerk sign-in modal and waits for sign-in to complete (up to 5 minutes).
 // Magic links open a new tab; the new tab detects the localStorage flag, shows a
-// minimal page, and broadcasts sign-in completion. This tab reloads to pick up the session.
+// minimal page, and broadcasts sign-in completion. This tab picks up the new session
+// via Clerk's cross-tab sync (addListener) without reloading.
 export async function clerkSignIn() {
   console.log("DEP: clerkSignIn called (modal)");
   const clerk = await waitForClerk();
@@ -414,7 +415,7 @@ export async function clerkSignIn() {
 
     let unsubscribeListener = null;
 
-    function complete(success, reload) {
+    function complete(success) {
       if (resolved) return;
       resolved = true;
       clearInterval(pollInterval);
@@ -422,20 +423,18 @@ export async function clerkSignIn() {
       try { if (unsubscribeListener) unsubscribeListener(); } catch (_) { }
       try { clerk.closeSignIn(); } catch (_) { }
       localStorage.removeItem("dep-clerk-signin");
-      console.log("DEP: clerkSignIn resolved:", success, "reload:", !!reload);
-      if (reload) {
-        window.location.reload();
-      } else {
-        resolve(success);
-      }
+      console.log("DEP: clerkSignIn resolved:", success);
+      resolve(success);
     }
 
-    // Listen for broadcast from the magic-link redirect tab
+    // Listen for broadcast from the magic-link redirect tab.
+    // Don't resolve here — Clerk's cross-tab session sync may not have
+    // completed yet. The addListener/poll below will fire once the session
+    // is actually available in this tab.
     const bc = new BroadcastChannel("dep-clerk-auth");
     bc.onmessage = (event) => {
       if (event.data?.type === "signed-in") {
-        console.log("DEP: Sign-in detected via BroadcastChannel");
-        complete(true, true);
+        console.log("DEP: Sign-in broadcast received from redirect tab");
       }
     };
 
@@ -443,7 +442,7 @@ export async function clerkSignIn() {
     unsubscribeListener = clerk.addListener((emission) => {
       if (emission.user || emission.session) {
         console.log("DEP: Sign-in detected via Clerk listener");
-        complete(true, false);
+        complete(true);
       }
     });
 
@@ -451,7 +450,7 @@ export async function clerkSignIn() {
     const pollInterval = setInterval(() => {
       if (clerk.user) {
         console.log("DEP: Sign-in detected via polling");
-        complete(true, false);
+        complete(true);
       }
     }, 1000);
 
@@ -464,7 +463,7 @@ export async function clerkSignIn() {
     // Timeout after 5 minutes
     setTimeout(() => {
       console.log("DEP: Clerk sign-in timed out");
-      complete(false, false);
+      complete(false);
     }, 300000);
   });
 }
