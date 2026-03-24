@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Shared;
@@ -17,14 +18,16 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     const string CustomAuthorizationHeaderName = "X-Dependinator-Authorization";
     const string AuthorizationHeaderName = "Authorization";
     readonly CloudSyncOptions options;
+    readonly ILogger<CloudSyncBearerTokenValidator> logger;
     readonly JwtSecurityTokenHandler tokenHandler = new();
     readonly IReadOnlyCollection<SecurityKey>? testSigningKeys;
     JsonWebKeySet? cachedKeySet;
     DateTime cachedKeySetExpiry;
 
-    public CloudSyncBearerTokenValidator(IOptions<CloudSyncOptions> options)
+    public CloudSyncBearerTokenValidator(IOptions<CloudSyncOptions> options, ILogger<CloudSyncBearerTokenValidator> logger)
     {
         this.options = options.Value;
+        this.logger = logger;
     }
 
     internal CloudSyncBearerTokenValidator(
@@ -33,6 +36,7 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     )
     {
         this.options = options.Value;
+        logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<CloudSyncBearerTokenValidator>.Instance;
         testSigningKeys = signingKeys;
     }
 
@@ -42,7 +46,10 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     )
     {
         if (string.IsNullOrWhiteSpace(options.ClerkIssuer))
+        {
+            logger.LogWarning("CloudSync__ClerkIssuer is not configured — all auth requests will be treated as unauthenticated");
             return null;
+        }
 
         if (!TryGetBearerToken(request, out string? token))
             return null;
@@ -67,7 +74,10 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
                 FindClaimValue(principal, "sub")
                 ?? FindClaimValue(principal, ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
+            {
+                logger.LogWarning("JWT validated but contains no 'sub' or NameIdentifier claim");
                 return null;
+            }
 
             string? email =
                 FindClaimValue(principal, "email")
@@ -76,8 +86,9 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
 
             return new CloudUserInfo(userId, email);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Bearer token validation failed");
             return null;
         }
     }

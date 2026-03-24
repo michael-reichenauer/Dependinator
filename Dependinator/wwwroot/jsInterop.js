@@ -412,11 +412,14 @@ export async function clerkSignIn() {
   return new Promise((resolve) => {
     let resolved = false;
 
+    let unsubscribeListener = null;
+
     function complete(success, reload) {
       if (resolved) return;
       resolved = true;
       clearInterval(pollInterval);
       try { bc.close(); } catch (_) { }
+      try { if (unsubscribeListener) unsubscribeListener(); } catch (_) { }
       try { clerk.closeSignIn(); } catch (_) { }
       localStorage.removeItem("dep-clerk-signin");
       console.log("DEP: clerkSignIn resolved:", success, "reload:", !!reload);
@@ -436,7 +439,15 @@ export async function clerkSignIn() {
       }
     };
 
-    // Also poll clerk.user as fallback (e.g. if sign-in completes in same tab)
+    // Listen for Clerk session changes (cross-tab sync after magic link verification)
+    unsubscribeListener = clerk.addListener((emission) => {
+      if (emission.user || emission.session) {
+        console.log("DEP: Sign-in detected via Clerk listener");
+        complete(true, false);
+      }
+    });
+
+    // Also poll clerk.user as fallback
     const pollInterval = setInterval(() => {
       if (clerk.user) {
         console.log("DEP: Sign-in detected via polling");
@@ -444,8 +455,11 @@ export async function clerkSignIn() {
       }
     }, 1000);
 
-    // Open the modal sign-in UI
-    clerk.openSignIn({});
+    // Open the modal sign-in UI — pass redirectUrl so magic link emails
+    // redirect back to this app (needed for BroadcastChannel Mode 1 flow).
+    clerk.openSignIn({
+      redirectUrl: window.location.origin + "/",
+    });
 
     // Timeout after 5 minutes
     setTimeout(() => {
