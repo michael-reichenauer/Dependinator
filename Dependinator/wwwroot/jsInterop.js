@@ -407,8 +407,10 @@ export async function clerkSignIn() {
   const clerk = await waitForClerk();
   if (clerk.user) return true;
 
-  // Set flag so the magic-link redirect tab shows a minimal page instead of full WASM
+  // Set flag so the magic-link redirect tab shows a minimal page instead of full WASM.
+  // sessionStorage marks THIS tab as the initiator (survives reload, not shared with new tabs).
   localStorage.setItem("dep-clerk-signin", Date.now().toString());
+  sessionStorage.setItem("dep-clerk-signin-initiator", "1");
 
   return new Promise((resolve) => {
     let resolved = false;
@@ -423,6 +425,7 @@ export async function clerkSignIn() {
       try { if (unsubscribeListener) unsubscribeListener(); } catch (_) { }
       try { clerk.closeSignIn(); } catch (_) { }
       localStorage.removeItem("dep-clerk-signin");
+      sessionStorage.removeItem("dep-clerk-signin-initiator");
       console.log("DEP: clerkSignIn resolved:", success);
       resolve(success);
     }

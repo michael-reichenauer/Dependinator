@@ -56,9 +56,24 @@
         // own local HTTP server (cloudSyncNode.ts) and does not use this page.
 
         (function () {
-            // ── Mode 1: Magic-link redirect (standalone WASM) ──
             var signinPending = localStorage.getItem("dep-clerk-signin");
             if (signinPending && (Date.now() - parseInt(signinPending, 10)) < 600000) {
+                // sessionStorage is per-tab: the tab that called clerkSignIn() set
+                // this flag, so a reload of that same tab will still have it.
+                // A NEW tab (magic-link redirect) will not.
+                var isOriginalTab = sessionStorage.getItem("dep-clerk-signin-initiator");
+
+                if (isOriginalTab) {
+                    // ── Original tab reloaded by Clerk after sign-in ──
+                    // Clean up and start the app normally (user is now signed in).
+                    localStorage.removeItem("dep-clerk-signin");
+                    sessionStorage.removeItem("dep-clerk-signin-initiator");
+                    Blazor.start();
+                    return;
+                }
+
+                // ── Magic-link redirect tab ──
+                // Show a minimal page instead of loading the full WASM app.
                 document.getElementById("app").innerHTML =
                     "<div style='color:#ccc;font-family:sans-serif;text-align:center;margin-top:40vh;'>"
                     + "<p>Completing sign-in...</p></div>";
@@ -97,7 +112,7 @@
                 return;
             }
 
-            // ── Mode 2: Normal page load ──
+            // ── Normal page load ──
             Blazor.start();
         })();
     </script>
