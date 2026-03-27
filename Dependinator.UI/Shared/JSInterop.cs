@@ -75,8 +75,8 @@ public class JSInterop : IJSInterop, IAsyncDisposable
     {
         var baseUri = await TryGetBaseUriAsync(jsRuntime);
         var modulePath = string.IsNullOrWhiteSpace(baseUri)
-            ? $"./_content/Dependinator/jsInterop.js?v={version}"
-            : $"{baseUri}_content/Dependinator/jsInterop.js?v={version}";
+            ? $"./_content/Dependinator.UI/jsInterop.js?v={version}"
+            : $"{baseUri}_content/Dependinator.UI/jsInterop.js?v={version}";
 
         return await jsRuntime.InvokeAsync<IJSObjectReference>(identifier: "import", args: modulePath);
     }
