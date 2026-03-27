@@ -522,6 +522,9 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
     void RestartIdleRefreshLoop()
     {
+        if (isDisposed)
+            return;
+
         CancellationTokenSource idleRefreshTokenSource = new();
         CancellationTokenSource? previousTokenSource;
         lock (idleRefreshLock)
