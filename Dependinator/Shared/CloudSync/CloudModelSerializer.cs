@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Dependinator.Modeling.Dtos;
+using Dependinator.Shared.Types;
 using Shared;
 
 namespace Dependinator.Shared.CloudSync;
@@ -16,24 +17,35 @@ static class CloudModelSerializer
     {
         string normalizedPath = CloudModelPath.Normalize(modelPath);
         byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(modelDto, serializerOptions);
+        byte[] hashBytes = JsonSerializer.SerializeToUtf8Bytes(StripViewState(modelDto), serializerOptions);
         byte[] compressedBytes = Compress(jsonBytes);
 
         return new CloudModelDocument(
             CloudModelPath.CreateKey(normalizedPath),
             normalizedPath,
             DateTimeOffset.UtcNow,
-            Convert.ToHexString(SHA256.HashData(jsonBytes)).ToLowerInvariant(),
+            Convert.ToHexString(SHA256.HashData(hashBytes)).ToLowerInvariant(),
             compressedBytes.LongLength,
             Convert.ToBase64String(compressedBytes)
         );
     }
 
-    // Computes SHA-256 hash over the uncompressed serialized model DTO.
+    // Computes SHA-256 hash over the serialized model DTO, excluding view-state fields
+    // (Zoom, Offset, ViewRect) so that panning/zooming does not trigger sync conflicts.
     public static string GetContentHash(ModelDto modelDto)
     {
-        byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(modelDto, serializerOptions);
+        byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(StripViewState(modelDto), serializerOptions);
         return Convert.ToHexString(SHA256.HashData(jsonBytes)).ToLowerInvariant();
     }
+
+    // Zeroes out view-state fields so they don't influence the content hash.
+    static ModelDto StripViewState(ModelDto modelDto) =>
+        modelDto with
+        {
+            Zoom = 0,
+            Offset = Pos.None,
+            ViewRect = Rect.None,
+        };
 
     // Deserializes a compressed cloud document back into a model DTO.
     public static R<ModelDto> ReadModel(CloudModelDocument document)

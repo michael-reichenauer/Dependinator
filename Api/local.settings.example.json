@@ -5,7 +5,7 @@
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "CloudSync__ContainerName": "dependinator-models-local",
     "CloudSync__MaxUserQuotaBytes": "10485760",
-    "CloudSync__ClerkIssuer": "https://your-clerk-instance.clerk.accounts.dev"
+    "CloudSync__ClerkIssuer": "https://renewed-hen-98.clerk.accounts.dev"
   },
   "Host": {
     "LocalHttpPort": 7071,
