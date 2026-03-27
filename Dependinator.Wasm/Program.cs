@@ -1,11 +1,11 @@
-using Dependinator;
+using Dependinator.UI;
 using Dependinator.Core;
 using Dependinator.Core.Parsing.Sources.Wasm;
 using Dependinator.Core.Rpc;
 using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
-using Dependinator.Shared;
-using Dependinator.Shared.CloudSync;
+using Dependinator.UI.Shared;
+using Dependinator.UI.Shared.CloudSync;
 using Dependinator.Wasm;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;

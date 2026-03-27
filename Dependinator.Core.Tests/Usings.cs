@@ -5,4 +5,4 @@ global using VerifyTests;
 global using Xunit;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicProxyGenAssembly2")]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Dependinator.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Dependinator.UI.Tests")]

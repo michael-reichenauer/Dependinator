@@ -1,0 +1,121 @@
+﻿{
+  "FormatVersion": "7",
+  "Name": "",
+  "Offset": {},
+  "ViewRect": {},
+  "Nodes": [
+    {
+      "Name": "",
+      "ParentName": "",
+      "Type": "Root",
+      "Properties": {},
+      "Boundary": {
+        "Width": 1000,
+        "Height": 1000
+      },
+      "Zoom": 1,
+      "Color": "Gray"
+    },
+    {
+      "Name": "$Externals",
+      "ParentName": "",
+      "Type": "Externals",
+      "Properties": {},
+      "Boundary": {
+        "X": 40,
+        "Y": 40,
+        "Width": 100,
+        "Height": 100
+      },
+      "Color": "Purple"
+    },
+    {
+      "Name": "Dependinator*UI*Tests",
+      "ParentName": "$Externals",
+      "Type": "Parent",
+      "Properties": {},
+      "Color": "Purple"
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator",
+      "ParentName": "Dependinator*UI*Tests",
+      "Type": "Parent",
+      "Properties": {},
+      "Color": "Green"
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI",
+      "ParentName": "Dependinator*UI*Tests.Dependinator",
+      "Type": "Parent",
+      "Properties": {},
+      "Color": "Pink"
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests",
+      "ParentName": "Dependinator*UI*Tests.Dependinator.UI",
+      "Type": "Parent",
+      "Properties": {},
+      "Color": "Red"
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models",
+      "ParentName": "Dependinator*UI*Tests.Dependinator.UI.Tests",
+      "Type": "Parent",
+      "Properties": {},
+      "Color": "Purple"
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+      "ParentName": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models",
+      "Type": "Type",
+      "Properties": {
+        "IsPrivate": false
+      },
+      "Color": "Cyan"
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.ctor()",
+      "ParentName": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+      "Type": "ConstructorMember",
+      "Properties": {
+        "IsPrivate": false
+      },
+      "Color": "Teal"
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.SecondFunction()",
+      "ParentName": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+      "Type": "MethodMember",
+      "Properties": {
+        "IsPrivate": false
+      },
+      "Color": "Blue"
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.FirstFunction()",
+      "ParentName": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+      "Type": "MethodMember",
+      "Properties": {
+        "IsPrivate": false
+      },
+      "Color": "Teal"
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.number",
+      "ParentName": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+      "Type": "MethodMember",
+      "Properties": {
+        "IsPrivate": false
+      },
+      "Color": "Blue"
+    }
+  ],
+  "Links": [
+    {
+      "SourceName": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.FirstFunction()",
+      "TargetName": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.number",
+      "TargetType": "MethodMember"
+    }
+  ],
+  "Lines": []
+}

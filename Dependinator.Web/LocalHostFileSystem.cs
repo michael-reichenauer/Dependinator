@@ -1,4 +1,4 @@
-using Dependinator.Shared;
+using Dependinator.UI.Shared;
 
 namespace Dependinator.Web;
 

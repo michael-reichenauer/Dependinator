@@ -17,12 +17,12 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 - `Dependinator.Lsp/` — LSP server executable
 
 **Core libraries:**
-- `Dependinator/` — shared UI, `App/`, `Diagrams/`, `Modeling/` components
+- `Dependinator.UI/` — shared UI, `App/`, `Diagrams/`, `Modeling/` components
 - `Dependinator.Core/` — core parsing/domain logic/utilities (`Parsing/`, `Models/`, `Utils/`)
 - `Dependinator.Roslyn/` — Roslyn-based parsing (`Parsing/`)
 - `Shared/` — shared DTOs/models between client and API
 
-**Test projects:** `Api.Tests/`, `Dependinator.Tests/`, `Dependinator.Core.Tests/`, `Dependinator.Roslyn.Tests/`
+**Test projects:** `Api.Tests/`, `Dependinator.UI.Tests/`, `Dependinator.Core.Tests/`, `Dependinator.Roslyn.Tests/`
 
 **VS Code extension (not part of `Dependinator.sln`):**
 - `DependinatorVsCode/` — TypeScript extension packaging the web UI + language server (`src/extension.ts`, `src/webview.ts`, `src/languageServer.ts`, `src/cloudSyncNode.ts`)
@@ -42,7 +42,7 @@ dotnet build Dependinator.sln
 
 # Test
 dotnet test Dependinator.sln                   # all tests
-dotnet test Dependinator.Tests/Dependinator.Tests.csproj
+dotnet test Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
 dotnet test Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
 dotnet test Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj
 dotnet test Api.Tests/Api.Tests.csproj
