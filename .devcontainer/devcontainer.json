@@ -22,10 +22,18 @@
     "ghcr.io/azure/azure-dev/azd:0": {
       "version": "latest"
     },
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "username": "vscode",
-      "userUid": "1000",
-      "userGid": "1000"
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-node-azure-pack",
+        "GitHub.vscode-github-actions",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "ms-azuretools.vscode-azurefunctions"
+      ]
     }
   },
   "postCreateCommand": "./installdevtools"
