@@ -36,6 +36,5 @@
         "ms-azuretools.vscode-azurefunctions"
       ]
     }
-  },
-  "postCreateCommand": "./installdevtools"
+  }
 }
