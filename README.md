@@ -3,12 +3,12 @@
 Dependinator is a tool for visualizing and exploring software dependencies. This repo contains the shared UI and core logic plus multiple hosts (Blazor Server, Blazor WebAssembly) and an Azure Functions API used for cloud sync.
 
 ## Solution structure
-- `Dependinator/`: Shared UI, parsing, models, utilities.
+- `Dependinator.UI/`: Shared UI, parsing, models, utilities.
 - `DependinatorWeb/`: Blazor Server host for local development.
 - `DependinatorWasm/`: Blazor WebAssembly host (Azure Static Web Apps target).
 - `Api/`: Azure Functions API for cloud sync.
 - `Shared/`: Shared DTOs/models between client and API.
-- `Dependinator.Tests/`: xUnit tests.
+- `Dependinator.UI.Tests/`: xUnit tests.
 
 ## Quick start
 - Build: `./build`
@@ -16,7 +16,7 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
 - Run server with cloud sync: `./watch-sync`
 - Run WASM sample: `./run`
 - Run WASM + API + Azurite locally: `./run-sync`
-- Tests: `dotnet test Dependinator.Tests/Dependinator.Tests.csproj`
+- Tests: `dotnet test Dependinator.UI.Tests/Dependinator.UI.Tests.csproj`
 
 ## Cloud sync
 

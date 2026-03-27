@@ -1,0 +1,41 @@
+﻿@using Dependinator.UI.App
+
+<MudThemeProvider Theme="DependinatorTheme" @bind-IsDarkMode="@_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <Canvas />
+    @* <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <AppBar />
+        <MudMainContent>
+            <Canvas />
+        </MudMainContent>
+    </MudHidden>
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        <Canvas />
+    </MudHidden> *@
+
+</MudLayout>
+
+@code {
+    bool _isDarkMode = true;
+
+    MudTheme DependinatorTheme = new MudTheme
+    {
+        PaletteLight = new PaletteLight()
+        {
+            AppbarBackground = Colors.DeepPurple.Accent4,
+            AppbarText = Colors.DeepPurple.Lighten5,
+        },
+        PaletteDark = new PaletteDark()
+        {
+            AppbarBackground = Colors.DeepPurple.Darken4,
+            AppbarText = Colors.DeepPurple.Lighten5,
+            Secondary = Colors.DeepPurple.Lighten4,
+            Primary = Colors.DeepPurple.Lighten5,
+            Tertiary = Colors.DeepPurple.Darken2,
+        },
+    };
+}

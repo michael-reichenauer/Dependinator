@@ -1,0 +1,53 @@
+﻿{
+  "Nodes": [
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.ctor()",
+      "Properties": {
+        "Type": "ConstructorMember",
+        "Parent": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+        "IsPrivate": false
+      }
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.SecondFunction()",
+      "Properties": {
+        "Type": "MethodMember",
+        "Parent": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+        "IsPrivate": false
+      }
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.FirstFunction()",
+      "Properties": {
+        "Type": "MethodMember",
+        "Parent": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+        "IsPrivate": false
+      }
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.number",
+      "Properties": {
+        "Type": "FieldMember",
+        "Parent": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+        "IsPrivate": false
+      }
+    },
+    {
+      "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
+      "Properties": {
+        "Type": "Type",
+        "Parent": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models",
+        "IsPrivate": false
+      }
+    }
+  ],
+  "Links": [
+    {
+      "Source": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.FirstFunction()",
+      "Target": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.number",
+      "Properties": {
+        "TargetType": "MethodMember"
+      }
+    }
+  ]
+}
