@@ -35,6 +35,10 @@ if ! grep -qxF 'export PATH="$PATH:$HOME/.dotnet/tools"' ~/.profile; then
 fi
 
 echo ""
+echo "Install claude"
+curl -fsSL https://claude.ai/install.sh | bash
+
+echo ""
 echo "Installing gmd ..."
 curl curl -sL https://raw.githubusercontent.com/michael-reichenauer/gmd/main/install.sh | bash
 
