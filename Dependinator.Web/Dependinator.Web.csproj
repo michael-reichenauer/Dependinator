@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+    <ProjectReference Include="..\Dependinator.UI\Dependinator.UI.csproj" />
     <ProjectReference Include="..\Dependinator.Core\Dependinator.Core.csproj" />
     <ProjectReference Include="..\Dependinator.Roslyn\Dependinator.Roslyn.csproj" />
   </ItemGroup>

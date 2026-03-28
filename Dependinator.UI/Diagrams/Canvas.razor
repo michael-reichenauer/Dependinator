@@ -1,0 +1,100 @@
+@namespace Dependinator.UI.Diagrams
+@using Dependinator.UI.App
+@using Dependinator.UI.Diagrams.Dependencies
+@using Microsoft.AspNetCore.Components.Forms
+
+
+<AppBar />
+<NodeToolbar />
+<LineToolbar />
+<DependenciesTree />
+<AppProgress />
+
+
+<div @ref="dropZoneElement" class="drop-zone">
+    <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
+
+    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+         width="@Width" height="@Height" viewBox="@ViewBox" style="background-color:@DColors.CanvasBackground">
+
+        <style>
+                    svg {
+                        cursor:
+                            @Cursor
+                        ;
+                    }
+
+                    .hoverable:hover * {
+                        stroke:
+                            @DColors.Selected
+                        ;
+                        stroke-width: 4px;
+                        stroke-opacity: 1;
+                    }
+
+                    .hoverableedit:hover * {
+                        stroke:
+                            @DColors.EditNodeBorder
+                        ;
+                        stroke-width: 4px;
+                        stroke-opacity: 1;
+                    }
+
+                    .selectpoint:hover * {
+                        fill: #51b8fc;
+                        stroke-width: 1px;
+                        fill-opacity: 0.3;
+                    }
+
+
+                    .hoverline:hover * {
+                        stroke: #51b8fc;
+                        stroke-width: 6px;
+                        stroke-opacity: 1;
+                    }
+
+                    .iconName {
+                        font: Verdana, Helvetica, Arial, sans-serif;
+                        fill:
+                            @DColors.Text
+                        ;
+                        dominant-baseline: hanging;
+                        text-anchor: middle;
+                        pointer-events: none;
+                    }
+
+                    .memberName {
+                        font: Verdana, Helvetica, Arial, sans-serif;
+                        fill:
+                            @DColors.Text
+                        ;
+                        dominant-baseline: middle;
+                        text-anchor: start;
+                        pointer-events: none;
+                    }
+
+                    .nodeName {
+                        font: Verdana, Helvetica, Arial, sans-serif;
+                        fill:
+                            @DColors.Text
+                        ;
+                        dominant-baseline: hanging;
+                        text-anchor: start;
+                        pointer-events: none;
+                    }
+        </style>
+        <defs>
+            <marker id="arrow-line" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 7 3, 0 6" fill="@DColors.Line" />
+            </marker>
+            <marker id="arrow-hidden" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 7 3, 0 6" fill="@DColors.LineHidden" />
+            </marker>
+            <marker id="arrow-direct" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 7 3, 0 6" fill="@DColors.DirectLine" />
+            </marker>
+            @((MarkupString)IconDefs)
+        </defs>
+        @((MarkupString)Content)
+    </svg>
+</div>

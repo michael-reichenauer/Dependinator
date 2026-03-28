@@ -8,19 +8,19 @@
   - `Api/` (Azure Functions host for cloud sync)
   - `Dependinator.Lsp/` (LSP server executable)
 - Core libraries:
-  - `Dependinator/` (shared UI + app components)
+  - `Dependinator.UI/` (shared UI + app components)
   - `Dependinator.Core/` (core parsing/domain logic/utilities)
   - `Dependinator.Roslyn/` (Roslyn-based parsing/integration)
   - `Shared/` (shared DTOs/models)
 - Test projects:
   - `Api.Tests/`
-  - `Dependinator.Tests/`
+  - `Dependinator.UI.Tests/`
   - `Dependinator.Core.Tests/`
   - `Dependinator.Roslyn.Tests/`
 - VS Code extension (not part of `Dependinator.sln`):
   - `DependinatorVsCode/` (TypeScript extension packaging the web UI + language server)
 - Common folders you will work in frequently:
-  - `Dependinator/App/`, `Dependinator/Diagrams/`
+  - `Dependinator.UI/App/`, `Dependinator.UI/Diagrams/`
   - `Dependinator.Core/Parsing/`, `Dependinator.Core/Models/`, `Dependinator.Core/Utils/`
   - `Dependinator.Roslyn/Parsing/`
 
@@ -43,7 +43,7 @@ Note:
   - `dotnet run --project Dependinator.Lsp/Dependinator.Lsp.csproj`
 - Targeted tests:
   - `dotnet test Api.Tests/Api.Tests.csproj`
-  - `dotnet test Dependinator.Tests/Dependinator.Tests.csproj`
+  - `dotnet test Dependinator.UI.Tests/Dependinator.UI.Tests.csproj`
   - `dotnet test Dependinator.Core.Tests/Dependinator.Core.Tests.csproj`
   - `dotnet test Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj`
 - VS Code extension (`DependinatorVsCode/`):

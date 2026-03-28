@@ -34,7 +34,7 @@ class SourceParser : ISourceParser
                 solutionNodes.AddRange(items);
             }
 
-            // await WriteCompressedExampleModelAsync(solutionNodes, solutionPath);
+            await WriteCompressedDemoModelAsync(solutionNodes, solutionPath);
 
             return solutionNodes;
         }
@@ -79,20 +79,20 @@ class SourceParser : ISourceParser
         }
     }
 
-    static async Task WriteCompressedExampleModelAsync(IReadOnlyList<Item> solutionNodes, string solutionPath)
+    static async Task WriteCompressedDemoModelAsync(IReadOnlyList<Item> solutionNodes, string solutionPath)
     {
-        if (Build.IsWasm || solutionPath != ExampleModel.WorkingSolutionPath)
+        if (Build.IsWasm || solutionPath != DemoModel.WorkingSolutionPath)
             return;
 
-        string outputPath = ExampleModel.ExampleOutputPath;
+        string outputPath = DemoModel.DemoOutputPath;
         var json = Json.Serialize(solutionNodes);
-        json = json.Replace("Dependinator", "Example");
+        json = json.Replace("Dependinator", "Demo");
 
         await using var file = File.Create(outputPath);
         await using var gzip = new GZipStream(file, CompressionLevel.SmallestSize);
         await using var writer = new StreamWriter(gzip);
         await writer.WriteAsync(json);
-        Log.Info($"Wrote example model {json.Length} json size to {outputPath}");
+        Log.Info($"Wrote demo model {json.Length} json size to {outputPath}");
     }
 
     static bool IsTestProject(Project project) => project.Name.EndsWith("Test") || project.Name.EndsWith(".Tests");

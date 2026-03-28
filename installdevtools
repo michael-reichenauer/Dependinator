@@ -13,7 +13,7 @@ echo "Installing Python for WASM tooling ..."
 sudo apt-get install -y python3 python-is-python3 1>/dev/null
 echo ""
 echo "Installing dotnet wasm-tools workload ..."
-dotnet workload install wasm-tools
+sudo dotnet workload install wasm-tools
 echo ""
 echo "Installing mc for file browsning support ..."
 sudo apt install -q mc -y 1>/dev/null
@@ -33,6 +33,10 @@ echo "Adding dotnet tools to PATH ..."
 if ! grep -qxF 'export PATH="$PATH:$HOME/.dotnet/tools"' ~/.profile; then
   echo 'export PATH="$PATH:$HOME/.dotnet/tools"' >> ~/.profile
 fi
+
+echo ""
+echo "Install claude"
+curl -fsSL https://claude.ai/install.sh | bash
 
 echo ""
 echo "Installing gmd ..."

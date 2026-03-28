@@ -1,11 +1,11 @@
 namespace Dependinator.Core.Shared;
 
-static class ExampleModel
+static class DemoModel
 {
-    public static string ExampleSolutionName = "/Example.sln";
+    public static string DemoSolutionName = "/Demo.sln";
     public static string WorkingSolutionPath = "/workspaces/Dependinator/Dependinator.sln";
-    public static string ExampleModelName = "example.model";
-    public static string ExampleOutputPath = $"/workspaces/Dependinator/Dependinator.Wasm/wwwroot/{ExampleModelName}";
+    public static string DemoModelName = "demo.model";
+    public static string DemoOutputPath = $"/workspaces/Dependinator/Dependinator.Wasm/wwwroot/{DemoModelName}";
 
-    public static string Path => Build.IsWeb ? WorkingSolutionPath : ExampleSolutionName;
+    public static string Path => Build.IsWeb ? WorkingSolutionPath : DemoSolutionName;
 }

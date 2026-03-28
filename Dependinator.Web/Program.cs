@@ -4,8 +4,9 @@ using Dependinator.Core.Shared;
 using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using Dependinator.Roslyn;
-using Dependinator.Shared;
-using Dependinator.Shared.CloudSync;
+using Dependinator.UI;
+using Dependinator.UI.Shared;
+using Dependinator.UI.Shared.CloudSync;
 
 namespace Dependinator.Web;
 
