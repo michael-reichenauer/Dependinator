@@ -107,7 +107,7 @@ class CanvasService : ICanvasService
         await screenService.CheckResizeAsync();
         var lastUsedPath = recentModelsService.LastUsedPath;
         if (lastUsedPath is null)
-            lastUsedPath = ExampleModel.Path;
+            lastUsedPath = DemoModel.Path;
         await LoadAsync(lastUsedPath);
     }
 
@@ -158,7 +158,7 @@ class CanvasService : ICanvasService
         }
         else
         {
-            lastUsedPath = ExampleModel.Path;
+            lastUsedPath = DemoModel.Path;
         }
         await LoadAsync(lastUsedPath);
     }

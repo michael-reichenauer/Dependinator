@@ -51,7 +51,7 @@ class ModelListService(
         }
         if (Build.IsWeb)
         {
-            localPaths = [ExampleModel.WorkingSolutionPath];
+            localPaths = [DemoModel.WorkingSolutionPath];
             if (!recentPaths.Any() && localPaths.Any())
                 recentPaths = [localPaths[0]];
         }
@@ -82,7 +82,7 @@ class ModelListService(
     async Task<IReadOnlyList<string>> GetLocalPathsAsync()
     {
         if (Build.IsWeb)
-            return [ExampleModel.WorkingSolutionPath];
+            return [DemoModel.WorkingSolutionPath];
 
         return await workspaceFileService.GetSolutionFilePathsAsync();
     }

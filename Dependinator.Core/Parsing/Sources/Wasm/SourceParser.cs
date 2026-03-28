@@ -9,11 +9,11 @@ class SourceParser(HttpClient httpClient) : ISourceParser
     {
         try
         {
-            if (solutionPath != "/Example.sln")
+            if (solutionPath != "/Demo.sln")
                 return R.Error($"Parsing not supported '{solutionPath}'");
-            Log.Info("Downloading example.model ...", solutionPath);
-            var compressedBytes = await httpClient.GetByteArrayAsync("example.model");
-            Log.Info("Downloaded example.model");
+            Log.Info("Downloading demo.model ...", solutionPath);
+            var compressedBytes = await httpClient.GetByteArrayAsync("demo.model");
+            Log.Info("Downloaded demo.model");
 
             using var input = new MemoryStream(compressedBytes);
             using var gzip = new GZipStream(input, CompressionMode.Decompress);
@@ -22,14 +22,14 @@ class SourceParser(HttpClient httpClient) : ISourceParser
 
             var items = Json.Deserialize<List<Item>>(json);
             if (items is null)
-                return R.Error($"Failed to deserialize browser example model for: {solutionPath}");
+                return R.Error($"Failed to deserialize browser demo model for: {solutionPath}");
 
             return items;
         }
         catch (Exception ex)
         {
             Log.Exception(ex, "Error downloading");
-            return R.Error($"Failed to load browser example model for: {solutionPath}\n{ex.Message}");
+            return R.Error($"Failed to load browser demo model for: {solutionPath}\n{ex.Message}");
         }
     }
 
