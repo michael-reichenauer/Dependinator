@@ -106,6 +106,68 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
             postMessage: (message) => vscode.postMessage(message)
         };
 
+        // Replace setTimeout/setInterval with Web Worker-backed versions.
+        // Chromium can throttle the webview's renderer process timers to 1000ms
+        // minimum (cross-origin iframe / background process classification).
+        // Web Worker timers are exempt from this throttling by spec.
+        // This must run before Blazor loads so all .NET timers (Task.Delay,
+        // Timer, Debouncer, etc.) automatically use unthrottled timers.
+        (function() {
+            var w = new Worker(URL.createObjectURL(new Blob([\`
+                var timers = new Map();
+                self.onmessage = function(e) {
+                    var d = e.data, id = d.id;
+                    if (d.type === 'set') {
+                        timers.set(id, setTimeout(function() {
+                            timers.delete(id);
+                            self.postMessage(id);
+                        }, d.ms));
+                    } else if (d.type === 'clear') {
+                        var t = timers.get(id);
+                        if (t !== undefined) { clearTimeout(t); timers.delete(id); }
+                    } else if (d.type === 'setI') {
+                        timers.set(id, setInterval(function() {
+                            self.postMessage(id);
+                        }, d.ms));
+                    } else if (d.type === 'clearI') {
+                        var t = timers.get(id);
+                        if (t !== undefined) { clearInterval(t); timers.delete(id); }
+                    }
+                };
+            \`], { type: 'application/javascript' })));
+            var cbs = new Map(), nextId = 1;
+            w.onmessage = function(e) {
+                var cb = cbs.get(e.data);
+                if (cb) {
+                    if (!cb.iv) cbs.delete(e.data);
+                    cb.fn();
+                }
+            };
+            globalThis.setTimeout = function(fn, ms) {
+                if (typeof fn !== 'function') return;
+                var args = arguments.length > 2 ? Array.prototype.slice.call(arguments, 2) : null;
+                var id = nextId++;
+                cbs.set(id, { fn: args ? function() { fn.apply(null, args); } : fn, iv: false });
+                w.postMessage({ type: 'set', id: id, ms: (ms | 0) });
+                return id;
+            };
+            globalThis.clearTimeout = function(id) {
+                cbs.delete(id);
+                w.postMessage({ type: 'clear', id: id });
+            };
+            globalThis.setInterval = function(fn, ms) {
+                if (typeof fn !== 'function') return;
+                var args = arguments.length > 2 ? Array.prototype.slice.call(arguments, 2) : null;
+                var id = nextId++;
+                cbs.set(id, { fn: args ? function() { fn.apply(null, args); } : fn, iv: true });
+                w.postMessage({ type: 'setI', id: id, ms: (ms | 0) });
+                return id;
+            };
+            globalThis.clearInterval = function(id) {
+                cbs.delete(id);
+                w.postMessage({ type: 'clearI', id: id });
+            };
+        })();
     </script>
     <script nonce="${nonce}" src="${baseUri}_framework/blazor.webassembly.js" autostart="false"></script>
     <script nonce="${nonce}">

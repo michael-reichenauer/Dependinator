@@ -18,8 +18,7 @@ class PanZoomService(
     IScreenService screenService,
     IModelMgr modelMgr,
     ICommandService commandService,
-    IApplicationEvents applicationEvents,
-    IJSInterop jSInterop
+    IApplicationEvents applicationEvents
 ) : IPanZoomService
 {
     const double MaxZoom = 10;
@@ -190,9 +189,7 @@ class PanZoomService(
             isSaveModel: false
         );
 
-        // Use requestAnimationFrame instead of Task.Yield/Task.Delay to avoid
-        // Chromium setTimeout throttling (1000ms) in VS Code webviews
-        await jSInterop.Call("waitForAnimationFrame");
+        await Task.Delay(5);
     }
 
     (Pos, double) GetPosAndZoom(Rect svgRect)
