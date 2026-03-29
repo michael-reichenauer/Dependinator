@@ -106,6 +106,7 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
         }
 
         applicationEvents.TriggerUndoneRedone();
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
         applicationEvents.TriggerSaveNeeded();
     }
@@ -114,15 +115,15 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
     {
         foreach (var subCommand in composite.commands.AsEnumerable().Reverse())
         {
+            await using var _ = new MinDelay(TimeSpan.FromMilliseconds(4));
             using (var model = modelMgr.UseModel())
             {
                 subCommand.Revert(model);
             }
             applicationEvents.TriggerModelChanged();
-
             applicationEvents.TriggerUndoneRedone();
             applicationEvents.TriggerUIStateChanged();
-            await Task.Delay(2);
+            applicationEvents.TriggerSaveNeeded();
         }
 
         var command = undoStack.Pop();
@@ -133,6 +134,7 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
     {
         foreach (var subCommand in composite.commands)
         {
+            await using var _ = new MinDelay(TimeSpan.FromMilliseconds(4));
             using (var model = modelMgr.UseModel())
             {
                 subCommand.Execute(model);
@@ -141,7 +143,7 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
             applicationEvents.TriggerModelChanged();
             applicationEvents.TriggerUndoneRedone();
             applicationEvents.TriggerUIStateChanged();
-            await Task.Delay(2);
+            applicationEvents.TriggerSaveNeeded();
         }
 
         var command = redoStack.Pop();

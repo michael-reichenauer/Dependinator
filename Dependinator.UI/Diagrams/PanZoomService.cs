@@ -182,14 +182,14 @@ class PanZoomService(
 
     async Task GoToAsync(Pos pos, double zoom, Rect svgRect)
     {
+        await using var _ = new MinDelay(TimeSpan.FromMilliseconds(8));
+
         var offset = ToOffset(pos, zoom, svgRect);
         commandService.Do(
             new ModelEditCommand() { Offset = offset, Zoom = zoom },
             isClearCache: false,
             isSaveModel: false
         );
-
-        await Task.Delay(5);
     }
 
     (Pos, double) GetPosAndZoom(Rect svgRect)
