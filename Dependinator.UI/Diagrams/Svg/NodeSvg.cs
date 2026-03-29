@@ -5,6 +5,10 @@ namespace Dependinator.UI.Diagrams.Svg;
 
 class NodeSvg
 {
+    public static bool ShowHiddenNodes { get; private set; } = true;
+
+    public static void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
+
     const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
     const double MinContainerZoom = 2.0;
     const int NameIconSize = 9;

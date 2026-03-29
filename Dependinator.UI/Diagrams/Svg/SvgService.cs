@@ -110,6 +110,9 @@ class SvgService : ISvgService
 
     static string RenderNode(Node node, RenderContext context)
     {
+        if (node.IsHidden && !NodeSvg.ShowHiddenNodes)
+            return "";
+
         var geometry = CalculateNodeGeometry(node, context);
 
         if (!RectOverlap(context.TileBounds, geometry.TileRect))
@@ -175,6 +178,8 @@ class SvgService : ISvgService
         var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
         foreach (var line in parentToChildrenLines)
         {
+            if (line.IsHidden && !NodeSvg.ShowHiddenNodes)
+                continue;
             yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
         }
 
@@ -185,6 +190,8 @@ class SvgService : ISvgService
             {
                 if (line.Target.Parent == line.Source)
                     continue;
+                if (line.IsHidden && !NodeSvg.ShowHiddenNodes)
+                    continue;
                 yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
             }
         }
@@ -194,6 +201,8 @@ class SvgService : ISvgService
     {
         foreach (var directLine in node.DirectLines)
         {
+            if (directLine.IsHidden && !NodeSvg.ShowHiddenNodes)
+                continue;
             var svg = LineSvg.GetDirectLineSvg(directLine, node, nodeCanvasPos, childrenZoom);
             if (svg.Length > 0)
                 yield return svg;

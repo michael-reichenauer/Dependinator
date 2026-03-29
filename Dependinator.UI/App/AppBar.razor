@@ -1,5 +1,7 @@
 @using Dependinator.Core
+@using Dependinator.UI.Modeling
 @using Dependinator.UI.Modeling.Commands
+@using Dependinator.UI.Diagrams.Svg
 @using Dependinator.UI.Shared.CloudSync
 @inject ICanvasService canvasService
 @inject IAppCloudSyncService appCloudSyncService
@@ -8,6 +10,8 @@
 @inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
 @inject IModelListService modelListService
+@inject IConfigService configService
+@inject IModelService modelService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
@@ -35,6 +39,11 @@
                 Refresh
             </MudMenuItem>
         }
+
+        <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon"
+                     OnClick="ToggleShowHiddenNodes">
+            Show Hidden Nodes
+        </MudMenuItem>
 
         <MudDivider />
 
@@ -387,6 +396,19 @@
     void OnBackgroundSyncError(string errorMessage)
     {
         _ = InvokeAsync(() => snackbar.Add(errorMessage, Severity.Warning));
+    }
+
+    string ShowHiddenNodesIcon => NodeSvg.ShowHiddenNodes
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Outlined.Circle;
+
+    async Task ToggleShowHiddenNodes()
+    {
+        var newValue = !NodeSvg.ShowHiddenNodes;
+        NodeSvg.SetShowHiddenNodes(newValue);
+        await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
+        modelService.ClearCache();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
