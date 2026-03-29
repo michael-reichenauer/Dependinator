@@ -90,9 +90,6 @@ class Node : IItem
             {
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
-                FileSpan = fileSpan is null
-                    ? null
-                    : new FileSpanDto(fileSpan.Path, fileSpan.StartLine, fileSpan.EndLine),
             },
             Boundary = Boundary != Rect.None ? Boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
@@ -110,13 +107,6 @@ class Node : IItem
         Description = dto.Properties.Description;
         HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
         IsPrivate = dto.Properties.IsPrivate;
-        fileSpan = dto.Properties.FileSpan is null
-            ? null
-            : new FileSpan(
-                dto.Properties.FileSpan.Path,
-                dto.Properties.FileSpan.StarLine,
-                dto.Properties.FileSpan.EndLine
-            );
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
