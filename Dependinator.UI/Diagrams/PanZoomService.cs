@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -14,7 +15,12 @@ interface IPanZoomService
 }
 
 [Scoped]
-class PanZoomService(IScreenService screenService, IModelMgr modelMgr, ICommandService commandService) : IPanZoomService
+class PanZoomService(
+    IScreenService screenService,
+    IModelMgr modelMgr,
+    ICommandService commandService,
+    IApplicationEvents applicationEvents
+) : IPanZoomService
 {
     const double MaxZoom = 10;
     const double Margin = 10;
@@ -116,8 +122,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, ICommandS
             currentZoom *= GoToZoomSpeed;
             currentViewRect = ToViewRect(currentPos, currentZoom, animationRect);
 
-            GoTo(currentPos, currentZoom, animationRect);
-            await Task.Delay(GoToDelay);
+            await GoToAsync(currentPos, currentZoom, animationRect);
         }
 
         var xd = (targetPos.X - currentPos.X) / currentZoom / GoToMoveStepCount;
@@ -130,13 +135,12 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, ICommandS
             var x = currentPos.X + xd * currentZoom;
             var y = currentPos.Y + yd * currentZoom;
             currentPos = new Pos(x, y);
-            GoTo(currentPos, currentZoom, animationRect);
-            await Task.Delay(GoToDelay);
+            await GoToAsync(currentPos, currentZoom, animationRect);
         }
 
         if (!IsCurrentGoToRequest(requestId))
             return false;
-        GoTo(targetPos, currentZoom, animationRect);
+        await GoToAsync(targetPos, currentZoom, animationRect);
 
         // Zoom until pos
         while (currentZoom > targetZoom)
@@ -145,8 +149,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, ICommandS
                 return false;
 
             currentZoom *= 1 / GoToZoomSpeed;
-            GoTo(targetPos, currentZoom, animationRect);
-            await Task.Delay(GoToDelay);
+            await GoToAsync(targetPos, currentZoom, animationRect);
         }
 
         if (!IsCurrentGoToRequest(requestId))
@@ -159,10 +162,11 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, ICommandS
         var finalRect = screenService.SvgRect;
         if (!IsValidSvgRect(finalRect))
             return false;
-        GoTo(targetPos, targetZoom, finalRect);
+        await GoToAsync(targetPos, targetZoom, finalRect);
 
         var (endPos, endZoom) = GetPosAndZoom(animationRect);
         Log.Info($"EndPos:  {endPos},  EndZoom:  {endZoom}");
+        applicationEvents.TriggerSaveNeeded();
         return true;
     }
 
@@ -178,10 +182,23 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, ICommandS
             && r1.Y + r1.Height <= r2.Y + r2.Height;
     }
 
-    void GoTo(Pos pos, double zoom, Rect svgRect)
+    async Task GoToAsync(Pos pos, double zoom, Rect svgRect)
     {
+        var time = Stopwatch.StartNew();
         var offset = ToOffset(pos, zoom, svgRect);
-        commandService.Do(new ModelEditCommand() { Offset = offset, Zoom = zoom }, false);
+        commandService.Do(
+            new ModelEditCommand() { Offset = offset, Zoom = zoom },
+            isClearCache: false,
+            isSaveModel: false
+        );
+
+        if (time.ElapsedMilliseconds > 10)
+            Log.Error($"GoTo time before await {time.ElapsedMilliseconds}ms");
+        await Task.Yield();
+        //await Task.Delay(GoToDelay);
+
+        if (time.ElapsedMilliseconds > 20)
+            Log.Error($"GoTo time asfter await {time.ElapsedMilliseconds}ms");
     }
 
     (Pos, double) GetPosAndZoom(Rect svgRect)

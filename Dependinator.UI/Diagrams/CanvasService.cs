@@ -223,6 +223,7 @@ class CanvasService : ICanvasService
         TileKeyText = $"{tile.Key}"; // Log info
         TileViewBox = $"{tileViewRect}"; // Log info
 
+        applicationEvents.TriggerUIStateChanged();
         return Content;
     }
 }
