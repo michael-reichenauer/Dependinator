@@ -28,10 +28,13 @@
             Fit to Screen
         </MudMenuItem>
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                     OnClick="canvasService.Refresh">
-            Refresh
-        </MudMenuItem>
+        @if (Build.IsVsCodeExtWasm || Build.IsWeb)
+        {
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                         OnClick="canvasService.Refresh">
+                Refresh
+            </MudMenuItem>
+        }
 
         <MudDivider />
 
@@ -114,7 +117,10 @@
                        OnClick="commandService.Undo" />
         <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
                        OnClick="commandService.Redo" />
-        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh" />
+        @if (Build.IsVsCodeExtWasm || Build.IsWeb)
+        {
+            <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh" />
+        }
     </MudHidden>
 
 </MudButtonGroup>
