@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -19,7 +18,8 @@ class PanZoomService(
     IScreenService screenService,
     IModelMgr modelMgr,
     ICommandService commandService,
-    IApplicationEvents applicationEvents
+    IApplicationEvents applicationEvents,
+    IJSInterop jSInterop
 ) : IPanZoomService
 {
     const double MaxZoom = 10;
@@ -28,7 +28,6 @@ class PanZoomService(
     const double PinchZoomSpeed = 1.04;
     const double GoToZoomSpeed = 1.02;
     const int GoToMoveStepCount = 50;
-    static readonly int GoToDelay = 5;
     long goToRequestId = 0;
 
     public void Zoom(PointerEvent e)
@@ -184,7 +183,6 @@ class PanZoomService(
 
     async Task GoToAsync(Pos pos, double zoom, Rect svgRect)
     {
-        var time = Stopwatch.StartNew();
         var offset = ToOffset(pos, zoom, svgRect);
         commandService.Do(
             new ModelEditCommand() { Offset = offset, Zoom = zoom },
@@ -192,13 +190,9 @@ class PanZoomService(
             isSaveModel: false
         );
 
-        if (time.ElapsedMilliseconds > 10)
-            Log.Error($"GoTo time before await {time.ElapsedMilliseconds}ms");
-        await Task.Yield();
-        //await Task.Delay(GoToDelay);
-
-        if (time.ElapsedMilliseconds > 20)
-            Log.Error($"GoTo time asfter await {time.ElapsedMilliseconds}ms");
+        // Use requestAnimationFrame instead of Task.Yield/Task.Delay to avoid
+        // Chromium setTimeout throttling (1000ms) in VS Code webviews
+        await jSInterop.Call("waitForAnimationFrame");
     }
 
     (Pos, double) GetPosAndZoom(Rect svgRect)

@@ -2,6 +2,10 @@ export function showPrompt(message) {
   return prompt(message, 'Type anything here');
 }
 
+export function waitForAnimationFrame() {
+  return new Promise(resolve => requestAnimationFrame(resolve));
+}
+
 export function listenToWindowResize(elementId, instance, functionName) {
   function resizeEventHandler() {
     instance.invokeMethodAsync(functionName);
