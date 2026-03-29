@@ -8,6 +8,7 @@
 @inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
 @inject ILineEditService lineEditService
+@implements IDisposable
 
 @if (HasSelectedLine)
 {
@@ -96,9 +97,9 @@
         dependenciesService.ShowNodeAsync(node.Id);
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-        if (firstRender) applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
-    }
+    protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
 }

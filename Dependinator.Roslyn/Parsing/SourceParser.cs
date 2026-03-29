@@ -34,7 +34,7 @@ class SourceParser : ISourceParser
                 solutionNodes.AddRange(items);
             }
 
-            await WriteCompressedDemoModelAsync(solutionNodes, solutionPath);
+            // await WriteCompressedDemoModelAsync(solutionNodes, solutionPath);
 
             return solutionNodes;
         }
