@@ -109,6 +109,7 @@ class ModelService : IModelService, IDisposable
 
         var modelInfo = await LoadCachedModelDataAsync(modelPath, modelDto);
         CheckLineVisibility();
+        RefreshAsync().RunInBackground();
         return modelInfo;
     }
 
