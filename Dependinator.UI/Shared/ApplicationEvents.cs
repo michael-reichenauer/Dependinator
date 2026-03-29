@@ -11,10 +11,16 @@ interface IApplicationEvents
     void TriggerSaveNeeded();
     void TriggerUndoneRedone();
     void TriggerModelChanged();
+
+    /// <summary>
+    /// Yields to the browser renderer using requestAnimationFrame.
+    /// Best for animation loops where you want to sync to the display refresh rate.
+    /// </summary>
+    Task YieldAsync();
 }
 
 [Scoped]
-class ApplicationEvents : IApplicationEvents
+class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
 {
     public event Action UIStateChanged = null!;
     public event Action SaveNeeded = null!;
@@ -28,4 +34,6 @@ class ApplicationEvents : IApplicationEvents
     public void TriggerUndoneRedone() => UndoneRedone?.Invoke();
 
     public void TriggerModelChanged() => ModelChanged?.Invoke();
+
+    public async Task YieldAsync() => await jSInterop.Call("waitForAnimationFrame");
 }

@@ -350,7 +350,7 @@ public class AppCloudSyncServiceTests
         Mock<ICloudSyncStateService> cloudSyncStateService = new();
         Mock<IModelService> modelService = new();
         Mock<IModelMgr> modelMgr = new();
-        ApplicationEvents applicationEvents = new();
+        ApplicationEvents applicationEvents = new(new Mock<IJSInterop>().Object);
         SyncCallCounters counters = new();
 
         cloudSyncService.SetupGet(x => x.IsAvailable).Returns(true);

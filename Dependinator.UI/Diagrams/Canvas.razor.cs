@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components.Forms;
 namespace Dependinator.UI.Diagrams;
 
 // https://css-tricks.com/use-and-reuse-everything-in-svg-even-animations/
-partial class Canvas : ComponentBase, IUIComponent
+partial class Canvas : ComponentBase, IUIComponent, IDisposable
 {
     [Inject]
     ICanvasService srv { get; init; } = null!;
@@ -41,10 +41,14 @@ partial class Canvas : ComponentBase, IUIComponent
 
             await jSInterop.Call("initializeFileDropZone", dropZoneElement, inputFile.Element);
 
-            applicationEvents.UIStateChanged += () => InvokeAsync(StateHasChanged);
+            applicationEvents.UIStateChanged += OnUiStateChanged;
             await InvokeAsync(srv.InitialShow);
         }
     }
+
+    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
 
     protected async void LoadFiles(InputFileChangeEventArgs e)
     {
