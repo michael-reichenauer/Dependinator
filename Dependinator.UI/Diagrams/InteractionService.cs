@@ -126,6 +126,8 @@ class InteractionService : IInteractionService
 
     public void IncreaseNodeSize()
     {
+        if (!NodeSvg.IsEditingEnabled)
+            return;
         if (!selectionService.IsSelected)
             return;
         var nodeId = NodeId.FromId(selectionService.SelectedId.Id);
@@ -135,6 +137,8 @@ class InteractionService : IInteractionService
 
     public void DecreaseNodeSize()
     {
+        if (!NodeSvg.IsEditingEnabled)
+            return;
         if (!selectionService.IsSelected)
             return;
         var nodeId = NodeId.FromId(selectionService.SelectedId.Id);
@@ -243,7 +247,8 @@ class InteractionService : IInteractionService
         if (!e.IsLeftButton)
             return;
         if (
-            mouseDownId.IsLinePoint
+            NodeSvg.IsEditingEnabled
+            && mouseDownId.IsLinePoint
             && selectionService.SelectedId.IsLine
             && mouseDownId.Id == selectionService.SelectedId.Id
         )
@@ -260,7 +265,7 @@ class InteractionService : IInteractionService
             return;
         }
 
-        if (mouseDownId != PointerId.Empty && mouseDownId.IsResize)
+        if (NodeSvg.IsEditingEnabled && mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {
             isResizingSelectedNode = true;
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
@@ -269,7 +274,8 @@ class InteractionService : IInteractionService
         }
 
         if (
-            mouseDownId == selectionService.SelectedId
+            NodeSvg.IsEditingEnabled
+            && mouseDownId == selectionService.SelectedId
             && selectionService.IsSelectedNodeMovable(Zoom)
             && mouseDownId.IsNode
         )

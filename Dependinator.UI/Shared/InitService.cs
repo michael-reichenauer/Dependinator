@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 
 namespace Dependinator.UI.Shared;
@@ -44,6 +45,7 @@ class InitService : IInitService
         await database.Init([FileService.DBCollectionName]);
         var config = await configService.GetAsync();
         NodeLayout.SetDensity(config.LayoutDensity);
+        NodeSvg.SetShowHiddenNodes(config.ShowHiddenNodes);
         await screenService.InitAsync(component);
         await mouseEventService.InitAsync();
         await recentModelsService.InitAsync();

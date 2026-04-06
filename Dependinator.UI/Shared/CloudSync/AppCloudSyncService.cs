@@ -526,6 +526,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
             return;
 
         CancellationTokenSource idleRefreshTokenSource = new();
+        var token = idleRefreshTokenSource.Token;
         CancellationTokenSource? previousTokenSource;
         lock (idleRefreshLock)
         {
@@ -535,7 +536,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
         previousTokenSource?.Cancel();
         previousTokenSource?.Dispose();
-        _ = RunIdleRefreshLoopAsync(idleRefreshTokenSource.Token);
+        _ = RunIdleRefreshLoopAsync(token);
     }
 
     async Task RunIdleRefreshLoopAsync(CancellationToken cancellationToken)

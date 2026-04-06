@@ -1,5 +1,7 @@
 @using Dependinator.Core
+@using Dependinator.UI.Modeling
 @using Dependinator.UI.Modeling.Commands
+@using Dependinator.UI.Diagrams.Svg
 @using Dependinator.UI.Shared.CloudSync
 @inject ICanvasService canvasService
 @inject IAppCloudSyncService appCloudSyncService
@@ -8,6 +10,8 @@
 @inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
 @inject IModelListService modelListService
+@inject IConfigService configService
+@inject IModelService modelService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
@@ -28,9 +32,20 @@
             Fit to Screen
         </MudMenuItem>
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                     OnClick="canvasService.Refresh">
-            Refresh
+        @if (Build.IsVsCodeExtWasm || Build.IsWeb)
+        {
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                         OnClick="canvasService.Refresh">
+                Refresh
+            </MudMenuItem>
+        }
+
+        <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes">
+            Show Hidden Nodes
+        </MudMenuItem>
+
+        <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode">
+            Edit Mode
         </MudMenuItem>
 
         <MudDivider />
@@ -114,7 +129,18 @@
                        OnClick="commandService.Undo" />
         <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
                        OnClick="commandService.Redo" />
-        <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh" />
+        @if (Build.IsVsCodeExtWasm || Build.IsWeb)
+        {
+            <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh" />
+        }
+        @if (NodeSvg.IsEditingEnabled)
+        {
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Color="@Color.Warning" OnClick="ToggleEditMode" />
+        }
+        else
+        {
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Default" OnClick="ToggleEditMode" />
+        }
     </MudHidden>
 
 </MudButtonGroup>
@@ -366,7 +392,7 @@
     void ShowSyncConflictSnackbar()
     {
         snackbar.Add(
-        "Cloud sync conflict detected. Choose Use Cloud or Keep Local.",
+        "Cloud sync conflict detected.",
         Severity.Error,
         options =>
         {
@@ -381,6 +407,37 @@
     void OnBackgroundSyncError(string errorMessage)
     {
         _ = InvokeAsync(() => snackbar.Add(errorMessage, Severity.Warning));
+    }
+
+    string ShowHiddenNodesIcon => NodeSvg.ShowHiddenNodes
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Outlined.Circle;
+
+    string EditModeIcon => NodeSvg.IsEditingEnabled
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Outlined.Circle;
+
+    string EditModeToolbarIcon => NodeSvg.IsEditingEnabled
+        ? Icons.Material.Filled.Edit
+        : Icons.Material.Outlined.EditOff;
+
+    MudBlazor.Color EditModeToolbarColor => NodeSvg.IsEditingEnabled
+        ? Color.Default
+        : Color.Inherit;
+
+    void ToggleEditMode()
+    {
+        NodeSvg.SetIsEditingEnabled(!NodeSvg.IsEditingEnabled);
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    async Task ToggleShowHiddenNodes()
+    {
+        var newValue = !NodeSvg.ShowHiddenNodes;
+        NodeSvg.SetShowHiddenNodes(newValue);
+        await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
+        modelService.ClearCache();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;

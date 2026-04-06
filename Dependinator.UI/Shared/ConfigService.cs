@@ -9,6 +9,7 @@ class Config
     public List<string> RecentPaths { get; set; } = [];
     public NodeLayoutDensity LayoutDensity { get; set; } = NodeLayoutDensity.Balanced;
     public Dictionary<string, CloudSyncModelState> CloudSyncStates { get; set; } = [];
+    public bool ShowHiddenNodes { get; set; } = true;
 }
 
 interface IConfigService
