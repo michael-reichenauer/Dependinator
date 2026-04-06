@@ -40,9 +40,12 @@
             </MudMenuItem>
         }
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon"
-                     OnClick="ToggleShowHiddenNodes">
+        <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes">
             Show Hidden Nodes
+        </MudMenuItem>
+
+        <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode">
+            Edit Mode
         </MudMenuItem>
 
         <MudDivider />
@@ -129,6 +132,14 @@
         @if (Build.IsVsCodeExtWasm || Build.IsWeb)
         {
             <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh" />
+        }
+        @if (NodeSvg.IsEditingEnabled)
+        {
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Color="@Color.Warning" OnClick="ToggleEditMode" />
+        }
+        else
+        {
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Default" OnClick="ToggleEditMode" />
         }
     </MudHidden>
 
@@ -401,6 +412,24 @@
     string ShowHiddenNodesIcon => NodeSvg.ShowHiddenNodes
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
+
+    string EditModeIcon => NodeSvg.IsEditingEnabled
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Outlined.Circle;
+
+    string EditModeToolbarIcon => NodeSvg.IsEditingEnabled
+        ? Icons.Material.Filled.Edit
+        : Icons.Material.Outlined.EditOff;
+
+    MudBlazor.Color EditModeToolbarColor => NodeSvg.IsEditingEnabled
+        ? Color.Default
+        : Color.Inherit;
+
+    void ToggleEditMode()
+    {
+        NodeSvg.SetIsEditingEnabled(!NodeSvg.IsEditingEnabled);
+        applicationEvents.TriggerUIStateChanged();
+    }
 
     async Task ToggleShowHiddenNodes()
     {

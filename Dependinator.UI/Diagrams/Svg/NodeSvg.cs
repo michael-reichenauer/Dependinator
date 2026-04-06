@@ -1,3 +1,4 @@
+using Dependinator.Core;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
@@ -6,8 +7,11 @@ namespace Dependinator.UI.Diagrams.Svg;
 class NodeSvg
 {
     public static bool ShowHiddenNodes { get; private set; } = true;
+    public static bool IsEditingEnabled { get; private set; } = !Build.IsStandaloneWasm;
 
     public static void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
+
+    public static void SetIsEditingEnabled(bool enabled) => IsEditingEnabled = enabled;
 
     const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
     const double MinContainerZoom = 2.0;
@@ -268,6 +272,15 @@ class NodeSvg
     {
         if (!node.IsSelected)
             return "";
+
+        if (!IsEditingEnabled)
+        {
+            // Show selection border only, no resize handles
+            return $"""
+                <rect x="{geometry.X - 6}" y="{geometry.Y - 6}" width="{geometry.Width + 13:0.##}" height="{geometry.Height
+                    + 13:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{DColors.Selected}" stroke-dasharray="5,5"/>
+                """;
+        }
 
         string c = DColors.Selected;
         const int s = 8;
