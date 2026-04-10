@@ -16,7 +16,4 @@ record NodePropertiesDto
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? MemberType { get; set; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public FileSpanDto? FileSpan { get; set; }
 }

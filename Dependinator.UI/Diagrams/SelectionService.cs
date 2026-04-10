@@ -104,15 +104,15 @@ class SelectionService : ISelectionService
             x = bound.X + clickedRelativePosition * bound.Width - toolbarOffsetX;
             y = bound.Y + clickedRelativePosition * bound.Height - toolbarOffsetY;
 
-            modelMgr.TryWithLine(
-                selectedId.LineId,
-                line =>
+            using (var model = modelMgr.UseModel())
+            {
+                if (model.Lines.TryGetValue(selectedId.LineId, out var line))
                 {
                     // For some lines based int its direction we need to flip the y coordinate
                     if (line.IsUpHill)
                         y = bound.Bottom - clickedRelativePosition * bound.Height - toolbarOffsetY;
                 }
-            );
+            }
         }
 
         if (selectedPosition.X == x && selectedPosition.Y == y)
@@ -125,11 +125,21 @@ class SelectionService : ISelectionService
     public void SetEditMode(bool isEditMode)
     {
         if (!IsSelected)
+        {
+            Log.Info("Not selected");
             return;
+        }
 
-        if (!modelMgr.TryWithNode(selectedId.NodeId, node => node.IsEditMode = isEditMode))
-            return;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
+                return;
+            node.IsEditMode = isEditMode;
+        }
+
+        Log.Info("Set edit mode", isEditMode, selectedId.NodeId);
         this.isEditMode = isEditMode;
+        applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -154,21 +164,21 @@ class SelectionService : ISelectionService
 
         if (pointerId.IsNode)
         {
-            var zoom = modelMgr.WithModel(m => m.Zoom);
+            var isMovable = false;
 
-            if (
-                modelMgr.TryWithNode(
-                    pointerId.NodeId,
-                    node =>
+            using (var model = modelMgr.UseModel())
+            {
+                if (model.Nodes.TryGetValue(pointerId.NodeId, out var node))
+                {
+                    if (IsNodeMovable(node, model.Zoom))
                     {
-                        if (!IsNodeMovable(node, zoom))
-                            return false;
+                        isMovable = true;
                         node.IsSelected = true;
                         node.IsEditMode = false;
-                        return true;
                     }
-                )
-            )
+                }
+            }
+            if (isMovable)
             {
                 selectedId = pointerId;
                 this.isEditMode = false;
@@ -192,18 +202,22 @@ class SelectionService : ISelectionService
 
         if (selectedId.IsNode)
         {
-            modelMgr.TryWithNode(
-                selectedId.NodeId,
-                node =>
+            using (var model = modelMgr.UseModel())
+            {
+                if (model.Nodes.TryGetValue(selectedId.NodeId, out var node))
                 {
                     node.IsSelected = false;
                     node.IsEditMode = false;
                 }
-            );
+            }
         }
         if (selectedId.IsLine)
         {
-            modelMgr.TryWithLine(selectedId.LineId, line => line.IsSelected = false);
+            using (var model = modelMgr.UseModel())
+            {
+                if (model.Lines.TryGetValue(selectedId.LineId, out var line))
+                    line.IsSelected = false;
+            }
         }
         selectedId = PointerId.Empty;
         this.isEditMode = false;
@@ -228,9 +242,9 @@ class SelectionService : ISelectionService
         var (x, y) = (e.ClientX, e.ClientY);
         selectedLineClickPosition = new Pos(x, y);
 
-        modelMgr.TryWithLine(
-            pointerId.LineId,
-            line =>
+        using (var model = modelMgr.UseModel())
+        {
+            if (model.Lines.TryGetValue(pointerId.LineId, out var line))
             {
                 if (isNewSelection)
                     line.IsSelected = true;
@@ -248,10 +262,8 @@ class SelectionService : ISelectionService
                     var t = ((x - x1) * dx + (y - y1) * dy) / len2; // projection factor t ∈ [0,1]
                     clickedRelativePosition = Math.Max(0, Math.Min(1, t));
                 }
-
-                return true;
             }
-        );
+        }
 
         if (isNewSelection)
         {

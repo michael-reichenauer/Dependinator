@@ -1,5 +1,6 @@
 ﻿@using Dependinator.UI.Diagrams.Dependencies
 @using Dependinator.UI.Diagrams.Icons
+@using Dependinator.UI.Diagrams.Svg
 @using Dependinator.Core
 @using Dependinator.Core.Parsing
 @using Dependinator.Core.Shared
@@ -42,9 +43,18 @@
 
     <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
     <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
-    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen"
-                   OnClick="interactionService.DecreaseNodeSize" />
-    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize" />
+
+    @if (NodeSvg.IsEditingEnabled)
+    {
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen"
+                     OnClick="interactionService.DecreaseNodeSize" />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize" />
+    }
+    else
+    {
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" Color="Color.Inherit" />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" Color="Color.Inherit" />
+    }
 
     @if (CanShowSource)
     {
@@ -53,11 +63,23 @@
 
     @if (!IsIconMode)
     {
-      <MudToggleIconButton @bind-Toggled="interactionService.IsEditNodeMode" Icon="@MudBlazor.Icons.Material.Outlined.Edit"
-                           ToggledIcon="@MudBlazor.Icons.Material.Filled.Edit" ToggledColor="@Color.Warning" />
-      @if (interactionService.IsEditNodeMode)
+      @if (IsEditNodeMode)
       {
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" OnClick="() => IsEditNodeMode = false"
+                       Color="@Color.Warning" />
         <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit" />
+      }
+      else
+      {
+        @if (NodeSvg.IsEditingEnabled)
+        {
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="() => IsEditNodeMode = true" />
+        }
+        else
+        {
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="Color.Inherit" />
+          
+        }
       }
 
     }
@@ -80,6 +102,17 @@
 @code {
   const double ToolbarOffset = 58;
   private MudMessageBox mbox { get; set; } = null!;
+
+
+  bool IsEditNodeMode
+  {
+    get { return interactionService.IsEditNodeMode; }
+    set
+    {
+      Log.Info("Set val", value);
+      interactionService.IsEditNodeMode = value;
+    }
+  }
 
   [Inject]
   IApplicationEvents applicationEvents { get; set; } = null!;
@@ -183,14 +216,17 @@
     FileSpan? nodeFileSpan = null;
 
     string nodeTitle = selectedId;
-    modelMgr.TryWithNode(
-        nodeId,
-        node =>
-        {
-          nodeTitle = node.LongName;
-          nodeFileSpan = node.FileSpanOrParentSpan;
-        }
-    );
+
+    using (var model = modelMgr.UseModel())
+    {
+      if (model.Nodes.TryGetValue(nodeId, out var node))
+      {
+        nodeTitle = node.LongName;
+        nodeFileSpan = node.FileSpanOrParentSpan;
+      }
+    }
+
+   
     if (nodeFileSpan is not null && Build.IsVsCodeExtWasm)
     {
       await navigationService.ShowEditor(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
