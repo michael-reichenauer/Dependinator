@@ -37,6 +37,13 @@ static class Names
         return ToFullTypeName(moduleName, fqTypeName);
     }
 
+    public static (string, string) GetFullTypeNameAndTypeName(INamedTypeSymbol typeSymbol, string moduleName)
+    {
+        var fqTypeName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+        return (ToFullTypeName(moduleName, fqTypeName), fqTypeName);
+    }
+
     public static string GetFullTypeName(INamedTypeSymbol typeSymbol)
     {
         var moduleName = GetModuleName(typeSymbol);

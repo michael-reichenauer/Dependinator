@@ -62,6 +62,7 @@ public class SourceParserTests
     }
 
     [Fact(Skip = "Disabled, since always parsing whole solution takes time")]
+    // [Fact]
     public async Task TestSolutionSourceParserAsync()
     {
         var sourceParser = new SourceParser();
