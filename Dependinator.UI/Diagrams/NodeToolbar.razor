@@ -50,11 +50,6 @@
                      OnClick="interactionService.DecreaseNodeSize" />
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize" />
     }
-    else
-    {
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" Color="Color.Inherit" />
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" Color="Color.Inherit" />
-    }
 
     @if (CanShowSource)
     {
@@ -75,13 +70,7 @@
         {
           <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="() => IsEditNodeMode = true" />
         }
-        else
-        {
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="Color.Inherit" />
-          
-        }
       }
-
     }
   </MudButtonGroup>
 }
