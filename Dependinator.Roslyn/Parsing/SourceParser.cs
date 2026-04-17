@@ -22,17 +22,24 @@ class SourceParser : ISourceParser
                 .Projects.Where(p => p.Language == LanguageNames.CSharp)
                 .Where(p => !IsTestProject(p));
 
-            var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionNode.Name));
-
             List<Item> solutionNodes = [];
             solutionNodes.Add(new Item(solutionNode, null));
 
-            await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
+            foreach (var project in projects)
             {
-                if (!Try(out var items, out var e, await parseProjectTask))
+                if (!Try(out var items, out var e, await ParseProjectAsync(project, solutionNode.Name)))
                     continue;
                 solutionNodes.AddRange(items);
             }
+
+            // var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionNode.Name));
+
+            // await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
+            // {
+            //     if (!Try(out var items, out var e, await parseProjectTask))
+            //         continue;
+            //     solutionNodes.AddRange(items);
+            // }
 
             // await WriteCompressedDemoModelAsync(solutionNodes, solutionPath);
 
@@ -51,6 +58,7 @@ class SourceParser : ISourceParser
             using var workspace = Compiler.CreateWorkspace();
 
             var project = await workspace.OpenProjectAsync(projectPath);
+            Log.Info("Parse:", projectPath);
             return await ParseProjectAsync(project, null);
         }
         catch (Exception e)
@@ -61,6 +69,7 @@ class SourceParser : ISourceParser
 
     public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
     {
+        Log.Info("Parse:", project.Name);
         if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
             return e;
 
@@ -71,6 +80,13 @@ class SourceParser : ISourceParser
     {
         var moduleName = Names.GetModuleName(compilation);
         yield return new Item(new Node(moduleName, new() { Type = NodeType.Assembly, Parent = parentName }), null);
+
+        var typeNames = Compiler
+            .GetAllTypes(compilation)
+            .Where(t => !t.IsImplicitlyDeclared)
+            .Select(t => t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+            .ToList();
+        Log.Info($"Names for {moduleName} ({typeNames.Count}):\n {string.Join("\n  ", typeNames)}");
 
         foreach (var type in Compiler.GetAllTypes(compilation).Where(t => !t.IsImplicitlyDeclared))
         {

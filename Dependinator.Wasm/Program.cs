@@ -1,9 +1,9 @@
-using Dependinator.UI;
 using Dependinator.Core;
 using Dependinator.Core.Parsing.Sources.Wasm;
 using Dependinator.Core.Rpc;
 using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
+using Dependinator.UI;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.CloudSync;
 using Dependinator.Wasm;

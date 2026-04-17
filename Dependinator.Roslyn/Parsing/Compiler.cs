@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.Loader;
 using Dependinator.Core.Parsing.Utils;
@@ -33,9 +34,12 @@ class Compiler
             .OrderBy(d => d.Location.IsInSource ? d.Location.GetLineSpan().Path : "")
             .ThenBy(d => d.Location.IsInSource ? d.Location.GetLineSpan().StartLinePosition.Line : int.MaxValue)
             .ToArray();
-
-        foreach (var error in errors)
-            Log.Warn($"Source Error: {error}");
+        if (errors.Any())
+        {
+            Log.Warn($"{errors.Count()} errors in {project.Name}");
+            // foreach (var error in errors)
+            //     Log.Warn($"  Error: {error}");
+        }
 
         return compilation;
     }
@@ -115,18 +119,14 @@ class Compiler
 
     // Cache load contexts per generator path so repeat compilations don't re-load the assembly
     // (AssemblyLoadContext does not allow loading the same path twice into different contexts).
-    static readonly Dictionary<string, GeneratorLoadContext> generatorContexts = [];
+    static readonly ConcurrentDictionary<string, GeneratorLoadContext> generatorContexts = new();
 
     static IEnumerable<ISourceGenerator> LoadGeneratorsFromFile(string path)
     {
         Assembly assembly;
         try
         {
-            if (!generatorContexts.TryGetValue(path, out var ctx))
-            {
-                ctx = new GeneratorLoadContext(path);
-                generatorContexts[path] = ctx;
-            }
+            var ctx = generatorContexts.GetOrAdd(path, p => new GeneratorLoadContext(p));
             assembly = ctx.LoadFromAssemblyPath(path);
         }
         catch (Exception ex)

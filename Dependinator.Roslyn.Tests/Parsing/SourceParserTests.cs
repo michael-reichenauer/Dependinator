@@ -57,18 +57,20 @@ public class SourceParserTests
         Assert.NotEmpty(SourceTestDataNodes);
     }
 
-    [Fact(Skip = "Disabled, since always parsing whole solution takes time")]
-    //[Fact]
+    //[Fact(Skip = "Disabled, since always parsing whole solution takes time")]
+    [Fact]
     public async Task TestSolutionSourceParserAsync()
     {
         var sourceParser = new SourceParser();
         if (!Try(out var items, out var e, await sourceParser.ParseSolutionAsync(Root.SolutionFilePath)))
             Assert.Fail(e.AllErrorMessages());
 
-        var nodes = items.NodesContained(typeof(TypeParser), null);
+        var nodes = items.Nodes().OrderBy(n => n.Name).ToList();
         Assert.NotEmpty(nodes);
 
-        var links = items.LinksToContained(typeof(TypeParser), null);
+        var n = nodes.Where(n => n.Name.Contains("AppBar")).ToList();
+
+        var links = items.Links().OrderBy(l => l.Source).ThenBy(l => l.Target).ToList();
         Assert.NotEmpty(links);
     }
 }
