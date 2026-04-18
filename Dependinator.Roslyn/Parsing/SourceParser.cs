@@ -31,25 +31,27 @@ class SourceParser : ISourceParser
             List<Item> solutionNodes = [];
             solutionNodes.Add(new Item(solutionNode, null));
 
-            foreach (var project in projects)
-            {
-                if (!Try(out var items, out var e, await ParseProjectAsync(project, solutionNode.Name)))
-                {
-                    Log.Warn($"Failed to parse project {project.Name}: {e.ErrorMessage}");
-                    continue;
-                }
-
-                solutionNodes.AddRange(items);
-            }
-
-            // var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionNode.Name));
-
-            // await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
+            // // In sequence
+            // foreach (var project in projects)
             // {
-            //     if (!Try(out var items, out var e, await parseProjectTask))
+            //     if (!Try(out var items, out var e, await ParseProjectAsync(project, solutionNode.Name)))
+            //     {
+            //         Log.Warn($"Failed to parse project {project.Name}: {e.ErrorMessage}");
             //         continue;
+            //     }
+
             //     solutionNodes.AddRange(items);
             // }
+
+            // In parallel
+            var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionNode.Name));
+
+            await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
+            {
+                if (!Try(out var items, out var e, await parseProjectTask))
+                    continue;
+                solutionNodes.AddRange(items);
+            }
 
             // await WriteCompressedDemoModelAsync(solutionNodes, solutionPath);
 
