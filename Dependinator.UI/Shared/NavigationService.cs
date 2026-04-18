@@ -1,3 +1,4 @@
+using Dependinator.Core;
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Modeling;
@@ -24,6 +25,7 @@ class NavigationService(
     IVsCodeSendService vsCodeSendService
 ) : INavigationService
 {
+    static readonly string RazorGeneratorName = "Razor.SourceGenerators.RazorSourceGenerator";
     readonly SemaphoreSlim showNodeLock = new(1, 1);
     long showNodeRequestId = 0;
 
@@ -106,6 +108,7 @@ class NavigationService(
         Log.Info("ShowEditor for", nodeId);
 
         FileSpan? fileSpan;
+        string nodeName;
         using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out var node))
@@ -118,11 +121,38 @@ class NavigationService(
                 Log.Warn($"Failed find node file span {nodeId}");
                 return;
             }
+            nodeName = node.Name;
             fileSpan = node.FileSpanOrParentSpan;
         }
-        Log.Info("Show editor for", fileSpan.Path, fileSpan.StartLine);
 
-        await vsCodeSendService.ShowEditorAsync(new FileLocation(fileSpan.Path, fileSpan.StartLine + 1));
+        var filePath = fileSpan.Path;
+        var fileLine = fileSpan.StartLine;
+
+        Log.Info("Show editor for", nodeName, filePath, fileLine);
+        var razorIndex = filePath.IndexOf(RazorGeneratorName);
+        if (razorIndex > 0)
+        {
+            (filePath, fileLine) = TransformRazorGeneratedPaths(nodeName, filePath);
+            Log.Info("New filePath:", filePath);
+        }
+
+        await vsCodeSendService.ShowEditorAsync(new FileLocation(filePath, fileLine + 1));
+    }
+
+    // Transforms RazorSourceGenerator generated path like e.g.:
+    // "Microsoft.CodeAnalysis.Razor.Compiler/Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator/Pages/_Host_cshtml.g.cs"
+    // To original paths like e.g. "/workspaces/Dependinator.Web/Pages/_Host.cshtml"
+    static (string, int) TransformRazorGeneratedPaths(string nodeName, string filePath)
+    {
+        var moduleIndex = nodeName.IndexOf('.');
+        var moduleName = nodeName[..moduleIndex].Replace('*', '.').Replace(".dll", "");
+
+        var razorIndex = filePath.IndexOf(RazorGeneratorName);
+        var filePathIndex = razorIndex + RazorGeneratorName.Length;
+        var fileSubPath = filePath[filePathIndex..].Replace("_cshtml.g.cs", ".cshtml").Replace("_razor.g.cs", ".razor");
+        filePath = $"{Build.SolutionFolderPath}/{moduleName}{fileSubPath}";
+
+        return (filePath, 0);
     }
 
     static bool EnsureLayoutForPath(Modeling.Models.Node node)

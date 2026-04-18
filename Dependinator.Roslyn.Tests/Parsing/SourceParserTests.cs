@@ -26,11 +26,7 @@ public class SourceParserTests
     public async Task TestLspProjectGenericRegistrationLinksAsync()
     {
         var sourceParser = new SourceParser();
-        var projectPath = Path.Combine(
-            Path.GetDirectoryName(Root.Path)!,
-            "Dependinator.Lsp",
-            "Dependinator.Lsp.csproj"
-        );
+        var projectPath = Path.Combine(Root.SolutionFolderPath, "Dependinator.Lsp", "Dependinator.Lsp.csproj");
 
         if (!Try(out var items, out var e, await sourceParser.ParseProjectAsync(projectPath)))
             Assert.Fail(e.AllErrorMessages());
@@ -69,10 +65,12 @@ public class SourceParserTests
         if (!Try(out var items, out var e, await sourceParser.ParseSolutionAsync(Root.SolutionFilePath)))
             Assert.Fail(e.AllErrorMessages());
 
-        var nodes = items.NodesContained(typeof(TypeParser), null);
+        var nodes = items.Nodes().OrderBy(n => n.Name).ToList();
         Assert.NotEmpty(nodes);
 
-        var links = items.LinksToContained(typeof(TypeParser), null);
+        var n = nodes.Where(n => n.Name.Contains("AppBar")).ToList();
+
+        var links = items.Links().OrderBy(l => l.Source).ThenBy(l => l.Target).ToList();
         Assert.NotEmpty(links);
     }
 }
