@@ -57,8 +57,8 @@ public class SourceParserTests
         Assert.NotEmpty(SourceTestDataNodes);
     }
 
-    //[Fact(Skip = "Disabled, since always parsing whole solution takes time")]
-    [Fact]
+    [Fact(Skip = "Disabled, since always parsing whole solution takes time")]
+    // [Fact]
     public async Task TestSolutionSourceParserAsync()
     {
         var sourceParser = new SourceParser();

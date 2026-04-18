@@ -98,8 +98,15 @@ class Compiler
             }
         }
 
+        // var generatorNames = string.Join("\n  ", generators.Select(g => g.GetGeneratorType().Name));
+        // Log.Info(
+        //     $"Generators for {project.Name}: {generators.Count} total ({fromReferenceCount} from references, {fromManualLoadCount} manually loaded), {project.AdditionalDocuments.Count()} additional docs:[\n  {generatorNames}]"
+        // );
+
         if (generators.Count == 0)
             return compilation;
+
+        // var treeCountBefore = compilation.SyntaxTrees.Count();
 
         var parseOptions = compilation.SyntaxTrees.FirstOrDefault()?.Options as CSharpParseOptions;
         var additionalTexts = project
@@ -111,8 +118,13 @@ class Compiler
 
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var updated, out var diagnostics);
 
+        // var treeCountAfter = updated.SyntaxTrees.Count();
+        // Log.Info(
+        //     $"Generators for {project.Name}: {treeCountAfter - treeCountBefore} new syntax trees added ({treeCountBefore} -> {treeCountAfter})"
+        // );
+
         foreach (var d in diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
-            Log.Warn($"Generator Error: {d}");
+            Log.Warn($"Generator Error in {project.Name}: {d}");
 
         return updated;
     }
@@ -142,6 +154,9 @@ class Compiler
         }
         catch (ReflectionTypeLoadException ex)
         {
+            // Log.Warn(
+            //     $"ReflectionTypeLoadException loading {Path.GetFileName(path)}: {string.Join("; ", ex.LoaderExceptions?.Select(e => e?.Message) ?? [])}"
+            // );
             types = ex.Types.Where(t => t is not null).ToArray()!;
         }
 
@@ -181,9 +196,11 @@ class Compiler
         }
     }
 
-    // Resolves a generator's dependencies from its own directory. The Razor generator ships
-    // alongside Microsoft.AspNetCore.Razor.Utilities.Shared.dll and Microsoft.Extensions.ObjectPool.dll,
-    // which the default load context can't find — leading to ReflectionTypeLoadException on GetTypes().
+    // Resolves a generator's dependencies from its own directory, but prefers assemblies
+    // already loaded in the default context. This is critical for type identity: the generator's
+    // IIncrementalGenerator reference must resolve to the same assembly as typeof(IIncrementalGenerator)
+    // in our code, which lives in the default context. Without this, the type check silently fails
+    // in hosts (like dotnet watch) where assembly resolution differs from the test runner.
     sealed class GeneratorLoadContext : AssemblyLoadContext
     {
         readonly string directory;
@@ -196,6 +213,18 @@ class Compiler
 
         protected override Assembly? Load(AssemblyName assemblyName)
         {
+            // Return the assembly from the default context if already loaded there (match by
+            // name only, ignoring version). This keeps type identity intact: the generator's
+            // IIncrementalGenerator resolves to the same type as typeof(IIncrementalGenerator)
+            // in our code. Version-tolerant matching is needed because the SDK's Razor generator
+            // targets a newer Microsoft.CodeAnalysis than the app's NuGet packages.
+            var loaded = Default.Assemblies.FirstOrDefault(a =>
+                string.Equals(a.GetName().Name, assemblyName.Name, StringComparison.OrdinalIgnoreCase)
+            );
+            if (loaded is not null)
+                return loaded;
+
+            // Fall back to sibling DLLs for generator-specific dependencies
             var candidate = Path.Combine(directory, assemblyName.Name + ".dll");
             if (File.Exists(candidate))
             {

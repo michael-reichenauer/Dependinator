@@ -15,12 +15,18 @@ class SourceParser : ISourceParser
 
             Solution solution = await workspace.OpenSolutionAsync(solutionPath);
 
+            foreach (var diag in workspace.Diagnostics)
+                Log.Warn($"Workspace: [{diag.Kind}] {diag.Message}");
+
             var solutionName = Names.GetSolutionName(solutionPath);
             var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution });
 
             var projects = solution
                 .Projects.Where(p => p.Language == LanguageNames.CSharp)
-                .Where(p => !IsTestProject(p));
+                .Where(p => !IsTestProject(p))
+                .ToList();
+
+            Log.Info($"Solution projects: {projects.Count} ({string.Join(", ", projects.Select(p => p.Name))})");
 
             List<Item> solutionNodes = [];
             solutionNodes.Add(new Item(solutionNode, null));
@@ -28,7 +34,11 @@ class SourceParser : ISourceParser
             foreach (var project in projects)
             {
                 if (!Try(out var items, out var e, await ParseProjectAsync(project, solutionNode.Name)))
+                {
+                    Log.Warn($"Failed to parse project {project.Name}: {e.ErrorMessage}");
                     continue;
+                }
+
                 solutionNodes.AddRange(items);
             }
 
@@ -58,7 +68,7 @@ class SourceParser : ISourceParser
             using var workspace = Compiler.CreateWorkspace();
 
             var project = await workspace.OpenProjectAsync(projectPath);
-            Log.Info("Parse:", projectPath);
+            // Log.Info("Parse:", projectPath);
             return await ParseProjectAsync(project, null);
         }
         catch (Exception e)
@@ -69,7 +79,7 @@ class SourceParser : ISourceParser
 
     public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
     {
-        Log.Info("Parse:", project.Name);
+        // Log.Info("Parse:", project.Name);
         if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
             return e;
 
@@ -86,7 +96,6 @@ class SourceParser : ISourceParser
             .Where(t => !t.IsImplicitlyDeclared)
             .Select(t => t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
             .ToList();
-        Log.Info($"Names for {moduleName} ({typeNames.Count}):\n {string.Join("\n  ", typeNames)}");
 
         foreach (var type in Compiler.GetAllTypes(compilation).Where(t => !t.IsImplicitlyDeclared))
         {

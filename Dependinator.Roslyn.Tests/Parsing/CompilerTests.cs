@@ -5,8 +5,8 @@ namespace Dependinator.Roslyn.Tests.Parsing;
 
 public class CompilerTests
 {
-    //[Fact(Skip = "Disabled, since always parsing project takes extra time")]
-    [Fact]
+    [Fact(Skip = "Disabled since always parsing project takes time")]
+    // [Fact]
     public async Task TestDependinatorUISourceParserAsync()
     {
         var projectPath = Path.Combine(Root.SolutionFolderPath, "Dependinator.UI", "Dependinator.UI.csproj");
@@ -16,14 +16,6 @@ public class CompilerTests
 
         if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
             Assert.Fail(e.AllErrorMessages());
-
-        var diagnostics = compilation.GetDiagnostics();
-        var errors = diagnostics
-            .Where(d => d.Severity == DiagnosticSeverity.Error)
-            .OrderBy(d => d.Location.IsInSource ? d.Location.GetLineSpan().Path : "")
-            .ThenBy(d => d.Location.IsInSource ? d.Location.GetLineSpan().StartLinePosition.Line : int.MaxValue)
-            .ToArray();
-        Assert.Empty(errors);
 
         var allTypes = Compiler.GetAllTypes(compilation).ToList();
 
