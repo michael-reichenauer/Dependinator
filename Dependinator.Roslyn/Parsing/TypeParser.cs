@@ -8,7 +8,7 @@ static class TypeParser
     {
         var (fullTypeName, typeName) = Names.GetFullTypeNameAndTypeName(type, moduleName);
 
-        if (IgnoredTypes.IsIgnoredSystemType(type, typeName))
+        if (IgnoredTypes.IsIgnored(type, typeName))
             yield break;
 
         var fileSpan = Locations.GetFirstFileSpanOrNoValue(type);
@@ -41,11 +41,11 @@ static class TypeParser
         if (
             type.BaseType is { } baseType
             && baseType.SpecialType != SpecialType.System_Object
-            && !IgnoredTypes.IsIgnoredSystemType(baseType)
+            && !IgnoredTypes.IsIgnored(baseType)
         )
             yield return new Item(null, LinkParser.Parse(fullTypeName, baseType));
 
-        foreach (var interfaceType in type.Interfaces.Where(it => !IgnoredTypes.IsIgnoredSystemType(it)))
+        foreach (var interfaceType in type.Interfaces.Where(it => !IgnoredTypes.IsIgnored(it)))
             yield return new Item(null, LinkParser.Parse(fullTypeName, interfaceType));
     }
 

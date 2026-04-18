@@ -136,7 +136,7 @@ class MethodLinkParser
     {
         if (
             type is not INamedTypeSymbol namedType
-            || IgnoredTypes.IsIgnoredSystemType(namedType)
+            || IgnoredTypes.IsIgnored(namedType)
             || SymbolEqualityComparer.Default.Equals(namedType, member.ContainingType)
         )
             yield break;
@@ -151,7 +151,7 @@ class MethodLinkParser
 
         if (symbol is IFieldSymbol fieldSymbol) // Method field
         {
-            if (fieldSymbol.ContainingType is INamedTypeSymbol fieldType && IgnoredTypes.IsIgnoredSystemType(fieldType))
+            if (fieldSymbol.ContainingType is INamedTypeSymbol fieldType && IgnoredTypes.IsIgnored(fieldType))
                 yield break;
 
             foreach (var fieldTypeLink in AddTypeLinks(fieldSymbol.Type, member, fullMethodName))
@@ -178,10 +178,7 @@ class MethodLinkParser
 
             if (methodSymbol.IsImplicitlyDeclared && methodSymbol.MethodKind == MethodKind.Constructor)
                 yield break;
-            if (
-                methodSymbol.ContainingType is INamedTypeSymbol methodType
-                && IgnoredTypes.IsIgnoredSystemType(methodType)
-            )
+            if (methodSymbol.ContainingType is INamedTypeSymbol methodType && IgnoredTypes.IsIgnored(methodType))
                 yield break;
 
             var methodItem = LinkParser.Parse(fullMethodName, methodSymbol);
