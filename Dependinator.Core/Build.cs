@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Dependinator.Core;
@@ -82,4 +83,8 @@ public static class Build
 
         return "0000000000000000000000000000000000000000";
     }
+
+    public static readonly string SolutionFolderPath = Path.GetDirectoryName(Path.GetDirectoryName(CurrentFilePath()))!;
+
+    static string CurrentFilePath([CallerFilePath] string sourceFilePath = "") => sourceFilePath;
 }
