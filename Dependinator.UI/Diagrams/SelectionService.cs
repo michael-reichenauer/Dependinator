@@ -28,17 +28,17 @@ interface ISelectionService
 }
 
 [Scoped]
-class SelectionService : ISelectionService
+class SelectionService(
+    IModelMgr modelMgr,
+    IModelService modelService,
+    IApplicationEvents applicationEvents,
+    IScreenService screenService
+) : ISelectionService
 {
     const double toolbarOffsetX = 40;
     const double toolbarOffsetY = 20;
     const double MinCover = 0.5;
     const double MaxCover = 0.8;
-
-    readonly IModelMgr modelMgr;
-    readonly IModelService modelService;
-    readonly IApplicationEvents applicationEvents;
-    readonly IScreenService screenService;
 
     Pos selectedPosition = Pos.None;
     Pos selectedLineClickPosition = Pos.None;
@@ -46,19 +46,6 @@ class SelectionService : ISelectionService
     PointerId selectedId = PointerId.Empty;
     bool isEditMode = false;
     bool isSelectedLineDirect = false;
-
-    public SelectionService(
-        IModelMgr modelMgr,
-        IModelService modelService,
-        IApplicationEvents applicationEvents,
-        IScreenService screenService
-    )
-    {
-        this.modelMgr = modelMgr;
-        this.modelService = modelService;
-        this.applicationEvents = applicationEvents;
-        this.screenService = screenService;
-    }
 
     public PointerId SelectedId => selectedId;
     public bool IsSelected => selectedId != PointerId.Empty;

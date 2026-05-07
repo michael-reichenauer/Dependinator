@@ -332,7 +332,6 @@ function waitForClerk(timeoutMs = 15000) {
 
     const ready = check();
     if (ready) {
-      console.log("DEP: Clerk already loaded");
       resolve(ready);
       return;
     }
@@ -387,7 +386,6 @@ export async function clerkGetToken() {
     try {
       const token = await clerk.session.getToken({ template: 'dependinator' });
       if (token) {
-        console.log("DEP: clerkGetToken - got token (dependinator template)");
         return token;
       }
     } catch (_) {

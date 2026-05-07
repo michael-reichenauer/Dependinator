@@ -33,7 +33,7 @@ class MemberParser
         if (
             member.Type is INamedTypeSymbol fieldType
             && !IsSameAsContainingType(fieldType, member)
-            && !IgnoredTypes.IsIgnoredSystemType(fieldType)
+            && !IgnoredTypes.IsIgnored(fieldType)
         )
             yield return new Item(null, LinkParser.Parse(memberNode.Node!.Name, fieldType));
     }
@@ -47,7 +47,7 @@ class MemberParser
         if (
             member.Type is INamedTypeSymbol propertyType
             && !IsSameAsContainingType(propertyType, member)
-            && !IgnoredTypes.IsIgnoredSystemType(propertyType)
+            && !IgnoredTypes.IsIgnored(propertyType)
         )
             yield return new Item(null, LinkParser.Parse(memberNode.Node!.Name, propertyType));
     }
