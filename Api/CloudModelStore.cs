@@ -70,6 +70,7 @@ public sealed class BlobCloudModelStore : ICloudModelStore
         await foreach (
             BlobItem blobItem in containerClient.GetBlobsAsync(
                 traits: BlobTraits.Metadata,
+                states: BlobStates.None,
                 prefix: prefix,
                 cancellationToken: cancellationToken
             )
@@ -184,7 +185,12 @@ public sealed class BlobCloudModelStore : ICloudModelStore
         long usedBytes = 0;
         string prefix = GetUserPrefix(user);
         await foreach (
-            BlobItem blobItem in containerClient.GetBlobsAsync(prefix: prefix, cancellationToken: cancellationToken)
+            BlobItem blobItem in containerClient.GetBlobsAsync(
+                traits: BlobTraits.None,
+                states: BlobStates.None,
+                prefix: prefix,
+                cancellationToken: cancellationToken
+            )
         )
             usedBytes += blobItem.Properties.ContentLength ?? 0;
 
