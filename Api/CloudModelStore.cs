@@ -61,7 +61,10 @@ public sealed class BlobCloudModelStore : ICloudModelStore
         }
     }
 
-    public async Task<IReadOnlyList<CloudModelMetadata>> ListAsync(CloudUserInfo user, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<CloudModelMetadata>> ListAsync(
+        CloudUserInfo user,
+        CancellationToken cancellationToken
+    )
     {
         BlobContainerClient containerClient = await GetContainerClientAsync(cancellationToken);
         string prefix = GetUserPrefix(user);
