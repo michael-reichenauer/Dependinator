@@ -7,8 +7,6 @@ var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices(services =>
     {
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.ConfigureFunctionsApplicationInsights();
         services.AddOptions<CloudSyncOptions>().BindConfiguration(CloudSyncOptions.SectionName);
         services.AddSingleton<ICloudModelStore, BlobCloudModelStore>();
         services.AddSingleton<ICloudSyncBearerTokenValidator, CloudSyncBearerTokenValidator>();
