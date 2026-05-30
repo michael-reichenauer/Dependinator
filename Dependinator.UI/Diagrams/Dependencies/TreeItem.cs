@@ -36,7 +36,7 @@ class TreeItem : TreeItemData<TreeItem>
 
     public TreeItem? Parent { get; init; }
     public NodeId NodeId { get; init; } = NodeId.Empty!;
-    public override List<TreeItemData<TreeItem>>? Children { get; set; } = [];
+    public override IReadOnlyCollection<ITreeItemData<TreeItem>>? Children { get; set; } = [];
 
     public IEnumerable<TreeItem> GetThisAndDescendants()
     {
