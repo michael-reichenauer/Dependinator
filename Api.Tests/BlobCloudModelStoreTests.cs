@@ -211,7 +211,7 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
     )
     {
         string arguments =
-            $"--silent --disableProductStyleUrl --location \"{location}\" --blobPort {blobPort} --queuePort {queuePort} --tablePort {tablePort}";
+            $"--silent --skipApiVersionCheck --disableProductStyleUrl --location \"{location}\" --blobPort {blobPort} --queuePort {queuePort} --tablePort {tablePort}";
         if (CommandExists("azurite"))
             return ("azurite", arguments);
 

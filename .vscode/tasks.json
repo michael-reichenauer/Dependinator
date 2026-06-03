@@ -93,7 +93,7 @@
 			"label": "start sync services",
 			"type": "shell",
 			"dependsOn": "build",
-			"command": "mkdir -p .azurite && (npx --yes azurite --silent --location .azurite &) && cd Api && func start --port 7071",
+			"command": "mkdir -p .azurite && (npx --yes azurite --silent --skipApiVersionCheck --location .azurite &) && cd Api && func start --port 7071",
 			"isBackground": true,
 			"options": {
 				"cwd": "${workspaceFolder}"
