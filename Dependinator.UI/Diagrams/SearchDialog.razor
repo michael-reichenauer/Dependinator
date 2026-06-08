@@ -2,13 +2,12 @@
 @inject INodeSearchService searchService
 @inject INavigationService navigationService
 
-<MudDialog Class="search-dialog" ContentClass="pa-2">
+<MudDialog Class="search-dialog" ContentClass="pa-2" Style="margin-top:-29px;">
   <DialogContent>
-    <MudTextField @ref="textField" T="string" Value="@query" ValueChanged="OnQueryChanged"
-                  Immediate="true" Autofocus="true" Placeholder="Search nodes…" Variant="Variant.Outlined"
-                  Adornment="Adornment.Start" AdornmentIcon="@MudBlazor.Icons.Material.Outlined.Search"
-                  Clearable="true" FullWidth="true" Class="search-dialog__field"
-                  OnKeyDown="OnKeyDown" autocomplete="off" />
+    <MudTextField @ref="textField" T="string" Value="@query" ValueChanged="OnQueryChanged" Immediate="true"
+                  Autofocus="true" Placeholder="Search nodes…" Variant="Variant.Outlined" Adornment="Adornment.Start"
+                  AdornmentIcon="@MudBlazor.Icons.Material.Outlined.Search" Clearable="true" FullWidth="true"
+                  Class="search-dialog__field" OnKeyDown="OnKeyDown" autocomplete="off" />
 
     @if (results.Count > 0)
     {
