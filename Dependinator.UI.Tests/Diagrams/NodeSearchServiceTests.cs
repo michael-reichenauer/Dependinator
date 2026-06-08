@@ -25,6 +25,25 @@ public class NodeSearchServiceTests
         Assert.Null(NodeSearchService.FuzzyMatch(query, candidate));
     }
 
+    [Theory]
+    // Right letters in order, but a typed char after the first would have to skip into the
+    // middle of a later word — not a camelCase-style match, so it must be rejected.
+    [InlineData("INavSer", "AddDependinatorServices<TEntryAssemblyMarker>")]
+    [InlineData("NavSvc", "INavigationService")] // 'v' (Sv…) lands mid-word in "Service".
+    public void FuzzyMatch_ShouldReject_MidWordJumps(string query, string candidate)
+    {
+        Assert.Null(NodeSearchService.FuzzyMatch(query, candidate));
+    }
+
+    [Theory]
+    [InlineData("INavSer", "INavigationService")]
+    [InlineData("nav", "INavigationService")] // First char may start a word mid-string.
+    [InlineData("ervice", "Service")] // First char may also start mid-word.
+    public void FuzzyMatch_ShouldAccept_WordContinuationsAndBoundaries(string query, string candidate)
+    {
+        Assert.NotNull(NodeSearchService.FuzzyMatch(query, candidate));
+    }
+
     [Fact]
     public void FuzzyMatch_ShouldRankBoundaryMatch_AboveMidWordMatch()
     {

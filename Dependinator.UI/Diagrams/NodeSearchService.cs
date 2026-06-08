@@ -45,76 +45,114 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
             results.Add((new NodeSearchResult(id, shortName, name), score.Value));
         }
 
-        return results
+        var response = results
             .OrderByDescending(r => r.Score)
             .ThenBy(r => r.Result.ShortName.Length)
             .ThenBy(r => r.Result.ShortName, StringComparer.Ordinal)
             .Select(r => r.Result)
             .ToList();
+
+        return response;
     }
 
-    // Returns a match score, or null if the query is not a subsequence of the candidate.
+    // Returns the best match score, or null if the query cannot be matched.
+    //
+    // Matching rule (camelCase / VS Code Ctrl-T style): every typed character after the
+    // first must either continue the current word (be adjacent to the previous match) or
+    // start a new word (be at a word boundary). Skipping into the middle of a later word
+    // is rejected, so "INavSer" matches "INavigationService" but not the scattered
+    // subsequence inside "AddDependinatorServices<TEntryAssemblyMarker>".
     internal static int? FuzzyMatch(string query, string candidate)
     {
         if (query.Length == 0)
             return 0;
-        if (candidate.Length == 0)
+        if (candidate.Length < query.Length)
             return null;
 
-        int score = 0;
-        int ci = 0;
-        int lastMatch = -2;
+        // Cheap reject: anything that is not even a subsequence cannot match.
+        if (!IsSubsequence(query, candidate))
+            return null;
 
-        foreach (char qc in query)
+        // memo[qi, fromIndex] caches the best score for matching query[qi..] starting the
+        // search at candidate[fromIndex..]. -1 means "not yet computed".
+        var memo = new int?[query.Length + 1, candidate.Length + 1];
+        var computed = new bool[query.Length + 1, candidate.Length + 1];
+
+        int? Match(int qi, int fromIndex)
         {
-            int searchStart = ci;
-            int matchIndex = FindNextMatch(candidate, ci, qc);
-            if (matchIndex < 0)
-                return null; // Not a subsequence match.
+            if (qi == query.Length)
+                return 0;
+            if (fromIndex >= candidate.Length)
+                return null;
+            if (computed[qi, fromIndex])
+                return memo[qi, fromIndex];
 
-            bool isBoundary = IsBoundary(candidate, matchIndex);
-            score += BaseMatch;
+            char qc = query[qi];
+            bool isFirst = qi == 0;
+            int? best = null;
 
-            if (matchIndex == 0)
-                score += PrefixBonus;
-            if (isBoundary)
-                score += BoundaryBonus;
-            if (matchIndex == lastMatch + 1)
-                score += ConsecutiveBonus;
-            if (char.IsUpper(qc) && isBoundary)
-                score += UppercaseBoundaryBonus;
+            for (int k = fromIndex; k < candidate.Length; k++)
+            {
+                if (!CharEquals(candidate[k], qc))
+                    continue;
 
-            // Penalize skipped characters so earlier/clustered matches rank higher.
-            int gap = matchIndex - searchStart;
-            score -= Math.Min(gap, MaxGapPenalized) * GapPenalty;
+                bool consecutive = !isFirst && k == fromIndex;
+                bool boundary = IsBoundary(candidate, k);
 
-            lastMatch = matchIndex;
-            ci = matchIndex + 1;
+                // After the first char, only continue a word or start a new one.
+                if (!isFirst && !consecutive && !boundary)
+                    continue;
+
+                int? rest = Match(qi + 1, k + 1);
+                if (rest is null)
+                    continue;
+
+                int s = ScoreChar(qc, k, fromIndex, consecutive, boundary) + rest.Value;
+                if (best is null || s > best)
+                    best = s;
+            }
+
+            computed[qi, fromIndex] = true;
+            memo[qi, fromIndex] = best;
+            return best;
         }
+
+        return Match(0, 0);
+    }
+
+    static int ScoreChar(char qc, int matchIndex, int fromIndex, bool consecutive, bool boundary)
+    {
+        int score = BaseMatch;
+
+        if (matchIndex == 0)
+            score += PrefixBonus;
+        if (boundary)
+            score += BoundaryBonus;
+        if (consecutive)
+            score += ConsecutiveBonus;
+        if (char.IsUpper(qc) && boundary)
+            score += UppercaseBoundaryBonus;
+
+        // Penalize skipped characters so earlier/tighter matches rank higher.
+        int gap = matchIndex - fromIndex;
+        score -= Math.Min(gap, MaxGapPenalized) * GapPenalty;
 
         return score;
     }
 
-    // For uppercase query chars, prefer the nearest boundary occurrence (honoring the
-    // "uppercase marks a new word" intent); otherwise take the next case-insensitive match.
-    static int FindNextMatch(string candidate, int start, char qc)
+    static bool IsSubsequence(string query, string candidate)
     {
-        if (char.IsUpper(qc))
+        int ci = 0;
+        foreach (char qc in query)
         {
-            for (int i = start; i < candidate.Length; i++)
-            {
-                if (CharEquals(candidate[i], qc) && IsBoundary(candidate, i))
-                    return i;
-            }
+            while (ci < candidate.Length && !CharEquals(candidate[ci], qc))
+                ci++;
+            if (ci >= candidate.Length)
+                return false;
+            ci++;
         }
 
-        for (int i = start; i < candidate.Length; i++)
-        {
-            if (CharEquals(candidate[i], qc))
-                return i;
-        }
-
-        return -1;
+        return true;
     }
 
     static bool CharEquals(char a, char b) => char.ToLowerInvariant(a) == char.ToLowerInvariant(b);
