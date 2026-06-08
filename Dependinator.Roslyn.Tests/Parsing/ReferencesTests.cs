@@ -4,18 +4,20 @@ using Dependinator.Roslyn.Tests.Parsing.Utils;
 
 namespace Dependinator.Roslyn.Tests.Parsing;
 
-public class ReferencedTestType
+public class ReferenceOtherType
 {
     public static readonly int Field1 = 1;
     public static int Property2 => 2;
 }
 
-public class ReferencerTestType
+public class ReferenceMainType
 {
+    public static int Property1 => ReferenceOtherType.Property2;
+
     public void Function1()
     {
-        int a = ReferencedTestType.Field1;
-        int b = ReferencedTestType.Property2;
+        int a = ReferenceOtherType.Field1;
+        int b = ReferenceOtherType.Property2;
     }
 }
 
@@ -23,28 +25,38 @@ public class ReferencerTestType
 public class ReferencesTests(RoslynFixture fixture)
 {
     readonly IReadOnlyList<Item> items = TypeParser
-        .ParseType(fixture.Type<ReferencerTestType>(), fixture.Compilation, fixture.ModelName)
+        .ParseType(fixture.Type<ReferenceMainType>(), fixture.Compilation, fixture.ModelName)
         .ToList();
 
     [Fact]
-    public void TestParseType()
+    public void CheckReferences()
     {
         Assert.Equal(
             NodeType.FieldMember,
-            items // Function1 Method link to ReferencedTestType.Property1 static field
-                .Link<ReferencerTestType, ReferencedTestType>(
-                    nameof(ReferencerTestType.Function1),
-                    nameof(ReferencedTestType.Field1)
+            items // ReferenceMainType.Function1 link to ReferenceOtherType.Property1 static field
+                .Link<ReferenceMainType, ReferenceOtherType>(
+                    nameof(ReferenceMainType.Function1),
+                    nameof(ReferenceOtherType.Field1)
                 )
                 .Properties.TargetType
         );
 
         Assert.Equal(
             NodeType.PropertyMember,
-            items // Function1 Method link to ReferencedTestType.Property2 static property
-                .Link<ReferencerTestType, ReferencedTestType>(
-                    nameof(ReferencerTestType.Function1),
-                    nameof(ReferencedTestType.Property2)
+            items // ReferenceMainType.Function1 link to ReferenceOtherType.Property2 static property
+                .Link<ReferenceMainType, ReferenceOtherType>(
+                    nameof(ReferenceMainType.Function1),
+                    nameof(ReferenceOtherType.Property2)
+                )
+                .Properties.TargetType
+        );
+
+        Assert.Equal(
+            NodeType.PropertyMember,
+            items // ReferenceMainType.Property1 link to ReferenceOtherType.Property2 static property
+                .Link<ReferenceMainType, ReferenceOtherType>(
+                    nameof(ReferenceMainType.Property1),
+                    nameof(ReferenceOtherType.Property2)
                 )
                 .Properties.TargetType
         );

@@ -28,6 +28,23 @@ class MethodLinkParser
             yield return link;
     }
 
+    public static IEnumerable<Link> ParsePropertyLinks(
+        IPropertySymbol property,
+        string fullPropertyName,
+        Compilation compilation
+    )
+    {
+        // Parse links from the get/set accessor bodies to referenced types and members
+        foreach (var accessor in new[] { property.GetMethod, property.SetMethod })
+        {
+            if (accessor is null)
+                continue;
+
+            foreach (var link in ParseBodyLinks(accessor, fullPropertyName, compilation))
+                yield return link;
+        }
+    }
+
     private static IEnumerable<Link> ParseBodyLinks(
         IMethodSymbol member,
         string fullMethodName,
@@ -42,6 +59,10 @@ class MethodLinkParser
                 bodyNodes = GetMethodBodyNodes(methodDeclaration);
             else if (syntax is LocalFunctionStatementSyntax localFunction)
                 bodyNodes = GetLocalFunctionBodyNodes(localFunction);
+            else if (syntax is AccessorDeclarationSyntax accessor)
+                bodyNodes = GetAccessorBodyNodes(accessor);
+            else if (syntax is ArrowExpressionClauseSyntax arrowExpression)
+                bodyNodes = [arrowExpression.Expression];
             else
                 continue;
 
@@ -224,5 +245,13 @@ class MethodLinkParser
             yield return localFunction.Body;
         if (localFunction.ExpressionBody is not null)
             yield return localFunction.ExpressionBody.Expression;
+    }
+
+    static IEnumerable<SyntaxNode> GetAccessorBodyNodes(AccessorDeclarationSyntax accessor)
+    {
+        if (accessor.Body is not null)
+            yield return accessor.Body;
+        if (accessor.ExpressionBody is not null)
+            yield return accessor.ExpressionBody.Expression;
     }
 }
