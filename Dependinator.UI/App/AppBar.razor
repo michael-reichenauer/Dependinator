@@ -282,7 +282,7 @@
                 MaxWidth = MaxWidth.Small,
                 FullWidth = true,
             };
-            var dialog = await dialogService.ShowAsync<Dependinator.UI.Diagrams.SearchDialog>("Search", options);
+            var dialog = await dialogService.ShowAsync<Dependinator.UI.Diagrams.SearchDialog>("", options);
             await dialog.Result;
         }
         finally
