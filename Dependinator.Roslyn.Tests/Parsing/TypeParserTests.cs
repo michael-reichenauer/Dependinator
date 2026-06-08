@@ -51,7 +51,6 @@ public class OtherClass
 [Collection(nameof(RoslynCollection))]
 public class TypeParserTests(RoslynFixture fixture)
 {
-    readonly RoslynFixture fixture = fixture;
     readonly IReadOnlyList<Item> items = TypeParser
         .ParseType(fixture.Type<SourceTestType>(), fixture.Compilation, fixture.ModelName)
         .ToList();

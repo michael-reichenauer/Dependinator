@@ -161,6 +161,21 @@ class MethodLinkParser
             yield return fieldItem;
         }
 
+        if (symbol is IPropertySymbol propertySymbol) // Method property access
+        {
+            if (
+                propertySymbol.ContainingType is INamedTypeSymbol propertyType
+                && IgnoredTypes.IsIgnored(propertyType)
+            )
+                yield break;
+
+            foreach (var propertyTypeLink in AddTypeLinks(propertySymbol.Type, member, fullMethodName))
+                yield return propertyTypeLink;
+
+            var propertyItem = LinkParser.Parse(fullMethodName, propertySymbol);
+            yield return propertyItem;
+        }
+
         if (symbol is IMethodSymbol methodSymbol) // Method call to other method
         {
             if (methodSymbol.MethodKind == MethodKind.LocalFunction)
