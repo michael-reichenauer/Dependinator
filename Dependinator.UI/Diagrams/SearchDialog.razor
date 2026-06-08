@@ -5,7 +5,7 @@
 <MudDialog Class="search-dialog">
   <DialogContent>
     <MudTextField @ref="textField" T="string" Value="@query" ValueChanged="OnQueryChanged"
-                  Immediate="true" Placeholder="Search nodes…" Variant="Variant.Outlined"
+                  Immediate="true" Autofocus="true" Placeholder="Search nodes…" Variant="Variant.Outlined"
                   Adornment="Adornment.Start" AdornmentIcon="@MudBlazor.Icons.Material.Outlined.Search"
                   Clearable="true" FullWidth="true" Class="search-dialog__field"
                   OnKeyDown="OnKeyDown" autocomplete="off" />
@@ -43,8 +43,13 @@
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (firstRender)
-      await textField.FocusAsync();
+    if (!firstRender)
+      return;
+
+    // Autofocus handles the common case; this is a fallback for when the dialog's
+    // open animation steals/delays focus. The small delay lets the transition settle.
+    await Task.Delay(50);
+    await textField.FocusAsync();
   }
 
   void OnQueryChanged(string value)
