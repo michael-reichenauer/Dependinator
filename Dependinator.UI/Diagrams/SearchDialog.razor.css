@@ -3,8 +3,8 @@
 }
 
 .search-dialog__results {
-  /* Show about 8 rows, but never taller than ~a third of the viewport. */
-  max-height: min(calc(8 * 2.5rem), 30vh);
+  /* Fixed vertical budget (~a third of the viewport); denser rows fit more items. */
+  max-height: min(20rem, 30vh);
   overflow-y: auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--mud-default-borderradius);
