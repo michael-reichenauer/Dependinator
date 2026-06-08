@@ -42,6 +42,28 @@
   text-overflow: ellipsis;
 }
 
+.search-dialog__nav {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem;
+  border-radius: var(--mud-default-borderradius);
+  color: var(--mud-palette-text-secondary);
+  cursor: pointer;
+  opacity: 0; /* Revealed on row hover / selection; reserves space to avoid layout shift. */
+}
+
+.search-dialog__item:hover .search-dialog__nav,
+.search-dialog__item--selected .search-dialog__nav {
+  opacity: 1;
+}
+
+.search-dialog__nav:hover {
+  color: var(--mud-palette-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 .search-dialog__empty {
   padding: 0.5rem 0.25rem;
   color: var(--mud-palette-text-secondary);

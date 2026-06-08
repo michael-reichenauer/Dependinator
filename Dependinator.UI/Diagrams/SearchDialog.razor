@@ -20,6 +20,10 @@
                @onclick="() => SelectAsync(result)">
             <span class="search-dialog__short">@result.ShortName</span>
             <span class="search-dialog__full">@result.FullName</span>
+            <span class="search-dialog__nav" title="Go to node (keep dialog open)"
+                  @onclick="() => NavigateAsync(result)" @onclick:stopPropagation="true">
+              <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.MyLocation" Size="Size.Small" />
+            </span>
           </div>
         }
       </div>
@@ -84,5 +88,12 @@
   {
     MudDialog.Close(DialogResult.Ok(true));
     await navigationService.ShowNodeAsync(result.Id);
+  }
+
+  // Navigate to the node but keep the dialog open so the user can keep exploring.
+  async Task NavigateAsync(NodeSearchResult result)
+  {
+    await navigationService.ShowNodeAsync(result.Id);
+    await textField.FocusAsync();
   }
 }
