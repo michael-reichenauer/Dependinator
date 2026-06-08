@@ -2,7 +2,7 @@
 @inject INodeSearchService searchService
 @inject INavigationService navigationService
 
-<MudDialog Class="search-dialog">
+<MudDialog Class="search-dialog" ContentClass="pa-2">
   <DialogContent>
     <MudTextField @ref="textField" T="string" Value="@query" ValueChanged="OnQueryChanged"
                   Immediate="true" Autofocus="true" Placeholder="Search nodes…" Variant="Variant.Outlined"
