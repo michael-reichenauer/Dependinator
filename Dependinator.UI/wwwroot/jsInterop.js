@@ -14,6 +14,21 @@ export function listenToWindowResize(elementId, instance, functionName) {
   window.addEventListener("resize", resizeEventHandler);
 }
 
+export function listenToKeyDown(instance, functionName) {
+  // Open search on Ctrl+T / Ctrl+F (Cmd on macOS). Note: in a normal browser tab
+  // Ctrl+T (new tab) is owned by the browser chrome and never reaches the page;
+  // this is reliable in the VS Code webview. Ctrl+F (find) can be prevented in-browser.
+  document.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey) {
+      const key = e.key.toLowerCase();
+      if (key === "t" || key === "f") {
+        e.preventDefault();
+        instance.invokeMethodAsync(functionName);
+      }
+    }
+  });
+}
+
 export function preventDefaultTouchEvents(elementId) {
   // Prevent default touch events(scrolling, zooming, etc.), handled by the app
   document.getElementById(elementId).addEventListener('touchstart', function (e) {

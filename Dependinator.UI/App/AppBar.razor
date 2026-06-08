@@ -3,6 +3,7 @@
 @using Dependinator.UI.Modeling.Commands
 @using Dependinator.UI.Diagrams.Svg
 @using Dependinator.UI.Shared.CloudSync
+@using Microsoft.JSInterop
 
 @inject ICanvasService canvasService
 @inject IAppCloudSyncService appCloudSyncService
@@ -13,6 +14,8 @@
 @inject IModelListService modelListService
 @inject IConfigService configService
 @inject IModelService modelService
+@inject IDialogService dialogService
+@inject IJSInterop jsInterop
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
@@ -26,6 +29,10 @@
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
                      Disabled="@(!commandService.CanRedo)" OnClick="commandService.Redo">
             Redo
+        </MudMenuItem>
+
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync">
+            Search …
         </MudMenuItem>
 
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
@@ -125,6 +132,8 @@
         </ChildContent>
     </MudTooltip>
 
+    <MudIconButton Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync" />
+
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="@GetToolbarButtonColor(commandService.CanUndo)"
                        OnClick="commandService.Undo" />
@@ -191,6 +200,9 @@
     MudMessageBox syncDownBox { get; set; } = null!;
     MudMessageBox syncConflictBox { get; set; } = null!;
 
+    DotNetObjectReference<AppBar>? selfReference;
+    bool isSearchOpen;
+
     record CloudIconInfo(string Icon, MudBlazor.Color Color);
     static readonly CloudIconInfo NotAvailable = new(Icons.Material.Outlined.CloudOff, Color.Inherit);
     static readonly CloudIconInfo NotAuthenticated = new(Icons.Material.Outlined.CloudQueue, Color.Inherit);
@@ -242,6 +254,41 @@
 
         if (!firstRender)
             return;
+
+        selfReference = jsInterop.Reference(this);
+        await jsInterop.Call("listenToKeyDown", selfReference, nameof(OnSearchHotkey));
+    }
+
+    [JSInvokable]
+    public ValueTask OnSearchHotkey()
+    {
+        _ = InvokeAsync(OpenSearchAsync);
+        return ValueTask.CompletedTask;
+    }
+
+    async Task OpenSearchAsync()
+    {
+        if (isSearchOpen)
+            return;
+
+        isSearchOpen = true;
+        try
+        {
+            var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                NoHeader = true,
+                Position = DialogPosition.TopCenter,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+            };
+            var dialog = await dialogService.ShowAsync<Dependinator.UI.Diagrams.SearchDialog>(null, options);
+            await dialog.Result;
+        }
+        finally
+        {
+            isSearchOpen = false;
+        }
     }
 
     static CloudIconInfo GetCloudIconInfo(CloudSyncState state) => state switch
@@ -260,6 +307,7 @@
         applicationEvents.UIStateChanged -= OnUiStateChanged;
         appCloudSyncService.Changed -= OnUiStateChanged;
         appCloudSyncService.BackgroundSyncError -= OnBackgroundSyncError;
+        selfReference?.Dispose();
     }
 
     async Task ToggleCloudAuthAsync()

@@ -6,13 +6,7 @@ namespace Dependinator.UI.Diagrams.Svg;
 
 class NodeSvg
 {
-    public static bool ShowHiddenNodes { get; private set; } = true;
-    public static bool IsEditingEnabled { get; private set; } = !Build.IsStandaloneWasm;
-
-    public static void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
-
-    public static void SetIsEditingEnabled(bool enabled) => IsEditingEnabled = enabled;
-
+    static bool? IsEditingEnabledManual = null;
     const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
     const double MinContainerZoom = 2.0;
     const int NameIconSize = 9;
@@ -20,6 +14,13 @@ class NodeSvg
     const double MemberTextGap = 4;
     const double MemberHorizontalPadding = 4;
     const double MemberAverageCharWidthFactor = 0.6;
+
+    public static bool ShowHiddenNodes { get; private set; } = true;
+    public static bool IsEditingEnabled => IsEditingEnabledManual ?? !Build.IsStandaloneWasm;
+
+    public static void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
+
+    public static void SetIsEditingEnabled(bool enabled) => IsEditingEnabledManual = enabled;
 
     public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 

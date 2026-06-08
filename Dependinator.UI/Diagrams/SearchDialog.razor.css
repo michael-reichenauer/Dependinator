@@ -1,0 +1,71 @@
+.search-dialog__field {
+  margin-bottom: 0.5rem;
+}
+
+.search-dialog__results {
+  /* Fixed vertical budget (~a third of the viewport); denser rows fit more items. */
+  max-height: min(20rem, 30vh);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--mud-default-borderradius);
+}
+
+.search-dialog__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.125rem 0.625rem;
+  line-height: 1.3;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.search-dialog__item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.search-dialog__item--selected {
+  background-color: var(--mud-palette-action-default-hover);
+}
+
+.search-dialog__short {
+  flex: 0 0 auto;
+  color: var(--mud-palette-text-primary);
+}
+
+.search-dialog__full {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.8em;
+  color: var(--mud-palette-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-dialog__nav {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem;
+  border-radius: var(--mud-default-borderradius);
+  color: var(--mud-palette-text-secondary);
+  cursor: pointer;
+  opacity: 0; /* Revealed on row hover / selection; reserves space to avoid layout shift. */
+}
+
+.search-dialog__item:hover .search-dialog__nav,
+.search-dialog__item--selected .search-dialog__nav {
+  opacity: 1;
+}
+
+.search-dialog__nav:hover {
+  color: var(--mud-palette-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.search-dialog__empty {
+  padding: 0.5rem 0.25rem;
+  color: var(--mud-palette-text-secondary);
+}
