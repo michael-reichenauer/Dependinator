@@ -1,0 +1,84 @@
+@using Dependinator.UI.Modeling.Models
+@inject INodeSearchService searchService
+@inject INavigationService navigationService
+
+<MudDialog Class="search-dialog">
+  <DialogContent>
+    <MudTextField @ref="textField" T="string" Value="@query" ValueChanged="OnQueryChanged"
+                  Immediate="true" Placeholder="Search nodes…" Variant="Variant.Outlined"
+                  Adornment="Adornment.Start" AdornmentIcon="@MudBlazor.Icons.Material.Outlined.Search"
+                  Clearable="true" FullWidth="true" Class="search-dialog__field"
+                  OnKeyDown="OnKeyDown" autocomplete="off" />
+
+    @if (results.Count > 0)
+    {
+      <div class="search-dialog__results">
+        @for (int i = 0; i < results.Count; i++)
+        {
+          var index = i;
+          var result = results[index];
+          <div class="search-dialog__item @(index == selectedIndex ? "search-dialog__item--selected" : "")"
+               @onclick="() => SelectAsync(result)">
+            <span class="search-dialog__short">@result.ShortName</span>
+            <span class="search-dialog__full">@result.FullName</span>
+          </div>
+        }
+      </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(query))
+    {
+      <MudText Typo="Typo.body2" Class="search-dialog__empty">No matching nodes</MudText>
+    }
+  </DialogContent>
+</MudDialog>
+
+@code {
+  [CascadingParameter]
+  IMudDialogInstance MudDialog { get; set; } = null!;
+
+  MudTextField<string> textField = null!;
+  string query = "";
+  IReadOnlyList<NodeSearchResult> results = [];
+  int selectedIndex = 0;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+      await textField.FocusAsync();
+  }
+
+  void OnQueryChanged(string value)
+  {
+    query = value ?? "";
+    results = searchService.Search(query);
+    selectedIndex = 0;
+  }
+
+  async Task OnKeyDown(KeyboardEventArgs e)
+  {
+    switch (e.Key)
+    {
+      case "ArrowDown":
+        if (results.Count > 0)
+          selectedIndex = Math.Min(selectedIndex + 1, results.Count - 1);
+        break;
+      case "ArrowUp":
+        if (results.Count > 0)
+          selectedIndex = Math.Max(selectedIndex - 1, 0);
+        break;
+      case "Enter":
+        if (selectedIndex >= 0 && selectedIndex < results.Count)
+          await SelectAsync(results[selectedIndex]);
+        break;
+      case "Escape":
+        MudDialog.Close(DialogResult.Cancel());
+        break;
+    }
+  }
+
+  async Task SelectAsync(NodeSearchResult result)
+  {
+    MudDialog.Close(DialogResult.Ok(true));
+    await navigationService.ShowNodeAsync(result.Id);
+  }
+}

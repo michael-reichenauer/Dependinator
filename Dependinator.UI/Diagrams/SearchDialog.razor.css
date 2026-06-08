@@ -1,0 +1,48 @@
+.search-dialog__field {
+  margin-bottom: 0.5rem;
+}
+
+.search-dialog__results {
+  /* Show about 15 rows, but never taller than the viewport. */
+  max-height: min(calc(15 * 2.5rem), 60vh);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--mud-default-borderradius);
+}
+
+.search-dialog__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.search-dialog__item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.search-dialog__item--selected {
+  background-color: var(--mud-palette-action-default-hover);
+}
+
+.search-dialog__short {
+  flex: 0 0 auto;
+  color: var(--mud-palette-text-primary);
+}
+
+.search-dialog__full {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.8em;
+  color: var(--mud-palette-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-dialog__empty {
+  padding: 0.5rem 0.25rem;
+  color: var(--mud-palette-text-secondary);
+}
