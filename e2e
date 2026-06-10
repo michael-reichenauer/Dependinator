@@ -1,0 +1,67 @@
+#!/bin/bash
+# Run the Playwright UI tests (Dependinator.E2E.Tests).
+#
+#   ./e2e               run on chromium (default)
+#   ./e2e -b firefox    run on a specific browser (chromium|firefox|webkit)
+#   ./e2e -a            run on all three browsers (e.g. before a release)
+#
+# Uses an already running app at http://localhost:5000 (./watch or ./watch-sync);
+# otherwise starts Dependinator.Web itself and stops it afterwards.
+set -uo pipefail
+cd "$(dirname "$0")"
+
+BASE_URL="${E2E_BASE_URL:-http://localhost:5000}"
+BROWSERS=("chromium")
+
+while getopts "ab:" opt; do
+    case $opt in
+        a) BROWSERS=("chromium" "firefox" "webkit") ;;
+        b) BROWSERS=("$OPTARG") ;;
+        *) echo "Usage: ./e2e [-a] [-b chromium|firefox|webkit]"; exit 1 ;;
+    esac
+done
+
+APP_PID=""
+cleanup() {
+    if [[ -n "$APP_PID" ]]; then
+        echo "Stopping app (pid $APP_PID)..."
+        kill "$APP_PID" 2>/dev/null
+        wait "$APP_PID" 2>/dev/null
+    fi
+}
+trap cleanup EXIT
+
+if ! curl -sf -o /dev/null "$BASE_URL"; then
+    echo "App not running at $BASE_URL, starting Dependinator.Web..."
+    # In Development the app hardcodes Kestrel to 127.0.0.1:5000 (Program.cs)
+    dotnet run --project ./Dependinator.Web/Dependinator.Web.csproj &
+    APP_PID=$!
+
+    for _ in $(seq 1 60); do
+        sleep 1
+        if curl -sf -o /dev/null "$BASE_URL"; then
+            break
+        fi
+        if ! kill -0 "$APP_PID" 2>/dev/null; then
+            echo "App failed to start."
+            APP_PID=""
+            exit 1
+        fi
+    done
+    if ! curl -sf -o /dev/null "$BASE_URL"; then
+        echo "App did not become ready at $BASE_URL."
+        exit 1
+    fi
+fi
+
+RESULT=0
+for browser in "${BROWSERS[@]}"; do
+    echo ""
+    echo "=== Running e2e tests on $browser ==="
+    if ! E2E=1 BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
+        dotnet test ./Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj; then
+        RESULT=1
+    fi
+done
+
+exit $RESULT

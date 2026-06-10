@@ -352,3 +352,9 @@ healthchecksdb
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# Playwright CLI runtime artifacts (sessions, snapshots); keep the config
+/.playwright/*
+!/.playwright/cli.config.json
+/.playwright-cli/
+.claude/settings.local.json

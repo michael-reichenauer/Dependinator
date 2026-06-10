@@ -41,11 +41,16 @@ dotnet build Dependinator.sln
 ./watch-sync                                   # Blazor Server + Azurite + Functions host
 
 # Test
-dotnet test Dependinator.sln                   # all tests
+dotnet test Dependinator.sln                   # all unit tests (e2e are skipped)
 dotnet test Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
 dotnet test Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
 dotnet test Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj
 dotnet test Api.Tests/Api.Tests.csproj
+
+# UI (Playwright) tests — see Dependinator.E2E.Tests/README.md
+./e2e                                          # chromium; auto-starts app if not running
+./e2e -b firefox                               # specific browser (chromium|firefox|webkit)
+./e2e -a                                       # all three browsers (before releases)
 
 # VS Code extension
 npm install --prefix ./DependinatorVsCode
@@ -70,6 +75,8 @@ dotnet list Dependinator.sln package --vulnerable
 - **Formatting:** CSharpier (`.csharpierrc.json`) + `.editorconfig`. Run `dotnet csharpier --check .` to verify; `CSharpier.MsBuild` also enforces formatting during build.
 - **Style:** 4-space indent, explicit types over `var`, PascalCase for types/methods/properties/constants, nullable-aware code, braces preferred.
 - **Tests:** xUnit + Moq + Verify.Xunit. Name tests as `MethodName_ShouldDoX()`. `Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` dynamically — do not hardcode `/workspaces/...` paths in tests.
+- **UI/e2e tests:** `Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. Keep the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props` in sync with `PLAYWRIGHT_VERSION` in `.devcontainer/post-create.sh`.
+- **Browser checks:** after UI changes, use the `ui-check` skill (`.claude/skills/ui-check/`) to verify behavior with `playwright-cli` and run `./e2e`.
 
 ## Architecture Notes
 
