@@ -4,14 +4,14 @@ namespace Dependinator.UI.Diagrams;
 
 record NodeSearchResult(NodeId Id, string ShortName, string FullName);
 
+// Searches all named (non-root) nodes by their short name using a VS Code Ctrl-T style
+// fuzzy matcher: typed letters must appear as a subsequence, and uppercase letters favor
+// word/camelCase boundaries (e.g. "PZS" jumps to "PanZoomService").
 interface INodeSearchService
 {
     IReadOnlyList<NodeSearchResult> Search(string query);
 }
 
-// Searches all named (non-root) nodes by their short name using a VS Code Ctrl-T style
-// fuzzy matcher: typed letters must appear as a subsequence, and uppercase letters favor
-// word/camelCase boundaries (e.g. "PZS" jumps to "PanZoomService").
 [Scoped]
 class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
 {
@@ -22,6 +22,7 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
     const int UppercaseBoundaryBonus = 20;
     const int GapPenalty = 2;
     const int MaxGapPenalized = 10;
+    const int MaxResultItems = 100;
 
     public IReadOnlyList<NodeSearchResult> Search(string query)
     {
@@ -32,7 +33,7 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
 
         // Snapshot candidate fields under the model lock; score outside the lock.
         var candidates = modelMgr.WithModel(model =>
-            model.Nodes.Values.Where(n => !n.IsRoot).Select(n => (n.Id, n.ShortName, n.Name)).ToList()
+            model.Nodes.Values.Where(n => !n.IsRoot).Select(n => (n.Id, n.ShortName, n.LongName)).ToList()
         );
 
         var results = new List<(NodeSearchResult Result, int Score)>(candidates.Count);
@@ -50,7 +51,10 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
             .ThenBy(r => r.Result.ShortName.Length)
             .ThenBy(r => r.Result.ShortName, StringComparer.Ordinal)
             .Select(r => r.Result)
+            .Take(MaxResultItems)
             .ToList();
+
+        // Log.Info($"Search Query '{query}':\n  {string.Join("\n  ", response.Take(10))}");
 
         return response;
     }
