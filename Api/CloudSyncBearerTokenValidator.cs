@@ -24,7 +24,10 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     JsonWebKeySet? cachedKeySet;
     DateTime cachedKeySetExpiry;
 
-    public CloudSyncBearerTokenValidator(IOptions<CloudSyncOptions> options, ILogger<CloudSyncBearerTokenValidator> logger)
+    public CloudSyncBearerTokenValidator(
+        IOptions<CloudSyncOptions> options,
+        ILogger<CloudSyncBearerTokenValidator> logger
+    )
     {
         this.options = options.Value;
         this.logger = logger;
@@ -47,7 +50,9 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
     {
         if (string.IsNullOrWhiteSpace(options.ClerkIssuer))
         {
-            logger.LogWarning("CloudSync__ClerkIssuer is not configured — all auth requests will be treated as unauthenticated");
+            logger.LogWarning(
+                "CloudSync__ClerkIssuer is not configured — all auth requests will be treated as unauthenticated"
+            );
             return null;
         }
 
@@ -56,7 +61,8 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
 
         try
         {
-            IEnumerable<SecurityKey> signingKeys = testSigningKeys
+            IEnumerable<SecurityKey> signingKeys =
+                testSigningKeys
                 ?? (IEnumerable<SecurityKey>)(await GetSigningKeysAsync(cancellationToken)).GetSigningKeys();
             TokenValidationParameters validationParameters = new()
             {
@@ -65,14 +71,32 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
                 ValidateIssuer = true,
                 ValidIssuer = options.ClerkIssuer.TrimEnd('/'),
                 ValidateAudience = false,
-                ValidateLifetime = true,
+                // WORKAROUND: The auth provider's free tier caps token lifetime ('exp') at
+                // 7 days. Standard 'exp' validation is therefore disabled and replaced by a
+                // custom max-age check on the 'iat' (issued-at) claim, so signed-in clients
+                // (mainly the VS Code extension, which stores a single long-lived token)
+                // stay valid for up to CloudSyncOptions.MaxTokenAgeDays (default 180 days).
+                // Signature and issuer validation are unaffected, so tokens are still
+                // provably issued by the configured auth provider.
+                //
+                // TO REVERT (once a paid plan allows configuring a longer token lifetime
+                // in the auth provider): set ValidateLifetime = true, remove the
+                // IsWithinMaxTokenAge check below, remove CloudSyncOptions.MaxTokenAgeDays,
+                // and restore the 'exp'-based expiry check in
+                // DependinatorVsCode/src/cloudSyncNode.ts readValidTokenAsync().
+                ValidateLifetime = false,
                 ClockSkew = TimeSpan.FromMinutes(2),
             };
 
-            ClaimsPrincipal principal = tokenHandler.ValidateToken(token, validationParameters, out _);
-            string? userId =
-                FindClaimValue(principal, "sub")
-                ?? FindClaimValue(principal, ClaimTypes.NameIdentifier);
+            ClaimsPrincipal principal = tokenHandler.ValidateToken(
+                token,
+                validationParameters,
+                out SecurityToken validatedToken
+            );
+            if (!IsWithinMaxTokenAge(validatedToken))
+                return null;
+
+            string? userId = FindClaimValue(principal, "sub") ?? FindClaimValue(principal, ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
             {
                 logger.LogWarning("JWT validated but contains no 'sub' or NameIdentifier claim");
@@ -91,6 +115,37 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
             logger.LogWarning(ex, "Bearer token validation failed");
             return null;
         }
+    }
+
+    // Part of the max-token-age WORKAROUND described above: accepts a validated token only
+    // if its 'iat' (issued-at) claim is present, not in the future, and no older than
+    // CloudSyncOptions.MaxTokenAgeDays. Replaces the disabled standard 'exp' validation.
+    bool IsWithinMaxTokenAge(SecurityToken validatedToken)
+    {
+        if (validatedToken is not JwtSecurityToken jwtToken || jwtToken.IssuedAt == default)
+        {
+            logger.LogWarning("JWT rejected: missing 'iat' (issued-at) claim required for max-age validation");
+            return false;
+        }
+
+        DateTime utcNow = DateTime.UtcNow;
+        if (jwtToken.IssuedAt > utcNow.AddMinutes(2))
+        {
+            logger.LogWarning("JWT rejected: 'iat' (issued-at) claim is in the future: {IssuedAt}", jwtToken.IssuedAt);
+            return false;
+        }
+
+        if (jwtToken.IssuedAt.AddDays(options.MaxTokenAgeDays) < utcNow)
+        {
+            logger.LogWarning(
+                "JWT rejected: token issued at {IssuedAt} exceeds max age of {MaxTokenAgeDays} days",
+                jwtToken.IssuedAt,
+                options.MaxTokenAgeDays
+            );
+            return false;
+        }
+
+        return true;
     }
 
     static readonly HttpClient jwksHttpClient = new();
@@ -116,11 +171,7 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
         return TryReadBearerToken(request, AuthorizationHeaderName, out token);
     }
 
-    static bool TryReadBearerToken(
-        FunctionsHttpRequestData request,
-        string headerName,
-        out string? token
-    )
+    static bool TryReadBearerToken(FunctionsHttpRequestData request, string headerName, out string? token)
     {
         token = null;
         if (!request.Headers.TryGetValues(headerName, out IEnumerable<string>? values))

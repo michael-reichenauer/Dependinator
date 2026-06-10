@@ -9,7 +9,7 @@ class MemberParser
         var items = member switch
         {
             IMethodSymbol m => ParseMethod(m, fullTypeName, compilation),
-            IPropertySymbol p => ParseProperty(p, fullTypeName),
+            IPropertySymbol p => ParseProperty(p, fullTypeName, compilation),
             IFieldSymbol f => ParseField(f, fullTypeName),
             IEventSymbol e => ParseEvent(e, fullTypeName),
             _ => throw new NotSupportedException($"Member type not supported: {member}"),
@@ -38,18 +38,31 @@ class MemberParser
             yield return new Item(null, LinkParser.Parse(memberNode.Node!.Name, fieldType));
     }
 
-    static IEnumerable<Item> ParseProperty(IPropertySymbol member, string fullTypeName)
+    static IEnumerable<Item> ParseProperty(IPropertySymbol member, string fullTypeName, Compilation compilation)
     {
         var memberNode = ParseMember(member, fullTypeName);
         yield return memberNode;
 
-        // Handle property link
+        var sentLinks = new HashSet<string>();
+
+        // Handle property type link
         if (
             member.Type is INamedTypeSymbol propertyType
             && !IsSameAsContainingType(propertyType, member)
             && !IgnoredTypes.IsIgnored(propertyType)
         )
-            yield return new Item(null, LinkParser.Parse(memberNode.Node!.Name, propertyType));
+        {
+            var typeLink = LinkParser.Parse(memberNode.Node!.Name, propertyType);
+            if (sentLinks.Add(typeLink.Target))
+                yield return new Item(null, typeLink);
+        }
+
+        // Handle links from the property accessor bodies
+        foreach (var link in MethodLinkParser.ParsePropertyLinks(member, memberNode.Node!.Name, compilation))
+        {
+            if (sentLinks.Add(link.Target))
+                yield return new Item(null, link);
+        }
     }
 
     static IEnumerable<Item> ParseMethod(IMethodSymbol member, string fullTypeName, Compilation compilation)

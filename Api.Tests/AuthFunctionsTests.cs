@@ -67,13 +67,16 @@ public class AuthFunctionsTests
     {
         List<Claim> claims = [new("sub", sub), new("email", email)];
 
-        JwtSecurityToken token = new(
+        JwtPayload payload = new(
             issuer: issuer,
+            audience: null,
             claims: claims,
             notBefore: DateTime.UtcNow.AddMinutes(-1),
             expires: DateTime.UtcNow.AddMinutes(10),
-            signingCredentials: new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
+            issuedAt: DateTime.UtcNow.AddMinutes(-1)
         );
+        JwtHeader header = new(new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256));
+        JwtSecurityToken token = new(header, payload);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }

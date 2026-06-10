@@ -56,6 +56,14 @@ const productionClerkAccountsUrl = "https://renewed-hen-98.accounts.dev";
 const productionClerkPublishableKey = "pk_test_cmVuZXdlZC1oZW4tOTguY2xlcmsuYWNjb3VudHMuZGV2JA";
 const callbackTimeoutMilliseconds = 5 * 60 * 1000;
 
+// WORKAROUND: The auth provider's free tier caps token lifetime ('exp') at 7 days. The API
+// ignores 'exp' and instead accepts tokens up to CloudSync__MaxTokenAgeDays (default 180)
+// after their 'iat' (issued-at) time — see Api/CloudSyncBearerTokenValidator.cs. This
+// constant must match so the stored token is kept locally for the same period.
+// TO REVERT (once a paid plan allows longer token lifetimes): remove this constant and
+// restore the 'exp'-based check in readValidTokenAsync().
+const tokenMaxAgeDays = 180;
+
 export function createCloudSyncBridge(context: vscode.ExtensionContext): CloudSyncBridge {
     return new CloudSyncBridgeImpl(context);
 }
@@ -449,8 +457,11 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
         if (!token)
             return undefined;
 
+        // Part of the max-token-age WORKAROUND (see tokenMaxAgeDays above): the API ignores
+        // the token's 'exp', so keep the token until 'iat' + tokenMaxAgeDays instead.
         const claims = this.readTokenClaims(token);
-        const expiry = typeof claims.exp === "number" ? claims.exp * 1000 : 0;
+        const issuedAt = typeof claims.iat === "number" ? claims.iat * 1000 : 0;
+        const expiry = issuedAt ? issuedAt + tokenMaxAgeDays * 24 * 60 * 60 * 1000 : 0;
         if (!expiry || expiry <= Date.now()) {
             await this.context.secrets.delete(tokenSecretName);
             return undefined;

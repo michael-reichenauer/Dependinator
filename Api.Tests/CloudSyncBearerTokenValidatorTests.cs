@@ -60,14 +60,62 @@ public class CloudSyncBearerTokenValidatorTests
         Assert.Null(user);
     }
 
+    // Max-token-age WORKAROUND (see CloudSyncBearerTokenValidator): expired tokens are
+    // accepted as long as 'iat' is within CloudSyncOptions.MaxTokenAgeDays.
     [Fact]
-    public async Task TryGetCurrentUserAsync_ShouldReturnNull_WhenTokenIsExpired()
+    public async Task TryGetCurrentUserAsync_ShouldAcceptExpiredToken_WhenWithinMaxTokenAge()
     {
         CloudSyncBearerTokenValidator sut = CreateValidator();
         TestHttpRequestData request = new(new TestFunctionContext());
         request.Headers.Add(
             "X-Dependinator-Authorization",
-            $"Bearer {CreateToken(ClerkIssuer, sub: "user-123", notBefore: DateTime.UtcNow.AddHours(-2), expires: DateTime.UtcNow.AddHours(-1))}"
+            $"Bearer {CreateToken(ClerkIssuer, sub: "user-123", notBefore: DateTime.UtcNow.AddDays(-10), expires: DateTime.UtcNow.AddDays(-3), issuedAt: DateTime.UtcNow.AddDays(-10))}"
+        );
+
+        CloudUserInfo? user = await sut.TryGetCurrentUserAsync(request, CancellationToken.None);
+
+        Assert.NotNull(user);
+        Assert.Equal("user-123", user.UserId);
+    }
+
+    [Fact]
+    public async Task TryGetCurrentUserAsync_ShouldReturnNull_WhenTokenIsOlderThanMaxTokenAge()
+    {
+        CloudSyncBearerTokenValidator sut = CreateValidator();
+        TestHttpRequestData request = new(new TestFunctionContext());
+        request.Headers.Add(
+            "X-Dependinator-Authorization",
+            $"Bearer {CreateToken(ClerkIssuer, sub: "user-123", notBefore: DateTime.UtcNow.AddDays(-200), expires: DateTime.UtcNow.AddDays(-193), issuedAt: DateTime.UtcNow.AddDays(-200))}"
+        );
+
+        CloudUserInfo? user = await sut.TryGetCurrentUserAsync(request, CancellationToken.None);
+
+        Assert.Null(user);
+    }
+
+    [Fact]
+    public async Task TryGetCurrentUserAsync_ShouldReturnNull_WhenIssuedAtClaimIsMissing()
+    {
+        CloudSyncBearerTokenValidator sut = CreateValidator();
+        TestHttpRequestData request = new(new TestFunctionContext());
+        request.Headers.Add(
+            "X-Dependinator-Authorization",
+            $"Bearer {CreateToken(ClerkIssuer, sub: "user-123", includeIssuedAt: false)}"
+        );
+
+        CloudUserInfo? user = await sut.TryGetCurrentUserAsync(request, CancellationToken.None);
+
+        Assert.Null(user);
+    }
+
+    [Fact]
+    public async Task TryGetCurrentUserAsync_ShouldReturnNull_WhenIssuedAtClaimIsInFuture()
+    {
+        CloudSyncBearerTokenValidator sut = CreateValidator();
+        TestHttpRequestData request = new(new TestFunctionContext());
+        request.Headers.Add(
+            "X-Dependinator-Authorization",
+            $"Bearer {CreateToken(ClerkIssuer, sub: "user-123", issuedAt: DateTime.UtcNow.AddHours(1))}"
         );
 
         CloudUserInfo? user = await sut.TryGetCurrentUserAsync(request, CancellationToken.None);
@@ -114,7 +162,9 @@ public class CloudSyncBearerTokenValidatorTests
         string? sub = null,
         string? email = null,
         DateTime? notBefore = null,
-        DateTime? expires = null
+        DateTime? expires = null,
+        DateTime? issuedAt = null,
+        bool includeIssuedAt = true
     )
     {
         List<Claim> claims = [];
@@ -123,13 +173,16 @@ public class CloudSyncBearerTokenValidatorTests
         if (!string.IsNullOrWhiteSpace(email))
             claims.Add(new Claim("email", email));
 
-        JwtSecurityToken token = new(
+        JwtPayload payload = new(
             issuer: issuer,
+            audience: null,
             claims: claims,
             notBefore: notBefore ?? DateTime.UtcNow.AddMinutes(-1),
             expires: expires ?? DateTime.UtcNow.AddMinutes(10),
-            signingCredentials: new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
+            issuedAt: includeIssuedAt ? (issuedAt ?? DateTime.UtcNow.AddMinutes(-1)) : null
         );
+        JwtHeader header = new(new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256));
+        JwtSecurityToken token = new(header, payload);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
