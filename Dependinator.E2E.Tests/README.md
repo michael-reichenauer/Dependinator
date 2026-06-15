@@ -9,11 +9,22 @@ with xUnit, testing the app as a user sees it at `http://localhost:5000`.
 ./e2e                # chromium (default), auto-starts the app if needed
 ./e2e -b firefox     # specific browser: chromium | firefox | webkit
 ./e2e -a             # all three browsers (recommended before releases)
+./e2e -s             # also start the cloud-sync stack so sync tests run
 ```
 
 If `./watch` or `./watch-sync` is already running, `./e2e` reuses that app
 instance (so hot-reloaded changes are tested); otherwise it starts and stops
 `Dependinator.Web` itself.
+
+### Cloud-sync tests
+
+Sync features talk to the Azure Functions API on port 7071 (backed by Azurite).
+Tests that need it are marked `[SyncFact]` instead of `[E2EFact]` and are
+skipped unless that stack is up. `./e2e -s` brings it up the same way
+`./watch-sync` does — reusing an already-running Azurite/Functions host, or
+starting (and stopping) them itself. It requires `func` and `azurite` installed.
+Note that signed-in sync flows additionally need a Clerk test user (not yet set
+up), so `[SyncFact]` currently only covers behavior reachable without sign-in.
 
 These tests are **skipped** during plain `dotnet test Dependinator.sln` — they
 only run when the `E2E=1` environment variable is set, which `./e2e` does.

@@ -4,32 +4,109 @@
 #   ./e2e               run on chromium (default)
 #   ./e2e -b firefox    run on a specific browser (chromium|firefox|webkit)
 #   ./e2e -a            run on all three browsers (e.g. before a release)
+#   ./e2e -s            also start the cloud-sync stack (Azurite + Functions on
+#                       7071) so sync tests ([SyncFact]) run; needs func+azurite
 #
 # Uses an already running app at http://localhost:5000 (./watch or ./watch-sync);
-# otherwise starts Dependinator.Web itself and stops it afterwards.
+# otherwise starts Dependinator.Web itself and stops it afterwards. With -s, any
+# already-running Azurite/Functions host is reused; otherwise they are started
+# and stopped here (same as ./watch-sync).
 set -uo pipefail
 cd "$(dirname "$0")"
 
 BASE_URL="${E2E_BASE_URL:-http://localhost:5000}"
 BROWSERS=("chromium")
+SYNC=0
 
-while getopts "ab:" opt; do
+while getopts "ab:s" opt; do
     case $opt in
         a) BROWSERS=("chromium" "firefox" "webkit") ;;
         b) BROWSERS=("$OPTARG") ;;
-        *) echo "Usage: ./e2e [-a] [-b chromium|firefox|webkit]"; exit 1 ;;
+        s) SYNC=1 ;;
+        *) echo "Usage: ./e2e [-a] [-b chromium|firefox|webkit] [-s]"; exit 1 ;;
     esac
 done
 
 APP_PID=""
+AZURITE_PID=""
+FUNC_PID=""
 cleanup() {
     if [[ -n "$APP_PID" ]]; then
         echo "Stopping app (pid $APP_PID)..."
         kill "$APP_PID" 2>/dev/null
         wait "$APP_PID" 2>/dev/null
     fi
+    if [[ -n "$FUNC_PID" ]]; then
+        echo "Stopping Functions host (pid $FUNC_PID)..."
+        kill "$FUNC_PID" 2>/dev/null
+    fi
+    if [[ -n "$AZURITE_PID" ]]; then
+        echo "Stopping Azurite (pid $AZURITE_PID)..."
+        kill "$AZURITE_PID" 2>/dev/null
+    fi
 }
 trap cleanup EXIT
+
+port_is_open() {
+    bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
+}
+
+# Optionally bring up the cloud-sync stack (Azurite + Azure Functions on 7071),
+# mirroring ./watch-sync, so the Blazor app can reach the cloud API during tests.
+E2E_SYNC=0
+if [[ "$SYNC" == "1" ]]; then
+    api_dir="./Api"
+    azurite_dir="./.azurite"
+    local_settings="$api_dir/local.settings.json"
+    local_settings_example="$api_dir/local.settings.example.json"
+
+    if ! command -v func >/dev/null 2>&1; then
+        echo "Azure Functions Core Tools ('func') is required for -s (sync tests)." >&2
+        echo "Install it from https://learn.microsoft.com/azure/azure-functions/functions-run-local" >&2
+        exit 1
+    fi
+
+    # Seed local settings from the checked-in example if the local file is missing.
+    if [[ ! -f "$local_settings" && -f "$local_settings_example" ]]; then
+        cp "$local_settings_example" "$local_settings"
+    fi
+
+    # Start Azurite unless something already serves its blob port (10000).
+    if port_is_open 10000; then
+        echo "Azurite already running, reusing it."
+    else
+        echo "Starting Azurite..."
+        mkdir -p "$azurite_dir"
+        if command -v azurite >/dev/null 2>&1; then
+            azurite --silent --skipApiVersionCheck --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
+        else
+            npx --yes azurite --silent --skipApiVersionCheck --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
+        fi
+        AZURITE_PID="$!"
+    fi
+
+    # Start the Functions host unless one is already listening on 7071.
+    if port_is_open 7071; then
+        echo "Azure Functions host already running on 7071, reusing it."
+    else
+        echo "Starting Azure Functions host on 7071..."
+        (
+            cd "$api_dir"
+            func start --port 7071
+        ) &
+        FUNC_PID="$!"
+
+        for _ in $(seq 1 120); do
+            port_is_open 7071 && break
+            sleep 0.5
+        done
+        if ! port_is_open 7071; then
+            echo "Azure Functions host did not start on port 7071." >&2
+            exit 1
+        fi
+    fi
+    E2E_SYNC=1
+fi
 
 if ! curl -sf -o /dev/null "$BASE_URL"; then
     echo "App not running at $BASE_URL, starting Dependinator.Web..."
@@ -58,7 +135,7 @@ RESULT=0
 for browser in "${BROWSERS[@]}"; do
     echo ""
     echo "=== Running e2e tests on $browser ==="
-    if ! E2E=1 BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
+    if ! E2E=1 E2E_SYNC="$E2E_SYNC" BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
         dotnet test ./Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj; then
         RESULT=1
     fi

@@ -51,6 +51,7 @@ dotnet test Api.Tests/Api.Tests.csproj
 ./e2e                                          # chromium; auto-starts app if not running
 ./e2e -b firefox                               # specific browser (chromium|firefox|webkit)
 ./e2e -a                                       # all three browsers (before releases)
+./e2e -s                                       # also start Azurite + Functions for sync tests
 
 # VS Code extension
 npm install --prefix ./DependinatorVsCode
