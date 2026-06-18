@@ -30,6 +30,10 @@ done
 APP_PID=""
 AZURITE_PID=""
 FUNC_PID=""
+JWKS_PID=""
+SETTINGS_BACKUP=""        # original Api/local.settings.json, restored on exit
+SETTINGS_CREATED=0        # 1 if we created local.settings.json (remove on exit)
+local_settings="./Api/local.settings.json"
 cleanup() {
     if [[ -n "$APP_PID" ]]; then
         echo "Stopping app (pid $APP_PID)..."
@@ -44,6 +48,17 @@ cleanup() {
         echo "Stopping Azurite (pid $AZURITE_PID)..."
         kill "$AZURITE_PID" 2>/dev/null
     fi
+    if [[ -n "$JWKS_PID" ]]; then
+        echo "Stopping test JWKS server (pid $JWKS_PID)..."
+        kill "$JWKS_PID" 2>/dev/null
+    fi
+    # Restore Api/local.settings.json to how we found it (we point ClerkIssuer at the
+    # local test issuer while sync tests run).
+    if [[ "$SETTINGS_CREATED" == "1" ]]; then
+        rm -f "$local_settings"
+    elif [[ -n "$SETTINGS_BACKUP" ]]; then
+        mv "$SETTINGS_BACKUP" "$local_settings"
+    fi
 }
 trap cleanup EXIT
 
@@ -51,13 +66,16 @@ port_is_open() {
     bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
 }
 
-# Optionally bring up the cloud-sync stack (Azurite + Azure Functions on 7071),
-# mirroring ./watch-sync, so the Blazor app can reach the cloud API during tests.
+# Optionally bring up the cloud-sync stack (Azurite + Azure Functions on 7071 + a
+# local test JWKS server), mirroring ./watch-sync, so the Blazor app can reach the
+# cloud API during tests. Auth uses a self-minted token validated against the test
+# JWKS instead of real Clerk — see Dependinator.E2E.Tests/TestAuth/.
 E2E_SYNC=0
+JWKS_PORT="${E2E_JWKS_PORT:-7072}"
+E2E_CLERK_ISSUER="http://127.0.0.1:${JWKS_PORT}"
 if [[ "$SYNC" == "1" ]]; then
     api_dir="./Api"
     azurite_dir="./.azurite"
-    local_settings="$api_dir/local.settings.json"
     local_settings_example="$api_dir/local.settings.example.json"
 
     if ! command -v func >/dev/null 2>&1; then
@@ -66,9 +84,13 @@ if [[ "$SYNC" == "1" ]]; then
         exit 1
     fi
 
-    # Seed local settings from the checked-in example if the local file is missing.
-    if [[ ! -f "$local_settings" && -f "$local_settings_example" ]]; then
-        cp "$local_settings_example" "$local_settings"
+    # Start the test JWKS server (serves the public key the Functions host validates with).
+    if port_is_open "$JWKS_PORT"; then
+        echo "Test JWKS server already running on $JWKS_PORT, reusing it."
+    else
+        echo "Starting test JWKS server on $JWKS_PORT..."
+        node ./Dependinator.E2E.Tests/TestAuth/jwks-server.js "$JWKS_PORT" &
+        JWKS_PID="$!"
     fi
 
     # Start Azurite unless something already serves its blob port (10000).
@@ -88,8 +110,23 @@ if [[ "$SYNC" == "1" ]]; then
     # Start the Functions host unless one is already listening on 7071.
     if port_is_open 7071; then
         echo "Azure Functions host already running on 7071, reusing it."
+        echo "WARNING: sync tests need CloudSync__ClerkIssuer=$E2E_CLERK_ISSUER; the" >&2
+        echo "         already-running host may use a different issuer and fail them." >&2
     else
-        echo "Starting Azure Functions host on 7071..."
+        # Point the Functions host at the local test issuer (restored on exit), seeding
+        # local.settings.json from the example first if it does not exist yet.
+        if [[ -f "$local_settings" ]]; then
+            SETTINGS_BACKUP="$(mktemp)"
+            cp "$local_settings" "$SETTINGS_BACKUP"
+        elif [[ -f "$local_settings_example" ]]; then
+            cp "$local_settings_example" "$local_settings"
+            SETTINGS_CREATED=1
+        fi
+        tmp_settings="$(mktemp)"
+        jq --arg iss "$E2E_CLERK_ISSUER" '.Values["CloudSync__ClerkIssuer"]=$iss' \
+            "$local_settings" >"$tmp_settings" && mv "$tmp_settings" "$local_settings"
+
+        echo "Starting Azure Functions host on 7071 (issuer $E2E_CLERK_ISSUER)..."
         (
             cd "$api_dir"
             func start --port 7071
@@ -135,7 +172,8 @@ RESULT=0
 for browser in "${BROWSERS[@]}"; do
     echo ""
     echo "=== Running e2e tests on $browser ==="
-    if ! E2E=1 E2E_SYNC="$E2E_SYNC" BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
+    if ! E2E=1 E2E_SYNC="$E2E_SYNC" E2E_CLERK_ISSUER="$E2E_CLERK_ISSUER" \
+        BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
         dotnet test ./Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj; then
         RESULT=1
     fi

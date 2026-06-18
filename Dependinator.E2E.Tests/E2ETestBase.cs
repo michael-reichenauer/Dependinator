@@ -27,6 +27,32 @@ public class E2ETestBase : PageTest
         await base.InitializeAsync();
     }
 
+    // Makes the page appear signed in to cloud sync without real Clerk: blocks the Clerk
+    // CDN and stubs window.Clerk so clerkGetToken() returns a JWT minted by TestAuthToken,
+    // which the local Functions host validates against the test JWKS (see ./e2e -s).
+    // Call this BEFORE navigating (Page.GotoAsync). Used by [SyncFact] tests.
+    protected async Task SignInAsTestUserAsync(string sub = "e2e-test-user", string email = "e2e@dependinator.test")
+    {
+        // The real Clerk CDN script would overwrite our stub, so prevent it from loading.
+        await Page.RouteAsync("**/*.clerk.accounts.dev/**", route => route.AbortAsync());
+
+        string token = TestAuthToken.Create(sub, email);
+        await Page.AddInitScriptAsync(
+            $$"""
+            window.Clerk = {
+                loaded: true,
+                user: { id: {{System.Text.Json.JsonSerializer.Serialize(sub)}} },
+                session: { getToken: async () => {{System.Text.Json.JsonSerializer.Serialize(token)}} },
+                load: async () => {},
+                addListener: () => (() => {}),
+                openSignIn: () => {},
+                closeSignIn: () => {},
+                signOut: async () => { window.Clerk.user = null; window.Clerk.session = null; },
+            };
+            """
+        );
+    }
+
     private static async Task EnsureAppIsRunningAsync()
     {
         if (isAppVerified)
