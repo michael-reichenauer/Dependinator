@@ -10,11 +10,21 @@ with xUnit, testing the app as a user sees it at `http://localhost:5000`.
 ./e2e -b firefox     # specific browser: chromium | firefox | webkit
 ./e2e -a             # all three browsers (recommended before releases)
 ./e2e -s             # also start the cloud-sync stack so sync tests run
+./e2e -t             # record a Playwright trace per test into ./traces
 ```
 
 If `./watch` or `./watch-sync` is already running, `./e2e` reuses that app
 instance (so hot-reloaded changes are tested); otherwise it starts and stops
 `Dependinator.Web` itself.
+
+### CI
+
+`.github/workflows/e2e.yml` runs this suite on pull requests (Chromium) and on
+pushes to `main`/`dev`; trigger it manually ("Run workflow") with **all** to also
+cover Firefox + WebKit before a release. It sets `E2E_TRACE=1` and, **on failure**,
+uploads the recorded traces as a `playwright-traces` artifact — download the `.zip`
+and open it at <https://trace.playwright.dev>. Sync (`[SyncFact]`) tests are skipped
+in CI (they need `func` + Azurite); they run locally via `./e2e -s`.
 
 ### Deterministic model (test mode)
 

@@ -357,4 +357,7 @@ healthchecksdb
 /.playwright/*
 !/.playwright/cli.config.json
 /.playwright-cli/
+
+# Playwright traces recorded by the e2e tests (./e2e -t or E2E_TRACE=1)
+/Dependinator.E2E.Tests/traces/
 .claude/settings.local.json

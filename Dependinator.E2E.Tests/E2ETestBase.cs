@@ -14,6 +14,16 @@ public class E2ETestBase : PageTest
 
     private static bool isAppVerified;
 
+    // When E2E_TRACE=1 (set by `./e2e -t` and in CI), each test records a Playwright
+    // trace to Dependinator.E2E.Tests/traces/. CI uploads that folder as an artifact on
+    // failure; open a .zip at https://trace.playwright.dev to debug.
+    private static readonly bool tracingEnabled = Environment.GetEnvironmentVariable("E2E_TRACE") == "1";
+    private static int traceCounter;
+    private bool tracingStarted;
+
+    private static string TraceDir =>
+        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "traces"));
+
     public override BrowserNewContextOptions ContextOptions()
     {
         BrowserNewContextOptions options = base.ContextOptions() ?? new BrowserNewContextOptions();
@@ -25,6 +35,28 @@ public class E2ETestBase : PageTest
     {
         await EnsureAppIsRunningAsync();
         await base.InitializeAsync();
+
+        if (tracingEnabled)
+        {
+            await Context.Tracing.StartAsync(
+                new() { Screenshots = true, Snapshots = true, Sources = true }
+            );
+            tracingStarted = true;
+        }
+    }
+
+    public override async Task DisposeAsync()
+    {
+        if (tracingStarted)
+        {
+            Directory.CreateDirectory(TraceDir);
+            string browser = Environment.GetEnvironmentVariable("BROWSER") ?? "chromium";
+            int ordinal = Interlocked.Increment(ref traceCounter);
+            string path = Path.Combine(TraceDir, $"{ordinal:D3}-{browser}.zip");
+            await Context.Tracing.StopAsync(new() { Path = path });
+        }
+
+        await base.DisposeAsync();
     }
 
     // Navigates and waits until the app has finished loading and rendering the initial
