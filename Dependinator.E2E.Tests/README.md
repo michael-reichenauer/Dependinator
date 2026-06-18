@@ -75,12 +75,19 @@ public class MyFeatureTests : E2ETestBase
     [E2EFact]
     public async Task MyFeature_ShouldDoSomething()
     {
-        await Page.GotoAsync("/");
+        await GotoReadyAsync();
         await Page.Keyboard.PressAsync("Control+f");
         await Expect(Page.GetByPlaceholder("Search nodes…")).ToBeVisibleAsync();
     }
 }
 ```
+
+Use **`GotoReadyAsync()`** (on `E2ETestBase`) instead of `Page.GotoAsync` for the
+home page: it navigates and waits until the app has finished loading and rendering
+the initial model. The app signals this by setting `data-app-ready="true"` on the
+`<body>` (via `jsInterop`'s `setAppReady`, called from `CanvasService.InitialShow`
+once the model is loaded), so tests wait on a real signal rather than arbitrary
+timeouts. `WaitForAppReadyAsync()` is also available if you navigate yourself.
 
 Useful app-specific selectors:
 

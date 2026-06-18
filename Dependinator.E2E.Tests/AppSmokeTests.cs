@@ -7,7 +7,7 @@ public class AppSmokeTests : E2ETestBase
     [E2EFact]
     public async Task HomePage_ShouldShowDiagramCanvas()
     {
-        await Page.GotoAsync("/");
+        await GotoReadyAsync();
 
         await Expect(Page).ToHaveTitleAsync("Dependinator");
         await Expect(Page.Locator("#svgcanvas")).ToBeVisibleAsync();
@@ -16,7 +16,7 @@ public class AppSmokeTests : E2ETestBase
     [E2EFact]
     public async Task HomePage_ShouldShowAppToolbar()
     {
-        await Page.GotoAsync("/");
+        await GotoReadyAsync();
 
         // Toolbar buttons and menu items carry stable data-testid hooks (AppBar.razor).
         await Expect(Page.GetByTestId("appbar-menu")).ToBeVisibleAsync();
@@ -26,7 +26,7 @@ public class AppSmokeTests : E2ETestBase
     [E2EFact]
     public async Task AppMenu_ShouldOpenSearchDialog_ViaMenuItem()
     {
-        await Page.GotoAsync("/");
+        await GotoReadyAsync();
 
         await Page.GetByTestId("appbar-menu").ClickAsync();
         await Page.GetByTestId("menu-search").ClickAsync();
@@ -37,8 +37,7 @@ public class AppSmokeTests : E2ETestBase
     [E2EFact]
     public async Task HomePage_ShouldLoadDemoModel_InTestMode()
     {
-        await Page.GotoAsync("/");
-        await Expect(Page.Locator("#svgcanvas")).ToBeVisibleAsync();
+        await GotoReadyAsync();
 
         // Under ./e2e the app runs in test mode (DEPENDINATOR_E2E=1) and loads the
         // embedded demo model instead of parsing the working solution; its root node
@@ -50,8 +49,7 @@ public class AppSmokeTests : E2ETestBase
     [E2EFact]
     public async Task SearchHotkey_ShouldOpenSearchDialog()
     {
-        await Page.GotoAsync("/");
-        await Expect(Page.Locator("#svgcanvas")).ToBeVisibleAsync();
+        await GotoReadyAsync();
 
         await Page.Keyboard.PressAsync("Control+f");
 

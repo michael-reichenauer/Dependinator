@@ -27,6 +27,18 @@ public class E2ETestBase : PageTest
         await base.InitializeAsync();
     }
 
+    // Navigates and waits until the app has finished loading and rendering the initial
+    // model (the app sets data-app-ready=true on the body via jsInterop's setAppReady).
+    // Prefer this over GotoAsync + arbitrary waits to avoid timing flakiness.
+    protected async Task GotoReadyAsync(string path = "/")
+    {
+        await Page.GotoAsync(path);
+        await WaitForAppReadyAsync();
+    }
+
+    protected Task WaitForAppReadyAsync() =>
+        Expect(Page.Locator("body")).ToHaveAttributeAsync("data-app-ready", "true", new() { Timeout = 30_000 });
+
     // Makes the page appear signed in to cloud sync without real Clerk: blocks the Clerk
     // CDN and stubs window.Clerk so clerkGetToken() returns a JWT minted by TestAuthToken,
     // which the local Functions host validates against the test JWKS (see ./e2e -s).

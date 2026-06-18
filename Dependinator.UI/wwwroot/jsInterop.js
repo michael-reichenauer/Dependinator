@@ -46,6 +46,12 @@ export function clickElement(elementId) {
   document.getElementById(elementId).click();
 }
 
+// Marks the app as ready once the initial model has loaded and rendered, so UI/e2e
+// tests can wait on [data-app-ready=true] instead of guessing with timeouts.
+export function setAppReady(ready) {
+  document.body.setAttribute("data-app-ready", ready ? "true" : "false");
+}
+
 export function postVsCodeMessage(message) {
   if (window.dependinator && typeof window.dependinator.postMessage === "function") {
     window.dependinator.postMessage(message);

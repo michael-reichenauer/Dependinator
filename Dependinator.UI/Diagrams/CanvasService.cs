@@ -112,6 +112,10 @@ class CanvasService : ICanvasService
         if (lastUsedPath is null)
             lastUsedPath = DemoModel.Path;
         await LoadAsync(lastUsedPath);
+
+        // Signal that the initial model has loaded and rendered (data-app-ready=true on
+        // the body), so UI/e2e tests can wait on it instead of arbitrary timeouts.
+        await jSInteropService.Call("setAppReady", true);
     }
 
     public async Task LoadAsync(string modelPath)
