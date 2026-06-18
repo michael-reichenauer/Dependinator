@@ -21,4 +21,9 @@
     <!-- Throwaway test signing key, read at runtime by TestAuthToken (sync tests). -->
     <None Include="TestAuth/private-key.pem" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Cloud-sync DTOs + CloudModelPath.CreateKey, used to seed/read known models. -->
+    <ProjectReference Include="../Shared/Shared.csproj" />
+  </ItemGroup>
 </Project>

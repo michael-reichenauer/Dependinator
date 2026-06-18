@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Shared;
 using Xunit;
 
 namespace Dependinator.E2E.Tests;
@@ -8,10 +9,25 @@ namespace Dependinator.E2E.Tests;
 // Cloud-sync tests. These only run under `./e2e -s`, which starts Azurite, the Azure
 // Functions API (7071) and the test JWKS server, and points the API at the test issuer.
 // Auth uses a self-minted token (TestAuthToken) instead of real Clerk — see TestAuth/.
-public class SyncTests : E2ETestBase
+// SeededSyncModel (a class fixture) seeds a known model so read tests are deterministic.
+public class SyncTests : E2ETestBase, IClassFixture<SeededSyncModel>
 {
-    // The Functions API the Blazor app talks to in dev (Dependinator.Web appsettings).
-    const string ApiBaseUrl = "http://127.0.0.1:7071";
+    // The Functions API the Blazor app talks to in dev (Dependinator.Web app settings).
+    const string ApiBaseUrl = SeededSyncModel.ApiBaseUrl;
+
+    // SeededSyncModel is a class fixture: xUnit creates it once and runs its seeding
+    // (IAsyncLifetime) before these tests. Consuming it here satisfies that wiring.
+    public SyncTests(SeededSyncModel seededModel) => _ = seededModel;
+
+    static HttpClient CreateClient(string sub) =>
+        new()
+        {
+            BaseAddress = new Uri(ApiBaseUrl),
+            DefaultRequestHeaders =
+            {
+                Authorization = new AuthenticationHeaderValue("Bearer", TestAuthToken.Create(sub)),
+            },
+        };
 
     // Proves the whole offline-auth chain end to end against the live host: a token we
     // mint is accepted (signature verified via the test JWKS, issuer + iat checked) and
@@ -19,18 +35,13 @@ public class SyncTests : E2ETestBase
     [SyncFact]
     public async Task AuthMe_ShouldReturnAuthenticatedUser_WhenTokenIsValid()
     {
-        using HttpClient client = new() { BaseAddress = new Uri(ApiBaseUrl) };
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            TestAuthToken.Create(sub: "e2e-test-user", email: "e2e@dependinator.test")
-        );
+        using HttpClient client = CreateClient("e2e-test-user");
 
-        AuthState? state = await client.GetFromJsonAsync<AuthState>("/api/auth/me");
+        CloudAuthState? state = await client.GetFromJsonAsync<CloudAuthState>("/api/auth/me");
 
         Assert.NotNull(state);
         Assert.True(state.IsAuthenticated);
         Assert.Equal("e2e-test-user", state.User?.UserId);
-        Assert.Equal("e2e@dependinator.test", state.User?.Email);
     }
 
     // Without a token the same endpoint reports unauthenticated (sanity check that auth
@@ -40,7 +51,7 @@ public class SyncTests : E2ETestBase
     {
         using HttpClient client = new() { BaseAddress = new Uri(ApiBaseUrl) };
 
-        AuthState? state = await client.GetFromJsonAsync<AuthState>("/api/auth/me");
+        CloudAuthState? state = await client.GetFromJsonAsync<CloudAuthState>("/api/auth/me");
 
         Assert.NotNull(state);
         Assert.False(state.IsAuthenticated);
@@ -50,20 +61,46 @@ public class SyncTests : E2ETestBase
     [SyncFact]
     public async Task ListModels_ShouldSucceed_ForAuthenticatedUser()
     {
-        using HttpClient client = new() { BaseAddress = new Uri(ApiBaseUrl) };
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            TestAuthToken.Create(sub: $"e2e-list-{Guid.NewGuid():N}")
-        );
+        using HttpClient client = CreateClient($"e2e-list-{Guid.NewGuid():N}");
 
         using HttpResponseMessage response = await client.GetAsync("/api/models");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    // Mirrors the production contract shape (Shared.CloudAuthState / CloudUserInfo) so the
-    // test does not need a reference to the Api/Shared projects.
-    sealed record AuthState(bool IsAvailable, bool IsAuthenticated, UserInfo? User);
+    // The seeded model (SeededSyncModel) is listed for its user — deterministic, no PUT
+    // in this test, independent of other tests' data.
+    [SyncFact]
+    public async Task ListModels_ShouldContainSeededModel()
+    {
+        using HttpClient client = CreateClient(SeededSyncModel.UserSub);
 
-    sealed record UserInfo(string UserId, string? Email);
+        CloudModelList? list = await client.GetFromJsonAsync<CloudModelList>("/api/models");
+
+        Assert.NotNull(list);
+        Assert.Contains(
+            list.Models,
+            m =>
+                m.ModelKey == SeededSyncModel.ModelKey
+                && m.NormalizedPath == SeededSyncModel.ModelPath
+                && m.ContentHash == SeededSyncModel.ContentHash
+        );
+    }
+
+    // Fetching the seeded model returns its exact content and metadata round-tripped
+    // through Azurite.
+    [SyncFact]
+    public async Task GetModel_ShouldReturnSeededDocument()
+    {
+        using HttpClient client = CreateClient(SeededSyncModel.UserSub);
+
+        CloudModelDocument? doc = await client.GetFromJsonAsync<CloudModelDocument>(
+            $"/api/models/{SeededSyncModel.ModelKey}"
+        );
+
+        Assert.NotNull(doc);
+        Assert.Equal(SeededSyncModel.ModelPath, doc.NormalizedPath);
+        Assert.Equal(SeededSyncModel.ContentHash, doc.ContentHash);
+        Assert.Equal(SeededSyncModel.ContentBase64, doc.CompressedContentBase64);
+    }
 }

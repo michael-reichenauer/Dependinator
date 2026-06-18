@@ -43,10 +43,18 @@ cleanup() {
     if [[ -n "$FUNC_PID" ]]; then
         echo "Stopping Functions host (pid $FUNC_PID)..."
         kill "$FUNC_PID" 2>/dev/null
+        # 'func start' spawns a worker (Api.dll) child that outlives the parent and keeps
+        # holding port 7071; reap the whole tree (only safe because we started it — when a
+        # host is already running we reuse it and never set FUNC_PID).
+        pkill -9 -f "func start --port 7071" 2>/dev/null
+        pkill -9 -f "Api/bin/output/Api.dll" 2>/dev/null
     fi
     if [[ -n "$AZURITE_PID" ]]; then
         echo "Stopping Azurite (pid $AZURITE_PID)..."
         kill "$AZURITE_PID" 2>/dev/null
+        # When started via 'npx azurite' the real server is a child node process that
+        # outlives the npx wrapper; reap it too (only when we started it).
+        pkill -9 -f "azurite --silent --skipApiVersionCheck --location ./.azurite" 2>/dev/null
     fi
     if [[ -n "$JWKS_PID" ]]; then
         echo "Stopping test JWKS server (pid $JWKS_PID)..."
