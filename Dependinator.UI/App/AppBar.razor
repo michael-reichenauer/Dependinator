@@ -20,45 +20,49 @@
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
     <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Secondary" Dense="true" Class="ml-n3"
-             AnchorOrigin="Origin.BottomCenter">
+             AnchorOrigin="Origin.BottomCenter" data-testid="appbar-menu">
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
-                     Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo">
+                     Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo" data-testid="menu-undo">
             Undo
         </MudMenuItem>
 
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
-                     Disabled="@(!commandService.CanRedo)" OnClick="commandService.Redo">
+                     Disabled="@(!commandService.CanRedo)" OnClick="commandService.Redo" data-testid="menu-redo">
             Redo
         </MudMenuItem>
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync">
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync"
+                     data-testid="menu-search">
             Search …
         </MudMenuItem>
 
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
-                     OnClick="canvasService.PanZoomToFit">
+                     OnClick="canvasService.PanZoomToFit" data-testid="menu-fit-to-screen">
             Fit to Screen
         </MudMenuItem>
 
         @if (Build.IsVsCodeExtWasm || Build.IsWeb)
         {
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                         OnClick="canvasService.Refresh">
+                         OnClick="canvasService.Refresh" data-testid="menu-refresh">
                 Refresh
             </MudMenuItem>
         }
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes">
+        <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes"
+                     data-testid="menu-show-hidden-nodes">
             Show Hidden Nodes
         </MudMenuItem>
 
-        <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode">
+        <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
+                     data-testid="menu-edit-mode">
             Edit Mode
         </MudMenuItem>
 
         <MudDivider />
 
-        <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff" OnClick="OnRemove">
+        <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff" OnClick="OnRemove"
+                     data-testid="menu-reset-model">
             Reset Model
         </MudMenuItem>
 
@@ -75,7 +79,7 @@
 
         <MudDivider />
 
-        <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled">
+        <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled" data-testid="menu-local-paths">
             @foreach (var path in modelListService.LocalPaths)
             {
                 <MudMenuItem IconColor="Color.Default" Icon="@Icons.Material.Outlined.Schema"
@@ -87,7 +91,7 @@
 
         @if (appCloudSyncService.IsAvailable)
         {
-            <MudMenu Label=" Cloud Models" Disabled="@IsCloudModelsMenuDisabled">
+            <MudMenu Label=" Cloud Models" Disabled="@IsCloudModelsMenuDisabled" data-testid="menu-cloud-models">
                 @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
                 {
                     bool isCurrent = IsCurrentCloudModel(cloudModel);
@@ -101,20 +105,23 @@
             <MudDivider />
             @if (AuthState.IsAuthenticated)
             {
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="LogoutAsync">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="LogoutAsync"
+                             data-testid="menu-logout">
                     Logout
                 </MudMenuItem>
             }
             else
             {
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Login" OnClick="LoginAsync">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Login" OnClick="LoginAsync"
+                             data-testid="menu-login">
                     Login
                 </MudMenuItem>
             }
         }
 
         <MudDivider />
-        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout">
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout"
+                     data-testid="menu-about">
             About
         </MudMenuItem>
     </MudMenu>
@@ -127,29 +134,33 @@
         <ChildContent>
             <span>
                 <MudIconButton Icon="@CurrentCloudIconInfo.Icon" Color="@CurrentCloudIconInfo.Color"
-                               Disabled="@(!appCloudSyncService.IsAvailable)" OnClick="ToggleCloudAuthAsync" />
+                               Disabled="@(!appCloudSyncService.IsAvailable)" OnClick="ToggleCloudAuthAsync"
+                               data-testid="toolbar-cloud" />
             </span>
         </ChildContent>
     </MudTooltip>
 
-    <MudIconButton Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync" />
+    <MudIconButton Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync" data-testid="toolbar-search" />
 
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="@GetToolbarButtonColor(commandService.CanUndo)"
-                       OnClick="commandService.Undo" />
+                       OnClick="commandService.Undo" data-testid="toolbar-undo" />
         <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
-                       OnClick="commandService.Redo" />
+                       OnClick="commandService.Redo" data-testid="toolbar-redo" />
         @if (Build.IsVsCodeExtWasm || Build.IsWeb)
         {
-            <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh" />
+            <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh"
+                           data-testid="toolbar-refresh" />
         }
         @if (NodeSvg.IsEditingEnabled)
         {
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Color="@Color.Warning" OnClick="ToggleEditMode" />
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Color="@Color.Warning" OnClick="ToggleEditMode"
+                           data-testid="toolbar-edit" />
         }
         else
         {
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Default" OnClick="ToggleEditMode" />
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Default" OnClick="ToggleEditMode"
+                           data-testid="toolbar-edit" />
         }
     </MudHidden>
 

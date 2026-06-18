@@ -18,7 +18,20 @@ public class AppSmokeTests : E2ETestBase
     {
         await Page.GotoAsync("/");
 
-        await Expect(Page.Locator(".mud-button-group-root")).ToBeVisibleAsync();
+        // Toolbar buttons and menu items carry stable data-testid hooks (AppBar.razor).
+        await Expect(Page.GetByTestId("appbar-menu")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("toolbar-search")).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
+    public async Task AppMenu_ShouldOpenSearchDialog_ViaMenuItem()
+    {
+        await Page.GotoAsync("/");
+
+        await Page.GetByTestId("appbar-menu").ClickAsync();
+        await Page.GetByTestId("menu-search").ClickAsync();
+
+        await Expect(Page.GetByPlaceholder("Search nodes…")).ToBeVisibleAsync();
     }
 
     [E2EFact]

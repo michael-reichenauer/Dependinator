@@ -74,11 +74,29 @@ public class MyFeatureTests : E2ETestBase
 
 Useful app-specific selectors:
 
-- `#svgcanvas` — the diagram SVG. Its contents are SVG shapes, mostly invisible
-  to role-based locators; assert on rendered text via `Page.Locator("#svgcanvas")
-  .GetByText(...)` or take screenshots for visual checks.
+- **`data-testid` on menus and toolbar buttons** — prefer these over `mud-*`
+  classes; use `Page.GetByTestId("...")`. Menu items only exist in the DOM while
+  their menu is open, so click the activator first:
+  ```csharp
+  await Page.GetByTestId("appbar-menu").ClickAsync();   // open the main menu
+  await Page.GetByTestId("menu-search").ClickAsync();   // then click an item
+  ```
+  Hooks: app menu activator `appbar-menu`; its items `menu-undo`, `menu-redo`,
+  `menu-search`, `menu-fit-to-screen`, `menu-refresh`, `menu-show-hidden-nodes`,
+  `menu-edit-mode`, `menu-reset-model`, `menu-local-paths`, `menu-cloud-models`,
+  `menu-login`/`menu-logout`, `menu-about`; toolbar buttons `toolbar-cloud`,
+  `toolbar-search`, `toolbar-undo`, `toolbar-redo`, `toolbar-refresh`,
+  `toolbar-edit`. The node context toolbar uses `node-*` (e.g. `node-menu`,
+  `node-references`, `node-show-source`) and the line toolbar `line-*`. Add a new
+  `data-testid` to the component when you need to target something not listed.
+- `#svgcanvas` — the diagram SVG. Nodes and lines already carry stable `id`s
+  derived from their element id (e.g. `<rect id="{elementId}">`, see
+  `PointerId.From*(...).ElementId`), so target them with `Page.Locator("#<id>")`.
+  Other SVG contents are mostly invisible to role-based locators; assert on
+  rendered text via `Page.Locator("#svgcanvas").GetByText(...)` or screenshots.
 - `Ctrl+F` opens the search dialog (placeholder `Search nodes…`).
-- MudBlazor components render with `mud-*` CSS classes.
+- MudBlazor components render with `mud-*` CSS classes (a fallback when no
+  `data-testid` exists).
 
 ## Debugging failing tests
 
