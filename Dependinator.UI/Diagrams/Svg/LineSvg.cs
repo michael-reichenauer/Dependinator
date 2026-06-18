@@ -102,12 +102,12 @@ class LineSvg
                 (point, index) =>
                 {
                     var renderedPoint = polylinePoints[index + 1];
-                    var handleId = PointerId.FromLinePoint(line.Id, index).ElementId;
+                    var elementId = PointerId.FromLinePoint(line.Id, index).ElementId;
                     return $"""
                     <g class="selectpoint">
                       <circle cx="{renderedPoint.X}" cy="{renderedPoint.Y}" r="{circleRadius
                         + 1}" fill="{segmentControlColor}" />
-                      <circle id="{handleId}" cx="{renderedPoint.X}" cy="{renderedPoint.Y}" r="{circleRadius
+                      <circle id="{elementId}" cx="{renderedPoint.X}" cy="{renderedPoint.Y}" r="{circleRadius
                         + 8}" fill="black" fill-opacity="0" />
                     </g>
                     """;
