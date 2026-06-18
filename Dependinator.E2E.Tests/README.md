@@ -13,9 +13,9 @@ with xUnit, testing the app as a user sees it at `http://localhost:5000`.
 ./e2e -t             # record a Playwright trace per test into ./traces
 ```
 
-If `./watch` or `./watch-sync` is already running, `./e2e` reuses that app
-instance (so hot-reloaded changes are tested); otherwise it starts and stops
-`Dependinator.Web` itself.
+`./e2e` starts (and stops) `Dependinator.Web` itself in test mode. If an app is
+already running on `http://localhost:5000` (e.g. `./watch`), it exits with an error
+asking you to stop it first — so tests always run against the known demo model.
 
 ### CI
 
@@ -32,9 +32,9 @@ in CI (they need `func` + Azurite); they run locally via `./e2e -s`.
 (`Build.IsTestMode`): on startup it loads the embedded **demo model** (`/Demo.sln`,
 a pre-parsed snapshot served from `Dependinator.Roslyn`'s embedded `demo.model`)
 instead of parsing the working solution. Tests therefore get a fast, deterministic
-model — the root node is `Demo.sln`. If you instead reuse a plain `./watch` (not in
-test mode), the app loads the real solution and model-specific assertions will
-differ; let `./e2e` start the app for determinism.
+model — the root node is `Demo.sln`. This is why `./e2e` refuses to reuse an
+already-running app (a plain `./watch` would load the real solution): it always
+starts its own test-mode app so the model is known.
 
 ### Cloud-sync tests
 

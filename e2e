@@ -9,10 +9,11 @@
 #   ./e2e -t            record a Playwright trace per test into ./Dependinator.E2E.Tests/traces
 #                       (open a .zip at https://trace.playwright.dev). CI sets this on failure.
 #
-# Uses an already running app at http://localhost:5000 (./watch or ./watch-sync);
-# otherwise starts Dependinator.Web itself and stops it afterwards. With -s, any
-# already-running Azurite/Functions host is reused; otherwise they are started
-# and stopped here (same as ./watch-sync).
+# Starts Dependinator.Web itself in test mode (embedded demo model) and stops it
+# afterwards. If an app is already running at http://localhost:5000 (e.g. ./watch),
+# it exits with an error asking you to stop it first — so tests always run against a
+# known model. With -s, an already-running Azurite/Functions host is reused; otherwise
+# they are started and stopped here (same as ./watch-sync).
 set -uo pipefail
 cd "$(dirname "$0")"
 
@@ -78,6 +79,15 @@ trap cleanup EXIT
 port_is_open() {
     bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
 }
+
+# ./e2e starts the app itself in test mode (DEPENDINATOR_E2E=1) so it loads the embedded
+# demo model deterministically. If something is already serving the URL (e.g. ./watch),
+# its model is unknown, so refuse rather than test against the wrong app.
+if curl -sf -o /dev/null "$BASE_URL"; then
+    echo "Error: an app is already running at $BASE_URL (e.g. ./watch)." >&2
+    echo "Stop it so ./e2e can start the app itself in test mode, then re-run." >&2
+    exit 1
+fi
 
 # Optionally bring up the cloud-sync stack (Azurite + Azure Functions on 7071 + a
 # local test JWKS server), mirroring ./watch-sync, so the Blazor app can reach the
@@ -158,34 +168,28 @@ if [[ "$SYNC" == "1" ]]; then
     E2E_SYNC=1
 fi
 
-if ! curl -sf -o /dev/null "$BASE_URL"; then
-    echo "App not running at $BASE_URL, starting Dependinator.Web (test mode)..."
-    # In Development the app hardcodes Kestrel to 127.0.0.1:5000 (Program.cs).
-    # DEPENDINATOR_E2E=1 makes it load the embedded demo model (fast, deterministic)
-    # instead of parsing the working solution.
-    DEPENDINATOR_E2E=1 dotnet run --project ./Dependinator.Web/Dependinator.Web.csproj &
-    APP_PID=$!
+# Start the app in test mode (the early check above guaranteed the URL was free).
+echo "Starting Dependinator.Web (test mode)..."
+# In Development the app hardcodes Kestrel to 127.0.0.1:5000 (Program.cs).
+# DEPENDINATOR_E2E=1 makes it load the embedded demo model (fast, deterministic)
+# instead of parsing the working solution.
+DEPENDINATOR_E2E=1 dotnet run --project ./Dependinator.Web/Dependinator.Web.csproj &
+APP_PID=$!
 
-    for _ in $(seq 1 60); do
-        sleep 1
-        if curl -sf -o /dev/null "$BASE_URL"; then
-            break
-        fi
-        if ! kill -0 "$APP_PID" 2>/dev/null; then
-            echo "App failed to start."
-            APP_PID=""
-            exit 1
-        fi
-    done
-    if ! curl -sf -o /dev/null "$BASE_URL"; then
-        echo "App did not become ready at $BASE_URL."
+for _ in $(seq 1 60); do
+    sleep 1
+    if curl -sf -o /dev/null "$BASE_URL"; then
+        break
+    fi
+    if ! kill -0 "$APP_PID" 2>/dev/null; then
+        echo "App failed to start."
+        APP_PID=""
         exit 1
     fi
-else
-    echo "Reusing the app already running at $BASE_URL."
-    echo "NOTE: tests expect the embedded demo model. If this app was not started with" >&2
-    echo "      DEPENDINATOR_E2E=1 (e.g. plain ./watch), it loads the real solution and" >&2
-    echo "      model-specific tests may differ. Let ./e2e start the app for determinism." >&2
+done
+if ! curl -sf -o /dev/null "$BASE_URL"; then
+    echo "App did not become ready at $BASE_URL."
+    exit 1
 fi
 
 RESULT=0

@@ -19,7 +19,8 @@ Start options (all serve the same Blazor Server app on http://localhost:5000):
 - `./watch` — UI only, hot reload. Sufficient for almost all UI checks.
 - `./watch-sync` — additionally starts Azurite + Azure Functions API (port 7071)
   for cloud-sync features. Needs `func` and `azurite` installed.
-- `./e2e` auto-starts/stops the app itself if nothing is running on 5000.
+- `./e2e` starts/stops its own app in test mode; it errors if something is already
+  running on 5000 (stop `./watch` first), so tests run against the known demo model.
 
 If you start the app yourself, run it in the background and stop it when done.
 The Wasm host (`./run`, also port 5000 — never run both at once) is rarely
