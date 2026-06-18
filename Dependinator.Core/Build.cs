@@ -8,6 +8,7 @@ public static class Build
 {
     static bool isVsCodeExtWasm = false;
     static bool isVsCodeExtLsp = false;
+    static bool isTestMode = false;
     public static readonly string Version = GetVersion().ToString();
     public static readonly string ProductVersion = GetProductVersion().ToString();
     public static readonly string Time = GetTime().IsoZone();
@@ -18,6 +19,11 @@ public static class Build
     public static bool IsStandaloneWasm => IsWasm && !isVsCodeExtWasm;
     public static bool IsVsCodeExtWasm => IsWasm && isVsCodeExtWasm;
     public static bool IsVsCodeExtLsp => !IsWasm && isVsCodeExtLsp;
+
+    // True during UI/e2e test runs (set from the DEPENDINATOR_E2E env var by the host).
+    // Makes the app load the embedded demo model instead of parsing a real solution,
+    // so tests get a deterministic model without a slow Roslyn parse.
+    public static bool IsTestMode => isTestMode;
 
     public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
     public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
@@ -40,6 +46,8 @@ public static class Build
     public static void SetIsVsCodeExtWasm() => isVsCodeExtWasm = true;
 
     public static void SetIsVsCodeExtLsp() => isVsCodeExtLsp = true;
+
+    public static void SetIsTestMode() => isTestMode = true;
 
     public static string BuildMode => IsDebug ? "IsDebug" : "IsRelease";
 

@@ -105,7 +105,10 @@ class CanvasService : ICanvasService
     {
         using var t = Timing.Start("InitialShow");
         await screenService.CheckResizeAsync();
-        var lastUsedPath = recentModelsService.LastUsedPath;
+
+        // In test mode always load the embedded demo model for a fast, deterministic
+        // model, ignoring any persisted recent/local paths.
+        var lastUsedPath = Dependinator.Core.Build.IsTestMode ? DemoModel.Path : recentModelsService.LastUsedPath;
         if (lastUsedPath is null)
             lastUsedPath = DemoModel.Path;
         await LoadAsync(lastUsedPath);

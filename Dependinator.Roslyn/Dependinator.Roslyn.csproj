@@ -19,4 +19,10 @@
   <ItemGroup>
     <ProjectReference Include="../Dependinator.Core/Dependinator.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Pre-parsed demo model (shared with the Wasm host's wwwroot), embedded so the
+         Web/LSP hosts can load "/Demo.sln" without a Roslyn parse. See SourceParser. -->
+    <EmbeddedResource Include="../Dependinator.Wasm/wwwroot/demo.model" LogicalName="Dependinator.Roslyn.demo.model" />
+  </ItemGroup>
 </Project>

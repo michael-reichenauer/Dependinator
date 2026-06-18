@@ -35,6 +35,19 @@ public class AppSmokeTests : E2ETestBase
     }
 
     [E2EFact]
+    public async Task HomePage_ShouldLoadDemoModel_InTestMode()
+    {
+        await Page.GotoAsync("/");
+        await Expect(Page.Locator("#svgcanvas")).ToBeVisibleAsync();
+
+        // Under ./e2e the app runs in test mode (DEPENDINATOR_E2E=1) and loads the
+        // embedded demo model instead of parsing the working solution; its root node
+        // label "Demo.sln" renders on the canvas. Target the visible label element
+        // (text.iconName) rather than GetByText, which also matches hidden <title>s.
+        await Expect(Page.Locator("#svgcanvas text.iconName", new() { HasText = "Demo.sln" }).First).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
     public async Task SearchHotkey_ShouldOpenSearchDialog()
     {
         await Page.GotoAsync("/");

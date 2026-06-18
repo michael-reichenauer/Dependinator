@@ -9,6 +9,12 @@ class SourceParser : ISourceParser
 {
     public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath)
     {
+        // The demo model is pre-parsed and embedded, so load it directly instead of
+        // running Roslyn. Used as a fallback when no real model is available and by
+        // UI/e2e tests (Build.IsTestMode) for a fast, deterministic model.
+        if (solutionPath == DemoModel.DemoSolutionName)
+            return await LoadEmbeddedDemoModelAsync();
+
         try
         {
             using var workspace = Compiler.CreateWorkspace();
@@ -103,6 +109,33 @@ class SourceParser : ISourceParser
         {
             foreach (var item in TypeParser.ParseType(type, compilation, moduleName))
                 yield return item;
+        }
+    }
+
+    // Reads the gzip-compressed, pre-parsed demo model embedded in this assembly
+    // (Dependinator.Roslyn.demo.model) and deserializes it into parsed items.
+    static async Task<R<IReadOnlyList<Item>>> LoadEmbeddedDemoModelAsync()
+    {
+        try
+        {
+            const string resourceName = "Dependinator.Roslyn.demo.model";
+            await using var stream = typeof(SourceParser).Assembly.GetManifestResourceStream(resourceName);
+            if (stream is null)
+                return R.Error($"Embedded demo model resource '{resourceName}' was not found.");
+
+            await using var gzip = new GZipStream(stream, CompressionMode.Decompress);
+            using var reader = new StreamReader(gzip);
+            var json = await reader.ReadToEndAsync();
+
+            var items = Json.Deserialize<List<Item>>(json);
+            if (items is null)
+                return R.Error("Failed to deserialize the embedded demo model.");
+
+            return items;
+        }
+        catch (Exception e)
+        {
+            return R.Error(e);
         }
     }
 

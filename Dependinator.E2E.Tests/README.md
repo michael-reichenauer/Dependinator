@@ -16,6 +16,16 @@ If `./watch` or `./watch-sync` is already running, `./e2e` reuses that app
 instance (so hot-reloaded changes are tested); otherwise it starts and stops
 `Dependinator.Web` itself.
 
+### Deterministic model (test mode)
+
+`./e2e` starts the app with `DEPENDINATOR_E2E=1`, which puts it in **test mode**
+(`Build.IsTestMode`): on startup it loads the embedded **demo model** (`/Demo.sln`,
+a pre-parsed snapshot served from `Dependinator.Roslyn`'s embedded `demo.model`)
+instead of parsing the working solution. Tests therefore get a fast, deterministic
+model — the root node is `Demo.sln`. If you instead reuse a plain `./watch` (not in
+test mode), the app loads the real solution and model-specific assertions will
+differ; let `./e2e` start the app for determinism.
+
 ### Cloud-sync tests
 
 Sync features talk to the Azure Functions API on port 7071 (backed by Azurite).

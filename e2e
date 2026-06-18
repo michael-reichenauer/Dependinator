@@ -146,9 +146,11 @@ if [[ "$SYNC" == "1" ]]; then
 fi
 
 if ! curl -sf -o /dev/null "$BASE_URL"; then
-    echo "App not running at $BASE_URL, starting Dependinator.Web..."
-    # In Development the app hardcodes Kestrel to 127.0.0.1:5000 (Program.cs)
-    dotnet run --project ./Dependinator.Web/Dependinator.Web.csproj &
+    echo "App not running at $BASE_URL, starting Dependinator.Web (test mode)..."
+    # In Development the app hardcodes Kestrel to 127.0.0.1:5000 (Program.cs).
+    # DEPENDINATOR_E2E=1 makes it load the embedded demo model (fast, deterministic)
+    # instead of parsing the working solution.
+    DEPENDINATOR_E2E=1 dotnet run --project ./Dependinator.Web/Dependinator.Web.csproj &
     APP_PID=$!
 
     for _ in $(seq 1 60); do
@@ -166,6 +168,11 @@ if ! curl -sf -o /dev/null "$BASE_URL"; then
         echo "App did not become ready at $BASE_URL."
         exit 1
     fi
+else
+    echo "Reusing the app already running at $BASE_URL."
+    echo "NOTE: tests expect the embedded demo model. If this app was not started with" >&2
+    echo "      DEPENDINATOR_E2E=1 (e.g. plain ./watch), it loads the real solution and" >&2
+    echo "      model-specific tests may differ. Let ./e2e start the app for determinism." >&2
 fi
 
 RESULT=0
