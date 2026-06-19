@@ -17,6 +17,24 @@ with xUnit, testing the app as a user sees it at `http://localhost:5000`.
 already running on `http://localhost:5000` (e.g. `./watch`), it exits with an error
 asking you to stop it first — so tests always run against the known demo model.
 
+### Viewing traces
+
+`./e2e -t` records a trace per test into `traces/NNN-<browser>.zip` (the big ones are
+UI tests; the tiny ones are API-only sync tests). To view one:
+
+```bash
+./trace        # most recent trace
+./trace 6      # traces/006-*.zip
+./trace path/to/trace.zip
+```
+
+`./trace` serves the Playwright Trace Viewer on `http://localhost:9322` (it doesn't
+open a window — devcontainer-friendly). Open that URL in VS Code's built-in **Simple
+Browser** (`Cmd/Ctrl+Shift+P` → "Simple Browser: Show") or your Mac browser; `Ctrl+C`
+to stop. In the viewer: scrub the filmstrip for screenshots, click an action to
+time-travel its before/after DOM snapshot, and use the Console/Network/Source tabs.
+(Alternatively, download a `.zip` and drag it onto <https://trace.playwright.dev>.)
+
 ### CI
 
 `.github/workflows/e2e.yml` runs this suite on pull requests (Chromium) and on

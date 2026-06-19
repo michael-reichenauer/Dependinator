@@ -53,6 +53,7 @@ dotnet test Api.Tests/Api.Tests.csproj
 ./e2e -a                                       # all three browsers (before releases)
 ./e2e -s                                       # also start Azurite + Functions for sync tests
 ./e2e -t                                       # record Playwright traces into ./Dependinator.E2E.Tests/traces
+./trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
 # CI: .github/workflows/e2e.yml runs ./e2e (chromium) on PRs; uploads traces on failure.
 
 # VS Code extension

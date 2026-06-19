@@ -203,4 +203,9 @@ for browser in "${BROWSERS[@]}"; do
     fi
 done
 
+if [[ "$E2E_TRACE" == "1" ]]; then
+    echo ""
+    echo "Traces recorded in ./Dependinator.E2E.Tests/traces — view one with: ./trace"
+fi
+
 exit $RESULT
