@@ -1,3 +1,4 @@
+using Dependinator.E2E.Tests.Pages;
 using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit;
 
@@ -24,6 +25,11 @@ public class E2ETestBase : PageTest
     private static string TraceDir =>
         Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "traces"));
 
+    private AppPage? app;
+
+    // Page object for the main app (canvas + toolbar/menu). See Pages/AppPage.cs.
+    protected AppPage App => app ??= new AppPage(Page);
+
     public override BrowserNewContextOptions ContextOptions()
     {
         BrowserNewContextOptions options = base.ContextOptions() ?? new BrowserNewContextOptions();
@@ -39,7 +45,12 @@ public class E2ETestBase : PageTest
         if (tracingEnabled)
         {
             await Context.Tracing.StartAsync(
-                new() { Screenshots = true, Snapshots = true, Sources = true }
+                new()
+                {
+                    Screenshots = true,
+                    Snapshots = true,
+                    Sources = true,
+                }
             );
             tracingStarted = true;
         }
@@ -57,44 +68,6 @@ public class E2ETestBase : PageTest
         }
 
         await base.DisposeAsync();
-    }
-
-    // Navigates and waits until the app has finished loading and rendering the initial
-    // model (the app sets data-app-ready=true on the body via jsInterop's setAppReady).
-    // Prefer this over GotoAsync + arbitrary waits to avoid timing flakiness.
-    protected async Task GotoReadyAsync(string path = "/")
-    {
-        await Page.GotoAsync(path);
-        await WaitForAppReadyAsync();
-    }
-
-    protected Task WaitForAppReadyAsync() =>
-        Expect(Page.Locator("body")).ToHaveAttributeAsync("data-app-ready", "true", new() { Timeout = 30_000 });
-
-    // Makes the page appear signed in to cloud sync without real Clerk: blocks the Clerk
-    // CDN and stubs window.Clerk so clerkGetToken() returns a JWT minted by TestAuthToken,
-    // which the local Functions host validates against the test JWKS (see ./e2e -s).
-    // Call this BEFORE navigating (Page.GotoAsync). Used by [SyncFact] tests.
-    protected async Task SignInAsTestUserAsync(string sub = "e2e-test-user", string email = "e2e@dependinator.test")
-    {
-        // The real Clerk CDN script would overwrite our stub, so prevent it from loading.
-        await Page.RouteAsync("**/*.clerk.accounts.dev/**", route => route.AbortAsync());
-
-        string token = TestAuthToken.Create(sub, email);
-        await Page.AddInitScriptAsync(
-            $$"""
-            window.Clerk = {
-                loaded: true,
-                user: { id: {{System.Text.Json.JsonSerializer.Serialize(sub)}} },
-                session: { getToken: async () => {{System.Text.Json.JsonSerializer.Serialize(token)}} },
-                load: async () => {},
-                addListener: () => (() => {}),
-                openSignIn: () => {},
-                closeSignIn: () => {},
-                signOut: async () => { window.Clerk.user = null; window.Clerk.session = null; },
-            };
-            """
-        );
     }
 
     private static async Task EnsureAppIsRunningAsync()

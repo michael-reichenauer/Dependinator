@@ -1,4 +1,4 @@
-using Microsoft.Playwright;
+using Dependinator.E2E.Tests.Pages;
 
 namespace Dependinator.E2E.Tests;
 
@@ -7,61 +7,55 @@ public class AppSmokeTests : E2ETestBase
     [E2EFact]
     public async Task HomePage_ShouldShowDiagramCanvas()
     {
-        await GotoReadyAsync();
+        await App.GotoAsync();
 
         await Expect(Page).ToHaveTitleAsync("Dependinator");
-        await Expect(Page.Locator("#svgcanvas")).ToBeVisibleAsync();
+        await Expect(App.Canvas).ToBeVisibleAsync();
     }
 
     [E2EFact]
     public async Task HomePage_ShouldShowAppToolbar()
     {
-        await GotoReadyAsync();
+        await App.GotoAsync();
 
-        // Toolbar buttons and menu items carry stable data-testid hooks (AppBar.razor).
-        await Expect(Page.GetByTestId("appbar-menu")).ToBeVisibleAsync();
-        await Expect(Page.GetByTestId("toolbar-search")).ToBeVisibleAsync();
+        await Expect(App.Menu).ToBeVisibleAsync();
+        await Expect(App.SearchButton).ToBeVisibleAsync();
     }
 
     [E2EFact]
     public async Task AppMenu_ShouldOpenSearchDialog_ViaMenuItem()
     {
-        await GotoReadyAsync();
+        await App.GotoAsync();
 
-        await Page.GetByTestId("appbar-menu").ClickAsync();
-        await Page.GetByTestId("menu-search").ClickAsync();
+        SearchDialog search = await App.OpenSearchViaMenuAsync();
 
-        await Expect(Page.GetByPlaceholder("Search nodes…")).ToBeVisibleAsync();
+        await Expect(search.Field).ToBeVisibleAsync();
     }
 
     [E2EFact]
     public async Task HomePage_ShouldLoadDemoModel_InTestMode()
     {
-        await GotoReadyAsync();
+        await App.GotoAsync();
 
-        // Under ./e2e the app runs in test mode (DEPENDINATOR_E2E=1) and loads the
-        // embedded demo model instead of parsing the working solution; its root node
-        // label "Demo.sln" renders on the canvas. Target the visible label element
-        // (text.iconName) rather than GetByText, which also matches hidden <title>s.
-        await Expect(Page.Locator("#svgcanvas text.iconName", new() { HasText = "Demo.sln" }).First).ToBeVisibleAsync();
+        // In test mode the app loads the embedded demo model instead of parsing the
+        // working solution; its root node label "Demo.sln" renders on the canvas.
+        await Expect(App.NodeLabel("Demo.sln")).ToBeVisibleAsync();
     }
 
     [E2EFact]
     public async Task SearchHotkey_ShouldOpenSearchDialog()
     {
-        await GotoReadyAsync();
+        await App.GotoAsync();
 
-        await Page.Keyboard.PressAsync("Control+f");
-
-        ILocator searchField = Page.GetByPlaceholder("Search nodes…");
-        await Expect(searchField).ToBeVisibleAsync();
+        SearchDialog search = await App.OpenSearchViaHotkeyAsync();
+        await Expect(search.Field).ToBeVisibleAsync();
 
         // A query that matches no nodes shows the empty-result message regardless
         // of which model happens to be loaded.
-        await searchField.FillAsync("zzz-no-such-node");
-        await Expect(Page.Locator(".search-dialog__empty")).ToBeVisibleAsync();
+        await search.FillAsync("zzz-no-such-node");
+        await Expect(search.EmptyResult).ToBeVisibleAsync();
 
-        await Page.Keyboard.PressAsync("Escape");
-        await Expect(searchField).ToBeHiddenAsync();
+        await search.CloseAsync();
+        await Expect(search.Field).ToBeHiddenAsync();
     }
 }

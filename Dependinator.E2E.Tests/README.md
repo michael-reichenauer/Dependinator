@@ -101,21 +101,32 @@ Add a class inheriting `E2ETestBase`, mark tests with `[E2EFact]`
 public class MyFeatureTests : E2ETestBase
 {
     [E2EFact]
-    public async Task MyFeature_ShouldDoSomething()
+    public async Task MyFeature_ShouldOpenSearch()
     {
-        await GotoReadyAsync();
-        await Page.Keyboard.PressAsync("Control+f");
-        await Expect(Page.GetByPlaceholder("Search nodes…")).ToBeVisibleAsync();
+        await App.GotoAsync();                              // navigate + wait until ready
+        SearchDialog search = await App.OpenSearchViaHotkeyAsync();
+        await Expect(search.Field).ToBeVisibleAsync();
     }
 }
 ```
 
-Use **`GotoReadyAsync()`** (on `E2ETestBase`) instead of `Page.GotoAsync` for the
-home page: it navigates and waits until the app has finished loading and rendering
-the initial model. The app signals this by setting `data-app-ready="true"` on the
-`<body>` (via `jsInterop`'s `setAppReady`, called from `CanvasService.InitialShow`
-once the model is loaded), so tests wait on a real signal rather than arbitrary
-timeouts. `WaitForAppReadyAsync()` is also available if you navigate yourself.
+### Page objects
+
+Common flows and locators live in **page objects** (`Pages/`), so tests read as
+intent rather than selectors:
+
+- **`App`** (`Pages/AppPage.cs`) — the main app. `E2ETestBase` exposes it as the
+  `App` property. `App.GotoAsync()` navigates and waits until the initial model has
+  loaded and rendered (the app sets `data-app-ready="true"` on the `<body>` from
+  `CanvasService.InitialShow`, so tests wait on a real signal, not a timeout). It
+  also exposes locators (`Menu`, `SearchButton`, `Canvas`, `NodeLabel("Demo.sln")`),
+  flows (`OpenSearchViaMenuAsync`, `OpenSearchViaHotkeyAsync`), and
+  `SignInAsTestUserAsync()` for signed-in cloud-sync flows (call before `GotoAsync`).
+- **`SearchDialog`** (`Pages/SearchDialog.cs`) — returned by the open-search flows;
+  exposes `Field`, `Results`, `EmptyResult`, `FillAsync`, `CloseAsync`.
+
+Keep assertions (`Expect(...)`) in the tests; keep locators and actions in the page
+objects. Add a new page object per dialog/screen as the suite grows.
 
 Useful app-specific selectors:
 
