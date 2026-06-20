@@ -1,7 +1,8 @@
-using Dependinator.E2E.Tests.Pages;
+using Dependinator.E2E.Tests.Shared;
+using Dependinator.E2E.Tests.Shared.Pages;
 using Xunit.Abstractions;
 
-namespace Dependinator.E2E.Tests;
+namespace Dependinator.E2E.Tests.Ui;
 
 public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
 {

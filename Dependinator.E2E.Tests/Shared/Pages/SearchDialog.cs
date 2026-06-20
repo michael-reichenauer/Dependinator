@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-namespace Dependinator.E2E.Tests.Pages;
+namespace Dependinator.E2E.Tests.Shared.Pages;
 
 // Page object for the node search dialog (Dependinator.UI/Diagrams/SearchDialog.razor).
 // Opened via AppPage.OpenSearchViaMenuAsync / OpenSearchViaHotkeyAsync.

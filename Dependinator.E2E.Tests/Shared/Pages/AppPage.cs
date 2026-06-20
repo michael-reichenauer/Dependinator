@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 
-namespace Dependinator.E2E.Tests.Pages;
+namespace Dependinator.E2E.Tests.Shared.Pages;
 
 // Page object for the main app — the diagram canvas plus the toolbar/menu (AppBar.razor).
 // Wraps an IPage with stable data-testid locators and the common flows, so tests read as

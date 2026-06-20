@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace Dependinator.E2E.Tests;
+namespace Dependinator.E2E.Tests.Shared;
 
 // Cloud-sync UI tests additionally need the Azure Functions API (port 7071) and
 // Azurite running, so they only execute when E2E_SYNC=1 (set by './e2e -s').

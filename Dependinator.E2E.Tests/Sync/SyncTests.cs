@@ -1,11 +1,12 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Dependinator.E2E.Tests.Shared;
 using Shared;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Dependinator.E2E.Tests;
+namespace Dependinator.E2E.Tests.Sync;
 
 // Cloud-sync tests. These only run under `./e2e -s`, which starts Azurite, the Azure
 // Functions API (7071) and the test JWKS server, and points the API at the test issuer.

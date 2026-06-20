@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Dependinator.E2E.Tests;
+namespace Dependinator.E2E.Tests.Shared;
 
 // Mints RS256 JWTs for cloud-sync e2e tests, signed with the throwaway test key in
 // TestAuth/private-key.pem. The matching public key is served by TestAuth/jwks-server.js

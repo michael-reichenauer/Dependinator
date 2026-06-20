@@ -1,9 +1,10 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Dependinator.E2E.Tests.Shared;
 using Shared;
 using Xunit;
 
-namespace Dependinator.E2E.Tests;
+namespace Dependinator.E2E.Tests.Sync;
 
 // Seeds a known cloud model into Azurite (through the API's own PUT) before sync tests
 // run, so read tests have a deterministic model regardless of test order. The seed user

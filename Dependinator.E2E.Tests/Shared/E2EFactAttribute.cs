@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace Dependinator.E2E.Tests;
+namespace Dependinator.E2E.Tests.Shared;
 
 // E2E tests need a running app and installed browsers, so they are skipped in
 // plain 'dotnet test' runs and only execute when E2E=1 (set by the ./e2e script).
