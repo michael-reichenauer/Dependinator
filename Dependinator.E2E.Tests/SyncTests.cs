@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Shared;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests;
 
@@ -17,7 +18,9 @@ public class SyncTests : E2ETestBase, IClassFixture<SeededSyncModel>
 
     // SeededSyncModel is a class fixture: xUnit creates it once and runs its seeding
     // (IAsyncLifetime) before these tests. Consuming it here satisfies that wiring.
-    public SyncTests(SeededSyncModel seededModel) => _ = seededModel;
+    // ITestOutputHelper is used by the base class to label trace files.
+    public SyncTests(SeededSyncModel seededModel, ITestOutputHelper output)
+        : base(output) => _ = seededModel;
 
     static HttpClient CreateClient(string sub) =>
         new()

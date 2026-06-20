@@ -1,6 +1,8 @@
+using System.Reflection;
 using Dependinator.E2E.Tests.Pages;
 using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit;
+using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests;
 
@@ -21,9 +23,33 @@ public class E2ETestBase : PageTest
     private static readonly bool tracingEnabled = Environment.GetEnvironmentVariable("E2E_TRACE") == "1";
     private static int traceCounter;
     private bool tracingStarted;
+    private readonly string testName;
 
     private static string TraceDir =>
         Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "traces"));
+
+    // xUnit injects ITestOutputHelper into the test constructor; it holds the running
+    // ITest, from which we read the test method name to label the trace file. (xUnit v2
+    // has no public test-name API, hence the reflection.)
+    protected E2ETestBase(ITestOutputHelper output) => testName = GetTestName(output);
+
+    private static string GetTestName(ITestOutputHelper output)
+    {
+        try
+        {
+            ITest? test = output
+                .GetType()
+                .GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+                .Select(f => f.GetValue(output))
+                .OfType<ITest>()
+                .FirstOrDefault();
+            return test?.TestCase.TestMethod.Method.Name ?? "test";
+        }
+        catch
+        {
+            return "test";
+        }
+    }
 
     private AppPage? app;
 
@@ -63,7 +89,7 @@ public class E2ETestBase : PageTest
             Directory.CreateDirectory(TraceDir);
             string browser = Environment.GetEnvironmentVariable("BROWSER") ?? "chromium";
             int ordinal = Interlocked.Increment(ref traceCounter);
-            string path = Path.Combine(TraceDir, $"{ordinal:D3}-{browser}.zip");
+            string path = Path.Combine(TraceDir, $"{ordinal:D3}-{testName}-{browser}.zip");
             await Context.Tracing.StopAsync(new() { Path = path });
         }
 

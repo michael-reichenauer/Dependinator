@@ -1,8 +1,9 @@
 using Dependinator.E2E.Tests.Pages;
+using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests;
 
-public class AppSmokeTests : E2ETestBase
+public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
     public async Task HomePage_ShouldShowDiagramCanvas()
