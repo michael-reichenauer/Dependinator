@@ -119,14 +119,21 @@ intent rather than selectors:
   `App` property. `App.GotoAsync()` navigates and waits until the initial model has
   loaded and rendered (the app sets `data-app-ready="true"` on the `<body>` from
   `CanvasService.InitialShow`, so tests wait on a real signal, not a timeout). It
-  also exposes locators (`Menu`, `SearchButton`, `Canvas`, `NodeLabel("Demo.sln")`),
-  flows (`OpenSearchViaMenuAsync`, `OpenSearchViaHotkeyAsync`), and
-  `SignInAsTestUserAsync()` for signed-in cloud-sync flows (call before `GotoAsync`).
+  also exposes locators (`Menu`, `SearchButton`, `Canvas`, `NodeLabel("Demo.sln")`,
+  `NodeToolbarMenu`), flows (`OpenSearchViaMenuAsync`, `OpenSearchViaHotkeyAsync`,
+  `SelectNodeAsync("Demo.sln")`), and `SignInAsTestUserAsync()` for signed-in
+  cloud-sync flows (call before `GotoAsync`).
 - **`SearchDialog`** (`Pages/SearchDialog.cs`) — returned by the open-search flows;
   exposes `Field`, `Results`, `EmptyResult`, `FillAsync`, `CloseAsync`.
 
 Keep assertions (`Expect(...)`) in the tests; keep locators and actions in the page
 objects. Add a new page object per dialog/screen as the suite grows.
+
+`ClickingNode_ShouldShowItsContextToolbar` in `AppSmokeTests` is a worked example of
+an **interaction** test (drive the diagram, assert it reacts) — copy its shape. Note
+the canvas is SVG: `SelectNodeAsync` clicks a node's group-box center via the mouse
+(not `Locator.ClickAsync`), because the canvas re-renders constantly and node SVG ids
+are generated (so nodes are matched by their stable label text).
 
 Useful app-specific selectors:
 

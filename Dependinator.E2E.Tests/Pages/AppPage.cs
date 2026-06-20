@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 
@@ -21,7 +22,32 @@ public sealed class AppPage
 
     // A rendered node label on the canvas (e.g. the demo root "Demo.sln"). Targets the
     // visible label element rather than GetByText, which also matches hidden <title>s.
+    // (Node group SVG ids are generated, so the label is the stable handle to a node.)
     public ILocator NodeLabel(string text) => page.Locator("#svgcanvas text.iconName", new() { HasText = text }).First;
+
+    // A diagram node's group element, matched by its exact label. (Node SVG ids are
+    // generated, so match on the label text. The whitespace-tolerant anchored regex gives
+    // an exact match — so "Demo.sln" doesn't also match the dependency line whose label is
+    // "Demo.sln→Externals (…)" — and tolerates the surrounding whitespace in the SVG text.)
+    public ILocator Node(string label) =>
+        page.Locator("#svgcanvas g.hoverable")
+            .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(label)}\s*$") });
+
+    // The selected-node context toolbar (NodeToolbar.razor) — its menu activator is
+    // present whenever a node is selected.
+    public ILocator NodeToolbarMenu => page.GetByTestId("node-menu");
+
+    // Select a diagram node by clicking the center of its group box. We click via the mouse
+    // at the computed coordinates rather than Locator.ClickAsync because the SVG canvas
+    // re-renders constantly (which fails Playwright's stability check). Selecting a node
+    // shows its context toolbar (NodeToolbarMenu).
+    public async Task SelectNodeAsync(string label)
+    {
+        LocatorBoundingBoxResult box =
+            await Node(label).BoundingBoxAsync()
+            ?? throw new InvalidOperationException($"Node '{label}' is not rendered on the canvas.");
+        await page.Mouse.ClickAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
+    }
 
     // Navigate to the app and wait until the initial model has loaded and rendered (the
     // app sets data-app-ready=true on the body once CanvasService finishes loading).

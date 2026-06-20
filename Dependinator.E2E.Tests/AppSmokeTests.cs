@@ -42,6 +42,21 @@ public class AppSmokeTests : E2ETestBase
         await Expect(App.NodeLabel("Demo.sln")).ToBeVisibleAsync();
     }
 
+    // Representative *interaction* test (vs. the smoke tests above): drive the diagram
+    // itself and assert the app reacts. Copy this shape for more behavior coverage —
+    // act through the App/SearchDialog page objects, then assert with Expect.
+    [E2EFact]
+    public async Task ClickingNode_ShouldShowItsContextToolbar()
+    {
+        await App.GotoAsync();
+
+        // Select the demo model's root node ("Demo.sln") on the diagram.
+        await App.SelectNodeAsync("Demo.sln");
+
+        // Selecting a node shows its context toolbar (NodeToolbar.razor, node-* hooks).
+        await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();
+    }
+
     [E2EFact]
     public async Task SearchHotkey_ShouldOpenSearchDialog()
     {
