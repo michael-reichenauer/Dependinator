@@ -192,6 +192,14 @@ if ! curl -sf -o /dev/null "$BASE_URL"; then
     exit 1
 fi
 
+# Clear traces from previous runs so they aren't confused with this run's. Per-test
+# trace files are numbered per process, so a later run with fewer tests would otherwise
+# leave stale higher-numbered files behind. Only when tracing; done once before the
+# browser loop so -a keeps all browsers' traces from this run.
+if [[ "$E2E_TRACE" == "1" ]]; then
+    rm -rf ./Dependinator.E2E.Tests/traces
+fi
+
 RESULT=0
 for browser in "${BROWSERS[@]}"; do
     echo ""
