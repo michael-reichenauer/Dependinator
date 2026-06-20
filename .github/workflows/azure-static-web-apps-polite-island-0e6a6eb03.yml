@@ -8,12 +8,22 @@ on:
     branches: [main, dev]
 
 jobs:
+  # Gate the deploy on the test suites passing (reusable workflows). They run only when a
+  # deploy would (not on PR close), so they don't block the close job below.
+  unit-tests:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    uses: ./.github/workflows/unit-tests.yml
+  e2e:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    uses: ./.github/workflows/e2e.yml
+
   build_and_deploy_job:
+    needs: [unit-tests, e2e]
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - name: Checkout branch 
+      - name: Checkout branch
         uses: actions/checkout@v4
         with:
           submodules: true
@@ -27,8 +37,7 @@ jobs:
         run: dotnet workload restore Dependinator.sln
       - name: Restore
         run: dotnet restore Dependinator.sln
-      - name: Test
-        run: dotnet test Dependinator.sln --no-restore
+      # Tests run in the unit-tests / e2e jobs above (this deploy 'needs' them).
       - name: Publish Dependinator WASM
         run: |
           rm -rf Dependinator.Wasm/publish

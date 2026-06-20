@@ -1,13 +1,13 @@
 name: E2E (Playwright)
 
-# Runs the Dependinator.E2E.Tests UI suite via ./e2e. On pull requests it runs
-# Chromium only; trigger manually with "all" to validate Firefox + WebKit too
-# (e.g. before a release). Playwright traces are uploaded as an artifact on failure
-# — download the .zip and open it at https://trace.playwright.dev.
+# Runs the Dependinator.E2E.Tests UI suite via ./e2e (Chromium). Runs on every push (all
+# branches), and is also called by the CI/CD and extension workflows so deploy/build wait
+# for it (a second run on main/dev — acceptable). Can also be run manually — pick "all" to
+# validate Firefox + WebKit too (e.g. before a release). Playwright traces are uploaded as
+# an artifact on failure — download the .zip and open it at https://trace.playwright.dev.
 on:
-  pull_request:
   push:
-    branches: [main, dev]
+  workflow_call:
   workflow_dispatch:
     inputs:
       browsers:
