@@ -1,0 +1,47 @@
+#!/bin/bash
+# Open a Playwright trace (from ./e2e -t) in the Trace Viewer, served locally so you can
+# view it in a browser — VS Code's built-in "Simple Browser" at the forwarded port, or
+# your Mac browser. Headless-devcontainer friendly: it serves, it doesn't open a window.
+#
+#   ./trace            # most recent trace
+#   ./trace 6          # Dependinator.E2E.Tests/traces/006-*.zip
+#   ./trace path/to/trace.zip
+#
+# Then in VS Code: Cmd/Ctrl+Shift+P -> "Simple Browser: Show" -> http://localhost:9322
+# (or just open that URL in your Mac browser). Ctrl+C here to stop. TRACE_PORT overrides.
+set -uo pipefail
+cd "$(dirname "$0")"
+
+TRACES_DIR="Dependinator.E2E.Tests/traces"
+PORT="${TRACE_PORT:-9322}"
+
+PW="$(ls Dependinator.E2E.Tests/bin/*/net*/playwright.ps1 2>/dev/null | head -1)"
+if [[ -z "$PW" ]]; then
+    echo "playwright.ps1 not found — build the test project first:" >&2
+    echo "  dotnet build Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj" >&2
+    exit 1
+fi
+
+arg="${1:-}"
+if [[ -z "$arg" ]]; then
+    zip="$(ls -t "$TRACES_DIR"/*.zip 2>/dev/null | head -1)"
+elif [[ -f "$arg" ]]; then
+    zip="$arg"
+else
+    # Treat a bare number as the NNN- prefix (e.g. 6 -> 006-...zip).
+    n="$(printf '%03d' "$arg" 2>/dev/null || echo "$arg")"
+    zip="$(ls "$TRACES_DIR/${n}"-*.zip 2>/dev/null | head -1)"
+fi
+
+if [[ -z "${zip:-}" || ! -f "$zip" ]]; then
+    echo "No matching trace found. Record some with ./e2e -t, or pass a path." >&2
+    echo "Available:" >&2
+    ls "$TRACES_DIR"/*.zip 2>/dev/null | sed 's/^/  /' >&2 || echo "  (none)" >&2
+    exit 1
+fi
+
+echo "Serving trace: $zip"
+echo "Open in VS Code Simple Browser (or your Mac browser): http://localhost:$PORT"
+echo "Press Ctrl+C to stop."
+# --host/--port serves the viewer (and would open a window, which is a harmless no-op here).
+exec pwsh "$PW" show-trace --host 127.0.0.1 --port "$PORT" "$zip"

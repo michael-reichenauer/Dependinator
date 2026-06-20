@@ -15,6 +15,10 @@ public class Program
     public static void Main(string[] args)
     {
         ConfigLogger.Configure(new HostLoggingSettings(EnableFileLog: true, EnableConsoleLog: false));
+        // UI/e2e tests set DEPENDINATOR_E2E=1 so the app loads the embedded demo model
+        // instead of parsing the working solution (fast, deterministic). See DemoModel.
+        if (Environment.GetEnvironmentVariable("DEPENDINATOR_E2E") == "1")
+            Build.SetIsTestMode();
         Log.Info($"#### Starting Dependinator Web {Build.Info} ...");
         ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 

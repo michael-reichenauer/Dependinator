@@ -1,0 +1,219 @@
+#!/bin/bash
+# Run the Playwright UI tests (Dependinator.E2E.Tests).
+#
+#   ./e2e               run on chromium (default)
+#   ./e2e -b firefox    run on a specific browser (chromium|firefox|webkit)
+#   ./e2e -a            run on all three browsers (e.g. before a release)
+#   ./e2e -s            also start the cloud-sync stack (Azurite + Functions on
+#                       7071) so sync tests ([SyncFact]) run; needs func+azurite
+#   ./e2e -t            record a Playwright trace per test into ./Dependinator.E2E.Tests/traces
+#                       (open a .zip at https://trace.playwright.dev). CI sets this on failure.
+#
+# Starts Dependinator.Web itself in test mode (embedded demo model) and stops it
+# afterwards. If an app is already running at http://localhost:5000 (e.g. ./watch),
+# it exits with an error asking you to stop it first — so tests always run against a
+# known model. With -s, an already-running Azurite/Functions host is reused; otherwise
+# they are started and stopped here (same as ./watch-sync).
+set -uo pipefail
+cd "$(dirname "$0")"
+
+BASE_URL="${E2E_BASE_URL:-http://localhost:5000}"
+BROWSERS=("chromium")
+SYNC=0
+# E2E_TRACE may already be set in the environment (e.g. by CI); -t turns it on too.
+E2E_TRACE="${E2E_TRACE:-0}"
+
+while getopts "ab:st" opt; do
+    case $opt in
+        a) BROWSERS=("chromium" "firefox" "webkit") ;;
+        b) BROWSERS=("$OPTARG") ;;
+        s) SYNC=1 ;;
+        t) E2E_TRACE=1 ;;
+        *) echo "Usage: ./e2e [-a] [-b chromium|firefox|webkit] [-s] [-t]"; exit 1 ;;
+    esac
+done
+
+APP_PID=""
+AZURITE_PID=""
+FUNC_PID=""
+JWKS_PID=""
+SETTINGS_BACKUP=""        # original Api/local.settings.json, restored on exit
+SETTINGS_CREATED=0        # 1 if we created local.settings.json (remove on exit)
+local_settings="./Api/local.settings.json"
+cleanup() {
+    if [[ -n "$APP_PID" ]]; then
+        echo "Stopping app (pid $APP_PID)..."
+        kill "$APP_PID" 2>/dev/null
+        wait "$APP_PID" 2>/dev/null
+    fi
+    if [[ -n "$FUNC_PID" ]]; then
+        echo "Stopping Functions host (pid $FUNC_PID)..."
+        kill "$FUNC_PID" 2>/dev/null
+        # 'func start' spawns a worker (Api.dll) child that outlives the parent and keeps
+        # holding port 7071; reap the whole tree (only safe because we started it — when a
+        # host is already running we reuse it and never set FUNC_PID).
+        pkill -9 -f "func start --port 7071" 2>/dev/null
+        pkill -9 -f "Api/bin/output/Api.dll" 2>/dev/null
+    fi
+    if [[ -n "$AZURITE_PID" ]]; then
+        echo "Stopping Azurite (pid $AZURITE_PID)..."
+        kill "$AZURITE_PID" 2>/dev/null
+        # When started via 'npx azurite' the real server is a child node process that
+        # outlives the npx wrapper; reap it too (only when we started it).
+        pkill -9 -f "azurite --silent --skipApiVersionCheck --location ./.azurite" 2>/dev/null
+    fi
+    if [[ -n "$JWKS_PID" ]]; then
+        echo "Stopping test JWKS server (pid $JWKS_PID)..."
+        kill "$JWKS_PID" 2>/dev/null
+    fi
+    # Restore Api/local.settings.json to how we found it (we point ClerkIssuer at the
+    # local test issuer while sync tests run).
+    if [[ "$SETTINGS_CREATED" == "1" ]]; then
+        rm -f "$local_settings"
+    elif [[ -n "$SETTINGS_BACKUP" ]]; then
+        mv "$SETTINGS_BACKUP" "$local_settings"
+    fi
+}
+trap cleanup EXIT
+
+port_is_open() {
+    bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
+}
+
+# ./e2e starts the app itself in test mode (DEPENDINATOR_E2E=1) so it loads the embedded
+# demo model deterministically. If something is already serving the URL (e.g. ./watch),
+# its model is unknown, so refuse rather than test against the wrong app.
+if curl -sf -o /dev/null "$BASE_URL"; then
+    echo "Error: an app is already running at $BASE_URL (e.g. ./watch)." >&2
+    echo "Stop it so ./e2e can start the app itself in test mode, then re-run." >&2
+    exit 1
+fi
+
+# Optionally bring up the cloud-sync stack (Azurite + Azure Functions on 7071 + a
+# local test JWKS server), mirroring ./watch-sync, so the Blazor app can reach the
+# cloud API during tests. Auth uses a self-minted token validated against the test
+# JWKS instead of real Clerk — see Dependinator.E2E.Tests/TestAuth/.
+E2E_SYNC=0
+JWKS_PORT="${E2E_JWKS_PORT:-7072}"
+E2E_CLERK_ISSUER="http://127.0.0.1:${JWKS_PORT}"
+if [[ "$SYNC" == "1" ]]; then
+    api_dir="./Api"
+    azurite_dir="./.azurite"
+    local_settings_example="$api_dir/local.settings.example.json"
+
+    if ! command -v func >/dev/null 2>&1; then
+        echo "Azure Functions Core Tools ('func') is required for -s (sync tests)." >&2
+        echo "Install it from https://learn.microsoft.com/azure/azure-functions/functions-run-local" >&2
+        exit 1
+    fi
+
+    # Start the test JWKS server (serves the public key the Functions host validates with).
+    if port_is_open "$JWKS_PORT"; then
+        echo "Test JWKS server already running on $JWKS_PORT, reusing it."
+    else
+        echo "Starting test JWKS server on $JWKS_PORT..."
+        node ./Dependinator.E2E.Tests/TestAuth/jwks-server.js "$JWKS_PORT" &
+        JWKS_PID="$!"
+    fi
+
+    # Start Azurite unless something already serves its blob port (10000).
+    if port_is_open 10000; then
+        echo "Azurite already running, reusing it."
+    else
+        echo "Starting Azurite..."
+        mkdir -p "$azurite_dir"
+        if command -v azurite >/dev/null 2>&1; then
+            azurite --silent --skipApiVersionCheck --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
+        else
+            npx --yes azurite --silent --skipApiVersionCheck --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
+        fi
+        AZURITE_PID="$!"
+    fi
+
+    # Start the Functions host unless one is already listening on 7071.
+    if port_is_open 7071; then
+        echo "Azure Functions host already running on 7071, reusing it."
+        echo "WARNING: sync tests need CloudSync__ClerkIssuer=$E2E_CLERK_ISSUER; the" >&2
+        echo "         already-running host may use a different issuer and fail them." >&2
+    else
+        # Point the Functions host at the local test issuer (restored on exit), seeding
+        # local.settings.json from the example first if it does not exist yet.
+        if [[ -f "$local_settings" ]]; then
+            SETTINGS_BACKUP="$(mktemp)"
+            cp "$local_settings" "$SETTINGS_BACKUP"
+        elif [[ -f "$local_settings_example" ]]; then
+            cp "$local_settings_example" "$local_settings"
+            SETTINGS_CREATED=1
+        fi
+        tmp_settings="$(mktemp)"
+        jq --arg iss "$E2E_CLERK_ISSUER" '.Values["CloudSync__ClerkIssuer"]=$iss' \
+            "$local_settings" >"$tmp_settings" && mv "$tmp_settings" "$local_settings"
+
+        echo "Starting Azure Functions host on 7071 (issuer $E2E_CLERK_ISSUER)..."
+        (
+            cd "$api_dir"
+            func start --port 7071
+        ) &
+        FUNC_PID="$!"
+
+        for _ in $(seq 1 120); do
+            port_is_open 7071 && break
+            sleep 0.5
+        done
+        if ! port_is_open 7071; then
+            echo "Azure Functions host did not start on port 7071." >&2
+            exit 1
+        fi
+    fi
+    E2E_SYNC=1
+fi
+
+# Start the app in test mode (the early check above guaranteed the URL was free).
+echo "Starting Dependinator.Web (test mode)..."
+# In Development the app hardcodes Kestrel to 127.0.0.1:5000 (Program.cs).
+# DEPENDINATOR_E2E=1 makes it load the embedded demo model (fast, deterministic)
+# instead of parsing the working solution.
+DEPENDINATOR_E2E=1 dotnet run --project ./Dependinator.Web/Dependinator.Web.csproj &
+APP_PID=$!
+
+for _ in $(seq 1 60); do
+    sleep 1
+    if curl -sf -o /dev/null "$BASE_URL"; then
+        break
+    fi
+    if ! kill -0 "$APP_PID" 2>/dev/null; then
+        echo "App failed to start."
+        APP_PID=""
+        exit 1
+    fi
+done
+if ! curl -sf -o /dev/null "$BASE_URL"; then
+    echo "App did not become ready at $BASE_URL."
+    exit 1
+fi
+
+# Clear traces from previous runs so they aren't confused with this run's. Per-test
+# trace files are numbered per process, so a later run with fewer tests would otherwise
+# leave stale higher-numbered files behind. Only when tracing; done once before the
+# browser loop so -a keeps all browsers' traces from this run.
+if [[ "$E2E_TRACE" == "1" ]]; then
+    rm -rf ./Dependinator.E2E.Tests/traces
+fi
+
+RESULT=0
+for browser in "${BROWSERS[@]}"; do
+    echo ""
+    echo "=== Running e2e tests on $browser ==="
+    if ! E2E=1 E2E_SYNC="$E2E_SYNC" E2E_CLERK_ISSUER="$E2E_CLERK_ISSUER" E2E_TRACE="$E2E_TRACE" \
+        BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
+        dotnet test ./Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj; then
+        RESULT=1
+    fi
+done
+
+if [[ "$E2E_TRACE" == "1" ]]; then
+    echo ""
+    echo "Traces recorded in ./Dependinator.E2E.Tests/traces — view one with: ./trace"
+fi
+
+exit $RESULT

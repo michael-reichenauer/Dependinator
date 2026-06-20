@@ -16,16 +16,19 @@
         <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled">
             @if (selectionService.IsSelectedLineDirect)
             {
-                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine" />
-                <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" />
-                <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" />
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine"
+                               data-testid="line-close" />
+                <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" data-testid="line-pan-source" />
+                <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" data-testid="line-pan-target" />
             }
             else
             {
-                <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" />
-                <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" />
-                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint" />
-                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint" />
+                <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="line-references" />
+                <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="line-dependencies" />
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
+                               data-testid="line-add-point" />
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
+                               data-testid="line-remove-point" />
             }
         </MudButtonGroup>
     </MudStack>

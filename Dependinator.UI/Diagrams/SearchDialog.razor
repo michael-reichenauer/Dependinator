@@ -1,4 +1,5 @@
 @using Dependinator.UI.Modeling.Models
+@implements IDisposable
 @inject INodeSearchService searchService
 @inject INavigationService navigationService
 
@@ -43,6 +44,7 @@
   string query = "";
   IReadOnlyList<NodeSearchResult> results = [];
   int selectedIndex = 0;
+  bool isDisposed;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -52,8 +54,17 @@
     // Autofocus handles the common case; this is a fallback for when the dialog's
     // open animation steals/delays focus. The small delay lets the transition settle.
     await Task.Delay(50);
+
+    // If the dialog was closed during the delay (e.g. dismissed quickly, or the page is
+    // tearing down at the end of a test), the element is gone — focusing it would make
+    // MudInput log "Unable to focus an invalid element". Skip it.
+    if (isDisposed)
+      return;
+
     await textField.FocusAsync();
   }
+
+  public void Dispose() => isDisposed = true;
 
   void OnQueryChanged(string value)
   {

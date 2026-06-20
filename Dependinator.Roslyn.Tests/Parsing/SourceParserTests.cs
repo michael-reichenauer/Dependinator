@@ -1,4 +1,5 @@
 using Dependinator.Core.Parsing;
+using Dependinator.Core.Shared;
 using Dependinator.Roslyn.Parsing;
 using Dependinator.Roslyn.Tests.Parsing.Utils;
 
@@ -55,6 +56,21 @@ public class SourceParserTests
 
         var SourceTestDataNodes = items.NodesContained<SourceTestData>(null);
         Assert.NotEmpty(SourceTestDataNodes);
+    }
+
+    [Fact]
+    public async Task ParseSolutionAsync_ShouldLoadEmbeddedDemoModel_ForDemoSolutionPath()
+    {
+        var sourceParser = new SourceParser();
+
+        // "/Demo.sln" is resolved from the embedded pre-parsed demo model (no Roslyn parse),
+        // which is what UI/e2e tests load via Build.IsTestMode.
+        if (!Try(out var items, out var e, await sourceParser.ParseSolutionAsync(DemoModel.DemoSolutionName)))
+            Assert.Fail(e.AllErrorMessages());
+
+        var nodes = items.Nodes().ToList();
+        Assert.NotEmpty(nodes);
+        Assert.Contains(nodes, n => n.Properties.Type == NodeType.Solution && n.Name.Contains("Demo"));
     }
 
     [Fact(Skip = "Disabled, since always parsing whole solution takes time")]
