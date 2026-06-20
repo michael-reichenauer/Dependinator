@@ -53,7 +53,7 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoAsync();
 
         // Select the demo model's root node ("Demo.sln") on the diagram.
-        await App.SelectNodeAsync("Demo.sln");
+        await App.SelectNodeByFullNameAsync("Demo.sln");
 
         // Selecting a node shows its context toolbar (NodeToolbar.razor, node-* hooks).
         await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();

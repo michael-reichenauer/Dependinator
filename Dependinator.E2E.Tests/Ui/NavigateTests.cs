@@ -19,5 +19,10 @@ public class NavigateTests(ITestOutputHelper output) : E2ETestBase(output)
         // Selecting a result navigates the diagram to that node, so its label "RootClass"
         // renders on the canvas (it is not shown at the initial root-level view).
         await Expect(App.NodeLabel("RootClass")).ToBeVisibleAsync();
+
+        // Select that node on the canvas by its visible (short) label; its context toolbar
+        // then appears.
+        await App.SelectNodeByVisibleNameAsync("RootClass");
+        await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();
     }
 }

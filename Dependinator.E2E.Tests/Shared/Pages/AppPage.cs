@@ -37,16 +37,53 @@ public sealed class AppPage
     // present whenever a node is selected.
     public ILocator NodeToolbarMenu => page.GetByTestId("node-menu");
 
-    // Select a diagram node by clicking the center of its group box. We click via the mouse
-    // at the computed coordinates rather than Locator.ClickAsync because the SVG canvas
-    // re-renders constantly (which fails Playwright's stability check). Selecting a node
-    // shows its context toolbar (NodeToolbarMenu).
-    public async Task SelectNodeAsync(string label)
+    // Select a diagram node by its exact group label (the *full* node name, e.g.
+    // "Demo.Core.RootClass"). We click via the mouse at the computed coordinates rather than
+    // Locator.ClickAsync because the SVG canvas re-renders constantly (which fails
+    // Playwright's stability check). Selecting a node shows its context toolbar
+    // (NodeToolbarMenu). See also SelectNodeByVisibleNameAsync for the short on-screen name.
+    public async Task SelectNodeByFullNameAsync(string label)
     {
         LocatorBoundingBoxResult box =
             await Node(label).BoundingBoxAsync()
             ?? throw new InvalidOperationException($"Node '{label}' is not rendered on the canvas.");
         await page.Mouse.ClickAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
+    }
+
+    // Select a diagram node by its visible (short) label — the text shown on the canvas,
+    // e.g. "RootClass" rather than the full "Demo.Core.RootClass". The visible labels
+    // (text.iconName) are rendered in a separate SVG layer from the interactive node groups
+    // (g.hoverable, which carry the full name), so we find the label and click the nearest
+    // node group's center (dependency lines, which also use g.hoverable, are excluded).
+    public async Task SelectNodeByVisibleNameAsync(string visibleName)
+    {
+        float[]? point = await page.EvaluateAsync<float[]?>(
+            @"(name) => {
+                const labels = [...document.querySelectorAll('#svgcanvas text.iconName')]
+                    .filter(t => t.textContent.trim() === name);
+                if (labels.length === 0) return null;
+                const lr = labels[0].getBoundingClientRect();
+                const lx = lr.x + lr.width / 2, ly = lr.y + lr.height / 2;
+                const arrow = String.fromCharCode(8594); // dependency lines contain '→'
+                let best = null, bestDist = Infinity;
+                for (const g of document.querySelectorAll('#svgcanvas g.hoverable')) {
+                    if (g.textContent.includes(arrow)) continue;
+                    const r = g.getBoundingClientRect();
+                    const cx = r.x + r.width / 2, cy = r.y + r.height / 2;
+                    const d = (cx - lx) ** 2 + (cy - ly) ** 2;
+                    if (d < bestDist) { bestDist = d; best = [cx, cy]; }
+                }
+                return best;
+            }",
+            visibleName
+        );
+
+        if (point is null)
+            throw new InvalidOperationException(
+                $"No node with visible label '{visibleName}' is rendered on the canvas."
+            );
+
+        await page.Mouse.ClickAsync(point[0], point[1]);
     }
 
     // Navigate to the app and wait until the initial model has loaded and rendered (the

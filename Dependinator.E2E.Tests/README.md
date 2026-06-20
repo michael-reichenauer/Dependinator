@@ -133,8 +133,9 @@ as intent rather than selectors:
   `CanvasService.InitialShow`, so tests wait on a real signal, not a timeout). It
   also exposes locators (`Menu`, `SearchButton`, `Canvas`, `NodeLabel("Demo.sln")`,
   `NodeToolbarMenu`), flows (`OpenSearchViaMenuAsync`, `OpenSearchViaHotkeyAsync`,
-  `SelectNodeAsync("Demo.sln")`), and `SignInAsTestUserAsync()` for signed-in
-  cloud-sync flows (call before `GotoAsync`).
+  `SelectNodeByFullNameAsync("Demo.Core.RootClass")` — full node name —
+  `SelectNodeByVisibleNameAsync("RootClass")` — the short on-screen label), and
+  `SignInAsTestUserAsync()` for signed-in cloud-sync flows (call before `GotoAsync`).
 - **`SearchDialog`** (`Shared/Pages/SearchDialog.cs`) — returned by the open-search flows;
   exposes `Field`, `Results`, `EmptyResult`, `FillAsync`, `CloseAsync`.
 
@@ -145,7 +146,11 @@ objects. Add a new page object per dialog/screen as the suite grows.
 an **interaction** test (drive the diagram, assert it reacts) — copy its shape. Note
 the canvas is SVG: `SelectNodeAsync` clicks a node's group-box center via the mouse
 (not `Locator.ClickAsync`), because the canvas re-renders constantly and node SVG ids
-are generated (so nodes are matched by their stable label text).
+are generated (so nodes are matched by their stable label text). `SelectNodeAsync`
+matches the node group's **full** name (e.g. `Demo.Core.RootClass`); use
+`SelectNodeByVisibleNameAsync` to match the **short** on-screen label (e.g. `RootClass`)
+— it locates the visible label and clicks the nearest node group, since labels render
+in a separate SVG layer from the interactive groups.
 
 Useful app-specific selectors:
 
