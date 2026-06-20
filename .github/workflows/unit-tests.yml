@@ -1,0 +1,34 @@
+name: Unit tests
+
+# Runs the non-UI test suites (Api / Core / Roslyn / UI) on every PR and on pushes to
+# main/dev. This builds the whole solution (so it also catches build/format breaks in any
+# project) and runs `dotnet test`; the Playwright e2e tests skip themselves unless E2E=1,
+# so no app or browsers are needed here. The browser e2e suite runs in e2e.yml.
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # The solution includes the Blazor WebAssembly host; restore any workloads it needs
+      # (no-op if none) so the solution builds on a clean runner.
+      - name: Restore workloads
+        run: dotnet workload restore Dependinator.sln
+
+      - name: Test
+        run: dotnet test Dependinator.sln
