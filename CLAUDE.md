@@ -41,6 +41,7 @@ dotnet build Dependinator.sln
 ./watch-sync                                   # Blazor Server + Azurite + Functions host
 
 # Test
+./test                                         # unit tests, then e2e (args forwarded to ./e2e, e.g. ./test -s -t)
 dotnet test Dependinator.sln                   # all unit tests (e2e are skipped)
 dotnet test Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
 dotnet test Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
