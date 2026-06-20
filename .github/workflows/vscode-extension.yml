@@ -12,7 +12,14 @@ permissions:
   contents: write
 
 jobs:
+  # Gate the whole extension pipeline (version bump, build, publish) on the test suites.
+  unit-tests:
+    uses: ./.github/workflows/unit-tests.yml
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+
   bump-version:
+    needs: [unit-tests, e2e]
     runs-on: ubuntu-latest
     outputs:
       new_sha: ${{ steps.set-outputs.outputs.new_sha }}

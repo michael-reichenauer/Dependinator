@@ -1,13 +1,13 @@
 name: Unit tests
 
-# Runs the non-UI test suites (Api / Core / Roslyn / UI) on every PR and on pushes to
-# main/dev. This builds the whole solution (so it also catches build/format breaks in any
-# project) and runs `dotnet test`; the Playwright e2e tests skip themselves unless E2E=1,
-# so no app or browsers are needed here. The browser e2e suite runs in e2e.yml.
+# Runs the non-UI test suites (Api / Core / Roslyn / UI). This builds the whole solution
+# (so it also catches build/format breaks in any project) and runs `dotnet test`; the
+# Playwright e2e tests skip themselves unless E2E=1, so no app or browsers are needed here.
+# Runs on every push (all branches), and is also called by the CI/CD and extension
+# workflows so deploy/build wait for it (which means a second run on main/dev — acceptable).
 on:
-  pull_request:
   push:
-    branches: [main, dev]
+  workflow_call:
   workflow_dispatch:
 
 permissions:
