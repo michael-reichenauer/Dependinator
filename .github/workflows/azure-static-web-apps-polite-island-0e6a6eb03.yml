@@ -16,6 +16,11 @@ jobs:
   e2e:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     uses: ./.github/workflows/e2e.yml
+    # Publishing dev/main (a push) runs the full gate: all browsers + cloud-sync tests.
+    # PR previews stay light (Chromium, no sync) for fast feedback.
+    with:
+      browsers: ${{ github.event_name == 'push' && 'all' || 'chromium' }}
+      sync: ${{ github.event_name == 'push' }}
 
   build_and_deploy_job:
     needs: [unit-tests, e2e]

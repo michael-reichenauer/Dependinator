@@ -17,6 +17,10 @@ jobs:
     uses: ./.github/workflows/unit-tests.yml
   e2e:
     uses: ./.github/workflows/e2e.yml
+    # Building/publishing the extension is a deliberate release, so run the full gate.
+    with:
+      browsers: all
+      sync: true
 
   bump-version:
     needs: [unit-tests, e2e]

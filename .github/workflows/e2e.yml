@@ -1,13 +1,22 @@
 name: E2E (Playwright)
 
-# Runs the Dependinator.E2E.Tests UI suite via ./e2e (Chromium). Runs on every push (all
-# branches), and is also called by the CI/CD and extension workflows so deploy/build wait
-# for it (a second run on main/dev — acceptable). Can also be run manually — pick "all" to
-# validate Firefox + WebKit too (e.g. before a release). Playwright traces are uploaded as
-# an artifact on failure — download the .zip and open it at https://trace.playwright.dev.
+# Runs the Dependinator.E2E.Tests UI suite via ./e2e. On a plain push (any branch) it runs
+# Chromium only, no cloud-sync — a quick check. The CI/CD and extension workflows call it
+# before publishing and pass browsers=all + sync=true, so the pre-publish gate covers all
+# browsers and the cloud-sync ([SyncFact]) tests. Can also be run manually. Playwright
+# traces are uploaded as an artifact on failure (open the .zip at trace.playwright.dev).
 on:
   push:
   workflow_call:
+    inputs:
+      browsers:
+        description: "chromium | all"
+        type: string
+        default: chromium
+      sync:
+        description: Also run the cloud-sync tests (./e2e -s)
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       browsers:
@@ -15,6 +24,10 @@ on:
         type: choice
         options: [chromium, all]
         default: chromium
+      sync:
+        description: Also run the cloud-sync tests (./e2e -s)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -22,25 +35,42 @@ permissions:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+
+      # Resolve the run config from the inputs (empty on a plain push -> defaults):
+      #   install   = browsers to install   e2e_args = ./e2e flags (-a / -s)   sync = bool
+      - name: Determine config
+        id: cfg
+        run: |
+          browsers="${{ inputs.browsers }}"
+          sync="${{ inputs.sync }}"
+          [ -z "$browsers" ] && browsers=chromium
+          [ "$sync" = "true" ] || sync=false
+          args=""
+          if [ "$browsers" = "all" ]; then
+            echo "install=chromium firefox webkit" >> "$GITHUB_OUTPUT"
+            args="$args -a"
+          else
+            echo "install=chromium" >> "$GITHUB_OUTPUT"
+          fi
+          [ "$sync" = "true" ] && args="$args -s"
+          echo "sync=$sync" >> "$GITHUB_OUTPUT"
+          echo "e2e_args=$args" >> "$GITHUB_OUTPUT"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
 
-      - name: Determine browsers
-        id: cfg
-        run: |
-          if [ "${{ github.event.inputs.browsers }}" = "all" ]; then
-            echo "install=chromium firefox webkit" >> "$GITHUB_OUTPUT"
-            echo "e2e_args=-a" >> "$GITHUB_OUTPUT"
-          else
-            echo "install=chromium" >> "$GITHUB_OUTPUT"
-            echo "e2e_args=" >> "$GITHUB_OUTPUT"
-          fi
+      # The cloud-sync API (Api) is a .NET 8 isolated Functions worker, so its runtime is
+      # needed (alongside the SDK from global.json) to run the sync tests.
+      - name: Setup .NET 8 runtime (sync tests)
+        if: steps.cfg.outputs.sync == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
 
       # Build the test project so playwright.ps1 (used to install browsers) exists.
       - name: Build e2e test project
@@ -49,9 +79,15 @@ jobs:
       - name: Install Playwright browsers
         run: pwsh Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ steps.cfg.outputs.install }}
 
-      # ./e2e starts Dependinator.Web itself (test mode, embedded demo model) and stops
-      # it afterwards. E2E_TRACE=1 records a trace per test for the artifact below.
-      # Sync tests ([SyncFact]) are skipped here — they need func + Azurite (-s).
+      # ./e2e -s starts the cloud-sync stack itself but needs these tools on the runner.
+      - name: Install Azure Functions Core Tools + Azurite (sync tests)
+        if: steps.cfg.outputs.sync == 'true'
+        run: |
+          npm install -g azure-functions-core-tools@4 --unsafe-perm true
+          npm install -g azurite
+
+      # ./e2e starts Dependinator.Web itself (test mode, embedded demo model) and stops it
+      # afterwards. E2E_TRACE=1 records a trace per test for the artifact below.
       - name: Run e2e tests
         env:
           E2E_TRACE: "1"
