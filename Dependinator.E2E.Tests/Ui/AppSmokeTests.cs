@@ -1,14 +1,15 @@
-using Dependinator.E2E.Tests.Pages;
+using Dependinator.E2E.Tests.Shared;
+using Dependinator.E2E.Tests.Shared.Pages;
 using Xunit.Abstractions;
 
-namespace Dependinator.E2E.Tests;
+namespace Dependinator.E2E.Tests.Ui;
 
 public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
     public async Task HomePage_ShouldShowDiagramCanvas()
     {
-        await App.GotoAsync();
+        await App.GotoMainPageAsync();
 
         await Expect(Page).ToHaveTitleAsync("Dependinator");
         await Expect(App.Canvas).ToBeVisibleAsync();
@@ -17,7 +18,7 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     [E2EFact]
     public async Task HomePage_ShouldShowAppToolbar()
     {
-        await App.GotoAsync();
+        await App.GotoMainPageAsync();
 
         await Expect(App.Menu).ToBeVisibleAsync();
         await Expect(App.SearchButton).ToBeVisibleAsync();
@@ -26,7 +27,7 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     [E2EFact]
     public async Task AppMenu_ShouldOpenSearchDialog_ViaMenuItem()
     {
-        await App.GotoAsync();
+        await App.GotoMainPageAsync();
 
         SearchDialog search = await App.OpenSearchViaMenuAsync();
 
@@ -36,7 +37,7 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     [E2EFact]
     public async Task HomePage_ShouldLoadDemoModel_InTestMode()
     {
-        await App.GotoAsync();
+        await App.GotoMainPageAsync();
 
         // In test mode the app loads the embedded demo model instead of parsing the
         // working solution; its root node label "Demo.sln" renders on the canvas.
@@ -49,10 +50,10 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     [E2EFact]
     public async Task ClickingNode_ShouldShowItsContextToolbar()
     {
-        await App.GotoAsync();
+        await App.GotoMainPageAsync();
 
         // Select the demo model's root node ("Demo.sln") on the diagram.
-        await App.SelectNodeAsync("Demo.sln");
+        await App.SelectNodeByFullNameAsync("Demo.sln");
 
         // Selecting a node shows its context toolbar (NodeToolbar.razor, node-* hooks).
         await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();
@@ -61,7 +62,7 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     [E2EFact]
     public async Task SearchHotkey_ShouldOpenSearchDialog()
     {
-        await App.GotoAsync();
+        await App.GotoMainPageAsync();
 
         SearchDialog search = await App.OpenSearchViaHotkeyAsync();
         await Expect(search.Field).ToBeVisibleAsync();

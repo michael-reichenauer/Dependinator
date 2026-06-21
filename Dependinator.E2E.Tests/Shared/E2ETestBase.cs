@@ -1,10 +1,10 @@
 using System.Reflection;
-using Dependinator.E2E.Tests.Pages;
+using Dependinator.E2E.Tests.Shared.Pages;
 using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit;
 using Xunit.Abstractions;
 
-namespace Dependinator.E2E.Tests;
+namespace Dependinator.E2E.Tests.Shared;
 
 // Base class for UI tests against a running app (started via ./watch, ./watch-sync
 // or auto-started by the ./e2e script). Browser is selected with the BROWSER

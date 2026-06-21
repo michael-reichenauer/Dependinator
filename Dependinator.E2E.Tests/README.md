@@ -92,10 +92,22 @@ Wasm host started with `./run`).
   window) is created per test by the `PageTest` base class; `Page` is ready to
   use in each test.
 
+## Project layout
+
+- `Shared/` — test infrastructure (`E2ETestBase`, the `[E2EFact]`/`[SyncFact]`
+  attributes, `TestAuthToken`), including `Shared/Pages/` — page objects (`AppPage`,
+  `SearchDialog`).
+- `Ui/` — browser UI tests (`AppSmokeTests`).
+- `Sync/` — cloud-sync tests (`SyncTests`) and their seed fixture (`SeededSyncModel`).
+- `TestAuth/` — throwaway signing key + JWKS server for offline sync auth.
+
+Namespaces match folders (e.g. `Dependinator.E2E.Tests.Ui`).
+
 ## Writing a new test
 
-Add a class inheriting `E2ETestBase`, mark tests with `[E2EFact]`
-(a `[Fact]` that is skipped unless `E2E=1`), name them `Thing_ShouldBehavior`:
+Add a class (in `Ui/` or `Sync/`, or a new area folder) inheriting `E2ETestBase`,
+mark tests with `[E2EFact]` (a `[Fact]` skipped unless `E2E=1`), name them
+`Thing_ShouldBehavior`:
 
 ```csharp
 public class MyFeatureTests : E2ETestBase
@@ -112,18 +124,19 @@ public class MyFeatureTests : E2ETestBase
 
 ### Page objects
 
-Common flows and locators live in **page objects** (`Pages/`), so tests read as
-intent rather than selectors:
+Common flows and locators live in **page objects** (`Shared/Pages/`), so tests read
+as intent rather than selectors:
 
-- **`App`** (`Pages/AppPage.cs`) — the main app. `E2ETestBase` exposes it as the
+- **`App`** (`Shared/Pages/AppPage.cs`) — the main app. `E2ETestBase` exposes it as the
   `App` property. `App.GotoAsync()` navigates and waits until the initial model has
   loaded and rendered (the app sets `data-app-ready="true"` on the `<body>` from
   `CanvasService.InitialShow`, so tests wait on a real signal, not a timeout). It
   also exposes locators (`Menu`, `SearchButton`, `Canvas`, `NodeLabel("Demo.sln")`,
   `NodeToolbarMenu`), flows (`OpenSearchViaMenuAsync`, `OpenSearchViaHotkeyAsync`,
-  `SelectNodeAsync("Demo.sln")`), and `SignInAsTestUserAsync()` for signed-in
-  cloud-sync flows (call before `GotoAsync`).
-- **`SearchDialog`** (`Pages/SearchDialog.cs`) — returned by the open-search flows;
+  `SelectNodeByFullNameAsync("Demo.Core.RootClass")` — full node name —
+  `SelectNodeByVisibleNameAsync("RootClass")` — the short on-screen label), and
+  `SignInAsTestUserAsync()` for signed-in cloud-sync flows (call before `GotoAsync`).
+- **`SearchDialog`** (`Shared/Pages/SearchDialog.cs`) — returned by the open-search flows;
   exposes `Field`, `Results`, `EmptyResult`, `FillAsync`, `CloseAsync`.
 
 Keep assertions (`Expect(...)`) in the tests; keep locators and actions in the page
@@ -133,7 +146,11 @@ objects. Add a new page object per dialog/screen as the suite grows.
 an **interaction** test (drive the diagram, assert it reacts) — copy its shape. Note
 the canvas is SVG: `SelectNodeAsync` clicks a node's group-box center via the mouse
 (not `Locator.ClickAsync`), because the canvas re-renders constantly and node SVG ids
-are generated (so nodes are matched by their stable label text).
+are generated (so nodes are matched by their stable label text). `SelectNodeAsync`
+matches the node group's **full** name (e.g. `Demo.Core.RootClass`); use
+`SelectNodeByVisibleNameAsync` to match the **short** on-screen label (e.g. `RootClass`)
+— it locates the visible label and clicks the nearest node group, since labels render
+in a separate SVG layer from the interactive groups.
 
 Useful app-specific selectors:
 

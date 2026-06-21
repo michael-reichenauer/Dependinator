@@ -6,7 +6,9 @@ record NodeSearchResult(NodeId Id, string ShortName, string FullName);
 
 // Searches all named (non-root) nodes by their short name using a VS Code Ctrl-T style
 // fuzzy matcher: typed letters must appear as a subsequence, and uppercase letters favor
-// word/camelCase boundaries (e.g. "PZS" jumps to "PanZoomService").
+// word/camelCase boundaries (e.g. "PZS" jumps to "PanZoomService"). When the query looks
+// like a qualified path (contains a '.' or '/'), the node's full name is matched too, so
+// e.g. "Demo.Core.RootClass" finds the node whose short name is just "RootClass".
 interface INodeSearchService
 {
     IReadOnlyList<NodeSearchResult> Search(string query);
@@ -24,6 +26,10 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
     const int MaxGapPenalized = 10;
     const int MaxResultItems = 100;
 
+    // Separators used in a node's full name (e.g. "Demo.Core.RootClass"); a query containing
+    // one is treated as a qualified path and matched against full names too.
+    static readonly char[] PathSeparators = ['.', '/'];
+
     public IReadOnlyList<NodeSearchResult> Search(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -36,10 +42,16 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
             model.Nodes.Values.Where(n => !n.IsRoot).Select(n => (n.Id, n.ShortName, n.LongName)).ToList()
         );
 
+        // For a qualified query like "Demo.Core.RootClass" the short name ("RootClass") is
+        // shorter than the query and can never match, so also match the full name in that case.
+        bool matchFullName = query.IndexOfAny(PathSeparators) >= 0;
+
         var results = new List<(NodeSearchResult Result, int Score)>(candidates.Count);
         foreach (var (id, shortName, name) in candidates)
         {
             var score = FuzzyMatch(query, shortName);
+            if (score is null && matchFullName)
+                score = FuzzyMatch(query, name);
             if (score is null)
                 continue;
 
