@@ -108,7 +108,6 @@ class ModelService : IModelService, IDisposable
             return error;
 
         var modelInfo = await LoadCachedModelDataAsync(modelPath, modelDto);
-        CheckLineVisibility();
         RefreshAsync().RunInBackground();
         return modelInfo;
     }
@@ -162,7 +161,6 @@ class ModelService : IModelService, IDisposable
             return e;
 
         var modelInfo = await LoadCachedModelDataAsync(path, model);
-        CheckLineVisibility();
 
         return modelInfo;
     }
@@ -288,6 +286,9 @@ class ModelService : IModelService, IDisposable
         }
 
         await Task.Run(() => SetNodeAndLinkDtos(modelDto));
+        // Compute line visibility before triggering the render so the first cached tile
+        // uses correct hidden state (lines to hidden nodes must render as hidden).
+        CheckLineVisibility();
         applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
         return new ModelInfo(path, modelDto.ViewRect, modelDto.Zoom);
