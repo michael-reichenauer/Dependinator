@@ -9,7 +9,7 @@ public class NavigateTests(ITestOutputHelper output) : E2ETestBase(output)
     [E2EFact]
     public async Task Search_ShouldNavigateToNode_WhenSelectingResult()
     {
-        await App.GotoAsync();
+        await App.GotoMainPageAsync();
 
         // Search for "RoCla" and select the first match (the "RootClass" node).
         SearchDialog search = await App.OpenSearchViaHotkeyAsync();

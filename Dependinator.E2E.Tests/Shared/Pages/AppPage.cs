@@ -86,10 +86,15 @@ public sealed class AppPage
         await page.Mouse.ClickAsync(point[0], point[1]);
     }
 
+    // Navigate to the main page app and wait until the initial model has loaded and rendered (the
+    // app sets data-app-ready=true on the body once CanvasService finishes loading).
+    // Prefer this over Page.GotoAsync + ad-hoc waits to avoid timing flakiness.
+    public Task GotoMainPageAsync() => GotoAsync("/");
+
     // Navigate to the app and wait until the initial model has loaded and rendered (the
     // app sets data-app-ready=true on the body once CanvasService finishes loading).
     // Prefer this over Page.GotoAsync + ad-hoc waits to avoid timing flakiness.
-    public async Task GotoAsync(string path = "/")
+    public async Task GotoAsync(string path)
     {
         await page.GotoAsync(path);
         await WaitForReadyAsync();
