@@ -83,8 +83,21 @@ jobs:
       - name: Install Azure Functions Core Tools + Azurite (sync tests)
         if: steps.cfg.outputs.sync == 'true'
         run: |
-          npm install -g azure-functions-core-tools@4 --unsafe-perm true
+          # Azurite is a pure-Node package — reliable via npm.
           npm install -g azurite
+          # Azure Functions Core Tools: install from the Microsoft apt feed. (The npm
+          # package downloads a binary from a CDN during install, which is flaky on CI.)
+          if ! command -v func >/dev/null; then
+            sudo apt-get update
+            if ! sudo apt-get install -y azure-functions-core-tools-4; then
+              # Runner is missing the Microsoft package feed — add it and retry.
+              wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb" -O /tmp/pmc.deb
+              sudo dpkg -i /tmp/pmc.deb
+              sudo apt-get update
+              sudo apt-get install -y azure-functions-core-tools-4
+            fi
+          fi
+          func --version
 
       # ./e2e starts Dependinator.Web itself (test mode, embedded demo model) and stops it
       # afterwards. E2E_TRACE=1 records a trace per test for the artifact below.
