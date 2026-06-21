@@ -107,6 +107,32 @@ public class NodeSearchServiceTests
         Assert.Equal("Service", results[0].ShortName);
     }
 
+    [Fact]
+    public void Search_ShouldMatchFullName_ForQualifiedQuery()
+    {
+        var sut = CreateService(
+            ("RootClass", "Demo.Core.RootClass"),
+            ("RootClass", "Demo.UI.RootClass")
+        );
+
+        // A dotted query is matched against full names (the short name "RootClass" is too
+        // short to match), so it finds — and narrows to — the right node.
+        var results = sut.Search("Demo.Core.RootClass");
+
+        Assert.Single(results);
+        Assert.Equal("Demo.Core.RootClass", results[0].FullName);
+    }
+
+    [Fact]
+    public void Search_ShouldNotMatchFullName_ForPlainQuery()
+    {
+        // A plain (non-qualified) query only matches short names — so "Demo" does NOT match
+        // a node whose short name is "RootClass", even though its full name contains "Demo".
+        var sut = CreateService(("RootClass", "Demo.Core.RootClass"));
+
+        Assert.Empty(sut.Search("Demo"));
+    }
+
     static NodeSearchService CreateService(params (string ShortName, string Name)[] nodes)
     {
         var candidates = nodes.Select(n => (NodeId.FromName(n.Name), n.ShortName, n.Name)).ToList();
