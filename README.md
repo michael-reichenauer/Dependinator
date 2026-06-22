@@ -17,10 +17,8 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
 
 ## Quick start
 - Build: `./build`
-- Run server (live dev): `./watch`
-- Run server with cloud sync: `./watch-sync`
-- Run WASM sample: `./run`
-- Run WASM + API + Azurite locally: `./run-sync`
+- Run server (live dev, with cloud sync): `./watch`
+- Run WASM + API + Azurite locally: `./run`
 - Tests: `dotnet test src/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj`
 
 ## Cloud sync

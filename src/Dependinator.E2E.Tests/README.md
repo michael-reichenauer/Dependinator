@@ -59,7 +59,7 @@ starts its own test-mode app so the model is known.
 Sync features talk to the Azure Functions API on port 7071 (backed by Azurite).
 Tests that need it are marked `[SyncFact]` instead of `[E2EFact]` and are
 skipped unless that stack is up. `./e2e -s` brings it up the same way
-`./watch-sync` does — reusing an already-running Azurite/Functions host, or
+`./watch` does — reusing an already-running Azurite/Functions host, or
 starting (and stopping) them itself. It requires `func` and `azurite` installed.
 Note that signed-in sync flows additionally need a Clerk test user (not yet set
 up), so `[SyncFact]` currently only covers behavior reachable without sign-in.

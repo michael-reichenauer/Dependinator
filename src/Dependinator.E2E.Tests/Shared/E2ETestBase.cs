@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Shared;
 
-// Base class for UI tests against a running app (started via ./watch, ./watch-sync
+// Base class for UI tests against a running app (started via ./watch
 // or auto-started by the ./e2e script). Browser is selected with the BROWSER
 // environment variable (chromium [default], firefox or webkit); the target app
 // with E2E_BASE_URL (default Blazor Server at http://localhost:5000).
@@ -114,7 +114,7 @@ public class E2ETestBase : PageTest
         {
             throw new InvalidOperationException(
                 $"The app is not reachable at {BaseUrl}. "
-                    + "Start it with ./watch (or ./watch-sync), or run tests via ./e2e "
+                    + "Start it with ./watch, or run tests via ./e2e "
                     + "which starts the app automatically.",
                 e
             );

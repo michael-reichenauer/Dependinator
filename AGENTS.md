@@ -27,9 +27,8 @@
 ## Build, Test, and Development Commands
 - Root helper scripts:
   - `./build` (builds `Dependinator.Web`)
-  - `./watch` (runs `dotnet watch` for `Dependinator.Web`)
-  - `./run` (publishes `Dependinator.Wasm` in Release and serves `wwwroot` via SWA CLI)
-  - `./run-sync` (publishes `Dependinator.Wasm`, starts Azurite, starts the Functions host on `7071`, then serves the app through SWA CLI)
+  - `./watch` (runs `dotnet watch` for `Dependinator.Web`, plus Azurite and the Functions host on `7071` for cloud sync)
+  - `./run` (publishes `Dependinator.Wasm` in Release, starts Azurite, starts the Functions host on `7071`, then serves the app through SWA CLI)
   - `./updatepackages -u` (upgrade non-major packages) or `./updatepackages -m` (allow major)
   - `./build-ext` (npm install + version bump + VS Code extension package build)
 - Standard .NET:
@@ -60,7 +59,7 @@
   - `csharpier` dotnet tool (CLI formatting/checks)
   - `CSharpier.MsBuild` package (formatting enforcement during build)
 - `./run` uses `swa` if installed, otherwise falls back to `npx @azure/static-web-apps-cli`.
-- `./run-sync` requires:
+- `./run` requires:
   - Azure Functions Core Tools (`func`)
   - Azurite (`azurite`, or `npx azurite` as fallback)
   - SWA CLI (`swa`, or `npx @azure/static-web-apps-cli` as fallback)

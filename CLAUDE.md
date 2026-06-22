@@ -35,10 +35,8 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 dotnet build Dependinator.sln
 
 # Run
-./watch                                        # dotnet watch for Dependinator.Web (live dev)
-./run                                          # publish Wasm in Release + serve via SWA CLI
-./run-sync                                     # Wasm + Azurite + Functions host + SWA CLI
-./watch-sync                                   # Blazor Server + Azurite + Functions host
+./watch                                        # dotnet watch for Dependinator.Web + Azurite + Functions host (live dev)
+./run                                          # publish Wasm in Release + Azurite + Functions host + SWA CLI
 
 # Test
 ./test                                         # unit tests, then e2e (args forwarded to ./e2e, e.g. ./test -s -t)
@@ -71,8 +69,8 @@ dotnet list Dependinator.sln package --outdated
 dotnet list Dependinator.sln package --vulnerable
 ```
 
-`./run-sync` requires `func` (Azure Functions Core Tools), `azurite`, and `swa` (SWA CLI) to be installed.
-`./watch-sync` requires `func` and `azurite` (no SWA CLI needed).
+`./run` requires `func` (Azure Functions Core Tools), `azurite`, and `swa` (SWA CLI) to be installed.
+`./watch` requires `func` and `azurite` (no SWA CLI needed).
 
 ## Tooling & Conventions
 

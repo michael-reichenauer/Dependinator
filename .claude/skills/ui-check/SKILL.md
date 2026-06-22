@@ -16,9 +16,8 @@ curl -sf -o /dev/null http://localhost:5000 && echo running || echo "not running
 
 Start options (all serve the same Blazor Server app on http://localhost:5000):
 
-- `./watch` — UI only, hot reload. Sufficient for almost all UI checks.
-- `./watch-sync` — additionally starts Azurite + Azure Functions API (port 7071)
-  for cloud-sync features. Needs `func` and `azurite` installed.
+- `./watch` — Blazor Server with hot reload, plus Azurite + Azure Functions API
+  (port 7071) for cloud-sync features. Needs `func` and `azurite` installed.
 - `./e2e` starts/stops its own app in test mode; it errors if something is already
   running on 5000 (stop `./watch` first), so tests run against the known demo model.
 
@@ -48,7 +47,7 @@ Notes:
 - Cloud-sync flows require Clerk sign-in; do not try to automate sign-in.
   Anything behind login is currently out of scope for automated checks.
 - A "Connection refused (127.0.0.1:7071)" snackbar is expected when the app
-  runs without the cloud-sync API (plain ./watch) — it is not a bug.
+  runs without the cloud-sync API (e.g. `func`/`azurite` not installed) — it is not a bug.
 
 ## 3. Run the e2e test suite
 
@@ -65,4 +64,4 @@ Tests live in `src/Dependinator.E2E.Tests/` (xUnit + Microsoft.Playwright, see i
 README.md). They are skipped in plain `dotnet test` runs unless `E2E=1` is set,
 which `./e2e` does. New UI features should get a test there; use `[E2EFact]`
 and extend `E2ETestBase`. Cloud-sync tests use `[SyncFact]` and only run under
-`./e2e -s` (which brings up Azurite + the Functions API, like ./watch-sync).
+`./e2e -s` (which brings up Azurite + the Functions API, like ./watch).

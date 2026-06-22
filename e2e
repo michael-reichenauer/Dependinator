@@ -13,7 +13,7 @@
 # afterwards. If an app is already running at http://localhost:5000 (e.g. ./watch),
 # it exits with an error asking you to stop it first — so tests always run against a
 # known model. With -s, an already-running Azurite/Functions host is reused; otherwise
-# they are started and stopped here (same as ./watch-sync).
+# they are started and stopped here (same as ./watch).
 set -uo pipefail
 cd "$(dirname "$0")"
 
@@ -90,7 +90,7 @@ if curl -sf -o /dev/null "$BASE_URL"; then
 fi
 
 # Optionally bring up the cloud-sync stack (Azurite + Azure Functions on 7071 + a
-# local test JWKS server), mirroring ./watch-sync, so the Blazor app can reach the
+# local test JWKS server), mirroring ./watch, so the Blazor app can reach the
 # cloud API during tests. Auth uses a self-minted token validated against the test
 # JWKS instead of real Clerk — see src/Dependinator.E2E.Tests/TestAuth/.
 E2E_SYNC=0
