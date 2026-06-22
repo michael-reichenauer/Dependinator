@@ -1,5 +1,0 @@
-namespace Dependinator.Core.Shared;
-
-
-
-

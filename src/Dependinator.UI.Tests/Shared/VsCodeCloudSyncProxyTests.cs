@@ -10,12 +10,15 @@ public class VsCodeCloudSyncProxyTests
     [Fact]
     public async Task GetAuthStateAsync_ShouldReturnError_WhenResponseTimesOut()
     {
-        FakeJsInterop jsInterop = new((functionName, _) => functionName switch
-        {
-            "isVsCodeWebView" => true,
-            "postVsCodeMessage" => true,
-            _ => throw new InvalidOperationException($"Unexpected JS call: {functionName}"),
-        });
+        FakeJsInterop jsInterop = new(
+            (functionName, _) =>
+                functionName switch
+                {
+                    "isVsCodeWebView" => true,
+                    "postVsCodeMessage" => true,
+                    _ => throw new InvalidOperationException($"Unexpected JS call: {functionName}"),
+                }
+        );
         VsCodeCloudSyncProxy sut = new(jsInterop, TimeSpan.FromMilliseconds(10));
 
         R<global::Shared.CloudAuthState> result = await sut.GetAuthStateAsync();
@@ -28,12 +31,15 @@ public class VsCodeCloudSyncProxyTests
     [Fact]
     public async Task LoginAsync_ShouldReturnError_WhenResponseTimesOut()
     {
-        FakeJsInterop jsInterop = new((functionName, _) => functionName switch
-        {
-            "isVsCodeWebView" => true,
-            "postVsCodeMessage" => true,
-            _ => throw new InvalidOperationException($"Unexpected JS call: {functionName}"),
-        });
+        FakeJsInterop jsInterop = new(
+            (functionName, _) =>
+                functionName switch
+                {
+                    "isVsCodeWebView" => true,
+                    "postVsCodeMessage" => true,
+                    _ => throw new InvalidOperationException($"Unexpected JS call: {functionName}"),
+                }
+        );
         VsCodeCloudSyncProxy sut = new(
             jsInterop,
             requestTimeout: TimeSpan.FromSeconds(1),

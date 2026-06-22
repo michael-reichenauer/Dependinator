@@ -184,10 +184,7 @@ class MethodLinkParser
 
         if (symbol is IPropertySymbol propertySymbol) // Method property access
         {
-            if (
-                propertySymbol.ContainingType is INamedTypeSymbol propertyType
-                && IgnoredTypes.IsIgnored(propertyType)
-            )
+            if (propertySymbol.ContainingType is INamedTypeSymbol propertyType && IgnoredTypes.IsIgnored(propertyType))
                 yield break;
 
             foreach (var propertyTypeLink in AddTypeLinks(propertySymbol.Type, member, fullMethodName))

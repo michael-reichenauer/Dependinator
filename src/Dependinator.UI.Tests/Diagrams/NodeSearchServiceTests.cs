@@ -110,10 +110,7 @@ public class NodeSearchServiceTests
     [Fact]
     public void Search_ShouldMatchFullName_ForQualifiedQuery()
     {
-        var sut = CreateService(
-            ("RootClass", "Demo.Core.RootClass"),
-            ("RootClass", "Demo.UI.RootClass")
-        );
+        var sut = CreateService(("RootClass", "Demo.Core.RootClass"), ("RootClass", "Demo.UI.RootClass"));
 
         // A dotted query is matched against full names (the short name "RootClass" is too
         // short to match), so it finds — and narrows to — the right node.

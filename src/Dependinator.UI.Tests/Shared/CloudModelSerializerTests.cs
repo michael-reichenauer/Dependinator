@@ -58,10 +58,7 @@ public class CloudModelSerializerTests
             Links = [],
         };
 
-        Assert.Equal(
-            CloudModelSerializer.GetContentHash(dto1),
-            CloudModelSerializer.GetContentHash(dto2)
-        );
+        Assert.Equal(CloudModelSerializer.GetContentHash(dto1), CloudModelSerializer.GetContentHash(dto2));
     }
 
     [Fact]

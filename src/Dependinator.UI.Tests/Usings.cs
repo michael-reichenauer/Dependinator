@@ -1,5 +1,5 @@
-global using static Dependinator.UI.Tests.VerifierExtensions;
 global using Dependinator.Core.Utils;
+global using static Dependinator.UI.Tests.VerifierExtensions;
 global using Moq;
 global using VerifyTests;
 global using Xunit;
