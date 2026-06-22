@@ -5,31 +5,6 @@
             "name": "WebServer",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
-            // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/Dependinator.Web/bin/Debug/net10.0/Dependinator.Web.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/src/Dependinator.Web",
-            "stopAtEntry": false,
-            // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
-            // "serverReadyAction": {
-            //     "action": "openExternally",
-            //     "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-            //     "uriFormat": "%s"
-            // },
-            "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            },
-            "sourceFileMap": {
-                "/Views": "${workspaceFolder}/src/Dependinator.Web/Views"
-            },
-            "dotnetRunMessages": true,
-            "console": "internalConsole"
-        },
-        {
-            "name": "WebServer (Sync)",
-            "type": "coreclr",
-            "request": "launch",
             "preLaunchTask": "start sync services",
             "program": "${workspaceFolder}/src/Dependinator.Web/bin/Debug/net10.0/Dependinator.Web.dll",
             "args": [],
