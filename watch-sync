@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-api_dir="./Api"
+api_dir="./src/Api"
 azurite_dir="./.azurite"
 local_settings="$api_dir/local.settings.json"
 local_settings_example="$api_dir/local.settings.example.json"
@@ -71,4 +71,4 @@ fi
 # Run dotnet watch on the Blazor Server project.
 export DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
 export DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1
-dotnet watch --project ./Dependinator.Web/Dependinator.Web.csproj
+dotnet watch --project ./src/Dependinator.Web/Dependinator.Web.csproj

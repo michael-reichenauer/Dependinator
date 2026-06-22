@@ -27,7 +27,7 @@ public class SourceParserTests
     public async Task TestLspProjectGenericRegistrationLinksAsync()
     {
         var sourceParser = new SourceParser();
-        var projectPath = Path.Combine(Root.SolutionFolderPath, "Dependinator.Lsp", "Dependinator.Lsp.csproj");
+        var projectPath = Path.Combine(Root.SrcFolderPath, "Dependinator.Lsp", "Dependinator.Lsp.csproj");
 
         if (!Try(out var items, out var e, await sourceParser.ParseProjectAsync(projectPath)))
             Assert.Fail(e.AllErrorMessages());

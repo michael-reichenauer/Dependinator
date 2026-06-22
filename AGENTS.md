@@ -1,31 +1,28 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Solution: `Dependinator.sln` (main .NET projects, currently `net10.0` via `global.json`)
+- Solution: `Dependinator.sln` (main .NET projects, currently `net10.0` via `global.json`). The solution file stays at the repo root; all project folders live under `src/`.
 - Runtime/host projects:
-  - `Dependinator.Web/` (Blazor Server host for local development)
-  - `Dependinator.Wasm/` (Blazor WebAssembly host / Static Web Apps target)
-  - `Api/` (Azure Functions host for cloud sync)
-  - `Dependinator.Lsp/` (LSP server executable)
+  - `src/Dependinator.Web/` (Blazor Server host for local development)
+  - `src/Dependinator.Wasm/` (Blazor WebAssembly host / Static Web Apps target)
+  - `src/Api/` (Azure Functions host for cloud sync)
+  - `src/Dependinator.Lsp/` (LSP server executable)
 - Core libraries:
-  - `Dependinator.UI/` (shared UI + app components)
-  - `Dependinator.Core/` (core parsing/domain logic/utilities)
-  - `Dependinator.Roslyn/` (Roslyn-based parsing/integration)
-  - `Shared/` (shared DTOs/models)
+  - `src/Dependinator.UI/` (shared UI + app components)
+  - `src/Dependinator.Core/` (core parsing/domain logic/utilities)
+  - `src/Dependinator.Roslyn/` (Roslyn-based parsing/integration)
+  - `src/Shared/` (shared DTOs/models)
 - Test projects:
-  - `Api.Tests/`
-  - `Dependinator.UI.Tests/`
-  - `Dependinator.Core.Tests/`
-  - `Dependinator.Roslyn.Tests/`
+  - `src/Api.Tests/`
+  - `src/Dependinator.UI.Tests/`
+  - `src/Dependinator.Core.Tests/`
+  - `src/Dependinator.Roslyn.Tests/`
 - VS Code extension (not part of `Dependinator.sln`):
-  - `DependinatorVsCode/` (TypeScript extension packaging the web UI + language server)
+  - `src/DependinatorVsCode/` (TypeScript extension packaging the web UI + language server)
 - Common folders you will work in frequently:
-  - `Dependinator.UI/App/`, `Dependinator.UI/Diagrams/`
-  - `Dependinator.Core/Parsing/`, `Dependinator.Core/Models/`, `Dependinator.Core/Utils/`
-  - `Dependinator.Roslyn/Parsing/`
-
-Note:
-- Legacy sibling folders with undotted names still exist in the repo (`DependinatorWeb/`, `DependinatorWasm/`, `DependinatorCore/`, `DependinatorRoslyn/`, `DependinatorLanguageServer/`), but the active solution/projects use the dotted names above.
+  - `src/Dependinator.UI/App/`, `src/Dependinator.UI/Diagrams/`
+  - `src/Dependinator.Core/Parsing/`, `src/Dependinator.Core/Models/`, `src/Dependinator.Core/Utils/`
+  - `src/Dependinator.Roslyn/Parsing/`
 
 ## Build, Test, and Development Commands
 - Root helper scripts:
@@ -39,19 +36,19 @@ Note:
   - `dotnet restore`
   - `dotnet build Dependinator.sln`
   - `dotnet test Dependinator.sln`
-  - `dotnet run --project Dependinator.Web/Dependinator.Web.csproj`
-  - `dotnet run --project Dependinator.Lsp/Dependinator.Lsp.csproj`
+  - `dotnet run --project src/Dependinator.Web/Dependinator.Web.csproj`
+  - `dotnet run --project src/Dependinator.Lsp/Dependinator.Lsp.csproj`
 - Targeted tests:
-  - `dotnet test Api.Tests/Api.Tests.csproj`
-  - `dotnet test Dependinator.UI.Tests/Dependinator.UI.Tests.csproj`
-  - `dotnet test Dependinator.Core.Tests/Dependinator.Core.Tests.csproj`
-  - `dotnet test Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj`
-- VS Code extension (`DependinatorVsCode/`):
-  - `npm install --prefix ./DependinatorVsCode`
-  - `npm run compile --prefix ./DependinatorVsCode`
-  - `npm run build:extension --prefix ./DependinatorVsCode`
-  - `npm run package --prefix ./DependinatorVsCode`
-  - `npm run install:vsix --prefix ./DependinatorVsCode`
+  - `dotnet test src/Api.Tests/Api.Tests.csproj`
+  - `dotnet test src/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj`
+  - `dotnet test src/Dependinator.Core.Tests/Dependinator.Core.Tests.csproj`
+  - `dotnet test src/Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj`
+- VS Code extension (`src/DependinatorVsCode/`):
+  - `npm install --prefix ./src/DependinatorVsCode`
+  - `npm run compile --prefix ./src/DependinatorVsCode`
+  - `npm run build:extension --prefix ./src/DependinatorVsCode`
+  - `npm run package --prefix ./src/DependinatorVsCode`
+  - `npm run install:vsix --prefix ./src/DependinatorVsCode`
 - Packages and security:
   - `dotnet list Dependinator.sln package --outdated`
   - `dotnet list Dependinator.sln package --vulnerable`
@@ -69,10 +66,10 @@ Note:
   - SWA CLI (`swa`, or `npx @azure/static-web-apps-cli` as fallback)
 - `.devcontainer/Dockerfile` now installs Azure Functions Core Tools for local API runs in the devcontainer.
 - Some helper scripts are convenience wrappers; prefer explicit `dotnet`/`npm` commands when debugging CI or script issues.
-- `install-ext` currently references `./build-vscode` (not present in repo); prefer `npm run package/install:vsix --prefix ./DependinatorVsCode` until that wrapper is fixed.
+- `install-ext` currently references `./build-vscode` (not present in repo); prefer `npm run package/install:vsix --prefix ./src/DependinatorVsCode` until that wrapper is fixed.
 - Local runtime artifacts are intentionally not committed:
-  - `Api/local.settings.json`
-  - `Dependinator.Wasm/publish/`
+  - `src/Api/local.settings.json`
+  - `src/Dependinator.Wasm/publish/`
   - `.azurite/`
 
 ## Coding Style & Naming Conventions
@@ -100,7 +97,7 @@ Note:
 - `Api.Tests` includes:
   - Functions/API auth tests
   - Blob store tests backed by Azurite
-- `Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` dynamically; avoid reintroducing hardcoded `/workspaces/...` assumptions in tests.
+- `src/Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` (at the repo root) dynamically via `src/Dependinator.Core.Tests/Root.cs`; avoid reintroducing hardcoded `/workspaces/...` assumptions in tests.
 
 ## Commit & Pull Request Guidelines
 - Commits: imperative, concise subject (<72 chars), e.g., `Fix parsing of generic constraints`.
@@ -109,7 +106,7 @@ Note:
 - Ensure build/tests pass locally; include new/updated tests for parsing/core logic changes.
 
 ## Security & Configuration Tips
-- Do not commit secrets. Use `Api/local.settings.json` locally (example provided).
+- Do not commit secrets. Use `src/Api/local.settings.json` locally (example provided).
 - Validate third-party updates with `./updatepackages`, then run targeted tests plus a solution build.
 - For dependency/package updates, prefer central version changes in `Directory.Packages.props` and avoid per-project version drift.
 - Cloud sync uses two auth paths:
@@ -121,8 +118,8 @@ Note:
   - `CloudSync__BearerAudience`
 
 ## Agent-Specific Working Guidance
-- Before changing parsing behavior, check both `Dependinator.Core` and `Dependinator.Roslyn` for overlapping logic/tests.
-- When editing functionality used by the VS Code extension, verify whether corresponding assets/build steps exist in `DependinatorVsCode/scripts/`.
+- Before changing parsing behavior, check both `src/Dependinator.Core` and `src/Dependinator.Roslyn` for overlapping logic/tests.
+- When editing functionality used by the VS Code extension, verify whether corresponding assets/build steps exist in `src/DependinatorVsCode/scripts/`.
 - When editing cloud sync:
   - browser-hosted `Dependinator.Wasm` uses direct HTTP to `/api`
   - VS Code-hosted `Dependinator.Wasm` routes cloud sync through the extension host

@@ -4,7 +4,7 @@
 # your Mac browser. Headless-devcontainer friendly: it serves, it doesn't open a window.
 #
 #   ./trace            # most recent trace
-#   ./trace 6          # Dependinator.E2E.Tests/traces/006-*.zip
+#   ./trace 6          # src/Dependinator.E2E.Tests/traces/006-*.zip
 #   ./trace path/to/trace.zip
 #
 # Then in VS Code: Cmd/Ctrl+Shift+P -> "Simple Browser: Show" -> http://localhost:9322
@@ -12,13 +12,13 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
-TRACES_DIR="Dependinator.E2E.Tests/traces"
+TRACES_DIR="src/Dependinator.E2E.Tests/traces"
 PORT="${TRACE_PORT:-9322}"
 
-PW="$(ls Dependinator.E2E.Tests/bin/*/net*/playwright.ps1 2>/dev/null | head -1)"
+PW="$(ls src/Dependinator.E2E.Tests/bin/*/net*/playwright.ps1 2>/dev/null | head -1)"
 if [[ -z "$PW" ]]; then
     echo "playwright.ps1 not found — build the test project first:" >&2
-    echo "  dotnet build Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj" >&2
+    echo "  dotnet build src/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj" >&2
     exit 1
 fi
 

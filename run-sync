@@ -5,11 +5,11 @@
 set -euo pipefail
 
 # Paths and runtime settings used by the script.
-project="./Dependinator.Wasm/Dependinator.Wasm.csproj"
-publish_dir="./Dependinator.Wasm/publish"
+project="./src/Dependinator.Wasm/Dependinator.Wasm.csproj"
+publish_dir="./src/Dependinator.Wasm/publish"
 wwwroot_dir="$publish_dir/wwwroot"
-config_dir="./Dependinator.Wasm"
-api_dir="./Api"
+config_dir="./src/Dependinator.Wasm"
+api_dir="./src/Api"
 azurite_dir="./.azurite"
 port="${PORT:-5000}"
 host="${HOST:-127.0.0.1}"

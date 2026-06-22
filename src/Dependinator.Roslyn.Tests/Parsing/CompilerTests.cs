@@ -9,7 +9,7 @@ public class CompilerTests
     // [Fact]
     public async Task TestDependinatorUISourceParserAsync()
     {
-        var projectPath = Path.Combine(Root.SolutionFolderPath, "Dependinator.UI", "Dependinator.UI.csproj");
+        var projectPath = Path.Combine(Root.SrcFolderPath, "Dependinator.UI", "Dependinator.UI.csproj");
 
         using var workspace = Compiler.CreateWorkspace();
         var project = await workspace.OpenProjectAsync(projectPath);

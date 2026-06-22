@@ -1,2 +1,2 @@
 #!/bin/bash
-dotnet build ./Dependinator.Web/Dependinator.Web.csproj
+dotnet build ./src/Dependinator.Web/Dependinator.Web.csproj

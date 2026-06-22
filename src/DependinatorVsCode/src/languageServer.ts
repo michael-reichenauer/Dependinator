@@ -23,6 +23,7 @@ export async function startLanguageServer(
     const workspaceProject = workspaceFolder
         ? vscode.Uri.joinPath(
             workspaceFolder,
+            "src",
             "Dependinator.Lsp",
             "Dependinator.Lsp.csproj"
         )

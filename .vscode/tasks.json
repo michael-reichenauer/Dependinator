@@ -7,7 +7,7 @@
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/Dependinator.Web/Dependinator.Web.csproj",
+				"${workspaceFolder}/src/Dependinator.Web/Dependinator.Web.csproj",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
@@ -24,7 +24,7 @@
 			"type": "process",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/Api"
+				"cwd": "${workspaceFolder}/src/Api"
 			}
 		},
 		{
@@ -43,7 +43,7 @@
 			},
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/Api"
+				"cwd": "${workspaceFolder}/src/Api"
 			}
 		},
 		{
@@ -59,7 +59,7 @@
 			"type": "process",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/Api"
+				"cwd": "${workspaceFolder}/src/Api"
 			}
 		},
 		{
@@ -76,14 +76,14 @@
 			"dependsOn": "clean release (functions)",
 			"problemMatcher": "$msCompile",
 			"options": {
-				"cwd": "${workspaceFolder}/Api"
+				"cwd": "${workspaceFolder}/src/Api"
 			}
 		},
 		{
 			"type": "func",
 			"dependsOn": "build (functions)",
 			"options": {
-				"cwd": "${workspaceFolder}/Api/bin/Debug/net10.0"
+				"cwd": "${workspaceFolder}/src/Api/bin/Debug/net10.0"
 			},
 			"command": "host start",
 			"isBackground": true,
@@ -93,7 +93,7 @@
 			"label": "start sync services",
 			"type": "shell",
 			"dependsOn": "build",
-			"command": "mkdir -p .azurite && (npx --yes azurite --silent --skipApiVersionCheck --location .azurite &) && cd Api && func start --port 7071",
+			"command": "mkdir -p .azurite && (npx --yes azurite --silent --skipApiVersionCheck --location .azurite &) && cd src/Api && func start --port 7071",
 			"isBackground": true,
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -115,7 +115,7 @@
 			"type": "shell",
 			"command": "npm install",
 			"options": {
-				"cwd": "${workspaceFolder}/DependinatorVsCode"
+				"cwd": "${workspaceFolder}/src/DependinatorVsCode"
 			},
 			"problemMatcher": []
 		},
@@ -124,7 +124,7 @@
 			"type": "shell",
 			"command": "npm run compile",
 			"options": {
-				"cwd": "${workspaceFolder}/DependinatorVsCode"
+				"cwd": "${workspaceFolder}/src/DependinatorVsCode"
 			},
 			"problemMatcher": "$tsc"
 		},
@@ -143,13 +143,13 @@
 		{
 			"label": "Dependinator: Prepare WASM",
 			"type": "shell",
-			"command": "bash DependinatorVsCode/scripts/prepare-wasm.sh",
+			"command": "bash src/DependinatorVsCode/scripts/prepare-wasm.sh",
 			"problemMatcher": []
 		},
 		{
 			"label": "Dependinator: Prepare LSP",
 			"type": "shell",
-			"command": "bash DependinatorVsCode/scripts/prepare-server.sh",
+			"command": "bash src/DependinatorVsCode/scripts/prepare-server.sh",
 			"problemMatcher": []
 		},
 		{
