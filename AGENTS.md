@@ -65,7 +65,7 @@
   - SWA CLI (`swa`, or `npx @azure/static-web-apps-cli` as fallback)
 - `.devcontainer/Dockerfile` now installs Azure Functions Core Tools for local API runs in the devcontainer.
 - Some helper scripts are convenience wrappers; prefer explicit `dotnet`/`npm` commands when debugging CI or script issues.
-- `install-ext` currently references `./build-vscode` (not present in repo); prefer `npm run package/install:vsix --prefix ./src/DependinatorVsCode` until that wrapper is fixed.
+- `install-ext` builds the extension via `./build-ext`, then installs it with `npm run install:vsix --prefix ./src/DependinatorVsCode`.
 - Local runtime artifacts are intentionally not committed:
   - `src/Api/local.settings.json`
   - `src/Dependinator.Wasm/publish/`
