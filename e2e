@@ -17,6 +17,9 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
+# Shared Azurite + Azure Functions helpers (stack_stack_port_is_open, stack_start_*).
+source ./scripts/_stack.sh
+
 BASE_URL="${E2E_BASE_URL:-http://localhost:5000}"
 BROWSERS=("chromium")
 SYNC=0
@@ -34,8 +37,8 @@ while getopts "ab:st" opt; do
 done
 
 APP_PID=""
-AZURITE_PID=""
-FUNC_PID=""
+STACK_AZURITE_PID=""
+STACK_FUNC_PID=""
 JWKS_PID=""
 SETTINGS_BACKUP=""        # original src/Api/local.settings.json, restored on exit
 SETTINGS_CREATED=0        # 1 if we created local.settings.json (remove on exit)
@@ -46,18 +49,18 @@ cleanup() {
         kill "$APP_PID" 2>/dev/null
         wait "$APP_PID" 2>/dev/null
     fi
-    if [[ -n "$FUNC_PID" ]]; then
-        echo "Stopping Functions host (pid $FUNC_PID)..."
-        kill "$FUNC_PID" 2>/dev/null
+    if [[ -n "$STACK_FUNC_PID" ]]; then
+        echo "Stopping Functions host (pid $STACK_FUNC_PID)..."
+        kill "$STACK_FUNC_PID" 2>/dev/null
         # 'func start' spawns a worker (Api.dll) child that outlives the parent and keeps
         # holding port 7071; reap the whole tree (only safe because we started it — when a
         # host is already running we reuse it and never set FUNC_PID).
         pkill -9 -f "func start --port 7071" 2>/dev/null
         pkill -9 -f "src/Api/bin/output/Api.dll" 2>/dev/null
     fi
-    if [[ -n "$AZURITE_PID" ]]; then
-        echo "Stopping Azurite (pid $AZURITE_PID)..."
-        kill "$AZURITE_PID" 2>/dev/null
+    if [[ -n "$STACK_AZURITE_PID" ]]; then
+        echo "Stopping Azurite (pid $STACK_AZURITE_PID)..."
+        kill "$STACK_AZURITE_PID" 2>/dev/null
         # When started via 'npx azurite' the real server is a child node process that
         # outlives the npx wrapper; reap it too (only when we started it).
         pkill -9 -f "azurite --silent --skipApiVersionCheck --location ./.azurite" 2>/dev/null
@@ -75,10 +78,6 @@ cleanup() {
     fi
 }
 trap cleanup EXIT
-
-port_is_open() {
-    bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
-}
 
 # ./e2e starts the app itself in test mode (DEPENDINATOR_E2E=1) so it loads the embedded
 # demo model deterministically. If something is already serving the URL (e.g. ./watch),
@@ -108,7 +107,7 @@ if [[ "$SYNC" == "1" ]]; then
     fi
 
     # Start the test JWKS server (serves the public key the Functions host validates with).
-    if port_is_open "$JWKS_PORT"; then
+    if stack_port_is_open "$JWKS_PORT"; then
         echo "Test JWKS server already running on $JWKS_PORT, reusing it."
     else
         echo "Starting test JWKS server on $JWKS_PORT..."
@@ -117,21 +116,15 @@ if [[ "$SYNC" == "1" ]]; then
     fi
 
     # Start Azurite unless something already serves its blob port (10000).
-    if port_is_open 10000; then
+    if stack_port_is_open 10000; then
         echo "Azurite already running, reusing it."
     else
         echo "Starting Azurite..."
-        mkdir -p "$azurite_dir"
-        if command -v azurite >/dev/null 2>&1; then
-            azurite --silent --skipApiVersionCheck --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
-        else
-            npx --yes azurite --silent --skipApiVersionCheck --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
-        fi
-        AZURITE_PID="$!"
+        stack_start_azurite "$azurite_dir"
     fi
 
     # Start the Functions host unless one is already listening on 7071.
-    if port_is_open 7071; then
+    if stack_port_is_open 7071; then
         echo "Azure Functions host already running on 7071, reusing it."
         echo "WARNING: sync tests need CloudSync__ClerkIssuer=$E2E_CLERK_ISSUER; the" >&2
         echo "         already-running host may use a different issuer and fail them." >&2
@@ -150,20 +143,7 @@ if [[ "$SYNC" == "1" ]]; then
             "$local_settings" >"$tmp_settings" && mv "$tmp_settings" "$local_settings"
 
         echo "Starting Azure Functions host on 7071 (issuer $E2E_CLERK_ISSUER)..."
-        (
-            cd "$api_dir"
-            func start --port 7071
-        ) &
-        FUNC_PID="$!"
-
-        for _ in $(seq 1 120); do
-            port_is_open 7071 && break
-            sleep 0.5
-        done
-        if ! port_is_open 7071; then
-            echo "Azure Functions host did not start on port 7071." >&2
-            exit 1
-        fi
+        stack_start_func "$api_dir" 7071
     fi
     E2E_SYNC=1
 fi
