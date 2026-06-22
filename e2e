@@ -6,16 +6,19 @@
 #   ./e2e -a            run on all three browsers (e.g. before a release)
 #   ./e2e -s            also start the cloud-sync stack (Azurite + Functions on
 #                       7071) so sync tests ([SyncFact]) run; needs func+azurite
-#   ./e2e -t            record a Playwright trace per test into ./Dependinator.E2E.Tests/traces
+#   ./e2e -t            record a Playwright trace per test into ./src/Dependinator.E2E.Tests/traces
 #                       (open a .zip at https://trace.playwright.dev). CI sets this on failure.
 #
 # Starts Dependinator.Web itself in test mode (embedded demo model) and stops it
 # afterwards. If an app is already running at http://localhost:5000 (e.g. ./watch),
 # it exits with an error asking you to stop it first — so tests always run against a
 # known model. With -s, an already-running Azurite/Functions host is reused; otherwise
-# they are started and stopped here (same as ./watch-sync).
+# they are started and stopped here (same as ./watch).
 set -uo pipefail
 cd "$(dirname "$0")"
+
+# Shared Azurite + Azure Functions helpers (stack_stack_port_is_open, stack_start_*).
+source ./scripts/_stack.sh
 
 BASE_URL="${E2E_BASE_URL:-http://localhost:5000}"
 BROWSERS=("chromium")
@@ -34,30 +37,30 @@ while getopts "ab:st" opt; do
 done
 
 APP_PID=""
-AZURITE_PID=""
-FUNC_PID=""
+STACK_AZURITE_PID=""
+STACK_FUNC_PID=""
 JWKS_PID=""
-SETTINGS_BACKUP=""        # original Api/local.settings.json, restored on exit
+SETTINGS_BACKUP=""        # original src/Api/local.settings.json, restored on exit
 SETTINGS_CREATED=0        # 1 if we created local.settings.json (remove on exit)
-local_settings="./Api/local.settings.json"
+local_settings="./src/Api/local.settings.json"
 cleanup() {
     if [[ -n "$APP_PID" ]]; then
         echo "Stopping app (pid $APP_PID)..."
         kill "$APP_PID" 2>/dev/null
         wait "$APP_PID" 2>/dev/null
     fi
-    if [[ -n "$FUNC_PID" ]]; then
-        echo "Stopping Functions host (pid $FUNC_PID)..."
-        kill "$FUNC_PID" 2>/dev/null
+    if [[ -n "$STACK_FUNC_PID" ]]; then
+        echo "Stopping Functions host (pid $STACK_FUNC_PID)..."
+        kill "$STACK_FUNC_PID" 2>/dev/null
         # 'func start' spawns a worker (Api.dll) child that outlives the parent and keeps
         # holding port 7071; reap the whole tree (only safe because we started it — when a
         # host is already running we reuse it and never set FUNC_PID).
         pkill -9 -f "func start --port 7071" 2>/dev/null
-        pkill -9 -f "Api/bin/output/Api.dll" 2>/dev/null
+        pkill -9 -f "src/Api/bin/output/Api.dll" 2>/dev/null
     fi
-    if [[ -n "$AZURITE_PID" ]]; then
-        echo "Stopping Azurite (pid $AZURITE_PID)..."
-        kill "$AZURITE_PID" 2>/dev/null
+    if [[ -n "$STACK_AZURITE_PID" ]]; then
+        echo "Stopping Azurite (pid $STACK_AZURITE_PID)..."
+        kill "$STACK_AZURITE_PID" 2>/dev/null
         # When started via 'npx azurite' the real server is a child node process that
         # outlives the npx wrapper; reap it too (only when we started it).
         pkill -9 -f "azurite --silent --skipApiVersionCheck --location ./.azurite" 2>/dev/null
@@ -66,7 +69,7 @@ cleanup() {
         echo "Stopping test JWKS server (pid $JWKS_PID)..."
         kill "$JWKS_PID" 2>/dev/null
     fi
-    # Restore Api/local.settings.json to how we found it (we point ClerkIssuer at the
+    # Restore src/Api/local.settings.json to how we found it (we point ClerkIssuer at the
     # local test issuer while sync tests run).
     if [[ "$SETTINGS_CREATED" == "1" ]]; then
         rm -f "$local_settings"
@@ -75,10 +78,6 @@ cleanup() {
     fi
 }
 trap cleanup EXIT
-
-port_is_open() {
-    bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
-}
 
 # ./e2e starts the app itself in test mode (DEPENDINATOR_E2E=1) so it loads the embedded
 # demo model deterministically. If something is already serving the URL (e.g. ./watch),
@@ -90,14 +89,14 @@ if curl -sf -o /dev/null "$BASE_URL"; then
 fi
 
 # Optionally bring up the cloud-sync stack (Azurite + Azure Functions on 7071 + a
-# local test JWKS server), mirroring ./watch-sync, so the Blazor app can reach the
+# local test JWKS server), mirroring ./watch, so the Blazor app can reach the
 # cloud API during tests. Auth uses a self-minted token validated against the test
-# JWKS instead of real Clerk — see Dependinator.E2E.Tests/TestAuth/.
+# JWKS instead of real Clerk — see src/Dependinator.E2E.Tests/TestAuth/.
 E2E_SYNC=0
 JWKS_PORT="${E2E_JWKS_PORT:-7072}"
 E2E_CLERK_ISSUER="http://127.0.0.1:${JWKS_PORT}"
 if [[ "$SYNC" == "1" ]]; then
-    api_dir="./Api"
+    api_dir="./src/Api"
     azurite_dir="./.azurite"
     local_settings_example="$api_dir/local.settings.example.json"
 
@@ -108,30 +107,24 @@ if [[ "$SYNC" == "1" ]]; then
     fi
 
     # Start the test JWKS server (serves the public key the Functions host validates with).
-    if port_is_open "$JWKS_PORT"; then
+    if stack_port_is_open "$JWKS_PORT"; then
         echo "Test JWKS server already running on $JWKS_PORT, reusing it."
     else
         echo "Starting test JWKS server on $JWKS_PORT..."
-        node ./Dependinator.E2E.Tests/TestAuth/jwks-server.js "$JWKS_PORT" &
+        node ./src/Dependinator.E2E.Tests/TestAuth/jwks-server.js "$JWKS_PORT" &
         JWKS_PID="$!"
     fi
 
     # Start Azurite unless something already serves its blob port (10000).
-    if port_is_open 10000; then
+    if stack_port_is_open 10000; then
         echo "Azurite already running, reusing it."
     else
         echo "Starting Azurite..."
-        mkdir -p "$azurite_dir"
-        if command -v azurite >/dev/null 2>&1; then
-            azurite --silent --skipApiVersionCheck --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
-        else
-            npx --yes azurite --silent --skipApiVersionCheck --location "$azurite_dir" --debug "$azurite_dir/debug.log" &
-        fi
-        AZURITE_PID="$!"
+        stack_start_azurite "$azurite_dir"
     fi
 
     # Start the Functions host unless one is already listening on 7071.
-    if port_is_open 7071; then
+    if stack_port_is_open 7071; then
         echo "Azure Functions host already running on 7071, reusing it."
         echo "WARNING: sync tests need CloudSync__ClerkIssuer=$E2E_CLERK_ISSUER; the" >&2
         echo "         already-running host may use a different issuer and fail them." >&2
@@ -150,20 +143,7 @@ if [[ "$SYNC" == "1" ]]; then
             "$local_settings" >"$tmp_settings" && mv "$tmp_settings" "$local_settings"
 
         echo "Starting Azure Functions host on 7071 (issuer $E2E_CLERK_ISSUER)..."
-        (
-            cd "$api_dir"
-            func start --port 7071
-        ) &
-        FUNC_PID="$!"
-
-        for _ in $(seq 1 120); do
-            port_is_open 7071 && break
-            sleep 0.5
-        done
-        if ! port_is_open 7071; then
-            echo "Azure Functions host did not start on port 7071." >&2
-            exit 1
-        fi
+        stack_start_func "$api_dir" 7071
     fi
     E2E_SYNC=1
 fi
@@ -179,7 +159,7 @@ echo "Starting Dependinator.Web (test mode)..."
 # because the config key contains dots, which a bare VAR=value assignment can't have.
 env DEPENDINATOR_E2E=1 \
     "Logging__LogLevel__System.Net.Http.HttpClient.HttpCloudSyncService=Warning" \
-    dotnet run --project ./Dependinator.Web/Dependinator.Web.csproj &
+    dotnet run --project ./src/Dependinator.Web/Dependinator.Web.csproj &
 APP_PID=$!
 
 for _ in $(seq 1 60); do
@@ -203,7 +183,7 @@ fi
 # leave stale higher-numbered files behind. Only when tracing; done once before the
 # browser loop so -a keeps all browsers' traces from this run.
 if [[ "$E2E_TRACE" == "1" ]]; then
-    rm -rf ./Dependinator.E2E.Tests/traces
+    rm -rf ./src/Dependinator.E2E.Tests/traces
 fi
 
 RESULT=0
@@ -212,14 +192,14 @@ for browser in "${BROWSERS[@]}"; do
     echo "=== Running e2e tests on $browser ==="
     if ! E2E=1 E2E_SYNC="$E2E_SYNC" E2E_CLERK_ISSUER="$E2E_CLERK_ISSUER" E2E_TRACE="$E2E_TRACE" \
         BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
-        dotnet test ./Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj; then
+        dotnet test ./src/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj; then
         RESULT=1
     fi
 done
 
 if [[ "$E2E_TRACE" == "1" ]]; then
     echo ""
-    echo "Traces recorded in ./Dependinator.E2E.Tests/traces — view one with: ./trace"
+    echo "Traces recorded in ./src/Dependinator.E2E.Tests/traces — view one with: ./trace"
 fi
 
 exit $RESULT

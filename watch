@@ -1,4 +1,38 @@
 #!/bin/bash
+
+# Starts Azurite + Azure Functions host in the background, then runs
+# `dotnet watch` on the Blazor Server project with cloud sync enabled.
+
+set -euo pipefail
+cd "$(dirname "$0")"
+
+# Shared Azurite + Azure Functions helpers.
+source ./scripts/_stack.sh
+
+api_dir="./src/Api"
+azurite_dir="./.azurite"
+STACK_AZURITE_PID=""
+STACK_FUNC_PID=""
+
+cleanup() {
+    if [[ -n "$STACK_AZURITE_PID" ]] && kill -0 "$STACK_AZURITE_PID" 2>/dev/null; then
+        kill "$STACK_AZURITE_PID" 2>/dev/null || true
+    fi
+    if [[ -n "$STACK_FUNC_PID" ]] && kill -0 "$STACK_FUNC_PID" 2>/dev/null; then
+        kill "$STACK_FUNC_PID" 2>/dev/null || true
+    fi
+}
+
+trap cleanup EXIT INT TERM
+
+stack_seed_local_settings "$api_dir"
+stack_require_func
+
+# Bring up Azurite and the Functions host (fails early if the API never starts).
+stack_start_azurite "$azurite_dir"
+stack_start_func "$api_dir" 7071
+
+# Run dotnet watch on the Blazor Server project.
 export DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
 export DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1
-dotnet watch --project ./Dependinator.Web/Dependinator.Web.csproj
+dotnet watch --project ./src/Dependinator.Web/Dependinator.Web.csproj
