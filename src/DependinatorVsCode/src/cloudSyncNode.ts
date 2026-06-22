@@ -56,14 +56,6 @@ const productionClerkAccountsUrl = "https://renewed-hen-98.accounts.dev";
 const productionClerkPublishableKey = "pk_test_cmVuZXdlZC1oZW4tOTguY2xlcmsuYWNjb3VudHMuZGV2JA";
 const callbackTimeoutMilliseconds = 5 * 60 * 1000;
 
-// WORKAROUND: The auth provider's free tier caps token lifetime ('exp') at 7 days. The API
-// ignores 'exp' and instead accepts tokens up to CloudSync__MaxTokenAgeDays (default 180)
-// after their 'iat' (issued-at) time — see Api/CloudSyncBearerTokenValidator.cs. This
-// constant must match so the stored token is kept locally for the same period.
-// TO REVERT (once a paid plan allows longer token lifetimes): remove this constant and
-// restore the 'exp'-based check in readValidTokenAsync().
-const tokenMaxAgeDays = 180;
-
 export function createCloudSyncBridge(context: vscode.ExtensionContext): CloudSyncBridge {
     return new CloudSyncBridgeImpl(context);
 }
@@ -453,21 +445,10 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
     }
 
     async readValidTokenAsync(): Promise<string | undefined> {
-        const token = await this.context.secrets.get(tokenSecretName);
-        if (!token)
-            return undefined;
-
-        // Part of the max-token-age WORKAROUND (see tokenMaxAgeDays above): the API ignores
-        // the token's 'exp', so keep the token until 'iat' + tokenMaxAgeDays instead.
-        const claims = this.readTokenClaims(token);
-        const issuedAt = typeof claims.iat === "number" ? claims.iat * 1000 : 0;
-        const expiry = issuedAt ? issuedAt + tokenMaxAgeDays * 24 * 60 * 60 * 1000 : 0;
-        if (!expiry || expiry <= Date.now()) {
-            await this.context.secrets.delete(tokenSecretName);
-            return undefined;
-        }
-
-        return token;
+        // Token validity — including the max-token-age workaround — is enforced solely by the API
+        // (see Api/CloudSyncOptions.cs, MaxTokenAgeDays). A stored token is returned as-is; if the
+        // API rejects it, getAuthStateAsync()/requireTokenAsync() delete it and prompt re-login.
+        return await this.context.secrets.get(tokenSecretName);
     }
 
     async getAuthStateFromTokenAsync(token: string, configuration: CloudSyncConfig): Promise<CloudAuthState> {
@@ -571,24 +552,6 @@ class CloudSyncBridgeImpl implements CloudSyncBridge {
             default:
                 return `Cloud sync request failed with status code ${status}.`;
         }
-    }
-
-    readTokenClaims(token: string): Record<string, unknown> {
-        const tokenParts = token.split(".");
-        if (tokenParts.length < 2)
-            throw new Error("Cloud sync token format was invalid.");
-
-        return JSON.parse(this.base64UrlDecode(tokenParts[1])) as Record<string, unknown>;
-    }
-
-    base64UrlDecode(value: string): string {
-        const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
-        const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
-        return decodeURIComponent(
-            Array.from(atob(`${normalized}${padding}`))
-                .map(char => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
-                .join("")
-        );
     }
 
     createSignedOutState(isAvailable: boolean): CloudAuthState {
