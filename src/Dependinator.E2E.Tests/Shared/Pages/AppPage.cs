@@ -48,6 +48,9 @@ public sealed class AppPage
     // The toolbar edit-mode toggle (AppBar.razor). Toggles NodeSvg.IsEditingEnabled.
     public ILocator ToolbarEdit => page.GetByTestId("toolbar-edit");
 
+    // The cloud sync/auth button (AppBar.razor). Clicking it while signed out starts login.
+    public ILocator CloudButton => page.GetByTestId("toolbar-cloud");
+
     // A MudBlazor dialog (NodeProperties / MudMessageBox) rendered as role="dialog".
     public ILocator Dialog => page.GetByRole(AriaRole.Dialog);
 
