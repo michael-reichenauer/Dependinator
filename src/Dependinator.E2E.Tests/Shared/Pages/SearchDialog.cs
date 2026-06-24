@@ -12,6 +12,7 @@ public sealed class SearchDialog
 
     public ILocator Field => page.GetByPlaceholder("Search nodes…");
     public ILocator Results => page.Locator(".search-dialog__item");
+    public ILocator SelectedItem => page.Locator(".search-dialog__item--selected");
     public ILocator EmptyResult => page.Locator(".search-dialog__empty");
 
     public Task FillAsync(string query) => Field.FillAsync(query);

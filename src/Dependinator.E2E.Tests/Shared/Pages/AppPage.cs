@@ -37,6 +37,34 @@ public sealed class AppPage
     // present whenever a node is selected.
     public ILocator NodeToolbarMenu => page.GetByTestId("node-menu");
 
+    // The selected-node toolbar's References/Dependencies buttons (NodeToolbar.razor).
+    public ILocator NodeReferencesButton => page.GetByTestId("node-references");
+    public ILocator NodeDependenciesButton => page.GetByTestId("node-dependencies");
+
+    // The grow/shrink buttons, shown on the node toolbar only while edit mode is enabled.
+    public ILocator NodeIncreaseSize => page.GetByTestId("node-increase-size");
+    public ILocator NodeDecreaseSize => page.GetByTestId("node-decrease-size");
+
+    // The toolbar edit-mode toggle (AppBar.razor). Toggles NodeSvg.IsEditingEnabled.
+    public ILocator ToolbarEdit => page.GetByTestId("toolbar-edit");
+
+    // The cloud sync/auth button (AppBar.razor). Clicking it while signed out starts login.
+    public ILocator CloudButton => page.GetByTestId("toolbar-cloud");
+
+    // A MudBlazor dialog (NodeProperties / MudMessageBox) rendered as role="dialog".
+    public ILocator Dialog => page.GetByRole(AriaRole.Dialog);
+
+    // The dependencies/references explorer tree (DependenciesTree.razor popover). The tree
+    // renders nested .mud-treeview lists, so take the outermost (first) one.
+    public ILocator DependenciesTree => page.Locator(".mud-treeview").First;
+
+    // Open the app menu and return a menu-item locator by its data-testid.
+    public async Task<ILocator> OpenMenuItemAsync(string testId)
+    {
+        await Menu.ClickAsync();
+        return MenuItem(testId);
+    }
+
     // Select a diagram node by its exact group label (the *full* node name, e.g.
     // "Demo.Core.RootClass"). We click via the mouse at the computed coordinates rather than
     // Locator.ClickAsync because the SVG canvas re-renders constantly (which fails
