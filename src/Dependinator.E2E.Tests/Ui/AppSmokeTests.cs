@@ -1,5 +1,6 @@
 using Dependinator.E2E.Tests.Shared;
 using Dependinator.E2E.Tests.Shared.Pages;
+using Microsoft.Playwright;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
@@ -57,6 +58,34 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Selecting a node shows its context toolbar (NodeToolbar.razor, node-* hooks).
         await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
+    public async Task AppMenu_ShouldOpenAboutDialog()
+    {
+        await App.GotoMainPageAsync();
+
+        await (await App.OpenMenuItemAsync("menu-about")).ClickAsync();
+
+        // The About message box shows the build version.
+        await Expect(App.Dialog).ToBeVisibleAsync();
+        await Expect(App.Dialog).ToContainTextAsync("Version:");
+    }
+
+    [E2EFact]
+    public async Task AppMenu_ShouldConfirmBeforeResettingModel()
+    {
+        await App.GotoMainPageAsync();
+
+        await (await App.OpenMenuItemAsync("menu-reset-model")).ClickAsync();
+
+        // Reset is destructive, so it must ask for confirmation first.
+        await Expect(App.Dialog).ToBeVisibleAsync();
+        await Expect(App.Dialog).ToContainTextAsync("reset model");
+
+        // Cancel so the loaded demo model is left intact.
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Cancel" }).ClickAsync();
+        await Expect(App.Dialog).ToBeHiddenAsync();
     }
 
     [E2EFact]

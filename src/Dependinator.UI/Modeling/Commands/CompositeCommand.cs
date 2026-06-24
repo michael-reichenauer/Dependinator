@@ -15,7 +15,7 @@ class CompositeCommand : Command
     {
         typeName = commands.First().Type;
         timeStamp = commands.Last().TimeStamp;
-        this.commands.Add(commands);
+        this.commands.AddRange(commands);
     }
 
     public void Add(Command command)
