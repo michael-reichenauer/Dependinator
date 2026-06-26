@@ -9,11 +9,15 @@ namespace Dependinator.E2E.Tests.Shared;
 // Base class for UI tests against a running app (started via ./watch
 // or auto-started by the ./e2e script). Browser is selected with the BROWSER
 // environment variable (chromium [default], firefox or webkit); the target app
-// with E2E_BASE_URL (default Blazor Server at http://localhost:5000).
+// with E2E_BASE_URL (default Blazor Server at http://127.0.0.1:5000).
 public class E2ETestBase : PageTest
 {
+    // 127.0.0.1 (not localhost): the app binds IPv4 loopback only (Program.cs
+    // Listen(IPAddress.Loopback, 5000)). With "localhost" this client can resolve to ::1
+    // and get "connection refused" even though the app is up. The ./e2e script overrides
+    // this via E2E_BASE_URL, but keep the default consistent for manual ./watch runs.
     protected static readonly string BaseUrl =
-        Environment.GetEnvironmentVariable("E2E_BASE_URL") ?? "http://localhost:5000";
+        Environment.GetEnvironmentVariable("E2E_BASE_URL") ?? "http://127.0.0.1:5000";
 
     private static bool isAppVerified;
 

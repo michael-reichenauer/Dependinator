@@ -27,16 +27,39 @@ public class JSInterop : IJSInterop, IAsyncDisposable
     public async ValueTask Call(string functionName, params object?[]? args)
     {
         //Log.Info("Call", functionName);
-        IJSObjectReference module = await GetModuleAsync();
-        await module.InvokeVoidAsync(functionName, args);
+        try
+        {
+            IJSObjectReference module = await GetModuleAsync();
+            await module.InvokeVoidAsync(functionName, args);
+        }
+        catch (Exception e) when (IsCircuitGone(e))
+        {
+            // The Blazor circuit/JS runtime is gone (browser closed, circuit torn down).
+            // A fire-and-forget call racing teardown would otherwise surface as an
+            // unobserved task exception and shut the whole app down (see ExceptionHandling).
+        }
     }
 
     public async ValueTask<T> Call<T>(string functionName, params object?[]? args)
     {
         //Log.Info("Call", functionName);
-        IJSObjectReference module = await GetModuleAsync();
-        return await module.InvokeAsync<T>(functionName, args);
+        try
+        {
+            IJSObjectReference module = await GetModuleAsync();
+            return await module.InvokeAsync<T>(functionName, args);
+        }
+        catch (Exception e) when (IsCircuitGone(e))
+        {
+            // Circuit/runtime gone (see Call above). Return default so callers handle it
+            // as "no result" (e.g. GetBoundingRectangle treats null as R.None) instead of
+            // letting an unobserved exception terminate the app.
+            return default!;
+        }
     }
+
+    // True when an exception means the Blazor circuit / JS runtime is no longer available,
+    // so the JS call can never succeed and should be swallowed rather than treated as fatal.
+    static bool IsCircuitGone(Exception e) => e is JSDisconnectedException or ObjectDisposedException;
 
     public DotNetObjectReference<TValue> Reference<TValue>(TValue value)
         where TValue : class

@@ -20,7 +20,11 @@ cd "$(dirname "$0")"
 # Shared Azurite + Azure Functions helpers (stack_stack_port_is_open, stack_start_*).
 source ./scripts/_stack.sh
 
-BASE_URL="${E2E_BASE_URL:-http://localhost:5000}"
+# Use 127.0.0.1 (not localhost) so the bash readiness curl and the .NET test client both
+# hit the IPv4 loopback the app actually binds (Program.cs Listen(IPAddress.Loopback, 5000)).
+# With "localhost" the test's HttpClient can resolve to ::1, which nothing listens on, and
+# fail with "connection refused" even though the app is up on 127.0.0.1.
+BASE_URL="${E2E_BASE_URL:-http://127.0.0.1:5000}"
 BROWSERS=("chromium")
 SYNC=0
 # E2E_TRACE may already be set in the environment (e.g. by CI); -t turns it on too.
