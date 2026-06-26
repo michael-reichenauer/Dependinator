@@ -73,12 +73,12 @@
         }
     },
     "scripts": {
-        "compile": "tsc -p tsconfig.node.json && tsc -p tsconfig.web.json",
-        "watch": "tsc -w -p tsconfig.node.json",
-        "watch:web": "tsc -w -p tsconfig.web.json",
+        "check-types": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+        "compile": "npm run check-types && node esbuild.js",
+        "watch": "node esbuild.js --watch",
         "prepare:wasm": "bash scripts/prepare-wasm.sh",
         "prepare:server": "bash scripts/prepare-server.sh",
-        "build:extension": "npm run prepare:wasm && npm run prepare:server && npm run compile",
+        "build:extension": "npm run prepare:wasm && npm run prepare:server && npm run check-types && node esbuild.js --production",
         "package": "vsce package --out dependinator.vsix",
         "install:vsix": "code --install-extension dependinator.vsix --force",
         "package:linux-x64": "VSCODE_TARGET=linux-x64 vsce package --target linux-x64",
@@ -96,6 +96,7 @@
         "@types/node": "^20.19.33",
         "@types/vscode": "^1.84.0",
         "@vscode/vsce": "^3.2.0",
+        "esbuild": "^0.25.0",
         "typescript": "^5.4.5"
     }
 }
