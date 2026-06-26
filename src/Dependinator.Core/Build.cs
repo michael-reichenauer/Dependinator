@@ -92,7 +92,11 @@ public static class Build
         return "0000000000000000000000000000000000000000";
     }
 
-    public static readonly string SolutionFolderPath = Path.GetDirectoryName(Path.GetDirectoryName(CurrentFilePath()))!;
+    // Build.cs lives at <repo>/src/Dependinator.Core/Build.cs; the solution folder is the
+    // repo root, three levels up (file -> Dependinator.Core -> src -> repo root).
+    public static readonly string SolutionFolderPath = Path.GetDirectoryName(
+        Path.GetDirectoryName(Path.GetDirectoryName(CurrentFilePath()))
+    )!;
 
     static string CurrentFilePath([CallerFilePath] string sourceFilePath = "") => sourceFilePath;
 }
