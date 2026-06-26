@@ -22,7 +22,9 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 - `src/Dependinator.Roslyn/` — Roslyn-based parsing (`Parsing/`)
 - `src/Shared/` — shared DTOs/models between client and API
 
-**Test projects:** `src/Api.Tests/`, `src/Dependinator.UI.Tests/`, `src/Dependinator.Core.Tests/`, `src/Dependinator.Roslyn.Tests/`
+**Test projects:** `src/Api.Tests/`, `src/Dependinator.UI.Tests/`, `src/Dependinator.Core.Tests/`, `src/Dependinator.Roslyn.Tests/`, `src/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `src/Dependinator.E2E.Tests/` (Playwright UI tests)
+
+The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution folders.
 
 **VS Code extension (not part of `Dependinator.sln`):**
 - `src/DependinatorVsCode/` — TypeScript extension packaging the web UI + language server (`src/extension.ts`, `src/webview.ts`, `src/languageServer.ts`, `src/cloudSyncNode.ts`)
@@ -45,6 +47,7 @@ dotnet test src/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
 dotnet test src/Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
 dotnet test src/Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj
 dotnet test src/Api.Tests/Api.Tests.csproj
+dotnet test src/Dependinator.Architecture.Tests/Dependinator.Architecture.Tests.csproj
 
 # UI (Playwright) tests — see src/Dependinator.E2E.Tests/README.md
 ./e2e                                          # chromium; auto-starts app if not running
@@ -92,6 +95,8 @@ dotnet list Dependinator.sln package --vulnerable
 **VS Code extension cloud sync:** the extension serves a self-contained Clerk sign-in page from a local HTTP callback server. The `dependinator.cloudSync.baseUrl` setting controls which API endpoint is used (production, SWA CLI, or Functions direct).
 
 **VS Code extension:** when editing functionality used by the extension, check `src/DependinatorVsCode/scripts/` for corresponding build steps.
+
+**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`). `src/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, hosts, or UI frameworks (MudBlazor/ASP.NET Core), and Shared must not reference other Dependinator projects. Don't add references against this direction.
 
 ## Commit Style
 
