@@ -20,10 +20,18 @@ public static class ExceptionHandling
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             HandleException("app domain exception", e.ExceptionObject as Exception ?? new Exception());
 
-        // Log exceptions that hasn't been handled when a Task is finalized.
+        // Unobserved task exceptions are failures of fire-and-forget tasks that nobody
+        // awaited. Since .NET 4.5 these do NOT terminate the process by default, and for a
+        // long-running server host they must not: when a Blazor Server circuit is torn down
+        // (the browser navigates away or closes) while the server is completing a JS-interop
+        // call, SignalR's RemoteJSRuntime.EndInvokeDotNet can throw a NullReferenceException
+        // sending the result to the now-gone client. That is a benign per-circuit race;
+        // treating it as fatal here used to Environment.Exit the whole app, taking the server
+        // down for every other client (and making firefox/webkit e2e runs flaky, as they
+        // tear circuits down between tests). Log it, mark it observed, and keep running.
         TaskScheduler.UnobservedTaskException += (s, e) =>
         {
-            HandleException("unobserved task exception", e.Exception);
+            Log.Exception(e.Exception, "Unobserved task exception (non-fatal)");
             e.SetObserved();
         };
 
