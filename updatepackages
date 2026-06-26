@@ -29,9 +29,15 @@ while getopts "um" opt; do
     esac
 done
 
+# Directory holding the TypeScript VS Code extension
+vscode_ext_dir="$PWD/src/DependinatorVsCode"
+
 # Check if dotnet-outdated is installed
 check_dotnet_outdated_installed
 
+# ---------------------------------------------------------------------------------
+# .NET packages
+# ---------------------------------------------------------------------------------
 if [ "$update_packages" = true ]; then
     if [ "$include_major" = true ]; then
         echo "Upgrading all packages (including major) in '$PWD' ..."
@@ -46,11 +52,39 @@ echo
 echo "================================================================================="
 echo "Listing all outdated packages in $PWD"
 dotnet outdated
-echo 
+echo
 echo "================================================================================="
 echo "Checking for vulnerable packages in $PWD"
 dotnet list package --vulnerable
-echo 
+
+# ---------------------------------------------------------------------------------
+# TypeScript packages (VS Code extension)
+# ---------------------------------------------------------------------------------
+if [ -f "$vscode_ext_dir/package.json" ]; then
+    echo
+    echo "================================================================================="
+    echo "TypeScript (VS Code extension) packages in $vscode_ext_dir"
+
+    if [ "$update_packages" = true ]; then
+        if [ "$include_major" = true ]; then
+            echo "Upgrading all npm packages (including major) ..."
+            # npm-check-updates rewrites package.json ranges to the latest versions
+            (cd "$vscode_ext_dir" && npx --yes npm-check-updates -u && npm install)
+        else
+            echo "Upgrading all non-major npm packages (within semver ranges) ..."
+            (cd "$vscode_ext_dir" && npm update)
+        fi
+    fi
+
+    echo
+    echo "Listing all outdated npm packages"
+    (cd "$vscode_ext_dir" && npm outdated)
+    echo
+    echo "Checking for vulnerable npm packages"
+    (cd "$vscode_ext_dir" && npm audit)
+fi
+
+echo
 echo "---------------------------------------------------------------------------------"
 echo "Use option '-u' to update non-major outdated packages"
 echo "Use option '-m' to update all outdated packages including major versions"
