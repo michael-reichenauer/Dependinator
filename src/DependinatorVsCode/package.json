@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.5.37",
+    "version": "0.5.38",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
@@ -79,7 +79,7 @@
         "prepare:wasm": "bash scripts/prepare-wasm.sh",
         "prepare:server": "bash scripts/prepare-server.sh",
         "build:extension": "npm run prepare:wasm && npm run prepare:server && npm run check-types && node esbuild.js --production",
-        "package": "vsce package --out dependinator.vsix",
+        "package": "DEPENDINATOR_ALL_SERVERS=1 vsce package --out dependinator.vsix",
         "install:vsix": "code --install-extension dependinator.vsix --force",
         "package:linux-x64": "VSCODE_TARGET=linux-x64 vsce package --target linux-x64",
         "package:linux-arm64": "VSCODE_TARGET=linux-arm64 vsce package --target linux-arm64",
@@ -87,6 +87,7 @@
         "package:win32-arm64": "VSCODE_TARGET=win32-arm64 vsce package --target win32-arm64",
         "package:darwin-x64": "VSCODE_TARGET=darwin-x64 vsce package --target darwin-x64",
         "package:darwin-arm64": "VSCODE_TARGET=darwin-arm64 vsce package --target darwin-arm64",
+        "package:all-platforms": "npm run package:linux-x64 && npm run package:linux-arm64 && npm run package:win32-x64 && npm run package:win32-arm64 && npm run package:darwin-x64 && npm run package:darwin-arm64",
         "vscode:prepublish": "npm run build:extension"
     },
     "dependencies": {
