@@ -1,46 +1,49 @@
-# Dependinator VS Code Extension
+# Dependinator
 
-This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
+Dependinator visualizes code structure and dependencies as an interactive,
+navigable map, making complex architectures easier to understand, analyze, and
+refactor — without leaving VS Code.
 
-## Local development
+## Features
 
-1. Build and copy the WASM assets into `DependinatorVsCode/media`:
-   - `scripts/prepare-wasm.sh`
-2. In `DependinatorVsCode`, install dependencies and compile:
-   - `npm install`
-   - `npm run compile`
-3. Press F5 in VS Code to launch the extension host.
-4. Run the `Dependinator: Open` command.
+- **Interactive dependency map** — explore your codebase as a zoomable,
+  navigable diagram instead of scrolling through files.
+- **Drill down and back up** — open nodes to see their internals and follow
+  dependencies between components.
+- **Runs inside VS Code** — opens in an editor tab; no separate app to launch.
+- **Optional cloud sync** — sign in to sync your views across devices.
+
+## Getting started
+
+1. Install the extension.
+2. Open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run
+   **Dependinator: Open**, or click the Dependinator icon in the editor title
+   bar.
+3. The dependency map opens in a new tab. Click nodes to drill in, and drag /
+   zoom to navigate.
+
+## Commands
+
+| Command | Description |
+| --- | --- |
+| `Dependinator: Open` | Open the Dependinator dependency map. |
+| `Dependinator: Install in Dev Container` | Jump to the Extensions view to install the extension inside a dev container. |
+
+## Settings
+
+- `dependinator.cloudSync.baseUrl` — the API endpoint used for cloud sync.
+  Defaults to the production service; other entries are for local/development
+  use. Sign-in is handled separately by the extension.
 
 ## Notes
+- The installed extension bundles a self-contained language server, so a local
+  `dotnet` install is not required.
 
-- In vscode.dev, the UI can load, but the .NET language server will be disabled.
-- Use `Dependinator: Install in Dev Container` to jump to the Extensions view and install the extension in a dev container.
-- WASM assets are published in Release without AOT.
-- `publisher` in `package.json` must match your VS Code Marketplace publisher name before publishing.
-- Packaging requires the .NET 10 SDK (see `global.json`) and Node 20+.
-- Installed extensions use a self-contained language server, so `dotnet` is not required at runtime.
+## Links
 
-## Build a VSIX locally
+- Repository: https://github.com/michael-reichenauer/Dependinator
+- Contributing / building the extension: see [DEVELOPMENT.md](DEVELOPMENT.md)
 
-1. From `DependinatorVsCode/`, install dependencies:
-   - `npm install`
-2. Create a per-platform VSIX (builds WASM assets, publishes the language server, compiles TS):
-   - `npm run package:linux-x64`
-   - `npm run package:win32-x64`
-   - `npm run package:darwin-arm64`
-   - `npm run package:darwin-x64`
-3. The output is `DependinatorVsCode/dependinator-<version>.vsix`.
+## License
 
-## Publish to the Marketplace
-
-1. Update `DependinatorVsCode/package.json`:
-   - Set `publisher` to your Marketplace publisher ID.
-   - Increment `version`.
-2. Create a Personal Access Token (VSCE) and publish:
-   - `npx vsce publish -p <your_token>`
-
-## GitHub workflow
-
-The `Build VS Code Extension` workflow builds a VSIX per target.
-To publish from CI, add the `VSCE_PAT` secret and trigger the workflow with `publish` set to true.
+MIT — see [LICENSE](LICENSE).
