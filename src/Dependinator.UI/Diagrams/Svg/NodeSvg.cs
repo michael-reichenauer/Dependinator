@@ -360,9 +360,12 @@ class NodeSvg
             Parsing.NodeType.ConstructorMember => "ConstructorIcon",
             Parsing.NodeType.Solution => "SolutionIcon",
             Parsing.NodeType.Externals => "ExternalsIcon",
-            Parsing.NodeType.Assembly => "ModuleIcon",
-            Parsing.NodeType.Namespace => "FilesIcon",
-            Parsing.NodeType.Parent => "FilesIcon",
+            Parsing.NodeType.Assembly => "AssemblyIcon",
+            Parsing.NodeType.Namespace => "NamespaceIcon",
+            // The Roslyn source parser doesn't emit Namespace nodes; namespace containers are
+            // rebuilt as implicit Parent nodes (see StructureService.GetOrCreateParent), so Parent
+            // also renders as a namespace. (FilesIcon is kept in the library for future use.)
+            Parsing.NodeType.Parent => "NamespaceIcon",
             Parsing.NodeType.Type => "TypeIcon",
 
             _ => "ModuleIcon",

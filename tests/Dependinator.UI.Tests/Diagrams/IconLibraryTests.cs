@@ -15,8 +15,9 @@ public class IconLibraryTests
         "ConstructorIcon",
         "SolutionIcon",
         "ExternalsIcon",
+        "AssemblyIcon",
         "ModuleIcon",
-        "FilesIcon",
+        "NamespaceIcon",
         "TypeIcon",
     ];
 
@@ -46,7 +47,7 @@ public class IconLibraryTests
     {
         var icons = IconLibrary.All;
 
-        Assert.Equal(13, icons.Count);
+        Assert.Equal(15, icons.Count);
         Assert.All(icons, icon => Assert.Equal("Default", icon.Group));
         Assert.All(icons, icon => Assert.Contains("<svg", icon.Svg));
     }
