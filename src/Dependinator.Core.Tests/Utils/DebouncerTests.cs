@@ -27,20 +27,24 @@ public class DebouncerTests
         TaskCompletionSource<TimeSpan> invokedAt = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Stopwatch stopwatch = Stopwatch.StartNew();
 
-        while (stopwatch.Elapsed < TimeSpan.FromMilliseconds(500) && !invokedAt.Task.IsCompleted)
+        // Spam Debounce far faster than the 300ms debounce delay so the normal debounce
+        // never fires; only the 600ms maximum delay should trigger the action. The large
+        // gap between the call interval (50ms) and the debounce delay (300ms) keeps the
+        // test robust against Task.Delay jitter on loaded CI runners.
+        while (stopwatch.Elapsed < TimeSpan.FromMilliseconds(1500) && !invokedAt.Task.IsCompleted)
         {
             debouncer.Debounce(
-                TimeSpan.FromMilliseconds(150),
-                TimeSpan.FromMilliseconds(400),
+                TimeSpan.FromMilliseconds(300),
+                TimeSpan.FromMilliseconds(600),
                 () => invokedAt.TrySetResult(stopwatch.Elapsed)
             );
 
-            await Task.Delay(75);
+            await Task.Delay(50);
         }
 
-        TimeSpan elapsed = await invokedAt.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        TimeSpan elapsed = await invokedAt.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
-        Assert.InRange(elapsed, TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(800));
+        Assert.InRange(elapsed, TimeSpan.FromMilliseconds(400), TimeSpan.FromMilliseconds(1200));
     }
 
     [Fact]
