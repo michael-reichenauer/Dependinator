@@ -8,12 +8,27 @@ on:
     branches: [main, dev]
 
 jobs:
+  # Gate the deploy on the test suites passing (reusable workflows). They run only when a
+  # deploy would (not on PR close), so they don't block the close job below.
+  unit-tests:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    uses: ./.github/workflows/unit-tests.yml
+  e2e:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    uses: ./.github/workflows/e2e.yml
+    # Publishing dev/main (a push) runs the full gate: all browsers + cloud-sync tests.
+    # PR previews stay light (Chromium, no sync) for fast feedback.
+    with:
+      browsers: ${{ github.event_name == 'push' && 'all' || 'chromium' }}
+      sync: ${{ github.event_name == 'push' }}
+
   build_and_deploy_job:
+    needs: [unit-tests, e2e]
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - name: Checkout branch 
+      - name: Checkout branch
         uses: actions/checkout@v4
         with:
           submodules: true
@@ -27,17 +42,16 @@ jobs:
         run: dotnet workload restore Dependinator.sln
       - name: Restore
         run: dotnet restore Dependinator.sln
-      - name: Test
-        run: dotnet test Dependinator.sln --no-restore
+      # Tests run in the unit-tests / e2e jobs above (this deploy 'needs' them).
       - name: Publish Dependinator WASM
         run: |
-          rm -rf Dependinator.Wasm/publish
-          dotnet publish Dependinator.Wasm/Dependinator.Wasm.csproj -c Release --no-restore -o Dependinator.Wasm/publish
-          cp Dependinator.Wasm/staticwebapp.config.json Dependinator.Wasm/publish/wwwroot/staticwebapp.config.json
+          rm -rf src/Dependinator.Wasm/publish
+          dotnet publish src/Dependinator.Wasm/Dependinator.Wasm.csproj -c Release --no-restore -o src/Dependinator.Wasm/publish
+          cp src/Dependinator.Wasm/staticwebapp.config.json src/Dependinator.Wasm/publish/wwwroot/staticwebapp.config.json
       - name: Publish API
         run: |
-          rm -rf Api/publish
-          dotnet publish Api/Api.csproj -c Release -o Api/publish
+          rm -rf src/Api/publish
+          dotnet publish src/Api/Api.csproj -c Release -o src/Api/publish
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -47,8 +61,8 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "Dependinator.Wasm/publish/wwwroot" # Prebuilt app content
-          api_location: "Api/publish"
+          app_location: "src/Dependinator.Wasm/publish/wwwroot" # Prebuilt app content
+          api_location: "src/Api/publish"
           skip_app_build: true
           skip_api_build: true
           ###### End of Repository/Build Configurations ######

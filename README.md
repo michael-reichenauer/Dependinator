@@ -3,20 +3,23 @@
 Dependinator is a tool for visualizing and exploring software dependencies. This repo contains the shared UI and core logic plus multiple hosts (Blazor Server, Blazor WebAssembly) and an Azure Functions API used for cloud sync.
 
 ## Solution structure
-- `Dependinator.UI/`: Shared UI, parsing, models, utilities.
-- `DependinatorWeb/`: Blazor Server host for local development.
-- `DependinatorWasm/`: Blazor WebAssembly host (Azure Static Web Apps target).
-- `Api/`: Azure Functions API for cloud sync.
-- `Shared/`: Shared DTOs/models between client and API.
-- `Dependinator.UI.Tests/`: xUnit tests.
+
+`Dependinator.sln` stays at the repo root; all project folders live under `src/`.
+
+- `src/Dependinator.UI/`: Shared UI, parsing, models, utilities.
+- `src/Dependinator.Web/`: Blazor Server host for local development.
+- `src/Dependinator.Wasm/`: Blazor WebAssembly host (Azure Static Web Apps target).
+- `src/Dependinator.Lsp/`: LSP server executable.
+- `src/Api/`: Azure Functions API for cloud sync.
+- `src/Shared/`: Shared DTOs/models between client and API.
+- `src/DependinatorVsCode/`: VS Code extension (TypeScript).
+- `src/Dependinator.UI.Tests/`: xUnit tests.
 
 ## Quick start
 - Build: `./build`
-- Run server (live dev): `./watch`
-- Run server with cloud sync: `./watch-sync`
-- Run WASM sample: `./run`
-- Run WASM + API + Azurite locally: `./run-sync`
-- Tests: `dotnet test Dependinator.UI.Tests/Dependinator.UI.Tests.csproj`
+- Run server (live dev, with cloud sync): `./watch`
+- Run WASM + API + Azurite locally: `./run`
+- Tests: `dotnet test src/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj`
 
 ## Cloud sync
 

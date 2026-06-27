@@ -12,7 +12,18 @@ permissions:
   contents: write
 
 jobs:
+  # Gate the whole extension pipeline (version bump, build, publish) on the test suites.
+  unit-tests:
+    uses: ./.github/workflows/unit-tests.yml
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+    # Building/publishing the extension is a deliberate release, so run the full gate.
+    with:
+      browsers: all
+      sync: true
+
   bump-version:
+    needs: [unit-tests, e2e]
     runs-on: ubuntu-latest
     outputs:
       new_sha: ${{ steps.set-outputs.outputs.new_sha }}
@@ -36,14 +47,14 @@ jobs:
       - name: Bump extension version
         id: bump_version
         run: |
-          cd DependinatorVsCode
+          cd src/DependinatorVsCode
           npm version patch --no-git-tag-version
           VERSION=$(node -p 'require("./package.json").version')
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Commit and tag version
         run: |
-          git add DependinatorVsCode/package.json DependinatorVsCode/package-lock.json
+          git add src/DependinatorVsCode/package.json src/DependinatorVsCode/package-lock.json
           git commit -m "VS Code extension v${{ steps.bump_version.outputs.version }}"
           git tag "v${{ steps.bump_version.outputs.version }}"
 
@@ -86,22 +97,22 @@ jobs:
 
       - name: Install npm dependencies
         run: npm ci
-        working-directory: DependinatorVsCode
+        working-directory: src/DependinatorVsCode
 
       - name: Package extension
         run: npm run package:${{ matrix.target }}
-        working-directory: DependinatorVsCode
+        working-directory: src/DependinatorVsCode
 
       - name: Upload VSIX
         uses: actions/upload-artifact@v4
         with:
           name: dependinator-${{ matrix.target }}-vsix
-          path: DependinatorVsCode/*.vsix
+          path: src/DependinatorVsCode/*.vsix
           if-no-files-found: error
 
       - name: Publish to Marketplace
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
         run: npx vsce publish --target ${{ matrix.target }} -p "$VSCE_PAT"
-        working-directory: DependinatorVsCode
+        working-directory: src/DependinatorVsCode
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

@@ -1,18 +1,56 @@
 #!/bin/bash
-set -euo pipefail
 
-project="./Dependinator.Wasm/Dependinator.Wasm.csproj"
-publish_dir="./Dependinator.Wasm/publish"
+# Exit on errors (`-e`), treat unset variables as errors (`-u`),
+# and fail a pipeline if any command in it fails (`pipefail`).
+set -euo pipefail
+cd "$(dirname "$0")"
+
+# Shared Azurite + Azure Functions helpers.
+source ./scripts/_stack.sh
+
+# Paths and runtime settings used by the script.
+project="./src/Dependinator.Wasm/Dependinator.Wasm.csproj"
+publish_dir="./src/Dependinator.Wasm/publish"
 wwwroot_dir="$publish_dir/wwwroot"
-config_dir="./Dependinator.Wasm"
+config_dir="./src/Dependinator.Wasm"
+api_dir="./src/Api"
+azurite_dir="./.azurite"
 port="${PORT:-5000}"
 host="${HOST:-127.0.0.1}"
+STACK_AZURITE_PID=""
+STACK_FUNC_PID=""
 
+# Stop background processes that this script started, if they are still running.
+cleanup() {
+    # `kill -0` does not stop the process; it only checks whether the PID exists
+    # and is accessible to the current user.
+    if [[ -n "$STACK_AZURITE_PID" ]] && kill -0 "$STACK_AZURITE_PID" 2>/dev/null; then
+        kill "$STACK_AZURITE_PID" 2>/dev/null || true
+    fi
+    if [[ -n "$STACK_FUNC_PID" ]] && kill -0 "$STACK_FUNC_PID" 2>/dev/null; then
+        kill "$STACK_FUNC_PID" 2>/dev/null || true
+    fi
+}
+
+# Always run cleanup when the script exits, including Ctrl+C (`INT`) and `TERM`.
+trap cleanup EXIT INT TERM
+
+# Rebuild the static web assets from scratch into a clean publish folder.
 rm -rf "$publish_dir"
 dotnet publish "$project" -c Release -o "$publish_dir"
 
+# The Functions host is required for the local `/api` backend used by `run`.
+stack_require_func
+stack_seed_local_settings "$api_dir"
+
+# Bring up Azurite and the Functions host (fails early if the API never starts).
+stack_start_azurite "$azurite_dir"
+stack_start_func "$api_dir" 7071
+
+# Serve the published app through the Static Web Apps CLI and point API requests
+# at the local Functions host.
 if command -v swa >/dev/null 2>&1; then
-    swa start "$wwwroot_dir" --port "$port" --host "$host" --swa-config-location "$config_dir"
+    swa start "$wwwroot_dir" --api-devserver-url "http://127.0.0.1:7071" --port "$port" --host "$host" --swa-config-location "$config_dir"
 else
-    npx --yes @azure/static-web-apps-cli start "$wwwroot_dir" --port "$port" --host "$host" --swa-config-location "$config_dir"
+    npx --yes @azure/static-web-apps-cli start "$wwwroot_dir" --api-devserver-url "http://127.0.0.1:7071" --port "$port" --host "$host" --swa-config-location "$config_dir"
 fi
