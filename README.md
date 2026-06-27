@@ -4,7 +4,7 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
 
 ## Solution structure
 
-`Dependinator.sln` (targeting `net10.0`, SDK pinned in `global.json`) stays at the repo root; all project folders live under `src/`. Dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`), enforced by `src/Dependinator.Architecture.Tests/`.
+`Dependinator.sln` (targeting `net10.0`, SDK pinned in `global.json`) stays at the repo root; production project folders live under `src/` and test projects under `tests/`. Dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`), enforced by `tests/Dependinator.Architecture.Tests/`.
 
 **Hosts:**
 - `src/Dependinator.Web/`: Blazor Server host for local development.
@@ -19,9 +19,9 @@ Dependinator is a tool for visualizing and exploring software dependencies. This
 - `src/Shared/`: Shared DTOs/models between client and API.
 
 **Tests:**
-- `src/Dependinator.UI.Tests/`, `src/Dependinator.Core.Tests/`, `src/Dependinator.Roslyn.Tests/`, `src/Api.Tests/`: xUnit unit tests.
-- `src/Dependinator.Architecture.Tests/`: NetArchTest layering guards.
-- `src/Dependinator.E2E.Tests/`: Playwright UI tests (run via `./e2e`).
+- `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Api.Tests/`: xUnit unit tests.
+- `tests/Dependinator.Architecture.Tests/`: NetArchTest layering guards.
+- `tests/Dependinator.E2E.Tests/`: Playwright UI tests (run via `./e2e`).
 
 **VS Code extension** (not part of `Dependinator.sln`):
 - `src/DependinatorVsCode/`: TypeScript extension packaging the web UI + language server.

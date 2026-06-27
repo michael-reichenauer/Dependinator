@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Api", "src\Api\Api.csproj",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.UI", "src\Dependinator.UI\Dependinator.UI.csproj", "{E84718B7-744A-4052-99F3-3A6B8DBB400F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.UI.Tests", "src\Dependinator.UI.Tests\Dependinator.UI.Tests.csproj", "{D38AC12B-5844-4EED-8EFC-07C532B65ACE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.UI.Tests", "tests\Dependinator.UI.Tests\Dependinator.UI.Tests.csproj", "{D38AC12B-5844-4EED-8EFC-07C532B65ACE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Web", "src\Dependinator.Web\Dependinator.Web.csproj", "{4CAFD59F-88D5-4FE3-8F01-CCA96F0136BE}"
 EndProject
@@ -19,15 +19,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dependinator.Lsp", "src\Dep
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Core", "src\Dependinator.Core\Dependinator.Core.csproj", "{622D18E8-BD34-48C5-AA37-EE1DC44CE2E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Core.Tests", "src\Dependinator.Core.Tests\Dependinator.Core.Tests.csproj", "{EDBF5EDC-B720-4BEB-8477-D197E7A305E1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Core.Tests", "tests\Dependinator.Core.Tests\Dependinator.Core.Tests.csproj", "{EDBF5EDC-B720-4BEB-8477-D197E7A305E1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Roslyn", "src\Dependinator.Roslyn\Dependinator.Roslyn.csproj", "{8931E056-B12F-4D6E-9DD1-177625DA172E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Roslyn.Tests", "src\Dependinator.Roslyn.Tests\Dependinator.Roslyn.Tests.csproj", "{BECA882F-0BF8-4B97-A6E4-4A10FE099558}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Roslyn.Tests", "tests\Dependinator.Roslyn.Tests\Dependinator.Roslyn.Tests.csproj", "{BECA882F-0BF8-4B97-A6E4-4A10FE099558}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api.Tests", "src\Api.Tests\Api.Tests.csproj", "{5886DF45-8B75-4431-8CB1-10DEF3149EE0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api.Tests", "tests\Api.Tests\Api.Tests.csproj", "{5886DF45-8B75-4431-8CB1-10DEF3149EE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.E2E.Tests", "src\Dependinator.E2E.Tests\Dependinator.E2E.Tests.csproj", "{E5F5D2C9-2BBE-487D-ACEF-740319B72E00}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.E2E.Tests", "tests\Dependinator.E2E.Tests\Dependinator.E2E.Tests.csproj", "{E5F5D2C9-2BBE-487D-ACEF-740319B72E00}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hosts", "Hosts", "{A1000000-0000-4000-8000-000000000001}"
 EndProject
@@ -35,7 +35,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A1000000-0000-4000-8000-000000000003}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Architecture.Tests", "src\Dependinator.Architecture.Tests\Dependinator.Architecture.Tests.csproj", "{14415F17-3F41-471E-B91B-9AD993BA807C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Architecture.Tests", "tests\Dependinator.Architecture.Tests\Dependinator.Architecture.Tests.csproj", "{14415F17-3F41-471E-B91B-9AD993BA807C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
