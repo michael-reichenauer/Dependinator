@@ -74,10 +74,10 @@ jobs:
 
       # Build the test project so playwright.ps1 (used to install browsers) exists.
       - name: Build e2e test project
-        run: dotnet build src/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj
+        run: dotnet build tests/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj
 
       - name: Install Playwright browsers
-        run: pwsh src/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ steps.cfg.outputs.install }}
+        run: pwsh tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ steps.cfg.outputs.install }}
 
       # ./e2e -s starts the cloud-sync stack itself but needs these tools on the runner.
       - name: Install Azure Functions Core Tools + Azurite (sync tests)
@@ -111,6 +111,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-traces
-          path: src/Dependinator.E2E.Tests/traces/
+          path: tests/Dependinator.E2E.Tests/traces/
           if-no-files-found: ignore
           retention-days: 14

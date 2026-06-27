@@ -6,7 +6,7 @@
 #   ./e2e -a            run on all three browsers (e.g. before a release)
 #   ./e2e -s            also start the cloud-sync stack (Azurite + Functions on
 #                       7071) so sync tests ([SyncFact]) run; needs func+azurite
-#   ./e2e -t            record a Playwright trace per test into ./src/Dependinator.E2E.Tests/traces
+#   ./e2e -t            record a Playwright trace per test into ./tests/Dependinator.E2E.Tests/traces
 #                       (open a .zip at https://trace.playwright.dev). CI sets this on failure.
 #
 # Starts Dependinator.Web itself in test mode (embedded demo model) and stops it
@@ -95,7 +95,7 @@ fi
 # Optionally bring up the cloud-sync stack (Azurite + Azure Functions on 7071 + a
 # local test JWKS server), mirroring ./watch, so the Blazor app can reach the
 # cloud API during tests. Auth uses a self-minted token validated against the test
-# JWKS instead of real Clerk — see src/Dependinator.E2E.Tests/TestAuth/.
+# JWKS instead of real Clerk — see tests/Dependinator.E2E.Tests/TestAuth/.
 E2E_SYNC=0
 JWKS_PORT="${E2E_JWKS_PORT:-7072}"
 E2E_CLERK_ISSUER="http://127.0.0.1:${JWKS_PORT}"
@@ -115,7 +115,7 @@ if [[ "$SYNC" == "1" ]]; then
         echo "Test JWKS server already running on $JWKS_PORT, reusing it."
     else
         echo "Starting test JWKS server on $JWKS_PORT..."
-        node ./src/Dependinator.E2E.Tests/TestAuth/jwks-server.js "$JWKS_PORT" &
+        node ./tests/Dependinator.E2E.Tests/TestAuth/jwks-server.js "$JWKS_PORT" &
         JWKS_PID="$!"
     fi
 
@@ -187,7 +187,7 @@ fi
 # leave stale higher-numbered files behind. Only when tracing; done once before the
 # browser loop so -a keeps all browsers' traces from this run.
 if [[ "$E2E_TRACE" == "1" ]]; then
-    rm -rf ./src/Dependinator.E2E.Tests/traces
+    rm -rf ./tests/Dependinator.E2E.Tests/traces
 fi
 
 RESULT=0
@@ -196,14 +196,14 @@ for browser in "${BROWSERS[@]}"; do
     echo "=== Running e2e tests on $browser ==="
     if ! E2E=1 E2E_SYNC="$E2E_SYNC" E2E_CLERK_ISSUER="$E2E_CLERK_ISSUER" E2E_TRACE="$E2E_TRACE" \
         BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
-        dotnet test ./src/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj; then
+        dotnet test ./tests/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj; then
         RESULT=1
     fi
 done
 
 if [[ "$E2E_TRACE" == "1" ]]; then
     echo ""
-    echo "Traces recorded in ./src/Dependinator.E2E.Tests/traces — view one with: ./trace"
+    echo "Traces recorded in ./tests/Dependinator.E2E.Tests/traces — view one with: ./trace"
 fi
 
 exit $RESULT
