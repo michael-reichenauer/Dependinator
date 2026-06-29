@@ -18,9 +18,9 @@
 @inject IJSInterop jsInterop
 @implements IDisposable
 
-<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
-    <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Secondary" Dense="true" Class="ml-n3"
-             AnchorOrigin="Origin.BottomCenter" data-testid="appbar-menu">
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
+    <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Tertiary" Dense="true"
+             AnchorOrigin="Origin.BottomCenter" PopoverClass="dep-light-menu" data-testid="appbar-menu">
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
                      Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo" data-testid="menu-undo">
             Undo
@@ -79,7 +79,8 @@
 
         <MudDivider />
 
-        <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled" data-testid="menu-local-paths">
+        <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled" PopoverClass="dep-light-menu"
+                 data-testid="menu-local-paths">
             @foreach (var path in modelListService.LocalPaths)
             {
                 <MudMenuItem IconColor="Color.Default" Icon="@Icons.Material.Outlined.Schema"
@@ -91,7 +92,8 @@
 
         @if (appCloudSyncService.IsAvailable)
         {
-            <MudMenu Label=" Cloud Models" Disabled="@IsCloudModelsMenuDisabled" data-testid="menu-cloud-models">
+            <MudMenu Label=" Cloud Models" Disabled="@IsCloudModelsMenuDisabled" PopoverClass="dep-light-menu"
+                     data-testid="menu-cloud-models">
                 @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
                 {
                     bool isCurrent = IsCurrentCloudModel(cloudModel);
@@ -159,7 +161,7 @@
         }
         else
         {
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Default" OnClick="ToggleEditMode"
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Tertiary" OnClick="ToggleEditMode"
                            data-testid="toolbar-edit" />
         }
     </MudHidden>
@@ -215,8 +217,8 @@
     bool isSearchOpen;
 
     record CloudIconInfo(string Icon, MudBlazor.Color Color);
-    static readonly CloudIconInfo NotAvailable = new(Icons.Material.Outlined.CloudOff, Color.Inherit);
-    static readonly CloudIconInfo NotAuthenticated = new(Icons.Material.Outlined.CloudQueue, Color.Inherit);
+    static readonly CloudIconInfo NotAvailable = new(Icons.Material.Outlined.CloudOff, Color.Tertiary);
+    static readonly CloudIconInfo NotAuthenticated = new(Icons.Material.Outlined.CloudQueue, Color.Tertiary);
     static readonly CloudIconInfo HasLocalChanges = new(Icons.Material.Outlined.CloudUpload, Color.Info);
     static readonly CloudIconInfo HasRemoteChanges = new(Icons.Material.Outlined.CloudDownload, Color.Info);
     static readonly CloudIconInfo HasConflicts = new(Icons.Material.Outlined.SyncProblem, Color.Error);
@@ -233,7 +235,10 @@
     CloudIconInfo CurrentCloudIconInfo => GetCloudIconInfo(CurrentCloudSyncState);
     bool HasSyncConflicts => CurrentCloudSyncState is CloudSyncState.HasConflicts;
     CloudSyncState previousCloudSyncState = CloudSyncState.NotAvailable;
-    string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
+    string CssPosition =>
+    $"position:fixed;left:{15}px; top:{3}px;"
+    + "background:rgba(255,255,255,0.9);border-radius:4px;"
+    + "box-shadow:var(--mud-elevation-2);";
     string CloudStatusText =>
     !appCloudSyncService.IsAvailable
     ? "Cloud sync unavailable"
@@ -501,7 +506,7 @@
     }
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
-    static MudBlazor.Color GetToolbarButtonColor(bool isEnabled) => isEnabled ? Color.Default : Color.Inherit;
+    static MudBlazor.Color GetToolbarButtonColor(bool isEnabled) => isEnabled ? Color.Tertiary : Color.Default;
 
     static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
 
