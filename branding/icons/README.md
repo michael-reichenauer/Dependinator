@@ -8,6 +8,10 @@ DeepPurple squircle, matching the app's brand color).
 - `icon-square.svg` — full-bleed square background; used for the iOS
   `apple-touch-icon` (iOS applies its own corner mask, so the source must not
   have transparent corners).
+- `icon-glyph-dark.svg` / `icon-glyph-light.svg` — glyphs (no background) for the
+  VS Code extension editor title-bar button: brand-purple (`#7C4DFF`) nodes with
+  theme-gray edges (`#424242` dark glyph for light themes, `#C5C5C5` light glyph
+  for dark themes).
 
 ## Regenerate the raster assets
 
@@ -24,6 +28,7 @@ This writes:
 | `favicon.ico` | 16/32/48 | `src/Dependinator.Wasm/wwwroot` |
 | `icon-192.png` | 192 | `src/Dependinator.Wasm/wwwroot` |
 | `apple-touch-icon.png` | 180 | `src/Dependinator.Wasm/wwwroot`, `src/Dependinator.Web/wwwroot` |
+| `icon-tree-dark.svg` / `icon-tree-light.svg` | vector | `src/DependinatorVsCode/resources` (title-bar button) |
 
 The VS Code extension icon (`src/DependinatorVsCode/media/icon-192.png`,
 referenced by `package.json`) is **generated** from the Wasm `wwwroot` by

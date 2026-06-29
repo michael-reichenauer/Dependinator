@@ -2,6 +2,7 @@
 """Render the Dependinator app icon SVGs into all required PNG/ICO assets."""
 import io
 import os
+import shutil
 import cairosvg
 from PIL import Image
 
@@ -9,9 +10,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 ROUNDED = os.path.join(HERE, "icon-rounded.svg")
 SQUARE = os.path.join(HERE, "icon-square.svg")
+GLYPH_DARK = os.path.join(HERE, "icon-glyph-dark.svg")
+GLYPH_LIGHT = os.path.join(HERE, "icon-glyph-light.svg")
 
 WASM = os.path.join(REPO, "src/Dependinator.Wasm/wwwroot")
 WEB = os.path.join(REPO, "src/Dependinator.Web/wwwroot")
+VSCODE_RES = os.path.join(REPO, "src/DependinatorVsCode/resources")
 
 
 def render(svg, size):
@@ -41,6 +45,14 @@ def main():
     # Blazor Server host
     save_png(ROUNDED, 32, os.path.join(WEB, "favicon.png"))
     save_png(SQUARE, 180, os.path.join(WEB, "apple-touch-icon.png"))
+
+    # VS Code extension editor title-bar glyphs (themed monochrome SVGs).
+    # Live in resources/ (not media/, which prepare-wasm.sh wipes).
+    for src, name in ((GLYPH_DARK, "icon-tree-dark.svg"),
+                      (GLYPH_LIGHT, "icon-tree-light.svg")):
+        dst = os.path.join(VSCODE_RES, name)
+        shutil.copyfile(src, dst)
+        print(f"  SVG        -> {os.path.relpath(dst, REPO)}")
 
     print("Done.")
 

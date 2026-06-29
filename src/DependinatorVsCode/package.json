@@ -24,7 +24,10 @@
             {
                 "command": "dependinator.open",
                 "title": "Dependinator: Open",
-                "icon": "$(type-hierarchy-sub)"
+                "icon": {
+                    "light": "resources/icon-tree-dark.svg",
+                    "dark": "resources/icon-tree-light.svg"
+                }
             },
             {
                 "command": "dependinator.installInDevContainer",
