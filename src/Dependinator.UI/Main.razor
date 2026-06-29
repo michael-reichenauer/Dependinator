@@ -20,7 +20,7 @@
 </MudLayout>
 
 @code {
-    bool _isDarkMode = true;
+    bool _isDarkMode = false;
 
     MudTheme DependinatorTheme = new MudTheme
     {
@@ -28,6 +28,7 @@
         {
             AppbarBackground = Colors.DeepPurple.Accent4,
             AppbarText = Colors.DeepPurple.Lighten5,
+            Tertiary = Colors.DeepPurple.Darken2,
         },
         PaletteDark = new PaletteDark()
         {
