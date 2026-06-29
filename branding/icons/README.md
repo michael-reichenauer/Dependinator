@@ -12,6 +12,9 @@ DeepPurple squircle, matching the app's brand color).
   VS Code extension editor title-bar button: brand-purple (`#7C4DFF`) nodes with
   theme-gray edges (`#424242` dark glyph for light themes, `#C5C5C5` light glyph
   for dark themes).
+- `icon-glyph-readme.svg` — same glyph with neutral-gray (`#6E6E6E`) edges,
+  rasterized to a PNG for the extension README (the Marketplace blocks SVG
+  images), so it reads on both light and dark backgrounds.
 
 ## Regenerate the raster assets
 
@@ -29,6 +32,7 @@ This writes:
 | `icon-192.png` | 192 | `src/Dependinator.Wasm/wwwroot` |
 | `apple-touch-icon.png` | 180 | `src/Dependinator.Wasm/wwwroot`, `src/Dependinator.Web/wwwroot` |
 | `icon-tree-dark.svg` / `icon-tree-light.svg` | vector | `src/DependinatorVsCode/resources` (title-bar button) |
+| `icon-toolbar.png` | 54 | `src/DependinatorVsCode/resources` (inline icon in the extension README) |
 
 The VS Code extension icon (`src/DependinatorVsCode/media/icon-192.png`,
 referenced by `package.json`) is **generated** from the Wasm `wwwroot` by

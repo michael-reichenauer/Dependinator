@@ -12,6 +12,7 @@ ROUNDED = os.path.join(HERE, "icon-rounded.svg")
 SQUARE = os.path.join(HERE, "icon-square.svg")
 GLYPH_DARK = os.path.join(HERE, "icon-glyph-dark.svg")
 GLYPH_LIGHT = os.path.join(HERE, "icon-glyph-light.svg")
+GLYPH_README = os.path.join(HERE, "icon-glyph-readme.svg")
 
 WASM = os.path.join(REPO, "src/Dependinator.Wasm/wwwroot")
 WEB = os.path.join(REPO, "src/Dependinator.Web/wwwroot")
@@ -53,6 +54,10 @@ def main():
         dst = os.path.join(VSCODE_RES, name)
         shutil.copyfile(src, dst)
         print(f"  SVG        -> {os.path.relpath(dst, REPO)}")
+
+    # PNG of the title-bar glyph for the extension README (the Marketplace
+    # blocks SVG images). Neutral-gray edges so it reads on light and dark.
+    save_png(GLYPH_README, 54, os.path.join(VSCODE_RES, "icon-toolbar.png"))
 
     print("Done.")
 
