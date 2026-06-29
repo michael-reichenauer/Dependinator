@@ -13,7 +13,8 @@
 @if (HasSelectedLine)
 {
     <MudStack Style="@containerPosition" Spacing="1">
-        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled">
+        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text"
+                        Style="background:rgba(255,255,255,0.9);border-radius:4px;box-shadow:var(--mud-elevation-2);">
             @if (selectionService.IsSelectedLineDirect)
             {
                 <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine"
