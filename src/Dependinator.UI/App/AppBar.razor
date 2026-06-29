@@ -20,7 +20,7 @@
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
     <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Tertiary" Dense="true"
-             AnchorOrigin="Origin.BottomCenter" data-testid="appbar-menu">
+             AnchorOrigin="Origin.BottomCenter" PopoverClass="dep-light-menu" data-testid="appbar-menu">
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
                      Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo" data-testid="menu-undo">
             Undo
@@ -79,7 +79,8 @@
 
         <MudDivider />
 
-        <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled" data-testid="menu-local-paths">
+        <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled" PopoverClass="dep-light-menu"
+                 data-testid="menu-local-paths">
             @foreach (var path in modelListService.LocalPaths)
             {
                 <MudMenuItem IconColor="Color.Default" Icon="@Icons.Material.Outlined.Schema"
@@ -91,7 +92,8 @@
 
         @if (appCloudSyncService.IsAvailable)
         {
-            <MudMenu Label=" Cloud Models" Disabled="@IsCloudModelsMenuDisabled" data-testid="menu-cloud-models">
+            <MudMenu Label=" Cloud Models" Disabled="@IsCloudModelsMenuDisabled" PopoverClass="dep-light-menu"
+                     data-testid="menu-cloud-models">
                 @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
                 {
                     bool isCurrent = IsCurrentCloudModel(cloudModel);
