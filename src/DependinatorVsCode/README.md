@@ -17,8 +17,9 @@ refactor — without leaving VS Code.
 
 1. Install the extension.
 2. Open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run
-   **Dependinator: Open**, or click the Dependinator icon in the editor title
-   bar.
+   **Dependinator: Open**, or click the Dependinator icon
+   <img src="https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/icon-toolbar.png" alt="Dependinator title-bar icon" height="16" align="top" />
+   in the editor title bar.
 3. The dependency map opens in a new tab. Click nodes to drill in, and drag /
    zoom to navigate.
 
