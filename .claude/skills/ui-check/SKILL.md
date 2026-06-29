@@ -60,7 +60,7 @@ After UI-affecting changes, run:
 ./e2e -s             # also start Azurite + Functions (7071) for sync tests
 ```
 
-Tests live in `src/Dependinator.E2E.Tests/` (xUnit + Microsoft.Playwright, see its
+Tests live in `tests/Dependinator.E2E.Tests/` (xUnit + Microsoft.Playwright, see its
 README.md). They are skipped in plain `dotnet test` runs unless `E2E=1` is set,
 which `./e2e` does. New UI features should get a test there; use `[E2EFact]`
 and extend `E2ETestBase`. Cloud-sync tests use `[SyncFact]` and only run under

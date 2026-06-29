@@ -1,18 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
-        <AssemblyName>Dependinator.Architecture.Tests</AssemblyName>
-        <RootNamespace>Dependinator.Architecture.Tests</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     </PropertyGroup>
-
+    <ItemGroup>
+        <Compile Remove="**/_Snapshots/**/*.cs" />
+        <None Include="**/_Snapshots/**/*.cs" />
+    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="NetArchTest.Rules" />
+        <PackageReference Include="Moq" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -22,16 +23,10 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Verify.Xunit" />
     </ItemGroup>
-
     <ItemGroup>
-        <Using Include="Xunit" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Dependinator.Core\Dependinator.Core.csproj" />
-        <ProjectReference Include="..\Dependinator.UI\Dependinator.UI.csproj" />
-        <ProjectReference Include="..\Dependinator.Roslyn\Dependinator.Roslyn.csproj" />
-        <ProjectReference Include="..\Shared\Shared.csproj" />
+        <ProjectReference Include="..\..\src\Dependinator.UI\Dependinator.UI.csproj" />
+        <ProjectReference Include="..\Dependinator.Core.Tests\Dependinator.Core.Tests.csproj" />
     </ItemGroup>
 </Project>

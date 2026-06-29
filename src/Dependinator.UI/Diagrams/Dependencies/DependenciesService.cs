@@ -120,7 +120,6 @@ class DependenciesService(
 
     public async Task ShowNodeAsync(NodeId nodeId)
     {
-        Close();
         await navigationService.ShowNodeAsync(nodeId);
     }
 

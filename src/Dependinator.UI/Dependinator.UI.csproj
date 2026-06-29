@@ -10,6 +10,9 @@
         <SupportedPlatform Include="browser" />
     </ItemGroup>
     <ItemGroup>
+        <EmbeddedResource Include="Diagrams/Icons/Library/**/*.svg" />
+    </ItemGroup>
+    <ItemGroup>
         <PackageReference Include="CSharpier.MsBuild">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>

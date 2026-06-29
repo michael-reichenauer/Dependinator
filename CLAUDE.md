@@ -22,7 +22,7 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 - `src/Dependinator.Roslyn/` — Roslyn-based parsing (`Parsing/`)
 - `src/Shared/` — shared DTOs/models between client and API
 
-**Test projects:** `src/Api.Tests/`, `src/Dependinator.UI.Tests/`, `src/Dependinator.Core.Tests/`, `src/Dependinator.Roslyn.Tests/`, `src/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `src/Dependinator.E2E.Tests/` (Playwright UI tests)
+**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
 
 The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution folders.
 
@@ -43,18 +43,18 @@ dotnet build Dependinator.sln
 # Test
 ./test                                         # unit tests, then e2e (args forwarded to ./e2e, e.g. ./test -s -t)
 dotnet test Dependinator.sln                   # all unit tests (e2e are skipped)
-dotnet test src/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
-dotnet test src/Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
-dotnet test src/Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj
-dotnet test src/Api.Tests/Api.Tests.csproj
-dotnet test src/Dependinator.Architecture.Tests/Dependinator.Architecture.Tests.csproj
+dotnet test tests/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
+dotnet test tests/Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
+dotnet test tests/Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj
+dotnet test tests/Api.Tests/Api.Tests.csproj
+dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Tests.csproj
 
-# UI (Playwright) tests — see src/Dependinator.E2E.Tests/README.md
+# UI (Playwright) tests — see tests/Dependinator.E2E.Tests/README.md
 ./e2e                                          # chromium; auto-starts app if not running
 ./e2e -b firefox                               # specific browser (chromium|firefox|webkit)
 ./e2e -a                                       # all three browsers (before releases)
 ./e2e -s                                       # also start Azurite + Functions for sync tests
-./e2e -t                                       # record Playwright traces into ./src/Dependinator.E2E.Tests/traces
+./e2e -t                                       # record Playwright traces into ./tests/Dependinator.E2E.Tests/traces
 ./trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
 # CI: .github/workflows/e2e.yml runs ./e2e (chromium) on PRs; uploads traces on failure.
 
@@ -80,8 +80,8 @@ dotnet list Dependinator.sln package --vulnerable
 - **Package versions:** centrally managed in `Directory.Packages.props`; avoid per-project version overrides.
 - **Formatting:** CSharpier (`.csharpierrc.json`) + `.editorconfig`. Run `dotnet csharpier --check .` to verify; `CSharpier.MsBuild` also enforces formatting during build.
 - **Style:** 4-space indent, explicit types over `var`, PascalCase for types/methods/properties/constants, nullable-aware code, braces preferred.
-- **Tests:** xUnit + Moq + Verify.Xunit. Name tests as `MethodName_ShouldDoX()`. `src/Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` (at the repo root) dynamically via `src/Dependinator.Core.Tests/Root.cs` — do not hardcode `/workspaces/...` paths in tests.
-- **UI/e2e tests:** `src/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. Keep the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props` in sync with `PLAYWRIGHT_VERSION` in `.devcontainer/post-create.sh`.
+- **Tests:** xUnit + Moq + Verify.Xunit. Name tests as `MethodName_ShouldDoX()`. `tests/Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` (at the repo root) dynamically via `tests/Dependinator.Core.Tests/Root.cs` — do not hardcode `/workspaces/...` paths in tests.
+- **UI/e2e tests:** `tests/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. Keep the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props` in sync with `PLAYWRIGHT_VERSION` in `.devcontainer/post-create.sh`.
 - **Browser checks:** after UI changes, use the `ui-check` skill (`.claude/skills/ui-check/`) to verify behavior with `playwright-cli` and run `./e2e`.
 
 ## Architecture Notes
@@ -96,7 +96,7 @@ dotnet list Dependinator.sln package --vulnerable
 
 **VS Code extension:** when editing functionality used by the extension, check `src/DependinatorVsCode/scripts/` for corresponding build steps.
 
-**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`). `src/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, hosts, or UI frameworks (MudBlazor/ASP.NET Core), and Shared must not reference other Dependinator projects. Don't add references against this direction.
+**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, hosts, or UI frameworks (MudBlazor/ASP.NET Core), and Shared must not reference other Dependinator projects. Don't add references against this direction.
 
 ## Commit Style
 

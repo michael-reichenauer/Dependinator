@@ -9,9 +9,9 @@
 
 @if (HasSelectedLine)
 {
-  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Filled" Style="@CssPosition">
+  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
     <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
-             data-testid="node-menu">
+             PopoverClass="dep-light-menu" data-testid="node-menu">
       <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
                    OnClick="ShowProperties" data-testid="node-menu-properties">
         Properties …
@@ -144,7 +144,9 @@
 
   string CssPosition =>
       $"position:fixed;left:{selectionService.SelectedNodePosition.X}px;"
-      + $"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset}px;";
+      + $"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset}px;"
+      + "background:rgba(255,255,255,0.9);border-radius:4px;"
+      + "box-shadow:var(--mud-elevation-2);";
 
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
