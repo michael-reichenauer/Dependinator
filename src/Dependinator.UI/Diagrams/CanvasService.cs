@@ -3,7 +3,9 @@ using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using MudBlazor;
 
 namespace Dependinator.UI.Diagrams;
 
@@ -47,6 +49,7 @@ class CanvasService : ICanvasService
     readonly IBrowserFileService browserFileService;
     readonly IModelListService recentModelsService;
     readonly IInteractionService interactionService;
+    readonly IDialogService dialogService;
 
     public CanvasService(
         IScreenService screenService,
@@ -59,7 +62,8 @@ class CanvasService : ICanvasService
         IFileService fileService,
         IBrowserFileService browserFileService,
         IModelListService recentModelsService,
-        IInteractionService interactionService
+        IInteractionService interactionService,
+        IDialogService dialogService
     )
     {
         this.screenService = screenService;
@@ -73,6 +77,7 @@ class CanvasService : ICanvasService
         this.browserFileService = browserFileService;
         this.recentModelsService = recentModelsService;
         this.interactionService = interactionService;
+        this.dialogService = dialogService;
     }
 
     public string DiagramName { get; set; } = "Loading ...";
@@ -103,19 +108,31 @@ class CanvasService : ICanvasService
 
     public async void InitialShow()
     {
+        bool isShowDemoMessage = false;
         using var t = Timing.Start("InitialShow");
         await screenService.CheckResizeAsync();
-
         // In test mode always load the embedded demo model for a fast, deterministic
         // model, ignoring any persisted recent/local paths.
         var lastUsedPath = Dependinator.Core.Build.IsTestMode ? DemoModel.Path : recentModelsService.LastUsedPath;
         if (lastUsedPath is null)
+        {
             lastUsedPath = DemoModel.Path;
+            isShowDemoMessage = true;
+        }
+
         await LoadAsync(lastUsedPath);
 
         // Signal that the initial model has loaded and rendered (data-app-ready=true on
         // the body), so UI/e2e tests can wait on it instead of arbitrary timeouts.
         await jSInteropService.Call("setAppReady", true);
+
+        // First-time users (or users who reset their last diagram) have no previous
+        // model, so a demo diagram is shown. Let them know why, and invite them to
+        // explore the application with it.
+        if (isShowDemoMessage)
+        {
+            await ShowDemoMessageAsync();
+        }
     }
 
     public async Task LoadAsync(string modelPath)
@@ -232,5 +249,20 @@ class CanvasService : ICanvasService
 
         applicationEvents.TriggerUIStateChanged();
         return Content;
+    }
+
+    async Task ShowDemoMessageAsync()
+    {
+        await dialogService.ShowMessageBoxAsync(
+            "Welcome to Dependinator",
+            (MarkupString)(
+                "It looks like you don't have a diagram yet, so a <b>demo diagram</b> "
+                + "has been opened for you to explore.<br/><br/>"
+                + "Pan, zoom and click the nodes to see how Dependinator visualizes "
+                + "software dependencies. You can open your own model at any time from the menu.<br/><br/>"
+                + "Login in to sync your diagrams across your devices."
+            ),
+            yesText: "Got it"
+        );
     }
 }
