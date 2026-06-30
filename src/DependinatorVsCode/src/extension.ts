@@ -179,6 +179,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             if (cloudSyncBridge && await cloudSyncBridge.handleWebviewMessage(message, panel))
                 return;
 
+            if (message.type === "vscode/OpenExternal") {
+                const url = String(message.message ?? "");
+                if (url)
+                    await vscode.env.openExternal(vscode.Uri.parse(url));
+                return;
+            }
+
             if (message.type === "vscode/ShowEditor") {
                 const fileLocation = String(message.message ?? "");
                 console.log("Show editor for", fileLocation);

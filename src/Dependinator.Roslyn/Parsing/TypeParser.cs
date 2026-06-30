@@ -20,7 +20,7 @@ static class TypeParser
                 fullTypeName,
                 new NodeProperties
                 {
-                    Type = NodeType.Type,
+                    Type = SymbolUtils.GetTypeNodeType(type),
                     Description = leadingComment,
                     FileSpan = fileSpan,
                     IsPrivate = isPrivate,

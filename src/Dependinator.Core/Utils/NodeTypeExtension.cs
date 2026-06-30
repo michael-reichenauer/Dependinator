@@ -13,5 +13,14 @@ static class NodeTypeExtension
                     or NodeType.EventMember
                     or NodeType.MethodMember
                     or NodeType.PropertyMember;
+
+        public bool IsType =>
+            nodeType
+                is NodeType.Type
+                    or NodeType.ClassType
+                    or NodeType.InterfaceType
+                    or NodeType.EnumType
+                    or NodeType.StructType
+                    or NodeType.RecordType;
     }
 }

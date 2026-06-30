@@ -46,6 +46,10 @@ export function clickElement(elementId) {
   document.getElementById(elementId).click();
 }
 
+export function openUrl(url) {
+  window.open(url, "_blank", "noopener");
+}
+
 // Marks the app as ready once the initial model has loaded and rendered, so UI/e2e
 // tests can wait on [data-app-ready=true] instead of guessing with timeouts.
 export function setAppReady(ready) {

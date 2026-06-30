@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dependinator — Quick Start</title>
+    <link rel="icon" href="icon-192.png" />
+    <style>
+        :root {
+            --brand: #7C4DFF;
+            --brand-dark: #5e35d6;
+            --ink: #1f1f23;
+            --muted: #5c5c66;
+            --line: #e6e3f2;
+            --bg: #fbfbfe;
+            --card: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--ink);
+            background: var(--bg);
+        }
+
+        .wrap {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 40px 24px 64px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        header img {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            margin: 0;
+            color: var(--brand-dark);
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: var(--muted);
+            margin: 0 0 28px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            color: var(--brand-dark);
+            margin: 36px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--line);
+        }
+
+        ul {
+            margin: 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        .feature b,
+        .step b {
+            color: var(--ink);
+        }
+
+        .steps {
+            counter-reset: step;
+        }
+
+        .steps li {
+            position: relative;
+            padding-left: 42px;
+            min-height: 30px;
+        }
+
+        .steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 1px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--brand);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 14px 0;
+        }
+
+        kbd {
+            font-family: inherit;
+            font-size: 0.85em;
+            background: #f1eefb;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 1px 7px;
+            color: var(--brand-dark);
+            white-space: nowrap;
+        }
+
+        a {
+            color: var(--brand-dark);
+        }
+
+        footer {
+            margin-top: 44px;
+            padding-top: 16px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <img src="icon-192.png" alt="Dependinator logo" />
+            <h1>Dependinator</h1>
+        </header>
+        <p class="tagline">
+            Dependinator visualizes code structure and dependencies as an interactive,
+            navigable map — making complex architectures easier to understand, analyze, and refactor.
+        </p>
+
+        <div class="card">
+            <b>Think of it like a map app.</b> Just as Google Maps shows continents when you're zoomed
+            out and individual streets when you zoom in, Dependinator shows your whole system at a glance
+            and reveals more detail about an area as you zoom into it. There are no separate "open" and
+            "close" actions — you simply zoom in to drill down and zoom out to step back.
+        </div>
+
+        <h2>What you can do</h2>
+        <ul>
+            <li class="feature"><b>Explore an interactive dependency map</b> — see your codebase as a
+                zoomable, navigable diagram instead of scrolling through files.</li>
+            <li class="feature"><b>Zoom for detail</b> — zoom into any node to reveal its internals,
+                then zoom back out to see the bigger picture.</li>
+            <li class="feature"><b>Follow dependencies</b> — pick any node and trace what it depends on,
+                or what depends on it, across the whole model.</li>
+            <li class="feature"><b>Jump to source</b> — in the VS Code extension, go straight from a node
+                to the code it represents (and back).</li>
+            <li class="feature"><b>Optional cloud sync</b> — sign in to sync your models and views across
+                devices.</li>
+        </ul>
+
+        <h2>Getting around</h2>
+        <ul class="steps">
+            <li><b>Zoom in</b> (scroll or pinch) to drill into an area and see more detail; <b>zoom out</b>
+                to step back to the overview — just like panning and zooming a map.</li>
+            <li><b>Drag</b> the background to pan across the model.</li>
+            <li><b>Search</b> (the magnifier in the toolbar, or <kbd>Ctrl</kbd>+<kbd>F</kbd>) to jump
+                straight to a node by name.</li>
+            <li>Use <b>Fit to Screen</b> from the menu to recenter and reset the view at any time.</li>
+        </ul>
+
+        <h2>Working with a node</h2>
+        <p>
+            <b>Click a node</b> to select it and show its <b>toolbar</b>. From there you can:
+        </p>
+        <ul>
+            <li class="feature"><b>Show dependencies</b> — reveal the lines <i>to</i> the node (what
+                depends on it) or <i>from</i> the node (what it depends on).</li>
+            <li class="feature"><b>Resize the node</b> — drag its edges to give it more or less room in
+                the layout.</li>
+            <li class="feature"><b>Go to source</b> — in the VS Code extension, nodes that map to code
+                show a button that opens the corresponding file in the editor.</li>
+        </ul>
+        <p>
+            To see what's <i>inside</i> a node, you don't need a button — just <b>zoom in</b> on it and its
+            internals come into view.
+        </p>
+
+        <h2>The Dependencies dialog</h2>
+        <p>
+            When you explore dependencies for a node, the <b>Dependencies dialog</b> lets you walk the
+            dependency graph step by step:
+        </p>
+        <ul>
+            <li class="feature"><b>Choose a direction</b> — look at dependencies pointing <i>to</i> the
+                selected node (its callers / dependents) or <i>from</i> it (the things it relies on).</li>
+            <li class="feature"><b>Drill through the chain</b> — select an item on either side to make it
+                the new focus and keep following the references deeper into the system.</li>
+            <li class="feature"><b>Navigate to a node</b> — pick a dependency to highlight and center it
+                on the map, so you can see where it sits in the overall structure.</li>
+        </ul>
+
+        <div class="card">
+            <b>The menu</b> (the <span style="color:var(--brand-dark)">☰</span> button, top-left) is your
+            hub: open recent models and local paths, toggle hidden nodes, undo / redo, reset the layout,
+            and sign in for cloud sync.
+        </div>
+
+        <h2>VS Code vs. the web app</h2>
+        <p>
+            The <b>VS Code extension</b> is where you'll do the real work of building and editing diagrams
+            alongside your code. Click the diagram button in the editor title bar to <b>show the diagram for
+            the node at your current file</b>, and from the diagram you can jump back to <b>open the
+            corresponding editor</b> — so the map and the source stay in step.
+        </p>
+        <p>
+            The <b>web app</b> (the Wasm app running in a desktop or mobile browser) is aimed more at
+            <b>viewing and exploring</b> a diagram than editing it — handy for reviewing an architecture on
+            the go or sharing a view.
+        </p>
+
+        <h2>Cloud sync across devices</h2>
+        <p>
+            Signing in (via the cloud button in the toolbar) lets Dependinator sync your models and views
+            across devices. It's entirely optional — everything works locally without an account.
+        </p>
+        <p>
+            To see the same diagram on, say, VS Code on your computer and a browser on your phone, just
+            <b>sign in with the same account on both devices</b>. Once you're signed in on each, your models
+            and views stay in sync between them.
+        </p>
+
+        <footer>
+            More on <a href="https://github.com/michael-reichenauer/Dependinator" target="_blank"
+                rel="noopener">GitHub</a>. Happy exploring!
+        </footer>
+    </div>
+</body>
+
+</html>

@@ -16,6 +16,7 @@
 @inject IModelService modelService
 @inject IDialogService dialogService
 @inject IJSInterop jsInterop
+@inject IVsCodeSendService vsCodeSendService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
@@ -122,6 +123,10 @@
         }
 
         <MudDivider />
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Help" OnClick="ShowHelpAsync"
+                     data-testid="menu-help">
+            Help
+        </MudMenuItem>
         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout"
                      data-testid="menu-about">
             About
@@ -164,6 +169,7 @@
             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Tertiary" OnClick="ToggleEditMode"
                            data-testid="toolbar-edit" />
         }
+        <MudIconButton Icon="@Icons.Material.Outlined.Help" OnClick="ShowHelpAsync" data-testid="toolbar-help" />
     </MudHidden>
 
 </MudButtonGroup>
@@ -435,6 +441,8 @@
     }
 
     Task ShowAbout() => aboutBox.ShowAsync();
+
+    Task ShowHelpAsync() => vsCodeSendService.OpenHelpAsync();
 
     void OnUiStateChanged() => _ = InvokeAsync(HandleUiStateChangedAsync);
 
