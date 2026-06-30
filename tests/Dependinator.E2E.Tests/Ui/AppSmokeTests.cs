@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
 using Dependinator.E2E.Tests.Shared.Pages;
 using Microsoft.Playwright;
@@ -70,6 +71,20 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
         // The About message box shows the build version.
         await Expect(App.Dialog).ToBeVisibleAsync();
         await Expect(App.Dialog).ToContainTextAsync("Version:");
+    }
+
+    [E2EFact]
+    public async Task AppMenu_ShouldOpenHelpPageInNewTab()
+    {
+        await App.GotoMainPageAsync();
+
+        ILocator helpItem = await App.OpenMenuItemAsync("menu-help");
+
+        // Help opens the static quick-start page in a new browser tab.
+        IPage helpPage = await Page.RunAndWaitForPopupAsync(async () => await helpItem.ClickAsync());
+
+        await Expect(helpPage).ToHaveURLAsync(new Regex("_content/Dependinator\\.UI/help\\.html"));
+        await Expect(helpPage).ToHaveTitleAsync(new Regex("Quick Start"));
     }
 
     [E2EFact]
