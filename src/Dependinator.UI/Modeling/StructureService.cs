@@ -65,8 +65,8 @@ class StructureService(ILineService linesService) : IStructureService
 
         var source = model.Nodes[NodeId.FromName(parsedLink.Source)];
         var target = model.Nodes[NodeId.FromName(parsedLink.Target)];
-        if (parsedLink.Properties.TargetType is not null && parsedLink.Properties.TargetType is not NodeType.None)
-            target.Type = (NodeType)parsedLink.Properties.TargetType;
+        if (parsedLink.Properties.TargetType is { } targetType && targetType is not NodeType.None)
+            SetTargetTypeFromLink(target, targetType);
 
         link = new Models.Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
@@ -101,12 +101,22 @@ class StructureService(ILineService linesService) : IStructureService
         var target = model.Nodes[NodeId.FromName(linkDto.TargetName)];
         var targetType = Enums.To<NodeType>(linkDto.TargetType, NodeType.None);
         if (targetType is not NodeType.None)
-            target.Type = targetType;
+            SetTargetTypeFromLink(target, targetType);
 
         var link = new Models.Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
 
         AddLink(model, link);
+    }
+
+    // A link only carries the generic NodeType.Type for type targets, so don't let it overwrite an
+    // already-known specific type kind (e.g. InterfaceType) the target node was parsed with.
+    static void SetTargetTypeFromLink(Models.Node target, NodeType targetType)
+    {
+        if (targetType == NodeType.Type && target.Type.IsType)
+            return;
+
+        target.Type = targetType;
     }
 
     public void SetLineLayoutDto(IModel model, LineDto lineLayoutDto)

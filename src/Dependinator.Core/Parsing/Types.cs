@@ -40,7 +40,16 @@ enum NodeType
     Dll,
     Exe,
     Namespace,
+
+    // Type is the generic "a type" value (used for link targets and unknown/external types).
+    // The ClassType..RecordType values distinguish a parsed type's kind for icon selection,
+    // in the same way the *Member values distinguish member kinds.
     Type,
+    ClassType,
+    InterfaceType,
+    EnumType,
+    StructType,
+    RecordType,
     FieldMember,
     ConstructorMember,
     EventMember,

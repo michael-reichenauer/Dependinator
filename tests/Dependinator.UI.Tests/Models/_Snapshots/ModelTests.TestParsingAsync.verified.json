@@ -35,7 +35,7 @@
     {
       "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
       "Properties": {
-        "Type": "Type",
+        "Type": "ClassType",
         "Parent": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models",
         "IsPrivate": false
       }

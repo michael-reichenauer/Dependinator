@@ -86,7 +86,7 @@ class NodeLayout
     }
 
     static bool IsTypeWithMembers(Node parent) =>
-        parent.Type == Parsing.NodeType.Type && parent.Children.Any(child => child.Type.IsMember);
+        parent.Type.IsType && parent.Children.Any(child => child.Type.IsMember);
 
     static void ArrangeChildren(Node parent, IReadOnlyList<Node> children, LayoutMetrics metrics)
     {

@@ -367,6 +367,11 @@ class NodeSvg
             // also renders as a namespace. (FilesIcon is kept in the library for future use.)
             Parsing.NodeType.Parent => "NamespaceIcon",
             Parsing.NodeType.Type => "TypeIcon",
+            Parsing.NodeType.ClassType => "TypeIcon",
+            Parsing.NodeType.InterfaceType => "InterfaceIcon",
+            Parsing.NodeType.EnumType => "EnumIcon",
+            Parsing.NodeType.StructType => "StructIcon",
+            Parsing.NodeType.RecordType => "RecordIcon",
 
             _ => "ModuleIcon",
         };

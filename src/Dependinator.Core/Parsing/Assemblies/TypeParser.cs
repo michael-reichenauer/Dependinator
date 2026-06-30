@@ -53,7 +53,7 @@ internal class TypeParser
                 name,
                 new()
                 {
-                    Type = NodeType.Type,
+                    Type = GetTypeNodeType(type),
                     Description = description,
                     Parent = parentName,
                     IsPrivate = isPrivate,
@@ -78,6 +78,20 @@ internal class TypeParser
     private async Task SendNodeAsync(Node typeNode)
     {
         await items.SendAsync(typeNode);
+    }
+
+    // Maps a compiled type to the specific type NodeType used for icon selection. Records aren't
+    // reliably distinguishable from IL, so they fall back to ClassType/StructType; anything not
+    // interface/enum/struct is reported as ClassType.
+    private static NodeType GetTypeNodeType(TypeDefinition type)
+    {
+        if (type.IsInterface)
+            return NodeType.InterfaceType;
+        if (type.IsEnum)
+            return NodeType.EnumType;
+        if (type.IsValueType)
+            return NodeType.StructType;
+        return NodeType.ClassType;
     }
 
     private async Task<bool> IsNameSpaceDocTypeAsync(TypeDefinition type, string? description)
