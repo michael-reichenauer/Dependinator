@@ -141,18 +141,26 @@ class SourceParser : ISourceParser
 
     static async Task WriteCompressedDemoModelAsync(IReadOnlyList<Item> solutionNodes, string solutionPath)
     {
-        if (Build.IsWasm || solutionPath != DemoModel.WorkingSolutionPath)
-            return;
-
-        string outputPath = DemoModel.DemoOutputPath;
-        var json = Json.Serialize(solutionNodes);
-        json = json.Replace("Dependinator", "Demo");
-
-        await using var file = File.Create(outputPath);
-        await using var gzip = new GZipStream(file, CompressionLevel.SmallestSize);
-        await using var writer = new StreamWriter(gzip);
-        await writer.WriteAsync(json);
-        Log.Info($"Wrote demo model {json.Length} json size to {outputPath}");
+        try
+        {
+            Log.Info(solutionPath);
+            Log.Info(DemoModel.WorkingSolutionPath);
+            if (Build.IsWasm || solutionPath != DemoModel.WorkingSolutionPath)
+                return;
+            string outputPath = DemoModel.DemoOutputPath;
+            var json = Json.Serialize(solutionNodes);
+            json = json.Replace("Dependinator", "Demo");
+            await using var file = File.Create(outputPath);
+            await using var gzip = new GZipStream(file, CompressionLevel.SmallestSize);
+            await using var writer = new StreamWriter(gzip);
+            await writer.WriteAsync(json);
+            Log.Info($"Wrote demo model {json.Length} json size to {outputPath}");
+        }
+        catch (Exception ex)
+        {
+            Log.Exception(ex);
+            throw;
+        }
     }
 
     static bool IsTestProject(Project project) => project.Name.EndsWith("Test") || project.Name.EndsWith(".Tests");
