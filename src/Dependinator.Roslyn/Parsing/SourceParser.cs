@@ -110,6 +110,9 @@ class SourceParser : ISourceParser
             foreach (var item in TypeParser.ParseType(type, compilation, moduleName))
                 yield return item;
         }
+
+        foreach (var item in NamespaceParser.ParseNamespaces(compilation, moduleName))
+            yield return item;
     }
 
     // Reads the gzip-compressed, pre-parsed demo model embedded in this assembly

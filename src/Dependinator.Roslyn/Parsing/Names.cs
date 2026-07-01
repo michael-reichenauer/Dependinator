@@ -50,6 +50,12 @@ static class Names
         return GetFullTypeName(typeSymbol, moduleName);
     }
 
+    public static string GetFullNamespaceName(INamespaceSymbol ns, string moduleName)
+    {
+        var fqName = ns.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        return ToFullTypeName(moduleName, fqName);
+    }
+
     public static string GetFullMemberName(ISymbol symbol, string fullTypeName)
     {
         var memberName = symbol.ToDisplayString(MemberFormat).Replace(" ", "");
