@@ -1,6 +1,8 @@
 ﻿using Dependinator.Core.Parsing.Utils;
 using Newtonsoft.Json;
 
+// Parses pre-built .json model data files directly into the code model, loading nodes
+// and links without compiling or reflecting over any assemblies.
 namespace Dependinator.Core.Parsing.JsonDataFiles;
 
 [Transient]

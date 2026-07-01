@@ -1,6 +1,9 @@
 using System.Diagnostics;
 using StreamJsonRpc;
 
+// JSON-RPC transport (built on StreamJsonRpc) used to communicate between hosts, such as
+// the LSP server and the web UI. Handles message framing, base64 packaging, and generating
+// local targets and remote proxies for the [Rpc]-annotated service interfaces.
 namespace Dependinator.Core.Rpc;
 
 public interface IJsonRpcService

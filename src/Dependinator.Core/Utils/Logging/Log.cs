@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
+// Lightweight logging infrastructure for the core: the static Log entry point plus logger
+// configuration and host logging settings.
 namespace Dependinator.Core.Utils.Logging;
 
 public static class Log
