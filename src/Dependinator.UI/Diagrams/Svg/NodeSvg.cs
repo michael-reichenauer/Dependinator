@@ -14,7 +14,13 @@ class NodeSvg
     const int NameIconSize = 9;
     const int FontSize = 8;
     const int DescriptionFontSize = 6;
-    const int MaxDescriptionLength = 15;
+    const int DescriptionMinWidth = 25;
+    const int DescriptionMaxWidth = 60;
+    const int DescriptionMaxLines = 7;
+    const int IconDescriptionMaxLines = 5;
+    const int MemberDescriptionMaxLines = 1;
+    const double DescriptionCharWidthFactor = 0.45;
+    const double DescriptionLineHeightFactor = 1.2;
     const double DescriptionLineGap = 1;
     const double MemberTextGap = 4;
     const double MemberHorizontalPadding = 4;
@@ -51,7 +57,9 @@ class NodeSvg
             descriptionY,
             descriptionFontSize,
             "iconDescription",
-            textOpacity
+            textOpacity,
+            DescriptionMinWidth,
+            IconDescriptionMaxLines
         );
 
         return $"""
@@ -79,13 +87,19 @@ class NodeSvg
         var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName, node.HtmlDescription);
         var descriptionFontSize = DescriptionFontSize * parentZoom;
         var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * parentZoom;
+        var descriptionWidth = DescriptionWidthForNode(
+            geometry.Width - (header.TextPos.X - geometry.X),
+            descriptionFontSize
+        );
         var descriptionSvg = BuildDescriptionSvg(
             node,
             header.TextPos.X,
             descriptionY,
             descriptionFontSize,
             "nodeDescription",
-            textOpacity
+            textOpacity,
+            descriptionWidth,
+            DescriptionMaxLines
         );
 
         return $"""
@@ -124,7 +138,9 @@ class NodeSvg
             descriptionY,
             descriptionFontSize,
             "memberDescription",
-            textOpacity
+            textOpacity,
+            DescriptionMinWidth,
+            MemberDescriptionMaxLines
         );
 
         return $"""
@@ -296,31 +312,103 @@ class NodeSvg
         double y,
         double fontSize,
         string cssClass,
-        string textOpacity
+        string textOpacity,
+        int maxWidth,
+        int maxLines
     )
     {
-        var description = GetShortHtmlDescription(node.Description);
-        if (description is null)
+        var lines = GetDescriptionLines(node.Description, maxWidth, maxLines);
+        if (lines.Count == 0)
             return "";
 
-        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{description}</text>""";
+        var lineHeight = fontSize * DescriptionLineHeightFactor;
+        var tspans = string.Join(
+            "\n",
+            lines.Select(
+                (line, i) =>
+                    $"""<tspan x="{x:0.##}" dy="{(i == 0 ? 0 : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
+            )
+        );
+
+        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>""";
     }
 
-    internal static string? GetShortHtmlDescription(string? description)
+    // Estimate how many characters fit across a node of the given pixel width, so wider
+    // (zoomed-in) containers wrap at a wider line than small icon nodes. Clamped to a
+    // readable floor and a sane cap.
+    internal static int DescriptionWidthForNode(double availableWidth, double fontSize)
+    {
+        var charWidth = fontSize * DescriptionCharWidthFactor;
+        if (charWidth <= 0)
+            return DescriptionMinWidth;
+
+        var chars = (int)(availableWidth / charWidth);
+        return Math.Clamp(chars, DescriptionMinWidth, DescriptionMaxWidth);
+    }
+
+    internal static IReadOnlyList<string> GetDescriptionLines(string? description, int maxWidth, int maxLines)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return null;
+            return [];
 
         // Collapse to a single line and strip XML-doc tags like <summary>.
         var text = Regex.Replace(description, "<[^>]*>", " ");
         text = Regex.Replace(text, "\\s+", " ").Trim();
         if (text.Length == 0)
-            return null;
+            return [];
 
-        if (text.Length > MaxDescriptionLength)
-            text = text[..MaxDescriptionLength].TrimEnd() + "…";
+        var lines = WrapText(text, maxWidth);
+        if (lines.Count <= maxLines)
+            return lines;
 
-        return HttpUtility.HtmlEncode(text);
+        // Truncate to maxLines and mark the last kept line with an ellipsis.
+        lines = lines.Take(maxLines).ToList();
+        var last = lines[^1];
+        if (last.Length + 1 > maxWidth)
+            last = last[..(maxWidth - 1)].TrimEnd();
+        lines[^1] = last + "…";
+        return lines;
+    }
+
+    static List<string> WrapText(string text, int maxWidth)
+    {
+        var lines = new List<string>();
+        var current = "";
+
+        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var remaining = word;
+
+            // Hard-break words that are longer than a full line.
+            while (remaining.Length > maxWidth)
+            {
+                if (current.Length > 0)
+                {
+                    lines.Add(current);
+                    current = "";
+                }
+                lines.Add(remaining[..maxWidth]);
+                remaining = remaining[maxWidth..];
+            }
+
+            if (remaining.Length == 0)
+                continue;
+
+            if (current.Length == 0)
+                current = remaining;
+            else if (current.Length + 1 + remaining.Length <= maxWidth)
+                current += " " + remaining;
+            else
+            {
+                lines.Add(current);
+                current = remaining;
+            }
+        }
+
+        if (current.Length > 0)
+            lines.Add(current);
+
+        return lines;
     }
 
     static string BuildHoverGroup(
