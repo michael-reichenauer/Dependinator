@@ -2,6 +2,8 @@
 using Dependinator.Core.Parsing.Utils;
 using Dependinator.Core.Shared;
 
+// Parses Visual Studio solutions (.sln) and their projects, resolving each project's
+// output assemblies and delegating to the assembly parser to build the combined model.
 namespace Dependinator.Core.Parsing.Solutions;
 
 internal class SolutionParser : IDisposable

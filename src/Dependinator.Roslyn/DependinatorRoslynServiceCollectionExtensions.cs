@@ -1,5 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 
+// Root namespace of Dependinator.Roslyn: Roslyn-based source parsing that enriches the core
+// model with metadata (descriptions, source locations, links) not available from compiled
+// assemblies. This file registers its services for DI.
 namespace Dependinator.Roslyn;
 
 public static class DependinatorRoslynServiceCollectionExtensions

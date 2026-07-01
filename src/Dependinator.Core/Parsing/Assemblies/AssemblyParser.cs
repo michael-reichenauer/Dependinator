@@ -5,6 +5,9 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
 
+// Reflection-based parsing of compiled assemblies (.dll/.exe) using Mono.Cecil to extract
+// types, members, and the dependency links between them, decompiling method bodies to
+// discover references.
 namespace Dependinator.Core.Parsing.Assemblies;
 
 internal class AssemblyParser : IDisposable

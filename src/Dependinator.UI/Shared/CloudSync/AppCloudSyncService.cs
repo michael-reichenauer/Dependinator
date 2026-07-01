@@ -29,6 +29,11 @@ interface IAppCloudSyncService
     event Action<string> BackgroundSyncError;
 
     bool IsAvailable { get; }
+
+    // True while the initial authentication state is still being determined
+    // (e.g. waiting for Clerk.js to load and the first /auth/me call to return).
+    bool IsConnecting { get; }
+
     CloudAuthState AuthState { get; }
     CloudSyncModelState? SyncState { get; }
     bool HasLocalChangesSinceLastSync { get; }
@@ -83,6 +88,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
     bool isUiStateRefreshInProgress;
     bool isUiStateRefreshQueued;
+    bool hasResolvedInitialAuth;
     bool isDisposed;
     CancellationTokenSource? idleRefreshCancellationTokenSource;
     DateTimeOffset lastSyncStateRefreshUtc = DateTimeOffset.MinValue;
@@ -123,6 +129,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     public event Action<string> BackgroundSyncError = null!;
 
     public bool IsAvailable => cloudSyncService.IsAvailable;
+    public bool IsConnecting => IsAvailable && !hasResolvedInitialAuth && !authState.IsAuthenticated;
     public CloudAuthState AuthState => authState;
     public CloudSyncModelState? SyncState => syncState;
     public bool HasLocalChangesSinceLastSync => hasLocalChangesSinceLastSync;
@@ -374,10 +381,15 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         {
             authState = unavailableAuthState;
             ResetSyncSnapshot(clearCloudModels: true);
+            hasResolvedInitialAuth = true;
             return R.Ok;
         }
 
-        if (!Try(out CloudAuthState? state, out ErrorResult? error, await cloudSyncService.GetAuthStateAsync()))
+        R<CloudAuthState> authResult = await cloudSyncService.GetAuthStateAsync();
+        // The auth state is now determined (signed in or not), so stop showing the
+        // transient "connecting" indicator even if the call failed.
+        hasResolvedInitialAuth = true;
+        if (!Try(out CloudAuthState? state, out ErrorResult? error, authResult))
             return error;
 
         authState = state;

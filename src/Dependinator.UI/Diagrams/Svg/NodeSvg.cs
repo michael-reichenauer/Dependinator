@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+using System.Web;
 using Dependinator.Core;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -11,6 +13,20 @@ class NodeSvg
     const double MinContainerZoom = 2.0;
     const int NameIconSize = 9;
     const int FontSize = 8;
+    const int DescriptionFontSize = 6;
+    const int DescriptionMinWidth = 25;
+    const int DescriptionMaxWidth = 60;
+    const int DescriptionMaxLines = 7;
+    const int IconDescriptionMaxLines = 5;
+    const int MemberDescriptionMaxLines = 1;
+    const double DescriptionCharWidthFactor = 0.45;
+    const double DescriptionLineHeightFactor = 1.2;
+    const double DescriptionLineGap = 1;
+
+    // Offset (in em) from the text's y down to the first line's alphabetic baseline. This lets us
+    // top-align the description using the universally-supported alphabetic baseline instead of
+    // `dominant-baseline: hanging`, which WebKit (iPad Safari) does not apply to <tspan> children.
+    const double DescriptionFirstLineOffsetFactor = 0.8;
     const double MemberTextGap = 4;
     const double MemberHorizontalPadding = 4;
     const double MemberAverageCharWidthFactor = 0.6;
@@ -38,10 +54,23 @@ class NodeSvg
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName, node.HtmlDescription);
         var selectedOverlay = SelectedNodeSvg(node, geometry);
+        var descriptionFontSize = DescriptionFontSize * parentZoom;
+        var descriptionY = textY + fontSize + DescriptionLineGap * parentZoom;
+        var descriptionSvg = BuildDescriptionSvg(
+            node,
+            textX,
+            descriptionY,
+            descriptionFontSize,
+            "iconDescription",
+            textOpacity,
+            DescriptionMinWidth,
+            IconDescriptionMaxLines
+        );
 
         return $"""
             <use href="#{iconId}" xlink:href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
-            <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
+            <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" dominant-baseline="hanging" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
+            {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
             """;
@@ -61,15 +90,32 @@ class NodeSvg
 
         var innerGeometry = new Rect(0, 0, geometry.Width, geometry.Height);
         var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName, node.HtmlDescription);
+        var descriptionFontSize = DescriptionFontSize * parentZoom;
+        var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * parentZoom;
+        var descriptionWidth = DescriptionWidthForNode(
+            geometry.Width - (header.TextPos.X - geometry.X),
+            descriptionFontSize
+        );
+        var descriptionSvg = BuildDescriptionSvg(
+            node,
+            header.TextPos.X,
+            descriptionY,
+            descriptionFontSize,
+            "nodeDescription",
+            textOpacity,
+            descriptionWidth,
+            DescriptionMaxLines
+        );
 
         return $"""
             <svg x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" viewBox="{0} {0} {geometry.Width:0.##} {geometry.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
               <rect x="{0}" y="{0}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="{strokeWidth}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
               {hoverGroup}
-              {childrenContent}          
+              {childrenContent}
             </svg>
             <use href="#{iconId}" xlink:href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
-            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            {descriptionSvg}
             {selectedOverlay}
             """;
     }
@@ -89,10 +135,23 @@ class NodeSvg
             node.HtmlDescription
         );
         var selectedOverlay = SelectedNodeSvg(node, layout.Bounds);
+        var descriptionFontSize = DescriptionFontSize * parentZoom;
+        var descriptionY = layout.Text.Y + fontSize / 2 + DescriptionLineGap * parentZoom;
+        var descriptionSvg = BuildDescriptionSvg(
+            node,
+            layout.Text.X,
+            descriptionY,
+            descriptionFontSize,
+            "memberDescription",
+            textOpacity,
+            DescriptionMinWidth,
+            MemberDescriptionMaxLines
+        );
 
         return $"""
             <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.Icon.X:0.##}" y="{layout.Icon.Y:0.##}" width="{layout.Icon.Width:0.##}" height="{layout.Icon.Height:0.##}" {nodeOpacity} />
-            <text x="{layout.Text.X:0.##}" y="{layout.Text.Y:0.##}" class="memberName" font-size="{fontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            <text x="{layout.Text.X:0.##}" y="{layout.Text.Y:0.##}" class="memberName" dominant-baseline="middle" font-size="{fontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
             """;
@@ -250,6 +309,112 @@ class NodeSvg
         if (node.IsEditMode)
             return (DColors.EditNodeBorder, DColors.EditNodeBackground);
         return (border, background);
+    }
+
+    static string BuildDescriptionSvg(
+        Node node,
+        double x,
+        double y,
+        double fontSize,
+        string cssClass,
+        string textOpacity,
+        int maxWidth,
+        int maxLines
+    )
+    {
+        var lines = GetDescriptionLines(node.Description, maxWidth, maxLines);
+        if (lines.Count == 0)
+            return "";
+
+        var lineHeight = fontSize * DescriptionLineHeightFactor;
+        var firstLineOffset = fontSize * DescriptionFirstLineOffsetFactor;
+        var tspans = string.Join(
+            "\n",
+            lines.Select(
+                (line, i) =>
+                    $"""<tspan x="{x:0.##}" dy="{(i == 0 ? firstLineOffset : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
+            )
+        );
+
+        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>""";
+    }
+
+    // Estimate how many characters fit across a node of the given pixel width, so wider
+    // (zoomed-in) containers wrap at a wider line than small icon nodes. Clamped to a
+    // readable floor and a sane cap.
+    internal static int DescriptionWidthForNode(double availableWidth, double fontSize)
+    {
+        var charWidth = fontSize * DescriptionCharWidthFactor;
+        if (charWidth <= 0)
+            return DescriptionMinWidth;
+
+        var chars = (int)(availableWidth / charWidth);
+        return Math.Clamp(chars, DescriptionMinWidth, DescriptionMaxWidth);
+    }
+
+    internal static IReadOnlyList<string> GetDescriptionLines(string? description, int maxWidth, int maxLines)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            return [];
+
+        // Collapse to a single line and strip XML-doc tags like <summary>.
+        var text = Regex.Replace(description, "<[^>]*>", " ");
+        text = Regex.Replace(text, "\\s+", " ").Trim();
+        if (text.Length == 0)
+            return [];
+
+        var lines = WrapText(text, maxWidth);
+        if (lines.Count <= maxLines)
+            return lines;
+
+        // Truncate to maxLines and mark the last kept line with an ellipsis.
+        lines = lines.Take(maxLines).ToList();
+        var last = lines[^1];
+        if (last.Length + 1 > maxWidth)
+            last = last[..(maxWidth - 1)].TrimEnd();
+        lines[^1] = last + "…";
+        return lines;
+    }
+
+    static List<string> WrapText(string text, int maxWidth)
+    {
+        var lines = new List<string>();
+        var current = "";
+
+        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var remaining = word;
+
+            // Hard-break words that are longer than a full line.
+            while (remaining.Length > maxWidth)
+            {
+                if (current.Length > 0)
+                {
+                    lines.Add(current);
+                    current = "";
+                }
+                lines.Add(remaining[..maxWidth]);
+                remaining = remaining[maxWidth..];
+            }
+
+            if (remaining.Length == 0)
+                continue;
+
+            if (current.Length == 0)
+                current = remaining;
+            else if (current.Length + 1 + remaining.Length <= maxWidth)
+                current += " " + remaining;
+            else
+            {
+                lines.Add(current);
+                current = remaining;
+            }
+        }
+
+        if (current.Length > 0)
+            lines.Add(current);
+
+        return lines;
     }
 
     static string BuildHoverGroup(

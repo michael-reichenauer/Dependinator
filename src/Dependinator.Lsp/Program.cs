@@ -5,6 +5,9 @@ using Dependinator.Roslyn;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
 
+// Language Server Protocol (LSP) server executable. Hosts the Dependinator core and Roslyn
+// parsing behind an LSP/JSON-RPC endpoint so the VS Code extension can request models,
+// navigation, and workspace information.
 namespace Dependinator.Lsp;
 
 internal class Program

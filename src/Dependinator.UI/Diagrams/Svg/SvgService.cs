@@ -3,6 +3,8 @@ using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
+// Generates the SVG rendering of the diagram from the model, producing the tiled SVG content
+// drawn on the canvas.
 namespace Dependinator.UI.Diagrams.Svg;
 
 interface ISvgService

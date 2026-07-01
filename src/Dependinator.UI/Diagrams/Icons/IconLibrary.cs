@@ -1,5 +1,7 @@
 using System.Reflection;
 
+// The built-in icon library: loads and caches node icons from embedded .svg resources for use
+// in the diagram.
 namespace Dependinator.UI.Diagrams.Icons;
 
 // One icon read from an embedded .svg resource. Name equals the svg's `id` attribute and is the

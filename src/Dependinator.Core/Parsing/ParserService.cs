@@ -3,6 +3,9 @@ using Dependinator.Core.Parsing.Sources;
 using Dependinator.Core.Parsing.Utils;
 using Dependinator.Core.Rpc;
 
+// Orchestrates parsing of a solution, projects, or assemblies into the code model
+// of nodes and links. ParserService picks the appropriate parser for a given path and
+// combines reflection-based structure with source-level metadata.
 namespace Dependinator.Core.Parsing;
 
 // Parses the a solution or assemblies to extract code structure and meta data.

@@ -15,3 +15,15 @@
     --mud-palette-primary: #512da8; /* DeepPurple Darken2 — visible on white */
     --mud-palette-secondary: #5e35b1; /* DeepPurple Darken1 — menu item icons */
 }
+
+/* Cloud sync indicator: while the app is determining the cloud auth state on
+   startup (waiting for Clerk.js to load and the first /auth/me call), the cloud
+   icon gently pulses to signal that it is working rather than "not signed in". */
+.cloud-connecting {
+    animation: dep-cloud-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes dep-cloud-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}

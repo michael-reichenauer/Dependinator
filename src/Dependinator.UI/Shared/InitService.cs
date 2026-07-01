@@ -2,6 +2,9 @@ using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 
+// App-wide shared UI services and helpers used across the diagram and modeling features:
+// initialization, navigation, storage/file access, host and VS Code integration, application
+// state and events, progress, and theming/colors.
 namespace Dependinator.UI.Shared;
 
 interface IInitService

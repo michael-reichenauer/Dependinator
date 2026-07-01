@@ -2,6 +2,8 @@ using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
+// The diagram model of nodes, links, and lines: loading, refreshing, layout, naming, structure,
+// and persistence of the model shown on the canvas.
 namespace Dependinator.UI.Modeling;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);

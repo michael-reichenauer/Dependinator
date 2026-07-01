@@ -43,6 +43,10 @@ dotnet publish "$project" -c Release -o "$publish_dir"
 stack_require_func
 stack_seed_local_settings "$api_dir"
 
+# Free ports held by a previous run that did not stop cleanly: 5000 (SWA CLI),
+# 7071 (Functions host), 10000-10002 (Azurite blob/queue/table).
+stack_free_ports "$port" 7071 10000 10001 10002
+
 # Bring up Azurite and the Functions host (fails early if the API never starts).
 stack_start_azurite "$azurite_dir"
 stack_start_func "$api_dir" 7071

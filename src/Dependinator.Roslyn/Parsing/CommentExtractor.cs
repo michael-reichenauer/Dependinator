@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+// This namespace contains Roslyn parsing functionality
 namespace Dependinator.Roslyn.Parsing;
 
 static class CommentExtractor
@@ -24,6 +25,23 @@ static class CommentExtractor
         }
 
         return NoValue.String;
+    }
+
+    public static string? GetNamespaceCommentOrNull(INamespaceSymbol ns)
+    {
+        // A namespace can be declared across many files; use the first declaration that
+        // has a leading comment (e.g. a comment placed directly above `namespace X;`).
+        foreach (var syntaxRef in ns.DeclaringSyntaxReferences)
+        {
+            if (syntaxRef.GetSyntax() is BaseNamespaceDeclarationSyntax declarationNode)
+            {
+                var comment = GetLeadingComment(declarationNode);
+                if (!string.IsNullOrWhiteSpace(comment))
+                    return comment;
+            }
+        }
+
+        return null;
     }
 
     static bool TryGetDeclarationNode(SyntaxNode syntaxNode, out SyntaxNode declarationNode)

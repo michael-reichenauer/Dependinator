@@ -25,13 +25,17 @@ public sealed class AppPage
     // (Node group SVG ids are generated, so the label is the stable handle to a node.)
     public ILocator NodeLabel(string text) => page.Locator("#svgcanvas text.iconName", new() { HasText = text }).First;
 
-    // A diagram node's group element, matched by its exact label. (Node SVG ids are
-    // generated, so match on the label text. The whitespace-tolerant anchored regex gives
-    // an exact match — so "Demo.sln" doesn't also match the dependency line whose label is
-    // "Demo.sln→Externals (…)" — and tolerates the surrounding whitespace in the SVG text.)
+    // A diagram node's group element, matched by its label. (Node SVG ids are generated, so
+    // match on the label text, which comes from the group's <title>.) The title is the node's
+    // long name optionally followed by its description ("longName\n\ndescription", see
+    // NodeSvg.BuildHoverGroup), so anchor at the start and require a whitespace/end boundary
+    // after the label rather than matching to end-of-text. This still gives an exact name match
+    // — "Demo.Core" won't match the "Demo.Core.RootClass" group (a '.' follows, not whitespace),
+    // and "Demo.sln" won't match the "Demo.sln→Externals (…)" dependency line — while tolerating
+    // the description that a node's title may now carry.
     public ILocator Node(string label) =>
         page.Locator("#svgcanvas g.hoverable")
-            .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(label)}\s*$") });
+            .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(label)}(\s|$)") });
 
     // The selected-node context toolbar (NodeToolbar.razor) — its menu activator is
     // present whenever a node is selected.

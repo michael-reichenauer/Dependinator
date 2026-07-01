@@ -1,5 +1,6 @@
 using Dependinator.UI.Modeling.Models;
 
+// Undoable edit commands for the model (node, line, and composite edits) with an undo/redo stack.
 namespace Dependinator.UI.Modeling.Commands;
 
 interface ICommandService

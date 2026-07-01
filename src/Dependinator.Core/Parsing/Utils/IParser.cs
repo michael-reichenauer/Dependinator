@@ -1,4 +1,6 @@
-﻿namespace Dependinator.Core.Parsing.Utils;
+﻿// Shared parsing abstractions and helpers used across the parsers: the IParser/IItems
+// interfaces, node naming (NodeName), and MSBuild location helpers.
+namespace Dependinator.Core.Parsing.Utils;
 
 interface IParser
 {

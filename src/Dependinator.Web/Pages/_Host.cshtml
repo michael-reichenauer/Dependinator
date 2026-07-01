@@ -10,6 +10,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="~/" />
+    <!-- Warm up the TLS connection to Clerk early so the cloud sign-in/token
+         calls resolve faster once the app starts. -->
+    <link rel="preconnect" href="https://renewed-hen-98.clerk.accounts.dev" crossorigin />
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="Dependinator.Web.styles.css" rel="stylesheet" />

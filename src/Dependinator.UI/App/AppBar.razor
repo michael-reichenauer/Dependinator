@@ -141,6 +141,7 @@
         <ChildContent>
             <span>
                 <MudIconButton Icon="@CurrentCloudIconInfo.Icon" Color="@CurrentCloudIconInfo.Color"
+                               Class="@(IsCloudConnecting ? "cloud-connecting" : null)"
                                Disabled="@(!appCloudSyncService.IsAvailable)" OnClick="ToggleCloudAuthAsync"
                                data-testid="toolbar-cloud" />
             </span>
@@ -224,6 +225,7 @@
 
     record CloudIconInfo(string Icon, MudBlazor.Color Color);
     static readonly CloudIconInfo NotAvailable = new(Icons.Material.Outlined.CloudOff, Color.Tertiary);
+    static readonly CloudIconInfo Connecting = new(Icons.Material.Outlined.CloudSync, Color.Info);
     static readonly CloudIconInfo NotAuthenticated = new(Icons.Material.Outlined.CloudQueue, Color.Tertiary);
     static readonly CloudIconInfo HasLocalChanges = new(Icons.Material.Outlined.CloudUpload, Color.Info);
     static readonly CloudIconInfo HasRemoteChanges = new(Icons.Material.Outlined.CloudDownload, Color.Info);
@@ -238,7 +240,8 @@
     bool IsCloudModelsMenuDisabled => !AuthState.IsAuthenticated || CloudModels.Count == 0;
     bool IsLocalModelsMenuDisabled => modelListService.LocalPaths.Count == 0;
     CloudSyncState CurrentCloudSyncState => appCloudSyncService.GetCloudSyncState();
-    CloudIconInfo CurrentCloudIconInfo => GetCloudIconInfo(CurrentCloudSyncState);
+    bool IsCloudConnecting => appCloudSyncService.IsConnecting;
+    CloudIconInfo CurrentCloudIconInfo => IsCloudConnecting ? Connecting : GetCloudIconInfo(CurrentCloudSyncState);
     bool HasSyncConflicts => CurrentCloudSyncState is CloudSyncState.HasConflicts;
     CloudSyncState previousCloudSyncState = CloudSyncState.NotAvailable;
     string CssPosition =>
@@ -248,6 +251,8 @@
     string CloudStatusText =>
     !appCloudSyncService.IsAvailable
     ? "Cloud sync unavailable"
+                : IsCloudConnecting
+    ? "Connecting to cloud …"
                 : AuthState.IsAuthenticated
     ? $"Cloud signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}"
     : "Cloud not signed in";
@@ -334,6 +339,10 @@
 
     async Task ToggleCloudAuthAsync()
     {
+        // Ignore clicks while the initial auth state is still being determined.
+        if (IsCloudConnecting)
+            return;
+
         switch (CurrentCloudSyncState)
         {
             case CloudSyncState.NotAvailable:

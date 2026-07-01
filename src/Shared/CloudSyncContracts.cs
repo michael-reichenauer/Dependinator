@@ -1,3 +1,5 @@
+// DTOs and contracts shared between the client and the cloud-sync API (auth state, model metadata,
+// quotas, and blob-name sanitization). This project must not reference other Dependinator projects.
 namespace Shared;
 
 public sealed record CloudUserInfo(string UserId, string? Email);

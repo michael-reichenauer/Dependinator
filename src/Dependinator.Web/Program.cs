@@ -8,6 +8,8 @@ using Dependinator.UI;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.CloudSync;
 
+// Blazor Server host used for local development. Wires up the core, Roslyn parsing, shared UI,
+// and cloud-sync services and serves the app.
 namespace Dependinator.Web;
 
 public class Program
