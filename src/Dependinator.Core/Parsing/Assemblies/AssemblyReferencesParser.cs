@@ -61,7 +61,7 @@ internal class AssemblyReferencesParser
         string referencesRootName = "$Externals";
         Node referencesRootNode = new Node(
             referencesRootName,
-            new() { Type = NodeType.Externals, Description = "External references" }
+            new() { Type = NodeType.Externals, Description = NodeDescriptions.Externals }
         );
 
         await items.SendAsync(referencesRootNode);
