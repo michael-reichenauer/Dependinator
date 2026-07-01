@@ -25,7 +25,8 @@ class SourceParser : ISourceParser
                 Log.Warn($"Workspace: [{diag.Kind}] {diag.Message}");
 
             var solutionName = Names.GetSolutionName(solutionPath);
-            var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution });
+            var description = SolutionDescriptionReader.TryReadFromReadme(solutionPath);
+            var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution, Description = description });
 
             var projects = solution
                 .Projects.Where(p => p.Language == LanguageNames.CSharp)
