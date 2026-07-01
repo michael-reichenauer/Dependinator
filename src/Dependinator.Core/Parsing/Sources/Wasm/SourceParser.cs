@@ -1,6 +1,8 @@
 using System.IO.Compression;
 using Microsoft.Extensions.DependencyInjection;
 
+// Browser/WebAssembly implementation of source parsing. Since a full parser cannot run in
+// the browser, it loads a precompiled demo model instead of parsing real source.
 namespace Dependinator.Core.Parsing.Sources.Wasm;
 
 class SourceParser(HttpClient httpClient) : ISourceParser

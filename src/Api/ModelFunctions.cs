@@ -3,6 +3,9 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Shared;
 
+// Azure Functions HTTP API for cloud sync. Validates Clerk-issued JWTs and stores, lists,
+// and retrieves each user's models in blob storage, enforcing per-user storage quotas.
+// Request/response contracts are shared with the client via the Shared project.
 namespace Api;
 
 public sealed class ModelFunctions

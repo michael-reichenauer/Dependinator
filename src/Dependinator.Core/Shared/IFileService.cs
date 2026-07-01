@@ -1,3 +1,5 @@
+// File-access abstractions and services shared across parsers and hosts for reading and
+// writing workspace, model, and parser files (IFileService and its implementations).
 namespace Dependinator.Core.Shared;
 
 public interface IFileService

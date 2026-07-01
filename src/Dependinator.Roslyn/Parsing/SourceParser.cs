@@ -2,6 +2,9 @@ using System.IO.Compression;
 using Dependinator.Core.Shared;
 using Microsoft.CodeAnalysis;
 
+// Roslyn-based parsing of solutions and projects into the code model, extracting namespaces,
+// types, and members with their links, plus source metadata such as comments/descriptions and
+// file locations used for navigation.
 namespace Dependinator.Roslyn.Parsing;
 
 [Transient]
@@ -25,7 +28,8 @@ class SourceParser : ISourceParser
                 Log.Warn($"Workspace: [{diag.Kind}] {diag.Message}");
 
             var solutionName = Names.GetSolutionName(solutionPath);
-            var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution });
+            var description = SolutionDescriptionReader.TryReadFromReadme(solutionPath);
+            var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution, Description = description });
 
             var projects = solution
                 .Projects.Where(p => p.Language == LanguageNames.CSharp)
@@ -97,7 +101,11 @@ class SourceParser : ISourceParser
     static IEnumerable<Item> ParseProjectCompilation(Compilation compilation, string? parentName)
     {
         var moduleName = Names.GetModuleName(compilation);
-        yield return new Item(new Node(moduleName, new() { Type = NodeType.Assembly, Parent = parentName }), null);
+        var description = GetAssemblyDescription(compilation);
+        yield return new Item(
+            new Node(moduleName, new() { Type = NodeType.Assembly, Description = description, Parent = parentName }),
+            null
+        );
 
         var typeNames = Compiler
             .GetAllTypes(compilation)
@@ -110,6 +118,24 @@ class SourceParser : ISourceParser
             foreach (var item in TypeParser.ParseType(type, compilation, moduleName))
                 yield return item;
         }
+
+        foreach (var item in NamespaceParser.ParseNamespaces(compilation, moduleName))
+            yield return item;
+    }
+
+    // Reads the [assembly: AssemblyDescription("...")] value from the project's compiled
+    // assembly attributes, used as the description for the assembly node.
+    static string? GetAssemblyDescription(Compilation compilation)
+    {
+        var attribute = compilation.Assembly.GetAttributes()
+            .FirstOrDefault(a =>
+                a.AttributeClass?.ToDisplayString() == "System.Reflection.AssemblyDescriptionAttribute"
+            );
+
+        if (attribute is null || attribute.ConstructorArguments.Length == 0)
+            return null;
+
+        return attribute.ConstructorArguments[0].Value as string;
     }
 
     // Reads the gzip-compressed, pre-parsed demo model embedded in this assembly

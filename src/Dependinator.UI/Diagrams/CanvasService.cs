@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 
+// The interactive diagram canvas: rendering the model, pan/zoom, selection, and pointer-driven
+// editing of nodes and lines.
 namespace Dependinator.UI.Diagrams;
 
 interface ICanvasService

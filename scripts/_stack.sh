@@ -12,6 +12,28 @@ stack_port_is_open() {
     bash -c "exec 3<>/dev/tcp/127.0.0.1/$1" 2>/dev/null
 }
 
+# Kill any process listening on the given TCP ports. Used at startup so a previous
+# run that did not shut down cleanly (leftover app, Functions host or Azurite) does
+# not block a fresh start by holding onto a port.
+stack_free_ports() {
+    local port pids
+    for port in "$@"; do
+        pids="$(lsof -ti "tcp:$port" -sTCP:LISTEN 2>/dev/null || true)"
+        [[ -z "$pids" ]] && continue
+        echo "Port $port is in use by a lingering process (pid: $pids); stopping it." >&2
+        kill $pids 2>/dev/null || true
+        # Wait briefly for a graceful exit before force-killing survivors. This also
+        # catches the `func` worker child (Api.dll), which outlives its parent and
+        # keeps holding the Functions port after the parent is killed.
+        for _ in $(seq 1 20); do
+            stack_port_is_open "$port" || break
+            sleep 0.2
+        done
+        pids="$(lsof -ti "tcp:$port" -sTCP:LISTEN 2>/dev/null || true)"
+        [[ -n "$pids" ]] && kill -9 $pids 2>/dev/null || true
+    done
+}
+
 # Seed src/Api/local.settings.json from the checked-in example when missing.
 stack_seed_local_settings() {
     local api_dir="$1"

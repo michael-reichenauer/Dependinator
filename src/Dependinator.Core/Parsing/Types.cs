@@ -57,6 +57,12 @@ enum NodeType
     MethodMember,
 }
 
+static class NodeDescriptions
+{
+    public const string Externals =
+        "External references used by, but not part of, this solution (e.g. third-party packages and framework assemblies).";
+}
+
 static class NoValue
 {
     public static readonly int Int = int.MinValue;

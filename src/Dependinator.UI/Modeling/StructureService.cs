@@ -19,6 +19,7 @@ interface IStructureService
 class StructureService(ILineService linesService) : IStructureService
 {
     static readonly string ExternalsNodeName = "$Externals";
+    static readonly string ExternalsDescription = Parsing.NodeDescriptions.Externals;
 
     public void AddOrUpdateNode(IModel model, Parsing.Node parsedNode)
     {
@@ -192,14 +193,20 @@ class StructureService(ILineService linesService) : IStructureService
                 parentName = ExternalsNodeName;
         }
 
+        var isExternals = parentName == ExternalsNodeName;
         var nodeId = NodeId.FromName(parentName);
         if (!model.Nodes.TryGetValue(nodeId, out var item))
         {
-            var parentTyp = parentName == ExternalsNodeName ? Parsing.NodeType.Externals : Parsing.NodeType.Parent;
-            var parent = DefaultParentNode(parentName, parentTyp);
+            var parentTyp = isExternals ? Parsing.NodeType.Externals : Parsing.NodeType.Parent;
+            var parent = DefaultParentNode(parentName, parentTyp, isExternals ? ExternalsDescription : null);
             AddOrUpdateNode(model, parent);
             return model.Nodes[nodeId];
         }
+
+        // The Externals node is synthesized here (the source parser never emits it), so backfill its
+        // description onto an existing node, e.g. one loaded from cache or created before it had one.
+        if (isExternals && string.IsNullOrEmpty(item.Description))
+            item.Update(DefaultParentNode(parentName, Parsing.NodeType.Externals, ExternalsDescription));
 
         return item;
     }
@@ -233,8 +240,8 @@ class StructureService(ILineService linesService) : IStructureService
         }
     }
 
-    static Parsing.Node DefaultParentNode(string name, Parsing.NodeType nodeType) =>
-        new(name, new() { Type = nodeType });
+    static Parsing.Node DefaultParentNode(string name, Parsing.NodeType nodeType, string? description = null) =>
+        new(name, new() { Type = nodeType, Description = description });
 
     static Parsing.Node DefaultParsingNode(string name) => new(name, new() { Type = Parsing.NodeType.None });
 

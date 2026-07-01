@@ -1,3 +1,5 @@
+// Common lightweight value types shared across the UI, such as Pos, Rect, Source, FileLocation,
+// and strongly-typed ids.
 namespace Dependinator.UI.Shared.Types;
 
 interface IItem { }

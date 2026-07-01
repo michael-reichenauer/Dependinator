@@ -20,7 +20,9 @@
       "Name": "$Externals",
       "ParentName": "",
       "Type": "Externals",
-      "Properties": {},
+      "Properties": {
+        "Description": "External references used by, but not part of, this solution (e.g. third-party packages and framework assemblies)."
+      },
       "Boundary": {
         "X": 40,
         "Y": 40,
