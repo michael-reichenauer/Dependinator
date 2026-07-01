@@ -326,6 +326,38 @@ public class AppCloudSyncServiceTests
         Assert.False(context.Sut.HasRemoteChangesSinceLastSync);
     }
 
+    [Fact]
+    public async Task IsConnecting_ShouldBeTrueUntilInitialAuthResolves()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        AppCloudSyncService sut = CreateSut(modelPath, syncedModel, syncState, [cloudModel]);
+
+        Assert.True(sut.IsConnecting);
+
+        await sut.RefreshSyncStateCoreAsync();
+
+        Assert.False(sut.IsConnecting);
+    }
+
+    [Fact]
+    public async Task IsConnecting_ShouldBecomeFalse_EvenWhenAuthStateCallFails()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, cloudModels: []);
+        context.CloudSyncService.Setup(x => x.GetAuthStateAsync()).ReturnsAsync(R.Error("auth failed"));
+
+        Assert.True(context.Sut.IsConnecting);
+
+        await context.Sut.RefreshSyncStateCoreAsync();
+
+        Assert.False(context.Sut.IsConnecting);
+    }
+
     static AppCloudSyncService CreateSut(
         string modelPath,
         ModelDto currentModelDto,
