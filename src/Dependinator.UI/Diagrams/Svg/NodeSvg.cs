@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+using System.Web;
 using Dependinator.Core;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -11,6 +13,9 @@ class NodeSvg
     const double MinContainerZoom = 2.0;
     const int NameIconSize = 9;
     const int FontSize = 8;
+    const int DescriptionFontSize = 6;
+    const int MaxDescriptionLength = 15;
+    const double DescriptionLineGap = 1;
     const double MemberTextGap = 4;
     const double MemberHorizontalPadding = 4;
     const double MemberAverageCharWidthFactor = 0.6;
@@ -38,10 +43,21 @@ class NodeSvg
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName, node.HtmlDescription);
         var selectedOverlay = SelectedNodeSvg(node, geometry);
+        var descriptionFontSize = DescriptionFontSize * parentZoom;
+        var descriptionY = textY + fontSize + DescriptionLineGap * parentZoom;
+        var descriptionSvg = BuildDescriptionSvg(
+            node,
+            textX,
+            descriptionY,
+            descriptionFontSize,
+            "iconDescription",
+            textOpacity
+        );
 
         return $"""
             <use href="#{iconId}" xlink:href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
             <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
+            {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
             """;
@@ -61,15 +77,26 @@ class NodeSvg
 
         var innerGeometry = new Rect(0, 0, geometry.Width, geometry.Height);
         var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName, node.HtmlDescription);
+        var descriptionFontSize = DescriptionFontSize * parentZoom;
+        var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * parentZoom;
+        var descriptionSvg = BuildDescriptionSvg(
+            node,
+            header.TextPos.X,
+            descriptionY,
+            descriptionFontSize,
+            "nodeDescription",
+            textOpacity
+        );
 
         return $"""
             <svg x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" viewBox="{0} {0} {geometry.Width:0.##} {geometry.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
               <rect x="{0}" y="{0}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="{strokeWidth}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
               {hoverGroup}
-              {childrenContent}          
+              {childrenContent}
             </svg>
             <use href="#{iconId}" xlink:href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
             <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            {descriptionSvg}
             {selectedOverlay}
             """;
     }
@@ -89,10 +116,21 @@ class NodeSvg
             node.HtmlDescription
         );
         var selectedOverlay = SelectedNodeSvg(node, layout.Bounds);
+        var descriptionFontSize = DescriptionFontSize * parentZoom;
+        var descriptionY = layout.Text.Y + fontSize / 2 + DescriptionLineGap * parentZoom;
+        var descriptionSvg = BuildDescriptionSvg(
+            node,
+            layout.Text.X,
+            descriptionY,
+            descriptionFontSize,
+            "memberDescription",
+            textOpacity
+        );
 
         return $"""
             <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.Icon.X:0.##}" y="{layout.Icon.Y:0.##}" width="{layout.Icon.Width:0.##}" height="{layout.Icon.Height:0.##}" {nodeOpacity} />
             <text x="{layout.Text.X:0.##}" y="{layout.Text.Y:0.##}" class="memberName" font-size="{fontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
             """;
@@ -250,6 +288,39 @@ class NodeSvg
         if (node.IsEditMode)
             return (DColors.EditNodeBorder, DColors.EditNodeBackground);
         return (border, background);
+    }
+
+    static string BuildDescriptionSvg(
+        Node node,
+        double x,
+        double y,
+        double fontSize,
+        string cssClass,
+        string textOpacity
+    )
+    {
+        var description = GetShortHtmlDescription(node.Description);
+        if (description is null)
+            return "";
+
+        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{description}</text>""";
+    }
+
+    internal static string? GetShortHtmlDescription(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            return null;
+
+        // Collapse to a single line and strip XML-doc tags like <summary>.
+        var text = Regex.Replace(description, "<[^>]*>", " ");
+        text = Regex.Replace(text, "\\s+", " ").Trim();
+        if (text.Length == 0)
+            return null;
+
+        if (text.Length > MaxDescriptionLength)
+            text = text[..MaxDescriptionLength].TrimEnd() + "…";
+
+        return HttpUtility.HtmlEncode(text);
     }
 
     static string BuildHoverGroup(
