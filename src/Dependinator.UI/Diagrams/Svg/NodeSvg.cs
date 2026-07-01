@@ -22,6 +22,11 @@ class NodeSvg
     const double DescriptionCharWidthFactor = 0.45;
     const double DescriptionLineHeightFactor = 1.2;
     const double DescriptionLineGap = 1;
+
+    // Offset (in em) from the text's y down to the first line's alphabetic baseline. This lets us
+    // top-align the description using the universally-supported alphabetic baseline instead of
+    // `dominant-baseline: hanging`, which WebKit (iPad Safari) does not apply to <tspan> children.
+    const double DescriptionFirstLineOffsetFactor = 0.8;
     const double MemberTextGap = 4;
     const double MemberHorizontalPadding = 4;
     const double MemberAverageCharWidthFactor = 0.6;
@@ -322,15 +327,16 @@ class NodeSvg
             return "";
 
         var lineHeight = fontSize * DescriptionLineHeightFactor;
+        var firstLineOffset = fontSize * DescriptionFirstLineOffsetFactor;
         var tspans = string.Join(
             "\n",
             lines.Select(
                 (line, i) =>
-                    $"""<tspan x="{x:0.##}" dy="{(i == 0 ? 0 : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
+                    $"""<tspan x="{x:0.##}" dy="{(i == 0 ? firstLineOffset : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
             )
         );
 
-        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" dominant-baseline="hanging" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>""";
+        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>""";
     }
 
     // Estimate how many characters fit across a node of the given pixel width, so wider
