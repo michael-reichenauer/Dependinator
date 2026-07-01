@@ -103,7 +103,15 @@ class SourceParser : ISourceParser
         var moduleName = Names.GetModuleName(compilation);
         var description = GetAssemblyDescription(compilation);
         yield return new Item(
-            new Node(moduleName, new() { Type = NodeType.Assembly, Description = description, Parent = parentName }),
+            new Node(
+                moduleName,
+                new()
+                {
+                    Type = NodeType.Assembly,
+                    Description = description,
+                    Parent = parentName,
+                }
+            ),
             null
         );
 
@@ -127,7 +135,8 @@ class SourceParser : ISourceParser
     // assembly attributes, used as the description for the assembly node.
     static string? GetAssemblyDescription(Compilation compilation)
     {
-        var attribute = compilation.Assembly.GetAttributes()
+        var attribute = compilation
+            .Assembly.GetAttributes()
             .FirstOrDefault(a =>
                 a.AttributeClass?.ToDisplayString() == "System.Reflection.AssemblyDescriptionAttribute"
             );

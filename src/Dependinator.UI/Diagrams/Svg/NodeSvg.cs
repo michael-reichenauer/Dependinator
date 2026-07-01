@@ -64,7 +64,7 @@ class NodeSvg
 
         return $"""
             <use href="#{iconId}" xlink:href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
-            <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
+            <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" dominant-baseline="hanging" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
@@ -109,7 +109,7 @@ class NodeSvg
               {childrenContent}
             </svg>
             <use href="#{iconId}" xlink:href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
-            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {descriptionSvg}
             {selectedOverlay}
             """;
@@ -145,7 +145,7 @@ class NodeSvg
 
         return $"""
             <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.Icon.X:0.##}" y="{layout.Icon.Y:0.##}" width="{layout.Icon.Width:0.##}" height="{layout.Icon.Height:0.##}" {nodeOpacity} />
-            <text x="{layout.Text.X:0.##}" y="{layout.Text.Y:0.##}" class="memberName" font-size="{fontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            <text x="{layout.Text.X:0.##}" y="{layout.Text.Y:0.##}" class="memberName" dominant-baseline="middle" font-size="{fontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
@@ -330,7 +330,7 @@ class NodeSvg
             )
         );
 
-        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>""";
+        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" dominant-baseline="hanging" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>""";
     }
 
     // Estimate how many characters fit across a node of the given pixel width, so wider
