@@ -101,7 +101,11 @@ class SourceParser : ISourceParser
     static IEnumerable<Item> ParseProjectCompilation(Compilation compilation, string? parentName)
     {
         var moduleName = Names.GetModuleName(compilation);
-        yield return new Item(new Node(moduleName, new() { Type = NodeType.Assembly, Parent = parentName }), null);
+        var description = GetAssemblyDescription(compilation);
+        yield return new Item(
+            new Node(moduleName, new() { Type = NodeType.Assembly, Description = description, Parent = parentName }),
+            null
+        );
 
         var typeNames = Compiler
             .GetAllTypes(compilation)
@@ -117,6 +121,21 @@ class SourceParser : ISourceParser
 
         foreach (var item in NamespaceParser.ParseNamespaces(compilation, moduleName))
             yield return item;
+    }
+
+    // Reads the [assembly: AssemblyDescription("...")] value from the project's compiled
+    // assembly attributes, used as the description for the assembly node.
+    static string? GetAssemblyDescription(Compilation compilation)
+    {
+        var attribute = compilation.Assembly.GetAttributes()
+            .FirstOrDefault(a =>
+                a.AttributeClass?.ToDisplayString() == "System.Reflection.AssemblyDescriptionAttribute"
+            );
+
+        if (attribute is null || attribute.ConstructorArguments.Length == 0)
+            return null;
+
+        return attribute.ConstructorArguments[0].Value as string;
     }
 
     // Reads the gzip-compressed, pre-parsed demo model embedded in this assembly
