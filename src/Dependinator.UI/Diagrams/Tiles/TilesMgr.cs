@@ -1,3 +1,5 @@
+// Tile cache for the diagram: splits the rendered SVG into cached tiles so panning and zooming
+// only regenerate the visible area.
 namespace Dependinator.UI.Diagrams.Tiles;
 
 interface ITilesMgr

@@ -2,6 +2,9 @@ using System.IO.Compression;
 using Dependinator.Core.Shared;
 using Microsoft.CodeAnalysis;
 
+// Roslyn-based parsing of solutions and projects into the code model, extracting namespaces,
+// types, and members with their links, plus source metadata such as comments/descriptions and
+// file locations used for navigation.
 namespace Dependinator.Roslyn.Parsing;
 
 [Transient]

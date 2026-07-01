@@ -3,6 +3,8 @@ using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using MudBlazor;
 
+// The dependency explorer tree that shows a selected node's references and dependencies
+// alongside the diagram.
 namespace Dependinator.UI.Diagrams.Dependencies;
 
 public enum TreeType

@@ -2,6 +2,8 @@ using Dependinator.Core.Parsing;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Shared.Types;
 
+// The core in-memory model types — Node, Link, Line and their strongly-typed ids — together with
+// the Model container and ModelMgr that owns the currently loaded model.
 namespace Dependinator.UI.Modeling.Models;
 
 interface IModel : IDisposable

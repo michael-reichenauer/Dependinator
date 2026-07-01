@@ -1,5 +1,7 @@
 using Dependinator.UI.Shared.Types;
 
+// Serializable data-transfer objects for persisting and loading the model to and from storage,
+// including the versioned on-disk format.
 namespace Dependinator.UI.Modeling.Dtos;
 
 [Serializable]

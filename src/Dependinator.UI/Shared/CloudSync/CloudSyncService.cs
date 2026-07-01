@@ -1,6 +1,9 @@
 using Dependinator.UI.Modeling.Dtos;
 using Shared;
 
+// Client-side cloud sync: the transports and services that sign in via Clerk and upload/download
+// models to the API, including the browser (direct HTTP) and VS Code-hosted (extension proxy)
+// variants and the sync state tracking.
 namespace Dependinator.UI.Shared.CloudSync;
 
 // Abstraction over all cloud-sync transports used by the app.
