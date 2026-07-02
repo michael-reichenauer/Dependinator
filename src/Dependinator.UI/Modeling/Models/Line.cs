@@ -1,3 +1,4 @@
+using System.Web;
 using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Modeling.Models;
@@ -39,6 +40,10 @@ class Line : IItem
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
     public IReadOnlyList<Pos> SegmentPoints => segmentPoints;
 
+    public string? Description { get; private set; }
+    public string? HtmlDescription { get; private set; }
+    public DateTime DescriptionUpdateStamp { get; private set; }
+
     public bool IsUpHill { get; internal set; } // Used to determine the direction of the line for placing the toolbar
     public bool IsHidden
     {
@@ -66,6 +71,15 @@ class Line : IItem
         if (links.Remove(link.Id))
             UpdateStrokeWidth();
     }
+
+    public void SetDescription(string? text, DateTime updateStamp)
+    {
+        Description = text;
+        HtmlDescription = text is not null ? HttpUtility.HtmlEncode(text) : null;
+        DescriptionUpdateStamp = updateStamp;
+    }
+
+    public void ClearDescription() => SetDescription(null, DateTime.MinValue);
 
     public override string ToString() => $"{Source}->{Target} ({links.Count})";
 

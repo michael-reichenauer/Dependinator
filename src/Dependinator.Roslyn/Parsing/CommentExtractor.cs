@@ -31,10 +31,17 @@ static class CommentExtractor
     {
         // A namespace can be declared across many files; use the first declaration that
         // has a leading comment (e.g. a comment placed directly above `namespace X;`).
+        // A declaration of `namespace X.Y;` also declares the parent namespace X, so only
+        // declarations whose written name matches the namespace exactly are considered
+        // (a comment above `namespace X.Y;` must not become the description of X).
+        var namespaceName = ns.ToDisplayString();
         foreach (var syntaxRef in ns.DeclaringSyntaxReferences)
         {
             if (syntaxRef.GetSyntax() is BaseNamespaceDeclarationSyntax declarationNode)
             {
+                if (declarationNode.Name.ToString() != namespaceName)
+                    continue;
+
                 var comment = GetLeadingComment(declarationNode);
                 if (!string.IsNullOrWhiteSpace(comment))
                     return comment;

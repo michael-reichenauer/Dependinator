@@ -23,6 +23,33 @@ public class NamespaceParserTests(RoslynFixture fixture)
     }
 
     [Fact]
+    public void TestParseNamespaceLineDescriptions()
+    {
+        var lineDescription = items
+            .LineDescriptions()
+            .Single(d => d.Source.EndsWith(".Parsing.NamespaceLineDocSample"));
+
+        Assert.Equal("Dependinator.Roslyn.Tests.Parsing.NamespaceDocSample", lineDescription.Target);
+        Assert.Equal("Uses the doc sample namespace.", lineDescription.Text);
+
+        // The arrow line is excluded from the namespace node's description
+        var namespaceNode = items.Nodes().Single(n => n.Name.EndsWith(".Parsing.NamespaceLineDocSample"));
+        Assert.Equal("Sample line namespace description.", namespaceNode.Properties.Description);
+    }
+
+    [Fact]
+    public void TestChildNamespaceCommentIsNotUsedForParent()
+    {
+        // The comments above `namespace ....Parsing.NamespaceDocSample;` declarations must not
+        // become the description of the parent namespace `....Tests.Parsing` (which has no
+        // comment above any exact declaration and thus is not emitted at all).
+        Assert.DoesNotContain(
+            items.Nodes(),
+            n => n.Properties.Type == NodeType.Namespace && n.Name.EndsWith(".Roslyn.Tests.Parsing")
+        );
+    }
+
+    [Fact]
     public void TestNamespaceWithoutCommentIsNotEmitted()
     {
         Assert.DoesNotContain(

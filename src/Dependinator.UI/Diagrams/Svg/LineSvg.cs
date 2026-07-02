@@ -72,13 +72,17 @@ class LineSvg
         var points = ToPolylinePoints(polylinePoints);
         var selectedSvg = SelectedLineSvg(line, polylinePoints);
 
+        var title = $"{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})";
+        if (!string.IsNullOrWhiteSpace(line.HtmlDescription))
+            title = $"{title}\n\n{line.HtmlDescription}";
+
         return $"""
             <polyline points="{points}" fill="none" stroke-width="{strokeWidth}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
             <circle cx="{endpoints.X1}" cy="{endpoints.Y1}" r="{circleRadius}" fill="{color}" />
             <g class="hoverable" id="{elementId}">
               <polyline id="{elementId}" points="{points}" fill="none" stroke-width="{strokeWidth
                 + 10}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
-              <title>{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})</title>
+              <title>{title}</title>
             </g>
             {selectedSvg}
             """;

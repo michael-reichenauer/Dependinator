@@ -48,6 +48,14 @@ public class OtherClass
     public int GetLength(string name) => name.Length;
 }
 
+// Uses the other class.
+// -> OtherClass: Calls the length helper
+//    for measuring names.
+public class LineDocSampleType
+{
+    public OtherClass other = new();
+}
+
 [Collection(nameof(RoslynCollection))]
 public class TypeParserTests(RoslynFixture fixture)
 {
@@ -173,5 +181,22 @@ public class TypeParserTests(RoslynFixture fixture)
 
         var typeToInterfaceLink = items.Link<SourceTestType, ISourceTestInterface>(null, null);
         Assert.Equal(NodeType.Type, typeToInterfaceLink.Properties.TargetType);
+    }
+
+    [Fact]
+    public void TestParseTypeLineDescriptions()
+    {
+        IReadOnlyList<Item> lineDocItems = TypeParser
+            .ParseType(fixture.Type<LineDocSampleType>(), fixture.Compilation, fixture.ModelName)
+            .ToList();
+
+        // The arrow lines are excluded from the type node's description
+        var typeNode = lineDocItems.Node<LineDocSampleType>(null);
+        Assert.Equal("Uses the other class.", typeNode.Properties.Description);
+
+        var lineDescription = lineDocItems.LineDescriptions().Single();
+        Assert.Equal(typeNode.Name, lineDescription.Source);
+        Assert.Equal("OtherClass", lineDescription.Target);
+        Assert.Equal("Calls the length helper for measuring names.", lineDescription.Text);
     }
 }
