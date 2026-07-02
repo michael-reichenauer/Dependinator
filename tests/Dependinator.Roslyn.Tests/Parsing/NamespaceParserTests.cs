@@ -20,6 +20,12 @@ public class NamespaceParserTests(RoslynFixture fixture)
 
         Assert.Equal(NodeType.Namespace, namespaceNode.Properties.Type);
         Assert.Equal("Sample namespace description.\nSecond line.", namespaceNode.Properties.Description);
+
+        // The file span points at the commented namespace declaration
+        Assert.NotNull(namespaceNode.Properties.FileSpan);
+        Assert.EndsWith("NamespaceDocSample.cs", namespaceNode.Properties.FileSpan.Path);
+        Assert.Equal(2, namespaceNode.Properties.FileSpan.StartLine);
+        Assert.Equal(2, namespaceNode.Properties.FileSpan.EndLine);
     }
 
     [Fact]
@@ -42,19 +48,26 @@ public class NamespaceParserTests(RoslynFixture fixture)
     {
         // The comments above `namespace ....Parsing.NamespaceDocSample;` declarations must not
         // become the description of the parent namespace `....Tests.Parsing` (which has no
-        // comment above any exact declaration and thus is not emitted at all).
-        Assert.DoesNotContain(
-            items.Nodes(),
-            n => n.Properties.Type == NodeType.Namespace && n.Name.EndsWith(".Roslyn.Tests.Parsing")
-        );
+        // comment above any exact declaration and thus is emitted with a file span only).
+        var namespaceNode = items
+            .Nodes()
+            .Single(n => n.Properties.Type == NodeType.Namespace && n.Name.EndsWith(".Roslyn.Tests.Parsing"));
+
+        Assert.Null(namespaceNode.Properties.Description);
+        Assert.NotNull(namespaceNode.Properties.FileSpan);
     }
 
     [Fact]
-    public void TestNamespaceWithoutCommentIsNotEmitted()
+    public void TestNamespaceWithoutCommentHasFileSpanButNoDescription()
     {
-        Assert.DoesNotContain(
-            items.Nodes(),
-            n => n.Properties.Type == NodeType.Namespace && n.Name.EndsWith(".Parsing.NamespaceNoDocSample")
-        );
+        // Undocumented namespaces get a file span pointing at the first namespace declaration,
+        // so "show source" can navigate to a place where a namespace comment can be added.
+        var namespaceNode = items.Nodes().Single(n => n.Name.EndsWith(".Parsing.NamespaceNoDocSample"));
+
+        Assert.Equal(NodeType.Namespace, namespaceNode.Properties.Type);
+        Assert.Null(namespaceNode.Properties.Description);
+        Assert.NotNull(namespaceNode.Properties.FileSpan);
+        Assert.EndsWith("NamespaceNoDocSample.cs", namespaceNode.Properties.FileSpan.Path);
+        Assert.Equal(0, namespaceNode.Properties.FileSpan.StartLine);
     }
 }

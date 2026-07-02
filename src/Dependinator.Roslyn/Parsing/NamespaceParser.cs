@@ -12,16 +12,26 @@ static class NamespaceParser
             if (ns.IsGlobalNamespace)
                 continue;
 
-            var comment = CommentExtractor.GetNamespaceCommentOrNull(ns);
-            if (comment is null)
-                continue; // Only emit items when the user actually documented the namespace
+            var (comment, fileSpan) = CommentExtractor.GetNamespaceCommentAndSpan(ns);
+            if (comment is null && fileSpan is null)
+                continue;
 
-            var (description, lineDescriptions) = CommentDescriptions.Parse(comment);
+            var (description, lineDescriptions) = comment is not null
+                ? CommentDescriptions.Parse(comment)
+                : new CommentDescriptions.Result(null, []);
             var fullName = Names.GetFullNamespaceName(ns, moduleName);
 
-            if (description is not null)
+            if (description is not null || fileSpan is not null)
                 yield return new Item(
-                    new Node(fullName, new NodeProperties { Type = NodeType.Namespace, Description = description }),
+                    new Node(
+                        fullName,
+                        new NodeProperties
+                        {
+                            Type = NodeType.Namespace,
+                            Description = description,
+                            FileSpan = fileSpan,
+                        }
+                    ),
                     null
                 );
 

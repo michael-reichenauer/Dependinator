@@ -95,13 +95,13 @@ class SourceParser : ISourceParser
         if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
             return e;
 
-        return ParseProjectCompilation(compilation, parentName).ToList();
+        return ParseProjectCompilation(compilation, parentName, project.FilePath).ToList();
     }
 
-    static IEnumerable<Item> ParseProjectCompilation(Compilation compilation, string? parentName)
+    static IEnumerable<Item> ParseProjectCompilation(Compilation compilation, string? parentName, string? projectPath)
     {
         var moduleName = Names.GetModuleName(compilation);
-        var description = GetAssemblyDescription(compilation);
+        var (description, fileSpan) = GetAssemblyDescription(compilation, projectPath);
         yield return new Item(
             new Node(
                 moduleName,
@@ -110,6 +110,7 @@ class SourceParser : ISourceParser
                     Type = NodeType.Assembly,
                     Description = description,
                     Parent = parentName,
+                    FileSpan = fileSpan,
                 }
             ),
             null
@@ -132,8 +133,12 @@ class SourceParser : ISourceParser
     }
 
     // Reads the [assembly: AssemblyDescription("...")] value from the project's compiled
-    // assembly attributes, used as the description for the assembly node.
-    static string? GetAssemblyDescription(Compilation compilation)
+    // assembly attributes, used as the description for the assembly node, together with a
+    // source location where the description can be edited or added ("show source").
+    internal static (string? Description, FileSpan? FileSpan) GetAssemblyDescription(
+        Compilation compilation,
+        string? projectPath
+    )
     {
         var attribute = compilation
             .Assembly.GetAttributes()
@@ -141,10 +146,68 @@ class SourceParser : ISourceParser
                 a.AttributeClass?.ToDisplayString() == "System.Reflection.AssemblyDescriptionAttribute"
             );
 
-        if (attribute is null || attribute.ConstructorArguments.Length == 0)
-            return null;
+        var fileSpan = GetAssemblyDescriptionSpan(attribute, compilation, projectPath);
 
-        return attribute.ConstructorArguments[0].Value as string;
+        if (attribute is null || attribute.ConstructorArguments.Length == 0)
+            return (null, fileSpan);
+
+        return (attribute.ConstructorArguments[0].Value as string, fileSpan);
+    }
+
+    // The assembly node has no single source definition, so pick the best editable location:
+    // the hand-written [assembly: AssemblyDescription(...)] attribute if present, otherwise a
+    // hand-written Usings.cs/AssemblyInfo.cs file, otherwise the project file itself (where a
+    // <Description> property generates the attribute).
+    static FileSpan? GetAssemblyDescriptionSpan(AttributeData? attribute, Compilation compilation, string? projectPath)
+    {
+        if (attribute?.ApplicationSyntaxReference is { } syntaxRef)
+        {
+            var lineSpan = syntaxRef.GetSyntax().GetLocation().GetLineSpan();
+            if (!IsGeneratedPath(lineSpan.Path))
+                return new FileSpan(lineSpan.Path, lineSpan.StartLinePosition.Line, lineSpan.EndLinePosition.Line);
+        }
+
+        foreach (var fileName in new[] { "Usings.cs", "AssemblyInfo.cs" })
+        {
+            var path = compilation
+                .SyntaxTrees.Select(t => t.FilePath)
+                .Where(p => !IsGeneratedPath(p))
+                .FirstOrDefault(p => string.Equals(Path.GetFileName(p), fileName, StringComparison.OrdinalIgnoreCase));
+
+            if (path is not null)
+                return new FileSpan(path, 0, 0);
+        }
+
+        if (projectPath is not null && File.Exists(projectPath))
+        {
+            var line = GetProjectDescriptionLine(projectPath);
+            return new FileSpan(projectPath, line, line);
+        }
+
+        return null;
+    }
+
+    static bool IsGeneratedPath(string path) =>
+        path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") || path.Contains("/obj/");
+
+    static int GetProjectDescriptionLine(string projectPath)
+    {
+        try
+        {
+            var lineNumber = 0;
+            foreach (var line in File.ReadLines(projectPath))
+            {
+                if (line.Contains("<Description>"))
+                    return lineNumber;
+                lineNumber++;
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"Failed to read project file {projectPath}: {e.Message}");
+        }
+
+        return 0;
     }
 
     // Reads the gzip-compressed, pre-parsed demo model embedded in this assembly
