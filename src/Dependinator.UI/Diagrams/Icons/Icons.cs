@@ -27,16 +27,16 @@ static class Icon
         { Parsing.NodeType.EnumType, "EnumIcon" },
         { Parsing.NodeType.StructType, "StructIcon" },
         { Parsing.NodeType.RecordType, "RecordIcon" },
-        { Parsing.NodeType.MethodMember, "MemberIcon" },
-        { Parsing.NodeType.FieldMember, "MemberIcon" },
-        { Parsing.NodeType.ConstructorMember, "MemberIcon" },
-        { Parsing.NodeType.EventMember, "MemberIcon" },
-        { Parsing.NodeType.PropertyMember, "MemberIcon" },
+        { Parsing.NodeType.MethodMember, "MethodIcon" },
+        { Parsing.NodeType.FieldMember, "FieldIcon" },
+        { Parsing.NodeType.ConstructorMember, "ConstructorIcon" },
+        { Parsing.NodeType.EventMember, "EventIcon" },
+        { Parsing.NodeType.PropertyMember, "PropertyIcon" },
     };
 
-    public static string GetIcon(Parsing.NodeType iconName)
+    public static string GetIcon(Parsing.NodeType nodeType)
     {
-        if (!IconMap.TryGetValue(iconName, out string? name))
+        if (!IconMap.TryGetValue(nodeType, out string? name))
             return ModuleIcon;
 
         return IconLibrary.Get(name);
