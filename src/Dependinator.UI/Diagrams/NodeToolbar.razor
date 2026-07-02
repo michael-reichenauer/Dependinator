@@ -12,10 +12,10 @@
   <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
     <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
              PopoverClass="dep-light-menu" data-testid="node-menu">
-      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
+      @* <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
                    OnClick="ShowProperties" data-testid="node-menu-properties">
         Properties …
-      </MudMenuItem>
+      </MudMenuItem> *@
       <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
                    OnClick="LayoutChildren" data-testid="node-menu-reset-children">
         Reset Children Layout
@@ -47,8 +47,8 @@
 
     @if (NodeSvg.IsEditingEnabled)
     {
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen"
-                     OnClick="interactionService.DecreaseNodeSize" data-testid="node-decrease-size" />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" OnClick="interactionService.DecreaseNodeSize"
+                     data-testid="node-decrease-size" />
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize"
                      data-testid="node-increase-size" />
     }
