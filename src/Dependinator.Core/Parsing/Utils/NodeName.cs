@@ -6,7 +6,6 @@ internal class NodeName : Equatable<NodeName>
 
     public static NodeName Root = From("");
     static readonly char[] PartsSeparators = "./".ToCharArray();
-    static readonly char[] NameSeparators = "(<".ToCharArray();
     readonly Lazy<DisplayParts> displayParts;
 
     readonly Lazy<NodeName> parentName;
@@ -33,10 +32,24 @@ internal class NodeName : Equatable<NodeName>
 
     public static string ParseParentName(string name)
     {
-        var parametersIndex = name.IndexOfAny(NameSeparators);
-        if (parametersIndex > 0)
-            name = name[..parametersIndex];
-        int index = name.LastIndexOfAny(PartsSeparators);
+        // Members of generic types have the type's <T> before the member name
+        // (e.g. Ns.Type<T>.Member), so part separators inside <> must be skipped
+        // rather than cutting the name at the first '<'.
+        int depth = 0;
+        int index = -1;
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            if (c == '(')
+                break;
+            if (c == '<')
+                depth++;
+            else if (c == '>')
+                depth--;
+            else if (depth == 0 && (c == '.' || c == '/'))
+                index = i;
+        }
+
         return index > -1 ? name[..index] : "";
     }
 
@@ -49,10 +62,8 @@ internal class NodeName : Equatable<NodeName>
 
     NodeName GetParentName()
     {
-        // Split full name in name and parent name,
-        int index = FullName.LastIndexOfAny(PartsSeparators);
-
-        return index > -1 ? From(FullName[..index]) : Root;
+        var parentName = ParseParentName(FullName);
+        return parentName != "" ? From(parentName) : Root;
     }
 
     DisplayParts GetDisplayParts()
