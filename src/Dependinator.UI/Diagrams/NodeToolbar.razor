@@ -10,70 +10,88 @@
 @if (HasSelectedLine)
 {
   <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
-    <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
-             PopoverClass="dep-light-menu" data-testid="node-menu">
-      @* <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
-                   OnClick="ShowProperties" data-testid="node-menu-properties">
-        Properties …
-      </MudMenuItem> *@
-      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
-                   OnClick="LayoutChildren" data-testid="node-menu-reset-children">
-        Reset Children Layout
-      </MudMenuItem>
-      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DeveloperBoardOff"
-                   OnClick="LayoutDescendants" data-testid="node-menu-reset-descendants">
-        Reset All Descendants Layout
-      </MudMenuItem>
-
-      <MudDivider />
-      @if (!IsNodeHidden)
-      {
-        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
-                     OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled" data-testid="node-menu-toggle-hide">
-          Hide Node …
+    <MudTooltip Text="Menu">
+      <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
+               PopoverClass="dep-light-menu" data-testid="node-menu">
+        @* <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
+                     OnClick="ShowProperties" data-testid="node-menu-properties">
+          Properties …
+        </MudMenuItem> *@
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
+                     OnClick="LayoutChildren" data-testid="node-menu-reset-children">
+          Reset Children Layout
         </MudMenuItem>
-      }
-      else
-      {
-        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility"
-                     OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled" data-testid="node-menu-toggle-hide">
-          Show Node …
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DeveloperBoardOff"
+                     OnClick="LayoutDescendants" data-testid="node-menu-reset-descendants">
+          Reset All Descendants Layout
         </MudMenuItem>
-      }
-    </MudMenu>
 
-    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="node-references" />
-    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
+        <MudDivider />
+        @if (!IsNodeHidden)
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
+                       OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled" data-testid="node-menu-toggle-hide">
+            Hide Node …
+          </MudMenuItem>
+        }
+        else
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility"
+                       OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled" data-testid="node-menu-toggle-hide">
+            Show Node …
+          </MudMenuItem>
+        }
+      </MudMenu>
+    </MudTooltip>
+
+    <MudTooltip Text="Show references">
+      <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="node-references" />
+    </MudTooltip>
+    <MudTooltip Text="Show dependencies">
+      <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
+    </MudTooltip>
 
     @if (NodeSvg.IsEditingEnabled)
     {
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" OnClick="interactionService.DecreaseNodeSize"
-                     data-testid="node-decrease-size" />
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize"
-                     data-testid="node-increase-size" />
+      <MudTooltip Text="Decrease node size">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" OnClick="interactionService.DecreaseNodeSize"
+                       data-testid="node-decrease-size" />
+      </MudTooltip>
+      <MudTooltip Text="Increase node size">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize"
+                       data-testid="node-increase-size" />
+      </MudTooltip>
     }
 
     @if (CanShowSource)
     {
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync"
-                     data-testid="node-show-source" />
+      <MudTooltip Text="Show source code">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync"
+                       data-testid="node-show-source" />
+      </MudTooltip>
     }
 
     @if (!IsIconMode)
     {
       @if (IsEditNodeMode)
       {
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" OnClick="() => IsEditNodeMode = false"
-                       Color="@Color.Warning" data-testid="node-edit" />
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit"
-                       data-testid="node-fit-to-screen" />
+        <MudTooltip Text="Exit node edit mode">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" OnClick="() => IsEditNodeMode = false"
+                         Color="@Color.Warning" data-testid="node-edit" />
+        </MudTooltip>
+        <MudTooltip Text="Fit node to screen">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit"
+                         data-testid="node-fit-to-screen" />
+        </MudTooltip>
       }
       else
       {
         @if (NodeSvg.IsEditingEnabled)
         {
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="() => IsEditNodeMode = true"
-                         data-testid="node-edit" />
+          <MudTooltip Text="Edit node">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="() => IsEditNodeMode = true"
+                           data-testid="node-edit" />
+          </MudTooltip>
         }
       }
     }
