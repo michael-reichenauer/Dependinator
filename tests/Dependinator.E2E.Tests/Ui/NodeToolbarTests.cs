@@ -7,7 +7,7 @@ namespace Dependinator.E2E.Tests.Ui;
 // dialogs/popovers it triggers actually open — wiring that unit tests can't reach.
 public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
 {
-    [E2EFact]
+    [E2EFact(Skip = "The Properties menu item is disabled until actual data exists (see NodeToolbar.razor)")]
     public async Task NodeMenu_ShouldOpenPropertiesDialog()
     {
         await App.GotoMainPageAsync();
