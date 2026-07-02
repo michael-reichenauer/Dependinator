@@ -13,6 +13,13 @@ static class ItemsExtensions
         public IReadOnlyList<Link> Links() =>
             items.Where(i => i.Link is not null).Select(i => i.Link).Cast<Link>().ToList();
 
+        public IReadOnlyList<LineDescription> LineDescriptions() =>
+            items
+                .Where(i => i.LineDescription is not null)
+                .Select(i => i.LineDescription)
+                .Cast<LineDescription>()
+                .ToList();
+
         public Node Node<T>(string? memberName) => items.Node(typeof(T), memberName);
 
         public Node Node(Type type, string? memberName)

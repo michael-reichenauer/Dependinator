@@ -8,6 +8,10 @@ public class NodeNameTests
     [InlineData("Mod.Ns.Sample", "Mod.Ns")]
     [InlineData("Mod.Ns.Sample.Do(System.Int32,System.String)", "Mod.Ns.Sample")]
     [InlineData("Mod.Ns.Generic<T>", "Mod.Ns")]
+    [InlineData("Mod.Ns.Generic<T>.field", "Mod.Ns.Generic<T>")]
+    [InlineData("Mod.Ns.Generic<T>.Do(T?,System.String)", "Mod.Ns.Generic<T>")]
+    [InlineData("Mod.Ns.Generic<T1,T2>.Do<T3>(T3)", "Mod.Ns.Generic<T1,T2>")]
+    [InlineData("Mod.Ns.Generic<Other.Nested<T>>.Do()", "Mod.Ns.Generic<Other.Nested<T>>")]
     [InlineData("Mod.Ns.Outer/Inner", "Mod.Ns.Outer")]
     [InlineData("Root", "")]
     public void ParseParentName_ShouldReturnContainingName(string fullName, string expected)
@@ -18,6 +22,7 @@ public class NodeNameTests
     [Theory]
     [InlineData("Mod.Ns.Sample", "Mod.Ns")]
     [InlineData("Mod.Ns.Outer/Inner", "Mod.Ns.Outer")]
+    [InlineData("Mod.Ns.Generic<T>.Do(T?)", "Mod.Ns.Generic<T>")]
     public void ParentName_ShouldHandleDotAndSlashSeparators(string fullName, string expectedParent)
     {
         Assert.Equal(expectedParent, NodeName.From(fullName).ParentName.FullName);

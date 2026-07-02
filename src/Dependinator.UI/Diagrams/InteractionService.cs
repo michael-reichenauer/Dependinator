@@ -10,6 +10,7 @@ interface IInteractionService
     string Cursor { get; }
     bool IsContainer { get; }
     bool CanShowSource { get; }
+    bool CanShowLineSource { get; }
     bool IsEditNodeMode { get; set; }
     Task InitAsync();
     void NodePanZoomToFit();
@@ -92,6 +93,19 @@ class InteractionService : IInteractionService
             return node.FileSpanOrParentSpan is not null;
             // return node.FileSpanOrParentSpan is not null
             //     || node.Type is Parsing.NodeType.Type or Parsing.NodeType.Member;
+        }
+    }
+
+    // A line has no own source location; "show source" navigates to the line's source node.
+    public bool CanShowLineSource
+    {
+        get
+        {
+            if (!selectionService.SelectedId.IsLine)
+                return false;
+            if (!dependenciesService.TryGetLine(LineId.FromId(selectionService.SelectedId.Id), out var line))
+                return false;
+            return line.Source.FileSpanOrParentSpan is not null;
         }
     }
 

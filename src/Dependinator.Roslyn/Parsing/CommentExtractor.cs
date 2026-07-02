@@ -27,21 +27,42 @@ static class CommentExtractor
         return NoValue.String;
     }
 
-    public static string? GetNamespaceCommentOrNull(INamespaceSymbol ns)
+    public static (string? Comment, FileSpan? FileSpan) GetNamespaceCommentAndSpan(INamespaceSymbol ns)
     {
         // A namespace can be declared across many files; use the first declaration that
         // has a leading comment (e.g. a comment placed directly above `namespace X;`).
-        foreach (var syntaxRef in ns.DeclaringSyntaxReferences)
+        // A declaration of `namespace X.Y;` also declares the parent namespace X, so only
+        // declarations whose written name matches the namespace exactly are considered
+        // (a comment above `namespace X.Y;` must not become the description of X).
+        // The span is the commented declaration's location, or the first declaration's
+        // location if none has a comment, so "show source" can navigate to a place where
+        // a namespace comment can be edited or added.
+        var namespaceName = ns.ToDisplayString();
+        var declarations = ns
+            .DeclaringSyntaxReferences.Select(syntaxRef => syntaxRef.GetSyntax())
+            .OfType<BaseNamespaceDeclarationSyntax>()
+            .Where(declaration => declaration.Name.ToString() == namespaceName)
+            .Select(declaration => (Declaration: declaration, Span: GetNamespaceNameSpan(declaration)))
+            .OrderBy(d => d.Span.Path, StringComparer.Ordinal)
+            .ThenBy(d => d.Span.StartLine)
+            .ToList();
+
+        foreach (var (declaration, span) in declarations)
         {
-            if (syntaxRef.GetSyntax() is BaseNamespaceDeclarationSyntax declarationNode)
-            {
-                var comment = GetLeadingComment(declarationNode);
-                if (!string.IsNullOrWhiteSpace(comment))
-                    return comment;
-            }
+            var comment = GetLeadingComment(declaration);
+            if (!string.IsNullOrWhiteSpace(comment))
+                return (comment, span);
         }
 
-        return null;
+        return (null, declarations.Count > 0 ? declarations[0].Span : null);
+    }
+
+    static FileSpan GetNamespaceNameSpan(BaseNamespaceDeclarationSyntax declaration)
+    {
+        // Use the line of the namespace name rather than the whole declaration node,
+        // since a file-scoped namespace declaration spans the entire file.
+        var lineSpan = declaration.Name.GetLocation().GetLineSpan();
+        return new FileSpan(lineSpan.Path, lineSpan.StartLinePosition.Line, lineSpan.StartLinePosition.Line);
     }
 
     static bool TryGetDeclarationNode(SyntaxNode syntaxNode, out SyntaxNode declarationNode)

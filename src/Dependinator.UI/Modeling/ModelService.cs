@@ -245,6 +245,9 @@ class ModelService : IModelService, IDisposable
 
             applicationEvents.TriggerModelChanged();
             await AddOrUpdateAllItems(items);
+
+            // Line descriptions can only be applied once all links (and thus lines) have been added
+            ApplyLineDescriptions(items);
         }
 
         CheckLineVisibility();
@@ -318,6 +321,16 @@ class ModelService : IModelService, IDisposable
                 modelStructureService.AddOrUpdateNode(model, parsedItem.Node);
             if (parsedItem.Link is not null)
                 modelStructureService.AddOrUpdateLink(model, parsedItem.Link);
+        }
+    }
+
+    void ApplyLineDescriptions(IReadOnlyList<Parsing.Item> parsedItems)
+    {
+        using var model = modelMgr.UseModel();
+        foreach (var parsedItem in parsedItems)
+        {
+            if (parsedItem.LineDescription is not null)
+                modelStructureService.SetLineDescription(model, parsedItem.LineDescription);
         }
     }
 

@@ -2,6 +2,7 @@ using Dependinator.Core.Parsing;
 using Dependinator.Core.Shared;
 using Dependinator.Roslyn.Parsing;
 using Dependinator.Roslyn.Tests.Parsing.Utils;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Dependinator.Roslyn.Tests.Parsing;
 
@@ -21,8 +22,60 @@ public class SourceTestData
     public void SecondFunction() { }
 }
 
-public class SourceParserTests
+[Collection(nameof(RoslynCollection))]
+public class SourceParserTests(RoslynFixture fixture)
 {
+    [Fact]
+    public void GetAssemblyDescription_ShouldReturnAttributeValueAndItsSourceLocation()
+    {
+        var (description, fileSpan) = SourceParser.GetAssemblyDescription(fixture.Compilation, Root.ProjectFilePath);
+
+        Assert.Equal("Test assembly for Roslyn parsing.", description);
+        Assert.NotNull(fileSpan);
+        Assert.EndsWith("Usings.cs", fileSpan.Path);
+        Assert.Equal(5, fileSpan.StartLine); // 0-based line of the AssemblyDescription attribute
+    }
+
+    [Fact]
+    public void GetAssemblyDescription_ShouldFallBackToUsingsFile_WhenNoAttribute()
+    {
+        var syntaxTree = CSharpSyntaxTree.ParseText("namespace Sample;", path: "/repo/src/Sample/Usings.cs");
+        var compilation = CSharpCompilation.Create("Sample", [syntaxTree]);
+
+        var (description, fileSpan) = SourceParser.GetAssemblyDescription(compilation, null);
+
+        Assert.Null(description);
+        Assert.NotNull(fileSpan);
+        Assert.Equal("/repo/src/Sample/Usings.cs", fileSpan.Path);
+        Assert.Equal(0, fileSpan.StartLine);
+    }
+
+    [Fact]
+    public void GetAssemblyDescription_ShouldFallBackToProjectFile_WhenNoSuitableSourceFile()
+    {
+        var projectPath = Path.Combine(Path.GetTempPath(), $"Sample-{Guid.NewGuid()}.csproj");
+        File.WriteAllText(
+            projectPath,
+            "<Project>\n  <PropertyGroup>\n    <Description>Sample</Description>\n  </PropertyGroup>\n</Project>\n"
+        );
+        try
+        {
+            var syntaxTree = CSharpSyntaxTree.ParseText("namespace Sample;", path: "/repo/src/Sample/Program.cs");
+            var compilation = CSharpCompilation.Create("Sample", [syntaxTree]);
+
+            var (description, fileSpan) = SourceParser.GetAssemblyDescription(compilation, projectPath);
+
+            Assert.Null(description);
+            Assert.NotNull(fileSpan);
+            Assert.Equal(projectPath, fileSpan.Path);
+            Assert.Equal(2, fileSpan.StartLine); // 0-based line of the <Description> element
+        }
+        finally
+        {
+            File.Delete(projectPath);
+        }
+    }
+
     [Fact(Skip = "Disabled, since always LspProject takes extra time")]
     public async Task TestLspProjectGenericRegistrationLinksAsync()
     {

@@ -1,5 +1,6 @@
 ﻿@using Dependinator.UI.Diagrams.Icons
 @using Dependinator.UI.Diagrams.Dependencies
+@using Dependinator.Core
 
 
 @inject IApplicationEvents applicationEvents
@@ -8,6 +9,7 @@
 @inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
 @inject ILineEditService lineEditService
+@inject INavigationService navigationService
 @implements IDisposable
 
 @if (HasSelectedLine)
@@ -43,6 +45,13 @@
                 <MudTooltip Text="Remove line point">
                     <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
                                    data-testid="line-remove-point" />
+                </MudTooltip>
+            }
+            @if (interactionService.CanShowLineSource)
+            {
+                <MudTooltip Text="Show source node source code">
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync"
+                                   data-testid="line-show-source" />
                 </MudTooltip>
             }
         </MudButtonGroup>
@@ -90,6 +99,14 @@
         if (!TryGetSelectedLine(out var line))
             return;
         SelectNode(line.Source);
+    }
+
+    async Task ShowSourceAsync()
+    {
+        if (!TryGetSelectedLine(out var line))
+            return;
+        if (Build.IsVsCodeExtWasm)
+            await navigationService.ShowEditor(line.Source.Id);
     }
 
     void PanToTarget()

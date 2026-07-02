@@ -9,6 +9,7 @@ interface IStructureService
 {
     void AddOrUpdateNode(IModel model, Parsing.Node parsedNode);
     void AddOrUpdateLink(IModel model, Parsing.Link parsedLink);
+    void SetLineDescription(IModel model, Parsing.LineDescription lineDescription);
     void ClearNotUpdated(IModel model);
     void SetNodeDto(IModel model, NodeDto nodeDto);
     void SetLinkDto(IModel model, LinkDto linkDto);
@@ -120,12 +121,45 @@ class StructureService(ILineService linesService) : IStructureService
         target.Type = targetType;
     }
 
+    // Sets a parsed line description on the line whose endpoints exactly match the description's
+    // source and resolved target. The target name may be relative; it is resolved like C# name
+    // lookup by prefixing the source node's ancestors. If no matching line exists, the
+    // description is silently unused; nodes, links, or lines are never created.
+    public void SetLineDescription(IModel model, Parsing.LineDescription lineDescription)
+    {
+        if (!model.Nodes.TryGetValue(NodeId.FromName(lineDescription.Source), out var source))
+            return;
+
+        foreach (var targetName in CandidateTargetNames(source, lineDescription.Target))
+        {
+            if (model.Lines.TryGetValue(LineId.From(lineDescription.Source, targetName), out var line))
+            {
+                line.SetDescription(lineDescription.Text, model.UpdateStamp);
+                return;
+            }
+        }
+    }
+
+    static IEnumerable<string> CandidateTargetNames(Models.Node source, string target)
+    {
+        yield return target;
+
+        foreach (var ancestor in source.Ancestors())
+        {
+            if (ancestor.IsRoot)
+                yield break;
+            yield return $"{ancestor.Name}.{target}";
+        }
+    }
+
     public void SetLineLayoutDto(IModel model, LineDto lineLayoutDto)
     {
         if (!model.Lines.TryGetValue(LineId.FromId(lineLayoutDto.LineId), out var line))
             return;
 
         line.SetSegmentPoints(lineLayoutDto.SegmentPoints);
+        if (lineLayoutDto.Description is not null)
+            line.SetDescription(lineLayoutDto.Description, model.UpdateStamp);
     }
 
     public void ClearNotUpdated(IModel model)
@@ -139,6 +173,13 @@ class StructureService(ILineService linesService) : IStructureService
         Log.Info($"Remove {nodes.Count} nodes");
         foreach (var node in nodes)
             RemoveNode(model, node);
+
+        // Clear line descriptions whose source comments were removed since the last parse
+        var staleDescriptionLines = model
+            .Lines.Values.Where(l => l.Description is not null && l.DescriptionUpdateStamp != model.UpdateStamp)
+            .ToList();
+        foreach (var line in staleDescriptionLines)
+            line.ClearDescription();
     }
 
     void MoveNodeToParent(IModel model, Models.Node node, string parentName)

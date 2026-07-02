@@ -1,3 +1,4 @@
+using Dependinator.Core.Parsing.Utils;
 using Microsoft.CodeAnalysis;
 
 namespace Dependinator.Roslyn.Parsing;
@@ -15,19 +16,31 @@ static class TypeParser
         var leadingComment = CommentExtractor.GetLeadingCommentOrNoValue(type, fileSpan);
         var isPrivate = SymbolUtils.GetIsPrivate(type);
 
+        var description = leadingComment;
+        IReadOnlyList<(string Target, string Text)> lineDescriptions = [];
+        if (leadingComment is not null && leadingComment != NoValue.String)
+        {
+            (var nodeDescription, lineDescriptions) = CommentDescriptions.Parse(leadingComment);
+            // An arrow-only comment has no node description; NoValue.String clears any previous one
+            description = nodeDescription ?? NoValue.String;
+        }
+
         yield return new Item(
             new Node(
                 fullTypeName,
                 new NodeProperties
                 {
                     Type = SymbolUtils.GetTypeNodeType(type),
-                    Description = leadingComment,
+                    Description = description,
                     FileSpan = fileSpan,
                     IsPrivate = isPrivate,
                 }
             ),
             null
         );
+
+        foreach (var (target, text) in lineDescriptions)
+            yield return new Item(null, null, new LineDescription(fullTypeName, target, text));
 
         foreach (var item in ParseTypeLinks(type, fullTypeName))
             yield return item;

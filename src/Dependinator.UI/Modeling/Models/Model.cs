@@ -73,8 +73,13 @@ class Model : IModel
             Lines =
             [
                 .. lines
-                    .Values.Where(l => !l.IsDirect && l.SegmentPoints.Count > 0)
-                    .Select(l => new LineDto() { LineId = l.Id.Value, SegmentPoints = [.. l.SegmentPoints] }),
+                    .Values.Where(l => !l.IsDirect && (l.SegmentPoints.Count > 0 || l.Description is not null))
+                    .Select(l => new LineDto()
+                    {
+                        LineId = l.Id.Value,
+                        SegmentPoints = [.. l.SegmentPoints],
+                        Description = l.Description,
+                    }),
             ],
         };
 
