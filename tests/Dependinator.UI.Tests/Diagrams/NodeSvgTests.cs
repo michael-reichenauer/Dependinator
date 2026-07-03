@@ -84,6 +84,6 @@ public class NodeSvgTests
     [Fact]
     public void DescriptionWidthForNode_ShouldCap_ForVeryWideNodes()
     {
-        Assert.Equal(60, NodeSvg.DescriptionWidthForNode(100000, 6));
+        Assert.Equal(100, NodeSvg.DescriptionWidthForNode(100000, 6));
     }
 }

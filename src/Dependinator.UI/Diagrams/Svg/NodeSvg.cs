@@ -14,8 +14,14 @@ class NodeSvg
     const int NameIconSize = 9;
     const int FontSize = 8;
     const int DescriptionFontSize = 6;
+
+    // Name/description text stops scaling with zoom beyond this factor, so zooming in reveals
+    // more description text instead of just growing the letters. Containers appear at
+    // MinContainerZoom (2.0), so text still grows a bit "into" the node before plateauing at
+    // 24px names and 18px descriptions.
+    const double MaxTextZoom = 3.0;
     const int DescriptionMinWidth = 25;
-    const int DescriptionMaxWidth = 60;
+    const int DescriptionMaxWidth = 100;
     const int DescriptionMaxLines = 7;
     const int IconDescriptionMaxLines = 5;
     const int MemberDescriptionMaxLines = 1;
@@ -46,16 +52,17 @@ class NodeSvg
     public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
         var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
+        var textZoom = TextZoom(parentZoom);
         var textX = geometry.X + geometry.Width / 2;
         var textY = geometry.Y + geometry.Height;
-        var fontSize = FontSize * parentZoom;
+        var fontSize = FontSize * textZoom;
         var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName, node.HtmlDescription);
         var selectedOverlay = SelectedNodeSvg(node, geometry);
-        var descriptionFontSize = DescriptionFontSize * parentZoom;
-        var descriptionY = textY + fontSize + DescriptionLineGap * parentZoom;
+        var descriptionFontSize = DescriptionFontSize * textZoom;
+        var descriptionY = textY + fontSize + DescriptionLineGap * textZoom;
         var descriptionSvg = BuildDescriptionSvg(
             node,
             textX,
@@ -64,7 +71,7 @@ class NodeSvg
             "iconDescription",
             textOpacity,
             DescriptionMinWidth,
-            IconDescriptionMaxLines
+            ScaledMaxLines(IconDescriptionMaxLines, parentZoom, textZoom)
         );
 
         return $"""
@@ -90,8 +97,9 @@ class NodeSvg
 
         var innerGeometry = new Rect(0, 0, geometry.Width, geometry.Height);
         var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName, node.HtmlDescription);
-        var descriptionFontSize = DescriptionFontSize * parentZoom;
-        var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * parentZoom;
+        var textZoom = TextZoom(parentZoom);
+        var descriptionFontSize = DescriptionFontSize * textZoom;
+        var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * textZoom;
         var descriptionWidth = DescriptionWidthForNode(
             geometry.Width - (header.TextPos.X - geometry.X),
             descriptionFontSize
@@ -104,7 +112,7 @@ class NodeSvg
             "nodeDescription",
             textOpacity,
             descriptionWidth,
-            DescriptionMaxLines
+            ScaledMaxLines(DescriptionMaxLines, parentZoom, textZoom)
         );
 
         return $"""
@@ -122,8 +130,9 @@ class NodeSvg
 
     public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
-        var fontSize = FontSize * parentZoom;
-        var layout = CalculateMemberNodeLayout(node, nodeCanvasRect, parentZoom, fontSize);
+        var textZoom = TextZoom(parentZoom);
+        var fontSize = FontSize * textZoom;
+        var layout = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
         var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
@@ -135,8 +144,8 @@ class NodeSvg
             node.HtmlDescription
         );
         var selectedOverlay = SelectedNodeSvg(node, layout.Bounds);
-        var descriptionFontSize = DescriptionFontSize * parentZoom;
-        var descriptionY = layout.Text.Y + fontSize / 2 + DescriptionLineGap * parentZoom;
+        var descriptionFontSize = DescriptionFontSize * textZoom;
+        var descriptionY = layout.Text.Y + fontSize / 2 + DescriptionLineGap * textZoom;
         var descriptionSvg = BuildDescriptionSvg(
             node,
             layout.Text.X,
@@ -145,7 +154,7 @@ class NodeSvg
             "memberDescription",
             textOpacity,
             DescriptionMinWidth,
-            MemberDescriptionMaxLines
+            ScaledMaxLines(MemberDescriptionMaxLines, parentZoom, textZoom)
         );
 
         return $"""
@@ -174,12 +183,7 @@ class NodeSvg
         return new Rect(nodeCanvasRect.X, nodeCanvasRect.Y, width, height);
     }
 
-    static MemberNodeLayout CalculateMemberNodeLayout(
-        Node node,
-        Rect nodeCanvasRect,
-        double parentZoom,
-        double fontSize
-    )
+    static MemberNodeLayout CalculateMemberNodeLayout(Node node, Rect nodeCanvasRect, double textZoom, double fontSize)
     {
         var iconSize = fontSize;
         var centerY = nodeCanvasRect.Y + nodeCanvasRect.Height / 2;
@@ -187,8 +191,8 @@ class NodeSvg
         var iconX = nodeCanvasRect.X;
         var iconY = centerY - iconSize / 2;
 
-        var gap = MemberTextGap * parentZoom;
-        var padding = MemberHorizontalPadding * parentZoom;
+        var gap = MemberTextGap * textZoom;
+        var padding = MemberHorizontalPadding * textZoom;
         var textWidth = EstimateMemberTextWidth(node.ShortName, fontSize);
 
         var layoutWidth = iconSize + gap + textWidth + padding;
@@ -290,15 +294,26 @@ class NodeSvg
 
     static ContainerHeader CalculateContainerHeader(Rect nodeCanvasRect, double parentZoom)
     {
-        var iconSize = NameIconSize * parentZoom;
-        var iconPosition = new Pos(nodeCanvasRect.X, nodeCanvasRect.Y + nodeCanvasRect.Height + 1 * parentZoom);
+        var textZoom = TextZoom(parentZoom);
+        var iconSize = NameIconSize * textZoom;
+        var iconPosition = new Pos(nodeCanvasRect.X, nodeCanvasRect.Y + nodeCanvasRect.Height + 1 * textZoom);
         var textPosition = new Pos(
-            nodeCanvasRect.X + (NameIconSize + 1) * parentZoom,
-            nodeCanvasRect.Y + nodeCanvasRect.Height + 2 * parentZoom
+            nodeCanvasRect.X + (NameIconSize + 1) * textZoom,
+            nodeCanvasRect.Y + nodeCanvasRect.Height + 2 * textZoom
         );
-        var fontSize = FontSize * parentZoom;
+        var fontSize = FontSize * textZoom;
         return new ContainerHeader(iconPosition, iconSize, textPosition, fontSize);
     }
+
+    // Effective zoom for text and header icons: follows the diagram zoom until MaxTextZoom,
+    // then stays capped so text keeps a readable size instead of growing with the node.
+    static double TextZoom(double parentZoom) => Math.Min(parentZoom, MaxTextZoom);
+
+    // Once the font size is capped, further zooming leaves unused space below the node (layout
+    // distances keep scaling while text does not). Convert that surplus into extra description
+    // lines, keeping the same pixel footprint as the uncapped layout would have used.
+    static int ScaledMaxLines(int maxLines, double parentZoom, double textZoom) =>
+        textZoom <= 0 ? maxLines : (int)(maxLines * parentZoom / textZoom);
 
     static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
         node.IsHidden ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
