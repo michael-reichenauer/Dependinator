@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
-using Microsoft.Playwright;
 using Xunit;
 using Xunit.Abstractions;
 

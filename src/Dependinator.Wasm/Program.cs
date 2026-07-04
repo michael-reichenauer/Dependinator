@@ -6,7 +6,6 @@ using Dependinator.Core.Utils.Logging;
 using Dependinator.UI;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.CloudSync;
-using Dependinator.Wasm;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
