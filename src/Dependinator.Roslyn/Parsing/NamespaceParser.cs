@@ -12,6 +12,9 @@ static class NamespaceParser
             if (ns.IsGlobalNamespace)
                 continue;
 
+            if (IgnoredTypes.IsIgnored(ns))
+                continue;
+
             var (comment, fileSpan) = CommentExtractor.GetNamespaceCommentAndSpan(ns);
             if (comment is null && fileSpan is null)
                 continue;
