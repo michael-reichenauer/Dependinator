@@ -28,6 +28,17 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
     const double PinchZoomSpeed = 1.04;
     const double sizeDiff = 10.0;
 
+    // Pan/zoom on a node whose sole child is a pass-through container would be visually inert
+    // (the pass-through boundary always re-covers the parent's viewport), so such gestures are
+    // redirected to the deepest pass-through node, whose container transform moves the actual
+    // visible content.
+    static Node ResolveContainerTarget(Node node)
+    {
+        while (node.Children.Count == 1 && node.Children[0].IsPassThrough)
+            node = node.Children[0];
+        return node;
+    }
+
     static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 
     static double SnapToGridUp(double value) => Math.Ceiling(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
@@ -113,6 +124,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
                 return;
 
+            node = ResolveContainerTarget(node);
             nodeId = node.Id;
             var nodeZoom = node.GetZoom() * zoom;
             var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
@@ -258,6 +270,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
                 return;
 
+            node = ResolveContainerTarget(node);
             nodeId = node.Id;
             if (e.DeltaY == 0)
                 return;
@@ -299,6 +312,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
                 return;
 
+            node = ResolveContainerTarget(node);
             nodeId = node.Id;
             Rect b = node.GetTotalBounds();
 

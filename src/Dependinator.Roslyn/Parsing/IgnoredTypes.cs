@@ -6,6 +6,11 @@ class IgnoredTypes
 {
     public static bool IsIgnored(INamedTypeSymbol symbol, string? typeName = null)
     {
+        // Unresolved (error) types and anonymous types would produce bogus node names
+        // like "var", "" or "<anonymoustype:...>"
+        if (symbol.TypeKind == TypeKind.Error || symbol.IsAnonymousType)
+            return true;
+
         typeName ??= symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
         if (IsIgnoredType(typeName))
@@ -19,6 +24,17 @@ class IgnoredTypes
             return true;
 
         return false;
+    }
+
+    // Compiler/Razor-generated namespaces like "__Blazor.*" or "Microsoft.*" (e.g. generated
+    // attribute files in obj/) should not appear as namespace nodes in the model
+    public static bool IsIgnored(INamespaceSymbol ns)
+    {
+        var name = ns.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        return name == "global::Microsoft"
+            || name.StartsWith("global::Microsoft.")
+            || name == "global::__Blazor"
+            || name.StartsWith("global::__Blazor.");
     }
 
     static bool IsIgnoredType(string typeName)

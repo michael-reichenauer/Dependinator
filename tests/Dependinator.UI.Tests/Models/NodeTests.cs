@@ -45,6 +45,44 @@ public class NodeTests
     }
 
     [Fact]
+    public void Boundary_ShouldCoverParentViewportWhenPassThrough()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var assembly = new ModelNode("Assembly", root)
+        {
+            Boundary = new Rect(100, 100, 200, 160),
+            ContainerZoom = 0.5,
+            ContainerOffset = new Pos(10, 20),
+        };
+        var ns = new ModelNode("Assembly.Ns", assembly) { IsPassThrough = true };
+        root.AddChild(assembly);
+        assembly.AddChild(ns);
+
+        // The parent's viewport expressed in its inner coordinate space
+        Assert.Equal(new Rect(-20, -40, 400, 320), ns.Boundary);
+    }
+
+    [Fact]
+    public void Boundary_ShouldCoverParentViewportForPassThroughChain()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var assembly = new ModelNode("Assembly", root)
+        {
+            Boundary = new Rect(0, 0, 200, 160),
+            ContainerZoom = 0.5,
+            ContainerOffset = new Pos(0, 0),
+        };
+        var outerNs = new ModelNode("Assembly.Outer", assembly) { IsPassThrough = true, ContainerZoom = 0.25 };
+        var innerNs = new ModelNode("Assembly.Outer.Inner", outerNs) { IsPassThrough = true };
+        root.AddChild(assembly);
+        assembly.AddChild(outerNs);
+        outerNs.AddChild(innerNs);
+
+        Assert.Equal(new Rect(0, 0, 400, 320), outerNs.Boundary);
+        Assert.Equal(new Rect(0, 0, 1600, 1280), innerNs.Boundary);
+    }
+
+    [Fact]
     public void GetTotalBounds_ShouldIncludeAllChildren()
     {
         var root = new ModelNode("", null!) { Type = NodeType.Root };

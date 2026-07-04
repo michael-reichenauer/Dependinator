@@ -123,6 +123,13 @@ class SvgService : ISvgService
         if (node.Type.IsMember)
             return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom);
 
+        if (node.IsPassThrough)
+        { // An invisible container that covers its parent; render only its children, no chrome
+            var passThroughContext = context.ForNestedContainer(geometry.TileRect);
+            var passThroughContentSvg = RenderNodeContent(node, passThroughContext);
+            return NodeSvg.GetToLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
+        }
+
         if (NodeSvg.IsShowIcon(node.Type, context.Zoom))
             return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom);
 
@@ -182,6 +189,8 @@ class SvgService : ISvgService
         {
             if (line.IsHidden && !NodeSvg.ShowHiddenNodes)
                 continue;
+            if (line.Target.IsPassThrough)
+                continue; // The pass-through node covers this parent, so the segment is degenerate
             yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
         }
 
@@ -194,6 +203,8 @@ class SvgService : ISvgService
                     continue;
                 if (line.IsHidden && !NodeSvg.ShowHiddenNodes)
                     continue;
+                if (line.Source.IsPassThrough && line.Target == node)
+                    continue; // The pass-through node covers this parent, so the segment is degenerate
                 yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
             }
         }

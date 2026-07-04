@@ -59,7 +59,19 @@ class Node : IItem
     public bool IsChildrenLayoutRequired { get; set; } = false;
     public bool IsChildrenLayoutCustomized { get; set; } = false;
 
-    public Rect Boundary { get; set; } = Rect.None;
+    Rect boundary = Rect.None;
+
+    // A pass-through node is an invisible container that always exactly covers its parent's
+    // inner viewport, so its children appear to be shown directly in the parent (e.g. the
+    // "Dependinator.Core" namespace chain inside the "Dependinator.Core.dll" assembly node).
+    // Its boundary is derived, never stored, so it self-syncs when the parent is resized,
+    // panned, or zoomed.
+    public Rect Boundary
+    {
+        get => IsPassThrough ? GetPassThroughBoundary() : boundary;
+        set => boundary = value;
+    }
+
     public Double ContainerZoom { get; set; } = DefaultContainerZoom;
     public Pos ContainerOffset { get; set; } = Pos.None;
 
@@ -79,6 +91,7 @@ class Node : IItem
     public bool IsHidden => IsUserSetHidden || IsParentSetHidden;
     public bool IsUserSetHidden { get; set; }
     public bool IsParentSetHidden { get; set; }
+    public bool IsPassThrough { get; set; }
 
     public NodeDto ToDto() =>
         new()
@@ -91,7 +104,7 @@ class Node : IItem
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
             },
-            Boundary = Boundary != Rect.None ? Boundary : null,
+            Boundary = boundary != Rect.None ? boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
             Color = Color,
@@ -140,6 +153,19 @@ class Node : IItem
         if (IsUserSetHidden)
             return;
         Children.ForEach(child => child.SetHidden(hidden, false));
+    }
+
+    // The parent's visible viewport expressed in the parent's inner (children) coordinate
+    // space; recurses naturally when the parent is itself pass-through.
+    Rect GetPassThroughBoundary()
+    {
+        var parentBoundary = Parent.Boundary;
+        return new Rect(
+            -Parent.ContainerOffset.X / Parent.ContainerZoom,
+            -Parent.ContainerOffset.Y / Parent.ContainerZoom,
+            parentBoundary.Width / Parent.ContainerZoom,
+            parentBoundary.Height / Parent.ContainerZoom
+        );
     }
 
     public double GetZoom()
