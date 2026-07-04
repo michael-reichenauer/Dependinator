@@ -80,11 +80,15 @@ static class PassThroughService
         NodeLayout.FitContainerTransform(chain[^1]);
     }
 
-    // E.g. "Dependinator.Core.dll" => ["Dependinator", "Core"]
+    // E.g. "Dependinator.Core (dll)" => ["Dependinator", "Core"]
     static string[] GetModuleBaseNameSegments(Models.Node moduleNode)
     {
         var baseName = moduleNode.LongName;
-        if (
+        if (baseName.EndsWith(" (dll)", StringComparison.OrdinalIgnoreCase))
+            baseName = baseName[..^6];
+        else if (baseName.EndsWith(" (exe)", StringComparison.OrdinalIgnoreCase))
+            baseName = baseName[..^6];
+        else if (
             baseName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
             || baseName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
         )
