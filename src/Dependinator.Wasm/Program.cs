@@ -10,6 +10,8 @@ using Dependinator.Wasm;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
+namespace Dependinator.Wasm;
+
 internal class Program
 {
     public static async Task Main(string[] args)
