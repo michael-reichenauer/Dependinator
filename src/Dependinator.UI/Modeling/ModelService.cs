@@ -186,6 +186,7 @@ class ModelService : IModelService, IDisposable
         using (var model = modelMgr.UseModel())
         {
             modelStructureService.ClearNotUpdated(model);
+            PassThroughService.UpdatePassThroughFlags(model);
         }
 
         applicationEvents.TriggerModelChanged();
@@ -245,6 +246,11 @@ class ModelService : IModelService, IDisposable
 
             applicationEvents.TriggerModelChanged();
             await AddOrUpdateAllItems(items);
+
+            using (var model = modelMgr.UseModel())
+            {
+                PassThroughService.UpdatePassThroughFlags(model);
+            }
 
             // Line descriptions can only be applied once all links (and thus lines) have been added
             ApplyLineDescriptions(items);
@@ -340,5 +346,6 @@ class ModelService : IModelService, IDisposable
         modelDto.Nodes.ForEach(n => modelStructureService.SetNodeDto(model, n));
         modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));
         modelDto.Lines.ForEach(l => modelStructureService.SetLineLayoutDto(model, l));
+        PassThroughService.UpdatePassThroughFlags(model);
     }
 }

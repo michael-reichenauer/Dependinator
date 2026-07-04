@@ -68,6 +68,11 @@ class NodeLayout
         if (parent.Children.Count == 0)
             return;
 
+        // A sole pass-through child has a derived boundary that always covers the parent's
+        // viewport; arranging it or fitting the container transform to it would fight that.
+        if (parent.Children.Count == 1 && parent.Children[0].IsPassThrough)
+            return;
+
         if (!forceAllChildren && parent.IsChildrenLayoutCustomized)
         {
             ArrangeOnlyNewChildren(parent);
@@ -360,6 +365,17 @@ class NodeLayout
         }
 
         return new Rect(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    // Re-fits the container zoom/offset to the current children without re-arranging them,
+    // e.g. when a node's pass-through state changes and its effective boundary jumps in size.
+    public static void FitContainerTransform(Node parent)
+    {
+        var children = parent.Children.Where(child => child.Boundary != Rect.None).ToList();
+        if (children.Count == 0)
+            return;
+
+        ApplyContainerTransform(parent, GetChildrenBounds(children), GetDensityProfile().TargetLinearCoverage);
     }
 
     static void ApplyContainerTransform(Node parent, Rect contentBounds, double targetLinearCoverage)
