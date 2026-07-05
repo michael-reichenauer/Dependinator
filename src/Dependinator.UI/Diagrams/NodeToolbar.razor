@@ -25,6 +25,10 @@
                      OnClick="LayoutDescendants" data-testid="node-menu-reset-descendants">
           Reset All Descendants Layout
         </MudMenuItem>
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols"
+                     OnClick="SelectIconAsync" data-testid="node-menu-set-icon">
+          Set Icon …
+        </MudMenuItem>
 
         <MudDivider />
         @if (!IsNodeHidden)
@@ -60,6 +64,10 @@
       <MudTooltip Text="Increase node size">
         <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize"
                        data-testid="node-increase-size" />
+      </MudTooltip>
+      <MudTooltip Text="Set icon">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols" OnClick="SelectIconAsync"
+                       data-testid="node-set-icon" />
       </MudTooltip>
     }
 
@@ -140,6 +148,9 @@
 
   [Inject]
   IDependenciesService dependenciesService { get; set; } = null!;
+
+  [Inject]
+  INodeEditService nodeEditService { get; set; } = null!;
 
   [Inject]
   Modeling.IModelService modelService { get; set; } = null!;
@@ -249,4 +260,38 @@
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();
+
+  async Task SelectIconAsync()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+    string? currentIconName = null;
+    string defaultIconName = "";
+    using (var model = modelMgr.UseModel())
+    {
+      if (!model.Nodes.TryGetValue(nodeId, out var node))
+        return;
+      currentIconName = node.CustomIconName;
+      defaultIconName = Icon.GetIconName(node.Type);
+    }
+
+    var parameters = new DialogParameters
+    {
+      { nameof(IconSelectorDialog.NodeIdValue), nodeId.Value },
+      { nameof(IconSelectorDialog.CurrentIconName), currentIconName },
+      { nameof(IconSelectorDialog.DefaultIconName), defaultIconName },
+    };
+    var options = new DialogOptions
+    {
+      CloseOnEscapeKey = true,
+      NoHeader = true,
+      Position = DialogPosition.TopCenter,
+      MaxWidth = MaxWidth.Small,
+      FullWidth = true,
+    };
+    var dialog = await dialogService.ShowAsync<IconSelectorDialog>(null, parameters, options);
+    await dialog.Result;
+  }
 }

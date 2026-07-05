@@ -206,29 +206,55 @@ public class NodeLayoutTests
     }
 
     [Fact]
-    public void GetNextChildRect_RootNode_ShouldPlaceChildrenRowByRow()
+    public void AdjustChildren_TypeMembers_ShouldOrderByImportanceThenKind()
     {
         NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
 
-        var root = new ModelNode("", null!)
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var parent = new ModelNode("TypeParent", root)
         {
-            Type = NodeType.Root,
-            Boundary = new Rect(0, 0, 1000, 1000),
-            ContainerZoom = 1,
+            Type = NodeType.ClassType,
+            Boundary = new Rect(0, 0, 900, 700),
         };
+        root.AddChild(parent);
 
-        var first = NodeLayout.GetNextChildRect(root);
-        var firstChild = new ModelNode("Child1", root) { Boundary = first };
-        root.AddChild(firstChild);
+        var method = new ModelNode("TypeParent.Method()", parent) { Type = NodeType.MethodMember, IsPrivate = false };
+        var constructor = new ModelNode("TypeParent.Ctor()", parent)
+        {
+            Type = NodeType.ConstructorMember,
+            IsPrivate = false,
+        };
+        var property = new ModelNode("TypeParent.Property", parent)
+        {
+            Type = NodeType.PropertyMember,
+            IsPrivate = false,
+        };
+        parent.AddChild(method);
+        parent.AddChild(constructor);
+        parent.AddChild(property);
 
-        var second = NodeLayout.GetNextChildRect(root);
+        // Two references make the method the most important member despite its kind rank
+        var user1 = new ModelNode("User1", root) { Type = NodeType.Type };
+        var user2 = new ModelNode("User2", root) { Type = NodeType.Type };
+        root.AddChild(user1);
+        root.AddChild(user2);
+        foreach (var user in new[] { user1, user2 })
+        {
+            var link = new Dependinator.UI.Modeling.Models.Link(user, method);
+            user.AddSourceLink(link);
+            method.AddTargetLink(link);
+        }
 
-        Assert.Equal(NodeLayout.DefaultSize.Width, first.Width);
-        Assert.Equal(NodeLayout.DefaultSize.Height, first.Height);
-        AssertGridAligned(first);
-        AssertGridAligned(second);
-        Assert.Equal(first.Y, second.Y);
-        Assert.True(second.X > first.X);
+        NodeLayout.AdjustChildren(parent);
+
+        Assert.True(
+            method.Boundary.Y < constructor.Boundary.Y,
+            $"Expected most referenced member first but got {method.Boundary.Y} >= {constructor.Boundary.Y}"
+        );
+        Assert.True(
+            constructor.Boundary.Y < property.Boundary.Y,
+            $"Expected constructor before property but got {constructor.Boundary.Y} >= {property.Boundary.Y}"
+        );
     }
 
     static Rect GetDisplayedBounds(ModelNode parent)

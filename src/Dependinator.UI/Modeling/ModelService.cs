@@ -222,7 +222,24 @@ class ModelService : IModelService, IDisposable
         if (!Try(out var e, await ParseAndUpdateAsync(path)))
             return e;
 
+        // Rendering during the progressive parse may have laid out nodes before all their
+        // children's links had arrived; re-flag them so the next render lays out each node
+        // with the complete dependency graph.
+        using (var model = modelMgr.UseModel())
+        {
+            RequireChildrenLayout(model);
+        }
+
         return new ModelInfo(path, Rect.None, 0);
+    }
+
+    internal static void RequireChildrenLayout(IModel model)
+    {
+        foreach (var node in model.Nodes.Values)
+        {
+            if (node.Children.Count > 0 && !node.IsChildrenLayoutCustomized)
+                node.IsChildrenLayoutRequired = true;
+        }
     }
 
     async Task<R> ParseAndUpdateAsync(string path, bool isRefresh = false)

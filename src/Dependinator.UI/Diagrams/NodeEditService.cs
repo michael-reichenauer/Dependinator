@@ -16,6 +16,7 @@ interface INodeEditService
     void PanZoomToFit(PointerId pointerId);
     void IncreaseNodeSize(NodeId nodeId);
     void DecreaseNodeSize(NodeId nodeId);
+    void SetNodeIcon(NodeId nodeId, string? iconName);
 }
 
 [Scoped]
@@ -174,6 +175,20 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         }
 
         commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
+    }
+
+    // Sets the node's custom icon; null clears it back to the node-type default icon.
+    public void SetNodeIcon(NodeId nodeId, string? iconName)
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
+                return;
+            if (node.CustomIconName == iconName)
+                return;
+        }
+
+        commandService.Do(new NodeEditCommand(nodeId) { IconName = iconName ?? "" });
     }
 
     public void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId)

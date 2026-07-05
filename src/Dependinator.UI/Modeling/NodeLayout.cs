@@ -1,5 +1,6 @@
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using NodeType = Dependinator.Core.Parsing.NodeType;
 
 namespace Dependinator.UI.Modeling;
 
@@ -40,26 +41,7 @@ class NodeLayout
 
     static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 
-    static Rect SnapPositionToGrid(Rect rect) => rect with { X = SnapToGrid(rect.X), Y = SnapToGrid(rect.Y) };
-
-    public static Rect GetNextChildRect(Node parentNode)
-    {
-        if (!parentNode.IsRoot)
-            return Rect.None;
-
-        var density = RootProfile;
-        var rootGap = RootGap * density.GapScale;
-        var layoutWidth = parentNode.Boundary.Width / Math.Max(MinimumDimension, parentNode.ContainerZoom);
-        var columns = Math.Max(1, (int)Math.Floor((layoutWidth - rootGap) / (DefaultWidth + rootGap)));
-
-        var index = parentNode.Children.Count;
-        var column = index % columns;
-        var row = index / columns;
-
-        var x = rootGap + column * (DefaultWidth + rootGap);
-        var y = rootGap + row * (DefaultHeight + rootGap);
-        return SnapPositionToGrid(new Rect(x, y, DefaultWidth, DefaultHeight));
-    }
+    public static Rect SnapPositionToGrid(Rect rect) => rect with { X = SnapToGrid(rect.X), Y = SnapToGrid(rect.Y) };
 
     public static void AdjustChildren(Node parent, bool forceAllChildren = false)
     {
@@ -85,9 +67,19 @@ class NodeLayout
             return;
         }
 
-        Sorter.Sort(parent.Children, CompareChildren);
         var density = GetDensityProfile();
-        ArrangeChildren(parent, parent.Children, RegularMetrics(density));
+        var metrics = parent.IsRoot ? RootMetrics() : RegularMetrics(density);
+
+        if (!LayeredLayout.TryArrange(parent, metrics))
+        {
+            Sorter.Sort(parent.Children, CompareChildren);
+            ArrangeChildren(parent, parent.Children, metrics);
+        }
+
+        // The root's container transform is the fixed identity-like frame the canvas viewport
+        // (model.Zoom/Offset) pans and zooms within, so it must not be re-fitted by layout.
+        if (!parent.IsRoot)
+            ApplyContainerTransform(parent, GetChildrenBounds(parent.Children), density.TargetLinearCoverage);
     }
 
     static bool IsTypeWithMembers(Node parent) =>
@@ -105,8 +97,6 @@ class NodeLayout
             var y = metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
             children[index].Boundary = SnapPositionToGrid(new Rect(x, y, metrics.Width, metrics.Height));
         }
-
-        ApplyContainerTransform(parent, GetChildrenBounds(children), GetDensityProfile().TargetLinearCoverage);
     }
 
     static void ArrangeTypeChildren(Node parent)
@@ -434,13 +424,36 @@ class NodeLayout
         return 0;
     }
 
+    // Most used/using members first, then by member kind, so the most relevant members end up
+    // top left within their public/private group.
     static int CompareMemberChildren(Node c1, Node c2)
     {
-        var (v1, v2) = ((int)c1.Type, (int)c2.Type);
-        return v1 < v2 ? -1
-            : v2 > v1 ? 1
-            : 0;
+        var importance1 = c1.SourceLinks.Count + c1.TargetLinks.Count;
+        var importance2 = c2.SourceLinks.Count + c2.TargetLinks.Count;
+        if (importance1 != importance2)
+            return importance2 - importance1;
+
+        var rank1 = MemberKindRank(c1.Type);
+        var rank2 = MemberKindRank(c2.Type);
+        if (rank1 != rank2)
+            return rank1 - rank2;
+
+        return string.CompareOrdinal(c1.Name, c2.Name);
     }
+
+    static int MemberKindRank(NodeType type) =>
+        type switch
+        {
+            NodeType.ConstructorMember => 0,
+            NodeType.PropertyMember => 1,
+            NodeType.MethodMember => 2,
+            NodeType.EventMember => 3,
+            NodeType.FieldMember => 4,
+            _ => 5,
+        };
+
+    static LayoutMetrics RootMetrics() =>
+        new(DefaultWidth, DefaultHeight, RootGap * RootProfile.GapScale, RootGap * RootProfile.GapScale, 1.0);
 
     static LayoutMetrics RegularMetrics(DensityProfile density) =>
         new(
@@ -468,13 +481,13 @@ class NodeLayout
             _ => BalancedProfile,
         };
 
-    readonly record struct LayoutMetrics(
-        double Width,
-        double Height,
-        double HorizontalGap,
-        double VerticalGap,
-        double AspectBias
-    );
-
     readonly record struct DensityProfile(double GapScale, double TargetLinearCoverage);
 }
+
+readonly record struct LayoutMetrics(
+    double Width,
+    double Height,
+    double HorizontalGap,
+    double VerticalGap,
+    double AspectBias
+);

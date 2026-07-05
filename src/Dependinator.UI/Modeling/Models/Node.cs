@@ -53,6 +53,9 @@ class Node : IItem
 
     public string Color { get; set; } = "";
 
+    // User-selected icon name (an IconLibrary id); null means the node-type default icon.
+    public string? CustomIconName { get; set; }
+
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
@@ -108,6 +111,7 @@ class Node : IItem
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
             Color = Color,
+            IconName = CustomIconName,
             IsUserSetHidden = IsUserSetHidden,
             IsParentSetHidden = IsParentSetHidden,
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
@@ -125,6 +129,7 @@ class Node : IItem
         ContainerOffset = dto.Offset ?? Pos.None;
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
         Color = dto.Color ?? Color;
+        CustomIconName = dto.IconName;
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;

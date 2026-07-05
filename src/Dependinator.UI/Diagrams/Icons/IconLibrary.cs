@@ -5,8 +5,9 @@ using System.Reflection;
 namespace Dependinator.UI.Diagrams.Icons;
 
 // One icon read from an embedded .svg resource. Name equals the svg's `id` attribute and is the
-// key used by `<use href="#name">` references; Group is the containing library folder (e.g. "Default").
-readonly record struct IconInfo(string Group, string Name, string Svg);
+// key used by `<use href="#name">` references; Group is the containing library folder (e.g. "Default");
+// DisplayName is the user-facing name shown in icon lists (separators converted to spaces).
+readonly record struct IconInfo(string Group, string Name, string DisplayName, string Svg);
 
 // Loads and caches the built-in icon library from embedded `.svg` resources
 // (src/Dependinator.UI/Diagrams/Icons/Library/<Group>/<Name>.svg).
@@ -15,10 +16,10 @@ readonly record struct IconInfo(string Group, string Name, string Svg);
 // user-provided icon source can be layered in here without touching any consumer.
 static class IconLibrary
 {
-    const string Fallback = "ModuleIcon";
+    const string Fallback = "Module";
 
     // Marker identifying the embedded icon resources, e.g.
-    // "Dependinator.UI.Diagrams.Icons.Library.Default.SolutionIcon.svg".
+    // "Dependinator.UI.Diagrams.Icons.Library.Default.Solution.svg".
     const string LibraryMarker = ".Library.";
 
     static readonly Lazy<Cache> cache = new(Load);
@@ -30,6 +31,10 @@ static class IconLibrary
             return svg;
         return byName.TryGetValue(Fallback, out var fallback) ? fallback : "";
     }
+
+    // Whether an icon with the given name exists, so consumers can validate persisted icon
+    // names and fall back to the node-type default for stale/unknown ones.
+    public static bool Contains(string name) => cache.Value.ByName.ContainsKey(name);
 
     // All icon svgs concatenated, for rendering once into the diagram's <defs> so nodes can
     // reference them by id via <use href="#name">.
@@ -59,7 +64,7 @@ static class IconLibrary
 
     static bool TryParse(string resourceName, string svg, out IconInfo icon)
     {
-        // "...Library.Default.SolutionIcon.svg" -> group "Default", name "SolutionIcon".
+        // "...Library.Default.Solution.svg" -> group "Default", name "Solution".
         var relative = resourceName[(resourceName.IndexOf(LibraryMarker) + LibraryMarker.Length)..];
         relative = relative[..^".svg".Length];
 
@@ -72,9 +77,13 @@ static class IconLibrary
 
         var group = relative[..split];
         var name = relative[(split + 1)..];
-        icon = new IconInfo(group, name, svg);
+        icon = new IconInfo(group, name, ToDisplayName(name), svg);
         return true;
     }
+
+    // Icon library file names can contain '-'/'_' separators (common in e.g. Azure/AWS icon
+    // sets); the display name shown in icon lists uses spaces instead.
+    internal static string ToDisplayName(string name) => name.Replace('-', ' ').Replace('_', ' ').Trim();
 
     static string ReadResource(Assembly assembly, string resourceName)
     {

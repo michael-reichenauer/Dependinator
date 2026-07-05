@@ -29,7 +29,6 @@ class StructureService(ILineService linesService) : IStructureService
             var parent = GetOrCreateParent(model, parsedNode);
 
             node = new Models.Node(parsedNode.Name, parent);
-            node.Boundary = parent.IsChildrenLayoutCustomized ? Rect.None : NodeLayout.GetNextChildRect(parent);
 
             node.Update(parsedNode);
             node.UpdateStamp = model.UpdateStamp;
@@ -85,8 +84,6 @@ class StructureService(ILineService linesService) : IStructureService
 
         var node = new Models.Node(nodeDto.Name, parent);
         node.SetFromDto(nodeDto);
-        if (node.Boundary == Rect.None && !parent.IsChildrenLayoutCustomized)
-            node.Boundary = NodeLayout.GetNextChildRect(parent);
         node.UpdateStamp = model.UpdateStamp;
 
         model.TryAddNode(node);
@@ -158,6 +155,7 @@ class StructureService(ILineService linesService) : IStructureService
             return;
 
         line.SetSegmentPoints(lineLayoutDto.SegmentPoints);
+        line.IsSegmentsUserSet = lineLayoutDto.IsSegmentsUserSet ?? lineLayoutDto.SegmentPoints.Count > 0;
         if (lineLayoutDto.Description is not null)
             line.SetDescription(lineLayoutDto.Description, model.UpdateStamp);
     }

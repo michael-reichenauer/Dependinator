@@ -40,6 +40,10 @@ class Line : IItem
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
     public IReadOnlyList<Pos> SegmentPoints => segmentPoints;
 
+    // True when the user has placed the segment points manually; auto-routing (LayeredLayout)
+    // must not overwrite them. Auto-generated points leave this false so re-layout can redo them.
+    public bool IsSegmentsUserSet { get; set; }
+
     public string? Description { get; private set; }
     public string? HtmlDescription { get; private set; }
     public DateTime DescriptionUpdateStamp { get; private set; }

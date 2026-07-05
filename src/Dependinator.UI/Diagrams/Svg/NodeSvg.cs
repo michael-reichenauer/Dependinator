@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using System.Web;
 using Dependinator.Core;
+using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
@@ -529,31 +530,36 @@ class NodeSvg
             """;
     }
 
-    static string IconName(Node node)
+    internal static string IconName(Node node)
     {
+        // A user-selected icon overrides the node-type default; unknown (e.g. stale persisted)
+        // names fall back to the default.
+        if (node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName))
+            return customIconName;
+
         return node.Type switch
         {
-            Parsing.NodeType.EventMember => "EventIcon",
-            Parsing.NodeType.FieldMember => "FieldIcon",
-            Parsing.NodeType.PropertyMember => "PropertyIcon",
-            Parsing.NodeType.MethodMember => "MethodIcon",
-            Parsing.NodeType.ConstructorMember => "ConstructorIcon",
-            Parsing.NodeType.Solution => "SolutionIcon",
-            Parsing.NodeType.Externals => "ExternalsIcon",
-            Parsing.NodeType.Assembly => "AssemblyIcon",
-            Parsing.NodeType.Namespace => "NamespaceIcon",
+            Parsing.NodeType.EventMember => "Event",
+            Parsing.NodeType.FieldMember => "Field",
+            Parsing.NodeType.PropertyMember => "Property",
+            Parsing.NodeType.MethodMember => "Method",
+            Parsing.NodeType.ConstructorMember => "Constructor",
+            Parsing.NodeType.Solution => "Solution",
+            Parsing.NodeType.Externals => "Externals",
+            Parsing.NodeType.Assembly => "Assembly",
+            Parsing.NodeType.Namespace => "Namespace",
             // The Roslyn source parser doesn't emit Namespace nodes; namespace containers are
             // rebuilt as implicit Parent nodes (see StructureService.GetOrCreateParent), so Parent
-            // also renders as a namespace. (FilesIcon is kept in the library for future use.)
-            Parsing.NodeType.Parent => "NamespaceIcon",
-            Parsing.NodeType.Type => "TypeIcon",
-            Parsing.NodeType.ClassType => "TypeIcon",
-            Parsing.NodeType.InterfaceType => "InterfaceIcon",
-            Parsing.NodeType.EnumType => "EnumIcon",
-            Parsing.NodeType.StructType => "StructIcon",
-            Parsing.NodeType.RecordType => "RecordIcon",
+            // also renders as a namespace. (The Files icon is kept in the library for future use.)
+            Parsing.NodeType.Parent => "Namespace",
+            Parsing.NodeType.Type => "Type",
+            Parsing.NodeType.ClassType => "Type",
+            Parsing.NodeType.InterfaceType => "Interface",
+            Parsing.NodeType.EnumType => "Enum",
+            Parsing.NodeType.StructType => "Struct",
+            Parsing.NodeType.RecordType => "Record",
 
-            _ => "ModuleIcon",
+            _ => "Module",
         };
     }
 
