@@ -1,0 +1,104 @@
+.icon-dialog__field {
+  margin-bottom: 0.5rem;
+}
+
+.icon-dialog__body {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.icon-dialog__results {
+  /* Fixed vertical budget (~a third of the viewport); denser rows fit more items. */
+  flex: 1 1 auto;
+  min-width: 0;
+  max-height: min(20rem, 30vh);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--mud-default-borderradius);
+}
+
+.icon-dialog__group {
+  padding: 0.25rem 0.625rem 0.125rem;
+  font-size: 0.75em;
+  color: var(--mud-palette-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.icon-dialog__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.125rem 0.625rem;
+  line-height: 1.3;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.icon-dialog__item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.icon-dialog__item--selected {
+  background-color: var(--mud-palette-action-default-hover);
+}
+
+.icon-dialog__item--current .icon-dialog__name {
+  color: var(--mud-palette-primary);
+  font-weight: 600;
+}
+
+.icon-dialog__glyph {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+/* Icon svgs carry fixed width/height attributes (24); size them via CSS instead. */
+.icon-dialog__glyph ::deep svg {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-dialog__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--mud-palette-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Larger preview of the hovered (or keyboard-selected) icon. */
+.icon-dialog__preview {
+  flex: 0 0 8.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--mud-default-borderradius);
+}
+
+.icon-dialog__preview-glyph ::deep svg {
+  width: 96px;
+  height: 96px;
+}
+
+.icon-dialog__preview-name {
+  font-size: 0.8em;
+  color: var(--mud-palette-text-secondary);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.icon-dialog__empty {
+  padding: 0.5rem 0.25rem;
+  color: var(--mud-palette-text-secondary);
+}

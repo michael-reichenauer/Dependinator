@@ -8,21 +8,21 @@ public class IconLibraryTests
     // Icon ids referenced by NodeSvg.IconName() via <use href="#id">; all must exist in IconDefs.
     static readonly string[] ReferencedIconIds =
     [
-        "EventIcon",
-        "FieldIcon",
-        "PropertyIcon",
-        "MethodIcon",
-        "ConstructorIcon",
-        "SolutionIcon",
-        "ExternalsIcon",
-        "AssemblyIcon",
-        "ModuleIcon",
-        "NamespaceIcon",
-        "TypeIcon",
-        "InterfaceIcon",
-        "EnumIcon",
-        "StructIcon",
-        "RecordIcon",
+        "Event",
+        "Field",
+        "Property",
+        "Method",
+        "Constructor",
+        "Solution",
+        "Externals",
+        "Assembly",
+        "Module",
+        "Namespace",
+        "Type",
+        "Interface",
+        "Enum",
+        "Struct",
+        "Record",
     ];
 
     [Fact]
@@ -59,12 +59,54 @@ public class IconLibraryTests
     [Fact]
     public void Get_ShouldReturnCachedSvg_OnRepeatedCalls()
     {
-        Assert.Same(IconLibrary.Get("SolutionIcon"), IconLibrary.Get("SolutionIcon"));
+        Assert.Same(IconLibrary.Get("Solution"), IconLibrary.Get("Solution"));
     }
 
     [Fact]
     public void Get_ShouldFallBackToModuleIcon_WhenNameIsUnknown()
     {
-        Assert.Equal(IconLibrary.Get("ModuleIcon"), IconLibrary.Get("DoesNotExist"));
+        Assert.Equal(IconLibrary.Get("Module"), IconLibrary.Get("DoesNotExist"));
+    }
+
+    [Fact]
+    public void Contains_ShouldReturnTrue_ForKnownIcon()
+    {
+        Assert.True(IconLibrary.Contains("Solution"));
+    }
+
+    [Fact]
+    public void Contains_ShouldReturnFalse_ForUnknownIcon()
+    {
+        Assert.False(IconLibrary.Contains("DoesNotExist"));
+    }
+
+    [Theory]
+    [InlineData("Solution", "Solution")]
+    [InlineData("key-vault", "key vault")]
+    [InlineData("Message_Queue", "Message Queue")]
+    [InlineData("api-gateway_v2", "api gateway v2")]
+    public void ToDisplayName_ShouldConvertSeparatorsToSpaces(string name, string expected)
+    {
+        Assert.Equal(expected, IconLibrary.ToDisplayName(name));
+    }
+
+    [Fact]
+    public void All_ShouldExposeDisplayName_ForEveryIcon()
+    {
+        // Current icons are single words, so their display name matches the raw name.
+        Assert.All(IconLibrary.All, icon => Assert.Equal(icon.Name, icon.DisplayName));
+    }
+
+    [Fact]
+    public void IconDefs_ShouldNotContainDuplicateIds()
+    {
+        // All icon svgs are concatenated into one <defs>; duplicate ids (e.g. a shared "grad"
+        // gradient id) would collide and mis-render, so every id must be unique.
+        var ids = System
+            .Text.RegularExpressions.Regex.Matches(Icon.IconDefs, "id=\"([^\"]+)\"")
+            .Select(match => match.Groups[1].Value)
+            .ToList();
+
+        Assert.Equal(ids.Count, ids.Distinct().Count());
     }
 }

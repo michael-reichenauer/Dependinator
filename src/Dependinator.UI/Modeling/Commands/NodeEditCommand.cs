@@ -14,6 +14,11 @@ class NodeEditCommand(NodeId nodeId) : Command
     public Pos? ContainerOffset { get; set; }
     public Pos? ContainerOffsetCopy { get; set; }
 
+    // Custom icon name; null means "not part of this command", "" means clear to the
+    // node-type default icon (stored as null on the node).
+    public string? IconName { get; set; }
+    public string? IconNameCopy { get; set; }
+
     public override void Execute(IModel model)
     {
         if (!model.Nodes.TryGetValue(nodeId, out var node))
@@ -25,6 +30,8 @@ class NodeEditCommand(NodeId nodeId) : Command
             (ContainerZoomCopy, node.ContainerZoom) = (node.ContainerZoom, (double)ContainerZoom);
         if (ContainerOffset != null)
             (ContainerOffsetCopy, node.ContainerOffset) = (node.ContainerOffset, ContainerOffset);
+        if (IconName != null)
+            (IconNameCopy, node.CustomIconName) = (node.CustomIconName ?? "", IconName == "" ? null : IconName);
     }
 
     public override void Revert(IModel model)
@@ -44,6 +51,12 @@ class NodeEditCommand(NodeId nodeId) : Command
             (ContainerOffset, node.ContainerOffset, ContainerOffsetCopy) = (
                 node.ContainerOffset,
                 ContainerOffsetCopy,
+                null
+            );
+        if (IconNameCopy != null)
+            (IconName, node.CustomIconName, IconNameCopy) = (
+                node.CustomIconName ?? "",
+                IconNameCopy == "" ? null : IconNameCopy,
                 null
             );
     }

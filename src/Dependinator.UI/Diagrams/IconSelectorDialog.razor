@@ -1,0 +1,192 @@
+@using Dependinator.UI.Diagrams.Icons
+@using Dependinator.UI.Modeling.Models
+@implements IDisposable
+@inject INodeEditService nodeEditService
+
+<MudDialog Class="icon-dialog" ContentClass="pa-2" Style="margin-top:-29px;">
+  <DialogContent>
+    <MudTextField @ref="textField" T="string" Value="@query" ValueChanged="OnQueryChanged" Immediate="true"
+                  Autofocus="true" Placeholder="Search icons…" Variant="Variant.Outlined" Adornment="Adornment.Start"
+                  AdornmentIcon="@MudBlazor.Icons.Material.Outlined.Search" Clearable="true" FullWidth="true"
+                  Class="icon-dialog__field" OnKeyDown="OnKeyDown" autocomplete="off" data-testid="icon-dialog-search" />
+
+    <div class="icon-dialog__body">
+      <div class="icon-dialog__results" data-testid="icon-dialog-results">
+        @for (int i = 0; i < entries.Count; i++)
+        {
+          var index = i;
+          var entry = entries[index];
+          if (entry is null)
+          {
+            <div class="icon-dialog__item @ItemClass(index, null)" @onclick="() => SelectAsync(null)"
+                 @onmouseover="() => hoveredIndex = index" @onmouseout="() => hoveredIndex = -1"
+                 data-testid="icon-dialog-default">
+              <div class="icon-dialog__glyph">
+                <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.RestartAlt" Size="Size.Small" />
+              </div>
+              <span class="icon-dialog__name">Default (node type icon)</span>
+            </div>
+          }
+          else
+          {
+            var icon = entry.Value;
+            @if (showGroupHeaders && IsFirstOfGroup(index))
+            {
+              <div class="icon-dialog__group">@icon.Group.Replace(".", " / ")</div>
+            }
+            <div class="icon-dialog__item @ItemClass(index, icon.Name)" @onclick="() => SelectAsync(icon.Name)"
+                 @onmouseover="() => hoveredIndex = index" @onmouseout="() => hoveredIndex = -1"
+                 data-testid="icon-dialog-item-@icon.Name">
+              <div class="icon-dialog__glyph">@((MarkupString)icon.Svg)</div>
+              <span class="icon-dialog__name">@icon.DisplayName</span>
+            </div>
+          }
+        }
+        @if (entries.Count <= 1 && !string.IsNullOrWhiteSpace(query))
+        {
+          <MudText Typo="Typo.body2" Class="icon-dialog__empty">No matching icons</MudText>
+        }
+      </div>
+
+      <div class="icon-dialog__preview" data-testid="icon-dialog-preview">
+        @if (PreviewIcon is { } preview)
+        {
+          <div class="icon-dialog__preview-glyph">@((MarkupString)preview.Svg)</div>
+          <span class="icon-dialog__preview-name">@preview.DisplayName</span>
+        }
+      </div>
+    </div>
+  </DialogContent>
+</MudDialog>
+
+@code {
+  [CascadingParameter]
+  IMudDialogInstance MudDialog { get; set; } = null!;
+
+  // The id of the node whose icon is being selected (NodeId as string, see NodeId.FromId).
+  [Parameter]
+  public string NodeIdValue { get; set; } = "";
+
+  // The node's current custom icon name; null when using the node-type default.
+  [Parameter]
+  public string? CurrentIconName { get; set; }
+
+  MudTextField<string> textField = null!;
+  string query = "";
+
+  // Selectable rows in display order; null is the pinned "Default" entry, others are icons.
+  IReadOnlyList<IconInfo?> entries = [];
+  bool showGroupHeaders;
+  int selectedIndex;
+  int hoveredIndex = -1;
+  bool isDisposed;
+
+  protected override void OnInitialized()
+  {
+    showGroupHeaders = IconLibrary.All.Select(icon => icon.Group).Distinct().Count() > 1;
+    entries = Filter("");
+
+    // Preselect the node's current icon so keyboard navigation starts from it.
+    var currentIndex = CurrentIconName is null
+        ? 0
+        : entries.ToList().FindIndex(entry => entry?.Name == CurrentIconName);
+    selectedIndex = Math.Max(0, currentIndex);
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (!firstRender)
+      return;
+
+    // Autofocus handles the common case; this is a fallback for when the dialog's
+    // open animation steals/delays focus. The small delay lets the transition settle.
+    await Task.Delay(50);
+
+    // If the dialog was closed during the delay (e.g. dismissed quickly, or the page is
+    // tearing down at the end of a test), the element is gone — focusing it would make
+    // MudInput log "Unable to focus an invalid element". Skip it.
+    if (isDisposed)
+      return;
+
+    await textField.FocusAsync();
+  }
+
+  public void Dispose() => isDisposed = true;
+
+  // The large preview shows the hovered icon, or the keyboard-selected one otherwise.
+  IconInfo? PreviewIcon =>
+      hoveredIndex >= 0 && hoveredIndex < entries.Count ? entries[hoveredIndex]
+      : selectedIndex >= 0 && selectedIndex < entries.Count ? entries[selectedIndex]
+      : null;
+
+  string ItemClass(int index, string? iconName) =>
+      (index == selectedIndex ? "icon-dialog__item--selected " : "")
+      + (iconName == CurrentIconName ? "icon-dialog__item--current" : "");
+
+  bool IsFirstOfGroup(int index) =>
+      entries[index] is { } icon && (entries[index - 1] is not { } previous || previous.Group != icon.Group);
+
+  void OnQueryChanged(string value)
+  {
+    query = value ?? "";
+    entries = Filter(query);
+    selectedIndex = 0;
+    hoveredIndex = -1;
+  }
+
+  // The pinned "Default" entry is always first; icons are fuzzy-matched on their display
+  // name (and raw name) and ranked by match score, or listed in library order when empty.
+  static IReadOnlyList<IconInfo?> Filter(string query)
+  {
+    List<IconInfo?> result = [null];
+
+    if (string.IsNullOrWhiteSpace(query))
+    {
+      result.AddRange(IconLibrary.All.OrderBy(icon => icon.Group).ThenBy(icon => icon.DisplayName).Cast<IconInfo?>());
+      return result;
+    }
+
+    query = query.Trim();
+    var matches = new List<(IconInfo Icon, int Score)>();
+    foreach (var icon in IconLibrary.All)
+    {
+      var score = NodeSearchService.FuzzyMatch(query, icon.DisplayName) ?? NodeSearchService.FuzzyMatch(query, icon.Name);
+      if (score is null)
+        continue;
+      matches.Add((icon, score.Value));
+    }
+
+    result.AddRange(matches
+        .OrderByDescending(match => match.Score)
+        .ThenBy(match => match.Icon.DisplayName, StringComparer.Ordinal)
+        .Select(match => (IconInfo?)match.Icon));
+    return result;
+  }
+
+  async Task OnKeyDown(KeyboardEventArgs e)
+  {
+    switch (e.Key)
+    {
+      case "ArrowDown":
+        selectedIndex = Math.Min(selectedIndex + 1, entries.Count - 1);
+        break;
+      case "ArrowUp":
+        selectedIndex = Math.Max(selectedIndex - 1, 0);
+        break;
+      case "Enter":
+        if (selectedIndex >= 0 && selectedIndex < entries.Count)
+          await SelectAsync(entries[selectedIndex]?.Name);
+        break;
+      case "Escape":
+        MudDialog.Close(DialogResult.Cancel());
+        break;
+    }
+  }
+
+  Task SelectAsync(string? iconName)
+  {
+    nodeEditService.SetNodeIcon(NodeId.FromId(NodeIdValue), iconName);
+    MudDialog.Close(DialogResult.Ok(true));
+    return Task.CompletedTask;
+  }
+}

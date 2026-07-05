@@ -1,9 +1,38 @@
+using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams.Svg;
+using ModelNode = Dependinator.UI.Modeling.Models.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
 public class NodeSvgTests
 {
+    [Fact]
+    public void IconName_ShouldReturnTypeDefault_WhenNoCustomIcon()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var node = new ModelNode("Node", root) { Type = NodeType.InterfaceType };
+
+        Assert.Equal("Interface", NodeSvg.IconName(node));
+    }
+
+    [Fact]
+    public void IconName_ShouldReturnCustomIcon_WhenSetToKnownName()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var node = new ModelNode("Node", root) { Type = NodeType.InterfaceType, CustomIconName = "Solution" };
+
+        Assert.Equal("Solution", NodeSvg.IconName(node));
+    }
+
+    [Fact]
+    public void IconName_ShouldFallBackToTypeDefault_WhenCustomIconIsUnknown()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var node = new ModelNode("Node", root) { Type = NodeType.InterfaceType, CustomIconName = "DoesNotExist" };
+
+        Assert.Equal("Interface", NodeSvg.IconName(node));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
