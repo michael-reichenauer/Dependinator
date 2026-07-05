@@ -37,13 +37,11 @@ static class Icon
         { Parsing.NodeType.PropertyMember, "Property" },
     };
 
-    public static string GetIcon(Parsing.NodeType nodeType)
-    {
-        if (!IconMap.TryGetValue(nodeType, out string? name))
-            return ModuleIcon;
+    // The name of the default icon for a node type (an IconLibrary id), falling back to "Module".
+    public static string GetIconName(Parsing.NodeType nodeType) =>
+        IconMap.TryGetValue(nodeType, out string? name) ? name : "Module";
 
-        return IconLibrary.Get(name);
-    }
+    public static string GetIcon(Parsing.NodeType nodeType) => IconLibrary.Get(GetIconName(nodeType));
 
     // Icon for a node, honoring a user-selected custom icon; unknown (e.g. stale persisted)
     // names fall back to the node-type default.

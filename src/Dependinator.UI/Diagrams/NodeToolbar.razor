@@ -268,17 +268,20 @@
 
     var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     string? currentIconName = null;
+    string defaultIconName = "";
     using (var model = modelMgr.UseModel())
     {
       if (!model.Nodes.TryGetValue(nodeId, out var node))
         return;
       currentIconName = node.CustomIconName;
+      defaultIconName = Icon.GetIconName(node.Type);
     }
 
     var parameters = new DialogParameters
     {
       { nameof(IconSelectorDialog.NodeIdValue), nodeId.Value },
       { nameof(IconSelectorDialog.CurrentIconName), currentIconName },
+      { nameof(IconSelectorDialog.DefaultIconName), defaultIconName },
     };
     var options = new DialogOptions
     {

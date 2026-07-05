@@ -6,9 +6,10 @@
 <MudDialog Class="icon-dialog" ContentClass="pa-2" Style="margin-top:-29px;">
   <DialogContent>
     <MudTextField @ref="textField" T="string" Value="@query" ValueChanged="OnQueryChanged" Immediate="true"
-                  Autofocus="true" Placeholder="Search icons…" Variant="Variant.Outlined" Adornment="Adornment.Start"
-                  AdornmentIcon="@MudBlazor.Icons.Material.Outlined.Search" Clearable="true" FullWidth="true"
-                  Class="icon-dialog__field" OnKeyDown="OnKeyDown" autocomplete="off" data-testid="icon-dialog-search" />
+                  Autofocus="true" Placeholder="Search icons…" Variant="Variant.Outlined" Margin="Margin.Dense"
+                  Adornment="Adornment.Start" AdornmentIcon="@MudBlazor.Icons.Material.Outlined.Search" Clearable="true"
+                  FullWidth="true" Class="icon-dialog__field" OnKeyDown="OnKeyDown" autocomplete="off"
+                  data-testid="icon-dialog-search" />
 
     <div class="icon-dialog__body">
       <div class="icon-dialog__results" data-testid="icon-dialog-results">
@@ -18,13 +19,20 @@
           var entry = entries[index];
           if (entry is null)
           {
-            <div class="icon-dialog__item @ItemClass(index, null)" @onclick="() => SelectAsync(null)"
+            <div class="icon-dialog__item d-flex align-center @ItemClass(index, null)" @onclick="() => SelectAsync(null)"
                  @onmouseover="() => hoveredIndex = index" @onmouseout="() => hoveredIndex = -1"
                  data-testid="icon-dialog-default">
               <div class="icon-dialog__glyph">
-                <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.RestartAlt" Size="Size.Small" />
+                @if (!string.IsNullOrEmpty(DefaultIconSvg))
+                {
+                  @((MarkupString)DefaultIconSvg)
+                }
+                else
+                {
+                  <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.RestartAlt" Size="Size.Small" />
+                }
               </div>
-              <span class="icon-dialog__name">Default (node type icon)</span>
+              <span class="icon-dialog__name">@DefaultLabel</span>
             </div>
           }
           else
@@ -34,7 +42,7 @@
             {
               <div class="icon-dialog__group">@icon.Group.Replace(".", " / ")</div>
             }
-            <div class="icon-dialog__item @ItemClass(index, icon.Name)" @onclick="() => SelectAsync(icon.Name)"
+            <div class="icon-dialog__item d-flex align-center @ItemClass(index, icon.Name)" @onclick="() => SelectAsync(icon.Name)"
                  @onmouseover="() => hoveredIndex = index" @onmouseout="() => hoveredIndex = -1"
                  data-testid="icon-dialog-item-@icon.Name">
               <div class="icon-dialog__glyph">@((MarkupString)icon.Svg)</div>
@@ -42,17 +50,22 @@
             </div>
           }
         }
-        @if (entries.Count <= 1 && !string.IsNullOrWhiteSpace(query))
+        @if (entries.Count <= 1 && !string.IsNullOrWhiteSpace(query) && !DefaultMatchesQuery)
         {
           <MudText Typo="Typo.body2" Class="icon-dialog__empty">No matching icons</MudText>
         }
       </div>
 
       <div class="icon-dialog__preview" data-testid="icon-dialog-preview">
-        @if (PreviewIcon is { } preview)
+        @if (ActiveIndex >= 0 && entries[ActiveIndex] is { } preview)
         {
           <div class="icon-dialog__preview-glyph">@((MarkupString)preview.Svg)</div>
           <span class="icon-dialog__preview-name">@preview.DisplayName</span>
+        }
+        else if (ActiveIndex >= 0 && !string.IsNullOrEmpty(DefaultIconSvg))
+        {
+          <div class="icon-dialog__preview-glyph">@((MarkupString)DefaultIconSvg)</div>
+          <span class="icon-dialog__preview-name">@DefaultLabel</span>
         }
       </div>
     </div>
@@ -70,6 +83,11 @@
   // The node's current custom icon name; null when using the node-type default.
   [Parameter]
   public string? CurrentIconName { get; set; }
+
+  // The name of the node's type-based default icon (e.g. "Solution"), shown on the "Default"
+  // row so it previews what the node reverts to; that icon is omitted from the list below.
+  [Parameter]
+  public string? DefaultIconName { get; set; }
 
   MudTextField<string> textField = null!;
   string query = "";
@@ -113,11 +131,24 @@
 
   public void Dispose() => isDisposed = true;
 
-  // The large preview shows the hovered icon, or the keyboard-selected one otherwise.
-  IconInfo? PreviewIcon =>
-      hoveredIndex >= 0 && hoveredIndex < entries.Count ? entries[hoveredIndex]
-      : selectedIndex >= 0 && selectedIndex < entries.Count ? entries[selectedIndex]
-      : null;
+  string DefaultIconSvg => string.IsNullOrEmpty(DefaultIconName) ? "" : IconLibrary.Get(DefaultIconName);
+
+  string DefaultLabel =>
+      string.IsNullOrEmpty(DefaultIconName)
+          ? "Default (node type icon)"
+          : $"{IconLibrary.ToDisplayName(DefaultIconName)} (Default)";
+
+  // Whether the always-pinned Default row itself matches the current query, so the "no matching
+  // icons" hint isn't shown alongside a Default row that clearly does match.
+  bool DefaultMatchesQuery =>
+      !string.IsNullOrEmpty(DefaultIconName)
+      && NodeSearchService.FuzzyMatch(query.Trim(), IconLibrary.ToDisplayName(DefaultIconName)) is not null;
+
+  // The large preview follows the hovered row, or the keyboard-selected one otherwise.
+  int ActiveIndex =>
+      hoveredIndex >= 0 && hoveredIndex < entries.Count ? hoveredIndex
+      : selectedIndex >= 0 && selectedIndex < entries.Count ? selectedIndex
+      : -1;
 
   string ItemClass(int index, string? iconName) =>
       (index == selectedIndex ? "icon-dialog__item--selected " : "")
@@ -134,21 +165,23 @@
     hoveredIndex = -1;
   }
 
-  // The pinned "Default" entry is always first; icons are fuzzy-matched on their display
-  // name (and raw name) and ranked by match score, or listed in library order when empty.
-  static IReadOnlyList<IconInfo?> Filter(string query)
+  // The pinned "Default" entry is always first; the node-type default icon is omitted (it is
+  // represented by the Default row). Remaining icons are fuzzy-matched on their display name
+  // (and raw name) and ranked by match score, or listed in library order when empty.
+  IReadOnlyList<IconInfo?> Filter(string query)
   {
     List<IconInfo?> result = [null];
+    var icons = IconLibrary.All.Where(icon => icon.Name != DefaultIconName);
 
     if (string.IsNullOrWhiteSpace(query))
     {
-      result.AddRange(IconLibrary.All.OrderBy(icon => icon.Group).ThenBy(icon => icon.DisplayName).Cast<IconInfo?>());
+      result.AddRange(icons.OrderBy(icon => icon.Group).ThenBy(icon => icon.DisplayName).Cast<IconInfo?>());
       return result;
     }
 
     query = query.Trim();
     var matches = new List<(IconInfo Icon, int Score)>();
-    foreach (var icon in IconLibrary.All)
+    foreach (var icon in icons)
     {
       var score = NodeSearchService.FuzzyMatch(query, icon.DisplayName) ?? NodeSearchService.FuzzyMatch(query, icon.Name);
       if (score is null)
