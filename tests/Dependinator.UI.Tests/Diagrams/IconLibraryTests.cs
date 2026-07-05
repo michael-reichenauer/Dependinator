@@ -47,12 +47,14 @@ public class IconLibraryTests
     }
 
     [Fact]
-    public void All_ShouldLoadEverySvgInTheDefaultGroup()
+    public void All_ShouldLoadEverySvgAsValidGroupedIcon()
     {
         var icons = IconLibrary.All;
 
-        Assert.Equal(19, icons.Count);
-        Assert.All(icons, icon => Assert.Equal("Default", icon.Group));
+        // The Default group holds the node-type icons; General holds the extra selectable icons.
+        Assert.Equal(19, icons.Count(icon => icon.Group == "Default"));
+        Assert.Equal(20, icons.Count(icon => icon.Group == "General"));
+        Assert.Equal(icons.Count, icons.Count(icon => icon.Group is "Default" or "General"));
         Assert.All(icons, icon => Assert.Contains("<svg", icon.Svg));
     }
 
