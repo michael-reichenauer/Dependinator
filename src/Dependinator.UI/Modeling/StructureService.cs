@@ -155,6 +155,7 @@ class StructureService(ILineService linesService) : IStructureService
             return;
 
         line.SetSegmentPoints(lineLayoutDto.SegmentPoints);
+        line.IsSegmentsUserSet = lineLayoutDto.IsSegmentsUserSet ?? lineLayoutDto.SegmentPoints.Count > 0;
         if (lineLayoutDto.Description is not null)
             line.SetDescription(lineLayoutDto.Description, model.UpdateStamp);
     }

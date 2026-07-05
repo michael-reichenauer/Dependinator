@@ -9,6 +9,7 @@ class LineEditCommand(LineId lineId) : Command
 
     public IReadOnlyList<Pos>? SegmentPoints { get; set; }
     public IReadOnlyList<Pos>? SegmentPointsCopy { get; set; }
+    public bool? IsSegmentsUserSetCopy { get; set; }
 
     public override void Execute(IModel model)
     {
@@ -16,7 +17,10 @@ class LineEditCommand(LineId lineId) : Command
             return;
 
         SegmentPointsCopy = [.. line.SegmentPoints];
+        IsSegmentsUserSetCopy = line.IsSegmentsUserSet;
         line.SetSegmentPoints(SegmentPoints);
+        // Removing the last point hands the line back to auto-routing
+        line.IsSegmentsUserSet = SegmentPoints.Count > 0;
     }
 
     public override void Revert(IModel model)
@@ -26,5 +30,6 @@ class LineEditCommand(LineId lineId) : Command
 
         (SegmentPoints, SegmentPointsCopy) = (SegmentPointsCopy, SegmentPoints);
         line.SetSegmentPoints(SegmentPoints);
+        (line.IsSegmentsUserSet, IsSegmentsUserSetCopy) = (IsSegmentsUserSetCopy ?? false, line.IsSegmentsUserSet);
     }
 }

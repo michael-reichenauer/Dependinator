@@ -78,6 +78,7 @@ class Model : IModel
                     {
                         LineId = l.Id.Value,
                         SegmentPoints = [.. l.SegmentPoints],
+                        IsSegmentsUserSet = l.IsSegmentsUserSet,
                         Description = l.Description,
                     }),
             ],

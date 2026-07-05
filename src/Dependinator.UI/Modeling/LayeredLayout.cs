@@ -24,6 +24,7 @@ static class LayeredLayout
         OrderLayers(graph);
         AssignCoordinates(graph, metrics);
         PlaceIsolated(graph, metrics);
+        RouteLines(graph, metrics);
         return true;
     }
 
@@ -59,7 +60,7 @@ static class LayeredLayout
                 if (!nodesByChild.TryGetValue(line.Target, out var target) || target == graphNode)
                     continue;
 
-                var edge = new GraphEdge(graphNode, target, weight);
+                var edge = new GraphEdge(graphNode, target, weight, line);
                 edges.Add(edge);
                 graphNode.OutEdges.Add(edge);
                 target.InEdges.Add(edge);
@@ -427,6 +428,100 @@ static class LayeredLayout
         }
     }
 
+    // Routes lines that span more than one column via waypoints in the row gaps of the
+    // intermediate columns, so they do not cut straight through nodes. Straight lines between
+    // adjacent columns are left alone. Hidden lines are skipped (stale auto waypoints cleared),
+    // and lines whose waypoints the user placed are never touched.
+    static void RouteLines(Graph graph, LayoutMetrics metrics)
+    {
+        var columns = graph
+            .Nodes.GroupBy(node => node.ColumnIndex ?? 0)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(node => node.Node.Boundary).OrderBy(rect => rect.Y).ToList()
+            );
+
+        foreach (var edge in graph.Edges)
+        {
+            var line = edge.Line;
+            if (line.IsSegmentsUserSet)
+                continue;
+
+            var sourceColumn = edge.Source.ColumnIndex ?? 0;
+            var targetColumn = edge.Target.ColumnIndex ?? 0;
+            if (line.IsHidden || Math.Abs(sourceColumn - targetColumn) <= 1)
+            {
+                line.SetSegmentPoints([]);
+                continue;
+            }
+
+            line.SetSegmentPoints(RouteSkipEdge(edge, sourceColumn, targetColumn, columns, metrics));
+        }
+    }
+
+    static List<Pos> RouteSkipEdge(
+        GraphEdge edge,
+        int sourceColumn,
+        int targetColumn,
+        Dictionary<int, List<Rect>> columns,
+        LayoutMetrics metrics
+    )
+    {
+        var goingRight = targetColumn > sourceColumn;
+        var sourceRect = edge.Source.Node.Boundary;
+        var targetRect = edge.Target.Node.Boundary;
+
+        // The anchors the renderer uses: source leaves from an edge center, target enters one
+        var start = new Pos(goingRight ? sourceRect.X + sourceRect.Width : sourceRect.X, CenterY(sourceRect));
+        var end = new Pos(goingRight ? targetRect.X : targetRect.X + targetRect.Width, CenterY(targetRect));
+
+        var cellWidth = metrics.Width + metrics.HorizontalGap;
+        var points = new List<Pos>();
+        var step = goingRight ? 1 : -1;
+
+        for (var column = sourceColumn + step; column != targetColumn; column += step)
+        {
+            if (!columns.TryGetValue(column, out var rects) || rects.Count == 0)
+                continue;
+
+            var columnCenterX = metrics.HorizontalGap + column * cellWidth + metrics.Width / 2;
+            var straightY = InterpolateY(start, end, columnCenterX);
+            if (!CrossesNode(rects, straightY))
+                continue;
+
+            var gapY = NearestGapY(rects, straightY, metrics);
+            points.Add(new Pos(columnCenterX, gapY));
+        }
+
+        return points;
+    }
+
+    static double CenterY(Rect rect) => rect.Y + rect.Height / 2;
+
+    static double InterpolateY(Pos start, Pos end, double x) =>
+        start.Y + (end.Y - start.Y) * ((x - start.X) / (end.X - start.X));
+
+    const double RouteClearance = 8;
+
+    static bool CrossesNode(List<Rect> rects, double y) =>
+        rects.Any(rect => y >= rect.Y - RouteClearance && y <= rect.Y + rect.Height + RouteClearance);
+
+    // Candidate detour heights are the centers of the gaps between the column's rows, plus one
+    // above the topmost and one below the bottommost node; picks the one closest to the
+    // straight line's height.
+    static double NearestGapY(List<Rect> rects, double y, LayoutMetrics metrics)
+    {
+        var halfGap = metrics.VerticalGap / 2;
+        var candidates = new List<double> { rects[0].Y - halfGap };
+        for (var index = 0; index < rects.Count - 1; index++)
+        {
+            candidates.Add((rects[index].Y + rects[index].Height + rects[index + 1].Y) / 2);
+        }
+        candidates.Add(rects[^1].Y + rects[^1].Height + halfGap);
+
+        return candidates.OrderBy(candidate => Math.Abs(candidate - y)).First();
+    }
+
     class Graph(List<GraphNode> nodes, List<GraphNode> isolated, List<GraphEdge> edges)
     {
         public List<GraphNode> Nodes { get; } = nodes;
@@ -453,11 +548,12 @@ static class LayeredLayout
         public int? ColumnIndex { get; set; }
     }
 
-    class GraphEdge(GraphNode source, GraphNode target, double weight)
+    class GraphEdge(GraphNode source, GraphNode target, double weight, Line line)
     {
         public GraphNode Source { get; } = source;
         public GraphNode Target { get; } = target;
         public double Weight { get; } = weight;
+        public Line Line { get; } = line;
         public bool IsReversed { get; set; }
     }
 }

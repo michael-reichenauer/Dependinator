@@ -203,6 +203,130 @@ public class LayeredLayoutTests
     }
 
     [Fact]
+    public void AdjustChildren_SkipEdge_ShouldGetWaypointAvoidingMiddleColumn()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 400));
+        var a = AddChild(model, parent, "A");
+        var b = AddChild(model, parent, "B");
+        var c = AddChild(model, parent, "C");
+        AddLink(model, a, b);
+        AddLink(model, b, c);
+        AddLink(model, a, c); // Skip edge spanning the middle column
+
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+        NodeLayout.AdjustChildren(parent);
+
+        var skipLine = a.SourceLines.Single(line => line.Target == c);
+        var directLine = a.SourceLines.Single(line => line.Target == b);
+
+        Assert.Empty(directLine.SegmentPoints);
+        var waypoint = Assert.Single(skipLine.SegmentPoints);
+
+        // The waypoint sits in the middle column's horizontal band but clear of B's node
+        Assert.InRange(waypoint.X, b.Boundary.X, b.Boundary.X + b.Boundary.Width);
+        var overlapsB = waypoint.Y >= b.Boundary.Y && waypoint.Y <= b.Boundary.Y + b.Boundary.Height;
+        Assert.False(
+            overlapsB,
+            $"Expected waypoint outside B (y={b.Boundary.Y}..{b.Boundary.Y + b.Boundary.Height}) but got {waypoint.Y}"
+        );
+    }
+
+    [Fact]
+    public void AdjustChildren_HiddenSkipEdge_ShouldGetNoWaypointsAndClearStale()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 400));
+        var a = AddChild(model, parent, "A");
+        var b = AddChild(model, parent, "B");
+        var c = AddChild(model, parent, "C");
+        AddLink(model, a, b);
+        AddLink(model, b, c);
+        AddLink(model, a, c);
+
+        var skipLine = a.SourceLines.Single(line => line.Target == c);
+        skipLine.SetSegmentPoints([new Pos(1, 2)]);
+        skipLine.IsHidden = true;
+
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+        NodeLayout.AdjustChildren(parent);
+
+        Assert.Empty(skipLine.SegmentPoints);
+    }
+
+    [Fact]
+    public void AdjustChildren_UserSetSegments_ShouldBePreserved()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 400));
+        var a = AddChild(model, parent, "A");
+        var b = AddChild(model, parent, "B");
+        var c = AddChild(model, parent, "C");
+        AddLink(model, a, b);
+        AddLink(model, b, c);
+        AddLink(model, a, c);
+
+        var skipLine = a.SourceLines.Single(line => line.Target == c);
+        var userPoints = new[] { new Pos(123, 456) };
+        skipLine.SetSegmentPoints(userPoints);
+        skipLine.IsSegmentsUserSet = true;
+
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+        NodeLayout.AdjustChildren(parent);
+
+        Assert.Equal(userPoints, skipLine.SegmentPoints);
+    }
+
+    [Fact]
+    public void AdjustChildren_AdjacentEdgeWithStaleWaypoints_ShouldBeCleared()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 400));
+        var a = AddChild(model, parent, "A");
+        var b = AddChild(model, parent, "B");
+        AddLink(model, a, b);
+
+        var line = a.SourceLines.Single(l => l.Target == b);
+        line.SetSegmentPoints([new Pos(1, 2)]);
+
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+        NodeLayout.AdjustChildren(parent);
+
+        Assert.Empty(line.SegmentPoints);
+    }
+
+    [Fact]
+    public void LineEditCommand_ShouldSetAndRevertUserSetFlag()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 400));
+        var a = AddChild(model, parent, "A");
+        var b = AddChild(model, parent, "B");
+        AddLink(model, a, b);
+        var line = a.SourceLines.Single(l => l.Target == b);
+
+        var command = new Dependinator.UI.Modeling.Commands.LineEditCommand(line.Id)
+        {
+            SegmentPoints = [new Pos(10, 20)],
+        };
+        command.Execute(model);
+        Assert.True(line.IsSegmentsUserSet);
+        Assert.Equal([new Pos(10, 20)], line.SegmentPoints);
+
+        command.Revert(model);
+        Assert.False(line.IsSegmentsUserSet);
+        Assert.Empty(line.SegmentPoints);
+
+        command.Revert(model); // Redo
+        Assert.True(line.IsSegmentsUserSet);
+
+        // User removing all points hands the line back to auto-routing
+        var clearCommand = new Dependinator.UI.Modeling.Commands.LineEditCommand(line.Id) { SegmentPoints = [] };
+        clearCommand.Execute(model);
+        Assert.False(line.IsSegmentsUserSet);
+    }
+
+    [Fact]
     public void RequireChildrenLayout_ShouldFlagOnlyNonCustomizedParents()
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();
