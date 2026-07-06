@@ -41,6 +41,25 @@ public class ManualCommandTests
     }
 
     [Fact]
+    public void ParentQualifiedNames_AllowSameShortName_UnderDifferentParents()
+    {
+        using var model = CreateModel();
+        new AddNodeCommand("A", model.Root.Name, new Rect(0, 0, 100, 100)).Execute(model);
+        new AddNodeCommand("B", model.Root.Name, new Rect(0, 0, 100, 100)).Execute(model);
+
+        // Same short name ("Child") under two different parents => distinct full-name identities.
+        new AddNodeCommand("A.Child", "A", new Rect(0, 0, 40, 40)).Execute(model);
+        new AddNodeCommand("B.Child", "B", new Rect(0, 0, 40, 40)).Execute(model);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("A.Child"), out var underA));
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("B.Child"), out var underB));
+        Assert.NotEqual(underA!.Id, underB!.Id);
+        // Both display just the short name typed in the text box.
+        Assert.Equal("Child", underA.ShortName);
+        Assert.Equal("Child", underB.ShortName);
+    }
+
+    [Fact]
     public void AddLinkCommand_ShouldAddManualLink_AndRevertRemoveIt()
     {
         using var model = CreateModel();
@@ -91,6 +110,46 @@ public class ManualCommandTests
         Assert.False(model.Links.ContainsKey(new LinkId("A", "B")));
         Assert.True(model.Links.TryGetValue(new LinkId("C", "B"), out var link));
         Assert.True(link!.IsManual);
+    }
+
+    [Fact]
+    public void RenameNode_ShouldRenameSubtree_RemapLinks_AndRevert()
+    {
+        using var model = CreateModel();
+        var structureService = CreateStructureService();
+        new AddNodeCommand("A", model.Root.Name, new Rect(0, 0, 100, 100)).Execute(model);
+        new AddNodeCommand("A.B", "A", new Rect(0, 0, 40, 40)).Execute(model);
+        new AddNodeCommand("Ext", model.Root.Name, new Rect(0, 0, 100, 100)).Execute(model);
+        structureService.AddManualLink(model, "A", "A.B"); // internal (parent -> child)
+        structureService.AddManualLink(model, "A.B", "Ext"); // subtree -> external
+        structureService.AddManualLink(model, "Ext", "A"); // external -> subtree
+
+        var command = new RenameNodeCommand(structureService, "A", "X");
+        command.Execute(model);
+
+        // The whole subtree is re-prefixed; the child keeps its short name under the new parent.
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("A")));
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("A.B")));
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("X"), out var x));
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("X.B"), out var xb));
+        Assert.Equal(x, xb!.Parent);
+        Assert.Equal("B", xb.ShortName);
+
+        // Links to/from the node and its child are remapped (external endpoints unchanged).
+        Assert.True(model.Links.ContainsKey(new LinkId("X", "X.B")));
+        Assert.True(model.Links.ContainsKey(new LinkId("X.B", "Ext")));
+        Assert.True(model.Links.ContainsKey(new LinkId("Ext", "X")));
+        Assert.False(model.Links.ContainsKey(new LinkId("A", "A.B")));
+        Assert.False(model.Links.ContainsKey(new LinkId("A.B", "Ext")));
+        Assert.False(model.Links.ContainsKey(new LinkId("Ext", "A")));
+
+        command.Revert(model);
+        Assert.True(model.Nodes.ContainsKey(NodeId.FromName("A")));
+        Assert.True(model.Nodes.ContainsKey(NodeId.FromName("A.B")));
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("X")));
+        Assert.True(model.Links.ContainsKey(new LinkId("A", "A.B")));
+        Assert.True(model.Links.ContainsKey(new LinkId("A.B", "Ext")));
+        Assert.True(model.Links.ContainsKey(new LinkId("Ext", "A")));
     }
 
     [Fact]

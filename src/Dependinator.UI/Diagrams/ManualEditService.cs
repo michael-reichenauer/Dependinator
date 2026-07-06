@@ -67,8 +67,10 @@ class ManualEditService(
     string pendingParentName = "";
     Rect pendingBoundary = Rect.None;
 
-    // The node being renamed (set between BeginRenameNode and commit/cancel).
+    // The node being renamed (set between BeginRenameNode and commit/cancel): its current full
+    // name and its parent's full name (used to re-qualify the new name).
     string renameFromName = "";
+    string renameParentName = "";
 
     public bool IsNameEntryOpen => entryMode != EntryMode.None;
     public Pos NameEntryScreenPos { get; private set; } = Pos.None;
@@ -117,13 +119,18 @@ class ManualEditService(
     {
         IsAddingLink = false;
 
-        var name = ResolveNodeName(nodeId);
-        if (name.Length == 0)
-            return;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
+                return;
+
+            renameFromName = node.Name;
+            renameParentName = node.Parent?.Name ?? "";
+            // The text box shows and edits the short name; the parent prefix is kept.
+            NameEntryInitialValue = node.ShortName;
+        }
 
         entryMode = EntryMode.Rename;
-        renameFromName = name;
-        NameEntryInitialValue = name;
         NameEntryScreenPos = screenPos;
         StateChanged?.Invoke();
     }
@@ -134,8 +141,15 @@ class ManualEditService(
         if (!IsNameEntryOpen || trimmed.Length == 0)
             return false;
 
+        var isRename = entryMode == EntryMode.Rename;
+        var parentName = isRename ? renameParentName : pendingParentName;
+
+        // The typed text is the short name; the node's identity is qualified by its parent (like
+        // parsed nodes), so the same short name can be used under different parents.
+        var fullName = ComposeFullName(parentName, trimmed);
+
         // Renaming to the unchanged name is a no-op, but a valid "commit" that closes the prompt.
-        if (entryMode == EntryMode.Rename && trimmed == renameFromName)
+        if (isRename && fullName == renameFromName)
         {
             ResetNameEntry();
             return true;
@@ -143,14 +157,13 @@ class ManualEditService(
 
         using (var model = modelMgr.UseModel())
         {
-            if (model.Nodes.ContainsKey(NodeId.FromName(trimmed)))
-                return false; // Name is the node identity; reject duplicates.
+            if (model.Nodes.ContainsKey(NodeId.FromName(fullName)))
+                return false; // Full name is the node identity; reject duplicates.
         }
 
-        var isRename = entryMode == EntryMode.Rename;
         Command command = isRename
-            ? new RenameNodeCommand(structureService, renameFromName, trimmed)
-            : new AddNodeCommand(trimmed, pendingParentName, pendingBoundary);
+            ? new RenameNodeCommand(structureService, renameFromName, fullName)
+            : new AddNodeCommand(fullName, pendingParentName, pendingBoundary);
         commandService.Do(command);
         ResetNameEntry();
 
@@ -159,10 +172,15 @@ class ManualEditService(
         if (isRename)
         {
             selectionService.Unselect();
-            selectionService.Select(NodeId.FromName(trimmed));
+            selectionService.Select(NodeId.FromName(fullName));
         }
         return true;
     }
+
+    // The identity name of a manual node: the parent's full name and the typed short name joined by
+    // a dot (mirroring parsed node names). Top-level nodes (empty parent name) keep just the short.
+    static string ComposeFullName(string parentName, string shortName) =>
+        string.IsNullOrEmpty(parentName) ? shortName : $"{parentName}.{shortName}";
 
     public void CancelNameEntry()
     {
@@ -241,6 +259,7 @@ class ManualEditService(
         pendingParentName = "";
         pendingBoundary = Rect.None;
         renameFromName = "";
+        renameParentName = "";
         StateChanged?.Invoke();
     }
 

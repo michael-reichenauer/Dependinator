@@ -96,10 +96,12 @@ class StructureService(ILineService linesService) : IStructureService
         return link;
     }
 
-    // Renames a node by rebuilding it under the new name (the name is the node's identity), moving
-    // its children across and recreating its links (and their lines) with the new name. No-op if
-    // the source is missing or the target name is already taken. Symmetric, so a command can revert
-    // by renaming back.
+    // Renames a node and its whole subtree by rebuilding each node under a new parent-qualified
+    // name (the name is the node's identity): the renamed node takes toName and every descendant is
+    // re-prefixed accordingly. All links touching any node in the subtree are recreated with the
+    // remapped endpoint names (endpoints outside the subtree are unchanged). No-op if the source is
+    // missing or the target name is already taken. Symmetric, so a command can revert by renaming
+    // back.
     public void RenameNode(IModel model, string fromName, string toName)
     {
         if (fromName == toName)
@@ -109,37 +111,62 @@ class StructureService(ILineService linesService) : IStructureService
         if (model.Nodes.ContainsKey(NodeId.FromName(toName)))
             return;
 
-        var parent = fromNode.Parent;
+        var rootParent = fromNode.Parent;
+        var subtree = fromNode.DescendantsAndSelfPreOrder().ToList();
 
-        // Create the renamed node, copying all persisted properties.
-        var toNode = new Models.Node(toName, parent);
-        toNode.SetFromDto(fromNode.ToDto());
-        toNode.UpdateStamp = model.UpdateStamp;
-        model.TryAddNode(toNode);
-        parent.AddChild(toNode);
-
-        // Re-parent children to the renamed node.
-        foreach (var child in fromNode.Children.ToList())
+        // Plan each node's new name (parents before children): the root becomes toName; each
+        // descendant keeps its short (last) name segment under its parent's new name. Capture the
+        // DTOs and parent links now, before any mutation.
+        var nameMap = new Dictionary<string, string>();
+        var plan = new List<(string NewName, string? NewParentName, NodeDto Dto)>();
+        foreach (var node in subtree)
         {
-            fromNode.RemoveChild(child);
-            toNode.AddChild(child);
+            var newName = node == fromNode ? toName : $"{nameMap[node.Parent.Name]}.{LastNameSegment(node.Name)}";
+            var newParentName = node == fromNode ? null : nameMap[node.Parent.Name];
+            nameMap[node.Name] = newName;
+            plan.Add((newName, newParentName, node.ToDto()));
         }
 
-        // Recreate links (and their lines) with the new name in place of the old.
-        var links = fromNode.SourceLinks.Concat(fromNode.TargetLinks).Distinct().ToList();
-        var endpoints = links
-            .Select(l =>
-                (
-                    Source: l.Source == fromNode ? toName : l.Source.Name,
-                    Target: l.Target == fromNode ? toName : l.Target.Name
-                )
-            )
-            .ToList();
-        links.ForEach(model.RemoveLink);
-        foreach (var (source, target) in endpoints)
-            AddManualLink(model, source, target);
+        // Collect links touching any subtree node, remapping endpoints that fall inside the subtree.
+        var seen = new HashSet<LinkId>();
+        var remappedLinks = new List<(string Source, string Target)>();
+        foreach (var node in subtree)
+        {
+            foreach (var link in node.SourceLinks.Concat(node.TargetLinks))
+            {
+                if (!seen.Add(link.Id))
+                    continue;
+                var source = nameMap.GetValueOrDefault(link.Source.Name, link.Source.Name);
+                var target = nameMap.GetValueOrDefault(link.Target.Name, link.Target.Name);
+                remappedLinks.Add((source, target));
+            }
+        }
 
-        model.RemoveNode(fromNode);
+        // Remove the old links and nodes, then rebuild the subtree under the new names and re-add the
+        // remapped links (and their lines).
+        var oldLinks = subtree.SelectMany(n => n.SourceLinks.Concat(n.TargetLinks)).Distinct().ToList();
+        oldLinks.ForEach(model.RemoveLink);
+        foreach (var node in fromNode.DescendantsAndSelfPostOrder().ToList())
+            model.RemoveNode(node);
+
+        foreach (var (newName, newParentName, dto) in plan)
+        {
+            var parent = newParentName is null ? rootParent : model.Nodes[NodeId.FromName(newParentName)];
+            var newNode = new Models.Node(newName, parent);
+            newNode.SetFromDto(dto);
+            newNode.UpdateStamp = model.UpdateStamp;
+            model.TryAddNode(newNode);
+            parent.AddChild(newNode);
+        }
+
+        foreach (var (source, target) in remappedLinks)
+            AddManualLink(model, source, target);
+    }
+
+    static string LastNameSegment(string name)
+    {
+        var index = name.LastIndexOf('.');
+        return index < 0 ? name : name[(index + 1)..];
     }
 
     public void SetNodeDto(IModel model, NodeDto nodeDto)

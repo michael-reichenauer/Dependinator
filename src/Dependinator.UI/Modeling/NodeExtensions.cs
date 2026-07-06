@@ -34,6 +34,18 @@ static class NodeExtensions
         yield return node;
     }
 
+    // The node and all its descendants in pre-order (parents before their children), so callers
+    // that rebuild nodes create each parent before the children attached to it.
+    public static IEnumerable<Node> DescendantsAndSelfPreOrder(this Node node)
+    {
+        yield return node;
+        foreach (var child in node.Children)
+        {
+            foreach (var descendant in child.DescendantsAndSelfPreOrder())
+                yield return descendant;
+        }
+    }
+
     public static Node LowestCommonAncestor(this Node first, Node second)
     {
         if (first == second)
