@@ -29,6 +29,7 @@ class InteractionService : IInteractionService
     readonly ISelectionService selectionService;
     readonly IModelMgr modelMgr;
     readonly IDependenciesService dependenciesService;
+    readonly IManualEditService manualEditService;
 
     const int MoveDelay = 300;
 
@@ -50,7 +51,8 @@ class InteractionService : IInteractionService
         IApplicationEvents applicationEvents,
         ISelectionService selectionService,
         IModelMgr modelMgr,
-        IDependenciesService dependenciesService
+        IDependenciesService dependenciesService,
+        IManualEditService manualEditService
     )
     {
         this.mouseEventService = mouseEventService;
@@ -61,6 +63,7 @@ class InteractionService : IInteractionService
         this.selectionService = selectionService;
         this.modelMgr = modelMgr;
         this.dependenciesService = dependenciesService;
+        this.manualEditService = manualEditService;
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
         this.applicationEvents.UndoneRedone += UpdateToolbar;
     }
@@ -219,6 +222,17 @@ class InteractionService : IInteractionService
     {
         // Log.Info("mouse click", e.TargetId);
         var pointerId = PointerId.Parse(e.TargetId);
+
+        // While drawing a manual link, a click picks the target node (or cancels on empty space).
+        if (manualEditService.IsAddingLink)
+        {
+            if (pointerId.IsNode)
+                manualEditService.TryCompleteAddLink(pointerId);
+            else
+                manualEditService.CancelAddLink();
+            return;
+        }
+
         dependenciesService.Clicked(pointerId);
 
         selectionService.Select(pointerId, e);
@@ -226,7 +240,10 @@ class InteractionService : IInteractionService
 
     void OnDblClick(PointerEvent e)
     {
-        // Log.Info($"OnDoubleClick {e.Type}");
+        // Double-click on empty canvas (or inside a container) starts adding a manual node there.
+        if (!NodeSvg.IsEditingEnabled)
+            return;
+        manualEditService.BeginAddNode(e);
     }
 
     void OnMouseDown(PointerEvent e)

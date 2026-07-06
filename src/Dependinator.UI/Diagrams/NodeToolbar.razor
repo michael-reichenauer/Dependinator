@@ -30,6 +30,18 @@
           Set Icon …
         </MudMenuItem>
 
+        @if (IsSelectedNodeManual)
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DriveFileRenameOutline"
+                       OnClick="RenameNode" data-testid="node-menu-rename">
+            Rename Node …
+          </MudMenuItem>
+          <MudMenuItem IconColor="Color.Error" Icon="@MudBlazor.Icons.Material.Outlined.Delete"
+                       OnClick="DeleteNode" data-testid="node-menu-delete">
+            Delete Node
+          </MudMenuItem>
+        }
+
         <MudDivider />
         @if (!IsNodeHidden)
         {
@@ -68,6 +80,10 @@
       <MudTooltip Text="Set icon">
         <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols" OnClick="SelectIconAsync"
                        data-testid="node-set-icon" />
+      </MudTooltip>
+      <MudTooltip Text="Add link from this node">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CallMade" OnClick="BeginAddLink"
+                       data-testid="node-add-link" />
       </MudTooltip>
     }
 
@@ -118,10 +134,22 @@
   </YesButton>
 </MudMessageBox>
 
+<MudMessageBox @ref="deleteConfirmBox" Title="Delete Node" CancelText="Cancel">
+  <MessageContent>
+    Delete this node and all its child nodes?
+  </MessageContent>
+  <YesButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Filled.Delete">
+      Delete
+    </MudButton>
+  </YesButton>
+</MudMessageBox>
+
 
 @code {
   const double ToolbarOffset = 58;
   private MudMessageBox mbox { get; set; } = null!;
+  private MudMessageBox deleteConfirmBox { get; set; } = null!;
 
 
   bool IsEditNodeMode
@@ -164,9 +192,37 @@
   [Inject]
   IConfigService configService { get; set; } = null!;
 
+  [Inject]
+  IManualEditService manualEditService { get; set; } = null!;
+
+  [Inject]
+  ISnackbar snackbar { get; set; } = null!;
+
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
+  bool IsSelectedNodeManual
+  {
+    get
+    {
+      if (!selectionService.SelectedId.IsNode)
+        return false;
+      using var model = modelMgr.UseModel();
+      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
+          && node.IsManual;
+    }
+  }
+  bool SelectedNodeHasChildren
+  {
+    get
+    {
+      if (!selectionService.SelectedId.IsNode)
+        return false;
+      using var model = modelMgr.UseModel();
+      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
+          && node.Children.Count > 0;
+    }
+  }
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
   bool IsIconMode => !interactionService.IsContainer;
   bool CanShowSource => interactionService.CanShowSource;
@@ -260,6 +316,36 @@
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();
+
+  void BeginAddLink()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    manualEditService.BeginAddLink(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
+    snackbar.Add("Click a target node to link to (Esc or click empty space to cancel).", Severity.Info);
+  }
+
+  async Task DeleteNode()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+
+    // Confirm before removing a node together with its children; no prompt for a childless node.
+    if (SelectedNodeHasChildren && await deleteConfirmBox.ShowAsync() != true)
+      return;
+
+    selectionService.Unselect();
+    manualEditService.DeleteManualNode(nodeId);
+  }
+
+  void RenameNode()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+    manualEditService.BeginRenameNode(nodeId, selectionService.SelectedNodePosition);
+  }
 
   async Task SelectIconAsync()
   {

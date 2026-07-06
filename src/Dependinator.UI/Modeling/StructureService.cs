@@ -9,6 +9,8 @@ interface IStructureService
 {
     void AddOrUpdateNode(IModel model, Parsing.Node parsedNode);
     void AddOrUpdateLink(IModel model, Parsing.Link parsedLink);
+    Models.Link? AddManualLink(IModel model, string sourceName, string targetName);
+    void RenameNode(IModel model, string fromName, string toName);
     void SetLineDescription(IModel model, Parsing.LineDescription lineDescription);
     void ClearNotUpdated(IModel model);
     void SetNodeDto(IModel model, NodeDto nodeDto);
@@ -75,6 +77,98 @@ class StructureService(ILineService linesService) : IStructureService
         AddLink(model, link);
     }
 
+    // Creates a user-drawn link (and its visual line) between two existing nodes. Returns null if
+    // an endpoint is missing or the link already exists (so redo is idempotent).
+    public Models.Link? AddManualLink(IModel model, string sourceName, string targetName)
+    {
+        var linkId = new LinkId(sourceName, targetName);
+        if (model.Links.ContainsKey(linkId))
+            return null;
+
+        if (!model.Nodes.TryGetValue(NodeId.FromName(sourceName), out var source))
+            return null;
+        if (!model.Nodes.TryGetValue(NodeId.FromName(targetName), out var target))
+            return null;
+
+        var link = new Models.Link(source, target) { IsManual = true, UpdateStamp = model.UpdateStamp };
+
+        AddLink(model, link);
+        return link;
+    }
+
+    // Renames a node and its whole subtree by rebuilding each node under a new parent-qualified
+    // name (the name is the node's identity): the renamed node takes toName and every descendant is
+    // re-prefixed accordingly. All links touching any node in the subtree are recreated with the
+    // remapped endpoint names (endpoints outside the subtree are unchanged). No-op if the source is
+    // missing or the target name is already taken. Symmetric, so a command can revert by renaming
+    // back.
+    public void RenameNode(IModel model, string fromName, string toName)
+    {
+        if (fromName == toName)
+            return;
+        if (!model.Nodes.TryGetValue(NodeId.FromName(fromName), out var fromNode))
+            return;
+        if (model.Nodes.ContainsKey(NodeId.FromName(toName)))
+            return;
+
+        var rootParent = fromNode.Parent;
+        var subtree = fromNode.DescendantsAndSelfPreOrder().ToList();
+
+        // Plan each node's new name (parents before children): the root becomes toName; each
+        // descendant keeps its short (last) name segment under its parent's new name. Capture the
+        // DTOs and parent links now, before any mutation.
+        var nameMap = new Dictionary<string, string>();
+        var plan = new List<(string NewName, string? NewParentName, NodeDto Dto)>();
+        foreach (var node in subtree)
+        {
+            var newName = node == fromNode ? toName : $"{nameMap[node.Parent.Name]}.{LastNameSegment(node.Name)}";
+            var newParentName = node == fromNode ? null : nameMap[node.Parent.Name];
+            nameMap[node.Name] = newName;
+            plan.Add((newName, newParentName, node.ToDto()));
+        }
+
+        // Collect links touching any subtree node, remapping endpoints that fall inside the subtree.
+        var seen = new HashSet<LinkId>();
+        var remappedLinks = new List<(string Source, string Target)>();
+        foreach (var node in subtree)
+        {
+            foreach (var link in node.SourceLinks.Concat(node.TargetLinks))
+            {
+                if (!seen.Add(link.Id))
+                    continue;
+                var source = nameMap.GetValueOrDefault(link.Source.Name, link.Source.Name);
+                var target = nameMap.GetValueOrDefault(link.Target.Name, link.Target.Name);
+                remappedLinks.Add((source, target));
+            }
+        }
+
+        // Remove the old links and nodes, then rebuild the subtree under the new names and re-add the
+        // remapped links (and their lines).
+        var oldLinks = subtree.SelectMany(n => n.SourceLinks.Concat(n.TargetLinks)).Distinct().ToList();
+        oldLinks.ForEach(model.RemoveLink);
+        foreach (var node in fromNode.DescendantsAndSelfPostOrder().ToList())
+            model.RemoveNode(node);
+
+        foreach (var (newName, newParentName, dto) in plan)
+        {
+            var parent = newParentName is null ? rootParent : model.Nodes[NodeId.FromName(newParentName)];
+            var newNode = new Models.Node(newName, parent);
+            newNode.SetFromDto(dto);
+            newNode.UpdateStamp = model.UpdateStamp;
+            model.TryAddNode(newNode);
+            parent.AddChild(newNode);
+        }
+
+        foreach (var (source, target) in remappedLinks)
+            AddManualLink(model, source, target);
+    }
+
+    static string LastNameSegment(string name)
+    {
+        var index = name.LastIndexOf('.');
+        return index < 0 ? name : name[(index + 1)..];
+    }
+
     public void SetNodeDto(IModel model, NodeDto nodeDto)
     {
         if (nodeDto.Name == "") // Root node already exists
@@ -104,6 +198,7 @@ class StructureService(ILineService linesService) : IStructureService
 
         var link = new Models.Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
+        link.IsManual = linkDto.IsManual;
 
         AddLink(model, link);
     }
@@ -162,15 +257,29 @@ class StructureService(ILineService linesService) : IStructureService
 
     public void ClearNotUpdated(IModel model)
     {
-        var links = model.Links.Values.Where(l => l.UpdateStamp != model.UpdateStamp).ToList();
+        // Manually added nodes/links are not produced by parsing, so they are always "stale" by
+        // stamp; exempt them so a re-parse doesn't delete the user's design work.
+        var links = model.Links.Values.Where(l => !l.IsManual && l.UpdateStamp != model.UpdateStamp).ToList();
         Log.Info($"Remove {links.Count} links");
         foreach (var link in links)
             model.RemoveLink(link);
 
-        var nodes = model.Nodes.Values.Where(n => n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0).ToList();
+        var nodes = model
+            .Nodes.Values.Where(n => !n.IsManual && n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0)
+            .ToList();
         Log.Info($"Remove {nodes.Count} nodes");
         foreach (var node in nodes)
             RemoveNode(model, node);
+
+        // A manual link may point at a parsed node that was just removed (deleted from code);
+        // drop such dangling manual links so no line references a node no longer in the model.
+        var danglingManualLinks = model
+            .Links.Values.Where(l =>
+                l.IsManual && (!model.Nodes.ContainsKey(l.Source.Id) || !model.Nodes.ContainsKey(l.Target.Id))
+            )
+            .ToList();
+        foreach (var link in danglingManualLinks)
+            model.RemoveLink(link);
 
         // Clear line descriptions whose source comments were removed since the last parse
         var staleDescriptionLines = model

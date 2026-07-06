@@ -14,12 +14,15 @@ class Link : IItem
         this.Id = new LinkId(Source.Name, Target.Name);
     }
 
-    public LinkDto ToDto() => new(Source.Name, Target.Name, Target.Type.ToString());
+    public LinkDto ToDto() => new(Source.Name, Target.Name, Target.Type.ToString()) { IsManual = IsManual };
 
     public LinkId Id { get; }
     public Node Source { get; }
     public Node Target { get; }
     public DateTime UpdateStamp { get; set; }
+
+    // A manually added link (drawn by the user), exempt from stale-link removal on re-parse.
+    public bool IsManual { get; set; }
 
     public void AddLine(Line line)
     {

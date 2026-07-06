@@ -81,6 +81,12 @@ class NodeSvg
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
+            {ManualMarkerSvg(
+                node,
+                textX + EstimateNameWidth(node.ShortName, fontSize) / 2,
+                textY + fontSize / 2,
+                fontSize
+            )}
             """;
     }
 
@@ -126,6 +132,12 @@ class NodeSvg
             <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {descriptionSvg}
             {selectedOverlay}
+            {ManualMarkerSvg(
+                node,
+                header.TextPos.X + EstimateNameWidth(node.ShortName, header.FontSize),
+                header.TextPos.Y + header.FontSize / 2,
+                header.FontSize
+            )}
             """;
     }
 
@@ -164,6 +176,12 @@ class NodeSvg
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
+            {ManualMarkerSvg(
+                node,
+                layout.Text.X + EstimateNameWidth(node.ShortName, fontSize),
+                layout.Text.Y,
+                fontSize
+            )}
             """;
     }
 
@@ -318,6 +336,24 @@ class NodeSvg
 
     static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
         node.IsHidden ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
+
+    // A small pencil glyph placed just after the node's name label, marking a manually added
+    // (user-drawn) node so it reads as "hand-drawn/editable" (not a status). Empty for parsed
+    // nodes. textEndX is the x just past the end of the name text; textCenterY its vertical center.
+    static string ManualMarkerSvg(Node node, double textEndX, double textCenterY, double fontSize)
+    {
+        if (!node.IsManual)
+            return "";
+
+        var glyphSize = fontSize * 0.95;
+        var x = textEndX + fontSize * 0.35;
+        // U+270E LOWER RIGHT PENCIL
+        return $"""<text x="{x:0.##}" y="{textCenterY:0.##}" font-size="{glyphSize:0.##}px" fill="{DColors.ManualMarker}" text-anchor="start" dominant-baseline="central" pointer-events="none">&#x270E;</text>""";
+    }
+
+    // Rough width of a rendered name in the diagram font, used to place the manual marker after it.
+    static double EstimateNameWidth(string text, double fontSize) =>
+        string.IsNullOrEmpty(text) ? 0 : text.Length * fontSize * MemberAverageCharWidthFactor;
 
     static (string Border, string Background) NodeColors(Node node)
     {

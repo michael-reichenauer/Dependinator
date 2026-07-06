@@ -36,4 +36,8 @@ record NodeDto
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsChildrenLayoutCustomized { get; set; }
+
+    // True for user-drawn nodes; omitted for parsed nodes so their serialized form is unchanged.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsManual { get; set; }
 }
