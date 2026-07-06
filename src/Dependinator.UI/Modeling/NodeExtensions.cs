@@ -22,6 +22,18 @@ static class NodeExtensions
         }
     }
 
+    // The node and all its descendants in post-order (children before their parent), so callers
+    // that remove nodes handle leaves before the containers that hold them.
+    public static IEnumerable<Node> DescendantsAndSelfPostOrder(this Node node)
+    {
+        foreach (var child in node.Children)
+        {
+            foreach (var descendant in child.DescendantsAndSelfPostOrder())
+                yield return descendant;
+        }
+        yield return node;
+    }
+
     public static Node LowestCommonAncestor(this Node first, Node second)
     {
         if (first == second)

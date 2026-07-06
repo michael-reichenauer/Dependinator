@@ -134,10 +134,22 @@
   </YesButton>
 </MudMessageBox>
 
+<MudMessageBox @ref="deleteConfirmBox" Title="Delete Node" CancelText="Cancel">
+  <MessageContent>
+    Delete this node and all its child nodes?
+  </MessageContent>
+  <YesButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Filled.Delete">
+      Delete
+    </MudButton>
+  </YesButton>
+</MudMessageBox>
+
 
 @code {
   const double ToolbarOffset = 58;
   private MudMessageBox mbox { get; set; } = null!;
+  private MudMessageBox deleteConfirmBox { get; set; } = null!;
 
 
   bool IsEditNodeMode
@@ -198,6 +210,17 @@
       using var model = modelMgr.UseModel();
       return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
           && node.IsManual;
+    }
+  }
+  bool SelectedNodeHasChildren
+  {
+    get
+    {
+      if (!selectionService.SelectedId.IsNode)
+        return false;
+      using var model = modelMgr.UseModel();
+      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
+          && node.Children.Count > 0;
     }
   }
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
@@ -302,11 +325,16 @@
     snackbar.Add("Click a target node to link to (Esc or click empty space to cancel).", Severity.Info);
   }
 
-  void DeleteNode()
+  async Task DeleteNode()
   {
     if (!selectionService.SelectedId.IsNode)
       return;
     var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+
+    // Confirm before removing a node together with its children; no prompt for a childless node.
+    if (SelectedNodeHasChildren && await deleteConfirmBox.ShowAsync() != true)
+      return;
+
     selectionService.Unselect();
     manualEditService.DeleteManualNode(nodeId);
   }

@@ -108,6 +108,49 @@ public class ManualCommandTests
     }
 
     [Fact]
+    public void DescendantsAndSelfPostOrder_ShouldReturnChildrenBeforeParent()
+    {
+        using var model = CreateModel();
+        new AddNodeCommand("P", model.Root.Name, new Rect(0, 0, 100, 100)).Execute(model);
+        new AddNodeCommand("C1", "P", new Rect(0, 0, 40, 40)).Execute(model);
+        new AddNodeCommand("C2", "P", new Rect(0, 0, 40, 40)).Execute(model);
+
+        var parent = model.Nodes[NodeId.FromName("P")];
+        var order = parent.DescendantsAndSelfPostOrder().Select(n => n.Name).ToList();
+
+        Assert.Equal(["C1", "C2", "P"], order);
+    }
+
+    [Fact]
+    public void CascadeDelete_ShouldRemoveParentChildAndLink_AndRevertRestoreTree()
+    {
+        using var model = CreateModel();
+        new AddNodeCommand("P", model.Root.Name, new Rect(0, 0, 100, 100)).Execute(model);
+        new AddNodeCommand("C", "P", new Rect(10, 10, 40, 40)).Execute(model);
+        var structureService = CreateStructureService();
+        structureService.AddManualLink(model, "P", "C");
+
+        // Post-order composite (child + its link before the parent), as DeleteManualNode builds.
+        var composite = new CompositeCommand(
+            new DeleteLinkCommand(structureService, "P", "C"),
+            new DeleteNodeCommand(NodeId.FromName("C")),
+            new DeleteNodeCommand(NodeId.FromName("P"))
+        );
+
+        composite.Execute(model);
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("P")));
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("C")));
+        Assert.False(model.Links.ContainsKey(new LinkId("P", "C")));
+
+        composite.Revert(model);
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("P"), out var parent));
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("C"), out var child));
+        Assert.Equal(parent, child!.Parent);
+        Assert.Contains(child, parent!.Children);
+        Assert.True(model.Links.ContainsKey(new LinkId("P", "C")));
+    }
+
+    [Fact]
     public void DeleteNodeCommand_ShouldRemoveManualNode_AndRevertRestoreIt()
     {
         using var model = CreateModel();

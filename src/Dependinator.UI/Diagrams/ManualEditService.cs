@@ -204,21 +204,32 @@ class ManualEditService(
         StateChanged?.Invoke();
     }
 
+    // Deletes a manual node and its whole subtree (children and their links), as one undoable step.
     public void DeleteManualNode(NodeId nodeId)
     {
         var commands = new List<Command>();
         using (var model = modelMgr.UseModel())
         {
-            if (!model.Nodes.TryGetValue(nodeId, out var node) || !node.IsManual || node.Children.Count > 0)
+            if (!model.Nodes.TryGetValue(nodeId, out var node) || !node.IsManual)
                 return;
 
-            // Remove attached manual links first (composed so undo restores them with the node).
-            var attached = node.SourceLinks.Concat(node.TargetLinks).Where(l => l.IsManual).Distinct();
-            foreach (var link in attached)
-                commands.Add(new DeleteLinkCommand(structureService, link.Source.Name, link.Target.Name));
+            // Post-order: delete descendants (and their links) before their parents, so undo — which
+            // reverts in reverse order — restores each parent before its children.
+            var seenLinks = new HashSet<LinkId>();
+            foreach (var descendant in node.DescendantsAndSelfPostOrder().ToList())
+            {
+                var links = descendant.SourceLinks.Concat(descendant.TargetLinks).Where(l => l.IsManual);
+                foreach (var link in links)
+                {
+                    if (seenLinks.Add(link.Id))
+                        commands.Add(new DeleteLinkCommand(structureService, link.Source.Name, link.Target.Name));
+                }
+                commands.Add(new DeleteNodeCommand(descendant.Id));
+            }
         }
 
-        commands.Add(new DeleteNodeCommand(nodeId));
+        if (commands.Count == 0)
+            return;
         commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
     }
 
