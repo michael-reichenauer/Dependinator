@@ -2,12 +2,12 @@
 @using MudBlazor
 @implements IDisposable
 
-@* Inline name prompt shown at the double-clicked spot when adding a manual node. *@
-@if (manualEditService.IsAddingNode)
+@* Inline name prompt for adding a manual node (at the double-clicked spot) or renaming one. *@
+@if (manualEditService.IsNameEntryOpen)
 {
   <div style="@CssPosition">
     <MudPaper Class="pa-2" Elevation="4">
-      <MudTextField @ref="textField" @bind-Value="nodeName" Immediate="true" Label="New node name"
+      <MudTextField @ref="textField" @bind-Value="nodeName" Immediate="true" Label="@manualEditService.NameEntryLabel"
                     Variant="Variant.Outlined" Margin="Margin.Dense" AutoFocus="true"
                     OnKeyDown="OnKeyDown" data-testid="manual-node-name" />
     </MudPaper>
@@ -23,32 +23,55 @@
 
   MudTextField<string> textField = null!;
   string nodeName = "";
+  bool wasOpen;
+  bool focusPending;
 
   protected override void OnInitialized() => manualEditService.StateChanged += OnStateChanged;
 
   void OnStateChanged() =>
       InvokeAsync(() =>
       {
-        if (manualEditService.IsAddingNode)
-          nodeName = "";
+        // Prefill and request focus when the prompt opens (empty for add, current name for rename).
+        if (manualEditService.IsNameEntryOpen && !wasOpen)
+        {
+          nodeName = manualEditService.NameEntryInitialValue;
+          focusPending = true;
+        }
+        wasOpen = manualEditService.IsNameEntryOpen;
         StateHasChanged();
       });
 
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (!focusPending)
+      return;
+    focusPending = false;
+
+    // When opened from the node menu, the closing MudMenu restores focus to its activator; wait for
+    // that to settle, then focus (and select) the field so the user can type immediately.
+    await Task.Delay(100);
+    if (manualEditService.IsNameEntryOpen && textField is not null)
+    {
+      await textField.FocusAsync();
+      await textField.SelectAsync();
+    }
+  }
+
   string CssPosition =>
-      $"position:fixed;left:{manualEditService.AddNodeScreenPos.X:0.##}px;"
-      + $"top:{manualEditService.AddNodeScreenPos.Y:0.##}px;z-index:1400;";
+      $"position:fixed;left:{manualEditService.NameEntryScreenPos.X:0.##}px;"
+      + $"top:{manualEditService.NameEntryScreenPos.Y:0.##}px;z-index:1400;";
 
   void OnKeyDown(KeyboardEventArgs e)
   {
     if (e.Key == "Enter")
       Commit();
     else if (e.Key == "Escape")
-      manualEditService.CancelAddNode();
+      manualEditService.CancelNameEntry();
   }
 
   void Commit()
   {
-    if (!manualEditService.CommitAddNode(nodeName))
+    if (!manualEditService.CommitNameEntry(nodeName))
       snackbar.Add("Enter a unique, non-empty node name.", Severity.Warning);
   }
 

@@ -32,6 +32,10 @@
 
         @if (IsSelectedNodeManual)
         {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DriveFileRenameOutline"
+                       OnClick="RenameNode" data-testid="node-menu-rename">
+            Rename Node …
+          </MudMenuItem>
           <MudMenuItem IconColor="Color.Error" Icon="@MudBlazor.Icons.Material.Outlined.Delete"
                        OnClick="DeleteNode" data-testid="node-menu-delete">
             Delete Node
@@ -305,6 +309,14 @@
     var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     selectionService.Unselect();
     manualEditService.DeleteManualNode(nodeId);
+  }
+
+  void RenameNode()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+    manualEditService.BeginRenameNode(nodeId, selectionService.SelectedNodePosition);
   }
 
   async Task SelectIconAsync()

@@ -10,6 +10,7 @@ interface IStructureService
     void AddOrUpdateNode(IModel model, Parsing.Node parsedNode);
     void AddOrUpdateLink(IModel model, Parsing.Link parsedLink);
     Models.Link? AddManualLink(IModel model, string sourceName, string targetName);
+    void RenameNode(IModel model, string fromName, string toName);
     void SetLineDescription(IModel model, Parsing.LineDescription lineDescription);
     void ClearNotUpdated(IModel model);
     void SetNodeDto(IModel model, NodeDto nodeDto);
@@ -93,6 +94,52 @@ class StructureService(ILineService linesService) : IStructureService
 
         AddLink(model, link);
         return link;
+    }
+
+    // Renames a node by rebuilding it under the new name (the name is the node's identity), moving
+    // its children across and recreating its links (and their lines) with the new name. No-op if
+    // the source is missing or the target name is already taken. Symmetric, so a command can revert
+    // by renaming back.
+    public void RenameNode(IModel model, string fromName, string toName)
+    {
+        if (fromName == toName)
+            return;
+        if (!model.Nodes.TryGetValue(NodeId.FromName(fromName), out var fromNode))
+            return;
+        if (model.Nodes.ContainsKey(NodeId.FromName(toName)))
+            return;
+
+        var parent = fromNode.Parent;
+
+        // Create the renamed node, copying all persisted properties.
+        var toNode = new Models.Node(toName, parent);
+        toNode.SetFromDto(fromNode.ToDto());
+        toNode.UpdateStamp = model.UpdateStamp;
+        model.TryAddNode(toNode);
+        parent.AddChild(toNode);
+
+        // Re-parent children to the renamed node.
+        foreach (var child in fromNode.Children.ToList())
+        {
+            fromNode.RemoveChild(child);
+            toNode.AddChild(child);
+        }
+
+        // Recreate links (and their lines) with the new name in place of the old.
+        var links = fromNode.SourceLinks.Concat(fromNode.TargetLinks).Distinct().ToList();
+        var endpoints = links
+            .Select(l =>
+                (
+                    Source: l.Source == fromNode ? toName : l.Source.Name,
+                    Target: l.Target == fromNode ? toName : l.Target.Name
+                )
+            )
+            .ToList();
+        links.ForEach(model.RemoveLink);
+        foreach (var (source, target) in endpoints)
+            AddManualLink(model, source, target);
+
+        model.RemoveNode(fromNode);
     }
 
     public void SetNodeDto(IModel model, NodeDto nodeDto)

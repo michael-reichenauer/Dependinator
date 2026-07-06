@@ -26,9 +26,10 @@ class DColors
     static readonly string DirectLineDark = "#7C4DFF";
     static readonly string DirectLineLight = "#512DA8";
 
-    // Marker badge on manually added (user-drawn) nodes
-    static readonly string ManualMarkerDark = "#2ECC71";
-    static readonly string ManualMarkerLight = "#1B9E4B";
+    // Marker glyph on manually added (user-drawn) nodes — neutral grey so it reads as
+    // "hand-drawn/editable" rather than a status indicator.
+    static readonly string ManualMarkerDark = "#8A8F98";
+    static readonly string ManualMarkerLight = "#5F6368";
 
     // Node Dark
     // static readonly string NodeBackgroundDarkSelected = "#1A2A40";

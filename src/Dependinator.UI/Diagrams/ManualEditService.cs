@@ -8,21 +8,27 @@ using Dependinator.UI.Shared.Types;
 namespace Dependinator.UI.Diagrams;
 
 // Orchestrates the "manual design" interactions: adding user-drawn nodes (double-click empty
-// canvas → inline name prompt) and user-drawn links (select source → add-link mode → click
-// target). All mutations go through the undoable CommandService.
+// canvas → inline name prompt), renaming them in place, and drawing user-drawn links (select
+// source → add-link mode → click target). All mutations go through the undoable CommandService.
 interface IManualEditService
 {
-    // Add-node inline prompt state (the Canvas renders a name input when IsAddingNode is true).
-    bool IsAddingNode { get; }
-    Pos AddNodeScreenPos { get; }
+    // Inline name-entry state (the Canvas renders a name input while IsNameEntryOpen is true),
+    // shared by the add-node and rename-node flows.
+    bool IsNameEntryOpen { get; }
+    Pos NameEntryScreenPos { get; }
+    string NameEntryInitialValue { get; }
+    string NameEntryLabel { get; }
     event Action? StateChanged;
 
     // Begins adding a node at a double-clicked canvas position; shows the inline name prompt.
     void BeginAddNode(PointerEvent e);
 
-    // Creates the node with the given name; returns false if the name is empty or already used.
-    bool CommitAddNode(string name);
-    void CancelAddNode();
+    // Begins renaming an existing node, anchoring the inline prompt at the given screen position.
+    void BeginRenameNode(NodeId nodeId, Pos screenPos);
+
+    // Commits the inline name entry (adds or renames); false if the name is empty or already used.
+    bool CommitNameEntry(string name);
+    void CancelNameEntry();
 
     // Add-link mode.
     bool IsAddingLink { get; }
@@ -37,18 +43,38 @@ interface IManualEditService
 }
 
 [Scoped]
-class ManualEditService(IModelMgr modelMgr, ICommandService commandService, IStructureService structureService)
-    : IManualEditService
+class ManualEditService(
+    IModelMgr modelMgr,
+    ICommandService commandService,
+    IStructureService structureService,
+    ISelectionService selectionService
+) : IManualEditService
 {
-    const double DefaultWidth = 80;
-    const double DefaultHeight = 40;
+    // Match the size parsed nodes get from the auto-layout.
+    static readonly double DefaultWidth = NodeLayout.DefaultSize.Width;
+    static readonly double DefaultHeight = NodeLayout.DefaultSize.Height;
 
-    // Pending add-node placement (set between BeginAddNode and CommitAddNode/CancelAddNode).
+    enum EntryMode
+    {
+        None,
+        Add,
+        Rename,
+    }
+
+    EntryMode entryMode = EntryMode.None;
+
+    // Pending add-node placement (set between BeginAddNode and commit/cancel).
     string pendingParentName = "";
     Rect pendingBoundary = Rect.None;
 
-    public bool IsAddingNode { get; private set; }
-    public Pos AddNodeScreenPos { get; private set; } = Pos.None;
+    // The node being renamed (set between BeginRenameNode and commit/cancel).
+    string renameFromName = "";
+
+    public bool IsNameEntryOpen => entryMode != EntryMode.None;
+    public Pos NameEntryScreenPos { get; private set; } = Pos.None;
+    public string NameEntryInitialValue { get; private set; } = "";
+    public string NameEntryLabel => entryMode == EntryMode.Rename ? "Rename node" : "New node name";
+
     public bool IsAddingLink { get; private set; }
     string addLinkSourceName = "";
 
@@ -81,16 +107,39 @@ class ManualEditService(IModelMgr modelMgr, ICommandService commandService, IStr
             );
         }
 
-        AddNodeScreenPos = new Pos(e.ClientX, e.ClientY);
-        IsAddingNode = true;
+        entryMode = EntryMode.Add;
+        NameEntryInitialValue = "";
+        NameEntryScreenPos = new Pos(e.ClientX, e.ClientY);
         StateChanged?.Invoke();
     }
 
-    public bool CommitAddNode(string name)
+    public void BeginRenameNode(NodeId nodeId, Pos screenPos)
+    {
+        IsAddingLink = false;
+
+        var name = ResolveNodeName(nodeId);
+        if (name.Length == 0)
+            return;
+
+        entryMode = EntryMode.Rename;
+        renameFromName = name;
+        NameEntryInitialValue = name;
+        NameEntryScreenPos = screenPos;
+        StateChanged?.Invoke();
+    }
+
+    public bool CommitNameEntry(string name)
     {
         var trimmed = name?.Trim() ?? "";
-        if (!IsAddingNode || trimmed.Length == 0)
+        if (!IsNameEntryOpen || trimmed.Length == 0)
             return false;
+
+        // Renaming to the unchanged name is a no-op, but a valid "commit" that closes the prompt.
+        if (entryMode == EntryMode.Rename && trimmed == renameFromName)
+        {
+            ResetNameEntry();
+            return true;
+        }
 
         using (var model = modelMgr.UseModel())
         {
@@ -98,16 +147,28 @@ class ManualEditService(IModelMgr modelMgr, ICommandService commandService, IStr
                 return false; // Name is the node identity; reject duplicates.
         }
 
-        commandService.Do(new AddNodeCommand(trimmed, pendingParentName, pendingBoundary));
-        ResetAddNode();
+        var isRename = entryMode == EntryMode.Rename;
+        Command command = isRename
+            ? new RenameNodeCommand(structureService, renameFromName, trimmed)
+            : new AddNodeCommand(trimmed, pendingParentName, pendingBoundary);
+        commandService.Do(command);
+        ResetNameEntry();
+
+        // A rename replaces the node, so the previous selection (old id) is now stale; move the
+        // selection to the resulting node.
+        if (isRename)
+        {
+            selectionService.Unselect();
+            selectionService.Select(NodeId.FromName(trimmed));
+        }
         return true;
     }
 
-    public void CancelAddNode()
+    public void CancelNameEntry()
     {
-        if (!IsAddingNode)
+        if (!IsNameEntryOpen)
             return;
-        ResetAddNode();
+        ResetNameEntry();
     }
 
     public void BeginAddLink(NodeId sourceId)
@@ -161,12 +222,14 @@ class ManualEditService(IModelMgr modelMgr, ICommandService commandService, IStr
         commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
     }
 
-    void ResetAddNode()
+    void ResetNameEntry()
     {
-        IsAddingNode = false;
-        AddNodeScreenPos = Pos.None;
+        entryMode = EntryMode.None;
+        NameEntryScreenPos = Pos.None;
+        NameEntryInitialValue = "";
         pendingParentName = "";
         pendingBoundary = Rect.None;
+        renameFromName = "";
         StateChanged?.Invoke();
     }
 

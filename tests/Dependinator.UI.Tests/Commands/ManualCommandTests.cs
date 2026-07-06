@@ -58,6 +58,56 @@ public class ManualCommandTests
     }
 
     [Fact]
+    public void RenameNodeCommand_ShouldRenameNode_PreserveProperties_AndRevert()
+    {
+        using var model = CreateModel();
+        new AddNodeCommand("Old", model.Root.Name, new Rect(20, 30, 100, 100)).Execute(model);
+
+        var command = new RenameNodeCommand(CreateStructureService(), "Old", "New");
+        command.Execute(model);
+
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("Old")));
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("New"), out var renamed));
+        Assert.True(renamed!.IsManual);
+        Assert.Equal(new Rect(20, 30, 100, 100), renamed.Boundary);
+        Assert.Contains(renamed, model.Root.Children);
+
+        command.Revert(model);
+        Assert.True(model.Nodes.ContainsKey(NodeId.FromName("Old")));
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("New")));
+    }
+
+    [Fact]
+    public void RenameNodeCommand_ShouldMigrateLinks_ToRenamedNode()
+    {
+        using var model = CreateModel();
+        AddRootNode(model, "A");
+        AddRootNode(model, "B");
+        var structureService = CreateStructureService();
+        structureService.AddManualLink(model, "A", "B");
+
+        new RenameNodeCommand(structureService, "A", "C").Execute(model);
+
+        Assert.False(model.Links.ContainsKey(new LinkId("A", "B")));
+        Assert.True(model.Links.TryGetValue(new LinkId("C", "B"), out var link));
+        Assert.True(link!.IsManual);
+    }
+
+    [Fact]
+    public void RenameNode_ShouldBeNoOp_WhenTargetNameTaken()
+    {
+        using var model = CreateModel();
+        AddRootNode(model, "A");
+        AddRootNode(model, "B");
+
+        CreateStructureService().RenameNode(model, "A", "B");
+
+        // Both original nodes remain unchanged.
+        Assert.True(model.Nodes.ContainsKey(NodeId.FromName("A")));
+        Assert.True(model.Nodes.ContainsKey(NodeId.FromName("B")));
+    }
+
+    [Fact]
     public void DeleteNodeCommand_ShouldRemoveManualNode_AndRevertRestoreIt()
     {
         using var model = CreateModel();
