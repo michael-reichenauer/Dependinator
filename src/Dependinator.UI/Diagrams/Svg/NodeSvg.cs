@@ -81,6 +81,7 @@ class NodeSvg
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
+            {ManualMarkerSvg(node, geometry)}
             """;
     }
 
@@ -126,6 +127,7 @@ class NodeSvg
             <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {descriptionSvg}
             {selectedOverlay}
+            {ManualMarkerSvg(node, geometry)}
             """;
     }
 
@@ -164,6 +166,7 @@ class NodeSvg
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
+            {ManualMarkerSvg(node, layout.Bounds)}
             """;
     }
 
@@ -318,6 +321,19 @@ class NodeSvg
 
     static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
         node.IsHidden ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
+
+    // A small filled dot in the node's top-right corner marking a manually added (user-drawn)
+    // node, so it reads differently from parsed nodes. Empty for parsed nodes.
+    static string ManualMarkerSvg(Node node, Rect geometry)
+    {
+        if (!node.IsManual)
+            return "";
+
+        var r = Math.Clamp(Math.Min(geometry.Width, geometry.Height) * 0.08, 2.0, 6.0);
+        var cx = geometry.X + geometry.Width - r * 1.4;
+        var cy = geometry.Y + r * 1.4;
+        return $"""<circle cx="{cx:0.##}" cy="{cy:0.##}" r="{r:0.##}" fill="{DColors.ManualMarker}" stroke="none"/>""";
+    }
 
     static (string Border, string Background) NodeColors(Node node)
     {

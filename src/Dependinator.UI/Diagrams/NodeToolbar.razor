@@ -30,6 +30,14 @@
           Set Icon …
         </MudMenuItem>
 
+        @if (IsSelectedNodeManual)
+        {
+          <MudMenuItem IconColor="Color.Error" Icon="@MudBlazor.Icons.Material.Outlined.Delete"
+                       OnClick="DeleteNode" data-testid="node-menu-delete">
+            Delete Node
+          </MudMenuItem>
+        }
+
         <MudDivider />
         @if (!IsNodeHidden)
         {
@@ -68,6 +76,10 @@
       <MudTooltip Text="Set icon">
         <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols" OnClick="SelectIconAsync"
                        data-testid="node-set-icon" />
+      </MudTooltip>
+      <MudTooltip Text="Add link from this node">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CallMade" OnClick="BeginAddLink"
+                       data-testid="node-add-link" />
       </MudTooltip>
     }
 
@@ -164,9 +176,26 @@
   [Inject]
   IConfigService configService { get; set; } = null!;
 
+  [Inject]
+  IManualEditService manualEditService { get; set; } = null!;
+
+  [Inject]
+  ISnackbar snackbar { get; set; } = null!;
+
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
+  bool IsSelectedNodeManual
+  {
+    get
+    {
+      if (!selectionService.SelectedId.IsNode)
+        return false;
+      using var model = modelMgr.UseModel();
+      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
+          && node.IsManual;
+    }
+  }
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
   bool IsIconMode => !interactionService.IsContainer;
   bool CanShowSource => interactionService.CanShowSource;
@@ -260,6 +289,23 @@
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();
+
+  void BeginAddLink()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    manualEditService.BeginAddLink(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
+    snackbar.Add("Click a target node to link to (Esc or click empty space to cancel).", Severity.Info);
+  }
+
+  void DeleteNode()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+    selectionService.Unselect();
+    manualEditService.DeleteManualNode(nodeId);
+  }
 
   async Task SelectIconAsync()
   {

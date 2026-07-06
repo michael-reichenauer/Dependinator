@@ -1,0 +1,56 @@
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@implements IDisposable
+
+@* Inline name prompt shown at the double-clicked spot when adding a manual node. *@
+@if (manualEditService.IsAddingNode)
+{
+  <div style="@CssPosition">
+    <MudPaper Class="pa-2" Elevation="4">
+      <MudTextField @ref="textField" @bind-Value="nodeName" Immediate="true" Label="New node name"
+                    Variant="Variant.Outlined" Margin="Margin.Dense" AutoFocus="true"
+                    OnKeyDown="OnKeyDown" data-testid="manual-node-name" />
+    </MudPaper>
+  </div>
+}
+
+@code {
+  [Inject]
+  IManualEditService manualEditService { get; set; } = null!;
+
+  [Inject]
+  ISnackbar snackbar { get; set; } = null!;
+
+  MudTextField<string> textField = null!;
+  string nodeName = "";
+
+  protected override void OnInitialized() => manualEditService.StateChanged += OnStateChanged;
+
+  void OnStateChanged() =>
+      InvokeAsync(() =>
+      {
+        if (manualEditService.IsAddingNode)
+          nodeName = "";
+        StateHasChanged();
+      });
+
+  string CssPosition =>
+      $"position:fixed;left:{manualEditService.AddNodeScreenPos.X:0.##}px;"
+      + $"top:{manualEditService.AddNodeScreenPos.Y:0.##}px;z-index:1400;";
+
+  void OnKeyDown(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter")
+      Commit();
+    else if (e.Key == "Escape")
+      manualEditService.CancelAddNode();
+  }
+
+  void Commit()
+  {
+    if (!manualEditService.CommitAddNode(nodeName))
+      snackbar.Add("Enter a unique, non-empty node name.", Severity.Warning);
+  }
+
+  public void Dispose() => manualEditService.StateChanged -= OnStateChanged;
+}

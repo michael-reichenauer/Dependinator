@@ -9,6 +9,7 @@ interface IStructureService
 {
     void AddOrUpdateNode(IModel model, Parsing.Node parsedNode);
     void AddOrUpdateLink(IModel model, Parsing.Link parsedLink);
+    Models.Link? AddManualLink(IModel model, string sourceName, string targetName);
     void SetLineDescription(IModel model, Parsing.LineDescription lineDescription);
     void ClearNotUpdated(IModel model);
     void SetNodeDto(IModel model, NodeDto nodeDto);
@@ -75,6 +76,25 @@ class StructureService(ILineService linesService) : IStructureService
         AddLink(model, link);
     }
 
+    // Creates a user-drawn link (and its visual line) between two existing nodes. Returns null if
+    // an endpoint is missing or the link already exists (so redo is idempotent).
+    public Models.Link? AddManualLink(IModel model, string sourceName, string targetName)
+    {
+        var linkId = new LinkId(sourceName, targetName);
+        if (model.Links.ContainsKey(linkId))
+            return null;
+
+        if (!model.Nodes.TryGetValue(NodeId.FromName(sourceName), out var source))
+            return null;
+        if (!model.Nodes.TryGetValue(NodeId.FromName(targetName), out var target))
+            return null;
+
+        var link = new Models.Link(source, target) { IsManual = true, UpdateStamp = model.UpdateStamp };
+
+        AddLink(model, link);
+        return link;
+    }
+
     public void SetNodeDto(IModel model, NodeDto nodeDto)
     {
         if (nodeDto.Name == "") // Root node already exists
@@ -104,6 +124,7 @@ class StructureService(ILineService linesService) : IStructureService
 
         var link = new Models.Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
+        link.IsManual = linkDto.IsManual;
 
         AddLink(model, link);
     }
@@ -162,15 +183,29 @@ class StructureService(ILineService linesService) : IStructureService
 
     public void ClearNotUpdated(IModel model)
     {
-        var links = model.Links.Values.Where(l => l.UpdateStamp != model.UpdateStamp).ToList();
+        // Manually added nodes/links are not produced by parsing, so they are always "stale" by
+        // stamp; exempt them so a re-parse doesn't delete the user's design work.
+        var links = model.Links.Values.Where(l => !l.IsManual && l.UpdateStamp != model.UpdateStamp).ToList();
         Log.Info($"Remove {links.Count} links");
         foreach (var link in links)
             model.RemoveLink(link);
 
-        var nodes = model.Nodes.Values.Where(n => n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0).ToList();
+        var nodes = model
+            .Nodes.Values.Where(n => !n.IsManual && n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0)
+            .ToList();
         Log.Info($"Remove {nodes.Count} nodes");
         foreach (var node in nodes)
             RemoveNode(model, node);
+
+        // A manual link may point at a parsed node that was just removed (deleted from code);
+        // drop such dangling manual links so no line references a node no longer in the model.
+        var danglingManualLinks = model
+            .Links.Values.Where(l =>
+                l.IsManual && (!model.Nodes.ContainsKey(l.Source.Id) || !model.Nodes.ContainsKey(l.Target.Id))
+            )
+            .ToList();
+        foreach (var link in danglingManualLinks)
+            model.RemoveLink(link);
 
         // Clear line descriptions whose source comments were removed since the last parse
         var staleDescriptionLines = model

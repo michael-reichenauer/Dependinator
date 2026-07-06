@@ -96,6 +96,11 @@ class Node : IItem
     public bool IsParentSetHidden { get; set; }
     public bool IsPassThrough { get; set; }
 
+    // A manually added node (drawn by the user to design intended structure), as opposed to a
+    // node produced by parsing. Manual nodes are marked visually and are exempt from the
+    // stale-node removal that runs after each re-parse (see StructureService.ClearNotUpdated).
+    public bool IsManual { get; set; }
+
     public NodeDto ToDto() =>
         new()
         {
@@ -115,6 +120,7 @@ class Node : IItem
             IsUserSetHidden = IsUserSetHidden,
             IsParentSetHidden = IsParentSetHidden,
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
+            IsManual = IsManual,
         };
 
     public void SetFromDto(NodeDto dto)
@@ -133,6 +139,7 @@ class Node : IItem
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
+        IsManual = dto.IsManual;
     }
 
     public void Update(Parsing.Node node)

@@ -26,6 +26,10 @@ class DColors
     static readonly string DirectLineDark = "#7C4DFF";
     static readonly string DirectLineLight = "#512DA8";
 
+    // Marker badge on manually added (user-drawn) nodes
+    static readonly string ManualMarkerDark = "#2ECC71";
+    static readonly string ManualMarkerLight = "#1B9E4B";
+
     // Node Dark
     // static readonly string NodeBackgroundDarkSelected = "#1A2A40";
     static readonly string NodeBorderDarkEdit = "#FFA64D";
@@ -69,6 +73,7 @@ class DColors
     public static readonly string Line = IsDark ? LineDark : LineLight;
     public static readonly string LineHidden = IsDark ? LineHiddenDark : LineHiddenLight;
     public static readonly string DirectLine = IsDark ? DirectLineDark : DirectLineLight;
+    public static readonly string ManualMarker = IsDark ? ManualMarkerDark : ManualMarkerLight;
     public static readonly string EditNodeBorder = IsDark ? NodeBorderDarkEdit : NodeBorderLightEdit;
     public static readonly string EditNodeBackground = IsDark ? NodeBackgroundDarkEdit : NodeBackgroundLightEdit;
     public static readonly string Text = IsDark ? TextDark : TextLight;
