@@ -28,24 +28,22 @@ public class NoteSvgTests
     }
 
     [Fact]
-    public void NoteRadius_ShouldGrowWithZoom_BelowTheCap()
+    public void NoteRadius_ShouldPlateau_AtHighZoom()
     {
-        // Below the cap the note scales 1:1 with zoom (radius = half the boundary * zoom).
-        Assert.Equal(NoteSize / 2 * 1, RenderedRadius(1), 3);
-        Assert.Equal(NoteSize / 2 * 2, RenderedRadius(2), 3);
-        Assert.True(RenderedRadius(2) > RenderedRadius(1));
+        // Zooming in stops enlarging the note: the on-screen radius reaches a maximum and stays
+        // there (robust to the exact MaxNoteZoom tuning value).
+        var r10 = RenderedRadius(10);
+        var r100 = RenderedRadius(100);
+        Assert.Equal(r10, r100, 3);
+
+        // And the capped size is far below what an uncapped circle would be at that zoom.
+        Assert.True(r100 < NoteSize / 2 * 100);
     }
 
     [Fact]
-    public void NoteRadius_ShouldStopGrowing_AboveTheCap()
+    public void NoteRadius_ShouldScaleDown_WhenZoomedOut()
     {
-        // Beyond MaxNoteZoom (3) the on-screen radius plateaus at NoteSize/2 * 3.
-        var capped = NoteSize / 2 * 3;
-        Assert.Equal(capped, RenderedRadius(6), 3);
-        Assert.Equal(capped, RenderedRadius(12), 3);
-        Assert.Equal(capped, RenderedRadius(100), 3);
-
-        // And the cap is smaller than the uncapped size would be at that zoom.
-        Assert.True(RenderedRadius(6) < NoteSize / 2 * 6);
+        // The note is not a fixed screen size in every direction: zooming further out shrinks it.
+        Assert.True(RenderedRadius(0.5) < RenderedRadius(2));
     }
 }

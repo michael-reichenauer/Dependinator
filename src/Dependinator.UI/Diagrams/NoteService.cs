@@ -11,6 +11,9 @@ namespace Dependinator.UI.Diagrams;
 // Result returned by NoteDialog: the (possibly edited) id and description, or a request to delete.
 record NoteDialogResult(string Id, string Description, bool Delete);
 
+// A note shown in the notes sidebar.
+record NoteItem(NodeId NodeId, string Id, string Description);
+
 // Orchestrates note annotations: arming "place note" mode from the menu, placing a note at the
 // clicked canvas position (with the next free id pre-filled), and editing/deleting an existing
 // note. A note is a manual Node (IsNote) parented into whatever container it is dropped in (like
@@ -33,6 +36,16 @@ interface INoteService
     Task EditNoteAsync(NodeId nodeId);
 
     bool IsNoteNode(NodeId nodeId);
+
+    // The toggleable notes sidebar.
+    bool IsShowSidebar { get; }
+    void ToggleSidebar();
+
+    // All notes, ordered by id (numbers numerically first, then letters), for the sidebar.
+    IReadOnlyList<NoteItem> GetNotes();
+
+    // Focuses a note from the sidebar: selects it and pans/zooms the diagram to it.
+    Task ShowNoteAsync(NodeId nodeId);
 }
 
 [Scoped]
@@ -41,7 +54,9 @@ class NoteService(
     ICommandService commandService,
     IStructureService structureService,
     ISelectionService selectionService,
-    IDialogService dialogService
+    IDialogService dialogService,
+    INavigationService navigationService,
+    IApplicationEvents applicationEvents
 ) : INoteService
 {
     // The note circle's bounding box in root child coordinates (a couple of grid cells).
@@ -68,6 +83,49 @@ class NoteService(
     {
         using var model = modelMgr.UseModel();
         return model.Nodes.TryGetValue(nodeId, out var node) && node.IsNote;
+    }
+
+    public bool IsShowSidebar { get; private set; }
+
+    public void ToggleSidebar()
+    {
+        IsShowSidebar = !IsShowSidebar;
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public IReadOnlyList<NoteItem> GetNotes()
+    {
+        using var model = modelMgr.UseModel();
+        return model
+            .Nodes.Values.Where(n => n.IsNote)
+            .Select(n => new NoteItem(n.Id, n.ShortName, n.Description ?? ""))
+            .OrderBy(n => n.Id, NoteIdComparer.Instance)
+            .ToList();
+    }
+
+    public async Task ShowNoteAsync(NodeId nodeId)
+    {
+        selectionService.Unselect();
+        selectionService.Select(nodeId);
+        await navigationService.ShowNodeAsync(nodeId);
+    }
+
+    // Orders note ids so numeric ids sort numerically and before any non-numeric ids (e.g.
+    // 1, 2, …, 10, then A, B), matching the reading order the ids convey.
+    sealed class NoteIdComparer : IComparer<string>
+    {
+        public static readonly NoteIdComparer Instance = new();
+
+        public int Compare(string? x, string? y)
+        {
+            var xIsNum = int.TryParse(x, out var xn);
+            var yIsNum = int.TryParse(y, out var yn);
+            if (xIsNum && yIsNum)
+                return xn.CompareTo(yn);
+            if (xIsNum != yIsNum)
+                return xIsNum ? -1 : 1;
+            return string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     public async Task PlaceNoteAtAsync(PointerEvent e)

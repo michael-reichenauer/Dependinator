@@ -29,6 +29,23 @@ public class NoteTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(NoteText(NoteId)).ToBeVisibleAsync();
     }
 
+    [E2EFact]
+    public async Task NotesSidebar_ShouldToggle_AndListNotes()
+    {
+        await App.GotoMainPageAsync();
+        await AddNoteAsync(NoteId, "Guiding note");
+
+        // Toggle the sidebar on from the app menu; it lists the note (id + description).
+        await (await App.OpenMenuItemAsync("menu-notes-sidebar")).ClickAsync();
+        ILocator item = Page.GetByTestId("notes-sidebar-item");
+        await Expect(item).ToHaveCountAsync(1);
+        await Expect(item.First).ToContainTextAsync("Guiding note");
+
+        // Toggle it off again via the sidebar's close button.
+        await Page.GetByTestId("notes-sidebar-close").ClickAsync();
+        await Expect(Page.GetByTestId("notes-sidebar-list")).ToHaveCountAsync(0);
+    }
+
     // The note's id is drawn as plain SVG <text> (not the text.iconName used by parsed nodes).
     ILocator NoteText(string id) => Page.Locator("#svgcanvas text", new() { HasTextString = id }).First;
 
@@ -37,7 +54,11 @@ public class NoteTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator addNote = await App.OpenMenuItemAsync("menu-add-note");
         await addNote.ClickAsync();
 
-        // Placing mode is armed; click an empty area (bottom-left) to drop the note there.
+        // Wait until placing mode is armed (the prompt snackbar). This also ensures the menu
+        // overlay has closed, so the next canvas click lands on the diagram, not the menu.
+        await Expect(Page.GetByText("Click on the diagram to place the note.")).ToBeVisibleAsync();
+
+        // Click an empty area (bottom-left) to drop the note there.
         LocatorBoundingBoxResult box =
             await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
         await Page.Mouse.ClickAsync(box.X + 150, box.Y + box.Height - 130);
