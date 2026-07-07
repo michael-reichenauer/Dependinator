@@ -48,6 +48,37 @@ public class ManualDtoRoundTripTests
     }
 
     [Fact]
+    public void NodeDto_ShouldRoundTripIsNoteAndDescription()
+    {
+        var root = new Node("", null!) { Type = Dependinator.Core.Parsing.NodeType.Root };
+        var note = new Node("1", root) { IsManual = true, IsNote = true };
+        note.SetDescription("Start here");
+
+        var restored = new Node("1", root);
+        restored.SetFromDto(note.ToDto());
+
+        Assert.True(note.ToDto().IsNote);
+        Assert.True(restored.IsNote);
+        Assert.True(restored.IsManual);
+        Assert.Equal("Start here", restored.Description);
+    }
+
+    [Fact]
+    public void NodeDto_ShouldOmitIsNote_WhenFalse()
+    {
+        var json = JsonSerializer.Serialize(
+            new NodeDto
+            {
+                Name = "Parsed",
+                ParentName = "",
+                Type = "Type",
+            }
+        );
+
+        Assert.DoesNotContain("IsNote", json);
+    }
+
+    [Fact]
     public void LinkDto_ShouldOmitIsManual_WhenFalse_ButIncludeWhenTrue()
     {
         Assert.DoesNotContain("IsManual", JsonSerializer.Serialize(new LinkDto("A", "B", "None")));

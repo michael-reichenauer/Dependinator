@@ -101,6 +101,19 @@ class Node : IItem
     // stale-node removal that runs after each re-parse (see StructureService.ClearNotUpdated).
     public bool IsManual { get; set; }
 
+    // A note is a user-drawn annotation rendered as a small circle showing a short id (e.g. "1",
+    // "A"); its Description is shown as a hover tooltip. Notes are manual nodes (also IsManual) so
+    // they persist and survive re-parse, but render via NoteSvg instead of the normal node chrome.
+    public bool IsNote { get; set; }
+
+    // Sets the description and keeps the pre-encoded HtmlDescription in sync (used by note edits
+    // and any other direct description change, mirroring how SetFromDto/Update keep them aligned).
+    public void SetDescription(string? description)
+    {
+        Description = string.IsNullOrEmpty(description) ? null : description;
+        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
+    }
+
     public NodeDto ToDto() =>
         new()
         {
@@ -121,6 +134,7 @@ class Node : IItem
             IsParentSetHidden = IsParentSetHidden,
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
             IsManual = IsManual,
+            IsNote = IsNote,
         };
 
     public void SetFromDto(NodeDto dto)
@@ -140,6 +154,7 @@ class Node : IItem
         IsParentSetHidden = dto.IsParentSetHidden;
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
         IsManual = dto.IsManual;
+        IsNote = dto.IsNote;
     }
 
     public void Update(Parsing.Node node)

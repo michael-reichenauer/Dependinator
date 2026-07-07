@@ -17,6 +17,7 @@
 @inject IDialogService dialogService
 @inject IJSInterop jsInterop
 @inject IVsCodeSendService vsCodeSendService
+@inject Dependinator.UI.Diagrams.INoteService noteService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
@@ -41,6 +42,11 @@
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.FitScreen"
                          OnClick="canvasService.PanZoomToFit" data-testid="menu-fit-to-screen">
                 Fit to Screen
+            </MudMenuItem>
+
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddCircleOutline"
+                         OnClick="BeginAddNote" data-testid="menu-add-note">
+                Add Note …
             </MudMenuItem>
 
             @if (Build.IsVsCodeExtWasm || Build.IsWeb)
@@ -463,6 +469,12 @@
             return;
 
         canvasService.Remove();
+    }
+
+    void BeginAddNote()
+    {
+        noteService.BeginPlaceNote();
+        snackbar.Add("Click on the diagram to place the note.", Severity.Info);
     }
 
     Task ShowAbout() => aboutBox.ShowAsync();

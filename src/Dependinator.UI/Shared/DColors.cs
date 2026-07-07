@@ -31,6 +31,13 @@ class DColors
     static readonly string ManualMarkerDark = "#8A8F98";
     static readonly string ManualMarkerLight = "#5F6368";
 
+    // Note annotation circles — a distinct accent (blue) so notes read as a separate guidance
+    // layer over the diagram. Text is white for contrast on the filled circle.
+    static readonly string NoteFillDark = "#4DA6FF";
+    static readonly string NoteFillLight = "#1A73E8";
+    static readonly string NoteBorderDark = "#1A2A40";
+    static readonly string NoteBorderLight = "#0D3B66";
+
     // Node Dark
     // static readonly string NodeBackgroundDarkSelected = "#1A2A40";
     static readonly string NodeBorderDarkEdit = "#FFA64D";
@@ -75,6 +82,9 @@ class DColors
     public static readonly string LineHidden = IsDark ? LineHiddenDark : LineHiddenLight;
     public static readonly string DirectLine = IsDark ? DirectLineDark : DirectLineLight;
     public static readonly string ManualMarker = IsDark ? ManualMarkerDark : ManualMarkerLight;
+    public static readonly string NoteFill = IsDark ? NoteFillDark : NoteFillLight;
+    public static readonly string NoteBorder = IsDark ? NoteBorderDark : NoteBorderLight;
+    public static readonly string NoteText = "#FFFFFF";
     public static readonly string EditNodeBorder = IsDark ? NodeBorderDarkEdit : NodeBorderLightEdit;
     public static readonly string EditNodeBackground = IsDark ? NodeBackgroundDarkEdit : NodeBackgroundLightEdit;
     public static readonly string Text = IsDark ? TextDark : TextLight;

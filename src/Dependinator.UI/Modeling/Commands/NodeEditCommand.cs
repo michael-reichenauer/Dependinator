@@ -19,6 +19,11 @@ class NodeEditCommand(NodeId nodeId) : Command
     public string? IconName { get; set; }
     public string? IconNameCopy { get; set; }
 
+    // Description; null means "not part of this command", "" means clear to no description
+    // (stored as null on the node). Used for editing note text.
+    public string? Description { get; set; }
+    public string? DescriptionCopy { get; set; }
+
     public override void Execute(IModel model)
     {
         if (!model.Nodes.TryGetValue(nodeId, out var node))
@@ -32,6 +37,11 @@ class NodeEditCommand(NodeId nodeId) : Command
             (ContainerOffsetCopy, node.ContainerOffset) = (node.ContainerOffset, ContainerOffset);
         if (IconName != null)
             (IconNameCopy, node.CustomIconName) = (node.CustomIconName ?? "", IconName == "" ? null : IconName);
+        if (Description != null)
+        {
+            DescriptionCopy = node.Description ?? "";
+            node.SetDescription(Description == "" ? null : Description);
+        }
     }
 
     public override void Revert(IModel model)
@@ -59,5 +69,11 @@ class NodeEditCommand(NodeId nodeId) : Command
                 IconNameCopy == "" ? null : IconNameCopy,
                 null
             );
+        if (DescriptionCopy != null)
+        {
+            Description = node.Description ?? "";
+            node.SetDescription(DescriptionCopy == "" ? null : DescriptionCopy);
+            DescriptionCopy = null;
+        }
     }
 }

@@ -120,6 +120,11 @@ class SvgService : ISvgService
         if (!RectOverlap(context.TileBounds, geometry.TileRect))
             return "";
 
+        // A note is a leaf annotation drawn as a circle; it has no children or chrome, so short-
+        // circuit before the member/icon/container branches.
+        if (node.IsNote)
+            return NoteSvg.GetNoteSvg(node, geometry.CanvasRect, context.Zoom);
+
         if (node.Type.IsMember)
             return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom);
 
