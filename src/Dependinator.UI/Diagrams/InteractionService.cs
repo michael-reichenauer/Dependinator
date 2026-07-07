@@ -31,6 +31,7 @@ class InteractionService : IInteractionService
     readonly IDependenciesService dependenciesService;
     readonly IManualEditService manualEditService;
     readonly INoteService noteService;
+    readonly IContextMenuService contextMenuService;
 
     const int MoveDelay = 300;
 
@@ -54,7 +55,8 @@ class InteractionService : IInteractionService
         IModelMgr modelMgr,
         IDependenciesService dependenciesService,
         IManualEditService manualEditService,
-        INoteService noteService
+        INoteService noteService,
+        IContextMenuService contextMenuService
     )
     {
         this.mouseEventService = mouseEventService;
@@ -67,6 +69,7 @@ class InteractionService : IInteractionService
         this.dependenciesService = dependenciesService;
         this.manualEditService = manualEditService;
         this.noteService = noteService;
+        this.contextMenuService = contextMenuService;
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
         this.applicationEvents.UndoneRedone += UpdateToolbar;
     }
@@ -174,8 +177,26 @@ class InteractionService : IInteractionService
         mouseEventService.PointerDown += OnMouseDown;
         mouseEventService.PointerUp += OnMouseUp;
         mouseEventService.Wheel += OnMouseWheel;
+        mouseEventService.ContextMenu += OnContextMenu;
 
         return Task.CompletedTask;
+    }
+
+    void OnContextMenu(PointerEvent e)
+    {
+        // A right-click cancels any in-progress placement gesture instead of opening the menu.
+        if (noteService.IsPlacingNote)
+        {
+            noteService.CancelPlaceNote();
+            return;
+        }
+        if (manualEditService.IsAddingLink)
+        {
+            manualEditService.CancelAddLink();
+            return;
+        }
+
+        contextMenuService.Open(e);
     }
 
     void OnMouseWheel(PointerEvent e)
