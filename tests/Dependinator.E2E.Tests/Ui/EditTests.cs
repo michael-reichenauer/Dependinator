@@ -21,7 +21,7 @@ public class EditTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
 
         // Nothing has been done yet, so undo/redo start disabled.
-        await Expect(await App.OpenMenuItemAsync("menu-undo")).ToHaveClassAsync(Disabled);
+        await Expect(await App.OpenSubMenuItemAsync("menu-edit", "menu-undo")).ToHaveClassAsync(Disabled);
         await Expect(App.MenuItem("menu-redo")).ToHaveClassAsync(Disabled);
         await Page.Keyboard.PressAsync("Escape");
 
@@ -31,12 +31,12 @@ public class EditTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Resizing the node pushes a NodeEditCommand onto the undo stack.
         await App.NodeIncreaseSize.ClickAsync();
-        await Expect(await App.OpenMenuItemAsync("menu-undo")).Not.ToHaveClassAsync(Disabled);
+        await Expect(await App.OpenSubMenuItemAsync("menu-edit", "menu-undo")).Not.ToHaveClassAsync(Disabled);
         await Expect(App.MenuItem("menu-redo")).ToHaveClassAsync(Disabled);
 
         // Undo reverts it: undo becomes unavailable, redo becomes available.
         await App.MenuItem("menu-undo").ClickAsync();
-        await Expect(await App.OpenMenuItemAsync("menu-undo")).ToHaveClassAsync(Disabled);
+        await Expect(await App.OpenSubMenuItemAsync("menu-edit", "menu-undo")).ToHaveClassAsync(Disabled);
         await Expect(App.MenuItem("menu-redo")).Not.ToHaveClassAsync(Disabled);
     }
 }

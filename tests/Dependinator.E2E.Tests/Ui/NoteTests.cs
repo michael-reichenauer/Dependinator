@@ -36,7 +36,7 @@ public class NoteTests(ITestOutputHelper output) : E2ETestBase(output)
         await AddNoteAsync(NoteId, "Guiding note");
 
         // Toggle the sidebar on from the app menu; it lists the note (id + description).
-        await (await App.OpenMenuItemAsync("menu-notes-sidebar")).ClickAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-notes-sidebar")).ClickAsync();
         ILocator item = Page.GetByTestId("notes-sidebar-item");
         await Expect(item).ToHaveCountAsync(1);
         await Expect(item.First).ToContainTextAsync("Guiding note");
@@ -51,7 +51,7 @@ public class NoteTests(ITestOutputHelper output) : E2ETestBase(output)
 
     async Task AddNoteAsync(string id, string description)
     {
-        ILocator addNote = await App.OpenMenuItemAsync("menu-add-note");
+        ILocator addNote = await App.OpenSubMenuItemAsync("menu-edit", "menu-add-note");
         await addNote.ClickAsync();
 
         // Wait until placing mode is armed (the prompt snackbar). This also ensures the menu

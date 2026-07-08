@@ -19,7 +19,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
 
         // "Add Node …" arms placing mode; the next canvas click begins the add there.
-        ILocator addNode = await App.OpenMenuItemAsync("menu-add-node");
+        ILocator addNode = await App.OpenSubMenuItemAsync("menu-edit", "menu-add-node");
         await addNode.ClickAsync();
 
         // Wait until placing mode is armed (the prompt snackbar). This also ensures the menu

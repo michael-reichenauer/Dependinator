@@ -69,6 +69,15 @@ public sealed class AppPage
         return MenuItem(testId);
     }
 
+    // Open the app menu, hover the parent submenu to expand it, and return the nested
+    // menu-item locator by its data-testid (nested MudMenu flyouts open on hover).
+    public async Task<ILocator> OpenSubMenuItemAsync(string parentTestId, string testId)
+    {
+        await Menu.ClickAsync();
+        await MenuItem(parentTestId).HoverAsync();
+        return MenuItem(testId);
+    }
+
     // Select a diagram node by its exact group label (the *full* node name, e.g.
     // "Demo.Core.RootClass"). We click via the mouse at the computed coordinates rather than
     // Locator.ClickAsync because the SVG canvas re-renders constantly (which fails

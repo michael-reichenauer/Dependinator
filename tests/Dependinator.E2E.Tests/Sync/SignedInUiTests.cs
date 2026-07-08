@@ -37,8 +37,10 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
         await App.CloudButton.HoverAsync();
         await Expect(Page.GetByText(new Regex("signed in as"))).ToBeVisibleAsync(new() { Timeout = 30_000 });
 
-        // The app menu now reflects an authenticated session ...
+        // The app menu now reflects an authenticated session (Logout and Cloud Models both
+        // live inside the Models submenu, so hover it to expand the flyout) ...
         await App.Menu.ClickAsync();
+        await App.MenuItem("menu-models").HoverAsync();
         await Expect(App.MenuItem("menu-logout")).ToBeVisibleAsync();
 
         // ... and the Cloud Models submenu is enabled (i.e. the seeded model was listed) ...
