@@ -1,4 +1,3 @@
-using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
@@ -35,8 +34,8 @@ static class LinePathGeometry
         if (line.IsDirect)
             return TryGetDirectLocalEndpoints(line, out endpoints);
 
-        var sourceAnchor = NodeSvg.GetLineAnchor(line.Source, NodeSvg.LineAnchorRole.Source);
-        var targetAnchor = NodeSvg.GetLineAnchor(line.Target, NodeSvg.LineAnchorRole.Target);
+        var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source);
+        var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target);
 
         if (line.Target.Parent == line.Source)
         {
@@ -100,6 +99,18 @@ static class LinePathGeometry
 
     public static Pos ToRendered(Pos local, Pos nodeCanvasPos, double childrenZoom) =>
         new(nodeCanvasPos.X + local.X * childrenZoom, nodeCanvasPos.Y + local.Y * childrenZoom);
+
+    // Whether the line runs "uphill" (up-right or down-left), used to place the line toolbar on
+    // the correct side. Rendering scales both endpoints by the same positive zoom and offset, so
+    // the local endpoints give the same orientation as the rendered line.
+    public static bool IsUpHill(Line line)
+    {
+        if (!TryGetLocalEndpoints(line, out var endpoints))
+            return false;
+
+        return endpoints.X1 <= endpoints.X2 && endpoints.Y1 >= endpoints.Y2
+            || endpoints.X1 >= endpoints.X2 && endpoints.Y1 <= endpoints.Y2;
+    }
 
     public static IReadOnlyList<Pos> GetRenderedPolylinePoints(Line line, Pos nodeCanvasPos, double childrenZoom)
     {

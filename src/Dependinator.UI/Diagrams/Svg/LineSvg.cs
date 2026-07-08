@@ -3,22 +3,14 @@ using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
-class LineSvg
+static class LineSvg
 {
     public static string GetLineSvg(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
     {
         if (!ShouldRender(line, parentZoom, childrenZoom))
             return "";
 
-        if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
-            return "";
-
-        var endpoints = LinePathGeometry.ToRendered(localEndpoints, nodeCanvasPos, childrenZoom);
-        var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
-        var elementId = PointerId.FromLine(line.Id).ElementId;
-        UpdateLineOrientation(line, endpoints);
-
-        return BuildLineSvg(line, endpoints, polylinePoints, elementId);
+        return Render(line, nodeCanvasPos, childrenZoom);
     }
 
     public static string GetDirectLineSvg(Line line, Node ancestor, Pos nodeCanvasPos, double childrenZoom)
@@ -26,27 +18,31 @@ class LineSvg
         if (line.RenderAncestor != ancestor)
             return "";
 
+        return Render(line, nodeCanvasPos, childrenZoom);
+    }
+
+    static bool ShouldRender(Line line, double parentZoom, double childrenZoom)
+    {
+        if (NodeViewPolicy.IsToLargeToBeSeen(childrenZoom))
+            return false;
+
+        var connectsParentAndChild = line.Target.Parent == line.Source || line.Source.Parent == line.Target;
+        if (connectsParentAndChild && NodeViewPolicy.IsToLargeToBeSeen(parentZoom))
+            return false;
+
+        return true;
+    }
+
+    static string Render(Line line, Pos nodeCanvasPos, double childrenZoom)
+    {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
             return "";
 
         var endpoints = LinePathGeometry.ToRendered(localEndpoints, nodeCanvasPos, childrenZoom);
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var elementId = PointerId.FromLine(line.Id).ElementId;
-        UpdateLineOrientation(line, endpoints);
 
         return BuildLineSvg(line, endpoints, polylinePoints, elementId);
-    }
-
-    static bool ShouldRender(Line line, double parentZoom, double childrenZoom)
-    {
-        if (NodeSvg.IsToLargeToBeSeen(childrenZoom))
-            return false;
-
-        var connectsParentAndChild = line.Target.Parent == line.Source || line.Source.Parent == line.Target;
-        if (connectsParentAndChild && NodeSvg.IsToLargeToBeSeen(parentZoom))
-            return false;
-
-        return true;
     }
 
     static string BuildLineSvg(
@@ -126,13 +122,6 @@ class LineSvg
             <circle cx="{end.X}" cy="{end.Y}" r="{circleRadius}" fill="{color}" />
             {handlesSvg}
             """;
-    }
-
-    static void UpdateLineOrientation(Line line, LinePathGeometry.LineEndpoints endpoints)
-    {
-        line.IsUpHill =
-            endpoints.X1 <= endpoints.X2 && endpoints.Y1 >= endpoints.Y2
-            || endpoints.X1 >= endpoints.X2 && endpoints.Y1 <= endpoints.Y2;
     }
 
     static string ToPolylinePoints(IReadOnlyList<Pos> points) => string.Join(" ", points.Select(p => $"{p.X},{p.Y}"));

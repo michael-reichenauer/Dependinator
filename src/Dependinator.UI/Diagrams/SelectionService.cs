@@ -96,7 +96,7 @@ class SelectionService(
                 if (model.Lines.TryGetValue(selectedId.LineId, out var line))
                 {
                     // For some lines based int its direction we need to flip the y coordinate
-                    if (line.IsUpHill)
+                    if (LinePathGeometry.IsUpHill(line))
                         y = bound.Bottom - clickedRelativePosition * bound.Height - toolbarOffsetY;
                 }
             }
@@ -239,7 +239,7 @@ class SelectionService(
 
                 // Calculate the clicked relative position on the line, this is used to
                 // show the toolbar at the clicked position on the line
-                if (line.IsUpHill)
+                if (LinePathGeometry.IsUpHill(line))
                     (y1, y2) = (y2, y1);
                 var dx = x2 - x1;
                 var dy = y2 - y1;

@@ -267,19 +267,12 @@ class NoteService(
     {
         if (pointerId.IsNode && model.Nodes.TryGetValue(pointerId.NodeId, out var node) && !node.IsRoot)
         {
-            if (IsContainerView(node, model.Zoom))
+            if (NodeViewPolicy.IsContainerView(node, model.Zoom))
                 return node;
             if (node.Parent is { } parent)
                 return parent;
         }
         return model.Root;
-    }
-
-    // Mirrors InteractionService.IsContainer: the node is shown as an expanded box (not an icon).
-    static bool IsContainerView(Node node, double modelZoom)
-    {
-        var nodeZoom = 1 / (node.GetZoom() * modelZoom);
-        return !NodeSvg.IsToLargeToBeSeen(nodeZoom) && !NodeSvg.IsShowIcon(node.Type, nodeZoom);
     }
 
     // A note's identity name: the parent's full name and the typed short id joined by a dot

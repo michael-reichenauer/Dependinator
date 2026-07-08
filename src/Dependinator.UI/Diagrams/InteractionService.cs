@@ -85,8 +85,7 @@ class InteractionService : IInteractionService
             using var model = modelMgr.UseModel();
             if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
                 return false;
-            var nodeZoom = 1 / (node.GetZoom() * Zoom);
-            return !NodeSvg.IsToLargeToBeSeen(nodeZoom) && !NodeSvg.IsShowIcon(node.Type, nodeZoom);
+            return NodeViewPolicy.IsContainerView(node, Zoom);
         }
     }
 
@@ -128,11 +127,9 @@ class InteractionService : IInteractionService
             using var model = modelMgr.UseModel();
             if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
                 return false;
-            var nodeZoom = 1 / (node.GetZoom() * Zoom);
-            if (!NodeSvg.IsToLargeToBeSeen(nodeZoom) && !NodeSvg.IsShowIcon(node.Type, nodeZoom))
-            { // No longer in edit mode if node is to large to be seen or has an icon
+            if (NodeViewPolicy.IsContainerView(node, Zoom))
                 return true;
-            }
+            // No longer in edit mode if node is to large to be seen or has an icon
 
             selectionService.SetEditMode(false);
             return false;
@@ -149,7 +146,7 @@ class InteractionService : IInteractionService
 
     public void IncreaseNodeSize()
     {
-        if (!NodeSvg.IsEditingEnabled)
+        if (!ViewOptions.IsEditingEnabled)
             return;
         if (!selectionService.IsSelected)
             return;
@@ -160,7 +157,7 @@ class InteractionService : IInteractionService
 
     public void DecreaseNodeSize()
     {
-        if (!NodeSvg.IsEditingEnabled)
+        if (!ViewOptions.IsEditingEnabled)
             return;
         if (!selectionService.IsSelected)
             return;
@@ -293,7 +290,7 @@ class InteractionService : IInteractionService
         }
 
         // Double-click on empty canvas (or inside a container) starts adding a manual node there.
-        if (!NodeSvg.IsEditingEnabled)
+        if (!ViewOptions.IsEditingEnabled)
             return;
         manualEditService.BeginAddNode(e);
     }
@@ -330,7 +327,7 @@ class InteractionService : IInteractionService
         if (!e.IsLeftButton)
             return;
         if (
-            NodeSvg.IsEditingEnabled
+            ViewOptions.IsEditingEnabled
             && mouseDownId.IsLinePoint
             && selectionService.SelectedId.IsLine
             && mouseDownId.Id == selectionService.SelectedId.Id
@@ -348,7 +345,7 @@ class InteractionService : IInteractionService
             return;
         }
 
-        if (NodeSvg.IsEditingEnabled && mouseDownId != PointerId.Empty && mouseDownId.IsResize)
+        if (ViewOptions.IsEditingEnabled && mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {
             isResizingSelectedNode = true;
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
@@ -357,7 +354,7 @@ class InteractionService : IInteractionService
         }
 
         if (
-            NodeSvg.IsEditingEnabled
+            ViewOptions.IsEditingEnabled
             && mouseDownId == selectionService.SelectedId
             && selectionService.IsSelectedNodeMovable(Zoom)
             && mouseDownId.IsNode

@@ -112,7 +112,7 @@ class SvgService : ISvgService
 
     static string RenderNode(Node node, RenderContext context)
     {
-        if (node.IsHidden && !NodeSvg.ShowHiddenNodes)
+        if (node.IsHidden && !ViewOptions.ShowHiddenNodes)
             return "";
 
         var geometry = CalculateNodeGeometry(node, context);
@@ -135,13 +135,13 @@ class SvgService : ISvgService
             return NodeSvg.GetToLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
         }
 
-        if (NodeSvg.IsShowIcon(node.Type, context.Zoom))
+        if (NodeViewPolicy.IsShowIcon(node.Type, context.Zoom))
             return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom);
 
         var nestedContext = context.ForNestedContainer(geometry.TileRect);
         var childrenContentSvg = RenderNodeContent(node, nestedContext);
 
-        if (NodeSvg.IsToLargeToBeSeen(context.Zoom))
+        if (NodeViewPolicy.IsToLargeToBeSeen(context.Zoom))
             return NodeSvg.GetToLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
 
         return NodeSvg.GetNodeContainerSvg(node, geometry.CanvasRect, context.Zoom, childrenContentSvg);
@@ -192,7 +192,7 @@ class SvgService : ISvgService
         var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
         foreach (var line in parentToChildrenLines)
         {
-            if (line.IsHidden && !NodeSvg.ShowHiddenNodes)
+            if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
             if (line.Target.IsPassThrough)
                 continue; // The pass-through node covers this parent, so the segment is degenerate
@@ -206,7 +206,7 @@ class SvgService : ISvgService
             {
                 if (line.Target.Parent == line.Source)
                     continue;
-                if (line.IsHidden && !NodeSvg.ShowHiddenNodes)
+                if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
                     continue;
                 if (line.Source.IsPassThrough && line.Target == node)
                     continue; // The pass-through node covers this parent, so the segment is degenerate
@@ -219,7 +219,7 @@ class SvgService : ISvgService
     {
         foreach (var directLine in node.DirectLines)
         {
-            if (directLine.IsHidden && !NodeSvg.ShowHiddenNodes)
+            if (directLine.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
             var svg = LineSvg.GetDirectLineSvg(directLine, node, nodeCanvasPos, childrenZoom);
             if (svg.Length > 0)

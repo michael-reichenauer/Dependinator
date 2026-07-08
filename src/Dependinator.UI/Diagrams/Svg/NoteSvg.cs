@@ -9,14 +9,13 @@ namespace Dependinator.UI.Diagrams.Svg;
 // with the description exposed as a native SVG <title> tooltip on hover. A note is a Node with
 // IsNote set, placed on the root canvas; it reuses the normal node id scheme so selection,
 // dragging and deletion flow through the existing interaction pipeline.
-class NoteSvg
+static class NoteSvg
 {
     // Fraction of the average glyph advance relative to the font size (matches NodeSvg).
     const double AverageCharWidthFactor = 0.6;
 
     // The note stops growing once the render zoom passes this factor, so zooming in keeps the
-    // marker a readable, fixed on-screen size instead of an ever-larger circle. Mirrors how node
-    // name/icon text caps at NodeSvg.MaxTextZoom (kept in sync with that value).
+    // marker a readable, fixed on-screen size instead of an ever-larger circle.
     const double MaxNoteZoom = 1.0;
 
     public static string GetNoteSvg(Node node, Rect canvasRect, double zoom)

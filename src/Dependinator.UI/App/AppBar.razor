@@ -1,7 +1,6 @@
 @using Dependinator.Core
 @using Dependinator.UI.Modeling
 @using Dependinator.UI.Modeling.Commands
-@using Dependinator.UI.Diagrams.Svg
 @using Dependinator.UI.Shared.CloudSync
 @using Microsoft.JSInterop
 
@@ -203,7 +202,7 @@
                                data-testid="toolbar-refresh" />
             </MudTooltip>
         }
-        @if (NodeSvg.IsEditingEnabled)
+        @if (ViewOptions.IsEditingEnabled)
         {
             <MudTooltip Text="Disable edit mode">
                 <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Color="@Color.Warning" OnClick="ToggleEditMode"
@@ -552,11 +551,11 @@
         _ = InvokeAsync(() => snackbar.Add(errorMessage, Severity.Warning));
     }
 
-    string ShowHiddenNodesIcon => NodeSvg.ShowHiddenNodes
+    string ShowHiddenNodesIcon => ViewOptions.ShowHiddenNodes
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
 
-    string EditModeIcon => NodeSvg.IsEditingEnabled
+    string EditModeIcon => ViewOptions.IsEditingEnabled
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
 
@@ -564,24 +563,24 @@
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
 
-    string EditModeToolbarIcon => NodeSvg.IsEditingEnabled
+    string EditModeToolbarIcon => ViewOptions.IsEditingEnabled
         ? Icons.Material.Filled.Edit
         : Icons.Material.Outlined.EditOff;
 
-    MudBlazor.Color EditModeToolbarColor => NodeSvg.IsEditingEnabled
+    MudBlazor.Color EditModeToolbarColor => ViewOptions.IsEditingEnabled
         ? Color.Default
         : Color.Inherit;
 
     void ToggleEditMode()
     {
-        NodeSvg.SetIsEditingEnabled(!NodeSvg.IsEditingEnabled);
+        ViewOptions.SetIsEditingEnabled(!ViewOptions.IsEditingEnabled);
         applicationEvents.TriggerUIStateChanged();
     }
 
     async Task ToggleShowHiddenNodes()
     {
-        var newValue = !NodeSvg.ShowHiddenNodes;
-        NodeSvg.SetShowHiddenNodes(newValue);
+        var newValue = !ViewOptions.ShowHiddenNodes;
+        ViewOptions.SetShowHiddenNodes(newValue);
         await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();

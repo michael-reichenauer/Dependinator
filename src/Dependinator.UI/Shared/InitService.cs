@@ -1,5 +1,4 @@
 using Dependinator.UI.Diagrams;
-using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 
 // App-wide shared UI services and helpers used across the diagram and modeling features:
@@ -48,7 +47,7 @@ class InitService : IInitService
         await database.Init([FileService.DBCollectionName]);
         var config = await configService.GetAsync();
         NodeLayout.SetDensity(config.LayoutDensity);
-        NodeSvg.SetShowHiddenNodes(config.ShowHiddenNodes);
+        ViewOptions.SetShowHiddenNodes(config.ShowHiddenNodes);
         await screenService.InitAsync(component);
         await mouseEventService.InitAsync();
         await recentModelsService.InitAsync();

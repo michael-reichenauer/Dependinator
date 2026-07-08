@@ -1,4 +1,3 @@
-using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
@@ -13,11 +12,11 @@ static class DirectLineCalculator
 
         var useRightSide = sourceCenter.X <= targetCenter.X;
 
-        var sourcePreference = useRightSide ? NodeSvg.AnchorPreference.Right : NodeSvg.AnchorPreference.Left;
-        var targetPreference = useRightSide ? NodeSvg.AnchorPreference.Left : NodeSvg.AnchorPreference.Right;
+        var sourcePreference = useRightSide ? AnchorPreference.Right : AnchorPreference.Left;
+        var targetPreference = useRightSide ? AnchorPreference.Left : AnchorPreference.Right;
 
-        var sourceAnchorGlobal = GetAnchorGlobal(source, NodeSvg.LineAnchorRole.Source, sourcePreference);
-        var targetAnchorGlobal = GetAnchorGlobal(target, NodeSvg.LineAnchorRole.Target, targetPreference);
+        var sourceAnchorGlobal = GetAnchorGlobal(source, LineAnchorRole.Source, sourcePreference);
+        var targetAnchorGlobal = GetAnchorGlobal(target, LineAnchorRole.Target, targetPreference);
 
         var sourceLocal = ToAncestorLocal(ancestor, sourceAnchorGlobal);
         var targetLocal = ToAncestorLocal(ancestor, targetAnchorGlobal);
@@ -25,10 +24,10 @@ static class DirectLineCalculator
         return (sourceLocal, targetLocal);
     }
 
-    static Pos GetAnchorGlobal(Node node, NodeSvg.LineAnchorRole role, NodeSvg.AnchorPreference preference)
+    static Pos GetAnchorGlobal(Node node, LineAnchorRole role, AnchorPreference preference)
     {
         var (pos, zoom) = node.GetPosAndZoom();
-        var (anchorX, anchorY) = NodeSvg.GetLineAnchor(node, role, preference);
+        var (anchorX, anchorY) = NodeAnchors.GetLineAnchor(node, role, preference);
         var localX = anchorX - node.Boundary.X;
         var localY = anchorY - node.Boundary.Y;
         var x = pos.X + localX * zoom;

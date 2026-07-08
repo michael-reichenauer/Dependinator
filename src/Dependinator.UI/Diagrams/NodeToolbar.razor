@@ -1,6 +1,5 @@
 ﻿@using Dependinator.UI.Diagrams.Dependencies
 @using Dependinator.UI.Diagrams.Icons
-@using Dependinator.UI.Diagrams.Svg
 @using Dependinator.Core
 @using Dependinator.Core.Parsing
 @using Dependinator.Core.Shared
@@ -79,7 +78,7 @@ else if (HasSelectedLine)
       <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
     </MudTooltip>
 
-    @if (NodeSvg.IsEditingEnabled)
+    @if (ViewOptions.IsEditingEnabled)
     {
       <MudTooltip Text="Decrease node size">
         <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" OnClick="interactionService.DecreaseNodeSize"
@@ -122,7 +121,7 @@ else if (HasSelectedLine)
       }
       else
       {
-        @if (NodeSvg.IsEditingEnabled)
+        @if (ViewOptions.IsEditingEnabled)
         {
           <MudTooltip Text="Edit node">
             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="() => IsEditNodeMode = true"
