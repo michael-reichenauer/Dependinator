@@ -92,7 +92,7 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
 
-        await (await App.OpenSubMenuItemAsync("menu-edit", "menu-reset-model")).ClickAsync();
+        await (await App.OpenSubMenuItemAsync("menu-models", "menu-reset-model")).ClickAsync();
 
         // Reset is destructive, so it must ask for confirmation first.
         await Expect(App.Dialog).ToBeVisibleAsync();

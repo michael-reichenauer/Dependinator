@@ -135,19 +135,19 @@
                         }
                     </MudMenu>
 
-                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Account</MudText>
+                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Device Sync</MudText>
                     @if (AuthState.IsAuthenticated)
                     {
-                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="LogoutAsync"
+                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudOff" OnClick="LogoutAsync"
                                      data-testid="menu-logout">
-                            Logout
+                            Disable Device Sync
                         </MudMenuItem>
                     }
                     else
                     {
-                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Login" OnClick="LoginAsync"
+                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudSync" OnClick="LoginAsync"
                                      data-testid="menu-login">
-                            Login
+                            Enable Device Sync
                         </MudMenuItem>
                     }
                 }
@@ -303,8 +303,8 @@
                 : IsCloudConnecting
     ? "Connecting to cloud …"
                 : AuthState.IsAuthenticated
-    ? $"Cloud signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}"
-    : "Cloud not signed in";
+    ? $"Device sync enabled as {AuthState.User?.Email ?? AuthState.User?.UserId}"
+    : "Device sync disabled";
     string SyncDownPrompt =>
     HasSyncConflicts
     ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
@@ -420,7 +420,7 @@
             return;
         }
 
-        snackbar.Add("Cloud sync is enabled.", Severity.Success);
+        snackbar.Add("Device sync is enabled.", Severity.Success);
     }
 
     async Task SyncUpAsync()
@@ -440,7 +440,7 @@
             return;
         }
 
-        snackbar.Add("Cloud sync is disabled.", Severity.Info);
+        snackbar.Add("Device sync is disabled.", Severity.Info);
     }
 
     async Task ResolveConflictAsync()

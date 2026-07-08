@@ -169,7 +169,7 @@ sealed class HttpCloudSyncService : ICloudSyncService
 
         return response.StatusCode switch
         {
-            HttpStatusCode.Unauthorized => "Cloud sync requires login.",
+            HttpStatusCode.Unauthorized => "Device sync is not enabled.",
             HttpStatusCode.NotFound => "Cloud model was not found.",
             _ => $"Cloud sync request failed with status code {(int)response.StatusCode}.",
         };
