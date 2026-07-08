@@ -2,17 +2,36 @@ using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams.Tiles;
 
+// Identifies a cached tile. Z is a discrete zoom level, where each level covers a ZoomFactor
+// zoom band and tile content is rendered at the level zoom ZoomFactor^-Z. X and Y are tile
+// indices at that level, in units of the screen size (TileWidth/TileHeight).
 record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
 {
-    private const double Margin = 0.6; // How much larger than screen needs to be included in tile
-    public static TileKey Empty = new(0L, 0L, 0, 0, 0);
+    public const double ZoomFactor = 1.1; // How often is a new tile needed when zooming
 
-    public double GetTileZoom() => Math.Pow(Tile.ZoomFactor, -Z);
+    // Rendered tile content extends Margin tile sizes beyond the tile on each side; the tile
+    // svg viewBox extends ViewBoxMargin tile sizes on each side (must be >= Margin), so the
+    // rendered content always fits within the viewBox.
+    const double Margin = 0.6; // How much larger than screen needs to be included in tile
+    const int ViewBoxMargin = 2;
 
+    public static readonly TileKey Empty = new(0L, 0L, 0, 0, 0);
+
+    public double GetTileZoom() => LevelZoom(Z);
+
+    // The tile rect in level canvas coordinates (canvas coordinates scaled by the level zoom)
     public Rect GetTileRect() => new(X * TileWidth, Y * TileHeight, TileWidth, TileHeight);
 
-    public Rect GetViewRect() => new(-TileWidth * 2, -TileHeight * 2, TileWidth * 5, TileHeight * 5);
+    // The svg viewBox in tile local coordinates (origin at the tile top-left corner)
+    public Rect GetViewRect() =>
+        new(
+            -TileWidth * ViewBoxMargin,
+            -TileHeight * ViewBoxMargin,
+            TileWidth * (2 * ViewBoxMargin + 1),
+            TileHeight * (2 * ViewBoxMargin + 1)
+        );
 
+    // The area to render in tile local coordinates (origin at the tile top-left corner)
     public Rect GetTileRectWithMargin() =>
         new(
             -TileWidth * Margin,
@@ -21,19 +40,21 @@ record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
             TileHeight + 2 * (TileHeight * Margin)
         );
 
-    public static TileKey From(Rect canvasRect, Double canvasZoom)
+    public static TileKey From(Rect canvasRect, double canvasZoom)
     {
         var tileWidth = (int)Math.Ceiling(canvasRect.Width);
         var tileHeight = (int)Math.Ceiling(canvasRect.Height);
 
-        int z = -(int)Math.Floor(Math.Log(canvasZoom) / Math.Log(Tile.ZoomFactor));
-        double tileZoom = Math.Pow(Tile.ZoomFactor, -z);
+        int z = -(int)Math.Floor(Math.Log(canvasZoom) / Math.Log(ZoomFactor));
+        double tileZoom = LevelZoom(z);
 
         long x = (long)Math.Round(canvasRect.X / tileZoom / tileWidth);
         long y = (long)Math.Round(canvasRect.Y / tileZoom / tileHeight);
 
         return new TileKey(x, y, z, tileWidth, tileHeight);
     }
+
+    static double LevelZoom(int z) => Math.Pow(ZoomFactor, -z);
 
     public override string ToString() => $"(({X},{Y},{Z}))";
 }
