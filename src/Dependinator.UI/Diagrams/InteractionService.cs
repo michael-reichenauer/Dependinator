@@ -195,6 +195,11 @@ class InteractionService : IInteractionService
             manualEditService.CancelAddLink();
             return;
         }
+        if (manualEditService.IsPlacingNode)
+        {
+            manualEditService.CancelPlaceNode();
+            return;
+        }
 
         contextMenuService.Open(e);
     }
@@ -251,6 +256,13 @@ class InteractionService : IInteractionService
         if (noteService.IsPlacingNote)
         {
             _ = noteService.PlaceNoteAtAsync(e);
+            return;
+        }
+
+        // While placing a node, a click begins adding it there (opens the inline name prompt).
+        if (manualEditService.IsPlacingNode)
+        {
+            manualEditService.BeginAddNode(e);
             return;
         }
 

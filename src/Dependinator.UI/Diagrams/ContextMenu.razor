@@ -10,14 +10,14 @@
        @oncontextmenu="Close" @oncontextmenu:preventDefault="true"></div>
 
   <div style="@CssPosition" data-testid="canvas-context-menu">
-    <MudPaper Elevation="8" Class="py-1" Style="min-width:170px;">
+    <MudPaper Elevation="8" Class="dep-light-menu py-1" Style="min-width:170px;">
       <MudList T="string" Dense="true">
-        <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.StickyNote2" OnClick="AddNote"
-                     data-testid="context-menu-add-note">
+        <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.StickyNote2" IconColor="Color.Secondary"
+                     OnClick="AddNote" data-testid="context-menu-add-note">
           Add Note Here
         </MudListItem>
-        <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.AddBox" OnClick="AddNode"
-                     data-testid="context-menu-add-node">
+        <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.AddBox" IconColor="Color.Secondary"
+                     OnClick="AddNode" data-testid="context-menu-add-node">
           Add Node Here
         </MudListItem>
       </MudList>

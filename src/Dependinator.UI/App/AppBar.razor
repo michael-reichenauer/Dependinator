@@ -18,6 +18,7 @@
 @inject IJSInterop jsInterop
 @inject IVsCodeSendService vsCodeSendService
 @inject Dependinator.UI.Diagrams.INoteService noteService
+@inject Dependinator.UI.Diagrams.IManualEditService manualEditService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
@@ -44,9 +45,14 @@
                 Fit to Screen
             </MudMenuItem>
 
-            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddCircleOutline"
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.StickyNote2"
                          OnClick="BeginAddNote" data-testid="menu-add-note">
                 Add Note …
+            </MudMenuItem>
+
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox"
+                         OnClick="BeginAddNode" data-testid="menu-add-node">
+                Add Node …
             </MudMenuItem>
 
             <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
@@ -480,6 +486,12 @@
     {
         noteService.BeginPlaceNote();
         snackbar.Add("Click on the diagram to place the note.", Severity.Info);
+    }
+
+    void BeginAddNode()
+    {
+        manualEditService.BeginPlaceNode();
+        snackbar.Add("Click on the diagram to place the node.", Severity.Info);
     }
 
     Task ShowAbout() => aboutBox.ShowAsync();
