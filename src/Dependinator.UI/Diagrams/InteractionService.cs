@@ -30,6 +30,8 @@ class InteractionService : IInteractionService
     readonly IModelMgr modelMgr;
     readonly IDependenciesService dependenciesService;
     readonly IManualEditService manualEditService;
+    readonly INoteService noteService;
+    readonly IContextMenuService contextMenuService;
 
     const int MoveDelay = 300;
 
@@ -52,7 +54,9 @@ class InteractionService : IInteractionService
         ISelectionService selectionService,
         IModelMgr modelMgr,
         IDependenciesService dependenciesService,
-        IManualEditService manualEditService
+        IManualEditService manualEditService,
+        INoteService noteService,
+        IContextMenuService contextMenuService
     )
     {
         this.mouseEventService = mouseEventService;
@@ -64,6 +68,8 @@ class InteractionService : IInteractionService
         this.modelMgr = modelMgr;
         this.dependenciesService = dependenciesService;
         this.manualEditService = manualEditService;
+        this.noteService = noteService;
+        this.contextMenuService = contextMenuService;
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
         this.applicationEvents.UndoneRedone += UpdateToolbar;
     }
@@ -171,8 +177,31 @@ class InteractionService : IInteractionService
         mouseEventService.PointerDown += OnMouseDown;
         mouseEventService.PointerUp += OnMouseUp;
         mouseEventService.Wheel += OnMouseWheel;
+        mouseEventService.ContextMenu += OnContextMenu;
 
         return Task.CompletedTask;
+    }
+
+    void OnContextMenu(PointerEvent e)
+    {
+        // A right-click cancels any in-progress placement gesture instead of opening the menu.
+        if (noteService.IsPlacingNote)
+        {
+            noteService.CancelPlaceNote();
+            return;
+        }
+        if (manualEditService.IsAddingLink)
+        {
+            manualEditService.CancelAddLink();
+            return;
+        }
+        if (manualEditService.IsPlacingNode)
+        {
+            manualEditService.CancelPlaceNode();
+            return;
+        }
+
+        contextMenuService.Open(e);
     }
 
     void OnMouseWheel(PointerEvent e)
@@ -223,6 +252,20 @@ class InteractionService : IInteractionService
         // Log.Info("mouse click", e.TargetId);
         var pointerId = PointerId.Parse(e.TargetId);
 
+        // While placing a note, a click drops it at that position (opens the note dialog).
+        if (noteService.IsPlacingNote)
+        {
+            _ = noteService.PlaceNoteAtAsync(e);
+            return;
+        }
+
+        // While placing a node, a click begins adding it there (opens the inline name prompt).
+        if (manualEditService.IsPlacingNode)
+        {
+            manualEditService.BeginAddNode(e);
+            return;
+        }
+
         // While drawing a manual link, a click picks the target node (or cancels on empty space).
         if (manualEditService.IsAddingLink)
         {
@@ -240,6 +283,15 @@ class InteractionService : IInteractionService
 
     void OnDblClick(PointerEvent e)
     {
+        var pointerId = PointerId.Parse(e.TargetId);
+
+        // Double-click on a note opens its edit dialog (allowed regardless of edit mode).
+        if (pointerId.IsNode && noteService.IsNoteNode(pointerId.NodeId))
+        {
+            _ = noteService.EditNoteAsync(pointerId.NodeId);
+            return;
+        }
+
         // Double-click on empty canvas (or inside a container) starts adding a manual node there.
         if (!NodeSvg.IsEditingEnabled)
             return;

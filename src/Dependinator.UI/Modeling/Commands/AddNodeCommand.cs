@@ -3,12 +3,16 @@ using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Modeling.Commands;
 
-// Adds a manually created (user-drawn) node under an existing parent. Revert removes it.
-class AddNodeCommand(string name, string parentName, Rect boundary) : Command
+// Adds a manually created (user-drawn) node under an existing parent. Revert removes it. When
+// isNote is true the node is a note annotation (rendered as a circle) with the given description.
+class AddNodeCommand(string name, string parentName, Rect boundary, bool isNote = false, string? description = null)
+    : Command
 {
     readonly string name = name;
     readonly string parentName = parentName;
     readonly Rect boundary = boundary;
+    readonly bool isNote = isNote;
+    readonly string? description = description;
 
     public override void Execute(IModel model)
     {
@@ -20,9 +24,11 @@ class AddNodeCommand(string name, string parentName, Rect boundary) : Command
         var node = new Node(name, parent)
         {
             IsManual = true,
+            IsNote = isNote,
             Boundary = boundary,
             UpdateStamp = model.UpdateStamp,
         };
+        node.SetDescription(description);
         model.TryAddNode(node);
         parent.AddChild(node);
         // Keep the user's chosen position; don't let auto-layout rearrange the parent's children.

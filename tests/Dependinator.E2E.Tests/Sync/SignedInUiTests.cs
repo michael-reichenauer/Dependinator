@@ -31,14 +31,16 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
         // resolves immediately because the stubbed Clerk already reports a user).
         await App.CloudButton.ClickAsync();
 
-        // Login is async (Functions round-trip). The cloud tooltip flips from "Cloud not
-        // signed in" to "Cloud signed in as <email>" once it completes; hovering keeps the
+        // Login is async (Functions round-trip). The cloud tooltip flips from "Device sync
+        // disabled" to "Device sync enabled as <email>" once it completes; hovering keeps the
         // tooltip open while Expect retries.
         await App.CloudButton.HoverAsync();
-        await Expect(Page.GetByText(new Regex("signed in as"))).ToBeVisibleAsync(new() { Timeout = 30_000 });
+        await Expect(Page.GetByText(new Regex("sync enabled as"))).ToBeVisibleAsync(new() { Timeout = 30_000 });
 
-        // The app menu now reflects an authenticated session ...
+        // The app menu now reflects an authenticated session (Logout and Cloud Models both
+        // live inside the Models submenu, so hover it to expand the flyout) ...
         await App.Menu.ClickAsync();
+        await App.MenuItem("menu-models").HoverAsync();
         await Expect(App.MenuItem("menu-logout")).ToBeVisibleAsync();
 
         // ... and the Cloud Models submenu is enabled (i.e. the seeded model was listed) ...

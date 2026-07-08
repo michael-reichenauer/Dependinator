@@ -262,7 +262,7 @@ class CanvasService : ICanvasService
                 + "has been opened for you to explore.<br/><br/>"
                 + "Pan, zoom and click the nodes to see how Dependinator visualizes "
                 + "software dependencies. You can open your own model at any time from the menu.<br/><br/>"
-                + "Login in to sync your diagrams across your devices."
+                + "Enable device sync to keep your diagrams in sync across your devices."
             ),
             yesText: "Got it"
         );

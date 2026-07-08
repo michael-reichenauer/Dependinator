@@ -7,7 +7,19 @@
 @using MudBlazor
 @implements IDisposable
 
-@if (HasSelectedLine)
+@if (HasSelectedLine && IsSelectedNodeNote)
+{
+  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
+    <MudTooltip Text="Edit note">
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="EditNote" data-testid="note-edit-toolbar" />
+    </MudTooltip>
+    <MudTooltip Text="Delete note">
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="DeleteNoteToolbar"
+                     data-testid="note-delete-toolbar" />
+    </MudTooltip>
+  </MudButtonGroup>
+}
+else if (HasSelectedLine)
 {
   <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
     <MudTooltip Text="Menu">
@@ -196,6 +208,9 @@
   IManualEditService manualEditService { get; set; } = null!;
 
   [Inject]
+  INoteService noteService { get; set; } = null!;
+
+  [Inject]
   ISnackbar snackbar { get; set; } = null!;
 
 
@@ -210,6 +225,17 @@
       using var model = modelMgr.UseModel();
       return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
           && node.IsManual;
+    }
+  }
+  bool IsSelectedNodeNote
+  {
+    get
+    {
+      if (!selectionService.SelectedId.IsNode)
+        return false;
+      using var model = modelMgr.UseModel();
+      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
+          && node.IsNote;
     }
   }
   bool SelectedNodeHasChildren
@@ -345,6 +371,22 @@
       return;
     var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     manualEditService.BeginRenameNode(nodeId, selectionService.SelectedNodePosition);
+  }
+
+  Task EditNote()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return Task.CompletedTask;
+    return noteService.EditNoteAsync(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
+  }
+
+  void DeleteNoteToolbar()
+  {
+    if (!selectionService.SelectedId.IsNode)
+      return;
+    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+    selectionService.Unselect();
+    manualEditService.DeleteManualNode(nodeId);
   }
 
   async Task SelectIconAsync()

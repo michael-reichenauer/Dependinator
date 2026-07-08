@@ -17,22 +17,14 @@
 @inject IDialogService dialogService
 @inject IJSInterop jsInterop
 @inject IVsCodeSendService vsCodeSendService
+@inject Dependinator.UI.Diagrams.INoteService noteService
+@inject Dependinator.UI.Diagrams.IManualEditService manualEditService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
     <MudTooltip Text="Menu">
         <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Tertiary" Dense="true"
                  AnchorOrigin="Origin.BottomCenter" PopoverClass="dep-light-menu" data-testid="appbar-menu">
-            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
-                         Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo" data-testid="menu-undo">
-                Undo
-            </MudMenuItem>
-
-            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
-                         Disabled="@(!commandService.CanRedo)" OnClick="commandService.Redo" data-testid="menu-redo">
-                Redo
-            </MudMenuItem>
-
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync"
                          data-testid="menu-search">
                 Search …
@@ -43,95 +35,136 @@
                 Fit to Screen
             </MudMenuItem>
 
-            @if (Build.IsVsCodeExtWasm || Build.IsWeb)
-            {
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                             OnClick="canvasService.Refresh" data-testid="menu-refresh">
-                    Refresh
+            <MudDivider />
+
+            <MudMenu Label="Edit" PopoverClass="dep-light-menu" data-testid="menu-edit">
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">History</MudText>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
+                             Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo" data-testid="menu-undo">
+                    Undo
                 </MudMenuItem>
-            }
 
-            <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes"
-                         data-testid="menu-show-hidden-nodes">
-                Show Hidden Nodes
-            </MudMenuItem>
-
-            <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
-                         data-testid="menu-edit-mode">
-                Edit Mode
-            </MudMenuItem>
-
-            <MudDivider />
-
-            <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff" OnClick="OnRemove"
-                         data-testid="menu-reset-model">
-                Reset Model
-            </MudMenuItem>
-
-            <MudDivider />
-
-            @foreach (string path in RecentModelPaths)
-            {
-                bool isCurrent = IsCurrentRecentModel(path);
-                <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
-                             Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => canvasService.LoadAsync(path)">
-                    @GetModelDisplayName(path)
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Redo"
+                             Disabled="@(!commandService.CanRedo)" OnClick="commandService.Redo" data-testid="menu-redo">
+                    Redo
                 </MudMenuItem>
-            }
 
-            <MudDivider />
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Insert</MudText>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox" OnClick="BeginAddNode"
+                             data-testid="menu-add-node">
+                    Add Node …
+                </MudMenuItem>
 
-            <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled" PopoverClass="dep-light-menu"
-                     data-testid="menu-local-paths">
-                @foreach (var path in modelListService.LocalPaths)
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.StickyNote2"
+                             OnClick="BeginAddNote" data-testid="menu-add-note">
+                    Add Note …
+                </MudMenuItem>
+
+                <MudDivider />
+
+            </MudMenu>
+
+            <MudMenu Label="View" PopoverClass="dep-light-menu" data-testid="menu-view">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes"
+                             data-testid="menu-show-hidden-nodes">
+                    Show Hidden Nodes
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
+                             data-testid="menu-edit-mode">
+                    Edit Mode
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
+                             data-testid="menu-notes-sidebar">
+                    Notes Sidebar
+                </MudMenuItem>
+
+                @if (Build.IsVsCodeExtWasm || Build.IsWeb)
                 {
-                    <MudMenuItem IconColor="Color.Default" Icon="@Icons.Material.Outlined.Schema"
-                                 OnClick="() => canvasService.LoadAsync(path)">
-                        @path
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                                 OnClick="canvasService.Refresh" data-testid="menu-refresh">
+                        Refresh
                     </MudMenuItem>
                 }
             </MudMenu>
 
-            @if (appCloudSyncService.IsAvailable)
-            {
-                <MudMenu Label=" Cloud Models" Disabled="@IsCloudModelsMenuDisabled" PopoverClass="dep-light-menu"
-                         data-testid="menu-cloud-models">
-                    @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
+            <MudMenu Label="Models" PopoverClass="dep-light-menu" data-testid="menu-models">
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Recent</MudText>
+                @foreach (string path in RecentModelPaths)
+                {
+                    bool isCurrent = IsCurrentRecentModel(path);
+                    <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
+                                 Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => canvasService.LoadAsync(path)">
+                        @GetModelDisplayName(path)
+                    </MudMenuItem>
+                }
+
+                <MudDivider />
+
+                <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff"
+                             OnClick="OnRemove" data-testid="menu-reset-model">
+                    Reset Model
+                </MudMenuItem>
+
+                <MudDivider />
+
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Sources</MudText>
+                <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled" PopoverClass="dep-light-menu"
+                         data-testid="menu-local-paths">
+                    @foreach (var path in modelListService.LocalPaths)
                     {
-                        bool isCurrent = IsCurrentCloudModel(cloudModel);
-                        <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
-                                     Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => LoadCloudModelAsync(cloudModel)">
-                            @GetModelDisplayName(cloudModel.NormalizedPath)
+                        <MudMenuItem IconColor="Color.Default" Icon="@Icons.Material.Outlined.Schema"
+                                     OnClick="() => canvasService.LoadAsync(path)">
+                            @path
                         </MudMenuItem>
                     }
                 </MudMenu>
 
-                <MudDivider />
-                @if (AuthState.IsAuthenticated)
+                @if (appCloudSyncService.IsAvailable)
                 {
-                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Logout" OnClick="LogoutAsync"
-                                 data-testid="menu-logout">
-                        Logout
-                    </MudMenuItem>
+                    <MudMenu Label="Cloud Models" Disabled="@IsCloudModelsMenuDisabled" PopoverClass="dep-light-menu"
+                             data-testid="menu-cloud-models">
+                        @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
+                        {
+                            bool isCurrent = IsCurrentCloudModel(cloudModel);
+                            <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
+                                         Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => LoadCloudModelAsync(cloudModel)">
+                                @GetModelDisplayName(cloudModel.NormalizedPath)
+                            </MudMenuItem>
+                        }
+                    </MudMenu>
+
+                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Device Sync</MudText>
+                    @if (AuthState.IsAuthenticated)
+                    {
+                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudOff" OnClick="LogoutAsync"
+                                     data-testid="menu-logout">
+                            Disable Device Sync
+                        </MudMenuItem>
+                    }
+                    else
+                    {
+                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudSync" OnClick="LoginAsync"
+                                     data-testid="menu-login">
+                            Enable Device Sync
+                        </MudMenuItem>
+                    }
                 }
-                else
-                {
-                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Login" OnClick="LoginAsync"
-                                 data-testid="menu-login">
-                        Login
-                    </MudMenuItem>
-                }
-            }
+            </MudMenu>
 
             <MudDivider />
-            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Help" OnClick="ShowHelpAsync"
-                         data-testid="menu-help">
-                Help
-            </MudMenuItem>
-            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout"
-                         data-testid="menu-about">
-                About
-            </MudMenuItem>
+
+            <MudMenu Label="Help" PopoverClass="dep-light-menu" data-testid="menu-help-group">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Help" OnClick="ShowHelpAsync"
+                             data-testid="menu-help">
+                    Help
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout"
+                             data-testid="menu-about">
+                    About
+                </MudMenuItem>
+            </MudMenu>
         </MudMenu>
     </MudTooltip>
 
@@ -180,8 +213,8 @@
         else
         {
             <MudTooltip Text="Enable edit mode">
-                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Tertiary" OnClick="ToggleEditMode"
-                               data-testid="toolbar-edit" />
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Tertiary"
+                               OnClick="ToggleEditMode" data-testid="toolbar-edit" />
             </MudTooltip>
         }
         <MudTooltip Text="Help">
@@ -270,8 +303,8 @@
                 : IsCloudConnecting
     ? "Connecting to cloud …"
                 : AuthState.IsAuthenticated
-    ? $"Cloud signed in as {AuthState.User?.Email ?? AuthState.User?.UserId}"
-    : "Cloud not signed in";
+    ? $"Device sync enabled as {AuthState.User?.Email ?? AuthState.User?.UserId}"
+    : "Device sync disabled";
     string SyncDownPrompt =>
     HasSyncConflicts
     ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
@@ -387,7 +420,7 @@
             return;
         }
 
-        snackbar.Add("Cloud sync is enabled.", Severity.Success);
+        snackbar.Add("Device sync is enabled.", Severity.Success);
     }
 
     async Task SyncUpAsync()
@@ -407,7 +440,7 @@
             return;
         }
 
-        snackbar.Add("Cloud sync is disabled.", Severity.Info);
+        snackbar.Add("Device sync is disabled.", Severity.Info);
     }
 
     async Task ResolveConflictAsync()
@@ -465,6 +498,18 @@
         canvasService.Remove();
     }
 
+    void BeginAddNote()
+    {
+        noteService.BeginPlaceNote();
+        snackbar.Add("Click on the diagram to place the note.", Severity.Info);
+    }
+
+    void BeginAddNode()
+    {
+        manualEditService.BeginPlaceNode();
+        snackbar.Add("Click on the diagram to place the node.", Severity.Info);
+    }
+
     Task ShowAbout() => aboutBox.ShowAsync();
 
     Task ShowHelpAsync() => vsCodeSendService.OpenHelpAsync();
@@ -512,6 +557,10 @@
         : Icons.Material.Outlined.Circle;
 
     string EditModeIcon => NodeSvg.IsEditingEnabled
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Outlined.Circle;
+
+    string NotesSidebarIcon => noteService.IsShowSidebar
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
 

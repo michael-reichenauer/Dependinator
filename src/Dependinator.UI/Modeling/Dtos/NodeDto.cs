@@ -40,4 +40,8 @@ record NodeDto
     // True for user-drawn nodes; omitted for parsed nodes so their serialized form is unchanged.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsManual { get; set; }
+
+    // True for note annotations (rendered as a circle with a short id). Omitted for other nodes.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsNote { get; set; }
 }

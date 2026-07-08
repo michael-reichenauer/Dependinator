@@ -1,0 +1,100 @@
+@using Dependinator.UI.Shared
+@inject IApplicationEvents applicationEvents
+@inject INoteService noteService
+@implements IDisposable
+
+@if (noteService.IsShowSidebar)
+{
+  <div class="notes-sidebar" style="position:fixed; top:8px; right:8px; bottom:8px; width:290px; z-index:1300;">
+    <MudPaper Elevation="4" Class="pa-3" Style="height:100%; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <MudText Typo="Typo.subtitle1" Color="Color.Info"><b>Notes</b></MudText>
+        <MudTooltip Text="Close">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Close" Size="Size.Small"
+                         OnClick="noteService.ToggleSidebar" data-testid="notes-sidebar-close" />
+        </MudTooltip>
+      </div>
+      <div style="border-bottom:1px solid var(--mud-palette-divider); margin:8px 0; flex:none;"></div>
+
+      <div style="overflow-y:auto; flex:1 1 auto; min-height:0;" data-testid="notes-sidebar-list">
+        @if (Notes.Count == 0)
+        {
+          <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            No notes yet. Use the menu's "Add Note" to place one on the diagram.
+          </MudText>
+        }
+        else
+        {
+          @foreach (var note in Notes)
+          {
+            <div class="note-row" @onclick="() => noteService.ShowNoteAsync(note.NodeId)"
+                 data-testid="notes-sidebar-item">
+              <span class="note-badge" style="background:@DColors.NoteFill; color:@DColors.NoteText;">@note.Id</span>
+              <MudText Typo="Typo.body2" Class="note-desc">
+                @(string.IsNullOrWhiteSpace(note.Description) ? "(no description)" : note.Description)
+              </MudText>
+              <div @onclick:stopPropagation="true">
+                <MudTooltip Text="Edit note">
+                  <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Size="Size.Small"
+                                 Class="note-edit-button" OnClick="() => noteService.EditNoteAsync(note.NodeId)" />
+                </MudTooltip>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </MudPaper>
+  </div>
+
+  <style>
+    .notes-sidebar .note-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: start;
+      gap: 10px;
+      padding: 6px 4px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .notes-sidebar .note-row:hover {
+      background: var(--mud-palette-action-default-hover);
+    }
+
+    .notes-sidebar .note-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 26px;
+      height: 26px;
+      padding: 0 6px;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: bold;
+      flex: none;
+    }
+
+    .notes-sidebar .note-desc {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .notes-sidebar .note-edit-button {
+      visibility: hidden;
+    }
+
+    .notes-sidebar .note-row:hover .note-edit-button {
+      visibility: visible;
+    }
+  </style>
+}
+
+@code {
+  IReadOnlyList<NoteItem> Notes => noteService.GetNotes();
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

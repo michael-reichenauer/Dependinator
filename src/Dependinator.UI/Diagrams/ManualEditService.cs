@@ -20,8 +20,15 @@ interface IManualEditService
     string NameEntryLabel { get; }
     event Action? StateChanged;
 
-    // Begins adding a node at a double-clicked canvas position; shows the inline name prompt.
+    // Begins adding a node at a double-clicked (or clicked, in place mode) canvas position; shows
+    // the inline name prompt.
     void BeginAddNode(PointerEvent e);
+
+    // "Add node" placement mode: armed from the app menu, the next canvas click adds a node at that
+    // position (parallels INoteService.BeginPlaceNote).
+    bool IsPlacingNode { get; }
+    void BeginPlaceNode();
+    void CancelPlaceNode();
 
     // Begins renaming an existing node, anchoring the inline prompt at the given screen position.
     void BeginRenameNode(NodeId nodeId, Pos screenPos);
@@ -80,12 +87,29 @@ class ManualEditService(
     public bool IsAddingLink { get; private set; }
     string addLinkSourceName = "";
 
+    public bool IsPlacingNode { get; private set; }
+
     public event Action? StateChanged;
+
+    public void BeginPlaceNode()
+    {
+        IsPlacingNode = true;
+        StateChanged?.Invoke();
+    }
+
+    public void CancelPlaceNode()
+    {
+        if (!IsPlacingNode)
+            return;
+        IsPlacingNode = false;
+        StateChanged?.Invoke();
+    }
 
     public void BeginAddNode(PointerEvent e)
     {
-        // Any pending link-drawing is superseded by starting a node add.
+        // Any pending link-drawing or armed placement is superseded by starting a node add.
         IsAddingLink = false;
+        IsPlacingNode = false;
 
         using (var model = modelMgr.UseModel())
         {

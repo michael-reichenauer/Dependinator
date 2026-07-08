@@ -1,0 +1,64 @@
+@using MudBlazor
+
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">@(IsEdit ? "Edit note" : "Add note")</MudText>
+  </TitleContent>
+  <DialogContent>
+    <MudTextField @ref="idField" T="string" @bind-Value="Id" Label="Id" MaxLength="3" Immediate="true"
+                  HelperText="Short id shown in the circle (e.g. 1, 2, A)" OnKeyDown="OnKeyDown"
+                  data-testid="note-id" />
+    <MudTextField T="string" @bind-Value="Description" Label="Description" Lines="4" Class="mt-3"
+                  HelperText="Shown as a tooltip when hovering the note" data-testid="note-description" />
+  </DialogContent>
+  <DialogActions>
+    @if (IsEdit)
+    {
+      <MudButton Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Outlined.Delete" OnClick="Delete"
+                 data-testid="note-delete">Delete</MudButton>
+    }
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="note-cancel">Cancel</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" Disabled="@(!CanSave)"
+               data-testid="note-save">Save</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public string Id { get; set; } = "";
+  [Parameter] public string Description { get; set; } = "";
+  [Parameter] public bool IsEdit { get; set; }
+
+  MudTextField<string> idField = null!;
+
+  bool CanSave => !string.IsNullOrWhiteSpace(Id);
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender && idField is not null)
+    {
+      await idField.FocusAsync();
+      await idField.SelectAsync();
+    }
+  }
+
+  void OnKeyDown(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter")
+      Save();
+  }
+
+  void Save()
+  {
+    if (!CanSave)
+      return;
+    MudDialog.Close(DialogResult.Ok(new NoteDialogResult((Id ?? "").Trim(), (Description ?? "").Trim(), false)));
+  }
+
+  void Delete() =>
+      MudDialog.Close(DialogResult.Ok(new NoteDialogResult((Id ?? "").Trim(), (Description ?? "").Trim(), true)));
+
+  void Cancel() => MudDialog.Cancel();
+}

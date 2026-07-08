@@ -10,6 +10,7 @@ interface IPointerEventService
     event Action<PointerEvent> PointerUp;
     event Action<PointerEvent> Click;
     event Action<PointerEvent> DblClick;
+    event Action<PointerEvent> ContextMenu;
 
     Task InitAsync();
 }
@@ -42,6 +43,7 @@ class PointerEventService : IPointerEventService
     public event Action<PointerEvent> PointerUp = null!;
     public event Action<PointerEvent> Click = null!;
     public event Action<PointerEvent> DblClick = null!;
+    public event Action<PointerEvent> ContextMenu = null!;
 
     public async Task InitAsync()
     {
@@ -49,6 +51,7 @@ class PointerEventService : IPointerEventService
 
         var objRef = jSInterop.Reference(this);
         await jSInterop.Call("addMouseEventListener", "svgcanvas", "wheel", objRef, nameof(MouseEventCallback));
+        await jSInterop.Call("addMouseEventListener", "svgcanvas", "contextmenu", objRef, nameof(MouseEventCallback));
         await jSInterop.Call(
             "addPointerEventListener",
             "svgcanvas",
@@ -81,6 +84,9 @@ class PointerEventService : IPointerEventService
         {
             case "wheel":
                 OnMouseWheelEvent(e);
+                break;
+            case "contextmenu":
+                ContextMenu?.Invoke(e);
                 break;
         }
 

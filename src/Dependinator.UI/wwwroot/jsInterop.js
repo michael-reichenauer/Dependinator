@@ -108,6 +108,12 @@ export function getWindowSizeDetails(parm) {
 export function addMouseEventListener(elementId, eventName, instance, functionName) {
   function eventHandler(event) {
     // console.log("DEP: mouse", event);
+
+    // Suppress the browser's native right-click menu so the app can show its own.
+    if (eventName == "contextmenu") {
+      event.preventDefault();
+    }
+
     instance.invokeMethodAsync(functionName, {
       Type: eventName,
       TargetId: event.target.id,
