@@ -59,6 +59,107 @@ public class StructureServiceTests
     // }
 
     [Fact]
+    public void AddOrUpdateNode_ShouldInheritHiddenStateFromHiddenParent()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var parent = AddNode(model, "Parent", model.Root);
+        parent.SetHidden(true, isUserSet: true);
+
+        var parsedNode = new ParsingNode(
+            "Parent.Child",
+            new Dependinator.Core.Parsing.NodeProperties { Parent = "Parent", Type = NodeType.Type }
+        );
+        service.AddOrUpdateNode(model, parsedNode);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Parent.Child"), out var child));
+        Assert.True(child.IsHidden);
+        Assert.True(child.IsParentSetHidden);
+        Assert.False(child.IsUserSetHidden);
+    }
+
+    [Fact]
+    public void AddOrUpdateNode_ShouldInheritHiddenStateThroughNewIntermediateParents()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var externals = AddNode(model, "Externals", model.Root);
+        externals.SetHidden(true, isUserSet: true);
+
+        // The intermediate parent "Externals.Assembly" does not exist yet and is created on
+        // demand; both it and the new node must inherit the hidden state
+        var parsedNode = new ParsingNode(
+            "Externals.Assembly.Type",
+            new Dependinator.Core.Parsing.NodeProperties { Type = NodeType.Type }
+        );
+        service.AddOrUpdateNode(model, parsedNode);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Externals.Assembly"), out var assembly));
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Externals.Assembly.Type"), out var type));
+        Assert.True(assembly.IsHidden);
+        Assert.True(type.IsHidden);
+    }
+
+    [Fact]
+    public void AddOrUpdateNode_ShouldSyncHiddenStateWhenReparented()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var visibleParent = AddNode(model, "ParentA", model.Root);
+        var hiddenParent = AddNode(model, "ParentB", model.Root);
+        hiddenParent.SetHidden(true, isUserSet: true);
+        var child = AddNode(model, "Child", visibleParent);
+
+        // Move into the hidden parent: the child becomes parent-set hidden
+        service.AddOrUpdateNode(
+            model,
+            new ParsingNode("Child", new Dependinator.Core.Parsing.NodeProperties { Parent = "ParentB" })
+        );
+        Assert.Equal("ParentB", child.Parent.Name);
+        Assert.True(child.IsHidden);
+        Assert.True(child.IsParentSetHidden);
+
+        // Move back to the visible parent: the stale parent-set hidden flag is cleared
+        service.AddOrUpdateNode(
+            model,
+            new ParsingNode("Child", new Dependinator.Core.Parsing.NodeProperties { Parent = "ParentA" })
+        );
+        Assert.Equal("ParentA", child.Parent.Name);
+        Assert.False(child.IsHidden);
+        Assert.False(child.IsParentSetHidden);
+    }
+
+    [Fact]
+    public void AddOrUpdateLink_ShouldHideNewTargetNodesUnderHiddenParent()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var externals = AddNode(model, "Externals", model.Root);
+        externals.SetHidden(true, isUserSet: true);
+        AddNode(model, "Source", model.Root);
+
+        // A link to a not-yet-existing node under a hidden parent creates that node on demand;
+        // it must inherit the hidden state so lines to the hidden subtree stay hidden
+        var parsedLink = new ParsingLink(
+            "Source",
+            "Externals.NewAssembly",
+            new Dependinator.Core.Parsing.LinkProperties()
+        );
+        service.AddOrUpdateLink(model, parsedLink);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Externals.NewAssembly"), out var target));
+        Assert.True(target.IsHidden);
+    }
+
+    [Fact]
     public void AddOrUpdateLink_ShouldCreateNodesAndAddLinesOnce()
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();
