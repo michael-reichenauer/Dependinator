@@ -29,7 +29,7 @@
                         var item = (TreeItem)treeItem;
                     }
                     <MudTreeViewItem Items="@item.Children" Icon="@item.Icon"
-                                     OnClick="() => srv.SetSelected(item.Value!)" @bind-Expanded="@item.Expanded">
+                                     @bind-Expanded="@item.Expanded">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
                                  class="hover-element">
@@ -48,7 +48,7 @@
                                         <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
                                                        Color="Color.Inherit" Class="ml-3 hover-button"
                                                        OnClick="() => srv.ShowNodeAsync(item.NodeId)" />
-                                        @if (srv.CanShowEditor(item.NodeId))
+                                        @if (item.CanShowEditor)
                                         {
                                             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" Size="Size.Small"
                                                            Color="Color.Inherit" Class="ml-3 hover-button"

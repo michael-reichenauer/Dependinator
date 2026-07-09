@@ -1,7 +1,6 @@
 using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
-using MudBlazor;
 
 // The dependency explorer tree that shows a selected node's references and dependencies
 // alongside the diagram.
@@ -21,10 +20,8 @@ interface IDependenciesService
     string TreeIcon { get; }
     IReadOnlyList<TreeItem> TreeItems { get; }
 
-    void SetSelected(TreeItem selectedItem);
     Task ShowNodeAsync(NodeId nodeId);
-    Task ToggleExpandAll(TreeItem treeItem);
-    bool CanShowEditor(NodeId nodeId);
+    void ToggleExpandAll(TreeItem treeItem);
     Task ShowEditorAsync(NodeId nodeId);
     void ShowDirectLine(NodeId nodeId);
     bool TryGetLine(LineId lineId, out Line line);
@@ -42,14 +39,17 @@ class DependenciesService(
     INavigationService navigationService
 ) : IDependenciesService
 {
-    private string selectedId = "";
+    string selectedId = "";
     TreeType treeType = TreeType.References;
-    public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
 
+    public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
     public string Title { get; private set; } = "";
     public string TreeIcon => treeType == TreeType.Dependencies ? Icon.DependenciesIcon : Icon.ReferencesIcon;
-
     public bool IsShowExplorer { get; private set; }
+
+    public void ShowReferences() => Show(TreeType.References);
+
+    public void ShowDependencies() => Show(TreeType.Dependencies);
 
     public void Clicked(PointerId pointerId)
     {
@@ -99,7 +99,7 @@ class DependenciesService(
     public bool TryGetLine(LineId lineId, out Line line)
     {
         using var model = modelMgr.UseModel();
-        return model.Lines.TryGetValue(LineId.FromId(lineId.Value), out line!);
+        return model.Lines.TryGetValue(lineId, out line!);
     }
 
     public void HideDirectLine(LineId lineId)
@@ -125,53 +125,40 @@ class DependenciesService(
         await navigationService.ShowNodeAsync(nodeId);
     }
 
-    public bool CanShowEditor(NodeId nodeId)
-    {
-        using var model = modelMgr.UseModel();
-        return model.Nodes.TryGetValue(nodeId, out var node) && node.FileSpanOrParentSpan is not null;
-    }
-
     public async Task ShowEditorAsync(NodeId nodeId)
     {
         await navigationService.ShowEditor(nodeId);
     }
 
-    public async Task ToggleExpandAll(TreeItem treeItem)
+    public void ToggleExpandAll(TreeItem treeItem)
     {
         bool shouldExpand = treeItem.GetThisAndDescendants().Any(ti => !ti.Expanded);
-        treeItem.GetThisAndDescendants().ForEach(ti => ti.Expanded = shouldExpand);
+        SetExpandedAll(treeItem, shouldExpand);
 
         applicationEvents.TriggerUIStateChanged();
     }
 
-    private void Close()
+    // Expands the item before recursing, since expanding an item creates its lazy children,
+    // which must happen before they can be visited.
+    static void SetExpandedAll(TreeItem treeItem, bool expanded)
+    {
+        treeItem.Expanded = expanded;
+        foreach (var child in (treeItem.Children ?? []).Cast<TreeItem>())
+        {
+            SetExpandedAll(child, expanded);
+        }
+    }
+
+    void Close()
     {
         IsShowExplorer = false;
         selectedId = "";
     }
 
-    public void SetSelected(TreeItem selectedItem)
+    void Show(TreeType type)
     {
-        if (selectedItem is null)
-            return;
-        Log.Info($"ItemSelected: {selectedItem.Text}");
-    }
-
-    public void ShowReferences()
-    {
-        selectedId = "";
-        treeType = TreeType.References;
-        TreeItems = GetTreeItems(treeType);
-
-        IsShowExplorer = true;
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-    public void ShowDependencies()
-    {
-        selectedId = "";
-        treeType = TreeType.Dependencies;
-        TreeItems = GetTreeItems(treeType);
+        treeType = type;
+        TreeItems = GetTreeItems(type);
 
         IsShowExplorer = true;
         applicationEvents.TriggerUIStateChanged();
@@ -179,131 +166,77 @@ class DependenciesService(
 
     IReadOnlyList<TreeItem> GetTreeItems(TreeType treeType)
     {
-        List<TreeItem> treeItems = [];
-        Log.Info($"GetTreeItems: {treeType}");
-
         selectedId = selectionService.SelectedId.Id;
 
-        using (var model = modelMgr.UseModel())
+        using var model = modelMgr.UseModel();
+
+        if (model.Nodes.TryGetValue(NodeId.FromId(selectedId), out var selectedNode))
         {
-            if (model.Nodes.TryGetValue(NodeId.FromId(selectedId), out var selectedNode))
-            {
-                Title = selectedNode.HtmlShortName;
-                var items = GetNodeItems(selectedNode, treeType);
-                treeItems.AddRange(items);
-                return treeItems;
-            }
-            if (model.Lines.TryGetValue(LineId.FromId(selectedId), out var selectedLine))
-            {
-                Title = selectedLine.HtmlShortName;
-                var items = GetLineItems(selectedLine, treeType);
-                treeItems.AddRange(items);
-                return treeItems;
-            }
+            Title = selectedNode.HtmlShortName;
+            return GetNodeItems(selectedNode, treeType);
+        }
+        if (model.Lines.TryGetValue(LineId.FromId(selectedId), out var selectedLine))
+        {
+            Title = selectedLine.HtmlShortName;
+            return GetLineItems(selectedLine, [.. selectedLine.Links], treeType);
         }
 
         Title = "No items found";
         return [];
     }
 
+    // Returns one subtree for each line into the node (references) or out of the node
+    // (dependencies) that carries at least one link actually ending at the node or a descendant
+    // (other links just pass by on their way to some other node).
     static IReadOnlyList<TreeItem> GetNodeItems(Node node, TreeType treeType)
     {
-        if (treeType == TreeType.References)
-        {
-            return GetNodeReferenceItems(node);
-        }
-        else
-        {
-            return GetNodeDependencyItems(node);
-        }
-    }
-
-    static IReadOnlyList<TreeItem> GetLineItems(Line line, TreeType treeType)
-    {
-        if (treeType == TreeType.References)
-        {
-            return GetLineReferenceItems(line, line, null);
-        }
-        else
-        {
-            return GetLineDependencyItems(line, line, null);
-        }
-    }
-
-    static IReadOnlyList<TreeItem> GetNodeReferenceItems(Node node)
-    {
         List<TreeItem> items = [];
 
-        foreach (var line in node.TargetLines)
+        var lines = treeType is TreeType.References ? node.TargetLines : node.SourceLines;
+        foreach (var line in lines)
         {
-            var isToNodeOrChild = line.Links.Any(link => link.Target == node || link.Target.Ancestors().Contains(node));
-            if (!isToNodeOrChild)
+            var isLineForNode = line.Links.Any(link =>
+            {
+                var endpoint = treeType is TreeType.References ? link.Target : link.Source;
+                return endpoint == node || endpoint.Ancestors().Contains(node);
+            });
+            if (!isLineForNode)
                 continue;
 
-            var referenceItems = GetLineReferenceItems(line, line, null);
-            items.AddRange(referenceItems);
-        }
-        if (!items.Any())
-        {
-            items.Add(new TreeItem() { Text = "No references found" });
-        }
-        return items;
-    }
-
-    static IReadOnlyList<TreeItem> GetNodeDependencyItems(Node node)
-    {
-        List<TreeItem> items = [];
-
-        foreach (var line in node.SourceLines)
-        {
-            var isFromNodeOrChild = line.Links.Any(link =>
-                link.Source == node || link.Source.Ancestors().Contains(node)
-            );
-            if (!isFromNodeOrChild)
-                continue;
-
-            var dependencyItems = GetLineDependencyItems(line, line, null);
-            items.AddRange(dependencyItems);
+            items.AddRange(GetLineItems(line, [.. line.Links], treeType));
         }
 
         if (!items.Any())
         {
-            items.Add(new TreeItem() { Text = "No dependencies found" });
+            var text = treeType is TreeType.References ? "No references found" : "No dependencies found";
+            items.Add(new TreeItem() { Text = text });
         }
         return items;
     }
 
-    static IReadOnlyList<TreeItem> GetLineReferenceItems(Line line, Line rootLine, TreeItem? parentItem)
+    // Returns an item for the node at the far end of the line (the source for references, the
+    // target for dependencies). Each tree branch traces one chain of lines that carry the root
+    // line's links; the item's children continue that chain from the far node.
+    static IReadOnlyList<TreeItem> GetLineItems(Line line, HashSet<Link> rootLinks, TreeType treeType)
     {
-        var sourceTargetLines = line.Source.TargetLines.Where(stl => stl.Links.Any(l => rootLine.Links.Contains(l)));
+        var (farNode, nearNode) =
+            treeType is TreeType.References ? (line.Source, line.Target) : (line.Target, line.Source);
 
-        if (line.Target.Parent == line.Source)
+        var farLines = treeType is TreeType.References ? farNode.TargetLines : farNode.SourceLines;
+        List<Line> nextLines = [.. farLines.Where(l => l.Links.Any(rootLinks.Contains))];
+
+        if (nearNode.Parent == farNode)
         {
-            // If the source is the parent of the target, we need to get the source lines of the source
-            return sourceTargetLines.SelectMany(l => GetLineReferenceItems(l, rootLine, parentItem)).ToList();
+            // A line from/to the direct parent adds no information; continue the chain past it.
+            return nextLines.SelectMany(l => GetLineItems(l, rootLinks, treeType)).ToList();
         }
 
-        GetTreeItemChildren? getChildren = sourceTargetLines.Any()
-            ? (itemParent) => [.. sourceTargetLines.SelectMany(tsl => GetLineReferenceItems(tsl, rootLine, itemParent))]
+        // Children are created lazily on first expand, after the model lock has been released;
+        // the captured lines/nodes may be stale if the model has been re-parsed since.
+        GetTreeItemChildren? getChildren = nextLines.Any()
+            ? () => [.. nextLines.SelectMany(l => GetLineItems(l, rootLinks, treeType))]
             : null;
 
-        return [new TreeItem(line.Source, parentItem, getChildren)];
-    }
-
-    static IReadOnlyList<TreeItem> GetLineDependencyItems(Line line, Line rootLine, TreeItem? parentItem)
-    {
-        var targetSourceLines = line.Target.SourceLines.Where(stl => stl.Links.Any(l => rootLine.Links.Contains(l)));
-        if (line.Source.Parent == line.Target)
-        {
-            // If the target is the parent of the source, we need to get the target lines of the target
-            return targetSourceLines.SelectMany(l => GetLineDependencyItems(l, rootLine, parentItem)).ToList();
-        }
-
-        GetTreeItemChildren? getChildren = targetSourceLines.Any()
-            ? (itemParent) =>
-                [.. targetSourceLines.SelectMany(tsl => GetLineDependencyItems(tsl, rootLine, itemParent))]
-            : null;
-
-        return [new TreeItem(line.Target, parentItem, getChildren)];
+        return [new TreeItem(farNode, getChildren)];
     }
 }
