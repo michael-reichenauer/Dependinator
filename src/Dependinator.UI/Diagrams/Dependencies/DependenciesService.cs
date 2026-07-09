@@ -16,7 +16,9 @@ interface IDependenciesService
 {
     bool IsShowExplorer { get; }
 
+    TreeType TreeType { get; }
     string Title { get; }
+    string Subtitle { get; }
     string TreeIcon { get; }
     IReadOnlyList<TreeItem> TreeItems { get; }
 
@@ -28,6 +30,7 @@ interface IDependenciesService
     void HideDirectLine(LineId lineId);
     void ShowReferences();
     void ShowDependencies();
+    void Close();
     void Clicked(PointerId pointerId);
 }
 
@@ -43,7 +46,9 @@ class DependenciesService(
     TreeType treeType = TreeType.References;
 
     public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
+    public TreeType TreeType => treeType;
     public string Title { get; private set; } = "";
+    public string Subtitle { get; private set; } = "";
     public string TreeIcon => treeType == TreeType.Dependencies ? Icon.DependenciesIcon : Icon.ReferencesIcon;
     public bool IsShowExplorer { get; private set; }
 
@@ -149,10 +154,11 @@ class DependenciesService(
         }
     }
 
-    void Close()
+    public void Close()
     {
         IsShowExplorer = false;
         selectedId = "";
+        applicationEvents.TriggerUIStateChanged();
     }
 
     void Show(TreeType type)
@@ -172,16 +178,22 @@ class DependenciesService(
 
         if (model.Nodes.TryGetValue(NodeId.FromId(selectedId), out var selectedNode))
         {
-            Title = selectedNode.HtmlShortName;
+            Title = selectedNode.ShortName;
+            Subtitle = treeType is TreeType.References ? "Nodes that use this node" : "Nodes that this node uses";
             return GetNodeItems(selectedNode, treeType);
         }
         if (model.Lines.TryGetValue(LineId.FromId(selectedId), out var selectedLine))
         {
-            Title = selectedLine.HtmlShortName;
+            Title = $"{selectedLine.Source.ShortName}→{selectedLine.Target.ShortName}";
+            Subtitle =
+                treeType is TreeType.References
+                    ? "Source nodes of this line's links"
+                    : "Target nodes of this line's links";
             return GetLineItems(selectedLine, [.. selectedLine.Links], treeType);
         }
 
         Title = "No items found";
+        Subtitle = "";
         return [];
     }
 

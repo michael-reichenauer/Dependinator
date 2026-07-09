@@ -62,6 +62,11 @@ public sealed class AppPage
     // renders nested .mud-treeview lists, so take the outermost (first) one.
     public ILocator DependenciesTree => page.Locator(".mud-treeview").First;
 
+    // The explorer popover's header buttons (DependenciesTree.razor).
+    public ILocator ExplorerReferencesButton => page.GetByTestId("explorer-references");
+    public ILocator ExplorerDependenciesButton => page.GetByTestId("explorer-dependencies");
+    public ILocator ExplorerCloseButton => page.GetByTestId("explorer-close");
+
     // Open the app menu and return a menu-item locator by its data-testid.
     public async Task<ILocator> OpenMenuItemAsync(string testId)
     {

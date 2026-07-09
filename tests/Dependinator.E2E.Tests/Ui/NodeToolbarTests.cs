@@ -33,4 +33,22 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         // The dependencies explorer popover renders a tree view.
         await Expect(App.DependenciesTree).ToBeVisibleAsync();
     }
+
+    [E2EFact]
+    public async Task DependenciesPanel_ShouldToggleDirectionAndClose()
+    {
+        await App.GotoMainPageAsync();
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+
+        await App.NodeDependenciesButton.ClickAsync();
+        await Expect(App.DependenciesTree).ToBeVisibleAsync();
+
+        // The header toggle switches the tree to references without closing the popover.
+        await App.ExplorerReferencesButton.ClickAsync();
+        await Expect(App.DependenciesTree).ToBeVisibleAsync();
+
+        // The header close button dismisses the explorer.
+        await App.ExplorerCloseButton.ClickAsync();
+        await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
+    }
 }
