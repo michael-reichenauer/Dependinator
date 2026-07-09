@@ -36,6 +36,56 @@ public class CompositeCommandTests
     }
 
     [Fact]
+    public void CanCombineWith_ShouldBeFalse_ForDifferentMergeKey()
+    {
+        var now = DateTime.UtcNow;
+        var first = new FakeCommand(type: "Edit", timeStamp: now, mergeKey: "node1");
+        var second = new FakeCommand(type: "Edit", timeStamp: now.AddMilliseconds(100), mergeKey: "node2");
+
+        Assert.False(second.CanCombineWith(first));
+    }
+
+    [Fact]
+    public async Task TimeStamp_ShouldBeCapturedAtConstruction()
+    {
+        var command = new OrderedCommand("a", []);
+        var timeStamp = command.TimeStamp;
+
+        await Task.Delay(20);
+
+        Assert.Equal(timeStamp, command.TimeStamp);
+    }
+
+    [Fact]
+    public void MixedComposite_ShouldNotCombineWithLaterCommand()
+    {
+        // Explicit composites can mix command types (e.g. delete node + its links); a later
+        // single command must not merge into such a multi-part user action.
+        var now = DateTime.UtcNow;
+        var composite = new CompositeCommand(
+            new FakeCommand(type: "Delete", timeStamp: now),
+            new FakeCommand(type: "Edit", timeStamp: now)
+        );
+        var later = new FakeCommand(type: "Delete", timeStamp: now.AddMilliseconds(100));
+
+        Assert.False(later.CanCombineWith(composite));
+    }
+
+    [Fact]
+    public void SameTypeComposite_ShouldCombineWithLaterCommand()
+    {
+        // Composites created by merging same-type commands (e.g. a drag) keep accepting more.
+        var now = DateTime.UtcNow;
+        var composite = new CompositeCommand(
+            new FakeCommand(type: "Edit", timeStamp: now),
+            new FakeCommand(type: "Edit", timeStamp: now)
+        );
+        var later = new FakeCommand(type: "Edit", timeStamp: now.AddMilliseconds(100));
+
+        Assert.True(later.CanCombineWith(composite));
+    }
+
+    [Fact]
     public void Execute_ShouldRunSubCommandsInOrder()
     {
         var order = new List<string>();

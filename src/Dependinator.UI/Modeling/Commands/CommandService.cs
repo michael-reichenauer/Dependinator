@@ -9,40 +9,43 @@ interface ICommandService
     bool CanRedo { get; }
 
     void Do(Command command, bool isClearCache = true, bool isSaveModel = true);
-    void Redo();
-    void Undo();
+    Task Redo();
+    Task Undo();
 }
 
 [Scoped]
 class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) : ICommandService
 {
+    // Delay between sub-commands when replaying a composite, so the user sees the steps.
+    static readonly TimeSpan replayStepDelay = TimeSpan.FromMilliseconds(4);
+
     readonly Stack<Command> undoStack = [];
     readonly Stack<Command> redoStack = [];
+    bool isReplaying; // Blocks Undo/Redo while a composite replay is in progress
 
-    public bool CanUndo => undoStack.Any();
-    public bool CanRedo => redoStack.Any();
+    public bool CanUndo => !isReplaying && undoStack.Count > 0;
+    public bool CanRedo => !isReplaying && redoStack.Count > 0;
 
     public void Do(Command command, bool isClearCache = true, bool isSaveModel = true)
     {
-        Do(command);
-
-        if (isClearCache)
-            applicationEvents.TriggerModelChanged();
-
-        applicationEvents.TriggerUndoneRedone();
-        applicationEvents.TriggerUIStateChanged();
-        if (isSaveModel)
-            applicationEvents.TriggerSaveNeeded();
+        ExecuteAndPush(command);
+        Notify(isModelChanged: isClearCache, isSaveNeeded: isSaveModel);
     }
 
-    void Do(Command command)
+    public Task Undo() => ReplayAsync(undoStack, redoStack, (command, model) => command.Revert(model));
+
+    public Task Redo() => ReplayAsync(redoStack, undoStack, (command, model) => command.Execute(model));
+
+    void ExecuteAndPush(Command command)
     {
         using (var model = modelMgr.UseModel())
         {
             command.Execute(model);
         }
-        // Check if command can be combined with previous command (e.g. multiple edits in a row)
-        if (undoStack.Any())
+
+        // Merge with the previous command if possible (e.g. the stream of small edits produced
+        // while dragging a node), so a single undo reverts the whole gesture.
+        if (undoStack.Count > 0)
         {
             var previous = undoStack.Peek();
             if (command.CanCombineWith(previous))
@@ -53,11 +56,9 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
                     redoStack.Clear();
                     return;
                 }
-                else
-                {
-                    undoStack.Pop();
-                    command = new CompositeCommand(previous, command);
-                }
+
+                undoStack.Pop();
+                command = new CompositeCommand(previous, command);
             }
         }
 
@@ -65,89 +66,59 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
         redoStack.Clear();
     }
 
-    public void Undo()
+    // Moves the top command from one stack to the other, applying Revert (undo) or Execute
+    // (redo). A composite is replayed one sub-command at a time with a short delay, so the user
+    // sees the steps; the stacks are updated up front so a re-entrant Undo/Redo cannot replay
+    // the same command twice.
+    async Task ReplayAsync(Stack<Command> from, Stack<Command> to, Action<Command, IModel> apply)
     {
-        if (!CanUndo)
+        if (isReplaying || from.Count == 0)
             return;
 
-        if (undoStack.Peek() is CompositeCommand composite)
+        var command = from.Pop();
+        to.Push(command);
+
+        if (command is not CompositeCommand composite)
         {
-            UndoComposite(composite);
+            Apply(command, apply);
             return;
         }
-        var command = undoStack.Pop();
-        redoStack.Push(command);
 
+        isReplaying = true;
+        try
+        {
+            // Undo reverts sub-commands in reverse order; CompositeCommand.Revert does the same.
+            var subCommands = from == undoStack ? composite.Commands.Reverse() : composite.Commands;
+            foreach (var subCommand in subCommands)
+            {
+                await using var _ = new MinDelay(replayStepDelay);
+                Apply(subCommand, apply, isSaveNeeded: false);
+            }
+        }
+        finally
+        {
+            isReplaying = false;
+            Notify(); // Re-enables undo/redo and saves once for the whole replay
+        }
+    }
+
+    void Apply(Command command, Action<Command, IModel> apply, bool isSaveNeeded = true)
+    {
         using (var model = modelMgr.UseModel())
         {
-            command.Revert(model);
+            apply(command, model);
         }
-        applicationEvents.TriggerModelChanged();
+
+        Notify(isSaveNeeded: isSaveNeeded);
+    }
+
+    void Notify(bool isModelChanged = true, bool isSaveNeeded = true)
+    {
+        if (isModelChanged)
+            applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUndoneRedone();
         applicationEvents.TriggerUIStateChanged();
-        applicationEvents.TriggerSaveNeeded();
-    }
-
-    public void Redo()
-    {
-        if (!CanRedo)
-            return;
-
-        if (redoStack.Peek() is CompositeCommand composite)
-        {
-            RedoComposite(composite);
-            return;
-        }
-
-        var command = redoStack.Pop();
-        undoStack.Push(command);
-        using (var model = modelMgr.UseModel())
-        {
-            command.Execute(model);
-        }
-
-        applicationEvents.TriggerUndoneRedone();
-        applicationEvents.TriggerModelChanged();
-        applicationEvents.TriggerUIStateChanged();
-        applicationEvents.TriggerSaveNeeded();
-    }
-
-    async void UndoComposite(CompositeCommand composite)
-    {
-        foreach (var subCommand in composite.commands.AsEnumerable().Reverse())
-        {
-            await using var _ = new MinDelay(TimeSpan.FromMilliseconds(4));
-            using (var model = modelMgr.UseModel())
-            {
-                subCommand.Revert(model);
-            }
-            applicationEvents.TriggerModelChanged();
-            applicationEvents.TriggerUndoneRedone();
-            applicationEvents.TriggerUIStateChanged();
+        if (isSaveNeeded)
             applicationEvents.TriggerSaveNeeded();
-        }
-
-        var command = undoStack.Pop();
-        redoStack.Push(command);
-    }
-
-    async void RedoComposite(CompositeCommand composite)
-    {
-        foreach (var subCommand in composite.commands)
-        {
-            await using var _ = new MinDelay(TimeSpan.FromMilliseconds(4));
-            using (var model = modelMgr.UseModel())
-            {
-                subCommand.Execute(model);
-            }
-
-            applicationEvents.TriggerModelChanged();
-            applicationEvents.TriggerUndoneRedone();
-            applicationEvents.TriggerUIStateChanged();
-            applicationEvents.TriggerSaveNeeded();
-        }
-
-        var command = redoStack.Pop();
-        undoStack.Push(command);
     }
 }
