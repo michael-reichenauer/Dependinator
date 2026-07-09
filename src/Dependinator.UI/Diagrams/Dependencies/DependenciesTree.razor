@@ -21,8 +21,7 @@
             AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft">
     <MudStack Spacing="0">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-            <MudIcon Icon="@srv.TreeIcon" Class="ml-n5" />
-            <MudText><b>@HeadingText</b></MudText>
+            <MudText Class="ml-n2"><b>@HeadingText</b></MudText>
             <MudText Color="Color.Info" Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 <b>@(srv.Title)</b>
             </MudText>
@@ -42,7 +41,7 @@
                                OnClick="() => srv.Close()" data-testid="explorer-close" />
             </MudTooltip>
         </MudStack>
-        <MudText Typo="Typo.caption" Class="ml-3 mud-text-secondary">@(srv.Subtitle)</MudText>
+        <MudText Typo="Typo.caption" Class="ml-n2 mud-text-secondary">@(srv.Subtitle)</MudText>
         <MudPaper Class="overflow-y-auto ml-n8" Elevation="0" MaxWidth="MaxWidth" MaxHeight="500px">
             <MudTreeView Items="@srv.TreeItems" Hover="true" Dense="true" Width="100%">
                 <ItemTemplate Context="treeItem">

@@ -1,4 +1,3 @@
-using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 
@@ -19,7 +18,6 @@ interface IDependenciesService
     TreeType TreeType { get; }
     string Title { get; }
     string Subtitle { get; }
-    string TreeIcon { get; }
     IReadOnlyList<TreeItem> TreeItems { get; }
 
     Task ShowNodeAsync(NodeId nodeId);
@@ -49,7 +47,6 @@ class DependenciesService(
     public TreeType TreeType => treeType;
     public string Title { get; private set; } = "";
     public string Subtitle { get; private set; } = "";
-    public string TreeIcon => treeType == TreeType.Dependencies ? Icon.DependenciesIcon : Icon.ReferencesIcon;
     public bool IsShowExplorer { get; private set; }
 
     public void ShowReferences() => Show(TreeType.References);
