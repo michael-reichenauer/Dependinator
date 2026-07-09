@@ -246,6 +246,7 @@ class DependenciesService(
             ? () => [.. nextLines.SelectMany(l => GetLineItems(l, rootLinks, treeType))]
             : null;
 
-        return [new TreeItem(farNode, getChildren)];
+        var linkCount = line.Links.Count(rootLinks.Contains);
+        return [new TreeItem(farNode, linkCount, getChildren)];
     }
 }

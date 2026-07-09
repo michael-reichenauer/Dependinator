@@ -17,13 +17,14 @@ class TreeItem : TreeItemData<TreeItem>
 
     public TreeItem() { }
 
-    public TreeItem(Node node, GetTreeItemChildren? getChildren)
+    public TreeItem(Node node, int linkCount, GetTreeItemChildren? getChildren)
     {
         Value = this;
         NodeId = node.Id;
         Text = node.ShortName;
         Icon = Icons.Icon.GetIcon(node);
         CanShowEditor = node.FileSpanOrParentSpan is not null;
+        LinkCount = linkCount;
         this.getChildren = getChildren;
 
         if (getChildren is not null)
@@ -35,6 +36,7 @@ class TreeItem : TreeItemData<TreeItem>
 
     public NodeId NodeId { get; init; } = NodeId.Empty;
     public bool CanShowEditor { get; }
+    public int LinkCount { get; }
     public override IReadOnlyCollection<ITreeItemData<TreeItem>>? Children { get; set; } = [];
 
     public IEnumerable<TreeItem> GetThisAndDescendants()

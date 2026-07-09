@@ -54,7 +54,13 @@
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
                                  class="hover-element">
 
-                                <MudText Style="justify-self: start;">@item.Text</MudText>
+                                <div style="justify-self: start; display: flex; align-items: baseline; gap: 6px;">
+                                    <MudText>@item.Text</MudText>
+                                    @if (item.LinkCount > 0)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">(@item.LinkCount)</MudText>
+                                    }
+                                </div>
 
                                 @if (item.NodeId != Modeling.Models.NodeId.Empty)
                                 {
