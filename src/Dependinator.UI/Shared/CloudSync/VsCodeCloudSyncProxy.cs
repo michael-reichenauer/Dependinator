@@ -94,7 +94,19 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
     // Completes pending bridge requests when extension sends async responses.
     public Task HandleResponseAsync(string message)
     {
-        CloudSyncEnvelope? envelope = JsonSerializer.Deserialize<CloudSyncEnvelope>(message, serializerOptions);
+        CloudSyncEnvelope? envelope;
+        try
+        {
+            envelope = JsonSerializer.Deserialize<CloudSyncEnvelope>(message, serializerOptions);
+        }
+        catch (JsonException ex)
+        {
+            // A malformed message from the extension must not crash message dispatch;
+            // the matching request will fail with a timeout instead.
+            Log.Warn($"Ignoring malformed VS Code cloud sync response: {ex.Message}");
+            return Task.CompletedTask;
+        }
+
         if (envelope is null || string.IsNullOrWhiteSpace(envelope.RequestId))
             return Task.CompletedTask;
 
@@ -129,14 +141,7 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
             }
 
             TimeSpan effectiveTimeout = timeoutOverride ?? requestTimeout;
-            Task completedTask = await Task.WhenAny(tcs.Task, Task.Delay(effectiveTimeout));
-            if (completedTask != tcs.Task)
-            {
-                pendingRequests.TryRemove(requestId, out _);
-                return R.Error($"VS Code cloud sync action '{action}' timed out.");
-            }
-
-            CloudSyncEnvelope response = await tcs.Task;
+            CloudSyncEnvelope response = await tcs.Task.WaitAsync(effectiveTimeout);
             if (!string.IsNullOrWhiteSpace(response.Error))
                 return R.Error(response.Error);
             if (string.IsNullOrWhiteSpace(response.Payload))
@@ -147,6 +152,11 @@ class VsCodeCloudSyncProxy : IVsCodeCloudSyncProxy
                 return R.Error($"VS Code cloud sync action '{action}' returned an invalid payload.");
 
             return value;
+        }
+        catch (TimeoutException)
+        {
+            pendingRequests.TryRemove(requestId, out _);
+            return R.Error($"VS Code cloud sync action '{action}' timed out.");
         }
         catch (Exception ex)
         {

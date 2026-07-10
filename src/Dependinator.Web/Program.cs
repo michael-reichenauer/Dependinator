@@ -51,7 +51,9 @@ public class Program
             .Services.AddOptions<CloudSyncClientOptions>()
             .Bind(builder.Configuration.GetSection(CloudSyncClientOptions.SectionName));
         builder.Services.AddHttpClient<HttpCloudSyncService>();
-        builder.Services.AddScoped<ICloudSyncService, HybridCloudSyncService>();
+        // Blazor Server never runs inside the VS Code webview, so the HTTP transport is used
+        // directly instead of the HybridCloudSyncService the Wasm host uses.
+        builder.Services.AddScoped<ICloudSyncService>(services => services.GetRequiredService<HttpCloudSyncService>());
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
         builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Core.RootClass));

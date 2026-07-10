@@ -15,10 +15,10 @@ interface ICloudSyncStateService
     Task<CloudSyncModelState?> GetAsync(string modelPath);
 
     // Stores sync metadata after a successful push operation.
-    Task RecordPushAsync(string modelPath, CloudModelMetadata metadata, string? localContentHash = null);
+    Task RecordPushAsync(string modelPath, CloudModelMetadata metadata, string localContentHash);
 
     // Stores sync metadata after a successful pull operation.
-    Task RecordPullAsync(string modelPath, string localContentHash, string? remoteContentHash = null);
+    Task RecordPullAsync(string modelPath, string localContentHash, string remoteContentHash);
 }
 
 // Persists cloud sync progress in the shared Config object so the UI can
@@ -37,25 +37,22 @@ class CloudSyncStateService(IConfigService configService) : ICloudSyncStateServi
     }
 
     // Writes a push event snapshot as the latest sync marker.
-    public Task RecordPushAsync(string modelPath, CloudModelMetadata metadata, string? localContentHash = null)
+    public Task RecordPushAsync(string modelPath, CloudModelMetadata metadata, string localContentHash)
     {
         return configService.SetAsync(config =>
         {
             CloudSyncModelState state = GetOrCreateState(config, modelPath);
-            string localHash = localContentHash ?? metadata.ContentHash;
-            string remoteHash = metadata.ContentHash;
-            state.Baseline = new CloudSyncBaseline(localHash, remoteHash);
+            state.Baseline = new CloudSyncBaseline(localContentHash, metadata.ContentHash);
         });
     }
 
     // Writes a pull event snapshot as the latest sync marker.
-    public Task RecordPullAsync(string modelPath, string localContentHash, string? remoteContentHash = null)
+    public Task RecordPullAsync(string modelPath, string localContentHash, string remoteContentHash)
     {
         return configService.SetAsync(config =>
         {
             CloudSyncModelState state = GetOrCreateState(config, modelPath);
-            string remoteHash = remoteContentHash ?? localContentHash;
-            state.Baseline = new CloudSyncBaseline(localContentHash, remoteHash);
+            state.Baseline = new CloudSyncBaseline(localContentHash, remoteContentHash);
         });
     }
 

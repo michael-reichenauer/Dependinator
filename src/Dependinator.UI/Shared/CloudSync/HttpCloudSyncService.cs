@@ -163,9 +163,17 @@ sealed class HttpCloudSyncService : ICloudSyncService
     // Parses structured API errors and falls back to status-based user messages.
     static async Task<string> ReadErrorMessageAsync(HttpResponseMessage response)
     {
-        ErrorResponse? errorResponse = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-        if (!string.IsNullOrWhiteSpace(errorResponse?.Message))
-            return errorResponse.Message;
+        try
+        {
+            ErrorResponse? errorResponse = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            if (!string.IsNullOrWhiteSpace(errorResponse?.Message))
+                return errorResponse.Message;
+        }
+        catch (Exception)
+        {
+            // Error body was not the expected JSON (e.g. an HTML page from a proxy);
+            // fall through to the status-code based message.
+        }
 
         return response.StatusCode switch
         {

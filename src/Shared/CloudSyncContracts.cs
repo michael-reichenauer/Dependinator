@@ -38,7 +38,6 @@ public static class CloudModelPath
             normalizedPath = normalizedPath.Replace("//", "/", StringComparison.Ordinal);
 
         return normalizedPath;
-        //return Path.GetFileName(normalizedPath);
     }
 
     public static string CreateKey(string modelPath)
