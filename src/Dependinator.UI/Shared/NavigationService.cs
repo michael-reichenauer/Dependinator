@@ -58,7 +58,7 @@ class NavigationService(
             if (!IsLatestShowNodeRequest(requestId))
                 return;
 
-            selectionService.Select(nodeId);
+            await selectionService.Select(nodeId);
             applicationEvents.TriggerUIStateChanged();
             await LogShowNodeCenteringAsync(nodeId, pos, zoom, requestId);
         }

@@ -106,7 +106,7 @@ class NoteService(
     public async Task ShowNoteAsync(NodeId nodeId)
     {
         selectionService.Unselect();
-        selectionService.Select(nodeId);
+        await selectionService.Select(nodeId);
         await navigationService.ShowNodeAsync(nodeId);
     }
 
@@ -169,7 +169,7 @@ class NoteService(
         commandService.Do(
             new AddNodeCommand(name, parentName, boundary, isNote: true, description: result.Description)
         );
-        selectionService.Select(NodeId.FromName(name));
+        await selectionService.Select(NodeId.FromName(name));
     }
 
     public async Task EditNoteAsync(NodeId nodeId)
@@ -224,7 +224,7 @@ class NoteService(
         {
             // A rename replaces the node, so the previous selection (old id) is stale.
             selectionService.Unselect();
-            selectionService.Select(NodeId.FromName(newFullName));
+            await selectionService.Select(NodeId.FromName(newFullName));
         }
     }
 

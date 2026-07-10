@@ -267,7 +267,7 @@ class InteractionService : IInteractionService
 
         dependenciesService.Clicked(pointerId);
 
-        selectionService.Select(pointerId, e);
+        selectionService.Select(pointerId, e).RunInBackground();
     }
 
     void OnDblClick(PointerEvent e)

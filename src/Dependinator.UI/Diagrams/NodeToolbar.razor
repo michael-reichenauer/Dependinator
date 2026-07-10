@@ -245,7 +245,7 @@ else if (HasSelectedLine)
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId);
-    selectionService.Select(nodeId);
+    await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
   }
 
@@ -260,7 +260,7 @@ else if (HasSelectedLine)
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId, true);
-    selectionService.Select(nodeId);
+    await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
   }
 

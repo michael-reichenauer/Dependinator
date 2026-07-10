@@ -19,10 +19,10 @@ interface ICanvasService
     string Cursor { get; }
 
     Task InitAsync();
-    void Remove();
-    void Refresh();
+    Task RemoveAsync();
+    Task RefreshAsync();
     void PanZoomToFit();
-    void InitialShow();
+    Task InitialShowAsync();
     Task LoadAsync(string modelPath);
     Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles);
 }
@@ -95,7 +95,7 @@ class CanvasService : ICanvasService
         await interactionService.InitAsync();
     }
 
-    public async void InitialShow()
+    public async Task InitialShowAsync()
     {
         bool isShowDemoMessage = false;
         using var t = Timing.Start("InitialShow");
@@ -159,7 +159,7 @@ class CanvasService : ICanvasService
         }
     }
 
-    public async void Remove()
+    public async Task RemoveAsync()
     {
         var lastUsedPath = recentModelsService.LastUsedPath;
         if (lastUsedPath is not null)
@@ -181,7 +181,7 @@ class CanvasService : ICanvasService
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public async void Refresh()
+    public async Task RefreshAsync()
     {
         await modelService.RefreshAsync();
         applicationEvents.TriggerUIStateChanged();

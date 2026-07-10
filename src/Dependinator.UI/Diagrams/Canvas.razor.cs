@@ -45,7 +45,7 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
             await jSInterop.Call("initializeFileDropZone", dropZoneElement, inputFile.Element);
 
             applicationEvents.UIStateChanged += OnUiStateChanged;
-            await InvokeAsync(srv.InitialShow);
+            await InvokeAsync(srv.InitialShowAsync);
         }
     }
 
@@ -53,7 +53,7 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
     public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
 
-    protected async void LoadFiles(InputFileChangeEventArgs e)
+    protected async Task LoadFiles(InputFileChangeEventArgs e)
     {
         var files = e.GetMultipleFiles(1000);
         if (!files.Any())

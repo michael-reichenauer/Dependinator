@@ -20,8 +20,8 @@ interface ISelectionService
     bool IsSelectedNodeMovable(double zoom);
     bool IsSelectedNodeHidden();
     bool IsSelectedNodeParentHidden();
-    void Select(PointerId pointerId, PointerEvent e);
-    void Select(NodeId nodeId);
+    Task Select(PointerId pointerId, PointerEvent e);
+    Task Select(NodeId nodeId);
     void SetEditMode(bool isEditMode);
     void Unselect();
     void ToggleNodeHide();
@@ -126,12 +126,9 @@ class SelectionService(
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public void Select(NodeId nodeId)
-    {
-        Select(PointerId.FromNode(nodeId), new PointerEvent());
-    }
+    public Task Select(NodeId nodeId) => Select(PointerId.FromNode(nodeId), new PointerEvent());
 
-    public async void Select(PointerId pointerId, PointerEvent e)
+    public async Task Select(PointerId pointerId, PointerEvent e)
     {
         if (IsSelected && selectedId.Id == pointerId.Id)
         {

@@ -82,7 +82,7 @@
                 @if (Build.IsVsCodeExtWasm || Build.IsWeb)
                 {
                     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                                 OnClick="canvasService.Refresh" data-testid="menu-refresh">
+                                 OnClick="canvasService.RefreshAsync" data-testid="menu-refresh">
                         Refresh
                     </MudMenuItem>
                 }
@@ -198,7 +198,7 @@
         @if (Build.IsVsCodeExtWasm || Build.IsWeb)
         {
             <MudTooltip Text="Refresh">
-                <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.Refresh"
+                <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.RefreshAsync"
                                data-testid="toolbar-refresh" />
             </MudTooltip>
         }
@@ -494,7 +494,7 @@
         if (await resetWarningBox.ShowAsync() != true)
             return;
 
-        canvasService.Remove();
+        await canvasService.RemoveAsync();
     }
 
     void BeginAddNote()

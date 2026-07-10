@@ -188,7 +188,7 @@ class ManualEditService(
         if (isRename)
         {
             selectionService.Unselect();
-            selectionService.Select(NodeId.FromName(fullName));
+            selectionService.Select(NodeId.FromName(fullName)).RunInBackground();
         }
         return true;
     }
