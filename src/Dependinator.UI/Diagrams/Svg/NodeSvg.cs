@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using System.Web;
 using Dependinator.UI.Diagrams.Icons;
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 using static System.FormattableString;

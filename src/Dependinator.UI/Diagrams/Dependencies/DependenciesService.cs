@@ -1,3 +1,4 @@
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 

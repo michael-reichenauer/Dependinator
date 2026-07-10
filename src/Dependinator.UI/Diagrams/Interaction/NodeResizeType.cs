@@ -1,4 +1,4 @@
-namespace Dependinator.UI.Diagrams;
+namespace Dependinator.UI.Diagrams.Interaction;
 
 enum NodeResizeType
 {

@@ -1,7 +1,7 @@
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
 
-namespace Dependinator.UI.Diagrams;
+namespace Dependinator.UI.Diagrams.Interaction;
 
 // Backs the right-click context menu: remembers where the user right-clicked (the pointer event,
 // used to place the new note/node at that spot and into whatever container is under the cursor) and

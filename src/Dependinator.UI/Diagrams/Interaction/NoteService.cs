@@ -6,7 +6,7 @@ using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
 using MudBlazor;
 
-namespace Dependinator.UI.Diagrams;
+namespace Dependinator.UI.Diagrams.Interaction;
 
 // Result returned by NoteDialog: the (possibly edited) id and description, or a request to delete.
 record NoteDialogResult(string Id, string Description, bool Delete);

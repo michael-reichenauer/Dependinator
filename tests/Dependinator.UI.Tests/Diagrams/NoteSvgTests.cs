@@ -3,7 +3,7 @@ using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
-namespace Dependinator.UI.Tests.Svg;
+namespace Dependinator.UI.Tests.Diagrams;
 
 // The note circle grows with the render zoom but stops at a maximum on-screen size (like node
 // name/icon text), so zooming in reveals context instead of an ever-larger circle.

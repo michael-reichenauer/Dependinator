@@ -1,4 +1,5 @@
 using Dependinator.Core.Shared;
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;

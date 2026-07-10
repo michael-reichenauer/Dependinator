@@ -5,7 +5,7 @@ using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
 
-namespace Dependinator.UI.Diagrams;
+namespace Dependinator.UI.Diagrams.Interaction;
 
 // Orchestrates the "manual design" interactions: adding user-drawn nodes (double-click empty
 // canvas → inline name prompt), renaming them in place, and drawing user-drawn links (select

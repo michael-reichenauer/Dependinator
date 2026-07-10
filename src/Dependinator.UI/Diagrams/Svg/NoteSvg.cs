@@ -1,4 +1,5 @@
 using System.Web;
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;

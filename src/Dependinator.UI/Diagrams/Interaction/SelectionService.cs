@@ -2,7 +2,7 @@ using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
-namespace Dependinator.UI.Diagrams;
+namespace Dependinator.UI.Diagrams.Interaction;
 
 interface ISelectionService
 {

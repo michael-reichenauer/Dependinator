@@ -1,7 +1,7 @@
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
-namespace Dependinator.UI.Diagrams;
+namespace Dependinator.UI.Diagrams.Interaction;
 
 // Shared placement logic for adding manual nodes and notes at a clicked canvas position
 // (used by ManualEditService and NoteService, which mirror each other's add flows).

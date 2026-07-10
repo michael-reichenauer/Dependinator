@@ -1,6 +1,6 @@
 using Dependinator.UI.Modeling.Models;
 
-namespace Dependinator.UI.Diagrams;
+namespace Dependinator.UI.Diagrams.Interaction;
 
 record PointerId
 {
