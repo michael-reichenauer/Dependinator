@@ -76,22 +76,24 @@ class DColors
     static readonly string NodeBorderLightEdit = "#CC7000";
     static readonly string NodeBackgroundLightEdit = "#FFF2E0";
 
+    // Computed properties (not readonly fields) so a future IsDark switch takes effect at
+    // runtime; readonly fields would be frozen to the light palette at type initialization.
     public static bool IsDark { get; set; } = false;
-    public static readonly string CanvasBackground = IsDark ? CanvasBackgroundDark : CanvasBackgroundLight;
-    public static readonly string Line = IsDark ? LineDark : LineLight;
-    public static readonly string LineHidden = IsDark ? LineHiddenDark : LineHiddenLight;
-    public static readonly string DirectLine = IsDark ? DirectLineDark : DirectLineLight;
-    public static readonly string ManualMarker = IsDark ? ManualMarkerDark : ManualMarkerLight;
-    public static readonly string NoteFill = IsDark ? NoteFillDark : NoteFillLight;
-    public static readonly string NoteBorder = IsDark ? NoteBorderDark : NoteBorderLight;
-    public static readonly string NoteText = "#FFFFFF";
-    public static readonly string EditNodeBorder = IsDark ? NodeBorderDarkEdit : NodeBorderLightEdit;
-    public static readonly string EditNodeBackground = IsDark ? NodeBackgroundDarkEdit : NodeBackgroundLightEdit;
-    public static readonly string Text = IsDark ? TextDark : TextLight;
+    public static string CanvasBackground => IsDark ? CanvasBackgroundDark : CanvasBackgroundLight;
+    public static string Line => IsDark ? LineDark : LineLight;
+    public static string LineHidden => IsDark ? LineHiddenDark : LineHiddenLight;
+    public static string DirectLine => IsDark ? DirectLineDark : DirectLineLight;
+    public static string ManualMarker => IsDark ? ManualMarkerDark : ManualMarkerLight;
+    public static string NoteFill => IsDark ? NoteFillDark : NoteFillLight;
+    public static string NoteBorder => IsDark ? NoteBorderDark : NoteBorderLight;
+    public static string NoteText => "#FFFFFF";
+    public static string EditNodeBorder => IsDark ? NodeBorderDarkEdit : NodeBorderLightEdit;
+    public static string EditNodeBackground => IsDark ? NodeBackgroundDarkEdit : NodeBackgroundLightEdit;
+    public static string Text => IsDark ? TextDark : TextLight;
 
-    public static readonly string Selected = IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
-    public static readonly string LineSelected = ItemLineSelected;
-    public static readonly string ToolBarIcon = MudBlazor.Colors.DeepPurple.Lighten5;
+    public static string Selected => IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
+    public static string LineSelected => ItemLineSelected;
+    public static string ToolBarIcon => MudBlazor.Colors.DeepPurple.Lighten5;
 
     public static string ColorBasedOnName(string name)
     {

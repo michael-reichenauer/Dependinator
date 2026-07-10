@@ -45,7 +45,7 @@ class CanvasService(
 ) : ICanvasService
 {
     double levelZoom = 1;
-    Pos tileOffset = Pos.Zero;
+    Pos tileOffset = Pos.None;
     string content = "";
 
     public string SvgContent => GetSvgContent();

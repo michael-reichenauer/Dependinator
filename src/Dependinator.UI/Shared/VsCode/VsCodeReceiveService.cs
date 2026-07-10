@@ -1,6 +1,6 @@
 using Dependinator.UI.Shared.CloudSync;
 
-namespace Dependinator.UI.Shared;
+namespace Dependinator.UI.Shared.VsCode;
 
 interface IVsCodeReceiveService
 {

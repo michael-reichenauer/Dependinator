@@ -1,7 +1,7 @@
 using Dependinator.UI.Shared.Types;
 using Microsoft.JSInterop;
 
-namespace Dependinator.UI.Diagrams;
+namespace Dependinator.UI.Shared;
 
 public class BrowserSizeDetails
 {
@@ -34,14 +34,15 @@ interface IScreenService
 
 // Inspired from https://stackoverflow.com/questions/75114524/getting-the-size-of-a-blazor-page-with-javascript
 [Scoped]
-class ScreenService : IScreenService
+class ScreenService : IScreenService, IDisposable
 {
     const int SvgPageMargin = 2;
+    const int ResizeDebounceMs = 25;
+
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInterop;
-    IUIComponent component = null!;
-    bool isResizing = false;
-    System.Timers.Timer resizeTimer;
+    readonly Timer resizeTimer;
+    DotNetObjectReference<ScreenService>? reference;
 
     readonly object syncRoot = new();
     BrowserSizeDetails browserSizeDetails = new BrowserSizeDetails();
@@ -50,18 +51,13 @@ class ScreenService : IScreenService
     {
         this.applicationEvents = applicationEvents;
         this.jSInterop = jSInteropService;
-
-        this.resizeTimer = new System.Timers.Timer(interval: 25);
-        this.resizeTimer.Elapsed += async (sender, elapsedEventArgs) =>
-            await DimensionsChanged(sender!, elapsedEventArgs);
+        this.resizeTimer = new Timer(_ => OnResizeDebounced(), null, Timeout.Infinite, Timeout.Infinite);
     }
 
     public Rect SvgRect { get; private set; } = Rect.None;
 
     public async Task InitAsync(IUIComponent component)
     {
-        this.component = component;
-
         this.browserSizeDetails = await GetBrowserSizeDetails();
         await RegisterWindowResizeEvents();
     }
@@ -76,7 +72,8 @@ class ScreenService : IScreenService
         var windowWidth = Math.Floor(browserSizeDetails.InnerWidth);
         var windowHeight = Math.Floor(browserSizeDetails.InnerHeight);
 
-        // Calculate the SVG size to fit the window (with some margin and x,y position)
+        // Calculate the SVG size to fit the window (with some margin and x,y position).
+        // The extra 10px of height lets the canvas reach the bottom edge of the window.
         var svgX = Math.Floor(svg.X);
         var svgY = Math.Floor(svg.Y);
         var svgWidth = windowWidth - svgX - SvgPageMargin * 2;
@@ -97,7 +94,6 @@ class ScreenService : IScreenService
         {
             applicationEvents.TriggerUIStateChanged();
             applicationEvents.TriggerSaveNeeded();
-            // Log.Info($"Resized: {newSwgRect}");
         }
     }
 
@@ -109,46 +105,34 @@ class ScreenService : IScreenService
         return r;
     }
 
-    async Task RegisterWindowResizeEvents() =>
-        await jSInterop.Call("listenToWindowResize", "svgcanvas", jSInterop.Reference(this), nameof(OnWindowResized));
+    [JSInvokable]
+    public ValueTask OnWindowResized()
+    {
+        // Debounce: restart the timer on every event, act once the burst has settled.
+        resizeTimer.Change(ResizeDebounceMs, Timeout.Infinite);
+        return ValueTask.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        resizeTimer.Dispose();
+        reference?.Dispose();
+    }
+
+    async Task RegisterWindowResizeEvents()
+    {
+        reference ??= jSInterop.Reference(this);
+        await jSInterop.Call("listenToWindowResize", "svgcanvas", reference, nameof(OnWindowResized));
+    }
 
     async Task<BrowserSizeDetails> GetBrowserSizeDetails() =>
         await jSInterop.Call<BrowserSizeDetails>("getWindowSizeDetails");
 
-    void OnResize() => CheckResizeAsync().RunInBackground();
-
-    [JSInvokable]
-    public ValueTask OnWindowResized()
-    {
-        if (this.isResizing is not true)
-        {
-            this.isResizing = true;
-        }
-        DebounceResizeEvent();
-        return ValueTask.CompletedTask;
-    }
-
-    private void DebounceResizeEvent()
-    {
-        if (this.resizeTimer.Enabled is false)
-        {
-            Task.Run(async () =>
+    void OnResizeDebounced() =>
+        Task.Run(async () =>
             {
                 this.browserSizeDetails = await GetBrowserSizeDetails();
-                isResizing = false;
-
-                OnResize();
-            });
-            this.resizeTimer.Stop();
-            this.resizeTimer.Start();
-        }
-    }
-
-    private async ValueTask DimensionsChanged(object sender, System.Timers.ElapsedEventArgs e)
-    {
-        this.resizeTimer.Stop();
-        this.browserSizeDetails = await GetBrowserSizeDetails();
-        isResizing = false;
-        OnResize();
-    }
+                await CheckResizeAsync();
+            })
+            .RunInBackground();
 }

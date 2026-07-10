@@ -9,7 +9,7 @@ public class TileCacheTests
     const double Zoom = 1.0;
 
     static Tile CreateTile(long x, long y, int tileWidth = 1000, int tileHeight = 500) =>
-        new(new TileKey(x, y, 0, tileWidth, tileHeight), $"<svg>{x},{y}</svg>", 1.0, Pos.Zero);
+        new(new TileKey(x, y, 0, tileWidth, tileHeight), $"<svg>{x},{y}</svg>", 1.0, Pos.None);
 
     static TileCache CreateCache() => new(() => { });
 

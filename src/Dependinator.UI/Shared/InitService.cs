@@ -1,5 +1,6 @@
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Shared.VsCode;
 
 // App-wide shared UI services and helpers used across the diagram and modeling features:
 // initialization, navigation, storage/file access, host and VS Code integration, application
@@ -15,8 +16,8 @@ interface IInitService
 class InitService : IInitService
 {
     readonly IScreenService screenService;
-    readonly IPointerEventService mouseEventService;
-    readonly IModelListService recentModelsService;
+    readonly IPointerEventService pointerEventService;
+    readonly IModelListService modelListService;
     readonly IConfigService configService;
     readonly IDatabase database;
     readonly ICanvasService canvasService;
@@ -24,8 +25,8 @@ class InitService : IInitService
 
     public InitService(
         IScreenService screenService,
-        IPointerEventService mouseEventService,
-        IModelListService recentModelsService,
+        IPointerEventService pointerEventService,
+        IModelListService modelListService,
         IConfigService configService,
         IDatabase database,
         ICanvasService canvasService,
@@ -33,8 +34,8 @@ class InitService : IInitService
     )
     {
         this.screenService = screenService;
-        this.mouseEventService = mouseEventService;
-        this.recentModelsService = recentModelsService;
+        this.pointerEventService = pointerEventService;
+        this.modelListService = modelListService;
         this.configService = configService;
         this.database = database;
         this.canvasService = canvasService;
@@ -49,8 +50,8 @@ class InitService : IInitService
         NodeLayout.SetDensity(config.LayoutDensity);
         ViewOptions.SetShowHiddenNodes(config.ShowHiddenNodes);
         await screenService.InitAsync(component);
-        await mouseEventService.InitAsync();
-        await recentModelsService.InitAsync();
+        await pointerEventService.InitAsync();
+        await modelListService.InitAsync();
         await canvasService.InitAsync();
     }
 }

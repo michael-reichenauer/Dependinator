@@ -74,7 +74,7 @@ static class PassThroughService
         foreach (var node in new[] { moduleNode }.Concat(chain.SkipLast(1)))
         {
             node.ContainerZoom = 1;
-            node.ContainerOffset = Pos.Zero;
+            node.ContainerOffset = Pos.None;
         }
 
         NodeLayout.FitContainerTransform(chain[^1]);

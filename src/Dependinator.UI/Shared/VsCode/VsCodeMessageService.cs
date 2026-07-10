@@ -2,12 +2,15 @@ using System.Text.Json;
 using Dependinator.Core.Rpc;
 using Microsoft.JSInterop;
 
-namespace Dependinator.UI.Shared;
+// Integration with the VS Code extension host when the app runs inside a VS Code webview:
+// message plumbing to/from the extension (and the Language Server behind it), plus typed
+// send/receive services on top of it.
+namespace Dependinator.UI.Shared.VsCode;
 
 public record VsCodeMessage(string Type, JsonElement Raw, string? Message);
 
-// Receives and sends messages from and to the VS Code Extension Host
-// Used to communicate with the Language Server via the the extension host.
+// Receives and sends messages from and to the VS Code Extension Host.
+// Used to communicate with the Language Server via the extension host.
 interface IVsCodeMessageService
 {
     Task InitAsync();

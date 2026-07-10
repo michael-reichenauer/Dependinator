@@ -1,6 +1,6 @@
 using Dependinator.Core.Parsing;
 
-namespace Dependinator.UI.Shared;
+namespace Dependinator.UI.Shared.VsCode;
 
 interface IVsCodeSendService
 {

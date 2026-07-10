@@ -41,25 +41,18 @@ class ModelListService(
     public async Task InitAsync()
     {
         recentPaths = (await configService.GetAsync()).RecentPaths;
-        cloudPaths = GetCloudPathsAsync();
+        cloudPaths = GetCloudPaths();
+        localPaths =
+            Build.IsVsCodeExtWasm ? await workspaceFileService.GetSolutionFilePathsAsync()
+            : Build.IsWeb ? [DemoModel.WorkingSolutionPath]
+            : []; // Standalone Wasm has no local models
 
-        if (Build.IsVsCodeExtWasm)
+        // Seed recent paths with the first available model (cloud for standalone Wasm)
+        if (!recentPaths.Any())
         {
-            localPaths = await GetLocalPathsAsync();
-            if (!recentPaths.Any() && localPaths.Any())
-                recentPaths = [localPaths[0]];
-        }
-        if (Build.IsWeb)
-        {
-            localPaths = [DemoModel.WorkingSolutionPath];
-            if (!recentPaths.Any() && localPaths.Any())
-                recentPaths = [localPaths[0]];
-        }
-        if (Build.IsStandaloneWasm)
-        {
-            localPaths = [];
-            if (!recentPaths.Any() && cloudPaths.Any())
-                recentPaths = [cloudPaths[0]];
+            var defaultPaths = Build.IsStandaloneWasm ? cloudPaths : localPaths;
+            if (defaultPaths.Any())
+                recentPaths = [defaultPaths[0]];
         }
 
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
@@ -79,15 +72,7 @@ class ModelListService(
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
     }
 
-    async Task<IReadOnlyList<string>> GetLocalPathsAsync()
-    {
-        if (Build.IsWeb)
-            return [DemoModel.WorkingSolutionPath];
-
-        return await workspaceFileService.GetSolutionFilePathsAsync();
-    }
-
-    IReadOnlyList<string> GetCloudPathsAsync()
+    IReadOnlyList<string> GetCloudPaths()
     {
         var cloudModelPaths = appCloudSyncService
             .CloudModels.OrderBy(cm => cm.UpdatedUtc)

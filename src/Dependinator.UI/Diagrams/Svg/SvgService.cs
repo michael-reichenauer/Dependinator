@@ -70,7 +70,7 @@ class SvgService : ISvgService
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
-        var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.Zero);
+        var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None);
         var rootContentSvg = RenderNodeContent(model.Root, rootContext);
 
         // Enable this if need to show tile border and/or tile with margin border
@@ -229,7 +229,7 @@ class SvgService : ISvgService
         public RenderContext With(Pos canvasOffset, double zoom) => new(canvasOffset, zoom, TileBounds, TilePosition);
 
         public RenderContext ForNestedContainer(Rect tileRect) =>
-            new(Pos.Zero, Zoom, TileBounds, new Pos(tileRect.X, tileRect.Y));
+            new(Pos.None, Zoom, TileBounds, new Pos(tileRect.X, tileRect.Y));
     }
 
     readonly record struct NodeGeometry(Rect CanvasRect, Rect TileRect);

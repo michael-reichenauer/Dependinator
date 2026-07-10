@@ -149,7 +149,7 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
         );
         var childrenZoom = ownerZoom * owner.ContainerZoom;
         if (childrenZoom == 0)
-            return Pos.Zero;
+            return Pos.None;
 
         return new Pos(
             (worldPos.X - childrenOriginWorld.X) / childrenZoom,

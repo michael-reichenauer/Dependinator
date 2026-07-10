@@ -8,9 +8,6 @@ public record Id(string Value)
     private static readonly char[] Base62Chars =
         "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".ToCharArray();
 
-    // public static implicit operator string(Id id) => id.Value;
-    // public static implicit operator Id(string value) => new(value);
-
     protected static string ToId(string input, int length = 10)
     {
         byte[] bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
