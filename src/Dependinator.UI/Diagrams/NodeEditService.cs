@@ -222,7 +222,6 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 },
                 NodeResizeType.TopRight => node.Boundary with
                 {
-                    X = node.Boundary.X,
                     Y = node.Boundary.Y + dy,
                     Width = node.Boundary.Width + dx,
                     Height = node.Boundary.Height - dy,
@@ -233,28 +232,17 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                     X = node.Boundary.X + dx,
                     Width = node.Boundary.Width - dx,
                 },
-                NodeResizeType.MiddleRight => node.Boundary with
-                {
-                    X = node.Boundary.X,
-                    Width = node.Boundary.Width + dx,
-                },
+                NodeResizeType.MiddleRight => node.Boundary with { Width = node.Boundary.Width + dx },
 
                 NodeResizeType.BottomLeft => node.Boundary with
                 {
                     X = node.Boundary.X + dx,
-                    Y = node.Boundary.Y,
                     Width = node.Boundary.Width - dx,
                     Height = node.Boundary.Height + dy,
                 },
-                NodeResizeType.BottomMiddle => node.Boundary with
-                {
-                    Y = node.Boundary.Y,
-                    Height = node.Boundary.Height + dy,
-                },
+                NodeResizeType.BottomMiddle => node.Boundary with { Height = node.Boundary.Height + dy },
                 NodeResizeType.BottomRight => node.Boundary with
                 {
-                    X = node.Boundary.X,
-                    Y = node.Boundary.Y,
                     Width = node.Boundary.Width + dx,
                     Height = node.Boundary.Height + dy,
                 },
@@ -289,9 +277,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             nodeId = node.Id;
             if (e.DeltaY == 0)
                 return;
-            //var (mx, my) = (e.OffsetX - node.ContainerOffset.X, e.OffsetY - node.ContainerOffset.Y);
             var (mx, my) = (node.Boundary.Width, node.Boundary.Height);
-            // var (mx, my) = (node.Boundary.Width / 2 - node.ContainerOffset.X, node.Boundary.Height / 2 - node.ContainerOffset.Y);
 
             var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
             newZoom = (e.DeltaY < 0) ? node.ContainerZoom * speed : node.ContainerZoom * (1 / speed);
@@ -336,20 +322,9 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             var zy = (b.Height + 2 * Margin) / node.Boundary.Height;
             newZoom = 1 / Math.Max(zx, zy);
 
-            var wx = node.Boundary.Width * newZoom;
-            var wy = node.Boundary.Height / newZoom;
-
-            // Zoom width and height to fit the bounds
-            var nw = (b.Width + 2 * Margin) * newZoom;
-            var nh = (b.Height + 2 * Margin) * newZoom;
-            var w = node.Boundary.Width * newZoom;
-            var h = node.Boundary.Height * newZoom;
-
-            // Pan to center the bounds
-            var mx = Margin;
-            var my = Margin;
-            var x = -(b.X - mx) * newZoom;
-            var y = -(b.Y - my) * newZoom;
+            // Pan so the bounds (with margin) start at the container's top-left corner
+            var x = -(b.X - Margin) * newZoom;
+            var y = -(b.Y - Margin) * newZoom;
 
             newOffset = new Pos(x, y);
         }

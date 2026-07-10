@@ -70,8 +70,6 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
             .Take(MaxResultItems)
             .ToList();
 
-        // Log.Info($"Search Query '{query}':\n  {string.Join("\n  ", response.Take(10))}");
-
         return response;
     }
 

@@ -99,8 +99,6 @@ class InteractionService : IInteractionService
             if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
                 return false;
             return node.FileSpanOrParentSpan is not null;
-            // return node.FileSpanOrParentSpan is not null
-            //     || node.Type is Parsing.NodeType.Type or Parsing.NodeType.Member;
         }
     }
 
@@ -246,7 +244,6 @@ class InteractionService : IInteractionService
 
     void OnClick(PointerEvent e)
     {
-        // Log.Info("mouse click", e.TargetId);
         var pointerId = PointerId.Parse(e.TargetId);
 
         // While placing a note, a click drops it at that position (opens the note dialog).

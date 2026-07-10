@@ -112,10 +112,7 @@ class SelectionService(
     public void SetEditMode(bool isEditMode)
     {
         if (!IsSelected)
-        {
-            Log.Info("Not selected");
             return;
-        }
 
         using (var model = modelMgr.UseModel())
         {
@@ -124,7 +121,6 @@ class SelectionService(
             node.IsEditMode = isEditMode;
         }
 
-        Log.Info("Set edit mode", isEditMode, selectedId.NodeId);
         this.isEditMode = isEditMode;
         applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
@@ -216,14 +212,8 @@ class SelectionService(
 
     async Task<bool> TrySelectOrRefreshLineAsync(PointerId pointerId, PointerEvent e, bool isNewSelection)
     {
-        Log.Info("Select line at", e);
-
         if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
-        {
-            Log.Info("Selected line is not visible on the screen");
-            return false;
-        }
-        Log.Info("Line bound", bound);
+            return false; // Selected line is not visible on the screen
 
         var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);
         var (x, y) = (e.ClientX, e.ClientY);

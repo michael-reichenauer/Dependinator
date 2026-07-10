@@ -75,18 +75,6 @@ class PanZoomService(
         commandService.Do(new ModelEditCommand() { Offset = newOffset }, false);
     }
 
-    public void PanZoomOrg(Rect viewRect, double zoom)
-    {
-        var newOffset = new Pos(viewRect.X, viewRect.Y);
-        var newZoom = zoom;
-
-        // Apply the newZoom and newOffset to the viewRect
-        using var model = modelMgr.UseModel();
-        model.Offset = newOffset;
-        model.Zoom = newZoom;
-        Log.Info($"PanZoom newOffset={newOffset} newZoom={newZoom}");
-    }
-
     public async Task<bool> PanZoomToAsync(Pos targetPos, double targetZoom)
     {
         var requestId = Interlocked.Increment(ref goToRequestId);
@@ -200,12 +188,7 @@ class PanZoomService(
         return (pos, zoom);
     }
 
-    Rect ToViewRect(Pos pos, double zoom)
-    {
-        return ToViewRect(pos, zoom, screenService.SvgRect);
-    }
-
-    Rect ToViewRect(Pos pos, double zoom, Rect svgRect)
+    static Rect ToViewRect(Pos pos, double zoom, Rect svgRect)
     {
         var offset = ToOffset(pos, zoom, svgRect);
         var x = offset.X;
@@ -215,21 +198,11 @@ class PanZoomService(
         return new Rect(x, y, width, height);
     }
 
-    Pos ToPos(Pos offset, double zoom)
-    {
-        return ToPos(offset, zoom, screenService.SvgRect);
-    }
-
-    Pos ToPos(Pos offset, double zoom, Rect svgRect)
+    static Pos ToPos(Pos offset, double zoom, Rect svgRect)
     {
         var x = offset.X + svgRect.Width / 2 * zoom;
         var y = offset.Y + svgRect.Height / 2 * zoom;
         return new Pos(x, y);
-    }
-
-    Pos ToOffset(Pos pos, double zoom)
-    {
-        return ToOffset(pos, zoom, screenService.SvgRect);
     }
 
     static Pos ToOffset(Pos pos, double zoom, Rect svgRect)

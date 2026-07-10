@@ -27,7 +27,6 @@ class SvgService : ISvgService
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
-        //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
         using (var model = modelMgr.UseModel())
         {
             if (model.Root.Children.Count == 0)
@@ -49,8 +48,6 @@ class SvgService : ISvgService
             tileKey = TileKey.From(viewRect, zoom);
             if (tiles.TryGetCached(tileKey, viewRect, zoom, out tile))
                 return tile;
-            // Log.Info("/n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-            // Log.Info($"Not Cached {tileKey}, for viewRect {viewRect} viewZoom: {zoom}, Tile:{tileKey.GetTileRect()}");
         }
 
         // Create a new tile and cache it
@@ -63,13 +60,11 @@ class SvgService : ISvgService
             tiles.SetCached(tile, viewRect, zoom);
         }
 
-        // Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars");
         return tile;
     }
 
     static Tile CreateModelTile(IModel model, TileKey tileKey)
     {
-        // using var t = Timing.Start($"GetModelSvg: {tileKey}");
         var tileRect = tileKey.GetTileRect();
         var tileWithMargin = tileKey.GetTileRectWithMargin();
         var tileZoom = tileKey.GetTileZoom();
@@ -97,7 +92,6 @@ class SvgService : ISvgService
 
     static string RenderNodeContent(Node node, RenderContext context)
     {
-        // Log.Info($"RenderNodeContent '{node.Name}', context: {context}");
         EnsureChildrenLayout(node);
 
         var childrenCanvasOffset = CalculateChildrenCanvasOffset(node, context);
