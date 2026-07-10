@@ -3,6 +3,7 @@ using System.Web;
 using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using static System.FormattableString;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
@@ -59,7 +60,8 @@ static partial class NodeSvg
             ScaledMaxLines(IconDescriptionMaxLines, parentZoom, textZoom)
         );
 
-        return $"""
+        return Invariant(
+            $"""
             <use href="#{iconId}" xlink:href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
             <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" dominant-baseline="hanging" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
             {descriptionSvg}
@@ -71,7 +73,8 @@ static partial class NodeSvg
                 textY + fontSize / 2,
                 fontSize
             )}
-            """;
+            """
+        );
     }
 
     public static string GetNodeContainerSvg(Node node, Rect nodeCanvasRect, double parentZoom, string childrenContent)
@@ -105,9 +108,10 @@ static partial class NodeSvg
             ScaledMaxLines(DescriptionMaxLines, parentZoom, textZoom)
         );
 
-        return $"""
+        return Invariant(
+            $"""
             <svg x="{nodeCanvasRect.X:0.##}" y="{nodeCanvasRect.Y:0.##}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" viewBox="{0} {0} {nodeCanvasRect.Width:0.##} {nodeCanvasRect.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
-              <rect x="{0}" y="{0}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" stroke-width="{strokeWidth}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
+              <rect x="{0}" y="{0}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" stroke-width="{strokeWidth:0.##}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
               {hoverGroup}
               {childrenContent}
             </svg>
@@ -121,7 +125,8 @@ static partial class NodeSvg
                 header.TextPos.Y + header.FontSize / 2,
                 header.FontSize
             )}
-            """;
+            """
+        );
     }
 
     public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom)
@@ -153,7 +158,8 @@ static partial class NodeSvg
             ScaledMaxLines(MemberDescriptionMaxLines, parentZoom, textZoom)
         );
 
-        return $"""
+        return Invariant(
+            $"""
             <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.Icon.X:0.##}" y="{layout.Icon.Y:0.##}" width="{layout.Icon.Width:0.##}" height="{layout.Icon.Height:0.##}" {nodeOpacity} />
             <text x="{layout.Text.X:0.##}" y="{layout.Text.Y:0.##}" class="memberName" dominant-baseline="middle" font-size="{fontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {descriptionSvg}
@@ -165,17 +171,20 @@ static partial class NodeSvg
                 layout.Text.Y,
                 fontSize
             )}
-            """;
+            """
+        );
     }
 
     public static string GetToLargeNodeContainerSvg(Rect nodeCanvasRect, string childrenContent)
     {
         var (x, y, w, h) = (nodeCanvasRect.X, nodeCanvasRect.Y, nodeCanvasRect.Width, nodeCanvasRect.Height);
-        return $"""
+        return Invariant(
+            $"""
               <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="0 0 {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
                 {childrenContent}
               </svg>
-            """;
+            """
+        );
     }
 
     static Rect CalculateIconGeometry(Node node, Rect nodeCanvasRect, double parentZoom)
@@ -251,7 +260,9 @@ static partial class NodeSvg
         var glyphSize = fontSize * 0.95;
         var x = textEndX + fontSize * 0.35;
         // U+270E LOWER RIGHT PENCIL
-        return $"""<text x="{x:0.##}" y="{textCenterY:0.##}" font-size="{glyphSize:0.##}px" fill="{DColors.ManualMarker}" text-anchor="start" dominant-baseline="central" pointer-events="none">&#x270E;</text>""";
+        return Invariant(
+            $"""<text x="{x:0.##}" y="{textCenterY:0.##}" font-size="{glyphSize:0.##}px" fill="{DColors.ManualMarker}" text-anchor="start" dominant-baseline="central" pointer-events="none">&#x270E;</text>"""
+        );
     }
 
     // Rough width of rendered text in the diagram font (average glyph advance), used e.g. to
@@ -288,11 +299,15 @@ static partial class NodeSvg
             "\n",
             lines.Select(
                 (line, i) =>
-                    $"""<tspan x="{x:0.##}" dy="{(i == 0 ? firstLineOffset : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
+                    Invariant(
+                        $"""<tspan x="{x:0.##}" dy="{(i == 0 ? firstLineOffset : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
+                    )
             )
         );
 
-        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>""";
+        return Invariant(
+            $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>"""
+        );
     }
 
     // Estimate how many characters fit across a node of the given pixel width, so wider
@@ -388,12 +403,15 @@ static partial class NodeSvg
     )
     {
         var title = string.IsNullOrWhiteSpace(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
-        return $"""
-            <g class="{cssClass}" id="{elementId}">
-              <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
-              <title>{title}</title>
-            </g>
-            """.Trim();
+        return Invariant(
+                $"""
+                <g class="{cssClass}" id="{elementId}">
+                  <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+                  <title>{title}</title>
+                </g>
+                """
+            )
+            .Trim();
     }
 
     static string SelectedNodeSvg(Node node, Rect geometry)
@@ -407,10 +425,12 @@ static partial class NodeSvg
         var w = geometry.Width;
         var h = geometry.Height;
 
-        var borderSvg = $"""
-            <rect x="{x - 6}" y="{y - 6}" width="{w + 13:0.##}" height="{h
+        var borderSvg = Invariant(
+            $"""
+            <rect x="{x - 6:0.##}" y="{y - 6:0.##}" width="{w + 13:0.##}" height="{h
                 + 13:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{color}" stroke-dasharray="5,5"/>
-            """;
+            """
+        );
 
         if (!ViewOptions.IsEditingEnabled)
             return borderSvg; // Show selection border only, no resize handles
@@ -443,12 +463,14 @@ static partial class NodeSvg
             .Select(handle =>
             {
                 var elementId = PointerId.FromNodeResize(node.Id, handle.Type).ElementId;
-                return $"""
+                return Invariant(
+                    $"""
                     <g class="selectpoint">
-                        <circle id="{elementId}" cx="{handle.X}" cy="{handle.Y}" r="{HandleRadius}" fill="{color}" />
-                        <circle id="{elementId}" cx="{handle.X}" cy="{handle.Y}" r="{TouchRadius}" fill="{color}" fill-opacity="0"/>
+                        <circle id="{elementId}" cx="{handle.X:0.##}" cy="{handle.Y:0.##}" r="{HandleRadius}" fill="{color}" />
+                        <circle id="{elementId}" cx="{handle.X:0.##}" cy="{handle.Y:0.##}" r="{TouchRadius:0.##}" fill="{color}" fill-opacity="0"/>
                     </g>
-                    """;
+                    """
+                );
             })
             .Join("\n");
 

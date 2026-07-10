@@ -2,6 +2,7 @@ using System.Web;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
+using static System.FormattableString;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
@@ -39,14 +40,17 @@ static class NoteSvg
 
         // The visible circle is the hover/hit target (id resolves to the node); the id text is drawn
         // on top with pointer-events="none" so it is not stroked by the .hoverable:hover rule.
-        return $"""
-            <g class="hoverable" id="{elementId}">
-              <circle id="{elementId}" cx="{cx:0.##}" cy="{cy:0.##}" r="{r:0.##}" fill="{DColors.NoteFill}" stroke="{DColors.NoteBorder}" stroke-width="{strokeWidth:0.##}" />
-              <title>{title}</title>
-            </g>
-            <text x="{cx:0.##}" y="{cy:0.##}" text-anchor="middle" dominant-baseline="central" font-family="Verdana, Helvetica, Arial, sans-serif" font-weight="bold" font-size="{fontSize:0.##}px" fill="{DColors.NoteText}" pointer-events="none">{id}</text>
-            {SelectedNoteSvg(node, cx, cy, r)}
-            """.Trim();
+        return Invariant(
+                $"""
+                <g class="hoverable" id="{elementId}">
+                  <circle id="{elementId}" cx="{cx:0.##}" cy="{cy:0.##}" r="{r:0.##}" fill="{DColors.NoteFill}" stroke="{DColors.NoteBorder}" stroke-width="{strokeWidth:0.##}" />
+                  <title>{title}</title>
+                </g>
+                <text x="{cx:0.##}" y="{cy:0.##}" text-anchor="middle" dominant-baseline="central" font-family="Verdana, Helvetica, Arial, sans-serif" font-weight="bold" font-size="{fontSize:0.##}px" fill="{DColors.NoteText}" pointer-events="none">{id}</text>
+                {SelectedNoteSvg(node, cx, cy, r)}
+                """
+            )
+            .Trim();
     }
 
     // Largest font size that keeps the id text (about 2-3 chars) inside the circle, capped so a
@@ -65,6 +69,8 @@ static class NoteSvg
             return "";
 
         var ringRadius = r + Math.Max(3, r * 0.25);
-        return $"""<circle cx="{cx:0.##}" cy="{cy:0.##}" r="{ringRadius:0.##}" fill="none" stroke="{DColors.Selected}" stroke-width="0.5" stroke-dasharray="5,5" pointer-events="none" />""";
+        return Invariant(
+            $"""<circle cx="{cx:0.##}" cy="{cy:0.##}" r="{ringRadius:0.##}" fill="none" stroke="{DColors.Selected}" stroke-width="0.5" stroke-dasharray="5,5" pointer-events="none" />"""
+        );
     }
 }

@@ -2,6 +2,7 @@ using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using static System.FormattableString;
 
 // Generates the SVG rendering of the diagram from the model, producing the tiled SVG content
 // drawn on the canvas.
@@ -82,12 +83,14 @@ class SvgService : ISvgService
         // var tileMarginBorderSvg = $"""<rect x="{tileWithMargin.X}" y="{tileWithMargin.Y}" width="{tileWithMargin.Width:0.##}" height="{tileWithMargin.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="green"/>""";
 
         var (x, y, w, h) = tileKey.GetViewRect();
-        var tileViewBox = $"{x} {y} {w} {h}";
-        var tileSvg = $"""
-            <svg width="{w}" height="{h}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">
+        var tileViewBox = Invariant($"{x:0.##} {y:0.##} {w:0.##} {h:0.##}");
+        var tileSvg = Invariant(
+            $"""
+            <svg width="{w:0.##}" height="{h:0.##}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">
               {rootContentSvg}
             </svg>
-            """;
+            """
+        );
 
         return new Tile(tileKey, tileSvg, tileZoom, tileOffset);
     }

@@ -253,8 +253,8 @@ else if (HasSelectedLine)
   bool CanShowSource => interactionService.CanShowSource;
 
   string CssPosition =>
-      $"position:fixed;left:{selectionService.SelectedNodePosition.X}px;"
-      + $"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset}px;"
+      FormattableString.Invariant($"position:fixed;left:{selectionService.SelectedNodePosition.X:0.##}px;")
+      + FormattableString.Invariant($"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset:0.##}px;")
       + "background:rgba(255,255,255,0.9);border-radius:4px;"
       + "box-shadow:var(--mud-elevation-2);";
 

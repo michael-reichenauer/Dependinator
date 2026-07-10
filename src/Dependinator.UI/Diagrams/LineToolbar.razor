@@ -65,7 +65,8 @@
     bool isIcon => !interactionService.IsContainer;
     double left => selectionService.SelectedLinePosition.X - 10;
     double top => selectionService.SelectedLinePosition.Y - 30;
-    string containerPosition => $"Position: fixed; left:{left}px; top:{top}px";
+    string containerPosition =>
+        FormattableString.Invariant($"Position: fixed; left:{left:0.##}px; top:{top:0.##}px");
 
     void ShowReferences() => dependenciesService.ShowReferences();
     void ShowDependencies() => dependenciesService.ShowDependencies();

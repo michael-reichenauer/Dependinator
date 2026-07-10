@@ -100,7 +100,9 @@ class CanvasService : ICanvasService
 
     public string SvgViewBox =>
         LevelZoom != 0
-            ? $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}"
+            ? FormattableString.Invariant(
+                $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}"
+            )
             : "0 0 0 0";
 
     public async Task InitAsync()

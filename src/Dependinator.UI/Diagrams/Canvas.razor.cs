@@ -24,8 +24,11 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     public ElementReference Ref { get; private set; }
 
     string Content => srv.SvgContent;
-    double Width => srv.SvgRect.Width;
-    double Height => srv.SvgRect.Height;
+
+    // Formatted invariantly; a raw double attribute value would be rendered with the current
+    // culture, which breaks the SVG in comma-decimal locales.
+    string Width => FormattableString.Invariant($"{srv.SvgRect.Width:0.##}");
+    string Height => FormattableString.Invariant($"{srv.SvgRect.Height:0.##}");
     string ViewBox => srv.SvgViewBox;
     static string IconDefs => Icon.IconDefs;
 

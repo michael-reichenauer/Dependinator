@@ -1,5 +1,6 @@
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using static System.FormattableString;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
@@ -72,16 +73,18 @@ static class LineSvg
         if (!string.IsNullOrWhiteSpace(line.HtmlDescription))
             title = $"{title}\n\n{line.HtmlDescription}";
 
-        return $"""
-            <polyline points="{points}" fill="none" stroke-width="{strokeWidth}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
-            <circle cx="{endpoints.X1}" cy="{endpoints.Y1}" r="{circleRadius}" fill="{color}" />
+        return Invariant(
+            $"""
+            <polyline points="{points}" fill="none" stroke-width="{strokeWidth:0.##}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
+            <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
             <g class="hoverable" id="{elementId}">
               <polyline id="{elementId}" points="{points}" fill="none" stroke-width="{strokeWidth
-                + 10}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
+                + 10:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
               <title>{title}</title>
             </g>
             {selectedSvg}
-            """;
+            """
+        );
     }
 
     static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints)
@@ -103,26 +106,31 @@ static class LineSvg
                 {
                     var renderedPoint = polylinePoints[index + 1];
                     var elementId = PointerId.FromLinePoint(line.Id, index).ElementId;
-                    return $"""
+                    return Invariant(
+                        $"""
                     <g class="selectpoint">
-                      <circle cx="{renderedPoint.X}" cy="{renderedPoint.Y}" r="{circleRadius
-                        + 1}" fill="{segmentControlColor}" />
-                      <circle id="{elementId}" cx="{renderedPoint.X}" cy="{renderedPoint.Y}" r="{circleRadius
-                        + 8}" fill="black" fill-opacity="0" />
+                      <circle cx="{renderedPoint.X:0.##}" cy="{renderedPoint.Y:0.##}" r="{circleRadius
+                        + 1:0.##}" fill="{segmentControlColor}" />
+                      <circle id="{elementId}" cx="{renderedPoint.X:0.##}" cy="{renderedPoint.Y:0.##}" r="{circleRadius
+                        + 8:0.##}" fill="black" fill-opacity="0" />
                     </g>
-                    """;
+                    """
+                    );
                 }
             )
         );
 
-        return $"""
+        return Invariant(
+            $"""
             <polyline points="{points}" fill="none" stroke="{color}" stroke-width="{strokeWidth
-                + 5}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3,50"/>
-            <circle cx="{start.X}" cy="{start.Y}" r="{circleRadius}" fill="{color}" />
-            <circle cx="{end.X}" cy="{end.Y}" r="{circleRadius}" fill="{color}" />
+                + 5:0.##}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3,50"/>
+            <circle cx="{start.X:0.##}" cy="{start.Y:0.##}" r="{circleRadius:0.##}" fill="{color}" />
+            <circle cx="{end.X:0.##}" cy="{end.Y:0.##}" r="{circleRadius:0.##}" fill="{color}" />
             {handlesSvg}
-            """;
+            """
+        );
     }
 
-    static string ToPolylinePoints(IReadOnlyList<Pos> points) => string.Join(" ", points.Select(p => $"{p.X},{p.Y}"));
+    static string ToPolylinePoints(IReadOnlyList<Pos> points) =>
+        string.Join(" ", points.Select(p => Invariant($"{p.X:0.##},{p.Y:0.##}")));
 }

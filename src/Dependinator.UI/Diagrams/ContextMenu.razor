@@ -36,8 +36,8 @@
   // The menu is placed just below-right of the click, clamped so it stays on screen anchored via
   // fixed positioning at the click's viewport coordinates.
   string CssPosition =>
-      $"position:fixed;left:{contextMenuService.ScreenPos.X:0.##}px;"
-      + $"top:{contextMenuService.ScreenPos.Y:0.##}px;z-index:1400;";
+      FormattableString.Invariant($"position:fixed;left:{contextMenuService.ScreenPos.X:0.##}px;")
+      + FormattableString.Invariant($"top:{contextMenuService.ScreenPos.Y:0.##}px;z-index:1400;");
 
   void Close() => contextMenuService.Close();
 
