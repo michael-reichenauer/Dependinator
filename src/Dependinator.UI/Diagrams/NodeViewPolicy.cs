@@ -6,10 +6,12 @@ namespace Dependinator.UI.Diagrams;
 // visible children, or not at all because the view has zoomed in past it.
 static class NodeViewPolicy
 {
-    const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
+    // Beyond this zoom a node's own chrome (border, name) is too large to be seen; only its
+    // children remain meaningful.
+    const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom;
     const double MinContainerZoom = 2.0;
 
-    public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
+    public static bool IsTooLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
 
     public static bool IsShowIcon(Parsing.NodeType nodeType, double zoom) =>
         nodeType.IsMember || zoom <= MinContainerZoom;
@@ -19,6 +21,6 @@ static class NodeViewPolicy
     public static bool IsContainerView(Node node, double modelZoom)
     {
         var nodeZoom = 1 / (node.GetZoom() * modelZoom);
-        return !IsToLargeToBeSeen(nodeZoom) && !IsShowIcon(node.Type, nodeZoom);
+        return !IsTooLargeToBeSeen(nodeZoom) && !IsShowIcon(node.Type, nodeZoom);
     }
 }

@@ -129,7 +129,7 @@ class SvgService : ISvgService
         { // An invisible container that covers its parent; render only its children, no chrome
             var passThroughContext = context.ForNestedContainer(geometry.TileRect);
             var passThroughContentSvg = RenderNodeContent(node, passThroughContext);
-            return NodeSvg.GetToLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
+            return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
         }
 
         if (NodeViewPolicy.IsShowIcon(node.Type, context.Zoom))
@@ -138,8 +138,8 @@ class SvgService : ISvgService
         var nestedContext = context.ForNestedContainer(geometry.TileRect);
         var childrenContentSvg = RenderNodeContent(node, nestedContext);
 
-        if (NodeViewPolicy.IsToLargeToBeSeen(context.Zoom))
-            return NodeSvg.GetToLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
+        if (NodeViewPolicy.IsTooLargeToBeSeen(context.Zoom))
+            return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
 
         return NodeSvg.GetNodeContainerSvg(node, geometry.CanvasRect, context.Zoom, childrenContentSvg);
     }

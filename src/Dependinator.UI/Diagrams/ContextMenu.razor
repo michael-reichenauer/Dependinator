@@ -33,8 +33,7 @@
 
   void OnStateChanged() => InvokeAsync(StateHasChanged);
 
-  // The menu is placed just below-right of the click, clamped so it stays on screen anchored via
-  // fixed positioning at the click's viewport coordinates.
+  // The menu is anchored via fixed positioning at the click's viewport coordinates.
   string CssPosition =>
       FormattableString.Invariant($"position:fixed;left:{contextMenuService.ScreenPos.X:0.##}px;")
       + FormattableString.Invariant($"top:{contextMenuService.ScreenPos.Y:0.##}px;z-index:1400;");

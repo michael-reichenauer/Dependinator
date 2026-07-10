@@ -187,7 +187,7 @@ static partial class NodeSvg
         );
     }
 
-    public static string GetToLargeNodeContainerSvg(Rect nodeCanvasRect, string childrenContent)
+    public static string GetTooLargeNodeContainerSvg(Rect nodeCanvasRect, string childrenContent)
     {
         var (x, y, w, h) = (nodeCanvasRect.X, nodeCanvasRect.Y, nodeCanvasRect.Width, nodeCanvasRect.Height);
         return Invariant(

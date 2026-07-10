@@ -28,50 +28,21 @@ interface ICanvasService
 }
 
 [Scoped]
-class CanvasService : ICanvasService
+class CanvasService(
+    IScreenService screenService,
+    IPanZoomService panZoomService,
+    IModelService modelService,
+    IModelMgr modelMgr,
+    ISvgService svgService,
+    IApplicationEvents applicationEvents,
+    IJSInterop jSInteropService,
+    IFileService fileService,
+    IBrowserFileService browserFileService,
+    IModelListService recentModelsService,
+    IInteractionService interactionService,
+    IDialogService dialogService
+) : ICanvasService
 {
-    readonly IScreenService screenService;
-    readonly IPanZoomService panZoomService;
-    readonly IModelService modelService;
-    readonly IModelMgr modelMgr;
-    readonly ISvgService svgService;
-    readonly IApplicationEvents applicationEvents;
-    readonly IJSInterop jSInteropService;
-    readonly IFileService fileService;
-    readonly IBrowserFileService browserFileService;
-    readonly IModelListService recentModelsService;
-    readonly IInteractionService interactionService;
-    readonly IDialogService dialogService;
-
-    public CanvasService(
-        IScreenService screenService,
-        IPanZoomService panZoomService,
-        IModelService modelService,
-        IModelMgr modelMgr,
-        ISvgService svgService,
-        IApplicationEvents applicationEvents,
-        IJSInterop jSInteropService,
-        IFileService fileService,
-        IBrowserFileService browserFileService,
-        IModelListService recentModelsService,
-        IInteractionService interactionService,
-        IDialogService dialogService
-    )
-    {
-        this.screenService = screenService;
-        this.panZoomService = panZoomService;
-        this.modelService = modelService;
-        this.modelMgr = modelMgr;
-        this.svgService = svgService;
-        this.applicationEvents = applicationEvents;
-        this.jSInteropService = jSInteropService;
-        this.fileService = fileService;
-        this.browserFileService = browserFileService;
-        this.recentModelsService = recentModelsService;
-        this.interactionService = interactionService;
-        this.dialogService = dialogService;
-    }
-
     double levelZoom = 1;
     Pos tileOffset = Pos.Zero;
     string content = "";

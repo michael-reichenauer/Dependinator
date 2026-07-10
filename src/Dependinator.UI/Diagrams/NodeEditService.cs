@@ -27,7 +27,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
     const double Margin = 50;
     const double WheelZoomSpeed = 1.2;
     const double PinchZoomSpeed = 1.04;
-    const double sizeDiff = 10.0;
+    const double SizeDiff = 10.0;
 
     // Pan/zoom on a node whose sole child is a pass-through container would be visually inert
     // (the pass-through boundary always re-covers the parent's viewport), so such gestures are
@@ -142,8 +142,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 return;
             newBoundary = node.Boundary with
             {
-                Width = NodeGrid.SnapUp(node.Boundary.Width + sizeDiff),
-                Height = NodeGrid.SnapUp(node.Boundary.Height + sizeDiff),
+                Width = NodeGrid.SnapUp(node.Boundary.Width + SizeDiff),
+                Height = NodeGrid.SnapUp(node.Boundary.Height + SizeDiff),
             };
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
@@ -161,8 +161,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 return;
             newBoundary = node.Boundary with
             {
-                Width = NodeGrid.SnapDown(node.Boundary.Width - sizeDiff),
-                Height = NodeGrid.SnapDown(node.Boundary.Height - sizeDiff),
+                Width = NodeGrid.SnapDown(node.Boundary.Width - SizeDiff),
+                Height = NodeGrid.SnapDown(node.Boundary.Height - SizeDiff),
             };
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
@@ -244,7 +244,9 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 _ => node.Boundary,
             };
 
-            // Adjust container offset to ensure that children stay in place
+            // Children are positioned relative to the node's top-left corner, so when resizing
+            // moves that corner (left/top handles), shift the container offset by the opposite
+            // amount to keep the children visually in place.
             newContainerOffset = node.ContainerOffset with
             {
                 X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),

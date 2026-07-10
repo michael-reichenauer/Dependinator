@@ -35,8 +35,11 @@ class SelectionService(
     IScreenService screenService
 ) : ISelectionService
 {
-    const double toolbarOffsetX = 40;
-    const double toolbarOffsetY = 20;
+    // Offset from the clicked point on a line to where its toolbar is anchored.
+    const double ToolbarOffsetX = 40;
+    const double ToolbarOffsetY = 20;
+
+    // Cover-ratio limits for IsNodeMovable (fractions of the viewport a node may cover).
     const double MinCover = 0.5;
     const double MaxCover = 0.8;
 
@@ -88,8 +91,8 @@ class SelectionService(
         if (selectedId.IsLine)
         {
             // Calculate the clicked relative position on the line, to show the toolbar at the clicked position on the line
-            x = bound.X + clickedRelativePosition * bound.Width - toolbarOffsetX;
-            y = bound.Y + clickedRelativePosition * bound.Height - toolbarOffsetY;
+            x = bound.X + clickedRelativePosition * bound.Width - ToolbarOffsetX;
+            y = bound.Y + clickedRelativePosition * bound.Height - ToolbarOffsetY;
 
             using (var model = modelMgr.UseModel())
             {
@@ -97,7 +100,7 @@ class SelectionService(
                 {
                     // For some lines based int its direction we need to flip the y coordinate
                     if (LinePathGeometry.IsUpHill(line))
-                        y = bound.Bottom - clickedRelativePosition * bound.Height - toolbarOffsetY;
+                        y = bound.Bottom - clickedRelativePosition * bound.Height - ToolbarOffsetY;
                 }
             }
         }
@@ -250,7 +253,8 @@ class SelectionService(
         return true;
     }
 
-    // Returns true if the node is movable, i.e. the node is not too large (to zoomed in) for the current screen.
+    // Returns true if the node is movable, i.e. the node is not too large (too zoomed in) for
+    // the current screen.
     public bool IsSelectedNodeMovable(double zoom)
     {
         if (!IsSelected || IsEditMode)
@@ -304,6 +308,9 @@ class SelectionService(
         applicationEvents.TriggerUIStateChanged();
     }
 
+    // A node is movable while it reads as an object on screen rather than as the screen itself:
+    // once it covers more than MinCover of the viewport in both directions (or MaxCover in one),
+    // the user is effectively "inside" it and dragging should pan the canvas instead.
     private bool IsNodeMovable(Node node, double zoom)
     {
         var v = screenService.SvgRect;

@@ -5,7 +5,7 @@ using Dependinator.UI.Modeling.Models;
 // alongside the diagram.
 namespace Dependinator.UI.Diagrams.Dependencies;
 
-public enum TreeType
+enum TreeType
 {
     References,
     Dependencies,

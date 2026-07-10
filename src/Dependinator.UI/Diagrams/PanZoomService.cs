@@ -75,6 +75,10 @@ class PanZoomService(
         commandService.Do(new ModelEditCommand() { Offset = newOffset }, false);
     }
 
+    // Animates the view to center targetPos at targetZoom in three phases: zoom out until the
+    // target view fits within the current view, pan to the target in fixed steps, then zoom
+    // back in. Any newer pan/zoom action bumps goToRequestId, which cancels this animation at
+    // the next step (IsCurrentGoToRequest).
     public async Task<bool> PanZoomToAsync(Pos targetPos, double targetZoom)
     {
         var requestId = Interlocked.Increment(ref goToRequestId);
@@ -188,16 +192,21 @@ class PanZoomService(
         return (pos, zoom);
     }
 
+    // Two ways of naming the same view position, both in canvas coordinates: the model stores
+    // the "offset" (the canvas point at the viewport's top-left corner), while the animation
+    // targets a "pos" (the canvas point at the viewport's center). The helpers below convert
+    // between them; the viewport spans svgRect.Size * zoom canvas units.
+
+    // The canvas rectangle currently visible for a center pos at the given zoom.
     static Rect ToViewRect(Pos pos, double zoom, Rect svgRect)
     {
         var offset = ToOffset(pos, zoom, svgRect);
-        var x = offset.X;
-        var y = offset.Y;
         var width = svgRect.Width * zoom;
         var height = svgRect.Height * zoom;
-        return new Rect(x, y, width, height);
+        return new Rect(offset.X, offset.Y, width, height);
     }
 
+    // Top-left offset → center pos.
     static Pos ToPos(Pos offset, double zoom, Rect svgRect)
     {
         var x = offset.X + svgRect.Width / 2 * zoom;
@@ -205,6 +214,7 @@ class PanZoomService(
         return new Pos(x, y);
     }
 
+    // Center pos → top-left offset.
     static Pos ToOffset(Pos pos, double zoom, Rect svgRect)
     {
         var x = pos.X - svgRect.Width / 2 * zoom;

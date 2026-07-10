@@ -21,6 +21,10 @@ enum AnchorPreference
 // vertical middle of their left/right edge.
 static class NodeAnchors
 {
+    // Small gap between a member icon's edge and the line endpoint, so arrow heads and line
+    // caps are not drawn directly on top of the icon.
+    const double MemberIconGap = 0.5;
+
     public static (double X, double Y) GetLineAnchor(
         Node node,
         LineAnchorRole role,
@@ -31,12 +35,12 @@ static class NodeAnchors
         {
             var metrics = GetMemberAnchorMetrics(node);
             if (role == LineAnchorRole.Source)
-                return (metrics.CenterX, metrics.Bottom + 0.5);
+                return (metrics.CenterX, metrics.Bottom + MemberIconGap);
 
             return preference switch
             {
                 AnchorPreference.Right => (metrics.Right, metrics.CenterY),
-                _ => (metrics.Left - 0.5, metrics.CenterY),
+                _ => (metrics.Left - MemberIconGap, metrics.CenterY),
             };
         }
 

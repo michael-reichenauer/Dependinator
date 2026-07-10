@@ -18,24 +18,31 @@ interface IInteractionService
     void DecreaseNodeSize();
 }
 
+// Routes raw pointer events (from IPointerEventService) to the matching gesture: selection,
+// canvas pan/zoom, and — in editing mode — node move/resize/content-pan and line-point drags.
 [Scoped]
-class InteractionService : IInteractionService
+class InteractionService(
+    IPointerEventService mouseEventService,
+    IPanZoomService panZoomService,
+    INodeEditService nodeEditService,
+    ILineEditService lineEditService,
+    IApplicationEvents applicationEvents,
+    ISelectionService selectionService,
+    IModelMgr modelMgr,
+    IDependenciesService dependenciesService,
+    IManualEditService manualEditService,
+    INoteService noteService,
+    IContextMenuService contextMenuService
+) : IInteractionService
 {
-    readonly IPointerEventService mouseEventService;
-    readonly IPanZoomService panZoomService;
-    readonly INodeEditService nodeEditService;
-    readonly ILineEditService lineEditService;
-    readonly IApplicationEvents applicationEvents;
-    readonly ISelectionService selectionService;
-    readonly IModelMgr modelMgr;
-    readonly IDependenciesService dependenciesService;
-    readonly IManualEditService manualEditService;
-    readonly INoteService noteService;
-    readonly IContextMenuService contextMenuService;
-
+    // Delay before a held-down button switches the cursor to "move" (see OnMoveTimer).
     const int MoveDelay = 300;
 
-    readonly Timer moveTimer;
+    // The gesture state machine: mouseDownId identifies what the press started on (node,
+    // resize handle, line, line point or empty canvas). OnMouseMove then activates at most one
+    // drag kind, remembered in the isDragging*/isResizing* flags so OnMouseUp knows what to
+    // finish (grid snap + toolbar refresh). All state is reset on mouse-up.
+    Timer? moveTimer;
     bool moveTimerRunning = false;
     bool isMoving = false;
     bool isDraggingSelectedNode = false;
@@ -44,35 +51,6 @@ class InteractionService : IInteractionService
     PointerId mouseDownId = PointerId.Empty;
     double Zoom => modelMgr.WithModel(m => m.Zoom);
     readonly Debouncer zoomToolbarDebouncer = new();
-
-    public InteractionService(
-        IPointerEventService mouseEventService,
-        IPanZoomService panZoomService,
-        INodeEditService nodeEditService,
-        ILineEditService lineEditService,
-        IApplicationEvents applicationEvents,
-        ISelectionService selectionService,
-        IModelMgr modelMgr,
-        IDependenciesService dependenciesService,
-        IManualEditService manualEditService,
-        INoteService noteService,
-        IContextMenuService contextMenuService
-    )
-    {
-        this.mouseEventService = mouseEventService;
-        this.panZoomService = panZoomService;
-        this.nodeEditService = nodeEditService;
-        this.lineEditService = lineEditService;
-        this.applicationEvents = applicationEvents;
-        this.selectionService = selectionService;
-        this.modelMgr = modelMgr;
-        this.dependenciesService = dependenciesService;
-        this.manualEditService = manualEditService;
-        this.noteService = noteService;
-        this.contextMenuService = contextMenuService;
-        moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
-        this.applicationEvents.UndoneRedone += UpdateToolbar;
-    }
 
     public string Cursor { get; private set; } = "default";
     public bool IsContainer
@@ -127,8 +105,8 @@ class InteractionService : IInteractionService
                 return false;
             if (NodeViewPolicy.IsContainerView(node, Zoom))
                 return true;
-            // No longer in edit mode if node is to large to be seen or has an icon
 
+            // No longer in edit mode if the node is too large to be seen or shown as an icon.
             selectionService.SetEditMode(false);
             return false;
         }
@@ -166,6 +144,9 @@ class InteractionService : IInteractionService
 
     public Task InitAsync()
     {
+        moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
+        applicationEvents.UndoneRedone += UpdateToolbar;
+
         mouseEventService.Click += OnClick;
         mouseEventService.DblClick += OnDblClick;
         mouseEventService.PointerMove += OnMouseMove;
@@ -293,7 +274,7 @@ class InteractionService : IInteractionService
         isResizingSelectedNode = false;
         isDraggingSelectedLinePoint = false;
         moveTimerRunning = true;
-        moveTimer.Change(MoveDelay, Timeout.Infinite);
+        moveTimer?.Change(MoveDelay, Timeout.Infinite);
         mouseDownId = PointerId.Parse(e.TargetId);
 
         if (mouseDownId.Id == selectionService.SelectedId.Id)
@@ -307,6 +288,10 @@ class InteractionService : IInteractionService
         mouseDownId = selectionService.SelectedId;
     }
 
+    // Routes a left-button drag to exactly one gesture. The branch order is the gesture
+    // priority: line-point drag → selected-node content pan (edit mode) → resize-handle drag →
+    // selected-node move → canvas pan (the fallback for everything else). Each editing branch
+    // marks its flag for OnMouseUp and hides the toolbar while dragging.
     void OnMouseMove(PointerEvent e)
     {
         if (!e.IsLeftButton)
@@ -355,26 +340,28 @@ class InteractionService : IInteractionService
         selectionService.HideSelectedPosition();
     }
 
+    // Finishes the active drag (if any): snaps the dragged item to the grid, refreshes the
+    // toolbar position, and resets all gesture state.
     void OnMouseUp(PointerEvent e)
     {
         if (isDraggingSelectedLinePoint && mouseDownId.IsLinePoint)
         {
             lineEditService.SnapSegmentPointToGrid(mouseDownId);
-            selectionService.UpdateSelectedPositionAsync();
+            selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedLinePoint = false;
         }
 
         if (isResizingSelectedNode && mouseDownId.IsResize)
         {
             nodeEditService.SnapResizedSelectedNodeToGrid(mouseDownId);
-            selectionService.UpdateSelectedPositionAsync();
+            selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isResizingSelectedNode = false;
         }
 
         if (isDraggingSelectedNode && mouseDownId.IsNode)
         {
             nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
-            selectionService.UpdateSelectedPositionAsync();
+            selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedNode = false;
         }
 
@@ -383,7 +370,7 @@ class InteractionService : IInteractionService
         if (moveTimerRunning)
         {
             moveTimerRunning = false;
-            moveTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            moveTimer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
         if (isMoving)
@@ -393,6 +380,8 @@ class InteractionService : IInteractionService
         }
     }
 
+    // Fires when a button has been held for MoveDelay without release: switches to the "move"
+    // cursor to signal that the drag gesture is active.
     void OnMoveTimer(object? state)
     {
         moveTimerRunning = false;

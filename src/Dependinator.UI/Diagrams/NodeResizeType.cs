@@ -1,6 +1,6 @@
 namespace Dependinator.UI.Diagrams;
 
-public enum NodeResizeType
+enum NodeResizeType
 {
     None,
     TopLeft,
