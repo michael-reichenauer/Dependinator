@@ -231,13 +231,13 @@ class SelectionService(
                 // show the toolbar at the clicked position on the line
                 if (LinePathGeometry.IsUpHill(line))
                     (y1, y2) = (y2, y1);
-                var dx = x2 - x1;
-                var dy = y2 - y1;
-                var len2 = dx * dx + dy * dy;
-                if (len2 > 0)
+                if (x1 != x2 || y1 != y2)
                 {
-                    var t = ((x - x1) * dx + (y - y1) * dy) / len2; // projection factor t ∈ [0,1]
-                    clickedRelativePosition = Math.Max(0, Math.Min(1, t));
+                    clickedRelativePosition = LinePathGeometry.ProjectionFactor(
+                        new Pos(x, y),
+                        new Pos(x1, y1),
+                        new Pos(x2, y2)
+                    );
                 }
             }
         }

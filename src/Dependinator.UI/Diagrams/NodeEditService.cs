@@ -40,12 +40,6 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         return node;
     }
 
-    static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
-
-    static double SnapToGridUp(double value) => Math.Ceiling(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
-
-    static double SnapToGridDown(double value) => Math.Floor(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
-
     public void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
     {
         NodeId nodeId;
@@ -75,8 +69,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
                 return;
             nodeId = node.Id;
-            var snappedX = SnapToGrid(node.Boundary.X);
-            var snappedY = SnapToGrid(node.Boundary.Y);
+            var snappedX = NodeGrid.Snap(node.Boundary.X);
+            var snappedY = NodeGrid.Snap(node.Boundary.Y);
             if (snappedX == node.Boundary.X && snappedY == node.Boundary.Y)
                 return;
 
@@ -148,8 +142,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 return;
             newBoundary = node.Boundary with
             {
-                Width = SnapToGridUp(node.Boundary.Width + sizeDiff),
-                Height = SnapToGridUp(node.Boundary.Height + sizeDiff),
+                Width = NodeGrid.SnapUp(node.Boundary.Width + sizeDiff),
+                Height = NodeGrid.SnapUp(node.Boundary.Height + sizeDiff),
             };
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
@@ -167,8 +161,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 return;
             newBoundary = node.Boundary with
             {
-                Width = SnapToGridDown(node.Boundary.Width - sizeDiff),
-                Height = SnapToGridDown(node.Boundary.Height - sizeDiff),
+                Width = NodeGrid.SnapDown(node.Boundary.Width - sizeDiff),
+                Height = NodeGrid.SnapDown(node.Boundary.Height - sizeDiff),
             };
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
@@ -342,32 +336,32 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         switch (resizeType)
         {
             case NodeResizeType.TopLeft:
-                left = SnapToGrid(left);
-                top = SnapToGrid(top);
+                left = NodeGrid.Snap(left);
+                top = NodeGrid.Snap(top);
                 break;
             case NodeResizeType.TopMiddle:
-                top = SnapToGrid(top);
+                top = NodeGrid.Snap(top);
                 break;
             case NodeResizeType.TopRight:
-                right = SnapToGrid(right);
-                top = SnapToGrid(top);
+                right = NodeGrid.Snap(right);
+                top = NodeGrid.Snap(top);
                 break;
             case NodeResizeType.MiddleLeft:
-                left = SnapToGrid(left);
+                left = NodeGrid.Snap(left);
                 break;
             case NodeResizeType.MiddleRight:
-                right = SnapToGrid(right);
+                right = NodeGrid.Snap(right);
                 break;
             case NodeResizeType.BottomLeft:
-                left = SnapToGrid(left);
-                bottom = SnapToGrid(bottom);
+                left = NodeGrid.Snap(left);
+                bottom = NodeGrid.Snap(bottom);
                 break;
             case NodeResizeType.BottomMiddle:
-                bottom = SnapToGrid(bottom);
+                bottom = NodeGrid.Snap(bottom);
                 break;
             case NodeResizeType.BottomRight:
-                right = SnapToGrid(right);
-                bottom = SnapToGrid(bottom);
+                right = NodeGrid.Snap(right);
+                bottom = NodeGrid.Snap(bottom);
                 break;
             default:
                 return boundary;

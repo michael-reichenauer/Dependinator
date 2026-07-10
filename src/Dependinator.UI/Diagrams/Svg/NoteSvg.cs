@@ -12,9 +12,6 @@ namespace Dependinator.UI.Diagrams.Svg;
 // dragging and deletion flow through the existing interaction pipeline.
 static class NoteSvg
 {
-    // Fraction of the average glyph advance relative to the font size (matches NodeSvg).
-    const double AverageCharWidthFactor = 0.6;
-
     // The note stops growing once the render zoom passes this factor, so zooming in keeps the
     // marker a readable, fixed on-screen size instead of an ever-larger circle.
     const double MaxNoteZoom = 1.0;
@@ -59,7 +56,7 @@ static class NoteSvg
     {
         var len = Math.Max(1, shortName.Length);
         var maxTextWidth = radius * 1.6; // leave a little padding inside the diameter
-        var byWidth = maxTextWidth / (len * AverageCharWidthFactor);
+        var byWidth = maxTextWidth / (len * NodeSvg.AverageCharWidthFactor);
         return Math.Min(radius * 1.1, byWidth);
     }
 

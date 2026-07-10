@@ -33,48 +33,32 @@ static partial class NodeSvg
     const double DescriptionFirstLineOffsetFactor = 0.8;
     const double MemberTextGap = 4;
     const double MemberHorizontalPadding = 4;
-    const double AverageCharWidthFactor = 0.6;
+
+    // Fraction of the average glyph advance relative to the font size (shared with NoteSvg).
+    internal const double AverageCharWidthFactor = 0.6;
 
     public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
         var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
         var textZoom = TextZoom(parentZoom);
-        var textX = geometry.X + geometry.Width / 2;
-        var textY = geometry.Y + geometry.Height;
         var fontSize = FontSize * textZoom;
-        var iconId = IconName(node);
-        var elementId = PointerId.FromNode(node.Id).ElementId;
-        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
-        var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName, node.HtmlDescription);
-        var selectedOverlay = SelectedNodeSvg(node, geometry);
-        var descriptionFontSize = DescriptionFontSize * textZoom;
-        var descriptionY = textY + fontSize + DescriptionLineGap * textZoom;
-        var descriptionSvg = BuildDescriptionSvg(
-            node,
-            textX,
-            descriptionY,
-            descriptionFontSize,
-            "iconDescription",
-            textOpacity,
-            DescriptionMinWidth,
-            ScaledMaxLines(IconDescriptionMaxLines, parentZoom, textZoom)
+        var textPos = new Pos(geometry.X + geometry.Width / 2, geometry.Y + geometry.Height);
+
+        var layout = new LeafNodeLayout(
+            IconRect: geometry,
+            TextPos: textPos,
+            TextClass: "iconName",
+            TextBaseline: "hanging",
+            FontSize: fontSize,
+            DescriptionClass: "iconDescription",
+            DescriptionY: textPos.Y + fontSize + DescriptionLineGap * textZoom,
+            DescriptionMaxLines: ScaledMaxLines(IconDescriptionMaxLines, parentZoom, textZoom),
+            Bounds: geometry,
+            // The name is centered under the icon, so the marker goes half the text width right.
+            MarkerPos: new Pos(textPos.X + EstimateTextWidth(node.ShortName, fontSize) / 2, textPos.Y + fontSize / 2)
         );
 
-        return Invariant(
-            $"""
-            <use href="#{iconId}" xlink:href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
-            <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" dominant-baseline="hanging" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
-            {descriptionSvg}
-            {hoverGroup}
-            {selectedOverlay}
-            {ManualMarkerSvg(
-                node,
-                textX + EstimateTextWidth(node.ShortName, fontSize) / 2,
-                textY + fontSize / 2,
-                fontSize
-            )}
-            """
-        );
+        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom);
     }
 
     public static string GetNodeContainerSvg(Node node, Rect nodeCanvasRect, double parentZoom, string childrenContent)
@@ -133,7 +117,42 @@ static partial class NodeSvg
     {
         var textZoom = TextZoom(parentZoom);
         var fontSize = FontSize * textZoom;
-        var layout = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
+        var member = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
+
+        var layout = new LeafNodeLayout(
+            IconRect: member.Icon,
+            TextPos: member.Text,
+            TextClass: "memberName",
+            TextBaseline: "middle",
+            FontSize: fontSize,
+            DescriptionClass: "memberDescription",
+            DescriptionY: member.Text.Y + fontSize / 2 + DescriptionLineGap * textZoom,
+            DescriptionMaxLines: ScaledMaxLines(MemberDescriptionMaxLines, parentZoom, textZoom),
+            Bounds: member.Bounds,
+            MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.ShortName, fontSize), member.Text.Y)
+        );
+
+        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom);
+    }
+
+    // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
+    // (an icon node or a member row); GetNodeIconSvg and GetMemberNodeSvg differ only in these
+    // values, not in structure.
+    readonly record struct LeafNodeLayout(
+        Rect IconRect,
+        Pos TextPos,
+        string TextClass,
+        string TextBaseline,
+        double FontSize,
+        string DescriptionClass,
+        double DescriptionY,
+        int DescriptionMaxLines,
+        Rect Bounds,
+        Pos MarkerPos
+    );
+
+    static string BuildLeafNodeSvg(Node node, LeafNodeLayout layout, double descriptionFontSize)
+    {
         var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
@@ -145,32 +164,25 @@ static partial class NodeSvg
             node.HtmlDescription
         );
         var selectedOverlay = SelectedNodeSvg(node, layout.Bounds);
-        var descriptionFontSize = DescriptionFontSize * textZoom;
-        var descriptionY = layout.Text.Y + fontSize / 2 + DescriptionLineGap * textZoom;
         var descriptionSvg = BuildDescriptionSvg(
             node,
-            layout.Text.X,
-            descriptionY,
+            layout.TextPos.X,
+            layout.DescriptionY,
             descriptionFontSize,
-            "memberDescription",
+            layout.DescriptionClass,
             textOpacity,
             DescriptionMinWidth,
-            ScaledMaxLines(MemberDescriptionMaxLines, parentZoom, textZoom)
+            layout.DescriptionMaxLines
         );
 
         return Invariant(
             $"""
-            <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.Icon.X:0.##}" y="{layout.Icon.Y:0.##}" width="{layout.Icon.Width:0.##}" height="{layout.Icon.Height:0.##}" {nodeOpacity} />
-            <text x="{layout.Text.X:0.##}" y="{layout.Text.Y:0.##}" class="memberName" dominant-baseline="middle" font-size="{fontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />
+            <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
-            {ManualMarkerSvg(
-                node,
-                layout.Text.X + EstimateTextWidth(node.ShortName, fontSize),
-                layout.Text.Y,
-                fontSize
-            )}
+            {ManualMarkerSvg(node, layout.MarkerPos.X, layout.MarkerPos.Y, layout.FontSize)}
             """
         );
     }
@@ -477,38 +489,8 @@ static partial class NodeSvg
         return $"{borderSvg}\n{handlesSvg}";
     }
 
-    internal static string IconName(Node node)
-    {
-        // A user-selected icon overrides the node-type default; unknown (e.g. stale persisted)
-        // names fall back to the default.
-        if (node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName))
-            return customIconName;
-
-        return node.Type switch
-        {
-            Parsing.NodeType.EventMember => "Event",
-            Parsing.NodeType.FieldMember => "Field",
-            Parsing.NodeType.PropertyMember => "Property",
-            Parsing.NodeType.MethodMember => "Method",
-            Parsing.NodeType.ConstructorMember => "Constructor",
-            Parsing.NodeType.Solution => "Solution",
-            Parsing.NodeType.Externals => "Externals",
-            Parsing.NodeType.Assembly => "Assembly",
-            Parsing.NodeType.Namespace => "Namespace",
-            // The Roslyn source parser doesn't emit Namespace nodes; namespace containers are
-            // rebuilt as implicit Parent nodes (see StructureService.GetOrCreateParent), so Parent
-            // also renders as a namespace. (The Files icon is kept in the library for future use.)
-            Parsing.NodeType.Parent => "Namespace",
-            Parsing.NodeType.Type => "Type",
-            Parsing.NodeType.ClassType => "Type",
-            Parsing.NodeType.InterfaceType => "Interface",
-            Parsing.NodeType.EnumType => "Enum",
-            Parsing.NodeType.StructType => "Struct",
-            Parsing.NodeType.RecordType => "Record",
-
-            _ => "Module",
-        };
-    }
+    // The icon id used in <use href="#id"> references; Icon owns the node-type→icon mapping.
+    internal static string IconName(Node node) => Icon.GetIconName(node);
 
     readonly record struct ContainerHeader(Pos IconPos, double IconSize, Pos TextPos, double FontSize);
 }

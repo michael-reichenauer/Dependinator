@@ -17,8 +17,6 @@ interface ILineEditService
 class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScreenService screenService)
     : ILineEditService
 {
-    static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
-
     public async Task AddSegmentPoint(LineId lineId, Pos screenPos)
     {
         if (screenPos == Pos.None)
@@ -118,7 +116,7 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
 
             var points = line.SegmentPoints.ToList();
             var point = points[pointerId.LinePointIndex];
-            var snapped = point with { X = SnapToGrid(point.X), Y = SnapToGrid(point.Y) };
+            var snapped = point with { X = NodeGrid.Snap(point.X), Y = NodeGrid.Snap(point.Y) };
             if (snapped == point)
                 return;
 
@@ -193,7 +191,7 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
         {
             var p1 = polyline[i];
             var p2 = polyline[i + 1];
-            var projected = ProjectPointOnSegment(hint, p1, p2);
+            var projected = LinePathGeometry.ProjectPointOnSegment(hint, p1, p2);
             var dist2 = DistanceSquared(hint, projected);
             if (dist2 >= bestDistanceSquared)
                 continue;
@@ -207,19 +205,6 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
         var insertIndex = bestSegmentIndex;
         updatedPoints.Insert(insertIndex, projectedPoint);
         return updatedPoints;
-    }
-
-    static Pos ProjectPointOnSegment(Pos point, Pos start, Pos end)
-    {
-        var dx = end.X - start.X;
-        var dy = end.Y - start.Y;
-        var len2 = dx * dx + dy * dy;
-        if (len2 == 0)
-            return start;
-
-        var t = ((point.X - start.X) * dx + (point.Y - start.Y) * dy) / len2;
-        t = Math.Max(0, Math.Min(1, t));
-        return new Pos(start.X + dx * t, start.Y + dy * t);
     }
 
     static double DistanceSquared(Pos a, Pos b)

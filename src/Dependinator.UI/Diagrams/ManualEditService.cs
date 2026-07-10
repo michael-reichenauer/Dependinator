@@ -113,21 +113,13 @@ class ManualEditService(
 
         using (var model = modelMgr.UseModel())
         {
-            var container = ResolveContainer(model, PointerId.Parse(e.TargetId));
-
-            // Screen → canvas (root) coordinates, then into the container's inner child space.
-            var svgX = e.OffsetX * model.Zoom + model.Offset.X;
-            var svgY = e.OffsetY * model.Zoom + model.Offset.Y;
-
-            var (parentPos, parentZoom) = container.GetPosAndZoom();
-            var zoom = container.ContainerZoom * parentZoom;
-            var localX = (svgX - parentPos.X - container.ContainerOffset.X * parentZoom) / zoom;
-            var localY = (svgY - parentPos.Y - container.ContainerOffset.Y * parentZoom) / zoom;
+            var container = DiagramPlacement.ResolveContainer(model, PointerId.Parse(e.TargetId));
+            var local = DiagramPlacement.ToContainerLocal(model, container, e);
 
             pendingParentName = container.Name;
             pendingBoundary = new Rect(
-                SnapToGrid(localX - DefaultWidth / 2),
-                SnapToGrid(localY - DefaultHeight / 2),
+                NodeGrid.Snap(local.X - DefaultWidth / 2),
+                NodeGrid.Snap(local.Y - DefaultHeight / 2),
                 DefaultWidth,
                 DefaultHeight
             );
@@ -170,7 +162,7 @@ class ManualEditService(
 
         // The typed text is the short name; the node's identity is qualified by its parent (like
         // parsed nodes), so the same short name can be used under different parents.
-        var fullName = ComposeFullName(parentName, trimmed);
+        var fullName = DiagramPlacement.ComposeFullName(parentName, trimmed);
 
         // Renaming to the unchanged name is a no-op, but a valid "commit" that closes the prompt.
         if (isRename && fullName == renameFromName)
@@ -200,11 +192,6 @@ class ManualEditService(
         }
         return true;
     }
-
-    // The identity name of a manual node: the parent's full name and the typed short name joined by
-    // a dot (mirroring parsed node names). Top-level nodes (empty parent name) keep just the short.
-    static string ComposeFullName(string parentName, string shortName) =>
-        string.IsNullOrEmpty(parentName) ? shortName : $"{parentName}.{shortName}";
 
     public void CancelNameEntry()
     {
@@ -287,25 +274,9 @@ class ManualEditService(
         StateChanged?.Invoke();
     }
 
-    // The container the new node is added into: the double-clicked container node, else the
-    // clicked node's parent, else the root.
-    static Node ResolveContainer(IModel model, PointerId pointerId)
-    {
-        if (pointerId.IsNode && model.Nodes.TryGetValue(pointerId.NodeId, out var node) && !node.IsRoot)
-        {
-            if (NodeViewPolicy.IsContainerView(node, model.Zoom))
-                return node;
-            if (node.Parent is { } parent)
-                return parent;
-        }
-        return model.Root;
-    }
-
     string ResolveNodeName(NodeId nodeId)
     {
         using var model = modelMgr.UseModel();
         return model.Nodes.TryGetValue(nodeId, out var node) ? node.Name : "";
     }
-
-    static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 }

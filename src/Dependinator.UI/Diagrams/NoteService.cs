@@ -138,23 +138,14 @@ class NoteService(
         string nextId;
         using (var model = modelMgr.UseModel())
         {
-            // Resolve the parent the same way manual-node add does: the clicked container (when
-            // shown expanded), else the clicked node's parent, else the root. This keeps the note
-            // sized relative to and scaling/hiding with the container it is dropped into.
-            var container = ResolveContainer(model, PointerId.Parse(e.TargetId));
-
-            // Screen → canvas (root) coordinates, then into the container's inner child space.
-            var svgX = e.OffsetX * model.Zoom + model.Offset.X;
-            var svgY = e.OffsetY * model.Zoom + model.Offset.Y;
-
-            var (parentPos, parentZoom) = container.GetPosAndZoom();
-            var zoom = container.ContainerZoom * parentZoom;
-            var localX = (svgX - parentPos.X - container.ContainerOffset.X * parentZoom) / zoom;
-            var localY = (svgY - parentPos.Y - container.ContainerOffset.Y * parentZoom) / zoom;
+            // Resolve the parent the same way manual-node add does. This keeps the note sized
+            // relative to and scaling/hiding with the container it is dropped into.
+            var container = DiagramPlacement.ResolveContainer(model, PointerId.Parse(e.TargetId));
+            var local = DiagramPlacement.ToContainerLocal(model, container, e);
 
             boundary = new Rect(
-                SnapToGrid(localX - NoteSize / 2),
-                SnapToGrid(localY - NoteSize / 2),
+                NodeGrid.Snap(local.X - NoteSize / 2),
+                NodeGrid.Snap(local.Y - NoteSize / 2),
                 NoteSize,
                 NoteSize
             );
@@ -168,7 +159,7 @@ class NoteService(
 
         // The typed id is the note's short name; its identity is qualified by its parent (like
         // parsed and manual nodes), so the same id can be reused under different parents.
-        var name = ComposeFullName(parentName, result.Id);
+        var name = DiagramPlacement.ComposeFullName(parentName, result.Id);
         using (var model = modelMgr.UseModel())
         {
             if (model.Nodes.ContainsKey(NodeId.FromName(name)))
@@ -209,7 +200,7 @@ class NoteService(
         }
 
         // Re-qualify the typed id under the note's existing parent to get its new identity.
-        var newFullName = ComposeFullName(parentName, result.Id);
+        var newFullName = DiagramPlacement.ComposeFullName(parentName, result.Id);
         var isRename = newFullName != oldFullName;
         if (isRename)
         {
@@ -260,26 +251,6 @@ class NoteService(
         return dialogResult.Data as NoteDialogResult;
     }
 
-    // The container the note is added into (mirrors ManualEditService.ResolveContainer): the
-    // clicked container node when it is shown as an expanded box, else the clicked node's parent,
-    // else the root.
-    static Node ResolveContainer(IModel model, PointerId pointerId)
-    {
-        if (pointerId.IsNode && model.Nodes.TryGetValue(pointerId.NodeId, out var node) && !node.IsRoot)
-        {
-            if (NodeViewPolicy.IsContainerView(node, model.Zoom))
-                return node;
-            if (node.Parent is { } parent)
-                return parent;
-        }
-        return model.Root;
-    }
-
-    // A note's identity name: the parent's full name and the typed short id joined by a dot
-    // (mirroring parsed/manual node names). Top-level notes (empty parent) keep just the short id.
-    static string ComposeFullName(string parentName, string shortId) =>
-        string.IsNullOrEmpty(parentName) ? shortId : $"{parentName}.{shortId}";
-
     // The next unused numeric id (1, 2, 3, …) among existing notes; user-entered ids may be any
     // short text but the default keeps guiding the reading order.
     static string NextNoteId(IModel model)
@@ -292,6 +263,4 @@ class NoteService(
         }
         return (maxNumber + 1).ToString();
     }
-
-    static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 }

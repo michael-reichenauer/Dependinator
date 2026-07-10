@@ -5,70 +5,108 @@ namespace Dependinator.UI.Diagrams;
 
 static class LinePathGeometry
 {
+    // How a line's endpoints relate in the node tree; this decides which node's child-local
+    // coordinate space the line is expressed and rendered in (its "owner").
+    enum LineRelation
+    {
+        Direct, // Rendered inside an explicit RenderAncestor, crossing container levels
+        ParentToChild, // From a container to one of its children
+        ChildToParent, // From a child to its container
+        Siblings, // Between two children of the same container
+        Unrelated, // Nothing to render (no common coordinate space)
+    }
+
+    static LineRelation Classify(Line line) =>
+        line.IsDirect ? LineRelation.Direct
+        : line.Target.Parent == line.Source ? LineRelation.ParentToChild
+        : line.Source.Parent == line.Target ? LineRelation.ChildToParent
+        : line.Source.Parent == line.Target.Parent ? LineRelation.Siblings
+        : LineRelation.Unrelated;
+
+    // The node whose children-local coordinate space the line's segment points live in.
     public static bool TryGetOwnerNode(Line line, out Node owner)
     {
-        if (line.IsDirect)
+        owner = Classify(line) switch
         {
-            owner = line.RenderAncestor!;
-            return owner is not null;
-        }
-
-        if (line.Target.Parent == line.Source)
-        {
-            owner = line.Source;
-            return true;
-        }
-
-        if (line.Source.Parent == line.Target)
-        {
-            owner = line.Target;
-            return true;
-        }
-
-        owner = line.Source.Parent;
-        return owner == line.Target.Parent;
+            LineRelation.Direct => line.RenderAncestor!,
+            LineRelation.ParentToChild => line.Source,
+            LineRelation.ChildToParent => line.Target,
+            LineRelation.Siblings => line.Source.Parent,
+            _ => null!,
+        };
+        return owner is not null;
     }
 
     public static bool TryGetLocalEndpoints(Line line, out LineEndpoints endpoints)
     {
-        if (line.IsDirect)
-            return TryGetDirectLocalEndpoints(line, out endpoints);
-
-        var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source);
-        var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target);
-
-        if (line.Target.Parent == line.Source)
+        switch (Classify(line))
         {
-            var parent = line.Source;
-            endpoints = new LineEndpoints(
-                -parent.ContainerOffset.X / parent.ContainerZoom,
-                (parent.Boundary.Height / 2 - parent.ContainerOffset.Y) / parent.ContainerZoom,
-                targetAnchor.X,
-                targetAnchor.Y
-            );
-            return true;
-        }
+            case LineRelation.Direct:
+                return TryGetDirectLocalEndpoints(line, out endpoints);
 
-        if (line.Source.Parent == line.Target)
-        {
-            var parent = line.Target;
-            endpoints = new LineEndpoints(
-                sourceAnchor.X,
-                sourceAnchor.Y,
-                (parent.Boundary.Width - parent.ContainerOffset.X) / parent.ContainerZoom,
-                (parent.Boundary.Height / 2 - parent.ContainerOffset.Y) / parent.ContainerZoom
-            );
-            return true;
-        }
+            // A parent endpoint must be expressed in the parent's own child-local space: its
+            // edge points (left edge / right edge at mid height) are mapped from boundary
+            // coordinates by undoing the container transform (subtract ContainerOffset, divide
+            // by ContainerZoom).
+            case LineRelation.ParentToChild:
+            {
+                var parent = line.Source;
+                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target);
+                endpoints = new LineEndpoints(
+                    -parent.ContainerOffset.X / parent.ContainerZoom, // Parent's left edge
+                    (parent.Boundary.Height / 2 - parent.ContainerOffset.Y) / parent.ContainerZoom, // Mid height
+                    targetAnchor.X,
+                    targetAnchor.Y
+                );
+                return true;
+            }
 
-        if (line.Source.Parent != line.Target.Parent)
-        {
-            endpoints = default;
-            return false;
-        }
+            case LineRelation.ChildToParent:
+            {
+                var parent = line.Target;
+                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source);
+                endpoints = new LineEndpoints(
+                    sourceAnchor.X,
+                    sourceAnchor.Y,
+                    (parent.Boundary.Width - parent.ContainerOffset.X) / parent.ContainerZoom, // Right edge
+                    (parent.Boundary.Height / 2 - parent.ContainerOffset.Y) / parent.ContainerZoom // Mid height
+                );
+                return true;
+            }
 
-        endpoints = new LineEndpoints(sourceAnchor.X, sourceAnchor.Y, targetAnchor.X, targetAnchor.Y);
-        return true;
+            case LineRelation.Siblings:
+            {
+                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source);
+                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target);
+                endpoints = new LineEndpoints(sourceAnchor.X, sourceAnchor.Y, targetAnchor.X, targetAnchor.Y);
+                return true;
+            }
+
+            default:
+                endpoints = default;
+                return false;
+        }
+    }
+
+    // The clamped projection factor t ∈ [0,1] of point onto the segment start→end
+    // (0 for a degenerate zero-length segment).
+    public static double ProjectionFactor(Pos point, Pos start, Pos end)
+    {
+        var dx = end.X - start.X;
+        var dy = end.Y - start.Y;
+        var len2 = dx * dx + dy * dy;
+        if (len2 == 0)
+            return 0;
+
+        var t = ((point.X - start.X) * dx + (point.Y - start.Y) * dy) / len2;
+        return Math.Clamp(t, 0, 1);
+    }
+
+    // The point on the segment start→end closest to the given point.
+    public static Pos ProjectPointOnSegment(Pos point, Pos start, Pos end)
+    {
+        var t = ProjectionFactor(point, start, end);
+        return new Pos(start.X + (end.X - start.X) * t, start.Y + (end.Y - start.Y) * t);
     }
 
     static bool TryGetDirectLocalEndpoints(Line line, out LineEndpoints endpoints)

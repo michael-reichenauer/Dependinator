@@ -203,26 +203,10 @@ class InteractionService : IInteractionService
     {
         if (IsEditNodeMode)
         {
-            // Node is in edit mode
+            // In edit mode, a wheel gesture on the selected node (or anything inside it) zooms
+            // the node's content instead of the canvas.
             var targetId = PointerId.Parse(e.TargetId);
-            if (targetId.Id != selectionService.SelectedId.Id)
-            {
-                // Node is in edit mode, check if mouse down is inside the selected node, if so treat as selected node
-                var selectId = NodeId.FromId(selectionService.SelectedId.Id);
-
-                using (var model = modelMgr.UseModel())
-                {
-                    if (model.Nodes.TryGetValue(NodeId.FromId(targetId.Id), out var node))
-                    {
-                        var ancestor = node.Ancestors().FirstOrDefault(n => n.Id == selectId);
-                        if (ancestor != null)
-                        {
-                            targetId = selectionService.SelectedId;
-                        }
-                    }
-                }
-            }
-            if (targetId.Id == selectionService.SelectedId.Id)
+            if (targetId.Id == selectionService.SelectedId.Id || IsInsideSelectedNode(targetId))
             {
                 nodeEditService.ZoomSelectedNode(e, selectionService.SelectedId);
                 return;
@@ -232,6 +216,17 @@ class InteractionService : IInteractionService
         panZoomService.Zoom(e);
         selectionService.HideSelectedPosition();
         UpdateToolbar();
+    }
+
+    // True if the pointer target is a descendant of the currently selected node. In edit mode,
+    // gestures on any descendant are treated as gestures on the selected node itself.
+    bool IsInsideSelectedNode(PointerId targetId)
+    {
+        var selectId = NodeId.FromId(selectionService.SelectedId.Id);
+        using var model = modelMgr.UseModel();
+        if (!model.Nodes.TryGetValue(NodeId.FromId(targetId.Id), out var node))
+            return false;
+        return node.Ancestors().Any(n => n.Id == selectId && !n.IsRoot);
     }
 
     void UpdateToolbar()
@@ -306,15 +301,8 @@ class InteractionService : IInteractionService
         if (!IsEditNodeMode)
             return;
 
-        // Node is in edit mode, check if mouse down is inside the selected node, if so treat as selected node
-        var downId = NodeId.FromId(mouseDownId.Id);
-        var selectId = NodeId.FromId(selectionService.SelectedId.Id);
-
-        using var model = modelMgr.UseModel();
-        if (!model.Nodes.TryGetValue(downId, out var node))
-            return;
-        var ancestorId = node.Ancestors().FirstOrDefault(n => n.Id == selectId && !n.IsRoot);
-        if (ancestorId == null)
+        // In edit mode, a press inside the selected node acts on the selected node itself.
+        if (!IsInsideSelectedNode(mouseDownId))
             return;
         mouseDownId = selectionService.SelectedId;
     }

@@ -201,40 +201,28 @@ else if (HasSelectedLine)
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
-  bool IsSelectedNodeManual
-  {
-    get
-    {
-      if (!selectionService.SelectedId.IsNode)
-        return false;
-      using var model = modelMgr.UseModel();
-      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
-          && node.IsManual;
-    }
-  }
-  bool IsSelectedNodeNote
-  {
-    get
-    {
-      if (!selectionService.SelectedId.IsNode)
-        return false;
-      using var model = modelMgr.UseModel();
-      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
-          && node.IsNote;
-    }
-  }
-  bool SelectedNodeHasChildren
-  {
-    get
-    {
-      if (!selectionService.SelectedId.IsNode)
-        return false;
-      using var model = modelMgr.UseModel();
-      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
-          && node.Children.Count > 0;
-    }
-  }
+  bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
+  bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
+  bool SelectedNodeHasChildren => SelectedNodeIs(node => node.Children.Count > 0);
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
+
+  // The selected node's id, when the selection is a node.
+  bool TryGetSelectedNodeId(out Modeling.Models.NodeId nodeId)
+  {
+    nodeId = Modeling.Models.NodeId.Empty;
+    if (!selectionService.SelectedId.IsNode)
+      return false;
+    nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+    return true;
+  }
+
+  bool SelectedNodeIs(Func<Modeling.Models.Node, bool> predicate)
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return false;
+    using var model = modelMgr.UseModel();
+    return model.Nodes.TryGetValue(nodeId, out var node) && predicate(node);
+  }
   bool IsIconMode => !interactionService.IsContainer;
   bool CanShowSource => interactionService.CanShowSource;
 
@@ -252,9 +240,8 @@ else if (HasSelectedLine)
 
   async Task LayoutChildren()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId);
@@ -264,13 +251,12 @@ else if (HasSelectedLine)
 
   async Task LayoutDescendants()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
     if (await mbox.ShowAsync() != true)
     {
       return;
     }
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId, true);
@@ -285,10 +271,9 @@ else if (HasSelectedLine)
 
   async Task ShowSourceAsync()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
 
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     FileSpan? nodeFileSpan = null;
 
     using (var model = modelMgr.UseModel())
@@ -305,17 +290,16 @@ else if (HasSelectedLine)
 
   void BeginAddLink()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    manualEditService.BeginAddLink(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
+    manualEditService.BeginAddLink(nodeId);
     snackbar.Add("Click a target node to link to (Esc or click empty space to cancel).", Severity.Info);
   }
 
   async Task DeleteNode()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
 
     // Confirm before removing a node together with its children; no prompt for a childless node.
     if (SelectedNodeHasChildren && await deleteConfirmBox.ShowAsync() != true)
@@ -327,34 +311,31 @@ else if (HasSelectedLine)
 
   void RenameNode()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     manualEditService.BeginRenameNode(nodeId, selectionService.SelectedNodePosition);
   }
 
   Task EditNote()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return Task.CompletedTask;
-    return noteService.EditNoteAsync(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
+    return noteService.EditNoteAsync(nodeId);
   }
 
   void DeleteNoteToolbar()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     selectionService.Unselect();
     manualEditService.DeleteManualNode(nodeId);
   }
 
   async Task SelectIconAsync()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
 
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     string? currentIconName = null;
     string defaultIconName = "";
     using (var model = modelMgr.UseModel())
