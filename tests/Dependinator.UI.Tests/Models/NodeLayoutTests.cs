@@ -257,6 +257,38 @@ public class NodeLayoutTests
         );
     }
 
+    [Fact]
+    public void AdjustChildren_ChildReferencingParent_ShouldBePlacedFirstRegardlessOfInsertionOrder()
+    {
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var parent = new ModelNode("Parent", root) { Type = NodeType.Namespace, Boundary = new Rect(0, 0, 1200, 800) };
+        root.AddChild(parent);
+
+        // Insert the unrelated child first, so only a symmetric comparison moves the
+        // parent-referencing child to the front.
+        var unrelated = new ModelNode("Parent.B", parent) { Type = NodeType.Type };
+        var referencing = new ModelNode("Parent.A", parent) { Type = NodeType.Type };
+        parent.AddChild(unrelated);
+        parent.AddChild(referencing);
+
+        // An empty line (no links) is ignored by the layered layout, so the sorted grid
+        // fallback that orders children by their line relations is used.
+        var line = new Dependinator.UI.Modeling.Models.Line(referencing, parent);
+        referencing.SourceLines.Add(line);
+        parent.TargetLines.Add(line);
+
+        NodeLayout.AdjustChildren(parent);
+
+        var first = referencing.Boundary;
+        var second = unrelated.Boundary;
+        Assert.True(
+            first.Y < second.Y || (first.Y == second.Y && first.X < second.X),
+            $"Expected parent-referencing child first but got {first} vs {second}"
+        );
+    }
+
     static Rect GetDisplayedBounds(ModelNode parent)
     {
         var first = parent.Children[0].Boundary;

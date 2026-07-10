@@ -72,7 +72,7 @@ class NodeLayout
 
         if (!LayeredLayout.TryArrange(parent, metrics))
         {
-            Sorter.Sort(parent.Children, CompareChildren);
+            SortChildren(parent.Children);
             ArrangeChildren(parent, parent.Children, metrics);
         }
 
@@ -109,7 +109,7 @@ class NodeLayout
         var nonMembers = parent.Children.Where(c => !c.Type.IsMember).ToList();
 
         Sorter.Sort(members, CompareMemberChildren);
-        Sorter.Sort(nonMembers, CompareChildren);
+        SortChildren(nonMembers);
 
         var publicMembers = members.Where(m => !(m.IsPrivate ?? false)).ToList();
         var privateMembers = members.Where(m => m.IsPrivate ?? false).ToList();
@@ -148,7 +148,7 @@ class NodeLayout
             return;
         }
 
-        Sorter.Sort(newChildren, CompareChildren);
+        SortChildren(newChildren);
         PlaceNodesInFreeSlots(parent, newChildren, occupied, regularMetrics, regularMetrics.HorizontalGap);
     }
 
@@ -164,7 +164,7 @@ class NodeLayout
         var newNonMembers = newChildren.Where(c => !c.Type.IsMember).ToList();
 
         Sorter.Sort(newMembers, CompareMemberChildren);
-        Sorter.Sort(newNonMembers, CompareChildren);
+        SortChildren(newNonMembers);
 
         var existingMembers = parent.Children.Where(c => c.Boundary != Rect.None && c.Type.IsMember).ToList();
         var existingPublicMembers = existingMembers
@@ -386,42 +386,47 @@ class NodeLayout
         parent.ContainerOffset = new Pos(offsetX, offsetY);
     }
 
-    static int CompareChildren(Node c1, Node c2)
+    // Orders siblings so referencing children come before the children they reference: first by
+    // sibling lines (c1->c2 before c2->c1), then children referenced by the parent, then children
+    // referencing the parent. The relation is a partial order, so ties are left in place.
+    static void SortChildren(IList<Node> children)
     {
-        // c1->c2
-        if (c1.SourceLines.ContainsBy(l => l.Target == c2) && !c2.SourceLines.ContainsBy(l => l.Target == c1))
-            return -1;
-        // c2->c1
-        if (!c1.SourceLines.ContainsBy(l => l.Target == c2) && c2.SourceLines.ContainsBy(l => l.Target == c1))
-            return 1;
+        if (children.Count < 2)
+            return;
 
-        // Parent->c1 but not Parent->c2
-        if (
-            c1.TargetLines.ContainsBy(l => l.Source == c1.Parent)
-            && !c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)
-        )
-            return -1;
-        // Not Parent->c1 but Parent->c2
-        if (
-            !c1.TargetLines.ContainsBy(l => l.Source == c1.Parent)
-            && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)
-        )
-            return 1;
+        // Precompute the line relations once; the comparer runs O(n²) times in Sorter.Sort, so
+        // scanning the line lists in every comparison gets expensive for large namespaces.
+        var relations = children.ToDictionary(
+            child => child,
+            child =>
+                (
+                    SiblingTargets: child.SourceLines.Select(line => line.Target).ToHashSet(),
+                    HasLineFromParent: child.TargetLines.ContainsBy(line => line.Source == child.Parent),
+                    HasLineToParent: child.SourceLines.ContainsBy(line => line.Target == child.Parent)
+                )
+        );
 
-        // c1->Parent but not c2->Parent
-        if (
-            c1.SourceLines.ContainsBy(l => l.Target == c1.Parent)
-            && !c2.SourceLines.ContainsBy(l => l.Target == c2.Parent)
-        )
-            return -1;
-        // Not c1->Parent but c2->Parent
-        if (
-            !c1.TargetLines.ContainsBy(l => l.Source == c1.Parent)
-            && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)
-        )
-            return 1;
+        Sorter.Sort(
+            children,
+            (c1, c2) =>
+            {
+                var r1 = relations[c1];
+                var r2 = relations[c2];
 
-        return 0;
+                var c1ToC2 = r1.SiblingTargets.Contains(c2);
+                var c2ToC1 = r2.SiblingTargets.Contains(c1);
+                if (c1ToC2 != c2ToC1)
+                    return c1ToC2 ? -1 : 1;
+
+                if (r1.HasLineFromParent != r2.HasLineFromParent)
+                    return r1.HasLineFromParent ? -1 : 1;
+
+                if (r1.HasLineToParent != r2.HasLineToParent)
+                    return r1.HasLineToParent ? -1 : 1;
+
+                return 0;
+            }
+        );
     }
 
     // Most used/using members first, then by member kind, so the most relevant members end up

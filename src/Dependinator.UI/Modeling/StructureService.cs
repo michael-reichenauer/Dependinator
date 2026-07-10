@@ -188,8 +188,6 @@ class StructureService(ILineService linesService) : IStructureService
 
         model.TryAddNode(node);
         parent.AddChild(node);
-
-        return;
     }
 
     public void SetLinkDto(IModel model, LinkDto linkDto)

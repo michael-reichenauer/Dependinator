@@ -84,8 +84,13 @@ public class NoteCommandTests
     public void RenameNodeCommand_ShouldChangeNoteId_PreserveIsNoteAndDescription()
     {
         using var model = CreateModel();
-        new AddNodeCommand("1", model.Root.Name, new Rect(20, 30, 40, 40), isNote: true, description: "Note text")
-            .Execute(model);
+        new AddNodeCommand(
+            "1",
+            model.Root.Name,
+            new Rect(20, 30, 40, 40),
+            isNote: true,
+            description: "Note text"
+        ).Execute(model);
 
         new RenameNodeCommand(CreateStructureService(), "1", "A").Execute(model);
 

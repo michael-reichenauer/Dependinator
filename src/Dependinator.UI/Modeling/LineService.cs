@@ -8,13 +8,13 @@ interface ILineService
 }
 
 [Transient]
-class LineService() : ILineService
+class LineService : ILineService
 {
     public void AddLinesFromSourceToTarget(IModel model, Link link)
     {
         Node commonAncestor = GetCommonAncestor(link);
 
-        // Add lines from source and target nodes upp to its parent for all ancestors until just before the common ancestor
+        // Add lines from source and target nodes up to its parent for all ancestors until just before the common ancestor
         var sourceAncestor = AddAncestorLines(model, link, link.Source, commonAncestor);
         var targetAncestor = AddDescendantLines(model, link, link.Target, commonAncestor);
 
@@ -22,15 +22,13 @@ class LineService() : ILineService
         AddDirectLine(model, sourceAncestor, targetAncestor, link);
     }
 
-    static Node GetCommonAncestor(Link link)
-    {
-        var targetAncestors = link.Target.Ancestors().ToList();
-        return link.Source.Ancestors().First(targetAncestors.Contains);
-    }
+    // The parents are used (not the endpoints themselves), so a link between a node and one of
+    // its ancestors resolves to the container above both, keeping the line chain non-empty.
+    static Node GetCommonAncestor(Link link) => link.Source.Parent.LowestCommonAncestor(link.Target.Parent);
 
     Node AddAncestorLines(IModel model, Link link, Node source, Node commonAncestor)
     {
-        // Add lines from source node upp to all ancestors until just before common ancestors
+        // Add lines from source node up to all ancestors until just before common ancestors
         Node currentSource = source;
         foreach (var parent in source.Ancestors())
         {

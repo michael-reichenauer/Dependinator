@@ -143,10 +143,13 @@ class Model : IModel
             line.Remove(link);
             if (line.IsEmpty)
                 RemoveLine(line);
-
-            link.Target.Remove(link);
-            link.Source.Remove(link);
         }
+
+        // Clear the removed lines so a re-added link (e.g. when its node moves to another
+        // parent) gets fresh lines instead of stale references to lines no longer in the model.
+        link.Lines.Clear();
+        link.Target.Remove(link);
+        link.Source.Remove(link);
     }
 
     public void RemoveLine(Line line)

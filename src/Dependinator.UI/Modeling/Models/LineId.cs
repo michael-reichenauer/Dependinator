@@ -4,7 +4,7 @@ namespace Dependinator.UI.Modeling.Models;
 
 public record LineId : Id
 {
-    public static LineId Empty = new("");
+    public static readonly LineId Empty = new("");
 
     private LineId(string Value)
         : base(Value) { }
