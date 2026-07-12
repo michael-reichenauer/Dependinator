@@ -113,7 +113,7 @@ class ModelService : IModelService, IDisposable
         Clear();
 
         Log.Info("Loading ...", path);
-        using var _ = Timing.Start("Load model", path);
+        using var _ = Timing.Start($"Load model {path}");
 
         // Try read cached model (with ui layout)
         if (!Try(out var modelInfo, out var e, await ReadCachedModelAsync(path)))

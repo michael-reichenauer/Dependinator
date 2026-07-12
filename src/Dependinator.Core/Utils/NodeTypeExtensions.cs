@@ -1,8 +1,10 @@
 using Dependinator.Core.Parsing;
 
+// Note: kept in the globally imported Utils namespace (not Dependinator.Core.Parsing) so the
+// extension members are in scope in Dependinator.UI, which only aliases the Parsing namespace.
 namespace Dependinator.Core.Utils;
 
-static class NodeTypeExtension
+static class NodeTypeExtensions
 {
     extension(NodeType nodeType)
     {

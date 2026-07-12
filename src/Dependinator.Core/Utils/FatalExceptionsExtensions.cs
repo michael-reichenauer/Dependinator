@@ -19,7 +19,11 @@ public class FatalExceptionEventArgs : EventArgs
 
 public static class FatalExceptionsExtensions
 {
-    private static readonly IReadOnlyList<Type> FatalTypes = new[]
+    // Exception types that indicate programmer errors or corrupted process state. Used by
+    // "catch (Exception e) when (e.IsNotFatal())" filters so these are never swallowed;
+    // they are reported via the FatalException event (which shuts the app down) instead.
+    // Derived types count as fatal too (e.g. ArgumentNullException, ObjectDisposedException).
+    private static readonly HashSet<Type> FatalTypes = new()
     {
         typeof(ArgumentException),
         typeof(AccessViolationException),
@@ -56,19 +60,28 @@ public static class FatalExceptionsExtensions
 
     public static bool IsNotFatal(this Exception e)
     {
-        Exception exception = e;
-        Type exceptionType = e.GetType();
-
-        if (FatalTypes.Contains(exceptionType))
+        if (!IsFatalType(e.GetType()))
         {
-            StackTrace stackTrace = new StackTrace(1, true);
-            string stackTraceText = stackTrace.ToString();
-            string message = $"Exception type is fatal: {exceptionType}, {e}\n at \n{stackTraceText}";
-
-            FatalException?.Invoke(null, new FatalExceptionEventArgs(message, exception));
-            return false;
+            return true;
         }
 
-        return true;
+        StackTrace stackTrace = new StackTrace(1, true);
+        string message = $"Exception type is fatal: {e.GetType()}, {e}\n at \n{stackTrace}";
+
+        FatalException?.Invoke(null, new FatalExceptionEventArgs(message, e));
+        return false;
+    }
+
+    static bool IsFatalType(Type exceptionType)
+    {
+        for (Type? type = exceptionType; type != null; type = type.BaseType)
+        {
+            if (FatalTypes.Contains(type))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

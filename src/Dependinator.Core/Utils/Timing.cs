@@ -25,8 +25,11 @@ public class Timing : IDisposable
         this.msgSourceLineNumber = sourceLineNumber;
     }
 
+    // The StopParameter sentinel prevents positional arguments from silently binding to the
+    // [Caller...] parameters (e.g. Timing.Start("msg", path) would bind path to memberName).
     public static Timing Start(
         string msg = "",
+        Logging.StopParameter stop = Logging.StopParameter.Empty,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0

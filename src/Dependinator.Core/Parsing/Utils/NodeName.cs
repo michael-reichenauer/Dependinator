@@ -1,6 +1,6 @@
 ﻿namespace Dependinator.Core.Parsing.Utils;
 
-internal class NodeName : Equatable<NodeName>
+internal class NodeName : IEquatable<NodeName>
 {
     record DisplayParts(string ShortName, string LongName);
 
@@ -16,8 +16,6 @@ internal class NodeName : Equatable<NodeName>
 
         parentName = new Lazy<NodeName>(GetParentName);
         displayParts = new Lazy<DisplayParts>(GetDisplayParts);
-
-        IsEqualWhenSame(fullName);
     }
 
     public string FullName { get; }
@@ -54,6 +52,17 @@ internal class NodeName : Equatable<NodeName>
     }
 
     public bool IsSame(string nameText) => nameText == FullName;
+
+    public bool Equals(NodeName? other) => other is not null && FullName == other.FullName;
+
+    public override bool Equals(object? obj) => obj is NodeName other && Equals(other);
+
+    public override int GetHashCode() => FullName.GetHashCode();
+
+    public static bool operator ==(NodeName? left, NodeName? right) =>
+        left is null ? right is null : left.Equals(right);
+
+    public static bool operator !=(NodeName? left, NodeName? right) => !(left == right);
 
     public override string ToString() => this != Root ? FullName : "<root>";
 

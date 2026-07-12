@@ -2,6 +2,15 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Dependinator.Core.Utils;
 
+[AttributeUsage(AttributeTargets.Class)]
+public class SingletonAttribute : Attribute { }
+
+[AttributeUsage(AttributeTargets.Class)]
+public class ScopedAttribute : Attribute { }
+
+[AttributeUsage(AttributeTargets.Class)]
+public class TransientAttribute : Attribute { }
+
 public static class AssemblyServiceCollectionExtensions
 {
     public static IServiceCollection AddAssemblyServices(this IServiceCollection services, Type assemblyType)
@@ -25,4 +34,10 @@ public static class AssemblyServiceCollectionExtensions
 
         return services;
     }
+
+    internal static bool HasAttribute(this Type type, Type attributeType) =>
+        type.IsDefined(attributeType, inherit: true);
+
+    internal static bool HasAttribute<T>(this Type type)
+        where T : Attribute => type.HasAttribute(typeof(T));
 }
