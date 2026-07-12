@@ -28,9 +28,10 @@ public static class DependencyInjection
         );
     }
 
-    static bool HasAttribute(this Type type, Type attributeType) => type.IsDefined(attributeType, inherit: true);
+    internal static bool HasAttribute(this Type type, Type attributeType) =>
+        type.IsDefined(attributeType, inherit: true);
 
-    static bool HasAttribute<T>(this Type type)
+    internal static bool HasAttribute<T>(this Type type)
         where T : Attribute => type.HasAttribute(typeof(T));
 
     static void Register<T>(

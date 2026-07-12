@@ -9,9 +9,9 @@ public interface ICalcAdd
 {
     Task<int> AddAsync(int a, int b);
     Task<string> AddStringsAsync(string a, string b);
-    Task<int> AddWitchCancelAsync(int a, int b, CancellationToken ct);
+    Task<int> AddWithCancelAsync(int a, int b, CancellationToken ct);
     Task<int> AddWithProgressAsync(int a, int b, IProgress<int> progress);
-    Task<int> AddWitchExceptionAsync(int a, int b);
+    Task<int> AddWithExceptionAsync(int a, int b);
 }
 
 public interface IMiniCalcAdd
@@ -25,7 +25,7 @@ public sealed class CalcAddService(int extra) : ICalcAdd
 
     public Task<string> AddStringsAsync(string a, string b) => Task.FromResult(a + b + extra);
 
-    public async Task<int> AddWitchCancelAsync(int a, int b, CancellationToken ct)
+    public async Task<int> AddWithCancelAsync(int a, int b, CancellationToken ct)
     {
         try
         {
@@ -45,7 +45,7 @@ public sealed class CalcAddService(int extra) : ICalcAdd
         return a + b;
     }
 
-    public async Task<int> AddWitchExceptionAsync(int a, int b)
+    public async Task<int> AddWithExceptionAsync(int a, int b)
     {
         throw new ArgumentException($"{a} + {b} not supported");
     }
@@ -68,18 +68,6 @@ public sealed class CalcProdService(int extra) : ICalcProd
 
 public class JsonRpcServiceTests
 {
-    // public JsonRpcServiceTests(ITestOutputHelper output)
-    // {
-    //     ConfigLogger.Configure(
-    //         new HostLoggingSettings(
-    //             EnableFileLog: false,
-    //             EnableConsoleLog: false,
-    //             LogFilePath: null,
-    //             Output: line => output.WriteLine(line)
-    //         )
-    //     );
-    // }
-
     [Fact]
     public async Task TestCallAsync()
     {
@@ -121,7 +109,7 @@ public class JsonRpcServiceTests
         // Check that cancellation token is forwarded to target and can be used there
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(1000));
         CancellationToken ct = cts.Token;
-        int sum = await calcAdd.AddWitchCancelAsync(3, 8, ct);
+        int sum = await calcAdd.AddWithCancelAsync(3, 8, ct);
         Assert.Equal(3 + 8 + 899, sum);
     }
 
@@ -151,7 +139,7 @@ public class JsonRpcServiceTests
         jsonRpcService.StartListening();
         ICalcAdd calcAdd = jsonRpcService.GetRemoteProxy<ICalcAdd>();
 
-        var exception = await Assert.ThrowsAsync<RemoteInvocationException>(() => calcAdd.AddWitchExceptionAsync(3, 8));
+        var exception = await Assert.ThrowsAsync<RemoteInvocationException>(() => calcAdd.AddWithExceptionAsync(3, 8));
         Assert.Equal("3 + 8 not supported", exception.Message);
         Assert.Equal("System.ArgumentException", ((CommonErrorData)exception.DeserializedErrorData!).TypeName);
     }
@@ -238,7 +226,7 @@ public class JsonRpcServiceTests
             jsonRpcService.CheckConnectionAsync(TimeSpan.FromSeconds(1))
         );
 
-        // Now enable communication anc check again
+        // Now enable communication and check again
         jsonRpcService.RegisterSendMessageAction(jsonRpcService.AddReceivedMessageAsync);
         await jsonRpcService.CheckConnectionAsync(TimeSpan.FromSeconds(1));
     }
