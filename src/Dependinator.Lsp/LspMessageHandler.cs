@@ -25,6 +25,9 @@ public class LspMessageHandler : IJsonRpcNotificationHandler<LspMessage>
         this.server = server;
         this.jsonRpcService = jsonRpcService;
 
+        // Registered in the constructor so the send action is wired as soon as OmniSharp
+        // creates this handler. The UI cannot trigger outbound traffic earlier, since it
+        // waits for the 'ui/lspReady' notification before sending any message.
         jsonRpcService.RegisterSendMessageAction(SendMessageToUIAsync);
     }
 

@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Dependinator.UI")]
 [assembly: InternalsVisibleTo("Dependinator.Lsp")]
+[assembly: InternalsVisibleTo("Dependinator.Lsp.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Roslyn")]
 [assembly: InternalsVisibleTo("Dependinator.Roslyn.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Web")]

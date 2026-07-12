@@ -32,10 +32,10 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
         await App.CloudButton.ClickAsync();
 
         // Login is async (Functions round-trip). The cloud tooltip flips from "Device sync
-        // disabled" to "Device sync enabled as <email>" once it completes; hovering keeps the
+        // disabled" to "Device sync enabled for <email>" once it completes; hovering keeps the
         // tooltip open while Expect retries.
         await App.CloudButton.HoverAsync();
-        await Expect(Page.GetByText(new Regex("sync enabled as"))).ToBeVisibleAsync(new() { Timeout = 30_000 });
+        await Expect(Page.GetByText(new Regex("sync enabled for"))).ToBeVisibleAsync(new() { Timeout = 30_000 });
 
         // The app menu now reflects an authenticated session (Logout and Cloud Models both
         // live inside the Models submenu, so hover it to expand the flyout) ...

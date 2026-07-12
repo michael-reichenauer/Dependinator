@@ -9,14 +9,14 @@ namespace Dependinator.Lsp.CloudSync;
 
 // Parameters and result of the interactive Clerk sign-in the extension runs on request
 // (loopback browser flow; the extension stores the token in VS Code secret storage).
-public record SignInParams()
+public record SignInParams
 {
     public static readonly string Method = "dependinator/cloudSync/signIn";
 }
 
 public record SignInResult(string Token);
 
-public record ClearTokenParams()
+public record ClearTokenParams
 {
     public static readonly string Method = "dependinator/cloudSync/clearToken";
 }
@@ -81,7 +81,9 @@ class CloudSyncRpcService : ICloudSyncRpcService
 
         if (!authState.IsAuthenticated)
         {
+            // The fresh token was rejected by the API; clear it so the user can retry cleanly.
             Log.Warn("Token acquisition succeeded, but the API returned unauthenticated");
+            await ClearStoredTokenAsync();
             return R.Error(
                 "Cloud sync login completed, but the API did not accept the token. Check Clerk configuration."
             );
@@ -93,18 +95,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
     // Clears the token here and in the extension's secret storage.
     public async Task<R<CloudAuthState>> LogoutAsync()
     {
-        try
-        {
-            await server
-                .SendRequest(ClearTokenParams.Method, new ClearTokenParams())
-                .ReturningVoid(CancellationToken.None);
-        }
-        catch (Exception ex)
-        {
-            Log.Exception(ex, "Failed to clear token in extension");
-        }
-
-        context.SetToken(null);
+        await ClearStoredTokenAsync();
         return SignedOutState();
     }
 
