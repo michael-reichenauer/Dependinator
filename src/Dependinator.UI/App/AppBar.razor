@@ -302,8 +302,8 @@
                 : IsCloudConnecting
     ? "Connecting to cloud …"
                 : AuthState.IsAuthenticated
-    ? $"Device sync enabled as {AuthState.User?.Email ?? AuthState.User?.UserId}"
-    : "Device sync disabled";
+    ? $"Device sync enabled for {AuthState.User?.Email ?? AuthState.User?.UserId}"
+    : "Device sync disabled, click to enable";
     string SyncDownPrompt =>
     HasSyncConflicts
     ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
