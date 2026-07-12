@@ -41,28 +41,22 @@ class SourceParser : ISourceParser
             List<Item> solutionNodes = [];
             solutionNodes.Add(new Item(solutionNode, null));
 
-            // // In sequence
-            // foreach (var project in projects)
-            // {
-            //     if (!Try(out var items, out var e, await ParseProjectAsync(project, solutionNode.Name)))
-            //     {
-            //         Log.Warn($"Failed to parse project {project.Name}: {e.ErrorMessage}");
-            //         continue;
-            //     }
+            // Parse all projects in parallel
+            var parseProjectTasks = projects
+                .Select(p => (Project: p, Task: ParseProjectAsync(p, solutionNode.Name)))
+                .ToList();
 
-            //     solutionNodes.AddRange(items);
-            // }
-
-            // In parallel
-            var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionNode.Name));
-
-            await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
+            foreach (var (project, parseProjectTask) in parseProjectTasks)
             {
                 if (!Try(out var items, out var e, await parseProjectTask))
+                {
+                    Log.Warn($"Failed to parse project {project.Name}: {e.ErrorMessage}");
                     continue;
+                }
                 solutionNodes.AddRange(items);
             }
 
+            // Uncomment to regenerate the embedded demo model (see WriteCompressedDemoModelAsync)
             // await WriteCompressedDemoModelAsync(solutionNodes, solutionPath);
 
             return solutionNodes;
@@ -80,7 +74,6 @@ class SourceParser : ISourceParser
             using var workspace = Compiler.CreateWorkspace();
 
             var project = await workspace.OpenProjectAsync(projectPath);
-            // Log.Info("Parse:", projectPath);
             return await ParseProjectAsync(project, null);
         }
         catch (Exception e)
@@ -91,7 +84,6 @@ class SourceParser : ISourceParser
 
     public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
     {
-        // Log.Info("Parse:", project.Name);
         if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
             return e;
 
@@ -115,12 +107,6 @@ class SourceParser : ISourceParser
             ),
             null
         );
-
-        var typeNames = Compiler
-            .GetAllTypes(compilation)
-            .Where(t => !t.IsImplicitlyDeclared)
-            .Select(t => t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
-            .ToList();
 
         foreach (var type in Compiler.GetAllTypes(compilation).Where(t => !t.IsImplicitlyDeclared))
         {
@@ -164,7 +150,7 @@ class SourceParser : ISourceParser
         {
             var lineSpan = syntaxRef.GetSyntax().GetLocation().GetLineSpan();
             if (!IsGeneratedPath(lineSpan.Path))
-                return new FileSpan(lineSpan.Path, lineSpan.StartLinePosition.Line, lineSpan.EndLinePosition.Line);
+                return Locations.ToFileSpan(lineSpan);
         }
 
         foreach (var fileName in new[] { "Usings.cs", "AssemblyInfo.cs" })
@@ -237,12 +223,13 @@ class SourceParser : ISourceParser
         }
     }
 
+    // Dev tool for regenerating the embedded demo model: uncomment the call in
+    // ParseSolutionAsync and parse the working solution (e.g. run the Web host); the parsed
+    // items are written gzip-compressed to the Wasm wwwroot with "Dependinator" renamed "Demo".
     static async Task WriteCompressedDemoModelAsync(IReadOnlyList<Item> solutionNodes, string solutionPath)
     {
         try
         {
-            Log.Info(solutionPath);
-            Log.Info(DemoModel.WorkingSolutionPath);
             if (Build.IsWasm || solutionPath != DemoModel.WorkingSolutionPath)
                 return;
             string outputPath = DemoModel.DemoOutputPath;
@@ -261,5 +248,6 @@ class SourceParser : ISourceParser
         }
     }
 
-    static bool IsTestProject(Project project) => project.Name.EndsWith("Test") || project.Name.EndsWith(".Tests");
+    // Heuristic: skip test projects by naming convention (e.g. "Foo.Tests", "FooTests", "FooTest")
+    static bool IsTestProject(Project project) => project.Name.EndsWith("Test") || project.Name.EndsWith("Tests");
 }

@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Dependinator.Roslyn.Parsing;
 
-class IgnoredTypes
+static class IgnoredTypes
 {
     public static bool IsIgnored(INamedTypeSymbol symbol, string? typeName = null)
     {

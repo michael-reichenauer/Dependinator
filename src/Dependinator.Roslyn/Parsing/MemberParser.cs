@@ -2,21 +2,25 @@ using Microsoft.CodeAnalysis;
 
 namespace Dependinator.Roslyn.Parsing;
 
-class MemberParser
+static class MemberParser
 {
     public static IEnumerable<Item> ParseTypeMember(ISymbol member, string fullTypeName, Compilation compilation)
     {
-        var items = member switch
+        switch (member)
         {
-            IMethodSymbol m => ParseMethod(m, fullTypeName, compilation),
-            IPropertySymbol p => ParseProperty(p, fullTypeName, compilation),
-            IFieldSymbol f => ParseField(f, fullTypeName),
-            IEventSymbol e => ParseEvent(e, fullTypeName),
-            _ => throw new NotSupportedException($"Member type not supported: {member}"),
-        };
-
-        foreach (var item in items)
-            yield return item;
+            case IMethodSymbol m:
+                return ParseMethod(m, fullTypeName, compilation);
+            case IPropertySymbol p:
+                return ParseProperty(p, fullTypeName, compilation);
+            case IFieldSymbol f:
+                return ParseField(f, fullTypeName);
+            case IEventSymbol e:
+                return ParseEvent(e, fullTypeName);
+            default:
+                // Skip unknown member kinds rather than failing the whole parse
+                Log.Warn($"Unsupported member kind {member.Kind}: {member}");
+                return [];
+        }
     }
 
     static IEnumerable<Item> ParseEvent(IEventSymbol member, string fullTypeName)
@@ -29,7 +33,7 @@ class MemberParser
         var memberNode = ParseMember(member, fullTypeName);
         yield return memberNode;
 
-        // Handle field link
+        // Link to the field's type
         if (
             member.Type is INamedTypeSymbol fieldType
             && !IsSameAsContainingType(fieldType, member)
@@ -45,7 +49,7 @@ class MemberParser
 
         var sentLinks = new HashSet<string>();
 
-        // Handle property type link
+        // Link to the property's type
         if (
             member.Type is INamedTypeSymbol propertyType
             && !IsSameAsContainingType(propertyType, member)
@@ -57,7 +61,7 @@ class MemberParser
                 yield return new Item(null, typeLink);
         }
 
-        // Handle links from the property accessor bodies
+        // Links from the property accessor bodies
         foreach (var link in MethodLinkParser.ParsePropertyLinks(member, memberNode.Node!.Name, compilation))
         {
             if (sentLinks.Add(link.Target))
@@ -83,7 +87,7 @@ class MemberParser
         var name = Names.GetFullMemberName(member, fullTypeName);
         var fileSpan = Locations.GetFirstFileSpanOrNoValue(member);
         var leadingComment = CommentExtractor.GetLeadingCommentOrNoValue(member, fileSpan);
-        var nodeType = NodeTypes.ToTypes(member);
+        var nodeType = NodeTypes.ToNodeType(member);
         var isPrivate = SymbolUtils.GetIsPrivate(member);
 
         return new Item(

@@ -71,9 +71,9 @@ static class TypeParser
         foreach (ISymbol member in GetMemberSymbols(type))
         {
             if (!SymbolEqualityComparer.Default.Equals(member.ContainingType, type))
-                yield break;
+                continue;
             if (member is INamedTypeSymbol)
-                yield break; // Nested type, handled by GetAllNamedTypes in SourceParser
+                continue; // Nested type, handled by GetAllNamedTypes in SourceParser
 
             foreach (var item in MemberParser.ParseTypeMember(member, fullTypeName, compilation))
                 yield return item;
