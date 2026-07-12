@@ -35,7 +35,7 @@ public class Timing : IDisposable
     public void Dispose()
     {
         var text = msg != "" ? $"{msg} {ToString()}" : $"{msgMember} {ToString()}";
-        Logging.Log.Info(text, Logging.Log.StopParameter.Empty, msgMember, msgSourceFilePath, msgSourceLineNumber);
+        Logging.Log.Info(text, Logging.StopParameter.Empty, msgMember, msgSourceFilePath, msgSourceLineNumber);
     }
 
     public TimeSpan Stop()
@@ -73,7 +73,7 @@ public class Timing : IDisposable
 
     public void Log(
         string message,
-        StopParameter stopParameter = default(StopParameter),
+        Logging.StopParameter stopParameter = Logging.StopParameter.Empty,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0
@@ -83,7 +83,7 @@ public class Timing : IDisposable
 
         Logging.Log.Info(
             $"{count}: {message}: {this}",
-            Logging.Log.StopParameter.Empty,
+            Logging.StopParameter.Empty,
             memberName,
             sourceFilePath,
             sourceLineNumber
@@ -91,7 +91,7 @@ public class Timing : IDisposable
     }
 
     public void Log(
-        StopParameter stopParameter = default(StopParameter),
+        Logging.StopParameter stopParameter = Logging.StopParameter.Empty,
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0
@@ -101,7 +101,7 @@ public class Timing : IDisposable
 
         Logging.Log.Info(
             $"At {count}: {this}",
-            Logging.Log.StopParameter.Empty,
+            Logging.StopParameter.Empty,
             memberName,
             sourceFilePath,
             sourceLineNumber
@@ -109,6 +109,4 @@ public class Timing : IDisposable
     }
 
     public override string ToString() => count == 0 ? $"({ElapsedText})" : $"{DiffMs}ms ({ElapsedText})";
-
-    public struct StopParameter { }
 }

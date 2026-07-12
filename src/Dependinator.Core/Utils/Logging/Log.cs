@@ -6,12 +6,26 @@ using System.Text.Json;
 // configuration and host logging settings.
 namespace Dependinator.Core.Utils.Logging;
 
+// Log level texts, padded to equal length so log lines align.
+static class LogLevels
+{
+    public const string Debug = "DEBUG";
+    public const string Info = "INFO ";
+    public const string Warn = "WARN ";
+    public const string Error = "ERROR";
+    public const string Fatal = "FATAL";
+}
+
+// Sentinel parameter that stops positional arguments from accidentally binding to the
+// [CallerMemberName]/[CallerFilePath]/[CallerLineNumber] parameters that follow it.
+// Empty is null; the type exists only to occupy a parameter slot.
+public class StopParameter
+{
+    public const StopParameter Empty = default;
+}
+
 public static class Log
 {
-    private static readonly string LevelDebug = "DEBUG";
-    private static readonly string LevelInfo = "INFO ";
-    private static readonly string LevelWarn = "WARN ";
-    private static readonly string LevelError = "ERROR";
     static readonly JsonSerializerOptions JsonOneLine = new() { WriteIndented = false };
 
     public static void Debug(
@@ -21,9 +35,11 @@ public static class Log
         [CallerLineNumber] int sourceLineNumber = 0
     )
     {
-        Write(LevelDebug, msg, memberName, sourceFilePath, sourceLineNumber);
+        Write(LogLevels.Debug, msg, memberName, sourceFilePath, sourceLineNumber);
     }
 
+    // Info has explicit p1..p4 overloads (instead of a params array) because params
+    // cannot be combined with the trailing [Caller...] parameters.
     public static void Info(
         string msg,
         StopParameter stop = StopParameter.Empty,
@@ -32,7 +48,7 @@ public static class Log
         [CallerLineNumber] int sourceLineNumber = 0
     )
     {
-        Write(LevelInfo, msg, memberName, sourceFilePath, sourceLineNumber);
+        Write(LogLevels.Info, msg, memberName, sourceFilePath, sourceLineNumber);
     }
 
     public static void Info(
@@ -44,7 +60,7 @@ public static class Log
         [CallerLineNumber] int sourceLineNumber = 0
     )
     {
-        Write(LevelInfo, $"{msg} {toText(p1)}", memberName, sourceFilePath, sourceLineNumber);
+        Write(LogLevels.Info, $"{msg} {ToText(p1)}", memberName, sourceFilePath, sourceLineNumber);
     }
 
     public static void Info(
@@ -57,7 +73,7 @@ public static class Log
         [CallerLineNumber] int sourceLineNumber = 0
     )
     {
-        Write(LevelInfo, $"{msg} {toText(p1)} {toText(p2)}", memberName, sourceFilePath, sourceLineNumber);
+        Write(LogLevels.Info, $"{msg} {ToText(p1)} {ToText(p2)}", memberName, sourceFilePath, sourceLineNumber);
     }
 
     public static void Info(
@@ -71,7 +87,13 @@ public static class Log
         [CallerLineNumber] int sourceLineNumber = 0
     )
     {
-        Write(LevelInfo, $"{msg} {toText(p1)} {toText(p2)} {toText(p3)}", memberName, sourceFilePath, sourceLineNumber);
+        Write(
+            LogLevels.Info,
+            $"{msg} {ToText(p1)} {ToText(p2)} {ToText(p3)}",
+            memberName,
+            sourceFilePath,
+            sourceLineNumber
+        );
     }
 
     public static void Info(
@@ -87,8 +109,8 @@ public static class Log
     )
     {
         Write(
-            LevelInfo,
-            $"{msg} {toText(p1)} {toText(p2)} {toText(p3)} {toText(p4)}",
+            LogLevels.Info,
+            $"{msg} {ToText(p1)} {ToText(p2)} {ToText(p3)} {ToText(p4)}",
             memberName,
             sourceFilePath,
             sourceLineNumber
@@ -102,7 +124,7 @@ public static class Log
         [CallerLineNumber] int sourceLineNumber = 0
     )
     {
-        Write(LevelWarn, msg, memberName, sourceFilePath, sourceLineNumber);
+        Write(LogLevels.Warn, msg, memberName, sourceFilePath, sourceLineNumber);
     }
 
     public static void Error(
@@ -112,36 +134,25 @@ public static class Log
         [CallerLineNumber] int sourceLineNumber = 0
     )
     {
-        Write(LevelError, msg, memberName, sourceFilePath, sourceLineNumber);
+        Write(LogLevels.Error, msg, memberName, sourceFilePath, sourceLineNumber);
     }
 
     public static void Exception(
         Exception e,
-        string msg,
+        string msg = "",
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0
     )
     {
-        Write(LevelError, $"{msg}\n{e}", memberName, sourceFilePath, sourceLineNumber);
+        Write(LogLevels.Error, msg == "" ? $"{e}" : $"{msg}\n{e}", memberName, sourceFilePath, sourceLineNumber);
     }
 
-    public static void Exception(
-        Exception e,
-        int stop = 0, // No used, but needed to separate from other Exception function
-        [CallerMemberName] string memberName = "",
-        [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0
-    )
-    {
-        Write(LevelError, $"{e}", memberName, sourceFilePath, sourceLineNumber);
-    }
-
-    // Trying to hide non usable function from code intellisense
+    // Hide object.ReferenceEquals from IntelliSense; calling it via Log is always a mistake.
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static new bool ReferenceEquals(object objA, object objB)
     {
-        throw new Exception("Assertion does not implement ReferenceEquals, use Ensure or Require");
+        throw new Exception("Log does not implement ReferenceEquals");
     }
 
     static void Write(string level, string msg, string memberName, string sourceFilePath, int sourceLineNumber)
@@ -149,7 +160,7 @@ public static class Log
         ConfigLogger.Write(level, msg, memberName, sourceFilePath, sourceLineNumber);
     }
 
-    static string toText(object? obj)
+    static string ToText(object? obj)
     {
         if (obj == null)
             return "<null>";
@@ -179,11 +190,6 @@ public static class Log
         {
             return obj.ToString() ?? "";
         }
-    }
-
-    public class StopParameter
-    {
-        public const StopParameter Empty = default;
     }
 
     static string ToJsonOneLine(object? source)
