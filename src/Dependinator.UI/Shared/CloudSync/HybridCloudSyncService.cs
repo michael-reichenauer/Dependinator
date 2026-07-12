@@ -7,10 +7,13 @@ namespace Dependinator.UI.Shared.CloudSync;
 sealed class HybridCloudSyncService : ICloudSyncService
 {
     readonly HttpCloudSyncService httpCloudSyncService;
-    readonly IVsCodeCloudSyncProxy vsCodeCloudSyncProxy;
+    readonly IVsCodeCloudSyncService vsCodeCloudSyncProxy;
     bool? isVsCodeProxyAvailable;
 
-    public HybridCloudSyncService(HttpCloudSyncService httpCloudSyncService, IVsCodeCloudSyncProxy vsCodeCloudSyncProxy)
+    public HybridCloudSyncService(
+        HttpCloudSyncService httpCloudSyncService,
+        IVsCodeCloudSyncService vsCodeCloudSyncProxy
+    )
     {
         this.httpCloudSyncService = httpCloudSyncService;
         this.vsCodeCloudSyncProxy = vsCodeCloudSyncProxy;

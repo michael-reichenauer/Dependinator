@@ -1,4 +1,5 @@
 using Dependinator.Core;
+using Dependinator.Core.CloudSync;
 using Dependinator.Core.Rpc;
 using Dependinator.Core.Shared;
 using Dependinator.Core.Utils;
@@ -50,7 +51,11 @@ public class Program
         builder
             .Services.AddOptions<CloudSyncClientOptions>()
             .Bind(builder.Configuration.GetSection(CloudSyncClientOptions.SectionName));
-        builder.Services.AddHttpClient<HttpCloudSyncService>();
+        builder.Services.AddHttpClient<CloudSyncHttpClient>();
+        builder.Services.AddTransient<ICloudSyncHttpClient>(services =>
+            services.GetRequiredService<CloudSyncHttpClient>()
+        );
+        builder.Services.AddScoped<HttpCloudSyncService>();
         // Blazor Server never runs inside the VS Code webview, so the HTTP transport is used
         // directly instead of the HybridCloudSyncService the Wasm host uses.
         builder.Services.AddScoped<ICloudSyncService>(services => services.GetRequiredService<HttpCloudSyncService>());

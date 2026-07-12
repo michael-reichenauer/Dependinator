@@ -1,6 +1,8 @@
 using Dependinator.Core;
+using Dependinator.Core.CloudSync;
 using Dependinator.Core.Rpc;
 using Dependinator.Core.Utils.Logging;
+using Dependinator.Lsp.CloudSync;
 using Dependinator.Roslyn;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
@@ -26,10 +28,15 @@ internal class Program
                         services.AddDependinatorCoreServices();
                         services.AddDependinatorRoslynServices();
                         services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();
+                        services.AddSingleton(new HttpClient());
+                        services.AddSingleton<LspCloudSyncContext>();
+                        services.AddSingleton<ICloudSyncApiContext>(sp => sp.GetRequiredService<LspCloudSyncContext>());
+                        services.AddSingleton<CloudSyncRpcService>();
                     })
                     .WithHandler<LspMessageHandler>()
                     .WithHandler<WorkspaceFolderChangeHandler>()
-                    .OnStarted((_, _) => Task.CompletedTask)
+                    .WithHandler<CloudSyncConfigChangedHandler>()
+                    .WithHandler<CloudSyncTokenChangedHandler>()
                     .OnInitialize(
                         (server, initializeParams, ct) =>
                         {
@@ -46,11 +53,16 @@ internal class Program
 
                             // Register remote services callable from the WebView WASM UI
                             server.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
+                            server.UseJsonRpcClasses(typeof(Program));
                             server.UseJsonRpc();
                             Log.Info("Initialized JsonRpc");
 
                             var workspaceFolderService = server.Services.GetRequiredService<IWorkspaceFolderService>();
                             workspaceFolderService.Initialize(initializeParams, ct);
+
+                            // Cloud sync config and token provided by the extension at launch.
+                            var cloudSyncContext = server.Services.GetRequiredService<LspCloudSyncContext>();
+                            cloudSyncContext.InitializeFromOptions(initializeParams.InitializationOptions);
 
                             return Task.CompletedTask;
                         }

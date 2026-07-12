@@ -1,5 +1,3 @@
-using Dependinator.UI.Shared.CloudSync;
-
 namespace Dependinator.UI.Shared.VsCode;
 
 interface IVsCodeReceiveService
@@ -11,12 +9,10 @@ interface IVsCodeReceiveService
 class VsCodeReceiveService : IVsCodeReceiveService
 {
     readonly INavigationService navigationService;
-    readonly IVsCodeCloudSyncProxy vsCodeCloudSyncProxy;
 
-    public VsCodeReceiveService(INavigationService navigationService, IVsCodeCloudSyncProxy vsCodeCloudSyncProxy)
+    public VsCodeReceiveService(INavigationService navigationService)
     {
         this.navigationService = navigationService;
-        this.vsCodeCloudSyncProxy = vsCodeCloudSyncProxy;
     }
 
     public async Task ReceivedMessageAsync(string type, string message)
@@ -25,9 +21,6 @@ class VsCodeReceiveService : IVsCodeReceiveService
         {
             case "ui/ShowNode":
                 await navigationService.ShowNodeAsync(message);
-                break;
-            case "ui/cloudSync/response":
-                await vsCodeCloudSyncProxy.HandleResponseAsync(message);
                 break;
         }
     }

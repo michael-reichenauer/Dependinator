@@ -71,6 +71,16 @@
                     ],
                     "default": "https://dependinator.com",
                     "description": "Base URL for the Dependinator cloud sync API. Sign-in is handled separately by the extension."
+                },
+                "dependinator.cloudSync.clerkAccountsUrl": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Clerk accounts URL used for cloud sync sign-in. Leave empty to use the built-in production Clerk instance."
+                },
+                "dependinator.cloudSync.clerkPublishableKey": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Clerk publishable key used for cloud sync sign-in. Leave empty to use the built-in production key."
                 }
             }
         }

@@ -5,8 +5,13 @@ import {
     registerUiMessageForwarding,
     startLanguageServer
 } from "./languageServer";
+import * as logger from "./logger";
 import type { WebviewMessage } from "./types";
-import { createDependinatorWebviewPanel, registerWebviewMessageHandler } from "./webview";
+import {
+    createDependinatorWebviewPanel,
+    findOtherViewColumn,
+    registerWebviewMessageHandler
+} from "./webview";
 
 const commandId = "dependinator.open";
 const installInDevContainerCommandId = "dependinator.installInDevContainer";
@@ -16,14 +21,39 @@ const extensionId = "michaelreichenauer.dependinator";
 let languageClient: LanguageClient | undefined;
 let languageClientPromise: Promise<LanguageClient | undefined> | undefined;
 let activePanel: vscode.WebviewPanel | undefined;
+
+// Latch that gates UI->LSP messages until the server has sent "ui/lspReady".
+// Resettable because vscode-languageclient restarts a crashed server, which sends
+// a fresh "ui/lspReady" once it has initialized again.
 let lspReady = false;
 let resolveLspReady: (() => void) | undefined;
-const lspReadyPromise = new Promise<void>(resolve => {
-    resolveLspReady = resolve;
-});
-type CloudSyncBridge = {
-    handleWebviewMessage(message: WebviewMessage, panel: vscode.WebviewPanel): Promise<boolean>;
-};
+let lspReadyPromise = createLspReadyLatch();
+
+function createLspReadyLatch(): Promise<void> {
+    return new Promise<void>(resolve => {
+        resolveLspReady = resolve;
+    });
+}
+
+function markLspReady(): void {
+    lspReady = true;
+    resolveLspReady?.();
+    resolveLspReady = undefined;
+}
+
+function resetLspReady(): void {
+    if (!lspReady)
+        return;
+
+    lspReady = false;
+    lspReadyPromise = createLspReadyLatch();
+}
+
+async function waitForLspReady(): Promise<void> {
+    if (lspReady)
+        return;
+    await lspReadyPromise;
+}
 
 function isCSharpDocument(document: vscode.TextDocument): boolean {
     if (document.languageId === "csharp")
@@ -40,67 +70,67 @@ function getDocumentPath(document: vscode.TextDocument): string | undefined {
     return uri.length > 0 ? uri : undefined;
 }
 
+/** Asks the webview UI to reveal the node for the active C# editor's file and line. */
 function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
-    console.log("DEP: sendShowNodeForEditor");
-    if (!editor || !activePanel) {
-        console.log("DEP: No editor", editor, activePanel);
+    if (!editor || !activePanel)
         return;
-    }
 
-    if (!isCSharpDocument(editor.document)) {
-        console.log("DEP: Not not C#");
+    if (!isCSharpDocument(editor.document))
         return;
-    }
 
     const path = getDocumentPath(editor.document);
-    if (!path) {
-        console.log("DEP: No path");
+    if (!path)
         return;
-    }
 
     const line = editor.selection.active.line + 1;
     activePanel.webview.postMessage({
         type: "ui/ShowNode",
         message: `${path}@${line}`
     });
-    console.log("DEP: Posted ui/ShowNode");
 }
 
-function getTargetViewColumnForShowEditor(panel: vscode.WebviewPanel): vscode.ViewColumn {
-    const panelColumn = panel.viewColumn;
-    const otherGroup = vscode.window.tabGroups.all.find(group => {
-        const groupColumn = group.viewColumn;
-        return groupColumn !== undefined
-            && panelColumn !== undefined
-            && groupColumn !== panelColumn;
-    });
-
-    if (otherGroup?.viewColumn !== undefined)
-        return otherGroup.viewColumn;
-
-    // Fall back to a split so the Dependinator webview stays visible.
-    return vscode.ViewColumn.Beside;
-}
-
-function markLspReady(_params: unknown): void {
-    if (lspReady)
+/** Opens a source file at a "<file-path>@<line>" location beside the webview. */
+async function showEditorForLocation(fileLocation: string, panel: vscode.WebviewPanel): Promise<void> {
+    if (fileLocation.length === 0) {
+        logger.warn("ShowEditor called with empty file location");
         return;
+    }
 
-    lspReady = true;
-    resolveLspReady?.();
-    resolveLspReady = undefined;
+    const atIndex = fileLocation.lastIndexOf("@");
+    const filePath = atIndex > 0 ? fileLocation.slice(0, atIndex) : fileLocation;
+    const lineText = atIndex > 0 ? fileLocation.slice(atIndex + 1) : "";
+    const parsedLine = Number.parseInt(lineText, 10);
+    const line = Number.isFinite(parsedLine) && parsedLine > 0 ? parsedLine : 1;
+
+    const uri = filePath.startsWith("file:")
+        || filePath.startsWith("vscode-remote:")
+        || filePath.startsWith("vscode-userdata:")
+        ? vscode.Uri.parse(filePath)
+        : vscode.Uri.file(filePath);
+
+    try {
+        const document = await vscode.workspace.openTextDocument(uri);
+        const editor = await vscode.window.showTextDocument(document, {
+            preview: false,
+            viewColumn: findOtherViewColumn(panel.viewColumn)
+        });
+        const lineIndex = Math.max(0, line - 1);
+        const position = new vscode.Position(lineIndex, 0);
+        editor.selection = new vscode.Selection(position, position);
+        editor.revealRange(
+            new vscode.Range(position, position),
+            vscode.TextEditorRevealType.InCenter
+        );
+    } catch (error) {
+        logger.error("Failed to open editor for", fileLocation, error);
+        vscode.window.showErrorMessage(`Dependinator: Could not open ${fileLocation}`);
+    }
 }
 
-async function waitForLspReady(): Promise<void> {
-    if (lspReady)
-        return;
-    await lspReadyPromise;
-}
-
+/** Extension entry point: registers commands and starts the language server. */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    console.log("DEP: #### Activate extension");
+    logger.log("Activating extension");
     const installCommand = vscode.commands.registerCommand(installInDevContainerCommandId, async () => {
-        console.log("DEP: Running command installInDevContainerCommandId");
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
         const isRemoteWorkspace = !!workspaceFolder && workspaceFolder.scheme !== "file";
         const isRemoteExtensionHost = context.extensionUri.scheme !== "file";
@@ -121,7 +151,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await vscode.commands.executeCommand("workbench.view.extensions");
             await vscode.commands.executeCommand("workbench.extensions.search", `@id:${extensionId}`);
         } catch (error) {
-            console.warn("Failed to open Extensions view for dev container install.", error);
+            logger.warn("Failed to open Extensions view for dev container install.", error);
             await vscode.commands.executeCommand("workbench.view.extensions");
         }
 
@@ -130,36 +160,42 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         );
     });
     context.subscriptions.push(installCommand);
-    console.log("DEP: vscode.env.uiKind", vscode.env.uiKind);
+
     // Web extensions can't start a .NET process, so skip the server there.
     const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
-    const cloudSyncBridgePromise: Promise<CloudSyncBridge | undefined> = isWeb
-        ? Promise.resolve(undefined)
-        : import("./cloudSyncNode")
-            .then(module => module.createCloudSyncBridge(context))
-            .catch(error => {
-                console.error("Dependinator cloud sync bridge failed to initialize", error);
-                return undefined;
-            });
     languageClientPromise = isWeb
         ? Promise.resolve(undefined)
         : startLanguageServer(context).catch(error => {
-            console.error("Dependinator language server failed to start", error);
+            logger.error("Dependinator language server failed to start", error);
             return undefined;
         });
 
-    languageClientPromise.then(client => {
+    languageClientPromise.then(async client => {
         languageClient = client;
         if (!client)
             return;
 
         registerLanguageClientLogging(client);
         registerUiMessageForwarding(client, () => activePanel?.webview, markLspReady);
+        client.onDidChangeState(event => {
+            // State.Running === 2 (compared numerically to keep this module free of
+            // vscode-languageclient value imports, which the web bundle cannot load).
+            if (event.newState !== 2)
+                resetLspReady();
+        });
+
+        // Cloud sync auth handlers are node-only; loaded dynamically like the LSP itself.
+        try {
+            const cloudSyncAuth = await import("./cloudSyncAuth");
+            cloudSyncAuth.registerCloudSyncAuth(client, context);
+        } catch (error) {
+            logger.error("Dependinator cloud sync auth failed to initialize", error);
+        }
     });
 
     // Command opens the webview hosting the WASM UI.
     const disposable = vscode.commands.registerCommand(commandId, async () => {
-        console.log("DEP: Running command Open Dependinator ...");
+        logger.log("Running command Open Dependinator");
         const activeTextEditor = vscode.window.activeTextEditor;
         if (activePanel) {
             activePanel.reveal(activePanel.viewColumn ?? vscode.ViewColumn.One);
@@ -175,10 +211,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         registerWebviewMessageHandler(panel, async (message: WebviewMessage) => {
-            const cloudSyncBridge = await cloudSyncBridgePromise;
-            if (cloudSyncBridge && await cloudSyncBridge.handleWebviewMessage(message, panel))
-                return;
-
             if (message.type === "vscode/OpenExternal") {
                 const url = String(message.message ?? "");
                 if (url)
@@ -187,54 +219,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             }
 
             if (message.type === "vscode/ShowEditor") {
-                const fileLocation = String(message.message ?? "");
-                console.log("Show editor for", fileLocation);
-                // Show the editor for fileLocation, which has the form of "<file-path>@<file-line>";
-                if (fileLocation.length === 0) {
-                    console.warn("ShowEditor called with empty file location");
-                    return;
-                }
-
-                const atIndex = fileLocation.lastIndexOf("@");
-                const filePath = atIndex > 0 ? fileLocation.slice(0, atIndex) : fileLocation;
-                const lineText = atIndex > 0 ? fileLocation.slice(atIndex + 1) : "";
-                const parsedLine = Number.parseInt(lineText, 10);
-                const line = Number.isFinite(parsedLine) && parsedLine > 0 ? parsedLine : 1;
-
-                const uri = filePath.startsWith("file:")
-                    || filePath.startsWith("vscode-remote:")
-                    || filePath.startsWith("vscode-userdata:")
-                    ? vscode.Uri.parse(filePath)
-                    : vscode.Uri.file(filePath);
-
-                try {
-                    const document = await vscode.workspace.openTextDocument(uri);
-                    const editor = await vscode.window.showTextDocument(document, {
-                        preview: false,
-                        viewColumn: getTargetViewColumnForShowEditor(panel)
-                    });
-                    const lineIndex = Math.max(0, line - 1);
-                    const position = new vscode.Position(lineIndex, 0);
-                    editor.selection = new vscode.Selection(position, position);
-                    editor.revealRange(
-                        new vscode.Range(position, position),
-                        vscode.TextEditorRevealType.InCenter
-                    );
-                } catch (error) {
-                    console.error("Failed to open editor for", fileLocation, error);
-                    vscode.window.showErrorMessage(`Dependinator: Could not open ${fileLocation}`);
-                }
+                await showEditorForLocation(String(message.message ?? ""), panel);
                 return;
             }
 
             if (message.type !== "lsp/message")
                 return;
-            // console.log("DEP: lsp/message message:", message);
 
             // Messages from WebView UI to language server
             const client = await languageClientPromise;
             if (!client) {
-                console.error("No client to send", message);
+                logger.error("No language client to send message to");
                 // Forward error message back to WebView UI
                 panel.webview.postMessage({
                     type: "ui/error",
@@ -250,7 +245,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                     message: message.message
                 });
             } catch (error) {
-                console.error("Failed to send", message);
+                logger.error("Failed to send message to language server", error);
                 // Forward error message back to WebView UI
                 panel.webview.postMessage({
                     type: "ui/error",
@@ -258,16 +253,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 });
             }
         });
-
-        // await waitForLspReady();
-        // sendShowNodeForEditor(activeTextEditor);
     });
 
     context.subscriptions.push(disposable);
 }
 
+/** Extension shutdown: stops the language server. */
 export async function deactivate(): Promise<void> {
-    console.log("DEP: deactivate Extension");
     if (languageClient) {
         await languageClient.stop();
     }

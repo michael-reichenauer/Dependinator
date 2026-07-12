@@ -8,11 +8,11 @@ export type WebviewMessageHandler = (
     panel: vscode.WebviewPanel
 ) => void | Promise<void>;
 
+/** Creates the webview panel that hosts the bundled Blazor WASM UI. */
 export function createDependinatorWebviewPanel(
     context: vscode.ExtensionContext
 ): vscode.WebviewPanel {
-    console.log("DEP: createDependinatorWebviewPanel ...");
-    const targetColumn = getTargetViewColumnForWebview();
+    const targetColumn = findOtherViewColumn(vscode.window.tabGroups.activeTabGroup.viewColumn);
     const panel = vscode.window.createWebviewPanel(
         viewType,
         "Dependinator",
@@ -28,31 +28,32 @@ export function createDependinatorWebviewPanel(
     return panel;
 }
 
-function getTargetViewColumnForWebview(): vscode.ViewColumn {
-    const activeColumn = vscode.window.tabGroups.activeTabGroup.viewColumn;
+/**
+ * Finds a view column other than the excluded one so editors and the webview end up
+ * side by side; falls back to a split when there is no other tab group yet.
+ */
+export function findOtherViewColumn(excludeColumn: vscode.ViewColumn | undefined): vscode.ViewColumn {
     const otherGroup = vscode.window.tabGroups.all.find(group => {
         const groupColumn = group.viewColumn;
         return groupColumn !== undefined
-            && activeColumn !== undefined
-            && groupColumn !== activeColumn;
+            && excludeColumn !== undefined
+            && groupColumn !== excludeColumn;
     });
 
     if (otherGroup?.viewColumn !== undefined)
         return otherGroup.viewColumn;
 
-    // Create a split if there is no other group yet.
     return vscode.ViewColumn.Beside;
 }
 
+/** Forwards typed messages posted by the WASM UI to the given handler. */
 export function registerWebviewMessageHandler(
     panel: vscode.WebviewPanel,
     handler: WebviewMessageHandler
 ): void {
-    console.log("DEP: registerWebviewMessageHandler");
     panel.webview.onDidReceiveMessage(message => {
         if (!message || typeof message.type !== "string")
             return;
-        // console.log("DEP: message from ui:", message);
         return handler(message, panel);
     });
 }
