@@ -6,7 +6,11 @@ public sealed record CloudUserInfo(string UserId, string? Email);
 
 public sealed record CloudAuthState(bool IsAvailable, bool IsAuthenticated, CloudUserInfo? User);
 
+// Reserved for a future quota/usage endpoint.
 public sealed record CloudSyncQuota(long UsedBytes, long MaxBytes);
+
+// Error payload returned by the API for non-success status codes.
+public sealed record ErrorResponse(string Message);
 
 public sealed record CloudModelMetadata(
     string ModelKey,

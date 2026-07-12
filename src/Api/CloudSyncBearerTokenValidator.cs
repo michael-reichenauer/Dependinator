@@ -8,12 +8,12 @@ using FunctionsHttpRequestData = Microsoft.Azure.Functions.Worker.Http.HttpReque
 
 namespace Api;
 
-public interface ICloudSyncBearerTokenValidator
+public interface ICloudSyncUserProvider
 {
     Task<CloudUserInfo?> TryGetCurrentUserAsync(FunctionsHttpRequestData request, CancellationToken cancellationToken);
 }
 
-public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidator
+public sealed class CloudSyncBearerTokenValidator : ICloudSyncUserProvider
 {
     const string CustomAuthorizationHeaderName = "X-Dependinator-Authorization";
     const string AuthorizationHeaderName = "Authorization";

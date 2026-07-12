@@ -136,6 +136,4 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
             _ => $"Cloud sync request failed with status code {(int)response.StatusCode}.",
         };
     }
-
-    sealed record ErrorResponse(string Message);
 }
