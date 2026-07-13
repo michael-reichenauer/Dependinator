@@ -60,6 +60,49 @@ public class NodeEditCommandTests
     }
 
     [Fact]
+    public void Execute_ShouldSetIconColor_AndRevertRestorePrevious()
+    {
+        var (model, node) = CreateModelWithNode();
+        node.CustomIconColor = "Blue";
+        var command = new NodeEditCommand(node.Id) { IconColor = "Teal" };
+
+        command.Execute(model);
+        Assert.Equal("Teal", node.CustomIconColor);
+
+        command.Revert(model);
+        Assert.Equal("Blue", node.CustomIconColor);
+    }
+
+    [Fact]
+    public void Execute_ShouldClearIconColorToDefault_WhenIconColorIsEmpty()
+    {
+        var (model, node) = CreateModelWithNode();
+        node.CustomIconColor = "Blue";
+        var command = new NodeEditCommand(node.Id) { IconColor = "" };
+
+        command.Execute(model);
+        Assert.Null(node.CustomIconColor);
+
+        // Revert restores the previous custom icon color.
+        command.Revert(model);
+        Assert.Equal("Blue", node.CustomIconColor);
+    }
+
+    [Fact]
+    public void Execute_ShouldSetIconColor_WhenNodeHadDefault_AndRevertRestoreNull()
+    {
+        var (model, node) = CreateModelWithNode();
+        Assert.Null(node.CustomIconColor);
+        var command = new NodeEditCommand(node.Id) { IconColor = "Rose" };
+
+        command.Execute(model);
+        Assert.Equal("Rose", node.CustomIconColor);
+
+        command.Revert(model);
+        Assert.Null(node.CustomIconColor);
+    }
+
+    [Fact]
     public void Execute_ShouldNotTouchIcon_WhenIconNameIsNull()
     {
         var (model, node) = CreateModelWithNode();

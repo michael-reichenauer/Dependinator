@@ -49,6 +49,16 @@ public sealed class AppPage
     public ILocator NodeIncreaseSize => page.GetByTestId("node-increase-size");
     public ILocator NodeDecreaseSize => page.GetByTestId("node-decrease-size");
 
+    // The node toolbar's icon-color swatch dropdown (NodeToolbar.razor). The testid sits on
+    // the MudMenu root, so click its inner activator button.
+    public ILocator NodeSetIconColorButton => page.GetByTestId("node-set-icon-color").Locator("button");
+
+    // A swatch row in the icon-color dropdown, e.g. "Blue" or "Default".
+    public ILocator IconColorItem(string color) => page.GetByTestId($"icon-color-item-{color}");
+
+    // A node icon's <use> reference on the canvas, e.g. "Solution" or "Solution--Blue".
+    public ILocator NodeIconUse(string iconId) => page.Locator($"#svgcanvas use[href='#{iconId}']");
+
     // The toolbar edit-mode toggle (AppBar.razor). Toggles NodeSvg.IsEditingEnabled.
     public ILocator ToolbarEdit => page.GetByTestId("toolbar-edit");
 
