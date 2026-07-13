@@ -61,6 +61,10 @@ class Node : IItem
     // Independent of Color, which is the node container's own (background) palette color.
     public string? CustomIconColor { get; set; }
 
+    // User-selected container color (a DColors.CustomNodeColors name); null means the
+    // auto-assigned Color above. Independent of CustomIconColor.
+    public string? CustomColor { get; set; }
+
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
@@ -134,6 +138,7 @@ class Node : IItem
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
             Color = Color,
+            CustomColor = CustomColor,
             IconName = CustomIconName,
             IconColor = CustomIconColor,
             IsUserSetHidden = IsUserSetHidden,
@@ -154,6 +159,7 @@ class Node : IItem
         ContainerOffset = dto.Offset ?? Pos.None;
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
         Color = dto.Color ?? Color;
+        CustomColor = dto.CustomColor;
         CustomIconName = dto.IconName;
         CustomIconColor = dto.IconColor;
         IsUserSetHidden = dto.IsUserSetHidden;

@@ -28,6 +28,10 @@ class NodeEditCommand(NodeId nodeId) : Command
     public string? IconColor { get; set; }
     public string? IconColorCopy { get; private set; }
 
+    // Custom container color; "" means clear to the auto-assigned color (stored as null on the node).
+    public string? CustomColor { get; set; }
+    public string? CustomColorCopy { get; private set; }
+
     // Description; "" means clear to no description (stored as null on the node). Used for
     // editing note text.
     public string? Description { get; set; }
@@ -48,6 +52,8 @@ class NodeEditCommand(NodeId nodeId) : Command
             (IconNameCopy, node.CustomIconName) = (node.CustomIconName ?? "", IconName == "" ? null : IconName);
         if (IconColor != null)
             (IconColorCopy, node.CustomIconColor) = (node.CustomIconColor ?? "", IconColor == "" ? null : IconColor);
+        if (CustomColor != null)
+            (CustomColorCopy, node.CustomColor) = (node.CustomColor ?? "", CustomColor == "" ? null : CustomColor);
         if (Description != null)
         {
             DescriptionCopy = node.Description ?? "";
@@ -84,6 +90,12 @@ class NodeEditCommand(NodeId nodeId) : Command
             (IconColor, node.CustomIconColor, IconColorCopy) = (
                 node.CustomIconColor ?? "",
                 IconColorCopy == "" ? null : IconColorCopy,
+                null
+            );
+        if (CustomColorCopy != null)
+            (CustomColor, node.CustomColor, CustomColorCopy) = (
+                node.CustomColor ?? "",
+                CustomColorCopy == "" ? null : CustomColorCopy,
                 null
             );
         if (DescriptionCopy != null)

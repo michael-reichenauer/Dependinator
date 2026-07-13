@@ -285,10 +285,15 @@ static partial class NodeSvg
 
     static (string Border, string Background) NodeColors(Node node)
     {
-        var (border, background) = DColors.NodeColorByName(node.Color);
         if (node.IsEditMode)
             return (DColors.EditNodeBorder, DColors.EditNodeBackground);
-        return (border, background);
+
+        // A user-selected container color overrides the auto-assigned one; unknown (e.g. stale
+        // persisted) names fall back to the auto color.
+        if (node.CustomColor is { } customColor && DColors.IsCustomNodeColor(customColor))
+            return DColors.CustomNodeColorByName(customColor);
+
+        return DColors.NodeColorByName(node.Color);
     }
 
     static string BuildDescriptionSvg(

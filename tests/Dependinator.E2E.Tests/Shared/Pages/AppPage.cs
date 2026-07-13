@@ -49,12 +49,16 @@ public sealed class AppPage
     public ILocator NodeIncreaseSize => page.GetByTestId("node-increase-size");
     public ILocator NodeDecreaseSize => page.GetByTestId("node-decrease-size");
 
-    // The node toolbar's icon-color swatch dropdown (NodeToolbar.razor). The testid sits on
+    // The node toolbar's color swatch dropdown (NodeToolbar.razor): icon tint while the node
+    // shows as an icon, container background while it shows as a container. The testid sits on
     // the MudMenu root, so click its inner activator button.
-    public ILocator NodeSetIconColorButton => page.GetByTestId("node-set-icon-color").Locator("button");
+    public ILocator NodeSetColorButton => page.GetByTestId("node-set-color").Locator("button");
 
-    // A swatch row in the icon-color dropdown, e.g. "Blue" or "Default".
+    // A swatch row in the icon-tint dropdown, e.g. "Blue" or "Default".
     public ILocator IconColorItem(string color) => page.GetByTestId($"icon-color-item-{color}");
+
+    // A swatch row in the container-color dropdown, e.g. "Blue" or "Default".
+    public ILocator ColorItem(string color) => page.GetByTestId($"color-item-{color}");
 
     // A node icon's <use> reference on the canvas, e.g. "Solution" or "Solution--Blue".
     public ILocator NodeIconUse(string iconId) => page.Locator($"#svgcanvas use[href='#{iconId}']");
@@ -104,6 +108,40 @@ public sealed class AppPage
             await Node(label).BoundingBoxAsync()
             ?? throw new InvalidOperationException($"Node '{label}' is not rendered on the canvas.");
         await page.Mouse.ClickAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
+    }
+
+    // Select a container node by clicking just inside its top-left corner, where no children
+    // render (a container's center often hits child nodes or dependency lines instead).
+    // Navigation animates pan/zoom, so wait until the node's bounds stop moving between two
+    // reads before clicking (same approach as WaitForStableNodePointAsync).
+    public async Task SelectContainerNodeAsync(string label, float timeoutSeconds = 15)
+    {
+        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        LocatorBoundingBoxResult? previous = null;
+
+        while (stopwatch.Elapsed < timeout)
+        {
+            LocatorBoundingBoxResult? box = null;
+            if (await Node(label).CountAsync() > 0)
+                box = await Node(label).BoundingBoxAsync();
+
+            bool isStable =
+                box is not null
+                && previous is not null
+                && Math.Abs(box.X - previous.X) < 1
+                && Math.Abs(box.Y - previous.Y) < 1;
+            if (isStable)
+            {
+                await page.Mouse.ClickAsync(box!.X + 20, box.Y + 20);
+                return;
+            }
+
+            previous = box;
+            await Task.Delay(100);
+        }
+
+        throw new InvalidOperationException($"Container node '{label}' did not render/stabilize within {timeout.TotalSeconds}s.");
     }
 
     // Select a diagram node by its visible (short) label — the text shown on the canvas,

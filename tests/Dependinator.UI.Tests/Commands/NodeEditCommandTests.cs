@@ -103,6 +103,35 @@ public class NodeEditCommandTests
     }
 
     [Fact]
+    public void Execute_ShouldSetCustomColor_AndRevertRestorePrevious()
+    {
+        var (model, node) = CreateModelWithNode();
+        node.CustomColor = "Blue";
+        var command = new NodeEditCommand(node.Id) { CustomColor = "Amber" };
+
+        command.Execute(model);
+        Assert.Equal("Amber", node.CustomColor);
+
+        command.Revert(model);
+        Assert.Equal("Blue", node.CustomColor);
+    }
+
+    [Fact]
+    public void Execute_ShouldClearCustomColorToAuto_WhenCustomColorIsEmpty()
+    {
+        var (model, node) = CreateModelWithNode();
+        node.CustomColor = "Blue";
+        var command = new NodeEditCommand(node.Id) { CustomColor = "" };
+
+        command.Execute(model);
+        Assert.Null(node.CustomColor);
+
+        // Revert restores the previous custom container color.
+        command.Revert(model);
+        Assert.Equal("Blue", node.CustomColor);
+    }
+
+    [Fact]
     public void Execute_ShouldNotTouchIcon_WhenIconNameIsNull()
     {
         var (model, node) = CreateModelWithNode();

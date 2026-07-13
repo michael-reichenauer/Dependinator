@@ -76,6 +76,24 @@ class DColors
     static readonly string NodeBorderLightEdit = "#CC7000";
     static readonly string NodeBackgroundLightEdit = "#FFF2E0";
 
+    // User-selected container colors: the shared accent colors (see ColorUtil, same six as the
+    // icon tints) rendered in the same faint style as the auto palette above, derived per theme
+    // by re-hueing the canonical "Blue" entry (hue ~210). Names deliberately overlap the auto
+    // palette's — resolution is separate (CustomNodeColorByName vs NodeColorByName).
+    const double CustomBaseHue = 210;
+
+    static readonly IReadOnlyList<DColor> customNodeColorsDark = DeriveCustomColors(nodeColorsDark[1]);
+    static readonly IReadOnlyList<DColor> customNodeColorsLight = DeriveCustomColors(nodeColorsLight[1]);
+
+    static IReadOnlyList<DColor> DeriveCustomColors(DColor blue) =>
+        [
+            .. ColorUtil.AccentColors.Select(accent => new DColor(
+                accent.Name,
+                ColorUtil.ShiftHue(blue.Border, CustomBaseHue, accent.Hue),
+                ColorUtil.ShiftHue(blue.Background, CustomBaseHue, accent.Hue)
+            )),
+        ];
+
     // Computed properties (not readonly fields) so a future IsDark switch takes effect at
     // runtime; readonly fields would be frozen to the light palette at type initialization.
     public static bool IsDark { get; set; } = false;
@@ -108,6 +126,20 @@ class DColors
     public static (string color, string background) NodeColorByName(string name)
     {
         var colors = IsDark ? nodeColorsDark : nodeColorsLight;
+        var color = colors.FirstOrDefault(c => c.Name == name) ?? colors[0];
+        return (color.Border, color.Background);
+    }
+
+    // The user-selectable container colors for the current theme, for rendering color pickers.
+    public static IReadOnlyList<DColor> CustomNodeColors => IsDark ? customNodeColorsDark : customNodeColorsLight;
+
+    // Whether name is one of the user-selectable container colors, so consumers can validate
+    // persisted names and fall back to the node's auto color for stale/unknown ones.
+    public static bool IsCustomNodeColor(string name) => customNodeColorsDark.Any(c => c.Name == name);
+
+    public static (string color, string background) CustomNodeColorByName(string name)
+    {
+        var colors = IsDark ? customNodeColorsDark : customNodeColorsLight;
         var color = colors.FirstOrDefault(c => c.Name == name) ?? colors[0];
         return (color.Border, color.Background);
     }

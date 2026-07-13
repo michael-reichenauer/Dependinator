@@ -28,16 +28,43 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.SelectNodeByFullNameAsync("Demo.sln");
 
-        // Pick Blue from the icon-color swatch dropdown; the node's icon <use> switches to
-        // the generated "--Blue" color variant def.
-        await App.NodeSetIconColorButton.ClickAsync();
+        // Pick Blue from the color swatch dropdown (icon tint while the node shows as an
+        // icon); the node's icon <use> switches to the generated "--Blue" color variant def.
+        await App.NodeSetColorButton.ClickAsync();
         await App.IconColorItem("Blue").ClickAsync();
         await Expect(App.NodeIconUse("Solution--Blue")).ToBeVisibleAsync();
 
         // Picking Default restores the base violet icon.
-        await App.NodeSetIconColorButton.ClickAsync();
+        await App.NodeSetColorButton.ClickAsync();
         await App.IconColorItem("Default").ClickAsync();
         await Expect(App.NodeIconUse("Solution")).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
+    public async Task NodeToolbar_ShouldSetContainerBackgroundColor()
+    {
+        await App.GotoMainPageAsync();
+
+        // Navigate into Demo.UI so its child class "Main" renders as a container.
+        var search = await App.OpenSearchViaHotkeyAsync();
+        await search.FillAsync("Demo.UI");
+        await Page.Keyboard.PressAsync("Enter");
+
+        await App.SelectContainerNodeAsync("Demo.UI.Main");
+
+        // Container mode: the edit pencil is offered and the palette dropdown shows the
+        // container swatches (color-item-*), not the icon tints.
+        await Expect(App.MenuItem("node-edit")).ToBeVisibleAsync();
+        await App.NodeSetColorButton.ClickAsync();
+        await App.ColorItem("Teal").ClickAsync();
+
+        // Reopening marks Teal as the current (bold) selection; Default clears it again.
+        // (Move the mouse off the button so its tooltip closes — the "Set background color"
+        // tooltip popover otherwise overlays the top menu row and intercepts the click.)
+        await App.NodeSetColorButton.ClickAsync();
+        await Page.Mouse.MoveAsync(0, 0);
+        await Expect(App.ColorItem("Teal").Locator("span").Last).ToHaveCSSAsync("font-weight", "600");
+        await App.ColorItem("Default").ClickAsync();
     }
 
     [E2EFact]
