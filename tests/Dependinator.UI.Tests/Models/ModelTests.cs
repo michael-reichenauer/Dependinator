@@ -47,4 +47,62 @@ public class ModelTests
         IReadOnlyList<Dependinator.Core.Parsing.Node> Nodes,
         IReadOnlyList<Dependinator.Core.Parsing.Link> Links
     );
+
+    [Fact]
+    public void RemoveLink_LinkWithoutLines_ShouldDetachFromEndpointNodes()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var (source, target) = AddSiblingNodes(model);
+
+        var link = new Link(source, target);
+        model.TryAddLink(link);
+        source.AddSourceLink(link);
+        target.AddTargetLink(link);
+
+        model.RemoveLink(link);
+
+        Assert.False(model.Links.ContainsKey(link.Id));
+        Assert.DoesNotContain(link, source.SourceLinks);
+        Assert.DoesNotContain(link, target.TargetLinks);
+    }
+
+    [Fact]
+    public void RemoveLink_LinkWithLines_ShouldRemoveEmptyLinesAndClearLineReferences()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var (source, target) = AddSiblingNodes(model);
+
+        var link = new Link(source, target);
+        model.TryAddLink(link);
+        source.AddSourceLink(link);
+        target.AddTargetLink(link);
+        new Dependinator.UI.Modeling.LineService().AddLinesFromSourceToTarget(model, link);
+        Assert.Single(link.Lines);
+
+        model.RemoveLink(link);
+
+        Assert.False(model.Links.ContainsKey(link.Id));
+        Assert.False(model.Lines.ContainsKey(LineId.From("Parent.Source", "Parent.Target")));
+        Assert.Empty(link.Lines);
+        Assert.Empty(source.SourceLines);
+        Assert.Empty(target.TargetLines);
+        Assert.DoesNotContain(link, source.SourceLinks);
+        Assert.DoesNotContain(link, target.TargetLinks);
+    }
+
+    static (Node Source, Node Target) AddSiblingNodes(IModel model)
+    {
+        var parent = new Node("Parent", model.Root);
+        model.TryAddNode(parent);
+        model.Root.AddChild(parent);
+
+        var source = new Node("Parent.Source", parent);
+        var target = new Node("Parent.Target", parent);
+        parent.AddChild(source);
+        parent.AddChild(target);
+        model.TryAddNode(source);
+        model.TryAddNode(target);
+
+        return (source, target);
+    }
 }

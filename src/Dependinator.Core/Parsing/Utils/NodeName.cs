@@ -1,12 +1,11 @@
 ﻿namespace Dependinator.Core.Parsing.Utils;
 
-internal class NodeName : Equatable<NodeName>
+internal class NodeName : IEquatable<NodeName>
 {
     record DisplayParts(string ShortName, string LongName);
 
     public static NodeName Root = From("");
     static readonly char[] PartsSeparators = "./".ToCharArray();
-    static readonly char[] NameSeparators = "(<".ToCharArray();
     readonly Lazy<DisplayParts> displayParts;
 
     readonly Lazy<NodeName> parentName;
@@ -17,8 +16,6 @@ internal class NodeName : Equatable<NodeName>
 
         parentName = new Lazy<NodeName>(GetParentName);
         displayParts = new Lazy<DisplayParts>(GetDisplayParts);
-
-        IsEqualWhenSame(fullName);
     }
 
     public string FullName { get; }
@@ -33,14 +30,39 @@ internal class NodeName : Equatable<NodeName>
 
     public static string ParseParentName(string name)
     {
-        var parametersIndex = name.IndexOfAny(NameSeparators);
-        if (parametersIndex > 0)
-            name = name[..parametersIndex];
-        int index = name.LastIndexOfAny(PartsSeparators);
+        // Members of generic types have the type's <T> before the member name
+        // (e.g. Ns.Type<T>.Member), so part separators inside <> must be skipped
+        // rather than cutting the name at the first '<'.
+        int depth = 0;
+        int index = -1;
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            if (c == '(')
+                break;
+            if (c == '<')
+                depth++;
+            else if (c == '>')
+                depth--;
+            else if (depth == 0 && (c == '.' || c == '/'))
+                index = i;
+        }
+
         return index > -1 ? name[..index] : "";
     }
 
     public bool IsSame(string nameText) => nameText == FullName;
+
+    public bool Equals(NodeName? other) => other is not null && FullName == other.FullName;
+
+    public override bool Equals(object? obj) => obj is NodeName other && Equals(other);
+
+    public override int GetHashCode() => FullName.GetHashCode();
+
+    public static bool operator ==(NodeName? left, NodeName? right) =>
+        left is null ? right is null : left.Equals(right);
+
+    public static bool operator !=(NodeName? left, NodeName? right) => !(left == right);
 
     public override string ToString() => this != Root ? FullName : "<root>";
 
@@ -49,10 +71,8 @@ internal class NodeName : Equatable<NodeName>
 
     NodeName GetParentName()
     {
-        // Split full name in name and parent name,
-        int index = FullName.LastIndexOfAny(PartsSeparators);
-
-        return index > -1 ? From(FullName[..index]) : Root;
+        var parentName = ParseParentName(FullName);
+        return parentName != "" ? From(parentName) : Root;
     }
 
     DisplayParts GetDisplayParts()

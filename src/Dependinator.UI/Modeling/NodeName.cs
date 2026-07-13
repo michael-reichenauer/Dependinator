@@ -2,7 +2,7 @@ using Dependinator.Core.Parsing;
 
 namespace Dependinator.UI.Modeling;
 
-class NodeName
+static class NodeName
 {
     static readonly char[] PartsSeparators = "./".ToCharArray();
 
@@ -33,11 +33,27 @@ class NodeName
             longName = ToNiceParameters(ToNiceText(longName));
         }
 
-        shortName = nodeType == NodeType.Assembly && !shortName.EndsWith(".dll") ? shortName + ".dll" : shortName;
-        longName = nodeType == NodeType.Assembly && !shortName.EndsWith(".dll") ? longName + ".dll" : longName;
+        if (nodeType == NodeType.Assembly && !shortName.EndsWith(".dll") && !shortName.EndsWith(".exe"))
+        {
+            shortName += ".dll";
+            longName += ".dll";
+        }
+
+        shortName = FormatModuleSuffix(shortName);
+        longName = FormatModuleSuffix(longName);
 
         return (longName, shortName);
-        //return (nodeName, shortName);
+    }
+
+    // Module names are shown as "Name (dll)" instead of "Name.dll"
+    static string FormatModuleSuffix(string name)
+    {
+        if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+            return $"{name[..^4]} (dll)";
+        if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            return $"{name[..^4]} (exe)";
+
+        return name;
     }
 
     static string ToNiceParameters(string fullName)

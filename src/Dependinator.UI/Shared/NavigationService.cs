@@ -1,9 +1,11 @@
 using Dependinator.Core;
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using Dependinator.UI.Shared.VsCode;
 using FileLocation = Dependinator.Core.Parsing.FileLocation;
 
 namespace Dependinator.UI.Shared;
@@ -26,6 +28,11 @@ class NavigationService(
 ) : INavigationService
 {
     static readonly string RazorGeneratorName = "Razor.SourceGenerators.RazorSourceGenerator";
+
+    // Diagnostics for investigating ShowNode centering accuracy. Off by default since it
+    // costs two extra JS interop roundtrips per ShowNode just to produce a debug log line.
+    static readonly bool IsCenteringDiagnosticsEnabled = false;
+
     readonly SemaphoreSlim showNodeLock = new(1, 1);
     long showNodeRequestId = 0;
 
@@ -58,7 +65,7 @@ class NavigationService(
             if (!IsLatestShowNodeRequest(requestId))
                 return;
 
-            selectionService.Select(nodeId);
+            await selectionService.Select(nodeId);
             applicationEvents.TriggerUIStateChanged();
             await LogShowNodeCenteringAsync(nodeId, pos, zoom, requestId);
         }
@@ -207,6 +214,8 @@ class NavigationService(
 
     async Task LogShowNodeCenteringAsync(NodeId nodeId, Pos targetPos, double targetZoom, long requestId)
     {
+        if (!IsCenteringDiagnosticsEnabled)
+            return;
         if (!IsLatestShowNodeRequest(requestId))
             return;
 

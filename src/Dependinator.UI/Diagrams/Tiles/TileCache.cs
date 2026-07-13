@@ -12,6 +12,8 @@ interface ITileCache : IDisposable
 
 class TileCache : ITileCache
 {
+    const int MaxCachedTiles = 100; // Cap memory, each tile holds a full svg string
+
     readonly Action disposeAction;
 
     readonly Dictionary<TileKey, Tile> tiles = [];
@@ -22,6 +24,7 @@ class TileCache : ITileCache
     double lastUsedZoom = 0;
     Tile lastUsedTile = Tile.Empty;
 
+    // Dispose() releases the state lock acquired by TilesMgr.UseTiles()
     public TileCache(Action disposeAction)
     {
         this.disposeAction = disposeAction;
@@ -37,26 +40,31 @@ class TileCache : ITileCache
             return true;
         }
 
-        ClearLastUsed();
         tile = Tile.Empty;
         return false;
     }
 
     public bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile)
     {
-        ValidateScreenTileSize(key);
-        var isCached = tiles.TryGetValue(key, out tile!);
-        if (isCached)
+        InvalidateIfTileSizeChanged(key);
+        if (!tiles.TryGetValue(key, out tile!))
         {
-            SetLastUsed(viewRect, zoom, tile);
+            tile = Tile.Empty;
+            return false;
         }
 
-        return isCached;
+        SetLastUsed(viewRect, zoom, tile);
+        return true;
     }
 
     public void SetCached(Tile tile, Rect viewRect, double zoom)
     {
-        ValidateScreenTileSize(tile.Key);
+        InvalidateIfTileSizeChanged(tile.Key);
+        if (tiles.Count >= MaxCachedTiles)
+        {
+            tiles.Clear();
+        }
+
         tiles[tile.Key] = tile;
         SetCurrentScreenTileSize(tile);
         SetLastUsed(viewRect, zoom, tile);
@@ -91,7 +99,7 @@ class TileCache : ITileCache
 
     public override string ToString() => $"{tiles.Count}";
 
-    void ValidateScreenTileSize(TileKey key)
+    void InvalidateIfTileSizeChanged(TileKey key)
     {
         if (currentScreenTileWidth != key.TileWidth || currentScreenTileHeight != key.TileHeight)
         { // Screen Tile size have been changed, invalidate all cached tiles.

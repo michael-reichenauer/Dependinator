@@ -1,0 +1,48 @@
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@implements IDisposable
+
+@* Right-click context menu on the diagram: add a note or a manual node at the clicked position. *@
+@if (contextMenuService.IsOpen)
+{
+  @* Full-screen catcher: any click (or another right-click) elsewhere dismisses the menu. *@
+  <div style="position:fixed;inset:0;z-index:1399;" @onclick="Close"
+       @oncontextmenu="Close" @oncontextmenu:preventDefault="true"></div>
+
+  <div style="@CssPosition" data-testid="canvas-context-menu">
+    <MudPaper Elevation="8" Class="dep-light-menu py-1" Style="min-width:170px;">
+      <MudList T="string" Dense="true">
+        <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.StickyNote2" IconColor="Color.Secondary"
+                     OnClick="AddNote" data-testid="context-menu-add-note">
+          Add Note Here
+        </MudListItem>
+        <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.AddBox" IconColor="Color.Secondary"
+                     OnClick="AddNode" data-testid="context-menu-add-node">
+          Add Node Here
+        </MudListItem>
+      </MudList>
+    </MudPaper>
+  </div>
+}
+
+@code {
+  [Inject]
+  IContextMenuService contextMenuService { get; set; } = null!;
+
+  protected override void OnInitialized() => contextMenuService.StateChanged += OnStateChanged;
+
+  void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+  // The menu is anchored via fixed positioning at the click's viewport coordinates.
+  string CssPosition =>
+      FormattableString.Invariant($"position:fixed;left:{contextMenuService.ScreenPos.X:0.##}px;")
+      + FormattableString.Invariant($"top:{contextMenuService.ScreenPos.Y:0.##}px;z-index:1400;");
+
+  void Close() => contextMenuService.Close();
+
+  void AddNote() => contextMenuService.AddNoteHere();
+
+  void AddNode() => contextMenuService.AddNodeHere();
+
+  public void Dispose() => contextMenuService.StateChanged -= OnStateChanged;
+}

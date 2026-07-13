@@ -66,7 +66,7 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
 
-        await (await App.OpenMenuItemAsync("menu-about")).ClickAsync();
+        await (await App.OpenSubMenuItemAsync("menu-help-group", "menu-about")).ClickAsync();
 
         // The About message box shows the build version.
         await Expect(App.Dialog).ToBeVisibleAsync();
@@ -78,7 +78,7 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
 
-        ILocator helpItem = await App.OpenMenuItemAsync("menu-help");
+        ILocator helpItem = await App.OpenSubMenuItemAsync("menu-help-group", "menu-help");
 
         // Help opens the static quick-start page in a new browser tab.
         IPage helpPage = await Page.RunAndWaitForPopupAsync(async () => await helpItem.ClickAsync());
@@ -92,7 +92,7 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
 
-        await (await App.OpenMenuItemAsync("menu-reset-model")).ClickAsync();
+        await (await App.OpenSubMenuItemAsync("menu-models", "menu-reset-model")).ClickAsync();
 
         // Reset is destructive, so it must ask for confirmation first.
         await Expect(App.Dialog).ToBeVisibleAsync();

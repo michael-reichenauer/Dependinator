@@ -56,9 +56,6 @@ class Database : IDatabase
             var compressedValue = CompressToBase64(jsonBytes);
             var pair = new Pair<string>(id, compressedValue);
             await jSInterop.Call("setDatabaseValue", DatabaseName, collectionName, pair);
-            // Log.Info(
-            //     $"Wrote '{id}': {jsonBytes.Length}=>{compressedValue.Length} bytes ({Math.Round(100.0 * compressedValue.Length / jsonBytes.Length)}%)"
-            // );
             return R.Ok;
         }
         catch (Exception ex)
@@ -73,14 +70,10 @@ class Database : IDatabase
             return e;
         try
         {
-            var compressedValue = pair.Value;
             var jsonBytes = DecompressFromBase64(pair.Value);
             var value = JsonSerializer.Deserialize<T>(jsonBytes, options);
             if (value is null)
                 return R.Error($"Deserialized null value for {DatabaseName}.{collectionName}.{id}");
-            // Log.Info(
-            //     $"Read '{id}': {jsonBytes.Length}<={compressedValue.Length} bytes ({Math.Round(100.0 * compressedValue.Length / jsonBytes.Length)}%)"
-            // );
             return value;
         }
         catch (Exception ex)
@@ -103,20 +96,6 @@ class Database : IDatabase
     }
 
     private async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
-    {
-        var streamResult = await GetDatabaseValueWithStreamAsync<T>(databaseName, collectionName, id);
-        if (streamResult.IsNone)
-            return R.None;
-        if (!Try(out var streamValue, out var streamError, streamResult))
-            return streamError;
-        return streamValue;
-    }
-
-    private async ValueTask<R<T>> GetDatabaseValueWithStreamAsync<T>(
-        string databaseName,
-        string collectionName,
-        string id
-    )
     {
         IJSStreamReference? valueStreamRef;
         try

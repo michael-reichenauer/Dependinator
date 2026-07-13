@@ -20,7 +20,12 @@ public interface ICloudModelStore
 
 public sealed class BlobCloudModelStore : ICloudModelStore
 {
+    const string NormalizedPathMetadataKey = "normalizedpath";
+    const string UpdatedUtcMetadataKey = "updatedutc";
+    const string ContentHashMetadataKey = "contenthash";
+
     readonly CloudSyncOptions options;
+    BlobContainerClient? cachedContainerClient;
 
     public BlobCloudModelStore(IOptions<CloudSyncOptions> options)
     {
@@ -40,18 +45,18 @@ public sealed class BlobCloudModelStore : ICloudModelStore
         {
             BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync(cancellationToken);
             byte[] contentBytes = downloadResult.Content.ToArray();
-            IDictionary<string, string> metadata = downloadResult.Details.Metadata;
+            CloudModelMetadata metadata = ToModelMetadata(
+                modelKey,
+                downloadResult.Details.Metadata,
+                contentBytes.LongLength
+            );
 
             return new CloudModelDocument(
-                modelKey,
-                GetMetadataValue(metadata, "normalizedpath"),
-                DateTimeOffset.Parse(
-                    GetMetadataValue(metadata, "updatedutc"),
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.RoundtripKind
-                ),
-                GetMetadataValue(metadata, "contenthash"),
-                contentBytes.LongLength,
+                metadata.ModelKey,
+                metadata.NormalizedPath,
+                metadata.UpdatedUtc,
+                metadata.ContentHash,
+                metadata.CompressedSizeBytes,
                 Convert.ToBase64String(contentBytes)
             );
         }
@@ -84,20 +89,7 @@ public sealed class BlobCloudModelStore : ICloudModelStore
                 continue;
 
             string modelKey = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(blobName));
-            IDictionary<string, string> metadata = blobItem.Metadata;
-            models.Add(
-                new CloudModelMetadata(
-                    modelKey,
-                    GetMetadataValue(metadata, "normalizedpath"),
-                    DateTimeOffset.Parse(
-                        GetMetadataValue(metadata, "updatedutc"),
-                        CultureInfo.InvariantCulture,
-                        DateTimeStyles.RoundtripKind
-                    ),
-                    GetMetadataValue(metadata, "contenthash"),
-                    blobItem.Properties.ContentLength ?? 0
-                )
-            );
+            models.Add(ToModelMetadata(modelKey, blobItem.Metadata, blobItem.Properties.ContentLength ?? 0));
         }
 
         return models.OrderByDescending(model => model.UpdatedUtc).ToList();
@@ -111,18 +103,18 @@ public sealed class BlobCloudModelStore : ICloudModelStore
     {
         byte[] contentBytes = Convert.FromBase64String(model.CompressedContentBase64);
         BlobContainerClient containerClient = await GetContainerClientAsync(cancellationToken);
-        BlobClient blobClient = containerClient.GetBlobClient(GetBlobName(user, model.ModelKey));
-        long existingSizeBytes = await GetExistingBlobSizeAsync(blobClient, cancellationToken);
-        long usedBytes = await GetUsedBytesAsync(containerClient, user, cancellationToken);
-        long newUsedBytes = usedBytes - existingSizeBytes + contentBytes.LongLength;
+        string blobName = GetBlobName(user, model.ModelKey);
+        BlobClient blobClient = containerClient.GetBlobClient(blobName);
+        long otherModelsBytes = await GetUsedBytesAsync(containerClient, user, blobName, cancellationToken);
+        long newUsedBytes = otherModelsBytes + contentBytes.LongLength;
         if (newUsedBytes > options.MaxUserQuotaBytes)
             throw new CloudSyncQuotaExceededException(newUsedBytes, options.MaxUserQuotaBytes);
 
         Dictionary<string, string> metadata = new(StringComparer.Ordinal)
         {
-            ["normalizedpath"] = model.NormalizedPath,
-            ["updatedutc"] = model.UpdatedUtc.ToString("O", CultureInfo.InvariantCulture),
-            ["contenthash"] = model.ContentHash,
+            [NormalizedPathMetadataKey] = model.NormalizedPath,
+            [UpdatedUtcMetadataKey] = model.UpdatedUtc.ToString("O", CultureInfo.InvariantCulture),
+            [ContentHashMetadataKey] = model.ContentHash,
         };
 
         using MemoryStream contentStream = new(contentBytes, writable: false);
@@ -145,11 +137,18 @@ public sealed class BlobCloudModelStore : ICloudModelStore
         );
     }
 
+    // Cached after the container has been created once; concurrent first calls may
+    // create the container twice, which is idempotent.
     async Task<BlobContainerClient> GetContainerClientAsync(CancellationToken cancellationToken)
     {
+        BlobContainerClient? containerClient = cachedContainerClient;
+        if (containerClient is not null)
+            return containerClient;
+
         BlobServiceClient blobServiceClient = CreateBlobServiceClient();
-        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(options.ContainerName);
+        containerClient = blobServiceClient.GetBlobContainerClient(options.ContainerName);
         await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+        cachedContainerClient = containerClient;
         return containerClient;
     }
 
@@ -164,24 +163,12 @@ public sealed class BlobCloudModelStore : ICloudModelStore
         return new BlobServiceClient(connectionString);
     }
 
-    async Task<long> GetExistingBlobSizeAsync(BlobClient blobClient, CancellationToken cancellationToken)
-    {
-        try
-        {
-            Response<BlobProperties> response = await blobClient.GetPropertiesAsync(
-                cancellationToken: cancellationToken
-            );
-            return response.Value.ContentLength;
-        }
-        catch (RequestFailedException ex) when (ex.Status == 404)
-        {
-            return 0;
-        }
-    }
-
-    async Task<long> GetUsedBytesAsync(
+    // Sums the user's stored bytes, excluding the blob about to be overwritten so the
+    // quota check compares against the size after the upload replaces it.
+    static async Task<long> GetUsedBytesAsync(
         BlobContainerClient containerClient,
         CloudUserInfo user,
+        string excludedBlobName,
         CancellationToken cancellationToken
     )
     {
@@ -195,7 +182,12 @@ public sealed class BlobCloudModelStore : ICloudModelStore
                 cancellationToken: cancellationToken
             )
         )
+        {
+            if (string.Equals(blobItem.Name, excludedBlobName, StringComparison.Ordinal))
+                continue;
+
             usedBytes += blobItem.Properties.ContentLength ?? 0;
+        }
 
         return usedBytes;
     }
@@ -206,6 +198,25 @@ public sealed class BlobCloudModelStore : ICloudModelStore
     {
         string storageKey = CloudUserStorageKey.Create(user);
         return $"users/{Uri.EscapeDataString(storageKey)}/models/";
+    }
+
+    static CloudModelMetadata ToModelMetadata(
+        string modelKey,
+        IDictionary<string, string> metadata,
+        long compressedSizeBytes
+    )
+    {
+        return new CloudModelMetadata(
+            modelKey,
+            GetMetadataValue(metadata, NormalizedPathMetadataKey),
+            DateTimeOffset.Parse(
+                GetMetadataValue(metadata, UpdatedUtcMetadataKey),
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.RoundtripKind
+            ),
+            GetMetadataValue(metadata, ContentHashMetadataKey),
+            compressedSizeBytes
+        );
     }
 
     static string GetMetadataValue(IDictionary<string, string> metadata, string key)

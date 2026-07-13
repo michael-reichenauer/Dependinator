@@ -41,29 +41,20 @@ class SourceParser : ISourceParser
             List<Item> solutionNodes = [];
             solutionNodes.Add(new Item(solutionNode, null));
 
-            // // In sequence
-            // foreach (var project in projects)
-            // {
-            //     if (!Try(out var items, out var e, await ParseProjectAsync(project, solutionNode.Name)))
-            //     {
-            //         Log.Warn($"Failed to parse project {project.Name}: {e.ErrorMessage}");
-            //         continue;
-            //     }
+            // Parse all projects in parallel
+            var parseProjectTasks = projects
+                .Select(p => (Project: p, Task: ParseProjectAsync(p, solutionNode.Name)))
+                .ToList();
 
-            //     solutionNodes.AddRange(items);
-            // }
-
-            // In parallel
-            var parseProjectTasks = projects.Select(p => ParseProjectAsync(p, solutionNode.Name));
-
-            await foreach (var parseProjectTask in Task.WhenEach(parseProjectTasks))
+            foreach (var (project, parseProjectTask) in parseProjectTasks)
             {
                 if (!Try(out var items, out var e, await parseProjectTask))
+                {
+                    Log.Warn($"Failed to parse project {project.Name}: {e.ErrorMessage}");
                     continue;
+                }
                 solutionNodes.AddRange(items);
             }
-
-            // await WriteCompressedDemoModelAsync(solutionNodes, solutionPath);
 
             return solutionNodes;
         }
@@ -80,7 +71,6 @@ class SourceParser : ISourceParser
             using var workspace = Compiler.CreateWorkspace();
 
             var project = await workspace.OpenProjectAsync(projectPath);
-            // Log.Info("Parse:", projectPath);
             return await ParseProjectAsync(project, null);
         }
         catch (Exception e)
@@ -91,17 +81,16 @@ class SourceParser : ISourceParser
 
     public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
     {
-        // Log.Info("Parse:", project.Name);
         if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
             return e;
 
-        return ParseProjectCompilation(compilation, parentName).ToList();
+        return ParseProjectCompilation(compilation, parentName, project.FilePath).ToList();
     }
 
-    static IEnumerable<Item> ParseProjectCompilation(Compilation compilation, string? parentName)
+    static IEnumerable<Item> ParseProjectCompilation(Compilation compilation, string? parentName, string? projectPath)
     {
         var moduleName = Names.GetModuleName(compilation);
-        var description = GetAssemblyDescription(compilation);
+        var (description, fileSpan) = GetAssemblyDescription(compilation, projectPath);
         yield return new Item(
             new Node(
                 moduleName,
@@ -110,16 +99,11 @@ class SourceParser : ISourceParser
                     Type = NodeType.Assembly,
                     Description = description,
                     Parent = parentName,
+                    FileSpan = fileSpan,
                 }
             ),
             null
         );
-
-        var typeNames = Compiler
-            .GetAllTypes(compilation)
-            .Where(t => !t.IsImplicitlyDeclared)
-            .Select(t => t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
-            .ToList();
 
         foreach (var type in Compiler.GetAllTypes(compilation).Where(t => !t.IsImplicitlyDeclared))
         {
@@ -132,8 +116,12 @@ class SourceParser : ISourceParser
     }
 
     // Reads the [assembly: AssemblyDescription("...")] value from the project's compiled
-    // assembly attributes, used as the description for the assembly node.
-    static string? GetAssemblyDescription(Compilation compilation)
+    // assembly attributes, used as the description for the assembly node, together with a
+    // source location where the description can be edited or added ("show source").
+    internal static (string? Description, FileSpan? FileSpan) GetAssemblyDescription(
+        Compilation compilation,
+        string? projectPath
+    )
     {
         var attribute = compilation
             .Assembly.GetAttributes()
@@ -141,10 +129,68 @@ class SourceParser : ISourceParser
                 a.AttributeClass?.ToDisplayString() == "System.Reflection.AssemblyDescriptionAttribute"
             );
 
-        if (attribute is null || attribute.ConstructorArguments.Length == 0)
-            return null;
+        var fileSpan = GetAssemblyDescriptionSpan(attribute, compilation, projectPath);
 
-        return attribute.ConstructorArguments[0].Value as string;
+        if (attribute is null || attribute.ConstructorArguments.Length == 0)
+            return (null, fileSpan);
+
+        return (attribute.ConstructorArguments[0].Value as string, fileSpan);
+    }
+
+    // The assembly node has no single source definition, so pick the best editable location:
+    // the hand-written [assembly: AssemblyDescription(...)] attribute if present, otherwise a
+    // hand-written Usings.cs/AssemblyInfo.cs file, otherwise the project file itself (where a
+    // <Description> property generates the attribute).
+    static FileSpan? GetAssemblyDescriptionSpan(AttributeData? attribute, Compilation compilation, string? projectPath)
+    {
+        if (attribute?.ApplicationSyntaxReference is { } syntaxRef)
+        {
+            var lineSpan = syntaxRef.GetSyntax().GetLocation().GetLineSpan();
+            if (!IsGeneratedPath(lineSpan.Path))
+                return Locations.ToFileSpan(lineSpan);
+        }
+
+        foreach (var fileName in new[] { "Usings.cs", "AssemblyInfo.cs" })
+        {
+            var path = compilation
+                .SyntaxTrees.Select(t => t.FilePath)
+                .Where(p => !IsGeneratedPath(p))
+                .FirstOrDefault(p => string.Equals(Path.GetFileName(p), fileName, StringComparison.OrdinalIgnoreCase));
+
+            if (path is not null)
+                return new FileSpan(path, 0, 0);
+        }
+
+        if (projectPath is not null && File.Exists(projectPath))
+        {
+            var line = GetProjectDescriptionLine(projectPath);
+            return new FileSpan(projectPath, line, line);
+        }
+
+        return null;
+    }
+
+    static bool IsGeneratedPath(string path) =>
+        path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") || path.Contains("/obj/");
+
+    static int GetProjectDescriptionLine(string projectPath)
+    {
+        try
+        {
+            var lineNumber = 0;
+            foreach (var line in File.ReadLines(projectPath))
+            {
+                if (line.Contains("<Description>"))
+                    return lineNumber;
+                lineNumber++;
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"Failed to read project file {projectPath}: {e.Message}");
+        }
+
+        return 0;
     }
 
     // Reads the gzip-compressed, pre-parsed demo model embedded in this assembly
@@ -174,29 +220,6 @@ class SourceParser : ISourceParser
         }
     }
 
-    static async Task WriteCompressedDemoModelAsync(IReadOnlyList<Item> solutionNodes, string solutionPath)
-    {
-        try
-        {
-            Log.Info(solutionPath);
-            Log.Info(DemoModel.WorkingSolutionPath);
-            if (Build.IsWasm || solutionPath != DemoModel.WorkingSolutionPath)
-                return;
-            string outputPath = DemoModel.DemoOutputPath;
-            var json = Json.Serialize(solutionNodes);
-            json = json.Replace("Dependinator", "Demo");
-            await using var file = File.Create(outputPath);
-            await using var gzip = new GZipStream(file, CompressionLevel.SmallestSize);
-            await using var writer = new StreamWriter(gzip);
-            await writer.WriteAsync(json);
-            Log.Info($"Wrote demo model {json.Length} json size to {outputPath}");
-        }
-        catch (Exception ex)
-        {
-            Log.Exception(ex);
-            throw;
-        }
-    }
-
-    static bool IsTestProject(Project project) => project.Name.EndsWith("Test") || project.Name.EndsWith(".Tests");
+    // Heuristic: skip test projects by naming convention (e.g. "Foo.Tests", "FooTests", "FooTest")
+    static bool IsTestProject(Project project) => project.Name.EndsWith("Test") || project.Name.EndsWith("Tests");
 }

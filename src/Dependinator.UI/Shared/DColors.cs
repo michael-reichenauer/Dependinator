@@ -26,6 +26,18 @@ class DColors
     static readonly string DirectLineDark = "#7C4DFF";
     static readonly string DirectLineLight = "#512DA8";
 
+    // Marker glyph on manually added (user-drawn) nodes — neutral grey so it reads as
+    // "hand-drawn/editable" rather than a status indicator.
+    static readonly string ManualMarkerDark = "#8A8F98";
+    static readonly string ManualMarkerLight = "#5F6368";
+
+    // Note annotation circles — a distinct accent (blue) so notes read as a separate guidance
+    // layer over the diagram. Text is white for contrast on the filled circle.
+    static readonly string NoteFillDark = "#4DA6FF";
+    static readonly string NoteFillLight = "#1A73E8";
+    static readonly string NoteBorderDark = "#1A2A40";
+    static readonly string NoteBorderLight = "#0D3B66";
+
     // Node Dark
     // static readonly string NodeBackgroundDarkSelected = "#1A2A40";
     static readonly string NodeBorderDarkEdit = "#FFA64D";
@@ -64,18 +76,56 @@ class DColors
     static readonly string NodeBorderLightEdit = "#CC7000";
     static readonly string NodeBackgroundLightEdit = "#FFF2E0";
 
-    public static bool IsDark { get; set; } = false;
-    public static readonly string CanvasBackground = IsDark ? CanvasBackgroundDark : CanvasBackgroundLight;
-    public static readonly string Line = IsDark ? LineDark : LineLight;
-    public static readonly string LineHidden = IsDark ? LineHiddenDark : LineHiddenLight;
-    public static readonly string DirectLine = IsDark ? DirectLineDark : DirectLineLight;
-    public static readonly string EditNodeBorder = IsDark ? NodeBorderDarkEdit : NodeBorderLightEdit;
-    public static readonly string EditNodeBackground = IsDark ? NodeBackgroundDarkEdit : NodeBackgroundLightEdit;
-    public static readonly string Text = IsDark ? TextDark : TextLight;
+    // User-selected container colors: the shared accent colors (see ColorUtil, same six as the
+    // icon tints) rendered in the same style as the auto palette above, derived per theme by
+    // re-hueing the canonical "Blue" entry (hue ~210), but with a slightly stronger background
+    // than the auto palette so an explicit color choice stands out against the canvas. Names
+    // deliberately overlap the auto palette's — resolution is separate (CustomNodeColorByName
+    // vs NodeColorByName).
+    const double CustomBaseHue = 210;
+    static readonly string CustomBackgroundDark = "#12243F";
+    static readonly string CustomBackgroundLight = "#EAF3FF";
 
-    public static readonly string Selected = IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
-    public static readonly string LineSelected = ItemLineSelected;
-    public static readonly string ToolBarIcon = MudBlazor.Colors.DeepPurple.Lighten5;
+    static readonly IReadOnlyList<DColor> customNodeColorsDark = DeriveCustomColors(
+        nodeColorsDark[1] with
+        {
+            Background = CustomBackgroundDark,
+        }
+    );
+    static readonly IReadOnlyList<DColor> customNodeColorsLight = DeriveCustomColors(
+        nodeColorsLight[1] with
+        {
+            Background = CustomBackgroundLight,
+        }
+    );
+
+    static IReadOnlyList<DColor> DeriveCustomColors(DColor blue) =>
+        [
+            .. ColorUtil.AccentColors.Select(accent => new DColor(
+                accent.Name,
+                ColorUtil.ShiftHue(blue.Border, CustomBaseHue, accent.Hue),
+                ColorUtil.ShiftHue(blue.Background, CustomBaseHue, accent.Hue)
+            )),
+        ];
+
+    // Computed properties (not readonly fields) so a future IsDark switch takes effect at
+    // runtime; readonly fields would be frozen to the light palette at type initialization.
+    public static bool IsDark { get; set; } = false;
+    public static string CanvasBackground => IsDark ? CanvasBackgroundDark : CanvasBackgroundLight;
+    public static string Line => IsDark ? LineDark : LineLight;
+    public static string LineHidden => IsDark ? LineHiddenDark : LineHiddenLight;
+    public static string DirectLine => IsDark ? DirectLineDark : DirectLineLight;
+    public static string ManualMarker => IsDark ? ManualMarkerDark : ManualMarkerLight;
+    public static string NoteFill => IsDark ? NoteFillDark : NoteFillLight;
+    public static string NoteBorder => IsDark ? NoteBorderDark : NoteBorderLight;
+    public static string NoteText => "#FFFFFF";
+    public static string EditNodeBorder => IsDark ? NodeBorderDarkEdit : NodeBorderLightEdit;
+    public static string EditNodeBackground => IsDark ? NodeBackgroundDarkEdit : NodeBackgroundLightEdit;
+    public static string Text => IsDark ? TextDark : TextLight;
+
+    public static string Selected => IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
+    public static string LineSelected => ItemLineSelected;
+    public static string ToolBarIcon => MudBlazor.Colors.DeepPurple.Lighten5;
 
     public static string ColorBasedOnName(string name)
     {
@@ -90,6 +140,20 @@ class DColors
     public static (string color, string background) NodeColorByName(string name)
     {
         var colors = IsDark ? nodeColorsDark : nodeColorsLight;
+        var color = colors.FirstOrDefault(c => c.Name == name) ?? colors[0];
+        return (color.Border, color.Background);
+    }
+
+    // The user-selectable container colors for the current theme, for rendering color pickers.
+    public static IReadOnlyList<DColor> CustomNodeColors => IsDark ? customNodeColorsDark : customNodeColorsLight;
+
+    // Whether name is one of the user-selectable container colors, so consumers can validate
+    // persisted names and fall back to the node's auto color for stale/unknown ones.
+    public static bool IsCustomNodeColor(string name) => customNodeColorsDark.Any(c => c.Name == name);
+
+    public static (string color, string background) CustomNodeColorByName(string name)
+    {
+        var colors = IsDark ? customNodeColorsDark : customNodeColorsLight;
         var color = colors.FirstOrDefault(c => c.Name == name) ?? colors[0];
         return (color.Border, color.Background);
     }

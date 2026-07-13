@@ -1,79 +1,143 @@
 ﻿@using Dependinator.UI.Diagrams.Dependencies
 @using Dependinator.UI.Diagrams.Icons
-@using Dependinator.UI.Diagrams.Svg
 @using Dependinator.Core
 @using Dependinator.Core.Parsing
 @using Dependinator.Core.Shared
 @using MudBlazor
 @implements IDisposable
 
-@if (HasSelectedLine)
+@if (HasSelectedLine && IsSelectedNodeNote)
 {
   <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
-    <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
-             PopoverClass="dep-light-menu" data-testid="node-menu">
-      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
-                   OnClick="ShowProperties" data-testid="node-menu-properties">
-        Properties …
-      </MudMenuItem>
-      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
-                   OnClick="LayoutChildren" data-testid="node-menu-reset-children">
-        Reset Children Layout
-      </MudMenuItem>
-      <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DeveloperBoardOff"
-                   OnClick="LayoutDescendants" data-testid="node-menu-reset-descendants">
-        Reset All Descendants Layout
-      </MudMenuItem>
-
-      <MudDivider />
-      @if (!IsNodeHidden)
-      {
-        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
-                     OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled" data-testid="node-menu-toggle-hide">
-          Hide Node …
+    <MudTooltip Text="Edit note">
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="EditNote" data-testid="note-edit-toolbar" />
+    </MudTooltip>
+    <MudTooltip Text="Delete note">
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="DeleteNoteToolbar"
+                     data-testid="note-delete-toolbar" />
+    </MudTooltip>
+  </MudButtonGroup>
+}
+else if (HasSelectedLine)
+{
+  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
+    <MudTooltip Text="Menu">
+      <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
+               PopoverClass="dep-light-menu" data-testid="node-menu">
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
+                     OnClick="LayoutChildren" data-testid="node-menu-reset-children">
+          Reset Children Layout
         </MudMenuItem>
-      }
-      else
-      {
-        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility"
-                     OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled" data-testid="node-menu-toggle-hide">
-          Show Node …
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DeveloperBoardOff"
+                     OnClick="LayoutDescendants" data-testid="node-menu-reset-descendants">
+          Reset All Descendants Layout
         </MudMenuItem>
-      }
-    </MudMenu>
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols"
+                     OnClick="SelectIconAsync" data-testid="node-menu-set-icon">
+          Set Icon …
+        </MudMenuItem>
+        <MudMenu Label="Icon Color" StartIcon="@MudBlazor.Icons.Material.Outlined.Palette" IconColor="Color.Secondary"
+                 Dense="true" PopoverClass="dep-light-menu" data-testid="node-menu-icon-color">
+          @IconColorMenuItems
+        </MudMenu>
+        <MudMenu Label="Background Color" StartIcon="@MudBlazor.Icons.Material.Outlined.FormatColorFill"
+                 IconColor="Color.Secondary" Dense="true" PopoverClass="dep-light-menu"
+                 data-testid="node-menu-color">
+          @NodeColorMenuItems
+        </MudMenu>
 
-    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="node-references" />
-    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
+        @if (IsSelectedNodeManual)
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DriveFileRenameOutline"
+                       OnClick="RenameNode" data-testid="node-menu-rename">
+            Rename Node …
+          </MudMenuItem>
+          <MudMenuItem IconColor="Color.Error" Icon="@MudBlazor.Icons.Material.Outlined.Delete"
+                       OnClick="DeleteNode" data-testid="node-menu-delete">
+            Delete Node
+          </MudMenuItem>
+        }
 
-    @if (NodeSvg.IsEditingEnabled)
+        <MudDivider />
+        @if (!IsNodeHidden)
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
+                       OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled" data-testid="node-menu-toggle-hide">
+            Hide Node …
+          </MudMenuItem>
+        }
+        else
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility"
+                       OnClick="ToggleNodeHide" Disabled="@IsVisibilityDisabled" data-testid="node-menu-toggle-hide">
+            Show Node …
+          </MudMenuItem>
+        }
+      </MudMenu>
+    </MudTooltip>
+
+    <MudTooltip Text="Show references">
+      <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="node-references" />
+    </MudTooltip>
+    <MudTooltip Text="Show dependencies">
+      <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
+    </MudTooltip>
+
+    @if (ViewOptions.IsEditingEnabled)
     {
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen"
-                     OnClick="interactionService.DecreaseNodeSize" data-testid="node-decrease-size" />
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize"
-                     data-testid="node-increase-size" />
+      <MudTooltip Text="Decrease node size">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" OnClick="interactionService.DecreaseNodeSize"
+                       data-testid="node-decrease-size" />
+      </MudTooltip>
+      <MudTooltip Text="Increase node size">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize"
+                       data-testid="node-increase-size" />
+      </MudTooltip>
+      <MudTooltip Text="Set icon">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols" OnClick="SelectIconAsync"
+                       data-testid="node-set-icon" />
+      </MudTooltip>
+      <MudTooltip Text="@(IsIconMode ? "Set icon color" : "Set background color")">
+        <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Palette" Dense="true" AnchorOrigin="Origin.BottomCenter"
+                 PopoverClass="dep-light-menu" data-testid="node-set-color">
+          @(IsIconMode ? IconColorMenuItems : NodeColorMenuItems)
+        </MudMenu>
+      </MudTooltip>
+      <MudTooltip Text="Add link from this node">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CallMade" OnClick="BeginAddLink"
+                       data-testid="node-add-link" />
+      </MudTooltip>
     }
 
     @if (CanShowSource)
     {
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync"
-                     data-testid="node-show-source" />
+      <MudTooltip Text="Show source code">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync"
+                       data-testid="node-show-source" />
+      </MudTooltip>
     }
 
     @if (!IsIconMode)
     {
       @if (IsEditNodeMode)
       {
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" OnClick="() => IsEditNodeMode = false"
-                       Color="@Color.Warning" data-testid="node-edit" />
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit"
-                       data-testid="node-fit-to-screen" />
+        <MudTooltip Text="Exit node edit mode">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" OnClick="() => IsEditNodeMode = false"
+                         Color="@Color.Warning" data-testid="node-edit" />
+        </MudTooltip>
+        <MudTooltip Text="Fit node to screen">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="interactionService.NodePanZoomToFit"
+                         data-testid="node-fit-to-screen" />
+        </MudTooltip>
       }
       else
       {
-        @if (NodeSvg.IsEditingEnabled)
+        @if (ViewOptions.IsEditingEnabled)
         {
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="() => IsEditNodeMode = true"
-                         data-testid="node-edit" />
+          <MudTooltip Text="Edit node">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="() => IsEditNodeMode = true"
+                           data-testid="node-edit" />
+          </MudTooltip>
         }
       }
     }
@@ -92,20 +156,28 @@
   </YesButton>
 </MudMessageBox>
 
+<MudMessageBox @ref="deleteConfirmBox" Title="Delete Node" CancelText="Cancel">
+  <MessageContent>
+    Delete this node and all its child nodes?
+  </MessageContent>
+  <YesButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Filled.Delete">
+      Delete
+    </MudButton>
+  </YesButton>
+</MudMessageBox>
+
 
 @code {
   const double ToolbarOffset = 58;
   private MudMessageBox mbox { get; set; } = null!;
+  private MudMessageBox deleteConfirmBox { get; set; } = null!;
 
 
   bool IsEditNodeMode
   {
     get { return interactionService.IsEditNodeMode; }
-    set
-    {
-      Log.Info("Set val", value);
-      interactionService.IsEditNodeMode = value;
-    }
+    set { interactionService.IsEditNodeMode = value; }
   }
 
   [Inject]
@@ -133,18 +205,48 @@
   INavigationService navigationService { get; set; } = null!;
 
   [Inject]
-  IConfigService configService { get; set; } = null!;
+  IManualEditService manualEditService { get; set; } = null!;
+
+  [Inject]
+  INoteService noteService { get; set; } = null!;
+
+  [Inject]
+  ISnackbar snackbar { get; set; } = null!;
+
+  [Inject]
+  INodeEditService nodeEditService { get; set; } = null!;
 
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
+  bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
+  bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
+  bool SelectedNodeHasChildren => SelectedNodeIs(node => node.Children.Count > 0);
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
+
+  // The selected node's id, when the selection is a node.
+  bool TryGetSelectedNodeId(out Modeling.Models.NodeId nodeId)
+  {
+    nodeId = Modeling.Models.NodeId.Empty;
+    if (!selectionService.SelectedId.IsNode)
+      return false;
+    nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+    return true;
+  }
+
+  bool SelectedNodeIs(Func<Modeling.Models.Node, bool> predicate)
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return false;
+    using var model = modelMgr.UseModel();
+    return model.Nodes.TryGetValue(nodeId, out var node) && predicate(node);
+  }
   bool IsIconMode => !interactionService.IsContainer;
   bool CanShowSource => interactionService.CanShowSource;
 
   string CssPosition =>
-      $"position:fixed;left:{selectionService.SelectedNodePosition.X}px;"
-      + $"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset}px;"
+      FormattableString.Invariant($"position:fixed;left:{selectionService.SelectedNodePosition.X:0.##}px;")
+      + FormattableString.Invariant($"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset:0.##}px;")
       + "background:rgba(255,255,255,0.9);border-radius:4px;"
       + "box-shadow:var(--mud-elevation-2);";
 
@@ -154,48 +256,31 @@
 
   public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
 
-  void ShowProperties() =>
-      dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions { CloseOnEscapeKey = true });
-
   async Task LayoutChildren()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId);
-    selectionService.Select(nodeId);
+    await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
   }
 
   async Task LayoutDescendants()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
     if (await mbox.ShowAsync() != true)
     {
       return;
     }
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId, true);
-    selectionService.Select(nodeId);
+    await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
   }
-
-  async Task SetLayoutDensityAsync(Modeling.NodeLayoutDensity density)
-  {
-    Modeling.NodeLayout.SetDensity(density);
-    await configService.SetAsync(config => config.LayoutDensity = density);
-    applicationEvents.TriggerUIStateChanged();
-  }
-
-  string DensityIcon(Modeling.NodeLayoutDensity density) =>
-      Modeling.NodeLayout.Density == density
-          ? MudBlazor.Icons.Material.Filled.CheckCircle
-          : MudBlazor.Icons.Material.Outlined.Circle;
 
   void ShowReferences() => dependenciesService.ShowReferences();
 
@@ -204,31 +289,184 @@
 
   async Task ShowSourceAsync()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
 
-    string selectedId = selectionService.SelectedId.Id;
-    var nodeId = Modeling.Models.NodeId.FromId(selectedId);
     FileSpan? nodeFileSpan = null;
-
-    string nodeTitle = selectedId;
 
     using (var model = modelMgr.UseModel())
     {
       if (model.Nodes.TryGetValue(nodeId, out var node))
-      {
-        nodeTitle = node.LongName;
         nodeFileSpan = node.FileSpanOrParentSpan;
-      }
     }
 
-   
     if (nodeFileSpan is not null && Build.IsVsCodeExtWasm)
-    {
-      await navigationService.ShowEditor(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
-      return;
-    }
+      await navigationService.ShowEditor(nodeId);
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();
+
+  void BeginAddLink()
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return;
+    manualEditService.BeginAddLink(nodeId);
+    snackbar.Add("Click a target node to link to (Esc or click empty space to cancel).", Severity.Info);
+  }
+
+  async Task DeleteNode()
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return;
+
+    // Confirm before removing a node together with its children; no prompt for a childless node.
+    if (SelectedNodeHasChildren && await deleteConfirmBox.ShowAsync() != true)
+      return;
+
+    selectionService.Unselect();
+    manualEditService.DeleteManualNode(nodeId);
+  }
+
+  void RenameNode()
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return;
+    manualEditService.BeginRenameNode(nodeId, selectionService.SelectedNodePosition);
+  }
+
+  Task EditNote()
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return Task.CompletedTask;
+    return noteService.EditNoteAsync(nodeId);
+  }
+
+  void DeleteNoteToolbar()
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return;
+    selectionService.Unselect();
+    manualEditService.DeleteManualNode(nodeId);
+  }
+
+  // One row of the color dropdowns: Fill is the swatch dot's fill; Ring is an optional border
+  // ring, used to preview a container's border+background pair. A null Name is the pinned
+  // "Default" row (clears back to the icon's violet / the node's auto color).
+  readonly record struct ColorSwatch(string? Name, string Fill, string? Ring);
+
+  // The swatch rows of a color dropdown; the current selection is marked with an outline and
+  // bold name. Shared by the icon-tint and container-color dropdowns (toolbar + context menu).
+  RenderFragment ColorMenuRows(string testPrefix, IReadOnlyList<ColorSwatch> swatches, string? current,
+      Action<string?> set) => @<text>
+    @foreach (var swatch in swatches)
+    {
+      var name = swatch.Name;
+      var isCurrent = current == name;
+      <MudMenuItem OnClick="() => set(name)" data-testid="@($"{testPrefix}-{name ?? "Default"}")">
+        <div class="d-flex align-center" style="gap:10px;">
+          <span style="@SwatchStyle(swatch, isCurrent)"></span>
+          <span style="@(isCurrent ? "font-weight:600;" : "")">@(name ?? "Default")</span>
+        </div>
+      </MudMenuItem>
+    }
+  </text>;
+
+  // The icon tints: the base violet plus the shared accent colors, as solid dots.
+  RenderFragment IconColorMenuItems =>
+      ColorMenuRows(
+          "icon-color-item",
+          [
+            new(null, IconLibrary.DefaultSwatch, null),
+            .. IconLibrary.IconColors.Select(color => new ColorSwatch(color.Name, color.Swatch, null)),
+          ],
+          GetCurrentIconColor(),
+          color => SetIconColor(color));
+
+  // The container colors: the node's auto-assigned color plus the shared accent colors, each
+  // dot previewing the actual border+background pair.
+  RenderFragment NodeColorMenuItems
+  {
+    get
+    {
+      var (customColor, autoColor) = GetCurrentNodeColors();
+      var (autoBorder, autoBackground) = DColors.NodeColorByName(autoColor);
+      return ColorMenuRows(
+          "color-item",
+          [
+            new(null, autoBackground, autoBorder),
+            .. DColors.CustomNodeColors.Select(color => new ColorSwatch(color.Name, color.Background, color.Border)),
+          ],
+          customColor,
+          color => SetNodeColor(color));
+    }
+  }
+
+  static string SwatchStyle(ColorSwatch swatch, bool isCurrent) =>
+      $"width:14px;height:14px;border-radius:50%;background:{swatch.Fill};flex-shrink:0;"
+      + (swatch.Ring is { } ring ? $"border:2px solid {ring};" : "")
+      + (isCurrent ? "outline:2px solid var(--mud-palette-primary);outline-offset:1px;" : "");
+
+  string? GetCurrentIconColor()
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return null;
+    using var model = modelMgr.UseModel();
+    return model.Nodes.TryGetValue(nodeId, out var node) ? node.CustomIconColor : null;
+  }
+
+  // The selected node's user-set container color (null = auto) and its auto-assigned color name.
+  (string? Custom, string Auto) GetCurrentNodeColors()
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return (null, "");
+    using var model = modelMgr.UseModel();
+    return model.Nodes.TryGetValue(nodeId, out var node) ? (node.CustomColor, node.Color) : (null, "");
+  }
+
+  void SetIconColor(string? colorName)
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return;
+    nodeEditService.SetNodeIconColor(nodeId, colorName);
+  }
+
+  void SetNodeColor(string? colorName)
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return;
+    nodeEditService.SetNodeColor(nodeId, colorName);
+  }
+
+  async Task SelectIconAsync()
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return;
+
+    string? currentIconName = null;
+    string defaultIconName = "";
+    using (var model = modelMgr.UseModel())
+    {
+      if (!model.Nodes.TryGetValue(nodeId, out var node))
+        return;
+      currentIconName = node.CustomIconName;
+      defaultIconName = Icon.GetIconName(node.Type);
+    }
+
+    var parameters = new DialogParameters
+    {
+      { nameof(IconSelectorDialog.NodeIdValue), nodeId.Value },
+      { nameof(IconSelectorDialog.CurrentIconName), currentIconName },
+      { nameof(IconSelectorDialog.DefaultIconName), defaultIconName },
+    };
+    var options = new DialogOptions
+    {
+      CloseOnEscapeKey = true,
+      NoHeader = true,
+      Position = DialogPosition.TopCenter,
+      MaxWidth = MaxWidth.Small,
+      FullWidth = true,
+    };
+    var dialog = await dialogService.ShowAsync<IconSelectorDialog>(null, parameters, options);
+    await dialog.Result;
+  }
 }

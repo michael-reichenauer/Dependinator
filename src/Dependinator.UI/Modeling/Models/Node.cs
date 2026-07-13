@@ -49,9 +49,21 @@ class Node : IItem
         }
     }
 
-    public string? Description { get; set; }
+    // Only set via SetDescription, which keeps the pre-encoded HtmlDescription in sync.
+    public string? Description { get; private set; }
 
     public string Color { get; set; } = "";
+
+    // User-selected icon name (an IconLibrary id); null means the node-type default icon.
+    public string? CustomIconName { get; set; }
+
+    // User-selected icon tint (an IconLibrary.IconColors name); null means the default violet.
+    // Independent of Color, which is the node container's own (background) palette color.
+    public string? CustomIconColor { get; set; }
+
+    // User-selected container color (a DColors.CustomNodeColors name); null means the
+    // auto-assigned Color above. Independent of CustomIconColor.
+    public string? CustomColor { get; set; }
 
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
@@ -59,8 +71,20 @@ class Node : IItem
     public bool IsChildrenLayoutRequired { get; set; } = false;
     public bool IsChildrenLayoutCustomized { get; set; } = false;
 
-    public Rect Boundary { get; set; } = Rect.None;
-    public Double ContainerZoom { get; set; } = DefaultContainerZoom;
+    Rect boundary = Rect.None;
+
+    // A pass-through node is an invisible container that always exactly covers its parent's
+    // inner viewport, so its children appear to be shown directly in the parent (e.g. the
+    // "Dependinator.Core" namespace chain inside the "Dependinator.Core.dll" assembly node).
+    // Its boundary is derived, never stored, so it self-syncs when the parent is resized,
+    // panned, or zoomed.
+    public Rect Boundary
+    {
+        get => IsPassThrough ? GetPassThroughBoundary() : boundary;
+        set => boundary = value;
+    }
+
+    public double ContainerZoom { get; set; } = DefaultContainerZoom;
     public Pos ContainerOffset { get; set; } = Pos.None;
 
     public List<Node> Children { get; } = new();
@@ -79,6 +103,25 @@ class Node : IItem
     public bool IsHidden => IsUserSetHidden || IsParentSetHidden;
     public bool IsUserSetHidden { get; set; }
     public bool IsParentSetHidden { get; set; }
+    public bool IsPassThrough { get; set; }
+
+    // A manually added node (drawn by the user to design intended structure), as opposed to a
+    // node produced by parsing. Manual nodes are marked visually and are exempt from the
+    // stale-node removal that runs after each re-parse (see StructureService.ClearNotUpdated).
+    public bool IsManual { get; set; }
+
+    // A note is a user-drawn annotation rendered as a small circle showing a short id (e.g. "1",
+    // "A"); its Description is shown as a hover tooltip. Notes are manual nodes (also IsManual) so
+    // they persist and survive re-parse, but render via NoteSvg instead of the normal node chrome.
+    public bool IsNote { get; set; }
+
+    // Sets the description and keeps the pre-encoded HtmlDescription in sync; the single write
+    // path for descriptions (note edits, SetFromDto, Update).
+    public void SetDescription(string? description)
+    {
+        Description = string.IsNullOrEmpty(description) ? null : description;
+        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
+    }
 
     public NodeDto ToDto() =>
         new()
@@ -91,38 +134,48 @@ class Node : IItem
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
             },
-            Boundary = Boundary != Rect.None ? Boundary : null,
+            Boundary = boundary != Rect.None ? boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
             Color = Color,
+            CustomColor = CustomColor,
+            IconName = CustomIconName,
+            IconColor = CustomIconColor,
             IsUserSetHidden = IsUserSetHidden,
             IsParentSetHidden = IsParentSetHidden,
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
+            IsManual = IsManual,
+            IsNote = IsNote,
         };
 
     public void SetFromDto(NodeDto dto)
     {
         Type = Enums.To<NodeType>(dto.Type, NodeType.None);
 
-        Description = dto.Properties.Description;
-        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
+        SetDescription(dto.Properties.Description);
         IsPrivate = dto.Properties.IsPrivate;
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
         Color = dto.Color ?? Color;
+        CustomColor = dto.CustomColor;
+        CustomIconName = dto.IconName;
+        CustomIconColor = dto.IconColor;
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
+        IsManual = dto.IsManual;
+        IsNote = dto.IsNote;
     }
 
     public void Update(Parsing.Node node)
     {
         Type = node.Properties.Type ?? Type;
         IsPrivate = node.Properties.IsPrivate ?? IsPrivate;
-        Description = node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description;
-        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
+        SetDescription(
+            node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description
+        );
         fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
     }
 
@@ -142,6 +195,19 @@ class Node : IItem
         Children.ForEach(child => child.SetHidden(hidden, false));
     }
 
+    // The parent's visible viewport expressed in the parent's inner (children) coordinate
+    // space; recurses naturally when the parent is itself pass-through.
+    Rect GetPassThroughBoundary()
+    {
+        var parentBoundary = Parent.Boundary;
+        return new Rect(
+            -Parent.ContainerOffset.X / Parent.ContainerZoom,
+            -Parent.ContainerOffset.Y / Parent.ContainerZoom,
+            parentBoundary.Width / Parent.ContainerZoom,
+            parentBoundary.Height / Parent.ContainerZoom
+        );
+    }
+
     public double GetZoom()
     {
         var zoom = 1.0;
@@ -151,6 +217,9 @@ class Node : IItem
 
     internal Rect GetTotalBounds()
     {
+        if (Children.Count == 0)
+            return Rect.None;
+
         if (IsChildrenLayoutRequired)
             NodeLayout.AdjustChildren(this);
         // Calculate the total bounds of the children

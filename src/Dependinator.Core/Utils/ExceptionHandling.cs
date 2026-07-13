@@ -2,15 +2,11 @@ using System.Diagnostics;
 
 namespace Dependinator.Core.Utils;
 
-// Handles unhandled exceptions top ensure they are logged and program is restarted or shut down
+// Handles unhandled exceptions to ensure they are logged and the program is shut down
 public static class ExceptionHandling
 {
-    private static readonly TimeSpan MinTimeBeforeAutoRestart = TimeSpan.FromSeconds(10);
-
-    private static bool hasDisplayedErrorMessageBox;
     private static bool hasFailed;
     private static bool hasShutdown;
-    private static DateTime StartTime = DateTime.UtcNow;
     private static Action shutdown = () => { };
 
     public static void HandleUnhandledExceptions(Action shutdownCallback)
@@ -47,20 +43,6 @@ public static class ExceptionHandling
         HandleException("RunInBackground error", exception);
     }
 
-    // public static void HandleDispatcherUnhandledException()
-    // {
-    // 	// Add the event handler for handling UI thread exceptions to the event
-    // 	Application.Current.DispatcherUnhandledException += (s, e) =>
-    // 	{
-    // 		HandleException("dispatcher exception", e.Exception);
-    // 		e.Handled = true;
-    // 	};
-
-    // 	WpfBindingTraceListener.Register();
-
-    // 	isDispatcherInitialized = true;
-    // }
-
     static void HandleException(string errorType, Exception exception)
     {
         if (hasFailed)
@@ -70,27 +52,14 @@ public static class ExceptionHandling
         string errorMessage = $"Unhandled {errorType}";
         Log.Exception(exception, errorMessage);
 
-        Shutdown(errorMessage, exception);
+        Shutdown();
     }
 
-    static void Shutdown(string message, Exception e)
+    static void Shutdown()
     {
         if (hasShutdown)
             return;
         hasShutdown = true;
-
-        // if (isDispatcherInitialized)
-        // {
-        // 	var dispatcher = GetApplicationDispatcher();
-        // 	if (dispatcher.CheckAccess())
-        // 	{
-        // 		ShowExceptionDialog(e);
-        // 	}
-        // 	else
-        // 	{
-        // 		dispatcher.Invoke(() => ShowExceptionDialog(e));
-        // 	}
-        // }
 
         if (Debugger.IsAttached)
         {
@@ -99,40 +68,5 @@ public static class ExceptionHandling
         }
 
         ConfigLogger.CloseAsync().ContinueWith(t => shutdown());
-
-        // shutdown();
-
-        // if (DateTime.Now - StartTime >= MinTimeBeforeAutoRestart)
-        // {
-        // 	StartInstanceService.StartInstance(Environment.CurrentDirectory);
-        // }
-
-        // if (isDispatcherInitialized)
-        // {
-        // 	Application.Current.Shutdown(0);
-        // }
-        // else
-        // {
-        // 	throw new Exception($"Unhandled exception {message}", e);
-        // }
     }
-
-    private static void ShowExceptionDialog(Exception e)
-    {
-        if (hasDisplayedErrorMessageBox)
-        {
-            return;
-        }
-
-        if (DateTime.UtcNow - StartTime < MinTimeBeforeAutoRestart)
-        {
-            Console.WriteLine("Sorry, but an unexpected error just occurred");
-            StartTime = DateTime.UtcNow;
-        }
-
-        hasDisplayedErrorMessageBox = true;
-    }
-
-    // private static Dispatcher GetApplicationDispatcher() =>
-    // 	Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
 }

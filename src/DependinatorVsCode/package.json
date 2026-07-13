@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.5.48",
+    "version": "0.5.53",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
@@ -71,6 +71,27 @@
                     ],
                     "default": "https://dependinator.com",
                     "description": "Base URL for the Dependinator cloud sync API. Sign-in is handled separately by the extension."
+                },
+                "dependinator.cloudSync.clerkAccountsUrl": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Clerk accounts URL used for cloud sync sign-in. Leave empty to use the built-in production Clerk instance."
+                },
+                "dependinator.cloudSync.clerkPublishableKey": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Clerk publishable key used for cloud sync sign-in. Leave empty to use the built-in production key."
+                },
+                "dependinator.autoRefresh.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically refresh the diagram when workspace source files change."
+                },
+                "dependinator.autoRefresh.delaySeconds": {
+                    "type": "number",
+                    "default": 3,
+                    "minimum": 1,
+                    "description": "Delay in seconds after the last source file change before the diagram is refreshed."
                 }
             }
         }

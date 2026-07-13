@@ -4,11 +4,18 @@ using static System.Environment;
 
 namespace Dependinator.Core.Utils.Logging;
 
+// Background log writer: Log queues messages here and a single reader task batches
+// them to the configured outputs (file, console and/or a host-provided callback).
 public static class ConfigLogger
 {
-    static readonly string LogFileName = "Dependinator.log";
-    static readonly string LevelInfo = "INFO ";
-    static readonly int MaxLogFileSize = 2000000;
+    const string LogFileName = "Dependinator.log";
+    const int MaxLogFileSize = 2000000;
+
+    const string TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff";
+
+    // Length of the formatted timestamp and the space after it, stripped from console
+    // output. Must be kept in sync with TimestampFormat.
+    const int TimestampPrefixLength = 24;
 
     record LogMsg(string Level, string Msg, string MemberName, string SourceFilePath, int SourceLineNumber);
 
@@ -30,19 +37,16 @@ public static class ConfigLogger
     static bool isConsoleLog = false;
     static Action<string>? output = null;
 
-    static TaskCompletionSource doneTask = new TaskCompletionSource();
+    static readonly TaskCompletionSource doneTask = new TaskCompletionSource();
 
     static ConfigLogger()
     {
-        Task.Factory.StartNew(ProcessLogsAsync, TaskCreationOptions.LongRunning).RunInBackground();
+        ProcessLogsAsync().RunInBackground();
         SetPrefixLength();
     }
 
-    public static void Enable(bool isFileLog, bool isConsoleLog)
-    {
-        Configure(new HostLoggingSettings(isFileLog, isConsoleLog));
-    }
-
+    // Should be called once at host startup before logging begins; messages logged
+    // before configuration may be dropped since all outputs are disabled by default.
     public static void Configure(IHostLoggingSettings settings)
     {
         isFileLog = settings.EnableFileLog;
@@ -84,10 +88,17 @@ public static class ConfigLogger
     static void Init(string logFilePath)
     {
         LogPath = logFilePath;
+
+        // Start each session with an empty log file; the previous session's content
+        // only survives via the ".2.log" rotation in MoveLargeLogFile().
         if (!Try(out var e, () => File.WriteAllText(LogPath, "")))
             throw Asserter.FailFast(e.ErrorMessage);
     }
 
+    // Determines the length of the source path prefix to strip from [CallerFilePath]
+    // paths, using this file's own compile-time path. This file is 4 directory levels
+    // below the prefix (<prefix>/Dependinator.Core/Utils/Logging/ConfigLogger.cs), so
+    // log lines show paths relative to the src/ folder. Update if this file moves.
     static void SetPrefixLength([CallerFilePath] string sourceFilePath = "")
     {
         string rootPath =
@@ -103,12 +114,12 @@ public static class ConfigLogger
         [CallerLineNumber] int sourceLineNumber = 0
     )
     {
-        string text = ToLogLine(LevelInfo, msg, memberName, sourceFilePath, sourceLineNumber);
+        string text = ToLogLine(LogLevels.Info, msg, memberName, sourceFilePath, sourceLineNumber);
         // Bypassing log queue since that is already closed
-        WriteToFile(new List<string>() { text });
+        WriteToOutputs(new List<string>() { text });
     }
 
-    private static async ValueTask ProcessLogsAsync()
+    static async Task ProcessLogsAsync()
     {
         try
         {
@@ -118,34 +129,15 @@ public static class ConfigLogger
 
                 while (reader.TryRead(out LogMsg? l))
                 {
-                    var msgLines = l.Msg.Split('\n');
-                    foreach (var msgLine in msgLines)
+                    foreach (var msgLine in l.Msg.Split('\n'))
                     {
-                        string logLine = ToLogLine(
-                            l.Level,
-                            msgLine,
-                            l.MemberName,
-                            l.SourceFilePath,
-                            l.SourceLineNumber
+                        batchedLines.Add(
+                            ToLogLine(l.Level, msgLine, l.MemberName, l.SourceFilePath, l.SourceLineNumber)
                         );
-                        batchedLines.Add(logLine);
                     }
                 }
 
-                try
-                {
-                    WriteToFile(batchedLines);
-                }
-                catch (ThreadAbortException)
-                {
-                    // The process or app-domain is closing,
-                    // Thread.ResetAbort();
-                    return;
-                }
-                catch (Exception e) when (e.IsNotFatal())
-                {
-                    // Native.OutputDebugString("ERROR Failed to log to file, " + e);
-                }
+                WriteToOutputs(batchedLines);
             }
 
             LogDone("Logging done");
@@ -156,40 +148,20 @@ public static class ConfigLogger
         }
     }
 
-    static string ToRelativeFilePath(string sourceFilePath)
-    {
-        return sourceFilePath.Substring(prefixLength).Replace(";", "");
-    }
-
     static string ToLogLine(string level, string msg, string memberName, string sourceFilePath, int lineNumber)
     {
-        string timeStamp = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}";
-        int trimLength = prefixLength;
-        if (prefixLength >= sourceFilePath.Length - 1)
-        {
-            trimLength = 0;
-        }
+        string timeStamp = DateTime.Now.ToString(TimestampFormat);
 
+        // Internally queued messages (e.g. from MoveLargeLogFile) have no source path;
+        // only strip the prefix from real caller paths.
+        int trimLength = prefixLength >= sourceFilePath.Length - 1 ? 0 : prefixLength;
         string filePath = sourceFilePath.Substring(trimLength).Replace(";", "");
 
-        int classStartIndex = filePath.LastIndexOf(Path.DirectorySeparatorChar);
-        if (classStartIndex == -1)
-        {
-            classStartIndex = 0;
-        }
-        int extensionIndex = filePath.LastIndexOf('.');
-        if (extensionIndex == -1)
-        {
-            extensionIndex = filePath.Length - 1;
-        }
-        string className = filePath.Substring(classStartIndex + 1, extensionIndex - classStartIndex - 1);
         string msgLine = $"{timeStamp} DEP: {level}:\"{msg}\"";
-
-        string line = $"{msgLine, -100} {{{memberName}() {filePath}:{lineNumber}}}";
-        return line;
+        return $"{msgLine, -100} {{{memberName}() {filePath}:{lineNumber}}}";
     }
 
-    private static void QueueLogMessage(LogMsg item)
+    static void QueueLogMessage(LogMsg item)
     {
         try
         {
@@ -201,14 +173,13 @@ public static class ConfigLogger
         }
     }
 
-    private static void WriteToFile(IReadOnlyCollection<string> textLines)
+    static void WriteToOutputs(IReadOnlyCollection<string> textLines)
     {
         if (!isFileLog && !isConsoleLog && output is null)
         {
             return;
         }
 
-        Exception? error = null;
         lock (syncRoot)
         {
             for (int i = 0; i < 10; i++)
@@ -219,7 +190,11 @@ public static class ConfigLogger
                         textLines.ForEach(l => output(l));
 
                     if (isConsoleLog)
-                        Console.WriteLine(textLines.Select(l => l.Length > 24 ? l[24..] : l).Join("\n"));
+                        Console.WriteLine(
+                            textLines
+                                .Select(l => l.Length > TimestampPrefixLength ? l[TimestampPrefixLength..] : l)
+                                .Join("\n")
+                        );
                     if (isFileLog)
                     {
                         if (LogPath == null)
@@ -241,27 +216,17 @@ public static class ConfigLogger
                     // Ignore error since folder has been deleted during uninstallation
                     return;
                 }
-                catch (ThreadAbortException)
-                {
-                    // Process or app-domain is closing
-                    // Thread.ResetAbort();
-                    return;
-                }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Thread.Sleep(30);
-                    error = e;
                 }
             }
-        }
 
-        if (error != null)
-        {
-            throw error;
+            // Retries exhausted; drop the batch since there is no way to report a logging failure.
         }
     }
 
-    private static void MoveLargeLogFile()
+    static void MoveLargeLogFile()
     {
         try
         {
@@ -287,14 +252,16 @@ public static class ConfigLogger
                     }
                     catch (Exception e)
                     {
-                        QueueLogMessage(new LogMsg("FATAL", "Failed to move temp to second log file" + e, "", "", 0));
+                        QueueLogMessage(
+                            new LogMsg(LogLevels.Fatal, "Failed to move temp to second log file" + e, "", "", 0)
+                        );
                     }
                 })
                 .RunInBackground();
         }
         catch (Exception e)
         {
-            QueueLogMessage(new LogMsg("FATAL", "ERROR Failed to move large log file: " + e, "", "", 0));
+            QueueLogMessage(new LogMsg(LogLevels.Fatal, "ERROR Failed to move large log file: " + e, "", "", 0));
         }
     }
 }

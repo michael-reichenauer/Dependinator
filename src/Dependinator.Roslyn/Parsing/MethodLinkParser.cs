@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Dependinator.Roslyn.Parsing;
 
-class MethodLinkParser
+static class MethodLinkParser
 {
     public static IEnumerable<Link> ParseMethodLinks(
         IMethodSymbol member,
@@ -45,11 +45,7 @@ class MethodLinkParser
         }
     }
 
-    private static IEnumerable<Link> ParseBodyLinks(
-        IMethodSymbol member,
-        string fullMethodName,
-        Compilation compilation
-    )
+    static IEnumerable<Link> ParseBodyLinks(IMethodSymbol member, string fullMethodName, Compilation compilation)
     {
         foreach (var syntaxRef in member.DeclaringSyntaxReferences)
         {
@@ -66,8 +62,7 @@ class MethodLinkParser
             else
                 continue;
 
-            var syntaxTree = syntax.SyntaxTree;
-            var semanticModel = compilation.GetSemanticModel(syntaxTree);
+            var semanticModel = Compiler.GetSemanticModel(compilation, syntax.SyntaxTree);
 
             foreach (var bodyNode in bodyNodes)
             {

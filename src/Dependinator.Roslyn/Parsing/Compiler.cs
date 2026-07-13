@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 using Dependinator.Core.Parsing.Utils;
 using Microsoft.CodeAnalysis;
@@ -9,7 +10,7 @@ using Microsoft.CodeAnalysis.MSBuild;
 
 namespace Dependinator.Roslyn.Parsing;
 
-class Compiler
+static class Compiler
 {
     public static MSBuildWorkspace CreateWorkspace()
     {
@@ -28,18 +29,11 @@ class Compiler
         // produced by e.g. the Razor generator (.razor components) are missing. Run them manually.
         compilation = RunSourceGenerators(project, compilation);
 
-        var diagnostics = compilation.GetDiagnostics();
-        var errors = diagnostics
-            .Where(d => d.Severity == DiagnosticSeverity.Error)
-            .OrderBy(d => d.Location.IsInSource ? d.Location.GetLineSpan().Path : "")
-            .ThenBy(d => d.Location.IsInSource ? d.Location.GetLineSpan().StartLinePosition.Line : int.MaxValue)
-            .ToArray();
-        if (errors.Any())
-        {
-            Log.Warn($"{errors.Count()} errors in {project.Name}");
-            // foreach (var error in errors)
-            //     Log.Warn($"  Error: {error}");
-        }
+        // Compile errors (e.g. missing references) can cause missing nodes/links in the model,
+        // so log a hint. The parse still proceeds with whatever Roslyn could resolve.
+        var errorCount = compilation.GetDiagnostics().Count(d => d.Severity == DiagnosticSeverity.Error);
+        if (errorCount > 0)
+            Log.Warn($"{errorCount} errors in {project.Name}");
 
         return compilation;
     }
@@ -47,6 +41,18 @@ class Compiler
     public static IEnumerable<INamedTypeSymbol> GetAllTypes(Compilation compilation)
     {
         return GetAllNamedTypes(compilation.Assembly.GlobalNamespace);
+    }
+
+    // Compilation.GetSemanticModel creates a fresh model (empty binding cache) on every call,
+    // so cache one model per syntax tree to reuse binding work across the many members parsed
+    // from the same file. Weak-keyed by compilation so models are released with it.
+    static readonly ConditionalWeakTable<Compilation, ConcurrentDictionary<SyntaxTree, SemanticModel>> semanticModels =
+        new();
+
+    public static SemanticModel GetSemanticModel(Compilation compilation, SyntaxTree syntaxTree)
+    {
+        var models = semanticModels.GetOrCreateValue(compilation);
+        return models.GetOrAdd(syntaxTree, tree => compilation.GetSemanticModel(tree));
     }
 
     static IEnumerable<INamedTypeSymbol> GetAllNamedTypes(INamespaceSymbol ns)
@@ -98,15 +104,8 @@ class Compiler
             }
         }
 
-        // var generatorNames = string.Join("\n  ", generators.Select(g => g.GetGeneratorType().Name));
-        // Log.Info(
-        //     $"Generators for {project.Name}: {generators.Count} total ({fromReferenceCount} from references, {fromManualLoadCount} manually loaded), {project.AdditionalDocuments.Count()} additional docs:[\n  {generatorNames}]"
-        // );
-
         if (generators.Count == 0)
             return compilation;
-
-        // var treeCountBefore = compilation.SyntaxTrees.Count();
 
         var parseOptions = compilation.SyntaxTrees.FirstOrDefault()?.Options as CSharpParseOptions;
         var additionalTexts = project
@@ -117,11 +116,6 @@ class Compiler
         var driver = CSharpGeneratorDriver.Create(generators, additionalTexts, parseOptions, configOptionsProvider);
 
         driver.RunGeneratorsAndUpdateCompilation(compilation, out var updated, out var diagnostics);
-
-        // var treeCountAfter = updated.SyntaxTrees.Count();
-        // Log.Info(
-        //     $"Generators for {project.Name}: {treeCountAfter - treeCountBefore} new syntax trees added ({treeCountBefore} -> {treeCountAfter})"
-        // );
 
         foreach (var d in diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
             Log.Warn($"Generator Error in {project.Name}: {d}");
@@ -154,9 +148,8 @@ class Compiler
         }
         catch (ReflectionTypeLoadException ex)
         {
-            // Log.Warn(
-            //     $"ReflectionTypeLoadException loading {Path.GetFileName(path)}: {string.Join("; ", ex.LoaderExceptions?.Select(e => e?.Message) ?? [])}"
-            // );
+            // Some types failing to load is expected (generator-internal dependencies);
+            // use the types that did load.
             types = ex.Types.Where(t => t is not null).ToArray()!;
         }
 

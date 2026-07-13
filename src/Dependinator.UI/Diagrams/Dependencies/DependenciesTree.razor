@@ -1,3 +1,5 @@
+@using Dependinator.UI.Diagrams.Icons
+
 @inject IApplicationEvents applicationEvents
 @inject IDependenciesService srv
 @inject IScreenService screenService
@@ -17,11 +19,29 @@
 
 <MudPopover Open="IsShowExplorer" Fixed="true" Class="px-5 pt-4 ml-1" MaxHeight="MaxHeight"
             AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft">
-    <MudStack>
-        <MudStack Row="true">
-            <MudIcon Icon="@srv.TreeIcon" Class="ml-n5" />
-            <MudText Color="Color.Info"><b>@(srv.Title)</b></MudText>
+    <MudStack Spacing="0">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudText Class="ml-n2"><b>@HeadingText</b></MudText>
+            <MudText Color="Color.Info" Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <b>@(srv.Title)</b>
+            </MudText>
+            <MudSpacer />
+            <MudTooltip Text="Show references">
+                <MudIconButton Icon="@Icon.ReferencesIcon" Size="Size.Small"
+                               Color="@(srv.TreeType == TreeType.References ? Color.Info : Color.Default)"
+                               OnClick="() => srv.ShowReferences()" data-testid="explorer-references" />
+            </MudTooltip>
+            <MudTooltip Text="Show dependencies">
+                <MudIconButton Icon="@Icon.DependenciesIcon" Size="Size.Small"
+                               Color="@(srv.TreeType == TreeType.Dependencies ? Color.Info : Color.Default)"
+                               OnClick="() => srv.ShowDependencies()" data-testid="explorer-dependencies" />
+            </MudTooltip>
+            <MudTooltip Text="Close">
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small"
+                               OnClick="() => srv.Close()" data-testid="explorer-close" />
+            </MudTooltip>
         </MudStack>
+        <MudText Typo="Typo.caption" Class="ml-n2 mud-text-secondary">@(srv.Subtitle)</MudText>
         <MudPaper Class="overflow-y-auto ml-n8" Elevation="0" MaxWidth="MaxWidth" MaxHeight="500px">
             <MudTreeView Items="@srv.TreeItems" Hover="true" Dense="true" Width="100%">
                 <ItemTemplate Context="treeItem">
@@ -29,34 +49,48 @@
                         var item = (TreeItem)treeItem;
                     }
                     <MudTreeViewItem Items="@item.Children" Icon="@item.Icon"
-                                     OnClick="() => srv.SetSelected(item.Value!)" @bind-Expanded="@item.Expanded">
+                                     OnClick="() => OnItemClickAsync(item)" @bind-Expanded="@item.Expanded">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
                                  class="hover-element">
 
-                                <MudText Style="justify-self: start;">@item.Text</MudText>
+                                <div style="justify-self: start; display: flex; align-items: baseline; gap: 6px;">
+                                    <MudText>@item.Text</MudText>
+                                    @if (item.LinkCount > 0)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">(@item.LinkCount)</MudText>
+                                    }
+                                </div>
 
                                 @if (item.NodeId != Modeling.Models.NodeId.Empty)
                                 {
                                     <div style="justify-self: end;">
                                         @if (item.Children?.Any() ?? false)
                                         {
-                                            <MudIconButton Icon="@Icons.Material.Filled.Expand" Size="Size.Small"
-                                                           Color="Color.Inherit" Class="ml-3 hover-button"
-                                                           OnClick="() => srv.ToggleExpandAll(item)" />
+                                            <MudTooltip Text="Expand/collapse all">
+                                                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Expand" Size="Size.Small"
+                                                               Color="Color.Inherit" Class="ml-3 hover-button"
+                                                               OnClick="() => srv.ToggleExpandAll(item)" />
+                                            </MudTooltip>
                                         }
-                                        <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
-                                                       Color="Color.Inherit" Class="ml-3 hover-button"
-                                                       OnClick="() => srv.ShowNodeAsync(item.NodeId)" />
-                                        @if (srv.CanShowEditor(item.NodeId))
+                                        <MudTooltip Text="Show node in diagram">
+                                            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CenterFocusStrong" Size="Size.Small"
+                                                           Color="Color.Inherit" Class="ml-3 hover-button"
+                                                           OnClick="() => srv.ShowNodeAsync(item.NodeId)" />
+                                        </MudTooltip>
+                                        @if (item.CanShowEditor)
                                         {
-                                            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" Size="Size.Small"
-                                                           Color="Color.Inherit" Class="ml-3 hover-button"
-                                                           OnClick="() => srv.ShowEditorAsync(item.NodeId)" />
+                                            <MudTooltip Text="Show source code">
+                                                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" Size="Size.Small"
+                                                               Color="Color.Inherit" Class="ml-3 hover-button"
+                                                               OnClick="() => srv.ShowEditorAsync(item.NodeId)" />
+                                            </MudTooltip>
                                         }
-                                        <MudIconButton Icon="@Dependinator.UI.Diagrams.Icons.Icon.DirectConnection"
-                                                       Size="Size.Small" Color="Color.Inherit" Class="ml-3 hover-button"
-                                                       OnClick="() => srv.ShowDirectLine(item.NodeId)" />
+                                        <MudTooltip Text="Show direct line to this node">
+                                            <MudIconButton Icon="@Icon.DirectConnection"
+                                                           Size="Size.Small" Color="Color.Inherit" Class="ml-3 hover-button"
+                                                           OnClick="() => srv.ShowDirectLine(item.NodeId)" />
+                                        </MudTooltip>
                                     </div>
                                 }
                             </div>
@@ -72,8 +106,13 @@
 @code {
     bool IsShowExplorer => srv.IsShowExplorer;
 
+    string HeadingText => srv.TreeType == TreeType.References ? "References:" : "Dependencies:";
+
     int MaxHeight => (int)screenService.SvgRect.Height - 5;
     int MaxWidth => (int)screenService.SvgRect.Width - 20;
+
+    Task OnItemClickAsync(TreeItem item) =>
+        item.NodeId != Modeling.Models.NodeId.Empty ? srv.ShowNodeAsync(item.NodeId) : Task.CompletedTask;
 
     protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 

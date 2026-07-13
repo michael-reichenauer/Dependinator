@@ -3,39 +3,40 @@ using MudBlazor;
 
 namespace Dependinator.UI.Diagrams.Dependencies;
 
-delegate IReadOnlyList<TreeItemData<TreeItem>> GetTreeItemChildren(TreeItem item);
+delegate IReadOnlyList<TreeItemData<TreeItem>> GetTreeItemChildren();
 
 class TreeItem : TreeItemData<TreeItem>
 {
-    // To make it look like there are children we use a children item array with one dummy item until first expand
-    // Which will then create the actually list of
+    // A single dummy child makes the tree show an expand arrow until the real children
+    // are created on first expand.
     static readonly List<TreeItemData<TreeItem>> uninitializedChildren = [new TreeItem()];
 
-    readonly GetTreeItemChildren? getChildren = null!;
+    readonly GetTreeItemChildren? getChildren;
     bool isExpanded;
-    bool isInitialized = true;
+    bool areChildrenCreated = true;
 
     public TreeItem() { }
 
-    public TreeItem(Node node, TreeItem? parent, GetTreeItemChildren? getChildren)
+    public TreeItem(Node node, int linkCount, GetTreeItemChildren? getChildren)
     {
         Value = this;
-        Parent = parent;
         NodeId = node.Id;
         Text = node.ShortName;
-        Icon = Icons.Icon.GetIcon(node.Type);
+        Icon = Icons.Icon.GetIcon(node);
+        CanShowEditor = node.FileSpanOrParentSpan is not null;
+        LinkCount = linkCount;
         this.getChildren = getChildren;
 
         if (getChildren is not null)
         {
-            // There children to get, but will be retrieved on first expand
-            isInitialized = false;
+            areChildrenCreated = false;
             Children = uninitializedChildren;
         }
     }
 
-    public TreeItem? Parent { get; init; }
-    public NodeId NodeId { get; init; } = NodeId.Empty!;
+    public NodeId NodeId { get; init; } = NodeId.Empty;
+    public bool CanShowEditor { get; }
+    public int LinkCount { get; }
     public override IReadOnlyCollection<ITreeItemData<TreeItem>>? Children { get; set; } = [];
 
     public IEnumerable<TreeItem> GetThisAndDescendants()
@@ -56,11 +57,11 @@ class TreeItem : TreeItemData<TreeItem>
         set
         {
             isExpanded = value;
-            if (isExpanded && !isInitialized)
+            if (isExpanded && !areChildrenCreated)
             {
-                // Get the children on first expand
-                Children = getChildren is null ? [] : [.. getChildren(this)];
-                isInitialized = true;
+                // Replace the dummy child with the real children on first expand
+                Children = getChildren is null ? [] : [.. getChildren()];
+                areChildrenCreated = true;
             }
         }
     }

@@ -1,17 +1,22 @@
-using Api;
-using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults()
-    .ConfigureServices(services =>
-    {
-        services.AddOptions<CloudSyncOptions>().BindConfiguration(CloudSyncOptions.SectionName);
-        services.AddSingleton<ICloudModelStore, BlobCloudModelStore>();
-        services.AddSingleton<ICloudSyncBearerTokenValidator, CloudSyncBearerTokenValidator>();
-        services.AddSingleton<ICloudSyncUserProvider, CloudSyncUserProvider>();
-    })
-    .Build();
+namespace Api;
 
-host.Run();
+public static class Program
+{
+    public static void Main()
+    {
+        IHost host = new HostBuilder()
+            .ConfigureFunctionsWorkerDefaults()
+            .ConfigureServices(services =>
+            {
+                services.AddOptions<CloudSyncOptions>().BindConfiguration(CloudSyncOptions.SectionName);
+                services.AddSingleton<ICloudModelStore, BlobCloudModelStore>();
+                services.AddSingleton<ICloudSyncUserProvider, CloudSyncBearerTokenValidator>();
+            })
+            .Build();
+
+        host.Run();
+    }
+}

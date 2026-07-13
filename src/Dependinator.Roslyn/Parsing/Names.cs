@@ -15,7 +15,7 @@ static class Names
 
     public static string GetSolutionName(string solutionPath)
     {
-        return Path.GetFileName(solutionPath).Replace(".", "*");
+        return EncodeName(Path.GetFileName(solutionPath));
     }
 
     public static string GetModuleName(Compilation compilation)
@@ -37,7 +37,10 @@ static class Names
         return ToFullTypeName(moduleName, fqTypeName);
     }
 
-    public static (string, string) GetFullTypeNameAndTypeName(INamedTypeSymbol typeSymbol, string moduleName)
+    public static (string FullTypeName, string FqTypeName) GetFullTypeNameAndTypeName(
+        INamedTypeSymbol typeSymbol,
+        string moduleName
+    )
     {
         var fqTypeName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
@@ -69,7 +72,7 @@ static class Names
 
         INamedTypeSymbol? declaringType = symbol.ContainingType;
         if (declaringType is null)
-            throw new NotSupportedException($"Symbol not support {symbol}");
+            throw new NotSupportedException($"Symbol not supported: {symbol}");
 
         var fullTypeName = GetFullTypeName(declaringType);
         return GetFullMemberName(symbol, fullTypeName);
@@ -85,7 +88,15 @@ static class Names
 
     static string SanitizeModuleName(string? moduleName)
     {
-        return moduleName?.Replace(".", "*") ?? "global::";
+        return moduleName is null ? "global::" : EncodeName(moduleName);
+    }
+
+    // "." is the hierarchy separator in model node names, so literal dots in solution/module
+    // names (e.g. "Dependinator.sln", "Dependinator.Core") are encoded as "*" to keep the
+    // name a single node level.
+    static string EncodeName(string name)
+    {
+        return name.Replace(".", "*");
     }
 
     static string ToFullTypeName(string moduleName, string fullName)

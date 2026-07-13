@@ -9,6 +9,9 @@ interface IStructureService
 {
     void AddOrUpdateNode(IModel model, Parsing.Node parsedNode);
     void AddOrUpdateLink(IModel model, Parsing.Link parsedLink);
+    Models.Link? AddManualLink(IModel model, string sourceName, string targetName);
+    void RenameNode(IModel model, string fromName, string toName);
+    void SetLineDescription(IModel model, Parsing.LineDescription lineDescription);
     void ClearNotUpdated(IModel model);
     void SetNodeDto(IModel model, NodeDto nodeDto);
     void SetLinkDto(IModel model, LinkDto linkDto);
@@ -28,13 +31,18 @@ class StructureService(ILineService linesService) : IStructureService
             var parent = GetOrCreateParent(model, parsedNode);
 
             node = new Models.Node(parsedNode.Name, parent);
-            node.Boundary = parent.IsChildrenLayoutCustomized ? Rect.None : NodeLayout.GetNextChildRect(parent);
 
             node.Update(parsedNode);
             node.UpdateStamp = model.UpdateStamp;
 
             model.TryAddNode(node);
             parent.AddChild(node);
+
+            // A node added after its parent (or an ancestor) was hidden must inherit the hidden
+            // state; otherwise its links make aggregated lines to/inside the hidden subtree
+            // render as visible even though the subtree stays hidden.
+            if (parent.IsHidden)
+                node.SetHidden(true, isUserSet: false);
 
             return;
         }
@@ -75,6 +83,98 @@ class StructureService(ILineService linesService) : IStructureService
         AddLink(model, link);
     }
 
+    // Creates a user-drawn link (and its visual line) between two existing nodes. Returns null if
+    // an endpoint is missing or the link already exists (so redo is idempotent).
+    public Models.Link? AddManualLink(IModel model, string sourceName, string targetName)
+    {
+        var linkId = new LinkId(sourceName, targetName);
+        if (model.Links.ContainsKey(linkId))
+            return null;
+
+        if (!model.Nodes.TryGetValue(NodeId.FromName(sourceName), out var source))
+            return null;
+        if (!model.Nodes.TryGetValue(NodeId.FromName(targetName), out var target))
+            return null;
+
+        var link = new Models.Link(source, target) { IsManual = true, UpdateStamp = model.UpdateStamp };
+
+        AddLink(model, link);
+        return link;
+    }
+
+    // Renames a node and its whole subtree by rebuilding each node under a new parent-qualified
+    // name (the name is the node's identity): the renamed node takes toName and every descendant is
+    // re-prefixed accordingly. All links touching any node in the subtree are recreated with the
+    // remapped endpoint names (endpoints outside the subtree are unchanged). No-op if the source is
+    // missing or the target name is already taken. Symmetric, so a command can revert by renaming
+    // back.
+    public void RenameNode(IModel model, string fromName, string toName)
+    {
+        if (fromName == toName)
+            return;
+        if (!model.Nodes.TryGetValue(NodeId.FromName(fromName), out var fromNode))
+            return;
+        if (model.Nodes.ContainsKey(NodeId.FromName(toName)))
+            return;
+
+        var rootParent = fromNode.Parent;
+        var subtree = fromNode.DescendantsAndSelfPreOrder().ToList();
+
+        // Plan each node's new name (parents before children): the root becomes toName; each
+        // descendant keeps its short (last) name segment under its parent's new name. Capture the
+        // DTOs and parent links now, before any mutation.
+        var nameMap = new Dictionary<string, string>();
+        var plan = new List<(string NewName, string? NewParentName, NodeDto Dto)>();
+        foreach (var node in subtree)
+        {
+            var newName = node == fromNode ? toName : $"{nameMap[node.Parent.Name]}.{LastNameSegment(node.Name)}";
+            var newParentName = node == fromNode ? null : nameMap[node.Parent.Name];
+            nameMap[node.Name] = newName;
+            plan.Add((newName, newParentName, node.ToDto()));
+        }
+
+        // Collect links touching any subtree node, remapping endpoints that fall inside the subtree.
+        var seen = new HashSet<LinkId>();
+        var remappedLinks = new List<(string Source, string Target)>();
+        foreach (var node in subtree)
+        {
+            foreach (var link in node.SourceLinks.Concat(node.TargetLinks))
+            {
+                if (!seen.Add(link.Id))
+                    continue;
+                var source = nameMap.GetValueOrDefault(link.Source.Name, link.Source.Name);
+                var target = nameMap.GetValueOrDefault(link.Target.Name, link.Target.Name);
+                remappedLinks.Add((source, target));
+            }
+        }
+
+        // Remove the old links and nodes, then rebuild the subtree under the new names and re-add the
+        // remapped links (and their lines).
+        var oldLinks = subtree.SelectMany(n => n.SourceLinks.Concat(n.TargetLinks)).Distinct().ToList();
+        oldLinks.ForEach(model.RemoveLink);
+        foreach (var node in fromNode.DescendantsAndSelfPostOrder().ToList())
+            model.RemoveNode(node);
+
+        foreach (var (newName, newParentName, dto) in plan)
+        {
+            var parent = newParentName is null ? rootParent : model.Nodes[NodeId.FromName(newParentName)];
+            var newNode = new Models.Node(newName, parent);
+            newNode.SetFromDto(dto);
+            newNode.UpdateStamp = model.UpdateStamp;
+            model.TryAddNode(newNode);
+            parent.AddChild(newNode);
+        }
+
+        foreach (var (source, target) in remappedLinks)
+            AddManualLink(model, source, target);
+    }
+
+    static string LastNameSegment(string name)
+    {
+        var index = name.LastIndexOf('.');
+        return index < 0 ? name : name[(index + 1)..];
+    }
+
     public void SetNodeDto(IModel model, NodeDto nodeDto)
     {
         if (nodeDto.Name == "") // Root node already exists
@@ -84,14 +184,10 @@ class StructureService(ILineService linesService) : IStructureService
 
         var node = new Models.Node(nodeDto.Name, parent);
         node.SetFromDto(nodeDto);
-        if (node.Boundary == Rect.None && !parent.IsChildrenLayoutCustomized)
-            node.Boundary = NodeLayout.GetNextChildRect(parent);
         node.UpdateStamp = model.UpdateStamp;
 
         model.TryAddNode(node);
         parent.AddChild(node);
-
-        return;
     }
 
     public void SetLinkDto(IModel model, LinkDto linkDto)
@@ -106,6 +202,7 @@ class StructureService(ILineService linesService) : IStructureService
 
         var link = new Models.Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
+        link.IsManual = linkDto.IsManual;
 
         AddLink(model, link);
     }
@@ -120,25 +217,80 @@ class StructureService(ILineService linesService) : IStructureService
         target.Type = targetType;
     }
 
+    // Sets a parsed line description on the line whose endpoints exactly match the description's
+    // source and resolved target. The target name may be relative; it is resolved like C# name
+    // lookup by prefixing the source node's ancestors. If no matching line exists, the
+    // description is silently unused; nodes, links, or lines are never created.
+    public void SetLineDescription(IModel model, Parsing.LineDescription lineDescription)
+    {
+        if (!model.Nodes.TryGetValue(NodeId.FromName(lineDescription.Source), out var source))
+            return;
+
+        foreach (var targetName in CandidateTargetNames(source, lineDescription.Target))
+        {
+            if (model.Lines.TryGetValue(LineId.From(lineDescription.Source, targetName), out var line))
+            {
+                line.SetDescription(lineDescription.Text, model.UpdateStamp);
+                return;
+            }
+        }
+    }
+
+    static IEnumerable<string> CandidateTargetNames(Models.Node source, string target)
+    {
+        yield return target;
+
+        foreach (var ancestor in source.Ancestors())
+        {
+            if (ancestor.IsRoot)
+                yield break;
+            yield return $"{ancestor.Name}.{target}";
+        }
+    }
+
     public void SetLineLayoutDto(IModel model, LineDto lineLayoutDto)
     {
         if (!model.Lines.TryGetValue(LineId.FromId(lineLayoutDto.LineId), out var line))
             return;
 
         line.SetSegmentPoints(lineLayoutDto.SegmentPoints);
+        line.IsSegmentsUserSet = lineLayoutDto.IsSegmentsUserSet ?? lineLayoutDto.SegmentPoints.Count > 0;
+        if (lineLayoutDto.Description is not null)
+            line.SetDescription(lineLayoutDto.Description, model.UpdateStamp);
     }
 
     public void ClearNotUpdated(IModel model)
     {
-        var links = model.Links.Values.Where(l => l.UpdateStamp != model.UpdateStamp).ToList();
+        // Manually added nodes/links are not produced by parsing, so they are always "stale" by
+        // stamp; exempt them so a re-parse doesn't delete the user's design work.
+        var links = model.Links.Values.Where(l => !l.IsManual && l.UpdateStamp != model.UpdateStamp).ToList();
         Log.Info($"Remove {links.Count} links");
         foreach (var link in links)
             model.RemoveLink(link);
 
-        var nodes = model.Nodes.Values.Where(n => n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0).ToList();
+        var nodes = model
+            .Nodes.Values.Where(n => !n.IsManual && n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0)
+            .ToList();
         Log.Info($"Remove {nodes.Count} nodes");
         foreach (var node in nodes)
             RemoveNode(model, node);
+
+        // A manual link may point at a parsed node that was just removed (deleted from code);
+        // drop such dangling manual links so no line references a node no longer in the model.
+        var danglingManualLinks = model
+            .Links.Values.Where(l =>
+                l.IsManual && (!model.Nodes.ContainsKey(l.Source.Id) || !model.Nodes.ContainsKey(l.Target.Id))
+            )
+            .ToList();
+        foreach (var link in danglingManualLinks)
+            model.RemoveLink(link);
+
+        // Clear line descriptions whose source comments were removed since the last parse
+        var staleDescriptionLines = model
+            .Lines.Values.Where(l => l.Description is not null && l.DescriptionUpdateStamp != model.UpdateStamp)
+            .ToList();
+        foreach (var line in staleDescriptionLines)
+            line.ClearDescription();
     }
 
     void MoveNodeToParent(IModel model, Models.Node node, string parentName)
@@ -152,6 +304,10 @@ class StructureService(ILineService linesService) : IStructureService
         node.Parent.RemoveChild(node);
         var parent = GetOrCreateNode(model, parentName);
         parent.AddChild(node);
+
+        // Sync inherited hidden state with the new parent: hide when moved into a hidden
+        // subtree, and clear a stale parent-set hidden flag when moved out of one.
+        node.SetHidden(parent.IsHidden, isUserSet: false);
 
         // Re-add link and lines again
         links.ForEach(l => AddLink(model, l));

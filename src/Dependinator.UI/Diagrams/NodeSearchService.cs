@@ -38,8 +38,12 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
         query = query.Trim();
 
         // Snapshot candidate fields under the model lock; score outside the lock.
+        // Pass-through nodes are invisible containers and thus not navigable targets.
         var candidates = modelMgr.WithModel(model =>
-            model.Nodes.Values.Where(n => !n.IsRoot).Select(n => (n.Id, n.ShortName, n.LongName)).ToList()
+            model
+                .Nodes.Values.Where(n => !n.IsRoot && !n.IsPassThrough)
+                .Select(n => (n.Id, n.ShortName, n.LongName))
+                .ToList()
         );
 
         // For a qualified query like "Demo.Core.RootClass" the short name ("RootClass") is
@@ -65,8 +69,6 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
             .Select(r => r.Result)
             .Take(MaxResultItems)
             .ToList();
-
-        // Log.Info($"Search Query '{query}':\n  {string.Join("\n  ", response.Take(10))}");
 
         return response;
     }

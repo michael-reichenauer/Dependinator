@@ -5,55 +5,47 @@ namespace Dependinator.Lsp;
 
 interface IWorkspaceFolderService
 {
-    void Initialize(InitializeParams initializeParams, CancellationToken ct);
-    void AddFolders(IEnumerable<WorkspaceFolder> folders, CancellationToken ct);
+    void Initialize(InitializeParams initializeParams);
+    void AddFolders(IEnumerable<WorkspaceFolder> folders);
     void RemoveFolders(IEnumerable<WorkspaceFolder> folders);
 }
 
-class WorkspaceFolderService(WorkspaceFileService workspaceFileService) : IWorkspaceFolderService
+// Tracks the client's workspace root folders (seeded from initialize, updated on
+// didChangeWorkspaceFolders) and forwards them to the core file service.
+class WorkspaceFolderService(IWorkspaceFileService workspaceFileService) : IWorkspaceFolderService
 {
     readonly HashSet<string> roots = new(StringComparer.OrdinalIgnoreCase);
 
-    public void Initialize(InitializeParams initializeParams, CancellationToken ct)
+    public void Initialize(InitializeParams initializeParams)
     {
-        var rootPaths = new List<string>();
-
         if (initializeParams.WorkspaceFolders is not null && initializeParams.WorkspaceFolders.Any())
         {
-            rootPaths.AddRange(
-                initializeParams
-                    .WorkspaceFolders.Select(folder => folder.Uri.GetFileSystemPath())
-                    .Where(path => !string.IsNullOrWhiteSpace(path))
-            );
+            GetPaths(initializeParams.WorkspaceFolders).ForEach(path => roots.Add(path));
         }
         else if (initializeParams.RootUri is not null)
         {
+            // Fall back to the deprecated rootUri/rootPath fields for older clients.
             var path = initializeParams.RootUri.GetFileSystemPath();
             if (!string.IsNullOrWhiteSpace(path))
-                rootPaths.Add(path);
+                roots.Add(path);
         }
         else if (!string.IsNullOrWhiteSpace(initializeParams.RootPath))
         {
-            rootPaths.Add(initializeParams.RootPath);
+            roots.Add(initializeParams.RootPath);
         }
-
-        foreach (var path in rootPaths.Where(path => !string.IsNullOrWhiteSpace(path)))
-            roots.Add(path);
 
         workspaceFileService.SetWorkspaceFolders(roots.ToList());
     }
 
-    public void AddFolders(IEnumerable<WorkspaceFolder> folders, CancellationToken ct)
+    public void AddFolders(IEnumerable<WorkspaceFolder> folders)
     {
-        var added = GetPaths(folders);
-        added.ForEach(path => roots.Add(path));
+        GetPaths(folders).ForEach(path => roots.Add(path));
         workspaceFileService.SetWorkspaceFolders(roots.ToList());
     }
 
     public void RemoveFolders(IEnumerable<WorkspaceFolder> folders)
     {
-        var removed = GetPaths(folders);
-        removed.ForEach(path => roots.Remove(path));
+        GetPaths(folders).ForEach(path => roots.Remove(path));
         workspaceFileService.SetWorkspaceFolders(roots.ToList());
     }
 

@@ -8,12 +8,12 @@ using FunctionsHttpRequestData = Microsoft.Azure.Functions.Worker.Http.HttpReque
 
 namespace Api;
 
-public interface ICloudSyncBearerTokenValidator
+public interface ICloudSyncUserProvider
 {
     Task<CloudUserInfo?> TryGetCurrentUserAsync(FunctionsHttpRequestData request, CancellationToken cancellationToken);
 }
 
-public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidator
+public sealed class CloudSyncBearerTokenValidator : ICloudSyncUserProvider
 {
     const string CustomAuthorizationHeaderName = "X-Dependinator-Authorization";
     const string AuthorizationHeaderName = "Authorization";
@@ -81,9 +81,10 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncBearerTokenValidat
                 //
                 // TO REVERT (once a paid plan allows configuring a longer token lifetime
                 // in the auth provider): set ValidateLifetime = true, remove the
-                // IsWithinMaxTokenAge check below, remove CloudSyncOptions.MaxTokenAgeDays,
-                // and restore the 'exp'-based expiry check in
-                // DependinatorVsCode/src/cloudSyncNode.ts readValidTokenAsync().
+                // IsWithinMaxTokenAge check below, and remove
+                // CloudSyncOptions.MaxTokenAgeDays. The clients (browser hosts and the
+                // LSP-hosted cloud sync, see Dependinator.Lsp/CloudSync) send the stored
+                // token as-is and rely on this API to reject expired tokens.
                 ValidateLifetime = false,
                 ClockSkew = TimeSpan.FromMinutes(2),
             };

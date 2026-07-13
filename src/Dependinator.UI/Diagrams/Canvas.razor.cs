@@ -24,8 +24,11 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     public ElementReference Ref { get; private set; }
 
     string Content => srv.SvgContent;
-    double Width => srv.SvgRect.Width;
-    double Height => srv.SvgRect.Height;
+
+    // Formatted invariantly; a raw double attribute value would be rendered with the current
+    // culture, which breaks the SVG in comma-decimal locales.
+    string Width => FormattableString.Invariant($"{srv.SvgRect.Width:0.##}");
+    string Height => FormattableString.Invariant($"{srv.SvgRect.Height:0.##}");
     string ViewBox => srv.SvgViewBox;
     static string IconDefs => Icon.IconDefs;
 
@@ -42,7 +45,7 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
             await jSInterop.Call("initializeFileDropZone", dropZoneElement, inputFile.Element);
 
             applicationEvents.UIStateChanged += OnUiStateChanged;
-            await InvokeAsync(srv.InitialShow);
+            await InvokeAsync(srv.InitialShowAsync);
         }
     }
 
@@ -50,7 +53,7 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
     public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
 
-    protected async void LoadFiles(InputFileChangeEventArgs e)
+    protected async Task LoadFiles(InputFileChangeEventArgs e)
     {
         var files = e.GetMultipleFiles(1000);
         if (!files.Any())

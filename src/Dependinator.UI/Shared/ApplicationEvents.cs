@@ -2,10 +2,10 @@ namespace Dependinator.UI.Shared;
 
 interface IApplicationEvents
 {
-    event Action UIStateChanged;
-    event Action SaveNeeded;
-    event Action UndoneRedone;
-    event Action ModelChanged;
+    event Action? UIStateChanged;
+    event Action? SaveNeeded;
+    event Action? UndoneRedone;
+    event Action? ModelChanged;
 
     void TriggerUIStateChanged();
     void TriggerSaveNeeded();
@@ -22,10 +22,10 @@ interface IApplicationEvents
 [Scoped]
 class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
 {
-    public event Action UIStateChanged = null!;
-    public event Action SaveNeeded = null!;
-    public event Action UndoneRedone = null!;
-    public event Action ModelChanged = null!;
+    public event Action? UIStateChanged;
+    public event Action? SaveNeeded;
+    public event Action? UndoneRedone;
+    public event Action? ModelChanged;
 
     public void TriggerUIStateChanged() => UIStateChanged?.Invoke();
 

@@ -8,7 +8,7 @@ namespace Dependinator.Core.Utils;
 // that return a R or R<T> type. This makes it possible to avoid using exceptions for flow control.
 // There are two Try methods that converts functions that can throw exceptions to functions that
 // return a R or R<T> type instead.
-// It is very convenient to declare a 'global using static gmd.Utils.Result;' in the global Usings.cs file.
+// It is very convenient to declare a 'global using static Dependinator.Core.Utils.Result;' in the global Usings.cs file.
 // Use like e.g.:
 // if (!Try(() => File.ReadAllText(path));
 public static class Result
@@ -225,8 +225,11 @@ public class R
 
     protected Exception resultException;
 
-    // protected Error Error => IsResultError ? Error(resultException) : throw Asserter.FailFast("Result was not an error");
     protected bool IsOk => !IsResultError;
+
+    // Deliberate use-enforcement: R<T>.GetResultValue() fails fast unless IsResultError/IsOk
+    // was read first (normally via a Try() call), so a value can never be extracted from a
+    // result whose error state was never checked.
     protected bool isErrorChecked = false;
 
     internal string AllErrorMessages() => string.Join(",\n", AllMessageLines());

@@ -48,6 +48,25 @@ public class OtherClass
     public int GetLength(string name) => name.Length;
 }
 
+// Uses the other class.
+// -> OtherClass: Calls the length helper
+//    for measuring names.
+public class LineDocSampleType
+{
+    public OtherClass other = new();
+}
+
+// Members declared after the nested type must still be parsed (regression: parsing used to
+// stop at the first nested type)
+public class NestedTypeSampleType
+{
+    public class NestedType { }
+
+    public int fieldAfterNested;
+
+    public void MethodAfterNested() { }
+}
+
 [Collection(nameof(RoslynCollection))]
 public class TypeParserTests(RoslynFixture fixture)
 {
@@ -173,5 +192,36 @@ public class TypeParserTests(RoslynFixture fixture)
 
         var typeToInterfaceLink = items.Link<SourceTestType, ISourceTestInterface>(null, null);
         Assert.Equal(NodeType.Type, typeToInterfaceLink.Properties.TargetType);
+    }
+
+    [Fact]
+    public void ParseType_ShouldParseMembersDeclaredAfterNestedType()
+    {
+        IReadOnlyList<Item> nestedItems = TypeParser
+            .ParseType(fixture.Type<NestedTypeSampleType>(), fixture.Compilation, fixture.ModelName)
+            .ToList();
+
+        // The nested type itself is parsed separately (via GetAllTypes), not as a member
+        Assert.DoesNotContain(nestedItems.Nodes(), n => n.Name.EndsWith(nameof(NestedTypeSampleType.NestedType)));
+
+        Assert.NotNull(nestedItems.Node<NestedTypeSampleType>(nameof(NestedTypeSampleType.fieldAfterNested)));
+        Assert.NotNull(nestedItems.Node<NestedTypeSampleType>(nameof(NestedTypeSampleType.MethodAfterNested)));
+    }
+
+    [Fact]
+    public void TestParseTypeLineDescriptions()
+    {
+        IReadOnlyList<Item> lineDocItems = TypeParser
+            .ParseType(fixture.Type<LineDocSampleType>(), fixture.Compilation, fixture.ModelName)
+            .ToList();
+
+        // The arrow lines are excluded from the type node's description
+        var typeNode = lineDocItems.Node<LineDocSampleType>(null);
+        Assert.Equal("Uses the other class.", typeNode.Properties.Description);
+
+        var lineDescription = lineDocItems.LineDescriptions().Single();
+        Assert.Equal(typeNode.Name, lineDescription.Source);
+        Assert.Equal("OtherClass", lineDescription.Target);
+        Assert.Equal("Calls the length helper for measuring names.", lineDescription.Text);
     }
 }

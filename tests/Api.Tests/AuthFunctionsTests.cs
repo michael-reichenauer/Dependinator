@@ -56,11 +56,10 @@ public class AuthFunctionsTests
         Assert.Null(body.User);
     }
 
-    static CloudSyncUserProvider CreateUserProvider()
+    static ICloudSyncUserProvider CreateUserProvider()
     {
         CloudSyncOptions options = new() { ClerkIssuer = ClerkIssuer };
-        CloudSyncBearerTokenValidator validator = new(Options.Create(options), [signingKey]);
-        return new CloudSyncUserProvider(validator);
+        return new CloudSyncBearerTokenValidator(Options.Create(options), [signingKey]);
     }
 
     static string CreateToken(string issuer, string sub, string email)

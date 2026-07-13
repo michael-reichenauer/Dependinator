@@ -69,12 +69,6 @@ class ModelService : IModelService, IDisposable
         TriggerSave();
     }
 
-    public bool TryNode(string id, out Node node)
-    {
-        using var model = modelMgr.UseModel();
-        return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
-    }
-
     public void Clear()
     {
         using (var model = modelMgr.UseModel())
@@ -97,12 +91,7 @@ class ModelService : IModelService, IDisposable
 
     public async Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto)
     {
-        string modelPath;
-        using (var model = modelMgr.UseModel())
-        {
-            modelPath = model.Path;
-        }
-
+        var modelPath = modelMgr.ModelPath;
         if (string.IsNullOrWhiteSpace(modelPath))
             return R.Error("Model is not loaded");
 
@@ -124,7 +113,7 @@ class ModelService : IModelService, IDisposable
         Clear();
 
         Log.Info("Loading ...", path);
-        using var _ = Timing.Start("Load model", path);
+        using var _ = Timing.Start($"Load model {path}");
 
         // Try read cached model (with ui layout)
         if (!Try(out var modelInfo, out var e, await ReadCachedModelAsync(path)))
@@ -169,12 +158,7 @@ class ModelService : IModelService, IDisposable
 
     public async Task<R> RefreshAsync()
     {
-        var path = "";
-        using (var model = modelMgr.UseModel())
-        {
-            path = model.Path;
-        }
-
+        var path = modelMgr.ModelPath;
         if (!modelListService.IsLocalPath(path))
         {
             Log.Info("Not a local path", path);
@@ -186,6 +170,7 @@ class ModelService : IModelService, IDisposable
         using (var model = modelMgr.UseModel())
         {
             modelStructureService.ClearNotUpdated(model);
+            PassThroughService.UpdatePassThroughFlags(model);
         }
 
         applicationEvents.TriggerModelChanged();
@@ -194,12 +179,12 @@ class ModelService : IModelService, IDisposable
         return R.Ok;
     }
 
-    public async Task LayoutNode(NodeId nodeId, bool recursively = false)
+    public Task LayoutNode(NodeId nodeId, bool recursively = false)
     {
         using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out Node? node))
-                return;
+                return Task.CompletedTask;
 
             LayoutNode(node, recursively);
         }
@@ -207,6 +192,7 @@ class ModelService : IModelService, IDisposable
         applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
         applicationEvents.TriggerSaveNeeded();
+        return Task.CompletedTask;
     }
 
     void LayoutNode(Node node, bool recursively)
@@ -221,7 +207,24 @@ class ModelService : IModelService, IDisposable
         if (!Try(out var e, await ParseAndUpdateAsync(path)))
             return e;
 
+        // Rendering during the progressive parse may have laid out nodes before all their
+        // children's links had arrived; re-flag them so the next render lays out each node
+        // with the complete dependency graph.
+        using (var model = modelMgr.UseModel())
+        {
+            RequireChildrenLayout(model);
+        }
+
         return new ModelInfo(path, Rect.None, 0);
+    }
+
+    internal static void RequireChildrenLayout(IModel model)
+    {
+        foreach (var node in model.Nodes.Values)
+        {
+            if (node.Children.Count > 0 && !node.IsChildrenLayoutCustomized)
+                node.IsChildrenLayoutRequired = true;
+        }
     }
 
     async Task<R> ParseAndUpdateAsync(string path, bool isRefresh = false)
@@ -245,6 +248,14 @@ class ModelService : IModelService, IDisposable
 
             applicationEvents.TriggerModelChanged();
             await AddOrUpdateAllItems(items);
+
+            using (var model = modelMgr.UseModel())
+            {
+                PassThroughService.UpdatePassThroughFlags(model);
+            }
+
+            // Line descriptions can only be applied once all links (and thus lines) have been added
+            ApplyLineDescriptions(items);
         }
 
         CheckLineVisibility();
@@ -270,11 +281,11 @@ class ModelService : IModelService, IDisposable
         using (var model = modelMgr.UseModel())
         {
             modelPath = model.Path;
+            if (modelPath == "")
+                return;
+
             modelData = model.SerializeToDto();
         }
-
-        if (modelPath == "")
-            return;
 
         persistenceService.WriteAsync(modelPath, modelData).RunInBackground();
     }
@@ -321,11 +332,22 @@ class ModelService : IModelService, IDisposable
         }
     }
 
+    void ApplyLineDescriptions(IReadOnlyList<Parsing.Item> parsedItems)
+    {
+        using var model = modelMgr.UseModel();
+        foreach (var parsedItem in parsedItems)
+        {
+            if (parsedItem.LineDescription is not null)
+                modelStructureService.SetLineDescription(model, parsedItem.LineDescription);
+        }
+    }
+
     void SetNodeAndLinkDtos(ModelDto modelDto)
     {
         using var model = modelMgr.UseModel();
         modelDto.Nodes.ForEach(n => modelStructureService.SetNodeDto(model, n));
         modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));
         modelDto.Lines.ForEach(l => modelStructureService.SetLineLayoutDto(model, l));
+        PassThroughService.UpdatePassThroughFlags(model);
     }
 }

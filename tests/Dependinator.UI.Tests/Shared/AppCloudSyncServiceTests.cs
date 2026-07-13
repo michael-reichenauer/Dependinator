@@ -21,7 +21,7 @@ public class AppCloudSyncServiceTests
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         AppCloudSyncService sut = CreateSut(modelPath, syncedModel, syncState, [cloudModel]);
 
-        await sut.RefreshSyncStateCoreAsync();
+        await sut.RefreshSyncStateAsync();
 
         Assert.Equal(CloudSyncState.HasRemoteChanges, sut.GetCloudSyncState());
         Assert.False(sut.HasLocalChangesSinceLastSync);
@@ -38,7 +38,7 @@ public class AppCloudSyncServiceTests
         ModelDto localModel = CreateModelDto("local");
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         AppCloudSyncService sut = CreateSut(modelPath, localModel, syncState, [cloudModel]);
-        await sut.RefreshSyncStateCoreAsync();
+        await sut.RefreshSyncStateAsync();
 
         Assert.Equal(CloudSyncState.HasConflicts, sut.GetCloudSyncState());
         Assert.True(sut.HasLocalChangesSinceLastSync);
@@ -54,7 +54,7 @@ public class AppCloudSyncServiceTests
         CloudSyncModelState syncState = new() { Baseline = new CloudSyncBaseline(syncedHash, syncedHash) };
         AppCloudSyncService sut = CreateSut(modelPath, syncedModel, syncState, cloudModels: []);
 
-        await sut.RefreshSyncStateCoreAsync();
+        await sut.RefreshSyncStateAsync();
 
         Assert.Equal(CloudSyncState.HasRemoteChanges, sut.GetCloudSyncState());
         Assert.False(sut.HasLocalChangesSinceLastSync);
@@ -337,7 +337,7 @@ public class AppCloudSyncServiceTests
 
         Assert.True(sut.IsConnecting);
 
-        await sut.RefreshSyncStateCoreAsync();
+        await sut.RefreshSyncStateAsync();
 
         Assert.False(sut.IsConnecting);
     }
@@ -353,7 +353,7 @@ public class AppCloudSyncServiceTests
 
         Assert.True(context.Sut.IsConnecting);
 
-        await context.Sut.RefreshSyncStateCoreAsync();
+        await context.Sut.RefreshSyncStateAsync();
 
         Assert.False(context.Sut.IsConnecting);
     }
@@ -404,10 +404,10 @@ public class AppCloudSyncServiceTests
 
         cloudSyncStateService.Setup(x => x.GetAsync(modelPath)).ReturnsAsync(syncState);
         cloudSyncStateService
-            .Setup(x => x.RecordPushAsync(It.IsAny<string>(), It.IsAny<CloudModelMetadata>(), It.IsAny<string?>()))
+            .Setup(x => x.RecordPushAsync(It.IsAny<string>(), It.IsAny<CloudModelMetadata>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);
         cloudSyncStateService
-            .Setup(x => x.RecordPullAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()))
+            .Setup(x => x.RecordPullAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);
 
         modelMgr.SetupGet(x => x.ModelPath).Returns(modelPath);

@@ -2,6 +2,7 @@ using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using static System.FormattableString;
 
 // Generates the SVG rendering of the diagram from the model, producing the tiled SVG content
 // drawn on the canvas.
@@ -26,7 +27,6 @@ class SvgService : ISvgService
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
-        //Log.Info("Get tile", zoom, viewRect.X, viewRect.Y);
         using (var model = modelMgr.UseModel())
         {
             if (model.Root.Children.Count == 0)
@@ -48,8 +48,6 @@ class SvgService : ISvgService
             tileKey = TileKey.From(viewRect, zoom);
             if (tiles.TryGetCached(tileKey, viewRect, zoom, out tile))
                 return tile;
-            // Log.Info("/n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-            // Log.Info($"Not Cached {tileKey}, for viewRect {viewRect} viewZoom: {zoom}, Tile:{tileKey.GetTileRect()}");
         }
 
         // Create a new tile and cache it
@@ -62,19 +60,17 @@ class SvgService : ISvgService
             tiles.SetCached(tile, viewRect, zoom);
         }
 
-        // Log.Info($"Tile: K:{tile.Key}, O: {tile.Offset}, Z: {tile.Zoom}, svg: {tile.Svg.Length} chars");
         return tile;
     }
 
     static Tile CreateModelTile(IModel model, TileKey tileKey)
     {
-        // using var t = Timing.Start($"GetModelSvg: {tileKey}");
         var tileRect = tileKey.GetTileRect();
         var tileWithMargin = tileKey.GetTileRectWithMargin();
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
-        var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.Zero);
+        var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None);
         var rootContentSvg = RenderNodeContent(model.Root, rootContext);
 
         // Enable this if need to show tile border and/or tile with margin border
@@ -82,19 +78,20 @@ class SvgService : ISvgService
         // var tileMarginBorderSvg = $"""<rect x="{tileWithMargin.X}" y="{tileWithMargin.Y}" width="{tileWithMargin.Width:0.##}" height="{tileWithMargin.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="green"/>""";
 
         var (x, y, w, h) = tileKey.GetViewRect();
-        var tileViewBox = $"{x} {y} {w} {h}";
-        var tileSvg = $"""
-            <svg width="{w}" height="{h}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">
+        var tileViewBox = Invariant($"{x:0.##} {y:0.##} {w:0.##} {h:0.##}");
+        var tileSvg = Invariant(
+            $"""
+            <svg width="{w:0.##}" height="{h:0.##}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">
               {rootContentSvg}
             </svg>
-            """;
+            """
+        );
 
         return new Tile(tileKey, tileSvg, tileZoom, tileOffset);
     }
 
     static string RenderNodeContent(Node node, RenderContext context)
     {
-        // Log.Info($"RenderNodeContent '{node.Name}', context: {context}");
         EnsureChildrenLayout(node);
 
         var childrenCanvasOffset = CalculateChildrenCanvasOffset(node, context);
@@ -112,7 +109,7 @@ class SvgService : ISvgService
 
     static string RenderNode(Node node, RenderContext context)
     {
-        if (node.IsHidden && !NodeSvg.ShowHiddenNodes)
+        if (node.IsHidden && !ViewOptions.ShowHiddenNodes)
             return "";
 
         var geometry = CalculateNodeGeometry(node, context);
@@ -120,17 +117,29 @@ class SvgService : ISvgService
         if (!RectOverlap(context.TileBounds, geometry.TileRect))
             return "";
 
+        // A note is a leaf annotation drawn as a circle; it has no children or chrome, so short-
+        // circuit before the member/icon/container branches.
+        if (node.IsNote)
+            return NoteSvg.GetNoteSvg(node, geometry.CanvasRect, context.Zoom);
+
         if (node.Type.IsMember)
             return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom);
 
-        if (NodeSvg.IsShowIcon(node.Type, context.Zoom))
+        if (node.IsPassThrough)
+        { // An invisible container that covers its parent; render only its children, no chrome
+            var passThroughContext = context.ForNestedContainer(geometry.TileRect);
+            var passThroughContentSvg = RenderNodeContent(node, passThroughContext);
+            return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
+        }
+
+        if (NodeViewPolicy.IsShowIcon(node.Type, context.Zoom))
             return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom);
 
         var nestedContext = context.ForNestedContainer(geometry.TileRect);
         var childrenContentSvg = RenderNodeContent(node, nestedContext);
 
-        if (NodeSvg.IsToLargeToBeSeen(context.Zoom))
-            return NodeSvg.GetToLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
+        if (NodeViewPolicy.IsTooLargeToBeSeen(context.Zoom))
+            return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
 
         return NodeSvg.GetNodeContainerSvg(node, geometry.CanvasRect, context.Zoom, childrenContentSvg);
     }
@@ -180,8 +189,10 @@ class SvgService : ISvgService
         var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
         foreach (var line in parentToChildrenLines)
         {
-            if (line.IsHidden && !NodeSvg.ShowHiddenNodes)
+            if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
+            if (line.Target.IsPassThrough)
+                continue; // The pass-through node covers this parent, so the segment is degenerate
             yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
         }
 
@@ -192,8 +203,10 @@ class SvgService : ISvgService
             {
                 if (line.Target.Parent == line.Source)
                     continue;
-                if (line.IsHidden && !NodeSvg.ShowHiddenNodes)
+                if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
                     continue;
+                if (line.Source.IsPassThrough && line.Target == node)
+                    continue; // The pass-through node covers this parent, so the segment is degenerate
                 yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
             }
         }
@@ -203,7 +216,7 @@ class SvgService : ISvgService
     {
         foreach (var directLine in node.DirectLines)
         {
-            if (directLine.IsHidden && !NodeSvg.ShowHiddenNodes)
+            if (directLine.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
             var svg = LineSvg.GetDirectLineSvg(directLine, node, nodeCanvasPos, childrenZoom);
             if (svg.Length > 0)
@@ -216,7 +229,7 @@ class SvgService : ISvgService
         public RenderContext With(Pos canvasOffset, double zoom) => new(canvasOffset, zoom, TileBounds, TilePosition);
 
         public RenderContext ForNestedContainer(Rect tileRect) =>
-            new(Pos.Zero, Zoom, TileBounds, new Pos(tileRect.X, tileRect.Y));
+            new(Pos.None, Zoom, TileBounds, new Pos(tileRect.X, tileRect.Y));
     }
 
     readonly record struct NodeGeometry(Rect CanvasRect, Rect TileRect);

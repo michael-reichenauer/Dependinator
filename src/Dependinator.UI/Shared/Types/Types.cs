@@ -10,8 +10,8 @@ public record FileLocation(string Path, int Line);
 
 record Pos(double X, double Y)
 {
+    // Note: None equals a genuine origin position and cannot be distinguished from it.
     public static readonly Pos None = new(0, 0);
-    public static readonly Pos Zero = None;
 
     public override string ToString() => $"({X:0.##},{Y:0.##})";
 }

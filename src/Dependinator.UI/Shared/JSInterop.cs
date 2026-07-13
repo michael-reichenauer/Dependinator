@@ -18,15 +18,20 @@ public class JSInterop : IJSInterop, IAsyncDisposable
 
     public JSInterop(IJSRuntime jsRuntime)
     {
-        // var version = "1.4";                    // Version is needed to avoid cached js file (prod)
-        var version = $"{DateTime.UtcNow.Ticks}"; // Vesion is needed to avoid cached js file (dev)
+        // The version query string busts the browser cache for jsInterop.js. Debug uses ticks so
+        // js edits show up without a rebuild; Release uses the auto-incremented build version
+        // (Core has AssemblyVersion 0.5.*) so browsers can cache the module within a deployment.
+#if DEBUG
+        var version = $"{DateTime.UtcNow.Ticks}";
+#else
+        var version = Core.Build.Version;
+#endif
 
         this.moduleTask = new(() => CreateModuleAsync(jsRuntime, version));
     }
 
     public async ValueTask Call(string functionName, params object?[]? args)
     {
-        //Log.Info("Call", functionName);
         try
         {
             IJSObjectReference module = await GetModuleAsync();
@@ -42,7 +47,6 @@ public class JSInterop : IJSInterop, IAsyncDisposable
 
     public async ValueTask<T> Call<T>(string functionName, params object?[]? args)
     {
-        //Log.Info("Call", functionName);
         try
         {
             IJSObjectReference module = await GetModuleAsync();
@@ -61,12 +65,10 @@ public class JSInterop : IJSInterop, IAsyncDisposable
     // so the JS call can never succeed and should be swallowed rather than treated as fatal.
     static bool IsCircuitGone(Exception e) => e is JSDisconnectedException or ObjectDisposedException;
 
+    // Callers own the returned reference and must dispose it when their service is disposed
+    // (see ScreenService, PointerEventService, VsCodeMessageService).
     public DotNetObjectReference<TValue> Reference<TValue>(TValue value)
-        where TValue : class
-    {
-        // Save all instances to be disposed !!!!!
-        return DotNetObjectReference.Create(value);
-    }
+        where TValue : class => DotNetObjectReference.Create(value);
 
     public async ValueTask DisposeAsync()
     {

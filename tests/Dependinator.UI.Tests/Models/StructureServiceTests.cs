@@ -2,6 +2,7 @@ using Dependinator.Core.Parsing;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
+using ParsingLineDescription = Dependinator.Core.Parsing.LineDescription;
 using ParsingLink = Dependinator.Core.Parsing.Link;
 using ParsingNode = Dependinator.Core.Parsing.Node;
 
@@ -58,6 +59,107 @@ public class StructureServiceTests
     // }
 
     [Fact]
+    public void AddOrUpdateNode_ShouldInheritHiddenStateFromHiddenParent()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var parent = AddNode(model, "Parent", model.Root);
+        parent.SetHidden(true, isUserSet: true);
+
+        var parsedNode = new ParsingNode(
+            "Parent.Child",
+            new Dependinator.Core.Parsing.NodeProperties { Parent = "Parent", Type = NodeType.Type }
+        );
+        service.AddOrUpdateNode(model, parsedNode);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Parent.Child"), out var child));
+        Assert.True(child.IsHidden);
+        Assert.True(child.IsParentSetHidden);
+        Assert.False(child.IsUserSetHidden);
+    }
+
+    [Fact]
+    public void AddOrUpdateNode_ShouldInheritHiddenStateThroughNewIntermediateParents()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var externals = AddNode(model, "Externals", model.Root);
+        externals.SetHidden(true, isUserSet: true);
+
+        // The intermediate parent "Externals.Assembly" does not exist yet and is created on
+        // demand; both it and the new node must inherit the hidden state
+        var parsedNode = new ParsingNode(
+            "Externals.Assembly.Type",
+            new Dependinator.Core.Parsing.NodeProperties { Type = NodeType.Type }
+        );
+        service.AddOrUpdateNode(model, parsedNode);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Externals.Assembly"), out var assembly));
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Externals.Assembly.Type"), out var type));
+        Assert.True(assembly.IsHidden);
+        Assert.True(type.IsHidden);
+    }
+
+    [Fact]
+    public void AddOrUpdateNode_ShouldSyncHiddenStateWhenReparented()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var visibleParent = AddNode(model, "ParentA", model.Root);
+        var hiddenParent = AddNode(model, "ParentB", model.Root);
+        hiddenParent.SetHidden(true, isUserSet: true);
+        var child = AddNode(model, "Child", visibleParent);
+
+        // Move into the hidden parent: the child becomes parent-set hidden
+        service.AddOrUpdateNode(
+            model,
+            new ParsingNode("Child", new Dependinator.Core.Parsing.NodeProperties { Parent = "ParentB" })
+        );
+        Assert.Equal("ParentB", child.Parent.Name);
+        Assert.True(child.IsHidden);
+        Assert.True(child.IsParentSetHidden);
+
+        // Move back to the visible parent: the stale parent-set hidden flag is cleared
+        service.AddOrUpdateNode(
+            model,
+            new ParsingNode("Child", new Dependinator.Core.Parsing.NodeProperties { Parent = "ParentA" })
+        );
+        Assert.Equal("ParentA", child.Parent.Name);
+        Assert.False(child.IsHidden);
+        Assert.False(child.IsParentSetHidden);
+    }
+
+    [Fact]
+    public void AddOrUpdateLink_ShouldHideNewTargetNodesUnderHiddenParent()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var externals = AddNode(model, "Externals", model.Root);
+        externals.SetHidden(true, isUserSet: true);
+        AddNode(model, "Source", model.Root);
+
+        // A link to a not-yet-existing node under a hidden parent creates that node on demand;
+        // it must inherit the hidden state so lines to the hidden subtree stay hidden
+        var parsedLink = new ParsingLink(
+            "Source",
+            "Externals.NewAssembly",
+            new Dependinator.Core.Parsing.LinkProperties()
+        );
+        service.AddOrUpdateLink(model, parsedLink);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Externals.NewAssembly"), out var target));
+        Assert.True(target.IsHidden);
+    }
+
+    [Fact]
     public void AddOrUpdateLink_ShouldCreateNodesAndAddLinesOnce()
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();
@@ -80,5 +182,99 @@ public class StructureServiceTests
                 ),
             Times.Once
         );
+    }
+
+    [Fact]
+    public void SetLineDescription_ShouldSetDescriptionOnExactLine()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var (_, _, line) = AddNodesWithLine(model, "Source", "Target");
+
+        service.SetLineDescription(model, new ParsingLineDescription("Source", "Target", "Uses <the> target"));
+
+        Assert.Equal("Uses <the> target", line.Description);
+        Assert.Equal("Uses &lt;the&gt; target", line.HtmlDescription);
+        Assert.Equal(model.UpdateStamp, line.DescriptionUpdateStamp);
+    }
+
+    [Fact]
+    public void SetLineDescription_ShouldResolveRelativeTargetViaAncestors()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        // Node names carry a '*' module prefix (e.g. "Dependinator*Core"), so a relative
+        // target like "Models" must resolve via the source node's ancestors
+        var module = AddNode(model, "Dependinator*Core", model.Root);
+        var source = AddNode(model, "Dependinator*Core.Parsing", module);
+        var target = AddNode(model, "Dependinator*Core.Models", module);
+        var line = new Line(source, target);
+        model.TryAddLine(line);
+
+        service.SetLineDescription(model, new ParsingLineDescription("Dependinator*Core.Parsing", "Models", "text"));
+
+        Assert.Equal("text", line.Description);
+    }
+
+    [Fact]
+    public void SetLineDescription_ShouldNotCreateNodesOrLines()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        AddNode(model, "Source", model.Root);
+        var nodeCount = model.Nodes.Count;
+        var lineCount = model.Lines.Count;
+
+        service.SetLineDescription(model, new ParsingLineDescription("Source", "Missing", "text"));
+
+        Assert.Equal(nodeCount, model.Nodes.Count);
+        Assert.Equal(lineCount, model.Lines.Count);
+    }
+
+    [Fact]
+    public void SetLineLayoutDto_ShouldRoundtripLineDescription()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var (_, _, line) = AddNodesWithLine(model, "Source", "Target");
+        line.SetDescription("Uses the target", model.UpdateStamp);
+
+        // The line has no segment points but is persisted anyway because it has a description
+        var lineDto = Assert.Single(model.SerializeToDto().Lines);
+        Assert.Equal("Uses the target", lineDto.Description);
+
+        line.ClearDescription();
+        service.SetLineLayoutDto(model, lineDto);
+
+        Assert.Equal("Uses the target", line.Description);
+    }
+
+    static Modeling.Models.Node AddNode(IModel model, string name, Modeling.Models.Node parent)
+    {
+        var node = new Modeling.Models.Node(name, parent) { UpdateStamp = model.UpdateStamp };
+        parent.AddChild(node);
+        model.TryAddNode(node);
+        return node;
+    }
+
+    static (Modeling.Models.Node, Modeling.Models.Node, Line) AddNodesWithLine(
+        IModel model,
+        string sourceName,
+        string targetName
+    )
+    {
+        var source = AddNode(model, sourceName, model.Root);
+        var target = AddNode(model, targetName, model.Root);
+        var line = new Line(source, target);
+        model.TryAddLine(line);
+        return (source, target, line);
     }
 }

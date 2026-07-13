@@ -15,32 +15,54 @@ static class Icon
     public const string LineTargetIcon =
         "<g><rect fill=\"none\" height=\"24\" width=\"24\"/></g><g><rect x=\"4\" y=\"11\" width=\"12\" height=\"2\" rx=\"1\" fill=\"currentColor\"/><polygon points=\"16,8.5 22,12 16,15.5\" fill=\"currentColor\"/></g>";
 
-    internal static string ModuleIcon => IconLibrary.Get("ModuleIcon");
+    internal static string ModuleIcon => IconLibrary.Get("Module");
 
     static readonly Dictionary<Parsing.NodeType, string> IconMap = new()
     {
-        { Parsing.NodeType.Solution, "SolutionIcon" },
-        { Parsing.NodeType.Externals, "ExternalsIcon" },
-        { Parsing.NodeType.Type, "TypeIcon" },
-        { Parsing.NodeType.ClassType, "TypeIcon" },
-        { Parsing.NodeType.InterfaceType, "InterfaceIcon" },
-        { Parsing.NodeType.EnumType, "EnumIcon" },
-        { Parsing.NodeType.StructType, "StructIcon" },
-        { Parsing.NodeType.RecordType, "RecordIcon" },
-        { Parsing.NodeType.MethodMember, "MemberIcon" },
-        { Parsing.NodeType.FieldMember, "MemberIcon" },
-        { Parsing.NodeType.ConstructorMember, "MemberIcon" },
-        { Parsing.NodeType.EventMember, "MemberIcon" },
-        { Parsing.NodeType.PropertyMember, "MemberIcon" },
+        { Parsing.NodeType.Solution, "Solution" },
+        { Parsing.NodeType.Externals, "Externals" },
+        { Parsing.NodeType.Assembly, "Assembly" },
+        { Parsing.NodeType.Namespace, "Namespace" },
+        // The Roslyn source parser doesn't emit Namespace nodes; namespace containers are
+        // rebuilt as implicit Parent nodes (see StructureService.GetOrCreateParent), so Parent
+        // also renders as a namespace. (The Files icon is kept in the library for future use.)
+        { Parsing.NodeType.Parent, "Namespace" },
+        { Parsing.NodeType.Type, "Type" },
+        { Parsing.NodeType.ClassType, "Type" },
+        { Parsing.NodeType.InterfaceType, "Interface" },
+        { Parsing.NodeType.EnumType, "Enum" },
+        { Parsing.NodeType.StructType, "Struct" },
+        { Parsing.NodeType.RecordType, "Record" },
+        { Parsing.NodeType.MethodMember, "Method" },
+        { Parsing.NodeType.FieldMember, "Field" },
+        { Parsing.NodeType.ConstructorMember, "Constructor" },
+        { Parsing.NodeType.EventMember, "Event" },
+        { Parsing.NodeType.PropertyMember, "Property" },
     };
 
-    public static string GetIcon(Parsing.NodeType iconName)
-    {
-        if (!IconMap.TryGetValue(iconName, out string? name))
-            return ModuleIcon;
+    // The name of the default icon for a node type (an IconLibrary id), falling back to "Module".
+    public static string GetIconName(Parsing.NodeType nodeType) =>
+        IconMap.TryGetValue(nodeType, out string? name) ? name : "Module";
 
-        return IconLibrary.Get(name);
+    public static string GetIcon(Parsing.NodeType nodeType) => IconLibrary.Get(GetIconName(nodeType));
+
+    // The icon name for a node, honoring a user-selected custom icon and icon color; unknown
+    // (e.g. stale persisted) names or colors fall back to the node-type default/base icon.
+    public static string GetIconName(Modeling.Models.Node node)
+    {
+        var name =
+            node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName)
+                ? customIconName
+                : GetIconName(node.Type);
+
+        if (node.CustomIconColor is { } color && IconLibrary.Contains(IconLibrary.VariantName(name, color)))
+            return IconLibrary.VariantName(name, color);
+
+        return name;
     }
+
+    // Icon for a node, honoring a user-selected custom icon.
+    public static string GetIcon(Modeling.Models.Node node) => IconLibrary.Get(GetIconName(node));
 
     // All node icon definitions, rendered once into the diagram's <defs> so nodes can reference
     // them by id via <use href="#name">.

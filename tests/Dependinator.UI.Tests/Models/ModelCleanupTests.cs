@@ -62,4 +62,46 @@ public class ModelCleanupTests
         Assert.False(model.Links.TryGetValue(new LinkId("Source", "Target"), out _));
         Assert.False(model.Lines.TryGetValue(LineId.From("Source", "Target"), out _));
     }
+
+    [Fact]
+    public void ClearNotUpdated_ShouldClearStaleLineDescriptions()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var lineService = new Mock<ILineService>();
+        var structureService = new StructureService(lineService.Object);
+        var stamp = new DateTime(2024, 1, 1);
+        model.UpdateStamp = stamp;
+
+        var source = new Node("Source", model.Root) { UpdateStamp = stamp };
+        var target = new Node("Target", model.Root) { UpdateStamp = stamp };
+        var other = new Node("Other", model.Root) { UpdateStamp = stamp };
+        model.Root.AddChild(source);
+        model.Root.AddChild(target);
+        model.Root.AddChild(other);
+        model.TryAddNode(source);
+        model.TryAddNode(target);
+        model.TryAddNode(other);
+
+        var staleLine = AddLine(model, source, target, stamp);
+        staleLine.SetDescription("Stale description", stamp.AddDays(-1));
+
+        var freshLine = AddLine(model, source, other, stamp);
+        freshLine.SetDescription("Fresh description", stamp);
+
+        structureService.ClearNotUpdated(model);
+
+        Assert.Null(staleLine.Description);
+        Assert.Equal("Fresh description", freshLine.Description);
+    }
+
+    static Line AddLine(IModel model, Node source, Node target, DateTime stamp)
+    {
+        var link = new Link(source, target) { UpdateStamp = stamp };
+        var line = new Line(source, target);
+        line.Add(link);
+        link.AddLine(line);
+        model.TryAddLine(line);
+        model.TryAddLink(link);
+        return line;
+    }
 }

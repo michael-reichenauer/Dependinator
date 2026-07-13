@@ -1,8 +1,10 @@
 namespace Dependinator.Core.Parsing;
 
-record Item(Node? Node, Link? Link);
+record Item(Node? Node, Link? Link, LineDescription? LineDescription = null);
 
 record Link(string Source, string Target, LinkProperties Properties);
+
+record LineDescription(string Source, string Target, string Text);
 
 record Node(string Name, NodeProperties Properties);
 

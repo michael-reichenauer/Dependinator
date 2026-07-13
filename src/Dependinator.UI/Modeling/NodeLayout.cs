@@ -1,5 +1,6 @@
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using NodeType = Dependinator.Core.Parsing.NodeType;
 
 namespace Dependinator.UI.Modeling;
 
@@ -40,32 +41,18 @@ class NodeLayout
 
     static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
 
-    static Rect SnapPositionToGrid(Rect rect) => rect with { X = SnapToGrid(rect.X), Y = SnapToGrid(rect.Y) };
-
-    public static Rect GetNextChildRect(Node parentNode)
-    {
-        if (!parentNode.IsRoot)
-            return Rect.None;
-
-        var density = RootProfile;
-        var rootGap = RootGap * density.GapScale;
-        var layoutWidth = parentNode.Boundary.Width / Math.Max(MinimumDimension, parentNode.ContainerZoom);
-        var columns = Math.Max(1, (int)Math.Floor((layoutWidth - rootGap) / (DefaultWidth + rootGap)));
-
-        var index = parentNode.Children.Count;
-        var column = index % columns;
-        var row = index / columns;
-
-        var x = rootGap + column * (DefaultWidth + rootGap);
-        var y = rootGap + row * (DefaultHeight + rootGap);
-        return SnapPositionToGrid(new Rect(x, y, DefaultWidth, DefaultHeight));
-    }
+    public static Rect SnapPositionToGrid(Rect rect) => rect with { X = SnapToGrid(rect.X), Y = SnapToGrid(rect.Y) };
 
     public static void AdjustChildren(Node parent, bool forceAllChildren = false)
     {
         parent.IsChildrenLayoutRequired = false;
 
         if (parent.Children.Count == 0)
+            return;
+
+        // A sole pass-through child has a derived boundary that always covers the parent's
+        // viewport; arranging it or fitting the container transform to it would fight that.
+        if (parent.Children.Count == 1 && parent.Children[0].IsPassThrough)
             return;
 
         if (!forceAllChildren && parent.IsChildrenLayoutCustomized)
@@ -80,9 +67,19 @@ class NodeLayout
             return;
         }
 
-        Sorter.Sort(parent.Children, CompareChildren);
         var density = GetDensityProfile();
-        ArrangeChildren(parent, parent.Children, RegularMetrics(density));
+        var metrics = parent.IsRoot ? RootMetrics() : RegularMetrics(density);
+
+        if (!LayeredLayout.TryArrange(parent, metrics))
+        {
+            SortChildren(parent.Children);
+            ArrangeChildren(parent, parent.Children, metrics);
+        }
+
+        // The root's container transform is the fixed identity-like frame the canvas viewport
+        // (model.Zoom/Offset) pans and zooms within, so it must not be re-fitted by layout.
+        if (!parent.IsRoot)
+            ApplyContainerTransform(parent, GetChildrenBounds(parent.Children), density.TargetLinearCoverage);
     }
 
     static bool IsTypeWithMembers(Node parent) =>
@@ -100,8 +97,6 @@ class NodeLayout
             var y = metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
             children[index].Boundary = SnapPositionToGrid(new Rect(x, y, metrics.Width, metrics.Height));
         }
-
-        ApplyContainerTransform(parent, GetChildrenBounds(children), GetDensityProfile().TargetLinearCoverage);
     }
 
     static void ArrangeTypeChildren(Node parent)
@@ -114,7 +109,7 @@ class NodeLayout
         var nonMembers = parent.Children.Where(c => !c.Type.IsMember).ToList();
 
         Sorter.Sort(members, CompareMemberChildren);
-        Sorter.Sort(nonMembers, CompareChildren);
+        SortChildren(nonMembers);
 
         var publicMembers = members.Where(m => !(m.IsPrivate ?? false)).ToList();
         var privateMembers = members.Where(m => m.IsPrivate ?? false).ToList();
@@ -153,7 +148,7 @@ class NodeLayout
             return;
         }
 
-        Sorter.Sort(newChildren, CompareChildren);
+        SortChildren(newChildren);
         PlaceNodesInFreeSlots(parent, newChildren, occupied, regularMetrics, regularMetrics.HorizontalGap);
     }
 
@@ -169,7 +164,7 @@ class NodeLayout
         var newNonMembers = newChildren.Where(c => !c.Type.IsMember).ToList();
 
         Sorter.Sort(newMembers, CompareMemberChildren);
-        Sorter.Sort(newNonMembers, CompareChildren);
+        SortChildren(newNonMembers);
 
         var existingMembers = parent.Children.Where(c => c.Boundary != Rect.None && c.Type.IsMember).ToList();
         var existingPublicMembers = existingMembers
@@ -362,6 +357,17 @@ class NodeLayout
         return new Rect(minX, minY, maxX - minX, maxY - minY);
     }
 
+    // Re-fits the container zoom/offset to the current children without re-arranging them,
+    // e.g. when a node's pass-through state changes and its effective boundary jumps in size.
+    public static void FitContainerTransform(Node parent)
+    {
+        var children = parent.Children.Where(child => child.Boundary != Rect.None).ToList();
+        if (children.Count == 0)
+            return;
+
+        ApplyContainerTransform(parent, GetChildrenBounds(children), GetDensityProfile().TargetLinearCoverage);
+    }
+
     static void ApplyContainerTransform(Node parent, Rect contentBounds, double targetLinearCoverage)
     {
         var availableWidth = Math.Max(MinimumDimension, parent.Boundary.Width);
@@ -380,51 +386,79 @@ class NodeLayout
         parent.ContainerOffset = new Pos(offsetX, offsetY);
     }
 
-    static int CompareChildren(Node c1, Node c2)
+    // Orders siblings so referencing children come before the children they reference: first by
+    // sibling lines (c1->c2 before c2->c1), then children referenced by the parent, then children
+    // referencing the parent. The relation is a partial order, so ties are left in place.
+    static void SortChildren(IList<Node> children)
     {
-        // c1->c2
-        if (c1.SourceLines.ContainsBy(l => l.Target == c2) && !c2.SourceLines.ContainsBy(l => l.Target == c1))
-            return -1;
-        // c2->c1
-        if (!c1.SourceLines.ContainsBy(l => l.Target == c2) && c2.SourceLines.ContainsBy(l => l.Target == c1))
-            return 1;
+        if (children.Count < 2)
+            return;
 
-        // Parent->c1 but not Parent->c2
-        if (
-            c1.TargetLines.ContainsBy(l => l.Source == c1.Parent)
-            && !c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)
-        )
-            return -1;
-        // Not Parent->c1 but Parent->c2
-        if (
-            !c1.TargetLines.ContainsBy(l => l.Source == c1.Parent)
-            && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)
-        )
-            return 1;
+        // Precompute the line relations once; the comparer runs O(n²) times in Sorter.Sort, so
+        // scanning the line lists in every comparison gets expensive for large namespaces.
+        var relations = children.ToDictionary(
+            child => child,
+            child =>
+                (
+                    SiblingTargets: child.SourceLines.Select(line => line.Target).ToHashSet(),
+                    HasLineFromParent: child.TargetLines.ContainsBy(line => line.Source == child.Parent),
+                    HasLineToParent: child.SourceLines.ContainsBy(line => line.Target == child.Parent)
+                )
+        );
 
-        // c1->Parent but not c2->Parent
-        if (
-            c1.SourceLines.ContainsBy(l => l.Target == c1.Parent)
-            && !c2.SourceLines.ContainsBy(l => l.Target == c2.Parent)
-        )
-            return -1;
-        // Not c1->Parent but c2->Parent
-        if (
-            !c1.TargetLines.ContainsBy(l => l.Source == c1.Parent)
-            && c2.TargetLines.ContainsBy(l => l.Source == c2.Parent)
-        )
-            return 1;
+        Sorter.Sort(
+            children,
+            (c1, c2) =>
+            {
+                var r1 = relations[c1];
+                var r2 = relations[c2];
 
-        return 0;
+                var c1ToC2 = r1.SiblingTargets.Contains(c2);
+                var c2ToC1 = r2.SiblingTargets.Contains(c1);
+                if (c1ToC2 != c2ToC1)
+                    return c1ToC2 ? -1 : 1;
+
+                if (r1.HasLineFromParent != r2.HasLineFromParent)
+                    return r1.HasLineFromParent ? -1 : 1;
+
+                if (r1.HasLineToParent != r2.HasLineToParent)
+                    return r1.HasLineToParent ? -1 : 1;
+
+                return 0;
+            }
+        );
     }
 
+    // Most used/using members first, then by member kind, so the most relevant members end up
+    // top left within their public/private group.
     static int CompareMemberChildren(Node c1, Node c2)
     {
-        var (v1, v2) = ((int)c1.Type, (int)c2.Type);
-        return v1 < v2 ? -1
-            : v2 > v1 ? 1
-            : 0;
+        var importance1 = c1.SourceLinks.Count + c1.TargetLinks.Count;
+        var importance2 = c2.SourceLinks.Count + c2.TargetLinks.Count;
+        if (importance1 != importance2)
+            return importance2 - importance1;
+
+        var rank1 = MemberKindRank(c1.Type);
+        var rank2 = MemberKindRank(c2.Type);
+        if (rank1 != rank2)
+            return rank1 - rank2;
+
+        return string.CompareOrdinal(c1.Name, c2.Name);
     }
+
+    static int MemberKindRank(NodeType type) =>
+        type switch
+        {
+            NodeType.ConstructorMember => 0,
+            NodeType.PropertyMember => 1,
+            NodeType.MethodMember => 2,
+            NodeType.EventMember => 3,
+            NodeType.FieldMember => 4,
+            _ => 5,
+        };
+
+    static LayoutMetrics RootMetrics() =>
+        new(DefaultWidth, DefaultHeight, RootGap * RootProfile.GapScale, RootGap * RootProfile.GapScale, 1.0);
 
     static LayoutMetrics RegularMetrics(DensityProfile density) =>
         new(
@@ -452,13 +486,13 @@ class NodeLayout
             _ => BalancedProfile,
         };
 
-    readonly record struct LayoutMetrics(
-        double Width,
-        double Height,
-        double HorizontalGap,
-        double VerticalGap,
-        double AspectBias
-    );
-
     readonly record struct DensityProfile(double GapScale, double TargetLinearCoverage);
 }
+
+readonly record struct LayoutMetrics(
+    double Width,
+    double Height,
+    double HorizontalGap,
+    double VerticalGap,
+    double AspectBias
+);

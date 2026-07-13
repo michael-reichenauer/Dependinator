@@ -10,7 +10,7 @@ class WorkspaceFolderChangeHandler(IWorkspaceFolderService workspaceFolderServic
 {
     public Task<Unit> Handle(DidChangeWorkspaceFoldersParams request, CancellationToken ct)
     {
-        workspaceFolderService.AddFolders(request.Event.Added ?? [], ct);
+        workspaceFolderService.AddFolders(request.Event.Added ?? []);
         workspaceFolderService.RemoveFolders(request.Event.Removed ?? []);
         return Task.FromResult(Unit.Value);
     }

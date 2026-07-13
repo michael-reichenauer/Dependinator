@@ -3,43 +3,41 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Dependinator.Roslyn.Parsing;
 
-class Locations
+static class Locations
 {
     public static FileSpan GetFirstFileSpanOrNoValue(ISymbol symbol)
     {
-        var spans = GetLocationSpans(symbol);
-        if (!spans.Any())
-            return NoValue.FileSpan;
-        var firstSpan = spans.First();
+        foreach (var span in GetLocationSpans(symbol))
+            return ToFileSpan(span);
 
-        return new FileSpan(firstSpan.Path, firstSpan.StartLinePosition.Line, firstSpan.EndLinePosition.Line);
+        return NoValue.FileSpan;
     }
 
     public static IEnumerable<FileLinePositionSpan> GetLocationSpans(ISymbol symbol)
     {
-        var typeSpans = GetTypeDeclarationSpans(symbol);
-        if (typeSpans.Any())
-            return typeSpans;
-        return GetTypeLocationSpans(symbol);
+        // Prefer full type declaration spans (covering the whole declaration); fall back to
+        // the symbol's source locations (just the identifier) for members and other symbols.
+        var declarationSpans = GetDeclarationSpans(symbol).ToList();
+        if (declarationSpans.Count > 0)
+            return declarationSpans;
+        return GetSourceLocationSpans(symbol);
     }
 
-    static IEnumerable<FileLinePositionSpan> GetTypeDeclarationSpans(ISymbol symbol)
+    public static FileSpan ToFileSpan(FileLinePositionSpan span)
+    {
+        return new FileSpan(span.Path, span.StartLinePosition.Line, span.EndLinePosition.Line);
+    }
+
+    static IEnumerable<FileLinePositionSpan> GetDeclarationSpans(ISymbol symbol)
     {
         foreach (var syntaxRef in symbol.DeclaringSyntaxReferences)
         {
-            var syntax = syntaxRef.GetSyntax();
-            if (syntax is TypeDeclarationSyntax typeDecl)
-            {
+            if (syntaxRef.GetSyntax() is BaseTypeDeclarationSyntax typeDecl)
                 yield return typeDecl.GetLocation().GetLineSpan();
-            }
-            else if (syntax is BaseTypeDeclarationSyntax baseTypeDecl)
-            {
-                yield return baseTypeDecl.GetLocation().GetLineSpan();
-            }
         }
     }
 
-    static IEnumerable<FileLinePositionSpan> GetTypeLocationSpans(ISymbol symbol)
+    static IEnumerable<FileLinePositionSpan> GetSourceLocationSpans(ISymbol symbol)
     {
         foreach (var location in symbol.Locations.Where(l => l.IsInSource))
         {

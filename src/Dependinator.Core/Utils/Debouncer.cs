@@ -1,5 +1,8 @@
 ﻿namespace Dependinator.Core.Utils;
 
+// Trailing-edge debouncer: each Debounce() call restarts the delay and the action runs once
+// the calls stop. The overloads with a maximumDelay also guarantee the action runs no later
+// than maximumDelay after the first call in a burst, even if calls keep arriving.
 public sealed class Debouncer : IDisposable
 {
     private readonly Timer timer;
