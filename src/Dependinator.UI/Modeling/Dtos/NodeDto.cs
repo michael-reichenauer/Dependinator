@@ -28,6 +28,11 @@ record NodeDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? IconName { get; init; }
 
+    // User-selected icon tint; omitted when the icon uses the default violet. Independent of
+    // Color (the node container's palette color).
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? IconColor { get; init; }
+
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsUserSetHidden { get; set; }
 

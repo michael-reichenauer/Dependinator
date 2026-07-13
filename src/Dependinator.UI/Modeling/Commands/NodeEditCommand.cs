@@ -24,6 +24,10 @@ class NodeEditCommand(NodeId nodeId) : Command
     public string? IconName { get; set; }
     public string? IconNameCopy { get; private set; }
 
+    // Custom icon tint; "" means clear to the default violet (stored as null on the node).
+    public string? IconColor { get; set; }
+    public string? IconColorCopy { get; private set; }
+
     // Description; "" means clear to no description (stored as null on the node). Used for
     // editing note text.
     public string? Description { get; set; }
@@ -42,6 +46,8 @@ class NodeEditCommand(NodeId nodeId) : Command
             (ContainerOffsetCopy, node.ContainerOffset) = (node.ContainerOffset, ContainerOffset);
         if (IconName != null)
             (IconNameCopy, node.CustomIconName) = (node.CustomIconName ?? "", IconName == "" ? null : IconName);
+        if (IconColor != null)
+            (IconColorCopy, node.CustomIconColor) = (node.CustomIconColor ?? "", IconColor == "" ? null : IconColor);
         if (Description != null)
         {
             DescriptionCopy = node.Description ?? "";
@@ -72,6 +78,12 @@ class NodeEditCommand(NodeId nodeId) : Command
             (IconName, node.CustomIconName, IconNameCopy) = (
                 node.CustomIconName ?? "",
                 IconNameCopy == "" ? null : IconNameCopy,
+                null
+            );
+        if (IconColorCopy != null)
+            (IconColor, node.CustomIconColor, IconColorCopy) = (
+                node.CustomIconColor ?? "",
+                IconColorCopy == "" ? null : IconColorCopy,
                 null
             );
         if (DescriptionCopy != null)

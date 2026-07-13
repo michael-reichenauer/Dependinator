@@ -57,6 +57,10 @@ class Node : IItem
     // User-selected icon name (an IconLibrary id); null means the node-type default icon.
     public string? CustomIconName { get; set; }
 
+    // User-selected icon tint (an IconLibrary.IconColors name); null means the default violet.
+    // Independent of Color, which is the node container's own (background) palette color.
+    public string? CustomIconColor { get; set; }
+
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
@@ -131,6 +135,7 @@ class Node : IItem
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
             Color = Color,
             IconName = CustomIconName,
+            IconColor = CustomIconColor,
             IsUserSetHidden = IsUserSetHidden,
             IsParentSetHidden = IsParentSetHidden,
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
@@ -150,6 +155,7 @@ class Node : IItem
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
         Color = dto.Color ?? Color;
         CustomIconName = dto.IconName;
+        CustomIconColor = dto.IconColor;
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;

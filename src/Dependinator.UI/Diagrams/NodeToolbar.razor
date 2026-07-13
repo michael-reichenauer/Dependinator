@@ -36,6 +36,10 @@ else if (HasSelectedLine)
                      OnClick="SelectIconAsync" data-testid="node-menu-set-icon">
           Set Icon …
         </MudMenuItem>
+        <MudMenu Label="Icon Color" StartIcon="@MudBlazor.Icons.Material.Outlined.Palette" IconColor="Color.Secondary"
+                 Dense="true" PopoverClass="dep-light-menu" data-testid="node-menu-icon-color">
+          @IconColorMenuItems
+        </MudMenu>
 
         @if (IsSelectedNodeManual)
         {
@@ -87,6 +91,12 @@ else if (HasSelectedLine)
       <MudTooltip Text="Set icon">
         <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols" OnClick="SelectIconAsync"
                        data-testid="node-set-icon" />
+      </MudTooltip>
+      <MudTooltip Text="Set icon color">
+        <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Palette" Dense="true" AnchorOrigin="Origin.BottomCenter"
+                 PopoverClass="dep-light-menu" data-testid="node-set-icon-color">
+          @IconColorMenuItems
+        </MudMenu>
       </MudTooltip>
       <MudTooltip Text="Add link from this node">
         <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CallMade" OnClick="BeginAddLink"
@@ -197,6 +207,9 @@ else if (HasSelectedLine)
 
   [Inject]
   ISnackbar snackbar { get; set; } = null!;
+
+  [Inject]
+  INodeEditService nodeEditService { get; set; } = null!;
 
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
@@ -329,6 +342,53 @@ else if (HasSelectedLine)
       return;
     selectionService.Unselect();
     manualEditService.DeleteManualNode(nodeId);
+  }
+
+  // Swatch rows shared by the toolbar icon-color dropdown and the context-menu submenu: a pinned
+  // "Default" (base violet) row followed by the selectable tints; the node's current tint is
+  // marked with a ring and bold name.
+  RenderFragment IconColorMenuItems => @<text>
+    @{
+      var currentColor = GetCurrentIconColor();
+    }
+    <MudMenuItem OnClick="() => SetIconColor(null)" data-testid="icon-color-item-Default">
+      <div class="d-flex align-center" style="gap:10px;">
+        <span style="@SwatchStyle(IconLibrary.DefaultSwatch, currentColor is null)"></span>
+        <span style="@NameStyle(currentColor is null)">Default</span>
+      </div>
+    </MudMenuItem>
+    @foreach (var color in IconLibrary.IconColors)
+    {
+      var name = color.Name;
+      var isCurrent = currentColor == name;
+      <MudMenuItem OnClick="() => SetIconColor(name)" data-testid="@($"icon-color-item-{name}")">
+        <div class="d-flex align-center" style="gap:10px;">
+          <span style="@SwatchStyle(color.Swatch, isCurrent)"></span>
+          <span style="@NameStyle(isCurrent)">@name</span>
+        </div>
+      </MudMenuItem>
+    }
+  </text>;
+
+  static string SwatchStyle(string swatch, bool isCurrent) =>
+      $"width:14px;height:14px;border-radius:50%;background:{swatch};flex-shrink:0;"
+      + (isCurrent ? "outline:2px solid var(--mud-palette-primary);outline-offset:1px;" : "");
+
+  static string NameStyle(bool isCurrent) => isCurrent ? "font-weight:600;" : "";
+
+  string? GetCurrentIconColor()
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return null;
+    using var model = modelMgr.UseModel();
+    return model.Nodes.TryGetValue(nodeId, out var node) ? node.CustomIconColor : null;
+  }
+
+  void SetIconColor(string? colorName)
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return;
+    nodeEditService.SetNodeIconColor(nodeId, colorName);
   }
 
   async Task SelectIconAsync()

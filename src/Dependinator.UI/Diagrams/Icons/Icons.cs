@@ -46,14 +46,19 @@ static class Icon
 
     public static string GetIcon(Parsing.NodeType nodeType) => IconLibrary.Get(GetIconName(nodeType));
 
-    // The icon name for a node, honoring a user-selected custom icon; unknown (e.g. stale
-    // persisted) names fall back to the node-type default.
+    // The icon name for a node, honoring a user-selected custom icon and icon color; unknown
+    // (e.g. stale persisted) names or colors fall back to the node-type default/base icon.
     public static string GetIconName(Modeling.Models.Node node)
     {
-        if (node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName))
-            return customIconName;
+        var name =
+            node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName)
+                ? customIconName
+                : GetIconName(node.Type);
 
-        return GetIconName(node.Type);
+        if (node.CustomIconColor is { } color && IconLibrary.Contains(IconLibrary.VariantName(name, color)))
+            return IconLibrary.VariantName(name, color);
+
+        return name;
     }
 
     // Icon for a node, honoring a user-selected custom icon.
