@@ -77,13 +77,27 @@ class DColors
     static readonly string NodeBackgroundLightEdit = "#FFF2E0";
 
     // User-selected container colors: the shared accent colors (see ColorUtil, same six as the
-    // icon tints) rendered in the same faint style as the auto palette above, derived per theme
-    // by re-hueing the canonical "Blue" entry (hue ~210). Names deliberately overlap the auto
-    // palette's — resolution is separate (CustomNodeColorByName vs NodeColorByName).
+    // icon tints) rendered in the same style as the auto palette above, derived per theme by
+    // re-hueing the canonical "Blue" entry (hue ~210), but with a slightly stronger background
+    // than the auto palette so an explicit color choice stands out against the canvas. Names
+    // deliberately overlap the auto palette's — resolution is separate (CustomNodeColorByName
+    // vs NodeColorByName).
     const double CustomBaseHue = 210;
+    static readonly string CustomBackgroundDark = "#12243F";
+    static readonly string CustomBackgroundLight = "#EAF3FF";
 
-    static readonly IReadOnlyList<DColor> customNodeColorsDark = DeriveCustomColors(nodeColorsDark[1]);
-    static readonly IReadOnlyList<DColor> customNodeColorsLight = DeriveCustomColors(nodeColorsLight[1]);
+    static readonly IReadOnlyList<DColor> customNodeColorsDark = DeriveCustomColors(
+        nodeColorsDark[1] with
+        {
+            Background = CustomBackgroundDark,
+        }
+    );
+    static readonly IReadOnlyList<DColor> customNodeColorsLight = DeriveCustomColors(
+        nodeColorsLight[1] with
+        {
+            Background = CustomBackgroundLight,
+        }
+    );
 
     static IReadOnlyList<DColor> DeriveCustomColors(DColor blue) =>
         [
