@@ -101,35 +101,65 @@ public sealed class AppPage
     // (text.iconName) are rendered in a separate SVG layer from the interactive node groups
     // (g.hoverable, which carry the full name), so we find the label and click the nearest
     // node group's center (dependency lines, which also use g.hoverable, are excluded).
+    //
+    // Navigating to a node (NavigationService.ShowNodeAsync) animates pan/zoom over many
+    // re-rendered tiles, and mid-animation the label can be momentarily absent (tile culling,
+    // icon/container switch) or still moving, so poll until the click point exists and has
+    // stopped moving between two reads instead of reading it once.
     public async Task SelectNodeByVisibleNameAsync(string visibleName)
     {
-        float[]? point = await page.EvaluateAsync<float[]?>(
-            @"(name) => {
-                const labels = [...document.querySelectorAll('#svgcanvas text.iconName')]
-                    .filter(t => t.textContent.trim() === name);
-                if (labels.length === 0) return null;
-                const lr = labels[0].getBoundingClientRect();
-                const lx = lr.x + lr.width / 2, ly = lr.y + lr.height / 2;
-                const arrow = String.fromCharCode(8594); // dependency lines contain '→'
-                let best = null, bestDist = Infinity;
-                for (const g of document.querySelectorAll('#svgcanvas g.hoverable')) {
-                    if (g.textContent.includes(arrow)) continue;
-                    const r = g.getBoundingClientRect();
-                    const cx = r.x + r.width / 2, cy = r.y + r.height / 2;
-                    const d = (cx - lx) ** 2 + (cy - ly) ** 2;
-                    if (d < bestDist) { bestDist = d; best = [cx, cy]; }
-                }
-                return best;
-            }",
-            visibleName
-        );
-
-        if (point is null)
-            throw new InvalidOperationException(
-                $"No node with visible label '{visibleName}' is rendered on the canvas."
-            );
-
+        float[] point = await WaitForStableNodePointAsync(visibleName);
         await page.Mouse.ClickAsync(point[0], point[1]);
+    }
+
+    async Task<float[]> WaitForStableNodePointAsync(string visibleName, float timeoutSeconds = 15)
+    {
+        const string FindNodePointScript =
+            @"(name) => {
+            const labels = [...document.querySelectorAll('#svgcanvas text.iconName')]
+                .filter(t => t.textContent.trim() === name);
+            if (labels.length === 0) return null;
+            const lr = labels[0].getBoundingClientRect();
+            const lx = lr.x + lr.width / 2, ly = lr.y + lr.height / 2;
+            const arrow = String.fromCharCode(8594); // dependency lines contain '→'
+            let best = null, bestDist = Infinity;
+            for (const g of document.querySelectorAll('#svgcanvas g.hoverable')) {
+                if (g.textContent.includes(arrow)) continue;
+                const r = g.getBoundingClientRect();
+                const cx = r.x + r.width / 2, cy = r.y + r.height / 2;
+                const d = (cx - lx) ** 2 + (cy - ly) ** 2;
+                if (d < bestDist) { bestDist = d; best = [cx, cy]; }
+            }
+            return best;
+        }";
+
+        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        float[]? previous = null;
+        bool wasEverFound = false;
+
+        while (stopwatch.Elapsed < timeout)
+        {
+            float[]? point = await page.EvaluateAsync<float[]?>(FindNodePointScript, visibleName);
+            wasEverFound |= point is not null;
+
+            bool isStable =
+                point is not null
+                && previous is not null
+                && Math.Abs(point[0] - previous[0]) < 1
+                && Math.Abs(point[1] - previous[1]) < 1;
+            if (isStable)
+                return point!;
+
+            previous = point;
+            await Task.Delay(100);
+        }
+
+        throw new InvalidOperationException(
+            wasEverFound
+                ? $"Node with visible label '{visibleName}' did not stop moving within {timeout.TotalSeconds}s."
+                : $"No node with visible label '{visibleName}' is rendered on the canvas."
+        );
     }
 
     // Navigate to the main page app and wait until the initial model has loaded and rendered (the
