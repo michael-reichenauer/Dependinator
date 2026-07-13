@@ -26,6 +26,8 @@ sealed class HybridCloudSyncService : ICloudSyncService
 
     public Task<R<CloudAuthState>> LogoutAsync() => ForwardAsync(service => service.LogoutAsync());
 
+    public Task<R> OpenUserProfileAsync() => ForwardAsync(service => service.OpenUserProfileAsync());
+
     public Task<R<CloudAuthState>> GetAuthStateAsync() => ForwardAsync(service => service.GetAuthStateAsync());
 
     public Task<R<CloudModelList>> ListAsync() => ForwardAsync(service => service.ListAsync());
@@ -40,6 +42,14 @@ sealed class HybridCloudSyncService : ICloudSyncService
     // The bridge is injected by the VS Code webview before the app boots, so the answer cannot
     // change during a session and is cached after the first JS interop roundtrip.
     async Task<R<T>> ForwardAsync<T>(Func<ICloudSyncService, Task<R<T>>> action)
+    {
+        isVsCodeProxyAvailable ??= await vsCodeCloudSyncProxy.IsAvailableAsync();
+
+        ICloudSyncService service = isVsCodeProxyAvailable.Value ? vsCodeCloudSyncProxy : httpCloudSyncService;
+        return await action(service);
+    }
+
+    async Task<R> ForwardAsync(Func<ICloudSyncService, Task<R>> action)
     {
         isVsCodeProxyAvailable ??= await vsCodeCloudSyncProxy.IsAvailableAsync();
 

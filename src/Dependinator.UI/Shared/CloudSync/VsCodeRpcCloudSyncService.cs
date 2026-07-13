@@ -54,6 +54,10 @@ class VsCodeRpcCloudSyncService : IVsCodeCloudSyncService
         return await CallAsync("login", () => rpcService.LoginAsync(), loginRequestTimeout);
     }
 
+    // Clerk's profile UI cannot be shown in the VS Code webview; account management is browser-only.
+    public Task<R> OpenUserProfileAsync() =>
+        Task.FromResult<R>(R.Error("Account management is not available in VS Code."));
+
     public async Task<R<CloudAuthState>> LogoutAsync()
     {
         return await CallAsync("logout", () => rpcService.LogoutAsync());

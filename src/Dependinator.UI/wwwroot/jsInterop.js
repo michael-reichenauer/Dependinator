@@ -510,6 +510,15 @@ export async function clerkSignOut() {
   return true;
 }
 
+// Opens Clerk's user profile modal, where users manage account security (e.g. register passkeys).
+export async function clerkOpenUserProfile() {
+  console.log("DEP: clerkOpenUserProfile called");
+  const clerk = await waitForClerk();
+  if (!clerk.user) return false;
+  clerk.openUserProfile();
+  return true;
+}
+
 export async function clerkIsAuthenticated() {
   try {
     const clerk = await waitForClerk();

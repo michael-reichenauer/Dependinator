@@ -137,6 +137,13 @@
                     <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Device Sync</MudText>
                     @if (AuthState.IsAuthenticated)
                     {
+                        @if (!Build.IsVsCodeExtWasm)
+                        {
+                            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ManageAccounts"
+                                         OnClick="ManageAccountAsync" data-testid="menu-manage-account">
+                                Manage Account
+                            </MudMenuItem>
+                        }
                         <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudOff" OnClick="LogoutAsync"
                                      data-testid="menu-logout">
                             Disable Device Sync
@@ -440,6 +447,14 @@
         }
 
         snackbar.Add("Device sync is disabled.", Severity.Info);
+    }
+
+    async Task ManageAccountAsync()
+    {
+        if (!Try(out var error, await appCloudSyncService.ManageAccountAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+        }
     }
 
     async Task ResolveConflictAsync()

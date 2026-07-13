@@ -49,6 +49,9 @@ interface IAppCloudSyncService
     // Starts logout flow and clears cloud-backed state from UI cache.
     Task<R> LogoutAsync();
 
+    // Opens the account management UI (browser hosts only), e.g. to register passkeys.
+    Task<R> ManageAccountAsync();
+
     // Pushes the active model to cloud and updates the local sync marker.
     Task<R<CloudModelMetadata>> SyncUpAsync();
 
@@ -162,6 +165,11 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
         authState = state;
         return await RefreshSnapshotAndNotifyAsync(allowAutoSync: false);
+    }
+
+    public async Task<R> ManageAccountAsync()
+    {
+        return await cloudSyncService.OpenUserProfileAsync();
     }
 
     public async Task<R> LogoutAsync()

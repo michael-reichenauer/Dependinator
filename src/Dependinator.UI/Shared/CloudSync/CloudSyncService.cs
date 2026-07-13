@@ -13,6 +13,7 @@ interface ICloudSyncService
 
     Task<R<CloudAuthState>> LoginAsync();
     Task<R<CloudAuthState>> LogoutAsync();
+    Task<R> OpenUserProfileAsync();
     Task<R<CloudAuthState>> GetAuthStateAsync();
     Task<R<CloudModelList>> ListAsync();
     Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto);
@@ -32,6 +33,8 @@ class NoCloudSyncService : ICloudSyncService
     public Task<R<CloudAuthState>> LoginAsync() => NotAvailableAsync<CloudAuthState>();
 
     public Task<R<CloudAuthState>> LogoutAsync() => NotAvailableAsync<CloudAuthState>();
+
+    public Task<R> OpenUserProfileAsync() => Task.FromResult<R>(R.Error(NotAvailableError));
 
     public Task<R<CloudAuthState>> GetAuthStateAsync() => Task.FromResult<R<CloudAuthState>>(unavailableState);
 

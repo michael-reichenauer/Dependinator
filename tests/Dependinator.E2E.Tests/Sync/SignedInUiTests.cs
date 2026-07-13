@@ -49,6 +49,7 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
         await App.Menu.ClickAsync();
         await App.MenuItem("menu-models").HoverAsync();
         await Expect(App.MenuItem("menu-logout")).ToBeVisibleAsync();
+        await Expect(App.MenuItem("menu-manage-account")).ToBeVisibleAsync();
 
         // ... and the Cloud Models submenu is enabled (i.e. the seeded model was listed) ...
         await Expect(App.MenuItem("menu-cloud-models")).Not.ToHaveClassAsync(Disabled);

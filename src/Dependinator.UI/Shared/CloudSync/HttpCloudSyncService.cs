@@ -44,6 +44,23 @@ sealed class HttpCloudSyncService : ICloudSyncService
         }
     }
 
+    // Opens Clerk's user profile modal, where users manage account security (e.g. register passkeys).
+    public async Task<R> OpenUserProfileAsync()
+    {
+        try
+        {
+            bool success = await jsInterop.Call<bool>("clerkOpenUserProfile");
+            if (!success)
+                return R.Error("Sign in before managing the account.");
+
+            return R.Ok;
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
+    }
+
     // Signs out via Clerk.
     public async Task<R<CloudAuthState>> LogoutAsync()
     {
