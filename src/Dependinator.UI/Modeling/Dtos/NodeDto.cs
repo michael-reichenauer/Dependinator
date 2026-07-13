@@ -24,6 +24,10 @@ record NodeDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Color { get; init; }
 
+    // User-selected container color; omitted when the node uses its auto-assigned Color.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? CustomColor { get; init; }
+
     // User-selected icon name; omitted when the node uses the node-type default icon.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? IconName { get; init; }

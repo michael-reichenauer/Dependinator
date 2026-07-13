@@ -73,4 +73,34 @@ public class NodeIconPersistenceTests
 
         Assert.Null(node.CustomIconName);
     }
+
+    [Fact]
+    public void ToDto_And_SetFromDto_ShouldRoundTripIconColorAndCustomColor()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var node = new ModelNode("Node", root)
+        {
+            Type = NodeType.ClassType,
+            CustomIconColor = "Blue",
+            CustomColor = "Teal",
+        };
+
+        var dto = node.ToDto();
+        Assert.Equal("Blue", dto.IconColor);
+        Assert.Equal("Teal", dto.CustomColor);
+
+        var restored = new ModelNode("Node", root);
+        restored.SetFromDto(dto);
+        Assert.Equal("Blue", restored.CustomIconColor);
+        Assert.Equal("Teal", restored.CustomColor);
+    }
+
+    [Fact]
+    public void Serialize_ShouldOmitIconColorAndCustomColor_WhenNull()
+    {
+        var json = JsonSerializer.Serialize(MakeDto(null), Options);
+
+        Assert.DoesNotContain("IconColor", json);
+        Assert.DoesNotContain("CustomColor", json);
+    }
 }

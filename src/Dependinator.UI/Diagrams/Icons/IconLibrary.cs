@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Dependinator.UI.Shared;
 
 // The built-in icon library: loads and caches node icons from embedded .svg resources for use
 // in the diagram.
@@ -32,35 +33,21 @@ static class IconLibrary
     // nuance (gradients, slightly blue-leaning tones) is preserved in every variant.
     const double BaseHue = 252;
 
-    // Colors below this saturation are neutral detail marks (white text bars, gray accents) and
-    // are kept as-is when recoloring.
-    const double NeutralSaturation = 0.05;
-
-    // The Gray variant desaturates instead of re-hueing, matching the muted look of Private.svg.
-    const double GraySaturationScale = 0.15;
-
     // The canonical violet used to derive each variant's swatch hex, so picker dots always match
     // the recolored icons (also the "Default" swatch).
     public const string DefaultSwatch = "#7B6BE8";
 
-    // Selectable tints besides the default violet; a null hue means desaturate (Gray).
-    static readonly (string Name, double? Hue)[] ColorDefinitions =
-    [
-        ("Blue", 215),
-        ("Teal", 180),
-        ("Green", 145),
-        ("Amber", 40),
-        ("Rose", 340),
-        ("Gray", null),
-    ];
-
     static readonly Lazy<Cache> cache = new(Load);
 
-    // The selectable icon tints, for rendering color pickers (the default violet is represented
-    // by a separate "Default" entry using DefaultSwatch, not listed here).
+    // The selectable icon tints (the shared accent colors, see ColorUtil), for rendering color
+    // pickers (the default violet is represented by a separate "Default" entry using
+    // DefaultSwatch, not listed here).
     public static readonly IReadOnlyList<IconColor> IconColors =
     [
-        .. ColorDefinitions.Select(color => new IconColor(color.Name, RecolorHex(DefaultSwatch, color.Hue))),
+        .. ColorUtil.AccentColors.Select(color => new IconColor(
+            color.Name,
+            ColorUtil.ShiftHue(DefaultSwatch, BaseHue, color.Hue)
+        )),
     ];
 
     // The id of an icon's color variant in the library/defs, e.g. ("Type", "Blue") -> "Type--Blue".
@@ -106,7 +93,7 @@ static class IconLibrary
         var svgs = icons.Select(i => i.Svg).ToList();
         foreach (var icon in icons)
         {
-            foreach (var (colorName, hue) in ColorDefinitions)
+            foreach (var (colorName, hue) in ColorUtil.AccentColors)
             {
                 var variantSvg = Recolor(icon.Svg, colorName, hue);
                 byName[VariantName(icon.Name, colorName)] = variantSvg;
@@ -132,77 +119,8 @@ static class IconLibrary
         return Regex.Replace(
             svg,
             "(?<=\")#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?=\")",
-            match => RecolorHex(match.Value, hue)
+            match => ColorUtil.ShiftHue(match.Value, BaseHue, hue)
         );
-    }
-
-    // Re-hues one #RGB/#RRGGBB color (or desaturates it when hue is null), keeping saturation and
-    // lightness; near-neutral colors (white/gray details) are returned unchanged.
-    static string RecolorHex(string hex, double? hue)
-    {
-        var (r, g, b) = ParseHex(hex);
-        var (h, s, l) = RgbToHsl(r, g, b);
-        if (s < NeutralSaturation)
-            return hex;
-
-        (h, s) = hue is { } targetHue
-            ? (((h + targetHue - BaseHue) % 360 + 360) % 360, s)
-            : (h, s * GraySaturationScale);
-        var (nr, ng, nb) = HslToRgb(h, s, l);
-        return $"#{nr:X2}{ng:X2}{nb:X2}";
-    }
-
-    static (int R, int G, int B) ParseHex(string hex)
-    {
-        var value = hex[1..];
-        if (value.Length == 3)
-            value = $"{value[0]}{value[0]}{value[1]}{value[1]}{value[2]}{value[2]}";
-        return (Convert.ToInt32(value[..2], 16), Convert.ToInt32(value[2..4], 16), Convert.ToInt32(value[4..6], 16));
-    }
-
-    static (double H, double S, double L) RgbToHsl(int red, int green, int blue)
-    {
-        var r = red / 255.0;
-        var g = green / 255.0;
-        var b = blue / 255.0;
-        var max = Math.Max(r, Math.Max(g, b));
-        var min = Math.Min(r, Math.Min(g, b));
-        var l = (max + min) / 2;
-
-        if (max == min)
-            return (0, 0, l);
-
-        var d = max - min;
-        var s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        var h =
-            max == r ? ((g - b) / d + (g < b ? 6 : 0)) * 60
-            : max == g ? ((b - r) / d + 2) * 60
-            : ((r - g) / d + 4) * 60;
-        return (h, s, l);
-    }
-
-    static (int R, int G, int B) HslToRgb(double h, double s, double l)
-    {
-        if (s == 0)
-        {
-            var value = (int)Math.Round(l * 255);
-            return (value, value, value);
-        }
-
-        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        var p = 2 * l - q;
-        return (Channel(p, q, h + 120), Channel(p, q, h), Channel(p, q, h - 120));
-    }
-
-    static int Channel(double p, double q, double hue)
-    {
-        hue = (hue % 360 + 360) % 360;
-        var value =
-            hue < 60 ? p + (q - p) * hue / 60
-            : hue < 180 ? q
-            : hue < 240 ? p + (q - p) * (240 - hue) / 60
-            : p;
-        return (int)Math.Round(value * 255);
     }
 
     static bool TryParse(string resourceName, string svg, out IconInfo icon)

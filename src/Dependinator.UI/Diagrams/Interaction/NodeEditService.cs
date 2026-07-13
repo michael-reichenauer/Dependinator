@@ -18,6 +18,7 @@ interface INodeEditService
     void DecreaseNodeSize(NodeId nodeId);
     void SetNodeIcon(NodeId nodeId, string? iconName);
     void SetNodeIconColor(NodeId nodeId, string? colorName);
+    void SetNodeColor(NodeId nodeId, string? colorName);
 }
 
 [Scoped]
@@ -198,6 +199,20 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         }
 
         commandService.Do(new NodeEditCommand(nodeId) { IconColor = colorName ?? "" });
+    }
+
+    // Sets the node's container color; null clears it back to the auto-assigned color.
+    public void SetNodeColor(NodeId nodeId, string? colorName)
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
+                return;
+            if (node.CustomColor == colorName)
+                return;
+        }
+
+        commandService.Do(new NodeEditCommand(nodeId) { CustomColor = colorName ?? "" });
     }
 
     public void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
