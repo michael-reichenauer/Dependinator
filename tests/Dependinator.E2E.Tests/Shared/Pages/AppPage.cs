@@ -141,7 +141,9 @@ public sealed class AppPage
             await Task.Delay(100);
         }
 
-        throw new InvalidOperationException($"Container node '{label}' did not render/stabilize within {timeout.TotalSeconds}s.");
+        throw new InvalidOperationException(
+            $"Container node '{label}' did not render/stabilize within {timeout.TotalSeconds}s."
+        );
     }
 
     // Select a diagram node by its visible (short) label — the text shown on the canvas,
@@ -242,11 +244,18 @@ public sealed class AppPage
         return new SearchDialog(page);
     }
 
-    // Make the page appear signed in to cloud sync without real Clerk: block the Clerk CDN
-    // and stub window.Clerk so clerkGetToken() returns a JWT minted by TestAuthToken, which
+    // Stub Clerk sign-in without the real Clerk: block the Clerk CDN and stub window.Clerk
+    // so that once signed in, clerkGetToken() returns a JWT minted by TestAuthToken, which
     // the local Functions host validates against the test JWKS (see ./e2e -s). Call this
     // BEFORE GotoAsync. Used by signed-in [SyncFact] UI flows.
-    public async Task SignInAsTestUserAsync(string sub = "e2e-test-user", string email = "e2e@dependinator.test")
+    //
+    // The stub starts signed OUT and only signs in when the app calls Clerk.openSignIn()
+    // (i.e. when a test clicks the cloud button). If the stub reported a user from page
+    // load, the app's background sync refresh would authenticate on its own before the
+    // click — racing the test, auto-syncing the demo model into the user's cloud storage,
+    // and sometimes flagging a sync conflict so the click opened a modal conflict dialog
+    // whose overlay then blocked the toolbar (flaky timeout).
+    public async Task StubClerkSignInAsync(string sub = "e2e-test-user", string email = "e2e@dependinator.test")
     {
         // The real Clerk CDN script would overwrite our stub, so prevent it from loading.
         await page.RouteAsync("**/*.clerk.accounts.dev/**", route => route.AbortAsync());
@@ -256,11 +265,19 @@ public sealed class AppPage
             $$"""
             window.Clerk = {
                 loaded: true,
-                user: { id: {{System.Text.Json.JsonSerializer.Serialize(sub)}} },
-                session: { getToken: async () => {{System.Text.Json.JsonSerializer.Serialize(token)}} },
+                user: null,
+                session: null,
+                listeners: [],
                 load: async () => {},
-                addListener: () => (() => {}),
-                openSignIn: () => {},
+                addListener: (fn) => { window.Clerk.listeners.push(fn); return () => {}; },
+                openSignIn: () => {
+                    window.Clerk.user = { id: {{System.Text.Json.JsonSerializer.Serialize(sub)}} };
+                    window.Clerk.session = { getToken: async () => {{System.Text.Json.JsonSerializer.Serialize(
+                token
+            )}} };
+                    // clerkSignIn (jsInterop.js) resolves via this listener (or its 1s poll).
+                    window.Clerk.listeners.forEach((fn) => fn({ user: window.Clerk.user, session: window.Clerk.session }));
+                },
                 closeSignIn: () => {},
                 signOut: async () => { window.Clerk.user = null; window.Clerk.session = null; },
             };

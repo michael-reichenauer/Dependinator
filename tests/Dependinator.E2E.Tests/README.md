@@ -135,7 +135,8 @@ as intent rather than selectors:
   `NodeToolbarMenu`), flows (`OpenSearchViaMenuAsync`, `OpenSearchViaHotkeyAsync`,
   `SelectNodeByFullNameAsync("Demo.Core.RootClass")` — full node name —
   `SelectNodeByVisibleNameAsync("RootClass")` — the short on-screen label), and
-  `SignInAsTestUserAsync()` for signed-in cloud-sync flows (call before `GotoAsync`).
+  `StubClerkSignInAsync()` for signed-in cloud-sync flows (call before `GotoAsync`; the
+  stub signs in when the app opens the Clerk sign-in, i.e. on the cloud-button click).
 - **`SearchDialog`** (`Shared/Pages/SearchDialog.cs`) — returned by the open-search flows;
   exposes `Field`, `Results`, `EmptyResult`, `FillAsync`, `CloseAsync`.
 
