@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Dependinator.Web")]
 [assembly: InternalsVisibleTo("Dependinator.Wasm")]
 [assembly: InternalsVisibleTo("Dependinator.Core.Tests")]
+[assembly: InternalsVisibleTo("Dependinator.DemoGen")]
 [assembly: InternalsVisibleTo("Dependinator.UI.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 

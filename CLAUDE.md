@@ -29,6 +29,9 @@ The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution fol
 **VS Code extension (not part of `Dependinator.sln`):**
 - `src/DependinatorVsCode/` — TypeScript extension packaging the web UI + language server (`src/extension.ts`, `src/webview.ts`, `src/languageServer.ts`, `src/cloudSyncAuth.ts`)
 
+**Dev tools (not part of `Dependinator.sln`):**
+- `src/Dependinator.DemoGen/` — console tool that regenerates the embedded demo model; run via `./gen-demo` (kept out of the solution so it never appears in the parsed model)
+
 ## Build & Development Commands
 
 ```bash
@@ -64,6 +67,9 @@ npm run compile --prefix ./src/DependinatorVsCode
 npm run package --prefix ./src/DependinatorVsCode
 npm run install:vsix --prefix ./src/DependinatorVsCode
 ./build-ext                                    # npm install + version bump + package
+
+# Demo model
+./gen-demo                                     # regenerate src/Dependinator.Wasm/wwwroot/demo.model by parsing Dependinator.sln
 
 # Packages
 ./updatepackages -u                            # upgrade non-major packages

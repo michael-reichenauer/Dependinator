@@ -56,9 +56,6 @@ class SourceParser : ISourceParser
                 solutionNodes.AddRange(items);
             }
 
-            // Uncomment to regenerate the embedded demo model (see WriteCompressedDemoModelAsync)
-            // await WriteCompressedDemoModelAsync(solutionNodes, solutionPath);
-
             return solutionNodes;
         }
         catch (Exception e)
@@ -220,31 +217,6 @@ class SourceParser : ISourceParser
         catch (Exception e)
         {
             return R.Error(e);
-        }
-    }
-
-    // Dev tool for regenerating the embedded demo model: uncomment the call in
-    // ParseSolutionAsync and parse the working solution (e.g. run the Web host); the parsed
-    // items are written gzip-compressed to the Wasm wwwroot with "Dependinator" renamed "Demo".
-    static async Task WriteCompressedDemoModelAsync(IReadOnlyList<Item> solutionNodes, string solutionPath)
-    {
-        try
-        {
-            if (Build.IsWasm || solutionPath != DemoModel.WorkingSolutionPath)
-                return;
-            string outputPath = DemoModel.DemoOutputPath;
-            var json = Json.Serialize(solutionNodes);
-            json = json.Replace("Dependinator", "Demo");
-            await using var file = File.Create(outputPath);
-            await using var gzip = new GZipStream(file, CompressionLevel.SmallestSize);
-            await using var writer = new StreamWriter(gzip);
-            await writer.WriteAsync(json);
-            Log.Info($"Wrote demo model {json.Length} json size to {outputPath}");
-        }
-        catch (Exception ex)
-        {
-            Log.Exception(ex);
-            throw;
         }
     }
 
