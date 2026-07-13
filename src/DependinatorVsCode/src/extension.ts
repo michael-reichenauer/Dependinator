@@ -89,6 +89,54 @@ function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
     });
 }
 
+// Path segments that never affect the parsed model; also guards against
+// parse→change→parse loops since design-time builds can write under obj/.
+const autoRefreshIgnoredSegments = ["/obj/", "/bin/", "/node_modules/", "/.git/"];
+
+function isAutoRefreshRelevant(uri: vscode.Uri): boolean {
+    const path = uri.path.toLowerCase();
+    return !autoRefreshIgnoredSegments.some(segment => path.includes(segment));
+}
+
+/**
+ * Watches workspace source files and asks the webview UI to refresh (same as the
+ * Refresh toolbar button) a few seconds after the last change. Returns the
+ * disposables owning the watcher and its pending debounce timer.
+ */
+function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
+    const watcher = vscode.workspace.createFileSystemWatcher("**/*.{cs,csproj,sln}");
+    let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const onFileEvent = (uri: vscode.Uri): void => {
+        if (!isAutoRefreshRelevant(uri))
+            return;
+
+        // Read config at event time so toggling the setting needs no reload.
+        const config = vscode.workspace.getConfiguration("dependinator.autoRefresh");
+        if (!config.get<boolean>("enabled", true))
+            return;
+
+        const delaySeconds = Math.max(1, config.get<number>("delaySeconds", 3));
+        if (pendingTimer)
+            clearTimeout(pendingTimer);
+        pendingTimer = setTimeout(() => {
+            pendingTimer = undefined;
+            logger.log("Source files changed, refreshing diagram");
+            panel.webview.postMessage({ type: "ui/refresh", message: "" });
+        }, delaySeconds * 1000);
+    };
+
+    watcher.onDidCreate(onFileEvent);
+    watcher.onDidChange(onFileEvent);
+    watcher.onDidDelete(onFileEvent);
+
+    return new vscode.Disposable(() => {
+        if (pendingTimer)
+            clearTimeout(pendingTimer);
+        watcher.dispose();
+    });
+}
+
 /** Opens a source file at a "<file-path>@<line>" location beside the webview. */
 async function showEditorForLocation(fileLocation: string, panel: vscode.WebviewPanel): Promise<void> {
     if (fileLocation.length === 0) {
@@ -205,7 +253,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         const panel = createDependinatorWebviewPanel(context);
 
         activePanel = panel;
+        const autoRefresh = registerAutoRefresh(panel);
         panel.onDidDispose(() => {
+            autoRefresh.dispose();
             if (activePanel === panel)
                 activePanel = undefined;
         });
