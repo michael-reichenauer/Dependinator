@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.Azure.Functions.Worker.Http;
+using Shared;
 
 namespace Api;
 
@@ -26,6 +27,4 @@ static class ResponseFactory
     {
         return JsonAsync(request, statusCode, new ErrorResponse(message), cancellationToken);
     }
-
-    sealed record ErrorResponse(string Message);
 }

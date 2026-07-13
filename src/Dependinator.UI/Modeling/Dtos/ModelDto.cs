@@ -7,7 +7,7 @@ namespace Dependinator.UI.Modeling.Dtos;
 [Serializable]
 record ModelDto
 {
-    public static string CurrentFormatVersion = "7";
+    public const string CurrentFormatVersion = "7";
     public string FormatVersion { get; init; } = CurrentFormatVersion;
 
     public required string Name { get; init; }

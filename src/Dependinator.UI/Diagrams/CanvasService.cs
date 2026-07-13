@@ -1,4 +1,5 @@
 using Dependinator.Core.Shared;
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
@@ -14,93 +15,51 @@ namespace Dependinator.UI.Diagrams;
 interface ICanvasService
 {
     string SvgContent { get; }
-    string TileKeyText { get; }
     Rect SvgRect { get; }
-    string TileViewBox { get; }
-    Pos Offset { get; }
-    double Zoom { get; }
     string SvgViewBox { get; }
     string Cursor { get; }
-    string TitleInfo { get; }
-    string DiagramName { get; }
 
     Task InitAsync();
-    void OpenFiles();
-    void ToggleTheme();
-    public void Remove();
-    void Refresh();
-    void Clear();
+    Task RemoveAsync();
+    Task RefreshAsync();
     void PanZoomToFit();
-    void InitialShow();
+    Task InitialShowAsync();
     Task LoadAsync(string modelPath);
     Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles);
-    Task<IReadOnlyList<string>> GetModelPaths();
 }
 
 [Scoped]
-class CanvasService : ICanvasService
+class CanvasService(
+    IScreenService screenService,
+    IPanZoomService panZoomService,
+    IModelService modelService,
+    IModelMgr modelMgr,
+    ISvgService svgService,
+    IApplicationEvents applicationEvents,
+    IJSInterop jSInteropService,
+    IFileService fileService,
+    IBrowserFileService browserFileService,
+    IModelListService recentModelsService,
+    IInteractionService interactionService,
+    IDialogService dialogService
+) : ICanvasService
 {
-    readonly IScreenService screenService;
-    readonly IPanZoomService panZoomService;
-    readonly IModelService modelService;
-    readonly IModelMgr modelMgr;
-    readonly ISvgService svgService;
-    readonly IApplicationEvents applicationEvents;
-    readonly IJSInterop jSInteropService;
-    readonly IFileService fileService;
-    readonly IBrowserFileService browserFileService;
-    readonly IModelListService recentModelsService;
-    readonly IInteractionService interactionService;
-    readonly IDialogService dialogService;
+    double levelZoom = 1;
+    Pos tileOffset = Pos.None;
+    string content = "";
 
-    public CanvasService(
-        IScreenService screenService,
-        IPanZoomService panZoomService,
-        IModelService modelService,
-        IModelMgr modelMgr,
-        ISvgService svgService,
-        IApplicationEvents applicationEvents,
-        IJSInterop jSInteropService,
-        IFileService fileService,
-        IBrowserFileService browserFileService,
-        IModelListService recentModelsService,
-        IInteractionService interactionService,
-        IDialogService dialogService
-    )
-    {
-        this.screenService = screenService;
-        this.panZoomService = panZoomService;
-        this.modelService = modelService;
-        this.modelMgr = modelMgr;
-        this.svgService = svgService;
-        this.applicationEvents = applicationEvents;
-        this.jSInteropService = jSInteropService;
-        this.fileService = fileService;
-        this.browserFileService = browserFileService;
-        this.recentModelsService = recentModelsService;
-        this.interactionService = interactionService;
-        this.dialogService = dialogService;
-    }
-
-    public string DiagramName { get; set; } = "Loading ...";
-    public string TitleInfo =>
-        $"Zoom: {1 / Zoom * 100:#}%, {1 / Zoom:0.#}x, L: {-(int)Math.Ceiling(Math.Log(Zoom) / Math.Log(7)) + 1}";
     public string SvgContent => GetSvgContent();
-    public string TileKeyText { get; private set; } = "()";
-    public double LevelZoom { get; private set; } = 1;
-    public string TileViewBox { get; private set; } = "";
-    public Pos TileOffset { get; private set; } = Pos.Zero;
-    public string Content { get; private set; } = "";
     public string Cursor => interactionService.Cursor;
 
     public Rect SvgRect => screenService.SvgRect;
-    public Pos Offset => modelMgr.WithModel(m => m.Offset);
-    public double Zoom => modelMgr.WithModel(m => m.Zoom);
-    public double ActualZoom => LevelZoom != 0 ? Zoom / LevelZoom : 0;
+    Pos Offset => modelMgr.WithModel(m => m.Offset);
+    double Zoom => modelMgr.WithModel(m => m.Zoom);
 
     public string SvgViewBox =>
-        LevelZoom != 0
-            ? $"{Offset.X / LevelZoom - TileOffset.X:0.##} {Offset.Y / LevelZoom - TileOffset.Y:0.##} {SvgRect.Width * Zoom / LevelZoom:0.##} {SvgRect.Height * Zoom / LevelZoom:0.##}"
+        levelZoom != 0
+            ? FormattableString.Invariant(
+                $"{Offset.X / levelZoom - tileOffset.X:0.##} {Offset.Y / levelZoom - tileOffset.Y:0.##} {SvgRect.Width * Zoom / levelZoom:0.##} {SvgRect.Height * Zoom / levelZoom:0.##}"
+            )
             : "0 0 0 0";
 
     public async Task InitAsync()
@@ -108,7 +67,7 @@ class CanvasService : ICanvasService
         await interactionService.InitAsync();
     }
 
-    public async void InitialShow()
+    public async Task InitialShowAsync()
     {
         bool isShowDemoMessage = false;
         using var t = Timing.Start("InitialShow");
@@ -139,14 +98,12 @@ class CanvasService : ICanvasService
 
     public async Task LoadAsync(string modelPath)
     {
-        DiagramName = $"Loading {modelPath} ...";
         applicationEvents.TriggerUIStateChanged();
         await Task.Yield();
 
         if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath)))
             return;
 
-        DiagramName = modelMgr.WithModel(m => Path.GetFileNameWithoutExtension(m.Path));
         PanZoomModel(modelInfo);
 
         await recentModelsService.AddModelAsync(modelInfo.Path);
@@ -174,7 +131,7 @@ class CanvasService : ICanvasService
         }
     }
 
-    public async void Remove()
+    public async Task RemoveAsync()
     {
         var lastUsedPath = recentModelsService.LastUsedPath;
         if (lastUsedPath is not null)
@@ -189,27 +146,6 @@ class CanvasService : ICanvasService
         await LoadAsync(lastUsedPath);
     }
 
-    public async void OpenFiles()
-    {
-        await jSInteropService.Call("clickElement", "inputfile");
-    }
-
-    public void ToggleTheme()
-    {
-        DColors.IsDark = !DColors.IsDark;
-
-        modelService.ClearCache();
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-    public async Task<IReadOnlyList<string>> GetModelPaths()
-    {
-        if (!Try(out var paths, out var eee, await fileService.GetFilePathsAsync()))
-            return [];
-
-        return paths.Where(p => Path.GetDirectoryName(p) == "/models").ToList();
-    }
-
     public void PanZoomToFit()
     {
         var bound = modelMgr.WithModel(m => m.Root.GetTotalBounds());
@@ -217,16 +153,9 @@ class CanvasService : ICanvasService
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public async void Refresh()
+    public async Task RefreshAsync()
     {
         await modelService.RefreshAsync();
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-    public void Clear()
-    {
-        modelService.Clear();
-
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -238,19 +167,16 @@ class CanvasService : ICanvasService
         var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
         var tile = svgService.GetTile(viewRect, Zoom);
 
-        if (Content == tile.Svg)
-            return Content; // No change
+        if (content == tile.Svg)
+            return content; // No change
 
-        Content = tile.Svg;
-        LevelZoom = tile.Zoom;
+        content = tile.Svg;
+        levelZoom = tile.Zoom;
         var tileViewRect = tile.Key.GetViewRect();
-        TileOffset = new Pos(-tile.Offset.X + tileViewRect.X, -tile.Offset.Y + tileViewRect.Y);
-
-        TileKeyText = $"{tile.Key}"; // Log info
-        TileViewBox = $"{tileViewRect}"; // Log info
+        tileOffset = new Pos(-tile.Offset.X + tileViewRect.X, -tile.Offset.Y + tileViewRect.Y);
 
         applicationEvents.TriggerUIStateChanged();
-        return Content;
+        return content;
     }
 
     async Task ShowDemoMessageAsync()

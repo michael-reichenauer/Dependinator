@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using Dependinator.Core.CloudSync;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.CloudSync;
 using Microsoft.Extensions.Options;
@@ -19,7 +20,7 @@ public class HybridCloudSyncServiceTests
     {
         RecordingHandler httpHandler = new();
         CloudModelList expected = new([]);
-        Mock<IVsCodeCloudSyncProxy> proxy = new();
+        Mock<IVsCodeCloudSyncService> proxy = new();
         proxy.Setup(p => p.IsAvailableAsync()).ReturnsAsync(true);
         proxy.Setup(p => p.ListAsync()).ReturnsAsync((R<CloudModelList>)expected);
         HybridCloudSyncService sut = new(CreateHttpService(httpHandler), proxy.Object);
@@ -36,7 +37,7 @@ public class HybridCloudSyncServiceTests
     public async Task ListAsync_ShouldRouteToHttp_WhenProxyIsUnavailable()
     {
         RecordingHandler httpHandler = new();
-        Mock<IVsCodeCloudSyncProxy> proxy = new();
+        Mock<IVsCodeCloudSyncService> proxy = new();
         proxy.Setup(p => p.IsAvailableAsync()).ReturnsAsync(false);
         HybridCloudSyncService sut = new(CreateHttpService(httpHandler), proxy.Object);
 
@@ -53,7 +54,7 @@ public class HybridCloudSyncServiceTests
     {
         RecordingHandler httpHandler = new();
         CloudAuthState expected = new(IsAvailable: true, IsAuthenticated: true, User: null);
-        Mock<IVsCodeCloudSyncProxy> proxy = new();
+        Mock<IVsCodeCloudSyncService> proxy = new();
         proxy.Setup(p => p.IsAvailableAsync()).ReturnsAsync(true);
         proxy.Setup(p => p.LoginAsync()).ReturnsAsync((R<CloudAuthState>)expected);
         HybridCloudSyncService sut = new(CreateHttpService(httpHandler), proxy.Object);
@@ -69,7 +70,7 @@ public class HybridCloudSyncServiceTests
     [Fact]
     public void IsAvailable_ShouldReflectHttpTransport()
     {
-        Mock<IVsCodeCloudSyncProxy> proxy = new();
+        Mock<IVsCodeCloudSyncService> proxy = new();
 
         HybridCloudSyncService enabled = new(CreateHttpService(new RecordingHandler(), enabled: true), proxy.Object);
         HybridCloudSyncService disabled = new(CreateHttpService(new RecordingHandler(), enabled: false), proxy.Object);
@@ -82,7 +83,17 @@ public class HybridCloudSyncServiceTests
     {
         HttpClient httpClient = new(httpHandler);
         CloudSyncClientOptions options = new() { Enabled = enabled, ApiBaseAddress = "http://localhost/" };
-        return new HttpCloudSyncService(httpClient, new FakeJsInterop(), Options.Create(options));
+        CloudSyncHttpClient cloudSyncHttpClient = new(httpClient, new FakeApiContext(enabled, options.ApiBaseAddress));
+        return new HttpCloudSyncService(cloudSyncHttpClient, new FakeJsInterop(), Options.Create(options));
+    }
+
+    sealed class FakeApiContext(bool isEnabled, string? apiBaseAddress) : ICloudSyncApiContext
+    {
+        public bool IsEnabled => isEnabled;
+
+        public string? ApiBaseAddress => apiBaseAddress;
+
+        public Task<string?> GetAccessTokenAsync(CancellationToken ct) => Task.FromResult<string?>(null);
     }
 
     // Counts HTTP requests so a test can assert whether the HTTP transport was exercised.

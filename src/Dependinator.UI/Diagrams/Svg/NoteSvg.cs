@@ -1,7 +1,9 @@
 using System.Web;
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
+using static System.FormattableString;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
@@ -9,14 +11,10 @@ namespace Dependinator.UI.Diagrams.Svg;
 // with the description exposed as a native SVG <title> tooltip on hover. A note is a Node with
 // IsNote set, placed on the root canvas; it reuses the normal node id scheme so selection,
 // dragging and deletion flow through the existing interaction pipeline.
-class NoteSvg
+static class NoteSvg
 {
-    // Fraction of the average glyph advance relative to the font size (matches NodeSvg).
-    const double AverageCharWidthFactor = 0.6;
-
     // The note stops growing once the render zoom passes this factor, so zooming in keeps the
-    // marker a readable, fixed on-screen size instead of an ever-larger circle. Mirrors how node
-    // name/icon text caps at NodeSvg.MaxTextZoom (kept in sync with that value).
+    // marker a readable, fixed on-screen size instead of an ever-larger circle.
     const double MaxNoteZoom = 1.0;
 
     public static string GetNoteSvg(Node node, Rect canvasRect, double zoom)
@@ -40,14 +38,17 @@ class NoteSvg
 
         // The visible circle is the hover/hit target (id resolves to the node); the id text is drawn
         // on top with pointer-events="none" so it is not stroked by the .hoverable:hover rule.
-        return $"""
-            <g class="hoverable" id="{elementId}">
-              <circle id="{elementId}" cx="{cx:0.##}" cy="{cy:0.##}" r="{r:0.##}" fill="{DColors.NoteFill}" stroke="{DColors.NoteBorder}" stroke-width="{strokeWidth:0.##}" />
-              <title>{title}</title>
-            </g>
-            <text x="{cx:0.##}" y="{cy:0.##}" text-anchor="middle" dominant-baseline="central" font-family="Verdana, Helvetica, Arial, sans-serif" font-weight="bold" font-size="{fontSize:0.##}px" fill="{DColors.NoteText}" pointer-events="none">{id}</text>
-            {SelectedNoteSvg(node, cx, cy, r)}
-            """.Trim();
+        return Invariant(
+                $"""
+                <g class="hoverable" id="{elementId}">
+                  <circle id="{elementId}" cx="{cx:0.##}" cy="{cy:0.##}" r="{r:0.##}" fill="{DColors.NoteFill}" stroke="{DColors.NoteBorder}" stroke-width="{strokeWidth:0.##}" />
+                  <title>{title}</title>
+                </g>
+                <text x="{cx:0.##}" y="{cy:0.##}" text-anchor="middle" dominant-baseline="central" font-family="Verdana, Helvetica, Arial, sans-serif" font-weight="bold" font-size="{fontSize:0.##}px" fill="{DColors.NoteText}" pointer-events="none">{id}</text>
+                {SelectedNoteSvg(node, cx, cy, r)}
+                """
+            )
+            .Trim();
     }
 
     // Largest font size that keeps the id text (about 2-3 chars) inside the circle, capped so a
@@ -56,7 +57,7 @@ class NoteSvg
     {
         var len = Math.Max(1, shortName.Length);
         var maxTextWidth = radius * 1.6; // leave a little padding inside the diameter
-        var byWidth = maxTextWidth / (len * AverageCharWidthFactor);
+        var byWidth = maxTextWidth / (len * NodeSvg.AverageCharWidthFactor);
         return Math.Min(radius * 1.1, byWidth);
     }
 
@@ -66,6 +67,8 @@ class NoteSvg
             return "";
 
         var ringRadius = r + Math.Max(3, r * 0.25);
-        return $"""<circle cx="{cx:0.##}" cy="{cy:0.##}" r="{ringRadius:0.##}" fill="none" stroke="{DColors.Selected}" stroke-width="0.5" stroke-dasharray="5,5" pointer-events="none" />""";
+        return Invariant(
+            $"""<circle cx="{cx:0.##}" cy="{cy:0.##}" r="{ringRadius:0.##}" fill="none" stroke="{DColors.Selected}" stroke-width="0.5" stroke-dasharray="5,5" pointer-events="none" />"""
+        );
     }
 }

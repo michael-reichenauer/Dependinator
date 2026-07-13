@@ -1,11 +1,15 @@
 import * as vscode from "vscode";
 import type { LanguageClient, LanguageClientOptions, ServerOptions } from "vscode-languageclient/node";
+import * as logger from "./logger";
 
+/**
+ * Locates and starts the Dependinator.Lsp server over stdio.
+ * Prefers a published self-contained exe; falls back to a DLL and finally `dotnet run`.
+ */
 export async function startLanguageServer(
     context: vscode.ExtensionContext
 ): Promise<LanguageClient | undefined> {
-    console.log("DEP: Starting Language Server in Extension");
-    // Prefer a prebuilt DLL; fallback to `dotnet run` without build/restore noise.
+    logger.log("Starting language server");
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
     const isRemoteWorkspace = !!workspaceFolder && workspaceFolder.scheme !== "file";
     const isRemoteExtensionHost = context.extensionUri.scheme !== "file";
@@ -28,7 +32,6 @@ export async function startLanguageServer(
             "Dependinator.Lsp.csproj"
         )
         : undefined;
-    console.log("DEP: workspaceProject", workspaceProject);
 
     const extensionProject = vscode.Uri.joinPath(
         context.extensionUri,
@@ -36,7 +39,6 @@ export async function startLanguageServer(
         "Dependinator.Lsp",
         "Dependinator.Lsp.csproj"
     );
-    console.log("DEP: extensionProject", extensionProject);
 
     const serverExeName = process.platform === "win32" ? "Dependinator.Lsp.exe" : "Dependinator.Lsp";
     const runtimeIdentifier = getRuntimeIdentifier();
@@ -55,7 +57,6 @@ export async function startLanguageServer(
             serverExeName
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
-    console.log("DEP: serverExeCandidates", serverExeCandidates);
 
     const serverDllCandidates: vscode.Uri[] = [
         vscode.Uri.joinPath(
@@ -82,7 +83,6 @@ export async function startLanguageServer(
             "Dependinator.Lsp.dll"
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);
-    console.log("DEP: serverDllCandidates", serverDllCandidates);
 
     let serverCommand = "dotnet";
     let serverArgs: string[] | undefined;
@@ -90,12 +90,12 @@ export async function startLanguageServer(
     if (serverExe) {
         serverCommand = serverExe.fsPath;
         serverArgs = [];
-        console.log("DEP: Using server exe:", serverExe.fsPath);
+        logger.log("Using server exe:", serverExe.fsPath);
     } else {
         const serverDll = await firstExisting(serverDllCandidates);
         if (serverDll) {
             serverArgs = [serverDll.fsPath];
-            console.log("DEP: Using server dll:", serverDll.fsPath);
+            logger.log("Using server dll:", serverDll.fsPath);
         } else {
             const projectCandidates = [workspaceProject, extensionProject].filter(
                 (candidate): candidate is vscode.Uri => !!candidate
@@ -110,9 +110,9 @@ export async function startLanguageServer(
                     "--no-restore",
                     "--nologo"
                 ];
-                console.log("DEP: Using server project:", project.fsPath);
+                logger.log("Using server project:", project.fsPath);
             } else {
-                console.warn("Dependinator language server project not found.");
+                logger.warn("Dependinator language server project not found.");
                 return undefined;
             }
         }
@@ -145,8 +145,12 @@ export async function startLanguageServer(
         }
     };
 
+    // Hand the LSP its cloud-sync config and the stored access token at launch
+    // (node-only module, loaded dynamically like the language client itself).
+    const { getCloudSyncInitializationOptions } = await import("./cloudSyncAuth");
     const clientOptions: LanguageClientOptions = {
-        documentSelector: [{ scheme: "file", language: "csharp" }]
+        documentSelector: [{ scheme: "file", language: "csharp" }],
+        initializationOptions: await getCloudSyncInitializationOptions(context)
     };
 
     const client = new LanguageClient(
@@ -156,13 +160,14 @@ export async function startLanguageServer(
         clientOptions
     );
 
-    console.log("DEP: Starting lsp client ...", serverOptions);
+    logger.log("Starting lsp client:", serverCommand, serverArgs);
     await client.start();
-    console.log("DEP: Started lsp client", serverOptions);
+    logger.log("Started lsp client");
     context.subscriptions.push(client);
     return client;
 }
 
+/** Routes "vscode/log" notifications from the LSP to the Dependinator output channel. */
 export function registerLanguageClientLogging(client: LanguageClient): void {
     client.onNotification("vscode/log", params => {
         const type = typeof params?.Type === "string" ? params.Type.toLowerCase() : "";
@@ -171,35 +176,35 @@ export function registerLanguageClientLogging(client: LanguageClient): void {
         switch (type) {
             case "warning":
             case "warn":
-                console.warn(message);
+                logger.warn(message);
                 break;
             case "error":
             case "err":
-                console.error(message);
+                logger.error(message);
                 break;
             case "log":
             case "info":
             default:
-                console.log(message);
+                logger.log(message);
                 break;
         }
     });
 }
 
+/** Forwards "ui/message" notifications from the LSP to the webview and tracks readiness. */
 export function registerUiMessageForwarding(
     client: LanguageClient,
     getWebview: () => vscode.Webview | undefined,
     onLspReady?: (params: unknown) => void
 ): void {
     client.onNotification("ui/message", params => {
-        // console.log("DEP: ui/message:", params);
         getWebview()?.postMessage({
             type: "ui/message",
             message: params?.message
         });
     });
     client.onNotification("ui/lspReady", params => {
-        console.log("DEP: ui/lspReady:", params);
+        logger.log("Language server is ready");
         onLspReady?.(params);
     });
 }
@@ -214,16 +219,16 @@ async function fileExists(uri: vscode.Uri): Promise<boolean> {
 }
 
 async function firstExisting(uris: vscode.Uri[]): Promise<vscode.Uri | undefined> {
-    console.log("DEP: Lsp candidate paths: ", uris);
     for (const uri of uris) {
         if (await fileExists(uri)) {
-            console.log("DEP: Lsp Exist path: ", uri);
             return uri;
         }
     }
     return undefined;
 }
 
+// Maps the Node platform/arch to the .NET runtime identifier of the bundled server.
+// Must stay in sync with the RIDs published by scripts/prepare-server.sh.
 function getRuntimeIdentifier(): string | undefined {
     const platform = process.platform;
     const arch = process.arch;

@@ -19,7 +19,7 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
 {
     readonly object syncRoot = new();
     readonly IApplicationEvents applicationEvents = applicationEvents;
-    readonly Dictionary<Guid, ProgressEntry> prominentEntries = new();
+    readonly Dictionary<Guid, ProgressEntry> entries = new();
 
     long updateStamp;
     string? prominentText;
@@ -67,7 +67,7 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
         lock (syncRoot)
         {
             var entry = new ProgressEntry(kind, ++updateStamp, NormalizeText(text));
-            prominentEntries[id] = entry;
+            entries[id] = entry;
             prominentText = FindLatestText();
         }
 
@@ -75,12 +75,12 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
         return new ProgressScope(this, kind, id);
     }
 
-    void Stop(ProgressKind _, Guid id)
+    void Stop(Guid id)
     {
         var changed = false;
         lock (syncRoot)
         {
-            if (prominentEntries.Remove(id))
+            if (entries.Remove(id))
             {
                 prominentText = FindLatestText();
                 changed = true;
@@ -96,7 +96,7 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
         var changed = false;
         lock (syncRoot)
         {
-            if (!prominentEntries.TryGetValue(id, out var entry))
+            if (!entries.TryGetValue(id, out var entry))
                 return;
             entry.Kind = kind;
             entry.Text = NormalizeText(text);
@@ -109,7 +109,7 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
             applicationEvents.TriggerUIStateChanged();
     }
 
-    string? NormalizeText(string? text) => string.IsNullOrWhiteSpace(text) ? null : text;
+    static string? NormalizeText(string? text) => string.IsNullOrWhiteSpace(text) ? null : text;
 
     string? FindLatestText() => FindLatest()?.Text;
 
@@ -118,7 +118,7 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
     ProgressEntry? FindLatest()
     {
         ProgressEntry? selected = null;
-        foreach (var entry in prominentEntries.Values)
+        foreach (var entry in entries.Values)
         {
             if (string.IsNullOrWhiteSpace(entry.Text))
                 continue;
@@ -152,13 +152,13 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
                 return;
 
             disposed = true;
-            owner.Stop(kind, id);
+            owner.Stop(id);
         }
     }
 
-    sealed class ProgressEntry(ProgressService.ProgressKind Kind, long updateStamp, string? text)
+    sealed class ProgressEntry(ProgressService.ProgressKind kind, long updateStamp, string? text)
     {
-        public ProgressKind Kind { get; set; } = Kind;
+        public ProgressKind Kind { get; set; } = kind;
         public long UpdateStamp { get; set; } = updateStamp;
         public string? Text { get; set; } = text;
     }

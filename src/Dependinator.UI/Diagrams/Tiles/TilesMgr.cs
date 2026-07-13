@@ -1,5 +1,6 @@
 // Tile cache for the diagram: splits the rendered SVG into cached tiles so panning and zooming
-// only regenerate the visible area.
+// only regenerate the visible area. Access is guarded by the scoped IStateMgr lock, which is
+// shared with ModelMgr, so model and tiles use one reentrant state lock.
 namespace Dependinator.UI.Diagrams.Tiles;
 
 interface ITilesMgr
@@ -37,9 +38,5 @@ class TilesMgr : ITilesMgr, IDisposable
         tileCacheAction(tilesCache);
     }
 
-    void ClearCache()
-    {
-        using var tilesCache = UseTiles();
-        tilesCache.ClearCache();
-    }
+    void ClearCache() => WithTiles(tiles => tiles.ClearCache());
 }

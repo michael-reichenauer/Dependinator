@@ -7,9 +7,13 @@ namespace Dependinator.UI.Shared.CloudSync;
 sealed class HybridCloudSyncService : ICloudSyncService
 {
     readonly HttpCloudSyncService httpCloudSyncService;
-    readonly IVsCodeCloudSyncProxy vsCodeCloudSyncProxy;
+    readonly IVsCodeCloudSyncService vsCodeCloudSyncProxy;
+    bool? isVsCodeProxyAvailable;
 
-    public HybridCloudSyncService(HttpCloudSyncService httpCloudSyncService, IVsCodeCloudSyncProxy vsCodeCloudSyncProxy)
+    public HybridCloudSyncService(
+        HttpCloudSyncService httpCloudSyncService,
+        IVsCodeCloudSyncService vsCodeCloudSyncProxy
+    )
     {
         this.httpCloudSyncService = httpCloudSyncService;
         this.vsCodeCloudSyncProxy = vsCodeCloudSyncProxy;
@@ -32,12 +36,14 @@ sealed class HybridCloudSyncService : ICloudSyncService
     // Gets current model over active transport selected by ForwardAsync{T}.
     public Task<R<ModelDto>> PullAsync(string modelPath) => ForwardAsync(service => service.PullAsync(modelPath));
 
-    // Selects and invokes the sync service based on whether the VS Code webview bridge is responsive.
+    // Selects and invokes the sync service based on whether the VS Code webview bridge is present.
+    // The bridge is injected by the VS Code webview before the app boots, so the answer cannot
+    // change during a session and is cached after the first JS interop roundtrip.
     async Task<R<T>> ForwardAsync<T>(Func<ICloudSyncService, Task<R<T>>> action)
     {
-        var isVsCodeProxyAvailable = await vsCodeCloudSyncProxy.IsAvailableAsync();
+        isVsCodeProxyAvailable ??= await vsCodeCloudSyncProxy.IsAvailableAsync();
 
-        ICloudSyncService service = isVsCodeProxyAvailable ? vsCodeCloudSyncProxy : httpCloudSyncService;
+        ICloudSyncService service = isVsCodeProxyAvailable.Value ? vsCodeCloudSyncProxy : httpCloudSyncService;
         return await action(service);
     }
 }

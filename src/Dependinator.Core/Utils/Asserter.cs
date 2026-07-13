@@ -14,29 +14,6 @@ public static class Asserter
 {
     public static event EventHandler<AsserterEventArgs>? AssertOccurred;
 
-    public static void NotNull(
-        object instance,
-        [CallerMemberName] string memberName = "",
-        [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0
-    )
-    {
-        Requires(instance != null, memberName, sourceFilePath, sourceLineNumber);
-    }
-
-    public static void Requires(
-        bool predicate,
-        [CallerMemberName] string memberName = "",
-        [CallerFilePath] string sourceFilePath = "",
-        [CallerLineNumber] int sourceLineNumber = 0
-    )
-    {
-        if (!predicate)
-        {
-            Fail("assert", memberName, sourceFilePath, sourceLineNumber);
-        }
-    }
-
     public static Exception FailFast(
         string errorMessage,
         [CallerMemberName] string memberName = "",

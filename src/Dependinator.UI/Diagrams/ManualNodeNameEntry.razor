@@ -58,8 +58,8 @@
   }
 
   string CssPosition =>
-      $"position:fixed;left:{manualEditService.NameEntryScreenPos.X:0.##}px;"
-      + $"top:{manualEditService.NameEntryScreenPos.Y:0.##}px;z-index:1400;";
+      FormattableString.Invariant($"position:fixed;left:{manualEditService.NameEntryScreenPos.X:0.##}px;")
+      + FormattableString.Invariant($"top:{manualEditService.NameEntryScreenPos.Y:0.##}px;z-index:1400;");
 
   void OnKeyDown(KeyboardEventArgs e)
   {

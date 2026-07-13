@@ -1,15 +1,28 @@
 using System.Buffers;
 using System.Buffers.Binary;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using StreamJsonRpc;
 using StreamJsonRpc.Protocol;
 
 namespace Dependinator.Core.Rpc;
 
-public delegate ValueTask WriteBinaryMessageActionAsync(ReadOnlyMemory<byte> binaryMessage, CancellationToken ct);
-public delegate ValueTask WriteBase64MessageActionAsync(string base64Message, CancellationToken ct);
+public delegate ValueTask SendBinaryMessageAsync(ReadOnlyMemory<byte> binaryMessage, CancellationToken ct);
+public delegate ValueTask SendBase64MessageAsync(string base64Message, CancellationToken ct);
 
+// StreamJsonRpc message handler that transfers JSON-RPC messages over a caller-provided send
+// action, either as binary or base64 (for string-based transports like the VS Code webview
+// and LSP tunnel). Two framing layers are applied on top of the serialized JSON payload:
+// * Compression: payloads >= MinCompressionPayloadSize are gzipped and prefixed with
+//   "DNG1" + <uncompressedLength>, but only when it actually saves space.
+// * Chunking: messages larger than MaxChunkSize are then split into ordered chunks, each
+//   prefixed with "DNK1" + <totalLength> + <offset>, and reassembled by the receiver, so the
+//   transports never see a single huge message.
+// Plain JSON payloads start with '{', so they cannot be mistaken for a prefixed message.
+// The peers are trusted (our own hosts); malformed or out-of-sequence messages are validated
+// for consistency, then logged and dropped, which leaves the remote caller's pending request
+// unanswered.
 public sealed class JsonRpcMessageHandler : MessageHandlerBase
 {
     const int MaxChunkSize = 1000 * 1024;
@@ -27,18 +40,18 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
     readonly SemaphoreSlim writeGate = new(1, 1);
     readonly object readGate = new();
     readonly Channel<ReadOnlyMemory<byte>> messagesChannel = Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
-    WriteBinaryMessageActionAsync sendBinaryMessageActionAsync = null!;
+    SendBinaryMessageAsync sendBinaryMessageAsync = null!;
     byte[]? pendingChunkBuffer;
     int pendingChunkTotalLength;
-    int pendingChunkBytesReceived;
     int pendingChunkNextOffset;
 
     public JsonRpcMessageHandler()
-        //       : base(new StreamJsonRpc.MessagePackFormatter()) { } // More efficient
         : base(CreateFormatter()) { }
 
     static IJsonRpcMessageFormatter CreateFormatter()
     {
+        // System.Text.Json is used (rather than the more compact MessagePackFormatter) so the
+        // custom converters for R/R<T> results in RPC interfaces can be applied.
         var formatter = new SystemTextJsonFormatter();
         formatter.JsonSerializerOptions.Converters.Add(new ResultJsonConverter());
         formatter.JsonSerializerOptions.Converters.Add(new ResultJsonConverterFactory());
@@ -48,25 +61,23 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
     public override bool CanRead => true;
     public override bool CanWrite => true;
 
-    // Registers the write message action, that should transfer the message to the "other" side
-    public void RegisterSendMessageAction(WriteBinaryMessageActionAsync sendBinaryMessageActionAsync)
+    // Registers the send message action, that should transfer the message to the "other" side
+    public void RegisterSendMessageAction(SendBinaryMessageAsync sendBinaryMessageAsync)
     {
-        if (sendBinaryMessageActionAsync is null)
-            throw new InvalidOperationException($"{nameof(sendBinaryMessageActionAsync)} cannot be null");
+        ArgumentNullException.ThrowIfNull(sendBinaryMessageAsync);
 
-        this.sendBinaryMessageActionAsync = sendBinaryMessageActionAsync;
+        this.sendBinaryMessageAsync = sendBinaryMessageAsync;
     }
 
-    // Registers the write message action, that should transfer the message to the "other" side
-    public void RegisterSendMessageAction(WriteBase64MessageActionAsync sendBase64MessageActionAsync)
+    // Registers the send message action, that should transfer the message to the "other" side
+    public void RegisterSendMessageAction(SendBase64MessageAsync sendBase64MessageAsync)
     {
-        if (sendBase64MessageActionAsync is null)
-            throw new InvalidOperationException($"{nameof(sendBase64MessageActionAsync)} cannot be null");
+        ArgumentNullException.ThrowIfNull(sendBase64MessageAsync);
 
-        this.sendBinaryMessageActionAsync = async (binaryMessage, ct) =>
+        this.sendBinaryMessageAsync = async (binaryMessage, ct) =>
         {
             var base64Message = Convert.ToBase64String(binaryMessage.Span);
-            await sendBase64MessageActionAsync(base64Message, ct).ConfigureAwait(false);
+            await sendBase64MessageAsync(base64Message, ct).ConfigureAwait(false);
         };
     }
 
@@ -77,10 +88,11 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
         return AddReceivedMessageAsync(binaryPackage, ct);
     }
 
-    // Adds the message, that was received from the "other" side
+    // Adds the message, that was received from the "other" side. Messages must be delivered in
+    // send order (chunk reassembly relies on it), and the buffer must not be reused by the
+    // caller since it is kept until the message has been processed.
     public ValueTask AddReceivedMessageAsync(ReadOnlyMemory<byte> binaryMessage, CancellationToken ct)
     {
-        // Log.Info($"Received binary message {binaryMessage.Length} bytes");
         ReadOnlyMemory<byte>? messageToWrite = null;
 
         lock (readGate)
@@ -104,11 +116,10 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
 
                 // Store this chunk in pending buffer
                 payload.Span.CopyTo(pendingChunkBuffer.AsSpan(offset));
-                pendingChunkBytesReceived += payload.Length;
                 pendingChunkNextOffset += payload.Length;
 
-                if (pendingChunkBytesReceived < pendingChunkTotalLength)
-                    return ValueTask.CompletedTask; // Got, part of total, need more parts...
+                if (pendingChunkNextOffset < pendingChunkTotalLength)
+                    return ValueTask.CompletedTask; // Got part of total, need more parts...
 
                 // Got total message,
                 messageToWrite = pendingChunkBuffer;
@@ -148,12 +159,6 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
                 return ValueTask.CompletedTask;
             }
 
-            // Log.Info(
-            //     $"Received {messageToWrite.Value.Length} bytes ({Math.Ceiling((double)messageToWrite.Value.Length / MaxChunkPayloadSize)} chunks)"
-            // );
-            // Log.Info(
-            //     $"Decompressed message {messageToWrite.Value.Length} -> {decompressed.Length} bytes ({Math.Round(100.0 * messageToWrite.Value.Length / decompressed.Length)}%)"
-            // );
             messageToWrite = decompressed;
         }
 
@@ -164,7 +169,6 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
     protected override async ValueTask<JsonRpcMessage?> ReadCoreAsync(CancellationToken ct)
     {
         var payload = await messagesChannel.Reader.ReadAsync(ct).ConfigureAwait(false);
-        // Log.Info($"Read message {payload.Length} bytes");
 
         // Formatter expects a ReadOnlySequence<byte>.
         var seq = new ReadOnlySequence<byte>(payload);
@@ -175,7 +179,7 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
 
     protected override async ValueTask WriteCoreAsync(JsonRpcMessage rpcMessage, CancellationToken ct)
     {
-        if (sendBinaryMessageActionAsync is null)
+        if (sendBinaryMessageAsync is null)
             throw new InvalidOperationException($"{nameof(RegisterSendMessageAction)} has not yet been called");
 
         // Serialize message into a buffer.
@@ -189,16 +193,9 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
             if (IsCompressionSupported && TryCompressMessage(payloadToSend, out var compressedMessage))
             {
                 payloadToSend = compressedMessage;
-                // Log.Info(
-                //     $"Write message {buffer.WrittenMemory.Length} bytes compressed to {payloadToSend.Length} bytes"
-                // );
-            }
-            else
-            {
-                // Log.Info($"Write message {payloadToSend.Length} bytes");
             }
 
-            await SendBinaryMessageAsync(payloadToSend, ct);
+            await SendMessageAsync(payloadToSend, ct);
         }
         finally
         {
@@ -217,18 +214,17 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
         base.Dispose(disposing);
     }
 
-    async ValueTask SendBinaryMessageAsync(ReadOnlyMemory<byte> binaryMessage, CancellationToken ct)
+    async ValueTask SendMessageAsync(ReadOnlyMemory<byte> binaryMessage, CancellationToken ct)
     {
         // Check if the message can be sent as is or needs to be split in sub chunks
         if (binaryMessage.Length <= MaxChunkSize)
         {
             // No need to split, send total message as is
-            // Log.Info($"Send binary message {binaryMessage.Length} bytes");
-            await sendBinaryMessageActionAsync(binaryMessage, ct).ConfigureAwait(false);
+            await sendBinaryMessageAsync(binaryMessage, ct).ConfigureAwait(false);
             return;
         }
 
-        // Splitting message in sub chunks sent one ofter the other, which will be merged in other
+        // Splitting message in sub chunks sent one after the other, which will be merged in other
         // side by AddReceivedMessageAsync()
         var totalLength = binaryMessage.Length;
         for (var offset = 0; offset < totalLength; offset += MaxChunkPayloadSize)
@@ -239,8 +235,7 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
             binaryMessage.Slice(offset, payloadLength).Span.CopyTo(chunk.AsSpan(ChunkHeaderSize));
 
             // Send sub chunk
-            // Log.Info($"Send binary chunk message {chunk.Length} bytes");
-            await sendBinaryMessageActionAsync(chunk, ct).ConfigureAwait(false);
+            await sendBinaryMessageAsync(chunk, ct).ConfigureAwait(false);
         }
     }
 
@@ -289,7 +284,11 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
         decompressedMessage = default;
         try
         {
-            using var input = new MemoryStream(compressedPayload.ToArray(), writable: false);
+            // Wrap the payload's underlying array (always array-backed here) to avoid a copy
+            if (!MemoryMarshal.TryGetArray(compressedPayload, out ArraySegment<byte> segment))
+                segment = new ArraySegment<byte>(compressedPayload.ToArray());
+
+            using var input = new MemoryStream(segment.Array!, segment.Offset, segment.Count, writable: false);
             using var gzip = new GZipStream(input, CompressionMode.Decompress, leaveOpen: false);
 
             var decompressed = new byte[uncompressedLength];
@@ -405,7 +404,6 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
     {
         pendingChunkBuffer = new byte[totalLength];
         pendingChunkTotalLength = totalLength;
-        pendingChunkBytesReceived = 0;
         pendingChunkNextOffset = 0;
     }
 
@@ -413,7 +411,6 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
     {
         pendingChunkBuffer = null;
         pendingChunkTotalLength = 0;
-        pendingChunkBytesReceived = 0;
         pendingChunkNextOffset = 0;
     }
 }

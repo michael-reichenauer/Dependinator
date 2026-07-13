@@ -7,7 +7,7 @@
 //   dist/node/extension.js  - desktop host (Node), used via package.json "main"
 //   dist/web/extension.js   - web host (browser), used via package.json "browser"
 //
-// languageServer.ts and cloudSyncNode.ts use Node-only APIs (node:http,
+// languageServer.ts and cloudSyncAuth.ts use Node-only APIs (node:http,
 // node:crypto, vscode-languageclient/node). They are only reached behind the
 // `isWeb` guard via dynamic import(), so for the web bundle they are marked
 // external (never executed there); for the node bundle they bundle normally.

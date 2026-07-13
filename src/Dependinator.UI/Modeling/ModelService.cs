@@ -69,12 +69,6 @@ class ModelService : IModelService, IDisposable
         TriggerSave();
     }
 
-    public bool TryNode(string id, out Node node)
-    {
-        using var model = modelMgr.UseModel();
-        return model.Nodes.TryGetValue(NodeId.FromId(id), out node!);
-    }
-
     public void Clear()
     {
         using (var model = modelMgr.UseModel())
@@ -97,12 +91,7 @@ class ModelService : IModelService, IDisposable
 
     public async Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto)
     {
-        string modelPath;
-        using (var model = modelMgr.UseModel())
-        {
-            modelPath = model.Path;
-        }
-
+        var modelPath = modelMgr.ModelPath;
         if (string.IsNullOrWhiteSpace(modelPath))
             return R.Error("Model is not loaded");
 
@@ -124,7 +113,7 @@ class ModelService : IModelService, IDisposable
         Clear();
 
         Log.Info("Loading ...", path);
-        using var _ = Timing.Start("Load model", path);
+        using var _ = Timing.Start($"Load model {path}");
 
         // Try read cached model (with ui layout)
         if (!Try(out var modelInfo, out var e, await ReadCachedModelAsync(path)))
@@ -169,12 +158,7 @@ class ModelService : IModelService, IDisposable
 
     public async Task<R> RefreshAsync()
     {
-        var path = "";
-        using (var model = modelMgr.UseModel())
-        {
-            path = model.Path;
-        }
-
+        var path = modelMgr.ModelPath;
         if (!modelListService.IsLocalPath(path))
         {
             Log.Info("Not a local path", path);
@@ -195,12 +179,12 @@ class ModelService : IModelService, IDisposable
         return R.Ok;
     }
 
-    public async Task LayoutNode(NodeId nodeId, bool recursively = false)
+    public Task LayoutNode(NodeId nodeId, bool recursively = false)
     {
         using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out Node? node))
-                return;
+                return Task.CompletedTask;
 
             LayoutNode(node, recursively);
         }
@@ -208,6 +192,7 @@ class ModelService : IModelService, IDisposable
         applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
         applicationEvents.TriggerSaveNeeded();
+        return Task.CompletedTask;
     }
 
     void LayoutNode(Node node, bool recursively)
@@ -296,11 +281,11 @@ class ModelService : IModelService, IDisposable
         using (var model = modelMgr.UseModel())
         {
             modelPath = model.Path;
+            if (modelPath == "")
+                return;
+
             modelData = model.SerializeToDto();
         }
-
-        if (modelPath == "")
-            return;
 
         persistenceService.WriteAsync(modelPath, modelData).RunInBackground();
     }

@@ -2,7 +2,7 @@ using Dependinator.Core.Parsing;
 
 namespace Dependinator.UI.Modeling;
 
-class NodeName
+static class NodeName
 {
     static readonly char[] PartsSeparators = "./".ToCharArray();
 
@@ -43,7 +43,6 @@ class NodeName
         longName = FormatModuleSuffix(longName);
 
         return (longName, shortName);
-        //return (nodeName, shortName);
     }
 
     // Module names are shown as "Name (dll)" instead of "Name.dll"

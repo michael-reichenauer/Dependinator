@@ -4,10 +4,10 @@ namespace Dependinator.Roslyn.Parsing;
 
 static class NodeTypes
 {
-    public static NodeType ToTypes(ISymbol member) =>
+    public static NodeType ToNodeType(ISymbol member) =>
         member switch
         {
-            INamedTypeSymbol t => NodeType.Type,
+            INamedTypeSymbol => NodeType.Type,
             IMethodSymbol => NodeType.MethodMember,
             IPropertySymbol => NodeType.PropertyMember,
             IFieldSymbol => NodeType.FieldMember,

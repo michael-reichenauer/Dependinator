@@ -27,7 +27,7 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution folders.
 
 **VS Code extension (not part of `Dependinator.sln`):**
-- `src/DependinatorVsCode/` — TypeScript extension packaging the web UI + language server (`src/extension.ts`, `src/webview.ts`, `src/languageServer.ts`, `src/cloudSyncNode.ts`)
+- `src/DependinatorVsCode/` — TypeScript extension packaging the web UI + language server (`src/extension.ts`, `src/webview.ts`, `src/languageServer.ts`, `src/cloudSyncAuth.ts`)
 
 ## Build & Development Commands
 
@@ -90,7 +90,7 @@ dotnet list Dependinator.sln package --vulnerable
 
 **Cloud sync auth:** All hosts use Clerk for authentication. The API validates Clerk-issued JWTs via JWKS. Browser hosts (Blazor Server and WASM) use Clerk.js for sign-in and attach Bearer tokens to API requests. The VS Code extension serves a local sign-in page with Clerk.js and stores the JWT in VS Code secrets. All API calls use Bearer tokens via the `Authorization` or `X-Dependinator-Authorization` header.
 
-**Wasm cloud sync routing:** the browser-hosted `Dependinator.Wasm` calls `/api` directly; the VS Code-hosted `Dependinator.Wasm` routes cloud sync through the extension host (`DependinatorVsCode/src/cloudSyncNode.ts`), not through the LSP.
+**Wasm cloud sync routing:** the browser-hosted `Dependinator.Wasm` calls `/api` directly; the VS Code-hosted `Dependinator.Wasm` routes cloud sync over the JSON-RPC tunnel to the LSP (`src/Dependinator.Lsp/CloudSync/`), which makes the API calls. The extension (`DependinatorVsCode/src/cloudSyncAuth.ts`) only performs the Clerk sign-in and stores the access token.
 
 **VS Code extension cloud sync:** the extension serves a self-contained Clerk sign-in page from a local HTTP callback server. The `dependinator.cloudSync.baseUrl` setting controls which API endpoint is used (production, SWA CLI, or Functions direct).
 

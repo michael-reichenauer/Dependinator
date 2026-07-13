@@ -17,14 +17,13 @@ static class CloudModelSerializer
     {
         string normalizedPath = CloudModelPath.Normalize(modelPath);
         byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(modelDto, serializerOptions);
-        byte[] hashBytes = JsonSerializer.SerializeToUtf8Bytes(StripViewState(modelDto), serializerOptions);
         byte[] compressedBytes = Compress(jsonBytes);
 
         return new CloudModelDocument(
             CloudModelPath.CreateKey(normalizedPath),
             normalizedPath,
             DateTimeOffset.UtcNow,
-            Convert.ToHexString(SHA256.HashData(hashBytes)).ToLowerInvariant(),
+            GetContentHash(modelDto),
             compressedBytes.LongLength,
             Convert.ToBase64String(compressedBytes)
         );

@@ -1,6 +1,5 @@
 ﻿@using Dependinator.UI.Diagrams.Dependencies
 @using Dependinator.UI.Diagrams.Icons
-@using Dependinator.UI.Diagrams.Svg
 @using Dependinator.Core
 @using Dependinator.Core.Parsing
 @using Dependinator.Core.Shared
@@ -25,10 +24,6 @@ else if (HasSelectedLine)
     <MudTooltip Text="Menu">
       <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
                PopoverClass="dep-light-menu" data-testid="node-menu">
-        @* <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.TextSnippet"
-                     OnClick="ShowProperties" data-testid="node-menu-properties">
-          Properties …
-        </MudMenuItem> *@
         <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
                      OnClick="LayoutChildren" data-testid="node-menu-reset-children">
           Reset Children Layout
@@ -79,7 +74,7 @@ else if (HasSelectedLine)
       <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
     </MudTooltip>
 
-    @if (NodeSvg.IsEditingEnabled)
+    @if (ViewOptions.IsEditingEnabled)
     {
       <MudTooltip Text="Decrease node size">
         <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" OnClick="interactionService.DecreaseNodeSize"
@@ -122,7 +117,7 @@ else if (HasSelectedLine)
       }
       else
       {
-        @if (NodeSvg.IsEditingEnabled)
+        @if (ViewOptions.IsEditingEnabled)
         {
           <MudTooltip Text="Edit node">
             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="() => IsEditNodeMode = true"
@@ -167,11 +162,7 @@ else if (HasSelectedLine)
   bool IsEditNodeMode
   {
     get { return interactionService.IsEditNodeMode; }
-    set
-    {
-      Log.Info("Set val", value);
-      interactionService.IsEditNodeMode = value;
-    }
+    set { interactionService.IsEditNodeMode = value; }
   }
 
   [Inject]
@@ -190,9 +181,6 @@ else if (HasSelectedLine)
   IDependenciesService dependenciesService { get; set; } = null!;
 
   [Inject]
-  INodeEditService nodeEditService { get; set; } = null!;
-
-  [Inject]
   Modeling.IModelService modelService { get; set; } = null!;
 
   [Inject]
@@ -200,9 +188,6 @@ else if (HasSelectedLine)
 
   [Inject]
   INavigationService navigationService { get; set; } = null!;
-
-  [Inject]
-  IConfigService configService { get; set; } = null!;
 
   [Inject]
   IManualEditService manualEditService { get; set; } = null!;
@@ -216,46 +201,34 @@ else if (HasSelectedLine)
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
-  bool IsSelectedNodeManual
-  {
-    get
-    {
-      if (!selectionService.SelectedId.IsNode)
-        return false;
-      using var model = modelMgr.UseModel();
-      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
-          && node.IsManual;
-    }
-  }
-  bool IsSelectedNodeNote
-  {
-    get
-    {
-      if (!selectionService.SelectedId.IsNode)
-        return false;
-      using var model = modelMgr.UseModel();
-      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
-          && node.IsNote;
-    }
-  }
-  bool SelectedNodeHasChildren
-  {
-    get
-    {
-      if (!selectionService.SelectedId.IsNode)
-        return false;
-      using var model = modelMgr.UseModel();
-      return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
-          && node.Children.Count > 0;
-    }
-  }
+  bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
+  bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
+  bool SelectedNodeHasChildren => SelectedNodeIs(node => node.Children.Count > 0);
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
+
+  // The selected node's id, when the selection is a node.
+  bool TryGetSelectedNodeId(out Modeling.Models.NodeId nodeId)
+  {
+    nodeId = Modeling.Models.NodeId.Empty;
+    if (!selectionService.SelectedId.IsNode)
+      return false;
+    nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
+    return true;
+  }
+
+  bool SelectedNodeIs(Func<Modeling.Models.Node, bool> predicate)
+  {
+    if (!TryGetSelectedNodeId(out var nodeId))
+      return false;
+    using var model = modelMgr.UseModel();
+    return model.Nodes.TryGetValue(nodeId, out var node) && predicate(node);
+  }
   bool IsIconMode => !interactionService.IsContainer;
   bool CanShowSource => interactionService.CanShowSource;
 
   string CssPosition =>
-      $"position:fixed;left:{selectionService.SelectedNodePosition.X}px;"
-      + $"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset}px;"
+      FormattableString.Invariant($"position:fixed;left:{selectionService.SelectedNodePosition.X:0.##}px;")
+      + FormattableString.Invariant($"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset:0.##}px;")
       + "background:rgba(255,255,255,0.9);border-radius:4px;"
       + "box-shadow:var(--mud-elevation-2);";
 
@@ -265,48 +238,31 @@ else if (HasSelectedLine)
 
   public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
 
-  void ShowProperties() =>
-      dialogService.ShowAsync<NodeProperties>("Node Properties", new DialogOptions { CloseOnEscapeKey = true });
-
   async Task LayoutChildren()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId);
-    selectionService.Select(nodeId);
+    await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
   }
 
   async Task LayoutDescendants()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
     if (await mbox.ShowAsync() != true)
     {
       return;
     }
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
     await modelService.LayoutNode(nodeId, true);
-    selectionService.Select(nodeId);
+    await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
   }
-
-  async Task SetLayoutDensityAsync(Modeling.NodeLayoutDensity density)
-  {
-    Modeling.NodeLayout.SetDensity(density);
-    await configService.SetAsync(config => config.LayoutDensity = density);
-    applicationEvents.TriggerUIStateChanged();
-  }
-
-  string DensityIcon(Modeling.NodeLayoutDensity density) =>
-      Modeling.NodeLayout.Density == density
-          ? MudBlazor.Icons.Material.Filled.CheckCircle
-          : MudBlazor.Icons.Material.Outlined.Circle;
 
   void ShowReferences() => dependenciesService.ShowReferences();
 
@@ -315,47 +271,35 @@ else if (HasSelectedLine)
 
   async Task ShowSourceAsync()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
 
-    string selectedId = selectionService.SelectedId.Id;
-    var nodeId = Modeling.Models.NodeId.FromId(selectedId);
     FileSpan? nodeFileSpan = null;
-
-    string nodeTitle = selectedId;
 
     using (var model = modelMgr.UseModel())
     {
       if (model.Nodes.TryGetValue(nodeId, out var node))
-      {
-        nodeTitle = node.LongName;
         nodeFileSpan = node.FileSpanOrParentSpan;
-      }
     }
 
-   
     if (nodeFileSpan is not null && Build.IsVsCodeExtWasm)
-    {
-      await navigationService.ShowEditor(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
-      return;
-    }
+      await navigationService.ShowEditor(nodeId);
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();
 
   void BeginAddLink()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    manualEditService.BeginAddLink(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
+    manualEditService.BeginAddLink(nodeId);
     snackbar.Add("Click a target node to link to (Esc or click empty space to cancel).", Severity.Info);
   }
 
   async Task DeleteNode()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
 
     // Confirm before removing a node together with its children; no prompt for a childless node.
     if (SelectedNodeHasChildren && await deleteConfirmBox.ShowAsync() != true)
@@ -367,34 +311,31 @@ else if (HasSelectedLine)
 
   void RenameNode()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     manualEditService.BeginRenameNode(nodeId, selectionService.SelectedNodePosition);
   }
 
   Task EditNote()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return Task.CompletedTask;
-    return noteService.EditNoteAsync(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id));
+    return noteService.EditNoteAsync(nodeId);
   }
 
   void DeleteNoteToolbar()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     selectionService.Unselect();
     manualEditService.DeleteManualNode(nodeId);
   }
 
   async Task SelectIconAsync()
   {
-    if (!selectionService.SelectedId.IsNode)
+    if (!TryGetSelectedNodeId(out var nodeId))
       return;
 
-    var nodeId = Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id);
     string? currentIconName = null;
     string defaultIconName = "";
     using (var model = modelMgr.UseModel())

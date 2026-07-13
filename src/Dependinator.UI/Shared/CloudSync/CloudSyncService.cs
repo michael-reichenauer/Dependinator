@@ -23,38 +23,24 @@ interface ICloudSyncService
 [Scoped]
 class NoCloudSyncService : ICloudSyncService
 {
+    const string NotAvailableError = "Cloud sync is not available in this host.";
+
     static readonly CloudAuthState unavailableState = new(IsAvailable: false, IsAuthenticated: false, User: null);
 
     public bool IsAvailable => false;
 
-    public Task<R<CloudAuthState>> LoginAsync()
-    {
-        return Task.FromResult<R<CloudAuthState>>(R.Error("Cloud sync is not available in this host."));
-    }
+    public Task<R<CloudAuthState>> LoginAsync() => NotAvailableAsync<CloudAuthState>();
 
-    public Task<R<CloudAuthState>> LogoutAsync()
-    {
-        return Task.FromResult<R<CloudAuthState>>(R.Error("Cloud sync is not available in this host."));
-    }
+    public Task<R<CloudAuthState>> LogoutAsync() => NotAvailableAsync<CloudAuthState>();
 
-    public Task<R<CloudAuthState>> GetAuthStateAsync()
-    {
-        return Task.FromResult<R<CloudAuthState>>(unavailableState);
-    }
+    public Task<R<CloudAuthState>> GetAuthStateAsync() => Task.FromResult<R<CloudAuthState>>(unavailableState);
 
-    public Task<R<CloudModelList>> ListAsync()
-    {
-        return Task.FromResult<R<CloudModelList>>(R.Error("Cloud sync is not available in this host."));
-    }
+    public Task<R<CloudModelList>> ListAsync() => NotAvailableAsync<CloudModelList>();
 
-    public Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
-    {
-        return Task.FromResult<R<CloudModelMetadata>>(R.Error("Cloud sync is not available in this host."));
-    }
+    public Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto) =>
+        NotAvailableAsync<CloudModelMetadata>();
 
-    // Cloud pull attempt is rejected when no host transport is available.
-    public Task<R<ModelDto>> PullAsync(string modelPath)
-    {
-        return Task.FromResult<R<ModelDto>>(R.Error("Cloud sync is not available in this host."));
-    }
+    public Task<R<ModelDto>> PullAsync(string modelPath) => NotAvailableAsync<ModelDto>();
+
+    static Task<R<T>> NotAvailableAsync<T>() => Task.FromResult<R<T>>(R.Error(NotAvailableError));
 }

@@ -25,14 +25,9 @@ public sealed class ModelFunctions
         CancellationToken cancellationToken
     )
     {
-        CloudUserInfo? user = await GetCurrentUserAsync(request, cancellationToken);
+        CloudUserInfo? user = await userProvider.TryGetCurrentUserAsync(request, cancellationToken);
         if (user is null)
-            return await ResponseFactory.ErrorAsync(
-                request,
-                HttpStatusCode.Unauthorized,
-                "User is not authenticated.",
-                cancellationToken
-            );
+            return await UnauthorizedAsync(request, cancellationToken);
 
         IReadOnlyList<CloudModelMetadata> models = await cloudModelStore.ListAsync(user, cancellationToken);
         return await ResponseFactory.JsonAsync(
@@ -50,14 +45,9 @@ public sealed class ModelFunctions
         CancellationToken cancellationToken
     )
     {
-        CloudUserInfo? user = await GetCurrentUserAsync(request, cancellationToken);
+        CloudUserInfo? user = await userProvider.TryGetCurrentUserAsync(request, cancellationToken);
         if (user is null)
-            return await ResponseFactory.ErrorAsync(
-                request,
-                HttpStatusCode.Unauthorized,
-                "User is not authenticated.",
-                cancellationToken
-            );
+            return await UnauthorizedAsync(request, cancellationToken);
 
         CloudModelDocument? model = await cloudModelStore.GetAsync(user, modelKey, cancellationToken);
         if (model is null)
@@ -78,14 +68,9 @@ public sealed class ModelFunctions
         CancellationToken cancellationToken
     )
     {
-        CloudUserInfo? user = await GetCurrentUserAsync(request, cancellationToken);
+        CloudUserInfo? user = await userProvider.TryGetCurrentUserAsync(request, cancellationToken);
         if (user is null)
-            return await ResponseFactory.ErrorAsync(
-                request,
-                HttpStatusCode.Unauthorized,
-                "User is not authenticated.",
-                cancellationToken
-            );
+            return await UnauthorizedAsync(request, cancellationToken);
 
         CloudModelDocument? body = await request.ReadFromJsonAsync<CloudModelDocument>(cancellationToken);
         if (body is null)
@@ -146,8 +131,13 @@ public sealed class ModelFunctions
         }
     }
 
-    Task<CloudUserInfo?> GetCurrentUserAsync(HttpRequestData request, CancellationToken cancellationToken)
+    static Task<HttpResponseData> UnauthorizedAsync(HttpRequestData request, CancellationToken cancellationToken)
     {
-        return userProvider.TryGetCurrentUserAsync(request, cancellationToken);
+        return ResponseFactory.ErrorAsync(
+            request,
+            HttpStatusCode.Unauthorized,
+            "User is not authenticated.",
+            cancellationToken
+        );
     }
 }

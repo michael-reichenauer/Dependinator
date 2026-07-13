@@ -49,7 +49,8 @@ class Node : IItem
         }
     }
 
-    public string? Description { get; set; }
+    // Only set via SetDescription, which keeps the pre-encoded HtmlDescription in sync.
+    public string? Description { get; private set; }
 
     public string Color { get; set; } = "";
 
@@ -75,7 +76,7 @@ class Node : IItem
         set => boundary = value;
     }
 
-    public Double ContainerZoom { get; set; } = DefaultContainerZoom;
+    public double ContainerZoom { get; set; } = DefaultContainerZoom;
     public Pos ContainerOffset { get; set; } = Pos.None;
 
     public List<Node> Children { get; } = new();
@@ -106,8 +107,8 @@ class Node : IItem
     // they persist and survive re-parse, but render via NoteSvg instead of the normal node chrome.
     public bool IsNote { get; set; }
 
-    // Sets the description and keeps the pre-encoded HtmlDescription in sync (used by note edits
-    // and any other direct description change, mirroring how SetFromDto/Update keep them aligned).
+    // Sets the description and keeps the pre-encoded HtmlDescription in sync; the single write
+    // path for descriptions (note edits, SetFromDto, Update).
     public void SetDescription(string? description)
     {
         Description = string.IsNullOrEmpty(description) ? null : description;
@@ -141,8 +142,7 @@ class Node : IItem
     {
         Type = Enums.To<NodeType>(dto.Type, NodeType.None);
 
-        Description = dto.Properties.Description;
-        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
+        SetDescription(dto.Properties.Description);
         IsPrivate = dto.Properties.IsPrivate;
 
         Boundary = dto.Boundary ?? Rect.None;
@@ -161,8 +161,9 @@ class Node : IItem
     {
         Type = node.Properties.Type ?? Type;
         IsPrivate = node.Properties.IsPrivate ?? IsPrivate;
-        Description = node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description;
-        HtmlDescription = Description is not null ? HttpUtility.HtmlEncode(Description) : null;
+        SetDescription(
+            node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description
+        );
         fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
     }
 
@@ -204,6 +205,9 @@ class Node : IItem
 
     internal Rect GetTotalBounds()
     {
+        if (Children.Count == 0)
+            return Rect.None;
+
         if (IsChildrenLayoutRequired)
             NodeLayout.AdjustChildren(this);
         // Calculate the total bounds of the children

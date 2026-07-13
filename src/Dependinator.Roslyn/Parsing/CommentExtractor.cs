@@ -2,11 +2,13 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-// This namespace contains Roslyn parsing functionality
 namespace Dependinator.Roslyn.Parsing;
 
 static class CommentExtractor
 {
+    // Returns the comment directly above the symbol's declaration at fileSpan, or
+    // NoValue.String when there is none (NoValue rather than null so that an existing
+    // description in the model is cleared when the comment has been removed).
     public static string? GetLeadingCommentOrNoValue(ISymbol symbol, FileSpan fileSpan)
     {
         if (fileSpan == NoValue.FileSpan)
@@ -89,6 +91,9 @@ static class CommentExtractor
             && fileSpan.StartLine <= lineSpan.EndLinePosition.Line;
     }
 
+    // Collects the comment block adjacent to the declaration, walking the leading trivia
+    // backwards from the declaration and stopping at a blank line (so a detached comment
+    // higher up in the file is not treated as the declaration's comment).
     static string? GetLeadingComment(SyntaxNode declarationNode)
     {
         var leadingTrivia = declarationNode.GetLeadingTrivia();
@@ -139,32 +144,30 @@ static class CommentExtractor
             || trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia);
     }
 
+    // Strips the comment syntax ("///", "//" or "/* ... */" with "*" line prefixes) and
+    // returns the trimmed, non-empty comment lines
     static IEnumerable<string> NormalizeCommentLines(SyntaxTrivia commentTrivia)
     {
         var text = commentTrivia.ToString().Trim();
         if (string.IsNullOrWhiteSpace(text))
             return [];
 
+        string linePrefix;
         if (text.StartsWith("///"))
-            return text.Split('\n')
-                .Select(line => line.Replace("\r", "").Trim())
-                .Select(line => line.TrimPrefix("///").Trim())
-                .Where(line => !string.IsNullOrWhiteSpace(line));
+            linePrefix = "///";
+        else if (text.StartsWith("//"))
+            linePrefix = "//";
+        else if (text.StartsWith("/*"))
+        {
+            text = text.TrimPrefix("/*").TrimSuffix("*/");
+            linePrefix = "*";
+        }
+        else
+            return [];
 
-        if (text.StartsWith("//"))
-            return text.Split('\n')
-                .Select(line => line.Replace("\r", "").Trim())
-                .Select(line => line.TrimPrefix("//").Trim())
-                .Where(line => !string.IsNullOrWhiteSpace(line));
-
-        if (text.StartsWith("/*"))
-            return text.TrimPrefix("/*")
-                .TrimSuffix("*/")
-                .Split('\n')
-                .Select(line => line.Replace("\r", "").Trim())
-                .Select(line => line.TrimPrefix("*").Trim())
-                .Where(line => !string.IsNullOrWhiteSpace(line));
-
-        return [];
+        return text.Split('\n')
+            .Select(line => line.Replace("\r", "").Trim())
+            .Select(line => line.TrimPrefix(linePrefix).Trim())
+            .Where(line => !string.IsNullOrWhiteSpace(line));
     }
 }

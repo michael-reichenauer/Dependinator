@@ -13,8 +13,7 @@ public static class Program
             {
                 services.AddOptions<CloudSyncOptions>().BindConfiguration(CloudSyncOptions.SectionName);
                 services.AddSingleton<ICloudModelStore, BlobCloudModelStore>();
-                services.AddSingleton<ICloudSyncBearerTokenValidator, CloudSyncBearerTokenValidator>();
-                services.AddSingleton<ICloudSyncUserProvider, CloudSyncUserProvider>();
+                services.AddSingleton<ICloudSyncUserProvider, CloudSyncBearerTokenValidator>();
             })
             .Build();
 

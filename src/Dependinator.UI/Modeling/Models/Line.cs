@@ -48,7 +48,6 @@ class Line : IItem
     public string? HtmlDescription { get; private set; }
     public DateTime DescriptionUpdateStamp { get; private set; }
 
-    public bool IsUpHill { get; internal set; } // Used to determine the direction of the line for placing the toolbar
     public bool IsHidden
     {
         get => isHidden;

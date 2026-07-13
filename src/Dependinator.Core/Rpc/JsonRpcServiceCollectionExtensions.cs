@@ -2,7 +2,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Dependinator.Core.Rpc;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
+// Marks an interface as a remote RPC service; implementing classes are registered as local
+// RPC targets by UseJsonRpcClasses, and remote proxies are registered by AddJsonRpcInterfaces.
+[AttributeUsage(AttributeTargets.Interface)]
 public class RpcAttribute : Attribute { }
 
 public static class JsonRpcServiceCollectionExtensions
@@ -12,7 +14,7 @@ public static class JsonRpcServiceCollectionExtensions
         Log.Info("AddJsonRpcInterfaces");
         assemblyType
             .Assembly.GetTypes()
-            .Where(IsRemoteInterface)
+            .Where(IsRpcInterface)
             .ForEach(i => services.AddSingleton(i, (sp) => sp.GetRequiredService<IJsonRpcService>().GetRemoteProxy(i)));
         return services;
     }
@@ -24,10 +26,9 @@ public static class JsonRpcServiceCollectionExtensions
 
         assemblyType
             .Assembly.GetTypes()
-            .Where(IsRemoteClass)
-            .ForEach(c =>
-                jsonRpcService.AddLocalRpcTarget(c.GetRemoteInterface(), serviceProvider.GetRequiredService(c))
-            );
+            .Where(t => t.IsClass && !t.IsAbstract)
+            .SelectMany(c => c.GetInterfaces().Where(IsRpcInterface).Select(i => (Interface: i, Service: c)))
+            .ForEach(t => jsonRpcService.AddLocalRpcTarget(t.Interface, serviceProvider.GetRequiredService(t.Service)));
 
         return serviceProvider;
     }
@@ -39,15 +40,5 @@ public static class JsonRpcServiceCollectionExtensions
         return serviceProvider;
     }
 
-    static bool IsRemoteInterface(this Type type) => type.IsInterface && type.HasAttribute<RpcAttribute>();
-
-    static bool IsRemoteClass(this Type type) =>
-        type.IsClass && type.GetInterfaces().Any(i => i.HasAttribute<RpcAttribute>());
-
-    static Type GetRemoteInterface(this Type type) => type.GetInterfaces().First(i => i.HasAttribute<RpcAttribute>());
-
-    static bool HasAttribute(this Type type, Type attributeType) => type.IsDefined(attributeType, inherit: true);
-
-    static bool HasAttribute<T>(this Type type)
-        where T : Attribute => type.HasAttribute(typeof(T));
+    static bool IsRpcInterface(this Type type) => type.IsInterface && type.HasAttribute<RpcAttribute>();
 }

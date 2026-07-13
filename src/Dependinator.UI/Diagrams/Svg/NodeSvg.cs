@@ -1,25 +1,23 @@
 using System.Text.RegularExpressions;
 using System.Web;
-using Dependinator.Core;
 using Dependinator.UI.Diagrams.Icons;
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using static System.FormattableString;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
-class NodeSvg
+static partial class NodeSvg
 {
-    static bool? IsEditingEnabledManual = null;
-    const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom; // To large to be seen
-    const double MinContainerZoom = 2.0;
     const int NameIconSize = 9;
-    const int FontSize = 8;
+    internal const int FontSize = 8; // Also the member icon size, see NodeAnchors
     const int DescriptionFontSize = 6;
 
     // Name/description text stops scaling with zoom beyond this factor, so zooming in reveals
     // more description text instead of just growing the letters. Containers appear at
-    // MinContainerZoom (2.0), so text still grows a bit "into" the node before plateauing at
-    // 24px names and 18px descriptions.
+    // NodeViewPolicy.MinContainerZoom (2.0), so text still grows a bit "into" the node before
+    // plateauing at 24px names and 18px descriptions.
     const double MaxTextZoom = 3.0;
     const int DescriptionMinWidth = 25;
     const int DescriptionMaxWidth = 100;
@@ -36,63 +34,36 @@ class NodeSvg
     const double DescriptionFirstLineOffsetFactor = 0.8;
     const double MemberTextGap = 4;
     const double MemberHorizontalPadding = 4;
-    const double MemberAverageCharWidthFactor = 0.6;
 
-    public static bool ShowHiddenNodes { get; private set; } = true;
-    public static bool IsEditingEnabled => IsEditingEnabledManual ?? !Build.IsStandaloneWasm;
-
-    public static void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
-
-    public static void SetIsEditingEnabled(bool enabled) => IsEditingEnabledManual = enabled;
-
-    public static bool IsToLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
-
-    public static bool IsShowIcon(Parsing.NodeType nodeType, double zoom) =>
-        nodeType.IsMember || zoom <= MinContainerZoom;
+    // Fraction of the average glyph advance relative to the font size (shared with NoteSvg).
+    internal const double AverageCharWidthFactor = 0.6;
 
     public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
         var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
         var textZoom = TextZoom(parentZoom);
-        var textX = geometry.X + geometry.Width / 2;
-        var textY = geometry.Y + geometry.Height;
         var fontSize = FontSize * textZoom;
-        var iconId = IconName(node);
-        var elementId = PointerId.FromNode(node.Id).ElementId;
-        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
-        var hoverGroup = BuildHoverGroup(elementId, "hoverable", geometry, node.HtmlLongName, node.HtmlDescription);
-        var selectedOverlay = SelectedNodeSvg(node, geometry);
-        var descriptionFontSize = DescriptionFontSize * textZoom;
-        var descriptionY = textY + fontSize + DescriptionLineGap * textZoom;
-        var descriptionSvg = BuildDescriptionSvg(
-            node,
-            textX,
-            descriptionY,
-            descriptionFontSize,
-            "iconDescription",
-            textOpacity,
-            DescriptionMinWidth,
-            ScaledMaxLines(IconDescriptionMaxLines, parentZoom, textZoom)
+        var textPos = new Pos(geometry.X + geometry.Width / 2, geometry.Y + geometry.Height);
+
+        var layout = new LeafNodeLayout(
+            IconRect: geometry,
+            TextPos: textPos,
+            TextClass: "iconName",
+            TextBaseline: "hanging",
+            FontSize: fontSize,
+            DescriptionClass: "iconDescription",
+            DescriptionY: textPos.Y + fontSize + DescriptionLineGap * textZoom,
+            DescriptionMaxLines: ScaledMaxLines(IconDescriptionMaxLines, parentZoom, textZoom),
+            Bounds: geometry,
+            // The name is centered under the icon, so the marker goes half the text width right.
+            MarkerPos: new Pos(textPos.X + EstimateTextWidth(node.ShortName, fontSize) / 2, textPos.Y + fontSize / 2)
         );
 
-        return $"""
-            <use href="#{iconId}" xlink:href="#{iconId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" {nodeOpacity} />
-            <text x="{textX:0.##}" y="{textY:0.##}" class="iconName" dominant-baseline="hanging" font-size="{fontSize:0.##}px" {textOpacity} >{node.HtmlShortName}</text>
-            {descriptionSvg}
-            {hoverGroup}
-            {selectedOverlay}
-            {ManualMarkerSvg(
-                node,
-                textX + EstimateNameWidth(node.ShortName, fontSize) / 2,
-                textY + fontSize / 2,
-                fontSize
-            )}
-            """;
+        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom);
     }
 
     public static string GetNodeContainerSvg(Node node, Rect nodeCanvasRect, double parentZoom, string childrenContent)
     {
-        var geometry = nodeCanvasRect;
         var header = CalculateContainerHeader(nodeCanvasRect, parentZoom);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (border, background) = NodeColors(node);
@@ -100,15 +71,15 @@ class NodeSvg
         var iconId = IconName(node);
         var strokeWidth = node.IsEditMode ? 10 : node.StrokeWidth;
         var hoverClass = node.IsEditMode ? "hoverableedit" : "hoverable";
-        var selectedOverlay = SelectedNodeSvg(node, geometry);
+        var selectedOverlay = SelectedNodeSvg(node, nodeCanvasRect);
 
-        var innerGeometry = new Rect(0, 0, geometry.Width, geometry.Height);
+        var innerGeometry = new Rect(0, 0, nodeCanvasRect.Width, nodeCanvasRect.Height);
         var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName, node.HtmlDescription);
         var textZoom = TextZoom(parentZoom);
         var descriptionFontSize = DescriptionFontSize * textZoom;
         var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * textZoom;
         var descriptionWidth = DescriptionWidthForNode(
-            geometry.Width - (header.TextPos.X - geometry.X),
+            nodeCanvasRect.Width - (header.TextPos.X - nodeCanvasRect.X),
             descriptionFontSize
         );
         var descriptionSvg = BuildDescriptionSvg(
@@ -122,9 +93,10 @@ class NodeSvg
             ScaledMaxLines(DescriptionMaxLines, parentZoom, textZoom)
         );
 
-        return $"""
-            <svg x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" viewBox="{0} {0} {geometry.Width:0.##} {geometry.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
-              <rect x="{0}" y="{0}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="{strokeWidth}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
+        return Invariant(
+            $"""
+            <svg x="{nodeCanvasRect.X:0.##}" y="{nodeCanvasRect.Y:0.##}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" viewBox="{0} {0} {nodeCanvasRect.Width:0.##} {nodeCanvasRect.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
+              <rect x="{0}" y="{0}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" stroke-width="{strokeWidth:0.##}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
               {hoverGroup}
               {childrenContent}
             </svg>
@@ -134,18 +106,54 @@ class NodeSvg
             {selectedOverlay}
             {ManualMarkerSvg(
                 node,
-                header.TextPos.X + EstimateNameWidth(node.ShortName, header.FontSize),
+                header.TextPos.X + EstimateTextWidth(node.ShortName, header.FontSize),
                 header.TextPos.Y + header.FontSize / 2,
                 header.FontSize
             )}
-            """;
+            """
+        );
     }
 
     public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
         var textZoom = TextZoom(parentZoom);
         var fontSize = FontSize * textZoom;
-        var layout = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
+        var member = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
+
+        var layout = new LeafNodeLayout(
+            IconRect: member.Icon,
+            TextPos: member.Text,
+            TextClass: "memberName",
+            TextBaseline: "middle",
+            FontSize: fontSize,
+            DescriptionClass: "memberDescription",
+            DescriptionY: member.Text.Y + fontSize / 2 + DescriptionLineGap * textZoom,
+            DescriptionMaxLines: ScaledMaxLines(MemberDescriptionMaxLines, parentZoom, textZoom),
+            Bounds: member.Bounds,
+            MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.ShortName, fontSize), member.Text.Y)
+        );
+
+        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom);
+    }
+
+    // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
+    // (an icon node or a member row); GetNodeIconSvg and GetMemberNodeSvg differ only in these
+    // values, not in structure.
+    readonly record struct LeafNodeLayout(
+        Rect IconRect,
+        Pos TextPos,
+        string TextClass,
+        string TextBaseline,
+        double FontSize,
+        string DescriptionClass,
+        double DescriptionY,
+        int DescriptionMaxLines,
+        Rect Bounds,
+        Pos MarkerPos
+    );
+
+    static string BuildLeafNodeSvg(Node node, LeafNodeLayout layout, double descriptionFontSize)
+    {
         var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
@@ -157,42 +165,39 @@ class NodeSvg
             node.HtmlDescription
         );
         var selectedOverlay = SelectedNodeSvg(node, layout.Bounds);
-        var descriptionFontSize = DescriptionFontSize * textZoom;
-        var descriptionY = layout.Text.Y + fontSize / 2 + DescriptionLineGap * textZoom;
         var descriptionSvg = BuildDescriptionSvg(
             node,
-            layout.Text.X,
-            descriptionY,
+            layout.TextPos.X,
+            layout.DescriptionY,
             descriptionFontSize,
-            "memberDescription",
+            layout.DescriptionClass,
             textOpacity,
             DescriptionMinWidth,
-            ScaledMaxLines(MemberDescriptionMaxLines, parentZoom, textZoom)
+            layout.DescriptionMaxLines
         );
 
-        return $"""
-            <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.Icon.X:0.##}" y="{layout.Icon.Y:0.##}" width="{layout.Icon.Width:0.##}" height="{layout.Icon.Height:0.##}" {nodeOpacity} />
-            <text x="{layout.Text.X:0.##}" y="{layout.Text.Y:0.##}" class="memberName" dominant-baseline="middle" font-size="{fontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+        return Invariant(
+            $"""
+            <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />
+            <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
-            {ManualMarkerSvg(
-                node,
-                layout.Text.X + EstimateNameWidth(node.ShortName, fontSize),
-                layout.Text.Y,
-                fontSize
-            )}
-            """;
+            {ManualMarkerSvg(node, layout.MarkerPos.X, layout.MarkerPos.Y, layout.FontSize)}
+            """
+        );
     }
 
-    public static string GetToLargeNodeContainerSvg(Rect nodeCanvasRect, string childrenContent)
+    public static string GetTooLargeNodeContainerSvg(Rect nodeCanvasRect, string childrenContent)
     {
         var (x, y, w, h) = (nodeCanvasRect.X, nodeCanvasRect.Y, nodeCanvasRect.Width, nodeCanvasRect.Height);
-        return $"""
+        return Invariant(
+            $"""
               <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="0 0 {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
                 {childrenContent}
               </svg>
-            """;
+            """
+        );
     }
 
     static Rect CalculateIconGeometry(Node node, Rect nodeCanvasRect, double parentZoom)
@@ -212,7 +217,7 @@ class NodeSvg
 
         var gap = MemberTextGap * textZoom;
         var padding = MemberHorizontalPadding * textZoom;
-        var textWidth = EstimateMemberTextWidth(node.ShortName, fontSize);
+        var textWidth = Math.Max(fontSize, EstimateTextWidth(node.ShortName, fontSize));
 
         var layoutWidth = iconSize + gap + textWidth + padding;
         var layoutHeight = Math.Max(iconSize, fontSize);
@@ -229,87 +234,7 @@ class NodeSvg
         return new MemberNodeLayout(layoutRect, iconRect, textPos);
     }
 
-    static double EstimateMemberTextWidth(string shortName, double fontSize)
-    {
-        if (string.IsNullOrEmpty(shortName))
-            return fontSize;
-
-        var approximate = shortName.Length * fontSize * MemberAverageCharWidthFactor;
-        return Math.Max(fontSize, approximate);
-    }
-
     readonly record struct MemberNodeLayout(Rect Bounds, Rect Icon, Pos Text);
-
-    readonly record struct MemberAnchorMetrics(
-        double Left,
-        double Right,
-        double CenterX,
-        double CenterY,
-        double Bottom
-    );
-
-    internal enum LineAnchorRole
-    {
-        Source,
-        Target,
-    }
-
-    internal enum AnchorPreference
-    {
-        Default,
-        Left,
-        Right,
-    }
-
-    internal static (double X, double Y) GetLineAnchor(
-        Node node,
-        LineAnchorRole role,
-        AnchorPreference preference = AnchorPreference.Default
-    )
-    {
-        if (node.Type.IsMember)
-        {
-            var metrics = GetMemberAnchorMetrics(node);
-            if (role == LineAnchorRole.Source)
-                return (metrics.CenterX, metrics.Bottom + 0.5);
-
-            return preference switch
-            {
-                AnchorPreference.Right => (metrics.Right, metrics.CenterY),
-                _ => (metrics.Left - 0.5, metrics.CenterY),
-            };
-        }
-
-        var boundary = node.Boundary;
-        var centerY = boundary.Y + boundary.Height / 2.0;
-
-        if (role == LineAnchorRole.Source)
-        {
-            return preference switch
-            {
-                AnchorPreference.Left => (boundary.X, centerY),
-                _ => (boundary.X + boundary.Width, centerY),
-            };
-        }
-
-        return preference switch
-        {
-            AnchorPreference.Right => (boundary.X + boundary.Width, centerY),
-            _ => (boundary.X, centerY),
-        };
-    }
-
-    static MemberAnchorMetrics GetMemberAnchorMetrics(Node node)
-    {
-        var boundary = node.Boundary;
-        var iconSize = (double)FontSize;
-        var left = boundary.X;
-        var right = boundary.X + iconSize;
-        var centerX = boundary.X + iconSize / 2.0;
-        var centerY = boundary.Y + boundary.Height / 2.0;
-        var bottom = centerY + iconSize / 2.0;
-        return new MemberAnchorMetrics(left, right, centerX, centerY, bottom);
-    }
 
     static ContainerHeader CalculateContainerHeader(Rect nodeCanvasRect, double parentZoom)
     {
@@ -348,12 +273,15 @@ class NodeSvg
         var glyphSize = fontSize * 0.95;
         var x = textEndX + fontSize * 0.35;
         // U+270E LOWER RIGHT PENCIL
-        return $"""<text x="{x:0.##}" y="{textCenterY:0.##}" font-size="{glyphSize:0.##}px" fill="{DColors.ManualMarker}" text-anchor="start" dominant-baseline="central" pointer-events="none">&#x270E;</text>""";
+        return Invariant(
+            $"""<text x="{x:0.##}" y="{textCenterY:0.##}" font-size="{glyphSize:0.##}px" fill="{DColors.ManualMarker}" text-anchor="start" dominant-baseline="central" pointer-events="none">&#x270E;</text>"""
+        );
     }
 
-    // Rough width of a rendered name in the diagram font, used to place the manual marker after it.
-    static double EstimateNameWidth(string text, double fontSize) =>
-        string.IsNullOrEmpty(text) ? 0 : text.Length * fontSize * MemberAverageCharWidthFactor;
+    // Rough width of rendered text in the diagram font (average glyph advance), used e.g. to
+    // place the manual marker after a name.
+    static double EstimateTextWidth(string text, double fontSize) =>
+        string.IsNullOrEmpty(text) ? 0 : text.Length * fontSize * AverageCharWidthFactor;
 
     static (string Border, string Background) NodeColors(Node node)
     {
@@ -384,11 +312,15 @@ class NodeSvg
             "\n",
             lines.Select(
                 (line, i) =>
-                    $"""<tspan x="{x:0.##}" dy="{(i == 0 ? firstLineOffset : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
+                    Invariant(
+                        $"""<tspan x="{x:0.##}" dy="{(i == 0 ? firstLineOffset : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
+                    )
             )
         );
 
-        return $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>""";
+        return Invariant(
+            $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>"""
+        );
     }
 
     // Estimate how many characters fit across a node of the given pixel width, so wider
@@ -410,8 +342,8 @@ class NodeSvg
             return [];
 
         // Collapse to a single line and strip XML-doc tags like <summary>.
-        var text = Regex.Replace(description, "<[^>]*>", " ");
-        text = Regex.Replace(text, "\\s+", " ").Trim();
+        var text = XmlTagRegex().Replace(description, " ");
+        text = WhitespaceRegex().Replace(text, " ").Trim();
         if (text.Length == 0)
             return [];
 
@@ -427,6 +359,12 @@ class NodeSvg
         lines[^1] = last + "…";
         return lines;
     }
+
+    [GeneratedRegex("<[^>]*>")]
+    private static partial Regex XmlTagRegex();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRegex();
 
     static List<string> WrapText(string text, int maxWidth)
     {
@@ -478,12 +416,15 @@ class NodeSvg
     )
     {
         var title = string.IsNullOrWhiteSpace(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
-        return $"""
-            <g class="{cssClass}" id="{elementId}">
-              <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
-              <title>{title}</title>
-            </g>
-            """.Trim();
+        return Invariant(
+                $"""
+                <g class="{cssClass}" id="{elementId}">
+                  <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
+                  <title>{title}</title>
+                </g>
+                """
+            )
+            .Trim();
     }
 
     static string SelectedNodeSvg(Node node, Rect geometry)
@@ -491,113 +432,66 @@ class NodeSvg
         if (!node.IsSelected)
             return "";
 
-        if (!IsEditingEnabled)
-        {
-            // Show selection border only, no resize handles
-            return $"""
-                <rect x="{geometry.X - 6}" y="{geometry.Y - 6}" width="{geometry.Width + 13:0.##}" height="{geometry.Height
-                    + 13:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{DColors.Selected}" stroke-dasharray="5,5"/>
-                """;
-        }
-
-        string c = DColors.Selected;
-        const int s = 8;
-        const int m = 3;
-        const int mt = m + s;
-        const int ml = m + s;
-        const int mm = s / 2;
-        const int mr = m;
-        const int mb = m;
-        const int rp = 6;
-        const int rs = 13;
-
-        const int tt = 12;
-        const int t = 10 * 3 + 1;
-        var etl = PointerId.FromNodeResize(node.Id, NodeResizeType.TopLeft).ElementId;
-        var etm = PointerId.FromNodeResize(node.Id, NodeResizeType.TopMiddle).ElementId;
-        var etr = PointerId.FromNodeResize(node.Id, NodeResizeType.TopRight).ElementId;
-        var eml = PointerId.FromNodeResize(node.Id, NodeResizeType.MiddleLeft).ElementId;
-        var emr = PointerId.FromNodeResize(node.Id, NodeResizeType.MiddleRight).ElementId;
-        var ebl = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomLeft).ElementId;
-        var ebm = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomMiddle).ElementId;
-        var ebr = PointerId.FromNodeResize(node.Id, NodeResizeType.BottomRight).ElementId;
-
+        var color = DColors.Selected;
         var x = geometry.X;
         var y = geometry.Y;
         var w = geometry.Width;
         var h = geometry.Height;
 
-        return $"""
-            <rect x="{x - rp}" y="{y - rp}" width="{w + rs:0.##}" height="{h
-                + rs:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{c}" stroke-dasharray="5,5"/>
+        var borderSvg = Invariant(
+            $"""
+            <rect x="{x - 6:0.##}" y="{y - 6:0.##}" width="{w + 13:0.##}" height="{h
+                + 13:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{color}" stroke-dasharray="5,5"/>
+            """
+        );
 
-            <g class="selectpoint">
-                <circle id="{etl}" cx="{x - ml + s / 2.0}" cy="{y - mt + s / 2.0}" r="{s / 2.0}" fill="{c}" />
-                <circle id="{etl}" cx="{x - ml - tt + t / 2.0}"  cy="{y - mt - tt + t / 2.0}"  r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
-            </g>
-            <g class="selectpoint">
-                <circle id="{etm}" cx="{x + w / 2 - mm + s / 2.0}" cy="{y - mt + s / 2.0}" r="{s / 2.0}" fill="{c}" />
-                <circle id="{etm}" cx="{x + w / 2 - mm - tt + t / 2.0}" cy="{y - mt - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
-            </g>
-            <g class="selectpoint">
-                <circle id="{etr}" cx="{x + w + mr + s / 2.0}" cy="{y - mt + s / 2.0}" r="{s / 2.0}" fill="{c}" />
-                <circle id="{etr}" cx="{x + w + mr - tt + t / 2.0}" cy="{y - mt - tt + t / 2.0}"  r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
-            </g>
-            <g class="selectpoint">
-                <circle id="{eml}" cx="{x - ml + s / 2.0}" cy="{y + h / 2 + s / 2.0}" r="{s / 2.0}" fill="{c}" />
-                <circle id="{eml}" cx="{x - ml - tt + t / 2.0}"  cy="{y + h / 2 - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
-            </g>
-            <g class="selectpoint">
-                <circle id="{emr}" cx="{x + w + mr + s / 2.0}" cy="{y + h / 2 + s / 2.0}" r="{s / 2.0}" fill="{c}" />
-                <circle id="{emr}" cx="{x + w + mr - tt + t / 2.0}" cy="{y + h / 2 - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
-            </g>
-            <g class="selectpoint">
-                <circle id="{ebl}" cx="{x - ml + s / 2.0}" cy="{y + h + mb + s / 2.0}" r="{s / 2.0}" fill="{c}" />
-                <circle id="{ebl}" cx="{x - ml - tt + t / 2.0}"  cy="{y + h + mb - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
-            </g>
-            <g class="selectpoint">
-                <circle id="{ebm}" cx="{x + w / 2 - mm + s / 2.0}" cy="{y + h + mb + s / 2.0}" r="{s / 2.0}" fill="{c}" />
-                <circle id="{ebm}" cx="{x + w / 2 - mm - tt + t / 2.0}" cy="{y + h + mb - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
-            </g>
-            <g class="selectpoint">
-                <circle id="{ebr}" cx="{x + w + mr + s / 2.0}" cy="{y + h + mb + s / 2.0}" r="{s / 2.0}" fill="{c}" />
-                <circle id="{ebr}" cx="{x + w + mr - tt + t / 2.0}" cy="{y + h + mb - tt + t / 2.0}" r="{t / 2.0}" fill="{c}" fill-opacity="0"/>
-            </g>
-            """;
-    }
+        if (!ViewOptions.IsEditingEnabled)
+            return borderSvg; // Show selection border only, no resize handles
 
-    internal static string IconName(Node node)
-    {
-        // A user-selected icon overrides the node-type default; unknown (e.g. stale persisted)
-        // names fall back to the default.
-        if (node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName))
-            return customIconName;
+        const double HandleRadius = 4; // Visible resize handle
+        const double TouchRadius = 15.5; // Invisible, larger hit target for touch/imprecise clicks
+        const double HandleMargin = 7; // Distance of a handle center outside the node edge
 
-        return node.Type switch
+        var left = x - HandleMargin;
+        var centerX = x + w / 2;
+        var right = x + w + HandleMargin;
+        var top = y - HandleMargin;
+        // Middle-row handles sit one radius below the exact vertical middle (kept layout).
+        var middleY = y + h / 2 + HandleRadius;
+        var bottom = y + h + HandleMargin;
+
+        var handles = new (NodeResizeType Type, double X, double Y)[]
         {
-            Parsing.NodeType.EventMember => "Event",
-            Parsing.NodeType.FieldMember => "Field",
-            Parsing.NodeType.PropertyMember => "Property",
-            Parsing.NodeType.MethodMember => "Method",
-            Parsing.NodeType.ConstructorMember => "Constructor",
-            Parsing.NodeType.Solution => "Solution",
-            Parsing.NodeType.Externals => "Externals",
-            Parsing.NodeType.Assembly => "Assembly",
-            Parsing.NodeType.Namespace => "Namespace",
-            // The Roslyn source parser doesn't emit Namespace nodes; namespace containers are
-            // rebuilt as implicit Parent nodes (see StructureService.GetOrCreateParent), so Parent
-            // also renders as a namespace. (The Files icon is kept in the library for future use.)
-            Parsing.NodeType.Parent => "Namespace",
-            Parsing.NodeType.Type => "Type",
-            Parsing.NodeType.ClassType => "Type",
-            Parsing.NodeType.InterfaceType => "Interface",
-            Parsing.NodeType.EnumType => "Enum",
-            Parsing.NodeType.StructType => "Struct",
-            Parsing.NodeType.RecordType => "Record",
-
-            _ => "Module",
+            (NodeResizeType.TopLeft, left, top),
+            (NodeResizeType.TopMiddle, centerX, top),
+            (NodeResizeType.TopRight, right, top),
+            (NodeResizeType.MiddleLeft, left, middleY),
+            (NodeResizeType.MiddleRight, right, middleY),
+            (NodeResizeType.BottomLeft, left, bottom),
+            (NodeResizeType.BottomMiddle, centerX, bottom),
+            (NodeResizeType.BottomRight, right, bottom),
         };
+
+        var handlesSvg = handles
+            .Select(handle =>
+            {
+                var elementId = PointerId.FromNodeResize(node.Id, handle.Type).ElementId;
+                return Invariant(
+                    $"""
+                    <g class="selectpoint">
+                        <circle id="{elementId}" cx="{handle.X:0.##}" cy="{handle.Y:0.##}" r="{HandleRadius}" fill="{color}" />
+                        <circle id="{elementId}" cx="{handle.X:0.##}" cy="{handle.Y:0.##}" r="{TouchRadius:0.##}" fill="{color}" fill-opacity="0"/>
+                    </g>
+                    """
+                );
+            })
+            .Join("\n");
+
+        return $"{borderSvg}\n{handlesSvg}";
     }
+
+    // The icon id used in <use href="#id"> references; Icon owns the node-type→icon mapping.
+    internal static string IconName(Node node) => Icon.GetIconName(node);
 
     readonly record struct ContainerHeader(Pos IconPos, double IconSize, Pos TextPos, double FontSize);
 }

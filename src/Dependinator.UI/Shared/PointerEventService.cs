@@ -4,19 +4,19 @@ namespace Dependinator.UI.Shared;
 
 interface IPointerEventService
 {
-    event Action<PointerEvent> Wheel;
-    event Action<PointerEvent> PointerMove;
-    event Action<PointerEvent> PointerDown;
-    event Action<PointerEvent> PointerUp;
-    event Action<PointerEvent> Click;
-    event Action<PointerEvent> DblClick;
-    event Action<PointerEvent> ContextMenu;
+    event Action<PointerEvent>? Wheel;
+    event Action<PointerEvent>? PointerMove;
+    event Action<PointerEvent>? PointerDown;
+    event Action<PointerEvent>? PointerUp;
+    event Action<PointerEvent>? Click;
+    event Action<PointerEvent>? DblClick;
+    event Action<PointerEvent>? ContextMenu;
 
     Task InitAsync();
 }
 
 [Scoped]
-class PointerEventService : IPointerEventService
+class PointerEventService : IPointerEventService, IDisposable
 {
     readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInterop;
@@ -29,6 +29,7 @@ class PointerEventService : IPointerEventService
     bool timerRunning = false;
     PointerEvent pointerDown = new();
     DateTime pointerDownTime = DateTime.MinValue;
+    DotNetObjectReference<PointerEventService>? reference;
 
     public PointerEventService(IJSInterop jSInterop, IApplicationEvents applicationEvents)
     {
@@ -37,19 +38,20 @@ class PointerEventService : IPointerEventService
         this.applicationEvents = applicationEvents;
     }
 
-    public event Action<PointerEvent> Wheel = null!;
-    public event Action<PointerEvent> PointerMove = null!;
-    public event Action<PointerEvent> PointerDown = null!;
-    public event Action<PointerEvent> PointerUp = null!;
-    public event Action<PointerEvent> Click = null!;
-    public event Action<PointerEvent> DblClick = null!;
-    public event Action<PointerEvent> ContextMenu = null!;
+    public event Action<PointerEvent>? Wheel;
+    public event Action<PointerEvent>? PointerMove;
+    public event Action<PointerEvent>? PointerDown;
+    public event Action<PointerEvent>? PointerUp;
+    public event Action<PointerEvent>? Click;
+    public event Action<PointerEvent>? DblClick;
+    public event Action<PointerEvent>? ContextMenu;
 
     public async Task InitAsync()
     {
         await jSInterop.Call("preventDefaultTouchEvents", "svgcanvas");
 
-        var objRef = jSInterop.Reference(this);
+        reference ??= jSInterop.Reference(this);
+        var objRef = reference;
         await jSInterop.Call("addMouseEventListener", "svgcanvas", "wheel", objRef, nameof(MouseEventCallback));
         await jSInterop.Call("addMouseEventListener", "svgcanvas", "contextmenu", objRef, nameof(MouseEventCallback));
         await jSInterop.Call(
@@ -76,10 +78,15 @@ class PointerEventService : IPointerEventService
         );
     }
 
+    public void Dispose()
+    {
+        clickTimer.Dispose();
+        reference?.Dispose();
+    }
+
     [JSInvokable]
     public ValueTask MouseEventCallback(PointerEvent e)
     {
-        // Log.Info($"MouseEventCallback: '{e.ToJson()}'");
         switch (e.Type)
         {
             case "wheel":
@@ -97,7 +104,6 @@ class PointerEventService : IPointerEventService
     [JSInvokable]
     public ValueTask PointerEventCallback(PointerEvent e)
     {
-        // Log.Info($"PointerEventCallback: {e.Time} {e.Type} {e.PointerId} {e.PointerType} on {e.TargetId}'");
         switch (e.Type)
         {
             case "pointerdown":
@@ -122,6 +128,8 @@ class PointerEventService : IPointerEventService
 
     void OnPointerDownEvent(PointerEvent e)
     {
+        // A single stale pointer (e.g. a touch that never got a pointerup) would make every
+        // new touch look like a two-finger gesture; treat a pointer older than a second as stale.
         if (activePointers.Count == 1 && e.PointerId != activePointers.Keys.First())
         {
             var p1 = activePointers.Values.First();
@@ -150,14 +158,15 @@ class PointerEventService : IPointerEventService
 
     void OnPointerMoveEvent(PointerEvent e)
     {
-        // Log.Info("Pointermove", pointerDowns.Count, e.Button, e.Type);
-
         if (activePointers.Count == 1)
         {
             PointerMove?.Invoke(e);
         }
         else if (activePointers.Count == 2)
         {
+            // Two-finger pinch: convert the change in distance between the two pointers into
+            // a synthetic wheel event (zoom) centered between them, so pinch and mouse wheel
+            // share the same zoom handling downstream.
             var p1 = activePointers.Values.ElementAt(0);
             var p2 = activePointers.Values.ElementAt(1);
 
@@ -190,6 +199,8 @@ class PointerEventService : IPointerEventService
 
         PointerUp?.Invoke(e);
 
+        // Treat as a click if the left button was released close to where it was pressed,
+        // within the click timeout (i.e. not a drag or long press).
         if (
             e.Button == 0
             && Math.Abs(e.OffsetX - pointerDown.OffsetX) < 5
@@ -197,7 +208,6 @@ class PointerEventService : IPointerEventService
             && (DateTime.UtcNow - pointerDownTime).TotalMilliseconds < ClickTimeout
         )
         {
-            // Log.Info("on click");
             OnLeftClickEvent(e);
         }
     }
@@ -207,6 +217,9 @@ class PointerEventService : IPointerEventService
         timerRunning = false;
     }
 
+    // Click/double-click detection: Click fires immediately on the first click and a timer
+    // starts; a second click before the timer expires also fires DblClick (Click is not
+    // suppressed or delayed while waiting).
     void OnLeftClickEvent(PointerEvent e)
     {
         pointerDown = e;

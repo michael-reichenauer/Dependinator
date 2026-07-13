@@ -19,7 +19,7 @@ public class CloudSyncStateServiceTests
             CompressedSizeBytes: 10
         );
 
-        await sut.RecordPushAsync(@"C:\repo\Model.json", metadata);
+        await sut.RecordPushAsync(@"C:\repo\Model.json", metadata, localContentHash: "hash-123");
         CloudSyncModelState? state = await sut.GetAsync("C:/repo/Model.json");
 
         Assert.NotNull(state);
@@ -32,7 +32,7 @@ public class CloudSyncStateServiceTests
         InMemoryConfigService configService = new();
         CloudSyncStateService sut = new(configService);
 
-        await sut.RecordPullAsync("/models/sample.model", "pull-hash");
+        await sut.RecordPullAsync("/models/sample.model", "pull-hash", "pull-hash");
         CloudSyncModelState? state = await sut.GetAsync("/models/sample.model");
 
         Assert.NotNull(state);

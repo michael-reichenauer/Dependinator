@@ -23,6 +23,9 @@ static class Icon
         { Parsing.NodeType.Externals, "Externals" },
         { Parsing.NodeType.Assembly, "Assembly" },
         { Parsing.NodeType.Namespace, "Namespace" },
+        // The Roslyn source parser doesn't emit Namespace nodes; namespace containers are
+        // rebuilt as implicit Parent nodes (see StructureService.GetOrCreateParent), so Parent
+        // also renders as a namespace. (The Files icon is kept in the library for future use.)
         { Parsing.NodeType.Parent, "Namespace" },
         { Parsing.NodeType.Type, "Type" },
         { Parsing.NodeType.ClassType, "Type" },
@@ -43,15 +46,18 @@ static class Icon
 
     public static string GetIcon(Parsing.NodeType nodeType) => IconLibrary.Get(GetIconName(nodeType));
 
-    // Icon for a node, honoring a user-selected custom icon; unknown (e.g. stale persisted)
-    // names fall back to the node-type default.
-    public static string GetIcon(Modeling.Models.Node node)
+    // The icon name for a node, honoring a user-selected custom icon; unknown (e.g. stale
+    // persisted) names fall back to the node-type default.
+    public static string GetIconName(Modeling.Models.Node node)
     {
         if (node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName))
-            return IconLibrary.Get(customIconName);
+            return customIconName;
 
-        return GetIcon(node.Type);
+        return GetIconName(node.Type);
     }
+
+    // Icon for a node, honoring a user-selected custom icon.
+    public static string GetIcon(Modeling.Models.Node node) => IconLibrary.Get(GetIconName(node));
 
     // All node icon definitions, rendered once into the diagram's <defs> so nodes can reference
     // them by id via <use href="#name">.
