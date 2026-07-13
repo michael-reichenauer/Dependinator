@@ -81,6 +81,17 @@
                     "type": "string",
                     "default": "",
                     "description": "Clerk publishable key used for cloud sync sign-in. Leave empty to use the built-in production key."
+                },
+                "dependinator.autoRefresh.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically refresh the diagram when workspace source files change."
+                },
+                "dependinator.autoRefresh.delaySeconds": {
+                    "type": "number",
+                    "default": 3,
+                    "minimum": 1,
+                    "description": "Delay in seconds after the last source file change before the diagram is refreshed."
                 }
             }
         }
