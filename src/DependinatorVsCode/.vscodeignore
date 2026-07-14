@@ -1,5 +1,6 @@
 .publish/**
 resources/demo.gif
+resources/publisher-logo-128.png
 .vscode-test/**
 artifacts/**
 node_modules/**
