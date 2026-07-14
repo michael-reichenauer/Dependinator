@@ -1,27 +1,43 @@
 # Dependinator
 
-Dependinator visualizes code structure and dependencies as an interactive,
-navigable map, making complex architectures easier to understand, analyze, and
-refactor — without leaving VS Code.
+Dependinator visualizes the structure and dependencies of your C#/.NET
+codebase as an interactive, navigable map, making complex architectures easier
+to understand, analyze, and refactor — without leaving VS Code.
 
 ## Features
 
 - **Interactive dependency map** — explore your codebase as a zoomable,
   navigable diagram instead of scrolling through files.
-- **Drill down and back up** — open nodes to see their internals and follow
-  dependencies between components.
+- **Drill down and back up** — open nodes to see their internals
+  (namespaces, types, members) and follow dependencies between components.
+- **Jump to code** — navigate from a node or dependency straight to the
+  corresponding source location in the editor.
+- **Automatic refresh** — the map updates automatically when you change
+  source files (configurable).
 - **Runs inside VS Code** — opens in an editor tab; no separate app to launch.
-- **Optional cloud sync** — sign in to sync your views across devices.
+- **Optional cloud sync** — sign in to sync your customized views across
+  devices.
+
+## Requirements
+
+- A workspace containing a **.NET solution (`.sln`)** with C# projects —
+  Dependinator parses the solution to build the dependency map.
+- No local `dotnet` installation is needed; the extension bundles a
+  self-contained language server.
 
 ## Getting started
 
-1. Install the extension.
+1. Install the extension and open a folder containing a `.sln` file.
 2. Open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run
    **Dependinator: Open**, or click the Dependinator icon
    <img src="https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/icon-toolbar.png" alt="Dependinator title-bar icon" height="16" align="top" />
    in the editor title bar.
 3. The dependency map opens in a new tab. Click nodes to drill in, and drag /
    zoom to navigate.
+
+Need more guidance? Click the **Help** button in the Dependinator app bar —
+it opens a page with detailed usage instructions, navigation tips, and
+keyboard/mouse controls.
 
 ## Commands
 
@@ -32,13 +48,21 @@ refactor — without leaving VS Code.
 
 ## Settings
 
-- `dependinator.cloudSync.baseUrl` — the API endpoint used for cloud sync.
-  Defaults to the production service; other entries are for local/development
-  use. Sign-in is handled separately by the extension.
+| Setting | Description |
+| --- | --- |
+| `dependinator.autoRefresh.enabled` | Automatically refresh the diagram when workspace source files change (default: `true`). |
+| `dependinator.autoRefresh.delaySeconds` | Delay after the last source file change before the diagram is refreshed (default: `3`). |
 
-## Notes
-- The installed extension bundles a self-contained language server, so a local
-  `dotnet` install is not required.
+## Cloud sync
+
+Cloud sync is optional. When you sign in (from the Dependinator app bar),
+your customized diagram layouts and views are synced across devices via the
+Dependinator cloud service. Without signing in, everything works locally.
+
+## Feedback & issues
+
+Found a bug or have a feature request? Please open an issue at
+https://github.com/michael-reichenauer/Dependinator/issues
 
 ## Links
 
