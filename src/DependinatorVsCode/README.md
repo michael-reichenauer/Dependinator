@@ -4,6 +4,8 @@ Dependinator visualizes the structure and dependencies of your C#/.NET
 codebase as an interactive, navigable map, making complex architectures easier
 to understand, analyze, and refactor — without leaving VS Code.
 
+![Dependinator in action: zooming into the dependency map and navigating to a node with search](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/demo.gif)
+
 ## Features
 
 - **Interactive dependency map** — explore your codebase as a zoomable,

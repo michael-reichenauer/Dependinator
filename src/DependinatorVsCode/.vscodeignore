@@ -1,4 +1,5 @@
 .publish/**
+resources/demo.gif
 .vscode-test/**
 artifacts/**
 node_modules/**
