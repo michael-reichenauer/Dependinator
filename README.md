@@ -4,6 +4,11 @@ Dependinator visualizes the structure and dependencies of your C#/.NET
 codebase as an interactive, navigable map, making complex architectures easier
 to understand, analyze, and refactor.
 
+> ⚠️ **Beta** — Dependinator is under active development and published as an
+> early preview for a small group of testers. Expect rough edges, missing
+> features, and breaking changes between versions. It is not yet a finished
+> product.
+
 ![Dependinator in action: zooming into the dependency map and navigating to a node with search](src/DependinatorVsCode/resources/demo.gif)
 
 ## Features
