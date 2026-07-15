@@ -65,8 +65,8 @@ public class NoteTests(ITestOutputHelper output) : E2ETestBase(output)
 
         ILocator idInput = Page.GetByTestId("note-id");
         await Expect(idInput).ToBeVisibleAsync();
-        await idInput.FillAsync(id);
-        await Page.GetByTestId("note-description").FillAsync(description);
+        await App.FillReliablyAsync(idInput, id);
+        await App.FillReliablyAsync(Page.GetByTestId("note-description"), description);
         await Page.GetByTestId("note-save").ClickAsync();
     }
 }

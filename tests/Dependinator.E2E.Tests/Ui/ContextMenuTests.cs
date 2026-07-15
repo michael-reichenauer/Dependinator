@@ -23,7 +23,7 @@ public class ContextMenuTests(ITestOutputHelper output) : E2ETestBase(output)
         // The data-testid is applied directly to the MudTextField's <input> element.
         ILocator input = Page.GetByTestId("manual-node-name");
         await Expect(input).ToBeVisibleAsync();
-        await input.FillAsync(NodeName);
+        await App.FillReliablyAsync(input, NodeName);
         await input.PressAsync("Enter");
 
         await Expect(App.NodeLabel(NodeName)).ToBeVisibleAsync();
@@ -39,8 +39,8 @@ public class ContextMenuTests(ITestOutputHelper output) : E2ETestBase(output)
 
         ILocator idInput = Page.GetByTestId("note-id");
         await Expect(idInput).ToBeVisibleAsync();
-        await idInput.FillAsync(NoteId);
-        await Page.GetByTestId("note-description").FillAsync("Context note");
+        await App.FillReliablyAsync(idInput, NoteId);
+        await App.FillReliablyAsync(Page.GetByTestId("note-description"), "Context note");
         await Page.GetByTestId("note-save").ClickAsync();
 
         // The note's id is drawn as plain SVG <text> (not the text.iconName used by parsed nodes).

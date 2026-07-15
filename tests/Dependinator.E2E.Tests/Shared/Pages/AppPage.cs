@@ -81,20 +81,66 @@ public sealed class AppPage
     public ILocator ExplorerDependenciesButton => page.GetByTestId("explorer-dependencies");
     public ILocator ExplorerCloseButton => page.GetByTestId("explorer-close");
 
+    // Menu open/hover steps retry a few short attempts instead of one long wait: the flaky
+    // failure mode is a swallowed click or hover (MudBlazor opens menus via a server roundtrip
+    // behind a popover overlay, and a click landing while a previous popover is still closing
+    // can be eaten without opening the menu), which only another attempt can recover from.
+    const int MenuAttempts = 3;
+    const float MenuAttemptTimeout = 5_000;
+
+    static bool IsRetryable(Exception e) => e is TimeoutException or PlaywrightException;
+
     // Open the app menu and return a menu-item locator by its data-testid.
     public async Task<ILocator> OpenMenuItemAsync(string testId)
     {
-        await Menu.ClickAsync();
+        await OpenAppMenuAsync(MenuItem(testId));
         return MenuItem(testId);
     }
 
     // Open the app menu, hover the parent submenu to expand it, and return the nested
-    // menu-item locator by its data-testid (nested MudMenu flyouts open on hover).
+    // menu-item locator by its data-testid (nested MudMenu flyouts open on hover). The hover
+    // retries too: the parent item can be re-rendered (detached) mid-hover, or the flyout can
+    // fail to open when the hover races the menu's own opening render.
     public async Task<ILocator> OpenSubMenuItemAsync(string parentTestId, string testId)
     {
-        await Menu.ClickAsync();
-        await MenuItem(parentTestId).HoverAsync();
-        return MenuItem(testId);
+        ILocator parent = MenuItem(parentTestId);
+        await OpenAppMenuAsync(parent);
+
+        ILocator item = MenuItem(testId);
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await parent.HoverAsync(new() { Timeout = MenuAttemptTimeout });
+                await item.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                return item;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
+            {
+                // Park the pointer off the item so the re-hover fires a fresh enter event.
+                await page.Mouse.MoveAsync(0, 0);
+            }
+        }
+    }
+
+    // Click the app-menu button until the expected item shows. A single long wait cannot
+    // recover from a swallowed click, so retry with short waits, pressing Escape between
+    // attempts to close any half-open popover before clicking again.
+    async Task OpenAppMenuAsync(ILocator item)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            await Menu.ClickAsync();
+            try
+            {
+                await item.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
+            {
+                await page.Keyboard.PressAsync("Escape");
+            }
+        }
     }
 
     // Select a diagram node by its exact group label (the *full* node name, e.g.
@@ -104,17 +150,23 @@ public sealed class AppPage
     // (NodeToolbarMenu). See also SelectNodeByVisibleNameAsync for the short on-screen name.
     public async Task SelectNodeByFullNameAsync(string label)
     {
-        LocatorBoundingBoxResult box =
-            await Node(label).BoundingBoxAsync()
-            ?? throw new InvalidOperationException($"Node '{label}' is not rendered on the canvas.");
+        LocatorBoundingBoxResult box = await WaitForStableNodeBoxAsync(label);
         await page.Mouse.ClickAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
     }
 
     // Select a container node by clicking just inside its top-left corner, where no children
     // render (a container's center often hits child nodes or dependency lines instead).
-    // Navigation animates pan/zoom, so wait until the node's bounds stop moving between two
-    // reads before clicking (same approach as WaitForStableNodePointAsync).
     public async Task SelectContainerNodeAsync(string label, float timeoutSeconds = 15)
+    {
+        LocatorBoundingBoxResult box = await WaitForStableNodeBoxAsync(label, timeoutSeconds);
+        await page.Mouse.ClickAsync(box.X + 20, box.Y + 20);
+    }
+
+    // The canvas pans/zooms with animations (initial fit, navigation), so wait until the
+    // node's bounds stop moving between two reads before clicking; a single read can compute
+    // a click point where the node was a frame ago (same approach as
+    // WaitForStableNodePointAsync below).
+    async Task<LocatorBoundingBoxResult> WaitForStableNodeBoxAsync(string label, float timeoutSeconds = 15)
     {
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -132,18 +184,13 @@ public sealed class AppPage
                 && Math.Abs(box.X - previous.X) < 1
                 && Math.Abs(box.Y - previous.Y) < 1;
             if (isStable)
-            {
-                await page.Mouse.ClickAsync(box!.X + 20, box.Y + 20);
-                return;
-            }
+                return box!;
 
             previous = box;
             await Task.Delay(100);
         }
 
-        throw new InvalidOperationException(
-            $"Container node '{label}' did not render/stabilize within {timeout.TotalSeconds}s."
-        );
+        throw new InvalidOperationException($"Node '{label}' did not render/stabilize within {timeout.TotalSeconds}s.");
     }
 
     // Select a diagram node by its visible (short) label — the text shown on the canvas,
@@ -232,9 +279,26 @@ public sealed class AppPage
     // Open the node search dialog via the app menu; returns its page object.
     public async Task<SearchDialog> OpenSearchViaMenuAsync()
     {
-        await Menu.ClickAsync();
-        await MenuItem("menu-search").ClickAsync();
+        await (await OpenMenuItemAsync("menu-search")).ClickAsync();
         return new SearchDialog(page);
+    }
+
+    // Fill a server-bound (MudTextField) input and verify the value stuck. A Blazor render
+    // landing just after the fill can echo a stale value back into the input, truncating the
+    // text (observed flake: a note description "Guiding note" saved as "Gui"). Give any
+    // in-flight render a moment to land, then refill if it overwrote the value.
+    public async Task FillReliablyAsync(ILocator input, string value)
+    {
+        for (int attempt = 1; attempt <= 3; attempt++)
+        {
+            await input.FillAsync(value);
+            await page.WaitForTimeoutAsync(250);
+            if (await input.InputValueAsync() == value)
+                return;
+        }
+
+        // All attempts were overwritten — fail with Playwright's descriptive assertion.
+        await Expect(input).ToHaveValueAsync(value);
     }
 
     // Open the node search dialog via the Ctrl+F hotkey; returns its page object.
