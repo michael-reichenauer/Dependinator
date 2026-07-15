@@ -23,7 +23,12 @@ public sealed class AppPage
     // A rendered node label on the canvas (e.g. the demo root "Demo.sln"). Targets the
     // visible label element rather than GetByText, which also matches hidden <title>s.
     // (Node group SVG ids are generated, so the label is the stable handle to a node.)
-    public ILocator NodeLabel(string text) => page.Locator("#svgcanvas text.iconName", new() { HasText = text }).First;
+    // The label's class depends on how the node currently renders — icon (iconName),
+    // container header (nodeName), or member (memberName) — and zoom level decides which,
+    // so match all three (see NodeSvg.cs).
+    public ILocator NodeLabel(string text) => page.Locator(NodeLabelSelector, new() { HasText = text }).First;
+
+    const string NodeLabelSelector = "#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName";
 
     // A diagram node's group element, matched by its label. (Node SVG ids are generated, so
     // match on the label text, which comes from the group's <title>.) The title is the node's
@@ -202,7 +207,10 @@ public sealed class AppPage
     // Navigating to a node (NavigationService.ShowNodeAsync) animates pan/zoom over many
     // re-rendered tiles, and mid-animation the label can be momentarily absent (tile culling,
     // icon/container switch) or still moving, so poll until the click point exists and has
-    // stopped moving between two reads instead of reading it once.
+    // stopped moving between two reads instead of reading it once. The zoom the navigation
+    // settles at decides whether the node renders as icon, container, or member, so the
+    // label is matched by any of the three label classes (a CI flake showed "RootClass"
+    // ending up as a container header, which the icon-only match never found).
     public async Task SelectNodeByVisibleNameAsync(string visibleName)
     {
         float[] point = await WaitForStableNodePointAsync(visibleName);
@@ -213,7 +221,8 @@ public sealed class AppPage
     {
         const string FindNodePointScript =
             @"(name) => {
-            const labels = [...document.querySelectorAll('#svgcanvas text.iconName')]
+            const selector = '#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName';
+            const labels = [...document.querySelectorAll(selector)]
                 .filter(t => t.textContent.trim() === name);
             if (labels.length === 0) return null;
             const lr = labels[0].getBoundingClientRect();
