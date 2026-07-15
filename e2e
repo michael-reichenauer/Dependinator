@@ -194,9 +194,14 @@ RESULT=0
 for browser in "${BROWSERS[@]}"; do
     echo ""
     echo "=== Running e2e tests on $browser ==="
+    # Sync tests skip here by design when -s isn't given; hide the per-test
+    # "Skipped ..."/"[SKIP]" lines so real failures stand out (the "Skipped: N" count
+    # stays in the summary line). Failure output is unaffected; pipefail keeps
+    # dotnet test's exit code through the pipe.
     if ! E2E=1 E2E_SYNC="$E2E_SYNC" E2E_CLERK_ISSUER="$E2E_CLERK_ISSUER" E2E_TRACE="$E2E_TRACE" \
         BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
-        dotnet test ./tests/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj; then
+        dotnet test ./tests/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj 2>&1 \
+        | grep -vE '^\s+Skipped |\[SKIP\]$'; then
         RESULT=1
     fi
 done

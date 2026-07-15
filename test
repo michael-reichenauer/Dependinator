@@ -15,7 +15,10 @@ cd "$(dirname "$0")"
 result=0
 
 echo "=== Unit tests (dotnet test Dependinator.sln — e2e tests skip here) ==="
-if ! dotnet test Dependinator.sln; then
+# The e2e tests skip here by design; hide the per-test "Skipped ..."/"[SKIP]" lines so
+# real failures stand out (the "Skipped: N" count stays in the summary line). Failure
+# output is unaffected; pipefail keeps dotnet test's exit code through the pipe.
+if ! dotnet test Dependinator.sln 2>&1 | grep -vE '^\s+Skipped |\[SKIP\]$'; then
     result=1
     echo "Unit tests FAILED."
 fi
