@@ -91,7 +91,8 @@ class SourceParser : ISourceParser
     {
         var moduleName = Names.GetModuleName(compilation);
         var (description, fileSpan) = GetAssemblyDescription(compilation, projectPath);
-        bool isExecutable = compilation.Options.OutputKind
+        bool isExecutable =
+            compilation.Options.OutputKind
             is OutputKind.ConsoleApplication
                 or OutputKind.WindowsApplication
                 or OutputKind.WindowsRuntimeApplication;

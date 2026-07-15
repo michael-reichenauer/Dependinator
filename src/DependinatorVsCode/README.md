@@ -9,7 +9,7 @@ to understand, analyze, and refactor — without leaving VS Code.
 > features, and breaking changes between versions. It is not yet a finished
 > product.
 
-![Dependinator in action: zooming into the dependency map and navigating to a node with search](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/demo.gif)
+![Dependinator in action: navigating to a node with search and exploring its dependencies in the Dependencies explorer](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/demo.gif)
 
 ## Features
 

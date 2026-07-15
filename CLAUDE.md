@@ -71,6 +71,9 @@ npm run install:vsix --prefix ./src/DependinatorVsCode
 # Demo model
 ./gen-demo                                     # regenerate src/Dependinator.Wasm/wwwroot/demo.model by parsing Dependinator.sln
 
+# Demo gif (VS Code extension README)
+./record-demo                                  # re-record src/DependinatorVsCode/resources/demo.gif (scenario in scripts/record-demo.mjs; needs ffmpeg + global @playwright/cli)
+
 # Packages
 ./updatepackages -u                            # upgrade non-major packages
 ./updatepackages -m                            # allow major upgrades
