@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Re-records the VS Code extension demo gif
+# (src/DependinatorVsCode/resources/demo.gif).
+#
+# The demo scenario itself is scripted in scripts/record-demo.mjs — edit the
+# steps there and re-run this script to regenerate the gif.
+#
+# Requires: ffmpeg, and the globally installed @playwright/cli (provides the
+# playwright module + browsers; installed by .devcontainer/post-create.sh).
+# Starts Dependinator.Web on :5000 if it is not already running.
+set -eu
+cd "$(dirname "$0")"
+
+command -v ffmpeg > /dev/null || { echo "error: ffmpeg is required"; exit 1; }
+
+NODE_PATH="$(npm root -g)/@playwright/cli/node_modules"
+export NODE_PATH
+node -e "require('playwright')" 2> /dev/null \
+    || { echo "error: playwright not found (npm install -g @playwright/cli)"; exit 1; }
+
+app_pid=""
+cleanup() {
+    if [ -n "$app_pid" ]; then
+        kill "$app_pid" 2> /dev/null || true
+    fi
+}
+trap cleanup EXIT
+
+if ! curl -sf -o /dev/null http://localhost:5000; then
+    echo "Starting Dependinator.Web on http://localhost:5000 ..."
+    dotnet build src/Dependinator.Web/Dependinator.Web.csproj -v q
+    ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:5000 \
+        dotnet run --project src/Dependinator.Web --no-build > /dev/null 2>&1 &
+    app_pid=$!
+    for _ in $(seq 1 60); do
+        curl -sf -o /dev/null http://localhost:5000 && break
+        sleep 1
+    done
+    curl -sf -o /dev/null http://localhost:5000 \
+        || { echo "error: app did not start on :5000"; exit 1; }
+    sleep 5 # give the app time to load/parse the model
+fi
+
+node scripts/record-demo.mjs "$@"
