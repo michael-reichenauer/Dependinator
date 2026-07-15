@@ -1,6 +1,54 @@
 # Dependinator
 
-Dependinator is a tool for visualizing and exploring software dependencies. This repo contains the shared UI and core logic plus multiple hosts (Blazor Server, Blazor WebAssembly) and an Azure Functions API used for cloud sync.
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/michaelreichenauer.dependinator?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/michaelreichenauer.dependinator)](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
+
+Dependinator visualizes the structure and dependencies of your C#/.NET
+codebase as an interactive, navigable map, making complex architectures easier
+to understand, analyze, and refactor. It is published as a
+[VS Code extension](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
+on the Visual Studio Marketplace.
+
+> ⚠️ **Beta** — Dependinator is under active development and published as an
+> early preview for a small group of testers. Expect rough edges, missing
+> features, and breaking changes between versions. It is not yet a finished
+> product.
+
+![Dependinator in action: zooming into the dependency map and navigating to a node with search](src/DependinatorVsCode/resources/demo.gif)
+
+## Features
+
+- **Interactive dependency map** — explore your codebase as a zoomable,
+  navigable diagram instead of scrolling through files.
+- **Drill down and back up** — open nodes to see their internals
+  (namespaces, types, members) and follow dependencies between components.
+- **Jump to code** — navigate from a node or dependency straight to the
+  corresponding source location.
+- **Automatic refresh** — the map updates automatically when source files
+  change.
+- **Optional cloud sync** — sign in to sync your customized views across
+  devices.
+
+## Try it
+
+- **VS Code extension** — install
+  [Dependinator](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
+  from the Visual Studio Marketplace (search for "Dependinator" in the
+  Extensions view) and run **Dependinator: Open** in a workspace with a
+  `.sln` file. See [src/DependinatorVsCode/README.md](src/DependinatorVsCode/README.md)
+  for details.
+- **In the browser** — try the demo at [dependinator.com](https://dependinator.com).
+
+In the app, the **Help** button in the app bar opens a page with usage
+instructions, navigation tips, and keyboard/mouse controls.
+
+---
+
+# Development
+
+This repo contains the shared UI and core logic plus multiple hosts (Blazor
+Server, Blazor WebAssembly), an Azure Functions API used for cloud sync, and
+the VS Code extension.
 
 ## Solution structure
 
@@ -62,3 +110,7 @@ Cloud sync uses [Clerk](https://clerk.com) for authentication (magic links / ema
 
 - The `dependinator.cloudSync.baseUrl` setting controls which API endpoint the extension uses.
 - The extension serves a local Clerk sign-in page and stores the session JWT in VS Code secrets.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

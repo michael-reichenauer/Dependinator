@@ -1,6 +1,8 @@
 name: Build VS Code Extension
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       publish:
@@ -10,6 +12,11 @@ on:
 
 permissions:
   contents: write
+
+# Serialize runs so two quick pushes to main can't race on the version-bump push.
+concurrency:
+  group: vscode-extension
+  cancel-in-progress: false
 
 jobs:
   # Gate the whole extension pipeline (version bump, build, publish) on the test suites.
@@ -111,7 +118,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish to Marketplace
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish }}
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
         run: npx vsce publish --target ${{ matrix.target }} -p "$VSCE_PAT"
         working-directory: src/DependinatorVsCode
         env:

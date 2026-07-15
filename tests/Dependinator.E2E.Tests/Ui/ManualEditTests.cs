@@ -34,7 +34,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         // The data-testid is applied directly to the MudTextField's <input> element.
         ILocator input = Page.GetByTestId("manual-node-name");
         await Expect(input).ToBeVisibleAsync();
-        await input.FillAsync(MenuNodeName);
+        await App.FillReliablyAsync(input, MenuNodeName);
         await input.PressAsync("Enter");
 
         await Expect(App.NodeLabel(MenuNodeName)).ToBeVisibleAsync();
@@ -74,7 +74,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         // The data-testid is applied directly to the MudTextField's <input> element.
         ILocator input = Page.GetByTestId("manual-node-name");
         await Expect(input).ToBeVisibleAsync();
-        await input.FillAsync(name);
+        await App.FillReliablyAsync(input, name);
         await input.PressAsync("Enter");
     }
 }

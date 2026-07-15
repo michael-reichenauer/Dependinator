@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 namespace Dependinator.E2E.Tests.Sync;
 
 // Signed-in cloud-sync UI flow. Runs only under `./e2e -s` (Azurite + Functions on 7071 +
-// the test JWKS server). Stubs Clerk via AppPage.SignInAsTestUserAsync (no real Clerk) and
+// the test JWKS server). Stubs Clerk via AppPage.StubClerkSignInAsync (no real Clerk) and
 // seeds a model via SeededSyncModel, then drives the browser: click the cloud button to sign
 // in, and verify the signed-in UI reflects the authenticated session and lists the seeded
 // model. This exercises the whole Clerk-stub -> Bearer token -> /api -> UI chain that the
@@ -14,6 +14,7 @@ namespace Dependinator.E2E.Tests.Sync;
 public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
 {
     static readonly Regex Disabled = new("mud-disabled");
+    static readonly Regex Connecting = new("cloud-connecting");
 
     // SeededSyncModel is a class fixture: xUnit seeds the model (IAsyncLifetime) before this
     // test. Signing in as that same user is what makes the model appear in the cloud list.
@@ -23,12 +24,18 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
     [SyncFact]
     public async Task CloudSignIn_ShouldAuthenticateAndListSeededModel()
     {
-        // Appear signed in as the seed user so /api/models returns the seeded model.
-        await App.SignInAsTestUserAsync(sub: SeededSyncModel.UserSub);
+        // Stub Clerk so the cloud-button click signs in as the seed user, which makes
+        // /api/models return the seeded model. The stub stays signed out until then, so
+        // the app cannot authenticate (and auto-sync) in the background before the click.
+        await App.StubClerkSignInAsync(sub: SeededSyncModel.UserSub);
         await App.GotoMainPageAsync();
 
+        // Wait out the transient "connecting" state — the cloud button silently ignores
+        // clicks while the initial auth probe is still running.
+        await Expect(App.CloudButton).Not.ToHaveClassAsync(Connecting, new() { Timeout = 15_000 });
+
         // The cloud button starts not-authenticated; clicking it signs in (clerkSignIn
-        // resolves immediately because the stubbed Clerk already reports a user).
+        // resolves as soon as the stubbed Clerk.openSignIn reports the signed-in user).
         await App.CloudButton.ClickAsync();
 
         // Login is async (Functions round-trip). The cloud tooltip flips from "Device sync
@@ -39,9 +46,7 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
 
         // The app menu now reflects an authenticated session (Logout and Cloud Models both
         // live inside the Models submenu, so hover it to expand the flyout) ...
-        await App.Menu.ClickAsync();
-        await App.MenuItem("menu-models").HoverAsync();
-        await Expect(App.MenuItem("menu-logout")).ToBeVisibleAsync();
+        await Expect(await App.OpenSubMenuItemAsync("menu-models", "menu-logout")).ToBeVisibleAsync();
 
         // ... and the Cloud Models submenu is enabled (i.e. the seeded model was listed) ...
         await Expect(App.MenuItem("menu-cloud-models")).Not.ToHaveClassAsync(Disabled);
