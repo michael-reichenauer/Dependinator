@@ -1,8 +1,13 @@
 # Dependinator
 
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/michaelreichenauer.dependinator?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/michaelreichenauer.dependinator)](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
+
 Dependinator visualizes the structure and dependencies of your C#/.NET
 codebase as an interactive, navigable map, making complex architectures easier
-to understand, analyze, and refactor.
+to understand, analyze, and refactor. It is published as a
+[VS Code extension](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
+on the Visual Studio Marketplace.
 
 > ⚠️ **Beta** — Dependinator is under active development and published as an
 > early preview for a small group of testers. Expect rough edges, missing
@@ -28,7 +33,8 @@ to understand, analyze, and refactor.
 
 - **VS Code extension** — install
   [Dependinator](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
-  from the marketplace and run **Dependinator: Open** in a workspace with a
+  from the Visual Studio Marketplace (search for "Dependinator" in the
+  Extensions view) and run **Dependinator: Open** in a workspace with a
   `.sln` file. See [src/DependinatorVsCode/README.md](src/DependinatorVsCode/README.md)
   for details.
 - **In the browser** — try the demo at [dependinator.com](https://dependinator.com).
