@@ -91,6 +91,10 @@ class SourceParser : ISourceParser
     {
         var moduleName = Names.GetModuleName(compilation);
         var (description, fileSpan) = GetAssemblyDescription(compilation, projectPath);
+        bool isExecutable = compilation.Options.OutputKind
+            is OutputKind.ConsoleApplication
+                or OutputKind.WindowsApplication
+                or OutputKind.WindowsRuntimeApplication;
         yield return new Item(
             new Node(
                 moduleName,
@@ -99,6 +103,7 @@ class SourceParser : ISourceParser
                     Type = NodeType.Assembly,
                     Description = description,
                     Parent = parentName,
+                    IsExecutable = isExecutable,
                     FileSpan = fileSpan,
                 }
             ),
