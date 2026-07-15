@@ -181,6 +181,14 @@ class CanvasService(
 
     async Task ShowDemoMessageAsync()
     {
+        // Inside the VS Code extension the user already has it installed, so only
+        // suggest the extension in the browser hosts.
+        string extensionHint = Dependinator.Core.Build.IsVsCodeExtWasm
+            ? ""
+            : "To work with diagrams alongside your code, install the "
+                + "<a href=\"https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator\" "
+                + "target=\"_blank\" rel=\"noopener\">Dependinator VS Code extension</a>.<br/><br/>";
+
         await dialogService.ShowMessageBoxAsync(
             "Welcome to Dependinator",
             (MarkupString)(
@@ -188,6 +196,9 @@ class CanvasService(
                 + "has been opened for you to explore.<br/><br/>"
                 + "Pan, zoom and click the nodes to see how Dependinator visualizes "
                 + "software dependencies. You can open your own model at any time from the menu.<br/><br/>"
+                + "The <b>Help</b> page (the <b>?</b> button in the app bar) has usage "
+                + "instructions, navigation tips, and keyboard/mouse controls.<br/><br/>"
+                + extensionHint
                 + "Enable device sync to keep your diagrams in sync across your devices."
             ),
             yesText: "Got it"
