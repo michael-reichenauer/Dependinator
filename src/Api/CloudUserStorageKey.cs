@@ -11,15 +11,15 @@ internal static class CloudUserStorageKey
         if (!string.IsNullOrWhiteSpace(user.Email))
         {
             string normalizedEmail = user.Email.Trim().ToLowerInvariant();
-            return $"email-{BlobNameSanitizer.SanitizeForBlobName(normalizedEmail)}";
+            return $"email-{ComputeHash(normalizedEmail)}";
         }
 
-        return BlobNameSanitizer.SanitizeForBlobName(user.UserId, fallbackValue: "unknown-user");
+        if (string.IsNullOrWhiteSpace(user.UserId))
+            return "unknown-user";
+
+        return $"user-{ComputeHash(user.UserId)}";
     }
 
-    // Currently unused: storage keys are kept as plain text (email/user id) to ease
-    // development. Once the key scheme switches to hashed keys, this will be used to
-    // hash the values above.
     static string ComputeHash(string value)
     {
         byte[] valueBytes = Encoding.UTF8.GetBytes(value);
