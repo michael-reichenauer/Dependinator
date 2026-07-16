@@ -4,6 +4,7 @@ using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using Dependinator.UI.Shared.VsCode;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
@@ -41,7 +42,8 @@ class CanvasService(
     IBrowserFileService browserFileService,
     IModelListService recentModelsService,
     IInteractionService interactionService,
-    IDialogService dialogService
+    IDialogService dialogService,
+    IVsCodeSendService vsCodeSendService
 ) : ICanvasService
 {
     double levelZoom = 1;
@@ -86,6 +88,10 @@ class CanvasService(
         // Signal that the initial model has loaded and rendered (data-app-ready=true on
         // the body), so UI/e2e tests can wait on it instead of arbitrary timeouts.
         await jSInteropService.Call("setAppReady", true);
+
+        // Let the VS Code extension host know the diagram is ready, so it can reveal the
+        // node for the editor that was active when the webview was first opened.
+        await vsCodeSendService.NotifyDiagramLoadedAsync();
 
         // First-time users (or users who reset their last diagram) have no previous
         // model, so a demo diagram is shown. Let them know why, and invite them to

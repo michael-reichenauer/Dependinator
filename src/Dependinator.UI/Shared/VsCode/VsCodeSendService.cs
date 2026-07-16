@@ -6,6 +6,7 @@ interface IVsCodeSendService
 {
     Task ShowEditorAsync(FileLocation fileLocation);
     Task OpenHelpAsync();
+    Task NotifyDiagramLoadedAsync();
 }
 
 [Scoped]
@@ -23,6 +24,14 @@ class VsCodeSendService : IVsCodeSendService
         var message = $"{fileLocation.Path}@{fileLocation.Line}";
         Log.Info("Show editor", message);
         await jSInterop.Call<bool>("postVsCodeMessage", new { type = "vscode/ShowEditor", message = message });
+    }
+
+    // Tells the extension host that the initial diagram has loaded and rendered, so it
+    // can send a pending ui/ShowNode for the editor that was active when the webview was
+    // opened. No-op in browser hosts (postVsCodeMessage returns false there).
+    public async Task NotifyDiagramLoadedAsync()
+    {
+        await jSInterop.Call<bool>("postVsCodeMessage", new { type = "vscode/DiagramLoaded", message = "" });
     }
 
     // The help page is a static asset served from the Dependinator.UI RCL at

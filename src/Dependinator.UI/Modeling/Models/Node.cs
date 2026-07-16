@@ -147,6 +147,7 @@ class Node : IItem
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
                 IsExecutable = IsExecutable,
+                FileSpan = fileSpan,
             },
             Boundary = boundary != Rect.None ? boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
@@ -169,6 +170,7 @@ class Node : IItem
         SetDescription(dto.Properties.Description);
         IsPrivate = dto.Properties.IsPrivate;
         IsExecutable = dto.Properties.IsExecutable;
+        fileSpan = dto.Properties.FileSpan;
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;

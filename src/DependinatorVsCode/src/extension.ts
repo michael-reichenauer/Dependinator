@@ -252,6 +252,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
         const panel = createDependinatorWebviewPanel(context);
 
+        // The webview UI isn't ready to handle ui/ShowNode until the diagram has loaded,
+        // so remember the editor active at open time and reveal its node when the UI
+        // reports "vscode/DiagramLoaded".
+        let pendingShowNodeEditor: vscode.TextEditor | undefined = activeTextEditor;
+
         activePanel = panel;
         const autoRefresh = registerAutoRefresh(panel);
         panel.onDidDispose(() => {
@@ -261,6 +266,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         registerWebviewMessageHandler(panel, async (message: WebviewMessage) => {
+            if (message.type === "vscode/DiagramLoaded") {
+                const editor = pendingShowNodeEditor;
+                pendingShowNodeEditor = undefined;
+                sendShowNodeForEditor(editor);
+                return;
+            }
+
             if (message.type === "vscode/OpenExternal") {
                 const url = String(message.message ?? "");
                 if (url)
