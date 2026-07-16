@@ -61,6 +61,11 @@
 
                 <MudDivider />
 
+                <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
+                             data-testid="menu-edit-mode">
+                    Edit Mode
+                </MudMenuItem>
+
             </MudMenu>
 
             <MudMenu Label="View" PopoverClass="dep-light-menu" data-testid="menu-view">
@@ -69,23 +74,10 @@
                     Show Hidden Nodes
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
-                             data-testid="menu-edit-mode">
-                    Edit Mode
-                </MudMenuItem>
-
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
                              data-testid="menu-notes-sidebar">
                     Notes Sidebar
                 </MudMenuItem>
-
-                @if (Build.IsVsCodeExtWasm || Build.IsWeb)
-                {
-                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                                 OnClick="canvasService.RefreshAsync" data-testid="menu-refresh">
-                        Refresh
-                    </MudMenuItem>
-                }
             </MudMenu>
 
             <MudMenu Label="Models" PopoverClass="dep-light-menu" data-testid="menu-models">
@@ -108,6 +100,14 @@
                 }
 
                 <MudDivider />
+
+                @if (Build.IsVsCodeExtWasm || Build.IsWeb)
+                {
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                                 OnClick="canvasService.RefreshAsync" data-testid="menu-refresh">
+                        Refresh
+                    </MudMenuItem>
+                }
 
                 <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff"
                              OnClick="OnRemove" data-testid="menu-reset-model">
