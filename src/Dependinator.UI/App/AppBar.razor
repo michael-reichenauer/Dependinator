@@ -78,6 +78,16 @@
                              data-testid="menu-notes-sidebar">
                     Notes Sidebar
                 </MudMenuItem>
+
+                @if (!Build.IsVsCodeExtWasm)
+                {
+                    <MudDivider />
+
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                                 OnClick="ReloadPageAsync" data-testid="menu-reload">
+                        Reload
+                    </MudMenuItem>
+                }
             </MudMenu>
 
             <MudMenu Label="Models" PopoverClass="dep-light-menu" data-testid="menu-models">
@@ -103,9 +113,9 @@
 
                 @if (Build.IsVsCodeExtWasm || Build.IsWeb)
                 {
-                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                                 OnClick="canvasService.RefreshAsync" data-testid="menu-refresh">
-                        Refresh
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Autorenew"
+                                 OnClick="canvasService.RefreshAsync" data-testid="menu-parse">
+                        Parse
                     </MudMenuItem>
                 }
 
@@ -181,9 +191,9 @@
         </MudTooltip>
         @if (Build.IsVsCodeExtWasm || Build.IsWeb)
         {
-            <MudTooltip Text="Refresh">
-                <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.RefreshAsync"
-                               data-testid="toolbar-refresh" />
+            <MudTooltip Text="Parse">
+                <MudIconButton Icon="@Icons.Material.Outlined.Autorenew" OnClick="canvasService.RefreshAsync"
+                               data-testid="toolbar-parse" />
             </MudTooltip>
         }
         @if (ViewOptions.IsEditingEnabled)
@@ -489,6 +499,8 @@
         manualEditService.BeginPlaceNode();
         snackbar.Add("Click on the diagram to place the node.", Severity.Info);
     }
+
+    async Task ReloadPageAsync() => await jsInterop.Call("reloadPage");
 
     Task ShowAbout() => aboutBox.ShowAsync();
 
