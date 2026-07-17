@@ -23,10 +23,15 @@ static class DiagramPlacement
 
     // Maps a pointer event's screen position to canvas (root) coordinates, then into the
     // container's inner child space, where the new item's boundary is expressed.
-    public static Pos ToContainerLocal(IModel model, Node container, PointerEvent e)
+    public static Pos ToContainerLocal(IModel model, Node container, PointerEvent e) =>
+        ToContainerLocal(model, container, new Pos(e.OffsetX, e.OffsetY));
+
+    // Same mapping for an explicit canvas-local (svg element) position, used when the pointer
+    // event's offset is unusable (pointer capture retargets offsets to the pressed element).
+    public static Pos ToContainerLocal(IModel model, Node container, Pos canvasPos)
     {
-        var svgX = e.OffsetX * model.Zoom + model.Offset.X;
-        var svgY = e.OffsetY * model.Zoom + model.Offset.Y;
+        var svgX = canvasPos.X * model.Zoom + model.Offset.X;
+        var svgY = canvasPos.Y * model.Zoom + model.Offset.Y;
 
         var (parentPos, parentZoom) = container.GetPosAndZoom();
         var zoom = container.ContainerZoom * parentZoom;

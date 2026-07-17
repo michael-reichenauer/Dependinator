@@ -21,6 +21,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     const string DragSourceIcon = "Messaging";
     const string DragTargetIcon = "Scheduler";
     const string DragCancelIcon = "Analytics";
+    const string DragCanvasIcon = "Security";
 
     [E2EFact]
     public async Task ManualNode_ShouldBeAddedViaMenu_AtClickedPosition()
@@ -147,7 +148,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
-    public async Task ManualLink_ShouldNotBeCreated_WhenLinkHandleDroppedOnEmptyCanvas()
+    public async Task ManualNode_ShouldBeAddedAndLinked_WhenLinkHandleDroppedOnEmptyCanvas()
     {
         await App.GotoMainPageAsync();
 
@@ -157,18 +158,33 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await AddManualNodeAtAsync(DragCancelIcon, box.X + 150, box.Y + box.Height - 130);
         await Expect(App.NodeLabel(DragCancelIcon)).ToBeVisibleAsync();
 
+        // Dropping the link handle on empty canvas opens the icon selector (a new node will be
+        // added at the drop point and linked to). Escape cancels the whole gesture: no node
+        // and no link are created.
         (float pressX, float pressY) = await HoverLinkHandleAsync(DragCancelIcon);
         await Page.Mouse.DownAsync();
         await Page.Mouse.MoveAsync(pressX + 200, pressY - 100, new() { Steps = 10 });
         await Expect(Page.Locator(".link-drag-overlay")).ToBeVisibleAsync();
-
-        // Dropping on empty canvas cancels the drag without creating a link.
         await Page.Mouse.UpAsync();
-
         await Expect(Page.Locator(".link-drag-overlay")).ToBeHiddenAsync();
+
+        ILocator search = Page.GetByTestId("icon-dialog-search");
+        await Expect(search).ToBeVisibleAsync();
+        await Page.Keyboard.PressAsync("Escape");
+        await Expect(search).ToBeHiddenAsync();
         ILocator anyLineFromNode = Page.Locator("#svgcanvas g.hoverable")
             .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(DragCancelIcon)}→") });
         await Expect(anyLineFromNode).ToHaveCountAsync(0);
+
+        // Dropping again and picking an icon creates the new node and the link to it.
+        (pressX, pressY) = await HoverLinkHandleAsync(DragCancelIcon);
+        await Page.Mouse.DownAsync();
+        await Page.Mouse.MoveAsync(pressX + 200, pressY - 100, new() { Steps = 10 });
+        await Page.Mouse.UpAsync();
+        await PickIconAsync(DragCanvasIcon);
+
+        await Expect(App.NodeLabel(DragCanvasIcon)).ToBeVisibleAsync();
+        await Expect(LineGroup(DragCancelIcon, DragCanvasIcon)).ToHaveCountAsync(1);
     }
 
     // Hovers the node to reveal its drag-to-link handle, then moves onto the handle's visible

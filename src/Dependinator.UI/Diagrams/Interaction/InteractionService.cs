@@ -422,8 +422,25 @@ class InteractionService(
         }
 
         var elementId = await screenService.GetElementIdAtPointAsync(e.ClientX, e.ClientY);
-        manualEditService.TryCompleteLinkDrag(PointerId.Parse(elementId));
+        var canvasPos = await GetCanvasPosAsync(e);
+
+        // Canvas/container drops open the icon selector dialog before completing; the drag
+        // state itself is reset synchronously, so refresh the UI right away to hide the
+        // preview line while the dialog is open.
+        var completion = manualEditService.CompleteLinkDragAsync(PointerId.Parse(elementId), canvasPos);
         applicationEvents.TriggerUIStateChanged();
+        await completion;
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    // The pointer-up position in canvas (svg-local) pixels; null if the canvas bounds are
+    // unknown. e.OffsetX/Y cannot be used: pointer capture makes them relative to the pressed
+    // link handle.
+    async Task<Pos?> GetCanvasPosAsync(PointerEvent e)
+    {
+        if (!Try(out var svgBound, out var _, await screenService.GetBoundingRectangle(PointerId.CanvasElementId)))
+            return null;
+        return new Pos(e.ClientX - svgBound.X, e.ClientY - svgBound.Y);
     }
 
     // Fires when a button has been held for MoveDelay without release: switches to the "move"

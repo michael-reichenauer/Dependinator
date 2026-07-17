@@ -21,6 +21,9 @@ record PointerId
         LinePointIndex = linePointIndex;
     }
 
+    // The id of the svg canvas element itself (drops/clicks on the diagram background).
+    public const string CanvasElementId = "svgcanvas";
+
     public static readonly PointerId Empty = new("", "", NodeResizeType.None);
 
     public static PointerId FromNode(NodeId nodeId) => new(nodeId.Value, "n", NodeResizeType.None);
@@ -45,6 +48,7 @@ record PointerId
     }
 
     public bool IsNode => SubId == "n";
+    public bool IsCanvas => Id == CanvasElementId;
     public bool IsLinkHandle => SubId == "lh";
     public bool IsResize => NodeResizeType != NodeResizeType.None;
     public bool IsLine => SubId == "l";

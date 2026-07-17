@@ -41,17 +41,21 @@ interface IManualEditService
     void CancelNameEntry();
 
     // Drag-to-link: pressing an icon node's link handle and dragging draws a dotted preview line
-    // (the Canvas renders it while IsLinkDragActive); dropping on another node creates a manual
-    // link. Positions are in viewport (client) pixels, matching the fixed preview overlay.
+    // (the Canvas renders it while IsLinkDragActive); dropping on an icon node creates a manual
+    // link, dropping on the canvas or a container adds a new node to link to. Positions are in
+    // viewport (client) pixels, matching the fixed preview overlay.
     bool IsLinkDragActive { get; }
     Pos LinkDragStart { get; }
     Pos LinkDragEnd { get; }
     void BeginLinkDrag(NodeId sourceId, Pos startPos);
     void UpdateLinkDrag(Pos pos);
 
-    // Completes a link drag with the dropped-on target; always resets the drag state. Returns
-    // true if a link was created (false on empty space, non-node or self drops).
-    bool TryCompleteLinkDrag(PointerId targetPointerId);
+    // Completes a link drag with the dropped-on target; always resets the drag state. Dropping
+    // on an icon node links to it; dropping on the canvas background or an expanded container
+    // adds a new node there (via the icon selector dialog) and links to that node instead.
+    // Other drops (self, outside the diagram, canceled dialog) create nothing. canvasPos is
+    // the drop point in canvas (svg-local) pixels, null if unknown.
+    Task CompleteLinkDragAsync(PointerId targetPointerId, Pos? canvasPos);
     void CancelLinkDrag();
 
     // Deletes a leaf manual node together with its manual links (undoable).
@@ -260,15 +264,75 @@ class ManualEditService(
         LinkDragEnd = pos;
     }
 
-    public bool TryCompleteLinkDrag(PointerId targetPointerId)
+    public async Task CompleteLinkDragAsync(PointerId targetPointerId, Pos? canvasPos)
     {
         if (!IsLinkDragActive)
-            return false;
+            return;
 
         var sourceName = dragLinkSourceName;
         ResetLinkDrag();
 
-        return TryCreateManualLink(sourceName, targetPointerId);
+        // Icon-view node drops link to the existing node; canvas/container drops add a new node
+        // at the drop point (in the resolved container) and link to it.
+        var linkTargetName = "";
+        var parentName = "";
+        var boundary = Rect.None;
+        using (var model = modelMgr.UseModel())
+        {
+            if (targetPointerId.IsNode)
+            {
+                if (!model.Nodes.TryGetValue(targetPointerId.NodeId, out var node))
+                    return;
+                if (!node.IsRoot && !NodeViewPolicy.IsContainerView(node, model.Zoom))
+                    linkTargetName = node.Name;
+            }
+            else if (!targetPointerId.IsCanvas)
+            {
+                return; // Dropped outside the diagram (or on a line/handle): nothing to do.
+            }
+
+            if (linkTargetName.Length == 0)
+            {
+                if (canvasPos is not { } pos)
+                    return;
+
+                var container = DiagramPlacement.ResolveContainer(model, targetPointerId);
+                var local = DiagramPlacement.ToContainerLocal(model, container, pos);
+                parentName = container.Name;
+                boundary = new Rect(
+                    NodeGrid.Snap(local.X - DefaultWidth / 2),
+                    NodeGrid.Snap(local.Y - DefaultHeight / 2),
+                    DefaultWidth,
+                    DefaultHeight
+                );
+            }
+        }
+
+        if (linkTargetName.Length > 0)
+        {
+            if (linkTargetName != sourceName)
+                commandService.Do(new AddLinkCommand(structureService, sourceName, linkTargetName));
+            return;
+        }
+
+        var iconName = await ShowIconSelectorAsync();
+        if (iconName is null)
+            return;
+
+        string fullName;
+        using (var model = modelMgr.UseModel())
+        {
+            var shortName = UniqueShortName(model, parentName, IconLibrary.ToDisplayName(iconName));
+            fullName = DiagramPlacement.ComposeFullName(parentName, shortName);
+        }
+
+        // One undoable step: undoing removes both the link and the node it was drawn to.
+        commandService.Do(
+            new CompositeCommand(
+                new AddNodeCommand(fullName, parentName, boundary, iconName: iconName),
+                new AddLinkCommand(structureService, sourceName, fullName)
+            )
+        );
     }
 
     public void CancelLinkDrag()
@@ -285,19 +349,6 @@ class ManualEditService(
         LinkDragEnd = Pos.None;
         dragLinkSourceName = "";
         StateChanged?.Invoke();
-    }
-
-    bool TryCreateManualLink(string sourceName, PointerId targetPointerId)
-    {
-        if (!targetPointerId.IsNode)
-            return false;
-
-        var targetName = ResolveNodeName(targetPointerId.NodeId);
-        if (targetName.Length == 0 || targetName == sourceName)
-            return false;
-
-        commandService.Do(new AddLinkCommand(structureService, sourceName, targetName));
-        return true;
     }
 
     // Deletes a manual node and its whole subtree (children and their links), as one undoable step.
