@@ -127,15 +127,4 @@ public class ManualEditServiceLinkDragTests
         Assert.Equal(Pos.None, service.LinkDragEnd);
         commandService.Verify(c => c.Do(It.IsAny<Command>()), Times.Never);
     }
-
-    [Fact]
-    public void LinkDrag_ShouldNotActivate_ClickBasedAddLinkMode()
-    {
-        var sourceId = AddRootNode("A");
-        var service = CreateService();
-
-        service.BeginLinkDrag(sourceId, new Pos(10, 20));
-
-        Assert.False(service.IsAddingLink);
-    }
 }

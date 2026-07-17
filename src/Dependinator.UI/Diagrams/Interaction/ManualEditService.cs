@@ -10,9 +10,9 @@ using MudBlazor;
 namespace Dependinator.UI.Diagrams.Interaction;
 
 // Orchestrates the "manual design" interactions: adding user-drawn nodes (double-click empty
-// canvas → icon selector dialog), renaming them in place, and drawing user-drawn links (select
-// source → add-link mode → click target, or drag a node's link handle onto the target). All
-// mutations go through the undoable CommandService.
+// canvas → icon selector dialog), renaming them in place, and drawing user-drawn links (drag a
+// hovered node's link handle onto the target). All mutations go through the undoable
+// CommandService.
 interface IManualEditService
 {
     // Inline name-entry state (the Canvas renders a name input while IsNameEntryOpen is true),
@@ -39,14 +39,6 @@ interface IManualEditService
     // Commits the inline name entry (renames); false if the name is empty or already used.
     bool CommitNameEntry(string name);
     void CancelNameEntry();
-
-    // Add-link mode.
-    bool IsAddingLink { get; }
-    void BeginAddLink(NodeId sourceId);
-
-    // Completes a pending add-link with the clicked target. Returns true if a link was created.
-    bool TryCompleteAddLink(PointerId targetPointerId);
-    void CancelAddLink();
 
     // Drag-to-link: pressing an icon node's link handle and dragging draws a dotted preview line
     // (the Canvas renders it while IsLinkDragActive); dropping on another node creates a manual
@@ -92,11 +84,6 @@ class ManualEditService(
     public string NameEntryInitialValue { get; private set; } = "";
     public string NameEntryLabel => "Rename node";
 
-    public bool IsAddingLink { get; private set; }
-    string addLinkSourceName = "";
-
-    // Deliberately separate from the add-link mode state, so a stray click during or after a
-    // drag can never complete a link via the click-based add-link path.
     public bool IsLinkDragActive { get; private set; }
     public Pos LinkDragStart { get; private set; } = Pos.None;
     public Pos LinkDragEnd { get; private set; } = Pos.None;
@@ -122,8 +109,7 @@ class ManualEditService(
 
     public async Task AddNodeAtAsync(PointerEvent e)
     {
-        // Any pending link-drawing or armed placement is superseded by starting a node add.
-        IsAddingLink = false;
+        // Any armed placement is superseded by starting a node add.
         IsPlacingNode = false;
         StateChanged?.Invoke();
 
@@ -198,8 +184,6 @@ class ManualEditService(
 
     public void BeginRenameNode(NodeId nodeId, Pos screenPos)
     {
-        IsAddingLink = false;
-
         using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out var node))
@@ -254,35 +238,6 @@ class ManualEditService(
         if (!IsNameEntryOpen)
             return;
         ResetNameEntry();
-    }
-
-    public void BeginAddLink(NodeId sourceId)
-    {
-        addLinkSourceName = ResolveNodeName(sourceId);
-        if (addLinkSourceName.Length == 0)
-            return;
-        IsAddingLink = true;
-        StateChanged?.Invoke();
-    }
-
-    public bool TryCompleteAddLink(PointerId targetPointerId)
-    {
-        if (!IsAddingLink)
-            return false;
-
-        var sourceName = addLinkSourceName;
-        IsAddingLink = false;
-        StateChanged?.Invoke();
-
-        return TryCreateManualLink(sourceName, targetPointerId);
-    }
-
-    public void CancelAddLink()
-    {
-        if (!IsAddingLink)
-            return;
-        IsAddingLink = false;
-        StateChanged?.Invoke();
     }
 
     public void BeginLinkDrag(NodeId sourceId, Pos startPos)

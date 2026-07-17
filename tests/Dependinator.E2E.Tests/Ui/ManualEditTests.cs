@@ -81,14 +81,16 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await AddManualNodeAtAsync(LinkTargetIcon, box.X + 450, box.Y + box.Height - 130);
         await Expect(App.NodeLabel(LinkTargetIcon)).ToBeVisibleAsync();
 
-        // Draw the link: select the source, arm add-link mode, click the target. The clicks
-        // are deliberately not paced apart: quick successive clicks at different positions
-        // must not merge into a double-click (PointerEventService's distance check), which
-        // would start an add-node and cancel add-link mode.
-        await App.SelectNodeByVisibleNameAsync(LinkSourceIcon);
-        await Page.GetByTestId("node-add-link").ClickAsync();
-        await Expect(Page.GetByText("Click a target node to link to")).ToBeVisibleAsync();
-        await App.SelectNodeByVisibleNameAsync(LinkTargetIcon);
+        // Draw the link by dragging the source node's link handle onto the target node.
+        LocatorBoundingBoxResult targetBox = await WaitForStableNodeBoxAsync(LinkTargetIcon);
+        await HoverLinkHandleAsync(LinkSourceIcon);
+        await Page.Mouse.DownAsync();
+        await Page.Mouse.MoveAsync(
+            targetBox.X + targetBox.Width / 2,
+            targetBox.Y + targetBox.Height / 2,
+            new() { Steps = 10 }
+        );
+        await Page.Mouse.UpAsync();
 
         // The manual link renders as a line between the two nodes. (Not ToBeVisible: a
         // horizontal line's group has a zero-height bounding box, which Playwright

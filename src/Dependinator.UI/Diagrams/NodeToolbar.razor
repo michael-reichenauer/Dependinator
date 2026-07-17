@@ -103,10 +103,6 @@ else if (HasSelectedLine)
           @(IsIconMode ? IconColorMenuItems : NodeColorMenuItems)
         </MudMenu>
       </MudTooltip>
-      <MudTooltip Text="Add link from this node">
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CallMade" OnClick="BeginAddLink"
-                       data-testid="node-add-link" />
-      </MudTooltip>
     }
 
     @if (CanShowSource)
@@ -211,9 +207,6 @@ else if (HasSelectedLine)
   INoteService noteService { get; set; } = null!;
 
   [Inject]
-  ISnackbar snackbar { get; set; } = null!;
-
-  [Inject]
   INodeEditService nodeEditService { get; set; } = null!;
 
 
@@ -305,14 +298,6 @@ else if (HasSelectedLine)
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();
-
-  void BeginAddLink()
-  {
-    if (!TryGetSelectedNodeId(out var nodeId))
-      return;
-    manualEditService.BeginAddLink(nodeId);
-    snackbar.Add("Click a target node to link to (Esc or click empty space to cancel).", Severity.Info);
-  }
 
   async Task DeleteNode()
   {

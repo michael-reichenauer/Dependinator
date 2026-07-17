@@ -175,11 +175,6 @@ class InteractionService(
             noteService.CancelPlaceNote();
             return;
         }
-        if (manualEditService.IsAddingLink)
-        {
-            manualEditService.CancelAddLink();
-            return;
-        }
         if (manualEditService.IsLinkDragActive)
         {
             manualEditService.CancelLinkDrag();
@@ -247,16 +242,6 @@ class InteractionService(
         if (manualEditService.IsPlacingNode)
         {
             _ = manualEditService.AddNodeAtAsync(e);
-            return;
-        }
-
-        // While drawing a manual link, a click picks the target node (or cancels on empty space).
-        if (manualEditService.IsAddingLink)
-        {
-            if (pointerId.IsNode)
-                manualEditService.TryCompleteAddLink(pointerId);
-            else
-                manualEditService.CancelAddLink();
             return;
         }
 
