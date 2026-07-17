@@ -1,3 +1,4 @@
+using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -119,6 +120,9 @@ class ModelService : IModelService, IDisposable
         if (!Try(out var modelInfo, out var e, await ReadCachedModelAsync(path)))
         {
             Log.Info("Failed to read cached model", e.ErrorMessage);
+            if (ModelPaths.IsDesignModel(path))
+                return await CreateEmptyModelAsync(path);
+
             var parsedModelInfo = await ParseNewModelAsync(path);
             TriggerSave();
             applicationEvents.TriggerModelChanged();
@@ -145,6 +149,28 @@ class ModelService : IModelService, IDisposable
         }
     }
 
+    // Creates and persists a new empty design model (root node only). Design models are
+    // manually edited and never parsed; the persisted model is their only source of truth,
+    // so it is written immediately (not debounced) to survive an instant reload.
+    async Task<R<ModelInfo>> CreateEmptyModelAsync(string path)
+    {
+        Log.Info("Creating empty design model", path);
+        ModelDto modelDto;
+        using (var model = modelMgr.UseModel())
+        {
+            model.Path = path;
+            model.UpdateStamp = DateTime.UtcNow;
+            modelDto = model.SerializeToDto();
+        }
+
+        if (!Try(out var e, await persistenceService.WriteAsync(path, modelDto)))
+            return e;
+
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+        return new ModelInfo(path, Rect.None, 0);
+    }
+
     async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
     {
         using var progress = progressService.Start("Loading ...");
@@ -159,6 +185,12 @@ class ModelService : IModelService, IDisposable
     public async Task<R> RefreshAsync()
     {
         var path = modelMgr.ModelPath;
+        if (ModelPaths.IsDesignModel(path))
+        {
+            Log.Info("Design model, parsing skipped", path);
+            return R.Ok;
+        }
+
         if (!modelListService.IsLocalPath(path))
         {
             Log.Info("Not a local path", path);

@@ -1,0 +1,54 @@
+@using MudBlazor
+
+@* Prompts for the name of a new empty model for manually designed diagrams. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">New Model</MudText>
+  </TitleContent>
+  <DialogContent>
+    <MudTextField @ref="nameField" T="string" @bind-Value="Name" Label="Model name" Immediate="true"
+                  HelperText="A new empty model for manually designed diagrams"
+                  Error="@ShowError" ErrorText="@ErrorText" OnKeyDown="OnKeyDown"
+                  data-testid="new-model-name" />
+  </DialogContent>
+  <DialogActions>
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="new-model-cancel">Cancel</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Create" Disabled="@(!CanCreate)"
+               data-testid="new-model-create">Create</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public IReadOnlyList<string> ExistingPaths { get; set; } = [];
+
+  MudTextField<string> nameField = null!;
+  string Name { get; set; } = "";
+
+  string? ErrorText => NewModelNameValidator.Validate(Name, ExistingPaths);
+  bool CanCreate => ErrorText is null;
+  bool ShowError => ErrorText is not null && Name.Trim() != "";
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender && nameField is not null)
+      await nameField.FocusAsync();
+  }
+
+  void OnKeyDown(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter")
+      Create();
+  }
+
+  void Create()
+  {
+    if (!CanCreate)
+      return;
+    MudDialog.Close(DialogResult.Ok(Name.Trim()));
+  }
+
+  void Cancel() => MudDialog.Cancel();
+}
