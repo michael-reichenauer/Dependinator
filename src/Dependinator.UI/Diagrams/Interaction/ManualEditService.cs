@@ -49,6 +49,9 @@ interface IManualEditService
 
     // Deletes a leaf manual node together with its manual links (undoable).
     void DeleteManualNode(NodeId nodeId);
+
+    // Deletes the manual link(s) a line represents (undoable); no-op if the line has parsed links.
+    void DeleteManualLine(LineId lineId);
 }
 
 [Scoped]
@@ -290,6 +293,25 @@ class ManualEditService(
 
         if (commands.Count == 0)
             return;
+        commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+    }
+
+    public void DeleteManualLine(LineId lineId)
+    {
+        var commands = new List<Command>();
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(lineId, out var line))
+                return;
+            if (!line.Links.Any() || line.Links.Any(l => !l.IsManual))
+                return;
+
+            foreach (var link in line.Links)
+            {
+                commands.Add(new DeleteLinkCommand(structureService, link.Source.Name, link.Target.Name));
+            }
+        }
+
         commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
     }
 

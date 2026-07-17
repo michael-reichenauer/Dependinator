@@ -9,6 +9,7 @@
 @inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
 @inject ILineEditService lineEditService
+@inject IManualEditService manualEditService
 @inject INavigationService navigationService
 @implements IDisposable
 
@@ -46,6 +47,13 @@
                     <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
                                    data-testid="line-remove-point" />
                 </MudTooltip>
+                @if (IsSelectedLineManual)
+                {
+                    <MudTooltip Text="Delete link">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error"
+                                       OnClick="DeleteManualLine" data-testid="line-delete" />
+                    </MudTooltip>
+                }
             }
             @if (interactionService.CanShowLineSource)
             {
@@ -87,6 +95,19 @@
             selectionService.SelectedLineClickPosition
         );
     }
+    // The line shows only user-drawn link(s), so it can be deleted (parsed links cannot).
+    bool IsSelectedLineManual =>
+        TryGetSelectedLine(out var line) && line.Links.Any() && line.Links.All(l => l.IsManual);
+
+    void DeleteManualLine()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
+        selectionService.Unselect();
+        manualEditService.DeleteManualLine(lineId);
+    }
+
     void CloseDirectLine()
     {
         if (!selectionService.SelectedId.IsLine)
