@@ -1,0 +1,88 @@
+# Curated Azure icons: "<source-key> = <Target-Name>" where the source key is the dashed name
+# after "-icon-service-" in the official package (numeric file prefixes change per release).
+# Import via ./import-icons; see scripts/import-cloud-icons.mjs for the package url/version.
+
+# Compute & containers
+Virtual-Machine             = Virtual-Machine
+VM-Scale-Sets               = VM-Scale-Sets
+Kubernetes-Services         = AKS
+Container-Apps-Environments = Container-Apps
+Container-Instances         = Container-Instances
+Container-Registries        = Container-Registry
+Function-Apps               = Azure-Functions
+App-Services                = App-Service
+Static-Apps                 = Static-Web-Apps
+Batch-Accounts              = Azure-Batch
+Service-Fabric-Clusters     = Service-Fabric
+
+# Storage
+Storage-Accounts            = Storage-Account
+Blob-Block                  = Blob-Storage
+Azure-Fileshares            = Azure-Files
+Storage-Queue               = Storage-Queue
+Disks                       = Managed-Disks
+
+# Databases & analytics
+SQL-Database                = SQL-Database
+SQL-Managed-Instance        = SQL-Managed-Instance
+Azure-Cosmos-DB             = Cosmos-DB
+Azure-Database-PostgreSQL-Server = PostgreSQL
+Azure-Database-MySQL-Server = MySQL
+Cache-Redis                 = Cache-for-Redis
+Azure-Synapse-Analytics     = Synapse-Analytics
+Azure-Databricks            = Databricks
+Data-Factories              = Data-Factory
+
+# Integration & messaging
+Azure-Service-Bus           = Service-Bus
+Event-Grid-Topics           = Event-Grid
+Event-Hubs                  = Event-Hubs
+Logic-Apps                  = Logic-Apps
+API-Management-Services     = API-Management
+SignalR                     = SignalR
+App-Configuration           = App-Configuration
+Notification-Hubs           = Notification-Hubs
+
+# Networking
+Virtual-Networks            = Virtual-Network
+Load-Balancers              = Load-Balancer
+Application-Gateways        = Application-Gateway
+Front-Door-and-CDN-Profiles = Front-Door
+Firewalls                   = Azure-Firewall
+DNS-Zones                   = Azure-DNS
+CDN-Profiles                = Azure-CDN
+Private-Link                = Private-Link
+ExpressRoute-Circuits       = ExpressRoute
+Virtual-Network-Gateways    = VPN-Gateway
+NAT                         = NAT-Gateway
+Bastions                    = Bastion
+Traffic-Manager-Profiles    = Traffic-Manager
+Web-Application-Firewall-Policies(WAF) = Web-Application-Firewall
+
+# Security & identity
+Key-Vaults                  = Key-Vault
+Managed-Identities          = Managed-Identities
+Microsoft-Defender-for-Cloud = Defender-for-Cloud
+Azure-Sentinel              = Sentinel
+
+# AI
+Azure-OpenAI                = Azure-OpenAI
+AI-Foundry                  = AI-Foundry
+Azure-Machine-Learning      = Machine-Learning
+Cognitive-Search            = AI-Search
+Speech-Services             = Speech-Services
+Translator-Text             = Translator
+Form-Recognizers            = Document-Intelligence
+Content-Safety              = Content-Safety
+Bot-Services                = Bot-Services
+
+# Observability & operations
+Monitor                     = Monitor
+Application-Insights        = Application-Insights
+Log-Analytics-Workspaces    = Log-Analytics
+Azure-Managed-Grafana       = Managed-Grafana
+Automation-Accounts         = Automation
+Recovery-Services-Vaults    = Recovery-Services-Vault
+Azure-DevOps                = Azure-DevOps
+IoT-Hub                     = IoT-Hub
+Stream-Analytics-Jobs       = Stream-Analytics

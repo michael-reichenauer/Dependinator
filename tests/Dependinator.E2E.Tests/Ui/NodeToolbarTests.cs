@@ -41,6 +41,29 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task NodeToolbar_ShouldSetCloudIconViaDialogTab()
+    {
+        await App.GotoMainPageAsync();
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+
+        // Open the icon selector dialog and switch to the Azure tab; the list swaps from the
+        // Default group's icons to the Azure ones.
+        await App.NodeSetIconButton.ClickAsync();
+        await Expect(App.IconDialogTab("Azure")).ToBeVisibleAsync();
+        await App.IconDialogTab("Azure").ClickAsync();
+        await Expect(App.IconDialogItem("Key-Vault")).ToBeVisibleAsync();
+
+        // Selecting an icon closes the dialog and the node's <use> switches to it.
+        await App.IconDialogItem("Key-Vault").ClickAsync();
+        await Expect(App.NodeIconUse("Key-Vault")).ToBeVisibleAsync();
+
+        // The pinned Default row restores the node-type icon.
+        await App.NodeSetIconButton.ClickAsync();
+        await App.IconDialogDefault.ClickAsync();
+        await Expect(App.NodeIconUse("Solution")).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
     public async Task NodeToolbar_ShouldSetContainerBackgroundColor()
     {
         await App.GotoMainPageAsync();

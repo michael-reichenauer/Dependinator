@@ -1,0 +1,76 @@
+# Curated Google Cloud icons: "<source-key> = <Target-Name>" where the source key is the
+# snake_case file name in the official legacy per-product icon package.
+# Import via ./import-icons; see scripts/import-cloud-icons.mjs for the package url/version.
+
+# Compute & containers
+compute_engine              = Compute-Engine
+google_kubernetes_engine    = GKE
+cloud_run                   = Cloud-Run
+cloud_functions             = Cloud-Functions
+app_engine                  = App-Engine
+artifact_registry           = Artifact-Registry
+cloud_build                 = Cloud-Build
+cloud_deploy                = Cloud-Deploy
+
+# Storage
+cloud_storage               = Cloud-Storage
+filestore                   = Filestore
+persistent_disk             = Persistent-Disk
+
+# Databases & analytics
+cloud_sql                   = Cloud-SQL
+cloud_spanner               = Cloud-Spanner
+bigtable                    = Bigtable
+firestore                   = Firestore
+memorystore                 = Memorystore
+bigquery                    = BigQuery
+dataflow                    = Dataflow
+dataproc                    = Dataproc
+cloud_composer              = Cloud-Composer
+looker                      = Looker
+
+# Integration & messaging
+pubsub                      = PubSub
+cloud_tasks                 = Cloud-Tasks
+cloud_scheduler             = Cloud-Scheduler
+eventarc                    = Eventarc
+workflows                   = Workflows
+cloud_endpoints             = Cloud-Endpoints
+cloud_api_gateway           = Cloud-API-Gateway
+apigee_api_platform         = Apigee
+
+# Networking
+virtual_private_cloud       = Virtual-Private-Cloud
+cloud_load_balancing        = Cloud-Load-Balancing
+cloud_cdn                   = Cloud-CDN
+cloud_dns                   = Cloud-DNS
+cloud_nat                   = Cloud-NAT
+cloud_vpn                   = Cloud-VPN
+cloud_interconnect          = Cloud-Interconnect
+cloud_router                = Cloud-Router
+cloud_armor                 = Cloud-Armor
+certificate_manager         = Certificate-Manager
+
+# Security & identity
+identity_and_access_management = Cloud-IAM
+key_management_service      = Cloud-KMS
+secret_manager              = Secret-Manager
+security_command_center     = Security-Command-Center
+
+# Observability
+cloud_logging               = Cloud-Logging
+cloud_monitoring            = Cloud-Monitoring
+trace                       = Cloud-Trace
+error_reporting             = Error-Reporting
+
+# AI
+vertexai                    = Vertex-AI
+automl                      = AutoML
+dialogflow                  = Dialogflow
+cloud_translation_api       = Cloud-Translation
+cloud_vision_api            = Cloud-Vision
+document_ai                 = Document-AI
+cloud_tpu                   = Cloud-TPU
+
+# Other
+anthos                      = Anthos

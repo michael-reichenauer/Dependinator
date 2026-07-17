@@ -2,6 +2,42 @@
   margin-bottom: 0.5rem;
 }
 
+.icon-dialog__tabs {
+  display: flex;
+  gap: 0.125rem;
+  margin-bottom: 0.5rem;
+  overflow-x: auto;
+}
+
+/* While a query is active the list spans all groups, so the tabs don't apply. */
+.icon-dialog__tabs--searching {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.icon-dialog__tab {
+  border: none;
+  background: transparent;
+  padding: 0.125rem 0.625rem;
+  border-radius: var(--mud-default-borderradius);
+  font: inherit;
+  font-size: 0.85em;
+  color: var(--mud-palette-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.icon-dialog__tab:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--mud-palette-text-primary);
+}
+
+.icon-dialog__tab--active {
+  background-color: var(--mud-palette-action-default-hover);
+  color: var(--mud-palette-primary);
+  font-weight: 600;
+}
+
 .icon-dialog__body {
   display: flex;
   gap: 0.5rem;
@@ -58,7 +94,7 @@
   height: 20px;
 }
 
-/* Icon svgs carry fixed width/height attributes (24); size them via CSS instead. */
+/* Icons scale via their viewBox (some carry width/height attributes); css sets the size. */
 .icon-dialog__glyph ::deep svg {
   width: 20px;
   height: 20px;

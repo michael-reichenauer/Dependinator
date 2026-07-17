@@ -51,11 +51,49 @@ public class IconLibraryTests
     {
         var icons = IconLibrary.All;
 
-        // The Default group holds the node-type icons; General holds the extra selectable icons.
+        // The Default group holds the node-type icons; General holds the extra selectable
+        // icons; the cloud groups hold the curated official provider icons (imported via
+        // ./import-icons — update the counts when the manifests change).
         Assert.Equal(19, icons.Count(icon => icon.Group == "Default"));
         Assert.Equal(20, icons.Count(icon => icon.Group == "General"));
-        Assert.Equal(icons.Count, icons.Count(icon => icon.Group is "Default" or "General"));
+        Assert.Equal(69, icons.Count(icon => icon.Group == "Azure"));
+        Assert.Equal(61, icons.Count(icon => icon.Group == "Aws"));
+        Assert.Equal(55, icons.Count(icon => icon.Group == "Google"));
+        Assert.Equal(
+            icons.Count,
+            icons.Count(icon => icon.Group is "Default" or "General" or "Azure" or "Aws" or "Google")
+        );
         Assert.All(icons, icon => Assert.Contains("<svg", icon.Svg));
+    }
+
+    [Fact]
+    public void All_ShouldHaveUniqueNames_AcrossAllGroups()
+    {
+        // Icon names are ids in the diagram's shared <defs>, so they must be globally unique
+        // (this also guards the import manifests against colliding target names).
+        var names = IconLibrary.All.Select(icon => icon.Name).ToList();
+
+        Assert.Equal(names.Count, names.Distinct().Count());
+    }
+
+    [Fact]
+    public void All_ShouldOrderGroups_InDisplayOrder()
+    {
+        var groups = IconLibrary.All.Select(icon => icon.Group).Distinct().ToList();
+
+        Assert.Equal(["Default", "General", "Azure", "Aws", "Google"], groups);
+
+        // Icons are contiguous per group (the picker's group headers rely on it).
+        var sequence = IconLibrary.All.Select(icon => icon.Group).ToList();
+        Assert.Equal(sequence.OrderBy(group => groups.IndexOf(group)), sequence);
+    }
+
+    [Fact]
+    public void Groups_ShouldExposeLabels_InDisplayOrder()
+    {
+        Assert.Equal(["Default", "General", "Azure", "Aws", "Google"], IconLibrary.Groups.Select(group => group.Name));
+        Assert.Equal(["Default", "General", "Azure", "AWS", "Google"], IconLibrary.Groups.Select(group => group.Label));
+        Assert.Equal("AWS", IconLibrary.GroupLabel("Aws"));
     }
 
     [Fact]
@@ -95,8 +133,7 @@ public class IconLibraryTests
     [Fact]
     public void All_ShouldExposeDisplayName_ForEveryIcon()
     {
-        // Current icons are single words, so their display name matches the raw name.
-        Assert.All(IconLibrary.All, icon => Assert.Equal(icon.Name, icon.DisplayName));
+        Assert.All(IconLibrary.All, icon => Assert.Equal(IconLibrary.ToDisplayName(icon.Name), icon.DisplayName));
     }
 
     [Fact]
@@ -112,12 +149,24 @@ public class IconLibraryTests
     }
 
     [Fact]
-    public void Contains_ShouldReturnTrue_ForEveryIconColorVariant_OfEveryIcon()
+    public void Contains_ShouldReturnTrue_ForEveryIconColorVariant_OfEveryTintedIcon()
     {
-        foreach (var icon in IconLibrary.All)
+        // Only the violet-palette groups get tint variants; the cloud brand icons keep their
+        // official colors.
+        foreach (var icon in IconLibrary.All.Where(icon => icon.Group is "Default" or "General"))
         foreach (var color in IconLibrary.IconColors)
         {
             Assert.True(IconLibrary.Contains(IconLibrary.VariantName(icon.Name, color.Name)));
+        }
+    }
+
+    [Fact]
+    public void Contains_ShouldReturnFalse_ForColorVariantsOfCloudIcons()
+    {
+        foreach (var icon in IconLibrary.All.Where(icon => icon.Group is "Azure" or "Aws" or "Google"))
+        foreach (var color in IconLibrary.IconColors)
+        {
+            Assert.False(IconLibrary.Contains(IconLibrary.VariantName(icon.Name, color.Name)));
         }
     }
 
@@ -209,6 +258,32 @@ public class IconLibraryTests
         foreach (var color in IconLibrary.IconColors)
         {
             Assert.Contains($"id=\"{id}--{color.Name}\"", defs);
+        }
+    }
+
+    [Fact]
+    public void All_ShouldBeNormalized_ForEveryCloudIcon()
+    {
+        // Pins the ./import-icons normalization contract: the root id equals the icon name
+        // (required by <use href="#name">), sizing comes from the viewBox, css classes/styles
+        // are inlined (they would leak across the shared diagram DOM), and every internal
+        // url(#...) reference resolves within the icon itself.
+        foreach (var icon in IconLibrary.All.Where(icon => icon.Group is "Azure" or "Aws" or "Google"))
+        {
+            Assert.StartsWith($"<svg id=\"{icon.Name}\"", icon.Svg);
+            Assert.Contains("viewBox=", icon.Svg);
+            Assert.DoesNotContain("<style", icon.Svg);
+            Assert.DoesNotContain("class=\"", icon.Svg);
+            Assert.DoesNotContain("<title", icon.Svg);
+
+            foreach (
+                var reference in System
+                    .Text.RegularExpressions.Regex.Matches(icon.Svg, @"url\(#([^)]+)\)|href=""#([^""]+)""")
+                    .Select(match => match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value)
+            )
+            {
+                Assert.Contains($"id=\"{reference}\"", icon.Svg);
+            }
         }
     }
 

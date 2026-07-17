@@ -1,0 +1,84 @@
+# Curated AWS icons: "<source-key> = <Target-Name>" where the source key is the "<key>" part of
+# Architecture-Service-Icons .../48/Arch_<key>_48.svg in the official package.
+# Import via ./import-icons; see scripts/import-cloud-icons.mjs for the package url/version.
+
+# Compute & containers
+Amazon-EC2                  = EC2
+Amazon-EC2-Auto-Scaling     = EC2-Auto-Scaling
+AWS-Lambda                  = Lambda
+Amazon-Elastic-Container-Service = ECS
+Amazon-Elastic-Kubernetes-Service = EKS
+AWS-Fargate                 = Fargate
+Amazon-Elastic-Container-Registry = ECR
+AWS-Elastic-Beanstalk       = Elastic-Beanstalk
+AWS-App-Runner              = App-Runner
+AWS-Batch                   = AWS-Batch
+
+# Storage
+Amazon-Simple-Storage-Service = S3
+Amazon-Elastic-Block-Store  = EBS
+Amazon-EFS                  = EFS
+
+# Databases
+Amazon-RDS                  = RDS
+Amazon-Aurora               = Aurora
+Amazon-DynamoDB             = DynamoDB
+Amazon-ElastiCache          = ElastiCache
+Amazon-Redshift             = Redshift
+Amazon-Neptune              = Neptune
+Amazon-DocumentDB           = DocumentDB
+
+# Integration & messaging
+Amazon-Simple-Queue-Service = SQS
+Amazon-Simple-Notification-Service = SNS
+Amazon-EventBridge          = EventBridge
+AWS-Step-Functions          = Step-Functions
+Amazon-MQ                   = Amazon-MQ
+Amazon-Kinesis              = Kinesis
+Amazon-Managed-Streaming-for-Apache-Kafka = MSK
+AWS-AppSync                 = AppSync
+Amazon-API-Gateway          = API-Gateway
+
+# Networking & content delivery
+Amazon-CloudFront           = CloudFront
+Amazon-Route-53             = Route-53
+Amazon-Virtual-Private-Cloud = VPC
+Elastic-Load-Balancing      = Elastic-Load-Balancing
+AWS-Direct-Connect          = Direct-Connect
+AWS-Transit-Gateway         = Transit-Gateway
+AWS-PrivateLink             = PrivateLink
+
+# Security & identity
+AWS-Identity-and-Access-Management = IAM
+Amazon-Cognito              = Cognito
+AWS-Key-Management-Service  = KMS
+AWS-Secrets-Manager         = Secrets-Manager
+AWS-WAF                     = AWS-WAF
+AWS-Shield                  = Shield
+Amazon-GuardDuty            = GuardDuty
+
+# Observability & operations
+Amazon-CloudWatch           = CloudWatch
+AWS-CloudTrail              = CloudTrail
+AWS-X-Ray                   = X-Ray
+AWS-Config                  = AWS-Config
+AWS-Systems-Manager         = Systems-Manager
+AWS-CloudFormation          = CloudFormation
+
+# Developer tools
+AWS-CodeBuild               = CodeBuild
+AWS-CodePipeline            = CodePipeline
+AWS-CodeDeploy              = CodeDeploy
+AWS-Amplify                 = Amplify
+
+# AI & analytics
+Amazon-SageMaker            = SageMaker
+Amazon-Bedrock              = Bedrock
+AWS-Glue                    = Glue
+Amazon-Athena               = Athena
+Amazon-EMR                  = EMR
+Amazon-OpenSearch-Service   = OpenSearch
+
+# Other
+Amazon-Simple-Email-Service = SES
+AWS-IoT-Core                = IoT-Core
