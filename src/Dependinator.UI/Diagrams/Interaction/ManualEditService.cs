@@ -10,8 +10,9 @@ using MudBlazor;
 namespace Dependinator.UI.Diagrams.Interaction;
 
 // Orchestrates the "manual design" interactions: adding user-drawn nodes (double-click empty
-// canvas → icon selector dialog), renaming them in place, and drawing user-drawn links (select
-// source → add-link mode → click target). All mutations go through the undoable CommandService.
+// canvas → icon selector dialog), renaming them in place, and drawing user-drawn links (drag a
+// hovered node's link handle onto the target). All mutations go through the undoable
+// CommandService.
 interface IManualEditService
 {
     // Inline name-entry state (the Canvas renders a name input while IsNameEntryOpen is true),
@@ -39,16 +40,29 @@ interface IManualEditService
     bool CommitNameEntry(string name);
     void CancelNameEntry();
 
-    // Add-link mode.
-    bool IsAddingLink { get; }
-    void BeginAddLink(NodeId sourceId);
+    // Drag-to-link: pressing an icon node's link handle and dragging draws a dotted preview line
+    // (the Canvas renders it while IsLinkDragActive); dropping on an icon node creates a manual
+    // link, dropping on the canvas or a container adds a new node to link to. Positions are in
+    // viewport (client) pixels, matching the fixed preview overlay.
+    bool IsLinkDragActive { get; }
+    Pos LinkDragStart { get; }
+    Pos LinkDragEnd { get; }
+    void BeginLinkDrag(NodeId sourceId, Pos startPos);
+    void UpdateLinkDrag(Pos pos);
 
-    // Completes a pending add-link with the clicked target. Returns true if a link was created.
-    bool TryCompleteAddLink(PointerId targetPointerId);
-    void CancelAddLink();
+    // Completes a link drag with the dropped-on target; always resets the drag state. Dropping
+    // on an icon node links to it; dropping on the canvas background or an expanded container
+    // adds a new node there (via the icon selector dialog) and links to that node instead.
+    // Other drops (self, outside the diagram, canceled dialog) create nothing. canvasPos is
+    // the drop point in canvas (svg-local) pixels, null if unknown.
+    Task CompleteLinkDragAsync(PointerId targetPointerId, Pos? canvasPos);
+    void CancelLinkDrag();
 
     // Deletes a leaf manual node together with its manual links (undoable).
     void DeleteManualNode(NodeId nodeId);
+
+    // Deletes the manual link(s) a line represents (undoable); no-op if the line has parsed links.
+    void DeleteManualLine(LineId lineId);
 }
 
 [Scoped]
@@ -74,8 +88,10 @@ class ManualEditService(
     public string NameEntryInitialValue { get; private set; } = "";
     public string NameEntryLabel => "Rename node";
 
-    public bool IsAddingLink { get; private set; }
-    string addLinkSourceName = "";
+    public bool IsLinkDragActive { get; private set; }
+    public Pos LinkDragStart { get; private set; } = Pos.None;
+    public Pos LinkDragEnd { get; private set; } = Pos.None;
+    string dragLinkSourceName = "";
 
     public bool IsPlacingNode { get; private set; }
 
@@ -97,8 +113,7 @@ class ManualEditService(
 
     public async Task AddNodeAtAsync(PointerEvent e)
     {
-        // Any pending link-drawing or armed placement is superseded by starting a node add.
-        IsAddingLink = false;
+        // Any armed placement is superseded by starting a node add.
         IsPlacingNode = false;
         StateChanged?.Invoke();
 
@@ -173,8 +188,6 @@ class ManualEditService(
 
     public void BeginRenameNode(NodeId nodeId, Pos screenPos)
     {
-        IsAddingLink = false;
-
         using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out var node))
@@ -231,36 +244,110 @@ class ManualEditService(
         ResetNameEntry();
     }
 
-    public void BeginAddLink(NodeId sourceId)
+    public void BeginLinkDrag(NodeId sourceId, Pos startPos)
     {
-        addLinkSourceName = ResolveNodeName(sourceId);
-        if (addLinkSourceName.Length == 0)
+        dragLinkSourceName = ResolveNodeName(sourceId);
+        if (dragLinkSourceName.Length == 0)
             return;
-        IsAddingLink = true;
+        IsLinkDragActive = true;
+        LinkDragStart = startPos;
+        LinkDragEnd = startPos;
         StateChanged?.Invoke();
     }
 
-    public bool TryCompleteAddLink(PointerId targetPointerId)
+    // No StateChanged here: the canvas already re-renders on every pointer event, and other
+    // subscribers (e.g. toolbars) do not need per-move notifications.
+    public void UpdateLinkDrag(Pos pos)
     {
-        if (!IsAddingLink || !targetPointerId.IsNode)
-            return false;
-
-        var targetName = ResolveNodeName(targetPointerId.NodeId);
-        IsAddingLink = false;
-        StateChanged?.Invoke();
-
-        if (targetName.Length == 0 || targetName == addLinkSourceName)
-            return false;
-
-        commandService.Do(new AddLinkCommand(structureService, addLinkSourceName, targetName));
-        return true;
+        if (!IsLinkDragActive)
+            return;
+        LinkDragEnd = pos;
     }
 
-    public void CancelAddLink()
+    public async Task CompleteLinkDragAsync(PointerId targetPointerId, Pos? canvasPos)
     {
-        if (!IsAddingLink)
+        if (!IsLinkDragActive)
             return;
-        IsAddingLink = false;
+
+        var sourceName = dragLinkSourceName;
+        ResetLinkDrag();
+
+        // Icon-view node drops link to the existing node; canvas/container drops add a new node
+        // at the drop point (in the resolved container) and link to it.
+        var linkTargetName = "";
+        var parentName = "";
+        var boundary = Rect.None;
+        using (var model = modelMgr.UseModel())
+        {
+            if (targetPointerId.IsNode)
+            {
+                if (!model.Nodes.TryGetValue(targetPointerId.NodeId, out var node))
+                    return;
+                if (!node.IsRoot && !NodeViewPolicy.IsContainerView(node, model.Zoom))
+                    linkTargetName = node.Name;
+            }
+            else if (!targetPointerId.IsCanvas)
+            {
+                return; // Dropped outside the diagram (or on a line/handle): nothing to do.
+            }
+
+            if (linkTargetName.Length == 0)
+            {
+                if (canvasPos is not { } pos)
+                    return;
+
+                var container = DiagramPlacement.ResolveContainer(model, targetPointerId);
+                var local = DiagramPlacement.ToContainerLocal(model, container, pos);
+                parentName = container.Name;
+                boundary = new Rect(
+                    NodeGrid.Snap(local.X - DefaultWidth / 2),
+                    NodeGrid.Snap(local.Y - DefaultHeight / 2),
+                    DefaultWidth,
+                    DefaultHeight
+                );
+            }
+        }
+
+        if (linkTargetName.Length > 0)
+        {
+            if (linkTargetName != sourceName)
+                commandService.Do(new AddLinkCommand(structureService, sourceName, linkTargetName));
+            return;
+        }
+
+        var iconName = await ShowIconSelectorAsync();
+        if (iconName is null)
+            return;
+
+        string fullName;
+        using (var model = modelMgr.UseModel())
+        {
+            var shortName = UniqueShortName(model, parentName, IconLibrary.ToDisplayName(iconName));
+            fullName = DiagramPlacement.ComposeFullName(parentName, shortName);
+        }
+
+        // One undoable step: undoing removes both the link and the node it was drawn to.
+        commandService.Do(
+            new CompositeCommand(
+                new AddNodeCommand(fullName, parentName, boundary, iconName: iconName),
+                new AddLinkCommand(structureService, sourceName, fullName)
+            )
+        );
+    }
+
+    public void CancelLinkDrag()
+    {
+        if (!IsLinkDragActive)
+            return;
+        ResetLinkDrag();
+    }
+
+    void ResetLinkDrag()
+    {
+        IsLinkDragActive = false;
+        LinkDragStart = Pos.None;
+        LinkDragEnd = Pos.None;
+        dragLinkSourceName = "";
         StateChanged?.Invoke();
     }
 
@@ -290,6 +377,25 @@ class ManualEditService(
 
         if (commands.Count == 0)
             return;
+        commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+    }
+
+    public void DeleteManualLine(LineId lineId)
+    {
+        var commands = new List<Command>();
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(lineId, out var line))
+                return;
+            if (!line.Links.Any() || line.Links.Any(l => !l.IsManual))
+                return;
+
+            foreach (var link in line.Links)
+            {
+                commands.Add(new DeleteLinkCommand(structureService, link.Source.Name, link.Target.Name));
+            }
+        }
+
         commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
     }
 

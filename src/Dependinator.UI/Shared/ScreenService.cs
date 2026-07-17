@@ -29,6 +29,9 @@ interface IScreenService
 
     Task InitAsync(IUIComponent component);
     Task<R<ElementBoundingRectangle>> GetBoundingRectangle(string elementId);
+
+    // Id of the topmost id-bearing element at a viewport (client) point; "" if none.
+    Task<string> GetElementIdAtPointAsync(double clientX, double clientY);
     Task CheckResizeAsync();
 }
 
@@ -104,6 +107,9 @@ class ScreenService : IScreenService, IDisposable
             return R.None;
         return r;
     }
+
+    public async Task<string> GetElementIdAtPointAsync(double clientX, double clientY) =>
+        await jSInterop.Call<string>("getElementIdAtPoint", clientX, clientY) ?? "";
 
     [JSInvokable]
     public ValueTask OnWindowResized()

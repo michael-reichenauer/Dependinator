@@ -1,4 +1,5 @@
 @using Dependinator.Core
+@using Dependinator.Core.Shared
 @using Dependinator.UI.Modeling
 @using Dependinator.UI.Modeling.Commands
 @using Dependinator.UI.Shared.CloudSync
@@ -111,7 +112,12 @@
 
                 <MudDivider />
 
-                @if (Build.IsVsCodeExtWasm || Build.IsWeb)
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox"
+                             OnClick="NewModelAsync" data-testid="menu-new-model">
+                    New Model …
+                </MudMenuItem>
+
+                @if (CanParseCurrentModel)
                 {
                     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Autorenew"
                                  OnClick="canvasService.RefreshAsync" data-testid="menu-parse">
@@ -189,7 +195,7 @@
             <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
                            OnClick="commandService.Redo" data-testid="toolbar-redo" />
         </MudTooltip>
-        @if (Build.IsVsCodeExtWasm || Build.IsWeb)
+        @if (CanParseCurrentModel)
         {
             <MudTooltip Text="Parse">
                 <MudIconButton Icon="@Icons.Material.Outlined.Autorenew" OnClick="canvasService.RefreshAsync"
@@ -500,6 +506,29 @@
         snackbar.Add("Click on the diagram to place the node.", Severity.Info);
     }
 
+    bool CanParseCurrentModel =>
+    (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsParseable(modelMgr.ModelPath);
+
+    async Task NewModelAsync()
+    {
+        List<string> existingPaths = modelListService.GetModelItems().Select(item => item.Path).ToList();
+        var parameters = new DialogParameters<NewModelDialog> { { d => d.ExistingPaths, existingPaths } };
+        var dialog = await dialogService.ShowAsync<NewModelDialog>("New Model", parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        string name = (string)result.Data!;
+
+        // A new empty model is only useful with editing enabled; opening an existing
+        // design model later leaves the toggle as the user last set it.
+        ViewOptions.SetIsEditingEnabled(true);
+        await canvasService.LoadAsync(name);
+        snackbar.Add("Empty model created. Use Edit > Add Node or double-click the canvas to add nodes.",
+        Severity.Info);
+        applicationEvents.TriggerUIStateChanged();
+    }
+
     async Task ReloadPageAsync() => await jsInterop.Call("reloadPage");
 
     Task ShowAbout() => aboutBox.ShowAsync();
@@ -567,6 +596,9 @@
     void ToggleEditMode()
     {
         ViewOptions.SetIsEditingEnabled(!ViewOptions.IsEditingEnabled);
+        // Edit-only markup (e.g. link handles) is baked into cached tiles, so the cache must be
+        // cleared for the toggle to take effect immediately.
+        modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -589,6 +621,7 @@
     {
         { IsLocal: true, IsCloud: true } => Icons.Material.Outlined.CloudDone,
         { IsCloud: true } => Icons.Material.Outlined.CloudDownload,
+        _ when ModelPaths.IsDesignModel(item.Path) => Icons.Material.Outlined.DesignServices,
         _ => Icons.Material.Outlined.Schema,
     };
 
@@ -598,6 +631,7 @@
         {
             { IsLocal: true, IsCloud: true } => "Local + cloud",
             { IsCloud: true } => "Cloud",
+            _ when ModelPaths.IsDesignModel(item.Path) => "Design",
             _ => "Local",
         };
         return $"{item.Path} ({source})";

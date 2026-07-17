@@ -19,6 +19,9 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     [Inject]
     IInitService initService { get; init; } = null!;
 
+    [Inject]
+    Interaction.IManualEditService manualEditService { get; init; } = null!;
+
     public ElementReference dropZoneElement { get; private set; }
     public InputFile inputFile { get; private set; } = null!;
     public ElementReference Ref { get; private set; }
@@ -33,6 +36,8 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     static string IconDefs => Icon.IconDefs;
 
     string Cursor => srv.Cursor;
+
+    static string Px(double value) => FormattableString.Invariant($"{value:0.##}");
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

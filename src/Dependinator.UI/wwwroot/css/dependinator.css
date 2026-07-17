@@ -16,6 +16,18 @@
     --mud-palette-secondary: #5e35b1; /* DeepPurple Darken1 — menu item icons */
 }
 
+/* Compact floating toolbars (node/note/line): MudBlazor's smallest button-group
+   preset yields ~35px buttons (its override-styles rule sets padding 6px 8px and
+   a 5-class rule sets the icon to 1.422rem); shrink both to get ~20px buttons.
+   The doubled .dep-mini-toolbar outweighs those rules regardless of stylesheet
+   load order. */
+.mud-button-group-root.dep-mini-toolbar.dep-mini-toolbar .mud-button-root {
+    padding: 2px;
+}
+.mud-button-group-root.dep-mini-toolbar.dep-mini-toolbar .mud-button-root .mud-icon-root {
+    font-size: 1rem;
+}
+
 /* Cloud sync indicator: while the app is determining the cloud auth state on
    startup (waiting for Clerk.js to load and the first /auth/me call), the cloud
    icon gently pulses to signal that it is working rather than "not signed in". */
