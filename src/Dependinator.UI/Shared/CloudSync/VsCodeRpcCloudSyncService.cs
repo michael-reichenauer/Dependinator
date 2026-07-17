@@ -77,10 +77,15 @@ class VsCodeRpcCloudSyncService : IVsCodeCloudSyncService
     }
 
     // Pulls a document via the LSP and decodes it back to a local model DTO.
+    // Returns R.None when no remote model exists for the path.
     public async Task<R<ModelDto>> PullAsync(string modelPath)
     {
         string modelKey = CloudModelPath.CreateKey(modelPath);
-        if (!Try(out var document, out var error, await CallAsync("pull", () => rpcService.PullAsync(modelKey))))
+        R<CloudModelDocument> documentResult = await CallAsync("pull", () => rpcService.PullAsync(modelKey));
+        if (documentResult.IsNone)
+            return R.None;
+
+        if (!Try(out var document, out var error, documentResult))
             return error;
 
         return CloudModelSerializer.ReadModel(document);

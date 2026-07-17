@@ -13,6 +13,8 @@ interface ICloudSyncHttpClient
     Task<R<CloudAuthState>> GetAuthStateAsync(CancellationToken ct = default);
     Task<R<CloudModelList>> ListAsync(CancellationToken ct = default);
     Task<R<CloudModelMetadata>> PushAsync(CloudModelDocument document, CancellationToken ct = default);
+
+    // Returns R.None when no remote model exists for the key (API 404).
     Task<R<CloudModelDocument>> PullAsync(string modelKey, CancellationToken ct = default);
 }
 
@@ -43,13 +45,23 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
     // Uploads a compressed model document via PUT.
     public async Task<R<CloudModelMetadata>> PushAsync(CloudModelDocument document, CancellationToken ct = default)
     {
-        return await SendAsync<CloudModelMetadata>(HttpMethod.Put, $"/api/models/{document.ModelKey}", document, ct);
+        return await SendAsync<CloudModelMetadata>(
+            HttpMethod.Put,
+            $"/api/models/{document.ModelKey}",
+            document,
+            ct: ct
+        );
     }
 
-    // Fetches a compressed remote model document.
+    // Fetches a compressed remote model document; R.None when no remote model exists.
     public async Task<R<CloudModelDocument>> PullAsync(string modelKey, CancellationToken ct = default)
     {
-        return await SendAsync<CloudModelDocument>(HttpMethod.Get, $"/api/models/{modelKey}", ct: ct);
+        return await SendAsync<CloudModelDocument>(
+            HttpMethod.Get,
+            $"/api/models/{modelKey}",
+            notFoundAsNone: true,
+            ct: ct
+        );
     }
 
     // Generic JSON helper for API calls with the host-provided Bearer token.
@@ -57,6 +69,7 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
         HttpMethod method,
         string path,
         object? content = null,
+        bool notFoundAsNone = false,
         CancellationToken ct = default
     )
     {
@@ -92,6 +105,9 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
 
                 return value;
             }
+
+            if (notFoundAsNone && response.StatusCode == HttpStatusCode.NotFound)
+                return R.None;
 
             string errorMessage = await ReadErrorMessageAsync(response, ct);
             return R.Error(errorMessage);

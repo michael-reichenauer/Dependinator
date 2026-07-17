@@ -463,7 +463,14 @@
             return;
         }
 
-        if (!Try(out var modelInfo, out var error, await appCloudSyncService.SyncDownAsync()))
+        R<ModelInfo> syncDownResult = await appCloudSyncService.SyncDownAsync();
+        if (syncDownResult.IsNone)
+        {
+            snackbar.Add("No cloud model existed, so the local model was uploaded instead.", Severity.Info);
+            return;
+        }
+
+        if (!Try(out var modelInfo, out var error, syncDownResult))
         {
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;

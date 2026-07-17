@@ -110,6 +110,19 @@ public class CloudSyncHttpClientTests
         Assert.Equal("application/json", handler.Request.Content!.Headers.ContentType!.MediaType);
     }
 
+    [Fact]
+    public async Task PullAsync_ShouldReturnNone_WhenApiReturnsNotFound()
+    {
+        RecordingHandler handler = new(
+            Json(HttpStatusCode.NotFound, "{\"Message\":\"No cloud model exists for key 'model-key'.\"}")
+        );
+        CloudSyncHttpClient sut = CreateClient(handler);
+
+        R<CloudModelDocument> result = await sut.PullAsync("model-key");
+
+        Assert.True(result.IsNone);
+    }
+
     static CloudSyncHttpClient CreateClient(
         RecordingHandler handler,
         string? token = "token",

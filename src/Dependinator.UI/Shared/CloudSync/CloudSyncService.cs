@@ -16,6 +16,8 @@ interface ICloudSyncService
     Task<R<CloudAuthState>> GetAuthStateAsync();
     Task<R<CloudModelList>> ListAsync();
     Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto);
+
+    // Returns R.None when no remote model exists for the path.
     Task<R<ModelDto>> PullAsync(string modelPath);
 }
 
