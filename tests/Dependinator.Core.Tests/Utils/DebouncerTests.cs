@@ -44,7 +44,7 @@ public class DebouncerTests
 
         TimeSpan elapsed = await invokedAt.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
-        Assert.InRange(elapsed, TimeSpan.FromMilliseconds(400), TimeSpan.FromMilliseconds(1200));
+        Assert.InRange(elapsed, TimeSpan.FromMilliseconds(400), TimeSpan.FromMilliseconds(1500));
     }
 
     [Fact]

@@ -5,13 +5,15 @@ using Xunit.Abstractions;
 namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises the manual "design" flow through the browser: add a user-drawn node via the app menu
-// ("Add Node …" arms placing mode → click canvas) or by double-clicking empty canvas, that it
+// ("Add Node …" arms placing mode → click canvas) or by double-clicking empty canvas — both open
+// the icon selector, and the node is created with the picked icon, named after it — that it
 // survives a reload (persisted with IsManual), and that only manual nodes expose the Delete
 // action. Editing is enabled by default in the Blazor Server host.
 public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
 {
-    const string NodeName = "MyE2ENode";
-    const string MenuNodeName = "MyMenuNode";
+    // Each test picks a distinct icon; the added node is named after the icon's display name.
+    const string NodeIcon = "Cache";
+    const string MenuNodeIcon = "Queue";
 
     [E2EFact]
     public async Task ManualNode_ShouldBeAddedViaMenu_AtClickedPosition()
@@ -31,13 +33,9 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
             await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
         await Page.Mouse.ClickAsync(box.X + 150, box.Y + box.Height - 130);
 
-        // The data-testid is applied directly to the MudTextField's <input> element.
-        ILocator input = Page.GetByTestId("manual-node-name");
-        await Expect(input).ToBeVisibleAsync();
-        await App.FillReliablyAsync(input, MenuNodeName);
-        await input.PressAsync("Enter");
+        await PickIconAsync(MenuNodeIcon);
 
-        await Expect(App.NodeLabel(MenuNodeName)).ToBeVisibleAsync();
+        await Expect(App.NodeLabel(MenuNodeIcon)).ToBeVisibleAsync();
     }
 
     [E2EFact]
@@ -45,8 +43,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
 
-        await AddManualNodeAsync(NodeName);
-        await Expect(App.NodeLabel(NodeName)).ToBeVisibleAsync();
+        await AddManualNodeAsync(NodeIcon);
+        await Expect(App.NodeLabel(NodeIcon)).ToBeVisibleAsync();
 
         // The debounced save writes to IndexedDB; give it a moment, then reload.
         await Page.WaitForTimeoutAsync(1500);
@@ -54,16 +52,16 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // A manual node is not produced by parsing, so surviving the reload proves it was
         // persisted (with IsManual) and kept by the re-parse reconciliation.
-        await Expect(App.NodeLabel(NodeName)).ToBeVisibleAsync();
+        await Expect(App.NodeLabel(NodeIcon)).ToBeVisibleAsync();
 
         // Only manual nodes expose the Delete action (proves IsManual round-tripped).
-        await App.SelectNodeByVisibleNameAsync(NodeName);
+        await App.SelectNodeByVisibleNameAsync(NodeIcon);
         await App.NodeToolbarMenu.ClickAsync();
         await Expect(Page.GetByTestId("node-menu-delete")).ToBeVisibleAsync();
     }
 
-    // Double-clicks an empty area of the canvas and enters a name in the inline prompt.
-    async Task AddManualNodeAsync(string name)
+    // Double-clicks an empty area of the canvas and picks an icon in the selector dialog.
+    async Task AddManualNodeAsync(string iconName)
     {
         LocatorBoundingBoxResult box =
             await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
@@ -71,10 +69,14 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         // Bottom-left quadrant, away from the centered demo nodes.
         await Page.Mouse.DblClickAsync(box.X + 120, box.Y + box.Height - 120);
 
-        // The data-testid is applied directly to the MudTextField's <input> element.
-        ILocator input = Page.GetByTestId("manual-node-name");
-        await Expect(input).ToBeVisibleAsync();
-        await App.FillReliablyAsync(input, name);
-        await input.PressAsync("Enter");
+        await PickIconAsync(iconName);
+    }
+
+    // Picks an icon from the General tab of the opened icon selector dialog.
+    async Task PickIconAsync(string iconName)
+    {
+        await Expect(Page.GetByTestId("icon-dialog-search")).ToBeVisibleAsync();
+        await App.IconDialogTab("General").ClickAsync();
+        await App.IconDialogItem(iconName).ClickAsync();
     }
 }

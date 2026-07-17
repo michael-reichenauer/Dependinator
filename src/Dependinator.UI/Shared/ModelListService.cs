@@ -4,6 +4,14 @@ using Dependinator.UI.Shared.CloudSync;
 
 namespace Dependinator.UI.Shared;
 
+record ModelItem(
+    string Path,
+    string DisplayName,
+    bool IsLocal,
+    bool IsCloud,
+    global::Shared.CloudModelMetadata? CloudModel
+);
+
 interface IModelListService
 {
     Task InitAsync();
@@ -13,6 +21,8 @@ interface IModelListService
     IReadOnlyList<string> CloudPaths { get; }
     string? LastUsedPath { get; }
     bool IsLocalPath(string path);
+
+    IReadOnlyList<ModelItem> GetModelItems();
 
     Task AddModelAsync(string path);
     Task RemoveModelAsync(string path);
@@ -37,6 +47,56 @@ class ModelListService(
     public string? LastUsedPath => recentPaths.Any() ? recentPaths[0] : null;
 
     public bool IsLocalPath(string path) => LocalPaths.Contains(path);
+
+    public IReadOnlyList<ModelItem> GetModelItems()
+    {
+        Dictionary<string, ModelItem> itemsByNormalizedPath = new(StringComparer.OrdinalIgnoreCase);
+        List<string> orderedNormalizedPaths = [];
+
+        void AddLocal(string path)
+        {
+            string normalizedPath = global::Shared.CloudModelPath.Normalize(path);
+            if (itemsByNormalizedPath.ContainsKey(normalizedPath))
+                return;
+
+            itemsByNormalizedPath[normalizedPath] = new ModelItem(
+                path,
+                Path.GetFileName(path),
+                IsLocal: true,
+                IsCloud: false,
+                CloudModel: null
+            );
+            orderedNormalizedPaths.Add(normalizedPath);
+        }
+
+        recentPaths.ForEach(AddLocal);
+        localPaths.ForEach(AddLocal);
+
+        foreach (
+            global::Shared.CloudModelMetadata cloudModel in appCloudSyncService.CloudModels.OrderByDescending(cm =>
+                cm.UpdatedUtc
+            )
+        )
+        {
+            string normalizedPath = global::Shared.CloudModelPath.Normalize(cloudModel.NormalizedPath);
+            if (itemsByNormalizedPath.TryGetValue(normalizedPath, out ModelItem? item))
+            {
+                itemsByNormalizedPath[normalizedPath] = item with { IsCloud = true, CloudModel = cloudModel };
+                continue;
+            }
+
+            itemsByNormalizedPath[normalizedPath] = new ModelItem(
+                cloudModel.NormalizedPath,
+                Path.GetFileName(cloudModel.NormalizedPath),
+                IsLocal: false,
+                IsCloud: true,
+                CloudModel: cloudModel
+            );
+            orderedNormalizedPaths.Add(normalizedPath);
+        }
+
+        return orderedNormalizedPaths.Select(np => itemsByNormalizedPath[np]).ToList();
+    }
 
     public async Task InitAsync()
     {

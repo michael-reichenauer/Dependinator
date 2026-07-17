@@ -9,7 +9,6 @@ namespace Dependinator.E2E.Tests.Ui;
 // reachable via the app menu and double-click, but anchored where the user right-clicked).
 public class ContextMenuTests(ITestOutputHelper output) : E2ETestBase(output)
 {
-    const string NodeName = "MyCtxNode";
     const string NoteId = "Z9";
 
     [E2EFact]
@@ -20,13 +19,14 @@ public class ContextMenuTests(ITestOutputHelper output) : E2ETestBase(output)
         await OpenContextMenuAsync();
         await Page.GetByTestId("context-menu-add-node").ClickAsync();
 
-        // The data-testid is applied directly to the MudTextField's <input> element.
-        ILocator input = Page.GetByTestId("manual-node-name");
-        await Expect(input).ToBeVisibleAsync();
-        await App.FillReliablyAsync(input, NodeName);
-        await input.PressAsync("Enter");
+        // The icon selector opens in picker mode: no pinned "Default" row (there is no node to
+        // revert yet); picking an icon adds a node named after it at the clicked position.
+        await Expect(Page.GetByTestId("icon-dialog-search")).ToBeVisibleAsync();
+        await Expect(App.IconDialogDefault).Not.ToBeVisibleAsync();
+        await App.IconDialogTab("General").ClickAsync();
+        await App.IconDialogItem("Database").ClickAsync();
 
-        await Expect(App.NodeLabel(NodeName)).ToBeVisibleAsync();
+        await Expect(App.NodeLabel("Database")).ToBeVisibleAsync();
     }
 
     [E2EFact]

@@ -361,3 +361,6 @@ healthchecksdb
 # Playwright traces recorded by the e2e tests (./e2e -t or E2E_TRACE=1)
 /tests/Dependinator.E2E.Tests/traces/
 .claude/settings.local.json
+
+# Cloud icon package cache (./import-icons)
+/.cache/

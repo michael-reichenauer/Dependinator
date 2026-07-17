@@ -2,7 +2,7 @@
 @using MudBlazor
 @implements IDisposable
 
-@* Inline name prompt for adding a manual node (at the double-clicked spot) or renaming one. *@
+@* Inline name prompt for renaming a manual node in place. *@
 @if (manualEditService.IsNameEntryOpen)
 {
   <div style="@CssPosition">
@@ -31,7 +31,7 @@
   void OnStateChanged() =>
       InvokeAsync(() =>
       {
-        // Prefill and request focus when the prompt opens (empty for add, current name for rename).
+        // Prefill with the current name and request focus when the prompt opens.
         if (manualEditService.IsNameEntryOpen && !wasOpen)
         {
           nodeName = manualEditService.NameEntryInitialValue;
