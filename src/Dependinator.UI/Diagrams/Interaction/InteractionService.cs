@@ -2,6 +2,7 @@ using Dependinator.UI.Diagrams.Dependencies;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
+using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams.Interaction;
 
@@ -32,7 +33,8 @@ class InteractionService(
     IDependenciesService dependenciesService,
     IManualEditService manualEditService,
     INoteService noteService,
-    IContextMenuService contextMenuService
+    IContextMenuService contextMenuService,
+    IScreenService screenService
 ) : IInteractionService
 {
     // Delay before a held-down button switches the cursor to "move" (see OnMoveTimer).
@@ -48,6 +50,13 @@ class InteractionService(
     bool isDraggingSelectedNode = false;
     bool isResizingSelectedNode = false;
     bool isDraggingSelectedLinePoint = false;
+    bool isDraggingLink = false;
+
+    // Press position in viewport (client) coords, the coordinate space of the link-drag
+    // preview overlay. Client coords are used because pointer capture retargets events to the
+    // pressed element, which makes e.OffsetX/Y unreliable during a drag (existing drags only
+    // use MovementX/Y).
+    Pos mouseDownClient = Pos.None;
     PointerId mouseDownId = PointerId.Empty;
     double Zoom => modelMgr.WithModel(m => m.Zoom);
     readonly Debouncer zoomToolbarDebouncer = new();
@@ -171,6 +180,11 @@ class InteractionService(
             manualEditService.CancelAddLink();
             return;
         }
+        if (manualEditService.IsLinkDragActive)
+        {
+            manualEditService.CancelLinkDrag();
+            return;
+        }
         if (manualEditService.IsPlacingNode)
         {
             manualEditService.CancelPlaceNode();
@@ -273,9 +287,16 @@ class InteractionService(
         isDraggingSelectedNode = false;
         isResizingSelectedNode = false;
         isDraggingSelectedLinePoint = false;
+        isDraggingLink = false;
         moveTimerRunning = true;
         moveTimer?.Change(MoveDelay, Timeout.Infinite);
         mouseDownId = PointerId.Parse(e.TargetId);
+        mouseDownClient = new Pos(e.ClientX, e.ClientY);
+
+        // A link-handle press must stay a link-handle press; the edit-mode remap below would
+        // otherwise turn a handle press inside an edit-mode container into a content-pan press.
+        if (mouseDownId.IsLinkHandle)
+            return;
 
         if (mouseDownId.Id == selectionService.SelectedId.Id)
             return;
@@ -289,13 +310,30 @@ class InteractionService(
     }
 
     // Routes a left-button drag to exactly one gesture. The branch order is the gesture
-    // priority: line-point drag → selected-node content pan (edit mode) → resize-handle drag →
-    // selected-node move → canvas pan (the fallback for everything else). Each editing branch
-    // marks its flag for OnMouseUp and hides the toolbar while dragging.
+    // priority: link-handle drag → line-point drag → selected-node content pan (edit mode) →
+    // resize-handle drag → selected-node move → canvas pan (the fallback for everything else).
+    // Each editing branch marks its flag for OnMouseUp and hides the toolbar while dragging.
     void OnMouseMove(PointerEvent e)
     {
         if (!e.IsLeftButton)
             return;
+
+        if (ViewOptions.IsEditingEnabled && mouseDownId.IsLinkHandle)
+        {
+            if (!isDraggingLink)
+            {
+                isDraggingLink = true;
+                manualEditService.BeginLinkDrag(mouseDownId.NodeId, mouseDownClient);
+                moveTimerRunning = false;
+                moveTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                Cursor = "crosshair";
+                isMoving = true; // Makes OnMouseUp restore the default cursor
+            }
+            manualEditService.UpdateLinkDrag(new Pos(e.ClientX, e.ClientY));
+            selectionService.HideSelectedPosition();
+            return;
+        }
+
         if (
             ViewOptions.IsEditingEnabled
             && mouseDownId.IsLinePoint
@@ -344,6 +382,12 @@ class InteractionService(
     // toolbar position, and resets all gesture state.
     void OnMouseUp(PointerEvent e)
     {
+        if (isDraggingLink)
+        {
+            isDraggingLink = false;
+            CompleteLinkDragAsync(e).RunInBackground();
+        }
+
         if (isDraggingSelectedLinePoint && mouseDownId.IsLinePoint)
         {
             lineEditService.SnapSegmentPointToGrid(mouseDownId);
@@ -378,6 +422,23 @@ class InteractionService(
             Cursor = "default";
             isMoving = false;
         }
+    }
+
+    // Finds the drop target under the cursor and completes (or cancels) the link drag. Pointer
+    // capture keeps e.TargetId at the pressed handle for the whole drag, so the drop target must
+    // be hit-tested at the release position instead.
+    async Task CompleteLinkDragAsync(PointerEvent e)
+    {
+        if (e.Type == "pointercancel")
+        {
+            manualEditService.CancelLinkDrag();
+            applicationEvents.TriggerUIStateChanged();
+            return;
+        }
+
+        var elementId = await screenService.GetElementIdAtPointAsync(e.ClientX, e.ClientY);
+        manualEditService.TryCompleteLinkDrag(PointerId.Parse(elementId));
+        applicationEvents.TriggerUIStateChanged();
     }
 
     // Fires when a button has been held for MoveDelay without release: switches to the "move"

@@ -596,6 +596,9 @@
     void ToggleEditMode()
     {
         ViewOptions.SetIsEditingEnabled(!ViewOptions.IsEditingEnabled);
+        // Edit-only markup (e.g. link handles) is baked into cached tiles, so the cache must be
+        // cleared for the toggle to take effect immediately.
+        modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }
 

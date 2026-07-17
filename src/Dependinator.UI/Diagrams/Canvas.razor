@@ -47,6 +47,31 @@
                         fill-opacity: 0.3;
                     }
 
+                    /* Drag-to-link handle: hidden until its node is hovered; pointer-events off
+                       while hidden so it never steals presses or elementFromPoint hit tests. */
+                    .linkhandle {
+                        opacity: 0;
+                        pointer-events: none;
+                    }
+
+                    .hoverable:hover .linkhandle {
+                        opacity: 1;
+                        pointer-events: all;
+                        cursor: crosshair;
+                    }
+
+                    /* Cancel the generic hover stroke on the handle circles (the plus glyph
+                       path keeps its own white stroke). */
+                    .hoverable:hover .linkhandle circle {
+                        stroke: none;
+                        stroke-width: 0;
+                    }
+
+                    .hoverable:hover .linkhandle path {
+                        stroke: white;
+                        stroke-width: 0.8px;
+                    }
+
                     .iconName {
                         font-family: Verdana, Helvetica, Arial, sans-serif;
                         fill:
@@ -124,4 +149,13 @@
         </defs>
         @((MarkupString)Content)
     </svg>
+
+    @if (manualEditService.IsLinkDragActive)
+    {
+        <svg class="link-drag-overlay" xmlns="http://www.w3.org/2000/svg">
+            <line x1="@Px(manualEditService.LinkDragStart.X)" y1="@Px(manualEditService.LinkDragStart.Y)"
+                  x2="@Px(manualEditService.LinkDragEnd.X)" y2="@Px(manualEditService.LinkDragEnd.Y)"
+                  stroke="@DColors.Selected" stroke-width="1.5" stroke-dasharray="6,6" />
+        </svg>
+    }
 </div>

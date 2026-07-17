@@ -33,6 +33,8 @@ record PointerId
     public static PointerId FromNodeResize(NodeId nodeId, NodeResizeType resizeType) =>
         new(nodeId.Value, ToSubId(resizeType), resizeType);
 
+    public static PointerId FromNodeLinkHandle(NodeId nodeId) => new(nodeId.Value, "lh", NodeResizeType.None);
+
     public static PointerId Parse(string elementId)
     {
         var parts = elementId.Split('.');
@@ -43,6 +45,7 @@ record PointerId
     }
 
     public bool IsNode => SubId == "n";
+    public bool IsLinkHandle => SubId == "lh";
     public bool IsResize => NodeResizeType != NodeResizeType.None;
     public bool IsLine => SubId == "l";
     public bool IsLinePoint => LinePointIndex >= 0;

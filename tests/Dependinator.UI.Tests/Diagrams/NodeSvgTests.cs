@@ -1,6 +1,8 @@
 using Dependinator.Core.Parsing;
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Svg;
 using ModelNode = Dependinator.UI.Modeling.Models.Node;
+using Rect = Dependinator.UI.Shared.Types.Rect;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
@@ -114,5 +116,50 @@ public class NodeSvgTests
     public void DescriptionWidthForNode_ShouldCap_ForVeryWideNodes()
     {
         Assert.Equal(100, NodeSvg.DescriptionWidthForNode(100000, 6));
+    }
+
+    static ModelNode CreateIconNode()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        return new ModelNode("Node", root) { Type = NodeType.ClassType, Boundary = new Rect(0, 0, 80, 40) };
+    }
+
+    [Fact]
+    public void GetNodeIconSvg_ShouldIncludeLinkHandle_WhenEditingEnabled()
+    {
+        var wasEnabled = ViewOptions.IsEditingEnabled;
+        try
+        {
+            ViewOptions.SetIsEditingEnabled(true);
+            var node = CreateIconNode();
+
+            var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0);
+
+            Assert.Contains("class=\"linkhandle\"", svg);
+            Assert.Contains($"{node.Id.Value}.lh", svg);
+        }
+        finally
+        {
+            ViewOptions.SetIsEditingEnabled(wasEnabled);
+        }
+    }
+
+    [Fact]
+    public void GetNodeIconSvg_ShouldOmitLinkHandle_WhenEditingDisabled()
+    {
+        var wasEnabled = ViewOptions.IsEditingEnabled;
+        try
+        {
+            ViewOptions.SetIsEditingEnabled(false);
+            var node = CreateIconNode();
+
+            var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0);
+
+            Assert.DoesNotContain("linkhandle", svg);
+        }
+        finally
+        {
+            ViewOptions.SetIsEditingEnabled(wasEnabled);
+        }
     }
 }

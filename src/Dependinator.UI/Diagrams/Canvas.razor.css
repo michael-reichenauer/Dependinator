@@ -17,6 +17,19 @@ svg {
     border: 2px solid #0088f711;
 }
 
+/* Dotted preview line drawn while dragging a node's link handle. Fixed over the whole
+   viewport so its pixel space equals pointer client coordinates. Must NOT make .drop-zone a
+   positioned element instead: that would paint the canvas above the position:fixed, z-auto
+   toolbars rendered earlier in Canvas.razor. pointer-events: none keeps the overlay out of
+   the drop-target hit test (getElementIdAtPoint). */
+.link-drag-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+}
+
 .drop-zone.hover {
     border: 2px solid #0087F7;
     background-color: #0088f711;

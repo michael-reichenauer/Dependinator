@@ -13,10 +13,14 @@ namespace Dependinator.E2E.Tests.Ui;
 public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     // Each test picks a distinct icon; the added node is named after the icon's display name.
+    // (Names must also not collide with labels in the demo model, e.g. "Api" or "Logging".)
     const string NodeIcon = "Cache";
     const string MenuNodeIcon = "Queue";
     const string LinkSourceIcon = "Database";
     const string LinkTargetIcon = "Storage";
+    const string DragSourceIcon = "Messaging";
+    const string DragTargetIcon = "Scheduler";
+    const string DragCancelIcon = "Analytics";
 
     [E2EFact]
     public async Task ManualNode_ShouldBeAddedViaMenu_AtClickedPosition()
@@ -102,6 +106,117 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("line-delete")).ToBeVisibleAsync();
         await Page.GetByTestId("line-delete").ClickAsync();
         await Expect(line).ToHaveCountAsync(0);
+    }
+
+    [E2EFact]
+    public async Task ManualLink_ShouldBeCreatedByDraggingLinkHandle()
+    {
+        await App.GotoMainPageAsync();
+
+        LocatorBoundingBoxResult box =
+            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+
+        // Two manual nodes on empty canvas (bottom-left, horizontally apart) to link.
+        await AddManualNodeAtAsync(DragSourceIcon, box.X + 150, box.Y + box.Height - 130);
+        await Expect(App.NodeLabel(DragSourceIcon)).ToBeVisibleAsync();
+        await AddManualNodeAtAsync(DragTargetIcon, box.X + 450, box.Y + box.Height - 130);
+        await Expect(App.NodeLabel(DragTargetIcon)).ToBeVisibleAsync();
+
+        LocatorBoundingBoxResult targetBox = await WaitForStableNodeBoxAsync(DragTargetIcon);
+
+        // Drag the source node's link handle onto the target: hovering the node reveals the
+        // handle, pressing it and moving draws the dotted preview line, releasing over the
+        // target creates the manual link.
+        await HoverLinkHandleAsync(DragSourceIcon);
+        await Page.Mouse.DownAsync();
+        await Page.Mouse.MoveAsync(
+            targetBox.X + targetBox.Width / 2,
+            targetBox.Y + targetBox.Height / 2,
+            new() { Steps = 10 }
+        );
+
+        // The dotted preview overlay is rendered while the drag is active.
+        await Expect(Page.Locator(".link-drag-overlay")).ToBeVisibleAsync();
+
+        await Page.Mouse.UpAsync();
+
+        await Expect(Page.Locator(".link-drag-overlay")).ToBeHiddenAsync();
+        await Expect(LineGroup(DragSourceIcon, DragTargetIcon)).ToHaveCountAsync(1);
+    }
+
+    [E2EFact]
+    public async Task ManualLink_ShouldNotBeCreated_WhenLinkHandleDroppedOnEmptyCanvas()
+    {
+        await App.GotoMainPageAsync();
+
+        LocatorBoundingBoxResult box =
+            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+
+        await AddManualNodeAtAsync(DragCancelIcon, box.X + 150, box.Y + box.Height - 130);
+        await Expect(App.NodeLabel(DragCancelIcon)).ToBeVisibleAsync();
+
+        (float pressX, float pressY) = await HoverLinkHandleAsync(DragCancelIcon);
+        await Page.Mouse.DownAsync();
+        await Page.Mouse.MoveAsync(pressX + 200, pressY - 100, new() { Steps = 10 });
+        await Expect(Page.Locator(".link-drag-overlay")).ToBeVisibleAsync();
+
+        // Dropping on empty canvas cancels the drag without creating a link.
+        await Page.Mouse.UpAsync();
+
+        await Expect(Page.Locator(".link-drag-overlay")).ToBeHiddenAsync();
+        ILocator anyLineFromNode = Page.Locator("#svgcanvas g.hoverable")
+            .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(DragCancelIcon)}→") });
+        await Expect(anyLineFromNode).ToHaveCountAsync(0);
+    }
+
+    // Hovers the node to reveal its drag-to-link handle, then moves onto the handle's press
+    // point and returns it. The press point is inside the touch circle where it overlaps the
+    // node's hover rect, so the handle stays hover-revealed (and pointer-events enabled) at
+    // the moment of the press.
+    async Task<(float X, float Y)> HoverLinkHandleAsync(string nodeLabel)
+    {
+        LocatorBoundingBoxResult nodeBox = await WaitForStableNodeBoxAsync(nodeLabel);
+        await Page.Mouse.MoveAsync(nodeBox.X + nodeBox.Width / 2, nodeBox.Y + nodeBox.Height / 2);
+
+        // The touch circle (the larger, last circle of the handle group) spans the icon's right
+        // edge; press at 15% of its width, which lies inside both the circle and the node.
+        ILocator touchCircle = App.Node(nodeLabel).Locator("g.linkhandle circle").Last;
+        LocatorBoundingBoxResult handleBox =
+            await touchCircle.BoundingBoxAsync() ?? throw new InvalidOperationException("Link handle is not rendered.");
+
+        float pressX = handleBox.X + handleBox.Width * 0.15f;
+        float pressY = handleBox.Y + handleBox.Height / 2;
+        await Page.Mouse.MoveAsync(pressX, pressY, new() { Steps = 3 });
+        return (pressX, pressY);
+    }
+
+    // Same stability polling as AppPage.WaitForStableNodeBoxAsync (private there): canvas
+    // re-renders after adding nodes can momentarily move or detach the group.
+    async Task<LocatorBoundingBoxResult> WaitForStableNodeBoxAsync(string label, float timeoutSeconds = 15)
+    {
+        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        LocatorBoundingBoxResult? previous = null;
+
+        while (stopwatch.Elapsed < timeout)
+        {
+            LocatorBoundingBoxResult? box = null;
+            if (await App.Node(label).CountAsync() > 0)
+                box = await App.Node(label).BoundingBoxAsync();
+
+            bool isStable =
+                box is not null
+                && previous is not null
+                && Math.Abs(box.X - previous.X) < 1
+                && Math.Abs(box.Y - previous.Y) < 1;
+            if (isStable)
+                return box!;
+
+            previous = box;
+            await Task.Delay(100);
+        }
+
+        throw new InvalidOperationException($"Node '{label}' did not render/stabilize within {timeout.TotalSeconds}s.");
     }
 
     // Canvas re-renders (e.g. after an unselect click) can momentarily detach the line's SVG

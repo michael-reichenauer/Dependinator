@@ -90,6 +90,18 @@ export function getBoundingRectangle(elementId) {
   return element.getBoundingClientRect();
 }
 
+// Id of the topmost id-bearing element at a viewport point. Used to find the drop target of a
+// drag-to-link gesture, since pointer capture keeps event.target at the drag-start element.
+// Relies on overlays (e.g. the link-drag preview line) being pointer-events: none.
+export function getElementIdAtPoint(x, y) {
+  const element = document.elementFromPoint(x, y);
+  if (element == null) {
+    return "";
+  }
+  const withId = element.closest("[id]");
+  return withId ? withId.id : "";
+}
+
 export function getWindowSizeDetails(parm) {
   var e = window, a = 'inner';
 

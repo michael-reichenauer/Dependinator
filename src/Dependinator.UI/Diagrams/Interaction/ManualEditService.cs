@@ -11,7 +11,8 @@ namespace Dependinator.UI.Diagrams.Interaction;
 
 // Orchestrates the "manual design" interactions: adding user-drawn nodes (double-click empty
 // canvas → icon selector dialog), renaming them in place, and drawing user-drawn links (select
-// source → add-link mode → click target). All mutations go through the undoable CommandService.
+// source → add-link mode → click target, or drag a node's link handle onto the target). All
+// mutations go through the undoable CommandService.
 interface IManualEditService
 {
     // Inline name-entry state (the Canvas renders a name input while IsNameEntryOpen is true),
@@ -47,6 +48,20 @@ interface IManualEditService
     bool TryCompleteAddLink(PointerId targetPointerId);
     void CancelAddLink();
 
+    // Drag-to-link: pressing an icon node's link handle and dragging draws a dotted preview line
+    // (the Canvas renders it while IsLinkDragActive); dropping on another node creates a manual
+    // link. Positions are in viewport (client) pixels, matching the fixed preview overlay.
+    bool IsLinkDragActive { get; }
+    Pos LinkDragStart { get; }
+    Pos LinkDragEnd { get; }
+    void BeginLinkDrag(NodeId sourceId, Pos startPos);
+    void UpdateLinkDrag(Pos pos);
+
+    // Completes a link drag with the dropped-on target; always resets the drag state. Returns
+    // true if a link was created (false on empty space, non-node or self drops).
+    bool TryCompleteLinkDrag(PointerId targetPointerId);
+    void CancelLinkDrag();
+
     // Deletes a leaf manual node together with its manual links (undoable).
     void DeleteManualNode(NodeId nodeId);
 
@@ -79,6 +94,13 @@ class ManualEditService(
 
     public bool IsAddingLink { get; private set; }
     string addLinkSourceName = "";
+
+    // Deliberately separate from the add-link mode state, so a stray click during or after a
+    // drag can never complete a link via the click-based add-link path.
+    public bool IsLinkDragActive { get; private set; }
+    public Pos LinkDragStart { get; private set; } = Pos.None;
+    public Pos LinkDragEnd { get; private set; } = Pos.None;
+    string dragLinkSourceName = "";
 
     public bool IsPlacingNode { get; private set; }
 
@@ -245,18 +267,14 @@ class ManualEditService(
 
     public bool TryCompleteAddLink(PointerId targetPointerId)
     {
-        if (!IsAddingLink || !targetPointerId.IsNode)
+        if (!IsAddingLink)
             return false;
 
-        var targetName = ResolveNodeName(targetPointerId.NodeId);
+        var sourceName = addLinkSourceName;
         IsAddingLink = false;
         StateChanged?.Invoke();
 
-        if (targetName.Length == 0 || targetName == addLinkSourceName)
-            return false;
-
-        commandService.Do(new AddLinkCommand(structureService, addLinkSourceName, targetName));
-        return true;
+        return TryCreateManualLink(sourceName, targetPointerId);
     }
 
     public void CancelAddLink()
@@ -265,6 +283,66 @@ class ManualEditService(
             return;
         IsAddingLink = false;
         StateChanged?.Invoke();
+    }
+
+    public void BeginLinkDrag(NodeId sourceId, Pos startPos)
+    {
+        dragLinkSourceName = ResolveNodeName(sourceId);
+        if (dragLinkSourceName.Length == 0)
+            return;
+        IsLinkDragActive = true;
+        LinkDragStart = startPos;
+        LinkDragEnd = startPos;
+        StateChanged?.Invoke();
+    }
+
+    // No StateChanged here: the canvas already re-renders on every pointer event, and other
+    // subscribers (e.g. toolbars) do not need per-move notifications.
+    public void UpdateLinkDrag(Pos pos)
+    {
+        if (!IsLinkDragActive)
+            return;
+        LinkDragEnd = pos;
+    }
+
+    public bool TryCompleteLinkDrag(PointerId targetPointerId)
+    {
+        if (!IsLinkDragActive)
+            return false;
+
+        var sourceName = dragLinkSourceName;
+        ResetLinkDrag();
+
+        return TryCreateManualLink(sourceName, targetPointerId);
+    }
+
+    public void CancelLinkDrag()
+    {
+        if (!IsLinkDragActive)
+            return;
+        ResetLinkDrag();
+    }
+
+    void ResetLinkDrag()
+    {
+        IsLinkDragActive = false;
+        LinkDragStart = Pos.None;
+        LinkDragEnd = Pos.None;
+        dragLinkSourceName = "";
+        StateChanged?.Invoke();
+    }
+
+    bool TryCreateManualLink(string sourceName, PointerId targetPointerId)
+    {
+        if (!targetPointerId.IsNode)
+            return false;
+
+        var targetName = ResolveNodeName(targetPointerId.NodeId);
+        if (targetName.Length == 0 || targetName == sourceName)
+            return false;
+
+        commandService.Do(new AddLinkCommand(structureService, sourceName, targetName));
+        return true;
     }
 
     // Deletes a manual node and its whole subtree (children and their links), as one undoable step.

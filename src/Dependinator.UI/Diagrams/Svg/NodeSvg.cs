@@ -38,6 +38,11 @@ static partial class NodeSvg
     // Fraction of the average glyph advance relative to the font size (shared with NoteSvg).
     internal const double AverageCharWidthFactor = 0.6;
 
+    // Drag-to-link handle at an icon node's right edge (revealed on hover, editing mode only).
+    const double LinkHandleGap = 4; // Distance from the icon's right edge to the handle center
+    const double LinkHandleRadius = 3.5; // Visible handle dot
+    const double LinkHandleTouchRadius = 10; // Invisible, larger hit target
+
     public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
         var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
@@ -56,7 +61,8 @@ static partial class NodeSvg
             DescriptionMaxLines: ScaledMaxLines(IconDescriptionMaxLines, parentZoom, textZoom),
             Bounds: geometry,
             // The name is centered under the icon, so the marker goes half the text width right.
-            MarkerPos: new Pos(textPos.X + EstimateTextWidth(node.ShortName, fontSize) / 2, textPos.Y + fontSize / 2)
+            MarkerPos: new Pos(textPos.X + EstimateTextWidth(node.ShortName, fontSize) / 2, textPos.Y + fontSize / 2),
+            LinkHandlePos: new Pos(geometry.X + geometry.Width + LinkHandleGap, geometry.Y + geometry.Height / 2)
         );
 
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom);
@@ -149,7 +155,8 @@ static partial class NodeSvg
         double DescriptionY,
         int DescriptionMaxLines,
         Rect Bounds,
-        Pos MarkerPos
+        Pos MarkerPos,
+        Pos? LinkHandlePos = null
     );
 
     static string BuildLeafNodeSvg(Node node, LeafNodeLayout layout, double descriptionFontSize)
@@ -162,7 +169,8 @@ static partial class NodeSvg
             "hoverable",
             layout.Bounds,
             node.HtmlLongName,
-            node.HtmlDescription
+            node.HtmlDescription,
+            LinkHandleSvg(node, layout.LinkHandlePos)
         );
         var selectedOverlay = SelectedNodeSvg(node, layout.Bounds);
         var descriptionSvg = BuildDescriptionSvg(
@@ -417,7 +425,8 @@ static partial class NodeSvg
         string cssClass,
         Rect geometry,
         string htmlLongName,
-        string? htmlDescription
+        string? htmlDescription,
+        string extraContent = ""
     )
     {
         var title = string.IsNullOrWhiteSpace(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
@@ -426,10 +435,35 @@ static partial class NodeSvg
                 <g class="{cssClass}" id="{elementId}">
                   <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                   <title>{title}</title>
+                  {extraContent}
                 </g>
                 """
             )
             .Trim();
+    }
+
+    // A drag-to-link handle at the node's right edge, revealed on hover (see the .linkhandle CSS
+    // in Canvas.razor). It sits inside the hover group so hovering the handle itself keeps it
+    // visible. Dragging it to another node creates a manual link (see InteractionService).
+    static string LinkHandleSvg(Node node, Pos? pos)
+    {
+        if (pos is null || !ViewOptions.IsEditingEnabled)
+            return "";
+
+        var (x, y) = (pos.X, pos.Y);
+        var elementId = PointerId.FromNodeLinkHandle(node.Id).ElementId;
+        // Visible dot + plus glyph, plus a larger invisible touch circle that overlaps the icon
+        // so the cursor never crosses a dead zone between node and handle (no hover flicker).
+        return Invariant(
+            $"""
+            <g class="linkhandle">
+              <circle id="{elementId}" cx="{x:0.##}" cy="{y:0.##}" r="{LinkHandleRadius}" fill="{DColors.Selected}"/>
+              <path d="M {x - 1.5:0.##} {y:0.##} h 3 M {x:0.##} {y
+                - 1.5:0.##} v 3" stroke="white" stroke-width="0.8" fill="none" pointer-events="none"/>
+              <circle id="{elementId}" cx="{x:0.##}" cy="{y:0.##}" r="{LinkHandleTouchRadius}" fill="{DColors.Selected}" fill-opacity="0"/>
+            </g>
+            """
+        );
     }
 
     static string SelectedNodeSvg(Node node, Rect geometry)
