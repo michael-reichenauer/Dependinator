@@ -229,10 +229,10 @@ class InteractionService(
             return;
         }
 
-        // While placing a node, a click begins adding it there (opens the inline name prompt).
+        // While placing a node, a click begins adding it there (opens the icon selector dialog).
         if (manualEditService.IsPlacingNode)
         {
-            manualEditService.BeginAddNode(e);
+            _ = manualEditService.AddNodeAtAsync(e);
             return;
         }
 
@@ -265,7 +265,7 @@ class InteractionService(
         // Double-click on empty canvas (or inside a container) starts adding a manual node there.
         if (!ViewOptions.IsEditingEnabled)
             return;
-        manualEditService.BeginAddNode(e);
+        _ = manualEditService.AddNodeAtAsync(e);
     }
 
     void OnMouseDown(PointerEvent e)

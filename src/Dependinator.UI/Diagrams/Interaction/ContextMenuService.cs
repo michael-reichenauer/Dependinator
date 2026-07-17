@@ -56,6 +56,6 @@ class ContextMenuService(INoteService noteService, IManualEditService manualEdit
     public void AddNodeHere()
     {
         Close();
-        manualEditService.BeginAddNode(pendingEvent);
+        _ = manualEditService.AddNodeAtAsync(pendingEvent);
     }
 }

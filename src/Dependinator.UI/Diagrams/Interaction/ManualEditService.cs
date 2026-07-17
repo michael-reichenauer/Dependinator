@@ -1,28 +1,30 @@
+using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
+using MudBlazor;
 
 namespace Dependinator.UI.Diagrams.Interaction;
 
 // Orchestrates the "manual design" interactions: adding user-drawn nodes (double-click empty
-// canvas → inline name prompt), renaming them in place, and drawing user-drawn links (select
+// canvas → icon selector dialog), renaming them in place, and drawing user-drawn links (select
 // source → add-link mode → click target). All mutations go through the undoable CommandService.
 interface IManualEditService
 {
     // Inline name-entry state (the Canvas renders a name input while IsNameEntryOpen is true),
-    // shared by the add-node and rename-node flows.
+    // used by the rename-node flow.
     bool IsNameEntryOpen { get; }
     Pos NameEntryScreenPos { get; }
     string NameEntryInitialValue { get; }
     string NameEntryLabel { get; }
     event Action? StateChanged;
 
-    // Begins adding a node at a double-clicked (or clicked, in place mode) canvas position; shows
-    // the inline name prompt.
-    void BeginAddNode(PointerEvent e);
+    // Adds a node at a double-clicked (or clicked, in place mode) canvas position: shows the icon
+    // selector dialog, then creates the node with the chosen icon, named after that icon.
+    Task AddNodeAtAsync(PointerEvent e);
 
     // "Add node" placement mode: armed from the app menu, the next canvas click adds a node at that
     // position (parallels INoteService.BeginPlaceNote).
@@ -33,7 +35,7 @@ interface IManualEditService
     // Begins renaming an existing node, anchoring the inline prompt at the given screen position.
     void BeginRenameNode(NodeId nodeId, Pos screenPos);
 
-    // Commits the inline name entry (adds or renames); false if the name is empty or already used.
+    // Commits the inline name entry (renames); false if the name is empty or already used.
     bool CommitNameEntry(string name);
     void CancelNameEntry();
 
@@ -54,35 +56,23 @@ class ManualEditService(
     IModelMgr modelMgr,
     ICommandService commandService,
     IStructureService structureService,
-    ISelectionService selectionService
+    ISelectionService selectionService,
+    IDialogService dialogService
 ) : IManualEditService
 {
     // Match the size parsed nodes get from the auto-layout.
     static readonly double DefaultWidth = NodeLayout.DefaultSize.Width;
     static readonly double DefaultHeight = NodeLayout.DefaultSize.Height;
 
-    enum EntryMode
-    {
-        None,
-        Add,
-        Rename,
-    }
-
-    EntryMode entryMode = EntryMode.None;
-
-    // Pending add-node placement (set between BeginAddNode and commit/cancel).
-    string pendingParentName = "";
-    Rect pendingBoundary = Rect.None;
-
     // The node being renamed (set between BeginRenameNode and commit/cancel): its current full
     // name and its parent's full name (used to re-qualify the new name).
     string renameFromName = "";
     string renameParentName = "";
 
-    public bool IsNameEntryOpen => entryMode != EntryMode.None;
+    public bool IsNameEntryOpen { get; private set; }
     public Pos NameEntryScreenPos { get; private set; } = Pos.None;
     public string NameEntryInitialValue { get; private set; } = "";
-    public string NameEntryLabel => entryMode == EntryMode.Rename ? "Rename node" : "New node name";
+    public string NameEntryLabel => "Rename node";
 
     public bool IsAddingLink { get; private set; }
     string addLinkSourceName = "";
@@ -105,19 +95,22 @@ class ManualEditService(
         StateChanged?.Invoke();
     }
 
-    public void BeginAddNode(PointerEvent e)
+    public async Task AddNodeAtAsync(PointerEvent e)
     {
         // Any pending link-drawing or armed placement is superseded by starting a node add.
         IsAddingLink = false;
         IsPlacingNode = false;
+        StateChanged?.Invoke();
 
+        string parentName;
+        Rect boundary;
         using (var model = modelMgr.UseModel())
         {
             var container = DiagramPlacement.ResolveContainer(model, PointerId.Parse(e.TargetId));
             var local = DiagramPlacement.ToContainerLocal(model, container, e);
 
-            pendingParentName = container.Name;
-            pendingBoundary = new Rect(
+            parentName = container.Name;
+            boundary = new Rect(
                 NodeGrid.Snap(local.X - DefaultWidth / 2),
                 NodeGrid.Snap(local.Y - DefaultHeight / 2),
                 DefaultWidth,
@@ -125,10 +118,57 @@ class ManualEditService(
             );
         }
 
-        entryMode = EntryMode.Add;
-        NameEntryInitialValue = "";
-        NameEntryScreenPos = new Pos(e.ClientX, e.ClientY);
-        StateChanged?.Invoke();
+        var iconName = await ShowIconSelectorAsync();
+        if (iconName is null)
+            return;
+
+        // The node is named after the chosen icon; a numeric suffix keeps it unique under the
+        // parent. The user can rename it afterwards via the node menu.
+        string fullName;
+        using (var model = modelMgr.UseModel())
+        {
+            var shortName = UniqueShortName(model, parentName, IconLibrary.ToDisplayName(iconName));
+            fullName = DiagramPlacement.ComposeFullName(parentName, shortName);
+        }
+
+        commandService.Do(new AddNodeCommand(fullName, parentName, boundary, iconName: iconName));
+    }
+
+    // Shows the icon selector in picker mode; returns the chosen icon name, or null if canceled.
+    async Task<string?> ShowIconSelectorAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(IconSelectorDialog.SelectOnly), true },
+            { nameof(IconSelectorDialog.CurrentIconName), "Module" },
+        };
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            NoHeader = true,
+            Position = DialogPosition.TopCenter,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+        };
+
+        var dialog = await dialogService.ShowAsync<IconSelectorDialog>(null, parameters, options);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled)
+            return null;
+        return result.Data as string;
+    }
+
+    // The first of "Name", "Name 2", "Name 3", … not already used under the parent (full name is
+    // the node identity, so the same short name can still be used under other parents).
+    static string UniqueShortName(IModel model, string parentName, string baseName)
+    {
+        for (var i = 1; ; i++)
+        {
+            var candidate = i == 1 ? baseName : $"{baseName} {i}";
+            var fullName = DiagramPlacement.ComposeFullName(parentName, candidate);
+            if (!model.Nodes.ContainsKey(NodeId.FromName(fullName)))
+                return candidate;
+        }
     }
 
     public void BeginRenameNode(NodeId nodeId, Pos screenPos)
@@ -146,7 +186,7 @@ class ManualEditService(
             NameEntryInitialValue = node.ShortName;
         }
 
-        entryMode = EntryMode.Rename;
+        IsNameEntryOpen = true;
         NameEntryScreenPos = screenPos;
         StateChanged?.Invoke();
     }
@@ -157,15 +197,12 @@ class ManualEditService(
         if (!IsNameEntryOpen || trimmed.Length == 0)
             return false;
 
-        var isRename = entryMode == EntryMode.Rename;
-        var parentName = isRename ? renameParentName : pendingParentName;
-
         // The typed text is the short name; the node's identity is qualified by its parent (like
         // parsed nodes), so the same short name can be used under different parents.
-        var fullName = DiagramPlacement.ComposeFullName(parentName, trimmed);
+        var fullName = DiagramPlacement.ComposeFullName(renameParentName, trimmed);
 
         // Renaming to the unchanged name is a no-op, but a valid "commit" that closes the prompt.
-        if (isRename && fullName == renameFromName)
+        if (fullName == renameFromName)
         {
             ResetNameEntry();
             return true;
@@ -177,19 +214,13 @@ class ManualEditService(
                 return false; // Full name is the node identity; reject duplicates.
         }
 
-        Command command = isRename
-            ? new RenameNodeCommand(structureService, renameFromName, fullName)
-            : new AddNodeCommand(fullName, pendingParentName, pendingBoundary);
-        commandService.Do(command);
+        commandService.Do(new RenameNodeCommand(structureService, renameFromName, fullName));
         ResetNameEntry();
 
         // A rename replaces the node, so the previous selection (old id) is now stale; move the
         // selection to the resulting node.
-        if (isRename)
-        {
-            selectionService.Unselect();
-            selectionService.Select(NodeId.FromName(fullName)).RunInBackground();
-        }
+        selectionService.Unselect();
+        selectionService.Select(NodeId.FromName(fullName)).RunInBackground();
         return true;
     }
 
@@ -264,11 +295,9 @@ class ManualEditService(
 
     void ResetNameEntry()
     {
-        entryMode = EntryMode.None;
+        IsNameEntryOpen = false;
         NameEntryScreenPos = Pos.None;
         NameEntryInitialValue = "";
-        pendingParentName = "";
-        pendingBoundary = Rect.None;
         renameFromName = "";
         renameParentName = "";
         StateChanged?.Invoke();

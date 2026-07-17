@@ -65,7 +65,7 @@
             </div>
           }
         }
-        @if (entries.Count <= 1 && !string.IsNullOrWhiteSpace(query) && !DefaultMatchesQuery)
+        @if (entries.Count <= (SelectOnly ? 0 : 1) && !string.IsNullOrWhiteSpace(query) && !DefaultMatchesQuery)
         {
           <MudText Typo="Typo.body2" Class="icon-dialog__empty">No matching icons</MudText>
         }
@@ -103,6 +103,11 @@
   // row so it previews what the node reverts to; that icon is omitted from the list below.
   [Parameter]
   public string? DefaultIconName { get; set; }
+
+  // Picker mode: no node exists yet (e.g. the add-node flow), so selecting closes the dialog
+  // with the icon name as the result instead of applying it, and the "Default" row is hidden.
+  [Parameter]
+  public bool SelectOnly { get; set; }
 
   MudTextField<string> textField = null!;
   string query = "";
@@ -181,7 +186,8 @@
       + (iconName == CurrentIconName ? "icon-dialog__item--current" : "");
 
   bool IsFirstOfGroup(int index) =>
-      entries[index] is { } icon && (entries[index - 1] is not { } previous || previous.Group != icon.Group);
+      entries[index] is { } icon
+      && (index == 0 || entries[index - 1] is not { } previous || previous.Group != icon.Group);
 
   async Task SelectTabAsync(string group)
   {
@@ -209,7 +215,7 @@
   // with group headers marking each icon's origin.
   IReadOnlyList<IconInfo?> Filter(string query)
   {
-    List<IconInfo?> result = [null];
+    List<IconInfo?> result = SelectOnly ? [] : [null];
     var icons = IconLibrary.All.Where(icon => icon.Name != DefaultIconName);
     showGroupHeaders = !string.IsNullOrWhiteSpace(query) && groups.Count > 1;
 
@@ -258,6 +264,12 @@
 
   Task SelectAsync(string? iconName)
   {
+    if (SelectOnly)
+    {
+      MudDialog.Close(DialogResult.Ok(iconName!));
+      return Task.CompletedTask;
+    }
+
     nodeEditService.SetNodeIcon(NodeId.FromId(NodeIdValue), iconName);
     MudDialog.Close(DialogResult.Ok(true));
     return Task.CompletedTask;

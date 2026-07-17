@@ -5,14 +5,21 @@ namespace Dependinator.UI.Modeling.Commands;
 
 // Adds a manually created (user-drawn) node under an existing parent. Revert removes it. When
 // isNote is true the node is a note annotation (rendered as a circle) with the given description.
-class AddNodeCommand(string name, string parentName, Rect boundary, bool isNote = false, string? description = null)
-    : Command
+class AddNodeCommand(
+    string name,
+    string parentName,
+    Rect boundary,
+    bool isNote = false,
+    string? description = null,
+    string? iconName = null
+) : Command
 {
     readonly string name = name;
     readonly string parentName = parentName;
     readonly Rect boundary = boundary;
     readonly bool isNote = isNote;
     readonly string? description = description;
+    readonly string? iconName = iconName;
 
     public override void Execute(IModel model)
     {
@@ -26,6 +33,7 @@ class AddNodeCommand(string name, string parentName, Rect boundary, bool isNote 
             IsManual = true,
             IsNote = isNote,
             Boundary = boundary,
+            CustomIconName = iconName,
             UpdateStamp = model.UpdateStamp,
         };
         node.SetDescription(description);
