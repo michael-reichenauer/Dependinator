@@ -62,8 +62,10 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         // persisted (with IsManual) and kept by the re-parse reconciliation.
         await Expect(App.NodeLabel(NodeIcon)).ToBeVisibleAsync();
 
-        // Only manual nodes expose the Delete action (proves IsManual round-tripped).
+        // Only manual nodes expose the Delete action (proves IsManual round-tripped),
+        // both as a toolbar button and in the node menu.
         await App.SelectNodeByVisibleNameAsync(NodeIcon);
+        await Expect(Page.GetByTestId("node-delete-toolbar")).ToBeVisibleAsync();
         await App.NodeToolbarMenu.ClickAsync();
         await Expect(Page.GetByTestId("node-menu-delete")).ToBeVisibleAsync();
     }

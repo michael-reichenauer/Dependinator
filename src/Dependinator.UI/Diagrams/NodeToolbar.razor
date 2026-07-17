@@ -8,7 +8,8 @@
 
 @if (HasSelectedLine && IsSelectedNodeNote)
 {
-  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
+  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar"
+                  Style="@CssPosition">
     <MudTooltip Text="Edit note">
       <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="EditNote" data-testid="note-edit-toolbar" />
     </MudTooltip>
@@ -20,7 +21,8 @@
 }
 else if (HasSelectedLine)
 {
-  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
+  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar"
+                  Style="@CssPosition">
     <MudTooltip Text="Menu">
       <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
                PopoverClass="dep-light-menu" data-testid="node-menu">
@@ -137,6 +139,14 @@ else if (HasSelectedLine)
         }
       }
     }
+
+    @if (IsSelectedNodeManual)
+    {
+      <MudTooltip Text="Delete node">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="DeleteNode"
+                       data-testid="node-delete-toolbar" />
+      </MudTooltip>
+    }
   </MudButtonGroup>
 }
 
@@ -165,7 +175,7 @@ else if (HasSelectedLine)
 
 
 @code {
-  const double ToolbarOffset = 58;
+  const double ToolbarOffset = 32;
   private MudMessageBox mbox { get; set; } = null!;
   private MudMessageBox deleteConfirmBox { get; set; } = null!;
 

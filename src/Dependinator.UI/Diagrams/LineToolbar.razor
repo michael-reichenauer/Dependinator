@@ -16,7 +16,7 @@
 @if (HasSelectedLine)
 {
     <MudStack Style="@containerPosition" Spacing="1">
-        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text"
+        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar"
                         Style="background:rgba(255,255,255,0.9);border-radius:4px;box-shadow:var(--mud-elevation-2);">
             @if (selectionService.IsSelectedLineDirect)
             {
@@ -71,7 +71,7 @@
     bool HasSelectedLine => selectionService.SelectedLinePosition != Shared.Types.Pos.None;
 
     double left => selectionService.SelectedLinePosition.X - 10;
-    double top => selectionService.SelectedLinePosition.Y - 30;
+    double top => selectionService.SelectedLinePosition.Y - 22;
     string containerPosition =>
         FormattableString.Invariant($"Position: fixed; left:{left:0.##}px; top:{top:0.##}px");
 
