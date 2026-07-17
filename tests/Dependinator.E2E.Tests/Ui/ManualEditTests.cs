@@ -77,14 +77,13 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await AddManualNodeAtAsync(LinkTargetIcon, box.X + 450, box.Y + box.Height - 130);
         await Expect(App.NodeLabel(LinkTargetIcon)).ToBeVisibleAsync();
 
-        // Draw the link: select the source, arm add-link mode, click the target. The app
-        // treats any two clicks within 300ms as a double-click (PointerEventService), which
-        // would start an add-node and cancel add-link mode — so pace the clicks apart.
+        // Draw the link: select the source, arm add-link mode, click the target. The clicks
+        // are deliberately not paced apart: quick successive clicks at different positions
+        // must not merge into a double-click (PointerEventService's distance check), which
+        // would start an add-node and cancel add-link mode.
         await App.SelectNodeByVisibleNameAsync(LinkSourceIcon);
-        await PaceClicksAsync();
         await Page.GetByTestId("node-add-link").ClickAsync();
         await Expect(Page.GetByText("Click a target node to link to")).ToBeVisibleAsync();
-        await PaceClicksAsync();
         await App.SelectNodeByVisibleNameAsync(LinkTargetIcon);
 
         // The manual link renders as a line between the two nodes. (Not ToBeVisible: a
@@ -95,10 +94,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Unselect the source node so its toolbar cannot cover the line, then select the line
         // by clicking its midpoint (the line group carries a wide invisible hit polyline).
-        await PaceClicksAsync();
         await Page.Mouse.ClickAsync(box.X + 60, box.Y + box.Height - 40);
         LocatorBoundingBoxResult lineBox = await WaitForStableLineBoxAsync(line);
-        await PaceClicksAsync();
         await Page.Mouse.ClickAsync(lineBox.X + lineBox.Width / 2, lineBox.Y + lineBox.Height / 2);
 
         // A line showing only a manual link exposes Delete; deleting removes the line.
@@ -106,10 +103,6 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.GetByTestId("line-delete").ClickAsync();
         await Expect(line).ToHaveCountAsync(0);
     }
-
-    // Waits out the app's 300ms double-click window (PointerEventService) so the next click
-    // is not merged with the previous one into a double-click.
-    Task PaceClicksAsync() => Page.WaitForTimeoutAsync(350);
 
     // Canvas re-renders (e.g. after an unselect click) can momentarily detach the line's SVG
     // group, so poll until its bounds exist and stop moving between two reads (same approach

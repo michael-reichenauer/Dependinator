@@ -24,10 +24,16 @@ class PointerEventService : IPointerEventService, IDisposable
     const int ClickDelay = 300;
     const int ClickTimeout = 500;
 
+    // Max distance between two clicks to count as a double-click; a second click further
+    // away starts a new click sequence instead. Touch double-taps jitter more than mouse.
+    const double DblClickMaxDistance = 10;
+    const double DblClickMaxTouchDistance = 25;
+
     readonly Timer clickTimer;
     readonly Dictionary<int, PointerEvent> activePointers = [];
     bool timerRunning = false;
     PointerEvent pointerDown = new();
+    PointerEvent firstClick = new();
     DateTime pointerDownTime = DateTime.MinValue;
     DotNetObjectReference<PointerEventService>? reference;
 
@@ -218,23 +224,35 @@ class PointerEventService : IPointerEventService, IDisposable
     }
 
     // Click/double-click detection: Click fires immediately on the first click and a timer
-    // starts; a second click before the timer expires also fires DblClick (Click is not
-    // suppressed or delayed while waiting).
+    // starts; a second click near the first one before the timer expires also fires DblClick
+    // (Click is not suppressed or delayed while waiting). A second click further away is a
+    // new first click — two quick clicks on different elements (e.g. a node and then a
+    // toolbar button) must not merge into a double-click.
     void OnLeftClickEvent(PointerEvent e)
     {
         pointerDown = e;
-        if (!timerRunning)
-        { // This is the first click, start the timer
-            timerRunning = true;
-            Click?.Invoke(pointerDown);
-            clickTimer.Change(ClickDelay, Timeout.Infinite);
-        }
-        else
+        if (timerRunning && IsNearFirstClick(e))
         {
             clickTimer.Change(Timeout.Infinite, Timeout.Infinite);
             timerRunning = false;
             DblClick?.Invoke(e);
             activePointers.Clear();
         }
+        else
+        { // This is a first click, start the timer
+            firstClick = e;
+            timerRunning = true;
+            Click?.Invoke(e);
+            clickTimer.Change(ClickDelay, Timeout.Infinite);
+        }
+    }
+
+    bool IsNearFirstClick(PointerEvent e)
+    {
+        // Client (viewport) coordinates: offsets are relative to the event target, which can
+        // be a different element for each of the two clicks.
+        var maxDistance = e.PointerType == "touch" ? DblClickMaxTouchDistance : DblClickMaxDistance;
+        return Math.Abs(e.ClientX - firstClick.ClientX) < maxDistance
+            && Math.Abs(e.ClientY - firstClick.ClientY) < maxDistance;
     }
 }
