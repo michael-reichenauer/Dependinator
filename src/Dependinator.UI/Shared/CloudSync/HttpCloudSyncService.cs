@@ -92,4 +92,11 @@ sealed class HttpCloudSyncService : ICloudSyncService
 
         return CloudModelSerializer.ReadModel(document);
     }
+
+    // Deletes the remote model for the path; a missing remote copy counts as already deleted.
+    public async Task<R> DeleteAsync(string modelPath)
+    {
+        string modelKey = CloudModelPath.CreateKey(modelPath);
+        return await httpClient.DeleteAsync(modelKey);
+    }
 }

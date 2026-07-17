@@ -238,6 +238,33 @@ public class CloudSyncRpcServiceTests
         Assert.Contains("requires login", error!.ErrorMessage);
     }
 
+    [Fact]
+    public async Task DeleteAsync_ShouldReturnError_WhenNoToken()
+    {
+        context.SetBaseUrl(BaseUrl);
+        CloudSyncRpcService sut = CreateSut();
+
+        R result = await sut.DeleteAsync("model-key");
+
+        Assert.False(Try(out var error, result));
+        Assert.Contains("requires login", error!.ErrorMessage);
+        httpClient.Verify(c => c.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldDelegateToHttpClient_WhenLoggedIn()
+    {
+        context.SetBaseUrl(BaseUrl);
+        context.SetToken(Token);
+        httpClient.Setup(c => c.DeleteAsync("model-key", It.IsAny<CancellationToken>())).ReturnsAsync(R.Ok);
+        CloudSyncRpcService sut = CreateSut();
+
+        R result = await sut.DeleteAsync("model-key");
+
+        Assert.True(Try(out var error, result), error?.ErrorMessage);
+        httpClient.Verify(c => c.DeleteAsync("model-key", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     static CloudModelDocument CreateDocument() =>
         new(
             ModelKey: "model-key",

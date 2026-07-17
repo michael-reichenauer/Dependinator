@@ -16,6 +16,7 @@ public interface ICloudModelStore
         CloudModelDocument model,
         CancellationToken cancellationToken
     );
+    Task<bool> DeleteAsync(CloudUserInfo user, string modelKey, CancellationToken cancellationToken);
 }
 
 public sealed class BlobCloudModelStore : ICloudModelStore
@@ -135,6 +136,14 @@ public sealed class BlobCloudModelStore : ICloudModelStore
             model.ContentHash,
             contentBytes.LongLength
         );
+    }
+
+    public async Task<bool> DeleteAsync(CloudUserInfo user, string modelKey, CancellationToken cancellationToken)
+    {
+        BlobContainerClient containerClient = await GetContainerClientAsync(cancellationToken);
+        BlobClient blobClient = containerClient.GetBlobClient(GetBlobName(user, modelKey));
+        Response<bool> response = await blobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
+        return response.Value;
     }
 
     // Cached after the container has been created once; concurrent first calls may

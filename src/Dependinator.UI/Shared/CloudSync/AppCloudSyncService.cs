@@ -58,6 +58,9 @@ interface IAppCloudSyncService
 
     // Downloads a selected remote model and opens it in the canvas.
     Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel);
+
+    // Deletes the remote copy of the current model and clears the local sync baseline.
+    Task<R> DeleteCurrentCloudModelAsync();
 }
 
 // Aggregates cloud sync concerns for the app: transport selection, auth state, model lists, and
@@ -192,6 +195,34 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     public async Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel)
     {
         return await ExecuteSyncOperationAsync(() => LoadCloudModelCoreAsync(cloudModel, notifyChanged: true));
+    }
+
+    // Deletes the remote copy of the current model and drops the sync baseline so the
+    // remaining local model is treated as unsynced local-only content.
+    public async Task<R> DeleteCurrentCloudModelAsync()
+    {
+        await syncOperationLock.WaitAsync();
+        try
+        {
+            string modelPath = modelMgr.ModelPath;
+            if (string.IsNullOrWhiteSpace(modelPath))
+                return R.Error("Model is not loaded.");
+
+            if (!Try(out ErrorResult? error, await cloudSyncService.DeleteAsync(modelPath)))
+                return error;
+
+            await cloudSyncStateService.ClearAsync(modelPath);
+            RemoveCloudModel(modelPath);
+            ResetSyncSnapshot(clearCloudModels: false);
+
+            Log.Info("DeleteCurrentCloudModelAsync");
+            NotifyChanged();
+            return R.Ok;
+        }
+        finally
+        {
+            syncOperationLock.Release();
+        }
     }
 
     async Task<R<T>> ExecuteSyncOperationAsync<T>(Func<Task<R<T>>> syncOperation)
@@ -748,6 +779,16 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
             updatedCloudModels.Add(cloudModel);
 
         cloudModels = updatedCloudModels;
+    }
+
+    void RemoveCloudModel(string modelPath)
+    {
+        string normalizedPath = CloudModelPath.Normalize(modelPath);
+        cloudModels = cloudModels
+            .Where(cloudModel =>
+                !string.Equals(cloudModel.NormalizedPath, normalizedPath, StringComparison.OrdinalIgnoreCase)
+            )
+            .ToList();
     }
 
     // Finds remote metadata that matches the active local model path.

@@ -145,11 +145,10 @@ class CanvasService(
             await fileService.DeleteAsync(lastUsedPath);
             await recentModelsService.RemoveModelAsync(lastUsedPath);
         }
-        else
-        {
-            lastUsedPath = DemoModel.Path;
-        }
-        await LoadAsync(lastUsedPath);
+
+        // Load the next remaining model instead of re-creating the deleted one; re-loading
+        // the deleted path would re-parse it and, with device sync on, re-upload it.
+        await LoadAsync(recentModelsService.LastUsedPath ?? DemoModel.Path);
     }
 
     public void PanZoomToFit()

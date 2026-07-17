@@ -126,8 +126,8 @@
                 }
 
                 <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff"
-                             OnClick="OnRemove" data-testid="menu-reset-model">
-                    Reset Model
+                             OnClick="OnDeleteModelAsync" data-testid="menu-delete-model">
+                    Delete Current Model
                 </MudMenuItem>
 
                 @if (appCloudSyncService.IsAvailable)
@@ -223,14 +223,31 @@
 
 </MudButtonGroup>
 
-<MudMessageBox @ref="resetWarningBox" Title="Reset Model" CancelText="Cancel">
+<MudMessageBox @ref="deleteLocalModelBox" Title="Delete Current Model" CancelText="Cancel">
     <MessageContent>
-        <MudText>Do you want to reset model?</MudText>
-        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be reset.</MudText>
+        <MudText>Do you want to delete the current model?</MudText>
+        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be deleted.</MudText>
     </MessageContent>
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
-            Reset
+            Delete
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+<MudMessageBox @ref="deleteLocalOrRemoteModelBox" Title="Delete Current Model" CancelText="Cancel">
+    <MessageContent>
+        <MudText>Do you want to delete only the local model, or both the local and the remote (cloud) model?</MudText>
+        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be deleted.</MudText>
+    </MessageContent>
+    <NoButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Error">
+            Local Only
+        </MudButton>
+    </NoButton>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
+            Local and Remote
         </MudButton>
     </YesButton>
 </MudMessageBox>
@@ -263,7 +280,8 @@
 </MudMessageBox>
 
 @code {
-    MudMessageBox resetWarningBox { get; set; } = null!;
+    MudMessageBox deleteLocalModelBox { get; set; } = null!;
+    MudMessageBox deleteLocalOrRemoteModelBox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
     MudMessageBox syncDownBox { get; set; } = null!;
     MudMessageBox syncConflictBox { get; set; } = null!;
@@ -493,10 +511,34 @@
         );
     }
 
-    async Task OnRemove()
+    bool HasRemoteCopyOfCurrentModel =>
+    AuthState.IsAuthenticated
+    && CurrentCloudModelPath is string currentModelPath
+    && appCloudSyncService.CloudModels.Any(cloudModel =>
+    string.Equals(cloudModel.NormalizedPath, currentModelPath, StringComparison.OrdinalIgnoreCase)
+    );
+
+    async Task OnDeleteModelAsync()
     {
-        if (await resetWarningBox.ShowAsync() != true)
+        if (!HasRemoteCopyOfCurrentModel)
+        {
+            if (await deleteLocalModelBox.ShowAsync() != true)
+                return;
+
+            await canvasService.RemoveAsync();
             return;
+        }
+
+        // Yes = delete local and remote, No = delete local only, null = cancel.
+        bool? choice = await deleteLocalOrRemoteModelBox.ShowAsync();
+        if (choice is null)
+            return;
+
+        if (choice is true && !Try(out var error, await appCloudSyncService.DeleteCurrentCloudModelAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
 
         await canvasService.RemoveAsync();
     }
