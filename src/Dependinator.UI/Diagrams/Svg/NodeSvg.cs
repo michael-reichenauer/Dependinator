@@ -39,9 +39,12 @@ static partial class NodeSvg
     internal const double AverageCharWidthFactor = 0.6;
 
     // Drag-to-link handle at an icon node's right edge (revealed on hover, editing mode only).
-    const double LinkHandleGap = 4; // Distance from the icon's right edge to the handle center
-    const double LinkHandleRadius = 3.5; // Visible handle dot
-    const double LinkHandleTouchRadius = 10; // Invisible, larger hit target
+    // The gap clears the selection resize handles (HandleMargin 7 + HandleRadius 4) so the
+    // handle is not drawn on top of the middle-right resize handle.
+    const double LinkHandleGap = 14; // Distance from the icon's right edge to the handle center
+    const double LinkHandleRadius = 7; // Visible handle dot
+    const double LinkHandleTouchRx = 17; // Invisible touch ellipse, bridges back to the icon edge
+    const double LinkHandleTouchRy = 11;
 
     public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
     {
@@ -445,22 +448,26 @@ static partial class NodeSvg
     // A drag-to-link handle at the node's right edge, revealed on hover (see the .linkhandle CSS
     // in Canvas.razor). It sits inside the hover group so hovering the handle itself keeps it
     // visible. Dragging it to another node creates a manual link (see InteractionService).
+    // Not shown while the node is selected: the selection's resize handles own the node edge
+    // (their large touch circles would swallow the handle's presses), and a selected node
+    // already offers "Add link from this node" in its toolbar.
     static string LinkHandleSvg(Node node, Pos? pos)
     {
-        if (pos is null || !ViewOptions.IsEditingEnabled)
+        if (pos is null || !ViewOptions.IsEditingEnabled || node.IsSelected)
             return "";
 
         var (x, y) = (pos.X, pos.Y);
         var elementId = PointerId.FromNodeLinkHandle(node.Id).ElementId;
-        // Visible dot + plus glyph, plus a larger invisible touch circle that overlaps the icon
-        // so the cursor never crosses a dead zone between node and handle (no hover flicker).
+        // Visible dot + plus glyph, plus an invisible touch ellipse that stretches back to the
+        // icon edge so the cursor never crosses a dead zone between node and handle (no hover
+        // flicker).
         return Invariant(
             $"""
             <g class="linkhandle">
               <circle id="{elementId}" cx="{x:0.##}" cy="{y:0.##}" r="{LinkHandleRadius}" fill="{DColors.Selected}"/>
-              <path d="M {x - 1.5:0.##} {y:0.##} h 3 M {x:0.##} {y
-                - 1.5:0.##} v 3" stroke="white" stroke-width="0.8" fill="none" pointer-events="none"/>
-              <circle id="{elementId}" cx="{x:0.##}" cy="{y:0.##}" r="{LinkHandleTouchRadius}" fill="{DColors.Selected}" fill-opacity="0"/>
+              <path d="M {x - 3:0.##} {y:0.##} h 6 M {x:0.##} {y
+                - 3:0.##} v 6" stroke="white" stroke-width="1.5" fill="none" pointer-events="none"/>
+              <ellipse id="{elementId}" cx="{x:0.##}" cy="{y:0.##}" rx="{LinkHandleTouchRx}" ry="{LinkHandleTouchRy}" fill="{DColors.Selected}" fill-opacity="0"/>
             </g>
             """
         );

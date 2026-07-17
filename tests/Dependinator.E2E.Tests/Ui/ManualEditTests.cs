@@ -169,22 +169,20 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(anyLineFromNode).ToHaveCountAsync(0);
     }
 
-    // Hovers the node to reveal its drag-to-link handle, then moves onto the handle's press
-    // point and returns it. The press point is inside the touch circle where it overlaps the
-    // node's hover rect, so the handle stays hover-revealed (and pointer-events enabled) at
-    // the moment of the press.
+    // Hovers the node to reveal its drag-to-link handle, then moves onto the handle's visible
+    // dot and returns the press point. The handle's invisible touch ellipse bridges from the
+    // icon edge to the dot, so the handle stays hover-revealed (and pointer-events enabled)
+    // while the cursor travels there.
     async Task<(float X, float Y)> HoverLinkHandleAsync(string nodeLabel)
     {
         LocatorBoundingBoxResult nodeBox = await WaitForStableNodeBoxAsync(nodeLabel);
         await Page.Mouse.MoveAsync(nodeBox.X + nodeBox.Width / 2, nodeBox.Y + nodeBox.Height / 2);
 
-        // The touch circle (the larger, last circle of the handle group) spans the icon's right
-        // edge; press at 15% of its width, which lies inside both the circle and the node.
-        ILocator touchCircle = App.Node(nodeLabel).Locator("g.linkhandle circle").Last;
+        ILocator handleDot = App.Node(nodeLabel).Locator("g.linkhandle circle");
         LocatorBoundingBoxResult handleBox =
-            await touchCircle.BoundingBoxAsync() ?? throw new InvalidOperationException("Link handle is not rendered.");
+            await handleDot.BoundingBoxAsync() ?? throw new InvalidOperationException("Link handle is not rendered.");
 
-        float pressX = handleBox.X + handleBox.Width * 0.15f;
+        float pressX = handleBox.X + handleBox.Width / 2;
         float pressY = handleBox.Y + handleBox.Height / 2;
         await Page.Mouse.MoveAsync(pressX, pressY, new() { Steps = 3 });
         return (pressX, pressY);

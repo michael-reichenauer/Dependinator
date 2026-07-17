@@ -145,6 +145,28 @@ public class NodeSvgTests
     }
 
     [Fact]
+    public void GetNodeIconSvg_ShouldOmitLinkHandle_WhenNodeSelected()
+    {
+        var wasEnabled = ViewOptions.IsEditingEnabled;
+        try
+        {
+            ViewOptions.SetIsEditingEnabled(true);
+            var node = CreateIconNode();
+            node.IsSelected = true;
+
+            var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0);
+
+            // A selected node shows resize handles at its edge instead; link-adding is offered
+            // via the node toolbar.
+            Assert.DoesNotContain("linkhandle", svg);
+        }
+        finally
+        {
+            ViewOptions.SetIsEditingEnabled(wasEnabled);
+        }
+    }
+
+    [Fact]
     public void GetNodeIconSvg_ShouldOmitLinkHandle_WhenEditingDisabled()
     {
         var wasEnabled = ViewOptions.IsEditingEnabled;

@@ -29,7 +29,7 @@
                         stroke:
                             @DColors.Selected
                         ;
-                        stroke-width: 4px;
+                        stroke-width: 2px;
                         stroke-opacity: 1;
                     }
 
@@ -60,9 +60,10 @@
                         cursor: crosshair;
                     }
 
-                    /* Cancel the generic hover stroke on the handle circles (the plus glyph
-                       path keeps its own white stroke). */
-                    .hoverable:hover .linkhandle circle {
+                    /* Cancel the generic hover stroke on the handle dot and touch ellipse (the
+                       plus glyph path keeps its own white stroke). */
+                    .hoverable:hover .linkhandle circle,
+                    .hoverable:hover .linkhandle ellipse {
                         stroke: none;
                         stroke-width: 0;
                     }
