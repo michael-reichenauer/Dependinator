@@ -19,6 +19,7 @@
 @inject IVsCodeSendService vsCodeSendService
 @inject Dependinator.UI.Diagrams.Interaction.INoteService noteService
 @inject Dependinator.UI.Diagrams.Interaction.IManualEditService manualEditService
+@inject Dependinator.UI.Diagrams.Export.IExportService exportService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
@@ -67,6 +68,23 @@
                     Edit Mode
                 </MudMenuItem>
 
+            </MudMenu>
+
+            <MudMenu Label="Export" PopoverClass="dep-light-menu" data-testid="menu-export">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.HighlightAlt"
+                             OnClick="BeginExportArea" data-testid="menu-export-area">
+                    Select Area …
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Screenshot"
+                             OnClick="exportService.ExportCurrentViewAsync" data-testid="menu-export-view">
+                    Current View …
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Image"
+                             OnClick="exportService.ExportEntireDiagramAsync" data-testid="menu-export-diagram">
+                    Entire Diagram …
+                </MudMenuItem>
             </MudMenu>
 
             <MudMenu Label="View" PopoverClass="dep-light-menu" data-testid="menu-view">
@@ -553,6 +571,12 @@
     {
         manualEditService.BeginPlaceNode();
         snackbar.Add("Click on the diagram to place the node.", Severity.Info);
+    }
+
+    void BeginExportArea()
+    {
+        snackbar.Add("Drag to select the area to export. Esc or right-click cancels.", Severity.Info);
+        exportService.ExportAreaAsync().RunInBackground();
     }
 
     bool CanParseCurrentModel =>

@@ -22,6 +22,9 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     [Inject]
     Interaction.IManualEditService manualEditService { get; init; } = null!;
 
+    [Inject]
+    Interaction.IAreaSelectionService areaSelectionService { get; init; } = null!;
+
     public ElementReference dropZoneElement { get; private set; }
     public InputFile inputFile { get; private set; } = null!;
     public ElementReference Ref { get; private set; }
