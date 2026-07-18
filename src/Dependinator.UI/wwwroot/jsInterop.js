@@ -46,6 +46,19 @@ export function clickElement(elementId) {
   document.getElementById(elementId).click();
 }
 
+// WebKit/Safari fails to re-bind url(#gradient) paint servers inside <use> shadow
+// trees after the diagram content subtree is replaced, leaving all icons without
+// their gradient fills until reload. Re-attaching the <defs> node at its current
+// position forces WebKit to re-resolve the references. No-op on other engines.
+export function refreshSvgPaintServers(elementId) {
+  if (!("webkitConvertPointFromNodeToPage" in window)) return;
+  const svg = document.getElementById(elementId);
+  const defs = svg?.querySelector("defs");
+  if (defs) {
+    defs.parentNode.insertBefore(defs, defs.nextSibling);
+  }
+}
+
 export function openUrl(url) {
   window.open(url, "_blank", "noopener");
 }

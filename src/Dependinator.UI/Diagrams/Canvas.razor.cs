@@ -37,6 +37,8 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
     string Cursor => srv.Cursor;
 
+    string renderedContent = "";
+
     static string Px(double value) => FormattableString.Invariant($"{value:0.##}");
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -51,6 +53,12 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
             applicationEvents.UIStateChanged += OnUiStateChanged;
             await InvokeAsync(srv.InitialShowAsync);
+        }
+
+        if (!ReferenceEquals(renderedContent, Content))
+        {
+            renderedContent = Content;
+            await jSInterop.Call("refreshSvgPaintServers", "svgcanvas");
         }
     }
 
