@@ -131,6 +131,29 @@ public sealed class ModelFunctions
         }
     }
 
+    [Function("DeleteModel")]
+    public async Task<HttpResponseData> DeleteModelAsync(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "models/{modelKey}")] HttpRequestData request,
+        string modelKey,
+        CancellationToken cancellationToken
+    )
+    {
+        CloudUserInfo? user = await userProvider.TryGetCurrentUserAsync(request, cancellationToken);
+        if (user is null)
+            return await UnauthorizedAsync(request, cancellationToken);
+
+        bool wasDeleted = await cloudModelStore.DeleteAsync(user, modelKey, cancellationToken);
+        if (!wasDeleted)
+            return await ResponseFactory.ErrorAsync(
+                request,
+                HttpStatusCode.NotFound,
+                $"No cloud model exists for key '{modelKey}'.",
+                cancellationToken
+            );
+
+        return request.CreateResponse(HttpStatusCode.NoContent);
+    }
+
     static Task<HttpResponseData> UnauthorizedAsync(HttpRequestData request, CancellationToken cancellationToken)
     {
         return ResponseFactory.ErrorAsync(

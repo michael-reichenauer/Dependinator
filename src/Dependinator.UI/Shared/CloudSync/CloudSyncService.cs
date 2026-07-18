@@ -19,6 +19,9 @@ interface ICloudSyncService
 
     // Returns R.None when no remote model exists for the path.
     Task<R<ModelDto>> PullAsync(string modelPath);
+
+    // Deletes the remote model for the path; a missing remote copy counts as already deleted.
+    Task<R> DeleteAsync(string modelPath);
 }
 
 // Fallback implementation used when cloud sync is not supported in the current host.
@@ -43,6 +46,8 @@ class NoCloudSyncService : ICloudSyncService
         NotAvailableAsync<CloudModelMetadata>();
 
     public Task<R<ModelDto>> PullAsync(string modelPath) => NotAvailableAsync<ModelDto>();
+
+    public Task<R> DeleteAsync(string modelPath) => Task.FromResult<R>(R.Error(NotAvailableError));
 
     static Task<R<T>> NotAvailableAsync<T>() => Task.FromResult<R<T>>(R.Error(NotAvailableError));
 }

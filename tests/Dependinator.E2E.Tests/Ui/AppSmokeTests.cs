@@ -88,15 +88,15 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
-    public async Task AppMenu_ShouldConfirmBeforeResettingModel()
+    public async Task AppMenu_ShouldConfirmBeforeDeletingModel()
     {
         await App.GotoMainPageAsync();
 
-        await (await App.OpenSubMenuItemAsync("menu-models", "menu-reset-model")).ClickAsync();
+        await (await App.OpenSubMenuItemAsync("menu-models", "menu-delete-model")).ClickAsync();
 
-        // Reset is destructive, so it must ask for confirmation first.
+        // Delete is destructive, so it must ask for confirmation first.
         await Expect(App.Dialog).ToBeVisibleAsync();
-        await Expect(App.Dialog).ToContainTextAsync("reset model");
+        await Expect(App.Dialog).ToContainTextAsync("delete the current model");
 
         // Cancel so the loaded demo model is left intact.
         await Page.GetByRole(AriaRole.Button, new() { Name = "Cancel" }).ClickAsync();

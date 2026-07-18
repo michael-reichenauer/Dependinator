@@ -403,6 +403,46 @@ public class AppCloudSyncServiceTests
         Assert.False(context.Sut.IsConnecting);
     }
 
+    [Fact]
+    public async Task DeleteCurrentCloudModel_ShouldClearBaselineAndCloudModelList()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel]);
+        context.CloudSyncService.Setup(x => x.DeleteAsync(modelPath)).ReturnsAsync(R.Ok);
+        context.CloudSyncStateService.Setup(x => x.ClearAsync(modelPath)).Returns(Task.CompletedTask);
+        await context.Sut.RefreshSyncStateAsync();
+
+        R result = await context.Sut.DeleteCurrentCloudModelAsync();
+
+        Assert.True(R.Try(out var error, result), error?.ErrorMessage);
+        context.CloudSyncService.Verify(x => x.DeleteAsync(modelPath), Times.Once);
+        context.CloudSyncStateService.Verify(x => x.ClearAsync(modelPath), Times.Once);
+        Assert.Empty(context.Sut.CloudModels);
+        Assert.False(context.Sut.HasRemoteChangesSinceLastSync);
+    }
+
+    [Fact]
+    public async Task DeleteCurrentCloudModel_ShouldReturnError_WhenTransportFails()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel]);
+        context.CloudSyncService.Setup(x => x.DeleteAsync(modelPath)).ReturnsAsync(R.Error("delete failed"));
+        await context.Sut.RefreshSyncStateAsync();
+
+        R result = await context.Sut.DeleteCurrentCloudModelAsync();
+
+        Assert.False(R.Try(out var error, result));
+        Assert.Contains("delete failed", error!.ErrorMessage);
+        context.CloudSyncStateService.Verify(x => x.ClearAsync(It.IsAny<string>()), Times.Never);
+        Assert.Single(context.Sut.CloudModels);
+    }
+
     static AppCloudSyncService CreateSut(
         string modelPath,
         ModelDto currentModelDto,

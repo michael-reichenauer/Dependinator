@@ -15,4 +15,5 @@ internal interface ICloudSyncRpcService
     Task<R<CloudModelList>> ListAsync();
     Task<R<CloudModelMetadata>> PushAsync(CloudModelDocument document);
     Task<R<CloudModelDocument>> PullAsync(string modelKey);
+    Task<R> DeleteAsync(string modelKey);
 }

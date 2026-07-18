@@ -91,8 +91,31 @@ class VsCodeRpcCloudSyncService : IVsCodeCloudSyncService
         return CloudModelSerializer.ReadModel(document);
     }
 
+    // Deletes the remote model for the path via the LSP.
+    public async Task<R> DeleteAsync(string modelPath)
+    {
+        string modelKey = CloudModelPath.CreateKey(modelPath);
+        return await CallAsync("delete", () => rpcService.DeleteAsync(modelKey));
+    }
+
     // Awaits an RPC call with a timeout; a dead or missing LSP must not hang the UI forever.
     async Task<R<T>> CallAsync<T>(string action, Func<Task<R<T>>> call, TimeSpan? timeoutOverride = null)
+    {
+        try
+        {
+            return await call().WaitAsync(timeoutOverride ?? requestTimeout);
+        }
+        catch (TimeoutException)
+        {
+            return R.Error($"VS Code cloud sync action '{action}' timed out.");
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
+    }
+
+    async Task<R> CallAsync(string action, Func<Task<R>> call, TimeSpan? timeoutOverride = null)
     {
         try
         {
