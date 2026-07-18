@@ -13,7 +13,12 @@ interface ICloudSyncHttpClient
     Task<R<CloudAuthState>> GetAuthStateAsync(CancellationToken ct = default);
     Task<R<CloudModelList>> ListAsync(CancellationToken ct = default);
     Task<R<CloudModelMetadata>> PushAsync(CloudModelDocument document, CancellationToken ct = default);
+
+    // Returns R.None when no remote model exists for the key (API 404).
     Task<R<CloudModelDocument>> PullAsync(string modelKey, CancellationToken ct = default);
+
+    // Deletes a remote model; a missing model (API 404) counts as already deleted.
+    Task<R> DeleteAsync(string modelKey, CancellationToken ct = default);
 }
 
 [Transient]
@@ -43,13 +48,45 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
     // Uploads a compressed model document via PUT.
     public async Task<R<CloudModelMetadata>> PushAsync(CloudModelDocument document, CancellationToken ct = default)
     {
-        return await SendAsync<CloudModelMetadata>(HttpMethod.Put, $"/api/models/{document.ModelKey}", document, ct);
+        return await SendAsync<CloudModelMetadata>(
+            HttpMethod.Put,
+            $"/api/models/{document.ModelKey}",
+            document,
+            ct: ct
+        );
     }
 
-    // Fetches a compressed remote model document.
+    // Fetches a compressed remote model document; R.None when no remote model exists.
     public async Task<R<CloudModelDocument>> PullAsync(string modelKey, CancellationToken ct = default)
     {
-        return await SendAsync<CloudModelDocument>(HttpMethod.Get, $"/api/models/{modelKey}", ct: ct);
+        return await SendAsync<CloudModelDocument>(
+            HttpMethod.Get,
+            $"/api/models/{modelKey}",
+            notFoundAsNone: true,
+            ct: ct
+        );
+    }
+
+    // Deletes a remote model; success without a response body, and 404 counts as already deleted.
+    public async Task<R> DeleteAsync(string modelKey, CancellationToken ct = default)
+    {
+        string path = $"/api/models/{modelKey}";
+        try
+        {
+            using HttpRequestMessage request = new(HttpMethod.Delete, BuildApiUri(path));
+            await AddAuthorizationHeaderAsync(request, ct);
+
+            using HttpResponseMessage response = await httpClient.SendAsync(request, ct);
+            if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.NotFound)
+                return R.Ok;
+
+            string errorMessage = await ReadErrorMessageAsync(response, ct);
+            return R.Error(errorMessage);
+        }
+        catch (Exception ex)
+        {
+            return R.Error(ex);
+        }
     }
 
     // Generic JSON helper for API calls with the host-provided Bearer token.
@@ -57,21 +94,14 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
         HttpMethod method,
         string path,
         object? content = null,
+        bool notFoundAsNone = false,
         CancellationToken ct = default
     )
     {
         try
         {
             using HttpRequestMessage request = new(method, BuildApiUri(path));
-
-            string? token = await context.GetAccessTokenAsync(ct);
-            if (!string.IsNullOrWhiteSpace(token))
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                // Azure SWA may strip the standard Authorization header before forwarding
-                // to the managed Functions backend. Send via custom header as well.
-                request.Headers.TryAddWithoutValidation("X-Dependinator-Authorization", $"Bearer {token}");
-            }
+            await AddAuthorizationHeaderAsync(request, ct);
 
             if (content is not null)
             {
@@ -93,6 +123,9 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
                 return value;
             }
 
+            if (notFoundAsNone && response.StatusCode == HttpStatusCode.NotFound)
+                return R.None;
+
             string errorMessage = await ReadErrorMessageAsync(response, ct);
             return R.Error(errorMessage);
         }
@@ -100,6 +133,18 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
         {
             return R.Error(ex);
         }
+    }
+
+    async Task AddAuthorizationHeaderAsync(HttpRequestMessage request, CancellationToken ct)
+    {
+        string? token = await context.GetAccessTokenAsync(ct);
+        if (string.IsNullOrWhiteSpace(token))
+            return;
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        // Azure SWA may strip the standard Authorization header before forwarding
+        // to the managed Functions backend. Send via custom header as well.
+        request.Headers.TryAddWithoutValidation("X-Dependinator-Authorization", $"Bearer {token}");
     }
 
     // Builds absolute API URI when a base address override is configured.

@@ -14,7 +14,7 @@ on the Visual Studio Marketplace.
 > features, and breaking changes between versions. It is not yet a finished
 > product.
 
-![Dependinator in action: zooming into the dependency map and navigating to a node with search](src/DependinatorVsCode/resources/demo.gif)
+![Dependinator in action: navigating to a node with search and exploring its dependencies in the Dependencies explorer](src/DependinatorVsCode/resources/demo.gif)
 
 ## Features
 

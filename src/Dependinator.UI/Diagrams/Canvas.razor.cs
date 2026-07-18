@@ -19,6 +19,12 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     [Inject]
     IInitService initService { get; init; } = null!;
 
+    [Inject]
+    Interaction.IManualEditService manualEditService { get; init; } = null!;
+
+    [Inject]
+    Interaction.IAreaSelectionService areaSelectionService { get; init; } = null!;
+
     public ElementReference dropZoneElement { get; private set; }
     public InputFile inputFile { get; private set; } = null!;
     public ElementReference Ref { get; private set; }
@@ -34,6 +40,10 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
     string Cursor => srv.Cursor;
 
+    string renderedContent = "";
+
+    static string Px(double value) => FormattableString.Invariant($"{value:0.##}");
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
@@ -46,6 +56,12 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
             applicationEvents.UIStateChanged += OnUiStateChanged;
             await InvokeAsync(srv.InitialShowAsync);
+        }
+
+        if (!ReferenceEquals(renderedContent, Content))
+        {
+            renderedContent = Content;
+            await jSInterop.Call("refreshSvgPaintServers", "svgcanvas");
         }
     }
 

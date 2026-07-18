@@ -44,6 +44,36 @@ public sealed class BlobCloudModelStoreTests : IClassFixture<AzuriteFixture>
     }
 
     [Fact]
+    public async Task DeleteAsync_ShouldRemoveModel_AndReportMissingModel()
+    {
+        CloudSyncOptions options = new()
+        {
+            ContainerName = $"delete-{Guid.NewGuid():N}",
+            MaxUserQuotaBytes = 1024 * 1024,
+            StorageConnectionString = azuriteFixture.ConnectionString,
+        };
+        BlobCloudModelStore sut = new(Options.Create(options));
+        CloudUserInfo user = new("user-1", "user@example.com");
+        CloudModelDocument document = new(
+            ModelKey: CloudModelPath.CreateKey("/models/test.model"),
+            NormalizedPath: "/models/test.model",
+            UpdatedUtc: DateTimeOffset.UtcNow,
+            ContentHash: "hash",
+            CompressedSizeBytes: 4,
+            CompressedContentBase64: Convert.ToBase64String([1, 2, 3, 4])
+        );
+        await sut.PutAsync(user, document, CancellationToken.None);
+
+        bool wasDeleted = await sut.DeleteAsync(user, document.ModelKey, CancellationToken.None);
+        CloudModelDocument? remainingDocument = await sut.GetAsync(user, document.ModelKey, CancellationToken.None);
+        bool wasDeletedAgain = await sut.DeleteAsync(user, document.ModelKey, CancellationToken.None);
+
+        Assert.True(wasDeleted);
+        Assert.Null(remainingDocument);
+        Assert.False(wasDeletedAgain);
+    }
+
+    [Fact]
     public async Task PutAsync_ShouldThrow_WhenQuotaWouldBeExceeded()
     {
         CloudSyncOptions options = new()

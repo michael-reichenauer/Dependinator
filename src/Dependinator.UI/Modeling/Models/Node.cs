@@ -20,7 +20,7 @@ class Node : IItem
 
     private void SetDisplayNames()
     {
-        (LongName, ShortName) = NodeName.GetDisplayNames(Name, Type);
+        (LongName, ShortName) = NodeName.GetDisplayNames(Name, Type, IsExecutable ?? false);
         HtmlShortName = HttpUtility.HtmlEncode(ShortName);
         HtmlLongName = HttpUtility.HtmlEncode(LongName);
     }
@@ -33,7 +33,20 @@ class Node : IItem
     NodeType type = NodeType.None;
     public DateTime UpdateStamp { get; set; }
     public bool? IsPrivate { get; set; }
+    bool? isExecutable;
     FileSpan? fileSpan;
+
+    // For assembly nodes: the project builds an executable; shown as "Name (exe)" instead
+    // of "Name (dll)". Affects the display names, so they are recomputed on change.
+    public bool? IsExecutable
+    {
+        get => isExecutable;
+        set
+        {
+            isExecutable = value;
+            SetDisplayNames();
+        }
+    }
 
     public FileSpan? FileSpan => fileSpan;
     public FileSpan? FileSpanOrParentSpan => // Allow using a few levels up
@@ -133,6 +146,8 @@ class Node : IItem
             {
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
+                IsExecutable = IsExecutable,
+                FileSpan = fileSpan,
             },
             Boundary = boundary != Rect.None ? boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
@@ -154,6 +169,8 @@ class Node : IItem
 
         SetDescription(dto.Properties.Description);
         IsPrivate = dto.Properties.IsPrivate;
+        IsExecutable = dto.Properties.IsExecutable;
+        fileSpan = dto.Properties.FileSpan;
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
@@ -173,6 +190,7 @@ class Node : IItem
     {
         Type = node.Properties.Type ?? Type;
         IsPrivate = node.Properties.IsPrivate ?? IsPrivate;
+        IsExecutable = node.Properties.IsExecutable ?? IsExecutable;
         SetDescription(
             node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description
         );

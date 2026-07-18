@@ -107,6 +107,20 @@ public class VsCodeRpcCloudSyncServiceTests
         rpc.Verify(r => r.PullAsync(expectedKey), Times.Once);
     }
 
+    [Fact]
+    public async Task PullAsync_ShouldReturnNone_WhenNoRemoteModelExists()
+    {
+        string expectedKey = CloudModelPath.CreateKey("/models/sample.model");
+        Mock<ICloudSyncRpcService> rpc = new();
+        R<CloudModelDocument> noRemoteModel = R.None;
+        rpc.Setup(r => r.PullAsync(expectedKey)).ReturnsAsync(noRemoteModel);
+        VsCodeRpcCloudSyncService sut = new(new FakeJsInterop(), rpc.Object, TimeSpan.FromSeconds(1));
+
+        R<ModelDto> result = await sut.PullAsync("/models/sample.model");
+
+        Assert.True(result.IsNone);
+    }
+
     sealed class FakeJsInterop : IJSInterop
     {
         public ValueTask Call(string functionName, params object?[]? args) => ValueTask.CompletedTask;

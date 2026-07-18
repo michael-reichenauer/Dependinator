@@ -145,6 +145,14 @@ class CloudSyncRpcService : ICloudSyncRpcService
         return await httpClient.PullAsync(modelKey);
     }
 
+    public async Task<R> DeleteAsync(string modelKey)
+    {
+        if (!Try(out var error, RequireToken()))
+            return error;
+
+        return await httpClient.DeleteAsync(modelKey);
+    }
+
     R RequireToken()
     {
         if (!context.IsEnabled)

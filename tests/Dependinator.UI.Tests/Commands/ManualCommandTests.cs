@@ -41,6 +41,21 @@ public class ManualCommandTests
     }
 
     [Fact]
+    public void AddNodeCommand_ShouldSetCustomIcon_WhenIconNameGiven()
+    {
+        using var model = CreateModel();
+        var command = new AddNodeCommand("MyNode", model.Root.Name, new Rect(0, 0, 80, 40), iconName: "Database");
+
+        command.Execute(model);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("MyNode"), out var node));
+        Assert.Equal("Database", node!.CustomIconName);
+
+        command.Revert(model);
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("MyNode")));
+    }
+
+    [Fact]
     public void ParentQualifiedNames_AllowSameShortName_UnderDifferentParents()
     {
         using var model = CreateModel();

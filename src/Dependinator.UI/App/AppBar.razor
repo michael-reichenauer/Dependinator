@@ -1,4 +1,5 @@
 @using Dependinator.Core
+@using Dependinator.Core.Shared
 @using Dependinator.UI.Modeling
 @using Dependinator.UI.Modeling.Commands
 @using Dependinator.UI.Shared.CloudSync
@@ -18,6 +19,7 @@
 @inject IVsCodeSendService vsCodeSendService
 @inject Dependinator.UI.Diagrams.Interaction.INoteService noteService
 @inject Dependinator.UI.Diagrams.Interaction.IManualEditService manualEditService
+@inject Dependinator.UI.Diagrams.Export.IExportService exportService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
@@ -61,6 +63,28 @@
 
                 <MudDivider />
 
+                <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
+                             data-testid="menu-edit-mode">
+                    Edit Mode
+                </MudMenuItem>
+
+            </MudMenu>
+
+            <MudMenu Label="Export" PopoverClass="dep-light-menu" data-testid="menu-export">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.HighlightAlt"
+                             OnClick="BeginExportArea" data-testid="menu-export-area">
+                    Select Area …
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Screenshot"
+                             OnClick="exportService.ExportCurrentViewAsync" data-testid="menu-export-view">
+                    Current View …
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Image"
+                             OnClick="exportService.ExportEntireDiagramAsync" data-testid="menu-export-diagram">
+                    Entire Diagram …
+                </MudMenuItem>
             </MudMenu>
 
             <MudMenu Label="View" PopoverClass="dep-light-menu" data-testid="menu-view">
@@ -69,70 +93,64 @@
                     Show Hidden Nodes
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
-                             data-testid="menu-edit-mode">
-                    Edit Mode
-                </MudMenuItem>
-
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
                              data-testid="menu-notes-sidebar">
                     Notes Sidebar
                 </MudMenuItem>
 
-                @if (Build.IsVsCodeExtWasm || Build.IsWeb)
+                @if (!Build.IsVsCodeExtWasm)
                 {
+                    <MudDivider />
+
                     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                                 OnClick="canvasService.RefreshAsync" data-testid="menu-refresh">
-                        Refresh
+                                 OnClick="ReloadPageAsync" data-testid="menu-reload">
+                        Reload
                     </MudMenuItem>
                 }
             </MudMenu>
 
             <MudMenu Label="Models" PopoverClass="dep-light-menu" data-testid="menu-models">
-                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Recent</MudText>
-                @foreach (string path in RecentModelPaths)
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Models</MudText>
+                @{
+                    IReadOnlyList<ModelItem> modelItems = modelListService.GetModelItems();
+                }
+                @foreach (ModelItem item in modelItems)
                 {
-                    bool isCurrent = IsCurrentRecentModel(path);
-                    <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
-                                 Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => canvasService.LoadAsync(path)">
-                        @GetModelDisplayName(path)
+                    bool isCurrent = IsCurrentModel(item);
+                    <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@GetModelItemIcon(item)"
+                                 Style="@GetCurrentItemStyle(isCurrent)" title="@GetModelItemTitle(item)"
+                                 OnClick="() => LoadModelItemAsync(item)" data-testid="menu-model-item">
+                        @item.DisplayName
                     </MudMenuItem>
+                }
+                @if (modelItems.Count == 0)
+                {
+                    <MudMenuItem Disabled="true">No models</MudMenuItem>
                 }
 
                 <MudDivider />
 
-                <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff"
-                             OnClick="OnRemove" data-testid="menu-reset-model">
-                    Reset Model
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox"
+                             OnClick="NewModelAsync" data-testid="menu-new-model">
+                    New Model …
                 </MudMenuItem>
 
-                <MudDivider />
+                @if (CanParseCurrentModel)
+                {
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Autorenew"
+                                 OnClick="canvasService.RefreshAsync" data-testid="menu-parse">
+                        Parse
+                    </MudMenuItem>
+                }
 
-                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Sources</MudText>
-                <MudMenu Label="Local Paths" Disabled="@IsLocalModelsMenuDisabled" PopoverClass="dep-light-menu"
-                         data-testid="menu-local-paths">
-                    @foreach (var path in modelListService.LocalPaths)
-                    {
-                        <MudMenuItem IconColor="Color.Default" Icon="@Icons.Material.Outlined.Schema"
-                                     OnClick="() => canvasService.LoadAsync(path)">
-                            @path
-                        </MudMenuItem>
-                    }
-                </MudMenu>
+                <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff"
+                             OnClick="OnDeleteModelAsync" data-testid="menu-delete-model">
+                    Delete Current Model
+                </MudMenuItem>
 
                 @if (appCloudSyncService.IsAvailable)
                 {
-                    <MudMenu Label="Cloud Models" Disabled="@IsCloudModelsMenuDisabled" PopoverClass="dep-light-menu"
-                             data-testid="menu-cloud-models">
-                        @foreach (global::Shared.CloudModelMetadata cloudModel in CloudModels)
-                        {
-                            bool isCurrent = IsCurrentCloudModel(cloudModel);
-                            <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@Icons.Material.Outlined.Schema"
-                                         Style="@GetCurrentItemStyle(isCurrent)" OnClick="() => LoadCloudModelAsync(cloudModel)">
-                                @GetModelDisplayName(cloudModel.NormalizedPath)
-                            </MudMenuItem>
-                        }
-                    </MudMenu>
+                    <MudDivider />
 
                     <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Device Sync</MudText>
                     @if (AuthState.IsAuthenticated)
@@ -195,11 +213,11 @@
             <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
                            OnClick="commandService.Redo" data-testid="toolbar-redo" />
         </MudTooltip>
-        @if (Build.IsVsCodeExtWasm || Build.IsWeb)
+        @if (CanParseCurrentModel)
         {
-            <MudTooltip Text="Refresh">
-                <MudIconButton Icon="@Icons.Material.Outlined.Refresh" OnClick="canvasService.RefreshAsync"
-                               data-testid="toolbar-refresh" />
+            <MudTooltip Text="Parse">
+                <MudIconButton Icon="@Icons.Material.Outlined.Autorenew" OnClick="canvasService.RefreshAsync"
+                               data-testid="toolbar-parse" />
             </MudTooltip>
         }
         @if (ViewOptions.IsEditingEnabled)
@@ -223,14 +241,31 @@
 
 </MudButtonGroup>
 
-<MudMessageBox @ref="resetWarningBox" Title="Reset Model" CancelText="Cancel">
+<MudMessageBox @ref="deleteLocalModelBox" Title="Delete Current Model" CancelText="Cancel">
     <MessageContent>
-        <MudText>Do you want to reset model?</MudText>
-        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be reset.</MudText>
+        <MudText>Do you want to delete the current model?</MudText>
+        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be deleted.</MudText>
     </MessageContent>
     <YesButton>
         <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
-            Reset
+            Delete
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+<MudMessageBox @ref="deleteLocalOrRemoteModelBox" Title="Delete Current Model" CancelText="Cancel">
+    <MessageContent>
+        <MudText>Do you want to delete only the local model, or both the local and the remote (cloud) model?</MudText>
+        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be deleted.</MudText>
+    </MessageContent>
+    <NoButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Error">
+            Local Only
+        </MudButton>
+    </NoButton>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
+            Local and Remote
         </MudButton>
     </YesButton>
 </MudMessageBox>
@@ -263,7 +298,8 @@
 </MudMessageBox>
 
 @code {
-    MudMessageBox resetWarningBox { get; set; } = null!;
+    MudMessageBox deleteLocalModelBox { get; set; } = null!;
+    MudMessageBox deleteLocalOrRemoteModelBox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
     MudMessageBox syncDownBox { get; set; } = null!;
     MudMessageBox syncConflictBox { get; set; } = null!;
@@ -280,13 +316,10 @@
     static readonly CloudIconInfo HasConflicts = new(Icons.Material.Outlined.SyncProblem, Color.Error);
     static readonly CloudIconInfo IsSynced = new(Icons.Material.Filled.CloudDone, Color.Success);
 
-    IReadOnlyList<string> RecentModelPaths => modelListService.RecentModelPaths;
-    string? CurrentRecentModelPath => RecentModelPaths.Count > 0 ? RecentModelPaths[0] : null;
+    string? CurrentRecentModelPath =>
+    modelListService.RecentModelPaths.Count > 0 ? modelListService.RecentModelPaths[0] : null;
     string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
-    IReadOnlyList<global::Shared.CloudModelMetadata> CloudModels => appCloudSyncService.CloudModels;
-    bool IsCloudModelsMenuDisabled => !AuthState.IsAuthenticated || CloudModels.Count == 0;
-    bool IsLocalModelsMenuDisabled => modelListService.LocalPaths.Count == 0;
     CloudSyncState CurrentCloudSyncState => appCloudSyncService.GetCloudSyncState();
     bool IsCloudConnecting => appCloudSyncService.IsConnecting;
     CloudIconInfo CurrentCloudIconInfo => IsCloudConnecting ? Connecting : GetCloudIconInfo(CurrentCloudSyncState);
@@ -466,7 +499,14 @@
             return;
         }
 
-        if (!Try(out var modelInfo, out var error, await appCloudSyncService.SyncDownAsync()))
+        R<ModelInfo> syncDownResult = await appCloudSyncService.SyncDownAsync();
+        if (syncDownResult.IsNone)
+        {
+            snackbar.Add("No cloud model existed, so the local model was uploaded instead.", Severity.Info);
+            return;
+        }
+
+        if (!Try(out var modelInfo, out var error, syncDownResult))
         {
             snackbar.Add(error.ErrorMessage, Severity.Error);
             return;
@@ -489,10 +529,34 @@
         );
     }
 
-    async Task OnRemove()
+    bool HasRemoteCopyOfCurrentModel =>
+    AuthState.IsAuthenticated
+    && CurrentCloudModelPath is string currentModelPath
+    && appCloudSyncService.CloudModels.Any(cloudModel =>
+    string.Equals(cloudModel.NormalizedPath, currentModelPath, StringComparison.OrdinalIgnoreCase)
+    );
+
+    async Task OnDeleteModelAsync()
     {
-        if (await resetWarningBox.ShowAsync() != true)
+        if (!HasRemoteCopyOfCurrentModel)
+        {
+            if (await deleteLocalModelBox.ShowAsync() != true)
+                return;
+
+            await canvasService.RemoveAsync();
             return;
+        }
+
+        // Yes = delete local and remote, No = delete local only, null = cancel.
+        bool? choice = await deleteLocalOrRemoteModelBox.ShowAsync();
+        if (choice is null)
+            return;
+
+        if (choice is true && !Try(out var error, await appCloudSyncService.DeleteCurrentCloudModelAsync()))
+        {
+            snackbar.Add(error.ErrorMessage, Severity.Error);
+            return;
+        }
 
         await canvasService.RemoveAsync();
     }
@@ -508,6 +572,37 @@
         manualEditService.BeginPlaceNode();
         snackbar.Add("Click on the diagram to place the node.", Severity.Info);
     }
+
+    void BeginExportArea()
+    {
+        snackbar.Add("Drag to select the area to export. Esc or right-click cancels.", Severity.Info);
+        exportService.ExportAreaAsync().RunInBackground();
+    }
+
+    bool CanParseCurrentModel =>
+    (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsParseable(modelMgr.ModelPath);
+
+    async Task NewModelAsync()
+    {
+        List<string> existingPaths = modelListService.GetModelItems().Select(item => item.Path).ToList();
+        var parameters = new DialogParameters<NewModelDialog> { { d => d.ExistingPaths, existingPaths } };
+        var dialog = await dialogService.ShowAsync<NewModelDialog>("New Model", parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        string name = (string)result.Data!;
+
+        // A new empty model is only useful with editing enabled; opening an existing
+        // design model later leaves the toggle as the user last set it.
+        ViewOptions.SetIsEditingEnabled(true);
+        await canvasService.LoadAsync(name);
+        snackbar.Add("Empty model created. Use Edit > Add Node or double-click the canvas to add nodes.",
+        Severity.Info);
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    async Task ReloadPageAsync() => await jsInterop.Call("reloadPage");
 
     Task ShowAbout() => aboutBox.ShowAsync();
 
@@ -574,6 +669,9 @@
     void ToggleEditMode()
     {
         ViewOptions.SetIsEditingEnabled(!ViewOptions.IsEditingEnabled);
+        // Edit-only markup (e.g. link handles) is baked into cached tiles, so the cache must be
+        // cleared for the toggle to take effect immediately.
+        modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -591,15 +689,47 @@
 
     static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
 
-    static string GetModelDisplayName(string modelPath) => Path.GetFileName(modelPath);
+    static string GetModelItemIcon(ModelItem item) =>
+    item switch
+    {
+        { IsLocal: true, IsCloud: true } => Icons.Material.Outlined.CloudDone,
+        { IsCloud: true } => Icons.Material.Outlined.CloudDownload,
+        _ when ModelPaths.IsDesignModel(item.Path) => Icons.Material.Outlined.DesignServices,
+        _ => Icons.Material.Outlined.Schema,
+    };
 
-    bool IsCurrentRecentModel(string path) => string.Equals(path, CurrentRecentModelPath, StringComparison.Ordinal);
+    static string GetModelItemTitle(ModelItem item)
+    {
+        string source = item switch
+        {
+            { IsLocal: true, IsCloud: true } => "Local + cloud",
+            { IsCloud: true } => "Cloud",
+            _ when ModelPaths.IsDesignModel(item.Path) => "Design",
+            _ => "Local",
+        };
+        return $"{item.Path} ({source})";
+    }
 
-    bool IsCurrentCloudModel(global::Shared.CloudModelMetadata cloudModel) =>
-    string.Equals(
-    cloudModel.NormalizedPath,
+    async Task LoadModelItemAsync(ModelItem item)
+    {
+        if (item.IsLocal)
+        {
+            await canvasService.LoadAsync(item.Path);
+            return;
+        }
+
+        await LoadCloudModelAsync(item.CloudModel!);
+    }
+
+    bool IsCurrentModel(ModelItem item) =>
+    string.Equals(item.Path, CurrentRecentModelPath, StringComparison.Ordinal)
+    || (
+    item.IsCloud
+    && string.Equals(
+    item.CloudModel!.NormalizedPath,
     CurrentCloudModelPath,
     StringComparison.OrdinalIgnoreCase
+    )
     );
 
     static string GetSyncStatusDescription(CloudSyncState state) =>

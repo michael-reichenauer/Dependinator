@@ -6,7 +6,11 @@ static class NodeName
 {
     static readonly char[] PartsSeparators = "./".ToCharArray();
 
-    public static (string longName, string shortName) GetDisplayNames(string nodeName, NodeType nodeType)
+    public static (string longName, string shortName) GetDisplayNames(
+        string nodeName,
+        NodeType nodeType,
+        bool isExecutable
+    )
     {
         var name = nodeName;
         var parametersParts = "";
@@ -39,19 +43,21 @@ static class NodeName
             longName += ".dll";
         }
 
-        shortName = FormatModuleSuffix(shortName);
-        longName = FormatModuleSuffix(longName);
+        shortName = FormatModuleSuffix(shortName, isExecutable);
+        longName = FormatModuleSuffix(longName, isExecutable);
 
         return (longName, shortName);
     }
 
-    // Module names are shown as "Name (dll)" instead of "Name.dll"
-    static string FormatModuleSuffix(string name)
+    // Module names are shown as "Name (dll)" or "Name (exe)" instead of "Name.dll". SDK-built
+    // executables compile to a ".dll" module (the ".exe" is just the apphost), so IsExecutable
+    // decides the suffix rather than the module name's extension.
+    static string FormatModuleSuffix(string name, bool isExecutable)
     {
-        if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-            return $"{name[..^4]} (dll)";
         if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             return $"{name[..^4]} (exe)";
+        if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+            return $"{name[..^4]} ({(isExecutable ? "exe" : "dll")})";
 
         return name;
     }

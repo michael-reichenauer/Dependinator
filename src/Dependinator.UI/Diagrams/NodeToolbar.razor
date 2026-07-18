@@ -8,7 +8,8 @@
 
 @if (HasSelectedLine && IsSelectedNodeNote)
 {
-  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
+  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar"
+                  Style="@CssPosition">
     <MudTooltip Text="Edit note">
       <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="EditNote" data-testid="note-edit-toolbar" />
     </MudTooltip>
@@ -20,7 +21,8 @@
 }
 else if (HasSelectedLine)
 {
-  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
+  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar"
+                  Style="@CssPosition">
     <MudTooltip Text="Menu">
       <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
                PopoverClass="dep-light-menu" data-testid="node-menu">
@@ -103,10 +105,6 @@ else if (HasSelectedLine)
           @(IsIconMode ? IconColorMenuItems : NodeColorMenuItems)
         </MudMenu>
       </MudTooltip>
-      <MudTooltip Text="Add link from this node">
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CallMade" OnClick="BeginAddLink"
-                       data-testid="node-add-link" />
-      </MudTooltip>
     }
 
     @if (CanShowSource)
@@ -141,6 +139,14 @@ else if (HasSelectedLine)
         }
       }
     }
+
+    @if (IsSelectedNodeManual)
+    {
+      <MudTooltip Text="Delete node">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="DeleteNode"
+                       data-testid="node-delete-toolbar" />
+      </MudTooltip>
+    }
   </MudButtonGroup>
 }
 
@@ -169,7 +175,7 @@ else if (HasSelectedLine)
 
 
 @code {
-  const double ToolbarOffset = 58;
+  const double ToolbarOffset = 32;
   private MudMessageBox mbox { get; set; } = null!;
   private MudMessageBox deleteConfirmBox { get; set; } = null!;
 
@@ -209,9 +215,6 @@ else if (HasSelectedLine)
 
   [Inject]
   INoteService noteService { get; set; } = null!;
-
-  [Inject]
-  ISnackbar snackbar { get; set; } = null!;
 
   [Inject]
   INodeEditService nodeEditService { get; set; } = null!;
@@ -305,14 +308,6 @@ else if (HasSelectedLine)
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();
-
-  void BeginAddLink()
-  {
-    if (!TryGetSelectedNodeId(out var nodeId))
-      return;
-    manualEditService.BeginAddLink(nodeId);
-    snackbar.Add("Click a target node to link to (Esc or click empty space to cancel).", Severity.Info);
-  }
 
   async Task DeleteNode()
   {

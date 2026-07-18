@@ -41,13 +41,44 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task NodeToolbar_ShouldSetCloudIconViaDialogTab()
+    {
+        await App.GotoMainPageAsync();
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+
+        // Open the icon selector dialog and switch to the Azure tab; the list swaps from the
+        // Default group's icons to the Azure ones.
+        await App.NodeSetIconButton.ClickAsync();
+        await Expect(App.IconDialogTab("Azure")).ToBeVisibleAsync();
+        await App.IconDialogTab("Azure").ClickAsync();
+        await Expect(App.IconDialogItem("Key-Vault")).ToBeVisibleAsync();
+
+        // Selecting an icon closes the dialog and the node's <use> switches to it.
+        await App.IconDialogItem("Key-Vault").ClickAsync();
+        await Expect(App.NodeIconUse("Key-Vault")).ToBeVisibleAsync();
+
+        // The pinned Default row restores the node-type icon.
+        await App.NodeSetIconButton.ClickAsync();
+        await App.IconDialogDefault.ClickAsync();
+        await Expect(App.NodeIconUse("Solution")).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
     public async Task NodeToolbar_ShouldSetContainerBackgroundColor()
     {
         await App.GotoMainPageAsync();
 
-        // Navigate into Demo.UI so its child class "Main" renders as a container.
+        // Wait for the parsed model to actually render before searching: app-ready fires
+        // before parsing completes, and the search dialog only runs its query on input —
+        // a query typed mid-parse finds nothing and is never re-run (a CI flake showed
+        // Enter as a no-op on an empty result list, leaving the dialog open).
+        await Expect(App.NodeLabel("Demo.sln")).ToBeVisibleAsync();
+
+        // Navigate into Demo.UI so its child class "Main" renders as a container. Also wait
+        // for a selected result row before pressing Enter — Enter without results is a no-op.
         var search = await App.OpenSearchViaHotkeyAsync();
         await search.FillAsync("Demo.UI");
+        await Expect(search.SelectedItem).ToBeVisibleAsync();
         await Page.Keyboard.PressAsync("Enter");
 
         await App.SelectContainerNodeAsync("Demo.UI.Main");

@@ -13,7 +13,6 @@ namespace Dependinator.E2E.Tests.Sync;
 // API-only SyncTests cannot reach.
 public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
 {
-    static readonly Regex Disabled = new("mud-disabled");
     static readonly Regex Connecting = new("cloud-connecting");
 
     // SeededSyncModel is a class fixture: xUnit seeds the model (IAsyncLifetime) before this
@@ -44,15 +43,12 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
         await App.CloudButton.HoverAsync();
         await Expect(Page.GetByText(new Regex("sync enabled for"))).ToBeVisibleAsync(new() { Timeout = 30_000 });
 
-        // The app menu now reflects an authenticated session (Logout and Cloud Models both
-        // live inside the Models submenu, so hover it to expand the flyout) ...
+        // The app menu now reflects an authenticated session (Logout and the merged model
+        // list both live inside the Models submenu, so hover it to expand the flyout) ...
         await Expect(await App.OpenSubMenuItemAsync("menu-models", "menu-logout")).ToBeVisibleAsync();
 
-        // ... and the Cloud Models submenu is enabled (i.e. the seeded model was listed) ...
-        await Expect(App.MenuItem("menu-cloud-models")).Not.ToHaveClassAsync(Disabled);
-
-        // ... and opening it shows the seeded model by name.
-        await App.MenuItem("menu-cloud-models").HoverAsync();
-        await Expect(Page.GetByText("seed-model.sln")).ToBeVisibleAsync();
+        // ... and the merged model list shows the seeded cloud model by name (its presence
+        // proves the cloud model list was fetched and merged in).
+        await Expect(App.MenuItem("menu-model-item").Filter(new() { HasText = "seed-model.sln" })).ToBeVisibleAsync();
     }
 }

@@ -175,6 +175,35 @@ async function showEditorForLocation(fileLocation: string, panel: vscode.Webview
     }
 }
 
+/**
+ * Saves a file exported by the webview UI (e.g. an exported diagram image) via a save dialog.
+ * The webview cannot download files itself (<a download> is blocked), so it sends the content
+ * as base64 in a "vscode/SaveFile" message.
+ */
+async function saveFileFromWebview(message: unknown): Promise<void> {
+    const { fileName, base64 } = (message ?? {}) as { fileName?: unknown; base64?: unknown };
+    if (typeof fileName !== "string" || typeof base64 !== "string" || base64.length === 0) {
+        logger.warn("SaveFile called with invalid message");
+        return;
+    }
+
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const defaultUri = workspaceFolder
+        ? vscode.Uri.joinPath(workspaceFolder, fileName)
+        : vscode.Uri.file(fileName);
+
+    const targetUri = await vscode.window.showSaveDialog({ defaultUri });
+    if (!targetUri)
+        return;
+
+    try {
+        await vscode.workspace.fs.writeFile(targetUri, Buffer.from(base64, "base64"));
+    } catch (error) {
+        logger.error("Failed to save file", fileName, error);
+        vscode.window.showErrorMessage(`Dependinator: Could not save ${fileName}`);
+    }
+}
+
 /** Extension entry point: registers commands and starts the language server. */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     logger.log("Activating extension");
@@ -252,6 +281,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
         const panel = createDependinatorWebviewPanel(context);
 
+        // The webview UI isn't ready to handle ui/ShowNode until the diagram has loaded,
+        // so remember the editor active at open time and reveal its node when the UI
+        // reports "vscode/DiagramLoaded".
+        let pendingShowNodeEditor: vscode.TextEditor | undefined = activeTextEditor;
+
         activePanel = panel;
         const autoRefresh = registerAutoRefresh(panel);
         panel.onDidDispose(() => {
@@ -261,6 +295,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         registerWebviewMessageHandler(panel, async (message: WebviewMessage) => {
+            if (message.type === "vscode/DiagramLoaded") {
+                const editor = pendingShowNodeEditor;
+                pendingShowNodeEditor = undefined;
+                sendShowNodeForEditor(editor);
+                return;
+            }
+
+            if (message.type === "vscode/SaveFile") {
+                await saveFileFromWebview(message.message);
+                return;
+            }
+
             if (message.type === "vscode/OpenExternal") {
                 const url = String(message.message ?? "");
                 if (url)

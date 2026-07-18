@@ -327,6 +327,51 @@ public class AppCloudSyncServiceTests
     }
 
     [Fact]
+    public async Task SyncDownAsync_ShouldUploadLocalModel_WhenNoRemoteModelExists()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto localModel = CreateModelDto("local");
+        SutContext context = CreateSutContext(modelPath, localModel, syncState: null, cloudModels: []);
+        R<ModelDto> noRemoteModel = R.None;
+        context
+            .CloudSyncService.Setup(x => x.PullAsync(modelPath))
+            .Callback(() => context.Counters.PullCalls++)
+            .ReturnsAsync(noRemoteModel);
+
+        R<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
+
+        Assert.True(syncDownResult.IsNone);
+        Assert.True(context.Counters.PushCalls > 0);
+        context.ModelService.Verify(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()), Times.Never);
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+    }
+
+    [Fact]
+    public async Task AutoSync_ShouldUploadLocalModel_WhenPullFindsNoRemoteModel()
+    {
+        // The cloud model list still contains the model, but the remote copy is gone by the
+        // time the auto-sync pull runs; recovery should push instead of reporting an error.
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], CreateFastTimings());
+        R<ModelDto> noRemoteModel = R.None;
+        context
+            .CloudSyncService.Setup(x => x.PullAsync(It.IsAny<string>()))
+            .Callback(() => context.Counters.PullCalls++)
+            .ReturnsAsync(noRemoteModel);
+        List<string> errorMessages = [];
+        context.Sut.BackgroundSyncError += message => errorMessages.Add(message);
+
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.PushCalls > 0);
+
+        Assert.True(context.Counters.PullCalls > 0);
+        Assert.Empty(errorMessages);
+    }
+
+    [Fact]
     public async Task IsConnecting_ShouldBeTrueUntilInitialAuthResolves()
     {
         string modelPath = "/models/sample.model";
@@ -356,6 +401,46 @@ public class AppCloudSyncServiceTests
         await context.Sut.RefreshSyncStateAsync();
 
         Assert.False(context.Sut.IsConnecting);
+    }
+
+    [Fact]
+    public async Task DeleteCurrentCloudModel_ShouldClearBaselineAndCloudModelList()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel]);
+        context.CloudSyncService.Setup(x => x.DeleteAsync(modelPath)).ReturnsAsync(R.Ok);
+        context.CloudSyncStateService.Setup(x => x.ClearAsync(modelPath)).Returns(Task.CompletedTask);
+        await context.Sut.RefreshSyncStateAsync();
+
+        R result = await context.Sut.DeleteCurrentCloudModelAsync();
+
+        Assert.True(R.Try(out var error, result), error?.ErrorMessage);
+        context.CloudSyncService.Verify(x => x.DeleteAsync(modelPath), Times.Once);
+        context.CloudSyncStateService.Verify(x => x.ClearAsync(modelPath), Times.Once);
+        Assert.Empty(context.Sut.CloudModels);
+        Assert.False(context.Sut.HasRemoteChangesSinceLastSync);
+    }
+
+    [Fact]
+    public async Task DeleteCurrentCloudModel_ShouldReturnError_WhenTransportFails()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel]);
+        context.CloudSyncService.Setup(x => x.DeleteAsync(modelPath)).ReturnsAsync(R.Error("delete failed"));
+        await context.Sut.RefreshSyncStateAsync();
+
+        R result = await context.Sut.DeleteCurrentCloudModelAsync();
+
+        Assert.False(R.Try(out var error, result));
+        Assert.Contains("delete failed", error!.ErrorMessage);
+        context.CloudSyncStateService.Verify(x => x.ClearAsync(It.IsAny<string>()), Times.Never);
+        Assert.Single(context.Sut.CloudModels);
     }
 
     static AppCloudSyncService CreateSut(

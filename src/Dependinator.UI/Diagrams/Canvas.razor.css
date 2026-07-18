@@ -11,10 +11,37 @@
 svg {
     /* The 100% width and height will make it take up the full space of its container */
     /* border: 1px dashed rgb(56, 151, 246); */
+
+    /* Diagram drags (pan, area selection) must not also select the svg text elements. */
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .drop-zone {
     border: 2px solid #0088f711;
+}
+
+/* Dotted preview line drawn while dragging a node's link handle. Fixed over the whole
+   viewport so its pixel space equals pointer client coordinates. Must NOT make .drop-zone a
+   positioned element instead: that would paint the canvas above the position:fixed, z-auto
+   toolbars rendered earlier in Canvas.razor. pointer-events: none keeps the overlay out of
+   the drop-target hit test (getElementIdAtPoint). */
+.link-drag-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+}
+
+/* Rubber-band rectangle drawn while dragging an area selection (e.g. for image export).
+   Same fixed, click-through overlay approach as .link-drag-overlay above. */
+.area-select-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
 }
 
 .drop-zone.hover {

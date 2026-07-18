@@ -19,6 +19,9 @@ interface ICloudSyncStateService
 
     // Stores sync metadata after a successful pull operation.
     Task RecordPullAsync(string modelPath, string localContentHash, string remoteContentHash);
+
+    // Removes the persisted sync state for a model, e.g. after its remote copy is deleted.
+    Task ClearAsync(string modelPath);
 }
 
 // Persists cloud sync progress in the shared Config object so the UI can
@@ -54,6 +57,12 @@ class CloudSyncStateService(IConfigService configService) : ICloudSyncStateServi
             CloudSyncModelState state = GetOrCreateState(config, modelPath);
             state.Baseline = new CloudSyncBaseline(localContentHash, remoteContentHash);
         });
+    }
+
+    // Drops the sync marker so the model no longer appears synced to a deleted remote copy.
+    public Task ClearAsync(string modelPath)
+    {
+        return configService.SetAsync(config => config.CloudSyncStates.Remove(GetKey(modelPath)));
     }
 
     // Loads an existing model state, or creates and stores one when missing.

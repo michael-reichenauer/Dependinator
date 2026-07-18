@@ -93,6 +93,7 @@ internal class AssemblyParser : IDisposable
     {
         string nodeName = Name.GetModuleName(assemblyDefinition!);
         string? assemblyDescription = GetAssemblyDescription(assemblyDefinition!);
+        bool isExecutable = assemblyDefinition!.MainModule.Kind is ModuleKind.Console or ModuleKind.Windows;
         var assemblyNode = new Node(
             nodeName,
             new()
@@ -100,6 +101,7 @@ internal class AssemblyParser : IDisposable
                 Type = NodeType.Assembly,
                 Description = assemblyDescription,
                 Parent = parentName,
+                IsExecutable = isExecutable,
             }
         );
 

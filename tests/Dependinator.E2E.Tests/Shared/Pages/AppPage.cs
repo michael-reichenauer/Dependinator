@@ -65,6 +65,18 @@ public sealed class AppPage
     // A swatch row in the container-color dropdown, e.g. "Blue" or "Default".
     public ILocator ColorItem(string color) => page.GetByTestId($"color-item-{color}");
 
+    // The node toolbar's "Set icon" button (NodeToolbar.razor), opening IconSelectorDialog.
+    public ILocator NodeSetIconButton => page.GetByTestId("node-set-icon");
+
+    // A group tab in the icon selector dialog, e.g. "Azure" or "Aws" (IconSelectorDialog.razor).
+    public ILocator IconDialogTab(string group) => page.GetByTestId($"icon-dialog-tab-{group}");
+
+    // An icon row in the icon selector dialog, e.g. "Key-Vault".
+    public ILocator IconDialogItem(string iconName) => page.GetByTestId($"icon-dialog-item-{iconName}");
+
+    // The pinned "Default (node type icon)" row in the icon selector dialog.
+    public ILocator IconDialogDefault => page.GetByTestId("icon-dialog-default");
+
     // A node icon's <use> reference on the canvas, e.g. "Solution" or "Solution--Blue".
     public ILocator NodeIconUse(string iconId) => page.Locator($"#svgcanvas use[href='#{iconId}']");
 

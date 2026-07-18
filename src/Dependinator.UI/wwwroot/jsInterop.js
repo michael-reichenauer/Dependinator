@@ -46,8 +46,100 @@ export function clickElement(elementId) {
   document.getElementById(elementId).click();
 }
 
+// WebKit/Safari fails to re-bind url(#gradient) paint servers inside <use> shadow
+// trees after the diagram content subtree is replaced, leaving all icons without
+// their gradient fills until reload. Re-attaching the <defs> node at its current
+// position forces WebKit to re-resolve the references. No-op on other engines.
+export function refreshSvgPaintServers(elementId) {
+  if (!("webkitConvertPointFromNodeToPage" in window)) return;
+  const svg = document.getElementById(elementId);
+  const defs = svg?.querySelector("defs");
+  if (defs) {
+    defs.parentNode.insertBefore(defs, defs.nextSibling);
+  }
+}
+
 export function openUrl(url) {
   window.open(url, "_blank", "noopener");
+}
+
+// Downloads a text file (e.g. an exported SVG). In the VS Code webview <a download> does not
+// work, so the file is sent to the extension host, which shows a save dialog instead.
+export function downloadFile(fileName, mimeType, text) {
+  if (isVsCodeWebView()) {
+    postVsCodeMessage({ type: "vscode/SaveFile", message: { fileName: fileName, base64: textToBase64(text) } });
+    return;
+  }
+  downloadBlob(fileName, new Blob([text], { type: mimeType }));
+}
+
+// Rasterizes a standalone SVG document to a PNG at width*scale x height*scale and downloads
+// it. The SVG is loaded via a data: URL, not a blob: URL — the VS Code webview CSP only
+// allows img-src data:, and data: works in all hosts. The SVG document must have explicit
+// width/height attributes, or Firefox refuses to draw it.
+export function downloadSvgAsPng(fileName, svgText, width, height, scale) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(width * scale);
+        canvas.height = Math.round(height * scale);
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        if (isVsCodeWebView()) {
+          const dataUrl = canvas.toDataURL("image/png");
+          const base64 = dataUrl.substring(dataUrl.indexOf(",") + 1);
+          postVsCodeMessage({ type: "vscode/SaveFile", message: { fileName: fileName, base64: base64 } });
+          resolve();
+          return;
+        }
+
+        canvas.toBlob(blob => {
+          if (!blob) {
+            reject(new Error("Failed to create the PNG image"));
+            return;
+          }
+          downloadBlob(fileName, blob);
+          resolve();
+        }, "image/png");
+      } catch (error) {
+        reject(error);
+      }
+    };
+    image.onerror = () => reject(new Error("Failed to render the SVG image"));
+    image.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgText);
+  });
+}
+
+function downloadBlob(fileName, blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function textToBase64(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  bytes.forEach(byte => binary += String.fromCharCode(byte));
+  return btoa(binary);
+}
+
+export function listenToEscapeKey(instance, functionName) {
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      instance.invokeMethodAsync(functionName);
+    }
+  });
+}
+
+export function reloadPage() {
+  location.reload();
 }
 
 // Marks the app as ready once the initial model has loaded and rendered, so UI/e2e
@@ -84,6 +176,18 @@ export function getBoundingRectangle(elementId) {
     return null;
   }
   return element.getBoundingClientRect();
+}
+
+// Id of the topmost id-bearing element at a viewport point. Used to find the drop target of a
+// drag-to-link gesture, since pointer capture keeps event.target at the drag-start element.
+// Relies on overlays (e.g. the link-drag preview line) being pointer-events: none.
+export function getElementIdAtPoint(x, y) {
+  const element = document.elementFromPoint(x, y);
+  if (element == null) {
+    return "";
+  }
+  const withId = element.closest("[id]");
+  return withId ? withId.id : "";
 }
 
 export function getWindowSizeDetails(parm) {

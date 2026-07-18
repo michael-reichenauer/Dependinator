@@ -15,12 +15,24 @@ public class CloudUserStorageKeyTests
     }
 
     [Fact]
-    public void Create_ShouldFallBackToUserId_WhenEmailIsMissing()
+    public void Create_ShouldNotContainEmail_WhenEmailIsPresent()
+    {
+        CloudUserInfo user = new("swa-user-123", "User@example.com");
+
+        string storageKey = CloudUserStorageKey.Create(user);
+
+        Assert.DoesNotContain("user@example.com", storageKey);
+        Assert.Matches("^email-[0-9a-f]{64}$", storageKey);
+    }
+
+    [Fact]
+    public void Create_ShouldFallBackToHashedUserId_WhenEmailIsMissing()
     {
         CloudUserInfo user = new("user-123", null);
 
         string storageKey = CloudUserStorageKey.Create(user);
 
-        Assert.Equal("user-123", storageKey);
+        Assert.DoesNotContain("user-123", storageKey);
+        Assert.Matches("^user-[0-9a-f]{64}$", storageKey);
     }
 }

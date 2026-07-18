@@ -11,6 +11,21 @@
                   FullWidth="true" Class="icon-dialog__field" OnKeyDown="OnKeyDown" autocomplete="off"
                   data-testid="icon-dialog-search" />
 
+    @if (groups.Count > 1)
+    {
+      <div class="icon-dialog__tabs @(isSearching ? "icon-dialog__tabs--searching" : "")" role="tablist"
+           data-testid="icon-dialog-tabs">
+        @foreach (var group in groups)
+        {
+          <button type="button" role="tab" tabindex="-1"
+                  class="icon-dialog__tab @(group.Name == activeTab ? "icon-dialog__tab--active" : "")"
+                  @onclick="() => SelectTabAsync(group.Name)" data-testid="icon-dialog-tab-@group.Name">
+            @group.Label
+          </button>
+        }
+      </div>
+    }
+
     <div class="icon-dialog__body">
       <div class="icon-dialog__results" data-testid="icon-dialog-results">
         @for (int i = 0; i < entries.Count; i++)
@@ -40,7 +55,7 @@
             var icon = entry.Value;
             @if (showGroupHeaders && IsFirstOfGroup(index))
             {
-              <div class="icon-dialog__group">@icon.Group.Replace(".", " / ")</div>
+              <div class="icon-dialog__group">@IconLibrary.GroupLabel(icon.Group).Replace(".", " / ")</div>
             }
             <div class="icon-dialog__item d-flex align-center @ItemClass(index, icon.Name)" @onclick="() => SelectAsync(icon.Name)"
                  @onmouseover="() => hoveredIndex = index" @onmouseout="() => hoveredIndex = -1"
@@ -50,7 +65,7 @@
             </div>
           }
         }
-        @if (entries.Count <= 1 && !string.IsNullOrWhiteSpace(query) && !DefaultMatchesQuery)
+        @if (entries.Count <= (SelectOnly ? 0 : 1) && !string.IsNullOrWhiteSpace(query) && !DefaultMatchesQuery)
         {
           <MudText Typo="Typo.body2" Class="icon-dialog__empty">No matching icons</MudText>
         }
@@ -89,19 +104,35 @@
   [Parameter]
   public string? DefaultIconName { get; set; }
 
+  // Picker mode: no node exists yet (e.g. the add-node flow), so selecting closes the dialog
+  // with the icon name as the result instead of applying it, and the "Default" row is hidden.
+  [Parameter]
+  public bool SelectOnly { get; set; }
+
   MudTextField<string> textField = null!;
   string query = "";
 
   // Selectable rows in display order; null is the pinned "Default" entry, others are icons.
   IReadOnlyList<IconInfo?> entries = [];
+  IReadOnlyList<IconGroup> groups = [];
+  string activeTab = "";
   bool showGroupHeaders;
   int selectedIndex;
   int hoveredIndex = -1;
   bool isDisposed;
 
+  bool isSearching => !string.IsNullOrWhiteSpace(query);
+
   protected override void OnInitialized()
   {
-    showGroupHeaders = IconLibrary.All.Select(icon => icon.Group).Distinct().Count() > 1;
+    groups = IconLibrary.Groups;
+
+    // Start on the tab of the node's current icon, so it is visible and preselected.
+    var currentGroup = CurrentIconName is null
+        ? null
+        : IconLibrary.All.FirstOrDefault(icon => icon.Name == CurrentIconName).Group;
+    activeTab = currentGroup ?? (groups.Count > 0 ? groups[0].Name : "");
+
     entries = Filter("");
 
     // Preselect the node's current icon so keyboard navigation starts from it.
@@ -155,7 +186,20 @@
       + (iconName == CurrentIconName ? "icon-dialog__item--current" : "");
 
   bool IsFirstOfGroup(int index) =>
-      entries[index] is { } icon && (entries[index - 1] is not { } previous || previous.Group != icon.Group);
+      entries[index] is { } icon
+      && (index == 0 || entries[index - 1] is not { } previous || previous.Group != icon.Group);
+
+  async Task SelectTabAsync(string group)
+  {
+    activeTab = group;
+    entries = Filter(query);
+    selectedIndex = 0;
+    hoveredIndex = -1;
+
+    // Clicking the tab button steals focus; return it to the search field so the user can
+    // keep typing and use the keyboard navigation.
+    await textField.FocusAsync();
+  }
 
   void OnQueryChanged(string value)
   {
@@ -166,16 +210,18 @@
   }
 
   // The pinned "Default" entry is always first; the node-type default icon is omitted (it is
-  // represented by the Default row). Remaining icons are fuzzy-matched on their display name
-  // (and raw name) and ranked by match score, or listed in library order when empty.
+  // represented by the Default row). When the query is empty only the active tab's icons are
+  // listed, in library order; a query fuzzy-matches across all groups (ranked by match score),
+  // with group headers marking each icon's origin.
   IReadOnlyList<IconInfo?> Filter(string query)
   {
-    List<IconInfo?> result = [null];
+    List<IconInfo?> result = SelectOnly ? [] : [null];
     var icons = IconLibrary.All.Where(icon => icon.Name != DefaultIconName);
+    showGroupHeaders = !string.IsNullOrWhiteSpace(query) && groups.Count > 1;
 
     if (string.IsNullOrWhiteSpace(query))
     {
-      result.AddRange(icons.OrderBy(icon => icon.Group).ThenBy(icon => icon.DisplayName).Cast<IconInfo?>());
+      result.AddRange(icons.Where(icon => icon.Group == activeTab).Cast<IconInfo?>());
       return result;
     }
 
@@ -218,6 +264,12 @@
 
   Task SelectAsync(string? iconName)
   {
+    if (SelectOnly)
+    {
+      MudDialog.Close(DialogResult.Ok(iconName!));
+      return Task.CompletedTask;
+    }
+
     nodeEditService.SetNodeIcon(NodeId.FromId(NodeIdValue), iconName);
     MudDialog.Close(DialogResult.Ok(true));
     return Task.CompletedTask;

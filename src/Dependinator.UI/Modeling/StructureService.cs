@@ -180,6 +180,10 @@ class StructureService(ILineService linesService) : IStructureService
         if (nodeDto.Name == "") // Root node already exists
             return;
 
+        // Persisted FileSpan paths are relative to the model folder; the in-memory model
+        // uses absolute paths (matched against editor file paths for code navigation).
+        nodeDto = FileSpanPaths.ToAbsolute(nodeDto, model.Path);
+
         var parent = GetOrCreateParent(model, nodeDto);
 
         var node = new Models.Node(nodeDto.Name, parent);

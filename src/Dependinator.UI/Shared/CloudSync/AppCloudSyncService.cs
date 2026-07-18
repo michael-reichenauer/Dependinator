@@ -52,11 +52,15 @@ interface IAppCloudSyncService
     // Pushes the active model to cloud and updates the local sync marker.
     Task<R<CloudModelMetadata>> SyncUpAsync();
 
-    // Pulls current model from cloud and replaces the active local model.
+    // Pulls current model from cloud and replaces the active local model. Returns R.None when
+    // no remote copy existed and the local model was uploaded to re-create it instead.
     Task<R<ModelInfo>> SyncDownAsync();
 
     // Downloads a selected remote model and opens it in the canvas.
     Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel);
+
+    // Deletes the remote copy of the current model and clears the local sync baseline.
+    Task<R> DeleteCurrentCloudModelAsync();
 }
 
 // Aggregates cloud sync concerns for the app: transport selection, auth state, model lists, and
@@ -193,6 +197,34 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         return await ExecuteSyncOperationAsync(() => LoadCloudModelCoreAsync(cloudModel, notifyChanged: true));
     }
 
+    // Deletes the remote copy of the current model and drops the sync baseline so the
+    // remaining local model is treated as unsynced local-only content.
+    public async Task<R> DeleteCurrentCloudModelAsync()
+    {
+        await syncOperationLock.WaitAsync();
+        try
+        {
+            string modelPath = modelMgr.ModelPath;
+            if (string.IsNullOrWhiteSpace(modelPath))
+                return R.Error("Model is not loaded.");
+
+            if (!Try(out ErrorResult? error, await cloudSyncService.DeleteAsync(modelPath)))
+                return error;
+
+            await cloudSyncStateService.ClearAsync(modelPath);
+            RemoveCloudModel(modelPath);
+            ResetSyncSnapshot(clearCloudModels: false);
+
+            Log.Info("DeleteCurrentCloudModelAsync");
+            NotifyChanged();
+            return R.Ok;
+        }
+        finally
+        {
+            syncOperationLock.Release();
+        }
+    }
+
     async Task<R<T>> ExecuteSyncOperationAsync<T>(Func<Task<R<T>>> syncOperation)
     {
         await syncOperationLock.WaitAsync();
@@ -232,7 +264,19 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         if (string.IsNullOrWhiteSpace(modelPath))
             return R.Error("Model is not loaded.");
 
-        if (!Try(out ModelDto? modelDto, out ErrorResult? error, await cloudSyncService.PullAsync(modelPath)))
+        R<ModelDto> pullResult = await cloudSyncService.PullAsync(modelPath);
+        if (pullResult.IsNone)
+        {
+            // No remote copy exists (deleted, other account, or other backend). Re-create it from
+            // the local model instead of failing; the push also replaces the stale sync baseline.
+            Log.Info($"No cloud model exists for '{modelPath}'; uploading local model instead");
+            if (!Try(out _, out ErrorResult? pushError, await SyncUpCoreAsync(notifyChanged)))
+                return pushError;
+
+            return R.None;
+        }
+
+        if (!Try(out ModelDto? modelDto, out ErrorResult? error, pullResult))
             return error;
 
         if (!Try(out ModelInfo? modelInfo, out error, await modelServiceLazy.Value.ReplaceCurrentModelAsync(modelDto)))
@@ -250,7 +294,11 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     async Task<R<CloudModelMetadata>> LoadCloudModelCoreAsync(CloudModelMetadata cloudModel, bool notifyChanged)
     {
         string normalizedPath = cloudModel.NormalizedPath;
-        if (!Try(out ModelDto? modelDto, out ErrorResult? error, await cloudSyncService.PullAsync(normalizedPath)))
+        R<ModelDto> pullResult = await cloudSyncService.PullAsync(normalizedPath);
+        if (pullResult.IsNone)
+            return R.Error($"Cloud model for '{normalizedPath}' no longer exists.");
+
+        if (!Try(out ModelDto? modelDto, out ErrorResult? error, pullResult))
             return error;
 
         if (!Try(out error, await modelServiceLazy.Value.WriteModelAsync(normalizedPath, modelDto)))
@@ -314,7 +362,12 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
     async Task<R> RunAutoSyncAsync<T>(Func<Task<R<T>>> syncOperation)
     {
-        if (!Try(out _, out ErrorResult? error, await ExecuteSyncOperationAsync(syncOperation)))
+        R<T> result = await ExecuteSyncOperationAsync(syncOperation);
+        // None means a pull found no remote copy and recovery already pushed the local model.
+        if (result.IsNone)
+            return R.Ok;
+
+        if (!Try(out _, out ErrorResult? error, result))
             return error;
 
         return R.Ok;
@@ -726,6 +779,16 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
             updatedCloudModels.Add(cloudModel);
 
         cloudModels = updatedCloudModels;
+    }
+
+    void RemoveCloudModel(string modelPath)
+    {
+        string normalizedPath = CloudModelPath.Normalize(modelPath);
+        cloudModels = cloudModels
+            .Where(cloudModel =>
+                !string.Equals(cloudModel.NormalizedPath, normalizedPath, StringComparison.OrdinalIgnoreCase)
+            )
+            .ToList();
     }
 
     // Finds remote metadata that matches the active local model path.

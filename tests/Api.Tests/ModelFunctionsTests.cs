@@ -55,6 +55,49 @@ public class ModelFunctionsTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task DeleteModelAsync_ShouldReturnUnauthorized_WhenNoPrincipalHeaderExists()
+    {
+        Mock<ICloudModelStore> store = new(MockBehavior.Strict);
+        ModelFunctions sut = new(new StubUserProvider(null), store.Object);
+        TestHttpRequestData request = new(new TestFunctionContext(), method: "DELETE");
+
+        HttpResponseData response = await sut.DeleteModelAsync(request, "model-key", CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteModelAsync_ShouldReturnNotFound_WhenModelDoesNotExist()
+    {
+        CloudUserInfo user = new("user-123", "user@example.com");
+        Mock<ICloudModelStore> store = new(MockBehavior.Strict);
+        store.Setup(s => s.DeleteAsync(user, "model-key", CancellationToken.None)).ReturnsAsync(false);
+
+        ModelFunctions sut = new(new StubUserProvider(user), store.Object);
+        TestHttpRequestData request = new(new TestFunctionContext(), method: "DELETE");
+
+        HttpResponseData response = await sut.DeleteModelAsync(request, "model-key", CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteModelAsync_ShouldReturnNoContent_WhenModelIsDeleted()
+    {
+        CloudUserInfo user = new("user-123", "user@example.com");
+        Mock<ICloudModelStore> store = new(MockBehavior.Strict);
+        store.Setup(s => s.DeleteAsync(user, "model-key", CancellationToken.None)).ReturnsAsync(true);
+
+        ModelFunctions sut = new(new StubUserProvider(user), store.Object);
+        TestHttpRequestData request = new(new TestFunctionContext(), method: "DELETE");
+
+        HttpResponseData response = await sut.DeleteModelAsync(request, "model-key", CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        store.Verify(s => s.DeleteAsync(user, "model-key", CancellationToken.None), Times.Once);
+    }
+
     sealed class StubUserProvider(CloudUserInfo? user) : ICloudSyncUserProvider
     {
         public Task<CloudUserInfo?> TryGetCurrentUserAsync(

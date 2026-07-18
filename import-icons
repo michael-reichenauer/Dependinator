@@ -1,0 +1,5 @@
+#!/bin/bash
+# Import curated cloud-provider icons (Azure, AWS, Google) into
+# src/Dependinator.UI/Diagrams/Icons/Library/ from the official icon packages.
+# Curated lists live in scripts/cloud-icons/*.manifest; see scripts/import-cloud-icons.mjs.
+exec node "$(dirname "$0")/scripts/import-cloud-icons.mjs" "$@"

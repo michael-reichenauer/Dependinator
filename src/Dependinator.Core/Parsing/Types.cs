@@ -14,6 +14,11 @@ class NodeProperties
     public string? Description { get; init; }
     public string? Parent { get; init; }
     public bool? IsPrivate { get; init; }
+
+    // For assembly nodes: the project builds an executable (OutputType Exe). SDK-built
+    // executables still compile to a ".dll" module (the ".exe" is just the apphost), so
+    // this cannot be derived from the module name.
+    public bool? IsExecutable { get; init; }
     public FileSpan? FileSpan { get; init; }
 }
 

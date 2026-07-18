@@ -68,7 +68,7 @@ class Model : IModel
             Zoom = Zoom,
             Offset = Offset,
             ViewRect = ViewRect,
-            Nodes = [.. nodes.Values.Select(n => n.ToDto())],
+            Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
             Links = [.. links.Values.Select(l => l.ToDto())],
             Lines =
             [
