@@ -19,6 +19,12 @@ public class E2ETestBase : PageTest
     protected static readonly string BaseUrl =
         Environment.GetEnvironmentVariable("E2E_BASE_URL") ?? "http://127.0.0.1:5000";
 
+    // Playwright's default Expect timeout is 5s, which flakes on slow CI runners: navigation
+    // after clicking a search result animates pan/zoom over re-rendered tiles and (on the
+    // 2-core runner, webkit especially) can take just over 5s before the target label exists.
+    // Align with the 15s the polling helpers in AppPage use.
+    static E2ETestBase() => Assertions.SetDefaultExpectTimeout(15_000);
+
     private static bool isAppVerified;
 
     // When E2E_TRACE=1 (set by `./e2e -t` and in CI), each test records a Playwright
