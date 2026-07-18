@@ -1,0 +1,64 @@
+@using MudBlazor
+@using static System.FormattableString
+
+@* Options for exporting a diagram area as an image: format (SVG/PNG), PNG scale, file name. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">Export Image</MudText>
+  </TitleContent>
+  <DialogContent>
+    <MudRadioGroup T="ExportFormat" @bind-Value="Format">
+      <MudRadio T="ExportFormat" Value="ExportFormat.Svg" data-testid="export-format-svg">SVG</MudRadio>
+      <MudRadio T="ExportFormat" Value="ExportFormat.Png" data-testid="export-format-png">PNG</MudRadio>
+    </MudRadioGroup>
+
+    @if (Format == ExportFormat.Png)
+    {
+      <MudSelect T="double" @bind-Value="PngScale" Label="Scale" Margin="Margin.Dense" Dense="true"
+                 data-testid="export-scale">
+        <MudSelectItem T="double" Value="1.0">1x</MudSelectItem>
+        <MudSelectItem T="double" Value="2.0">2x</MudSelectItem>
+        <MudSelectItem T="double" Value="4.0">4x</MudSelectItem>
+      </MudSelect>
+    }
+
+    <MudTextField T="string" @bind-Value="FileName" Label="File name" Immediate="true"
+                  Adornment="Adornment.End" AdornmentText="@Extension" data-testid="export-filename" />
+
+    <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">Image size: @SizeText</MudText>
+  </DialogContent>
+  <DialogActions>
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="export-cancel">Cancel</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Ok" Disabled="@(!CanExport)"
+               data-testid="export-ok">Export</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public double WidthPx { get; set; }
+  [Parameter] public double HeightPx { get; set; }
+  [Parameter] public string DefaultFileName { get; set; } = "diagram";
+
+  ExportFormat Format { get; set; } = ExportFormat.Svg;
+  double PngScale { get; set; } = 2;
+  string FileName { get; set; } = "";
+
+  string Extension => Format == ExportFormat.Svg ? ".svg" : ".png";
+  double Scale => Format == ExportFormat.Png ? PngScale : 1;
+  string SizeText => Invariant($"{WidthPx * Scale:0} × {HeightPx * Scale:0} px");
+  bool CanExport => FileName.Trim().Length > 0;
+
+  protected override void OnInitialized() => FileName = DefaultFileName;
+
+  void Ok()
+  {
+    if (!CanExport)
+      return;
+    MudDialog.Close(DialogResult.Ok(new ExportOptions(Format, PngScale, FileName.Trim())));
+  }
+
+  void Cancel() => MudDialog.Cancel();
+}

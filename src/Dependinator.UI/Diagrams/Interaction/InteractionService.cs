@@ -3,6 +3,7 @@ using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using Microsoft.JSInterop;
 
 namespace Dependinator.UI.Diagrams.Interaction;
 
@@ -20,7 +21,8 @@ interface IInteractionService
 }
 
 // Routes raw pointer events (from IPointerEventService) to the matching gesture: selection,
-// canvas pan/zoom, and — in editing mode — node move/resize/content-pan and line-point drags.
+// canvas pan/zoom, area selection, and — in editing mode — node move/resize/content-pan and
+// line-point drags.
 [Scoped]
 class InteractionService(
     IPointerEventService mouseEventService,
@@ -34,8 +36,10 @@ class InteractionService(
     IManualEditService manualEditService,
     INoteService noteService,
     IContextMenuService contextMenuService,
-    IScreenService screenService
-) : IInteractionService
+    IScreenService screenService,
+    IAreaSelectionService areaSelectionService,
+    IJSInterop jsInterop
+) : IInteractionService, IDisposable
 {
     // Delay before a held-down button switches the cursor to "move" (see OnMoveTimer).
     const int MoveDelay = 300;
@@ -51,6 +55,12 @@ class InteractionService(
     bool isResizingSelectedNode = false;
     bool isDraggingSelectedLinePoint = false;
     bool isDraggingLink = false;
+    bool isAreaSelecting = false;
+
+    // Swallows the click that follows a completed area-selection drag, so the drag does not
+    // also select whatever node the pointer was released on.
+    bool suppressNextClick = false;
+    DotNetObjectReference<InteractionService>? selfReference;
 
     // Press position in viewport (client) coords, the coordinate space of the link-drag
     // preview overlay. Client coords are used because pointer capture retargets events to the
@@ -61,7 +71,12 @@ class InteractionService(
     double Zoom => modelMgr.WithModel(m => m.Zoom);
     readonly Debouncer zoomToolbarDebouncer = new();
 
-    public string Cursor { get; private set; } = "default";
+    string cursor = "default";
+    public string Cursor
+    {
+        get => areaSelectionService.IsArmed || areaSelectionService.IsSelecting ? "crosshair" : cursor;
+        private set => cursor = value;
+    }
     public bool IsContainer
     {
         get
@@ -151,7 +166,7 @@ class InteractionService(
         nodeEditService.DecreaseNodeSize(nodeId);
     }
 
-    public Task InitAsync()
+    public async Task InitAsync()
     {
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
         applicationEvents.UndoneRedone += UpdateToolbar;
@@ -164,12 +179,31 @@ class InteractionService(
         mouseEventService.Wheel += OnMouseWheel;
         mouseEventService.ContextMenu += OnContextMenu;
 
-        return Task.CompletedTask;
+        selfReference = jsInterop.Reference(this);
+        await jsInterop.Call("listenToEscapeKey", selfReference, nameof(OnEscapeKey));
     }
+
+    // Cancels an armed/active area selection on Escape. A strict no-op otherwise, so it never
+    // interferes with e.g. MudBlazor dialogs, which handle Escape themselves.
+    [JSInvokable]
+    public ValueTask OnEscapeKey()
+    {
+        if (areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
+            areaSelectionService.Cancel();
+        return ValueTask.CompletedTask;
+    }
+
+    public void Dispose() => selfReference?.Dispose();
 
     void OnContextMenu(PointerEvent e)
     {
         // A right-click cancels any in-progress placement gesture instead of opening the menu.
+        if (areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
+        {
+            isAreaSelecting = false;
+            areaSelectionService.Cancel();
+            return;
+        }
         if (noteService.IsPlacingNote)
         {
             noteService.CancelPlaceNote();
@@ -229,6 +263,14 @@ class InteractionService(
 
     void OnClick(PointerEvent e)
     {
+        // Ignore clicks while armed for area selection (only a drag is meaningful) and the
+        // click that follows a completed selection drag.
+        if (areaSelectionService.IsArmed || suppressNextClick)
+        {
+            suppressNextClick = false;
+            return;
+        }
+
         var pointerId = PointerId.Parse(e.TargetId);
 
         // While placing a note, a click drops it at that position (opens the note dialog).
@@ -269,10 +311,22 @@ class InteractionService(
 
     void OnMouseDown(PointerEvent e)
     {
+        // A suppressed click (if any) would have fired before this next press; clear a stale flag
+        // from a selection drag that was too long to produce a click event at all.
+        suppressNextClick = false;
         isDraggingSelectedNode = false;
         isResizingSelectedNode = false;
         isDraggingSelectedLinePoint = false;
         isDraggingLink = false;
+
+        // An armed area selection captures the press; no move timer or edit-mode remapping.
+        if (areaSelectionService.IsArmed)
+        {
+            isAreaSelecting = true;
+            areaSelectionService.PointerDown(e);
+            return;
+        }
+
         moveTimerRunning = true;
         moveTimer?.Change(MoveDelay, Timeout.Infinite);
         mouseDownId = PointerId.Parse(e.TargetId);
@@ -302,6 +356,12 @@ class InteractionService(
     {
         if (!e.IsLeftButton)
             return;
+
+        if (isAreaSelecting)
+        {
+            areaSelectionService.PointerMove(e);
+            return;
+        }
 
         if (ViewOptions.IsEditingEnabled && mouseDownId.IsLinkHandle)
         {
@@ -367,6 +427,14 @@ class InteractionService(
     // toolbar position, and resets all gesture state.
     void OnMouseUp(PointerEvent e)
     {
+        if (isAreaSelecting)
+        {
+            isAreaSelecting = false;
+            suppressNextClick = true;
+            areaSelectionService.PointerUpAsync(e).RunInBackground();
+            return;
+        }
+
         if (isDraggingLink)
         {
             isDraggingLink = false;

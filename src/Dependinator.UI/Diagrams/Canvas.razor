@@ -159,4 +159,16 @@
                   stroke="@DColors.Selected" stroke-width="1.5" stroke-dasharray="6,6" />
         </svg>
     }
+
+    @if (areaSelectionService.IsSelecting)
+    {
+        <svg class="area-select-overlay" xmlns="http://www.w3.org/2000/svg">
+            <rect x="@Px(Math.Min(areaSelectionService.StartClient.X, areaSelectionService.EndClient.X))"
+                  y="@Px(Math.Min(areaSelectionService.StartClient.Y, areaSelectionService.EndClient.Y))"
+                  width="@Px(Math.Abs(areaSelectionService.EndClient.X - areaSelectionService.StartClient.X))"
+                  height="@Px(Math.Abs(areaSelectionService.EndClient.Y - areaSelectionService.StartClient.Y))"
+                  fill="@DColors.Selected" fill-opacity="0.08"
+                  stroke="@DColors.Selected" stroke-width="1.5" stroke-dasharray="4,4" />
+        </svg>
+    }
 </div>

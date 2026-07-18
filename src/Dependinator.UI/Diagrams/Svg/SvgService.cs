@@ -11,6 +11,12 @@ namespace Dependinator.UI.Diagrams.Svg;
 interface ISvgService
 {
     Tile GetTile(Rect viewRect, double zoom);
+
+    // Renders the diagram content covering canvasRect (canvas coordinates) at zoom (canvas units
+    // per output pixel), in output-pixel coordinates with origin at the rect's top-left. Returns
+    // the bare content (no <svg> wrapper, no defs) for embedding in an export document. Unlike
+    // GetTile, this renders fresh (no tile cache) and does not touch the view state.
+    string GetContentSvg(Rect canvasRect, double zoom);
 }
 
 [Transient]
@@ -61,6 +67,18 @@ class SvgService : ISvgService
         }
 
         return tile;
+    }
+
+    public string GetContentSvg(Rect canvasRect, double zoom)
+    {
+        using var model = modelMgr.UseModel();
+        if (model.Root.Children.Count == 0 || canvasRect.Width <= 0 || canvasRect.Height <= 0 || zoom <= 0)
+            return "";
+
+        var offset = new Pos(-canvasRect.X / zoom, -canvasRect.Y / zoom);
+        var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
+        var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None);
+        return RenderNodeContent(model.Root, context);
     }
 
     static Tile CreateModelTile(IModel model, TileKey tileKey)
