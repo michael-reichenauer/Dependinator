@@ -189,9 +189,22 @@ public class TypeParserTests(RoslynFixture fixture)
 
         var typeToBaseLink = items.Link<SourceTestType, SourceTestBaseType>(null, null);
         Assert.Equal(NodeType.Type, typeToBaseLink.Properties.TargetType);
+        Assert.True(typeToBaseLink.Properties.IsInheritance);
 
         var typeToInterfaceLink = items.Link<SourceTestType, ISourceTestInterface>(null, null);
         Assert.Equal(NodeType.Type, typeToInterfaceLink.Properties.TargetType);
+        Assert.True(typeToInterfaceLink.Properties.IsInheritance);
+    }
+
+    [Fact]
+    public void ParseType_ShouldNotMarkUsageLinksAsInheritance()
+    {
+        // A field of the base type is a usage of it, not inheritance
+        var fieldLink = items.Link<SourceTestType, SourceTestBaseType>(nameof(SourceTestType.field2), null);
+        Assert.NotEqual(true, fieldLink.Properties.IsInheritance);
+
+        var propertyLink = items.Link<SourceTestType, ISourceTestInterface>(nameof(SourceTestType.Property2), null);
+        Assert.NotEqual(true, propertyLink.Properties.IsInheritance);
     }
 
     [Fact]

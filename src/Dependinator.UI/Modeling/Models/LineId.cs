@@ -14,5 +14,8 @@ public record LineId : Id
     public static LineId FromDirect(string sourceName, string targetName) =>
         new(Id.ToId($"direct:{sourceName}=>{targetName}"));
 
+    public static LineId FromInheritance(string sourceName, string targetName) =>
+        new(Id.ToId($"inherit:{sourceName}=>{targetName}"));
+
     public static LineId FromId(string id) => new(id);
 }

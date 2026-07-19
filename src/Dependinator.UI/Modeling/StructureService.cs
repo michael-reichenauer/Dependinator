@@ -61,12 +61,26 @@ class StructureService(ILineService linesService) : IStructureService
     public void AddOrUpdateLink(IModel model, Parsing.Link parsedLink)
     {
         var linkId = new LinkId(parsedLink.Source, parsedLink.Target);
+        var isParsedInheritance = parsedLink.Properties.IsInheritance == true;
 
         if (model.Links.TryGetValue(linkId, out var link))
         {
+            // Within one parse (same stamp) any inheritance link wins over usage links (parse
+            // order is not guaranteed); a new parse (new stamp) resets, so a link downgrades
+            // when the code no longer inherits but still references the target.
+            var isFirstInParse = link.UpdateStamp != model.UpdateStamp;
+            var isInheritance = isParsedInheritance || (!isFirstInParse && link.IsInheritance);
+
             link.UpdateStamp = model.UpdateStamp;
             link.Source.UpdateStamp = model.UpdateStamp;
             link.Target.UpdateStamp = model.UpdateStamp;
+
+            if (link.IsInheritance != isInheritance)
+            { // Kind changed, rebuild the link's lines since inheritance links use separate lines
+                model.RemoveLink(link);
+                link.IsInheritance = isInheritance;
+                AddLink(model, link);
+            }
             return;
         }
 
@@ -78,6 +92,7 @@ class StructureService(ILineService linesService) : IStructureService
             SetTargetTypeFromLink(target, targetType);
 
         link = new Models.Link(source, target);
+        link.IsInheritance = isParsedInheritance;
         link.UpdateStamp = model.UpdateStamp;
 
         AddLink(model, link);
@@ -207,6 +222,7 @@ class StructureService(ILineService linesService) : IStructureService
         var link = new Models.Link(source, target);
         link.UpdateStamp = model.UpdateStamp;
         link.IsManual = linkDto.IsManual;
+        link.IsInheritance = linkDto.IsInheritance;
 
         AddLink(model, link);
     }
@@ -232,7 +248,10 @@ class StructureService(ILineService linesService) : IStructureService
 
         foreach (var targetName in CandidateTargetNames(source, lineDescription.Target))
         {
-            if (model.Lines.TryGetValue(LineId.From(lineDescription.Source, targetName), out var line))
+            if (
+                model.Lines.TryGetValue(LineId.From(lineDescription.Source, targetName), out var line)
+                || model.Lines.TryGetValue(LineId.FromInheritance(lineDescription.Source, targetName), out line)
+            )
             {
                 line.SetDescription(lineDescription.Text, model.UpdateStamp);
                 return;

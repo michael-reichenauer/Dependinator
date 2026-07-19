@@ -14,7 +14,8 @@ class Link : IItem
         this.Id = new LinkId(Source.Name, Target.Name);
     }
 
-    public LinkDto ToDto() => new(Source.Name, Target.Name, Target.Type.ToString()) { IsManual = IsManual };
+    public LinkDto ToDto() =>
+        new(Source.Name, Target.Name, Target.Type.ToString()) { IsManual = IsManual, IsInheritance = IsInheritance };
 
     public LinkId Id { get; }
     public Node Source { get; }
@@ -23,6 +24,9 @@ class Link : IItem
 
     // A manually added link (drawn by the user), exempt from stale-link removal on re-parse.
     public bool IsManual { get; set; }
+
+    // The source type inherits/implements the target type (UML generalization/realization).
+    public bool IsInheritance { get; set; }
 
     public void AddLine(Line line)
     {

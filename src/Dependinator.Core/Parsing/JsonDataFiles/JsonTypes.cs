@@ -45,6 +45,7 @@ public static class JsonTypes
     {
         public string? Description { get; set; }
         public string? TargetType { get; set; } = "";
+        public bool? IsInheritance { get; set; }
     }
 
     // Link between two nodes

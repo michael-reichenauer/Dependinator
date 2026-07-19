@@ -28,6 +28,22 @@ public class NavigateTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task NavigateToInterface_ShouldShowInheritanceLineWithHollowArrow()
+    {
+        await App.GotoMainPageAsync();
+
+        // Navigate to an interface in the demo model; classes implementing it render
+        // inheritance lines (separate from usage lines) ending in the hollow UML arrow
+        // head (the "arrow-inheritance" marker) at the interface.
+        SearchDialog search = await App.OpenSearchViaHotkeyAsync();
+        await search.FillAsync("ILineService");
+        await search.Results.First.ClickAsync();
+
+        await Expect(App.NodeLabel("ILineService")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#svgcanvas polyline[marker-end*='arrow-inheritance']").First).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
     public async Task Search_ShouldMoveSelectionWithArrowKeysAndNavigateOnEnter()
     {
         await App.GotoMainPageAsync();

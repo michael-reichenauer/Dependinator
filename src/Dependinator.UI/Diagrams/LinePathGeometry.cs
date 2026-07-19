@@ -51,7 +51,10 @@ static class LinePathGeometry
             case LineRelation.ParentToChild:
             {
                 var parent = line.Source;
-                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target);
+                var targetPreference = line.HasInheritanceTargetEnd
+                    ? AnchorPreference.Bottom
+                    : AnchorPreference.Default;
+                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target, targetPreference);
                 endpoints = new LineEndpoints(
                     -parent.ContainerOffset.X / parent.ContainerZoom, // Parent's left edge
                     (parent.Boundary.Height / 2 - parent.ContainerOffset.Y) / parent.ContainerZoom, // Mid height
@@ -64,7 +67,8 @@ static class LinePathGeometry
             case LineRelation.ChildToParent:
             {
                 var parent = line.Target;
-                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source);
+                var sourcePreference = line.HasInheritanceSourceEnd ? AnchorPreference.Top : AnchorPreference.Default;
+                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source, sourcePreference);
                 endpoints = new LineEndpoints(
                     sourceAnchor.X,
                     sourceAnchor.Y,
@@ -76,8 +80,12 @@ static class LinePathGeometry
 
             case LineRelation.Siblings:
             {
-                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source);
-                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target);
+                var sourcePreference = line.HasInheritanceSourceEnd ? AnchorPreference.Top : AnchorPreference.Default;
+                var targetPreference = line.HasInheritanceTargetEnd
+                    ? AnchorPreference.Bottom
+                    : AnchorPreference.Default;
+                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source, sourcePreference);
+                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target, targetPreference);
                 endpoints = new LineEndpoints(sourceAnchor.X, sourceAnchor.Y, targetAnchor.X, targetAnchor.Y);
                 return true;
             }
