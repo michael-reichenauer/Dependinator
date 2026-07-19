@@ -19,10 +19,10 @@ internal class LinkHandler
         return SendLinkAsync(source, target, targetType);
     }
 
-    public async Task AddLinkToTypeAsync(string sourceName, TypeReference targetType)
+    public async Task AddLinkToTypeAsync(string sourceName, TypeReference targetType, bool isInheritance = false)
     {
         if (targetType is GenericInstanceType genericType)
-        {
+        { // Generic arguments are usages, only the link to the generic type itself can be inheritance
             await genericType.GenericArguments.ForEachAsync(argType => AddLinkToTypeAsync(sourceName, argType));
         }
 
@@ -34,7 +34,7 @@ internal class LinkHandler
         if (IsIgnoredTargetName(targetNodeName))
             return;
 
-        await SendLinkAsync(sourceName, targetNodeName, NodeType.Type);
+        await SendLinkAsync(sourceName, targetNodeName, NodeType.Type, isInheritance);
     }
 
     public async Task AddLinkToMemberAsync(string sourceName, IMemberDefinition memberInfo)
@@ -50,9 +50,18 @@ internal class LinkHandler
         await SendLinkAsync(sourceName, targetNodeName, NodeType.MethodMember);
     }
 
-    private async Task SendLinkAsync(string sourceName, string targetName, NodeType targetType)
+    private async Task SendLinkAsync(
+        string sourceName,
+        string targetName,
+        NodeType targetType,
+        bool isInheritance = false
+    )
     {
-        Link dataLink = new Link(sourceName, targetName, new() { TargetType = targetType });
+        Link dataLink = new Link(
+            sourceName,
+            targetName,
+            new() { TargetType = targetType, IsInheritance = isInheritance ? true : null }
+        );
         await items.SendAsync(dataLink);
         LinksCount++;
     }

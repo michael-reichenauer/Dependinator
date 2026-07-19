@@ -18,12 +18,19 @@ class Line : IItem
     double strokeWidth = BaseStrokeWidth;
     bool isHidden;
 
-    public Line(Node source, Node target, bool isDirect = false, LineId? id = null)
+    public Line(Node source, Node target, bool isDirect = false, LineId? id = null, bool isInheritance = false)
     {
         Source = source;
         Target = target;
-        Id = id ?? (isDirect ? LineId.FromDirect(source.Name, target.Name) : LineId.From(source.Name, target.Name));
+        Id =
+            id
+            ?? (
+                isDirect ? LineId.FromDirect(source.Name, target.Name)
+                : isInheritance ? LineId.FromInheritance(source.Name, target.Name)
+                : LineId.From(source.Name, target.Name)
+            );
         IsDirect = isDirect;
+        IsInheritance = isInheritance;
         UpdateStrokeWidth();
     }
 
@@ -33,7 +40,13 @@ class Line : IItem
     public Node Target { get; }
     public bool IsEmpty => links.Count == 0;
     public bool IsDirect { get; }
+    public bool IsInheritance { get; }
     public Node? RenderAncestor { get; set; }
+
+    // An inheritance line segment is only anchored specially (top/bottom middle) at an end that
+    // is a real link endpoint; a shared segment can end at a container boundary at the other end.
+    public bool HasInheritanceSourceEnd => IsInheritance && links.Values.Any(l => l.Source == Source);
+    public bool HasInheritanceTargetEnd => IsInheritance && links.Values.Any(l => l.Target == Target);
 
     public double StrokeWidth => strokeWidth;
     public bool IsSelected { get; internal set; }

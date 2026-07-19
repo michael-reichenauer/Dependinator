@@ -28,6 +28,7 @@ public class SvgExportDocumentTests
         Assert.Contains("id=\"arrow-line\"", svg);
         Assert.Contains("id=\"arrow-hidden\"", svg);
         Assert.Contains("id=\"arrow-direct\"", svg);
+        Assert.Contains("id=\"arrow-inheritance\"", svg);
         Assert.Contains(".linkhandle { display: none; }", svg);
     }
 

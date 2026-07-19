@@ -56,10 +56,10 @@ static class TypeParser
             && baseType.SpecialType != SpecialType.System_Object
             && !IgnoredTypes.IsIgnored(baseType)
         )
-            yield return new Item(null, LinkParser.Parse(fullTypeName, baseType));
+            yield return new Item(null, LinkParser.Parse(fullTypeName, baseType, isInheritance: true));
 
         foreach (var interfaceType in type.Interfaces.Where(it => !IgnoredTypes.IsIgnored(it)))
-            yield return new Item(null, LinkParser.Parse(fullTypeName, interfaceType));
+            yield return new Item(null, LinkParser.Parse(fullTypeName, interfaceType, isInheritance: true));
     }
 
     internal static IEnumerable<Item> ParseTypeMembers(
