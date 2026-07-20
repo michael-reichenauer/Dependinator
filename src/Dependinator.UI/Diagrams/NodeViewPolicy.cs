@@ -23,4 +23,14 @@ static class NodeViewPolicy
         var nodeZoom = 1 / (node.GetZoom() * modelZoom);
         return !IsTooLargeToBeSeen(nodeZoom) && !IsShowIcon(node.Type, nodeZoom);
     }
+
+    // The node's children are rendered at this zoom: pass-through nodes always show children,
+    // icons and members never do, and containers do even when zoomed in past their own chrome.
+    public static bool IsChildrenShown(Node node, double modelZoom)
+    {
+        if (node.IsPassThrough)
+            return true;
+        var nodeZoom = 1 / (node.GetZoom() * modelZoom);
+        return !IsShowIcon(node.Type, nodeZoom);
+    }
 }

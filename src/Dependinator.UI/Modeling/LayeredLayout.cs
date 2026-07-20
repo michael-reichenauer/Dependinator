@@ -49,7 +49,7 @@ static class LayeredLayout
         {
             foreach (var line in graphNode.Node.SourceLines)
             {
-                if (line.IsDirect || line.IsEmpty)
+                if (line.IsDirect || line.IsCousin || line.IsEmpty)
                     continue;
                 var weight = Math.Max(1, line.Links.Count);
                 if (line.Target == parent)
@@ -68,7 +68,7 @@ static class LayeredLayout
 
             foreach (var line in graphNode.Node.TargetLines)
             {
-                if (line.IsDirect || line.IsEmpty)
+                if (line.IsDirect || line.IsCousin || line.IsEmpty)
                     continue;
                 if (line.Source == parent)
                     graphNode.ExternalIn += Math.Max(1, line.Links.Count);

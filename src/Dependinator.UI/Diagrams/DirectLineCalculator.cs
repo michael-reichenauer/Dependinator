@@ -5,15 +5,23 @@ namespace Dependinator.UI.Diagrams;
 
 static class DirectLineCalculator
 {
-    public static (Pos Source, Pos Target) GetAnchorsRelativeToAncestor(Node ancestor, Node source, Node target)
+    public static (Pos Source, Pos Target) GetAnchorsRelativeToAncestor(
+        Node ancestor,
+        Node source,
+        Node target,
+        AnchorPreference? sourcePreferenceOverride = null,
+        AnchorPreference? targetPreferenceOverride = null
+    )
     {
         var (sourceCenter, _) = source.GetCenterPosAndZoom();
         var (targetCenter, _) = target.GetCenterPosAndZoom();
 
         var useRightSide = sourceCenter.X <= targetCenter.X;
 
-        var sourcePreference = useRightSide ? AnchorPreference.Right : AnchorPreference.Left;
-        var targetPreference = useRightSide ? AnchorPreference.Left : AnchorPreference.Right;
+        var sourcePreference =
+            sourcePreferenceOverride ?? (useRightSide ? AnchorPreference.Right : AnchorPreference.Left);
+        var targetPreference =
+            targetPreferenceOverride ?? (useRightSide ? AnchorPreference.Left : AnchorPreference.Right);
 
         var sourceAnchorGlobal = GetAnchorGlobal(source, LineAnchorRole.Source, sourcePreference);
         var targetAnchorGlobal = GetAnchorGlobal(target, LineAnchorRole.Target, targetPreference);

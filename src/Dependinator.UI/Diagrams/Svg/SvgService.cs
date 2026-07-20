@@ -75,6 +75,8 @@ class SvgService : ISvgService
         if (model.Root.Children.Count == 0 || canvasRect.Width <= 0 || canvasRect.Height <= 0 || zoom <= 0)
             return "";
 
+        RepLineService.Sync(model, zoom);
+
         var offset = new Pos(-canvasRect.X / zoom, -canvasRect.Y / zoom);
         var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
         var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None);
@@ -87,6 +89,8 @@ class SvgService : ISvgService
         var tileWithMargin = tileKey.GetTileRectWithMargin();
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
+
+        RepLineService.Sync(model, tileZoom);
 
         var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None);
         var rootContentSvg = RenderNodeContent(model.Root, rootContext);
@@ -120,7 +124,10 @@ class SvgService : ISvgService
             .Children.Select(child => RenderNode(child, childrenContext))
             .Where(svg => svg.Length > 0);
         var linesSvg = RenderNodeLines(node, childrenCanvasOffset, context.Zoom, childrenZoom);
-        var directLinesSvg = RenderDirectNodeLines(node, childrenCanvasOffset, childrenZoom);
+
+        // Cousin and direct lines draw above the child nodes: they cross into containers whose
+        // opaque fill would otherwise cover them.
+        var directLinesSvg = RenderDirectNodeLines(node, childrenCanvasOffset, childrenZoom, context);
 
         return linesSvg.Concat(childNodeSvg).Concat(directLinesSvg).Join("\n");
     }
@@ -207,6 +214,8 @@ class SvgService : ISvgService
         var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
         foreach (var line in parentToChildrenLines)
         {
+            if (!line.IsActiveRep)
+                continue; // Only current representative lines are drawn (see RepLineService)
             if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
             if (line.Target.IsPassThrough)
@@ -219,6 +228,8 @@ class SvgService : ISvgService
         {
             foreach (var line in child.SourceLines)
             {
+                if (!line.IsActiveRep)
+                    continue; // Only current representative lines are drawn (see RepLineService)
                 if (line.Target.Parent == line.Source)
                     continue;
                 if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
@@ -230,17 +241,70 @@ class SvgService : ISvgService
         }
     }
 
-    static IEnumerable<string> RenderDirectNodeLines(Node node, Pos nodeCanvasPos, double childrenZoom)
+    static IEnumerable<string> RenderDirectNodeLines(
+        Node node,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        RenderContext context
+    )
     {
         foreach (var directLine in node.DirectLines)
         {
+            if (directLine.IsCousin && !directLine.IsActiveRep)
+                continue; // An inactive cousin line kept only for its user waypoints/description
             if (directLine.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
+            if (!IsLineInTileBounds(directLine, nodeCanvasPos, childrenZoom, context))
+                continue; // Many cousin lines exist model-wide; only emit those touching this tile
             var svg = LineSvg.GetDirectLineSvg(directLine, node, nodeCanvasPos, childrenZoom);
             if (svg.Length > 0)
                 yield return svg;
         }
     }
+
+    // How far outside the tile a cousin line's far endpoint may lie (in tile widths/heights)
+    // before the line is dropped. A line to a target many screens away conveys nothing but a
+    // direction, and at deep zoom every visible node has such lines to all its remote rep
+    // targets — rendering them all makes tiles enormous. The old chain rendering likewise hid
+    // container-boundary lines once the container was zoomed past (LineSvg.ShouldRender).
+    const double NeighborhoodFactor = 3;
+
+    // Whether the line's rendered endpoints make it worth drawing in this tile: at least one
+    // endpoint inside the tile, and the other within the tile's extended neighborhood. Lines
+    // that merely pass over the view (both ends invisible) are noise the viewer cannot
+    // interpret. The canvas shows one viewport-sized tile, so this is a per-view decision.
+    // Rendered points are canvas coordinates at this node's children level; tile coordinates
+    // are offset by the context's TilePosition (see CalculateNodeGeometry, which relates
+    // canvasRect and tileRect the same way).
+    static bool IsLineInTileBounds(Line line, Pos nodeCanvasPos, double childrenZoom, RenderContext context)
+    {
+        const double Margin = 15; // Stroke + hover hit-target width
+        IReadOnlyList<Pos> points = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
+        if (points.Count == 0)
+            return false;
+
+        var bounds = new Rect(
+            context.TileBounds.X - context.TilePosition.X - Margin,
+            context.TileBounds.Y - context.TilePosition.Y - Margin,
+            context.TileBounds.Width + 2 * Margin,
+            context.TileBounds.Height + 2 * Margin
+        );
+        var neighborhood = new Rect(
+            bounds.X - NeighborhoodFactor * bounds.Width,
+            bounds.Y - NeighborhoodFactor * bounds.Height,
+            (1 + 2 * NeighborhoodFactor) * bounds.Width,
+            (1 + 2 * NeighborhoodFactor) * bounds.Height
+        );
+
+        Pos start = points[0];
+        Pos end = points[^1];
+        if (!IsPointInRect(start, bounds) && !IsPointInRect(end, bounds))
+            return false;
+        return IsPointInRect(start, neighborhood) && IsPointInRect(end, neighborhood);
+    }
+
+    static bool IsPointInRect(Pos point, Rect rect) =>
+        point.X >= rect.X && point.X <= rect.X + rect.Width && point.Y >= rect.Y && point.Y <= rect.Y + rect.Height;
 
     readonly record struct RenderContext(Pos CanvasOffset, double Zoom, Rect TileBounds, Pos TilePosition)
     {

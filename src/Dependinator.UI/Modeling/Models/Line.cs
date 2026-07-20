@@ -43,6 +43,16 @@ class Line : IItem
     public bool IsInheritance { get; }
     public Node? RenderAncestor { get; set; }
 
+    // A cousin line crosses container boundaries between the "deepest visible representatives"
+    // of its links' endpoints (see RepLineService); like a direct line, it is rendered inside
+    // its RenderAncestor's coordinate space.
+    public bool IsCousin => RenderAncestor is not null && !IsDirect;
+
+    // Transient per-zoom render state: true when this line is the current representative line
+    // for at least one link at the most recently synced zoom (set by RepLineService.Sync);
+    // only active lines are rendered. Not persisted.
+    public bool IsActiveRep { get; set; }
+
     // An inheritance line segment is only anchored specially (top/bottom middle) at an end that
     // is a real link endpoint; a shared segment can end at a container boundary at the other end.
     public bool HasInheritanceSourceEnd => IsInheritance && links.Values.Any(l => l.Source == Source);
@@ -72,6 +82,8 @@ class Line : IItem
             UpdateStrokeWidth();
         }
     }
+
+    public bool Contains(Link link) => links.ContainsKey(link.Id);
 
     public void Add(Link link)
     {

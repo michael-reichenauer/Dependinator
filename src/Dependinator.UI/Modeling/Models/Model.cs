@@ -15,6 +15,11 @@ interface IModel : IDisposable
     double Zoom { get; set; }
     Pos Offset { get; set; }
 
+    // Monotonic counter of structural changes (nodes/links added or removed); lets
+    // consumers detect that cached, structure-derived state (e.g. representative lines)
+    // is still valid. Line changes do not count: lines are derived state themselves.
+    int StructureVersion { get; }
+
     IReadOnlyDictionary<NodeId, Node> Nodes { get; }
     IReadOnlyDictionary<LinkId, Link> Links { get; }
     IReadOnlyDictionary<LineId, Line> Lines { get; }
@@ -52,6 +57,8 @@ class Model : IModel
     public Pos Offset { get; set; } = Pos.None;
 
     public Node Root { get; private set; } = null!;
+
+    public int StructureVersion { get; private set; }
 
     Dictionary<NodeId, Node> nodes { get; } = [];
     Dictionary<LinkId, Link> links { get; } = [];
@@ -98,6 +105,7 @@ class Model : IModel
         if (nodes.ContainsKey(node.Id))
             return;
         nodes[node.Id] = node;
+        StructureVersion++;
     }
 
     public void TryAddLink(Link link)
@@ -105,6 +113,7 @@ class Model : IModel
         if (links.ContainsKey(link.Id))
             return;
         links[link.Id] = link;
+        StructureVersion++;
     }
 
     public void TryAddLine(Line line)
@@ -116,6 +125,7 @@ class Model : IModel
 
     public void Clear()
     {
+        StructureVersion++;
         nodes.Clear();
         links.Clear();
         lines.Clear();
@@ -129,6 +139,7 @@ class Model : IModel
 
     public void RemoveNode(Node node)
     {
+        StructureVersion++;
         var parent = node.Parent;
         nodes.Remove(node.Id);
         parent?.RemoveChild(node);
@@ -136,6 +147,7 @@ class Model : IModel
 
     public void RemoveLink(Link link)
     {
+        StructureVersion++;
         links.Remove(link.Id);
 
         foreach (var line in link.Lines)
