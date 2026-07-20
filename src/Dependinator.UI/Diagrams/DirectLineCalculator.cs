@@ -13,23 +13,53 @@ static class DirectLineCalculator
         AnchorPreference? targetPreferenceOverride = null
     )
     {
-        var (sourceCenter, _) = source.GetCenterPosAndZoom();
-        var (targetCenter, _) = target.GetCenterPosAndZoom();
+        var (sourcePreference, targetPreference) = ResolveAnchorSides(source, target);
 
-        var useRightSide = sourceCenter.X <= targetCenter.X;
-
-        var sourcePreference =
-            sourcePreferenceOverride ?? (useRightSide ? AnchorPreference.Right : AnchorPreference.Left);
-        var targetPreference =
-            targetPreferenceOverride ?? (useRightSide ? AnchorPreference.Left : AnchorPreference.Right);
-
-        var sourceAnchorGlobal = GetAnchorGlobal(source, LineAnchorRole.Source, sourcePreference);
-        var targetAnchorGlobal = GetAnchorGlobal(target, LineAnchorRole.Target, targetPreference);
+        var sourceAnchorGlobal = GetAnchorGlobal(
+            source,
+            LineAnchorRole.Source,
+            sourcePreferenceOverride ?? sourcePreference
+        );
+        var targetAnchorGlobal = GetAnchorGlobal(
+            target,
+            LineAnchorRole.Target,
+            targetPreferenceOverride ?? targetPreference
+        );
 
         var sourceLocal = ToAncestorLocal(ancestor, sourceAnchorGlobal);
         var targetLocal = ToAncestorLocal(ancestor, targetAnchorGlobal);
 
         return (sourceLocal, targetLocal);
+    }
+
+    // Which side of each node the line attaches to. When one node contains the other
+    // (an ancestor→descendant line, e.g. a line split into a container's own child), the line
+    // enters/leaves the descendant from the same side as the ordinary parent→child lines —
+    // left when flowing down into a container, right when flowing up out of it — so it lines up
+    // with the other lines at that node. Otherwise the left/right choice follows the two nodes'
+    // horizontal order (their centers), the usual left-to-right dependency flow.
+    static (AnchorPreference Source, AnchorPreference Target) ResolveAnchorSides(Node source, Node target)
+    {
+        if (IsAncestorOf(source, target))
+            return (AnchorPreference.Left, AnchorPreference.Default); // Both left: down into the container
+        if (IsAncestorOf(target, source))
+            return (AnchorPreference.Default, AnchorPreference.Right); // Both right: up out of the container
+
+        var (sourceCenter, _) = source.GetCenterPosAndZoom();
+        var (targetCenter, _) = target.GetCenterPosAndZoom();
+        return sourceCenter.X <= targetCenter.X
+            ? (AnchorPreference.Right, AnchorPreference.Left)
+            : (AnchorPreference.Left, AnchorPreference.Right);
+    }
+
+    static bool IsAncestorOf(Node maybeAncestor, Node node)
+    {
+        for (Node? current = node.Parent; current is not null; current = current.Parent)
+        {
+            if (current == maybeAncestor)
+                return true;
+        }
+        return false;
     }
 
     static Pos GetAnchorGlobal(Node node, LineAnchorRole role, AnchorPreference preference)

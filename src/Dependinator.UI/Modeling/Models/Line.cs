@@ -53,6 +53,15 @@ class Line : IItem
     // only active lines are rendered. Not persisted.
     public bool IsActiveRep { get; set; }
 
+    // Split-line state (transient, never persisted): the user can "split" an aggregated line
+    // one level into its target, temporarily showing dashed direct-style lines to the
+    // target's children instead. SplitParent points from a split line back to the line it was
+    // split from; SplitLines holds a split line's live children; IsSplitSuppressed hides the
+    // parent while all its links are represented by split lines (see DependenciesService).
+    public Line? SplitParent { get; set; }
+    public List<Line> SplitLines { get; } = [];
+    public bool IsSplitSuppressed { get; set; }
+
     // An inheritance line segment is only anchored specially (top/bottom middle) at an end that
     // is a real link endpoint; a shared segment can end at a container boundary at the other end.
     public bool HasInheritanceSourceEnd => IsInheritance && links.Values.Any(l => l.Source == Source);

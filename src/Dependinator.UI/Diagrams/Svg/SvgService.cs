@@ -217,6 +217,8 @@ class SvgService : ISvgService
         var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
         foreach (var line in parentToChildrenLines)
         {
+            if (line.IsSplitSuppressed)
+                continue; // Temporarily replaced by its user-split lines (see DependenciesService)
             if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
             if (line.Target.IsPassThrough)
@@ -231,6 +233,8 @@ class SvgService : ISvgService
             {
                 if (!line.IsActiveRep)
                     continue; // Only current representative lines are drawn (see RepLineService)
+                if (line.IsSplitSuppressed)
+                    continue; // Temporarily replaced by its user-split lines (see DependenciesService)
                 if (line.Target.Parent == line.Source)
                     continue;
                 if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
@@ -253,6 +257,8 @@ class SvgService : ISvgService
         {
             if (directLine.IsCousin && !directLine.IsActiveRep)
                 continue; // An inactive cousin line kept only for its user waypoints/description
+            if (directLine.IsSplitSuppressed)
+                continue; // Temporarily replaced by its user-split lines (see DependenciesService)
             if (directLine.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
             if (!IsLineInTileBounds(directLine, nodeCanvasPos, childrenZoom, context))

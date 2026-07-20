@@ -37,6 +37,13 @@ static class RepLineService
     // stale in that edge case until the next structure change or expansion flip.
     static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IModel, SyncState> lastSync = new();
 
+    // The zoom the model was last rendered at (the tile zoom passed to the most recent Sync);
+    // used by interactions that must reason about the same expansion state that is on screen
+    // (e.g. splitting a line to the deepest visible level). Falls back to the model's view zoom
+    // before the first Sync.
+    public static double GetRenderedZoom(IModel model) =>
+        lastSync.TryGetValue(model, out var state) ? state.Zoom : model.Zoom;
+
     public static void Sync(IModel model, double zoom)
     {
         if (lastSync.TryGetValue(model, out var state) && state.StructureVersion == model.StructureVersion)

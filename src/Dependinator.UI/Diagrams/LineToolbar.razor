@@ -55,6 +55,13 @@
                     </MudTooltip>
                 }
             }
+            @if (CanSplitSelectedLine)
+            {
+                <MudTooltip Text="Split line one level into target">
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CallSplit" OnClick="SplitLine"
+                                   data-testid="line-split" />
+                </MudTooltip>
+            }
             @if (interactionService.CanShowLineSource)
             {
                 <MudTooltip Text="Show source node source code">
@@ -114,6 +121,18 @@
             return;
         var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
         dependenciesService.HideDirectLine(lineId);
+    }
+
+    bool CanSplitSelectedLine =>
+        selectionService.SelectedId.IsLine
+        && dependenciesService.CanSplitLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
+
+    void SplitLine()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
+        dependenciesService.SplitLine(lineId);
     }
     void PanToSource()
     {

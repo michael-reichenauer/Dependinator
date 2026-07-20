@@ -168,6 +168,24 @@ class Model : IModel
     {
         lines.Remove(line.Id);
         line.RenderAncestor?.RemoveDirectLine(line);
+
+        // Keep the split bookkeeping consistent: a removed split line releases its parent
+        // (restoring it when it was the last one), and a removed parent orphans its split
+        // lines (they stay visible until hidden individually).
+        if (line.SplitParent is not null)
+        {
+            line.SplitParent.SplitLines.Remove(line);
+            if (line.SplitParent.SplitLines.Count == 0)
+                line.SplitParent.IsSplitSuppressed = false;
+            line.SplitParent = null;
+        }
+        foreach (var splitLine in line.SplitLines)
+        {
+            splitLine.SplitParent = null;
+        }
+        line.SplitLines.Clear();
+        line.IsSplitSuppressed = false;
+
         line.Target.Remove(line);
         line.Source.Remove(line);
     }
