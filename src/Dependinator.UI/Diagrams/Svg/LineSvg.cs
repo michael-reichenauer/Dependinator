@@ -75,6 +75,7 @@ static class LineSvg
         var color =
             line.IsDirect ? DColors.DirectLine
             : line.IsHidden ? DColors.LineHidden
+            : line.IsCousin ? DColors.CousinLine
             : DColors.Line;
 
         // The hollow inheritance arrow head is only drawn where the line enters the real
@@ -85,6 +86,7 @@ static class LineSvg
             line.IsDirect ? "arrow-direct"
             : line.IsHidden ? "arrow-hidden"
             : isInheritanceHead ? "arrow-inheritance"
+            : line.IsCousin ? "arrow-cousin"
             : "arrow-line";
 
         var strokeWidth = line.StrokeWidth;

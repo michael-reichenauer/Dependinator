@@ -3,17 +3,22 @@ using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Diagrams;
 
-// Resolves which lines are rendered at a given zoom: each link is drawn as one line between
-// the "deepest visible representative" of its source and target. A representative walks down
-// from the top-level sibling under the link's common ancestor toward the endpoint, descending
-// while nodes show their children, and stops at the first icon/member node (or the endpoint
-// itself).
+// Resolves which lines are rendered at a given zoom: each link is drawn as one line from the
+// "deepest visible representative" of its source straight to the target-side TOP sibling
+// under the link's common ancestor (the target container). The source representative walks
+// down from the source-side top sibling toward the endpoint, descending while nodes show
+// their children, and stops at the first icon/member node (or the endpoint itself). The
+// target side never descends: inside the target container the link fans out via the ordinary
+// parent-to-child chain segments (rendered ungated, see SvgService.RenderNodeLines), exactly
+// like the original aggregation. This keeps crossing-line counts at one per source child and
+// target container instead of source-child x target-child pairs.
 //
 // Top-level rep pairs coincide with the aggregated sibling chain lines built by LineService
 // (same LineId), so those Line objects are reused with their waypoints and descriptions.
 // Deeper pairs cross container boundaries ("cousins") and are materialized here as lines
 // rendered inside the common ancestor, like direct lines. The chain lines stay in the model
-// as layout and dependency-explorer input, but only lines flagged IsActiveRep are rendered.
+// as layout and dependency-explorer input; sibling and child-to-parent chain segments render
+// only when flagged IsActiveRep.
 //
 // Sync runs on every tile creation while the model lock is held, so the per-link work is
 // kept allocation-free: ancestor paths go into two reused buffers and the common ancestor
@@ -107,7 +112,7 @@ static class RepLineService
                 common++;
 
             var repSource = GetRepresentative(sourcePath, common, zoom, isChildrenShownCache);
-            var repTarget = GetRepresentative(targetPath, common, zoom, isChildrenShownCache);
+            var repTarget = targetPath[targetPath.Count - common - 1]; // Target top sibling; never descends
             if (repSource == repTarget)
                 continue;
 

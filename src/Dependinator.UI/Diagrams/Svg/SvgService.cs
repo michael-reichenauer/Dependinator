@@ -211,11 +211,12 @@ class SvgService : ISvgService
 
     static IEnumerable<string> RenderNodeLines(Node node, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
     {
+        // Parent-to-child segments are the fan-out of incoming links inside this container
+        // (and direct parent-to-child links); they always render, as in the original
+        // aggregation — crossing rep lines end at the container, and these continue inside.
         var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
         foreach (var line in parentToChildrenLines)
         {
-            if (!line.IsActiveRep)
-                continue; // Only current representative lines are drawn (see RepLineService)
             if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
             if (line.Target.IsPassThrough)

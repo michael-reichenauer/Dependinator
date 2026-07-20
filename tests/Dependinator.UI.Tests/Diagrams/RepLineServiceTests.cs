@@ -8,6 +8,10 @@ namespace Dependinator.UI.Tests.Diagrams;
 // Zoom levels used in tests (top-level nodes have GetZoom() == 1, their children 8 with the
 // default ContainerZoom of 1/8): at IconZoom (1.0) top-level nodes render as icons; at
 // ContainerZoom (0.1) top-level nodes are expanded containers and their children are icons.
+//
+// Crossing lines go from the deepest visible SOURCE child to the TARGET-side top container;
+// the target side never descends (the fan-out inside the target renders via the ordinary
+// parent-to-child chain segments, which are not gated by IsActiveRep).
 public class RepLineServiceTests
 {
     const double IconZoom = 1.0;
@@ -28,11 +32,10 @@ public class RepLineServiceTests
         Assert.Equal(3, model.Lines.Count); // No cousin lines added
         Assert.True(GetLine(model, "ParentA", "ParentB").IsActiveRep);
         Assert.False(GetLine(model, "Source", "ParentA").IsActiveRep);
-        Assert.False(GetLine(model, "ParentB", "Target").IsActiveRep);
     }
 
     [Fact]
-    public void Sync_BothSidesExpanded_ShouldCreateCousinLineAndDeactivateChain()
+    public void Sync_SourceSideExpanded_ShouldCreateChildToContainerLine()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -43,21 +46,23 @@ public class RepLineServiceTests
 
         RepLineService.Sync(model, ContainerZoom);
 
-        var cousin = GetLine(model, "Source", "Target");
+        // The crossing line goes from the source child to the target CONTAINER, not to the
+        // target child; the split inside ParentB stays with the chain segments.
+        var cousin = GetLine(model, "Source", "ParentB");
         Assert.True(cousin.IsCousin);
         Assert.True(cousin.IsActiveRep);
         Assert.Equal(model.Root, cousin.RenderAncestor);
         Assert.Contains(cousin, model.Root.DirectLines);
         Assert.Single(cousin.Links);
         Assert.Contains(cousin, link.Lines);
+        Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
 
         Assert.False(GetLine(model, "ParentA", "ParentB").IsActiveRep);
         Assert.False(GetLine(model, "Source", "ParentA").IsActiveRep);
-        Assert.False(GetLine(model, "ParentB", "Target").IsActiveRep);
     }
 
     [Fact]
-    public void Sync_LinksFromWithinCollapsedNodes_ShouldAggregateOnOneCousinLine()
+    public void Sync_LinksFromWithinCollapsedNode_ShouldAggregatePerTargetContainer()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -71,22 +76,24 @@ public class RepLineServiceTests
         AddLink(model, source1, target1);
         AddLink(model, source2, target2);
 
-        // ParentA/ParentB expanded, ChildA/ChildB icons: both deep links share one cousin line
+        // ParentA/ParentB expanded, ChildA an icon: both deep links share one crossing line
+        // from ChildA to the target container ParentB
         RepLineService.Sync(model, ContainerZoom);
 
-        var cousin = GetLine(model, "ChildA", "ChildB");
+        var cousin = GetLine(model, "ChildA", "ParentB");
         Assert.True(cousin.IsCousin);
         Assert.True(cousin.IsActiveRep);
         Assert.Equal(2, cousin.Links.Count);
     }
 
     [Fact]
-    public void Sync_OnlyOneSideExpanded_ShouldCreateHalfCousinLine()
+    public void Sync_ExpandedSourceChild_ShouldDescendToDeepestVisibleSource()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
         var parentB = AddNode(model, "ParentB", model.Root);
-        // ParentA renders its children larger, so ChildA is still expanded when ChildB is an icon
+        // ParentA renders its children larger, so ChildA is still expanded when top-level
+        // containers are; the walk descends through it to Source
         parentA.ContainerZoom = 1.0 / 2;
         var childA = AddNode(model, "ChildA", parentA);
         var childB = AddNode(model, "ChildB", parentB);
@@ -96,15 +103,14 @@ public class RepLineServiceTests
 
         RepLineService.Sync(model, ContainerZoom);
 
-        // Source side descends through expanded ChildA to Source; target side stops at ChildB
-        var cousin = GetLine(model, "Source", "ChildB");
+        var cousin = GetLine(model, "Source", "ParentB");
         Assert.True(cousin.IsCousin);
         Assert.True(cousin.IsActiveRep);
         Assert.Equal(model.Root, cousin.RenderAncestor);
     }
 
     [Fact]
-    public void Sync_InheritanceLink_ShouldOnlyBeInheritanceLineWhenRepsAreEndpoints()
+    public void Sync_InheritanceLink_ShouldOnlyBeInheritanceLineWhenSourceRepIsEndpoint()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -118,12 +124,13 @@ public class RepLineServiceTests
         Assert.True(GetLine(model, "ParentA", "ParentB").IsActiveRep);
         Assert.False(model.Lines.ContainsKey(LineId.FromInheritance("ParentA", "ParentB")));
 
-        // Expanded: reps are the real endpoints, so the cousin line is an inheritance line
+        // Expanded: the source rep is the real subtype, so the crossing line is inheritance
+        // styled at the source end; the target end is the container, not the supertype
         RepLineService.Sync(model, ContainerZoom);
-        Assert.True(model.Lines.TryGetValue(LineId.FromInheritance("Source", "Target"), out var cousin));
+        Assert.True(model.Lines.TryGetValue(LineId.FromInheritance("Source", "ParentB"), out var cousin));
         Assert.True(cousin!.IsInheritance);
         Assert.True(cousin.HasInheritanceSourceEnd);
-        Assert.True(cousin.HasInheritanceTargetEnd);
+        Assert.False(cousin.HasInheritanceTargetEnd);
         Assert.True(cousin.IsActiveRep);
     }
 
@@ -138,7 +145,7 @@ public class RepLineServiceTests
         AddLink(model, source, target);
 
         RepLineService.Sync(model, ContainerZoom);
-        var cousin = GetLine(model, "Source", "Target");
+        var cousin = GetLine(model, "Source", "ParentB");
 
         // The cousin line is kept (invisible) for cheap reactivation, only the flags flip
         RepLineService.Sync(model, IconZoom);
@@ -148,7 +155,7 @@ public class RepLineServiceTests
 
         // Zooming back in reuses the kept line instead of creating a new one
         RepLineService.Sync(model, ContainerZoom);
-        Assert.Same(cousin, GetLine(model, "Source", "Target"));
+        Assert.Same(cousin, GetLine(model, "Source", "ParentB"));
         Assert.True(cousin.IsActiveRep);
         Assert.False(GetLine(model, "ParentA", "ParentB").IsActiveRep);
         Assert.Single(cousin.Links);
@@ -165,7 +172,7 @@ public class RepLineServiceTests
         var link = AddLink(model, source, target);
 
         RepLineService.Sync(model, ContainerZoom);
-        var cousin = GetLine(model, "Source", "Target");
+        var cousin = GetLine(model, "Source", "ParentB");
 
         model.RemoveLink(link);
 
@@ -205,11 +212,11 @@ public class RepLineServiceTests
 
         RepLineService.Sync(model, ContainerZoom);
 
-        Assert.True(GetLine(model, "Source", "Target").IsHidden);
+        Assert.True(GetLine(model, "Source", "ParentB").IsHidden);
     }
 
     [Fact]
-    public void Sync_PassThroughNode_ShouldNeverBeRepresentative()
+    public void Sync_PassThroughNode_ShouldNeverBeSourceRepresentative()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -224,8 +231,8 @@ public class RepLineServiceTests
         // children, so the walk descends to Source
         RepLineService.Sync(model, ContainerZoom);
 
-        Assert.True(GetLine(model, "Source", "Target").IsActiveRep);
-        Assert.False(model.Lines.ContainsKey(LineId.From("PassThrough", "Target")));
+        Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.False(model.Lines.ContainsKey(LineId.From("PassThrough", "ParentB")));
     }
 
     static IModel NewModel() => new ModelMgr(new StateMgr()).UseModel();

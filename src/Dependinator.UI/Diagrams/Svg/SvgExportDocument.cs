@@ -99,6 +99,9 @@ static class SvgExportDocument
             <marker id="arrow-direct" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
                 <polygon points="0 0, 7 3, 0 6" fill="{DColors.DirectLine}" />
             </marker>
+            <marker id="arrow-cousin" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 7 3, 0 6" fill="{DColors.CousinLine}" />
+            </marker>
             <marker id="arrow-inheritance" markerWidth="15" markerHeight="12" refX="0" refY="6" orient="auto">
                 <polygon points="0.5 0.5, 14.5 6, 0.5 11.5" fill="none" stroke="{DColors.Line}" stroke-width="1" />
             </marker>
