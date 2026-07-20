@@ -29,6 +29,8 @@ interface IDependenciesService
     void HideDirectLine(LineId lineId);
     bool CanSplitLine(LineId lineId);
     void SplitLine(LineId lineId);
+    bool CanSplitLineSource(LineId lineId);
+    void SplitLineSource(LineId lineId);
     void ShowReferences();
     void ShowDependencies();
     void Close();
@@ -133,44 +135,68 @@ class DependenciesService(
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public bool CanSplitLine(LineId lineId)
+    // Which end of a line a split fans out: Target reveals more targets (fixing the source),
+    // Source reveals more sources (fixing the target).
+    enum SplitSide
+    {
+        Source,
+        Target,
+    }
+
+    public bool CanSplitLine(LineId lineId) => CanSplit(lineId, SplitSide.Target);
+
+    public bool CanSplitLineSource(LineId lineId) => CanSplit(lineId, SplitSide.Source);
+
+    public void SplitLine(LineId lineId) => Split(lineId, SplitSide.Target);
+
+    public void SplitLineSource(LineId lineId) => Split(lineId, SplitSide.Source);
+
+    bool CanSplit(LineId lineId, SplitSide side)
     {
         using var model = modelMgr.UseModel();
         if (!model.Lines.TryGetValue(lineId, out var line))
             return false;
-        return GetSplitGroups(line, RepLineService.GetRenderedZoom(model)).Count > 0;
+        return GetSplitGroups(line, side, RepLineService.GetRenderedZoom(model)).Count > 0;
     }
 
-    // Splits an aggregated line into its target down to the deepest currently-visible level:
-    // for each distinct visible representative descendant of the target that the line's links
-    // continue into, a dashed direct-style line from the same source to that node is shown
-    // (carrying those links, so it can be split again after zooming in deeper). Splitting
+    // Splits an aggregated line at one end down to the deepest currently-visible level: for
+    // each distinct visible representative descendant of that end which the line's links
+    // continue into, a dashed direct-style line from/to that node (with the other end fixed) is
+    // shown, carrying those links so it can be split again after zooming in deeper. Splitting
     // reaches the deepest visible nodes in one step — an expanded intermediate container
     // already shows its own structure, so stopping at its edge would add nothing. The original
-    // line hides while all its links are represented by split lines; links ending at the target
-    // itself keep it visible. Split lines are hidden like direct lines and are never persisted.
-    public void SplitLine(LineId lineId)
+    // line hides while all its links are represented by split lines; links whose split-side
+    // endpoint is the line's own endpoint keep it visible. Split lines are hidden like direct
+    // lines and are never persisted.
+    void Split(LineId lineId, SplitSide side)
     {
         using var model = modelMgr.UseModel();
         if (!model.Lines.TryGetValue(lineId, out var line))
             return;
 
-        var groups = GetSplitGroups(line, RepLineService.GetRenderedZoom(model));
+        var groups = GetSplitGroups(line, side, RepLineService.GetRenderedZoom(model));
         if (groups.Count == 0)
             return;
+
+        var fixedEnd = side == SplitSide.Target ? line.Source : line.Target;
+        var splitEnd = side == SplitSide.Target ? line.Target : line.Source;
 
         int splitLinkCount = 0;
         foreach (var (rep, links) in groups)
         {
             // A rep container the user never expanded on screen (e.g. resolved via zoom alone)
             // may have unpositioned children; the split line's anchors need real positions.
-            EnsureLayout(rep, line.Target);
+            EnsureLayout(rep, splitEnd);
 
-            var splitLineId = LineId.FromDirect(line.Source.Name, rep.Name);
+            var (splitSource, splitTarget) = side == SplitSide.Target ? (fixedEnd, rep) : (rep, fixedEnd);
+            var splitLineId = LineId.FromDirect(splitSource.Name, splitTarget.Name);
             if (!model.Lines.TryGetValue(splitLineId, out var splitLine))
             {
-                var ancestor = line.Source.LowestCommonAncestor(rep);
-                splitLine = new Line(line.Source, rep, isDirect: true, id: splitLineId) { RenderAncestor = ancestor };
+                var ancestor = splitSource.LowestCommonAncestor(splitTarget);
+                splitLine = new Line(splitSource, splitTarget, isDirect: true, id: splitLineId)
+                {
+                    RenderAncestor = ancestor,
+                };
                 ancestor.AddDirectLine(splitLine);
                 model.TryAddLine(splitLine);
             }
@@ -197,13 +223,15 @@ class DependenciesService(
         applicationEvents.TriggerUIStateChanged();
     }
 
-    static Dictionary<Node, List<Link>> GetSplitGroups(Line line, double zoom)
+    static Dictionary<Node, List<Link>> GetSplitGroups(Line line, SplitSide side, double zoom)
     {
+        var container = side == SplitSide.Target ? line.Target : line.Source;
         Dictionary<Node, List<Link>> groups = [];
         foreach (var link in line.Links)
         {
-            if (!TryGetTargetRep(line.Target, link.Target, zoom, out var rep))
-                continue; // The link ends at the line's target itself; nothing deeper to show
+            var endpoint = side == SplitSide.Target ? link.Target : link.Source;
+            if (!TryGetVisibleRep(container, endpoint, zoom, out var rep))
+                continue; // The link's endpoint is the line's endpoint itself; nothing deeper
             if (!groups.TryGetValue(rep, out var links))
             {
                 links = [];
@@ -218,7 +246,7 @@ class DependenciesService(
     // zoom: descend through expanded containers (which already show their own children),
     // stopping at the first icon/member or at node itself. False when node is not a proper
     // descendant of container.
-    static bool TryGetTargetRep(Node container, Node node, double zoom, out Node rep)
+    static bool TryGetVisibleRep(Node container, Node node, double zoom, out Node rep)
     {
         rep = null!;
         if (!TryGetChildTowardNode(container, node, out var child))

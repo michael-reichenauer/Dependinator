@@ -99,6 +99,83 @@ public class DependenciesServiceSplitTests
     }
 
     [Fact]
+    public void SplitLineSource_ShouldCreateDirectStyleLinePerVisibleSourceChild()
+    {
+        var service = CreateService();
+        using (var model = modelMgr.UseModel())
+        {
+            var parentA = AddNode(model, "ParentA", model.Root);
+            var parentB = AddNode(model, "ParentB", model.Root);
+            var childA1 = AddNode(model, "ChildA1", parentA);
+            var childA2 = AddNode(model, "ChildA2", parentA);
+            var source1 = AddNode(model, "Source1", childA1);
+            var target = AddNode(model, "Target", parentB);
+            AddLink(model, source1, target);
+            AddLink(model, childA2, target);
+            model.Zoom = OneLevelZoom; // ParentA's children are icons
+        }
+
+        service.SplitLineSource(LineId.From("ParentA", "ParentB"));
+
+        using (var model = modelMgr.UseModel())
+        {
+            var original = model.Lines[LineId.From("ParentA", "ParentB")];
+
+            // One dashed line per distinct visible source child of ParentA, target fixed
+            var split1 = model.Lines[LineId.FromDirect("ChildA1", "ParentB")];
+            var split2 = model.Lines[LineId.FromDirect("ChildA2", "ParentB")];
+            Assert.True(split1.IsDirect);
+            Assert.Same(original, split1.SplitParent);
+            Assert.Same(original, split2.SplitParent);
+            Assert.Single(split1.Links);
+            Assert.Single(split2.Links);
+            Assert.True(original.IsSplitSuppressed);
+        }
+    }
+
+    [Fact]
+    public void SplitLineSource_ShouldDescendToDeepestVisible_WhenIntermediateIsExpanded()
+    {
+        var service = CreateService();
+        using (var model = modelMgr.UseModel())
+        {
+            var parentA = AddNode(model, "ParentA", model.Root);
+            var parentB = AddNode(model, "ParentB", model.Root);
+            var childA1 = AddNode(model, "ChildA1", parentA);
+            var source1 = AddNode(model, "Source1", childA1);
+            var target = AddNode(model, "Target", parentB);
+            AddLink(model, source1, target);
+            model.Zoom = DeepZoom; // ChildA1 is an expanded container, Source1 an icon
+        }
+
+        service.SplitLineSource(LineId.From("ParentA", "ParentB"));
+
+        using (var model = modelMgr.UseModel())
+        {
+            // The split reaches Source1 directly, skipping the expanded ChildA1.
+            Assert.True(model.Lines.ContainsKey(LineId.FromDirect("Source1", "ParentB")));
+            Assert.False(model.Lines.ContainsKey(LineId.FromDirect("ChildA1", "ParentB")));
+            Assert.True(model.Lines[LineId.From("ParentA", "ParentB")].IsSplitSuppressed);
+        }
+    }
+
+    [Fact]
+    public void CanSplitLineSource_ShouldBeFalse_WhenAllLinksStartAtSource()
+    {
+        var service = CreateService();
+        using (var model = modelMgr.UseModel())
+        {
+            var parentA = AddNode(model, "ParentA", model.Root);
+            var parentB = AddNode(model, "ParentB", model.Root);
+            var target = AddNode(model, "Target", parentB);
+            AddLink(model, parentA, target); // Starts at the source container itself
+            model.Zoom = OneLevelZoom;
+        }
+
+        Assert.False(service.CanSplitLineSource(LineId.From("ParentA", "ParentB")));
+    }
+
+    [Fact]
     public void SplitLine_ShouldKeepOriginalVisible_WhenSomeLinksEndAtTarget()
     {
         var service = CreateService();
