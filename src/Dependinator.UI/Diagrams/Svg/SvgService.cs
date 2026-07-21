@@ -152,6 +152,8 @@ class SvgService : ISvgService
 
         if (node.IsPassThrough)
         { // An invisible container that covers its parent; render only its children, no chrome
+            if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
+                return RenderFlattenedNodeContent(node, geometry, context);
             var passThroughContext = context.ForNestedContainer(geometry.TileRect);
             var passThroughContentSvg = RenderNodeContent(node, passThroughContext);
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
@@ -160,6 +162,9 @@ class SvgService : ISvgService
         if (NodeViewPolicy.IsShowIcon(node.Type, context.Zoom))
             return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom);
 
+        if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
+            return RenderFlattenedNodeContent(node, geometry, context);
+
         var nestedContext = context.ForNestedContainer(geometry.TileRect);
         var childrenContentSvg = RenderNodeContent(node, nestedContext);
 
@@ -167,6 +172,16 @@ class SvgService : ISvgService
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
 
         return NodeSvg.GetNodeContainerSvg(node, geometry.CanvasRect, context.Zoom, childrenContentSvg);
+    }
+
+    // At extreme zoom a nested svg viewport would carry offsets of millions of canvas units,
+    // which browsers combine in single-precision floats, displacing the subtree far off-screen
+    // (blank view). Rendering the children directly in the current viewport lets the offsets
+    // telescope back to small numbers server-side in double precision.
+    static string RenderFlattenedNodeContent(Node node, NodeGeometry geometry, RenderContext context)
+    {
+        var flatContext = context.With(new Pos(geometry.CanvasRect.X, geometry.CanvasRect.Y), context.Zoom);
+        return RenderNodeContent(node, flatContext);
     }
 
     static NodeGeometry CalculateNodeGeometry(Node node, RenderContext context)
