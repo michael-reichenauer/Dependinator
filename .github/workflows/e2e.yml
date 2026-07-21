@@ -1,12 +1,14 @@
 name: E2E (Playwright)
 
-# Runs the Dependinator.E2E.Tests UI suite via ./e2e. On a plain push (any branch) it runs
-# Chromium only, no cloud-sync — a quick check. The CI/CD and extension workflows call it
-# before publishing and pass browsers=all + sync=true, so the pre-publish gate covers all
+# Runs the Dependinator.E2E.Tests UI suite via ./e2e. On a plain push (feature branches;
+# main/dev are excluded since the CI/CD workflow calls this there) it runs Chromium only,
+# no cloud-sync — a quick check. The CI/CD and extension workflows call it before
+# publishing and pass browsers=all + sync=true, so the pre-publish gate covers all
 # browsers and the cloud-sync ([SyncFact]) tests. Can also be run manually. Playwright
 # traces are uploaded as an artifact on failure (open the .zip at trace.playwright.dev).
 on:
   push:
+    branches-ignore: [main, dev]
   workflow_call:
     inputs:
       browsers:

@@ -16,8 +16,10 @@ static class LinePathGeometry
         Unrelated, // Nothing to render (no common coordinate space)
     }
 
+    // Both direct and cousin lines carry a RenderAncestor and render in its coordinate space;
+    // chain lines never have one and are classified by their tree relation.
     static LineRelation Classify(Line line) =>
-        line.IsDirect ? LineRelation.Direct
+        line.IsDirect || line.RenderAncestor is not null ? LineRelation.Direct
         : line.Target.Parent == line.Source ? LineRelation.ParentToChild
         : line.Source.Parent == line.Target ? LineRelation.ChildToParent
         : line.Source.Parent == line.Target.Parent ? LineRelation.Siblings
@@ -51,7 +53,10 @@ static class LinePathGeometry
             case LineRelation.ParentToChild:
             {
                 var parent = line.Source;
-                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target);
+                var targetPreference = line.HasInheritanceTargetEnd
+                    ? AnchorPreference.Bottom
+                    : AnchorPreference.Default;
+                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target, targetPreference);
                 endpoints = new LineEndpoints(
                     -parent.ContainerOffset.X / parent.ContainerZoom, // Parent's left edge
                     (parent.Boundary.Height / 2 - parent.ContainerOffset.Y) / parent.ContainerZoom, // Mid height
@@ -64,7 +69,8 @@ static class LinePathGeometry
             case LineRelation.ChildToParent:
             {
                 var parent = line.Target;
-                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source);
+                var sourcePreference = line.HasInheritanceSourceEnd ? AnchorPreference.Top : AnchorPreference.Default;
+                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source, sourcePreference);
                 endpoints = new LineEndpoints(
                     sourceAnchor.X,
                     sourceAnchor.Y,
@@ -76,8 +82,12 @@ static class LinePathGeometry
 
             case LineRelation.Siblings:
             {
-                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source);
-                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target);
+                var sourcePreference = line.HasInheritanceSourceEnd ? AnchorPreference.Top : AnchorPreference.Default;
+                var targetPreference = line.HasInheritanceTargetEnd
+                    ? AnchorPreference.Bottom
+                    : AnchorPreference.Default;
+                var sourceAnchor = NodeAnchors.GetLineAnchor(line.Source, LineAnchorRole.Source, sourcePreference);
+                var targetAnchor = NodeAnchors.GetLineAnchor(line.Target, LineAnchorRole.Target, targetPreference);
                 endpoints = new LineEndpoints(sourceAnchor.X, sourceAnchor.Y, targetAnchor.X, targetAnchor.Y);
                 return true;
             }
@@ -117,10 +127,14 @@ static class LinePathGeometry
             return false;
         }
 
+        var sourcePreference = line.HasInheritanceSourceEnd ? AnchorPreference.Top : (AnchorPreference?)null;
+        var targetPreference = line.HasInheritanceTargetEnd ? AnchorPreference.Bottom : (AnchorPreference?)null;
         var (sourceAnchor, targetAnchor) = DirectLineCalculator.GetAnchorsRelativeToAncestor(
             line.RenderAncestor,
             line.Source,
-            line.Target
+            line.Target,
+            sourcePreference,
+            targetPreference
         );
 
         endpoints = new LineEndpoints(sourceAnchor.X, sourceAnchor.Y, targetAnchor.X, targetAnchor.Y);

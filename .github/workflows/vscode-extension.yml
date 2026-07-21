@@ -59,9 +59,33 @@ jobs:
           VERSION=$(node -p 'require("./package.json").version')
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Update changelog
+        run: |
+          # Use the "- " bullet lines from the triggering commit message as the
+          # changelog entry; fall back to the commit subject if there are none,
+          # or to a generic entry when the subject is just a merge message.
+          BULLETS=$(git log -1 --pretty=%B | grep -E '^[[:space:]]*- ' | sed -E 's/^[[:space:]]+//' || true)
+          if [ -z "$BULLETS" ]; then
+            SUBJECT=$(git log -1 --pretty=%s)
+            case "$SUBJECT" in
+              Merge*) BULLETS="- Minor fixes and improvements" ;;
+              *) BULLETS="- $SUBJECT" ;;
+            esac
+          fi
+          cd src/DependinatorVsCode
+          {
+            head -n 1 CHANGELOG.md
+            echo ""
+            echo "## ${{ steps.bump_version.outputs.version }} ($(date +%Y-%m-%d))"
+            echo ""
+            echo "$BULLETS"
+            tail -n +2 CHANGELOG.md
+          } > CHANGELOG.md.tmp
+          mv CHANGELOG.md.tmp CHANGELOG.md
+
       - name: Commit and tag version
         run: |
-          git add src/DependinatorVsCode/package.json src/DependinatorVsCode/package-lock.json
+          git add src/DependinatorVsCode/package.json src/DependinatorVsCode/package-lock.json src/DependinatorVsCode/CHANGELOG.md
           git commit -m "VS Code extension v${{ steps.bump_version.outputs.version }}"
           git tag "v${{ steps.bump_version.outputs.version }}"
 

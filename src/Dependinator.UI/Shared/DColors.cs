@@ -26,6 +26,12 @@ class DColors
     static readonly string DirectLineDark = "#7C4DFF";
     static readonly string DirectLineLight = "#512DA8";
 
+    // Cousin (container-crossing) lines: slightly toned down from the normal line color so they
+    // read as "crossing" without cluttering dense views. Move these toward LineDark/LineLight
+    // (#999999 / #555555) to make them more visible, or set them equal for no distinction.
+    static readonly string CousinLineDark = "#8A9099";
+    static readonly string CousinLineLight = "#6E727A";
+
     // Marker glyph on manually added (user-drawn) nodes — neutral grey so it reads as
     // "hand-drawn/editable" rather than a status indicator.
     static readonly string ManualMarkerDark = "#8A8F98";
@@ -115,6 +121,7 @@ class DColors
     public static string Line => IsDark ? LineDark : LineLight;
     public static string LineHidden => IsDark ? LineHiddenDark : LineHiddenLight;
     public static string DirectLine => IsDark ? DirectLineDark : DirectLineLight;
+    public static string CousinLine => IsDark ? CousinLineDark : CousinLineLight;
     public static string ManualMarker => IsDark ? ManualMarkerDark : ManualMarkerLight;
     public static string NoteFill => IsDark ? NoteFillDark : NoteFillLight;
     public static string NoteBorder => IsDark ? NoteBorderDark : NoteBorderLight;

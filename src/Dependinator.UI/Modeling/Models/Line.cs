@@ -18,12 +18,19 @@ class Line : IItem
     double strokeWidth = BaseStrokeWidth;
     bool isHidden;
 
-    public Line(Node source, Node target, bool isDirect = false, LineId? id = null)
+    public Line(Node source, Node target, bool isDirect = false, LineId? id = null, bool isInheritance = false)
     {
         Source = source;
         Target = target;
-        Id = id ?? (isDirect ? LineId.FromDirect(source.Name, target.Name) : LineId.From(source.Name, target.Name));
+        Id =
+            id
+            ?? (
+                isDirect ? LineId.FromDirect(source.Name, target.Name)
+                : isInheritance ? LineId.FromInheritance(source.Name, target.Name)
+                : LineId.From(source.Name, target.Name)
+            );
         IsDirect = isDirect;
+        IsInheritance = isInheritance;
         UpdateStrokeWidth();
     }
 
@@ -33,7 +40,32 @@ class Line : IItem
     public Node Target { get; }
     public bool IsEmpty => links.Count == 0;
     public bool IsDirect { get; }
+    public bool IsInheritance { get; }
     public Node? RenderAncestor { get; set; }
+
+    // A cousin line crosses container boundaries between the "deepest visible representatives"
+    // of its links' endpoints (see RepLineService); like a direct line, it is rendered inside
+    // its RenderAncestor's coordinate space.
+    public bool IsCousin => RenderAncestor is not null && !IsDirect;
+
+    // Transient per-zoom render state: true when this line is the current representative line
+    // for at least one link at the most recently synced zoom (set by RepLineService.Sync);
+    // only active lines are rendered. Not persisted.
+    public bool IsActiveRep { get; set; }
+
+    // Split-line state (transient, never persisted): the user can "split" an aggregated line
+    // one level into its target, temporarily showing dashed direct-style lines to the
+    // target's children instead. SplitParent points from a split line back to the line it was
+    // split from; SplitLines holds a split line's live children; IsSplitSuppressed hides the
+    // parent while all its links are represented by split lines (see DependenciesService).
+    public Line? SplitParent { get; set; }
+    public List<Line> SplitLines { get; } = [];
+    public bool IsSplitSuppressed { get; set; }
+
+    // An inheritance line segment is only anchored specially (top/bottom middle) at an end that
+    // is a real link endpoint; a shared segment can end at a container boundary at the other end.
+    public bool HasInheritanceSourceEnd => IsInheritance && links.Values.Any(l => l.Source == Source);
+    public bool HasInheritanceTargetEnd => IsInheritance && links.Values.Any(l => l.Target == Target);
 
     public double StrokeWidth => strokeWidth;
     public bool IsSelected { get; internal set; }
@@ -59,6 +91,8 @@ class Line : IItem
             UpdateStrokeWidth();
         }
     }
+
+    public bool Contains(Link link) => links.ContainsKey(link.Id);
 
     public void Add(Link link)
     {

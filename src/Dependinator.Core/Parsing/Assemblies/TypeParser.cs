@@ -137,11 +137,11 @@ internal class TypeParser
             TypeReference baseType = type.BaseType;
             if (baseType != null && baseType.FullName != "System.Object")
             {
-                await linkHandler.AddLinkToTypeAsync(sourceNode.Name, baseType);
+                await linkHandler.AddLinkToTypeAsync(sourceNode.Name, baseType, isInheritance: true);
             }
 
             await type.Interfaces.ForEachAsync(interfaceType =>
-                linkHandler.AddLinkToTypeAsync(sourceNode.Name, interfaceType.InterfaceType)
+                linkHandler.AddLinkToTypeAsync(sourceNode.Name, interfaceType.InterfaceType, isInheritance: true)
             );
         }
         catch (Exception e)

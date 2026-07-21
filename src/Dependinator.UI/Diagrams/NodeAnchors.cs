@@ -14,6 +14,8 @@ enum AnchorPreference
     Default,
     Left,
     Right,
+    Top,
+    Bottom,
 }
 
 // Where lines attach to a node, in the node's local (unzoomed) coordinates. Member nodes anchor
@@ -45,6 +47,7 @@ static class NodeAnchors
         }
 
         var boundary = node.Boundary;
+        var centerX = boundary.X + boundary.Width / 2.0;
         var centerY = boundary.Y + boundary.Height / 2.0;
 
         if (role == LineAnchorRole.Source)
@@ -52,6 +55,7 @@ static class NodeAnchors
             return preference switch
             {
                 AnchorPreference.Left => (boundary.X, centerY),
+                AnchorPreference.Top => (centerX, boundary.Y),
                 _ => (boundary.X + boundary.Width, centerY),
             };
         }
@@ -59,6 +63,7 @@ static class NodeAnchors
         return preference switch
         {
             AnchorPreference.Right => (boundary.X + boundary.Width, centerY),
+            AnchorPreference.Bottom => (centerX, boundary.Y + boundary.Height),
             _ => (boundary.X, centerY),
         };
     }

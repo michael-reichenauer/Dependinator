@@ -185,6 +185,99 @@ public class StructureServiceTests
     }
 
     [Fact]
+    public void AddOrUpdateLink_ShouldUpgradeToInheritanceWithinSameParse()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+
+        AddNode(model, "Source", model.Root);
+        AddNode(model, "Target", model.Root);
+
+        // A usage link is parsed first (parse order is not guaranteed), then the inheritance link
+        service.AddOrUpdateLink(model, new ParsingLink("Source", "Target", new()));
+        service.AddOrUpdateLink(
+            model,
+            new ParsingLink("Source", "Target", new Dependinator.Core.Parsing.LinkProperties { IsInheritance = true })
+        );
+
+        Assert.True(model.Links.TryGetValue(new LinkId("Source", "Target"), out var link));
+        Assert.True(link.IsInheritance);
+
+        // The link's lines are rebuilt as inheritance lines
+        Assert.True(model.Lines.TryGetValue(LineId.FromInheritance("Source", "Target"), out _));
+        Assert.False(model.Lines.TryGetValue(LineId.From("Source", "Target"), out _));
+    }
+
+    [Fact]
+    public void AddOrUpdateLink_ShouldDowngradeWhenNewParseHasNoInheritance()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+
+        AddNode(model, "Source", model.Root);
+        AddNode(model, "Target", model.Root);
+
+        service.AddOrUpdateLink(
+            model,
+            new ParsingLink("Source", "Target", new Dependinator.Core.Parsing.LinkProperties { IsInheritance = true })
+        );
+
+        // A new parse (new stamp) where the pair is only a usage link downgrades the kind
+        model.UpdateStamp = new DateTime(2024, 1, 2);
+        service.AddOrUpdateLink(model, new ParsingLink("Source", "Target", new()));
+
+        Assert.True(model.Links.TryGetValue(new LinkId("Source", "Target"), out var link));
+        Assert.False(link.IsInheritance);
+        Assert.True(model.Lines.TryGetValue(LineId.From("Source", "Target"), out _));
+        Assert.False(model.Lines.TryGetValue(LineId.FromInheritance("Source", "Target"), out _));
+    }
+
+    [Fact]
+    public void SetLinkDto_ShouldRoundtripIsInheritance()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+
+        AddNode(model, "Source", model.Root);
+        AddNode(model, "Target", model.Root);
+        service.AddOrUpdateLink(
+            model,
+            new ParsingLink("Source", "Target", new Dependinator.Core.Parsing.LinkProperties { IsInheritance = true })
+        );
+
+        var linkDto = Assert.Single(model.SerializeToDto().Links);
+        Assert.True(linkDto.IsInheritance);
+
+        using var restoredModel = new ModelMgr(new StateMgr()).UseModel();
+        restoredModel.UpdateStamp = new DateTime(2024, 1, 1);
+        service.SetLinkDto(restoredModel, linkDto);
+
+        Assert.True(restoredModel.Links.TryGetValue(new LinkId("Source", "Target"), out var restoredLink));
+        Assert.True(restoredLink.IsInheritance);
+        Assert.True(restoredModel.Lines.TryGetValue(LineId.FromInheritance("Source", "Target"), out _));
+    }
+
+    [Fact]
+    public void SetLineDescription_ShouldSetDescriptionOnInheritanceLine()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var source = AddNode(model, "Source", model.Root);
+        var target = AddNode(model, "Target", model.Root);
+        var line = new Line(source, target, isInheritance: true);
+        model.TryAddLine(line);
+
+        service.SetLineDescription(model, new ParsingLineDescription("Source", "Target", "Implements the target"));
+
+        Assert.Equal("Implements the target", line.Description);
+    }
+
+    [Fact]
     public void SetLineDescription_ShouldSetDescriptionOnExactLine()
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();

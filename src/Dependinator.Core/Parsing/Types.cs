@@ -26,6 +26,7 @@ class LinkProperties
 {
     public string? Description { get; init; }
     public NodeType? TargetType { get; init; }
+    public bool? IsInheritance { get; init; }
 }
 
 record Source(string Text, FileLocation Location);

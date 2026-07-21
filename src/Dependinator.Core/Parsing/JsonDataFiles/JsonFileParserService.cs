@@ -98,7 +98,15 @@ class JsonFileParserService : IParser
         };
 
     static Link ToLinkData(JsonTypes.Link link) =>
-        new(link.Source, link.Target, new() { TargetType = Enums.ToOrNull<NodeType>(link.Properties?.TargetType) });
+        new(
+            link.Source,
+            link.Target,
+            new()
+            {
+                TargetType = Enums.ToOrNull<NodeType>(link.Properties?.TargetType),
+                IsInheritance = link.Properties?.IsInheritance,
+            }
+        );
 
     static void ValidateVersion(JsonReader reader)
     {

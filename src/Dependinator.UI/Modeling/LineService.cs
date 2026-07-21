@@ -61,10 +61,17 @@ class LineService : ILineService
         if (source.Name == target.Name)
             return;
 
-        var line = source.SourceLines.FirstOrDefault(l => l.Target == target);
+        // Inheritance links get their own line segments where they touch the real source or
+        // target node (special top/bottom anchors and hollow arrow); intermediate segments
+        // between ancestors merge with usage lines as usual.
+        var isInheritanceSegment = link.IsInheritance && (source == link.Source || target == link.Target);
+
+        var line = source.SourceLines.FirstOrDefault(l =>
+            l.Target == target && l.IsInheritance == isInheritanceSegment
+        );
         if (line == null)
         { // First line between these source and target
-            line = new Line(source, target);
+            line = new Line(source, target, isInheritance: isInheritanceSegment);
             source.SourceLines.Add(line);
             target.TargetLines.Add(line);
 
