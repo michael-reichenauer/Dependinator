@@ -22,7 +22,7 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 - `src/Dependinator.Roslyn/` — Roslyn-based parsing (`Parsing/`)
 - `src/Shared/` — shared DTOs/models between client and API
 
-**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
+**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
 
 The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution folders.
 
@@ -49,6 +49,7 @@ dotnet test Dependinator.sln                   # all unit tests (e2e are skipped
 dotnet test tests/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
 dotnet test tests/Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
 dotnet test tests/Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj
+dotnet test tests/Dependinator.Lsp.Tests/Dependinator.Lsp.Tests.csproj
 dotnet test tests/Api.Tests/Api.Tests.csproj
 dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Tests.csproj
 
@@ -59,7 +60,10 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 ./e2e -s                                       # also start Azurite + Functions for sync tests
 ./e2e -t                                       # record Playwright traces into ./tests/Dependinator.E2E.Tests/traces
 ./trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
-# CI: .github/workflows/e2e.yml runs ./e2e (chromium) on PRs; uploads traces on failure.
+# CI: e2e.yml and unit-tests.yml run on push to feature branches (main/dev excluded);
+# the CI/CD (azure-static-web-apps-*.yml) and vscode-extension.yml workflows call them
+# before deploy/publish, with e2e getting browsers=all + sync=true as the full gate.
+# Playwright traces are uploaded as an artifact on e2e failure.
 
 # VS Code extension
 npm install --prefix ./src/DependinatorVsCode
@@ -67,6 +71,10 @@ npm run compile --prefix ./src/DependinatorVsCode
 npm run package --prefix ./src/DependinatorVsCode
 npm run install:vsix --prefix ./src/DependinatorVsCode
 ./build-ext                                    # npm install + version bump + package
+./install-ext                                  # ./build-ext + install the VSIX into VS Code
+
+# Icons
+./import-icons                                 # re-import curated Azure/AWS/Google icons into src/Dependinator.UI/Diagrams/Icons/Library/ (manifests in scripts/cloud-icons/)
 
 # Demo model
 ./gen-demo                                     # regenerate src/Dependinator.Wasm/wwwroot/demo.model by parsing Dependinator.sln

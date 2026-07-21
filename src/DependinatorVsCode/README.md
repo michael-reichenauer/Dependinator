@@ -21,6 +21,14 @@ to understand, analyze, and refactor — without leaving VS Code.
   corresponding source location in the editor.
 - **Automatic refresh** — the map updates automatically when you change
   source files (configurable).
+- **Manual editing** — add your own nodes and links (drag from a node to
+  create a link), delete manual links, and start from an empty model to
+  sketch an architecture by hand.
+- **Multiple models** — create, switch between, and delete models from the
+  app menu.
+- **Icon library** — pick icons for nodes, including curated Azure, AWS,
+  and Google cloud-service icons.
+- **Export as image** — save the current diagram as an image.
 - **Runs inside VS Code** — opens in an editor tab; no separate app to launch.
 - **Optional cloud sync** — sign in to sync your customized views across
   devices.
