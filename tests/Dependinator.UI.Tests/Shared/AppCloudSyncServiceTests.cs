@@ -218,7 +218,7 @@ public class AppCloudSyncServiceTests
         int firstPushCount = context.Counters.PushCalls;
 
         context.ApplicationEvents.TriggerUIStateChanged();
-        await Task.Delay(30);
+        await Task.Delay(100);
 
         Assert.Equal(firstPushCount, context.Counters.PushCalls);
     }
