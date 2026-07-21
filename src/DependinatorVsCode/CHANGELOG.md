@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.11 (2026-07-21)
+
+- Create new release when push to main branch
+
 ## 0.8.10 (2026-07-21)
 
 - Minor fixes and improvements
