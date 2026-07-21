@@ -123,7 +123,7 @@ class SvgService : ISvgService
         var childNodeSvg = node
             .Children.Select(child => RenderNode(child, childrenContext))
             .Where(svg => svg.Length > 0);
-        var linesSvg = RenderNodeLines(node, childrenCanvasOffset, context.Zoom, childrenZoom);
+        var linesSvg = RenderNodeLines(node, childrenCanvasOffset, childrenZoom, context);
 
         // Cousin and direct lines draw above the child nodes: they cross into containers whose
         // opaque fill would otherwise cover them.
@@ -209,11 +209,11 @@ class SvgService : ISvgService
         return true;
     }
 
-    static IEnumerable<string> RenderNodeLines(Node node, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
+    static IEnumerable<string> RenderNodeLines(Node node, Pos nodeCanvasPos, double childrenZoom, RenderContext context)
     {
         // Parent-to-child segments are the fan-out of incoming links inside this container
-        // (and direct parent-to-child links); they always render, as in the original
-        // aggregation — crossing rep lines end at the container, and these continue inside.
+        // (and direct parent-to-child links) — crossing rep lines end at the container, and
+        // these continue inside.
         var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
         foreach (var line in parentToChildrenLines)
         {
@@ -223,7 +223,9 @@ class SvgService : ISvgService
                 continue;
             if (line.Target.IsPassThrough)
                 continue; // The pass-through node covers this parent, so the segment is degenerate
-            yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
+            if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
+                continue;
+            yield return LineSvg.GetLineSvg(line, nodeCanvasPos, childrenZoom);
         }
 
         // All sibling lines and children to parent lines
@@ -241,9 +243,48 @@ class SvgService : ISvgService
                     continue;
                 if (line.Source.IsPassThrough && line.Target == node)
                     continue; // The pass-through node covers this parent, so the segment is degenerate
-                yield return LineSvg.GetLineSvg(line, nodeCanvasPos, parentZoom, childrenZoom);
+                if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
+                    continue;
+                yield return LineSvg.GetLineSvg(line, nodeCanvasPos, childrenZoom);
             }
         }
+    }
+
+    // A line is drawn while at least one of its endpoint nodes is rendered in this tile; a line
+    // whose both endpoints are invisible is noise the viewer cannot interpret. The container
+    // itself always counts as rendered, since this tile is rendering its content.
+    static bool IsEitherEndpointRendered(
+        Line line,
+        Node node,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        RenderContext context
+    ) =>
+        IsEndpointRendered(line.Source, node, nodeCanvasPos, childrenZoom, context)
+        || IsEndpointRendered(line.Target, node, nodeCanvasPos, childrenZoom, context);
+
+    static bool IsEndpointRendered(
+        Node endpoint,
+        Node node,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        RenderContext context
+    )
+    {
+        if (endpoint == node)
+            return true;
+        if (endpoint.IsHidden && !ViewOptions.ShowHiddenNodes)
+            return false;
+
+        // The endpoint's tile rect, as RenderNode computes it for this container's children
+        // (see CalculateNodeGeometry with the children context).
+        var tileRect = new Rect(
+            context.TilePosition.X + nodeCanvasPos.X + endpoint.Boundary.X * childrenZoom,
+            context.TilePosition.Y + nodeCanvasPos.Y + endpoint.Boundary.Y * childrenZoom,
+            endpoint.Boundary.Width * childrenZoom,
+            endpoint.Boundary.Height * childrenZoom
+        );
+        return RectOverlap(context.TileBounds, tileRect);
     }
 
     static IEnumerable<string> RenderDirectNodeLines(
@@ -261,57 +302,62 @@ class SvgService : ISvgService
                 continue; // Temporarily replaced by its user-split lines (see DependenciesService)
             if (directLine.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
-            if (!IsLineInTileBounds(directLine, nodeCanvasPos, childrenZoom, context))
-                continue; // Many cousin lines exist model-wide; only emit those touching this tile
+            if (!IsEitherDirectEndpointRendered(directLine, node, nodeCanvasPos, childrenZoom, context))
+                continue;
             var svg = LineSvg.GetDirectLineSvg(directLine, node, nodeCanvasPos, childrenZoom);
             if (svg.Length > 0)
                 yield return svg;
         }
     }
 
-    // How far outside the tile a cousin line's far endpoint may lie (in tile widths/heights)
-    // before the line is dropped. A line to a target many screens away conveys nothing but a
-    // direction, and at deep zoom every visible node has such lines to all its remote rep
-    // targets — rendering them all makes tiles enormous. The old chain rendering likewise hid
-    // container-boundary lines once the container was zoomed past (LineSvg.ShouldRender).
-    const double NeighborhoodFactor = 3;
+    // Direct/cousin lines follow the same endpoint-visibility rule as ordinary lines: drawn
+    // while the source or target node is rendered in this tile. Their endpoints can lie many
+    // levels below the render ancestor, so the endpoint rect is mapped from its global
+    // position into the ancestor's children-local space (as DirectLineCalculator does for the
+    // anchors). Lines that merely pass over the view (both endpoints invisible) stay dropped —
+    // at deep zoom many cousin lines exist model-wide, and rendering every crossing makes
+    // tiles enormous.
+    static bool IsEitherDirectEndpointRendered(
+        Line line,
+        Node ancestor,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        RenderContext context
+    ) =>
+        IsDirectEndpointRendered(line.Source, ancestor, nodeCanvasPos, childrenZoom, context)
+        || IsDirectEndpointRendered(line.Target, ancestor, nodeCanvasPos, childrenZoom, context);
 
-    // Whether the line's rendered endpoints make it worth drawing in this tile: at least one
-    // endpoint inside the tile, and the other within the tile's extended neighborhood. Lines
-    // that merely pass over the view (both ends invisible) are noise the viewer cannot
-    // interpret. The canvas shows one viewport-sized tile, so this is a per-view decision.
-    // Rendered points are canvas coordinates at this node's children level; tile coordinates
-    // are offset by the context's TilePosition (see CalculateNodeGeometry, which relates
-    // canvasRect and tileRect the same way).
-    static bool IsLineInTileBounds(Line line, Pos nodeCanvasPos, double childrenZoom, RenderContext context)
+    static bool IsDirectEndpointRendered(
+        Node endpoint,
+        Node ancestor,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        RenderContext context
+    )
     {
-        const double Margin = 15; // Stroke + hover hit-target width
-        IReadOnlyList<Pos> points = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
-        if (points.Count == 0)
+        if (endpoint == ancestor)
+            return true;
+        if (endpoint.IsHidden && !ViewOptions.ShowHiddenNodes)
             return false;
 
-        var bounds = new Rect(
-            context.TileBounds.X - context.TilePosition.X - Margin,
-            context.TileBounds.Y - context.TilePosition.Y - Margin,
-            context.TileBounds.Width + 2 * Margin,
-            context.TileBounds.Height + 2 * Margin
-        );
-        var neighborhood = new Rect(
-            bounds.X - NeighborhoodFactor * bounds.Width,
-            bounds.Y - NeighborhoodFactor * bounds.Height,
-            (1 + 2 * NeighborhoodFactor) * bounds.Width,
-            (1 + 2 * NeighborhoodFactor) * bounds.Height
-        );
+        var (endpointPos, endpointZoom) = endpoint.GetPosAndZoom();
+        var (ancestorPos, ancestorZoom) = ancestor.GetPosAndZoom();
+        var childrenScale = ancestorZoom * ancestor.ContainerZoom;
+        if (childrenScale <= 0)
+            return true;
 
-        Pos start = points[0];
-        Pos end = points[^1];
-        if (!IsPointInRect(start, bounds) && !IsPointInRect(end, bounds))
-            return false;
-        return IsPointInRect(start, neighborhood) && IsPointInRect(end, neighborhood);
+        var localX = (endpointPos.X - ancestorPos.X - ancestor.ContainerOffset.X * ancestorZoom) / childrenScale;
+        var localY = (endpointPos.Y - ancestorPos.Y - ancestor.ContainerOffset.Y * ancestorZoom) / childrenScale;
+        var localZoom = endpointZoom / childrenScale;
+
+        var tileRect = new Rect(
+            context.TilePosition.X + nodeCanvasPos.X + localX * childrenZoom,
+            context.TilePosition.Y + nodeCanvasPos.Y + localY * childrenZoom,
+            endpoint.Boundary.Width * localZoom * childrenZoom,
+            endpoint.Boundary.Height * localZoom * childrenZoom
+        );
+        return RectOverlap(context.TileBounds, tileRect);
     }
-
-    static bool IsPointInRect(Pos point, Rect rect) =>
-        point.X >= rect.X && point.X <= rect.X + rect.Width && point.Y >= rect.Y && point.Y <= rect.Y + rect.Height;
 
     readonly record struct RenderContext(Pos CanvasOffset, double Zoom, Rect TileBounds, Pos TilePosition)
     {

@@ -61,7 +61,7 @@ public class SvgInvariantCultureTests
                 var target = new Node("b", root) { Boundary = new Rect(200.75, 120.5, 100, 50) };
                 var line = new Line(source, target);
 
-                var svg = LineSvg.GetLineSvg(line, new Pos(0.5, 0.5), 1, 1);
+                var svg = LineSvg.GetLineSvg(line, new Pos(0.5, 0.5), 1);
                 Assert.NotEqual("", svg);
 
                 var points = Regex.Match(svg, "points=\"([^\"]*)\"").Groups[1].Value;
