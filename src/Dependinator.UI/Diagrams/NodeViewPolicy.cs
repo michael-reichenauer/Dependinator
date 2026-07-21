@@ -11,7 +11,16 @@ static class NodeViewPolicy
     const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom;
     const double MinContainerZoom = 2.0;
 
+    // Beyond this zoom a node's nested svg viewport coordinates (± zoom * node extent) get so
+    // large that browsers' single-precision transform math displaces the whole subtree by
+    // millions of pixels, leaving the view blank at deep zoom. Such nodes are far larger than
+    // the screen, so clipping no longer matters and they render flattened into the parent
+    // viewport instead.
+    const double MaxNestedViewportZoom = 1000;
+
     public static bool IsTooLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
+
+    public static bool IsRenderedFlat(double zoom) => zoom > MaxNestedViewportZoom;
 
     public static bool IsShowIcon(Parsing.NodeType nodeType, double zoom) =>
         nodeType.IsMember || zoom <= MinContainerZoom;
@@ -22,5 +31,15 @@ static class NodeViewPolicy
     {
         var nodeZoom = 1 / (node.GetZoom() * modelZoom);
         return !IsTooLargeToBeSeen(nodeZoom) && !IsShowIcon(node.Type, nodeZoom);
+    }
+
+    // The node's children are rendered at this zoom: pass-through nodes always show children,
+    // icons and members never do, and containers do even when zoomed in past their own chrome.
+    public static bool IsChildrenShown(Node node, double modelZoom)
+    {
+        if (node.IsPassThrough)
+            return true;
+        var nodeZoom = 1 / (node.GetZoom() * modelZoom);
+        return !IsShowIcon(node.Type, nodeZoom);
     }
 }

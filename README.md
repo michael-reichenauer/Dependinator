@@ -26,6 +26,14 @@ on the Visual Studio Marketplace.
   corresponding source location.
 - **Automatic refresh** — the map updates automatically when source files
   change.
+- **Manual editing** — add your own nodes and links (drag from a node to
+  create a link), delete manual links, and start from an empty model to
+  sketch an architecture by hand.
+- **Multiple models** — create, switch between, and delete models from the
+  app menu.
+- **Icon library** — pick icons for nodes, including curated Azure, AWS,
+  and Google cloud-service icons.
+- **Export as image** — save the current diagram as an image.
 - **Optional cloud sync** — sign in to sync your customized views across
   devices.
 
@@ -67,7 +75,7 @@ the VS Code extension.
 - `src/Shared/`: Shared DTOs/models between client and API.
 
 **Tests:**
-- `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Api.Tests/`: xUnit unit tests.
+- `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Api.Tests/`: xUnit unit tests.
 - `tests/Dependinator.Architecture.Tests/`: NetArchTest layering guards.
 - `tests/Dependinator.E2E.Tests/`: Playwright UI tests (run via `./e2e`).
 

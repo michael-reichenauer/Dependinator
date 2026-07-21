@@ -35,5 +35,7 @@ class Link : IItem
         Lines.Add(line);
     }
 
+    public void RemoveLine(Line line) => Lines.Remove(line);
+
     public override string ToString() => $"{Source}->{Target} ({Lines.Count})";
 }

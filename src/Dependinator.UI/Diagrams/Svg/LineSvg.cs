@@ -25,35 +25,7 @@ static class LineSvg
     // the "arrow-inheritance" marker geometry in Canvas.razor/SvgExportDocument).
     const double InheritanceMarkerLength = 14.5;
 
-    public static string GetLineSvg(Line line, Pos nodeCanvasPos, double parentZoom, double childrenZoom)
-    {
-        if (!ShouldRender(line, parentZoom, childrenZoom))
-            return "";
-
-        return Render(line, nodeCanvasPos, childrenZoom);
-    }
-
-    public static string GetDirectLineSvg(Line line, Node ancestor, Pos nodeCanvasPos, double childrenZoom)
-    {
-        if (line.RenderAncestor != ancestor)
-            return "";
-
-        return Render(line, nodeCanvasPos, childrenZoom);
-    }
-
-    static bool ShouldRender(Line line, double parentZoom, double childrenZoom)
-    {
-        if (NodeViewPolicy.IsTooLargeToBeSeen(childrenZoom))
-            return false;
-
-        var connectsParentAndChild = line.Target.Parent == line.Source || line.Source.Parent == line.Target;
-        if (connectsParentAndChild && NodeViewPolicy.IsTooLargeToBeSeen(parentZoom))
-            return false;
-
-        return true;
-    }
-
-    static string Render(Line line, Pos nodeCanvasPos, double childrenZoom)
+    public static string GetLineSvg(Line line, Pos nodeCanvasPos, double childrenZoom)
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
             return "";
@@ -63,6 +35,14 @@ static class LineSvg
         var elementId = PointerId.FromLine(line.Id).ElementId;
 
         return BuildLineSvg(line, endpoints, polylinePoints, elementId);
+    }
+
+    public static string GetDirectLineSvg(Line line, Node ancestor, Pos nodeCanvasPos, double childrenZoom)
+    {
+        if (line.RenderAncestor != ancestor)
+            return "";
+
+        return GetLineSvg(line, nodeCanvasPos, childrenZoom);
     }
 
     static string BuildLineSvg(
@@ -75,6 +55,7 @@ static class LineSvg
         var color =
             line.IsDirect ? DColors.DirectLine
             : line.IsHidden ? DColors.LineHidden
+            : line.IsCousin ? DColors.CousinLine
             : DColors.Line;
 
         // The hollow inheritance arrow head is only drawn where the line enters the real
@@ -85,6 +66,7 @@ static class LineSvg
             line.IsDirect ? "arrow-direct"
             : line.IsHidden ? "arrow-hidden"
             : isInheritanceHead ? "arrow-inheritance"
+            : line.IsCousin ? "arrow-cousin"
             : "arrow-line";
 
         var strokeWidth = line.StrokeWidth;
