@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.10 (2026-07-21)
+
+- Minor fixes and improvements
+
 ## 0.8.9 (2026-07-21)
 
 - Show Children to other nodes lines
