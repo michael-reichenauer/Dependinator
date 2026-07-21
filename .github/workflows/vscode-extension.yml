@@ -147,3 +147,46 @@ jobs:
         working-directory: src/DependinatorVsCode
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+  release:
+    needs: [bump-version, build-vsix]
+    # Create a release only when the extension was actually published (same gate
+    # as the Publish to Marketplace step).
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump-version.outputs.new_sha }}
+
+      - name: Download VSIX artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dependinator-*-vsix
+          merge-multiple: true
+          path: vsix
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.bump-version.outputs.new_version }}
+        run: |
+          # Extract this version's section from CHANGELOG.md (lines between the
+          # "## <version>" heading and the next "## " heading). The trailing
+          # space in the match keeps e.g. 0.8.1 from matching 0.8.10.
+          awk -v ver="$VERSION" '
+            $0 ~ "^## " ver " " { found=1; next }
+            found && /^## / { exit }
+            found { print }
+          ' src/DependinatorVsCode/CHANGELOG.md > notes.md
+          {
+            echo ""
+            echo "**Install:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)"
+            echo ""
+            echo "**Try it in the browser:** [dependinator.com](https://dependinator.com)"
+          } >> notes.md
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --notes-file notes.md \
+            vsix/*.vsix
