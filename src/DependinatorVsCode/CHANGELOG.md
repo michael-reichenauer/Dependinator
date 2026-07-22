@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.15 (2026-07-22)
+
+- Fix workflow
+
 ## 0.8.14 (2026-07-22)
 
 - Disable ui test for split
