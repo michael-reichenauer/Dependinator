@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.14 (2026-07-22)
+
+- Disable ui test for split
+
 ## 0.8.13 (2026-07-22)
 
 - Minor fixes and improvements
