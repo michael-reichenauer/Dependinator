@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.13 (2026-07-22)
+
+- Minor fixes and improvements
+
 ## 0.8.12 (2026-07-22)
 
 - Unify the CI/CD workflow and extension workflow
