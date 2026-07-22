@@ -108,6 +108,9 @@ jobs:
 
   build-vsix:
     needs: bump-version
+    # Explicit status check: the implicit success() would skip this job because the
+    # skipped test-gate jobs upstream propagate through the needs chain.
+    if: ${{ !cancelled() && needs.bump-version.result == 'success' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -160,8 +163,9 @@ jobs:
   release:
     needs: [bump-version, build-vsix]
     # Create a release only when the extension was actually published (same gate
-    # as the Publish to Marketplace step).
-    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
+    # as the Publish to Marketplace step). The explicit build-vsix status check is
+    # needed because skipped upstream jobs would otherwise skip this job too.
+    if: ${{ !cancelled() && needs.build-vsix.result == 'success' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
