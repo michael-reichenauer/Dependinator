@@ -2,7 +2,11 @@
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "module": "ES2020",
-        "outDir": "dist/web"
+        "outDir": "dist/web",
+        "types": [
+            "vscode",
+            "node"
+        ]
     },
     "include": [
         "src"
