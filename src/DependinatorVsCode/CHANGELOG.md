@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.12 (2026-07-22)
+
+- Unify the CI/CD workflow and extension workflow
+
 ## 0.8.11 (2026-07-21)
 
 - Create new release when push to main branch
