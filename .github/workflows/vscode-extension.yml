@@ -1,8 +1,8 @@
 name: Build VS Code Extension
 
 on:
-  push:
-    branches: [main]
+  # Called by the Dependinator CI/CD workflow at the end of a successful main run.
+  workflow_call:
   workflow_dispatch:
     inputs:
       publish:
@@ -14,15 +14,21 @@ permissions:
   contents: write
 
 # Serialize runs so two quick pushes to main can't race on the version-bump push.
+# This covers workflow_dispatch runs; the CI/CD caller job uses the same group name,
+# so called and manual runs also serialize against each other.
 concurrency:
   group: vscode-extension
   cancel-in-progress: false
 
 jobs:
-  # Gate the whole extension pipeline (version bump, build, publish) on the test suites.
+  # Gate the extension pipeline (version bump, build, publish) on the test suites.
+  # When called from the CI/CD workflow the suites have already run there, so only
+  # manual (workflow_dispatch) runs need their own gate.
   unit-tests:
+    if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/unit-tests.yml
   e2e:
+    if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/e2e.yml
     # Building/publishing the extension is a deliberate release, so run the full gate.
     with:
@@ -31,6 +37,8 @@ jobs:
 
   bump-version:
     needs: [unit-tests, e2e]
+    # Run when the gates passed or were skipped (workflow_call), never after a failure.
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     outputs:
       new_sha: ${{ steps.set-outputs.outputs.new_sha }}
@@ -142,6 +150,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish to Marketplace
+        # event_name is 'push' when this workflow is called from the CI/CD main run.
         if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
         run: npx vsce publish --target ${{ matrix.target }} -p "$VSCE_PAT"
         working-directory: src/DependinatorVsCode
