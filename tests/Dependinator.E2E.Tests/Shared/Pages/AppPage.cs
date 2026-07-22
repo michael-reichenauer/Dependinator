@@ -297,11 +297,21 @@ public sealed class AppPage
     public Task WaitForReadyAsync() =>
         Expect(page.Locator("body")).ToHaveAttributeAsync("data-app-ready", "true", new() { Timeout = 30_000 });
 
+    // Wait for the parsed model to actually render before interacting with model-dependent
+    // UI: app-ready fires before parsing completes, and e.g. a search query typed mid-parse
+    // can race the model (a CI flake showed the "Parsing" overlay still up when a test
+    // filled the search field, and the parse-completion re-render wiped the fill). The
+    // demo root label "Demo.sln" rendering on the canvas marks the parse as done (tests
+    // run against the embedded demo model, see ./e2e).
+    public Task WaitForModelRenderedAsync() => Expect(NodeLabel("Demo.sln")).ToBeVisibleAsync();
+
     // Open the node search dialog via the app menu; returns its page object.
+    // Waits for the parsed model first — see WaitForModelRenderedAsync.
     public async Task<SearchDialog> OpenSearchViaMenuAsync()
     {
+        await WaitForModelRenderedAsync();
         await (await OpenMenuItemAsync("menu-search")).ClickAsync();
-        return new SearchDialog(page);
+        return new SearchDialog(this, page);
     }
 
     // Fill a server-bound (MudTextField) input and verify the value stuck. A Blazor render
@@ -323,10 +333,12 @@ public sealed class AppPage
     }
 
     // Open the node search dialog via the Ctrl+F hotkey; returns its page object.
+    // Waits for the parsed model first — see WaitForModelRenderedAsync.
     public async Task<SearchDialog> OpenSearchViaHotkeyAsync()
     {
+        await WaitForModelRenderedAsync();
         await page.Keyboard.PressAsync("Control+f");
-        return new SearchDialog(page);
+        return new SearchDialog(this, page);
     }
 
     // Stub Clerk sign-in without the real Clerk: block the Clerk CDN and stub window.Clerk

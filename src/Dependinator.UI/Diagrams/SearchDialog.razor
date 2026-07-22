@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject INodeSearchService searchService
 @inject INavigationService navigationService
+@inject IApplicationEvents applicationEvents
 
 <MudDialog Class="search-dialog" ContentClass="pa-2" Style="margin-top:-29px;">
   <DialogContent>
@@ -46,6 +47,8 @@
   int selectedIndex = 0;
   bool isDisposed;
 
+  protected override void OnInitialized() => applicationEvents.ModelChanged += OnModelChanged;
+
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
     if (!firstRender)
@@ -64,7 +67,11 @@
     await textField.FocusAsync();
   }
 
-  public void Dispose() => isDisposed = true;
+  public void Dispose()
+  {
+    applicationEvents.ModelChanged -= OnModelChanged;
+    isDisposed = true;
+  }
 
   void OnQueryChanged(string value)
   {
@@ -72,6 +79,21 @@
     results = searchService.Search(query);
     selectedIndex = 0;
   }
+
+  // The query only runs on input, so a query typed while the model is still being parsed
+  // (or before a background refresh lands) would show stale — often empty — results until
+  // the user types again. Re-run it whenever the model changes; keep the selection on the
+  // same position when possible so arrow-key browsing isn't reset by background updates.
+  void OnModelChanged() =>
+    InvokeAsync(() =>
+    {
+      if (isDisposed || string.IsNullOrWhiteSpace(query))
+        return;
+
+      results = searchService.Search(query);
+      selectedIndex = Math.Min(selectedIndex, Math.Max(0, results.Count - 1));
+      StateHasChanged();
+    });
 
   async Task OnKeyDown(KeyboardEventArgs e)
   {

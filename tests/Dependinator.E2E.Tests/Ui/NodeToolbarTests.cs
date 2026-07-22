@@ -68,18 +68,15 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
 
-        // Wait for the parsed model to actually render before searching: app-ready fires
-        // before parsing completes, and the search dialog only runs its query on input —
-        // a query typed mid-parse finds nothing and is never re-run (a CI flake showed
-        // Enter as a no-op on an empty result list, leaving the dialog open).
-        await Expect(App.NodeLabel("Demo.sln")).ToBeVisibleAsync();
-
-        // Navigate into Demo.UI so its child class "Main" renders as a container. Also wait
-        // for a selected result row before pressing Enter — Enter without results is a no-op.
+        // Navigate into Demo.UI so its child class "Main" renders as a container. Wait for
+        // a selected result row before pressing Enter — Enter without results is a no-op —
+        // and press Enter on the field itself: the dialog's key handler is bound to the
+        // field, and a globally-pressed Enter is lost if the field momentarily lost focus
+        // (a CI flake showed Enter changing nothing, leaving the dialog open).
         var search = await App.OpenSearchViaHotkeyAsync();
         await search.FillAsync("Demo.UI");
         await Expect(search.SelectedItem).ToBeVisibleAsync();
-        await Page.Keyboard.PressAsync("Enter");
+        await search.Field.PressAsync("Enter");
 
         await App.SelectContainerNodeAsync("Demo.UI.Main");
 

@@ -6,16 +6,24 @@ namespace Dependinator.E2E.Tests.Shared.Pages;
 // Opened via AppPage.OpenSearchViaMenuAsync / OpenSearchViaHotkeyAsync.
 public sealed class SearchDialog
 {
+    private readonly AppPage app;
     private readonly IPage page;
 
-    public SearchDialog(IPage page) => this.page = page;
+    public SearchDialog(AppPage app, IPage page)
+    {
+        this.app = app;
+        this.page = page;
+    }
 
     public ILocator Field => page.GetByPlaceholder("Search nodes…");
     public ILocator Results => page.Locator(".search-dialog__item");
     public ILocator SelectedItem => page.Locator(".search-dialog__item--selected");
     public ILocator EmptyResult => page.Locator(".search-dialog__empty");
 
-    public Task FillAsync(string query) => Field.FillAsync(query);
+    // The search field is a server-bound MudTextField, so a Blazor render landing just
+    // after the fill can echo a stale value back and wipe the text (see
+    // AppPage.FillReliablyAsync) — fill via the retrying helper.
+    public Task FillAsync(string query) => app.FillReliablyAsync(Field, query);
 
     // A result row by its (short) node name.
     public ILocator Result(string name) => Results.Filter(new() { HasTextString = name });
