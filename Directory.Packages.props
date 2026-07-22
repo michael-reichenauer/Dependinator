@@ -13,7 +13,7 @@
         <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.10" />
-        <PackageVersion Include="MudBlazor" Version="9.6.0" />
+        <PackageVersion Include="MudBlazor" Version="9.7.0" />
         <PackageVersion Include="Scrutor" Version="7.0.0" />
         <PackageVersion Include="ICSharpCode.Decompiler" Version="10.1.1.8388" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.10" />
