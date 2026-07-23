@@ -50,7 +50,7 @@ export function registerCloudSyncAuth(client: LanguageClient, context: vscode.Ex
     client.onRequest(signInRequestMethod, async (): Promise<{ token: string }> => {
         const configuration = readConfiguration();
         if (!configuration)
-            throw new Error("VS Code cloud sync is not configured. Set dependinator.cloudSync.baseUrl.");
+            throw new Error("VS Code device sync is not configured. Set dependinator.cloudSync.baseUrl.");
 
         const token = await acquireTokenViaLocalCallbackAsync(configuration);
         await context.secrets.store(tokenSecretName, token);

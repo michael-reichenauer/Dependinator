@@ -107,7 +107,7 @@ class VsCodeRpcCloudSyncService : IVsCodeCloudSyncService
         }
         catch (TimeoutException)
         {
-            return R.Error($"VS Code cloud sync action '{action}' timed out.");
+            return R.Error($"VS Code device sync action '{action}' timed out.");
         }
         catch (Exception ex)
         {
@@ -123,7 +123,7 @@ class VsCodeRpcCloudSyncService : IVsCodeCloudSyncService
         }
         catch (TimeoutException)
         {
-            return R.Error($"VS Code cloud sync action '{action}' timed out.");
+            return R.Error($"VS Code device sync action '{action}' timed out.");
         }
         catch (Exception ex)
         {

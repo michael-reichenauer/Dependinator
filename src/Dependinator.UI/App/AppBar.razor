@@ -331,7 +331,7 @@
     + "box-shadow:var(--mud-elevation-2);";
     string CloudStatusText =>
     !appCloudSyncService.IsAvailable
-    ? "Cloud sync unavailable"
+    ? "Device sync unavailable"
                 : IsCloudConnecting
     ? "Connecting to cloud …"
                 : AuthState.IsAuthenticated
@@ -629,7 +629,7 @@
     void ShowSyncConflictSnackbar()
     {
         snackbar.Add(
-        "Cloud sync conflict detected.",
+        "Device sync conflict detected.",
         Severity.Error,
         options =>
         {
