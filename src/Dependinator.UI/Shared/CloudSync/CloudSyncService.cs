@@ -28,7 +28,7 @@ interface ICloudSyncService
 [Scoped]
 class NoCloudSyncService : ICloudSyncService
 {
-    const string NotAvailableError = "Cloud sync is not available in this host.";
+    const string NotAvailableError = "Device sync is not available in this host.";
 
     static readonly CloudAuthState unavailableState = new(IsAvailable: false, IsAuthenticated: false, User: null);
 

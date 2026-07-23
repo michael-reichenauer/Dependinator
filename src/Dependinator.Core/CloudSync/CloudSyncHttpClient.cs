@@ -118,7 +118,7 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
             {
                 T? value = await response.Content.ReadFromJsonAsync<T>(cancellationToken: ct);
                 if (value is null)
-                    return R.Error($"Cloud sync endpoint '{path}' returned an empty response.");
+                    return R.Error($"Device sync endpoint '{path}' returned an empty response.");
 
                 return value;
             }
@@ -178,7 +178,7 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
         {
             HttpStatusCode.Unauthorized => "Device sync is not enabled.",
             HttpStatusCode.NotFound => "Cloud model was not found.",
-            _ => $"Cloud sync request failed with status code {(int)response.StatusCode}.",
+            _ => $"Device sync request failed with status code {(int)response.StatusCode}.",
         };
     }
 }

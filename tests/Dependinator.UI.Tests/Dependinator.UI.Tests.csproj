@@ -27,6 +27,6 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\src\Dependinator.UI\Dependinator.UI.csproj" />
-        <ProjectReference Include="..\Dependinator.Core.Tests\Dependinator.Core.Tests.csproj" />
+        <ProjectReference Include="..\Dependinator.Reflection.Tests\Dependinator.Reflection.Tests.csproj" />
     </ItemGroup>
 </Project>

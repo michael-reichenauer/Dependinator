@@ -55,7 +55,7 @@ static class CloudModelSerializer
             byte[] jsonBytes = Decompress(compressedBytes);
             ModelDto? modelDto = JsonSerializer.Deserialize<ModelDto>(jsonBytes, serializerOptions);
             if (modelDto is null)
-                return R.Error("Cloud sync returned an empty model.");
+                return R.Error("Device sync returned an empty model.");
 
             return modelDto;
         }

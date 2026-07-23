@@ -49,19 +49,19 @@ public class CloudSyncHttpClientTests
     [Fact]
     public async Task ListAsync_ShouldReturnJsonErrorMessage_WhenApiReturnsErrorBody()
     {
-        RecordingHandler handler = new(Json(HttpStatusCode.Conflict, "{\"Message\":\"Cloud sync quota exceeded.\"}"));
+        RecordingHandler handler = new(Json(HttpStatusCode.Conflict, "{\"Message\":\"Device sync quota exceeded.\"}"));
         CloudSyncHttpClient sut = CreateClient(handler);
 
         R<CloudModelList> result = await sut.ListAsync();
 
         Assert.False(Try(out CloudModelList? _, out var error, result));
-        Assert.Contains("Cloud sync quota exceeded.", error!.ErrorMessage);
+        Assert.Contains("Device sync quota exceeded.", error!.ErrorMessage);
     }
 
     [Theory]
     [InlineData(HttpStatusCode.Unauthorized, "Device sync is not enabled.")]
     [InlineData(HttpStatusCode.NotFound, "Cloud model was not found.")]
-    [InlineData(HttpStatusCode.InternalServerError, "Cloud sync request failed with status code 500.")]
+    [InlineData(HttpStatusCode.InternalServerError, "Device sync request failed with status code 500.")]
     public async Task ListAsync_ShouldMapStatusCode_WhenErrorBodyIsNotJson(
         HttpStatusCode statusCode,
         string expectedMessage

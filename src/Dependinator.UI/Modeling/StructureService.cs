@@ -95,6 +95,13 @@ class StructureService(ILineService linesService) : IStructureService
         link.IsInheritance = isParsedInheritance;
         link.UpdateStamp = model.UpdateStamp;
 
+        // Stamp the endpoints like the existing-link path above: nodes that are only referenced
+        // by links (e.g. synthesized external targets) are never emitted by the parser, so a new
+        // link to a node from an earlier parse must keep it alive or ClearNotUpdated removes the
+        // node and leaves this link dangling with a detached endpoint.
+        source.UpdateStamp = model.UpdateStamp;
+        target.UpdateStamp = model.UpdateStamp;
+
         AddLink(model, link);
     }
 
@@ -292,7 +299,9 @@ class StructureService(ILineService linesService) : IStructureService
             model.RemoveLink(link);
 
         var nodes = model
-            .Nodes.Values.Where(n => !n.IsManual && n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0)
+            .Nodes.Values.Where(n =>
+                !n.IsManual && n.UpdateStamp != model.UpdateStamp && n.Children.Count == 0 && !HasParsedLinks(n)
+            )
             .ToList();
         Log.Info($"Remove {nodes.Count} nodes");
         foreach (var node in nodes)
@@ -428,7 +437,20 @@ class StructureService(ILineService linesService) : IStructureService
     {
         var parent = node.Parent;
         model.RemoveNode(node);
-        if (parent.UpdateStamp != model.UpdateStamp && parent.Children.Count == 0 && !parent.IsRoot)
+        if (
+            parent.UpdateStamp != model.UpdateStamp
+            && parent.Children.Count == 0
+            && !HasParsedLinks(parent)
+            && !parent.IsRoot
+        )
             RemoveNode(model, parent);
     }
+
+    // A node still referenced by a parsed link must survive cleanup even if its own stamp is
+    // stale (stale links are removed before nodes, so any remaining parsed link is current);
+    // removing it would detach the link endpoint and crash later ancestor walks during
+    // rendering. Manual links do not count: they must not keep a deleted parsed node alive
+    // and are dropped as dangling right after the node removal pass.
+    static bool HasParsedLinks(Models.Node node) =>
+        node.SourceLinks.Any(link => !link.IsManual) || node.TargetLinks.Any(link => !link.IsManual);
 }

@@ -20,9 +20,10 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 - `src/Dependinator.UI/` — shared UI, `App/`, `Diagrams/`, `Modeling/` components
 - `src/Dependinator.Core/` — core parsing/domain logic/utilities (`Parsing/`, `Models/`, `Utils/`)
 - `src/Dependinator.Roslyn/` — Roslyn-based parsing (`Parsing/`)
+- `src/Dependinator.Reflection/` — reflection-based parsing of compiled assemblies/solutions (`Parsing/`); currently inactive, not referenced by any host
 - `src/Shared/` — shared DTOs/models between client and API
 
-**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
+**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Reflection.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
 
 The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution folders.
 
@@ -49,6 +50,7 @@ dotnet test Dependinator.sln                   # all unit tests (e2e are skipped
 dotnet test tests/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
 dotnet test tests/Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
 dotnet test tests/Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj
+dotnet test tests/Dependinator.Reflection.Tests/Dependinator.Reflection.Tests.csproj
 dotnet test tests/Dependinator.Lsp.Tests/Dependinator.Lsp.Tests.csproj
 dotnet test tests/Api.Tests/Api.Tests.csproj
 dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Tests.csproj
@@ -105,7 +107,7 @@ dotnet list Dependinator.sln package --vulnerable
 
 ## Architecture Notes
 
-**Parsing pipeline:** `src/Dependinator.Core/Parsing/` orchestrates via `ParserService`. Roslyn-specific logic lives in `src/Dependinator.Roslyn/Parsing/`.
+**Parsing pipeline:** `src/Dependinator.Core/Parsing/` orchestrates via `ParserService`. Roslyn-specific logic lives in `src/Dependinator.Roslyn/Parsing/`. The older reflection/assembly parsing (Mono.Cecil + decompilation, MSBuild solutions, json model files) lives in `src/Dependinator.Reflection/` — inactive; re-activate by referencing the project and calling `AddDependinatorReflectionServices()`.
 
 **Cloud sync auth:** All hosts use Clerk for authentication. The API validates Clerk-issued JWTs via JWKS. Browser hosts (Blazor Server and WASM) use Clerk.js for sign-in and attach Bearer tokens to API requests. The VS Code extension serves a local sign-in page with Clerk.js and stores the JWT in VS Code secrets. All API calls use Bearer tokens via the `Authorization` or `X-Dependinator-Authorization` header.
 
@@ -115,7 +117,7 @@ dotnet list Dependinator.sln package --vulnerable
 
 **VS Code extension:** when editing functionality used by the extension, check `src/DependinatorVsCode/scripts/` for corresponding build steps.
 
-**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, hosts, or UI frameworks (MudBlazor/ASP.NET Core), and Shared must not reference other Dependinator projects. Don't add references against this direction.
+**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core` and `Reflection → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, Reflection, hosts, or UI frameworks (MudBlazor/ASP.NET Core), and Shared must not reference other Dependinator projects. Don't add references against this direction.
 
 ## Commit Style
 
