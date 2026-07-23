@@ -1,8 +1,8 @@
 # Change Log
 
-## 0.8.16 (2026-07-23)
+## 0.8.17 (2026-07-23)
 
-- Minor fixes and improvements
+- Move CHANGELOG.md to root folder
 
 ## 0.8.15 (2026-07-22)
 

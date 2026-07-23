@@ -22,9 +22,11 @@ jobs:
       browsers: ${{ github.event_name == 'push' && 'all' || 'chromium' }}
       sync: ${{ github.event_name == 'push' }}
 
+  # Dependabot PR runs get no repository secrets (GitHub policy), so the SWA deploy
+  # would fail on a missing token. Tests above still run; only deploy/close are skipped.
   build_and_deploy_job:
     needs: [unit-tests, e2e]
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: github.actor != 'dependabot[bot]' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed'))
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
@@ -68,8 +70,22 @@ jobs:
           ###### End of Repository/Build Configurations ######
           production_branch: "main"
 
+  # After a successful main deploy, build and publish the VS Code extension.
+  # The job-level concurrency uses the same group as manual runs of that workflow,
+  # so two quick main pushes (or a manual dispatch) can't race on the version-bump push.
+  vscode_extension:
+    needs: [build_and_deploy_job]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/vscode-extension.yml
+    secrets: inherit
+    permissions:
+      contents: write
+    concurrency:
+      group: vscode-extension
+      cancel-in-progress: false
+
   close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
     steps:

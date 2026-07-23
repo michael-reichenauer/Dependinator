@@ -9,7 +9,7 @@
         "strict": true,
         "sourceMap": true,
         "module": "ES2020",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "types": [
             "vscode"
         ],

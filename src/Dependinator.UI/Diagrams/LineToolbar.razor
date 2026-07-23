@@ -57,17 +57,17 @@
             }
             @if (CanSplitSelectedLineSource)
             {
-                <MudTooltip Text="Split line into sources">
+                @* <MudTooltip Text="Split line into sources">
                     <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CallMerge" OnClick="SplitLineSource"
                                    data-testid="line-split-source" />
-                </MudTooltip>
+                </MudTooltip> *@
             }
             @if (CanSplitSelectedLine)
             {
-                <MudTooltip Text="Split line into targets">
+                @* <MudTooltip Text="Split line into targets">
                     <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CallSplit" OnClick="SplitLine"
                                    data-testid="line-split" />
-                </MudTooltip>
+                </MudTooltip> *@
             }
             @if (interactionService.CanShowLineSource)
             {

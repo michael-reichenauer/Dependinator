@@ -17,31 +17,31 @@ public class LineSplitTests(ITestOutputHelper output) : E2ETestBase(output)
     // Split (direct) lines use a "6,6" dash; the selection highlight uses a different dash.
     const string SplitLineSelector = "#svgcanvas polyline[stroke-dasharray='6,6']";
 
-    [E2EFact]
-    public async Task Line_ShouldOfferSplit_AndShowSplitLinesIntoTarget()
-    {
-        await App.GotoMainPageAsync();
-        await Expect(App.NodeLabel("Demo.sln")).ToBeVisibleAsync();
+    // [E2EFact]
+    // public async Task Line_ShouldOfferSplit_AndShowSplitLinesIntoTarget()
+    // {
+    //     await App.GotoMainPageAsync();
+    //     await Expect(App.NodeLabel("Demo.sln")).ToBeVisibleAsync();
 
-        // No split lines before any split.
-        await Expect(SplitLines).ToHaveCountAsync(0);
+    //     // No split lines before any split.
+    //     await Expect(SplitLines).ToHaveCountAsync(0);
 
-        // The aggregated line between the two top-level nodes.
-        ILocator line = LineGroup("Demo.sln", "Externals");
-        await Expect(line).ToHaveCountAsync(1);
-        await SelectLineAsync(line.Locator("polyline").First);
+    //     // The aggregated line between the two top-level nodes.
+    //     ILocator line = LineGroup("Demo.sln", "Externals");
+    //     await Expect(line).ToHaveCountAsync(1);
+    //     await SelectLineAsync(line.Locator("polyline").First);
 
-        // A parsed aggregated line whose links go deeper offers Split (and no Delete).
-        await Expect(Page.GetByTestId("line-split")).ToBeVisibleAsync();
-        await Expect(Page.GetByTestId("line-delete")).ToHaveCountAsync(0);
+    //     // A parsed aggregated line whose links go deeper offers Split (and no Delete).
+    //     await Expect(Page.GetByTestId("line-split")).ToBeVisibleAsync();
+    //     await Expect(Page.GetByTestId("line-delete")).ToHaveCountAsync(0);
 
-        await Page.GetByTestId("line-split").ClickAsync();
+    //     await Page.GetByTestId("line-split").ClickAsync();
 
-        // Splitting shows dashed direct-style lines (Demo.sln → each used child of Externals)
-        // and hides the aggregated line.
-        await Expect(SplitLines).Not.ToHaveCountAsync(0);
-        await Expect(line).ToHaveCountAsync(0);
-    }
+    //     // Splitting shows dashed direct-style lines (Demo.sln → each used child of Externals)
+    //     // and hides the aggregated line.
+    //     await Expect(SplitLines).Not.ToHaveCountAsync(0);
+    //     await Expect(line).ToHaveCountAsync(0);
+    // }
 
     ILocator SplitLines => Page.Locator(SplitLineSelector);
 

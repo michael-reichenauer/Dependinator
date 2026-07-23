@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.8.8",
+    "version": "0.8.17",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
@@ -20,7 +20,7 @@
         ".NET"
     ],
     "engines": {
-        "vscode": "^1.84.0"
+        "vscode": "^1.91.0"
     },
     "categories": [
         "Visualization"
@@ -114,7 +114,8 @@
         "watch": "node esbuild.js --watch",
         "prepare:wasm": "bash scripts/prepare-wasm.sh",
         "prepare:server": "bash scripts/prepare-server.sh",
-        "build:extension": "npm run prepare:wasm && npm run prepare:server && npm run check-types && node esbuild.js --production",
+        "prepare:changelog": "cp ../../CHANGELOG.md CHANGELOG.md",
+        "build:extension": "npm run prepare:wasm && npm run prepare:server && npm run prepare:changelog && npm run check-types && node esbuild.js --production",
         "package": "DEPENDINATOR_ALL_SERVERS=1 vsce package --out dependinator.vsix",
         "install:vsix": "code --install-extension dependinator.vsix --force",
         "package:linux-x64": "VSCODE_TARGET=linux-x64 vsce package --target linux-x64",
@@ -127,11 +128,11 @@
         "vscode:prepublish": "npm run build:extension"
     },
     "dependencies": {
-        "vscode-languageclient": "^9.0.1"
+        "vscode-languageclient": "^10.1.0"
     },
     "devDependencies": {
         "@types/node": "^20.19.33",
-        "@types/vscode": "^1.84.0",
+        "@types/vscode": "^1.91.0",
         "@vscode/vsce": "^3.2.0",
         "esbuild": "^0.25.0",
         "typescript": "^5.4.5"

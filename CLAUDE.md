@@ -61,8 +61,10 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 ./e2e -t                                       # record Playwright traces into ./tests/Dependinator.E2E.Tests/traces
 ./trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
 # CI: e2e.yml and unit-tests.yml run on push to feature branches (main/dev excluded);
-# the CI/CD (azure-static-web-apps-*.yml) and vscode-extension.yml workflows call them
-# before deploy/publish, with e2e getting browsers=all + sync=true as the full gate.
+# the CI/CD workflow (azure-static-web-apps-*.yml) calls them before deploy, with e2e
+# getting browsers=all + sync=true on push as the full gate. On main pushes, CI/CD then
+# calls vscode-extension.yml after deploy to build/publish the extension (that workflow
+# runs its own test gate only on manual workflow_dispatch).
 # Playwright traces are uploaded as an artifact on e2e failure.
 
 # VS Code extension

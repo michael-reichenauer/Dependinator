@@ -207,11 +207,21 @@ public class AppCloudSyncServiceTests
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
         AppCloudSyncTimings timings = new(
             ActiveRefreshInterval: TimeSpan.FromMilliseconds(5),
-            AutoSyncMinInterval: TimeSpan.FromMilliseconds(80),
+            AutoSyncMinInterval: TimeSpan.FromMinutes(5),
             IdleRefreshInterval: TimeSpan.FromHours(1),
             MaxIdleRefreshDuration: TimeSpan.Zero
         );
-        SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], timings);
+        // The clock is controlled by the test so the throttle window cannot expire behind its
+        // back on a slow machine; refreshes still run on real (short) timers.
+        DateTimeOffset currentUtc = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        SutContext context = CreateSutContext(
+            modelPath,
+            localModel,
+            syncState,
+            [cloudModel],
+            timings,
+            () => currentUtc
+        );
 
         context.ApplicationEvents.TriggerUIStateChanged();
         await WaitUntilAsync(() => context.Counters.PushCalls > 0);
@@ -219,8 +229,11 @@ public class AppCloudSyncServiceTests
 
         context.ApplicationEvents.TriggerUIStateChanged();
         await Task.Delay(100);
-
         Assert.Equal(firstPushCount, context.Counters.PushCalls);
+
+        currentUtc += timings.AutoSyncMinInterval;
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.PushCalls > firstPushCount);
     }
 
     [Fact]
@@ -459,7 +472,8 @@ public class AppCloudSyncServiceTests
         ModelDto currentModelDto,
         CloudSyncModelState? syncState,
         IReadOnlyList<CloudModelMetadata> cloudModels,
-        AppCloudSyncTimings? timings = null
+        AppCloudSyncTimings? timings = null,
+        Func<DateTimeOffset>? utcNowProvider = null
     )
     {
         Mock<ICanvasService> canvasService = new();
@@ -511,7 +525,8 @@ public class AppCloudSyncServiceTests
                 new Lazy<IModelService>(() => modelService.Object),
                 modelMgr.Object,
                 applicationEvents,
-                timings
+                timings,
+                utcNowProvider
             ),
             cloudSyncService,
             cloudSyncStateService,
