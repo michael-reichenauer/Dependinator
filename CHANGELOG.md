@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.17 (2026-07-23)
+
+- Move CHANGELOG.md to root folder
+
 ## 0.8.15 (2026-07-22)
 
 - Fix workflow
