@@ -25,8 +25,8 @@ public record ClearTokenParams
 // HTTP calls to the shared Core client and interactive sign-in/token custody to the extension.
 class CloudSyncRpcService : ICloudSyncRpcService
 {
-    const string NotConfiguredError = "VS Code cloud sync is not configured. Set dependinator.cloudSync.baseUrl.";
-    const string LoginRequiredError = "Cloud sync requires login.";
+    const string NotConfiguredError = "VS Code device sync is not configured. Set dependinator.cloudSync.baseUrl.";
+    const string LoginRequiredError = "Device sync requires login.";
 
     // The extension enforces a 5 minute sign-in timeout; allow a little extra for the round trip.
     static readonly TimeSpan signInTimeout = TimeSpan.FromMinutes(5.5);
@@ -85,7 +85,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
             Log.Warn("Token acquisition succeeded, but the API returned unauthenticated");
             await ClearStoredTokenAsync();
             return R.Error(
-                "Cloud sync login completed, but the API did not accept the token. Check Clerk configuration."
+                "Device sync login completed, but the API did not accept the token. Check Clerk configuration."
             );
         }
 

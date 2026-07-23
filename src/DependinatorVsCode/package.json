@@ -75,24 +75,24 @@
                         "Local (watch)"
                     ],
                     "enumDescriptions": [
-                        "Uses the production Dependinator cloud sync service.",
+                        "Uses the production Dependinator device sync service.",
                         "Uses the deployed development Azure Static Web Apps environment.",
                         "Uses the local SWA CLI on port 4280.",
                         "Uses run (SWA CLI on port 5000, proxies API to Functions).",
                         "Uses watch (Functions host directly on port 7071)."
                     ],
                     "default": "https://dependinator.com",
-                    "description": "Base URL for the Dependinator cloud sync API. Sign-in is handled separately by the extension."
+                    "description": "Base URL for the Dependinator device sync API. Sign-in is handled separately by the extension."
                 },
                 "dependinator.cloudSync.clerkAccountsUrl": {
                     "type": "string",
                     "default": "",
-                    "description": "Clerk accounts URL used for cloud sync sign-in. Leave empty to use the built-in production Clerk instance."
+                    "description": "Clerk accounts URL used for device sync sign-in. Leave empty to use the built-in production Clerk instance."
                 },
                 "dependinator.cloudSync.clerkPublishableKey": {
                     "type": "string",
                     "default": "",
-                    "description": "Clerk publishable key used for cloud sync sign-in. Leave empty to use the built-in production key."
+                    "description": "Clerk publishable key used for device sync sign-in. Leave empty to use the built-in production key."
                 },
                 "dependinator.autoRefresh.enabled": {
                     "type": "boolean",

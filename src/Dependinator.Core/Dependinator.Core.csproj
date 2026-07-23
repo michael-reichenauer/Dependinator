@@ -15,10 +15,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ICSharpCode.Decompiler" />
-        <PackageReference Include="Microsoft.Build" ExcludeAssets="runtime" PrivateAssets="all" />
-        <PackageReference Include="Mono.Cecil" />
-        <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="Scrutor" />
         <PackageReference Include="StreamJsonRpc" />
         <PackageReference Include="Microsoft.Build.Locator" />

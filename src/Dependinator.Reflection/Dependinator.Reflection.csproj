@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Dependinator.Reflection</AssemblyName>
+        <RootNamespace>Dependinator.Reflection</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ICSharpCode.Decompiler" />
+        <PackageReference Include="Microsoft.Build" ExcludeAssets="runtime" PrivateAssets="all" />
+        <PackageReference Include="Mono.Cecil" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="Microsoft.Build.Framework" ExcludeAssets="runtime" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.NET.StringTools" ExcludeAssets="runtime" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Dependinator.Core/Dependinator.Core.csproj" />
+    </ItemGroup>
+</Project>

@@ -3,7 +3,7 @@ namespace Api;
 public sealed class CloudSyncQuotaExceededException : InvalidOperationException
 {
     public CloudSyncQuotaExceededException(long usedBytes, long maxBytes)
-        : base($"Cloud sync quota exceeded. Used {usedBytes} bytes of {maxBytes} bytes.")
+        : base($"Device sync quota exceeded. Used {usedBytes} bytes of {maxBytes} bytes.")
     {
         UsedBytes = usedBytes;
         MaxBytes = maxBytes;

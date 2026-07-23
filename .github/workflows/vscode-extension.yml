@@ -196,9 +196,31 @@ jobs:
             echo ""
             echo "**Install:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)"
             echo ""
-            echo "**Try it in the browser:** [dependinator.com](https://dependinator.com)"
+            echo "**Companion web app:** [dependinator.com](https://dependinator.com) — view your models in any browser, on any device. Enable device sync in both the extension and the web app to keep your models available and up to date everywhere."
+            echo ""
+            echo "**Manual install:** the \`.vsix\` assets below are the VS Code extension installation packages, one per platform. Download the one matching your OS/CPU and install it in VS Code via *Extensions → \"...\" → Install from VSIX...* (or \`code --install-extension <file>.vsix\`)."
+            echo ""
+            echo "**Full changelog:** [CHANGELOG.md]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)"
           } >> notes.md
+          # Label each asset so the release page shows what the file is instead
+          # of just the raw vsce file name (gh's "file#label" syntax).
+          assets=()
+          for f in vsix/*.vsix; do
+            base=$(basename "$f" .vsix)
+            target=${base#dependinator-}
+            target=${target%-"$VERSION"}
+            case "$target" in
+              linux-x64) platform="Linux x64" ;;
+              linux-arm64) platform="Linux ARM64" ;;
+              win32-x64) platform="Windows x64" ;;
+              win32-arm64) platform="Windows ARM64" ;;
+              darwin-x64) platform="macOS Intel" ;;
+              darwin-arm64) platform="macOS Apple Silicon" ;;
+              *) platform="$target" ;;
+            esac
+            assets+=("$f#VS Code extension - $platform (vsix)")
+          done
           gh release create "v$VERSION" \
             --title "v$VERSION" \
             --notes-file notes.md \
-            vsix/*.vsix
+            "${assets[@]}"

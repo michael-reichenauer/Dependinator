@@ -4,7 +4,7 @@ using NetArchTest.Rules;
 namespace Dependinator.Architecture.Tests;
 
 // Guards the solution's layering direction against future drift. The dependency direction is
-// Hosts -> UI -> Core -> Shared (with Roslyn -> Core). Today the project references already make
+// Hosts -> UI -> Core -> Shared (with Roslyn -> Core and Reflection -> Core). Today the project references already make
 // upward dependencies impossible to compile, but these tests fail loudly if someone later adds
 // such a reference (e.g. Core taking a dependency on UI for a "quick fix").
 public class LayeringTests
@@ -13,13 +13,17 @@ public class LayeringTests
     static readonly Assembly UiAssembly = typeof(Dependinator.UI.RootClass).Assembly;
     static readonly Assembly SharedAssembly = typeof(global::Shared.CloudUserInfo).Assembly;
     static readonly Assembly RoslynAssembly = Assembly.Load("Dependinator.Roslyn");
+    static readonly Assembly ReflectionAssembly = Assembly.Load("Dependinator.Reflection");
 
     static readonly string[] HostAssemblies = ["Dependinator.Web", "Dependinator.Wasm", "Dependinator.Lsp", "Api"];
 
     [Fact]
     public void Core_ShouldNotDependOnUiOrRoslynOrHosts()
     {
-        AssertNoDependencyOn(CoreAssembly, ["Dependinator.UI", "Dependinator.Roslyn", .. HostAssemblies]);
+        AssertNoDependencyOn(
+            CoreAssembly,
+            ["Dependinator.UI", "Dependinator.Roslyn", "Dependinator.Reflection", .. HostAssemblies]
+        );
     }
 
     [Fact]
@@ -41,11 +45,23 @@ public class LayeringTests
     }
 
     [Fact]
+    public void Reflection_ShouldNotDependOnUiOrHosts()
+    {
+        AssertNoDependencyOn(ReflectionAssembly, ["Dependinator.UI", .. HostAssemblies]);
+    }
+
+    [Fact]
     public void Shared_ShouldNotDependOnOtherDependinatorProjects()
     {
         AssertNoDependencyOn(
             SharedAssembly,
-            ["Dependinator.Core", "Dependinator.UI", "Dependinator.Roslyn", .. HostAssemblies]
+            [
+                "Dependinator.Core",
+                "Dependinator.UI",
+                "Dependinator.Roslyn",
+                "Dependinator.Reflection",
+                .. HostAssemblies,
+            ]
         );
     }
 
