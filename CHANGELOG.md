@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.18 (2026-07-23)
+
+- Update packages
+
 ## 0.8.17 (2026-07-23)
 
 - Move CHANGELOG.md to root folder
