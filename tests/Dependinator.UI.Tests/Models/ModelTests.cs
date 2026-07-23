@@ -1,4 +1,4 @@
-using Dependinator.Core.Tests.Parsing.Utils;
+using Dependinator.Reflection.Tests.Parsing.Utils;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 
