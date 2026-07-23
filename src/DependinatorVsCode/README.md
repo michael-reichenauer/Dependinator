@@ -30,8 +30,9 @@ to understand, analyze, and refactor — without leaving VS Code.
   and Google cloud-service icons.
 - **Export as image** — save the current diagram as an image.
 - **Runs inside VS Code** — opens in an editor tab; no separate app to launch.
-- **Optional cloud sync** — sign in to sync your customized views across
-  devices.
+- **Optional device sync** — enable device sync to keep your models updated
+  on all your devices, and view them anywhere in the companion web app at
+  [dependinator.com](https://dependinator.com).
 
 ## Requirements
 
@@ -68,11 +69,19 @@ keyboard/mouse controls.
 | `dependinator.autoRefresh.enabled` | Automatically refresh the diagram when workspace source files change (default: `true`). |
 | `dependinator.autoRefresh.delaySeconds` | Delay after the last source file change before the diagram is refreshed (default: `3`). |
 
-## Cloud sync
+## Device sync and the web app
 
-Cloud sync is optional. When you sign in (from the Dependinator app bar),
-your customized diagram layouts and views are synced across devices via the
-Dependinator cloud service. Without signing in, everything works locally.
+Device sync is optional. When you enable it (from the Dependinator app bar),
+your models and customized views are kept updated on all devices that have
+sync enabled. Without signing in, everything works locally.
+
+The companion web app at [dependinator.com](https://dependinator.com) lets
+you view your models outside VS Code — in a desktop or mobile browser,
+wherever you are. Enable device sync with the same account in both the
+extension and the web app, and the models you create in VS Code are there
+too. Editing in the web app works as well, though viewing is its primary
+use case; parsing code and creating/editing models is what the extension
+is for.
 
 ## Feedback & issues
 
@@ -81,6 +90,7 @@ https://github.com/michael-reichenauer/Dependinator/issues
 
 ## Links
 
+- Web app (view your models anywhere): https://dependinator.com
 - Repository: https://github.com/michael-reichenauer/Dependinator
 - Contributing / building the extension: see [DEVELOPMENT.md](DEVELOPMENT.md)
 

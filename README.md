@@ -34,8 +34,9 @@ on the Visual Studio Marketplace.
 - **Icon library** — pick icons for nodes, including curated Azure, AWS,
   and Google cloud-service icons.
 - **Export as image** — save the current diagram as an image.
-- **Optional cloud sync** — sign in to sync your customized views across
-  devices.
+- **Optional device sync** — enable device sync to keep your models updated
+  on all devices that have sync enabled, including the web app at
+  [dependinator.com](https://dependinator.com).
 
 ## Try it
 
@@ -43,9 +44,15 @@ on the Visual Studio Marketplace.
   [Dependinator](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
   from the Visual Studio Marketplace (search for "Dependinator" in the
   Extensions view) and run **Dependinator: Open** in a workspace with a
-  `.sln` file. See [src/DependinatorVsCode/README.md](src/DependinatorVsCode/README.md)
+  `.sln` file. This is the primary way to use Dependinator: parse your
+  code and create, edit, and view models. See
+  [src/DependinatorVsCode/README.md](src/DependinatorVsCode/README.md)
   for details.
-- **In the browser** — try the demo at [dependinator.com](https://dependinator.com).
+- **Web app** — [dependinator.com](https://dependinator.com) is the
+  companion app for viewing your models outside VS Code (editing works
+  too, but viewing is its primary use case). Enable device sync in both
+  the extension and the web app to see your models from wherever you
+  like — or just try the built-in demo model without signing in.
 
 In the app, the **Help** button in the app bar opens a page with usage
 instructions, navigation tips, and keyboard/mouse controls.

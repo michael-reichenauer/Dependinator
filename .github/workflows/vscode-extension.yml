@@ -196,7 +196,7 @@ jobs:
             echo ""
             echo "**Install:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)"
             echo ""
-            echo "**Try it in the browser:** [dependinator.com](https://dependinator.com)"
+            echo "**Companion web app:** [dependinator.com](https://dependinator.com) — view your models in any browser, on any device. Enable device sync in both the extension and the web app to keep your models available and up to date everywhere."
             echo ""
             echo "**Manual install:** the \`.vsix\` assets below are the VS Code extension installation packages, one per platform. Download the one matching your OS/CPU and install it in VS Code via *Extensions → \"...\" → Install from VSIX...* (or \`code --install-extension <file>.vsix\`)."
             echo ""
