@@ -197,6 +197,8 @@ jobs:
             echo "**Install:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)"
             echo ""
             echo "**Try it in the browser:** [dependinator.com](https://dependinator.com)"
+            echo ""
+            echo "**Full changelog:** [CHANGELOG.md]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)"
           } >> notes.md
           gh release create "v$VERSION" \
             --title "v$VERSION" \
