@@ -10,7 +10,7 @@
         <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.7" />
         <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.1" />
         <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.14.0" />
-        <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
+        <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.21.0" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.10" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.10" />
         <PackageVersion Include="MudBlazor" Version="9.7.0" />
