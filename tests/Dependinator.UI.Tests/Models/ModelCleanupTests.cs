@@ -1,6 +1,7 @@
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
+using ParsingLink = Dependinator.Core.Parsing.Link;
 
 namespace Dependinator.UI.Tests.Models;
 
@@ -92,6 +93,90 @@ public class ModelCleanupTests
 
         Assert.Null(staleLine.Description);
         Assert.Equal("Fresh description", freshLine.Description);
+    }
+
+    // Regression: a new link to a node from an earlier parse (e.g. an external target only
+    // referenced by links, whose sole referencer was renamed) must keep that node alive;
+    // removing it left the link with a detached endpoint, crashing ancestor walks on render.
+    [Fact]
+    public void ClearNotUpdated_ShouldKeepStaleNodeReferencedByNewLink()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var lineService = new Mock<ILineService>();
+        var structureService = new StructureService(lineService.Object);
+        var stamp = new DateTime(2024, 1, 1);
+        model.UpdateStamp = stamp;
+
+        var target = new Node("Target", model.Root) { UpdateStamp = stamp.AddDays(-1) };
+        model.Root.AddChild(target);
+        model.TryAddNode(target);
+
+        structureService.AddOrUpdateLink(model, new ParsingLink("Source", "Target", new()));
+
+        structureService.ClearNotUpdated(model);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Target"), out var kept));
+        Assert.Same(model.Root, kept.Parent);
+        Assert.Equal(stamp, kept.UpdateStamp);
+        Assert.True(model.Links.TryGetValue(new LinkId("Source", "Target"), out _));
+    }
+
+    // Defense in depth for the same invariant: even when a current parsed link exists on a
+    // stale node without the endpoint having been restamped, cleanup must not remove the node.
+    [Fact]
+    public void ClearNotUpdated_ShouldKeepStaleNodeWithCurrentParsedLink()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var lineService = new Mock<ILineService>();
+        var structureService = new StructureService(lineService.Object);
+        var stamp = new DateTime(2024, 1, 1);
+        model.UpdateStamp = stamp;
+
+        var source = new Node("Source", model.Root) { UpdateStamp = stamp };
+        var target = new Node("Target", model.Root) { UpdateStamp = stamp.AddDays(-1) };
+        model.Root.AddChild(source);
+        model.Root.AddChild(target);
+        model.TryAddNode(source);
+        model.TryAddNode(target);
+
+        var link = new Link(source, target) { UpdateStamp = stamp };
+        model.TryAddLink(link);
+        source.AddSourceLink(link);
+        target.AddTargetLink(link);
+
+        structureService.ClearNotUpdated(model);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Target"), out var kept));
+        Assert.Same(model.Root, kept.Parent);
+    }
+
+    // A manual link must not keep a deleted parsed node alive: the node goes and the link is
+    // dropped as dangling (the pre-existing behavior the parsed-link guard must not change).
+    [Fact]
+    public void ClearNotUpdated_ShouldRemoveStaleNodeWithOnlyManualLink()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var lineService = new Mock<ILineService>();
+        var structureService = new StructureService(lineService.Object);
+        var stamp = new DateTime(2024, 1, 1);
+        model.UpdateStamp = stamp;
+
+        var source = new Node("Source", model.Root) { UpdateStamp = stamp };
+        var target = new Node("Target", model.Root) { UpdateStamp = stamp.AddDays(-1) };
+        model.Root.AddChild(source);
+        model.Root.AddChild(target);
+        model.TryAddNode(source);
+        model.TryAddNode(target);
+
+        var link = new Link(source, target) { IsManual = true, UpdateStamp = stamp };
+        model.TryAddLink(link);
+        source.AddSourceLink(link);
+        target.AddTargetLink(link);
+
+        structureService.ClearNotUpdated(model);
+
+        Assert.False(model.Nodes.TryGetValue(NodeId.FromName("Target"), out _));
+        Assert.False(model.Links.TryGetValue(new LinkId("Source", "Target"), out _));
     }
 
     static Line AddLine(IModel model, Node source, Node target, DateTime stamp)
