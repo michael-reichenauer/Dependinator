@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.8.19 (2026-07-23)
+
+- Add link to changelog in release notes
+- Adjust release notes to explain vsix files
+- Update info about purpose of dependinator.com
+- Fix issue with error after parse
+
 ## 0.8.18 (2026-07-23)
 
 - Update packages
