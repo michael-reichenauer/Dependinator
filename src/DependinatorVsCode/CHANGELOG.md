@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.16 (2026-07-23)
+
+- Minor fixes and improvements
+
 ## 0.8.15 (2026-07-22)
 
 - Fix workflow
