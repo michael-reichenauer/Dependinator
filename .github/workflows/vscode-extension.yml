@@ -80,7 +80,6 @@ jobs:
               *) BULLETS="- $SUBJECT" ;;
             esac
           fi
-          cd src/DependinatorVsCode
           {
             head -n 1 CHANGELOG.md
             echo ""
@@ -93,7 +92,7 @@ jobs:
 
       - name: Commit and tag version
         run: |
-          git add src/DependinatorVsCode/package.json src/DependinatorVsCode/package-lock.json src/DependinatorVsCode/CHANGELOG.md
+          git add src/DependinatorVsCode/package.json src/DependinatorVsCode/package-lock.json CHANGELOG.md
           git commit -m "VS Code extension v${{ steps.bump_version.outputs.version }}"
           git tag "v${{ steps.bump_version.outputs.version }}"
 
@@ -192,7 +191,7 @@ jobs:
             $0 ~ "^## " ver " " { found=1; next }
             found && /^## / { exit }
             found { print }
-          ' src/DependinatorVsCode/CHANGELOG.md > notes.md
+          ' CHANGELOG.md > notes.md
           {
             echo ""
             echo "**Install:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)"
