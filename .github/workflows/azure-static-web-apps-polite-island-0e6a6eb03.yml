@@ -22,9 +22,11 @@ jobs:
       browsers: ${{ github.event_name == 'push' && 'all' || 'chromium' }}
       sync: ${{ github.event_name == 'push' }}
 
+  # Dependabot PR runs get no repository secrets (GitHub policy), so the SWA deploy
+  # would fail on a missing token. Tests above still run; only deploy/close are skipped.
   build_and_deploy_job:
     needs: [unit-tests, e2e]
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: github.actor != 'dependabot[bot]' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed'))
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
@@ -83,7 +85,7 @@ jobs:
       cancel-in-progress: false
 
   close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
     steps:
