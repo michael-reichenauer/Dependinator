@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Dependinator.UI.Shared;
 
 // The built-in icon library: loads and caches node icons from embedded .svg resources for use
 // in the diagram.

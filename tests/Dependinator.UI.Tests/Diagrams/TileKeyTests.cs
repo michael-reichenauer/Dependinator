@@ -7,10 +7,10 @@ public class TileKeyTests
 {
     [Theory]
     [InlineData(1.0, 0)] // Level 0 is unzoomed
-    [InlineData(1.05, 0)] // Within the level 0 zoom band
-    [InlineData(1.2, -1)] // Zoomed in one level
-    [InlineData(0.9, 2)] // Zoomed out two levels
-    [InlineData(0.5, 8)]
+    [InlineData(1.2, 0)] // Within the level 0 zoom band (below ZoomFactor)
+    [InlineData(1.4, -1)] // Zoomed in one level (above ZoomFactor)
+    [InlineData(0.9, 1)] // Zoomed out one level
+    [InlineData(0.5, 3)]
     public void From_ShouldMapZoomToLevels(double canvasZoom, int expectedZ)
     {
         TileKey key = TileKey.From(new Rect(0, 0, 1000, 500), canvasZoom);
@@ -31,8 +31,8 @@ public class TileKeyTests
 
     [Theory]
     [InlineData(0, 1.0)]
-    [InlineData(3, 1.0 / (1.1 * 1.1 * 1.1))] // ZoomFactor^-3
-    [InlineData(-2, 1.1 * 1.1)] // ZoomFactor^2
+    [InlineData(3, 1.0 / (TileKey.ZoomFactor * TileKey.ZoomFactor * TileKey.ZoomFactor))] // ZoomFactor^-3
+    [InlineData(-2, TileKey.ZoomFactor * TileKey.ZoomFactor)] // ZoomFactor^2
     public void GetTileZoom_ShouldInvertLevel(int z, double expectedZoom)
     {
         TileKey key = new TileKey(0, 0, z, 1000, 500);

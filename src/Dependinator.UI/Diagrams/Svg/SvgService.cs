@@ -1,8 +1,8 @@
+using System.Globalization;
 using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
-using static System.FormattableString;
 
 // Generates the SVG rendering of the diagram from the model, producing the tiled SVG content
 // drawn on the canvas.
@@ -22,6 +22,12 @@ interface ISvgService
 [Transient]
 class SvgService : ISvgService
 {
+    // Nodes smaller than this (in tile pixels) in both dimensions are skipped entirely,
+    // including their whole subtree: they are invisible, but at far-out zoom containers can
+    // hold hundreds of them, each otherwise emitting full icon markup. Lines to skipped nodes
+    // still draw (see IsEndpointRendered), keeping the far-zoom line texture intact.
+    const double MinRenderSize = 0.5;
+
     readonly IModelMgr modelMgr;
     readonly ITilesMgr tilesMgr;
 
@@ -85,6 +91,7 @@ class SvgService : ISvgService
 
     static Tile CreateModelTile(IModel model, TileKey tileKey)
     {
+        var timing = Timing.Start();
         var tileRect = tileKey.GetTileRect();
         var tileWithMargin = tileKey.GetTileRectWithMargin();
         var tileZoom = tileKey.GetTileZoom();
@@ -100,8 +107,9 @@ class SvgService : ISvgService
         // var tileMarginBorderSvg = $"""<rect x="{tileWithMargin.X}" y="{tileWithMargin.Y}" width="{tileWithMargin.Width:0.##}" height="{tileWithMargin.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="green"/>""";
 
         var (x, y, w, h) = tileKey.GetViewRect();
-        var tileViewBox = Invariant($"{x:0.##} {y:0.##} {w:0.##} {h:0.##}");
-        var tileSvg = Invariant(
+        var tileViewBox = string.Create(CultureInfo.InvariantCulture, $"{x:0.##} {y:0.##} {w:0.##} {h:0.##}");
+        var tileSvg = string.Create(
+            CultureInfo.InvariantCulture,
             $"""
             <svg width="{w:0.##}" height="{h:0.##}" viewBox="{tileViewBox}" xmlns="http://www.w3.org/2000/svg">
               {rootContentSvg}
@@ -109,6 +117,7 @@ class SvgService : ISvgService
             """
         );
 
+        Log.Info($"Tile {tileKey}: {tileSvg.Length} chars in {timing.ElapsedMs}ms");
         return new Tile(tileKey, tileSvg, tileZoom, tileOffset);
     }
 
@@ -140,6 +149,8 @@ class SvgService : ISvgService
         var geometry = CalculateNodeGeometry(node, context);
 
         if (!RectOverlap(context.TileBounds, geometry.TileRect))
+            return "";
+        if (geometry.TileRect.Width < MinRenderSize && geometry.TileRect.Height < MinRenderSize)
             return "";
 
         // A note is a leaf annotation drawn as a circle; it has no children or chrome, so short-

@@ -1,5 +1,4 @@
 using Dependinator.UI.Modeling.Models;
-using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams.Interaction;
@@ -72,13 +71,14 @@ class AreaSelectionService(IModelMgr modelMgr, IScreenService screenService, IAp
         OnStateChanged();
     }
 
-    // No StateChanged per move: the canvas re-renders on every pointer event (see the
-    // corresponding note in ManualEditService.UpdateLinkDrag).
+    // Only the render trigger per move (no StateChanged): toolbars and other subscribers do
+    // not need per-move notifications, but the canvas overlay must follow the drag.
     public void PointerMove(PointerEvent e)
     {
         if (!IsSelecting)
             return;
         EndClient = new Pos(e.ClientX, e.ClientY);
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public async Task PointerUpAsync(PointerEvent e)

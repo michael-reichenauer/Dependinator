@@ -23,7 +23,10 @@ class PanZoomService(
 {
     const double MaxZoom = 10;
     const double Margin = 10;
-    const double WheelZoomSpeed = 1.2;
+
+    // Kept below TileKey.ZoomFactor so a wheel tick usually stays within the current tile's
+    // zoom band (a cheap viewBox update) instead of forcing a full tile re-render every tick.
+    const double WheelZoomSpeed = 1.14;
     const double PinchZoomSpeed = 1.04;
     const double GoToZoomSpeed = 1.02;
     const int GoToMoveStepCount = 50;
@@ -41,7 +44,8 @@ class PanZoomService(
             var (mx, my) = (e.OffsetX, e.OffsetY);
 
             var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
-            newZoom = (e.DeltaY > 0) ? model.Zoom * speed : model.Zoom * (1 / speed);
+            var factor = Math.Pow(speed, e.ZoomSteps);
+            newZoom = (e.DeltaY > 0) ? model.Zoom * factor : model.Zoom * (1 / factor);
             if (newZoom > MaxZoom)
                 newZoom = MaxZoom;
 

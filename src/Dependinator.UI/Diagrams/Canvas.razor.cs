@@ -1,3 +1,4 @@
+using System.Globalization;
 using Dependinator.UI.Diagrams.Icons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -25,6 +26,9 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     [Inject]
     Interaction.IAreaSelectionService areaSelectionService { get; init; } = null!;
 
+    [Inject]
+    IIconDefsService iconDefsService { get; init; } = null!;
+
     public ElementReference dropZoneElement { get; private set; }
     public InputFile inputFile { get; private set; } = null!;
     public ElementReference Ref { get; private set; }
@@ -33,16 +37,16 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
     // Formatted invariantly; a raw double attribute value would be rendered with the current
     // culture, which breaks the SVG in comma-decimal locales.
-    string Width => FormattableString.Invariant($"{srv.SvgRect.Width:0.##}");
-    string Height => FormattableString.Invariant($"{srv.SvgRect.Height:0.##}");
+    string Width => string.Create(CultureInfo.InvariantCulture, $"{srv.SvgRect.Width:0.##}");
+    string Height => string.Create(CultureInfo.InvariantCulture, $"{srv.SvgRect.Height:0.##}");
     string ViewBox => srv.SvgViewBox;
-    static string IconDefs => Icon.IconDefs;
+    string IconDefs => iconDefsService.Defs;
 
     string Cursor => srv.Cursor;
 
     string renderedContent = "";
 
-    static string Px(double value) => FormattableString.Invariant($"{value:0.##}");
+    static string Px(double value) => string.Create(CultureInfo.InvariantCulture, $"{value:0.##}");
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

@@ -2,7 +2,6 @@ using System.Net;
 using System.Text;
 using Dependinator.Core.CloudSync;
 using Shared;
-using static Dependinator.Core.Utils.Result;
 
 namespace Dependinator.Core.Tests.CloudSync;
 

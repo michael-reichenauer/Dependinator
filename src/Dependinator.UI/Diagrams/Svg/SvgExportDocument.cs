@@ -1,7 +1,6 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Dependinator.UI.Diagrams.Icons;
-using Dependinator.UI.Shared;
-using static System.FormattableString;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
@@ -21,7 +20,8 @@ static class SvgExportDocument
     public static string Create(string contentSvg, double widthPx, double heightPx, string background)
     {
         var iconDefs = GetUsedIconDefs(contentSvg);
-        return Invariant(
+        return string.Create(
+            CultureInfo.InvariantCulture,
             $"""
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                  width="{widthPx:0.##}" height="{heightPx:0.##}" viewBox="0 0 {widthPx:0.##} {heightPx:0.##}">
