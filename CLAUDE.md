@@ -31,21 +31,21 @@ The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution fol
 - `src/DependinatorVsCode/` — TypeScript extension packaging the web UI + language server (`src/extension.ts`, `src/webview.ts`, `src/languageServer.ts`, `src/cloudSyncAuth.ts`)
 
 **Dev tools (not part of `Dependinator.sln`):**
-- `src/Dependinator.DemoGen/` — console tool that regenerates the embedded demo model; run via `./gen-demo` (kept out of the solution so it never appears in the parsed model)
+- `src/Dependinator.DemoGen/` — console tool that regenerates the embedded demo model; run via `./scripts/gen-demo` (kept out of the solution so it never appears in the parsed model)
 
 ## Build & Development Commands
 
 ```bash
 # Build
-./build                                        # builds Dependinator.Web
+./scripts/build                                        # builds Dependinator.Web
 dotnet build Dependinator.sln
 
 # Run
-./watch                                        # dotnet watch for Dependinator.Web + Azurite + Functions host (live dev)
-./run                                          # publish Wasm in Release + Azurite + Functions host + SWA CLI
+./scripts/watch                                        # dotnet watch for Dependinator.Web + Azurite + Functions host (live dev)
+./scripts/run                                          # publish Wasm in Release + Azurite + Functions host + SWA CLI
 
 # Test
-./test                                         # unit tests, then e2e (args forwarded to ./e2e, e.g. ./test -s -t)
+./scripts/test                                         # unit tests, then e2e (args forwarded to ./scripts/e2e, e.g. ./scripts/test -s -t)
 dotnet test Dependinator.sln                   # all unit tests (e2e are skipped)
 dotnet test tests/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
 dotnet test tests/Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
@@ -56,12 +56,12 @@ dotnet test tests/Api.Tests/Api.Tests.csproj
 dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Tests.csproj
 
 # UI (Playwright) tests — see tests/Dependinator.E2E.Tests/README.md
-./e2e                                          # chromium; auto-starts app if not running
-./e2e -b firefox                               # specific browser (chromium|firefox|webkit)
-./e2e -a                                       # all three browsers (before releases)
-./e2e -s                                       # also start Azurite + Functions for sync tests
-./e2e -t                                       # record Playwright traces into ./tests/Dependinator.E2E.Tests/traces
-./trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
+./scripts/e2e                                          # chromium; auto-starts app if not running
+./scripts/e2e -b firefox                               # specific browser (chromium|firefox|webkit)
+./scripts/e2e -a                                       # all three browsers (before releases)
+./scripts/e2e -s                                       # also start Azurite + Functions for sync tests
+./scripts/e2e -t                                       # record Playwright traces into ./tests/Dependinator.E2E.Tests/traces
+./scripts/trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
 # CI: e2e.yml and unit-tests.yml run on push to feature branches (main/dev excluded);
 # the CI/CD workflow (azure-static-web-apps-*.yml) calls them before deploy, with e2e
 # getting browsers=all + sync=true on push as the full gate. On main pushes, CI/CD then
@@ -74,27 +74,27 @@ npm install --prefix ./src/DependinatorVsCode
 npm run compile --prefix ./src/DependinatorVsCode
 npm run package --prefix ./src/DependinatorVsCode
 npm run install:vsix --prefix ./src/DependinatorVsCode
-./build-ext                                    # npm install + version bump + package
-./install-ext                                  # ./build-ext + install the VSIX into VS Code
+./scripts/build-ext                                    # npm install + version bump + package
+./scripts/install-ext                                  # ./scripts/build-ext + install the VSIX into VS Code
 
 # Icons
-./import-icons                                 # re-import curated Azure/AWS/Google icons into src/Dependinator.UI/Diagrams/Icons/Library/ (manifests in scripts/cloud-icons/)
+./scripts/import-icons                                 # re-import curated Azure/AWS/Google icons into src/Dependinator.UI/Diagrams/Icons/Library/ (manifests in scripts/cloud-icons/)
 
 # Demo model
-./gen-demo                                     # regenerate src/Dependinator.Wasm/wwwroot/demo.model by parsing Dependinator.sln
+./scripts/gen-demo                                     # regenerate src/Dependinator.Wasm/wwwroot/demo.model by parsing Dependinator.sln
 
 # Demo gif (VS Code extension README)
-./record-demo                                  # re-record src/DependinatorVsCode/resources/demo.gif (scenario in scripts/record-demo.mjs; needs ffmpeg + global @playwright/cli)
+./scripts/record-demo                                  # re-record src/DependinatorVsCode/resources/demo.gif (scenario in scripts/record-demo.mjs; needs ffmpeg + global @playwright/cli)
 
 # Packages
-./updatepackages -u                            # upgrade non-major packages
-./updatepackages -m                            # allow major upgrades
+./scripts/updatepackages -u                            # upgrade non-major packages
+./scripts/updatepackages -m                            # allow major upgrades
 dotnet list Dependinator.sln package --outdated
 dotnet list Dependinator.sln package --vulnerable
 ```
 
-`./run` requires `func` (Azure Functions Core Tools), `azurite`, and `swa` (SWA CLI) to be installed.
-`./watch` requires `func` and `azurite` (no SWA CLI needed).
+`./scripts/run` requires `func` (Azure Functions Core Tools), `azurite`, and `swa` (SWA CLI) to be installed.
+`./scripts/watch` requires `func` and `azurite` (no SWA CLI needed).
 
 ## Tooling & Conventions
 
@@ -102,8 +102,8 @@ dotnet list Dependinator.sln package --vulnerable
 - **Formatting:** CSharpier (`.csharpierrc.json`) + `.editorconfig`. Run `dotnet csharpier --check .` to verify; `CSharpier.MsBuild` also enforces formatting during build.
 - **Style:** 4-space indent, explicit types over `var`, PascalCase for types/methods/properties/constants, nullable-aware code, braces preferred.
 - **Tests:** xUnit + Moq + Verify.Xunit. Name tests as `MethodName_ShouldDoX()`. `tests/Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` (at the repo root) dynamically via `tests/Dependinator.Core.Tests/Root.cs` — do not hardcode `/workspaces/...` paths in tests.
-- **UI/e2e tests:** `tests/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. Keep the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props` in sync with `PLAYWRIGHT_VERSION` in `.devcontainer/post-create.sh`.
-- **Browser checks:** after UI changes, use the `ui-check` skill (`.claude/skills/ui-check/`) to verify behavior with `playwright-cli` and run `./e2e`.
+- **UI/e2e tests:** `tests/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./scripts/e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. Keep the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props` in sync with `PLAYWRIGHT_VERSION` in `.devcontainer/post-create.sh`.
+- **Browser checks:** after UI changes, use the `ui-check` skill (`.claude/skills/ui-check/`) to verify behavior with `playwright-cli` and run `./scripts/e2e`.
 
 ## Architecture Notes
 

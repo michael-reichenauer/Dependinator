@@ -302,7 +302,7 @@ public sealed class AppPage
     // can race the model (a CI flake showed the "Parsing" overlay still up when a test
     // filled the search field, and the parse-completion re-render wiped the fill). The
     // demo root label "Demo.sln" rendering on the canvas marks the parse as done (tests
-    // run against the embedded demo model, see ./e2e).
+    // run against the embedded demo model, see ./scripts/e2e).
     public Task WaitForModelRenderedAsync() => Expect(NodeLabel("Demo.sln")).ToBeVisibleAsync();
 
     // Open the node search dialog via the app menu; returns its page object.
@@ -343,7 +343,7 @@ public sealed class AppPage
 
     // Stub Clerk sign-in without the real Clerk: block the Clerk CDN and stub window.Clerk
     // so that once signed in, clerkGetToken() returns a JWT minted by TestAuthToken, which
-    // the local Functions host validates against the test JWKS (see ./e2e -s). Call this
+    // the local Functions host validates against the test JWKS (see ./scripts/e2e -s). Call this
     // BEFORE GotoAsync. Used by signed-in [SyncFact] UI flows.
     //
     // The stub starts signed OUT and only signs in when the app calls Clerk.openSignIn()

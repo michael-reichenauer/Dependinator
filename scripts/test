@@ -1,16 +1,16 @@
 #!/bin/bash
 # Run the full test suite: the unit tests (Api / Core / Roslyn / UI) first, then the
 # Playwright e2e UI tests. Both always run; the script exits non-zero if either fails.
-# Any arguments are forwarded to ./e2e, e.g.:
+# Any arguments are forwarded to ./scripts/e2e, e.g.:
 #
-#   ./test            unit tests, then e2e (chromium)
-#   ./test -s -t      ... and run the e2e part with the cloud-sync stack + tracing
-#   ./test -a         ... and run the e2e part on all browsers
+#   ./scripts/test            unit tests, then e2e (chromium)
+#   ./scripts/test -s -t      ... and run the e2e part with the cloud-sync stack + tracing
+#   ./scripts/test -a         ... and run the e2e part on all browsers
 #
 # Note: the e2e part needs port 5000 free (it starts the app in test mode itself), so
-# stop ./watch first — see ./e2e.
+# stop ./scripts/watch first — see ./scripts/e2e.
 set -uo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 result=0
 
@@ -24,8 +24,8 @@ if ! dotnet test Dependinator.sln 2>&1 | grep -vE '^\s+Skipped |\[SKIP\]$'; then
 fi
 
 echo ""
-echo "=== E2E tests (./e2e $*) ==="
-if ! ./e2e "$@"; then
+echo "=== E2E tests (./scripts/e2e $*) ==="
+if ! ./scripts/e2e "$@"; then
     result=1
     echo "E2E tests FAILED."
 fi

@@ -6,16 +6,16 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Shared;
 
-// Base class for UI tests against a running app (started via ./watch
-// or auto-started by the ./e2e script). Browser is selected with the BROWSER
+// Base class for UI tests against a running app (started via ./scripts/watch
+// or auto-started by the ./scripts/e2e script). Browser is selected with the BROWSER
 // environment variable (chromium [default], firefox or webkit); the target app
 // with E2E_BASE_URL (default Blazor Server at http://127.0.0.1:5000).
 public class E2ETestBase : PageTest
 {
     // 127.0.0.1 (not localhost): the app binds IPv4 loopback only (Program.cs
     // Listen(IPAddress.Loopback, 5000)). With "localhost" this client can resolve to ::1
-    // and get "connection refused" even though the app is up. The ./e2e script overrides
-    // this via E2E_BASE_URL, but keep the default consistent for manual ./watch runs.
+    // and get "connection refused" even though the app is up. The ./scripts/e2e script overrides
+    // this via E2E_BASE_URL, but keep the default consistent for manual ./scripts/watch runs.
     protected static readonly string BaseUrl =
         Environment.GetEnvironmentVariable("E2E_BASE_URL") ?? "http://127.0.0.1:5000";
 
@@ -27,7 +27,7 @@ public class E2ETestBase : PageTest
 
     private static bool isAppVerified;
 
-    // When E2E_TRACE=1 (set by `./e2e -t` and in CI), each test records a Playwright
+    // When E2E_TRACE=1 (set by `./scripts/e2e -t` and in CI), each test records a Playwright
     // trace to Dependinator.E2E.Tests/traces/. CI uploads that folder as an artifact on
     // failure; open a .zip at https://trace.playwright.dev to debug.
     private static readonly bool tracingEnabled = Environment.GetEnvironmentVariable("E2E_TRACE") == "1";
@@ -124,7 +124,7 @@ public class E2ETestBase : PageTest
         {
             throw new InvalidOperationException(
                 $"The app is not reachable at {BaseUrl}. "
-                    + "Start it with ./watch, or run tests via ./e2e "
+                    + "Start it with ./scripts/watch, or run tests via ./scripts/e2e "
                     + "which starts the app automatically.",
                 e
             );

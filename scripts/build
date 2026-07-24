@@ -1,0 +1,4 @@
+#!/bin/bash
+# Build the Blazor Server host (Dependinator.Web).
+cd "$(dirname "$0")/.."
+dotnet build ./src/Dependinator.Web/Dependinator.Web.csproj

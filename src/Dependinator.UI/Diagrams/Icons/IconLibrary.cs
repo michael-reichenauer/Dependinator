@@ -34,7 +34,7 @@ static class IconLibrary
 
     // The library groups in display order: folder name, user-facing label, and whether tint
     // color variants are generated. The hand-authored groups share the violet base palette and
-    // support tinting; the cloud brand icon sets (imported via ./import-icons) keep their
+    // support tinting; the cloud brand icon sets (imported via ./scripts/import-icons) keep their
     // official colors, so tinting is skipped for them. Unknown groups sort last, untinted.
     static readonly (string Name, string Label, bool Tinted)[] GroupOrder =
     [

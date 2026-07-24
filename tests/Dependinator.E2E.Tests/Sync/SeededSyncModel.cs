@@ -10,7 +10,7 @@ namespace Dependinator.E2E.Tests.Sync;
 // run, so read tests have a deterministic model regardless of test order. The seed user
 // is dedicated, so write tests using other users can't disturb it.
 //
-// Only seeds when the sync stack is up (E2E_SYNC=1, set by ./e2e -s); otherwise it is a
+// Only seeds when the sync stack is up (E2E_SYNC=1, set by ./scripts/e2e -s); otherwise it is a
 // no-op and the dependent [SyncFact] tests are skipped anyway. Wired in via IClassFixture.
 public sealed class SeededSyncModel : IAsyncLifetime
 {

@@ -8,7 +8,7 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Sync;
 
-// Cloud-sync tests. These only run under `./e2e -s`, which starts Azurite, the Azure
+// Cloud-sync tests. These only run under `./scripts/e2e -s`, which starts Azurite, the Azure
 // Functions API (7071) and the test JWKS server, and points the API at the test issuer.
 // Auth uses a self-minted token (TestAuthToken) instead of real Clerk — see TestAuth/.
 // SeededSyncModel (a class fixture) seeds a known model so read tests are deterministic.

@@ -9,7 +9,7 @@
 # playwright module + browsers; installed by .devcontainer/post-create.sh).
 # Starts Dependinator.Web on :5000 if it is not already running.
 set -eu
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 command -v ffmpeg > /dev/null || { echo "error: ffmpeg is required"; exit 1; }
 

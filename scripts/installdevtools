@@ -1,4 +1,6 @@
 #!/bin/bash
+# One-time devcontainer setup: timezone, apt packages (python, mc, lnav, xsel),
+# the dotnet wasm-tools workload, dotnet tools PATH, claude, and gmd.
 echo ""
 echo "Update timezone to Europe/Stockholm"
 sudo rm -rf /etc/localtime

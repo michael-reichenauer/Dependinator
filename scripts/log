@@ -1,0 +1,3 @@
+#!/bin/bash
+# View the Dependinator app log (~/Dependinator.log) in lnav.
+lnav ~/Dependinator.log

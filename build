@@ -1,2 +1,0 @@
-#!/bin/bash
-dotnet build ./src/Dependinator.Web/Dependinator.Web.csproj

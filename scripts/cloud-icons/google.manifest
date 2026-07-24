@@ -1,6 +1,6 @@
 # Curated Google Cloud icons: "<source-key> = <Target-Name>" where the source key is the
 # snake_case file name in the official legacy per-product icon package.
-# Import via ./import-icons; see scripts/import-cloud-icons.mjs for the package url/version.
+# Import via ./scripts/import-icons; see scripts/import-cloud-icons.mjs for the package url/version.
 
 # Compute & containers
 compute_engine              = Compute-Engine

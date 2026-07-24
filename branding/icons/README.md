@@ -37,4 +37,4 @@ This writes:
 The VS Code extension icon (`src/DependinatorVsCode/media/icon-192.png`,
 referenced by `package.json`) is **generated** from the Wasm `wwwroot` by
 `src/DependinatorVsCode/scripts/prepare-wasm.sh`, so it picks up changes
-automatically on the next extension build (`./build-ext`).
+automatically on the next extension build (`./scripts/build-ext`).

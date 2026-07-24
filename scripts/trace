@@ -1,16 +1,16 @@
 #!/bin/bash
-# Open a Playwright trace (from ./e2e -t) in the Trace Viewer, served locally so you can
-# view it in a browser — VS Code's built-in "Simple Browser" at the forwarded port, or
-# your Mac browser. Headless-devcontainer friendly: it serves, it doesn't open a window.
+# Open a Playwright trace (from ./scripts/e2e -t) in the Trace Viewer, served locally so
+# you can view it in a browser — VS Code's built-in "Simple Browser" at the forwarded port,
+# or your Mac browser. Headless-devcontainer friendly: it serves, it doesn't open a window.
 #
-#   ./trace            # most recent trace
-#   ./trace 6          # tests/Dependinator.E2E.Tests/traces/006-*.zip
-#   ./trace path/to/trace.zip
+#   ./scripts/trace            # most recent trace
+#   ./scripts/trace 6          # tests/Dependinator.E2E.Tests/traces/006-*.zip
+#   ./scripts/trace path/to/trace.zip
 #
 # Then in VS Code: Cmd/Ctrl+Shift+P -> "Simple Browser: Show" -> http://localhost:9322
 # (or just open that URL in your Mac browser). Ctrl+C here to stop. TRACE_PORT overrides.
 set -uo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 TRACES_DIR="tests/Dependinator.E2E.Tests/traces"
 PORT="${TRACE_PORT:-9322}"
@@ -34,7 +34,7 @@ else
 fi
 
 if [[ -z "${zip:-}" || ! -f "$zip" ]]; then
-    echo "No matching trace found. Record some with ./e2e -t, or pass a path." >&2
+    echo "No matching trace found. Record some with ./scripts/e2e -t, or pass a path." >&2
     echo "Available:" >&2
     ls "$TRACES_DIR"/*.zip 2>/dev/null | sed 's/^/  /' >&2 || echo "  (none)" >&2
     exit 1

@@ -53,7 +53,7 @@ public class IconLibraryTests
 
         // The Default group holds the node-type icons; General holds the extra selectable
         // icons; the cloud groups hold the curated official provider icons (imported via
-        // ./import-icons — update the counts when the manifests change).
+        // ./scripts/import-icons — update the counts when the manifests change).
         Assert.Equal(19, icons.Count(icon => icon.Group == "Default"));
         Assert.Equal(20, icons.Count(icon => icon.Group == "General"));
         Assert.Equal(69, icons.Count(icon => icon.Group == "Azure"));
@@ -264,7 +264,7 @@ public class IconLibraryTests
     [Fact]
     public void All_ShouldBeNormalized_ForEveryCloudIcon()
     {
-        // Pins the ./import-icons normalization contract: the root id equals the icon name
+        // Pins the ./scripts/import-icons normalization contract: the root id equals the icon name
         // (required by <use href="#name">), sizing comes from the viewBox, css classes/styles
         // are inlined (they would leak across the shared diagram DOM), and every internal
         // url(#...) reference resolves within the icon itself.

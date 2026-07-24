@@ -1,14 +1,14 @@
 ---
 name: ui-check
 description: Verify Dependinator UI changes in a real browser. Use after changing UI code (Dependinator.UI, Dependinator.Web, Dependinator.Wasm) to visually/behaviorally check the app, and to run the Playwright e2e test suite.
-allowed-tools: Bash(playwright-cli:*) Bash(./e2e:*) Bash(curl:*)
+allowed-tools: Bash(playwright-cli:*) Bash(./scripts/e2e:*) Bash(curl:*)
 ---
 
 # Checking Dependinator UI changes in a browser
 
 ## 1. Make sure the app is running
 
-Check first — the user often already has `./watch` running in a terminal:
+Check first — the user often already has `./scripts/watch` running in a terminal:
 
 ```bash
 curl -sf -o /dev/null http://localhost:5000 && echo running || echo "not running"
@@ -16,13 +16,13 @@ curl -sf -o /dev/null http://localhost:5000 && echo running || echo "not running
 
 Start options (all serve the same Blazor Server app on http://localhost:5000):
 
-- `./watch` — Blazor Server with hot reload, plus Azurite + Azure Functions API
+- `./scripts/watch` — Blazor Server with hot reload, plus Azurite + Azure Functions API
   (port 7071) for cloud-sync features. Needs `func` and `azurite` installed.
-- `./e2e` starts/stops its own app in test mode; it errors if something is already
-  running on 5000 (stop `./watch` first), so tests run against the known demo model.
+- `./scripts/e2e` starts/stops its own app in test mode; it errors if something is already
+  running on 5000 (stop `./scripts/watch` first), so tests run against the known demo model.
 
 If you start the app yourself, run it in the background and stop it when done.
-The Wasm host (`./run`, also port 5000 — never run both at once) is rarely
+The Wasm host (`./scripts/run`, also port 5000 — never run both at once) is rarely
 needed — only for Wasm-specific behavior; it requires a slow Release publish.
 
 ## 2. Interactive browser checks (playwright-cli)
@@ -54,14 +54,14 @@ Notes:
 After UI-affecting changes, run:
 
 ```bash
-./e2e                # Playwright smoke tests on chromium (default)
-./e2e -b firefox     # specific browser: chromium | firefox | webkit
-./e2e -a             # all three browsers (use before releases)
-./e2e -s             # also start Azurite + Functions (7071) for sync tests
+./scripts/e2e                # Playwright smoke tests on chromium (default)
+./scripts/e2e -b firefox     # specific browser: chromium | firefox | webkit
+./scripts/e2e -a             # all three browsers (use before releases)
+./scripts/e2e -s             # also start Azurite + Functions (7071) for sync tests
 ```
 
 Tests live in `tests/Dependinator.E2E.Tests/` (xUnit + Microsoft.Playwright, see its
 README.md). They are skipped in plain `dotnet test` runs unless `E2E=1` is set,
-which `./e2e` does. New UI features should get a test there; use `[E2EFact]`
+which `./scripts/e2e` does. New UI features should get a test there; use `[E2EFact]`
 and extend `E2ETestBase`. Cloud-sync tests use `[SyncFact]` and only run under
-`./e2e -s` (which brings up Azurite + the Functions API, like ./watch).
+`./scripts/e2e -s` (which brings up Azurite + the Functions API, like ./scripts/watch).

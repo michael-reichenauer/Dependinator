@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Sync;
 
-// Signed-in cloud-sync UI flow. Runs only under `./e2e -s` (Azurite + Functions on 7071 +
+// Signed-in cloud-sync UI flow. Runs only under `./scripts/e2e -s` (Azurite + Functions on 7071 +
 // the test JWKS server). Stubs Clerk via AppPage.StubClerkSignInAsync (no real Clerk) and
 // seeds a model via SeededSyncModel, then drives the browser: click the cloud button to sign
 // in, and verify the signed-in UI reflects the authenticated session and lists the seeded

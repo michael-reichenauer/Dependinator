@@ -1,0 +1,6 @@
+#!/bin/bash
+# Build the VS Code extension (scripts/build-ext) and install the resulting
+# .vsix into the local VS Code.
+cd "$(dirname "$0")/.."
+./scripts/build-ext
+npm run install:vsix --prefix ./src/DependinatorVsCode
