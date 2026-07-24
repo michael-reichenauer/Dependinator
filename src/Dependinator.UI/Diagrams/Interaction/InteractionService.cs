@@ -1,5 +1,4 @@
 using Dependinator.UI.Diagrams.Dependencies;
-using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;

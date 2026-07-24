@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Dependinator.UI.Diagrams.Icons;
-using Dependinator.UI.Shared;
 
 namespace Dependinator.UI.Diagrams.Svg;
 

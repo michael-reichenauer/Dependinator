@@ -1,5 +1,4 @@
 using Dependinator.UI.Modeling.Models;
-using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams.Interaction;
