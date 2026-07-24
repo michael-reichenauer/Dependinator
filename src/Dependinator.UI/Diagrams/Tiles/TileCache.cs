@@ -13,10 +13,12 @@ interface ITileCache : IDisposable
 class TileCache : ITileCache
 {
     const int MaxCachedTiles = 100; // Cap memory, each tile holds a full svg string
+    const int EvictCount = MaxCachedTiles / 4; // Evicted at once, so eviction stays rare
 
     readonly Action disposeAction;
 
-    readonly Dictionary<TileKey, Tile> tiles = [];
+    readonly Dictionary<TileKey, (Tile Tile, long Used)> tiles = [];
+    long accessCounter = 0;
     int currentScreenTileWidth = 0;
     int currentScreenTileHeight = 0;
 
@@ -47,12 +49,14 @@ class TileCache : ITileCache
     public bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile)
     {
         InvalidateIfTileSizeChanged(key);
-        if (!tiles.TryGetValue(key, out tile!))
+        if (!tiles.TryGetValue(key, out var entry))
         {
             tile = Tile.Empty;
             return false;
         }
 
+        tile = entry.Tile;
+        tiles[key] = (tile, ++accessCounter);
         SetLastUsed(viewRect, zoom, tile);
         return true;
     }
@@ -62,12 +66,23 @@ class TileCache : ITileCache
         InvalidateIfTileSizeChanged(tile.Key);
         if (tiles.Count >= MaxCachedTiles)
         {
-            tiles.Clear();
+            EvictLeastRecentlyUsed();
         }
 
-        tiles[tile.Key] = tile;
+        tiles[tile.Key] = (tile, ++accessCounter);
         SetCurrentScreenTileSize(tile);
         SetLastUsed(viewRect, zoom, tile);
+    }
+
+    // Evicts the least recently used quarter, so a long session keeps the tiles around the
+    // current view instead of periodically losing the whole cache at once.
+    void EvictLeastRecentlyUsed()
+    {
+        var oldestKeys = tiles.OrderBy(entry => entry.Value.Used).Take(EvictCount).Select(entry => entry.Key).ToList();
+        foreach (var key in oldestKeys)
+        {
+            tiles.Remove(key);
+        }
     }
 
     public void ClearCache()

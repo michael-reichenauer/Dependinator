@@ -79,7 +79,7 @@ public class TileCacheTests
     }
 
     [Fact]
-    public void SetCached_ShouldClearCacheWhenCapExceeded()
+    public void SetCached_ShouldEvictLeastRecentlyUsed_WhenCapExceeded()
     {
         TileCache cache = CreateCache();
         Tile firstTile = CreateTile(0, 0);
@@ -87,13 +87,20 @@ public class TileCacheTests
         {
             cache.SetCached(CreateTile(x, 0), ViewRect, Zoom);
         }
+        // Touching the oldest tile makes it recently used, so it survives the eviction.
         Assert.True(cache.TryGetCached(firstTile.Key, ViewRect, Zoom, out Tile _));
 
         Tile overflowTile = CreateTile(100, 0);
         cache.SetCached(overflowTile, ViewRect, Zoom);
 
-        Assert.False(cache.TryGetCached(firstTile.Key, ViewRect, Zoom, out Tile _));
+        // The recently used, recently added, and new tiles survive; only the least
+        // recently used quarter is evicted.
+        Assert.True(cache.TryGetCached(firstTile.Key, ViewRect, Zoom, out Tile _));
         Assert.True(cache.TryGetCached(overflowTile.Key, ViewRect, Zoom, out Tile _));
+        Assert.True(cache.TryGetCached(CreateTile(99, 0).Key, ViewRect, Zoom, out Tile _));
+        Assert.False(cache.TryGetCached(CreateTile(1, 0).Key, ViewRect, Zoom, out Tile _));
+        Assert.False(cache.TryGetCached(CreateTile(25, 0).Key, ViewRect, Zoom, out Tile _));
+        Assert.True(cache.TryGetCached(CreateTile(26, 0).Key, ViewRect, Zoom, out Tile _));
     }
 
     [Fact]
