@@ -474,6 +474,7 @@ class InteractionService(
         {
             Cursor = "default";
             isMoving = false;
+            applicationEvents.TriggerUIStateChanged(); // Restore the cursor without waiting for the next event
         }
     }
 

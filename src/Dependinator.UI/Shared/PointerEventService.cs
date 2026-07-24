@@ -18,7 +18,6 @@ interface IPointerEventService
 [Scoped]
 class PointerEventService : IPointerEventService, IDisposable
 {
-    readonly IApplicationEvents applicationEvents;
     readonly IJSInterop jSInterop;
 
     const int ClickDelay = 300;
@@ -37,11 +36,10 @@ class PointerEventService : IPointerEventService, IDisposable
     DateTime pointerDownTime = DateTime.MinValue;
     DotNetObjectReference<PointerEventService>? reference;
 
-    public PointerEventService(IJSInterop jSInterop, IApplicationEvents applicationEvents)
+    public PointerEventService(IJSInterop jSInterop)
     {
         clickTimer = new Timer(OnLeftClickTimer, null, Timeout.Infinite, Timeout.Infinite);
         this.jSInterop = jSInterop;
-        this.applicationEvents = applicationEvents;
     }
 
     public event Action<PointerEvent>? Wheel;
@@ -103,7 +101,6 @@ class PointerEventService : IPointerEventService, IDisposable
                 break;
         }
 
-        applicationEvents.TriggerUIStateChanged();
         return ValueTask.CompletedTask;
     }
 
@@ -126,7 +123,6 @@ class PointerEventService : IPointerEventService, IDisposable
                 break;
         }
 
-        applicationEvents.TriggerUIStateChanged();
         return ValueTask.CompletedTask;
     }
 

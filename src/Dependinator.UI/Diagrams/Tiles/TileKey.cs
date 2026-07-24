@@ -7,7 +7,11 @@ namespace Dependinator.UI.Diagrams.Tiles;
 // indices at that level, in units of the screen size (TileWidth/TileHeight).
 record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
 {
-    public const double ZoomFactor = 1.1; // How often is a new tile needed when zooming
+    // How often a new tile is needed when zooming: each level covers a ZoomFactor band, and
+    // in-between zooms scale the tile via the outer svg viewBox (lossless for vector content).
+    // Must stay above PanZoomService.WheelZoomSpeed so consecutive wheel ticks can reuse the
+    // tile instead of re-rendering on every tick.
+    public const double ZoomFactor = 1.3;
 
     // Rendered tile content extends Margin tile sizes beyond the tile on each side; the tile
     // svg viewBox extends ViewBoxMargin tile sizes on each side (must be >= Margin), so the

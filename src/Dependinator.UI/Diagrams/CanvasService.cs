@@ -1,3 +1,4 @@
+using System.Globalization;
 using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Svg;
@@ -59,7 +60,8 @@ class CanvasService(
 
     public string SvgViewBox =>
         levelZoom != 0
-            ? FormattableString.Invariant(
+            ? string.Create(
+                CultureInfo.InvariantCulture,
                 $"{Offset.X / levelZoom - tileOffset.X:0.##} {Offset.Y / levelZoom - tileOffset.Y:0.##} {SvgRect.Width * Zoom / levelZoom:0.##} {SvgRect.Height * Zoom / levelZoom:0.##}"
             )
             : "0 0 0 0";

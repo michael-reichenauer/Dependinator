@@ -31,5 +31,13 @@ public record PointerEvent
     public double DeltaZ { get; init; }
     public double DeltaMode { get; init; }
 
+    // Signed count of wheel events the JS input batcher coalesced into this event (one per
+    // animation frame); 0 for non-batched sources (e.g. pinch-synthesized wheel events).
+    public int WheelTicks { get; init; }
+
     public bool IsLeftButton => Buttons == LeftMouseBtn;
+
+    // How many zoom steps this wheel event represents: a coalesced event applies one step per
+    // dropped tick so fast wheel spins keep their speed despite the per-frame batching.
+    public int ZoomSteps => Math.Max(1, Math.Abs(WheelTicks));
 }
