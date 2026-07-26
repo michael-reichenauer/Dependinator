@@ -1,8 +1,6 @@
-using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
-using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
 using MudBlazor;
 

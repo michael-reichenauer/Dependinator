@@ -1,6 +1,6 @@
 # Curated Azure icons: "<source-key> = <Target-Name>" where the source key is the dashed name
 # after "-icon-service-" in the official package (numeric file prefixes change per release).
-# Import via ./import-icons; see scripts/import-cloud-icons.mjs for the package url/version.
+# Import via ./scripts/import-icons; see scripts/import-cloud-icons.mjs for the package url/version.
 
 # Compute & containers
 Virtual-Machine             = Virtual-Machine

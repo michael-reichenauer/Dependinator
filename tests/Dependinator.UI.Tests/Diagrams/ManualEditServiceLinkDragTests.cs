@@ -21,7 +21,8 @@ public class ManualEditServiceLinkDragTests
             commandService.Object,
             new StructureService(new Mock<ILineService>().Object),
             new Mock<ISelectionService>().Object,
-            dialogService.Object
+            dialogService.Object,
+            new Mock<IApplicationEvents>().Object
         );
 
     NodeId AddRootNode(string name)

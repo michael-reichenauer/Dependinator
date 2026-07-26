@@ -7,7 +7,7 @@
 // icon-prefixed (all icons share one <defs> in the diagram DOM), Google's <style> classes are
 // inlined as presentation attributes, and <title>/width/height are stripped.
 //
-// Usage: ./import-icons [--provider azure|aws|google] [--force-download] [--check]
+// Usage: ./scripts/import-icons [--provider azure|aws|google] [--force-download] [--check]
 //   --check verifies the manifests and normalization without writing to the library.
 
 import { execFileSync } from "node:child_process";

@@ -1,6 +1,6 @@
 name: E2E (Playwright)
 
-# Runs the Dependinator.E2E.Tests UI suite via ./e2e. On a plain push (feature branches;
+# Runs the Dependinator.E2E.Tests UI suite via ./scripts/e2e. On a plain push (feature branches;
 # main/dev are excluded since the CI/CD workflow calls this there) it runs Chromium only,
 # no cloud-sync — a quick check. The CI/CD and extension workflows call it before
 # publishing and pass browsers=all + sync=true, so the pre-publish gate covers all
@@ -16,7 +16,7 @@ on:
         type: string
         default: chromium
       sync:
-        description: Also run the cloud-sync tests (./e2e -s)
+        description: Also run the cloud-sync tests (./scripts/e2e -s)
         type: boolean
         default: false
   workflow_dispatch:
@@ -27,7 +27,7 @@ on:
         options: [chromium, all]
         default: chromium
       sync:
-        description: Also run the cloud-sync tests (./e2e -s)
+        description: Also run the cloud-sync tests (./scripts/e2e -s)
         type: boolean
         default: false
 
@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # Resolve the run config from the inputs (empty on a plain push -> defaults):
-      #   install   = browsers to install   e2e_args = ./e2e flags (-a / -s)   sync = bool
+      #   install   = browsers to install   e2e_args = ./scripts/e2e flags (-a / -s)   sync = bool
       - name: Determine config
         id: cfg
         run: |
@@ -81,7 +81,7 @@ jobs:
       - name: Install Playwright browsers
         run: pwsh tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ steps.cfg.outputs.install }}
 
-      # ./e2e -s starts the cloud-sync stack itself but needs these tools on the runner.
+      # ./scripts/e2e -s starts the cloud-sync stack itself but needs these tools on the runner.
       - name: Install Azure Functions Core Tools + Azurite (sync tests)
         if: steps.cfg.outputs.sync == 'true'
         run: |
@@ -101,12 +101,12 @@ jobs:
           fi
           func --version
 
-      # ./e2e starts Dependinator.Web itself (test mode, embedded demo model) and stops it
+      # ./scripts/e2e starts Dependinator.Web itself (test mode, embedded demo model) and stops it
       # afterwards. E2E_TRACE=1 records a trace per test for the artifact below.
       - name: Run e2e tests
         env:
           E2E_TRACE: "1"
-        run: ./e2e ${{ steps.cfg.outputs.e2e_args }}
+        run: ./scripts/e2e ${{ steps.cfg.outputs.e2e_args }}
 
       - name: Upload Playwright traces
         if: failure()

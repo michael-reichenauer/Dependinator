@@ -84,7 +84,7 @@ the VS Code extension.
 **Tests:**
 - `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Api.Tests/`: xUnit unit tests.
 - `tests/Dependinator.Architecture.Tests/`: NetArchTest layering guards.
-- `tests/Dependinator.E2E.Tests/`: Playwright UI tests (run via `./e2e`).
+- `tests/Dependinator.E2E.Tests/`: Playwright UI tests (run via `./scripts/e2e`).
 
 **VS Code extension** (not part of `Dependinator.sln`):
 - `src/DependinatorVsCode/`: TypeScript extension packaging the web UI + language server.
@@ -93,20 +93,20 @@ the VS Code extension.
 
 - **.NET SDK 10.0.101** (pinned in `global.json`).
 - **Node.js + npm** — for the VS Code extension and SWA CLI.
-- **Azurite** (`npm i -g azurite`) — local Azure Storage emulator, needed by `./watch` and `./run`.
-- **Azure Functions Core Tools** (`func`) — needed by `./watch` and `./run`.
-- **SWA CLI** (`npm i -g @azure/static-web-apps-cli`) — needed by `./run`.
-- **Playwright browsers** — for `./e2e`.
+- **Azurite** (`npm i -g azurite`) — local Azure Storage emulator, needed by `./scripts/watch` and `./scripts/run`.
+- **Azure Functions Core Tools** (`func`) — needed by `./scripts/watch` and `./scripts/run`.
+- **SWA CLI** (`npm i -g @azure/static-web-apps-cli`) — needed by `./scripts/run`.
+- **Playwright browsers** — for `./scripts/e2e`.
 
-The devcontainer (`.devcontainer/`) provisions the .NET SDK, Node, `func`, and Playwright browsers out of the box. **Azurite** and the **SWA CLI** are not preinstalled — add them with the `npm i -g` commands above if you need `./watch` or `./run`.
+The devcontainer (`.devcontainer/`) provisions the .NET SDK, Node, `func`, and Playwright browsers out of the box. **Azurite** and the **SWA CLI** are not preinstalled — add them with the `npm i -g` commands above if you need `./scripts/watch` or `./scripts/run`.
 
 ## Quick start
-- Build: `./build`
-- Run server (live dev, with cloud sync): `./watch`
-- Run WASM + API + Azurite locally: `./run`
+- Build: `./scripts/build`
+- Run server (live dev, with cloud sync): `./scripts/watch`
+- Run WASM + API + Azurite locally: `./scripts/run`
 - Unit tests: `dotnet test Dependinator.sln`
-- UI/e2e tests: `./e2e` (chromium; `-a` for all browsers)
-- All tests (unit + e2e): `./test`
+- UI/e2e tests: `./scripts/e2e` (chromium; `-a` for all browsers)
+- All tests (unit + e2e): `./scripts/test`
 
 ## Cloud sync
 

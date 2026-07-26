@@ -209,82 +209,143 @@ export function getWindowSizeDetails(parm) {
   return windowSize;
 }
 
-export function addMouseEventListener(elementId, eventName, instance, functionName) {
-  function eventHandler(event) {
-    // console.log("DEP: mouse", event);
+// Coalesces high-frequency input events (wheel and single-pointer pointermove) to at most one
+// .NET call per animation frame, since each call re-renders the UI (and round-trips over
+// SignalR on Blazor Server). Dropped events are not lost: their movement/scroll deltas are
+// accumulated into the queued event. Discrete events (pointerdown/up/cancel, contextmenu) and
+// two-pointer pinch moves are sent immediately, flushing pending queued events first so a
+// coalesced move can never arrive after its pointerup.
+const inputBatchers = new Map(); // elementId -> { queue, rafId, activePointers }
 
+function getInputBatcher(elementId) {
+  let batcher = inputBatchers.get(elementId);
+  if (!batcher) {
+    batcher = { queue: new Map(), rafId: 0, activePointers: 0 };
+    inputBatchers.set(elementId, batcher);
+  }
+  return batcher;
+}
+
+function flushInputBatch(batcher) {
+  if (batcher.rafId) {
+    cancelAnimationFrame(batcher.rafId);
+    batcher.rafId = 0;
+  }
+  const sends = [...batcher.queue.values()];
+  batcher.queue.clear();
+  for (const send of sends) send();
+}
+
+function scheduleBatchedInput(batcher, key, send) {
+  batcher.queue.set(key, send); // Latest wins per key; the caller accumulated the deltas
+  if (!batcher.rafId) {
+    batcher.rafId = requestAnimationFrame(() => {
+      batcher.rafId = 0;
+      flushInputBatch(batcher);
+    });
+  }
+}
+
+function mouseEventData(eventName, event) {
+  return {
+    Type: eventName,
+    TargetId: event.target.id,
+    OffsetX: event.offsetX,
+    OffsetY: event.offsetY,
+    ClientX: event.clientX,
+    ClientY: event.clientY,
+    ScreenX: event.screenX,
+    ScreenY: event.screenY,
+    PageX: event.pageX,
+    PageY: event.pageY,
+    MovementX: event.movementX,
+    MovementY: event.movementY,
+    Button: event.button,
+    Buttons: event.buttons,
+    ShiftKey: event.shiftKey,
+    CtrlKey: event.ctrlKey,
+    AltKey: event.altKey,
+    DeltaX: event.deltaX,
+    DeltaY: event.deltaY,
+    DeltaZ: event.deltaZ,
+    DeltaMode: event.deltaMode,
+  };
+}
+
+function pointerEventData(eventName, event) {
+  const data = mouseEventData(eventName, event);
+  data.Time = Date.now();
+  data.PointerId = event.pointerId;
+  data.PointerType = event.pointerType;
+  return data;
+}
+
+export function addMouseEventListener(elementId, eventName, instance, functionName) {
+  const batcher = getInputBatcher(elementId);
+
+  function eventHandler(event) {
     // Suppress the browser's native right-click menu so the app can show its own.
     if (eventName == "contextmenu") {
       event.preventDefault();
     }
 
-    instance.invokeMethodAsync(functionName, {
-      Type: eventName,
-      TargetId: event.target.id,
-      OffsetX: event.offsetX,
-      OffsetY: event.offsetY,
-      ClientX: event.clientX,
-      ClientY: event.clientY,
-      ScreenX: event.screenX,
-      ScreenY: event.screenY,
-      PageX: event.pageX,
-      PageY: event.pageY,
-      MovementX: event.movementX,
-      MovementY: event.movementY,
-      Button: event.button,
-      Buttons: event.buttons,
-      ShiftKey: event.shiftKey,
-      CtrlKey: event.ctrlKey,
-      AltKey: event.altKey,
-      DeltaX: event.deltaX,
-      DeltaY: event.deltaY,
-      DeltaZ: event.deltaZ,
-      DeltaMode: event.deltaMode,
-    });
+    const data = mouseEventData(eventName, event);
+
+    if (eventName == "wheel") {
+      const previous = batcher.queue.get("wheel")?.data;
+      data.WheelTicks = Math.sign(event.deltaY);
+      if (previous) {
+        data.DeltaX += previous.DeltaX;
+        data.DeltaY += previous.DeltaY;
+        data.DeltaZ += previous.DeltaZ;
+        data.WheelTicks += previous.WheelTicks;
+      }
+      const send = () => instance.invokeMethodAsync(functionName, data);
+      send.data = data;
+      scheduleBatchedInput(batcher, "wheel", send);
+      return;
+    }
+
+    flushInputBatch(batcher);
+    instance.invokeMethodAsync(functionName, data);
   }
 
   document.getElementById(elementId).addEventListener(eventName, eventHandler)
 }
 
 export function addPointerEventListener(elementId, eventName, instance, functionName) {
+  const batcher = getInputBatcher(elementId);
+
   function eventHandler(event) {
 
     if (eventName == "pointerdown") {
       event.target.setPointerCapture(event.pointerId);
+      batcher.activePointers++;
     }
-    if (eventName == "pointerup") {
+    if (eventName == "pointerup" || eventName == "pointercancel") {
       event.target.releasePointerCapture(event.pointerId);
-    }
-    if (eventName == "pointercancel") {
-      event.target.releasePointerCapture(event.pointerId);
+      batcher.activePointers = Math.max(0, batcher.activePointers - 1);
     }
 
-    instance.invokeMethodAsync(functionName, {
-      Type: eventName,
-      Time: Date.now(),
-      PointerId: event.pointerId,
-      PointerType: event.pointerType,
-      TargetId: event.target.id,
-      OffsetX: event.offsetX,
-      OffsetY: event.offsetY,
-      ClientX: event.clientX,
-      ClientY: event.clientY,
-      ScreenX: event.screenX,
-      ScreenY: event.screenY,
-      PageX: event.pageX,
-      PageY: event.pageY,
-      MovementX: event.movementX,
-      MovementY: event.movementY,
-      Button: event.button,
-      Buttons: event.buttons,
-      ShiftKey: event.shiftKey,
-      CtrlKey: event.ctrlKey,
-      AltKey: event.altKey,
-      DeltaX: event.deltaX,
-      DeltaY: event.deltaY,
-      DeltaZ: event.deltaZ,
-      DeltaMode: event.deltaMode,
-    });
+    const data = pointerEventData(eventName, event);
+
+    // Two active pointers = pinch zoom: the zoom step is applied per move event, so pinch
+    // moves are sent unbatched to keep the zoom speed intact.
+    if (eventName == "pointermove" && batcher.activePointers <= 1) {
+      const key = "move:" + event.pointerId;
+      const previous = batcher.queue.get(key)?.data;
+      if (previous) {
+        data.MovementX += previous.MovementX;
+        data.MovementY += previous.MovementY;
+      }
+      const send = () => instance.invokeMethodAsync(functionName, data);
+      send.data = data;
+      scheduleBatchedInput(batcher, key, send);
+      return;
+    }
+
+    flushInputBatch(batcher);
+    instance.invokeMethodAsync(functionName, data);
   }
 
   document.getElementById(elementId).addEventListener(eventName, eventHandler)

@@ -306,7 +306,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             var (mx, my) = (node.Boundary.Width, node.Boundary.Height);
 
             var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
-            newZoom = (e.DeltaY < 0) ? node.ContainerZoom * speed : node.ContainerZoom * (1 / speed);
+            var factor = Math.Pow(speed, e.ZoomSteps);
+            newZoom = (e.DeltaY < 0) ? node.ContainerZoom * factor : node.ContainerZoom * (1 / factor);
             if (newZoom < MinZoom)
                 newZoom = MinZoom;
             if (newZoom > MaxZoom)

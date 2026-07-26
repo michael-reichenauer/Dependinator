@@ -1,9 +1,12 @@
 #!/bin/bash
+# Publish the Blazor WebAssembly host (Release) and serve it through the Static
+# Web Apps CLI, with Azurite + the Azure Functions API running locally — the
+# closest local approximation of the deployed Azure Static Web Apps setup.
 
 # Exit on errors (`-e`), treat unset variables as errors (`-u`),
 # and fail a pipeline if any command in it fails (`pipefail`).
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 # Shared Azurite + Azure Functions helpers.
 source ./scripts/_stack.sh

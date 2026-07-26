@@ -1,6 +1,6 @@
 # Curated AWS icons: "<source-key> = <Target-Name>" where the source key is the "<key>" part of
 # Architecture-Service-Icons .../48/Arch_<key>_48.svg in the official package.
-# Import via ./import-icons; see scripts/import-cloud-icons.mjs for the package url/version.
+# Import via ./scripts/import-icons; see scripts/import-cloud-icons.mjs for the package url/version.
 
 # Compute & containers
 Amazon-EC2                  = EC2

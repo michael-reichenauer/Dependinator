@@ -1,7 +1,7 @@
+using System.Globalization;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
-using static System.FormattableString;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
@@ -89,7 +89,8 @@ static class LineSvg
 
         // The second, fully transparent polyline is the hover/hit target: it traces the same
         // path but much wider, so hovering/clicking near the thin visible line still hits it.
-        return Invariant(
+        return string.Create(
+            CultureInfo.InvariantCulture,
             $"""
             <polyline points="{points}" fill="none" stroke-width="{strokeWidth:0.##}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
             <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
@@ -123,7 +124,8 @@ static class LineSvg
                     var renderedPoint = polylinePoints[index + 1];
                     var elementId = PointerId.FromLinePoint(line.Id, index).ElementId;
                     // Visible handle plus a larger invisible circle as touch/click hit target.
-                    return Invariant(
+                    return string.Create(
+                        CultureInfo.InvariantCulture,
                         $"""
                     <g class="selectpoint">
                       <circle cx="{renderedPoint.X:0.##}" cy="{renderedPoint.Y:0.##}" r="{circleRadius
@@ -137,7 +139,8 @@ static class LineSvg
             )
         );
 
-        return Invariant(
+        return string.Create(
+            CultureInfo.InvariantCulture,
             $"""
             <polyline points="{points}" fill="none" stroke="{color}" stroke-width="{strokeWidth
                 + SelectedStrokeExtraWidth:0.##}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3,50"/>
@@ -149,7 +152,7 @@ static class LineSvg
     }
 
     static string ToPolylinePoints(IReadOnlyList<Pos> points) =>
-        string.Join(" ", points.Select(p => Invariant($"{p.X:0.##},{p.Y:0.##}")));
+        string.Join(" ", points.Select(p => string.Create(CultureInfo.InvariantCulture, $"{p.X:0.##},{p.Y:0.##}")));
 
     // Pulls the last point back along the final segment by length (clamped to that segment), so
     // an end marker drawn ahead of the line end (refX=0) has its tip at the original endpoint.

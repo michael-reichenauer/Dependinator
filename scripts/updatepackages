@@ -1,4 +1,11 @@
 #!/bin/bash
+# List (and with -u/-m upgrade) outdated NuGet and npm packages, and check for
+# vulnerable ones — covers the .NET solution and the VS Code extension.
+#
+#   ./scripts/updatepackages       list outdated + vulnerable packages
+#   ./scripts/updatepackages -u    upgrade non-major versions
+#   ./scripts/updatepackages -m    upgrade all versions, including major
+cd "$(dirname "$0")/.."
 
 # Function to check if dotnet-outdated is installed
 check_dotnet_outdated_installed() {

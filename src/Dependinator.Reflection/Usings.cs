@@ -1,4 +1,3 @@
-global using Dependinator.Core;
 global using Dependinator.Core.Parsing;
 global using Dependinator.Core.Utils;
 global using Dependinator.Core.Utils.Logging;

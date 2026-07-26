@@ -6,7 +6,7 @@ using Dependinator.Core.Utils.Logging;
 using Dependinator.Roslyn.Parsing;
 using static Dependinator.Core.Utils.Result;
 
-// Dev tool for regenerating the embedded demo model (run via ./gen-demo): parses the working
+// Dev tool for regenerating the embedded demo model (run via ./scripts/gen-demo): parses the working
 // Dependinator solution with Roslyn and writes the gzip-compressed, "Demo"-renamed model to
 // the Wasm wwwroot, where it is served as a static asset, embedded into Dependinator.Roslyn,
 // and copied into the VS Code extension by its build. This project is intentionally not part

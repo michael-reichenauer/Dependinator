@@ -1,9 +1,7 @@
 using Dependinator.UI.Diagrams.Icons;
-using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
-using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
 using MudBlazor;
 
@@ -71,7 +69,8 @@ class ManualEditService(
     ICommandService commandService,
     IStructureService structureService,
     ISelectionService selectionService,
-    IDialogService dialogService
+    IDialogService dialogService,
+    IApplicationEvents applicationEvents
 ) : IManualEditService
 {
     // Match the size parsed nodes get from the auto-layout.
@@ -255,13 +254,14 @@ class ManualEditService(
         StateChanged?.Invoke();
     }
 
-    // No StateChanged here: the canvas already re-renders on every pointer event, and other
-    // subscribers (e.g. toolbars) do not need per-move notifications.
+    // Only the render trigger per move (no StateChanged): other subscribers (e.g. toolbars)
+    // do not need per-move notifications, but the canvas drag preview must follow the cursor.
     public void UpdateLinkDrag(Pos pos)
     {
         if (!IsLinkDragActive)
             return;
         LinkDragEnd = pos;
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public async Task CompleteLinkDragAsync(PointerId targetPointerId, Pos? canvasPos)
@@ -349,6 +349,7 @@ class ManualEditService(
         LinkDragEnd = Pos.None;
         dragLinkSourceName = "";
         StateChanged?.Invoke();
+        applicationEvents.TriggerUIStateChanged(); // The canvas must hide the drag preview line
     }
 
     // Deletes a manual node and its whole subtree (children and their links), as one undoable step.

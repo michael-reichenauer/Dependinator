@@ -6,29 +6,29 @@ with xUnit, testing the app as a user sees it at `http://localhost:5000`.
 ## Running
 
 ```bash
-./e2e                # chromium (default), auto-starts the app if needed
-./e2e -b firefox     # specific browser: chromium | firefox | webkit
-./e2e -a             # all three browsers (recommended before releases)
-./e2e -s             # also start the cloud-sync stack so sync tests run
-./e2e -t             # record a Playwright trace per test into ./traces
+./scripts/e2e                # chromium (default), auto-starts the app if needed
+./scripts/e2e -b firefox     # specific browser: chromium | firefox | webkit
+./scripts/e2e -a             # all three browsers (recommended before releases)
+./scripts/e2e -s             # also start the cloud-sync stack so sync tests run
+./scripts/e2e -t             # record a Playwright trace per test into ./traces
 ```
 
-`./e2e` starts (and stops) `Dependinator.Web` itself in test mode. If an app is
-already running on `http://localhost:5000` (e.g. `./watch`), it exits with an error
+`./scripts/e2e` starts (and stops) `Dependinator.Web` itself in test mode. If an app is
+already running on `http://localhost:5000` (e.g. `./scripts/watch`), it exits with an error
 asking you to stop it first — so tests always run against the known demo model.
 
 ### Viewing traces
 
-`./e2e -t` records a trace per test into `traces/NNN-<browser>.zip` (the big ones are
+`./scripts/e2e -t` records a trace per test into `traces/NNN-<browser>.zip` (the big ones are
 UI tests; the tiny ones are API-only sync tests). To view one:
 
 ```bash
-./trace        # most recent trace
-./trace 6      # traces/006-*.zip
-./trace path/to/trace.zip
+./scripts/trace        # most recent trace
+./scripts/trace 6      # traces/006-*.zip
+./scripts/trace path/to/trace.zip
 ```
 
-`./trace` serves the Playwright Trace Viewer on `http://localhost:9322` (it doesn't
+`./scripts/trace` serves the Playwright Trace Viewer on `http://localhost:9322` (it doesn't
 open a window — devcontainer-friendly). Open that URL in VS Code's built-in **Simple
 Browser** (`Cmd/Ctrl+Shift+P` → "Simple Browser: Show") or your Mac browser; `Ctrl+C`
 to stop. In the viewer: scrub the filmstrip for screenshots, click an action to
@@ -42,30 +42,30 @@ pushes to `main`/`dev`; trigger it manually ("Run workflow") with **all** to als
 cover Firefox + WebKit before a release. It sets `E2E_TRACE=1` and, **on failure**,
 uploads the recorded traces as a `playwright-traces` artifact — download the `.zip`
 and open it at <https://trace.playwright.dev>. Sync (`[SyncFact]`) tests are skipped
-in CI (they need `func` + Azurite); they run locally via `./e2e -s`.
+in CI (they need `func` + Azurite); they run locally via `./scripts/e2e -s`.
 
 ### Deterministic model (test mode)
 
-`./e2e` starts the app with `DEPENDINATOR_E2E=1`, which puts it in **test mode**
+`./scripts/e2e` starts the app with `DEPENDINATOR_E2E=1`, which puts it in **test mode**
 (`Build.IsTestMode`): on startup it loads the embedded **demo model** (`/Demo.sln`,
 a pre-parsed snapshot served from `Dependinator.Roslyn`'s embedded `demo.model`)
 instead of parsing the working solution. Tests therefore get a fast, deterministic
-model — the root node is `Demo.sln`. This is why `./e2e` refuses to reuse an
-already-running app (a plain `./watch` would load the real solution): it always
+model — the root node is `Demo.sln`. This is why `./scripts/e2e` refuses to reuse an
+already-running app (a plain `./scripts/watch` would load the real solution): it always
 starts its own test-mode app so the model is known.
 
 ### Cloud-sync tests
 
 Sync features talk to the Azure Functions API on port 7071 (backed by Azurite).
 Tests that need it are marked `[SyncFact]` instead of `[E2EFact]` and are
-skipped unless that stack is up. `./e2e -s` brings it up the same way
-`./watch` does — reusing an already-running Azurite/Functions host, or
+skipped unless that stack is up. `./scripts/e2e -s` brings it up the same way
+`./scripts/watch` does — reusing an already-running Azurite/Functions host, or
 starting (and stopping) them itself. It requires `func` and `azurite` installed.
 Note that signed-in sync flows additionally need a Clerk test user (not yet set
 up), so `[SyncFact]` currently only covers behavior reachable without sign-in.
 
 These tests are **skipped** during plain `dotnet test Dependinator.sln` — they
-only run when the `E2E=1` environment variable is set, which `./e2e` does.
+only run when the `E2E=1` environment variable is set, which `./scripts/e2e` does.
 Equivalent manual invocation:
 
 ```bash
@@ -73,7 +73,7 @@ E2E=1 BROWSER=firefox dotnet test Dependinator.E2E.Tests/Dependinator.E2E.Tests.
 ```
 
 `E2E_BASE_URL` overrides the target app (e.g. `http://localhost:5000` for the
-Wasm host started with `./run`).
+Wasm host started with `./scripts/run`).
 
 ## Playwright in 60 seconds
 

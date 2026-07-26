@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Shared helpers for the local dev stack (Azurite + Azure Functions host).
-# Sourced by ./run, ./watch and ./e2e — not meant to be executed directly.
+# Sourced by ./scripts/run, ./scripts/watch and ./scripts/e2e — not meant to be executed directly.
 #
 # The start helpers set STACK_AZURITE_PID / STACK_FUNC_PID so callers can stop
 # only the processes they started in their own cleanup trap.

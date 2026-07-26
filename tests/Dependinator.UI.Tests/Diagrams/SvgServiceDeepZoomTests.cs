@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Diagrams.Tiles;
-using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Rect = Dependinator.UI.Shared.Types.Rect;
@@ -87,6 +86,9 @@ public class SvgServiceDeepZoomTests
             .Select(v => double.Parse(v, CultureInfo.InvariantCulture))
             .ToList();
 
-        Assert.All(viewportCoordinates, c => Assert.True(Math.Abs(c) < FloatSafeCoordinate, $"Viewport coordinate {c} exceeds float-safe magnitude"));
+        Assert.All(
+            viewportCoordinates,
+            c => Assert.True(Math.Abs(c) < FloatSafeCoordinate, $"Viewport coordinate {c} exceeds float-safe magnitude")
+        );
     }
 }

@@ -1,10 +1,8 @@
 #!/bin/bash
-
 # Starts Azurite + Azure Functions host in the background, then runs
 # `dotnet watch` on the Blazor Server project with cloud sync enabled.
-
 set -euo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 # Shared Azurite + Azure Functions helpers.
 source ./scripts/_stack.sh

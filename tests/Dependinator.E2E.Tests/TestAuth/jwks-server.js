@@ -4,7 +4,7 @@
 // Azure Functions host (CloudSyncBearerTokenValidator) can validate JWTs that
 // the C# test mints with the matching private key — no real Clerk needed.
 //
-// Started by `./e2e -s`. Port via argv[2] or PORT env (default 7072).
+// Started by `./scripts/e2e -s`. Port via argv[2] or PORT env (default 7072).
 const http = require("http");
 const fs = require("fs");
 const path = require("path");

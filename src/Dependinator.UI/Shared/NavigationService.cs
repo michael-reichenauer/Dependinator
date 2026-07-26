@@ -1,6 +1,5 @@
 using Dependinator.Core;
 using Dependinator.Core.Parsing;
-using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;

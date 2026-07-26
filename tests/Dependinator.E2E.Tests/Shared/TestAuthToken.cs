@@ -7,9 +7,9 @@ namespace Dependinator.E2E.Tests.Shared;
 
 // Mints RS256 JWTs for cloud-sync e2e tests, signed with the throwaway test key in
 // TestAuth/private-key.pem. The matching public key is served by TestAuth/jwks-server.js
-// (started by ./e2e -s), so the running Functions host validates these like real tokens.
+// (started by ./scripts/e2e -s), so the running Functions host validates these like real tokens.
 //
-// The issuer must match the Functions host's CloudSync__ClerkIssuer; ./e2e -s sets both
+// The issuer must match the Functions host's CloudSync__ClerkIssuer; ./scripts/e2e -s sets both
 // from E2E_CLERK_ISSUER. The 'kid' must match the one in TestAuth/jwks.json.
 public static class TestAuthToken
 {

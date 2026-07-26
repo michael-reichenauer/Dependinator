@@ -1,7 +1,6 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
-using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Modeling;
 

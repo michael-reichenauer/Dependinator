@@ -1,10 +1,10 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Web;
 using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
-using static System.FormattableString;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
@@ -102,14 +102,15 @@ static partial class NodeSvg
             ScaledMaxLines(DescriptionMaxLines, parentZoom, textZoom)
         );
 
-        return Invariant(
+        return string.Create(
+            CultureInfo.InvariantCulture,
             $"""
             <svg x="{nodeCanvasRect.X:0.##}" y="{nodeCanvasRect.Y:0.##}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" viewBox="{0} {0} {nodeCanvasRect.Width:0.##} {nodeCanvasRect.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
               <rect x="{0}" y="{0}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" stroke-width="{strokeWidth:0.##}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
               {hoverGroup}
               {childrenContent}
             </svg>
-            <use href="#{iconId}" xlink:href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
+            <use href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
             <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {descriptionSvg}
             {selectedOverlay}
@@ -187,9 +188,10 @@ static partial class NodeSvg
             layout.DescriptionMaxLines
         );
 
-        return Invariant(
+        return string.Create(
+            CultureInfo.InvariantCulture,
             $"""
-            <use href="#{iconId}" xlink:href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />
+            <use href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />
             <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
             {descriptionSvg}
             {hoverGroup}
@@ -202,7 +204,8 @@ static partial class NodeSvg
     public static string GetTooLargeNodeContainerSvg(Rect nodeCanvasRect, string childrenContent)
     {
         var (x, y, w, h) = (nodeCanvasRect.X, nodeCanvasRect.Y, nodeCanvasRect.Width, nodeCanvasRect.Height);
-        return Invariant(
+        return string.Create(
+            CultureInfo.InvariantCulture,
             $"""
               <svg x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="0 0 {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
                 {childrenContent}
@@ -284,7 +287,8 @@ static partial class NodeSvg
         var glyphSize = fontSize * 0.95;
         var x = textEndX + fontSize * 0.35;
         // U+270E LOWER RIGHT PENCIL
-        return Invariant(
+        return string.Create(
+            CultureInfo.InvariantCulture,
             $"""<text x="{x:0.##}" y="{textCenterY:0.##}" font-size="{glyphSize:0.##}px" fill="{DColors.ManualMarker}" text-anchor="start" dominant-baseline="central" pointer-events="none">&#x270E;</text>"""
         );
     }
@@ -328,13 +332,15 @@ static partial class NodeSvg
             "\n",
             lines.Select(
                 (line, i) =>
-                    Invariant(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
                         $"""<tspan x="{x:0.##}" dy="{(i == 0 ? firstLineOffset : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
                     )
             )
         );
 
-        return Invariant(
+        return string.Create(
+            CultureInfo.InvariantCulture,
             $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>"""
         );
     }
@@ -433,7 +439,8 @@ static partial class NodeSvg
     )
     {
         var title = string.IsNullOrWhiteSpace(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
-        return Invariant(
+        return string.Create(
+                CultureInfo.InvariantCulture,
                 $"""
                 <g class="{cssClass}" id="{elementId}">
                   <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
@@ -461,7 +468,8 @@ static partial class NodeSvg
         // Visible dot + plus glyph, plus an invisible touch ellipse that stretches back to the
         // icon edge so the cursor never crosses a dead zone between node and handle (no hover
         // flicker).
-        return Invariant(
+        return string.Create(
+            CultureInfo.InvariantCulture,
             $"""
             <g class="linkhandle">
               <circle id="{elementId}" cx="{x:0.##}" cy="{y:0.##}" r="{LinkHandleRadius}" fill="{DColors.Selected}"/>
@@ -484,7 +492,8 @@ static partial class NodeSvg
         var w = geometry.Width;
         var h = geometry.Height;
 
-        var borderSvg = Invariant(
+        var borderSvg = string.Create(
+            CultureInfo.InvariantCulture,
             $"""
             <rect x="{x - 6:0.##}" y="{y - 6:0.##}" width="{w + 13:0.##}" height="{h
                 + 13:0.##}" stroke-width="0.5" rx="0" fill="none" stroke="{color}" stroke-dasharray="5,5"/>
@@ -522,7 +531,8 @@ static partial class NodeSvg
             .Select(handle =>
             {
                 var elementId = PointerId.FromNodeResize(node.Id, handle.Type).ElementId;
-                return Invariant(
+                return string.Create(
+                    CultureInfo.InvariantCulture,
                     $"""
                     <g class="selectpoint">
                         <circle id="{elementId}" cx="{handle.X:0.##}" cy="{handle.Y:0.##}" r="{HandleRadius}" fill="{color}" />

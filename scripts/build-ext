@@ -1,4 +1,7 @@
 #!/bin/bash
+# Build the VS Code extension: npm install, bump the patch version, and
+# package it into a .vsix (see src/DependinatorVsCode/).
+cd "$(dirname "$0")/.."
 npm install --prefix ./src/DependinatorVsCode
 npm version patch --no-git-tag-version --prefix ./src/DependinatorVsCode
 npm run package --prefix ./src/DependinatorVsCode

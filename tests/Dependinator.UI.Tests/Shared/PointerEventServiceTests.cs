@@ -10,8 +10,7 @@ public class PointerEventServiceTests
     static PointerEventService CreateService()
     {
         Mock<IJSInterop> jsInterop = new();
-        Mock<IApplicationEvents> applicationEvents = new();
-        return new PointerEventService(jsInterop.Object, applicationEvents.Object);
+        return new PointerEventService(jsInterop.Object);
     }
 
     static PointerEvent PointerEventAt(string type, double x, double y, string pointerType) =>

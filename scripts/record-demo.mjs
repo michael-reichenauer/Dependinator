@@ -9,7 +9,7 @@
 //   5. Tree items are expanded to drill into member-level dependencies.
 //   6. The explorer is closed and the view zooms back out (Fit to Screen).
 //
-// Run via ./record-demo (repo root), which starts the app if needed and sets
+// Run via ./scripts/record-demo (repo root), which starts the app if needed and sets
 // NODE_PATH so the globally installed playwright (bundled with @playwright/cli
 // in the devcontainer) is resolvable. Requires ffmpeg.
 //

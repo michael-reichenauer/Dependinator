@@ -1,21 +1,21 @@
 #!/bin/bash
 # Run the Playwright UI tests (Dependinator.E2E.Tests).
 #
-#   ./e2e               run on chromium (default)
-#   ./e2e -b firefox    run on a specific browser (chromium|firefox|webkit)
-#   ./e2e -a            run on all three browsers (e.g. before a release)
-#   ./e2e -s            also start the cloud-sync stack (Azurite + Functions on
-#                       7071) so sync tests ([SyncFact]) run; needs func+azurite
-#   ./e2e -t            record a Playwright trace per test into ./tests/Dependinator.E2E.Tests/traces
-#                       (open a .zip at https://trace.playwright.dev). CI sets this on failure.
+#   ./scripts/e2e               run on chromium (default)
+#   ./scripts/e2e -b firefox    run on a specific browser (chromium|firefox|webkit)
+#   ./scripts/e2e -a            run on all three browsers (e.g. before a release)
+#   ./scripts/e2e -s            also start the cloud-sync stack (Azurite + Functions on
+#                               7071) so sync tests ([SyncFact]) run; needs func+azurite
+#   ./scripts/e2e -t            record a Playwright trace per test into ./tests/Dependinator.E2E.Tests/traces
+#                               (open a .zip at https://trace.playwright.dev). CI sets this on failure.
 #
 # Starts Dependinator.Web itself in test mode (embedded demo model) and stops it
-# afterwards. If an app is already running at http://localhost:5000 (e.g. ./watch),
+# afterwards. If an app is already running at http://localhost:5000 (e.g. ./scripts/watch),
 # it exits with an error asking you to stop it first — so tests always run against a
 # known model. With -s, an already-running Azurite/Functions host is reused; otherwise
-# they are started and stopped here (same as ./watch).
+# they are started and stopped here (same as ./scripts/watch).
 set -uo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 # Shared Azurite + Azure Functions helpers (stack_stack_port_is_open, stack_start_*).
 source ./scripts/_stack.sh
@@ -36,7 +36,7 @@ while getopts "ab:st" opt; do
         b) BROWSERS=("$OPTARG") ;;
         s) SYNC=1 ;;
         t) E2E_TRACE=1 ;;
-        *) echo "Usage: ./e2e [-a] [-b chromium|firefox|webkit] [-s] [-t]"; exit 1 ;;
+        *) echo "Usage: ./scripts/e2e [-a] [-b chromium|firefox|webkit] [-s] [-t]"; exit 1 ;;
     esac
 done
 
@@ -83,17 +83,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# ./e2e starts the app itself in test mode (DEPENDINATOR_E2E=1) so it loads the embedded
-# demo model deterministically. If something is already serving the URL (e.g. ./watch),
-# its model is unknown, so refuse rather than test against the wrong app.
+# ./scripts/e2e starts the app itself in test mode (DEPENDINATOR_E2E=1) so it loads the
+# embedded demo model deterministically. If something is already serving the URL (e.g.
+# ./scripts/watch), its model is unknown, so refuse rather than test against the wrong app.
 if curl -sf -o /dev/null "$BASE_URL"; then
-    echo "Error: an app is already running at $BASE_URL (e.g. ./watch)." >&2
-    echo "Stop it so ./e2e can start the app itself in test mode, then re-run." >&2
+    echo "Error: an app is already running at $BASE_URL (e.g. ./scripts/watch)." >&2
+    echo "Stop it so ./scripts/e2e can start the app itself in test mode, then re-run." >&2
     exit 1
 fi
 
 # Optionally bring up the cloud-sync stack (Azurite + Azure Functions on 7071 + a
-# local test JWKS server), mirroring ./watch, so the Blazor app can reach the
+# local test JWKS server), mirroring ./scripts/watch, so the Blazor app can reach the
 # cloud API during tests. Auth uses a self-minted token validated against the test
 # JWKS instead of real Clerk — see tests/Dependinator.E2E.Tests/TestAuth/.
 E2E_SYNC=0
@@ -208,7 +208,7 @@ done
 
 if [[ "$E2E_TRACE" == "1" ]]; then
     echo ""
-    echo "Traces recorded in ./tests/Dependinator.E2E.Tests/traces — view one with: ./trace"
+    echo "Traces recorded in ./tests/Dependinator.E2E.Tests/traces — view one with: ./scripts/trace"
 fi
 
 exit $RESULT

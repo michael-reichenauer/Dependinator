@@ -1,4 +1,5 @@
 #!/bin/bash
 # Regenerate the embedded demo model (src/Dependinator.Wasm/wwwroot/demo.model)
 # by parsing Dependinator.sln. See src/Dependinator.DemoGen/Program.cs.
+cd "$(dirname "$0")/.."
 dotnet run --project ./src/Dependinator.DemoGen/Dependinator.DemoGen.csproj
