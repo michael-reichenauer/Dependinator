@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.8.20 (2026-07-26)
+
+- Regenerate demo model
+- Regenerate demo recording
+- Optimize rendering
+- Optimize tiles cache, based on size and eviction
+
 ## 0.8.19 (2026-07-23)
 
 - Add link to changelog in release notes
