@@ -144,6 +144,26 @@ jobs:
         run: npm run package:${{ matrix.target }}
         working-directory: src/DependinatorVsCode
 
+      # The bundled LSP server is per-RID and is picked at runtime from server/<rid>/,
+      # so a package whose server RID does not match its target has no working server
+      # at all. Fail the build rather than shipping one.
+      - name: Verify bundled server matches target
+        run: |
+          case "${{ matrix.target }}" in
+            linux-x64) rid=linux-x64 ;;
+            linux-arm64) rid=linux-arm64 ;;
+            win32-x64) rid=win-x64 ;;
+            win32-arm64) rid=win-arm64 ;;
+            darwin-x64) rid=osx-x64 ;;
+            darwin-arm64) rid=osx-arm64 ;;
+            *) echo "Unmapped target ${{ matrix.target }}"; exit 1 ;;
+          esac
+          if [ ! -d "server/$rid" ]; then
+            echo "Expected server/$rid, found: $(ls server)"
+            exit 1
+          fi
+        working-directory: src/DependinatorVsCode
+
       - name: Upload VSIX
         uses: actions/upload-artifact@v4
         with:
@@ -154,7 +174,12 @@ jobs:
       - name: Publish to Marketplace
         # event_name is 'push' when this workflow is called from the CI/CD main run.
         if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
-        run: npx vsce publish --target ${{ matrix.target }} -p "$VSCE_PAT"
+        # Publish the .vsix built above instead of letting vsce re-package. A bare
+        # "vsce publish --target" re-runs vscode:prepublish without VSCODE_TARGET, so
+        # prepare-server.sh falls back to the runner's host RID and every published
+        # package ends up with a linux-x64 server. --packagePath reads the target from
+        # the package, so --target must not be passed alongside it.
+        run: npx vsce publish --packagePath "$(ls *.vsix)" -p "$VSCE_PAT"
         working-directory: src/DependinatorVsCode
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
