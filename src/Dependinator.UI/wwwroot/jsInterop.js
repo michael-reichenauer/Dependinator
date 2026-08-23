@@ -160,6 +160,11 @@ export function isVsCodeWebView() {
   return !!(window.dependinator && typeof window.dependinator.postMessage === "function");
 }
 
+// The version of the VS Code extension hosting this webview, injected by the extension host.
+export function getVsCodeExtensionVersion() {
+  return (window.dependinator && window.dependinator.extensionVersion) || "";
+}
+
 export function listenToVsCodeMessages(instance, functionName) {
   window.addEventListener("message", (event) => {
     if (!event || !event.data || !event.data.type) {

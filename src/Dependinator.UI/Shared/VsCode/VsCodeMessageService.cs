@@ -34,6 +34,7 @@ class VsCodeMessageService(
         if (!isVsCodeWebView)
             return;
         Core.Build.SetIsVsCodeExtWasm();
+        Core.Build.SetVsCodeExtensionVersion(await jSInterop.Call<string>("getVsCodeExtensionVersion"));
 
         reference = jSInterop.Reference(this);
         await jSInterop.Call("listenToVsCodeMessages", reference, nameof(OnVsCodeMessage));
