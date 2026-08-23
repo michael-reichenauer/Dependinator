@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.22 (2026-08-23)
+
+- In VSCode Ext, open the solution
+
 ## 0.8.21 (2026-08-23)
 
 - Fix publish issue
