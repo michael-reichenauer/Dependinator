@@ -20,6 +20,7 @@ interface IModelListService
     IReadOnlyList<string> LocalPaths { get; }
     IReadOnlyList<string> CloudPaths { get; }
     string? LastUsedPath { get; }
+    string? StartupPath { get; }
     bool IsLocalPath(string path);
 
     IReadOnlyList<ModelItem> GetModelItems();
@@ -45,6 +46,25 @@ class ModelListService(
     public IReadOnlyList<string> LocalPaths => localPaths;
     public IReadOnlyList<string> CloudPaths => cloudPaths;
     public string? LastUsedPath => recentPaths.Any() ? recentPaths[0] : null;
+
+    // The model to show when the app starts. Browser hosts resume the most recently used
+    // model, but the VS Code extension is opened for a specific workspace, so it starts on
+    // that workspace's solution instead of a model last used in some other workspace. The
+    // last used model is still kept when it is one of this workspace's solutions, since a
+    // workspace can contain several.
+    public string? StartupPath
+    {
+        get
+        {
+            if (!Build.IsVsCodeExtWasm)
+                return LastUsedPath;
+
+            if (LastUsedPath is not null && IsLocalPath(LastUsedPath))
+                return LastUsedPath;
+
+            return localPaths.FirstOrDefault() ?? LastUsedPath;
+        }
+    }
 
     public bool IsLocalPath(string path) => LocalPaths.Contains(path);
 
