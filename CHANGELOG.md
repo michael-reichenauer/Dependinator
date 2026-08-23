@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.21 (2026-08-23)
+
+- Fix publish issue
+
 ## 0.8.20 (2026-07-26)
 
 - Regenerate demo model
