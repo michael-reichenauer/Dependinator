@@ -9,6 +9,7 @@ public static class Build
     static bool isVsCodeExtWasm = false;
     static bool isVsCodeExtLsp = false;
     static bool isTestMode = false;
+    static string vsCodeExtensionVersion = "";
     public static readonly string Version = GetVersion().ToString();
     public static readonly string ProductVersion = GetProductVersion().ToString();
     public static readonly string Time = GetTime().IsoZone();
@@ -19,6 +20,10 @@ public static class Build
     public static bool IsStandaloneWasm => IsWasm && !isVsCodeExtWasm;
     public static bool IsVsCodeExtWasm => IsWasm && isVsCodeExtWasm;
     public static bool IsVsCodeExtLsp => !IsWasm && isVsCodeExtLsp;
+
+    // The version of the VS Code extension hosting the app, reported by the extension host.
+    // Empty when not running inside the extension (or before the host has been queried).
+    public static string VsCodeExtensionVersion => vsCodeExtensionVersion;
 
     // True during UI/e2e test runs (set from the DEPENDINATOR_E2E env var by the host).
     // Makes the app load the embedded demo model instead of parsing a real solution,
@@ -44,6 +49,8 @@ public static class Build
     }
 
     public static void SetIsVsCodeExtWasm() => isVsCodeExtWasm = true;
+
+    public static void SetVsCodeExtensionVersion(string version) => vsCodeExtensionVersion = version;
 
     public static void SetIsVsCodeExtLsp() => isVsCodeExtLsp = true;
 

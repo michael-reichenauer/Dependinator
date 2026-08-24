@@ -24,7 +24,11 @@ export function createDependinatorWebviewPanel(
         }
     );
 
-    panel.webview.html = getWebviewHtml(panel.webview, context.extensionUri);
+    panel.webview.html = getWebviewHtml(
+        panel.webview,
+        context.extensionUri,
+        context.extension.packageJSON.version ?? ""
+    );
     return panel;
 }
 
@@ -58,7 +62,11 @@ export function registerWebviewMessageHandler(
     });
 }
 
-function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
+function getWebviewHtml(
+    webview: vscode.Webview,
+    extensionUri: vscode.Uri,
+    extensionVersion: string
+): string {
     // Use a webview-safe URI for bundled assets.
     const mediaUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "media"));
     const baseUri = `${mediaUri.toString()}/`;
@@ -104,7 +112,8 @@ function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): stri
         const vscode = acquireVsCodeApi();
         window.dependinator = {
             getBaseUri: () => dependinatorBaseUri,
-            postMessage: (message) => vscode.postMessage(message)
+            postMessage: (message) => vscode.postMessage(message),
+            extensionVersion: "${extensionVersion}"
         };
 
         // Replace setTimeout/setInterval with Web Worker-backed versions.

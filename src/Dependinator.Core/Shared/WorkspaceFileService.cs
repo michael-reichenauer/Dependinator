@@ -24,7 +24,13 @@ class WorkspaceFileService : IWorkspaceFileService
     public async Task<IReadOnlyList<string>> GetSolutionFilePathsAsync()
     {
         await Task.CompletedTask;
-        var paths = EnumerateFiles(rootPaths, "*.sln").ToList();
+        // Order shallowest first, then by path, so the workspace's top level solution comes
+        // first regardless of enumeration order; callers treat the first as the workspace
+        // solution (e.g. the model the VS Code extension starts on).
+        var paths = EnumerateFiles(rootPaths, "*.sln")
+            .OrderBy(path => path.Count(c => c is '/' or '\\'))
+            .ThenBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
         Log.Info("Solution Paths", paths);
         return paths;
     }

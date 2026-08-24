@@ -78,14 +78,14 @@ class CanvasService(
         await screenService.CheckResizeAsync();
         // In test mode always load the embedded demo model for a fast, deterministic
         // model, ignoring any persisted recent/local paths.
-        var lastUsedPath = Dependinator.Core.Build.IsTestMode ? DemoModel.Path : recentModelsService.LastUsedPath;
-        if (lastUsedPath is null)
+        var startupPath = Dependinator.Core.Build.IsTestMode ? DemoModel.Path : recentModelsService.StartupPath;
+        if (startupPath is null)
         {
-            lastUsedPath = DemoModel.Path;
+            startupPath = DemoModel.Path;
             isShowDemoMessage = true;
         }
 
-        await LoadAsync(lastUsedPath);
+        await LoadAsync(startupPath);
 
         // Signal that the initial model has loaded and rendered (data-app-ready=true on
         // the body), so UI/e2e tests can wait on it instead of arbitrary timeouts.

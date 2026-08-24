@@ -260,6 +260,10 @@
 <MudMessageBox @ref="aboutBox" Title="About Dependinator" YesText="Close">
     <MessageContent>
         <MudText Typo="Typo.body1">Version: @Build.Version</MudText>
+        @if (Build.VsCodeExtensionVersion != "")
+        {
+            <MudText Typo="Typo.body1">Extension version: @Build.VsCodeExtensionVersion</MudText>
+        }
         <MudText Typo="Typo.body1">Commit sha: @Build.CommitSid</MudText>
         <MudText Typo="Typo.body1">Build Time: @Build.Time</MudText>
     </MessageContent>
