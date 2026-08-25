@@ -98,20 +98,80 @@ public sealed class AppPage
     public ILocator ExplorerDependenciesButton => page.GetByTestId("explorer-dependencies");
     public ILocator ExplorerCloseButton => page.GetByTestId("explorer-close");
 
+    // Close the dependencies/references explorer, retrying until the tree is really gone: the
+    // close button sits inside the popover, so a click landing while the popover re-renders is
+    // swallowed and leaves it open.
+    public async Task CloseExplorerAsync()
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            await ExplorerCloseButton.ClickAsync(new() { Timeout = MenuAttemptTimeout });
+            try
+            {
+                await DependenciesTree.WaitForAsync(
+                    new() { State = WaitForSelectorState.Hidden, Timeout = MenuAttemptTimeout }
+                );
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
+    }
+
     // Menu open/hover steps retry a few short attempts instead of one long wait: the flaky
-    // failure mode is a swallowed click or hover (MudBlazor opens menus via a server roundtrip
-    // behind a popover overlay, and a click landing while a previous popover is still closing
-    // can be eaten without opening the menu), which only another attempt can recover from.
+    // failure mode is a swallowed click or hover. MudBlazor opens menus via a server roundtrip
+    // behind a popover overlay, so a click is eaten when a previous popover is still closing, or
+    // when the activator is re-rendered under the pointer (the node toolbar re-renders on every
+    // canvas update, and its position follows the node). Only another click can recover from
+    // that — a longer wait cannot, because nothing is pending.
     const int MenuAttempts = 3;
     const float MenuAttemptTimeout = 5_000;
 
     static bool IsRetryable(Exception e) => e is TimeoutException or PlaywrightException;
 
+    // Click a MudBlazor menu activator until its popover really shows the expected item. Use
+    // this for every menu/dropdown rather than a bare ClickAsync: Playwright reports a
+    // swallowed click as successful, so the failure only surfaces later as the popover content
+    // never appearing.
+    public Task OpenMenuAsync(ILocator activator, ILocator expectedItem) =>
+        OpenMenuAsync(activator, expectedItem, MenuAttempts);
+
+    async Task OpenMenuAsync(ILocator activator, ILocator expectedItem, int attempts)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            // Already showing — a previous step can leave the menu open, and clicking the
+            // activator again would toggle it shut instead of opening it.
+            if (await expectedItem.IsVisibleAsync())
+                return;
+
+            try
+            {
+                await activator.ClickAsync(new() { Timeout = MenuAttemptTimeout });
+                await expectedItem.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < attempts)
+            {
+                await ResetPopoversAsync();
+            }
+        }
+    }
+
+    // Dismiss any half-open popover and park the pointer off the toolbar before clicking again:
+    // a popover still fading out swallows the next click, and a lingering tooltip popover can
+    // cover the activator entirely.
+    async Task ResetPopoversAsync()
+    {
+        await page.Keyboard.PressAsync("Escape");
+        await page.Mouse.MoveAsync(0, 0);
+    }
+
     // Open the app menu and return a menu-item locator by its data-testid.
     public async Task<ILocator> OpenMenuItemAsync(string testId)
     {
-        await OpenAppMenuAsync(MenuItem(testId));
-        return MenuItem(testId);
+        ILocator item = MenuItem(testId);
+        await OpenMenuAsync(Menu, item);
+        return item;
     }
 
     // Open the app menu, hover the parent submenu to expand it, and return the nested
@@ -121,44 +181,101 @@ public sealed class AppPage
     public async Task<ILocator> OpenSubMenuItemAsync(string parentTestId, string testId)
     {
         ILocator parent = MenuItem(parentTestId);
-        await OpenAppMenuAsync(parent);
-
         ILocator item = MenuItem(testId);
+
         for (int attempt = 1; ; attempt++)
         {
             try
             {
+                // Re-open the app menu on every attempt instead of only re-hovering: the menu
+                // can close again right after it opened — a re-render, or a click that only
+                // looked successful because the item was still visible while the previous
+                // popover faded out — and re-hovering a parent that is gone never recovers.
+                await OpenMenuAsync(Menu, parent, attempts: 1);
                 await parent.HoverAsync(new() { Timeout = MenuAttemptTimeout });
                 await item.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
                 return item;
             }
             catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
             {
-                // Park the pointer off the item so the re-hover fires a fresh enter event.
-                await page.Mouse.MoveAsync(0, 0);
+                await ResetPopoversAsync();
             }
         }
     }
 
-    // Click the app-menu button until the expected item shows. A single long wait cannot
-    // recover from a swallowed click, so retry with short waits, pressing Escape between
-    // attempts to close any half-open popover before clicking again.
-    async Task OpenAppMenuAsync(ILocator item)
+    // Repeat a canvas gesture until it produces the expected UI. A pointer gesture landing while
+    // the canvas re-renders is swallowed silently — nothing opens, and nothing reports an error
+    // — so the only way to tell it actually arrived is to look for its result and gesture again.
+    public async Task RepeatUntilVisibleAsync(Func<Task> gesture, ILocator expected)
     {
         for (int attempt = 1; ; attempt++)
         {
-            await Menu.ClickAsync();
+            await gesture();
             try
             {
-                await item.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                await expected.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
                 return;
             }
-            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
-            {
-                await page.Keyboard.PressAsync("Escape");
-            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
         }
     }
+
+    // Open the selected node's context menu (NodeToolbar.razor) and return one of its items.
+    public async Task<ILocator> OpenNodeMenuItemAsync(string testId)
+    {
+        ILocator item = MenuItem(testId);
+        await OpenMenuAsync(NodeToolbarMenu, item);
+        return item;
+    }
+
+    // Open the node toolbar's colour dropdown and return a container-background swatch row.
+    public async Task<ILocator> OpenColorItemAsync(string color)
+    {
+        ILocator item = ColorItem(color);
+        await OpenMenuAsync(NodeSetColorButton, item);
+        return item;
+    }
+
+    // Open the node toolbar's colour dropdown and return an icon-tint swatch row.
+    public async Task<ILocator> OpenIconColorItemAsync(string color)
+    {
+        ILocator item = IconColorItem(color);
+        await OpenMenuAsync(NodeSetColorButton, item);
+        return item;
+    }
+
+    // Pick a swatch from the node toolbar's colour dropdown. A click on a row inside a
+    // MudBlazor popover is swallowed just like a click that opens one — observed as the colour
+    // simply not being applied — so re-open and click again until the popover closes, which is
+    // what a handled pick does.
+    public Task PickColorItemAsync(string color) => PickSwatchAsync(color, isIconTint: false);
+
+    // The icon-tint equivalent of PickColorItemAsync (same dropdown, icon-mode contents).
+    public Task PickIconColorItemAsync(string color) => PickSwatchAsync(color, isIconTint: true);
+
+    async Task PickSwatchAsync(string color, bool isIconTint)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            ILocator item = isIconTint ? await OpenIconColorItemAsync(color) : await OpenColorItemAsync(color);
+            await item.ClickAsync(new() { Timeout = MenuAttemptTimeout });
+            try
+            {
+                await item.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
+    }
+
+    // Open the icon selector dialog from the node toolbar's "Set icon" button. The dialog's
+    // search field is the open marker — the pinned "Default" row is only offered for nodes
+    // that can fall back to a type icon.
+    public Task OpenIconSelectorAsync() => OpenMenuAsync(NodeSetIconButton, IconDialogSearch);
+
+    // The icon selector dialog's search field (IconSelectorDialog.razor); present exactly
+    // while the dialog is open.
+    public ILocator IconDialogSearch => page.GetByTestId("icon-dialog-search");
 
     // Select a diagram node by its exact group label (the *full* node name, e.g.
     // "Demo.Core.RootClass"). We click via the mouse at the computed coordinates rather than
@@ -167,17 +284,74 @@ public sealed class AppPage
     // (NodeToolbarMenu). See also SelectNodeByVisibleNameAsync for the short on-screen name.
     public async Task SelectNodeByFullNameAsync(string label)
     {
-        LocatorBoundingBoxResult box = await WaitForStableNodeBoxAsync(label);
-        await page.Mouse.ClickAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
+        await ClickUntilSelectedAsync(async () =>
+        {
+            LocatorBoundingBoxResult box = await WaitForStableNodeBoxAsync(label);
+            return [box.X + box.Width / 2, box.Y + box.Height / 2];
+        });
     }
 
-    // Select a container node by clicking just inside its top-left corner, where no children
-    // render (a container's center often hits child nodes or dependency lines instead).
+    // Candidate click points inside a container's header strip, as (fraction of width, pixels
+    // down from its top edge). The header is the band no child covers, but it also carries the
+    // node's icon and name, which are painted over the hover rect and carry no element id — a
+    // click on either selects nothing — so the points spread across the strip instead of
+    // targeting one spot.
+    static readonly (float WidthFraction, float Y)[] ContainerClickPoints =
+    [
+        (0.6f, 14),
+        (0.0f, 20),
+        (0.8f, 8),
+        (0.4f, 24),
+    ];
+
+    // Select a container node by clicking inside it, above its children. The click has to land
+    // on the container's own hover rect: a container's area is covered by its children's rects,
+    // and the app resolves a click through event.target.id (jsInterop.js), so a point over a
+    // child selects that child instead. The toolbar then renders in icon mode, without the
+    // container-only affordances, which otherwise only surfaces later as a missing button.
+    // How tall the header strip is depends on the zoom, so try a few points and keep the one
+    // that actually selected a container — the edit pencil is the container-only marker (this
+    // suite runs against the Blazor Server host, where editing is always enabled).
     public async Task SelectContainerNodeAsync(string label, float timeoutSeconds = 15)
     {
-        LocatorBoundingBoxResult box = await WaitForStableNodeBoxAsync(label, timeoutSeconds);
-        await page.Mouse.ClickAsync(box.X + 20, box.Y + 20);
+        for (int attempt = 0; ; attempt++)
+        {
+            LocatorBoundingBoxResult box = await WaitForStableNodeBoxAsync(label, timeoutSeconds);
+            var (widthFraction, y) = ContainerClickPoints[attempt];
+
+            // A zoomed-in container is wider than the window, so keep the point inside the part
+            // of it that is actually on screen — Mouse.ClickAsync outside the viewport hits
+            // nothing at all.
+            float left = Math.Max(box.X, 0) + 20;
+            float right = Math.Min(box.X + box.Width, page.ViewportSize?.Width ?? float.MaxValue) - 20;
+            float x = Math.Clamp(left + (right - left) * widthFraction, left, Math.Max(left, right));
+            await page.Mouse.ClickAsync(x, Math.Max(box.Y, 0) + y);
+
+            try
+            {
+                await MenuItem("node-edit").WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt + 1 < ContainerClickPoints.Length)
+            {
+                // Drop the wrong selection so the next click starts from a clean toolbar.
+                await page.Keyboard.PressAsync("Escape");
+            }
+        }
     }
+
+    // Wait until a node renders as an expanded container rather than as an icon. Which one it
+    // is depends on the zoom the view settles at (NodeViewPolicy.IsContainerView), and the
+    // container-only toolbar affordances — the edit pencil, the background-colour swatches —
+    // exist only in container mode, so tests that need them must wait for it explicitly
+    // instead of assuming the navigation zoomed in far enough.
+    public Task WaitForContainerNodeAsync(string visibleName) =>
+        Expect(ContainerHeader(visibleName)).ToBeVisibleAsync();
+
+    // A container's header label (NodeSvg renders it with class nodeName; an icon uses
+    // iconName and a member memberName instead).
+    ILocator ContainerHeader(string visibleName) =>
+        page.Locator("#svgcanvas text.nodeName").Filter(new() { HasTextString = visibleName }).First;
 
     // The canvas pans/zooms with animations (initial fit, navigation), so wait until the
     // node's bounds stop moving between two reads before clicking; a single read can compute
@@ -225,8 +399,26 @@ public sealed class AppPage
     // ending up as a container header, which the icon-only match never found).
     public async Task SelectNodeByVisibleNameAsync(string visibleName)
     {
-        float[] point = await WaitForStableNodePointAsync(visibleName);
-        await page.Mouse.ClickAsync(point[0], point[1]);
+        await ClickUntilSelectedAsync(() => WaitForStableNodePointAsync(visibleName));
+    }
+
+    // Click a computed canvas point until a node toolbar actually shows. The canvas re-renders
+    // continuously, so a click can land where the node was a frame ago and select nothing —
+    // which surfaces much later as a missing toolbar button. Recompute the point on each
+    // attempt rather than reusing a stale one.
+    async Task ClickUntilSelectedAsync(Func<Task<float[]>> getPoint)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            float[] point = await getPoint();
+            await page.Mouse.ClickAsync(point[0], point[1]);
+            try
+            {
+                await NodeToolbarMenu.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
     }
 
     async Task<float[]> WaitForStableNodePointAsync(string visibleName, float timeoutSeconds = 15)

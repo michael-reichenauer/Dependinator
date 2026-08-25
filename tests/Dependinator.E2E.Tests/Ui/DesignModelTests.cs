@@ -60,9 +60,11 @@ public class DesignModelTests(ITestOutputHelper output) : E2ETestBase(output)
         LocatorBoundingBoxResult box =
             await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
 
-        await Page.Mouse.DblClickAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
+        await App.RepeatUntilVisibleAsync(
+            () => Page.Mouse.DblClickAsync(box.X + box.Width / 2, box.Y + box.Height / 2),
+            App.IconDialogSearch
+        );
 
-        await Expect(Page.GetByTestId("icon-dialog-search")).ToBeVisibleAsync();
         await App.IconDialogTab("General").ClickAsync();
         await App.IconDialogItem(iconName).ClickAsync();
     }

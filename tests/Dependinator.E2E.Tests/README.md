@@ -17,6 +17,26 @@ with xUnit, testing the app as a user sees it at `http://localhost:5000`.
 already running on `http://localhost:5000` (e.g. `./scripts/watch`), it exits with an error
 asking you to stop it first — so tests always run against the known demo model.
 
+### Parallelism
+
+`xunit.runner.json` caps the suite at **2 test classes at a time**. All tests share one
+`Dependinator.Web` process, and every test drives a browser that makes that one server
+re-render the diagram; at xUnit's default (one thread per core) the server falls far enough
+behind that pointer events get swallowed mid-render, and whichever timing-sensitive test
+happens to land in a bad window fails. That produced roughly a 50% per-run failure rate
+locally, always in a different test — the same signature as the CI flakiness. Capping
+concurrency at 2 removed it. Raise this only together with a re-measurement (run the suite
+back to back a dozen times and count failures), not on wall-clock time alone.
+
+### Interacting with the app
+
+The canvas re-renders continuously and MudBlazor opens menus over a server roundtrip, so a
+click can be swallowed with no error: Playwright reports the click as delivered and the app
+simply never acts on it. The `AppPage` helpers therefore *verify and retry* rather than click
+once — `OpenMenuAsync`, `SelectContainerNodeAsync`, `RepeatUntilVisibleAsync` and friends all
+keep gesturing until the expected UI actually appears. Prefer them over a bare `ClickAsync`
+for anything that has to open a menu, dialog or selection.
+
 ### Viewing traces
 
 `./scripts/e2e -t` records a trace per test into `traces/NNN-<browser>.zip` (the big ones are
