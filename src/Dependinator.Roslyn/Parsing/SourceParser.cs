@@ -10,7 +10,7 @@ namespace Dependinator.Roslyn.Parsing;
 [Transient]
 class SourceParser : ISourceParser
 {
-    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath)
+    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath, SolutionParseOptions options)
     {
         // The demo model is pre-parsed and embedded, so load it directly instead of
         // running Roslyn. Used as a fallback when no real model is available and by
@@ -33,7 +33,8 @@ class SourceParser : ISourceParser
 
             var projects = solution
                 .Projects.Where(p => p.Language == LanguageNames.CSharp)
-                .Where(p => !IsTestProject(p))
+                // Check the option first, so including tests skips the reference scan entirely.
+                .Where(p => options.IncludeTestProjects || !IsTestProject(p))
                 .ToList();
 
             Log.Info($"Solution projects: {projects.Count} ({string.Join(", ", projects.Select(p => p.Name))})");
@@ -226,6 +227,32 @@ class SourceParser : ISourceParser
         }
     }
 
-    // Heuristic: skip test projects by naming convention (e.g. "Foo.Tests", "FooTests", "FooTest")
-    static bool IsTestProject(Project project) => project.Name.EndsWith("Test") || project.Name.EndsWith("Tests");
+    static readonly string[] TestNameSuffixes = ["Test", "Tests", "Spec", "Specs"];
+
+    static readonly HashSet<string> TestFrameworkAssemblies = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "xunit.core",
+        "xunit.assert",
+        "xunit.v3.core",
+        "xunit.v3.assert",
+        "nunit.framework",
+        "Microsoft.VisualStudio.TestPlatform.TestFramework",
+        "Microsoft.VisualStudio.TestPlatform.ObjectModel",
+        "TUnit.Core",
+    };
+
+    // A project is a test project if it references a test framework assembly, which is independent
+    // of naming convention. MSBuildWorkspace resolves metadata references from files, so FilePath
+    // is the reference's ".dll" path, and project-to-project references live in ProjectReferences
+    // rather than here. Projects that failed to restore have no references at all, so the older
+    // naming convention is kept as a fallback.
+    internal static bool IsTestProject(Project project) =>
+        IsTestProject(
+            project.Name,
+            project.MetadataReferences.OfType<PortableExecutableReference>().Select(r => r.FilePath)
+        );
+
+    internal static bool IsTestProject(string projectName, IEnumerable<string?> referencePaths) =>
+        referencePaths.Any(p => p is not null && TestFrameworkAssemblies.Contains(Path.GetFileNameWithoutExtension(p)))
+        || TestNameSuffixes.Any(s => projectName.EndsWith(s, StringComparison.OrdinalIgnoreCase));
 }

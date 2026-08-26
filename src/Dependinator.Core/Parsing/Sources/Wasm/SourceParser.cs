@@ -7,7 +7,8 @@ namespace Dependinator.Core.Parsing.Sources.Wasm;
 
 class SourceParser(HttpClient httpClient) : ISourceParser
 {
-    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath)
+    // The browser only ever loads the pre-parsed demo model, so parse options do not apply.
+    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath, SolutionParseOptions options)
     {
         try
         {

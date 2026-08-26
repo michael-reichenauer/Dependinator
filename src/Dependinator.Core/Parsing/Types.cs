@@ -2,6 +2,16 @@ namespace Dependinator.Core.Parsing;
 
 record Item(Node? Node, Link? Link, LineDescription? LineDescription = null);
 
+// Per-model options controlling what a solution parse includes. Crosses the [Rpc] boundary of
+// IParserService, so keep it JSON-round-trippable: init properties with defaults, so that future
+// options stay additive and older persisted models simply fall back to the defaults.
+record SolutionParseOptions
+{
+    public static readonly SolutionParseOptions Default = new();
+
+    public bool IncludeTestProjects { get; init; }
+}
+
 record Link(string Source, string Target, LinkProperties Properties);
 
 record LineDescription(string Source, string Target, string Text);

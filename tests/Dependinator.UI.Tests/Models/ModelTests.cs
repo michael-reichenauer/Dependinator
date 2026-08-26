@@ -49,6 +49,57 @@ public class ModelTests
     );
 
     [Fact]
+    public void IncludeTestProjects_ShouldRoundTripThroughDto()
+    {
+        var modelMgr = new ModelMgr(new StateMgr());
+        var dto = modelMgr.WithModel(m =>
+        {
+            m.IncludeTestProjects = true;
+            return m.SerializeToDto();
+        });
+
+        Assert.True(dto.IncludeTestProjects);
+
+        var restored = new ModelMgr(new StateMgr());
+        restored.WithModel(m => m.SetFromDto("My.sln", dto));
+        Assert.True(restored.WithModel(m => m.IncludeTestProjects));
+    }
+
+    [Fact]
+    public void Clear_ShouldResetIncludeTestProjects()
+    {
+        // Clear runs before a model is loaded, and on the uncached path the parse happens before
+        // SetFromDto, so a stale value would leak into the next model's parse.
+        var modelMgr = new ModelMgr(new StateMgr());
+        modelMgr.WithModel(m => m.IncludeTestProjects = true);
+
+        modelMgr.WithModel(m => m.Clear());
+
+        Assert.False(modelMgr.WithModel(m => m.IncludeTestProjects));
+    }
+
+    [Fact]
+    public void SetFromDto_ShouldDefaultIncludeTestProjects_ForModelCachedBeforeTheOptionExisted()
+    {
+        // Guards the decision not to bump ModelDto.CurrentFormatVersion: older cached JSON has no
+        // such field and must still deserialize rather than being rejected and discarded.
+        var json = """
+            {
+              "FormatVersion": "8",
+              "Name": "My.sln",
+              "Nodes": [],
+              "Links": []
+            }
+            """;
+
+        var dto = Json.Deserialize<Dependinator.UI.Modeling.Dtos.ModelDto>(json);
+
+        Assert.NotNull(dto);
+        Assert.Equal(Dependinator.UI.Modeling.Dtos.ModelDto.CurrentFormatVersion, dto.FormatVersion);
+        Assert.False(dto.IncludeTestProjects);
+    }
+
+    [Fact]
     public void RemoveLink_LinkWithoutLines_ShouldDetachFromEndpointNodes()
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();

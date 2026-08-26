@@ -15,7 +15,7 @@ namespace Dependinator.Core.Parsing;
 internal interface IParserService
 {
     // Parse assemblies
-    Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path);
+    Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, SolutionParseOptions options);
 }
 
 [Singleton]
@@ -24,10 +24,12 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
     readonly IEnumerable<IParser> parsers = parsers;
     private readonly ISourceParser sourceParser = sourceParser;
 
-    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
+    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, SolutionParseOptions options)
     {
         using var _ = Timing.Start("Parsed sources");
-        return await sourceParser.ParseSolutionAsync(path);
+        // Options arrive over JSON-RPC, where nullable annotations are not enforced, so a remote
+        // caller can still send null.
+        return await sourceParser.ParseSolutionAsync(path, options ?? SolutionParseOptions.Default);
 
         // try
         // {
