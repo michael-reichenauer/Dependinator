@@ -15,6 +15,9 @@ record ModelDto
     public Pos Offset { get; init; } = Pos.None;
     public Rect ViewRect { get; init; } = Rect.None;
 
+    // Defaulted, so models cached before this existed still deserialize (no FormatVersion bump).
+    public bool IncludeTestProjects { get; init; }
+
     public required IReadOnlyList<NodeDto> Nodes { get; init; }
     public required IReadOnlyList<LinkDto> Links { get; init; }
     public IReadOnlyList<LineDto> Lines { get; init; } = [];

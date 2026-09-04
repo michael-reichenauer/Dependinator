@@ -15,6 +15,9 @@ interface IModel : IDisposable
     double Zoom { get; set; }
     Pos Offset { get; set; }
 
+    // Whether test projects are included when this model's solution is parsed.
+    bool IncludeTestProjects { get; set; }
+
     // Monotonic counter of structural changes (nodes/links added or removed); lets
     // consumers detect that cached, structure-derived state (e.g. representative lines)
     // is still valid. Line changes do not count: lines are derived state themselves.
@@ -55,6 +58,7 @@ class Model : IModel
     public Rect ViewRect { get; set; } = Rect.None;
     public double Zoom { get; set; } = 0;
     public Pos Offset { get; set; } = Pos.None;
+    public bool IncludeTestProjects { get; set; }
 
     public Node Root { get; private set; } = null!;
 
@@ -75,6 +79,7 @@ class Model : IModel
             Zoom = Zoom,
             Offset = Offset,
             ViewRect = ViewRect,
+            IncludeTestProjects = IncludeTestProjects,
             Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
             Links = [.. links.Values.Select(l => l.ToDto())],
             Lines =
@@ -97,6 +102,7 @@ class Model : IModel
         Zoom = modelDto.Zoom;
         Offset = modelDto.Offset;
         ViewRect = modelDto.ViewRect;
+        IncludeTestProjects = modelDto.IncludeTestProjects;
         // Nodes and links will be set by model service in separate worker thread
     }
 
@@ -133,6 +139,9 @@ class Model : IModel
         ViewRect = Rect.None;
         Zoom = 0;
         Offset = Pos.None;
+        // Must reset: Clear runs before a model is loaded, and on the uncached path the parse
+        // happens before SetFromDto, so a stale value would leak into the next model's parse.
+        IncludeTestProjects = false;
 
         InitModel();
     }

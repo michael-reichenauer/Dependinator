@@ -20,6 +20,8 @@
     <ItemGroup>
         <!-- Throwaway test signing key, read at runtime by TestAuthToken (sync tests). -->
         <None Include="TestAuth/private-key.pem" CopyToOutputDirectory="PreserveNewest" />
+        <!-- Caps how many test classes run at once; see xunit.runner.json and the README. -->
+        <None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>

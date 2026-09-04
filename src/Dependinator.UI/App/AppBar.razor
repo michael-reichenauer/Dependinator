@@ -95,7 +95,7 @@
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
                              data-testid="menu-notes-sidebar">
-                    Notes Sidebar
+                    Show Notes Sidebar
                 </MudMenuItem>
 
                 @if (!Build.IsVsCodeExtWasm)
@@ -168,6 +168,16 @@
                         </MudMenuItem>
                     }
                 }
+            </MudMenu>
+
+            <MudMenu Label="Settings" PopoverClass="dep-light-menu" data-testid="menu-settings">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@IncludeTestProjectsIcon"
+                             Disabled="@(!CanParseCurrentModel)"
+                             title="Re-parses the solution. Test projects are excluded by default."
+                             data-checked="@(IncludeTestProjects ? "true" : "false")"
+                             OnClick="ToggleIncludeTestProjectsAsync" data-testid="menu-include-test-projects">
+                    Include Test Projects
+                </MudMenuItem>
             </MudMenu>
 
             <MudDivider />
@@ -473,6 +483,12 @@
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
 
+    bool IncludeTestProjects => modelMgr.WithModel(m => m.IncludeTestProjects);
+
+    string IncludeTestProjectsIcon => IncludeTestProjects
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Outlined.Circle;
+
     void ToggleEditMode()
     {
         ViewOptions.SetIsEditingEnabled(!ViewOptions.IsEditingEnabled);
@@ -489,6 +505,19 @@
         await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    async Task ToggleIncludeTestProjectsAsync()
+    {
+        var newValue = !IncludeTestProjects;
+        // The refresh path only shows discreet progress, so say what is happening.
+        snackbar.Add(
+            newValue ? "Parsing with test projects ..." : "Parsing without test projects ...",
+            Severity.Info
+        );
+
+        if (!Try(out var e, await modelService.SetIncludeTestProjectsAsync(newValue)))
+            snackbar.Add(e.ErrorMessage, Severity.Error);
     }
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;

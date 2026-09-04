@@ -1,3 +1,4 @@
+using Dependinator.Core.Parsing;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
@@ -41,7 +42,7 @@ public class ModelServiceDesignModelTests
         Assert.Equal("My Design", modelMgr.ModelPath);
         // Only the root node exists in the new empty model
         Assert.Equal(1, modelMgr.WithModel(m => m.Nodes.Count));
-        parserService.Verify(p => p.ParseAsync(It.IsAny<string>()), Times.Never);
+        parserService.Verify(p => p.ParseAsync(It.IsAny<string>(), It.IsAny<SolutionParseOptions>()), Times.Never);
         persistenceService.Verify(
             p => p.WriteAsync("My Design", It.Is<ModelDto>(dto => dto.Nodes.Count == 1)),
             Times.Once
@@ -58,19 +59,70 @@ public class ModelServiceDesignModelTests
         var result = await modelService.RefreshAsync();
 
         Assert.True(Try(result));
-        parserService.Verify(p => p.ParseAsync(It.IsAny<string>()), Times.Never);
+        parserService.Verify(p => p.ParseAsync(It.IsAny<string>(), It.IsAny<SolutionParseOptions>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SetIncludeTestProjectsAsync_ShouldReparseWithTheOption()
+    {
+        modelMgr.WithModel(m => m.Path = "My.sln");
+        modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
+        parserService
+            .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
+            .ReturnsAsync(R.Error("parse failed"));
+        using var modelService = CreateModelService();
+
+        await modelService.SetIncludeTestProjectsAsync(true);
+
+        Assert.True(modelMgr.WithModel(m => m.IncludeTestProjects));
+        parserService.Verify(
+            p => p.ParseAsync("My.sln", It.Is<SolutionParseOptions>(o => o.IncludeTestProjects)),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task SetIncludeTestProjectsAsync_ShouldNotReparse_WhenValueIsUnchanged()
+    {
+        modelMgr.WithModel(m => m.Path = "My.sln");
+        modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
+        using var modelService = CreateModelService();
+
+        await modelService.SetIncludeTestProjectsAsync(false);
+
+        parserService.Verify(p => p.ParseAsync(It.IsAny<string>(), It.IsAny<SolutionParseOptions>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_ShouldPassIncludeTestProjectsFalse_ByDefault()
+    {
+        modelMgr.WithModel(m => m.Path = "My.sln");
+        modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
+        parserService
+            .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
+            .ReturnsAsync(R.Error("parse failed"));
+        using var modelService = CreateModelService();
+
+        await modelService.RefreshAsync();
+
+        parserService.Verify(
+            p => p.ParseAsync("My.sln", It.Is<SolutionParseOptions>(o => !o.IncludeTestProjects)),
+            Times.Once
+        );
     }
 
     [Fact]
     public async Task LoadAsync_ShouldParse_WhenSolutionModelIsNotCached()
     {
         persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(R.Error("no cached model"));
-        parserService.Setup(p => p.ParseAsync("My.sln")).ReturnsAsync(R.Error("parse failed"));
+        parserService
+            .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
+            .ReturnsAsync(R.Error("parse failed"));
         using var modelService = CreateModelService();
 
         await modelService.LoadAsync("My.sln");
 
-        parserService.Verify(p => p.ParseAsync("My.sln"), Times.Once);
+        parserService.Verify(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()), Times.Once);
         persistenceService.Verify(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<ModelDto>()), Times.Never);
     }
 }

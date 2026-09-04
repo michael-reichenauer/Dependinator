@@ -23,7 +23,13 @@ internal class Program
         string outputPath = DemoModel.DemoOutputPath;
 
         Console.WriteLine($"Parsing {solutionPath} ...");
-        if (!Try(out var items, out var e, await new SourceParser().ParseSolutionAsync(solutionPath)))
+        if (
+            !Try(
+                out var items,
+                out var e,
+                await new SourceParser().ParseSolutionAsync(solutionPath, SolutionParseOptions.Default)
+            )
+        )
         {
             Console.Error.WriteLine($"Failed to parse solution: {e.ErrorMessage}");
             return 1;
