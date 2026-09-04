@@ -185,4 +185,44 @@ public class SourceParserTests(RoslynFixture fixture)
         var links = items.Links().OrderBy(l => l.Source).ThenBy(l => l.Target).ToList();
         Assert.NotEmpty(links);
     }
+
+    [Fact]
+    public async Task ParseSolutionAsync_ShouldReturnError_WhenSolutionFileIsMissing()
+    {
+        var missingPath = Path.Combine(Path.GetTempPath(), $"Missing-{Guid.NewGuid()}.sln");
+
+        var result = await new SourceParser().ParseSolutionAsync(missingPath, SolutionParseOptions.Default);
+
+        Assert.False(Try(out _, out var e, result));
+        Assert.Contains("not found", e.ErrorMessage);
+    }
+
+    // A solution without loadable projects must be an error, not an empty (0 node) model.
+    [Fact]
+    public async Task ParseSolutionAsync_ShouldReturnError_WhenSolutionHasNoProjects()
+    {
+        var solutionPath = Path.Combine(Path.GetTempPath(), $"Empty-{Guid.NewGuid()}.sln");
+        await File.WriteAllTextAsync(
+            solutionPath,
+            "Microsoft Visual Studio Solution File, Format Version 12.00\n"
+                + "# Visual Studio Version 17\n"
+                + "Global\n"
+                + "\tGlobalSection(SolutionProperties) = preSolution\n"
+                + "\t\tHideSolutionNode = FALSE\n"
+                + "\tEndGlobalSection\n"
+                + "EndGlobal\n"
+        );
+
+        try
+        {
+            var result = await new SourceParser().ParseSolutionAsync(solutionPath, SolutionParseOptions.Default);
+
+            Assert.False(Try(out _, out var e, result));
+            Assert.Contains("No C# projects", e.ErrorMessage);
+        }
+        finally
+        {
+            File.Delete(solutionPath);
+        }
+    }
 }

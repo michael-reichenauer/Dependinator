@@ -301,7 +301,18 @@
         base.OnInitialized();
 
         applicationEvents.UIStateChanged += OnUiStateChanged;
+        applicationEvents.ErrorReported += OnErrorReported;
         appCloudSyncService.Changed += OnUiStateChanged;
+    }
+
+    // Errors can be reported from background work (e.g. a refresh parse), so marshal to the
+    // renderer. RequireInteraction keeps the message up until dismissed, since a failed parse
+    // otherwise just looks like an empty diagram.
+    void OnErrorReported(string message)
+    {
+        _ = InvokeAsync(() =>
+            snackbar.Add(message, Severity.Error, config => config.RequireInteraction = true)
+        );
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -350,6 +361,7 @@
     public void Dispose()
     {
         applicationEvents.UIStateChanged -= OnUiStateChanged;
+        applicationEvents.ErrorReported -= OnErrorReported;
         appCloudSyncService.Changed -= OnUiStateChanged;
         selfReference?.Dispose();
     }
@@ -516,8 +528,8 @@
             Severity.Info
         );
 
-        if (!Try(out var e, await modelService.SetIncludeTestProjectsAsync(newValue)))
-            snackbar.Add(e.ErrorMessage, Severity.Error);
+        // A failed re-parse is reported centrally (ErrorReported), so the result is ignored here.
+        await modelService.SetIncludeTestProjectsAsync(newValue);
     }
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
