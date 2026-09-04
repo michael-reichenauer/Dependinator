@@ -294,7 +294,13 @@ class ModelService : IModelService, IDisposable
             Log.Info("Parsing ...");
 
             if (!Try(out var items, out var e, await ParseAsync(path, parseOptions)))
+            {
+                // A failed parse leaves an empty (or unchanged) diagram, which on its own looks
+                // like a solution without dependencies, so always tell the user what went wrong.
+                Log.Warn($"Failed to parse {path}: {e.AllErrorMessages()}");
+                applicationEvents.TriggerErrorReported($"Failed to parse '{Path.GetFileName(path)}'. {e.ErrorMessage}");
                 return e;
+            }
 
             using (var model = modelMgr.UseModel())
             {
@@ -322,7 +328,17 @@ class ModelService : IModelService, IDisposable
     async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, Parsing.SolutionParseOptions options)
     {
         using var _ = Timing.Start($"Parsed {path}");
-        return await parserService.ParseAsync(path, options);
+        try
+        {
+            return await parserService.ParseAsync(path, options);
+        }
+        catch (Exception e)
+        {
+            // The parser may run in the LSP process, where a lost/failed RPC call throws
+            // instead of returning a result.
+            Log.Exception(e, $"Failed to call parser for {path}");
+            return R.Error("The parser could not be reached.", e);
+        }
     }
 
     public void TriggerSave()

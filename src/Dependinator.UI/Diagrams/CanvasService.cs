@@ -109,7 +109,8 @@ class CanvasService(
         applicationEvents.TriggerUIStateChanged();
         await Task.Yield();
 
-        if (!Try(out var modelInfo, out var e, await modelService.LoadAsync(modelPath)))
+        // Load failures (e.g. a failed parse) are reported to the user by the model service.
+        if (!Try(out var modelInfo, out _, await modelService.LoadAsync(modelPath)))
             return;
 
         PanZoomModel(modelInfo);

@@ -125,4 +125,57 @@ public class ModelServiceDesignModelTests
         parserService.Verify(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()), Times.Once);
         persistenceService.Verify(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<ModelDto>()), Times.Never);
     }
+
+    [Fact]
+    public async Task LoadAsync_ShouldReportError_WhenParsingFails()
+    {
+        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(R.Error("no cached model"));
+        parserService
+            .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
+            .ReturnsAsync(R.Error("No .NET SDK found"));
+        using var modelService = CreateModelService();
+
+        var result = await modelService.LoadAsync("My.sln");
+
+        Assert.False(Try(out _, out _, result));
+        applicationEvents.Verify(
+            e => e.TriggerErrorReported(It.Is<string>(m => m.Contains("My.sln") && m.Contains("No .NET SDK found"))),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task RefreshAsync_ShouldReportError_WhenParsingFails()
+    {
+        modelMgr.WithModel(m => m.Path = "My.sln");
+        modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
+        parserService
+            .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
+            .ReturnsAsync(R.Error("parse failed"));
+        using var modelService = CreateModelService();
+
+        await modelService.RefreshAsync();
+
+        applicationEvents.Verify(
+            e => e.TriggerErrorReported(It.Is<string>(m => m.Contains("parse failed"))),
+            Times.Once
+        );
+    }
+
+    // The parser can run in the LSP process, where a broken RPC connection throws instead of
+    // returning an error result.
+    [Fact]
+    public async Task LoadAsync_ShouldReportError_WhenParserThrows()
+    {
+        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(R.Error("no cached model"));
+        parserService
+            .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
+            .ThrowsAsync(new InvalidOperationException("connection lost"));
+        using var modelService = CreateModelService();
+
+        var result = await modelService.LoadAsync("My.sln");
+
+        Assert.False(Try(out _, out _, result));
+        applicationEvents.Verify(e => e.TriggerErrorReported(It.IsAny<string>()), Times.Once);
+    }
 }
