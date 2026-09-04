@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.23 (2026-09-04)
+
+- Fix package version alignment
+
 ## 0.8.22 (2026-08-23)
 
 - In VSCode Ext, open the solution
