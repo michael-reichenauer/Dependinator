@@ -8,7 +8,7 @@
         <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.52.0" />
         <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.3.0" />
         <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.1.0" />
-        <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.1" />
+        <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.2" />
         <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.14.0" />
         <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.11" />
