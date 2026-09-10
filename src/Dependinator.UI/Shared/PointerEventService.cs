@@ -1,3 +1,4 @@
+using Dependinator.UI.Diagrams;
 using Microsoft.JSInterop;
 
 namespace Dependinator.UI.Shared;
@@ -126,7 +127,19 @@ class PointerEventService : IPointerEventService, IDisposable
         return ValueTask.CompletedTask;
     }
 
-    void OnMouseWheelEvent(PointerEvent e) => Wheel?.Invoke(e);
+    void OnMouseWheelEvent(PointerEvent e)
+    {
+        // Natural scrolling inverts the delta of a mouse wheel roll but not of a trackpad pinch,
+        // which browsers deliver as a wheel event with ctrlKey set. Flip only plain wheel rolls
+        // so pinch-to-zoom keeps its direction when the option is on. Touch pinches never reach
+        // this method; they are synthesized in OnPointerMoveEvent.
+        if (ViewOptions.InvertScrollZoom && !e.CtrlKey)
+        {
+            e = e with { DeltaY = -e.DeltaY, WheelTicks = -e.WheelTicks };
+        }
+
+        Wheel?.Invoke(e);
+    }
 
     void OnPointerDownEvent(PointerEvent e)
     {

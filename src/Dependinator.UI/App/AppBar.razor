@@ -178,6 +178,15 @@
                              OnClick="ToggleIncludeTestProjectsAsync" data-testid="menu-include-test-projects">
                     Include Test Projects
                 </MudMenuItem>
+
+                <MudDivider />
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@InvertScrollZoomIcon" OnClick="ToggleInvertScrollZoom"
+                             title="Flips the mouse wheel zoom direction, e.g. for natural scrolling on macOS."
+                             data-checked="@(ViewOptions.InvertScrollZoom ? "true" : "false")"
+                             data-testid="menu-invert-scroll-zoom">
+                    Invert Scroll Zoom
+                </MudMenuItem>
             </MudMenu>
 
             <MudDivider />
@@ -495,6 +504,10 @@
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
 
+    string InvertScrollZoomIcon => ViewOptions.InvertScrollZoom
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Outlined.Circle;
+
     bool IncludeTestProjects => modelMgr.WithModel(m => m.IncludeTestProjects);
 
     string IncludeTestProjectsIcon => IncludeTestProjects
@@ -516,6 +529,14 @@
         ViewOptions.SetShowHiddenNodes(newValue);
         await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
         modelService.ClearCache();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    async Task ToggleInvertScrollZoom()
+    {
+        var newValue = !ViewOptions.InvertScrollZoom;
+        ViewOptions.SetInvertScrollZoom(newValue);
+        await configService.SetAsync(config => config.InvertScrollZoom = newValue);
         applicationEvents.TriggerUIStateChanged();
     }
 

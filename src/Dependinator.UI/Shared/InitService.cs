@@ -49,6 +49,7 @@ class InitService : IInitService
         var config = await configService.GetAsync();
         NodeLayout.SetDensity(config.LayoutDensity);
         ViewOptions.SetShowHiddenNodes(config.ShowHiddenNodes);
+        ViewOptions.SetInvertScrollZoom(config.InvertScrollZoom);
         await screenService.InitAsync(component);
         await pointerEventService.InitAsync();
         await modelListService.InitAsync();

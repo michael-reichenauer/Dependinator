@@ -1,3 +1,4 @@
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Shared;
 
 namespace Dependinator.UI.Tests.Shared;
@@ -94,4 +95,108 @@ public class PointerEventServiceTests
         Assert.Equal(2, clickCount);
         Assert.Equal(0, dblClickCount);
     }
+
+    // Wheel zoom direction (InvertScrollZoom): the option flips the delta of plain wheel rolls
+    // only. Trackpad pinches (wheel + ctrlKey) and touch pinches keep their direction.
+
+    static PointerEvent WheelEvent(double deltaY, bool ctrlKey = false) =>
+        new()
+        {
+            Type = "wheel",
+            DeltaY = deltaY,
+            WheelTicks = Math.Sign(deltaY),
+            CtrlKey = ctrlKey,
+        };
+
+    static async Task<PointerEvent> SendWheelAsync(PointerEventService service, PointerEvent wheel)
+    {
+        PointerEvent? received = null;
+        service.Wheel += e => received = e;
+        await service.MouseEventCallback(wheel);
+        return Assert.IsType<PointerEvent>(received);
+    }
+
+    static async Task WithInvertScrollZoomAsync(bool invert, Func<Task> test)
+    {
+        var wasInverted = ViewOptions.InvertScrollZoom;
+        try
+        {
+            ViewOptions.SetInvertScrollZoom(invert);
+            await test();
+        }
+        finally
+        {
+            ViewOptions.SetInvertScrollZoom(wasInverted);
+        }
+    }
+
+    [Fact]
+    public async Task Wheel_ShouldKeepDelta_WhenInvertScrollZoomIsOff() =>
+        await WithInvertScrollZoomAsync(
+            false,
+            async () =>
+            {
+                PointerEvent received = await SendWheelAsync(CreateService(), WheelEvent(-100));
+
+                Assert.Equal(-100, received.DeltaY);
+                Assert.Equal(-1, received.WheelTicks);
+            }
+        );
+
+    [Fact]
+    public async Task Wheel_ShouldFlipDelta_WhenInvertScrollZoomIsOn() =>
+        await WithInvertScrollZoomAsync(
+            true,
+            async () =>
+            {
+                PointerEvent received = await SendWheelAsync(CreateService(), WheelEvent(-100));
+
+                Assert.Equal(100, received.DeltaY);
+                Assert.Equal(1, received.WheelTicks);
+                Assert.Equal(1, received.ZoomSteps);
+            }
+        );
+
+    [Fact]
+    public async Task Wheel_ShouldKeepDelta_WhenInvertScrollZoomIsOnButCtrlKeyIsPressed() =>
+        await WithInvertScrollZoomAsync(
+            true,
+            async () =>
+            {
+                // A macOS trackpad pinch arrives as a wheel event with ctrlKey set and is not
+                // affected by natural scrolling, so it must not be flipped.
+                PointerEvent received = await SendWheelAsync(CreateService(), WheelEvent(-100, ctrlKey: true));
+
+                Assert.Equal(-100, received.DeltaY);
+                Assert.Equal(-1, received.WheelTicks);
+            }
+        );
+
+    [Fact]
+    public async Task TouchPinch_ShouldKeepDirection_WhenInvertScrollZoomIsOn() =>
+        await WithInvertScrollZoomAsync(
+            true,
+            async () =>
+            {
+                PointerEventService service = CreateService();
+                PointerEvent? received = null;
+                service.Wheel += e => received = e;
+
+                // Two fingers move apart (pinch out), which the service synthesizes into a
+                // wheel event with a negative delta (zoom in) regardless of the option.
+                await service.PointerEventCallback(TouchAt("pointerdown", 1, 100, 100));
+                await service.PointerEventCallback(TouchAt("pointerdown", 2, 200, 100));
+                await service.PointerEventCallback(TouchAt("pointermove", 2, 250, 100));
+
+                PointerEvent wheel = Assert.IsType<PointerEvent>(received);
+                Assert.Equal("wheel", wheel.Type);
+                Assert.True(wheel.DeltaY < 0);
+            }
+        );
+
+    static PointerEvent TouchAt(string type, int pointerId, double x, double y) =>
+        PointerEventAt(type, x, y, "touch") with
+        {
+            PointerId = pointerId,
+        };
 }
