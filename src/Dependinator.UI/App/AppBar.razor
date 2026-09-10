@@ -20,6 +20,7 @@
 @inject Dependinator.UI.Diagrams.Interaction.INoteService noteService
 @inject Dependinator.UI.Diagrams.Interaction.IManualEditService manualEditService
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
+@inject IPointerEventService pointerEventService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
@@ -183,7 +184,7 @@
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@InvertScrollZoomIcon" OnClick="ToggleInvertScrollZoom"
                              title="Flips the mouse wheel zoom direction, e.g. for natural scrolling on macOS."
-                             data-checked="@(ViewOptions.InvertScrollZoom ? "true" : "false")"
+                             data-checked="@(pointerEventService.InvertScrollZoom ? "true" : "false")"
                              data-testid="menu-invert-scroll-zoom">
                     Invert Scroll Zoom
                 </MudMenuItem>
@@ -504,7 +505,7 @@
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
 
-    string InvertScrollZoomIcon => ViewOptions.InvertScrollZoom
+    string InvertScrollZoomIcon => pointerEventService.InvertScrollZoom
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
 
@@ -534,8 +535,8 @@
 
     async Task ToggleInvertScrollZoom()
     {
-        var newValue = !ViewOptions.InvertScrollZoom;
-        ViewOptions.SetInvertScrollZoom(newValue);
+        var newValue = !pointerEventService.InvertScrollZoom;
+        pointerEventService.InvertScrollZoom = newValue;
         await configService.SetAsync(config => config.InvertScrollZoom = newValue);
         applicationEvents.TriggerUIStateChanged();
     }

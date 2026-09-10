@@ -166,6 +166,26 @@ public sealed class AppPage
         await page.Mouse.MoveAsync(0, 0);
     }
 
+    // Close the open app menu (and any expanded submenu) with Escape, retrying until the
+    // top-level menu is really gone: a keystroke landing during a popover re-render is lost
+    // silently, and an open menu's overlay would swallow the next canvas gesture.
+    public async Task CloseMenuAsync()
+    {
+        ILocator topLevelItem = MenuItem("menu-search");
+        for (int attempt = 1; ; attempt++)
+        {
+            await page.Keyboard.PressAsync("Escape");
+            try
+            {
+                await topLevelItem.WaitForAsync(
+                    new() { State = WaitForSelectorState.Hidden, Timeout = MenuAttemptTimeout }
+                );
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
+    }
+
     // Open the app menu and return a menu-item locator by its data-testid.
     public async Task<ILocator> OpenMenuItemAsync(string testId)
     {
