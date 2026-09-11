@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.8.24 (2026-09-11)
+
+- Add support for optionally parsing test projects
+- Rename Show Notes Sidebar
+- Show error message when parsing fails
+- Add option to invert zoom mouse wheel direction
+
 ## 0.8.23 (2026-09-04)
 
 - Fix package version alignment
