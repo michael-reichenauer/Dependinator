@@ -12,6 +12,12 @@ interface IPointerEventService
     event Action<PointerEvent>? DblClick;
     event Action<PointerEvent>? ContextMenu;
 
+    // Flips the mouse wheel zoom direction. Needed by users with "natural scrolling" enabled
+    // (macOS), which inverts the wheel delta in a way the browser cannot detect. Per user
+    // session (this service is scoped), not a static: in the Blazor Server host a static would
+    // be shared by every connected browser.
+    bool InvertScrollZoom { get; set; }
+
     Task InitAsync();
 }
 
@@ -49,6 +55,8 @@ class PointerEventService : IPointerEventService, IDisposable
     public event Action<PointerEvent>? Click;
     public event Action<PointerEvent>? DblClick;
     public event Action<PointerEvent>? ContextMenu;
+
+    public bool InvertScrollZoom { get; set; }
 
     public async Task InitAsync()
     {
@@ -126,7 +134,19 @@ class PointerEventService : IPointerEventService, IDisposable
         return ValueTask.CompletedTask;
     }
 
-    void OnMouseWheelEvent(PointerEvent e) => Wheel?.Invoke(e);
+    void OnMouseWheelEvent(PointerEvent e)
+    {
+        // Natural scrolling inverts the delta of a mouse wheel roll but not of a trackpad pinch,
+        // which browsers deliver as a wheel event with ctrlKey set. Flip only plain wheel rolls
+        // so pinch-to-zoom keeps its direction when the option is on. Touch pinches never reach
+        // this method; they are synthesized in OnPointerMoveEvent.
+        if (InvertScrollZoom && !e.CtrlKey)
+        {
+            e = e with { DeltaY = -e.DeltaY, WheelTicks = -e.WheelTicks };
+        }
+
+        Wheel?.Invoke(e);
+    }
 
     void OnPointerDownEvent(PointerEvent e)
     {

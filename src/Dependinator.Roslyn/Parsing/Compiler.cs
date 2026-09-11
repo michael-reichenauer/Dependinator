@@ -12,11 +12,22 @@ namespace Dependinator.Roslyn.Parsing;
 
 static class Compiler
 {
-    public static MSBuildWorkspace CreateWorkspace()
+    public static R<MSBuildWorkspace> CreateWorkspace()
     {
-        MSBuildLocatorHelper.Register();
-        var workspace = MSBuildWorkspace.Create();
-        return workspace;
+        // Registering MSBuild fails when no .NET SDK is installed; report that instead of
+        // letting MSBuildWorkspace.Create() fail later with an obscure type load error.
+        if (!Try(out var e, MSBuildLocatorHelper.Register()))
+            return e;
+
+        try
+        {
+            return MSBuildWorkspace.Create();
+        }
+        catch (Exception ex)
+        {
+            Log.Exception(ex, "Failed to create MSBuild workspace");
+            return R.Error("Failed to create an MSBuild workspace. Is the .NET SDK installed?", ex);
+        }
     }
 
     public static async Task<R<Compilation>> GetCompilationAsync(Project project)

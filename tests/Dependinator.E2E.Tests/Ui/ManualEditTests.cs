@@ -66,8 +66,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         // both as a toolbar button and in the node menu.
         await App.SelectNodeByVisibleNameAsync(NodeIcon);
         await Expect(Page.GetByTestId("node-delete-toolbar")).ToBeVisibleAsync();
-        await App.NodeToolbarMenu.ClickAsync();
-        await Expect(Page.GetByTestId("node-menu-delete")).ToBeVisibleAsync();
+        await Expect(await App.OpenNodeMenuItemAsync("node-menu-delete")).ToBeVisibleAsync();
     }
 
     [E2EFact]
@@ -287,7 +286,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     // Double-clicks the canvas at the given page position and picks an icon in the selector dialog.
     async Task AddManualNodeAtAsync(string iconName, float x, float y)
     {
-        await Page.Mouse.DblClickAsync(x, y);
+        await App.RepeatUntilVisibleAsync(() => Page.Mouse.DblClickAsync(x, y), App.IconDialogSearch);
         await PickIconAsync(iconName);
     }
 

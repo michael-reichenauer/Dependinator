@@ -10,6 +10,7 @@ class Config
     public NodeLayoutDensity LayoutDensity { get; set; } = NodeLayoutDensity.Balanced;
     public Dictionary<string, CloudSyncModelState> CloudSyncStates { get; set; } = [];
     public bool ShowHiddenNodes { get; set; } = true;
+    public bool InvertScrollZoom { get; set; } = false;
 }
 
 interface IConfigService

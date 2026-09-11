@@ -12,6 +12,7 @@ internal class Solution
 
     public Solution(string solutionFilePath)
     {
+        // Any locator failure surfaces when the projects are read (GetProjects).
         MSBuildLocatorHelper.Register();
         SolutionFilePath = solutionFilePath;
         SolutionDirectory = Path.GetDirectoryName(solutionFilePath) ?? "";

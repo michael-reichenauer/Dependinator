@@ -20,6 +20,7 @@
 @inject Dependinator.UI.Diagrams.Interaction.INoteService noteService
 @inject Dependinator.UI.Diagrams.Interaction.IManualEditService manualEditService
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
+@inject IPointerEventService pointerEventService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
@@ -95,7 +96,7 @@
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
                              data-testid="menu-notes-sidebar">
-                    Notes Sidebar
+                    Show Notes Sidebar
                 </MudMenuItem>
 
                 @if (!Build.IsVsCodeExtWasm)
@@ -168,6 +169,25 @@
                         </MudMenuItem>
                     }
                 }
+            </MudMenu>
+
+            <MudMenu Label="Settings" PopoverClass="dep-light-menu" data-testid="menu-settings">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@IncludeTestProjectsIcon"
+                             Disabled="@(!CanParseCurrentModel)"
+                             title="Re-parses the solution. Test projects are excluded by default."
+                             data-checked="@(IncludeTestProjects ? "true" : "false")"
+                             OnClick="ToggleIncludeTestProjectsAsync" data-testid="menu-include-test-projects">
+                    Include Test Projects
+                </MudMenuItem>
+
+                <MudDivider />
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@InvertScrollZoomIcon" OnClick="ToggleInvertScrollZoom"
+                             title="Flips the mouse wheel zoom direction, e.g. for natural scrolling on macOS."
+                             data-checked="@(pointerEventService.InvertScrollZoom ? "true" : "false")"
+                             data-testid="menu-invert-scroll-zoom">
+                    Invert Scroll Zoom
+                </MudMenuItem>
             </MudMenu>
 
             <MudDivider />
@@ -291,7 +311,18 @@
         base.OnInitialized();
 
         applicationEvents.UIStateChanged += OnUiStateChanged;
+        applicationEvents.ErrorReported += OnErrorReported;
         appCloudSyncService.Changed += OnUiStateChanged;
+    }
+
+    // Errors can be reported from background work (e.g. a refresh parse), so marshal to the
+    // renderer. RequireInteraction keeps the message up until dismissed, since a failed parse
+    // otherwise just looks like an empty diagram.
+    void OnErrorReported(string message)
+    {
+        _ = InvokeAsync(() =>
+            snackbar.Add(message, Severity.Error, config => config.RequireInteraction = true)
+        );
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -340,6 +371,7 @@
     public void Dispose()
     {
         applicationEvents.UIStateChanged -= OnUiStateChanged;
+        applicationEvents.ErrorReported -= OnErrorReported;
         appCloudSyncService.Changed -= OnUiStateChanged;
         selfReference?.Dispose();
     }
@@ -473,6 +505,16 @@
         ? Icons.Material.Filled.CheckCircle
         : Icons.Material.Outlined.Circle;
 
+    string InvertScrollZoomIcon => pointerEventService.InvertScrollZoom
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Outlined.Circle;
+
+    bool IncludeTestProjects => modelMgr.WithModel(m => m.IncludeTestProjects);
+
+    string IncludeTestProjectsIcon => IncludeTestProjects
+        ? Icons.Material.Filled.CheckCircle
+        : Icons.Material.Outlined.Circle;
+
     void ToggleEditMode()
     {
         ViewOptions.SetIsEditingEnabled(!ViewOptions.IsEditingEnabled);
@@ -489,6 +531,27 @@
         await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    async Task ToggleInvertScrollZoom()
+    {
+        var newValue = !pointerEventService.InvertScrollZoom;
+        pointerEventService.InvertScrollZoom = newValue;
+        await configService.SetAsync(config => config.InvertScrollZoom = newValue);
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    async Task ToggleIncludeTestProjectsAsync()
+    {
+        var newValue = !IncludeTestProjects;
+        // The refresh path only shows discreet progress, so say what is happening.
+        snackbar.Add(
+            newValue ? "Parsing with test projects ..." : "Parsing without test projects ...",
+            Severity.Info
+        );
+
+        // A failed re-parse is reported centrally (ErrorReported), so the result is ignored here.
+        await modelService.SetIncludeTestProjectsAsync(newValue);
     }
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;

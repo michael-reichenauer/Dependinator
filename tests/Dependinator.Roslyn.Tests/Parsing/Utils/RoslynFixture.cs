@@ -10,6 +10,7 @@ public sealed class RoslynCollection : ICollectionFixture<RoslynFixture> { }
 public sealed class RoslynFixture : IAsyncLifetime
 {
     public MSBuildWorkspace Workspace { get; private set; } = null!;
+    public Project Project { get; private set; } = null!;
     public Compilation Compilation { get; private set; } = null!;
     public IReadOnlyList<INamedTypeSymbol> AllTestTypes { get; private set; } = null!;
     public string ModelName { get; private set; } = null!;
@@ -32,9 +33,12 @@ public sealed class RoslynFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        Workspace = Compiler.CreateWorkspace();
-        var project = await Workspace.OpenProjectAsync(Root.ProjectFilePath);
-        if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
+        if (!Try(out var workspace, out var workspaceError, Compiler.CreateWorkspace()))
+            throw new Exception($"Failed to create MSBuild workspace: {workspaceError.AllErrorMessages()}");
+
+        Workspace = workspace;
+        Project = await Workspace.OpenProjectAsync(Root.ProjectFilePath);
+        if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(Project)))
             throw new Exception($"Failed to get compilation for test project: {e.AllErrorMessages()}");
 
         Compilation = compilation;

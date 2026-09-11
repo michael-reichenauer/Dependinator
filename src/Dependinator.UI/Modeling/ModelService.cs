@@ -13,6 +13,7 @@ interface IModelService
 {
     Task<R<ModelInfo>> LoadAsync(string path);
     Task<R> RefreshAsync();
+    Task<R> SetIncludeTestProjectsAsync(bool includeTestProjects);
     void Clear();
     void ClearCache();
     void CheckLineVisibility();
@@ -259,9 +260,32 @@ class ModelService : IModelService, IDisposable
         }
     }
 
+    public async Task<R> SetIncludeTestProjectsAsync(bool includeTestProjects)
+    {
+        if (modelMgr.WithModel(m => m.IncludeTestProjects == includeTestProjects))
+            return R.Ok;
+
+        modelMgr.WithModel(m => m.IncludeTestProjects = includeTestProjects);
+
+        // Update the menu checkbox immediately; the re-parse below can take a while.
+        applicationEvents.TriggerUIStateChanged();
+
+        // Save before refreshing: RefreshAsync returns early for design models and non-local
+        // paths, before it reaches its own TriggerSave.
+        TriggerSave();
+
+        return await RefreshAsync();
+    }
+
     async Task<R> ParseAndUpdateAsync(string path, bool isRefresh = false)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
+        // Read before any model-lock block is opened; the model lock is thread-affine and must
+        // never be held across the parse await.
+        var parseOptions = modelMgr.WithModel(m => new Parsing.SolutionParseOptions
+        {
+            IncludeTestProjects = m.IncludeTestProjects,
+        });
         using (var progress = isRefresh ? progressService.StartDiscreet() : progressService.Start("Parsing"))
         {
             // Let the renderer process the progress state before potentially CPU-heavy parse work starts.
@@ -269,8 +293,14 @@ class ModelService : IModelService, IDisposable
 
             Log.Info("Parsing ...");
 
-            if (!Try(out var items, out var e, await ParseAsync(path)))
+            if (!Try(out var items, out var e, await ParseAsync(path, parseOptions)))
+            {
+                // A failed parse leaves an empty (or unchanged) diagram, which on its own looks
+                // like a solution without dependencies, so always tell the user what went wrong.
+                Log.Warn($"Failed to parse {path}: {e.AllErrorMessages()}");
+                applicationEvents.TriggerErrorReported($"Failed to parse '{Path.GetFileName(path)}'. {e.ErrorMessage}");
                 return e;
+            }
 
             using (var model = modelMgr.UseModel())
             {
@@ -295,10 +325,20 @@ class ModelService : IModelService, IDisposable
         return R.Ok;
     }
 
-    async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path)
+    async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, Parsing.SolutionParseOptions options)
     {
         using var _ = Timing.Start($"Parsed {path}");
-        return await parserService.ParseAsync(path);
+        try
+        {
+            return await parserService.ParseAsync(path, options);
+        }
+        catch (Exception e)
+        {
+            // The parser may run in the LSP process, where a lost/failed RPC call throws
+            // instead of returning a result.
+            Log.Exception(e, $"Failed to call parser for {path}");
+            return R.Error("The parser could not be reached.", e);
+        }
     }
 
     public void TriggerSave()

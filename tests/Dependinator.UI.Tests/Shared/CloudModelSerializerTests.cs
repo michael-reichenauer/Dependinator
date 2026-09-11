@@ -37,6 +37,22 @@ public class CloudModelSerializerTests
     }
 
     [Fact]
+    public void GetContentHash_ShouldDifferWhenIncludeTestProjectsDiffers()
+    {
+        // The option must be part of the hash, otherwise flipping it would never mark the model
+        // as changed and the new value would never sync.
+        ModelDto dto1 = new()
+        {
+            Name = "test",
+            Nodes = [],
+            Links = [],
+        };
+        ModelDto dto2 = dto1 with { IncludeTestProjects = true };
+
+        Assert.NotEqual(CloudModelSerializer.GetContentHash(dto1), CloudModelSerializer.GetContentHash(dto2));
+    }
+
+    [Fact]
     public void GetContentHash_ShouldIgnoreViewStateFields()
     {
         ModelDto dto1 = new()

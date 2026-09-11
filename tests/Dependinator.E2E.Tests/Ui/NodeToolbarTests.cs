@@ -1,4 +1,5 @@
 using Dependinator.E2E.Tests.Shared;
+using Microsoft.Playwright;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
@@ -14,8 +15,7 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.SelectNodeByFullNameAsync("Demo.sln");
 
         // Open the node context menu and choose "Properties …".
-        await App.NodeToolbarMenu.ClickAsync();
-        await App.MenuItem("node-menu-properties").ClickAsync();
+        await (await App.OpenNodeMenuItemAsync("node-menu-properties")).ClickAsync();
 
         // The NodeProperties dialog shows the build version line.
         await Expect(App.Dialog).ToBeVisibleAsync();
@@ -30,13 +30,11 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Pick Blue from the color swatch dropdown (icon tint while the node shows as an
         // icon); the node's icon <use> switches to the generated "--Blue" color variant def.
-        await App.NodeSetColorButton.ClickAsync();
-        await App.IconColorItem("Blue").ClickAsync();
+        await App.PickIconColorItemAsync("Blue");
         await Expect(App.NodeIconUse("Solution--Blue")).ToBeVisibleAsync();
 
         // Picking Default restores the base violet icon.
-        await App.NodeSetColorButton.ClickAsync();
-        await App.IconColorItem("Default").ClickAsync();
+        await App.PickIconColorItemAsync("Default");
         await Expect(App.NodeIconUse("Solution")).ToBeVisibleAsync();
     }
 
@@ -48,7 +46,7 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Open the icon selector dialog and switch to the Azure tab; the list swaps from the
         // Default group's icons to the Azure ones.
-        await App.NodeSetIconButton.ClickAsync();
+        await App.OpenIconSelectorAsync();
         await Expect(App.IconDialogTab("Azure")).ToBeVisibleAsync();
         await App.IconDialogTab("Azure").ClickAsync();
         await Expect(App.IconDialogItem("Key-Vault")).ToBeVisibleAsync();
@@ -58,7 +56,7 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.NodeIconUse("Key-Vault")).ToBeVisibleAsync();
 
         // The pinned Default row restores the node-type icon.
-        await App.NodeSetIconButton.ClickAsync();
+        await App.OpenIconSelectorAsync();
         await App.IconDialogDefault.ClickAsync();
         await Expect(App.NodeIconUse("Solution")).ToBeVisibleAsync();
     }
@@ -78,21 +76,24 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(search.SelectedItem).ToBeVisibleAsync();
         await search.Field.PressAsync("Enter");
 
+        // Only wait for "Main" to actually render as a container before selecting it: whether
+        // a node draws as a container or as an icon depends on the zoom the navigation settles
+        // at, and the buttons asserted below exist only in container mode.
+        await App.WaitForContainerNodeAsync("Main");
         await App.SelectContainerNodeAsync("Demo.UI.Main");
 
         // Container mode: the edit pencil is offered and the palette dropdown shows the
         // container swatches (color-item-*), not the icon tints.
         await Expect(App.MenuItem("node-edit")).ToBeVisibleAsync();
-        await App.NodeSetColorButton.ClickAsync();
-        await App.ColorItem("Teal").ClickAsync();
+        await App.PickColorItemAsync("Teal");
 
         // Reopening marks Teal as the current (bold) selection; Default clears it again.
         // (Move the mouse off the button so its tooltip closes — the "Set background color"
         // tooltip popover otherwise overlays the top menu row and intercepts the click.)
-        await App.NodeSetColorButton.ClickAsync();
+        ILocator teal = await App.OpenColorItemAsync("Teal");
         await Page.Mouse.MoveAsync(0, 0);
-        await Expect(App.ColorItem("Teal").Locator("span").Last).ToHaveCSSAsync("font-weight", "600");
-        await App.ColorItem("Default").ClickAsync();
+        await Expect(teal.Locator("span").Last).ToHaveCSSAsync("font-weight", "600");
+        await App.PickColorItemAsync("Default");
     }
 
     [E2EFact]
@@ -121,7 +122,7 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.DependenciesTree).ToBeVisibleAsync();
 
         // The header close button dismisses the explorer.
-        await App.ExplorerCloseButton.ClickAsync();
+        await App.CloseExplorerAsync();
         await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
     }
 }

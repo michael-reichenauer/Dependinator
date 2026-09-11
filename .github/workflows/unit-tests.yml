@@ -32,5 +32,11 @@ jobs:
       - name: Restore workloads
         run: dotnet workload restore Dependinator.sln
 
+      # Api.Tests starts a real Azurite for the blob-store tests. Install it up front:
+      # otherwise the fixture falls back to 'npx --yes azurite', which downloads and
+      # installs the package on a clean runner and can exceed its start-up deadline.
+      - name: Install Azurite (Api blob-store tests)
+        run: npm install -g azurite
+
       - name: Test
         run: dotnet test Dependinator.sln

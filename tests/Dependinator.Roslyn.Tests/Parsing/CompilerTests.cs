@@ -11,20 +11,25 @@ public class CompilerTests
     {
         var projectPath = Path.Combine(Root.SrcFolderPath, "Dependinator.UI", "Dependinator.UI.csproj");
 
-        using var workspace = Compiler.CreateWorkspace();
-        var project = await workspace.OpenProjectAsync(projectPath);
+        if (!Try(out var workspace, out var workspaceError, Compiler.CreateWorkspace()))
+            Assert.Fail(workspaceError.AllErrorMessages());
 
-        if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
-            Assert.Fail(e.AllErrorMessages());
+        using (workspace)
+        {
+            var project = await workspace.OpenProjectAsync(projectPath);
 
-        var allTypes = Compiler.GetAllTypes(compilation).ToList();
+            if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
+                Assert.Fail(e.AllErrorMessages());
 
-        var allTypeNames = allTypes
-            .Select(t => t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
-            .Order()
-            .ToList();
+            var allTypes = Compiler.GetAllTypes(compilation).ToList();
 
-        // Razor component
-        Assert.NotNull(allTypeNames.FirstOrDefault(n => n.Contains("AppProgress")));
+            var allTypeNames = allTypes
+                .Select(t => t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+                .Order()
+                .ToList();
+
+            // Razor component
+            Assert.NotNull(allTypeNames.FirstOrDefault(n => n.Contains("AppProgress")));
+        }
     }
 }

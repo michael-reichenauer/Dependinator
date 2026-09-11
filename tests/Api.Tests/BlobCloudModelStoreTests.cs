@@ -183,7 +183,12 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
         tempDirectory = Path.Combine(Path.GetTempPath(), $"dependinator-azurite-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDirectory);
 
-        (string fileName, string arguments) = ResolveCommand(blobPort, queuePort, tablePort, tempDirectory);
+        (string fileName, string arguments, bool usesNpx) = ResolveCommand(
+            blobPort,
+            queuePort,
+            tablePort,
+            tempDirectory
+        );
         process = new Process
         {
             StartInfo = new ProcessStartInfo
@@ -208,7 +213,11 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
         ConnectionString =
             $"DefaultEndpointsProtocol=http;AccountName={DevStoreAccountName};AccountKey={DevStoreAccountKey};BlobEndpoint=http://127.0.0.1:{blobPort}/{DevStoreAccountName};";
 
-        await WaitForPortAsync(blobPort);
+        // With the npx fallback the first run also downloads and installs Azurite before
+        // the server binds its port, which on a clean npm cache (a CI runner) takes far
+        // longer than a plain start-up. Only hold the tight deadline when Azurite is
+        // already installed.
+        await WaitForPortAsync(blobPort, usesNpx ? TimeSpan.FromMinutes(5) : TimeSpan.FromSeconds(60));
     }
 
     public Task DisposeAsync()
@@ -233,7 +242,7 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
             Directory.Delete(tempDirectory, recursive: true);
     }
 
-    static (string FileName, string Arguments) ResolveCommand(
+    static (string FileName, string Arguments, bool UsesNpx) ResolveCommand(
         int blobPort,
         int queuePort,
         int tablePort,
@@ -243,10 +252,10 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
         string arguments =
             $"--silent --skipApiVersionCheck --disableProductStyleUrl --location \"{location}\" --blobPort {blobPort} --queuePort {queuePort} --tablePort {tablePort}";
         if (CommandExists("azurite"))
-            return ("azurite", arguments);
+            return ("azurite", arguments, false);
 
         if (CommandExists("npx"))
-            return ("npx", $"--yes azurite {arguments}");
+            return ("npx", $"--yes azurite {arguments}", true);
 
         throw new InvalidOperationException("Azurite was not found. Install 'azurite' or ensure 'npx' is available.");
     }
@@ -272,9 +281,9 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
         return process.ExitCode == 0;
     }
 
-    async Task WaitForPortAsync(int port)
+    async Task WaitForPortAsync(int port, TimeSpan timeout)
     {
-        DateTime deadline = DateTime.UtcNow.AddSeconds(60);
+        DateTime deadline = DateTime.UtcNow.Add(timeout);
         while (DateTime.UtcNow < deadline)
         {
             if (process is { HasExited: true })
@@ -295,7 +304,9 @@ public sealed class AzuriteFixture : IAsyncLifetime, IDisposable
         }
 
         throw new TimeoutException(
-            $"Timed out waiting for Azurite on port {port}.{Environment.NewLine}{FormatDiagnostics()}"
+            $"Timed out after {timeout} waiting for Azurite on port {port}. Installing Azurite "
+                + $"('npm install -g azurite') avoids the slower 'npx' fallback."
+                + $"{Environment.NewLine}{FormatDiagnostics()}"
         );
     }
 
