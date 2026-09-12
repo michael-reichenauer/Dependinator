@@ -44,23 +44,23 @@ interface IAppCloudSyncService
     CloudSyncState GetCloudSyncState();
 
     // Starts authentication flow and refreshes derived sync state.
-    Task<R> LoginAsync();
+    Task<Result> LoginAsync();
 
     // Starts logout flow and clears cloud-backed state from UI cache.
-    Task<R> LogoutAsync();
+    Task<Result> LogoutAsync();
 
     // Pushes the active model to cloud and updates the local sync marker.
-    Task<R<CloudModelMetadata>> SyncUpAsync();
+    Task<Result<CloudModelMetadata>> SyncUpAsync();
 
-    // Pulls current model from cloud and replaces the active local model. Returns R.None when
+    // Pulls current model from cloud and replaces the active local model. Returns a NotFoundError when
     // no remote copy existed and the local model was uploaded to re-create it instead.
-    Task<R<ModelInfo>> SyncDownAsync();
+    Task<Result<ModelInfo>> SyncDownAsync();
 
     // Downloads a selected remote model and opens it in the canvas.
-    Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel);
+    Task<Result<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel);
 
     // Deletes the remote copy of the current model and clears the local sync baseline.
-    Task<R> DeleteCurrentCloudModelAsync();
+    Task<Result> DeleteCurrentCloudModelAsync();
 }
 
 // Aggregates cloud sync concerns for the app: transport selection, auth state, model lists, and
@@ -159,56 +159,56 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     }
 
     // Triggers login through transport and refreshes snapshot state afterwards.
-    public async Task<R> LoginAsync()
+    public async Task<Result> LoginAsync()
     {
-        if (!Try(out CloudAuthState? state, out ErrorResult? error, await cloudSyncService.LoginAsync()))
+        if (!Try(out CloudAuthState? state, out Error? error, await cloudSyncService.LoginAsync()))
             return error;
 
         authState = state;
         return await RefreshSnapshotAndNotifyAsync(allowAutoSync: false);
     }
 
-    public async Task<R> LogoutAsync()
+    public async Task<Result> LogoutAsync()
     {
-        if (!Try(out CloudAuthState? state, out ErrorResult? error, await cloudSyncService.LogoutAsync()))
+        if (!Try(out CloudAuthState? state, out Error? error, await cloudSyncService.LogoutAsync()))
             return error;
 
         authState = state;
         ResetSyncSnapshot(clearCloudModels: true);
         CancelIdleRefreshLoop();
         NotifyChanged();
-        return R.Ok;
+        return Result.Ok;
     }
 
     // Pushes current model DTO to cloud and records the successful sync baseline.
-    public async Task<R<CloudModelMetadata>> SyncUpAsync()
+    public async Task<Result<CloudModelMetadata>> SyncUpAsync()
     {
         return await ExecuteSyncOperationAsync(() => SyncUpCoreAsync(notifyChanged: true));
     }
 
-    public async Task<R<ModelInfo>> SyncDownAsync()
+    public async Task<Result<ModelInfo>> SyncDownAsync()
     {
         return await ExecuteSyncOperationAsync(() => SyncDownCoreAsync(notifyChanged: true));
     }
 
     // Loads a selected cloud model into workspace and records local baseline on success.
-    public async Task<R<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel)
+    public async Task<Result<CloudModelMetadata>> LoadCloudModelAsync(CloudModelMetadata cloudModel)
     {
         return await ExecuteSyncOperationAsync(() => LoadCloudModelCoreAsync(cloudModel, notifyChanged: true));
     }
 
     // Deletes the remote copy of the current model and drops the sync baseline so the
     // remaining local model is treated as unsynced local-only content.
-    public async Task<R> DeleteCurrentCloudModelAsync()
+    public async Task<Result> DeleteCurrentCloudModelAsync()
     {
         await syncOperationLock.WaitAsync();
         try
         {
             string modelPath = modelMgr.ModelPath;
             if (string.IsNullOrWhiteSpace(modelPath))
-                return R.Error("Model is not loaded.");
+                return new Error("Model is not loaded.");
 
-            if (!Try(out ErrorResult? error, await cloudSyncService.DeleteAsync(modelPath)))
+            if (!Try(out Error? error, await cloudSyncService.DeleteAsync(modelPath)))
                 return error;
 
             await cloudSyncStateService.ClearAsync(modelPath);
@@ -217,7 +217,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
             Log.Info("DeleteCurrentCloudModelAsync");
             NotifyChanged();
-            return R.Ok;
+            return Result.Ok;
         }
         finally
         {
@@ -225,7 +225,8 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         }
     }
 
-    async Task<R<T>> ExecuteSyncOperationAsync<T>(Func<Task<R<T>>> syncOperation)
+    async Task<Result<T>> ExecuteSyncOperationAsync<T>(Func<Task<Result<T>>> syncOperation)
+        where T : notnull
     {
         await syncOperationLock.WaitAsync();
         try
@@ -238,9 +239,9 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         }
     }
 
-    async Task<R<CloudModelMetadata>> SyncUpCoreAsync(bool notifyChanged)
+    async Task<Result<CloudModelMetadata>> SyncUpCoreAsync(bool notifyChanged)
     {
-        if (!Try(out ModelDto? modelDto, out ErrorResult? error, modelServiceLazy.Value.GetCurrentModelDto()))
+        if (!Try(out ModelDto? modelDto, out Error? error, modelServiceLazy.Value.GetCurrentModelDto()))
             return error;
 
         string modelPath = modelMgr.ModelPath;
@@ -258,25 +259,25 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         return metadata;
     }
 
-    async Task<R<ModelInfo>> SyncDownCoreAsync(bool notifyChanged)
+    async Task<Result<ModelInfo>> SyncDownCoreAsync(bool notifyChanged)
     {
         string modelPath = modelMgr.ModelPath;
         if (string.IsNullOrWhiteSpace(modelPath))
-            return R.Error("Model is not loaded.");
+            return new Error("Model is not loaded.");
 
-        R<ModelDto> pullResult = await cloudSyncService.PullAsync(modelPath);
-        if (pullResult.IsNone)
+        Result<ModelDto> pullResult = await cloudSyncService.PullAsync(modelPath);
+        if (pullResult is NotFoundError)
         {
             // No remote copy exists (deleted, other account, or other backend). Re-create it from
             // the local model instead of failing; the push also replaces the stale sync baseline.
             Log.Info($"No cloud model exists for '{modelPath}'; uploading local model instead");
-            if (!Try(out _, out ErrorResult? pushError, await SyncUpCoreAsync(notifyChanged)))
+            if (!Try(out _, out Error? pushError, await SyncUpCoreAsync(notifyChanged)))
                 return pushError;
 
-            return R.None;
+            return pullResult.Error;
         }
 
-        if (!Try(out ModelDto? modelDto, out ErrorResult? error, pullResult))
+        if (!Try(out ModelDto? modelDto, out Error? error, pullResult))
             return error;
 
         if (!Try(out ModelInfo? modelInfo, out error, await modelServiceLazy.Value.ReplaceCurrentModelAsync(modelDto)))
@@ -291,14 +292,14 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         return modelInfo;
     }
 
-    async Task<R<CloudModelMetadata>> LoadCloudModelCoreAsync(CloudModelMetadata cloudModel, bool notifyChanged)
+    async Task<Result<CloudModelMetadata>> LoadCloudModelCoreAsync(CloudModelMetadata cloudModel, bool notifyChanged)
     {
         string normalizedPath = cloudModel.NormalizedPath;
-        R<ModelDto> pullResult = await cloudSyncService.PullAsync(normalizedPath);
-        if (pullResult.IsNone)
-            return R.Error($"Cloud model for '{normalizedPath}' no longer exists.");
+        Result<ModelDto> pullResult = await cloudSyncService.PullAsync(normalizedPath);
+        if (pullResult is NotFoundError)
+            return new Error($"Cloud model for '{normalizedPath}' no longer exists.");
 
-        if (!Try(out ModelDto? modelDto, out ErrorResult? error, pullResult))
+        if (!Try(out ModelDto? modelDto, out Error? error, pullResult))
             return error;
 
         if (!Try(out error, await modelServiceLazy.Value.WriteModelAsync(normalizedPath, modelDto)))
@@ -327,50 +328,51 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     }
 
     // Rebuilds sync snapshot and optionally performs automatic sync work before notifying listeners.
-    async Task<R> RefreshSnapshotAndNotifyAsync(bool allowAutoSync)
+    async Task<Result> RefreshSnapshotAndNotifyAsync(bool allowAutoSync)
     {
-        if (!Try(out ErrorResult? error, await RefreshSyncStateAsync()))
+        if (!Try(out Error? error, await RefreshSyncStateAsync()))
             return error;
 
         if (allowAutoSync && !Try(out error, await TryAutoSyncIfNeededAsync()))
             return error;
 
         NotifyChanged();
-        return R.Ok;
+        return Result.Ok;
     }
 
-    async Task<R> TryAutoSyncIfNeededAsync()
+    async Task<Result> TryAutoSyncIfNeededAsync()
     {
         if (!ShouldEvaluateAutoSync())
-            return R.Ok;
+            return Result.Ok;
 
         if (!IsAutoSyncAttemptDue())
-            return R.Ok;
+            return Result.Ok;
 
         AutoSyncAction autoSyncAction = DetermineAutoSyncAction();
         if (autoSyncAction is AutoSyncAction.None)
-            return R.Ok;
+            return Result.Ok;
 
         lastAutoSyncAttemptUtc = utcNow();
         return autoSyncAction switch
         {
             AutoSyncAction.Push => await RunAutoSyncAsync(() => SyncUpCoreAsync(notifyChanged: false)),
             AutoSyncAction.Pull => await RunAutoSyncAsync(() => SyncDownCoreAsync(notifyChanged: false)),
-            _ => R.Ok,
+            _ => Result.Ok,
         };
     }
 
-    async Task<R> RunAutoSyncAsync<T>(Func<Task<R<T>>> syncOperation)
+    async Task<Result> RunAutoSyncAsync<T>(Func<Task<Result<T>>> syncOperation)
+        where T : notnull
     {
-        R<T> result = await ExecuteSyncOperationAsync(syncOperation);
+        Result<T> result = await ExecuteSyncOperationAsync(syncOperation);
         // None means a pull found no remote copy and recovery already pushed the local model.
-        if (result.IsNone)
-            return R.Ok;
+        if (result is NotFoundError)
+            return Result.Ok;
 
-        if (!Try(out _, out ErrorResult? error, result))
+        if (!Try(out _, out Error? error, result))
             return error;
 
-        return R.Ok;
+        return Result.Ok;
     }
 
     bool ShouldEvaluateAutoSync()
@@ -409,32 +411,32 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     }
 
     // Refreshes authentication state and invalidates local cloud snapshot when unauthenticated.
-    async Task<R> RefreshAuthStateAsync()
+    async Task<Result> RefreshAuthStateAsync()
     {
         if (!cloudSyncService.IsAvailable)
         {
             authState = unavailableAuthState;
             ResetSyncSnapshot(clearCloudModels: true);
             hasResolvedInitialAuth = true;
-            return R.Ok;
+            return Result.Ok;
         }
 
-        R<CloudAuthState> authResult = await cloudSyncService.GetAuthStateAsync();
+        Result<CloudAuthState> authResult = await cloudSyncService.GetAuthStateAsync();
         // The auth state is now determined (signed in or not), so stop showing the
         // transient "connecting" indicator even if the call failed.
         hasResolvedInitialAuth = true;
-        if (!Try(out CloudAuthState? state, out ErrorResult? error, authResult))
+        if (!Try(out CloudAuthState? state, out Error? error, authResult))
             return error;
 
         authState = state;
         if (!authState.IsAuthenticated)
             ResetSyncSnapshot(clearCloudModels: true);
 
-        return R.Ok;
+        return Result.Ok;
     }
 
     // Refreshes cached cloud model list and current-model sync state.
-    public async Task<R> RefreshSyncStateAsync()
+    public async Task<Result> RefreshSyncStateAsync()
     {
         if (!Try(out var error, await RefreshAuthStateAsync()))
         {
@@ -442,21 +444,21 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
             return error;
         }
 
-        if (!Try(out ErrorResult? error2, await RefreshCloudModelsAsync()))
+        if (!Try(out Error? error2, await RefreshCloudModelsAsync()))
             return error2;
 
         string modelPath = modelMgr.ModelPath;
         if (!cloudSyncService.IsAvailable || string.IsNullOrWhiteSpace(modelPath))
         {
             ResetSyncSnapshot(clearCloudModels: false);
-            return R.Ok;
+            return Result.Ok;
         }
 
         return await RefreshSyncStateForCurrentModelAsync(modelPath);
     }
 
     // Loads latest local sync marker and compares against current model hash to determine drift.
-    async Task<R> RefreshSyncStateForCurrentModelAsync(string modelPath)
+    async Task<Result> RefreshSyncStateForCurrentModelAsync(string modelPath)
     {
         syncState = await cloudSyncStateService.GetAsync(modelPath);
         CloudSyncBaseline? baseline = syncState?.Baseline;
@@ -469,26 +471,26 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
             currentRemoteContentHash
         );
         MarkSyncStateRefreshed();
-        return R.Ok;
+        return Result.Ok;
     }
 
     // Reads remote model metadata list for the current authenticated user.
-    async Task<R> RefreshCloudModelsAsync()
+    async Task<Result> RefreshCloudModelsAsync()
     {
         if (!cloudSyncService.IsAvailable || !authState.IsAuthenticated)
         {
             cloudModels = [];
-            return R.Ok;
+            return Result.Ok;
         }
 
-        if (!Try(out CloudModelList? modelList, out ErrorResult? error, await cloudSyncService.ListAsync()))
+        if (!Try(out CloudModelList? modelList, out Error? error, await cloudSyncService.ListAsync()))
         {
             cloudModels = [];
             return error;
         }
 
         cloudModels = modelList.Models;
-        return R.Ok;
+        return Result.Ok;
     }
 
     // Clears computed sync flags and optionally clears remote model list cache.
@@ -554,10 +556,10 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
         try
         {
-            R refreshResult = await RefreshSnapshotAndNotifyAsync(allowAutoSync: true);
-            if (!Try(out ErrorResult? error, refreshResult))
+            Result refreshResult = await RefreshSnapshotAndNotifyAsync(allowAutoSync: true);
+            if (!Try(out Error? error, refreshResult))
             {
-                NotifyBackgroundSyncError(error.ErrorMessage);
+                NotifyBackgroundSyncError(error.Message);
             }
             else
             {

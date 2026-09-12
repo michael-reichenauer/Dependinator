@@ -13,9 +13,9 @@ public class CloudSyncHttpClientTests
         RecordingHandler handler = new(OkJson("{\"IsAvailable\":true,\"IsAuthenticated\":true,\"User\":null}"));
         CloudSyncHttpClient sut = CreateClient(handler, token: "the-token");
 
-        R<CloudAuthState> result = await sut.GetAuthStateAsync();
+        Result<CloudAuthState> result = await sut.GetAuthStateAsync();
 
-        Assert.True(Try(out CloudAuthState? state, out var error, result), error?.ErrorMessage);
+        Assert.True(Try(out CloudAuthState? state, out var error, result), error?.Message);
         Assert.True(state.IsAuthenticated);
         Assert.Equal("Bearer the-token", handler.Request!.Headers.Authorization!.ToString());
         Assert.Equal("Bearer the-token", handler.Request.Headers.GetValues("X-Dependinator-Authorization").Single());
@@ -39,9 +39,9 @@ public class CloudSyncHttpClientTests
         RecordingHandler handler = new(OkJson("{\"Models\":[]}"));
         CloudSyncHttpClient sut = CreateClient(handler, apiBaseAddress: "https://example.com/");
 
-        R<CloudModelList> result = await sut.ListAsync();
+        Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.True(Try(out CloudModelList? _, out var error, result), error?.ErrorMessage);
+        Assert.True(Try(out CloudModelList? _, out var error, result), error?.Message);
         Assert.Equal("https://example.com/api/models", handler.Request!.RequestUri!.ToString());
     }
 
@@ -51,10 +51,10 @@ public class CloudSyncHttpClientTests
         RecordingHandler handler = new(Json(HttpStatusCode.Conflict, "{\"Message\":\"Device sync quota exceeded.\"}"));
         CloudSyncHttpClient sut = CreateClient(handler);
 
-        R<CloudModelList> result = await sut.ListAsync();
+        Result<CloudModelList> result = await sut.ListAsync();
 
         Assert.False(Try(out CloudModelList? _, out var error, result));
-        Assert.Contains("Device sync quota exceeded.", error!.ErrorMessage);
+        Assert.Contains("Device sync quota exceeded.", error!.Message);
     }
 
     [Theory]
@@ -71,10 +71,10 @@ public class CloudSyncHttpClientTests
         );
         CloudSyncHttpClient sut = CreateClient(handler);
 
-        R<CloudModelList> result = await sut.ListAsync();
+        Result<CloudModelList> result = await sut.ListAsync();
 
         Assert.False(Try(out CloudModelList? _, out var error, result));
-        Assert.Contains(expectedMessage, error!.ErrorMessage);
+        Assert.Contains(expectedMessage, error!.Message);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class CloudSyncHttpClientTests
         RecordingHandler handler = new(new HttpResponseMessage(HttpStatusCode.OK));
         CloudSyncHttpClient sut = CreateClient(handler);
 
-        R<CloudModelList> result = await sut.ListAsync();
+        Result<CloudModelList> result = await sut.ListAsync();
 
         Assert.False(Try(out CloudModelList? _, out var error, result));
         Assert.NotNull(error);
@@ -100,9 +100,9 @@ public class CloudSyncHttpClientTests
         );
         CloudSyncHttpClient sut = CreateClient(handler);
 
-        R<CloudModelMetadata> result = await sut.PushAsync(document);
+        Result<CloudModelMetadata> result = await sut.PushAsync(document);
 
-        Assert.True(Try(out CloudModelMetadata? metadata, out var error, result), error?.ErrorMessage);
+        Assert.True(Try(out CloudModelMetadata? metadata, out var error, result), error?.Message);
         Assert.Equal("model-key", metadata.ModelKey);
         Assert.Equal(HttpMethod.Put, handler.Request!.Method);
         Assert.EndsWith("/api/models/model-key", handler.Request.RequestUri!.ToString());
@@ -117,9 +117,9 @@ public class CloudSyncHttpClientTests
         );
         CloudSyncHttpClient sut = CreateClient(handler);
 
-        R<CloudModelDocument> result = await sut.PullAsync("model-key");
+        Result<CloudModelDocument> result = await sut.PullAsync("model-key");
 
-        Assert.True(result.IsNone);
+        Assert.True(result is NotFoundError);
     }
 
     static CloudSyncHttpClient CreateClient(

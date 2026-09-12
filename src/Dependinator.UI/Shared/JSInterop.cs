@@ -55,7 +55,7 @@ public class JSInterop : IJSInterop, IAsyncDisposable
         catch (Exception e) when (IsCircuitGone(e))
         {
             // Circuit/runtime gone (see Call above). Return default so callers handle it
-            // as "no result" (e.g. GetBoundingRectangle treats null as R.None) instead of
+            // as "no result" (e.g. GetBoundingRectangle treats null as a NotFoundError) instead of
             // letting an unobserved exception terminate the app.
             return default!;
         }

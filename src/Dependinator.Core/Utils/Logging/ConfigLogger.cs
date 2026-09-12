@@ -92,7 +92,7 @@ public static class ConfigLogger
         // Start each session with an empty log file; the previous session's content
         // only survives via the ".2.log" rotation in MoveLargeLogFile().
         if (!Try(out var e, () => File.WriteAllText(LogPath, "")))
-            throw Asserter.FailFast(e.ErrorMessage);
+            throw Asserter.FailFast(e.Message);
     }
 
     // Determines the length of the source path prefix to strip from [CallerFilePath]

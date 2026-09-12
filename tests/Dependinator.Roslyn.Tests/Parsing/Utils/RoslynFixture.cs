@@ -34,12 +34,12 @@ public sealed class RoslynFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         if (!Try(out var workspace, out var workspaceError, Compiler.CreateWorkspace()))
-            throw new Exception($"Failed to create MSBuild workspace: {workspaceError.AllErrorMessages()}");
+            throw new Exception($"Failed to create MSBuild workspace: {workspaceError.AllMessages()}");
 
         Workspace = workspace;
         Project = await Workspace.OpenProjectAsync(Root.ProjectFilePath);
         if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(Project)))
-            throw new Exception($"Failed to get compilation for test project: {e.AllErrorMessages()}");
+            throw new Exception($"Failed to get compilation for test project: {e.AllMessages()}");
 
         Compilation = compilation;
         AllTestTypes = Compiler.GetAllTypes(compilation).ToList();

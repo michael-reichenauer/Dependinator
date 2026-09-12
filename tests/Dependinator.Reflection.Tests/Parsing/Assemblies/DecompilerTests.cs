@@ -27,7 +27,7 @@ public class DecompilerTests
         string nodeName = Reference.NodeName<DecompilerTestClass>();
 
         if (!Try(out var source, out var e, decompiler.TryGetSource(module, nodeName)))
-            Assert.Fail(e.ErrorMessage);
+            Assert.Fail(e.Message);
 
         await Verify(source.Text, extension: "cs");
         Assert.Equal(CurrentFilePath(), source.Location.Path);
@@ -41,7 +41,7 @@ public class DecompilerTests
         var module = AssemblyHelper.GetModule<DecompilerTestClass>();
         string nodeName1 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.FirstFunction));
         if (!Try(out var source1, out var e1, decompiler.TryGetSource(module, nodeName1)))
-            Assert.Fail(e1.ErrorMessage);
+            Assert.Fail(e1.Message);
 
         await Verify(source1.Text, extension: "cs");
         Assert.Equal(CurrentFilePath(), source1.Location.Path);
@@ -49,7 +49,7 @@ public class DecompilerTests
 
         string nodeName2 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.SecondFunction));
         if (!Try(out var source2, out var e2, decompiler.TryGetSource(module, nodeName2)))
-            Assert.Fail(e2.ErrorMessage);
+            Assert.Fail(e2.Message);
         Assert.Equal(CurrentFilePath(), source2.Location.Path);
         Assert.Equal(16, source2.Location.Line);
     }
@@ -61,24 +61,14 @@ public class DecompilerTests
         var module = AssemblyHelper.GetModule<DecompilerTestClass>();
 
         // // Find first type in specified file
-        var fileLocation1 = decompiler.TryGetSource(module, Reference.NodeName<DecompilerTestClass>());
-        Assert.False(fileLocation1.IsResultError);
-        var isFound11 = decompiler.TryGetNodeNameForFileLocation(
-            module,
-            fileLocation1.GetResultValue().Location,
-            out var nodeName1
-        );
+        var fileLocation1 = AssertOk(decompiler.TryGetSource(module, Reference.NodeName<DecompilerTestClass>()));
+        var isFound11 = decompiler.TryGetNodeNameForFileLocation(module, fileLocation1.Location, out var nodeName1);
         Assert.True(isFound11);
         Assert.Equal(Reference.NodeName<DecompilerTestClass>(), nodeName1);
 
         // Find FirstFunction() in specified file
-        var fileLocation2 = decompiler.TryGetSource(module, Reference.NodeName<DecompilerTests>());
-        Assert.False(fileLocation2.IsResultError);
-        var isFound22 = decompiler.TryGetNodeNameForFileLocation(
-            module,
-            fileLocation2.GetResultValue().Location,
-            out var nodeName2
-        );
+        var fileLocation2 = AssertOk(decompiler.TryGetSource(module, Reference.NodeName<DecompilerTests>()));
+        var isFound22 = decompiler.TryGetNodeNameForFileLocation(module, fileLocation2.Location, out var nodeName2);
         Assert.True(isFound22);
         Assert.Equal(Reference.NodeName<DecompilerTests>(), nodeName2);
     }

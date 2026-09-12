@@ -15,7 +15,7 @@ namespace Dependinator.Core.Parsing;
 internal interface IParserService
 {
     // Parse assemblies
-    Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, SolutionParseOptions options);
+    Task<Result<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, SolutionParseOptions options);
 }
 
 [Singleton]
@@ -24,7 +24,7 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
     readonly IEnumerable<IParser> parsers = parsers;
     private readonly ISourceParser sourceParser = sourceParser;
 
-    public async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, SolutionParseOptions options)
+    public async Task<Result<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, SolutionParseOptions options)
     {
         using var _ = Timing.Start("Parsed sources");
         // Options arrive over JSON-RPC, where nullable annotations are not enforced, so a remote
@@ -37,7 +37,7 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
         //     var items = new ChannelItemsAdapter(channel.Writer);
 
         //     if (!Try(out var parser, out var e, GetParser(path)))
-        //         return R.Error($"File not supported: {path}", e);
+        //         return new Error($"File not supported: {path}", e);
 
         //     // await Task.Run(async () =>
         //     // {
@@ -53,17 +53,17 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
         // catch (Exception e)
         // {
         //     Log.Exception(e, "Error in parser");
-        //     return R.Error("Failed to parse", e);
+        //     return new Error("Failed to parse", e);
         // }
     }
 
-    R<IParser> GetParser(string path)
+    Result<IParser> GetParser(string path)
     {
         var parser = parsers.FirstOrDefault(p => p.CanSupport(path));
         if (parser == null)
-            return R.Error($"No supported parser for {path}");
+            return new Error($"No supported parser for {path}");
 
-        return R<IParser>.From(parser);
+        return parser;
     }
 
     sealed class ChannelItemsAdapter(ChannelWriter<Item> writer) : IItems

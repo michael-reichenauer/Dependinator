@@ -283,7 +283,7 @@ public class AppCloudSyncServiceTests
         context
             .CloudSyncService.Setup(x => x.PushAsync(It.IsAny<string>(), It.IsAny<ModelDto>()))
             .Callback(() => context.Counters.PushCalls++)
-            .ReturnsAsync(R.Error("Push failed."));
+            .ReturnsAsync(new Error("Push failed."));
 
         context.ApplicationEvents.TriggerUIStateChanged();
         await WaitUntilAsync(() => context.Counters.PushCalls > 0);
@@ -309,9 +309,9 @@ public class AppCloudSyncServiceTests
             .CloudSyncService.Setup(x => x.LogoutAsync())
             .ReturnsAsync(new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null));
 
-        R result = await context.Sut.LogoutAsync();
+        Result result = await context.Sut.LogoutAsync();
 
-        Assert.True(result);
+        AssertOk(result);
         Assert.Null(context.Sut.SyncState);
 
         Assert.False(context.Sut.HasLocalChangesSinceLastSync);
@@ -331,9 +331,9 @@ public class AppCloudSyncServiceTests
 
         context.CloudSyncService.Setup(x => x.PullAsync(modelPath)).ReturnsAsync(remotePulledModel);
 
-        R<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
+        Result<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
 
-        Assert.True(syncDownResult);
+        AssertOk(syncDownResult);
         Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
         Assert.False(context.Sut.HasLocalChangesSinceLastSync);
         Assert.False(context.Sut.HasRemoteChangesSinceLastSync);
@@ -345,15 +345,15 @@ public class AppCloudSyncServiceTests
         string modelPath = "/models/sample.model";
         ModelDto localModel = CreateModelDto("local");
         SutContext context = CreateSutContext(modelPath, localModel, syncState: null, cloudModels: []);
-        R<ModelDto> noRemoteModel = R.None;
+        Result<ModelDto> noRemoteModel = new NotFoundError("No remote model");
         context
             .CloudSyncService.Setup(x => x.PullAsync(modelPath))
             .Callback(() => context.Counters.PullCalls++)
             .ReturnsAsync(noRemoteModel);
 
-        R<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
+        Result<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
 
-        Assert.True(syncDownResult.IsNone);
+        Assert.True(syncDownResult is NotFoundError);
         Assert.True(context.Counters.PushCalls > 0);
         context.ModelService.Verify(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()), Times.Never);
         Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
@@ -369,7 +369,7 @@ public class AppCloudSyncServiceTests
         CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], CreateFastTimings());
-        R<ModelDto> noRemoteModel = R.None;
+        Result<ModelDto> noRemoteModel = new NotFoundError("No remote model");
         context
             .CloudSyncService.Setup(x => x.PullAsync(It.IsAny<string>()))
             .Callback(() => context.Counters.PullCalls++)
@@ -407,7 +407,7 @@ public class AppCloudSyncServiceTests
         ModelDto syncedModel = CreateModelDto("synced");
         CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
         SutContext context = CreateSutContext(modelPath, syncedModel, syncState, cloudModels: []);
-        context.CloudSyncService.Setup(x => x.GetAuthStateAsync()).ReturnsAsync(R.Error("auth failed"));
+        context.CloudSyncService.Setup(x => x.GetAuthStateAsync()).ReturnsAsync(new Error("auth failed"));
 
         Assert.True(context.Sut.IsConnecting);
 
@@ -424,13 +424,13 @@ public class AppCloudSyncServiceTests
         CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
         SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel]);
-        context.CloudSyncService.Setup(x => x.DeleteAsync(modelPath)).ReturnsAsync(R.Ok);
+        context.CloudSyncService.Setup(x => x.DeleteAsync(modelPath)).ReturnsAsync(Result.Ok);
         context.CloudSyncStateService.Setup(x => x.ClearAsync(modelPath)).Returns(Task.CompletedTask);
         await context.Sut.RefreshSyncStateAsync();
 
-        R result = await context.Sut.DeleteCurrentCloudModelAsync();
+        Result result = await context.Sut.DeleteCurrentCloudModelAsync();
 
-        Assert.True(R.Try(out var error, result), error?.ErrorMessage);
+        AssertOk(result);
         context.CloudSyncService.Verify(x => x.DeleteAsync(modelPath), Times.Once);
         context.CloudSyncStateService.Verify(x => x.ClearAsync(modelPath), Times.Once);
         Assert.Empty(context.Sut.CloudModels);
@@ -445,13 +445,13 @@ public class AppCloudSyncServiceTests
         CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
         SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel]);
-        context.CloudSyncService.Setup(x => x.DeleteAsync(modelPath)).ReturnsAsync(R.Error("delete failed"));
+        context.CloudSyncService.Setup(x => x.DeleteAsync(modelPath)).ReturnsAsync(new Error("delete failed"));
         await context.Sut.RefreshSyncStateAsync();
 
-        R result = await context.Sut.DeleteCurrentCloudModelAsync();
+        Result result = await context.Sut.DeleteCurrentCloudModelAsync();
 
-        Assert.False(R.Try(out var error, result));
-        Assert.Contains("delete failed", error!.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("delete failed", error.Message);
         context.CloudSyncStateService.Verify(x => x.ClearAsync(It.IsAny<string>()), Times.Never);
         Assert.Single(context.Sut.CloudModels);
     }
@@ -514,7 +514,7 @@ public class AppCloudSyncServiceTests
         modelService
             .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()))
             .ReturnsAsync(new ModelInfo(modelPath, Rect.None, 0));
-        modelService.Setup(x => x.WriteModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(R.Ok);
+        modelService.Setup(x => x.WriteModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(Result.Ok);
         canvasService.Setup(x => x.LoadAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
 
         return new SutContext(

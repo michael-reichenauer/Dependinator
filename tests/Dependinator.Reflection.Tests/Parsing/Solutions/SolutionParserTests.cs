@@ -15,7 +15,7 @@ public class SolutionParserTests
 
         using var parser = new SolutionParser(solutionPath, items, false, parserFileService);
         if (!Try(out var e, await parser.ParseAsync()))
-            Assert.Fail(e.AllErrorMessages());
+            Assert.Fail(e.AllMessages());
 
         Assert.NotEmpty(items.Nodes);
     }

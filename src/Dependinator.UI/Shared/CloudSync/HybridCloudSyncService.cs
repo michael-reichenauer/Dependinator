@@ -22,26 +22,27 @@ sealed class HybridCloudSyncService : ICloudSyncService
     public bool IsAvailable => httpCloudSyncService.IsAvailable;
 
     // Forwards request to VS Code proxy when available, otherwise to HTTP.
-    public Task<R<CloudAuthState>> LoginAsync() => ForwardAsync(service => service.LoginAsync());
+    public Task<Result<CloudAuthState>> LoginAsync() => ForwardAsync(service => service.LoginAsync());
 
-    public Task<R<CloudAuthState>> LogoutAsync() => ForwardAsync(service => service.LogoutAsync());
+    public Task<Result<CloudAuthState>> LogoutAsync() => ForwardAsync(service => service.LogoutAsync());
 
-    public Task<R<CloudAuthState>> GetAuthStateAsync() => ForwardAsync(service => service.GetAuthStateAsync());
+    public Task<Result<CloudAuthState>> GetAuthStateAsync() => ForwardAsync(service => service.GetAuthStateAsync());
 
-    public Task<R<CloudModelList>> ListAsync() => ForwardAsync(service => service.ListAsync());
+    public Task<Result<CloudModelList>> ListAsync() => ForwardAsync(service => service.ListAsync());
 
-    public Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto) =>
+    public Task<Result<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto) =>
         ForwardAsync(service => service.PushAsync(modelPath, modelDto));
 
     // Gets current model over active transport selected by ForwardAsync{T}.
-    public Task<R<ModelDto>> PullAsync(string modelPath) => ForwardAsync(service => service.PullAsync(modelPath));
+    public Task<Result<ModelDto>> PullAsync(string modelPath) => ForwardAsync(service => service.PullAsync(modelPath));
 
-    public Task<R> DeleteAsync(string modelPath) => ForwardAsync(service => service.DeleteAsync(modelPath));
+    public Task<Result> DeleteAsync(string modelPath) => ForwardAsync(service => service.DeleteAsync(modelPath));
 
     // Selects and invokes the sync service based on whether the VS Code webview bridge is present.
     // The bridge is injected by the VS Code webview before the app boots, so the answer cannot
     // change during a session and is cached after the first JS interop roundtrip.
-    async Task<R<T>> ForwardAsync<T>(Func<ICloudSyncService, Task<R<T>>> action)
+    async Task<Result<T>> ForwardAsync<T>(Func<ICloudSyncService, Task<Result<T>>> action)
+        where T : notnull
     {
         isVsCodeProxyAvailable ??= await vsCodeCloudSyncProxy.IsAvailableAsync();
 
@@ -49,7 +50,7 @@ sealed class HybridCloudSyncService : ICloudSyncService
         return await action(service);
     }
 
-    async Task<R> ForwardAsync(Func<ICloudSyncService, Task<R>> action)
+    async Task<Result> ForwardAsync(Func<ICloudSyncService, Task<Result>> action)
     {
         isVsCodeProxyAvailable ??= await vsCodeCloudSyncProxy.IsAvailableAsync();
 

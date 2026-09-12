@@ -12,7 +12,7 @@ namespace Dependinator.Roslyn.Parsing;
 
 static class Compiler
 {
-    public static R<MSBuildWorkspace> CreateWorkspace()
+    public static Result<MSBuildWorkspace> CreateWorkspace()
     {
         // Registering MSBuild fails when no .NET SDK is installed; report that instead of
         // letting MSBuildWorkspace.Create() fail later with an obscure type load error.
@@ -26,15 +26,15 @@ static class Compiler
         catch (Exception ex)
         {
             Log.Exception(ex, "Failed to create MSBuild workspace");
-            return R.Error("Failed to create an MSBuild workspace. Is the .NET SDK installed?", ex);
+            return new Error("Failed to create an MSBuild workspace. Is the .NET SDK installed?", ex);
         }
     }
 
-    public static async Task<R<Compilation>> GetCompilationAsync(Project project)
+    public static async Task<Result<Compilation>> GetCompilationAsync(Project project)
     {
         var compilation = await project.GetCompilationAsync();
         if (compilation is null)
-            return R.Error($"No compilation (project may not be supported/loaded) for {project.FilePath}.");
+            return new Error($"No compilation (project may not be supported/loaded) for {project.FilePath}.");
 
         // MSBuildWorkspace.GetCompilationAsync does not run source generators, so types
         // produced by e.g. the Razor generator (.razor components) are missing. Run them manually.

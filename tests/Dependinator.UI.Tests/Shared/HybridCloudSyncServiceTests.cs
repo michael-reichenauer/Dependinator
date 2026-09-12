@@ -22,10 +22,10 @@ public class HybridCloudSyncServiceTests
         CloudModelList expected = new([]);
         Mock<IVsCodeCloudSyncService> proxy = new();
         proxy.Setup(p => p.IsAvailableAsync()).ReturnsAsync(true);
-        proxy.Setup(p => p.ListAsync()).ReturnsAsync((R<CloudModelList>)expected);
+        proxy.Setup(p => p.ListAsync()).ReturnsAsync((Result<CloudModelList>)expected);
         HybridCloudSyncService sut = new(CreateHttpService(httpHandler), proxy.Object);
 
-        R<CloudModelList> result = await sut.ListAsync();
+        Result<CloudModelList> result = await sut.ListAsync();
 
         Assert.True(Try(out CloudModelList? value, out _, result));
         Assert.Same(expected, value);
@@ -41,7 +41,7 @@ public class HybridCloudSyncServiceTests
         proxy.Setup(p => p.IsAvailableAsync()).ReturnsAsync(false);
         HybridCloudSyncService sut = new(CreateHttpService(httpHandler), proxy.Object);
 
-        R<CloudModelList> result = await sut.ListAsync();
+        Result<CloudModelList> result = await sut.ListAsync();
 
         Assert.True(Try(out CloudModelList? value, out _, result));
         Assert.NotNull(value);
@@ -56,10 +56,10 @@ public class HybridCloudSyncServiceTests
         CloudAuthState expected = new(IsAvailable: true, IsAuthenticated: true, User: null);
         Mock<IVsCodeCloudSyncService> proxy = new();
         proxy.Setup(p => p.IsAvailableAsync()).ReturnsAsync(true);
-        proxy.Setup(p => p.LoginAsync()).ReturnsAsync((R<CloudAuthState>)expected);
+        proxy.Setup(p => p.LoginAsync()).ReturnsAsync((Result<CloudAuthState>)expected);
         HybridCloudSyncService sut = new(CreateHttpService(httpHandler), proxy.Object);
 
-        R<CloudAuthState> result = await sut.LoginAsync();
+        Result<CloudAuthState> result = await sut.LoginAsync();
 
         Assert.True(Try(out CloudAuthState? value, out _, result));
         Assert.Same(expected, value);

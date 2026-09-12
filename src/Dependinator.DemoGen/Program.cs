@@ -31,7 +31,7 @@ internal class Program
             )
         )
         {
-            Console.Error.WriteLine($"Failed to parse solution: {e.ErrorMessage}");
+            Console.Error.WriteLine($"Failed to parse solution: {e.Message}");
             return 1;
         }
 

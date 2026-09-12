@@ -129,7 +129,7 @@
     {
         if (!Try(out var error, await appCloudSyncService.LoginAsync()))
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -140,7 +140,7 @@
     {
         if (!Try(out _, out var error, await appCloudSyncService.SyncUpAsync()))
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
     }
@@ -169,8 +169,8 @@
             return;
         }
 
-        R<ModelInfo> syncDownResult = await appCloudSyncService.SyncDownAsync();
-        if (syncDownResult.IsNone)
+        Result<ModelInfo> syncDownResult = await appCloudSyncService.SyncDownAsync();
+        if (syncDownResult is NotFoundError)
         {
             snackbar.Add("No cloud model existed, so the local model was uploaded instead.", Severity.Info);
             return;
@@ -178,7 +178,7 @@
 
         if (!Try(out var modelInfo, out var error, syncDownResult))
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 

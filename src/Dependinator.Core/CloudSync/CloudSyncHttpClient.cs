@@ -10,15 +10,15 @@ namespace Dependinator.Core.CloudSync;
 // and the LSP host (token provided by the VS Code extension).
 interface ICloudSyncHttpClient
 {
-    Task<R<CloudAuthState>> GetAuthStateAsync(CancellationToken ct = default);
-    Task<R<CloudModelList>> ListAsync(CancellationToken ct = default);
-    Task<R<CloudModelMetadata>> PushAsync(CloudModelDocument document, CancellationToken ct = default);
+    Task<Result<CloudAuthState>> GetAuthStateAsync(CancellationToken ct = default);
+    Task<Result<CloudModelList>> ListAsync(CancellationToken ct = default);
+    Task<Result<CloudModelMetadata>> PushAsync(CloudModelDocument document, CancellationToken ct = default);
 
-    // Returns R.None when no remote model exists for the key (API 404).
-    Task<R<CloudModelDocument>> PullAsync(string modelKey, CancellationToken ct = default);
+    // Returns a NotFoundError when no remote model exists for the key (API 404).
+    Task<Result<CloudModelDocument>> PullAsync(string modelKey, CancellationToken ct = default);
 
     // Deletes a remote model; a missing model (API 404) counts as already deleted.
-    Task<R> DeleteAsync(string modelKey, CancellationToken ct = default);
+    Task<Result> DeleteAsync(string modelKey, CancellationToken ct = default);
 }
 
 [Transient]
@@ -34,19 +34,19 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
     }
 
     // Reads authenticated user context from the API.
-    public async Task<R<CloudAuthState>> GetAuthStateAsync(CancellationToken ct = default)
+    public async Task<Result<CloudAuthState>> GetAuthStateAsync(CancellationToken ct = default)
     {
         return await SendAsync<CloudAuthState>(HttpMethod.Get, "/api/auth/me", ct: ct);
     }
 
     // Lists remote models for the signed-in user.
-    public async Task<R<CloudModelList>> ListAsync(CancellationToken ct = default)
+    public async Task<Result<CloudModelList>> ListAsync(CancellationToken ct = default)
     {
         return await SendAsync<CloudModelList>(HttpMethod.Get, "/api/models", ct: ct);
     }
 
     // Uploads a compressed model document via PUT.
-    public async Task<R<CloudModelMetadata>> PushAsync(CloudModelDocument document, CancellationToken ct = default)
+    public async Task<Result<CloudModelMetadata>> PushAsync(CloudModelDocument document, CancellationToken ct = default)
     {
         return await SendAsync<CloudModelMetadata>(
             HttpMethod.Put,
@@ -56,8 +56,8 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
         );
     }
 
-    // Fetches a compressed remote model document; R.None when no remote model exists.
-    public async Task<R<CloudModelDocument>> PullAsync(string modelKey, CancellationToken ct = default)
+    // Fetches a compressed remote model document; a NotFoundError when no remote model exists.
+    public async Task<Result<CloudModelDocument>> PullAsync(string modelKey, CancellationToken ct = default)
     {
         return await SendAsync<CloudModelDocument>(
             HttpMethod.Get,
@@ -68,7 +68,7 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
     }
 
     // Deletes a remote model; success without a response body, and 404 counts as already deleted.
-    public async Task<R> DeleteAsync(string modelKey, CancellationToken ct = default)
+    public async Task<Result> DeleteAsync(string modelKey, CancellationToken ct = default)
     {
         string path = $"/api/models/{modelKey}";
         try
@@ -78,25 +78,26 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
 
             using HttpResponseMessage response = await httpClient.SendAsync(request, ct);
             if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.NotFound)
-                return R.Ok;
+                return Result.Ok;
 
             string errorMessage = await ReadErrorMessageAsync(response, ct);
-            return R.Error(errorMessage);
+            return new Error(errorMessage);
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 
     // Generic JSON helper for API calls with the host-provided Bearer token.
-    async Task<R<T>> SendAsync<T>(
+    async Task<Result<T>> SendAsync<T>(
         HttpMethod method,
         string path,
         object? content = null,
         bool notFoundAsNone = false,
         CancellationToken ct = default
     )
+        where T : notnull
     {
         try
         {
@@ -118,20 +119,20 @@ sealed class CloudSyncHttpClient : ICloudSyncHttpClient
             {
                 T? value = await response.Content.ReadFromJsonAsync<T>(cancellationToken: ct);
                 if (value is null)
-                    return R.Error($"Device sync endpoint '{path}' returned an empty response.");
+                    return new Error($"Device sync endpoint '{path}' returned an empty response.");
 
                 return value;
             }
 
             if (notFoundAsNone && response.StatusCode == HttpStatusCode.NotFound)
-                return R.None;
+                return new NotFoundError(await ReadErrorMessageAsync(response, ct));
 
             string errorMessage = await ReadErrorMessageAsync(response, ct);
-            return R.Error(errorMessage);
+            return new Error(errorMessage);
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 

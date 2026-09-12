@@ -27,9 +27,9 @@ public class CloudModelSerializerTests
         Assert.Equal("/models/sample.model", document.NormalizedPath);
         Assert.Equal(CloudModelPath.CreateKey("/models/sample.model"), document.ModelKey);
 
-        R<ModelDto> result = CloudModelSerializer.ReadModel(document);
+        Result<ModelDto> result = CloudModelSerializer.ReadModel(document);
 
-        Assert.True(Try(out var roundTrippedModel, out var error, result), error?.ErrorMessage);
+        Assert.True(Try(out var roundTrippedModel, out var error, result), error?.Message);
         Assert.Equal(modelDto.Name, roundTrippedModel.Name);
         Assert.Equal(modelDto.Zoom, roundTrippedModel.Zoom);
         Assert.Equal(modelDto.Offset, roundTrippedModel.Offset);

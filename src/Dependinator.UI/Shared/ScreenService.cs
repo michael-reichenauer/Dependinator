@@ -28,7 +28,7 @@ interface IScreenService
     Rect SvgRect { get; }
 
     Task InitAsync(IUIComponent component);
-    Task<R<ElementBoundingRectangle>> GetBoundingRectangle(string elementId);
+    Task<Result<ElementBoundingRectangle>> GetBoundingRectangle(string elementId);
 
     // Id of the topmost id-bearing element at a viewport (client) point; "" if none.
     Task<string> GetElementIdAtPointAsync(double clientX, double clientY);
@@ -100,11 +100,11 @@ class ScreenService : IScreenService, IDisposable
         }
     }
 
-    public async Task<R<ElementBoundingRectangle>> GetBoundingRectangle(string elementId)
+    public async Task<Result<ElementBoundingRectangle>> GetBoundingRectangle(string elementId)
     {
         var r = await jSInterop.Call<ElementBoundingRectangle>("getBoundingRectangle", elementId);
         if (r == null)
-            return R.None;
+            return new NotFoundError("No value");
         return r;
     }
 

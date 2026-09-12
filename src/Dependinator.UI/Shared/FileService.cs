@@ -26,22 +26,23 @@ class FileService : IBrowserFileService, IFileService
         this.hostStoragePaths = hostStoragePaths;
     }
 
-    public async Task<R<IReadOnlyList<string>>> GetFilePathsAsync()
+    public async Task<Result<IReadOnlyList<string>>> GetFilePathsAsync()
     {
         return await database.GetKeysAsync(DBCollectionName);
     }
 
-    public async Task<R> WriteAsync<T>(string path, T content)
+    public async Task<Result> WriteAsync<T>(string path, T content)
     {
         return await database.SetAsync(DBCollectionName, path, content);
     }
 
-    public async Task<R<T>> ReadAsync<T>(string path)
+    public async Task<Result<T>> ReadAsync<T>(string path)
+        where T : notnull
     {
         return await database.GetAsync<T>(DBCollectionName, path);
     }
 
-    public async Task<R> DeleteAsync(string path)
+    public async Task<Result> DeleteAsync(string path)
     {
         var binPath = BinPath(path);
         await database.DeleteAsync(DBCollectionName, binPath);
@@ -80,7 +81,7 @@ class FileService : IBrowserFileService, IFileService
         return paths;
     }
 
-    public async Task<R<Stream>> ReadStreamAsync(string path)
+    public async Task<Result<Stream>> ReadStreamAsync(string path)
     {
         Log.Info("ReadStream:", path);
 

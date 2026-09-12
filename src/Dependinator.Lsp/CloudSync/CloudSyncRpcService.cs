@@ -47,10 +47,10 @@ class CloudSyncRpcService : ICloudSyncRpcService
     }
 
     // Asks the extension to run the interactive Clerk sign-in and verifies the acquired token.
-    public async Task<R<CloudAuthState>> LoginAsync()
+    public async Task<Result<CloudAuthState>> LoginAsync()
     {
         if (!context.IsEnabled)
-            return R.Error(NotConfiguredError);
+            return new Error(NotConfiguredError);
 
         string token;
         try
@@ -63,15 +63,15 @@ class CloudSyncRpcService : ICloudSyncRpcService
         }
         catch (OperationCanceledException)
         {
-            return R.Error("Sign-in timed out. Please try again.");
+            return new Error("Sign-in timed out. Please try again.");
         }
         catch (Exception ex)
         {
-            return R.Error("Sign-in failed.", ex);
+            return new Error("Sign-in failed.", ex);
         }
 
         if (string.IsNullOrWhiteSpace(token))
-            return R.Error("Sign-in did not return a token.");
+            return new Error("Sign-in did not return a token.");
 
         context.SetToken(token);
         Log.Info("Cloud sync access token acquired via extension sign-in");
@@ -84,7 +84,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
             // The fresh token was rejected by the API; clear it so the user can retry cleanly.
             Log.Warn("Token acquisition succeeded, but the API returned unauthenticated");
             await ClearStoredTokenAsync();
-            return R.Error(
+            return new Error(
                 "Device sync login completed, but the API did not accept the token. Check Clerk configuration."
             );
         }
@@ -93,13 +93,13 @@ class CloudSyncRpcService : ICloudSyncRpcService
     }
 
     // Clears the token here and in the extension's secret storage.
-    public async Task<R<CloudAuthState>> LogoutAsync()
+    public async Task<Result<CloudAuthState>> LogoutAsync()
     {
         await ClearStoredTokenAsync();
         return SignedOutState();
     }
 
-    public async Task<R<CloudAuthState>> GetAuthStateAsync()
+    public async Task<Result<CloudAuthState>> GetAuthStateAsync()
     {
         if (!context.IsEnabled)
             return new CloudAuthState(IsAvailable: false, IsAuthenticated: false, User: null);
@@ -121,7 +121,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
         return authState;
     }
 
-    public async Task<R<CloudModelList>> ListAsync()
+    public async Task<Result<CloudModelList>> ListAsync()
     {
         if (!Try(out var error, RequireToken()))
             return error;
@@ -129,7 +129,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
         return await httpClient.ListAsync();
     }
 
-    public async Task<R<CloudModelMetadata>> PushAsync(CloudModelDocument document)
+    public async Task<Result<CloudModelMetadata>> PushAsync(CloudModelDocument document)
     {
         if (!Try(out var error, RequireToken()))
             return error;
@@ -137,7 +137,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
         return await httpClient.PushAsync(document);
     }
 
-    public async Task<R<CloudModelDocument>> PullAsync(string modelKey)
+    public async Task<Result<CloudModelDocument>> PullAsync(string modelKey)
     {
         if (!Try(out var error, RequireToken()))
             return error;
@@ -145,7 +145,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
         return await httpClient.PullAsync(modelKey);
     }
 
-    public async Task<R> DeleteAsync(string modelKey)
+    public async Task<Result> DeleteAsync(string modelKey)
     {
         if (!Try(out var error, RequireToken()))
             return error;
@@ -153,13 +153,13 @@ class CloudSyncRpcService : ICloudSyncRpcService
         return await httpClient.DeleteAsync(modelKey);
     }
 
-    R RequireToken()
+    Result RequireToken()
     {
         if (!context.IsEnabled)
-            return R.Error(NotConfiguredError);
+            return new Error(NotConfiguredError);
         if (!context.HasToken)
-            return R.Error(LoginRequiredError);
-        return R.Ok;
+            return new Error(LoginRequiredError);
+        return Result.Ok;
     }
 
     async Task ClearStoredTokenAsync()

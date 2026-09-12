@@ -26,7 +26,7 @@ public class DatabaseTests
 
         var result = await sut.GetAsync<string>("Files", "item-1");
 
-        Assert.True(Try(out var value, out var e, result), e?.ErrorMessage);
+        Assert.True(Try(out var value, out var e, result), e?.Message);
         Assert.Equal("payload", value);
     }
 
@@ -38,7 +38,7 @@ public class DatabaseTests
 
         var result = await sut.GetAsync<string>("Files", "item-1");
 
-        Assert.True(result.IsNone);
+        Assert.True(result is NotFoundError);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class DatabaseTests
 
         Assert.False(Try(out string? _, out var e, result));
         Assert.NotNull(e);
-        Assert.Contains("No value", e.ErrorMessage);
+        Assert.Contains("No value", e.Message);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class DatabaseTests
 
         Assert.False(Try(out var e, result));
         Assert.NotNull(e);
-        Assert.Contains("write failed", e.ErrorMessage);
+        Assert.Contains("write failed", e.Message);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class DatabaseTests
 
         var result = await sut.SetAsync("Files", "item-1", "payload");
 
-        Assert.True(Try(out var e, result), e?.ErrorMessage);
+        Assert.True(Try(out var e, result), e?.Message);
         Assert.NotNull(savedPair);
         var pairType = savedPair!.GetType();
         var id = (string)pairType.GetProperty("Id")!.GetValue(savedPair)!;
@@ -104,7 +104,7 @@ public class DatabaseTests
 
         Assert.False(Try(out IReadOnlyList<string>? _, out var e, result));
         Assert.NotNull(e);
-        Assert.Contains("keys failed", e.ErrorMessage);
+        Assert.Contains("keys failed", e.Message);
     }
 
     sealed class FakeJsInterop(Func<string, object?[]?, object?> onCall) : IJSInterop

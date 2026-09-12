@@ -7,10 +7,11 @@ namespace Dependinator.UI.Shared;
 interface IDatabase
 {
     Task Init(string[] collectionNames);
-    Task<R> SetAsync<T>(string collectionName, string id, T value);
-    Task<R<T>> GetAsync<T>(string collectionName, string id);
-    Task<R> DeleteAsync(string collectionName, string id);
-    Task<R<IReadOnlyList<string>>> GetKeysAsync(string collectionName);
+    Task<Result> SetAsync<T>(string collectionName, string id, T value);
+    Task<Result<T>> GetAsync<T>(string collectionName, string id)
+        where T : notnull;
+    Task<Result> DeleteAsync(string collectionName, string id);
+    Task<Result<IReadOnlyList<string>>> GetKeysAsync(string collectionName);
 }
 
 [Scoped]
@@ -35,7 +36,7 @@ class Database : IDatabase
         await jSInterop.Call("initializeDatabase", DatabaseName, CurrentVersion, collectionNames);
     }
 
-    public async Task<R<IReadOnlyList<string>>> GetKeysAsync(string collectionName)
+    public async Task<Result<IReadOnlyList<string>>> GetKeysAsync(string collectionName)
     {
         try
         {
@@ -44,11 +45,11 @@ class Database : IDatabase
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 
-    public async Task<R> SetAsync<T>(string collectionName, string id, T value)
+    public async Task<Result> SetAsync<T>(string collectionName, string id, T value)
     {
         try
         {
@@ -56,15 +57,16 @@ class Database : IDatabase
             var compressedValue = CompressToBase64(jsonBytes);
             var pair = new Pair<string>(id, compressedValue);
             await jSInterop.Call("setDatabaseValue", DatabaseName, collectionName, pair);
-            return R.Ok;
+            return Result.Ok;
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 
-    public async Task<R<T>> GetAsync<T>(string collectionName, string id)
+    public async Task<Result<T>> GetAsync<T>(string collectionName, string id)
+        where T : notnull
     {
         if (!Try(out var pair, out var e, await GetDatabaseValueAsync<Pair<string>>(DatabaseName, collectionName, id)))
             return e;
@@ -73,29 +75,30 @@ class Database : IDatabase
             var jsonBytes = DecompressFromBase64(pair.Value);
             var value = JsonSerializer.Deserialize<T>(jsonBytes, options);
             if (value is null)
-                return R.Error($"Deserialized null value for {DatabaseName}.{collectionName}.{id}");
+                return new Error($"Deserialized null value for {DatabaseName}.{collectionName}.{id}");
             return value;
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 
-    public async Task<R> DeleteAsync(string collectionName, string id)
+    public async Task<Result> DeleteAsync(string collectionName, string id)
     {
         try
         {
             await jSInterop.Call("deleteDatabaseValue", DatabaseName, collectionName, id);
-            return R.Ok;
+            return Result.Ok;
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 
-    private async ValueTask<R<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
+    private async ValueTask<Result<T>> GetDatabaseValueAsync<T>(string databaseName, string collectionName, string id)
+        where T : notnull
     {
         IJSStreamReference? valueStreamRef;
         try
@@ -109,11 +112,11 @@ class Database : IDatabase
         }
         catch (Exception)
         {
-            return R.None;
+            return new NotFoundError("No value");
         }
 
         if (valueStreamRef is null)
-            return R.None;
+            return new NotFoundError("No value");
 
         try
         {
@@ -121,14 +124,14 @@ class Database : IDatabase
             await using var stream = await valueStreamRef.OpenReadStreamAsync(MaxReadStreamSizeBytes);
             var value = await JsonSerializer.DeserializeAsync<T>(stream, options);
             if (value is null)
-                return R.Error($"Deserialized null value for {databaseName}.{collectionName}.{id}");
+                return new Error($"Deserialized null value for {databaseName}.{collectionName}.{id}");
 
             return value;
         }
         catch (Exception ex)
         {
             Log.Info("Failed to read stream", id);
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 

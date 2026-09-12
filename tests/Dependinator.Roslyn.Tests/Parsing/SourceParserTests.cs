@@ -84,7 +84,7 @@ public class SourceParserTests(RoslynFixture fixture)
         var projectPath = Path.Combine(Root.SrcFolderPath, "Dependinator.Lsp", "Dependinator.Lsp.csproj");
 
         if (!Try(out var items, out var e, await sourceParser.ParseProjectAsync(projectPath)))
-            Assert.Fail(e.AllErrorMessages());
+            Assert.Fail(e.AllMessages());
 
         var links = items.Links().Where(link => link.Source.Contains(".Dependinator.Lsp.Program.Main(")).ToList();
 
@@ -106,7 +106,7 @@ public class SourceParserTests(RoslynFixture fixture)
     {
         var sourceParser = new SourceParser();
         if (!Try(out var items, out var e, await sourceParser.ParseProjectAsync(Root.ProjectFilePath)))
-            Assert.Fail(e.AllErrorMessages());
+            Assert.Fail(e.AllMessages());
 
         var SourceTestDataNodes = items.NodesContained<SourceTestData>(null);
         Assert.NotEmpty(SourceTestDataNodes);
@@ -156,7 +156,7 @@ public class SourceParserTests(RoslynFixture fixture)
                 await sourceParser.ParseSolutionAsync(DemoModel.DemoSolutionName, SolutionParseOptions.Default)
             )
         )
-            Assert.Fail(e.AllErrorMessages());
+            Assert.Fail(e.AllMessages());
 
         var nodes = items.Nodes().ToList();
         Assert.NotEmpty(nodes);
@@ -175,7 +175,7 @@ public class SourceParserTests(RoslynFixture fixture)
                 await sourceParser.ParseSolutionAsync(Root.SolutionFilePath, SolutionParseOptions.Default)
             )
         )
-            Assert.Fail(e.AllErrorMessages());
+            Assert.Fail(e.AllMessages());
 
         var nodes = items.Nodes().OrderBy(n => n.Name).ToList();
         Assert.NotEmpty(nodes);
@@ -194,7 +194,7 @@ public class SourceParserTests(RoslynFixture fixture)
         var result = await new SourceParser().ParseSolutionAsync(missingPath, SolutionParseOptions.Default);
 
         Assert.False(Try(out _, out var e, result));
-        Assert.Contains("not found", e.ErrorMessage);
+        Assert.Contains("not found", e.Message);
     }
 
     // A solution without loadable projects must be an error, not an empty (0 node) model.
@@ -218,7 +218,7 @@ public class SourceParserTests(RoslynFixture fixture)
             var result = await new SourceParser().ParseSolutionAsync(solutionPath, SolutionParseOptions.Default);
 
             Assert.False(Try(out _, out var e, result));
-            Assert.Contains("No C# projects", e.ErrorMessage);
+            Assert.Contains("No C# projects", e.Message);
         }
         finally
         {

@@ -380,7 +380,7 @@
     {
         if (!Try(out var error, await appCloudSyncService.LoginAsync()))
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -391,7 +391,7 @@
     {
         if (!Try(out var error, await appCloudSyncService.LogoutAsync()))
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -402,7 +402,7 @@
     {
         if (!Try(out _, out var error, await appCloudSyncService.LoadCloudModelAsync(cloudModel)))
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -437,7 +437,7 @@
 
         if (choice is true && !Try(out var error, await appCloudSyncService.DeleteCurrentCloudModelAsync()))
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 

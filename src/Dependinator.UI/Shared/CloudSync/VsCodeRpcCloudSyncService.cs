@@ -49,41 +49,41 @@ class VsCodeRpcCloudSyncService : IVsCodeCloudSyncService
     }
 
     // Starts the extension-hosted login flow (interactive, so a much longer timeout).
-    public async Task<R<CloudAuthState>> LoginAsync()
+    public async Task<Result<CloudAuthState>> LoginAsync()
     {
         return await CallAsync("login", () => rpcService.LoginAsync(), loginRequestTimeout);
     }
 
-    public async Task<R<CloudAuthState>> LogoutAsync()
+    public async Task<Result<CloudAuthState>> LogoutAsync()
     {
         return await CallAsync("logout", () => rpcService.LogoutAsync());
     }
 
-    public async Task<R<CloudAuthState>> GetAuthStateAsync()
+    public async Task<Result<CloudAuthState>> GetAuthStateAsync()
     {
         return await CallAsync("getAuthState", () => rpcService.GetAuthStateAsync());
     }
 
-    public async Task<R<CloudModelList>> ListAsync()
+    public async Task<Result<CloudModelList>> ListAsync()
     {
         return await CallAsync("list", () => rpcService.ListAsync());
     }
 
     // Compresses the model locally and pushes the document via the LSP.
-    public async Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
+    public async Task<Result<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
     {
         CloudModelDocument document = CloudModelSerializer.CreateDocument(modelPath, modelDto);
         return await CallAsync("push", () => rpcService.PushAsync(document));
     }
 
     // Pulls a document via the LSP and decodes it back to a local model DTO.
-    // Returns R.None when no remote model exists for the path.
-    public async Task<R<ModelDto>> PullAsync(string modelPath)
+    // Returns a NotFoundError when no remote model exists for the path.
+    public async Task<Result<ModelDto>> PullAsync(string modelPath)
     {
         string modelKey = CloudModelPath.CreateKey(modelPath);
-        R<CloudModelDocument> documentResult = await CallAsync("pull", () => rpcService.PullAsync(modelKey));
-        if (documentResult.IsNone)
-            return R.None;
+        Result<CloudModelDocument> documentResult = await CallAsync("pull", () => rpcService.PullAsync(modelKey));
+        if (documentResult is NotFoundError)
+            return documentResult.Error;
 
         if (!Try(out var document, out var error, documentResult))
             return error;
@@ -92,14 +92,15 @@ class VsCodeRpcCloudSyncService : IVsCodeCloudSyncService
     }
 
     // Deletes the remote model for the path via the LSP.
-    public async Task<R> DeleteAsync(string modelPath)
+    public async Task<Result> DeleteAsync(string modelPath)
     {
         string modelKey = CloudModelPath.CreateKey(modelPath);
         return await CallAsync("delete", () => rpcService.DeleteAsync(modelKey));
     }
 
     // Awaits an RPC call with a timeout; a dead or missing LSP must not hang the UI forever.
-    async Task<R<T>> CallAsync<T>(string action, Func<Task<R<T>>> call, TimeSpan? timeoutOverride = null)
+    async Task<Result<T>> CallAsync<T>(string action, Func<Task<Result<T>>> call, TimeSpan? timeoutOverride = null)
+        where T : notnull
     {
         try
         {
@@ -107,15 +108,15 @@ class VsCodeRpcCloudSyncService : IVsCodeCloudSyncService
         }
         catch (TimeoutException)
         {
-            return R.Error($"VS Code device sync action '{action}' timed out.");
+            return new Error($"VS Code device sync action '{action}' timed out.");
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 
-    async Task<R> CallAsync(string action, Func<Task<R>> call, TimeSpan? timeoutOverride = null)
+    async Task<Result> CallAsync(string action, Func<Task<Result>> call, TimeSpan? timeoutOverride = null)
     {
         try
         {
@@ -123,11 +124,11 @@ class VsCodeRpcCloudSyncService : IVsCodeCloudSyncService
         }
         catch (TimeoutException)
         {
-            return R.Error($"VS Code device sync action '{action}' timed out.");
+            return new Error($"VS Code device sync action '{action}' timed out.");
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 }

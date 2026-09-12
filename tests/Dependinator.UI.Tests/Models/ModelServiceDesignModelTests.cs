@@ -31,8 +31,8 @@ public class ModelServiceDesignModelTests
     [Fact]
     public async Task LoadAsync_ShouldCreateEmptyModel_WhenDesignModelIsNotCached()
     {
-        persistenceService.Setup(p => p.ReadAsync("My Design")).ReturnsAsync(R.Error("no cached model"));
-        persistenceService.Setup(p => p.WriteAsync("My Design", It.IsAny<ModelDto>())).ReturnsAsync(R.Ok);
+        persistenceService.Setup(p => p.ReadAsync("My Design")).ReturnsAsync(new Error("no cached model"));
+        persistenceService.Setup(p => p.WriteAsync("My Design", It.IsAny<ModelDto>())).ReturnsAsync(Result.Ok);
         using var modelService = CreateModelService();
 
         var result = await modelService.LoadAsync("My Design");
@@ -69,7 +69,7 @@ public class ModelServiceDesignModelTests
         modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("parse failed"));
+            .ReturnsAsync(new Error("parse failed"));
         using var modelService = CreateModelService();
 
         await modelService.SetIncludeTestProjectsAsync(true);
@@ -100,7 +100,7 @@ public class ModelServiceDesignModelTests
         modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("parse failed"));
+            .ReturnsAsync(new Error("parse failed"));
         using var modelService = CreateModelService();
 
         await modelService.RefreshAsync();
@@ -114,10 +114,10 @@ public class ModelServiceDesignModelTests
     [Fact]
     public async Task LoadAsync_ShouldParse_WhenSolutionModelIsNotCached()
     {
-        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(R.Error("no cached model"));
+        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(new Error("no cached model"));
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("parse failed"));
+            .ReturnsAsync(new Error("parse failed"));
         using var modelService = CreateModelService();
 
         await modelService.LoadAsync("My.sln");
@@ -129,10 +129,10 @@ public class ModelServiceDesignModelTests
     [Fact]
     public async Task LoadAsync_ShouldReportError_WhenParsingFails()
     {
-        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(R.Error("no cached model"));
+        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(new Error("no cached model"));
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("No .NET SDK found"));
+            .ReturnsAsync(new Error("No .NET SDK found"));
         using var modelService = CreateModelService();
 
         var result = await modelService.LoadAsync("My.sln");
@@ -151,7 +151,7 @@ public class ModelServiceDesignModelTests
         modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("parse failed"));
+            .ReturnsAsync(new Error("parse failed"));
         using var modelService = CreateModelService();
 
         await modelService.RefreshAsync();
@@ -167,7 +167,7 @@ public class ModelServiceDesignModelTests
     [Fact]
     public async Task LoadAsync_ShouldReportError_WhenParserThrows()
     {
-        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(R.Error("no cached model"));
+        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(new Error("no cached model"));
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
             .ThrowsAsync(new InvalidOperationException("connection lost"));

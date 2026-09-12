@@ -30,7 +30,7 @@ internal class SolutionParser : IDisposable
 
     public void Dispose() => assemblyParsers.ForEach(parser => parser.Dispose());
 
-    public async Task<R> ParseAsync()
+    public async Task<Result> ParseAsync()
     {
         if (!Try(out var locatorError, MSBuildLocatorHelper.Register()))
             return locatorError;
@@ -50,10 +50,10 @@ internal class SolutionParser : IDisposable
         int linksCount = assemblyParsers.Sum(parser => parser.LinksCount);
 
         Log.Info($"Solution: {typeCount} types, {memberCount} members, {ilCount} il-instructions, {linksCount} links");
-        return R.Ok;
+        return Result.Ok;
     }
 
-    public async Task<R<Source>> TryGetSourceAsync(string nodeName)
+    public async Task<Result<Source>> TryGetSourceAsync(string nodeName)
     {
         if (!Try(out var locatorError, MSBuildLocatorHelper.Register()))
             return locatorError;
@@ -74,9 +74,9 @@ internal class SolutionParser : IDisposable
         }
 
         if (assemblyParser == null)
-            return R.Error($"Failed to find assembly for {moduleName}");
+            return new Error($"Failed to find assembly for {moduleName}");
 
-        return await Task.Run<R<Source>>(() =>
+        return await Task.Run<Result<Source>>(() =>
         {
             if (!Try(out var source, out var e, assemblyParser.TryGetSource(nodeName)))
                 return e;
@@ -85,7 +85,7 @@ internal class SolutionParser : IDisposable
         });
     }
 
-    public async Task<R<string>> TryGetNodeAsync(FileLocation fileLocation)
+    public async Task<Result<string>> TryGetNodeAsync(FileLocation fileLocation)
     {
         if (!Try(out var locatorError, MSBuildLocatorHelper.Register()))
             return locatorError;
@@ -107,7 +107,7 @@ internal class SolutionParser : IDisposable
                 return GetParentName(nodeName);
         }
 
-        return R.Error($"Failed to find node for {sourceFilePath}");
+        return new Error($"Failed to find node for {sourceFilePath}");
     }
 
     public static IReadOnlyList<string> GetDataFilePaths(string solutionFilePath)
@@ -122,7 +122,7 @@ internal class SolutionParser : IDisposable
     Node CreateSolutionNode() =>
         new(SolutionNodeName, new() { Type = NodeType.Solution, Description = "Solution file" });
 
-    async Task<R> CreateAssemblyParsersAsync(bool includeReferences = false)
+    async Task<Result> CreateAssemblyParsersAsync(bool includeReferences = false)
     {
         string solutionName = SolutionNodeName;
         Solution solution = new Solution(solutionFilePath);
@@ -132,7 +132,7 @@ internal class SolutionParser : IDisposable
             string assemblyPath = project.GetOutputPath();
             if (string.IsNullOrEmpty(assemblyPath))
                 continue;
-            // if (string.IsNullOrEmpty(assemblyPath)) return R.Error($"Failed to parse:\n {solutionFilePath}\n" +
+            // if (string.IsNullOrEmpty(assemblyPath)) return new Error($"Failed to parse:\n {solutionFilePath}\n" +
             //     $"Project\n{project}\nhas no Debug assembly.");
 
             string parent = GetProjectParentName(solutionName, project);
@@ -179,7 +179,7 @@ internal class SolutionParser : IDisposable
             }
         }
 
-        return R.Ok;
+        return Result.Ok;
     }
 
     string GetProjectParentName(string solutionName, Project project)
@@ -233,7 +233,7 @@ internal class SolutionParser : IDisposable
         return index > -1 ? fullName.Substring(0, index) : "";
     }
 
-    R<string> TryGetFilePath(string nodeName, string projectPath)
+    Result<string> TryGetFilePath(string nodeName, string projectPath)
     {
         // Source information did not contain file path info. Try locate file within project
         string solutionFolderPath = Path.GetDirectoryName(projectPath ?? solutionFilePath) ?? "";
@@ -259,7 +259,7 @@ internal class SolutionParser : IDisposable
             return filePaths[0];
         }
 
-        return R.Error($"Failed to find file for {nodeName}");
+        return new Error($"Failed to find file for {nodeName}");
     }
 
     static string GetShortName(string nodeName)
