@@ -331,9 +331,9 @@ public class AppCloudSyncServiceTests
 
         context.CloudSyncService.Setup(x => x.PullAsync(modelPath)).ReturnsAsync(remotePulledModel);
 
-        Result<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
+        Result<SyncDownOutcome> syncDownResult = await context.Sut.SyncDownAsync();
 
-        AssertOk(syncDownResult);
+        Assert.IsType<ModelInfo>(AssertOk(syncDownResult).Value);
         Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
         Assert.False(context.Sut.HasLocalChangesSinceLastSync);
         Assert.False(context.Sut.HasRemoteChangesSinceLastSync);
@@ -351,9 +351,9 @@ public class AppCloudSyncServiceTests
             .Callback(() => context.Counters.PullCalls++)
             .ReturnsAsync(noRemoteModel);
 
-        Result<ModelInfo> syncDownResult = await context.Sut.SyncDownAsync();
+        Result<SyncDownOutcome> syncDownResult = await context.Sut.SyncDownAsync();
 
-        Assert.True(syncDownResult is NotFoundError);
+        Assert.IsType<UploadedLocalModel>(AssertOk(syncDownResult).Value);
         Assert.True(context.Counters.PushCalls > 0);
         context.ModelService.Verify(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()), Times.Never);
         Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());

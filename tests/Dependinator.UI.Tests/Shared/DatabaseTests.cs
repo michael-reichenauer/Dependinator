@@ -31,14 +31,14 @@ public class DatabaseTests
     }
 
     [Fact]
-    public async Task GetAsync_ShouldReturnNone_WhenJsInteropReturnsNoValue()
+    public async Task GetAsync_ShouldReturnError_WhenJsInteropReturnsNoValue()
     {
         var jsInterop = new FakeJsInterop((_, _) => null);
         var sut = new Database(jsInterop);
 
         var result = await sut.GetAsync<string>("Files", "item-1");
 
-        Assert.True(result is NotFoundError);
+        Assert.Contains("No value", AssertError(result).Message);
     }
 
     [Fact]

@@ -28,8 +28,9 @@ class PersistenceService(IFileService fileService) : IPersistenceService
         return Task.Run<Result<ModelDto>>(async () =>
         {
             using var _ = Timing.Start($"Read model '{modelPath}'");
-            if (!Try(out var model, out var e2, await fileService.ReadAsync<ModelDto>(modelPath)))
-                return e2;
+            var readResult = await fileService.ReadAsync<ModelDto>(modelPath);
+            if (readResult is not ModelDto model)
+                return readResult.Error;
             if (model.FormatVersion != ModelDto.CurrentFormatVersion)
             {
                 var error = new Error(

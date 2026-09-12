@@ -68,7 +68,7 @@ class ScreenService : IScreenService, IDisposable
     public async Task CheckResizeAsync()
     {
         // Get Svg position (width and height are unreliable)
-        if (!Try(out var svg, out var _, await GetBoundingRectangle("svgcanvas")))
+        if (await GetBoundingRectangle("svgcanvas") is not ElementBoundingRectangle svg)
             return;
 
         // Get window width and height
@@ -104,7 +104,7 @@ class ScreenService : IScreenService, IDisposable
     {
         var r = await jSInterop.Call<ElementBoundingRectangle>("getBoundingRectangle", elementId);
         if (r == null)
-            return new NotFoundError("No value");
+            return new Error($"Element '{elementId}' not found");
         return r;
     }
 

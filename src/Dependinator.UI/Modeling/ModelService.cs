@@ -97,7 +97,7 @@ class ModelService : IModelService, IDisposable
         if (string.IsNullOrWhiteSpace(modelPath))
             return new Error("Model is not loaded");
 
-        if (!Try(out var error, await WriteModelAsync(modelPath, modelDto)))
+        if (await WriteModelAsync(modelPath, modelDto) is Error error)
             return error;
 
         var modelInfo = await LoadCachedModelDataAsync(modelPath, modelDto);
@@ -118,9 +118,10 @@ class ModelService : IModelService, IDisposable
         using var _ = Timing.Start($"Load model {path}");
 
         // Try read cached model (with ui layout)
-        if (!Try(out var modelInfo, out var e, await ReadCachedModelAsync(path)))
+        var cachedResult = await ReadCachedModelAsync(path);
+        if (cachedResult is not ModelInfo modelInfo)
         {
-            Log.Info("Failed to read cached model", e.Message);
+            Log.Info("Failed to read cached model", cachedResult.Error.Message);
             if (ModelPaths.IsDesignModel(path))
                 return await CreateEmptyModelAsync(path);
 
@@ -164,7 +165,7 @@ class ModelService : IModelService, IDisposable
             modelDto = model.SerializeToDto();
         }
 
-        if (!Try(out var e, await persistenceService.WriteAsync(path, modelDto)))
+        if (await persistenceService.WriteAsync(path, modelDto) is Error e)
             return e;
 
         applicationEvents.TriggerModelChanged();
@@ -175,8 +176,9 @@ class ModelService : IModelService, IDisposable
     async Task<Result<ModelInfo>> ReadCachedModelAsync(string path)
     {
         using var progress = progressService.Start("Loading ...");
-        if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
-            return e;
+        var modelResult = await persistenceService.ReadAsync(path);
+        if (modelResult is not ModelDto model)
+            return modelResult.Error;
 
         var modelInfo = await LoadCachedModelDataAsync(path, model);
 
@@ -198,7 +200,7 @@ class ModelService : IModelService, IDisposable
             return Result.Ok;
         }
 
-        if (!Try(out var e, await ParseAndUpdateAsync(path, true)))
+        if (await ParseAndUpdateAsync(path, true) is Error e)
             return e;
         using (var model = modelMgr.UseModel())
         {
@@ -237,7 +239,7 @@ class ModelService : IModelService, IDisposable
 
     async Task<Result<ModelInfo>> ParseNewModelAsync(string path)
     {
-        if (!Try(out var e, await ParseAndUpdateAsync(path)))
+        if (await ParseAndUpdateAsync(path) is Error e)
             return e;
 
         // Rendering during the progressive parse may have laid out nodes before all their
@@ -293,10 +295,12 @@ class ModelService : IModelService, IDisposable
 
             Log.Info("Parsing ...");
 
-            if (!Try(out var items, out var e, await ParseAsync(path, parseOptions)))
+            var parseResult = await ParseAsync(path, parseOptions);
+            if (parseResult is not IReadOnlyList<Parsing.Item> items)
             {
                 // A failed parse leaves an empty (or unchanged) diagram, which on its own looks
                 // like a solution without dependencies, so always tell the user what went wrong.
+                Error e = parseResult.Error;
                 Log.Warn($"Failed to parse {path}: {e.AllMessages()}");
                 applicationEvents.TriggerErrorReported($"Failed to parse '{Path.GetFileName(path)}'. {e.Message}");
                 return e;

@@ -88,17 +88,16 @@ class FileService : IBrowserFileService, IFileService
         if (path.StartsWith(hostStoragePaths.WebFilesPrefix))
         {
             var binPath = BinPath(path);
-            if (!Try(out var fileBase64, out var e, await ReadAsync<string>(binPath)))
-                return e;
+            var base64Result = await ReadAsync<string>(binPath);
+            if (base64Result is not string fileBase64)
+                return base64Result.Error;
             var bytes = Convert.FromBase64String(fileBase64);
             var filesStream = new MemoryStream(bytes, writable: false);
             filesStream.Seek(0, SeekOrigin.Begin);
             return filesStream;
         }
 
-        if (!Try(out var fileStream, out var e2, () => hostFileSystem.OpenRead(path)))
-            return e2;
-        return fileStream;
+        return Result.Catch(() => hostFileSystem.OpenRead(path));
     }
 
     string BinPath(string path) => $"{path}.bin";

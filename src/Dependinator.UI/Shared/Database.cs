@@ -68,8 +68,9 @@ class Database : IDatabase
     public async Task<Result<T>> GetAsync<T>(string collectionName, string id)
         where T : notnull
     {
-        if (!Try(out var pair, out var e, await GetDatabaseValueAsync<Pair<string>>(DatabaseName, collectionName, id)))
-            return e;
+        var pairResult = await GetDatabaseValueAsync<Pair<string>>(DatabaseName, collectionName, id);
+        if (pairResult is not Pair<string> pair)
+            return pairResult.Error;
         try
         {
             var jsonBytes = DecompressFromBase64(pair.Value);
@@ -110,13 +111,13 @@ class Database : IDatabase
                 id
             );
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return new NotFoundError("No value");
+            return new Error("No value", ex);
         }
 
         if (valueStreamRef is null)
-            return new NotFoundError("No value");
+            return new Error($"No value for {databaseName}.{collectionName}.{id}");
 
         try
         {

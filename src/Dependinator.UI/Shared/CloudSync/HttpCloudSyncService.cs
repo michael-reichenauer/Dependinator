@@ -84,11 +84,8 @@ sealed class HttpCloudSyncService : ICloudSyncService
     {
         string modelKey = CloudModelPath.CreateKey(modelPath);
         Result<CloudModelDocument> documentResult = await httpClient.PullAsync(modelKey);
-        if (documentResult is NotFoundError)
+        if (documentResult is not CloudModelDocument document)
             return documentResult.Error;
-
-        if (!Try(out var document, out var error, documentResult))
-            return error;
 
         return CloudModelSerializer.ReadModel(document);
     }
