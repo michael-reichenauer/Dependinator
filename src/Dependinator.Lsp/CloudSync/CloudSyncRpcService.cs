@@ -3,7 +3,6 @@ using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using Shared;
-using static Dependinator.Core.Utils.ResultShim;
 
 namespace Dependinator.Lsp.CloudSync;
 
@@ -76,8 +75,9 @@ class CloudSyncRpcService : ICloudSyncRpcService
         context.SetToken(token);
         Log.Info("Cloud sync access token acquired via extension sign-in");
 
-        if (!Try(out var authState, out var error, await httpClient.GetAuthStateAsync()))
-            return error;
+        var authStateResult = await httpClient.GetAuthStateAsync();
+        if (authStateResult is not CloudAuthState authState)
+            return authStateResult.Error;
 
         if (!authState.IsAuthenticated)
         {
@@ -107,8 +107,9 @@ class CloudSyncRpcService : ICloudSyncRpcService
         if (!context.HasToken)
             return SignedOutState();
 
-        if (!Try(out var authState, out var error, await httpClient.GetAuthStateAsync()))
-            return error;
+        var authStateResult = await httpClient.GetAuthStateAsync();
+        if (authStateResult is not CloudAuthState authState)
+            return authStateResult.Error;
 
         if (!authState.IsAuthenticated)
         {
@@ -123,7 +124,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
 
     public async Task<Result<CloudModelList>> ListAsync()
     {
-        if (!Try(out var error, RequireToken()))
+        if (RequireToken() is Error error)
             return error;
 
         return await httpClient.ListAsync();
@@ -131,7 +132,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
 
     public async Task<Result<CloudModelMetadata>> PushAsync(CloudModelDocument document)
     {
-        if (!Try(out var error, RequireToken()))
+        if (RequireToken() is Error error)
             return error;
 
         return await httpClient.PushAsync(document);
@@ -139,7 +140,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
 
     public async Task<Result<CloudModelDocument>> PullAsync(string modelKey)
     {
-        if (!Try(out var error, RequireToken()))
+        if (RequireToken() is Error error)
             return error;
 
         return await httpClient.PullAsync(modelKey);
@@ -147,7 +148,7 @@ class CloudSyncRpcService : ICloudSyncRpcService
 
     public async Task<Result> DeleteAsync(string modelKey)
     {
-        if (!Try(out var error, RequireToken()))
+        if (RequireToken() is Error error)
             return error;
 
         return await httpClient.DeleteAsync(modelKey);
