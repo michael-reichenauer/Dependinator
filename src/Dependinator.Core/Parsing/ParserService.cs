@@ -36,8 +36,9 @@ class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : 
         //     Channel<Item> channel = Channel.CreateUnbounded<Item>();
         //     var items = new ChannelItemsAdapter(channel.Writer);
 
-        //     if (!Try(out var parser, out var e, GetParser(path)))
-        //         return new Error($"File not supported: {path}", e);
+        //     var parserResult = GetParser(path);
+        //     if (parserResult is not IParser parser)
+        //         return new Error($"File not supported: {path}", parserResult.Error);
 
         //     // await Task.Run(async () =>
         //     // {

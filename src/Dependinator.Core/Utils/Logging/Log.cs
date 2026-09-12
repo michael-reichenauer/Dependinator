@@ -182,11 +182,8 @@ public static class Log
             return obj.ToString() ?? "";
         }
 
-        if (!Try(out var json, out _, () => JsonSerializer.Serialize(obj, JsonOneLine)))
-        {
-            return obj.ToString() ?? "";
-        }
-
-        return json;
+        return Result.Catch(() => JsonSerializer.Serialize(obj, JsonOneLine)) is string json
+            ? json
+            : obj.ToString() ?? "";
     }
 }
