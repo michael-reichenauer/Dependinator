@@ -24,4 +24,8 @@
         <ProjectReference Include="..\..\src\Dependinator.Lsp\Dependinator.Lsp.csproj" />
         <ProjectReference Include="..\..\src\Shared\Shared.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <!-- Shared Result assertions (AssertOk/AssertError); the source lives in Dependinator.Core.Tests -->
+        <Compile Include="..\Dependinator.Core.Tests\Utils\ResultAssert.cs" Link="Utils\ResultAssert.cs" />
+    </ItemGroup>
 </Project>

@@ -34,7 +34,7 @@ public class SourceParserTests(RoslynFixture fixture)
         Assert.Equal("Test assembly for Roslyn parsing.", description);
         Assert.NotNull(fileSpan);
         Assert.EndsWith("Usings.cs", fileSpan.Path);
-        Assert.Equal(5, fileSpan.StartLine); // 0-based line of the AssemblyDescription attribute
+        Assert.Equal(6, fileSpan.StartLine); // 0-based line of the AssemblyDescription attribute in Usings.cs
     }
 
     [Fact]

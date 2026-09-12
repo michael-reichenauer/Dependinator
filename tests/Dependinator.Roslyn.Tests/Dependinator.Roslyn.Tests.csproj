@@ -37,4 +37,8 @@
         <ProjectReference Include="..\..\src\Dependinator.Core\Dependinator.Core.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Roslyn\Dependinator.Roslyn.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <!-- Shared Result assertions (AssertOk/AssertError); the source lives in Dependinator.Core.Tests -->
+        <Compile Include="..\Dependinator.Core.Tests\Utils\ResultAssert.cs" Link="Utils\ResultAssert.cs" />
+    </ItemGroup>
 </Project>
