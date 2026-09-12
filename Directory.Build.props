@@ -1,0 +1,9 @@
+<Project>
+    <PropertyGroup>
+        <!-- C# 15 union patterns (Result/Result<T>) need the .NET 11 compiler; the target framework stays net10.0.
+         'preview' until .NET 11 GA (then 15); drop it entirely when the target framework becomes net11.0. -->
+        <LangVersion>preview</LangVersion>
+        <!-- A switch over a result that does not handle both of its cases is a bug, not a warning -->
+        <WarningsAsErrors>$(WarningsAsErrors);CS8509</WarningsAsErrors>
+    </PropertyGroup>
+</Project>

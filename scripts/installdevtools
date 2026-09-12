@@ -14,6 +14,9 @@ echo ""
 echo "Installing Python for WASM tooling ..."
 sudo apt-get install -y python3 python-is-python3 1>/dev/null
 echo ""
+echo "Installing the .NET 11 preview SDK beside SDK 10 (C# 15 union patterns, see global.json) ..."
+curl -sSL https://dot.net/v1/dotnet-install.sh | sudo bash -s -- --channel 11.0 --quality preview --install-dir /usr/share/dotnet
+echo ""
 echo "Installing dotnet wasm-tools workload ..."
 sudo dotnet workload install wasm-tools
 echo ""

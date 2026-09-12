@@ -8,7 +8,7 @@ Dependinator is a tool for visualizing and exploring software dependencies. It h
 
 ## Solution Structure
 
-The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `global.json`). The solution file stays at the repo root; all project folders live under `src/`.
+The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `global.json`: the .NET 11 preview SDK, needed for the C# 15 union patterns of `Result`/`Result<T>`; `Directory.Build.props` sets `LangVersion` preview and makes CS8509 an error). The solution file stays at the repo root; all project folders live under `src/`.
 
 **Runtime/host projects:**
 - `src/Dependinator.Web/` — Blazor Server host for local development
