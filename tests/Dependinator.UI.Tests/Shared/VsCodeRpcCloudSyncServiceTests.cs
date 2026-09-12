@@ -4,7 +4,7 @@ using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.CloudSync;
 using Microsoft.JSInterop;
 using Shared;
-using static Dependinator.Core.Utils.Result;
+using static Dependinator.Core.Utils.ResultShim;
 
 namespace Dependinator.UI.Tests.Shared;
 

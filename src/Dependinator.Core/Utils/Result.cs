@@ -4,14 +4,14 @@ using System.Runtime.CompilerServices;
 
 namespace Dependinator.Core.Utils;
 
-// Result contains a few Try methods that return either a value or an error for functions
+// ResultShim contains a few Try methods that return either a value or an error for functions
 // that return a R or R<T> type. This makes it possible to avoid using exceptions for flow control.
 // There are two Try methods that converts functions that can throw exceptions to functions that
 // return a R or R<T> type instead.
-// It is very convenient to declare a 'global using static Dependinator.Core.Utils.Result;' in the global Usings.cs file.
+// It is very convenient to declare a 'global using static Dependinator.Core.Utils.ResultShim;' in the global Usings.cs file.
 // Use like e.g.:
 // if (!Try(() => File.ReadAllText(path));
-public static class Result
+public static class ResultShim
 {
     // Returns true if the function returns a value, false if it returns an error.
     // The value and the error are returned in the out parameter values.
@@ -88,7 +88,7 @@ public static class Result
 // R and R<T> are a result types that can be used to return either a value or an error.
 // The R and R<t> are used together with the Try methods in the Result class.
 // The R and R<T> types are used to avoid using exceptions for flow control.
-// Se the Result class for more information.
+// See the ResultShim class for more information.
 public class R
 {
     protected static readonly Exception NoError = new Exception("No error");

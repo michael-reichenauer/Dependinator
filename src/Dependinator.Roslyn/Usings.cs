@@ -2,7 +2,7 @@ global using Dependinator.Core.Parsing;
 global using Dependinator.Core.Parsing.Sources;
 global using Dependinator.Core.Utils;
 global using Dependinator.Core.Utils.Logging;
-global using static Dependinator.Core.Utils.Result;
+global using static Dependinator.Core.Utils.ResultShim;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 

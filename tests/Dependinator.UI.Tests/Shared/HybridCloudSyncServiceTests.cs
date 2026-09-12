@@ -6,7 +6,7 @@ using Dependinator.UI.Shared.CloudSync;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
 using Shared;
-using static Dependinator.Core.Utils.Result;
+using static Dependinator.Core.Utils.ResultShim;
 
 namespace Dependinator.UI.Tests.Shared;
 

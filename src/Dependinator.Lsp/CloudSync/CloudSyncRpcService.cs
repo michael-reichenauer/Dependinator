@@ -3,7 +3,7 @@ using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 using Shared;
-using static Dependinator.Core.Utils.Result;
+using static Dependinator.Core.Utils.ResultShim;
 
 namespace Dependinator.Lsp.CloudSync;
 

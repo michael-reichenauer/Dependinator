@@ -3,7 +3,7 @@ using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
-using static Dependinator.Core.Utils.Result;
+using static Dependinator.Core.Utils.ResultShim;
 
 namespace Dependinator.UI.Tests.Models;
 

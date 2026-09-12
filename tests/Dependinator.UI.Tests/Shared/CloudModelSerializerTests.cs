@@ -2,7 +2,7 @@ using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Shared.CloudSync;
 using Dependinator.UI.Shared.Types;
 using Shared;
-using static Dependinator.Core.Utils.Result;
+using static Dependinator.Core.Utils.ResultShim;
 
 namespace Dependinator.UI.Tests.Shared;
 

@@ -1,6 +1,6 @@
 global using Dependinator.Core.Utils;
 global using Dependinator.Core.Utils.Logging;
-global using static Dependinator.Core.Utils.Result;
+global using static Dependinator.Core.Utils.ResultShim;
 global using Dependinator.UI.Shared;
 global using Parsing = Dependinator.Core.Parsing;
 using System.Reflection;

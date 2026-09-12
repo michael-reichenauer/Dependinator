@@ -4,7 +4,7 @@ using Dependinator.Core.Shared;
 using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using Dependinator.Roslyn.Parsing;
-using static Dependinator.Core.Utils.Result;
+using static Dependinator.Core.Utils.ResultShim;
 
 // Dev tool for regenerating the embedded demo model (run via ./scripts/gen-demo): parses the working
 // Dependinator solution with Roslyn and writes the gzip-compressed, "Demo"-renamed model to
