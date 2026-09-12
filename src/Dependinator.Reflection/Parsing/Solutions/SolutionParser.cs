@@ -32,12 +32,12 @@ internal class SolutionParser : IDisposable
 
     public async Task<Result> ParseAsync()
     {
-        if (!Try(out var locatorError, MSBuildLocatorHelper.Register()))
+        if (MSBuildLocatorHelper.Register() is Error locatorError)
             return locatorError;
         Log.Info("Parsing solution", solutionFilePath);
         parentNodesToSend.Add(CreateSolutionNode());
 
-        if (!Try(out var e, await CreateAssemblyParsersAsync()))
+        if (await CreateAssemblyParsersAsync() is Error e)
             return e;
         //Log.Debug($"Solution: {assemblyParsers.Count} assemblies");
 
@@ -55,9 +55,9 @@ internal class SolutionParser : IDisposable
 
     public async Task<Result<Source>> TryGetSourceAsync(string nodeName)
     {
-        if (!Try(out var locatorError, MSBuildLocatorHelper.Register()))
+        if (MSBuildLocatorHelper.Register() is Error locatorError)
             return locatorError;
-        if (!Try(out var e, await CreateAssemblyParsersAsync(true)))
+        if (await CreateAssemblyParsersAsync(true) is Error e)
             return e;
 
         string moduleName = GetModuleName(nodeName) ?? "";
@@ -76,34 +76,28 @@ internal class SolutionParser : IDisposable
         if (assemblyParser == null)
             return new Error($"Failed to find assembly for {moduleName}");
 
-        return await Task.Run<Result<Source>>(() =>
-        {
-            if (!Try(out var source, out var e, assemblyParser.TryGetSource(nodeName)))
-                return e;
-
-            return source;
-        });
+        return await Task.Run(() => assemblyParser.TryGetSource(nodeName));
     }
 
     public async Task<Result<string>> TryGetNodeAsync(FileLocation fileLocation)
     {
-        if (!Try(out var locatorError, MSBuildLocatorHelper.Register()))
+        if (MSBuildLocatorHelper.Register() is Error locatorError)
             return locatorError;
         await Task.Yield();
 
-        if (!Try(out var e, await CreateAssemblyParsersAsync(true)))
+        if (await CreateAssemblyParsersAsync(true) is Error e)
             return e;
 
         foreach (AssemblyParser parser in assemblyParsers)
         {
-            if (Try(out var nodeName, parser.TryGetNode(fileLocation)))
+            if (parser.TryGetNode(fileLocation) is string nodeName)
                 return nodeName;
         }
 
         string sourceFilePath = Path.GetDirectoryName(fileLocation.Path) ?? "";
         foreach (AssemblyParser parser in assemblyParsers)
         {
-            if (Try(out var nodeName, parser.TryGetNode(new FileLocation(sourceFilePath, fileLocation.Line))))
+            if (parser.TryGetNode(new FileLocation(sourceFilePath, fileLocation.Line)) is string nodeName)
                 return GetParentName(nodeName);
         }
 
@@ -137,20 +131,15 @@ internal class SolutionParser : IDisposable
 
             string parent = GetProjectParentName(solutionName, project);
 
-            if (
-                !Try(
-                    out var assemblyParser,
-                    out var e,
-                    await AssemblyParser.CreateAsync(
-                        assemblyPath,
-                        project.ProjectFilePath,
-                        parent,
-                        items,
-                        isReadSymbols,
-                        fileService
-                    )
-                )
-            )
+            var parserResult = await AssemblyParser.CreateAsync(
+                assemblyPath,
+                project.ProjectFilePath,
+                parent,
+                items,
+                isReadSymbols,
+                fileService
+            );
+            if (parserResult is not AssemblyParser assemblyParser)
                 continue;
 
             assemblyParsers.Add(assemblyParser);
@@ -167,12 +156,15 @@ internal class SolutionParser : IDisposable
 
             foreach (string referencePath in referencePaths)
             {
-                if (
-                    !Try(
-                        out var assemblyParser,
-                        await AssemblyParser.CreateAsync(referencePath, "", "", items, isReadSymbols, fileService)
-                    )
-                )
+                var referenceResult = await AssemblyParser.CreateAsync(
+                    referencePath,
+                    "",
+                    "",
+                    items,
+                    isReadSymbols,
+                    fileService
+                );
+                if (referenceResult is not AssemblyParser assemblyParser)
                     continue;
 
                 assemblyParsers.Add(assemblyParser);

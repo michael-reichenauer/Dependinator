@@ -24,8 +24,9 @@ class SourceParser : ISourceParser
 
         try
         {
-            if (!Try(out var workspace, out var workspaceError, Compiler.CreateWorkspace()))
-                return workspaceError;
+            var workspaceResult = Compiler.CreateWorkspace();
+            if (workspaceResult is not MSBuildWorkspace workspace)
+                return workspaceResult.Error;
             using (workspace)
             {
                 return await ParseSolutionAsync(workspace, solutionPath, options);
@@ -82,10 +83,11 @@ class SourceParser : ISourceParser
         var failedCount = 0;
         foreach (var (project, parseProjectTask) in parseProjectTasks)
         {
-            if (!Try(out var items, out var e, await parseProjectTask))
+            var projectResult = await parseProjectTask;
+            if (projectResult is not IReadOnlyList<Item> items)
             {
-                Log.Warn($"Failed to parse project {project.Name}: {e.Message}");
-                firstProjectError ??= e;
+                Log.Warn($"Failed to parse project {project.Name}: {projectResult.Error.Message}");
+                firstProjectError ??= projectResult.Error;
                 failedCount++;
                 continue;
             }
@@ -132,8 +134,9 @@ class SourceParser : ISourceParser
     {
         try
         {
-            if (!Try(out var workspace, out var workspaceError, Compiler.CreateWorkspace()))
-                return workspaceError;
+            var workspaceResult = Compiler.CreateWorkspace();
+            if (workspaceResult is not MSBuildWorkspace workspace)
+                return workspaceResult.Error;
 
             using (workspace)
             {
@@ -150,8 +153,9 @@ class SourceParser : ISourceParser
 
     public async Task<Result<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
     {
-        if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
-            return e;
+        var compilationResult = await Compiler.GetCompilationAsync(project);
+        if (compilationResult is not Compilation compilation)
+            return compilationResult.Error;
 
         return ParseProjectCompilation(compilation, parentName, project.FilePath).ToList();
     }

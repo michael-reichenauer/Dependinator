@@ -18,7 +18,7 @@ internal class SolutionParserService : IParser
     public async Task<Result> ParseAsync(string path, IItems items)
     {
         using var solutionParser = new SolutionParser(path, items, false, fileService);
-        if (!Try(out var e, await solutionParser.ParseAsync()))
+        if (await solutionParser.ParseAsync() is Error e)
             return e;
         return Result.Ok;
     }
@@ -26,18 +26,13 @@ internal class SolutionParserService : IParser
     public async Task<Result<Source>> GetSourceAsync(string path, string nodeName)
     {
         using var solutionParser = new SolutionParser(path, null!, true, fileService);
-        if (!Try(out var source, out var e, await solutionParser.TryGetSourceAsync(nodeName)))
-            return e;
-
-        return source;
+        return await solutionParser.TryGetSourceAsync(nodeName);
     }
 
     public async Task<Result<string>> GetNodeAsync(string path, FileLocation fileLocation)
     {
         using var solutionParser = new SolutionParser(path, null!, true, fileService);
-        if (!Try(out var nodeName, out var e, await solutionParser.TryGetNodeAsync(fileLocation)))
-            return e;
-        return nodeName;
+        return await solutionParser.TryGetNodeAsync(fileLocation);
     }
 
     public DateTime GetDataTime(string path)

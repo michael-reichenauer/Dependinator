@@ -16,7 +16,7 @@ static class Compiler
     {
         // Registering MSBuild fails when no .NET SDK is installed; report that instead of
         // letting MSBuildWorkspace.Create() fail later with an obscure type load error.
-        if (!Try(out var e, MSBuildLocatorHelper.Register()))
+        if (MSBuildLocatorHelper.Register() is Error e)
             return e;
 
         try

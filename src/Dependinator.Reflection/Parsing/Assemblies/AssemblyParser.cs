@@ -161,7 +161,7 @@ internal class AssemblyParser : IDisposable
             ParsingAssemblyResolver resolver = new();
             var parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
 
-            if (!Try(out var stream, out var e, await fileService.ReadStreamAsync(assemblyPath)))
+            if (await fileService.ReadStreamAsync(assemblyPath) is not Stream stream)
                 return null;
             return AssemblyDefinition.ReadAssembly(stream, parameters);
         }
