@@ -2,7 +2,6 @@ using System.IO.Compression;
 using System.Text;
 using Dependinator.UI.Shared;
 using Microsoft.JSInterop;
-using static Dependinator.Core.Utils.ResultShim;
 
 namespace Dependinator.UI.Tests.Shared;
 
@@ -26,7 +25,7 @@ public class DatabaseTests
 
         var result = await sut.GetAsync<string>("Files", "item-1");
 
-        Assert.True(Try(out var value, out var e, result), e?.Message);
+        var value = AssertOk(result);
         Assert.Equal("payload", value);
     }
 
@@ -49,8 +48,7 @@ public class DatabaseTests
 
         var result = await sut.GetAsync<string>("Files", "item-1");
 
-        Assert.False(Try(out string? _, out var e, result));
-        Assert.NotNull(e);
+        var e = AssertError(result);
         Assert.Contains("No value", e.Message);
     }
 
@@ -62,8 +60,7 @@ public class DatabaseTests
 
         var result = await sut.SetAsync("Files", "item-1", "payload");
 
-        Assert.False(Try(out var e, result));
-        Assert.NotNull(e);
+        var e = AssertError(result);
         Assert.Contains("write failed", e.Message);
     }
 
@@ -84,7 +81,7 @@ public class DatabaseTests
 
         var result = await sut.SetAsync("Files", "item-1", "payload");
 
-        Assert.True(Try(out var e, result), e?.Message);
+        AssertOk(result);
         Assert.NotNull(savedPair);
         var pairType = savedPair!.GetType();
         var id = (string)pairType.GetProperty("Id")!.GetValue(savedPair)!;
@@ -102,8 +99,7 @@ public class DatabaseTests
 
         var result = await sut.GetKeysAsync("Files");
 
-        Assert.False(Try(out IReadOnlyList<string>? _, out var e, result));
-        Assert.NotNull(e);
+        var e = AssertError(result);
         Assert.Contains("keys failed", e.Message);
     }
 

@@ -15,7 +15,7 @@ public class CloudSyncHttpClientTests
 
         Result<CloudAuthState> result = await sut.GetAuthStateAsync();
 
-        Assert.True(Try(out CloudAuthState? state, out var error, result), error?.Message);
+        var state = AssertOk(result);
         Assert.True(state.IsAuthenticated);
         Assert.Equal("Bearer the-token", handler.Request!.Headers.Authorization!.ToString());
         Assert.Equal("Bearer the-token", handler.Request.Headers.GetValues("X-Dependinator-Authorization").Single());
@@ -41,7 +41,7 @@ public class CloudSyncHttpClientTests
 
         Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.True(Try(out CloudModelList? _, out var error, result), error?.Message);
+        AssertOk(result);
         Assert.Equal("https://example.com/api/models", handler.Request!.RequestUri!.ToString());
     }
 
@@ -53,8 +53,8 @@ public class CloudSyncHttpClientTests
 
         Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.False(Try(out CloudModelList? _, out var error, result));
-        Assert.Contains("Device sync quota exceeded.", error!.Message);
+        var error = AssertError(result);
+        Assert.Contains("Device sync quota exceeded.", error.Message);
     }
 
     [Theory]
@@ -73,8 +73,8 @@ public class CloudSyncHttpClientTests
 
         Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.False(Try(out CloudModelList? _, out var error, result));
-        Assert.Contains(expectedMessage, error!.Message);
+        var error = AssertError(result);
+        Assert.Contains(expectedMessage, error.Message);
     }
 
     [Fact]
@@ -85,8 +85,7 @@ public class CloudSyncHttpClientTests
 
         Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.False(Try(out CloudModelList? _, out var error, result));
-        Assert.NotNull(error);
+        AssertError(result);
     }
 
     [Fact]
@@ -102,7 +101,7 @@ public class CloudSyncHttpClientTests
 
         Result<CloudModelMetadata> result = await sut.PushAsync(document);
 
-        Assert.True(Try(out CloudModelMetadata? metadata, out var error, result), error?.Message);
+        var metadata = AssertOk(result);
         Assert.Equal("model-key", metadata.ModelKey);
         Assert.Equal(HttpMethod.Put, handler.Request!.Method);
         Assert.EndsWith("/api/models/model-key", handler.Request.RequestUri!.ToString());

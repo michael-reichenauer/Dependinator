@@ -3,7 +3,6 @@ using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
-using static Dependinator.Core.Utils.ResultShim;
 
 namespace Dependinator.UI.Tests.Models;
 
@@ -37,8 +36,8 @@ public class ModelServiceDesignModelTests
 
         var result = await modelService.LoadAsync("My Design");
 
-        Assert.True(Try(out var modelInfo, out _, result));
-        Assert.Equal("My Design", modelInfo!.Path);
+        var modelInfo = AssertOk(result);
+        Assert.Equal("My Design", modelInfo.Path);
         Assert.Equal("My Design", modelMgr.ModelPath);
         // Only the root node exists in the new empty model
         Assert.Equal(1, modelMgr.WithModel(m => m.Nodes.Count));
@@ -58,7 +57,7 @@ public class ModelServiceDesignModelTests
 
         var result = await modelService.RefreshAsync();
 
-        Assert.True(Try(result));
+        AssertOk(result);
         parserService.Verify(p => p.ParseAsync(It.IsAny<string>(), It.IsAny<SolutionParseOptions>()), Times.Never);
     }
 
@@ -137,7 +136,7 @@ public class ModelServiceDesignModelTests
 
         var result = await modelService.LoadAsync("My.sln");
 
-        Assert.False(Try(out _, out _, result));
+        AssertError(result);
         applicationEvents.Verify(
             e => e.TriggerErrorReported(It.Is<string>(m => m.Contains("My.sln") && m.Contains("No .NET SDK found"))),
             Times.Once
@@ -175,7 +174,7 @@ public class ModelServiceDesignModelTests
 
         var result = await modelService.LoadAsync("My.sln");
 
-        Assert.False(Try(out _, out _, result));
+        AssertError(result);
         applicationEvents.Verify(e => e.TriggerErrorReported(It.IsAny<string>()), Times.Once);
     }
 }

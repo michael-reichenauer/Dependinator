@@ -11,15 +11,13 @@ public class CompilerTests
     {
         var projectPath = Path.Combine(Root.SrcFolderPath, "Dependinator.UI", "Dependinator.UI.csproj");
 
-        if (!Try(out var workspace, out var workspaceError, Compiler.CreateWorkspace()))
-            Assert.Fail(workspaceError.AllMessages());
+        var workspace = AssertOk(Compiler.CreateWorkspace());
 
         using (workspace)
         {
             var project = await workspace.OpenProjectAsync(projectPath);
 
-            if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
-                Assert.Fail(e.AllMessages());
+            var compilation = AssertOk(await Compiler.GetCompilationAsync(project));
 
             var allTypes = Compiler.GetAllTypes(compilation).ToList();
 

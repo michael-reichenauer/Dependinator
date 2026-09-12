@@ -6,7 +6,6 @@ using Dependinator.UI.Shared.CloudSync;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
 using Shared;
-using static Dependinator.Core.Utils.ResultShim;
 
 namespace Dependinator.UI.Tests.Shared;
 
@@ -27,7 +26,7 @@ public class HybridCloudSyncServiceTests
 
         Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.True(Try(out CloudModelList? value, out _, result));
+        var value = AssertOk(result);
         Assert.Same(expected, value);
         Assert.Equal(0, httpHandler.SendCount);
         proxy.Verify(p => p.ListAsync(), Times.Once);
@@ -43,7 +42,7 @@ public class HybridCloudSyncServiceTests
 
         Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.True(Try(out CloudModelList? value, out _, result));
+        var value = AssertOk(result);
         Assert.NotNull(value);
         Assert.Equal(1, httpHandler.SendCount);
         proxy.Verify(p => p.ListAsync(), Times.Never);
@@ -61,7 +60,7 @@ public class HybridCloudSyncServiceTests
 
         Result<CloudAuthState> result = await sut.LoginAsync();
 
-        Assert.True(Try(out CloudAuthState? value, out _, result));
+        var value = AssertOk(result);
         Assert.Same(expected, value);
         Assert.Equal(0, httpHandler.SendCount);
         proxy.Verify(p => p.LoginAsync(), Times.Once);

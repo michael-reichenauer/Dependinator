@@ -26,8 +26,7 @@ public class DecompilerTests
 
         string nodeName = Reference.NodeName<DecompilerTestClass>();
 
-        if (!Try(out var source, out var e, decompiler.TryGetSource(module, nodeName)))
-            Assert.Fail(e.Message);
+        var source = AssertOk(decompiler.TryGetSource(module, nodeName));
 
         await Verify(source.Text, extension: "cs");
         Assert.Equal(CurrentFilePath(), source.Location.Path);
@@ -40,16 +39,14 @@ public class DecompilerTests
         Decompiler decompiler = new();
         var module = AssemblyHelper.GetModule<DecompilerTestClass>();
         string nodeName1 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.FirstFunction));
-        if (!Try(out var source1, out var e1, decompiler.TryGetSource(module, nodeName1)))
-            Assert.Fail(e1.Message);
+        var source1 = AssertOk(decompiler.TryGetSource(module, nodeName1));
 
         await Verify(source1.Text, extension: "cs");
         Assert.Equal(CurrentFilePath(), source1.Location.Path);
         Assert.Equal(12, source1.Location.Line);
 
         string nodeName2 = Reference.NodeName<DecompilerTestClass>(nameof(DecompilerTestClass.SecondFunction));
-        if (!Try(out var source2, out var e2, decompiler.TryGetSource(module, nodeName2)))
-            Assert.Fail(e2.Message);
+        var source2 = AssertOk(decompiler.TryGetSource(module, nodeName2));
         Assert.Equal(CurrentFilePath(), source2.Location.Path);
         Assert.Equal(16, source2.Location.Line);
     }
