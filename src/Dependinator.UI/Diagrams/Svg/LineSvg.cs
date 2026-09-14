@@ -52,18 +52,21 @@ static class LineSvg
         string elementId
     )
     {
+        // Explorer (focused) lines share the direct line's accent color and arrow, but stay
+        // solid: only the explorer's pair lines are dashed.
+        var isAccent = line.IsDirect || line.IsFocused;
         var color =
-            line.IsDirect ? DColors.DirectLine
+            isAccent ? DColors.DirectLine
             : line.IsHidden ? DColors.LineHidden
             : line.IsCousin ? DColors.CousinLine
             : DColors.Line;
 
         // The hollow inheritance arrow head is only drawn where the line enters the real
-        // inheritance target (the supertype); hidden/direct styling takes precedence.
-        var isInheritanceHead = !line.IsDirect && !line.IsHidden && line.HasInheritanceTargetEnd;
+        // inheritance target (the supertype); hidden/accent styling takes precedence.
+        var isInheritanceHead = !isAccent && !line.IsHidden && line.HasInheritanceTargetEnd;
 
         var markerId =
-            line.IsDirect ? "arrow-direct"
+            isAccent ? "arrow-direct"
             : line.IsHidden ? "arrow-hidden"
             : isInheritanceHead ? "arrow-inheritance"
             : line.IsCousin ? "arrow-cousin"

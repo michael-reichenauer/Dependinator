@@ -20,6 +20,7 @@
 @inject Dependinator.UI.Diagrams.Interaction.INoteService noteService
 @inject Dependinator.UI.Diagrams.Interaction.IManualEditService manualEditService
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
+@inject Dependinator.UI.Diagrams.ILineSplitService lineSplitService
 @inject IPointerEventService pointerEventService
 @implements IDisposable
 
@@ -97,6 +98,11 @@
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
                              data-testid="menu-notes-sidebar">
                     Show Notes Sidebar
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.UnfoldLess"
+                             OnClick="lineSplitService.ClearAll" data-testid="menu-hide-direct-lines">
+                    Hide All Direct Lines
                 </MudMenuItem>
 
                 @if (!Build.IsVsCodeExtWasm)

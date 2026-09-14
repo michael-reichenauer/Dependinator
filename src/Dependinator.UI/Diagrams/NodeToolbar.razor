@@ -75,6 +75,13 @@ else if (HasSelectedLine)
             Show Node …
           </MudMenuItem>
         }
+        @if (HasSelectedNodeLineSplits)
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess"
+                       OnClick="HideDirectLines" data-testid="node-menu-hide-direct-lines">
+            Hide Direct Lines
+          </MudMenuItem>
+        }
       </MudMenu>
     </MudTooltip>
 
@@ -84,6 +91,21 @@ else if (HasSelectedLine)
     <MudTooltip Text="Show dependencies">
       <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
     </MudTooltip>
+
+    @if (SelectedNodeHasChildren)
+    {
+      <MudTooltip Text="Direct lines: one level up">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess" OnClick="DecreaseLineDepth"
+                       Disabled="@(SelectedNodeLineDepth == 0)" data-testid="node-lines-shallower" />
+      </MudTooltip>
+      <MudTooltip Text="Direct lines: one level deeper">
+        <MudBadge Content="@SelectedNodeLineDepth" Visible="@(SelectedNodeLineDepth > 0)" Color="Color.Secondary"
+                  Overlap="true" Origin="Origin.TopRight" data-testid="node-lines-depth">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.UnfoldMore" OnClick="IncreaseLineDepth"
+                         data-testid="node-lines-deeper" />
+        </MudBadge>
+      </MudTooltip>
+    }
 
     @if (ViewOptions.IsEditingEnabled)
     {
@@ -219,6 +241,9 @@ else if (HasSelectedLine)
   [Inject]
   INodeEditService nodeEditService { get; set; } = null!;
 
+  [Inject]
+  ILineSplitService lineSplitService { get; set; } = null!;
+
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentHidden();
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
@@ -308,6 +333,27 @@ else if (HasSelectedLine)
   }
 
   void ToggleNodeHide() => selectionService.ToggleNodeHide();
+
+  int SelectedNodeLineDepth => TryGetSelectedNodeId(out var nodeId) ? lineSplitService.GetDepth(nodeId) : 0;
+  bool HasSelectedNodeLineSplits => TryGetSelectedNodeId(out var nodeId) && lineSplitService.HasSplits(nodeId);
+
+  void IncreaseLineDepth()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      lineSplitService.IncreaseDepth(nodeId);
+  }
+
+  void DecreaseLineDepth()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      lineSplitService.DecreaseDepth(nodeId);
+  }
+
+  void HideDirectLines()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      lineSplitService.Clear(nodeId);
+  }
 
   async Task DeleteNode()
   {

@@ -18,10 +18,20 @@ interface IModel : IDisposable
     // Whether test projects are included when this model's solution is parsed.
     bool IncludeTestProjects { get; set; }
 
-    // Monotonic counter of structural changes (nodes/links added or removed); lets
-    // consumers detect that cached, structure-derived state (e.g. representative lines)
-    // is still valid. Line changes do not count: lines are derived state themselves.
+    // Monotonic counter of structural changes (nodes/links added or removed, or view state that
+    // changes how links resolve to lines, see BumpStructureVersion); lets consumers detect that
+    // cached, structure-derived state (e.g. representative lines) is still valid. Line changes
+    // do not count: lines are derived state themselves.
     int StructureVersion { get; }
+
+    // Invalidates structure-derived state without a node/link change, e.g. after a node's
+    // direct-line depth changed (RepLineService resolves lines from it).
+    void BumpStructureVersion();
+
+    // The dependency explorer's subject while its lines are shown (see DependenciesService and
+    // RepLineService); null when no explorer lines are shown. Transient; changes must bump
+    // StructureVersion.
+    LineFocus? LineFocus { get; set; }
 
     IReadOnlyDictionary<NodeId, Node> Nodes { get; }
     IReadOnlyDictionary<LinkId, Link> Links { get; }
@@ -63,6 +73,10 @@ class Model : IModel
     public Node Root { get; private set; } = null!;
 
     public int StructureVersion { get; private set; }
+
+    public void BumpStructureVersion() => StructureVersion++;
+
+    public LineFocus? LineFocus { get; set; }
 
     Dictionary<NodeId, Node> nodes { get; } = [];
     Dictionary<LinkId, Link> links { get; } = [];
@@ -135,6 +149,7 @@ class Model : IModel
         nodes.Clear();
         links.Clear();
         lines.Clear();
+        LineFocus = null;
         Path = "";
         ViewRect = Rect.None;
         Zoom = 0;
@@ -177,24 +192,6 @@ class Model : IModel
     {
         lines.Remove(line.Id);
         line.RenderAncestor?.RemoveDirectLine(line);
-
-        // Keep the split bookkeeping consistent: a removed split line releases its parent
-        // (restoring it when it was the last one), and a removed parent orphans its split
-        // lines (they stay visible until hidden individually).
-        if (line.SplitParent is not null)
-        {
-            line.SplitParent.SplitLines.Remove(line);
-            if (line.SplitParent.SplitLines.Count == 0)
-                line.SplitParent.IsSplitSuppressed = false;
-            line.SplitParent = null;
-        }
-        foreach (var splitLine in line.SplitLines)
-        {
-            splitLine.SplitParent = null;
-        }
-        line.SplitLines.Clear();
-        line.IsSplitSuppressed = false;
-
         line.Target.Remove(line);
         line.Source.Remove(line);
     }

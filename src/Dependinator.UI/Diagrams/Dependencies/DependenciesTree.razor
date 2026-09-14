@@ -26,6 +26,11 @@
                 <b>@(srv.Title)</b>
             </MudText>
             <MudSpacer />
+            <MudTooltip Text="@(srv.IsShowLines ? "Hide the lines in the diagram" : "Show the lines in the diagram")">
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Timeline" Size="Size.Small"
+                               Color="@(srv.IsShowLines ? Color.Info : Color.Default)"
+                               OnClick="() => srv.SetShowLines(!srv.IsShowLines)" data-testid="explorer-show-lines" />
+            </MudTooltip>
             <MudTooltip Text="Show references">
                 <MudIconButton Icon="@Icon.ReferencesIcon" Size="Size.Small"
                                Color="@(srv.TreeType == TreeType.References ? Color.Info : Color.Default)"
@@ -49,7 +54,8 @@
                         var item = (TreeItem)treeItem;
                     }
                     <MudTreeViewItem Items="@item.Children" Icon="@item.Icon"
-                                     OnClick="() => OnItemClickAsync(item)" @bind-Expanded="@item.Expanded">
+                                     OnClick="() => OnItemClickAsync(item)" Expanded="@item.Expanded"
+                                     ExpandedChanged="(bool expanded) => srv.SetExpanded(item, expanded)">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
                                  class="hover-element">

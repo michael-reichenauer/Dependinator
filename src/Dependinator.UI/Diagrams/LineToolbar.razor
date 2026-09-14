@@ -55,20 +55,6 @@
                     </MudTooltip>
                 }
             }
-            @if (CanSplitSelectedLineSource)
-            {
-                @* <MudTooltip Text="Split line into sources">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CallMerge" OnClick="SplitLineSource"
-                                   data-testid="line-split-source" />
-                </MudTooltip> *@
-            }
-            @if (CanSplitSelectedLine)
-            {
-                @* <MudTooltip Text="Split line into targets">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CallSplit" OnClick="SplitLine"
-                                   data-testid="line-split" />
-                </MudTooltip> *@
-            }
             @if (interactionService.CanShowLineSource)
             {
                 <MudTooltip Text="Show source node source code">
@@ -130,29 +116,6 @@
         dependenciesService.HideDirectLine(lineId);
     }
 
-    bool CanSplitSelectedLine =>
-        selectionService.SelectedId.IsLine
-        && dependenciesService.CanSplitLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
-
-    bool CanSplitSelectedLineSource =>
-        selectionService.SelectedId.IsLine
-        && dependenciesService.CanSplitLineSource(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
-
-    void SplitLine()
-    {
-        if (!selectionService.SelectedId.IsLine)
-            return;
-        var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
-        dependenciesService.SplitLine(lineId);
-    }
-
-    void SplitLineSource()
-    {
-        if (!selectionService.SelectedId.IsLine)
-            return;
-        var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
-        dependenciesService.SplitLineSource(lineId);
-    }
     void PanToSource()
     {
         if (!TryGetSelectedLine(out var line))

@@ -49,6 +49,17 @@ public class ModelTests
     );
 
     [Fact]
+    public void BumpStructureVersion_ShouldIncrementStructureVersion()
+    {
+        var modelMgr = new ModelMgr(new StateMgr());
+        var version = modelMgr.WithModel(m => m.StructureVersion);
+
+        modelMgr.WithModel(m => m.BumpStructureVersion());
+
+        Assert.Equal(version + 1, modelMgr.WithModel(m => m.StructureVersion));
+    }
+
+    [Fact]
     public void IncludeTestProjects_ShouldRoundTripThroughDto()
     {
         var modelMgr = new ModelMgr(new StateMgr());

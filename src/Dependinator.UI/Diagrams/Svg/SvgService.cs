@@ -238,13 +238,13 @@ class SvgService : ISvgService
     static IEnumerable<string> RenderNodeLines(Node node, Pos nodeCanvasPos, double childrenZoom, RenderContext context)
     {
         // Parent-to-child segments are the fan-out of incoming links inside this container
-        // (and direct parent-to-child links) — crossing rep lines end at the container, and
-        // these continue inside.
+        // (and direct parent-to-child links); only the segments below the links' current
+        // target representative are active (see RepLineService).
         var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
         foreach (var line in parentToChildrenLines)
         {
-            if (line.IsSplitSuppressed)
-                continue; // Temporarily replaced by its user-split lines (see DependenciesService)
+            if (!line.IsActiveRep)
+                continue; // Only current representative segments are drawn (see RepLineService)
             if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
             if (line.Target.IsPassThrough)
@@ -261,8 +261,6 @@ class SvgService : ISvgService
             {
                 if (!line.IsActiveRep)
                     continue; // Only current representative lines are drawn (see RepLineService)
-                if (line.IsSplitSuppressed)
-                    continue; // Temporarily replaced by its user-split lines (see DependenciesService)
                 if (line.Target.Parent == line.Source)
                     continue;
                 if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
@@ -324,8 +322,6 @@ class SvgService : ISvgService
         {
             if (directLine.IsCousin && !directLine.IsActiveRep)
                 continue; // An inactive cousin line kept only for its user waypoints/description
-            if (directLine.IsSplitSuppressed)
-                continue; // Temporarily replaced by its user-split lines (see DependenciesService)
             if (directLine.IsHidden && !ViewOptions.ShowHiddenNodes)
                 continue;
             if (!IsEitherDirectEndpointRendered(directLine, node, nodeCanvasPos, childrenZoom, context))
