@@ -378,9 +378,9 @@
 
     async Task LoginAsync()
     {
-        if (!Try(out var error, await appCloudSyncService.LoginAsync()))
+        if (await appCloudSyncService.LoginAsync() is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -389,9 +389,9 @@
 
     async Task LogoutAsync()
     {
-        if (!Try(out var error, await appCloudSyncService.LogoutAsync()))
+        if (await appCloudSyncService.LogoutAsync() is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -400,9 +400,9 @@
 
     async Task LoadCloudModelAsync(global::Shared.CloudModelMetadata cloudModel)
     {
-        if (!Try(out _, out var error, await appCloudSyncService.LoadCloudModelAsync(cloudModel)))
+        if (await appCloudSyncService.LoadCloudModelAsync(cloudModel) is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -435,9 +435,9 @@
         if (choice is null)
             return;
 
-        if (choice is true && !Try(out var error, await appCloudSyncService.DeleteCurrentCloudModelAsync()))
+        if (choice is true && await appCloudSyncService.DeleteCurrentCloudModelAsync() is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 

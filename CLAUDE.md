@@ -8,7 +8,7 @@ Dependinator is a tool for visualizing and exploring software dependencies. It h
 
 ## Solution Structure
 
-The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `global.json`). The solution file stays at the repo root; all project folders live under `src/`.
+The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `global.json`: the .NET 11 preview SDK, needed for the C# 15 union patterns of `Result`/`Result<T>`; `Directory.Build.props` sets `LangVersion` preview and makes CS8509 an error). The solution file stays at the repo root; all project folders live under `src/`.
 
 **Runtime/host projects:**
 - `src/Dependinator.Web/` — Blazor Server host for local development
@@ -101,6 +101,8 @@ dotnet list Dependinator.sln package --vulnerable
 - **Package versions:** centrally managed in `Directory.Packages.props`; avoid per-project version overrides.
 - **Formatting:** CSharpier (`.csharpierrc.json`) + `.editorconfig`. Run `dotnet csharpier --check .` to verify; `CSharpier.MsBuild` also enforces formatting during build.
 - **Style:** 4-space indent, explicit types over `var`, PascalCase for types/methods/properties/constants, nullable-aware code, braces preferred.
+- **Results:** fallible operations return `Result` / `Result<T>` (`src/Dependinator.Core/Utils/Result.cs`), C# 15 unions matched on the case type. Propagate with `if (await X() is Error e) return e;` and `if (result is not T value) return result.Error;`; create errors with `new Error("...")`, `new Error("...", inner)` or `new Error(exception)`; wrap a throwing API with `Result.Catch(...)`; a `switch` over a result is exhaustive with its two arms (CS8509 is a build error). There is no `Try` helper, no typed value accessor and no `union` keyword (CSharpier cannot parse it yet). `NotFoundError` exists only for the cloud pull's 404. Name the exact declared type in a pattern: `Source`, `Item`, `Node` and `Link` exist in more than one namespace, and a pattern on the wrong twin compiles and never matches. Generic code matches `result.Value is T value`. Never use `default(Result)`. Tests assert with `AssertOk(result)` / `AssertError(result)` (`tests/Dependinator.Core.Tests/Utils/ResultAssert.cs`, linked into the other test projects).
+- **.NET 11 GA follow-up:** the checklist for the GA SDK (`LangVersion` 15, no preview) and for a later move to net11.0 is `NET11-UPGRADE.md`.
 - **Tests:** xUnit + Moq + Verify.Xunit. Name tests as `MethodName_ShouldDoX()`. `tests/Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` (at the repo root) dynamically via `tests/Dependinator.Core.Tests/Root.cs` — do not hardcode `/workspaces/...` paths in tests.
 - **UI/e2e tests:** `tests/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./scripts/e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. Keep the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props` in sync with `PLAYWRIGHT_VERSION` in `.devcontainer/post-create.sh`.
 - **Browser checks:** after UI changes, use the `ui-check` skill (`.claude/skills/ui-check/`) to verify behavior with `playwright-cli` and run `./scripts/e2e`.

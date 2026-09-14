@@ -11,16 +11,16 @@ record ModelInfo(string Path, Rect ViewRect, double Zoom);
 
 interface IModelService
 {
-    Task<R<ModelInfo>> LoadAsync(string path);
-    Task<R> RefreshAsync();
-    Task<R> SetIncludeTestProjectsAsync(bool includeTestProjects);
+    Task<Result<ModelInfo>> LoadAsync(string path);
+    Task<Result> RefreshAsync();
+    Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects);
     void Clear();
     void ClearCache();
     void CheckLineVisibility();
     Task LayoutNode(NodeId nodeId, bool recursively = false);
-    R<ModelDto> GetCurrentModelDto();
-    Task<R> WriteModelAsync(string modelPath, ModelDto modelDto);
-    Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
+    Result<ModelDto> GetCurrentModelDto();
+    Task<Result> WriteModelAsync(string modelPath, ModelDto modelDto);
+    Task<Result<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
 }
 
 [Scoped]
@@ -80,24 +80,24 @@ class ModelService : IModelService, IDisposable
         applicationEvents.TriggerModelChanged();
     }
 
-    public R<ModelDto> GetCurrentModelDto()
+    public Result<ModelDto> GetCurrentModelDto()
     {
         using (var model = modelMgr.UseModel())
         {
             if (string.IsNullOrWhiteSpace(model.Path))
-                return R.Error("Model is not loaded");
+                return new Error("Model is not loaded");
 
             return model.SerializeToDto();
         }
     }
 
-    public async Task<R<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto)
+    public async Task<Result<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto)
     {
         var modelPath = modelMgr.ModelPath;
         if (string.IsNullOrWhiteSpace(modelPath))
-            return R.Error("Model is not loaded");
+            return new Error("Model is not loaded");
 
-        if (!Try(out var error, await WriteModelAsync(modelPath, modelDto)))
+        if (await WriteModelAsync(modelPath, modelDto) is Error error)
             return error;
 
         var modelInfo = await LoadCachedModelDataAsync(modelPath, modelDto);
@@ -105,12 +105,12 @@ class ModelService : IModelService, IDisposable
         return modelInfo;
     }
 
-    public Task<R> WriteModelAsync(string modelPath, ModelDto modelDto)
+    public Task<Result> WriteModelAsync(string modelPath, ModelDto modelDto)
     {
         return persistenceService.WriteAsync(modelPath, modelDto);
     }
 
-    public async Task<R<ModelInfo>> LoadAsync(string path)
+    public async Task<Result<ModelInfo>> LoadAsync(string path)
     {
         Clear();
 
@@ -118,9 +118,10 @@ class ModelService : IModelService, IDisposable
         using var _ = Timing.Start($"Load model {path}");
 
         // Try read cached model (with ui layout)
-        if (!Try(out var modelInfo, out var e, await ReadCachedModelAsync(path)))
+        var cachedResult = await ReadCachedModelAsync(path);
+        if (cachedResult is not ModelInfo modelInfo)
         {
-            Log.Info("Failed to read cached model", e.ErrorMessage);
+            Log.Info("Failed to read cached model", cachedResult.Error.Message);
             if (ModelPaths.IsDesignModel(path))
                 return await CreateEmptyModelAsync(path);
 
@@ -153,7 +154,7 @@ class ModelService : IModelService, IDisposable
     // Creates and persists a new empty design model (root node only). Design models are
     // manually edited and never parsed; the persisted model is their only source of truth,
     // so it is written immediately (not debounced) to survive an instant reload.
-    async Task<R<ModelInfo>> CreateEmptyModelAsync(string path)
+    async Task<Result<ModelInfo>> CreateEmptyModelAsync(string path)
     {
         Log.Info("Creating empty design model", path);
         ModelDto modelDto;
@@ -164,7 +165,7 @@ class ModelService : IModelService, IDisposable
             modelDto = model.SerializeToDto();
         }
 
-        if (!Try(out var e, await persistenceService.WriteAsync(path, modelDto)))
+        if (await persistenceService.WriteAsync(path, modelDto) is Error e)
             return e;
 
         applicationEvents.TriggerModelChanged();
@@ -172,33 +173,34 @@ class ModelService : IModelService, IDisposable
         return new ModelInfo(path, Rect.None, 0);
     }
 
-    async Task<R<ModelInfo>> ReadCachedModelAsync(string path)
+    async Task<Result<ModelInfo>> ReadCachedModelAsync(string path)
     {
         using var progress = progressService.Start("Loading ...");
-        if (!Try(out var model, out var e, await persistenceService.ReadAsync(path)))
-            return e;
+        var modelResult = await persistenceService.ReadAsync(path);
+        if (modelResult is not ModelDto model)
+            return modelResult.Error;
 
         var modelInfo = await LoadCachedModelDataAsync(path, model);
 
         return modelInfo;
     }
 
-    public async Task<R> RefreshAsync()
+    public async Task<Result> RefreshAsync()
     {
         var path = modelMgr.ModelPath;
         if (ModelPaths.IsDesignModel(path))
         {
             Log.Info("Design model, parsing skipped", path);
-            return R.Ok;
+            return Result.Ok;
         }
 
         if (!modelListService.IsLocalPath(path))
         {
             Log.Info("Not a local path", path);
-            return R.Ok;
+            return Result.Ok;
         }
 
-        if (!Try(out var e, await ParseAndUpdateAsync(path, true)))
+        if (await ParseAndUpdateAsync(path, true) is Error e)
             return e;
         using (var model = modelMgr.UseModel())
         {
@@ -209,7 +211,7 @@ class ModelService : IModelService, IDisposable
         applicationEvents.TriggerModelChanged();
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
-        return R.Ok;
+        return Result.Ok;
     }
 
     public Task LayoutNode(NodeId nodeId, bool recursively = false)
@@ -235,9 +237,9 @@ class ModelService : IModelService, IDisposable
             node.Children.ForEach(n => LayoutNode(n, recursively));
     }
 
-    async Task<R<ModelInfo>> ParseNewModelAsync(string path)
+    async Task<Result<ModelInfo>> ParseNewModelAsync(string path)
     {
-        if (!Try(out var e, await ParseAndUpdateAsync(path)))
+        if (await ParseAndUpdateAsync(path) is Error e)
             return e;
 
         // Rendering during the progressive parse may have laid out nodes before all their
@@ -260,10 +262,10 @@ class ModelService : IModelService, IDisposable
         }
     }
 
-    public async Task<R> SetIncludeTestProjectsAsync(bool includeTestProjects)
+    public async Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects)
     {
         if (modelMgr.WithModel(m => m.IncludeTestProjects == includeTestProjects))
-            return R.Ok;
+            return Result.Ok;
 
         modelMgr.WithModel(m => m.IncludeTestProjects = includeTestProjects);
 
@@ -277,7 +279,7 @@ class ModelService : IModelService, IDisposable
         return await RefreshAsync();
     }
 
-    async Task<R> ParseAndUpdateAsync(string path, bool isRefresh = false)
+    async Task<Result> ParseAndUpdateAsync(string path, bool isRefresh = false)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
         // Read before any model-lock block is opened; the model lock is thread-affine and must
@@ -293,12 +295,14 @@ class ModelService : IModelService, IDisposable
 
             Log.Info("Parsing ...");
 
-            if (!Try(out var items, out var e, await ParseAsync(path, parseOptions)))
+            var parseResult = await ParseAsync(path, parseOptions);
+            if (parseResult is not IReadOnlyList<Parsing.Item> items)
             {
                 // A failed parse leaves an empty (or unchanged) diagram, which on its own looks
                 // like a solution without dependencies, so always tell the user what went wrong.
-                Log.Warn($"Failed to parse {path}: {e.AllErrorMessages()}");
-                applicationEvents.TriggerErrorReported($"Failed to parse '{Path.GetFileName(path)}'. {e.ErrorMessage}");
+                Error e = parseResult.Error;
+                Log.Warn($"Failed to parse {path}: {e.AllMessages()}");
+                applicationEvents.TriggerErrorReported($"Failed to parse '{Path.GetFileName(path)}'. {e.Message}");
                 return e;
             }
 
@@ -322,10 +326,10 @@ class ModelService : IModelService, IDisposable
 
         CheckLineVisibility();
 
-        return R.Ok;
+        return Result.Ok;
     }
 
-    async Task<R<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, Parsing.SolutionParseOptions options)
+    async Task<Result<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, Parsing.SolutionParseOptions options)
     {
         using var _ = Timing.Start($"Parsed {path}");
         try
@@ -337,7 +341,7 @@ class ModelService : IModelService, IDisposable
             // The parser may run in the LSP process, where a lost/failed RPC call throws
             // instead of returning a result.
             Log.Exception(e, $"Failed to call parser for {path}");
-            return R.Error("The parser could not be reached.", e);
+            return new Error("The parser could not be reached.", e);
         }
     }
 

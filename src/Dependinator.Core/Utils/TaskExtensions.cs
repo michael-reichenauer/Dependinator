@@ -40,6 +40,23 @@ public static class TaskExtensions
             );
     }
 
+    // A background task that returns a Result has no caller left to see a failure, so an Error is
+    // logged here (an exception still goes through FailedBackgroundTask). Binds for every
+    // Task<Result> automatically, being more specific than the Task overload.
+    public static void RunInBackground(this Task<Result> task)
+    {
+        task.ContinueWith(
+            completed =>
+            {
+                if (completed.IsFaulted)
+                    FailedBackgroundTask(completed);
+                else if (completed.IsCompletedSuccessfully && completed.Result is Error e)
+                    Log.Error($"Background task failed: {e.AllMessages()}");
+            },
+            TaskContinuationOptions.ExecuteSynchronously
+        );
+    }
+
     private static void FailedBackgroundTask(Task task)
     {
         var e = new InvalidOperationException("RunInBackground task failed", task.Exception);

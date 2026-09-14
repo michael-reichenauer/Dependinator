@@ -11,7 +11,7 @@ namespace Dependinator.Roslyn.Parsing;
 [Transient]
 class SourceParser : ISourceParser
 {
-    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath, SolutionParseOptions options)
+    public async Task<Result<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath, SolutionParseOptions options)
     {
         // The demo model is pre-parsed and embedded, so load it directly instead of
         // running Roslyn. Used as a fallback when no real model is available and by
@@ -20,12 +20,13 @@ class SourceParser : ISourceParser
             return await LoadEmbeddedDemoModelAsync();
 
         if (!File.Exists(solutionPath))
-            return R.Error($"Solution file not found: {solutionPath}");
+            return new Error($"Solution file not found: {solutionPath}");
 
         try
         {
-            if (!Try(out var workspace, out var workspaceError, Compiler.CreateWorkspace()))
-                return workspaceError;
+            var workspaceResult = Compiler.CreateWorkspace();
+            if (workspaceResult is not MSBuildWorkspace workspace)
+                return workspaceResult.Error;
             using (workspace)
             {
                 return await ParseSolutionAsync(workspace, solutionPath, options);
@@ -34,11 +35,11 @@ class SourceParser : ISourceParser
         catch (Exception e)
         {
             Log.Exception(e, $"Failed to parse {solutionPath}");
-            return R.Error($"Failed to parse '{Names.GetSolutionName(solutionPath)}'.", e);
+            return new Error($"Failed to parse '{Names.GetSolutionName(solutionPath)}'.", e);
         }
     }
 
-    async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(
+    async Task<Result<IReadOnlyList<Item>>> ParseSolutionAsync(
         MSBuildWorkspace workspace,
         string solutionPath,
         SolutionParseOptions options
@@ -58,12 +59,12 @@ class SourceParser : ISourceParser
         // A solution where no project could be loaded would silently render as an empty diagram,
         // so report it, together with whatever MSBuild complained about while loading.
         if (csharpProjects.Count == 0)
-            return R.Error($"No C# projects could be loaded from '{solutionName}'.{GetDiagnosticsText(workspace)}");
+            return new Error($"No C# projects could be loaded from '{solutionName}'.{GetDiagnosticsText(workspace)}");
 
         // Check the option first, so including tests skips the reference scan entirely.
         var projects = csharpProjects.Where(p => options.IncludeTestProjects || !IsTestProject(p)).ToList();
         if (projects.Count == 0)
-            return R.Error(
+            return new Error(
                 $"'{solutionName}' contains only test projects. "
                     + "Enable Settings > Include Test Projects in the menu to parse them."
             );
@@ -78,14 +79,15 @@ class SourceParser : ISourceParser
             .Select(p => (Project: p, Task: ParseProjectAsync(p, solutionNode.Name)))
             .ToList();
 
-        ErrorResult? firstProjectError = null;
+        Error? firstProjectError = null;
         var failedCount = 0;
         foreach (var (project, parseProjectTask) in parseProjectTasks)
         {
-            if (!Try(out var items, out var e, await parseProjectTask))
+            var projectResult = await parseProjectTask;
+            if (projectResult is not IReadOnlyList<Item> items)
             {
-                Log.Warn($"Failed to parse project {project.Name}: {e.ErrorMessage}");
-                firstProjectError ??= e;
+                Log.Warn($"Failed to parse project {project.Name}: {projectResult.Error.Message}");
+                firstProjectError ??= projectResult.Error;
                 failedCount++;
                 continue;
             }
@@ -95,7 +97,7 @@ class SourceParser : ISourceParser
         // Some projects failing still yields a usable (if partial) model, but all of them failing
         // means there is nothing to show, so report it instead of returning a lone solution node.
         if (failedCount == projects.Count)
-            return R.Error(
+            return new Error(
                 $"Failed to parse all {projects.Count} projects in '{solutionName}'.{GetDiagnosticsText(workspace)}",
                 firstProjectError!
             );
@@ -128,12 +130,13 @@ class SourceParser : ISourceParser
         return " " + string.Join(" ", failures);
     }
 
-    public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
+    public async Task<Result<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
     {
         try
         {
-            if (!Try(out var workspace, out var workspaceError, Compiler.CreateWorkspace()))
-                return workspaceError;
+            var workspaceResult = Compiler.CreateWorkspace();
+            if (workspaceResult is not MSBuildWorkspace workspace)
+                return workspaceResult.Error;
 
             using (workspace)
             {
@@ -144,14 +147,15 @@ class SourceParser : ISourceParser
         catch (Exception e)
         {
             Log.Exception(e, $"Failed to parse {projectPath}");
-            return R.Error($"Failed to parse '{Path.GetFileName(projectPath)}'.", e);
+            return new Error($"Failed to parse '{Path.GetFileName(projectPath)}'.", e);
         }
     }
 
-    public async Task<R<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
+    public async Task<Result<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
     {
-        if (!Try(out var compilation, out var e, await Compiler.GetCompilationAsync(project)))
-            return e;
+        var compilationResult = await Compiler.GetCompilationAsync(project);
+        if (compilationResult is not Compilation compilation)
+            return compilationResult.Error;
 
         return ParseProjectCompilation(compilation, parentName, project.FilePath).ToList();
     }
@@ -270,14 +274,14 @@ class SourceParser : ISourceParser
 
     // Reads the gzip-compressed, pre-parsed demo model embedded in this assembly
     // (Dependinator.Roslyn.demo.model) and deserializes it into parsed items.
-    static async Task<R<IReadOnlyList<Item>>> LoadEmbeddedDemoModelAsync()
+    static async Task<Result<IReadOnlyList<Item>>> LoadEmbeddedDemoModelAsync()
     {
         try
         {
             const string resourceName = "Dependinator.Roslyn.demo.model";
             await using var stream = typeof(SourceParser).Assembly.GetManifestResourceStream(resourceName);
             if (stream is null)
-                return R.Error($"Embedded demo model resource '{resourceName}' was not found.");
+                return new Error($"Embedded demo model resource '{resourceName}' was not found.");
 
             await using var gzip = new GZipStream(stream, CompressionMode.Decompress);
             using var reader = new StreamReader(gzip);
@@ -285,13 +289,13 @@ class SourceParser : ISourceParser
 
             var items = Json.Deserialize<List<Item>>(json);
             if (items is null)
-                return R.Error("Failed to deserialize the embedded demo model.");
+                return new Error("Failed to deserialize the embedded demo model.");
 
             return items;
         }
         catch (Exception e)
         {
-            return R.Error(e);
+            return new Error(e);
         }
     }
 

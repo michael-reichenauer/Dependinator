@@ -2,7 +2,6 @@ using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Shared.CloudSync;
 using Dependinator.UI.Shared.Types;
 using Shared;
-using static Dependinator.Core.Utils.Result;
 
 namespace Dependinator.UI.Tests.Shared;
 
@@ -27,9 +26,9 @@ public class CloudModelSerializerTests
         Assert.Equal("/models/sample.model", document.NormalizedPath);
         Assert.Equal(CloudModelPath.CreateKey("/models/sample.model"), document.ModelKey);
 
-        R<ModelDto> result = CloudModelSerializer.ReadModel(document);
+        Result<ModelDto> result = CloudModelSerializer.ReadModel(document);
 
-        Assert.True(Try(out var roundTrippedModel, out var error, result), error?.ErrorMessage);
+        var roundTrippedModel = AssertOk(result);
         Assert.Equal(modelDto.Name, roundTrippedModel.Name);
         Assert.Equal(modelDto.Zoom, roundTrippedModel.Zoom);
         Assert.Equal(modelDto.Offset, roundTrippedModel.Offset);

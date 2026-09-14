@@ -18,7 +18,7 @@ class JsonFileParserService : IParser
 
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".json");
 
-    public Task<R> ParseAsync(string path, IItems items)
+    public Task<Result> ParseAsync(string path, IItems items)
     {
         return Task.Run(async () =>
         {
@@ -37,20 +37,21 @@ class JsonFileParserService : IParser
                 }
 
                 Log.Debug($"Read {itemCount} items");
-                return R.Ok;
+                return Result.Ok;
             }
             catch (Exception e)
             {
                 // Some unexpected error while reading the cache
-                return R.Error($"Failed to parse:\n{path},\n{e.Message}");
+                return new Error($"Failed to parse:\n{path},\n{e.Message}");
             }
         });
     }
 
-    public Task<R<Source>> GetSourceAsync(string path, string nodeName) =>
-        Task.FromResult((R<Source>)new Source("", new FileLocation(path, 0)));
+    public Task<Result<Source>> GetSourceAsync(string path, string nodeName) =>
+        Task.FromResult((Result<Source>)new Source("", new FileLocation(path, 0)));
 
-    public Task<R<string>> GetNodeAsync(string path, FileLocation fileLocation) => Task.FromResult((R<string>)"");
+    public Task<Result<string>> GetNodeAsync(string path, FileLocation fileLocation) =>
+        Task.FromResult((Result<string>)"");
 
     public DateTime GetDataTime(string path) => File.GetLastWriteTime(path);
 

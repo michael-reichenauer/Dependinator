@@ -46,7 +46,7 @@ internal class AssemblyParser : IDisposable
         memberParser = new MemberParser(linkHandler, xmlDockParser, items);
     }
 
-    public static async Task<R<AssemblyParser>> CreateAsync(
+    public static async Task<Result<AssemblyParser>> CreateAsync(
         string assemblyPath,
         string projectPath,
         string parentName,
@@ -56,11 +56,11 @@ internal class AssemblyParser : IDisposable
     )
     {
         if (!await fileService.ExistsAsync(assemblyPath))
-            return R.Error($"No file at '{assemblyPath}'");
+            return new Error($"No file at '{assemblyPath}'");
 
         var assemblyDefinition = await GetAssemblyAsync(assemblyPath, fileService, isReadSymbols);
         if (assemblyDefinition is null)
-            return R.Error($"Failed to read assembly {assemblyPath}");
+            return new Error($"Failed to read assembly {assemblyPath}");
 
         Log.Info("Parsing assembly", assemblyPath);
         return new AssemblyParser(assemblyPath, assemblyDefinition, projectPath, parentName, items);
@@ -80,13 +80,13 @@ internal class AssemblyParser : IDisposable
         assemblyDefinition.Dispose();
     }
 
-    public async Task<R> ParseAsync()
+    public async Task<Result> ParseAsync()
     {
         await ParseAssemblyModuleAsync();
         await ParseAssemblyReferencesAsync([]);
         await ParseTypesAsync();
         await ParseTypeMembersAsync();
-        return R.Ok;
+        return Result.Ok;
     }
 
     public async Task ParseAssemblyModuleAsync()
@@ -138,15 +138,15 @@ internal class AssemblyParser : IDisposable
         await memberParser.AddTypesMembersAsync(typeInfos);
     }
 
-    public R<Source> TryGetSource(string nodeName)
+    public Result<Source> TryGetSource(string nodeName)
     {
         return decompiler.TryGetSource(assemblyDefinition.MainModule, nodeName);
     }
 
-    public R<string> TryGetNode(FileLocation fileLocation)
+    public Result<string> TryGetNode(FileLocation fileLocation)
     {
         if (!decompiler.TryGetNodeNameForFileLocation(assemblyDefinition.MainModule, fileLocation, out var nodeName))
-            return R.Error($"Failed to get node {fileLocation.Path}");
+            return new Error($"Failed to get node {fileLocation.Path}");
         return nodeName;
     }
 
@@ -161,7 +161,7 @@ internal class AssemblyParser : IDisposable
             ParsingAssemblyResolver resolver = new();
             var parameters = new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = isSymbols };
 
-            if (!Try(out var stream, out var e, await fileService.ReadStreamAsync(assemblyPath)))
+            if (await fileService.ReadStreamAsync(assemblyPath) is not Stream stream)
                 return null;
             return AssemblyDefinition.ReadAssembly(stream, parameters);
         }

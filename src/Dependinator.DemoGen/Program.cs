@@ -4,7 +4,6 @@ using Dependinator.Core.Shared;
 using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using Dependinator.Roslyn.Parsing;
-using static Dependinator.Core.Utils.Result;
 
 // Dev tool for regenerating the embedded demo model (run via ./scripts/gen-demo): parses the working
 // Dependinator solution with Roslyn and writes the gzip-compressed, "Demo"-renamed model to
@@ -23,15 +22,10 @@ internal class Program
         string outputPath = DemoModel.DemoOutputPath;
 
         Console.WriteLine($"Parsing {solutionPath} ...");
-        if (
-            !Try(
-                out var items,
-                out var e,
-                await new SourceParser().ParseSolutionAsync(solutionPath, SolutionParseOptions.Default)
-            )
-        )
+        var parseResult = await new SourceParser().ParseSolutionAsync(solutionPath, SolutionParseOptions.Default);
+        if (parseResult is not IReadOnlyList<Item> items)
         {
-            Console.Error.WriteLine($"Failed to parse solution: {e.ErrorMessage}");
+            Console.Error.WriteLine($"Failed to parse solution: {parseResult.Error.Message}");
             return 1;
         }
 

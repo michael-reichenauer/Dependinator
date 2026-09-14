@@ -28,24 +28,24 @@ sealed class HttpCloudSyncService : ICloudSyncService
     public bool IsAvailable => options.Enabled;
 
     // Opens Clerk sign-in modal and waits for the user to complete sign-in.
-    public async Task<R<CloudAuthState>> LoginAsync()
+    public async Task<Result<CloudAuthState>> LoginAsync()
     {
         try
         {
             bool success = await jsInterop.Call<bool>("clerkSignIn");
             if (!success)
-                return R.Error("Sign-in was canceled or timed out.");
+                return new Error("Sign-in was canceled or timed out.");
 
             return await GetAuthStateAsync();
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 
     // Signs out via Clerk.
-    public async Task<R<CloudAuthState>> LogoutAsync()
+    public async Task<Result<CloudAuthState>> LogoutAsync()
     {
         try
         {
@@ -53,48 +53,45 @@ sealed class HttpCloudSyncService : ICloudSyncService
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
 
         return new CloudAuthState(IsAvailable: true, IsAuthenticated: false, User: null);
     }
 
     // Reads authenticated user context from the API.
-    public async Task<R<CloudAuthState>> GetAuthStateAsync()
+    public async Task<Result<CloudAuthState>> GetAuthStateAsync()
     {
         return await httpClient.GetAuthStateAsync();
     }
 
     // Lists remote models for the signed-in user.
-    public async Task<R<CloudModelList>> ListAsync()
+    public async Task<Result<CloudModelList>> ListAsync()
     {
         return await httpClient.ListAsync();
     }
 
     // Uploads current model DTO as a compressed document via PUT.
-    public async Task<R<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
+    public async Task<Result<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto)
     {
         CloudModelDocument document = CloudModelSerializer.CreateDocument(modelPath, modelDto);
         return await httpClient.PushAsync(document);
     }
 
     // Fetches a compressed remote model document and converts it back to local DTO.
-    // Returns R.None when no remote model exists for the path.
-    public async Task<R<ModelDto>> PullAsync(string modelPath)
+    // Returns a NotFoundError when no remote model exists for the path.
+    public async Task<Result<ModelDto>> PullAsync(string modelPath)
     {
         string modelKey = CloudModelPath.CreateKey(modelPath);
-        R<CloudModelDocument> documentResult = await httpClient.PullAsync(modelKey);
-        if (documentResult.IsNone)
-            return R.None;
-
-        if (!Try(out var document, out var error, documentResult))
-            return error;
+        Result<CloudModelDocument> documentResult = await httpClient.PullAsync(modelKey);
+        if (documentResult is not CloudModelDocument document)
+            return documentResult.Error;
 
         return CloudModelSerializer.ReadModel(document);
     }
 
     // Deletes the remote model for the path; a missing remote copy counts as already deleted.
-    public async Task<R> DeleteAsync(string modelPath)
+    public async Task<Result> DeleteAsync(string modelPath)
     {
         string modelKey = CloudModelPath.CreateKey(modelPath);
         return await httpClient.DeleteAsync(modelKey);

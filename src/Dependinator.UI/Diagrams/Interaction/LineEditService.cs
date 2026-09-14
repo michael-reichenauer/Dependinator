@@ -131,7 +131,7 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
 
     async Task<Pos?> TryScreenToWorldPosAsync(Pos screenPos)
     {
-        if (!Try(out var svgBound, out var _, await screenService.GetBoundingRectangle("svgcanvas")))
+        if (await screenService.GetBoundingRectangle("svgcanvas") is not ElementBoundingRectangle svgBound)
             return null;
 
         var localX = screenPos.X - svgBound.X;

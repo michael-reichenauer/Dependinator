@@ -100,7 +100,9 @@ class AreaSelectionService(IModelMgr modelMgr, IScreenService screenService, IAp
 
         // Client → canvas: subtract the svg element's viewport origin, then apply zoom/offset.
         // ClientX/Y is used (not OffsetX/Y) since pointer capture retargets offsets during drags.
-        if (!Try(out var svgBound, out var _, await screenService.GetBoundingRectangle(PointerId.CanvasElementId)))
+        if (
+            await screenService.GetBoundingRectangle(PointerId.CanvasElementId) is not ElementBoundingRectangle svgBound
+        )
         {
             Complete(null);
             return;

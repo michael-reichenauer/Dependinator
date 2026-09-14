@@ -2,8 +2,8 @@ using System.Text.Json;
 
 namespace Dependinator.Core.Tests.Utils;
 
-// Verifies that R/R<T> survive the JSON-RPC tunnel serialization, especially the R.None
-// "no value" marker that cloud sync uses to signal a missing remote model.
+// Verifies that Result/Result<T> survive the JSON-RPC tunnel serialization: the value, the chain of
+// wrapped error messages, and the NotFoundError that cloud sync uses to signal a missing remote model.
 public class ResultJsonConvertersTests
 {
     static readonly JsonSerializerOptions options = CreateOptions();
@@ -16,39 +16,47 @@ public class ResultJsonConvertersTests
         return serializerOptions;
     }
 
-    [Fact]
-    public void Roundtrip_ShouldPreserveNone_ForGenericResult()
-    {
-        R<string> noneResult = R.None;
+    static Result<string> Roundtrip(Result<string> result) =>
+        JsonSerializer.Deserialize<Result<string>>(JsonSerializer.Serialize(result, options), options);
 
-        string json = JsonSerializer.Serialize(noneResult, options);
-        R<string> roundtripped = JsonSerializer.Deserialize<R<string>>(json, options)!;
-
-        Assert.True(roundtripped.IsNone);
-    }
+    static Result Roundtrip(Result result) =>
+        JsonSerializer.Deserialize<Result>(JsonSerializer.Serialize(result, options), options);
 
     [Fact]
     public void Roundtrip_ShouldPreserveValue_ForGenericResult()
     {
-        R<string> valueResult = "the value";
-
-        string json = JsonSerializer.Serialize(valueResult, options);
-        R<string> roundtripped = JsonSerializer.Deserialize<R<string>>(json, options)!;
-
-        Assert.True(Try(out string? value, out var error, roundtripped), error?.ErrorMessage);
-        Assert.Equal("the value", value);
+        Assert.Equal("the value", AssertOk(Roundtrip("the value")));
     }
 
     [Fact]
-    public void Roundtrip_ShouldPreserveErrorMessage_ForGenericResult()
+    public void Roundtrip_ShouldPreserveNotFound_ForGenericResult()
     {
-        R<string> errorResult = R.Error("Something failed.");
+        var error = AssertError(Roundtrip(new NotFoundError("No remote model")));
 
-        string json = JsonSerializer.Serialize(errorResult, options);
-        R<string> roundtripped = JsonSerializer.Deserialize<R<string>>(json, options)!;
+        Assert.IsType<NotFoundError>(error);
+        Assert.Equal("No remote model", error.Message);
+    }
 
-        Assert.False(Try(out string? _, out var error, roundtripped));
-        Assert.False(roundtripped.IsNone);
-        Assert.Contains("Something failed.", error!.ErrorMessage);
+    [Fact]
+    public void Roundtrip_ShouldPreserveErrorMessages_ForGenericResult()
+    {
+        var error = AssertError(Roundtrip(new Error("Something failed.", new Error("Because of this."))));
+
+        Assert.IsNotType<NotFoundError>(error);
+        Assert.Equal("Something failed.", error.Message);
+        Assert.Equal("Something failed.,\nBecause of this.", error.AllMessages());
+    }
+
+    [Fact]
+    public void Roundtrip_ShouldPreserveOutcome_ForResult()
+    {
+        AssertOk(Roundtrip(Result.Ok));
+        Assert.Equal("Something failed.", AssertError(Roundtrip(new Error("Something failed."))).Message);
+    }
+
+    [Fact]
+    public void Serialize_ShouldRejectAnUnsetResult()
+    {
+        Assert.Throws<JsonException>(() => JsonSerializer.Serialize(default(Result<string>), options));
     }
 }

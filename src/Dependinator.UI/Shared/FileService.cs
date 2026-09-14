@@ -26,22 +26,23 @@ class FileService : IBrowserFileService, IFileService
         this.hostStoragePaths = hostStoragePaths;
     }
 
-    public async Task<R<IReadOnlyList<string>>> GetFilePathsAsync()
+    public async Task<Result<IReadOnlyList<string>>> GetFilePathsAsync()
     {
         return await database.GetKeysAsync(DBCollectionName);
     }
 
-    public async Task<R> WriteAsync<T>(string path, T content)
+    public async Task<Result> WriteAsync<T>(string path, T content)
     {
         return await database.SetAsync(DBCollectionName, path, content);
     }
 
-    public async Task<R<T>> ReadAsync<T>(string path)
+    public async Task<Result<T>> ReadAsync<T>(string path)
+        where T : notnull
     {
         return await database.GetAsync<T>(DBCollectionName, path);
     }
 
-    public async Task<R> DeleteAsync(string path)
+    public async Task<Result> DeleteAsync(string path)
     {
         var binPath = BinPath(path);
         await database.DeleteAsync(DBCollectionName, binPath);
@@ -80,24 +81,23 @@ class FileService : IBrowserFileService, IFileService
         return paths;
     }
 
-    public async Task<R<Stream>> ReadStreamAsync(string path)
+    public async Task<Result<Stream>> ReadStreamAsync(string path)
     {
         Log.Info("ReadStream:", path);
 
         if (path.StartsWith(hostStoragePaths.WebFilesPrefix))
         {
             var binPath = BinPath(path);
-            if (!Try(out var fileBase64, out var e, await ReadAsync<string>(binPath)))
-                return e;
+            var base64Result = await ReadAsync<string>(binPath);
+            if (base64Result is not string fileBase64)
+                return base64Result.Error;
             var bytes = Convert.FromBase64String(fileBase64);
             var filesStream = new MemoryStream(bytes, writable: false);
             filesStream.Seek(0, SeekOrigin.Begin);
             return filesStream;
         }
 
-        if (!Try(out var fileStream, out var e2, () => hostFileSystem.OpenRead(path)))
-            return e2;
-        return fileStream;
+        return Result.Catch(() => hostFileSystem.OpenRead(path));
     }
 
     string BinPath(string path) => $"{path}.bin";

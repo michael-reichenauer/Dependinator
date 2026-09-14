@@ -48,10 +48,10 @@ public class CloudSyncRpcServiceTests
     {
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudAuthState> result = await sut.LoginAsync();
+        Result<CloudAuthState> result = await sut.LoginAsync();
 
-        Assert.False(Try(out _, out var error, result));
-        Assert.Contains("not configured", error!.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("not configured", error.Message);
     }
 
     [Fact]
@@ -62,9 +62,9 @@ public class CloudSyncRpcServiceTests
         httpClient.Setup(c => c.GetAuthStateAsync(It.IsAny<CancellationToken>())).ReturnsAsync(AuthenticatedState);
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudAuthState> result = await sut.LoginAsync();
+        Result<CloudAuthState> result = await sut.LoginAsync();
 
-        Assert.True(Try(out CloudAuthState? state, out var error, result), error?.ErrorMessage);
+        var state = AssertOk(result);
         Assert.Equal(AuthenticatedState, state);
         Assert.True(context.HasToken);
     }
@@ -76,10 +76,10 @@ public class CloudSyncRpcServiceTests
         SetupSignIn("");
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudAuthState> result = await sut.LoginAsync();
+        Result<CloudAuthState> result = await sut.LoginAsync();
 
-        Assert.False(Try(out _, out var error, result));
-        Assert.Contains("did not return a token", error!.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("did not return a token", error.Message);
         Assert.False(context.HasToken);
     }
 
@@ -92,10 +92,10 @@ public class CloudSyncRpcServiceTests
         httpClient.Setup(c => c.GetAuthStateAsync(It.IsAny<CancellationToken>())).ReturnsAsync(UnauthenticatedState);
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudAuthState> result = await sut.LoginAsync();
+        Result<CloudAuthState> result = await sut.LoginAsync();
 
-        Assert.False(Try(out _, out var error, result));
-        Assert.Contains("did not accept the token", error!.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("did not accept the token", error.Message);
         Assert.False(context.HasToken);
         VerifyClearTokenSent();
     }
@@ -108,10 +108,10 @@ public class CloudSyncRpcServiceTests
         SetupClearToken();
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudAuthState> result = await sut.LogoutAsync();
+        Result<CloudAuthState> result = await sut.LogoutAsync();
 
-        Assert.True(Try(out CloudAuthState? state, out var error, result), error?.ErrorMessage);
-        Assert.False(state!.IsAuthenticated);
+        var state = AssertOk(result);
+        Assert.False(state.IsAuthenticated);
         Assert.False(context.HasToken);
         VerifyClearTokenSent();
     }
@@ -126,10 +126,10 @@ public class CloudSyncRpcServiceTests
             .Throws(new InvalidOperationException("extension gone"));
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudAuthState> result = await sut.LogoutAsync();
+        Result<CloudAuthState> result = await sut.LogoutAsync();
 
-        Assert.True(Try(out CloudAuthState? state, out var error, result), error?.ErrorMessage);
-        Assert.False(state!.IsAuthenticated);
+        var state = AssertOk(result);
+        Assert.False(state.IsAuthenticated);
         Assert.False(context.HasToken);
     }
 
@@ -138,10 +138,10 @@ public class CloudSyncRpcServiceTests
     {
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudAuthState> result = await sut.GetAuthStateAsync();
+        Result<CloudAuthState> result = await sut.GetAuthStateAsync();
 
-        Assert.True(Try(out CloudAuthState? state, out var error, result), error?.ErrorMessage);
-        Assert.False(state!.IsAvailable);
+        var state = AssertOk(result);
+        Assert.False(state.IsAvailable);
     }
 
     [Fact]
@@ -150,10 +150,10 @@ public class CloudSyncRpcServiceTests
         context.SetBaseUrl(BaseUrl);
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudAuthState> result = await sut.GetAuthStateAsync();
+        Result<CloudAuthState> result = await sut.GetAuthStateAsync();
 
-        Assert.True(Try(out CloudAuthState? state, out var error, result), error?.ErrorMessage);
-        Assert.True(state!.IsAvailable);
+        var state = AssertOk(result);
+        Assert.True(state.IsAvailable);
         Assert.False(state.IsAuthenticated);
         httpClient.Verify(c => c.GetAuthStateAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -167,10 +167,10 @@ public class CloudSyncRpcServiceTests
         httpClient.Setup(c => c.GetAuthStateAsync(It.IsAny<CancellationToken>())).ReturnsAsync(UnauthenticatedState);
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudAuthState> result = await sut.GetAuthStateAsync();
+        Result<CloudAuthState> result = await sut.GetAuthStateAsync();
 
-        Assert.True(Try(out CloudAuthState? state, out var error, result), error?.ErrorMessage);
-        Assert.False(state!.IsAuthenticated);
+        var state = AssertOk(result);
+        Assert.False(state.IsAuthenticated);
         Assert.False(context.HasToken);
         VerifyClearTokenSent();
     }
@@ -180,10 +180,10 @@ public class CloudSyncRpcServiceTests
     {
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudModelList> result = await sut.ListAsync();
+        Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.False(Try(out _, out var error, result));
-        Assert.Contains("not configured", error!.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("not configured", error.Message);
     }
 
     [Fact]
@@ -192,10 +192,10 @@ public class CloudSyncRpcServiceTests
         context.SetBaseUrl(BaseUrl);
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudModelList> result = await sut.ListAsync();
+        Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.False(Try(out _, out var error, result));
-        Assert.Contains("requires login", error!.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("requires login", error.Message);
         httpClient.Verify(c => c.ListAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -208,9 +208,9 @@ public class CloudSyncRpcServiceTests
         httpClient.Setup(c => c.ListAsync(It.IsAny<CancellationToken>())).ReturnsAsync(list);
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudModelList> result = await sut.ListAsync();
+        Result<CloudModelList> result = await sut.ListAsync();
 
-        Assert.True(Try(out CloudModelList? value, out var error, result), error?.ErrorMessage);
+        var value = AssertOk(result);
         Assert.Equal(list, value);
     }
 
@@ -220,10 +220,10 @@ public class CloudSyncRpcServiceTests
         context.SetBaseUrl(BaseUrl);
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudModelMetadata> result = await sut.PushAsync(CreateDocument());
+        Result<CloudModelMetadata> result = await sut.PushAsync(CreateDocument());
 
-        Assert.False(Try(out _, out var error, result));
-        Assert.Contains("requires login", error!.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("requires login", error.Message);
     }
 
     [Fact]
@@ -232,10 +232,10 @@ public class CloudSyncRpcServiceTests
         context.SetBaseUrl(BaseUrl);
         CloudSyncRpcService sut = CreateSut();
 
-        R<CloudModelDocument> result = await sut.PullAsync("model-key");
+        Result<CloudModelDocument> result = await sut.PullAsync("model-key");
 
-        Assert.False(Try(out _, out var error, result));
-        Assert.Contains("requires login", error!.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("requires login", error.Message);
     }
 
     [Fact]
@@ -244,10 +244,10 @@ public class CloudSyncRpcServiceTests
         context.SetBaseUrl(BaseUrl);
         CloudSyncRpcService sut = CreateSut();
 
-        R result = await sut.DeleteAsync("model-key");
+        Result result = await sut.DeleteAsync("model-key");
 
-        Assert.False(Try(out var error, result));
-        Assert.Contains("requires login", error!.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("requires login", error.Message);
         httpClient.Verify(c => c.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -256,12 +256,12 @@ public class CloudSyncRpcServiceTests
     {
         context.SetBaseUrl(BaseUrl);
         context.SetToken(Token);
-        httpClient.Setup(c => c.DeleteAsync("model-key", It.IsAny<CancellationToken>())).ReturnsAsync(R.Ok);
+        httpClient.Setup(c => c.DeleteAsync("model-key", It.IsAny<CancellationToken>())).ReturnsAsync(Result.Ok);
         CloudSyncRpcService sut = CreateSut();
 
-        R result = await sut.DeleteAsync("model-key");
+        Result result = await sut.DeleteAsync("model-key");
 
-        Assert.True(Try(out var error, result), error?.ErrorMessage);
+        AssertOk(result);
         httpClient.Verify(c => c.DeleteAsync("model-key", It.IsAny<CancellationToken>()), Times.Once);
     }
 

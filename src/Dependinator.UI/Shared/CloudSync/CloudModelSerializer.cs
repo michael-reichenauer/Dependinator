@@ -47,7 +47,7 @@ static class CloudModelSerializer
         };
 
     // Deserializes a compressed cloud document back into a model DTO.
-    public static R<ModelDto> ReadModel(CloudModelDocument document)
+    public static Result<ModelDto> ReadModel(CloudModelDocument document)
     {
         try
         {
@@ -55,13 +55,13 @@ static class CloudModelSerializer
             byte[] jsonBytes = Decompress(compressedBytes);
             ModelDto? modelDto = JsonSerializer.Deserialize<ModelDto>(jsonBytes, serializerOptions);
             if (modelDto is null)
-                return R.Error("Device sync returned an empty model.");
+                return new Error("Device sync returned an empty model.");
 
             return modelDto;
         }
         catch (Exception ex)
         {
-            return R.Error(ex);
+            return new Error(ex);
         }
     }
 
