@@ -172,6 +172,21 @@ public class SvgServiceLineVisibilityTests
     }
 
     [Fact]
+    public void GetContentSvg_ShouldRenderFocusLineDottedInAccentStyle()
+    {
+        var modelMgr = CreateCousinModel();
+        modelMgr.WithModel(m => m.LineFocus = LineFocus.ForNode(m.Nodes[NodeId.FromName("Source")], false));
+
+        // The explorer subject's line: accent arrow, dotted (the pinned pair lines are dashed
+        // "6,6"), instead of the ordinary line ParentA->ParentB.
+        var svg = RenderView(modelMgr, 0, 0, CousinZoom);
+
+        Assert.Contains("stroke-dasharray=\"2,4\" />", svg);
+        Assert.Contains("marker-end=\"url(#arrow-direct)\" stroke-dasharray=\"2,4\"", svg);
+        Assert.DoesNotContain("stroke-dasharray=\"6,6\"", svg);
+    }
+
+    [Fact]
     public void GetContentSvg_ShouldRenderHiddenLineAsHidden_WhenEndpointIsVisible()
     {
         var modelMgr = CreateModel(out Line line);

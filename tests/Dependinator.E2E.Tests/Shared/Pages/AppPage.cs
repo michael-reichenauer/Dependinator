@@ -61,9 +61,9 @@ public sealed class AppPage
     public ILocator CousinLines => page.Locator("#svgcanvas polyline[marker-end='url(#arrow-cousin)']");
 
     // The explorer subject's lines (Line.IsFocused): accent colored like the explorer's pair
-    // lines, but solid. Present only while the explorer shows lines.
+    // lines, but dotted instead of dashed. Present only while the explorer shows lines.
     public ILocator FocusLines =>
-        page.Locator("#svgcanvas polyline[marker-end='url(#arrow-direct)']:not([stroke-dasharray])");
+        page.Locator("#svgcanvas polyline[marker-end='url(#arrow-direct)'][stroke-dasharray='2,4']");
 
     // A line's hover title, "Source→Target (n)" with the nodes' long names (LineSvg).
     public ILocator LineTitle(string text) => page.Locator("#svgcanvas title", new() { HasTextString = text });
