@@ -147,7 +147,7 @@ public class DependenciesServiceFocusTests
     }
 
     [Fact]
-    public void Clicked_OnOtherElement_ShouldClearFocus()
+    public void Clicked_OnOtherElement_ShouldMinimizeAndKeepFocus()
     {
         AddModel();
         var service = CreateService(PointerId.FromNode(source.Id));
@@ -155,8 +155,48 @@ public class DependenciesServiceFocusTests
 
         service.Clicked(PointerId.FromNode(target.Id));
 
-        Assert.False(service.IsShowExplorer);
-        Assert.Null(Focus);
+        Assert.True(service.IsShowExplorer);
+        Assert.True(service.IsMinimized);
+        Assert.NotNull(Focus);
+        Assert.Single(service.TreeItems);
+    }
+
+    [Fact]
+    public void Clicked_OnSubject_ShouldNotMinimize()
+    {
+        AddModel();
+        var service = CreateService(PointerId.FromNode(source.Id));
+        service.ShowDependencies();
+
+        service.Clicked(PointerId.FromNode(source.Id));
+
+        Assert.False(service.IsMinimized);
+    }
+
+    [Fact]
+    public void SetMinimized_ShouldRestore_AndShowResetsIt()
+    {
+        AddModel();
+        var service = CreateService(PointerId.FromNode(source.Id));
+        service.ShowDependencies();
+        service.Clicked(PointerId.FromNode(target.Id));
+        applicationEvents.Invocations.Clear();
+
+        service.SetMinimized(false);
+        Assert.False(service.IsMinimized);
+        applicationEvents.Verify(e => e.TriggerUIStateChanged(), Times.Once);
+
+        // Unchanged state is a no-op; a fresh Show starts restored; Close resets it
+        service.SetMinimized(false);
+        applicationEvents.Verify(e => e.TriggerUIStateChanged(), Times.Once);
+        service.Clicked(PointerId.FromNode(target.Id));
+        service.ShowReferences();
+        Assert.False(service.IsMinimized);
+        service.Clicked(PointerId.FromNode(target.Id));
+        service.Close();
+        Assert.False(service.IsMinimized);
+        service.SetMinimized(true); // Closed: nothing to minimize
+        Assert.False(service.IsMinimized);
     }
 
     [Fact]

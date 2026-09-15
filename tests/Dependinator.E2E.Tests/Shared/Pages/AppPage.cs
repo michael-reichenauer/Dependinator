@@ -72,6 +72,11 @@ public sealed class AppPage
     public ILocator ExplorerExpandButtons => page.Locator(".mud-treeview button.mud-treeview-item-expand-button");
     public ILocator ExplorerShowLinesButton => page.GetByTestId("explorer-show-lines");
 
+    // The explorer's title bar (heading + subject name); clicking it restores a minimized
+    // explorer. The minimize/restore button sits next to the close button.
+    public ILocator ExplorerHeader => page.GetByTestId("explorer-header");
+    public ILocator ExplorerMinimizeButton => page.GetByTestId("explorer-minimize");
+
     // The grow/shrink buttons, shown on the node toolbar only while edit mode is enabled.
     public ILocator NodeIncreaseSize => page.GetByTestId("node-increase-size");
     public ILocator NodeDecreaseSize => page.GetByTestId("node-decrease-size");

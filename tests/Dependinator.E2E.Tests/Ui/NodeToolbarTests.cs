@@ -171,6 +171,33 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task DependenciesPanel_ShouldMinimizeOnCanvasClick_AndRestoreOnHeaderClick()
+    {
+        await App.GotoMainPageAsync();
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+
+        await App.RepeatUntilVisibleAsync(() => App.NodeDependenciesButton.ClickAsync(), App.DependenciesTree);
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+
+        // A click elsewhere in the diagram (empty canvas, top-right corner) folds the explorer
+        // down to its title bar; its lines stay in the diagram.
+        var canvas = await App.Canvas.BoundingBoxAsync();
+        await Page.Mouse.ClickAsync(canvas!.X + canvas.Width - 30, canvas.Y + canvas.Height - 30);
+        await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
+        await Expect(App.ExplorerHeader).ToBeVisibleAsync();
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+
+        // Clicking the title bar brings the tree back; the header button folds it again.
+        await App.RepeatUntilVisibleAsync(() => App.ExplorerHeader.ClickAsync(), App.DependenciesTree);
+        await App.ExplorerMinimizeButton.ClickAsync();
+        await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
+        await App.RepeatUntilVisibleAsync(() => App.ExplorerMinimizeButton.ClickAsync(), App.DependenciesTree);
+
+        await App.CloseExplorerAsync();
+        await Expect(App.FocusLines).ToHaveCountAsync(0);
+    }
+
+    [E2EFact]
     public async Task DependenciesPanel_ShouldToggleDirectionAndClose()
     {
         await App.GotoMainPageAsync();

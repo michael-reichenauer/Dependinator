@@ -18,6 +18,7 @@ interface IDependenciesService
 {
     bool IsShowExplorer { get; }
     bool IsShowLines { get; }
+    bool IsMinimized { get; }
 
     TreeType TreeType { get; }
     string Title { get; }
@@ -34,6 +35,7 @@ interface IDependenciesService
     void ShowReferences();
     void ShowDependencies();
     void SetShowLines(bool isShowLines);
+    void SetMinimized(bool isMinimized);
     void Close();
     void Clicked(PointerId pointerId);
 }
@@ -56,17 +58,29 @@ class DependenciesService(
     public string Subtitle { get; private set; } = "";
     public bool IsShowExplorer { get; private set; }
     public bool IsShowLines => isShowLines;
+    public bool IsMinimized { get; private set; }
 
     public void ShowReferences() => Show(TreeType.References);
 
     public void ShowDependencies() => Show(TreeType.Dependencies);
 
+    // A click elsewhere in the diagram folds the explorer down to its title bar instead of
+    // closing it: the user keeps the subject's lines while looking around, and a click on the
+    // bar (or its buttons) brings the tree back. Clicking the subject itself leaves it as is.
     public void Clicked(PointerId pointerId)
     {
-        if (IsShowExplorer && pointerId.Id != selectedId)
+        if (IsShowExplorer && !IsMinimized && pointerId.Id != selectedId)
         {
-            Close();
+            SetMinimized(true);
         }
+    }
+
+    public void SetMinimized(bool isMinimized)
+    {
+        if (!IsShowExplorer || IsMinimized == isMinimized)
+            return;
+        IsMinimized = isMinimized;
+        applicationEvents.TriggerUIStateChanged();
     }
 
     // Lines in the diagram follow the explorer while on: the subject's links are drawn from the
@@ -185,6 +199,7 @@ class DependenciesService(
     public void Close()
     {
         IsShowExplorer = false;
+        IsMinimized = false;
         selectedId = "";
         UpdateFocus();
         applicationEvents.TriggerUIStateChanged();
@@ -196,6 +211,7 @@ class DependenciesService(
         TreeItems = GetTreeItems(type);
 
         IsShowExplorer = true;
+        IsMinimized = false;
         UpdateFocus();
         applicationEvents.TriggerUIStateChanged();
     }
