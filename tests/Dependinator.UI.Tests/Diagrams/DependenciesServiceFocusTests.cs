@@ -85,7 +85,7 @@ public class DependenciesServiceFocusTests
         var focus = Focus!;
         Assert.Same(parentA, focus.NearNode);
         Assert.Same(parentB, focus.FarNode);
-        Assert.Equal(line.Links, focus.Links!);
+        Assert.Equal(line.Links.ToHashSet(), focus.Links!);
     }
 
     [Fact]
