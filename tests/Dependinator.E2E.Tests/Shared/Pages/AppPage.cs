@@ -50,6 +50,33 @@ public sealed class AppPage
     public ILocator NodeReferencesButton => page.GetByTestId("node-references");
     public ILocator NodeDependenciesButton => page.GetByTestId("node-dependencies");
 
+    // Direct-line depth buttons on the node toolbar (NodeToolbar.razor); the "one level up"
+    // button is disabled while the selected node has no split depth.
+    public ILocator NodeLinesDeeper => page.GetByTestId("node-lines-deeper");
+    public ILocator NodeLinesShallower => page.GetByTestId("node-lines-shallower");
+    public ILocator NodeLinesShallowerDisabled => page.Locator("[data-testid='node-lines-shallower'][disabled]");
+
+    // Crossing ("cousin") lines drawn by RepLineService for split nodes; absent in the
+    // aggregated default view.
+    public ILocator CousinLines => page.Locator("#svgcanvas polyline[marker-end='url(#arrow-cousin)']");
+
+    // The explorer subject's lines (Line.IsFocused): accent colored like the explorer's pair
+    // lines, but dotted instead of dashed. Present only while the explorer shows lines.
+    public ILocator FocusLines =>
+        page.Locator("#svgcanvas polyline[marker-end='url(#arrow-direct)'][stroke-dasharray='2,4']");
+
+    // A line's hover title, "Source→Target (n)" with the nodes' long names (LineSvg).
+    public ILocator LineTitle(string text) => page.Locator("#svgcanvas title", new() { HasTextString = text });
+
+    // The expand arrows of the explorer tree rows (MudTreeViewItem), in document order.
+    public ILocator ExplorerExpandButtons => page.Locator(".mud-treeview button.mud-treeview-item-expand-button");
+    public ILocator ExplorerShowLinesButton => page.GetByTestId("explorer-show-lines");
+
+    // The explorer's title bar (heading + subject name); clicking it restores a minimized
+    // explorer. The minimize/restore button sits next to the close button.
+    public ILocator ExplorerHeader => page.GetByTestId("explorer-header");
+    public ILocator ExplorerMinimizeButton => page.GetByTestId("explorer-minimize");
+
     // The grow/shrink buttons, shown on the node toolbar only while edit mode is enabled.
     public ILocator NodeIncreaseSize => page.GetByTestId("node-increase-size");
     public ILocator NodeDecreaseSize => page.GetByTestId("node-decrease-size");

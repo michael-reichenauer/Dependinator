@@ -22,10 +22,13 @@ Required as soon as the GA SDK is out; nothing else in the repo changes.
 - [ ] CI: **no change**. The four workflows keep `dotnet-version: "10.0.x"` (the net10.0 runtime the
       tests, the csharpier tool and CSharpier.MsBuild need) next to `global-json-file: global.json`.
 - [ ] `Directory.Packages.props`: move `Microsoft.CodeAnalysis.CSharp`, `.Workspaces.MSBuild`,
-      `.CSharp.Workspaces` (5.6.0) and `Microsoft.Build`, `.Framework`, `Microsoft.NET.StringTools`
-      (18.9.6) to the versions that ship with the GA SDK, so Dependinator parses user code that uses
-      C# 15 syntax (the union *patterns* already bind with 5.6.0; the `union` *keyword* may not).
-      `./scripts/updatepackages -u` then `dotnet test tests/Dependinator.Roslyn.Tests`.
+      `.CSharp.Workspaces` (5.6.0) to the versions that ship with the GA SDK, so Dependinator parses
+      user code that uses C# 15 syntax (the union *patterns* already bind with 5.6.0; the `union`
+      *keyword* may not). `./scripts/updatepackages -u` then `dotnet test tests/Dependinator.Roslyn.Tests`.
+      Keep `Microsoft.Build`, `.Framework` and `Microsoft.NET.StringTools` at 18.9.6: from 18.10 they
+      ship `lib/net11.0` only, and every net10.0 build then warns "doesn't support net10.0".
+      `.github/dependabot.yml` ignores 18.10+ for the three; `updatepackages -u` does not, so revert
+      them if it bumps them. They move in phase B.
 - [ ] If the build reports **CS0104** (ambiguous `Result`, `Error`, `Success`): the base class library
       shipped a type of that name. Resolve with `using Result = Dependinator.Core.Utils.Result;` style
       aliases in the affected `Usings.cs`, or rename ours; do not remove the global using of
@@ -82,6 +85,9 @@ not reference `Dependinator.Core`).
       `Microsoft.AspNetCore.Components.WebAssembly.DevServer`, `Microsoft.AspNetCore.Components.Web`
       10.0.x → 11.0.x; `Microsoft.Azure.Functions.Worker*` to versions that support net11.0;
       `./scripts/updatepackages -m` for the rest.
+- [ ] `Directory.Packages.props`: `Microsoft.Build`, `.Framework`, `Microsoft.NET.StringTools` 18.9.6 →
+      the 18.10+ line that ships with the 11 SDK, and delete their `ignore` entries in
+      `.github/dependabot.yml`.
 - [ ] `dotnet workload restore Dependinator.sln` on the new band (a no-op today because
       `WasmBuildNative` is false; keep the CI step either way).
 - [ ] Docs: `README.md` (Solution structure and Prerequisites), `CLAUDE.md` line 11,

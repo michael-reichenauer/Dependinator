@@ -3,7 +3,9 @@ using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 
 // The dependency explorer tree that shows a selected node's references and dependencies
-// alongside the diagram.
+// alongside the diagram. While its lines are shown, the diagram follows the tree: the subject's
+// links are drawn from the subject itself and split into the far-side containers the user
+// expands in the tree (Model.LineFocus, resolved by RepLineService).
 namespace Dependinator.UI.Diagrams.Dependencies;
 
 enum TreeType
@@ -15,6 +17,8 @@ enum TreeType
 interface IDependenciesService
 {
     bool IsShowExplorer { get; }
+    bool IsShowLines { get; }
+    bool IsMinimized { get; }
 
     TreeType TreeType { get; }
     string Title { get; }
@@ -22,17 +26,16 @@ interface IDependenciesService
     IReadOnlyList<TreeItem> TreeItems { get; }
 
     Task ShowNodeAsync(NodeId nodeId);
+    void SetExpanded(TreeItem treeItem, bool expanded);
     void ToggleExpandAll(TreeItem treeItem);
     Task ShowEditorAsync(NodeId nodeId);
     void ShowDirectLine(NodeId nodeId);
     bool TryGetLine(LineId lineId, out Line line);
     void HideDirectLine(LineId lineId);
-    bool CanSplitLine(LineId lineId);
-    void SplitLine(LineId lineId);
-    bool CanSplitLineSource(LineId lineId);
-    void SplitLineSource(LineId lineId);
     void ShowReferences();
     void ShowDependencies();
+    void SetShowLines(bool isShowLines);
+    void SetMinimized(bool isMinimized);
     void Close();
     void Clicked(PointerId pointerId);
 }
@@ -47,23 +50,59 @@ class DependenciesService(
 {
     string selectedId = "";
     TreeType treeType = TreeType.References;
+    bool isShowLines = true;
 
     public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
     public TreeType TreeType => treeType;
     public string Title { get; private set; } = "";
     public string Subtitle { get; private set; } = "";
     public bool IsShowExplorer { get; private set; }
+    public bool IsShowLines => isShowLines;
+    public bool IsMinimized { get; private set; }
 
     public void ShowReferences() => Show(TreeType.References);
 
     public void ShowDependencies() => Show(TreeType.Dependencies);
 
+    // A click elsewhere in the diagram folds the explorer down to its title bar instead of
+    // closing it: the user keeps the subject's lines while looking around, and a click on the
+    // bar (or its buttons) brings the tree back. Clicking the subject itself leaves it as is.
     public void Clicked(PointerId pointerId)
     {
-        if (IsShowExplorer && pointerId.Id != selectedId)
+        if (IsShowExplorer && !IsMinimized && pointerId.Id != selectedId)
         {
-            Close();
+            SetMinimized(true);
         }
+    }
+
+    public void SetMinimized(bool isMinimized)
+    {
+        if (!IsShowExplorer || IsMinimized == isMinimized)
+            return;
+        IsMinimized = isMinimized;
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Lines in the diagram follow the explorer while on: the subject's links are drawn from the
+    // subject and split as tree rows are expanded. Off shows the tree only. The choice is kept
+    // for the session, also across explorer sessions.
+    public void SetShowLines(bool isShowLines)
+    {
+        if (this.isShowLines == isShowLines)
+            return;
+        this.isShowLines = isShowLines;
+        UpdateFocus();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Expanding a row lists the far container's children in the tree, and splits the line into
+    // that container one level in the diagram; collapsing merges it back. The tree view writes
+    // the new state into the item before raising the change, so the item is not consulted for
+    // whether anything changed; UpdateFocus compares the resulting focus instead.
+    public void SetExpanded(TreeItem treeItem, bool expanded)
+    {
+        treeItem.Expanded = expanded;
+        UpdateFocus();
     }
 
     public void ShowDirectLine(NodeId otherNodeId)
@@ -118,14 +157,6 @@ class DependenciesService(
         if (!model.Lines.TryGetValue(lineId, out var line))
             return;
 
-        // Split lines carry their links; detach them so the links do not keep referencing the
-        // removed line (plain dialog direct lines have no links, so this is a no-op there).
-        foreach (var link in line.Links.ToList())
-        {
-            line.Remove(link);
-            link.RemoveLine(line);
-        }
-
         model.RemoveLine(line);
 
         applicationEvents.TriggerModelChanged();
@@ -133,162 +164,6 @@ class DependenciesService(
         if (shouldUnselect)
             selectionService.Unselect();
         applicationEvents.TriggerUIStateChanged();
-    }
-
-    // Which end of a line a split fans out: Target reveals more targets (fixing the source),
-    // Source reveals more sources (fixing the target).
-    enum SplitSide
-    {
-        Source,
-        Target,
-    }
-
-    public bool CanSplitLine(LineId lineId) => CanSplit(lineId, SplitSide.Target);
-
-    public bool CanSplitLineSource(LineId lineId) => CanSplit(lineId, SplitSide.Source);
-
-    public void SplitLine(LineId lineId) => Split(lineId, SplitSide.Target);
-
-    public void SplitLineSource(LineId lineId) => Split(lineId, SplitSide.Source);
-
-    bool CanSplit(LineId lineId, SplitSide side)
-    {
-        using var model = modelMgr.UseModel();
-        if (!model.Lines.TryGetValue(lineId, out var line))
-            return false;
-        return GetSplitGroups(line, side, RepLineService.GetRenderedZoom(model)).Count > 0;
-    }
-
-    // Splits an aggregated line at one end down to the deepest currently-visible level: for
-    // each distinct visible representative descendant of that end which the line's links
-    // continue into, a dashed direct-style line from/to that node (with the other end fixed) is
-    // shown, carrying those links so it can be split again after zooming in deeper. Splitting
-    // reaches the deepest visible nodes in one step — an expanded intermediate container
-    // already shows its own structure, so stopping at its edge would add nothing. The original
-    // line hides while all its links are represented by split lines; links whose split-side
-    // endpoint is the line's own endpoint keep it visible. Split lines are hidden like direct
-    // lines and are never persisted.
-    void Split(LineId lineId, SplitSide side)
-    {
-        using var model = modelMgr.UseModel();
-        if (!model.Lines.TryGetValue(lineId, out var line))
-            return;
-
-        var groups = GetSplitGroups(line, side, RepLineService.GetRenderedZoom(model));
-        if (groups.Count == 0)
-            return;
-
-        var fixedEnd = side == SplitSide.Target ? line.Source : line.Target;
-        var splitEnd = side == SplitSide.Target ? line.Target : line.Source;
-
-        int splitLinkCount = 0;
-        foreach (var (rep, links) in groups)
-        {
-            // A rep container the user never expanded on screen (e.g. resolved via zoom alone)
-            // may have unpositioned children; the split line's anchors need real positions.
-            EnsureLayout(rep, splitEnd);
-
-            var (splitSource, splitTarget) = side == SplitSide.Target ? (fixedEnd, rep) : (rep, fixedEnd);
-            var splitLineId = LineId.FromDirect(splitSource.Name, splitTarget.Name);
-            if (!model.Lines.TryGetValue(splitLineId, out var splitLine))
-            {
-                var ancestor = splitSource.LowestCommonAncestor(splitTarget);
-                splitLine = new Line(splitSource, splitTarget, isDirect: true, id: splitLineId)
-                {
-                    RenderAncestor = ancestor,
-                };
-                ancestor.AddDirectLine(splitLine);
-                model.TryAddLine(splitLine);
-            }
-
-            if (splitLine.SplitParent is null)
-            {
-                splitLine.SplitParent = line;
-                line.SplitLines.Add(splitLine);
-            }
-
-            foreach (var link in links)
-            {
-                splitLine.Add(link);
-                link.AddLine(splitLine);
-                splitLinkCount++;
-            }
-        }
-
-        line.IsSplitSuppressed = splitLinkCount == line.Links.Count;
-
-        applicationEvents.TriggerModelChanged();
-        if (line.IsSplitSuppressed)
-            selectionService.Unselect();
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-    static Dictionary<Node, List<Link>> GetSplitGroups(Line line, SplitSide side, double zoom)
-    {
-        var container = side == SplitSide.Target ? line.Target : line.Source;
-        Dictionary<Node, List<Link>> groups = [];
-        foreach (var link in line.Links)
-        {
-            var endpoint = side == SplitSide.Target ? link.Target : link.Source;
-            if (!TryGetVisibleRep(container, endpoint, zoom, out var rep))
-                continue; // The link's endpoint is the line's endpoint itself; nothing deeper
-            if (!groups.TryGetValue(rep, out var links))
-            {
-                links = [];
-                groups[rep] = links;
-            }
-            links.Add(link);
-        }
-        return groups;
-    }
-
-    // The deepest node below container on the path toward node that is still visible at this
-    // zoom: descend through expanded containers (which already show their own children),
-    // stopping at the first icon/member or at node itself. False when node is not a proper
-    // descendant of container.
-    static bool TryGetVisibleRep(Node container, Node node, double zoom, out Node rep)
-    {
-        rep = null!;
-        if (!TryGetChildTowardNode(container, node, out var child))
-            return false;
-
-        rep = child;
-        while (
-            rep != node && NodeViewPolicy.IsChildrenShown(rep, zoom) && TryGetChildTowardNode(rep, node, out var next)
-        )
-        {
-            rep = next;
-        }
-        return true;
-    }
-
-    // The child of container on the path down to node; false when node is not a proper
-    // descendant of container.
-    static bool TryGetChildTowardNode(Node container, Node node, out Node child)
-    {
-        child = null!;
-        for (Node? current = node; current?.Parent is not null; current = current.Parent)
-        {
-            if (current.Parent == container)
-            {
-                child = current;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Ensures every container from upToInclusive down to from's parent has its children laid
-    // out, so from and its ancestors have real boundaries for anchor calculation.
-    static void EnsureLayout(Node from, Node upToInclusive)
-    {
-        for (Node? node = from.Parent; node is not null; node = node.Parent)
-        {
-            if (node.IsChildrenLayoutRequired)
-                NodeLayout.AdjustChildren(node);
-            if (node == upToInclusive)
-                break;
-        }
     }
 
     public async Task ShowNodeAsync(NodeId nodeId)
@@ -306,6 +181,7 @@ class DependenciesService(
         bool shouldExpand = treeItem.GetThisAndDescendants().Any(ti => !ti.Expanded);
         SetExpandedAll(treeItem, shouldExpand);
 
+        UpdateFocus();
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -323,7 +199,9 @@ class DependenciesService(
     public void Close()
     {
         IsShowExplorer = false;
+        IsMinimized = false;
         selectedId = "";
+        UpdateFocus();
         applicationEvents.TriggerUIStateChanged();
     }
 
@@ -333,7 +211,51 @@ class DependenciesService(
         TreeItems = GetTreeItems(type);
 
         IsShowExplorer = true;
+        IsMinimized = false;
+        UpdateFocus();
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Mirrors the explorer state into the model's line focus: the subject and direction shown
+    // and the far-side rows currently expanded. Any change re-resolves the lines (the structure
+    // version invalidates RepLineService's memo), rebuilds the tiles and repaints the canvas.
+    void UpdateFocus()
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            var focus = IsShowExplorer && isShowLines ? CreateFocus(model) : null;
+            if (focus is null && model.LineFocus is null)
+                return;
+            if (focus is not null && model.LineFocus is not null && focus.IsSameAs(model.LineFocus))
+                return;
+            model.LineFocus = focus;
+            model.BumpStructureVersion();
+        }
+
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    LineFocus? CreateFocus(IModel model)
+    {
+        var isReferences = treeType is TreeType.References;
+        LineFocus focus;
+        if (model.Nodes.TryGetValue(NodeId.FromId(selectedId), out var node))
+            focus = LineFocus.ForNode(node, isReferences);
+        else if (model.Lines.TryGetValue(LineId.FromId(selectedId), out var line))
+            focus = LineFocus.ForLine(line, isReferences);
+        else
+            return null;
+
+        foreach (var item in TreeItems.SelectMany(item => item.GetThisAndDescendants()))
+        {
+            if (!item.Expanded || item.NodeId == NodeId.Empty)
+                continue;
+            if (model.Nodes.TryGetValue(item.NodeId, out var farNode))
+                focus.ExpandedFarNodes.Add(farNode);
+        }
+
+        return focus;
     }
 
     IReadOnlyList<TreeItem> GetTreeItems(TreeType treeType)
@@ -394,7 +316,9 @@ class DependenciesService(
 
     // Returns an item for the node at the far end of the line (the source for references, the
     // target for dependencies). Each tree branch traces one chain of lines that carry the root
-    // line's links; the item's children continue that chain from the far node.
+    // line's links; the item's children continue that chain from the far node. The levels are
+    // exactly the far-side funnel: the top rows are the far top containers, their children the
+    // parent-to-child fan-out, which is what expanding a row splits in the diagram.
     static IReadOnlyList<TreeItem> GetLineItems(Line line, HashSet<Link> rootLinks, TreeType treeType)
     {
         var (farNode, nearNode) =

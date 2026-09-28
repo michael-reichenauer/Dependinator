@@ -118,6 +118,12 @@ class Node : IItem
     public bool IsParentSetHidden { get; set; }
     public bool IsPassThrough { get; set; }
 
+    // Direct-line depth (see RepLineService): this node's aggregated line bundles are split that
+    // many levels into its subtree, for every link touching the subtree (internal links included,
+    // incoming as well as outgoing). Pass-through nodes never count as a level. Transient view
+    // state; every change must bump Model.StructureVersion so RepLineService re-syncs.
+    public int LineSplitDepth { get; set; }
+
     // A manually added node (drawn by the user to design intended structure), as opposed to a
     // node produced by parsing. Manual nodes are marked visually and are exempt from the
     // stale-node removal that runs after each re-parse (see StructureService.ClearNotUpdated).
