@@ -127,9 +127,9 @@
 
     async Task LoginAsync()
     {
-        if (!Try(out var error, await appCloudSyncService.LoginAsync()))
+        if (await appCloudSyncService.LoginAsync() is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -138,9 +138,9 @@
 
     async Task SyncUpAsync()
     {
-        if (!Try(out _, out var error, await appCloudSyncService.SyncUpAsync()))
+        if (await appCloudSyncService.SyncUpAsync() is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
     }
@@ -169,20 +169,22 @@
             return;
         }
 
-        R<ModelInfo> syncDownResult = await appCloudSyncService.SyncDownAsync();
-        if (syncDownResult.IsNone)
+        Result<SyncDownOutcome> syncDownResult = await appCloudSyncService.SyncDownAsync();
+        if (syncDownResult is not SyncDownOutcome outcome)
         {
-            snackbar.Add("No cloud model existed, so the local model was uploaded instead.", Severity.Info);
+            snackbar.Add(syncDownResult.Error.Message, Severity.Error);
             return;
         }
 
-        if (!Try(out var modelInfo, out var error, syncDownResult))
+        (string message, Severity severity) = outcome switch
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
-            return;
-        }
-
-        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(modelInfo.Path)}.", Severity.Success);
+            ModelInfo modelInfo => (
+                $"Loaded cloud model for {Path.GetFileNameWithoutExtension(modelInfo.Path)}.",
+                Severity.Success
+            ),
+            UploadedLocalModel => ("No cloud model existed, so the local model was uploaded instead.", Severity.Info),
+        };
+        snackbar.Add(message, severity);
     }
 
     void OnUiStateChanged() => _ = InvokeAsync(HandleUiStateChangedAsync);

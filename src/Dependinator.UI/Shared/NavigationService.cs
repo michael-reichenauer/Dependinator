@@ -223,12 +223,12 @@ class NavigationService(
             return;
 
         var nodeElementId = PointerId.FromNode(nodeId).ElementId;
-        if (!Try(out var nodeRect, out var _, await screenService.GetBoundingRectangle(nodeElementId)))
+        if (await screenService.GetBoundingRectangle(nodeElementId) is not ElementBoundingRectangle nodeRect)
         {
             Log.Debug($"ShowNode Centering: node bounds unavailable for {nodeId} ({nodeElementId})");
             return;
         }
-        if (!Try(out var svgRect, out var _, await screenService.GetBoundingRectangle("svgcanvas")))
+        if (await screenService.GetBoundingRectangle("svgcanvas") is not ElementBoundingRectangle svgRect)
         {
             Log.Debug($"ShowNode Centering: canvas bounds unavailable for {nodeId}");
             return;

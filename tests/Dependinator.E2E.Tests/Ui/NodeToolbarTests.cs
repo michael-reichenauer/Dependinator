@@ -97,6 +97,68 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task NodeToolbar_ShouldToggleDirectLines()
+    {
+        await App.GotoMainPageAsync();
+
+        // Same navigation as the background-color test: "Main" must render as a container so
+        // its members are visible endpoints for the crossing lines.
+        var search = await App.OpenSearchViaHotkeyAsync();
+        await search.FillAsync("Demo.UI");
+        await Expect(search.SelectedItem).ToBeVisibleAsync();
+        await search.Field.PressAsync("Enter");
+        await App.WaitForContainerNodeAsync("Main");
+        await App.SelectContainerNodeAsync("Demo.UI.Main");
+
+        // Aggregated default: no crossing lines anywhere, and nothing to merge yet.
+        await Expect(App.CousinLines).ToHaveCountAsync(0);
+        await Expect(App.NodeLinesShallowerDisabled).ToBeVisibleAsync();
+
+        // One level deeper: Main's members get their own lines to the sibling containers they
+        // use (e.g. BuildRenderTree -> Diagrams). Clicks on the re-rendering toolbar can be
+        // swallowed, so repeat until a crossing line shows up.
+        await App.RepeatUntilVisibleAsync(() => App.NodeLinesDeeper.ClickAsync(), App.CousinLines.First);
+
+        // One level up again restores the bundle; the button disables itself at depth zero.
+        await App.RepeatUntilVisibleAsync(() => App.NodeLinesShallower.ClickAsync(), App.NodeLinesShallowerDisabled);
+        await Expect(App.CousinLines).ToHaveCountAsync(0);
+    }
+
+    [E2EFact]
+    public async Task DependenciesPanel_ShouldDrawFocusLines_AndSplitOnExpand()
+    {
+        await App.GotoMainPageAsync();
+
+        // Same navigation as the background-color test: "Main" as a container.
+        var search = await App.OpenSearchViaHotkeyAsync();
+        await search.FillAsync("Demo.UI");
+        await Expect(search.SelectedItem).ToBeVisibleAsync();
+        await search.Field.PressAsync("Enter");
+        await App.WaitForContainerNodeAsync("Main");
+        await App.SelectContainerNodeAsync("Demo.UI.Main");
+        await Expect(App.FocusLines).ToHaveCountAsync(0);
+
+        // Opening the explorer draws Main's own lines in the accent style: its links leave from
+        // Main itself instead of merging into the Demo.UI bundle, ending at the far top
+        // containers (the collapsed tree rows).
+        await App.RepeatUntilVisibleAsync(() => App.NodeDependenciesButton.ClickAsync(), App.DependenciesTree);
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+        await Expect(App.LineTitle("Demo.UI.Main→Externals")).ToHaveCountAsync(1);
+
+        // Expanding the first row (Externals) splits its line one level, into the row's child
+        // MudBlazor; collapsing it merges the line back.
+        await App.ExplorerExpandButtons.First.ClickAsync();
+        await Expect(App.LineTitle("Demo.UI.Main→MudBlazor (dll)")).ToHaveCountAsync(1);
+        await Expect(App.LineTitle("Demo.UI.Main→Externals")).ToHaveCountAsync(0);
+        await App.ExplorerExpandButtons.First.ClickAsync();
+        await Expect(App.LineTitle("Demo.UI.Main→Externals")).ToHaveCountAsync(1);
+
+        // Closing the explorer removes its lines.
+        await App.CloseExplorerAsync();
+        await Expect(App.FocusLines).ToHaveCountAsync(0);
+    }
+
+    [E2EFact]
     public async Task NodeToolbar_ShouldOpenDependenciesPanel()
     {
         await App.GotoMainPageAsync();
@@ -106,6 +168,33 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // The dependencies explorer popover renders a tree view.
         await Expect(App.DependenciesTree).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
+    public async Task DependenciesPanel_ShouldMinimizeOnCanvasClick_AndRestoreOnHeaderClick()
+    {
+        await App.GotoMainPageAsync();
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+
+        await App.RepeatUntilVisibleAsync(() => App.NodeDependenciesButton.ClickAsync(), App.DependenciesTree);
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+
+        // A click elsewhere in the diagram (empty canvas, top-right corner) folds the explorer
+        // down to its title bar; its lines stay in the diagram.
+        var canvas = await App.Canvas.BoundingBoxAsync();
+        await Page.Mouse.ClickAsync(canvas!.X + canvas.Width - 30, canvas.Y + canvas.Height - 30);
+        await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
+        await Expect(App.ExplorerHeader).ToBeVisibleAsync();
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+
+        // Clicking the title bar brings the tree back; the header button folds it again.
+        await App.RepeatUntilVisibleAsync(() => App.ExplorerHeader.ClickAsync(), App.DependenciesTree);
+        await App.ExplorerMinimizeButton.ClickAsync();
+        await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
+        await App.RepeatUntilVisibleAsync(() => App.ExplorerMinimizeButton.ClickAsync(), App.DependenciesTree);
+
+        await App.CloseExplorerAsync();
+        await Expect(App.FocusLines).ToHaveCountAsync(0);
     }
 
     [E2EFact]

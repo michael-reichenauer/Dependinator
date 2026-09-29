@@ -5,37 +5,38 @@ namespace Dependinator.UI.Modeling;
 
 interface IPersistenceService
 {
-    Task<R> WriteAsync(string modelPath, ModelDto model);
-    Task<R<ModelDto>> ReadAsync(string path);
+    Task<Result> WriteAsync(string modelPath, ModelDto model);
+    Task<Result<ModelDto>> ReadAsync(string path);
 }
 
 [Transient]
 class PersistenceService(IFileService fileService) : IPersistenceService
 {
-    public Task<R> WriteAsync(string modelPath, ModelDto model)
+    public Task<Result> WriteAsync(string modelPath, ModelDto model)
     {
         return Task.Run(async () =>
         {
             using var _ = Timing.Start($"Wrote model '{modelPath}'");
             await fileService.WriteAsync(modelPath, model);
 
-            return R.Ok;
+            return Result.Ok;
         });
     }
 
-    public Task<R<ModelDto>> ReadAsync(string modelPath)
+    public Task<Result<ModelDto>> ReadAsync(string modelPath)
     {
-        return Task.Run<R<ModelDto>>(async () =>
+        return Task.Run<Result<ModelDto>>(async () =>
         {
             using var _ = Timing.Start($"Read model '{modelPath}'");
-            if (!Try(out var model, out var e2, await fileService.ReadAsync<ModelDto>(modelPath)))
-                return e2;
+            var readResult = await fileService.ReadAsync<ModelDto>(modelPath);
+            if (readResult is not ModelDto model)
+                return readResult.Error;
             if (model.FormatVersion != ModelDto.CurrentFormatVersion)
             {
-                var error = R.Error(
+                var error = new Error(
                     $"Cached model format version {model.FormatVersion} != {ModelDto.CurrentFormatVersion} (current)"
                 );
-                Log.Error(error.ErrorMessage);
+                Log.Error(error.Message);
                 return error;
             }
 

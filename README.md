@@ -91,7 +91,7 @@ the VS Code extension.
 
 ## Prerequisites
 
-- **.NET SDK 10.0.101** (pinned in `global.json`).
+- **.NET SDK 11.0 preview** (pinned in `global.json`; the C# 15 union patterns need its compiler) plus the **.NET 10 SDK/runtime** for the `net10.0` target. The devcontainer installs both; elsewhere run the `dotnet-install.sh` line from `scripts/installdevtools`.
 - **Node.js + npm** — for the VS Code extension and SWA CLI.
 - **Azurite** (`npm i -g azurite`) — local Azure Storage emulator, needed by `./scripts/watch` and `./scripts/run`.
 - **Azure Functions Core Tools** (`func`) — needed by `./scripts/watch` and `./scripts/run`.

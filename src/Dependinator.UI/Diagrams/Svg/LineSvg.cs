@@ -52,18 +52,22 @@ static class LineSvg
         string elementId
     )
     {
+        // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
+        // tell the on-demand lines apart from each other and from the solid aggregated lines:
+        // the explorer's pinned pair lines are dashed, its transient focus lines dotted.
+        var isAccent = line.IsDirect || line.IsFocused;
         var color =
-            line.IsDirect ? DColors.DirectLine
+            isAccent ? DColors.DirectLine
             : line.IsHidden ? DColors.LineHidden
             : line.IsCousin ? DColors.CousinLine
             : DColors.Line;
 
         // The hollow inheritance arrow head is only drawn where the line enters the real
-        // inheritance target (the supertype); hidden/direct styling takes precedence.
-        var isInheritanceHead = !line.IsDirect && !line.IsHidden && line.HasInheritanceTargetEnd;
+        // inheritance target (the supertype); hidden/accent styling takes precedence.
+        var isInheritanceHead = !isAccent && !line.IsHidden && line.HasInheritanceTargetEnd;
 
         var markerId =
-            line.IsDirect ? "arrow-direct"
+            isAccent ? "arrow-direct"
             : line.IsHidden ? "arrow-hidden"
             : isInheritanceHead ? "arrow-inheritance"
             : line.IsCousin ? "arrow-cousin"
@@ -71,7 +75,10 @@ static class LineSvg
 
         var strokeWidth = line.StrokeWidth;
         var circleRadius = strokeWidth + StartCircleExtraRadius;
-        var dashArray = line.IsDirect ? " stroke-dasharray=\"6,6\"" : "";
+        var dashArray =
+            line.IsDirect ? " stroke-dasharray=\"6,6\""
+            : line.IsFocused ? " stroke-dasharray=\"2,4\""
+            : "";
 
         // The hollow marker starts at the polyline end (refX=0) and extends forward, so the
         // visible line is pulled back by the arrow-head length to keep the tip on the node edge

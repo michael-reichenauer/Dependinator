@@ -76,7 +76,7 @@ class SelectionService(
             return;
 
         var id = SelectedId.ElementId;
-        if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(id)))
+        if (await screenService.GetBoundingRectangle(id) is not ElementBoundingRectangle bound)
         {
             // Selected Element is not visible on the screen
             if (selectedPosition != Pos.None)
@@ -212,7 +212,7 @@ class SelectionService(
 
     async Task<bool> TrySelectOrRefreshLineAsync(PointerId pointerId, PointerEvent e, bool isNewSelection)
     {
-        if (!Try(out var bound, out var _, await screenService.GetBoundingRectangle(pointerId.ElementId)))
+        if (await screenService.GetBoundingRectangle(pointerId.ElementId) is not ElementBoundingRectangle bound)
             return false; // Selected line is not visible on the screen
 
         var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);

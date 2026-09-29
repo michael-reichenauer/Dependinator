@@ -14,15 +14,15 @@ internal static class MSBuildLocatorHelper
 
     static readonly object SyncLock = new();
 
-    public static R Register()
+    public static Result Register()
     {
         if (MSBuildLocator.IsRegistered)
-            return R.Ok;
+            return Result.Ok;
 
         lock (SyncLock)
         {
             if (MSBuildLocator.IsRegistered)
-                return R.Ok;
+                return Result.Ok;
 
             VisualStudioInstance[] instances;
             try
@@ -33,13 +33,13 @@ internal static class MSBuildLocatorHelper
             {
                 // Querying itself fails if e.g. the "dotnet" host cannot be located at all.
                 Log.Exception(e, "Failed to query MSBuild instances");
-                return R.Error(NoSdkErrorMessage, e);
+                return new Error(NoSdkErrorMessage, e);
             }
 
             if (instances.Length == 0)
             {
                 Log.Warn("No MSBuild instances (no .NET SDK installed?)");
-                return R.Error(NoSdkErrorMessage);
+                return new Error(NoSdkErrorMessage);
             }
 
             var instance = instances.OrderByDescending(i => i.Version).First();
@@ -52,10 +52,10 @@ internal static class MSBuildLocatorHelper
             catch (Exception e)
             {
                 Log.Exception(e, "Failed to register MSBuild instance");
-                return R.Error($"Failed to use the installed .NET SDK ({instance.MSBuildPath}).", e);
+                return new Error($"Failed to use the installed .NET SDK ({instance.MSBuildPath}).", e);
             }
 
-            return R.Ok;
+            return Result.Ok;
         }
     }
 }

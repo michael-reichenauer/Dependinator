@@ -20,6 +20,7 @@
 @inject Dependinator.UI.Diagrams.Interaction.INoteService noteService
 @inject Dependinator.UI.Diagrams.Interaction.IManualEditService manualEditService
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
+@inject Dependinator.UI.Diagrams.ILineSplitService lineSplitService
 @inject IPointerEventService pointerEventService
 @implements IDisposable
 
@@ -97,6 +98,11 @@
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
                              data-testid="menu-notes-sidebar">
                     Show Notes Sidebar
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.UnfoldLess"
+                             OnClick="lineSplitService.ClearAll" data-testid="menu-hide-direct-lines">
+                    Hide All Direct Lines
                 </MudMenuItem>
 
                 @if (!Build.IsVsCodeExtWasm)
@@ -378,9 +384,9 @@
 
     async Task LoginAsync()
     {
-        if (!Try(out var error, await appCloudSyncService.LoginAsync()))
+        if (await appCloudSyncService.LoginAsync() is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -389,9 +395,9 @@
 
     async Task LogoutAsync()
     {
-        if (!Try(out var error, await appCloudSyncService.LogoutAsync()))
+        if (await appCloudSyncService.LogoutAsync() is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -400,9 +406,9 @@
 
     async Task LoadCloudModelAsync(global::Shared.CloudModelMetadata cloudModel)
     {
-        if (!Try(out _, out var error, await appCloudSyncService.LoadCloudModelAsync(cloudModel)))
+        if (await appCloudSyncService.LoadCloudModelAsync(cloudModel) is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 
@@ -435,9 +441,9 @@
         if (choice is null)
             return;
 
-        if (choice is true && !Try(out var error, await appCloudSyncService.DeleteCurrentCloudModelAsync()))
+        if (choice is true && await appCloudSyncService.DeleteCurrentCloudModelAsync() is Error error)
         {
-            snackbar.Add(error.ErrorMessage, Severity.Error);
+            snackbar.Add(error.Message, Severity.Error);
             return;
         }
 

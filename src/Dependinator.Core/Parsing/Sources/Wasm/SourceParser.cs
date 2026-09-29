@@ -8,12 +8,12 @@ namespace Dependinator.Core.Parsing.Sources.Wasm;
 class SourceParser(HttpClient httpClient) : ISourceParser
 {
     // The browser only ever loads the pre-parsed demo model, so parse options do not apply.
-    public async Task<R<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath, SolutionParseOptions options)
+    public async Task<Result<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath, SolutionParseOptions options)
     {
         try
         {
             if (solutionPath != "/Demo.sln")
-                return R.Error($"Parsing not supported '{solutionPath}'");
+                return new Error($"Parsing not supported '{solutionPath}'");
             Log.Info("Downloading demo.model ...", solutionPath);
             var compressedBytes = await httpClient.GetByteArrayAsync("demo.model");
             Log.Info("Downloaded demo.model");
@@ -25,21 +25,21 @@ class SourceParser(HttpClient httpClient) : ISourceParser
 
             var items = Json.Deserialize<List<Item>>(json);
             if (items is null)
-                return R.Error($"Failed to deserialize browser demo model for: {solutionPath}");
+                return new Error($"Failed to deserialize browser demo model for: {solutionPath}");
 
             return items;
         }
         catch (Exception ex)
         {
             Log.Exception(ex, "Error downloading");
-            return R.Error($"Failed to load browser demo model for: {solutionPath}\n{ex.Message}");
+            return new Error($"Failed to load browser demo model for: {solutionPath}\n{ex.Message}");
         }
     }
 
-    public Task<R<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
+    public Task<Result<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
     {
-        return Task.FromResult<R<IReadOnlyList<Item>>>(
-            R.Error($"Source parsing is not supported in browser runtime: {projectPath}.")
+        return Task.FromResult<Result<IReadOnlyList<Item>>>(
+            new Error($"Source parsing is not supported in browser runtime: {projectPath}.")
         );
     }
 }

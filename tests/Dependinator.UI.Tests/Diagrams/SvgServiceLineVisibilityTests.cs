@@ -78,14 +78,15 @@ public class SvgServiceLineVisibilityTests
         Assert.DoesNotContain("marker-end", svg);
     }
 
-    // At this zoom top-level containers are expanded and their children icons, so
-    // RepLineService creates cousin (crossing) lines from the source child to the target's
-    // top container (RenderAncestor = root).
+    // At this zoom top-level containers are expanded and their children icons. With a split
+    // depth on ParentA, RepLineService creates a cousin (crossing) line from the source child
+    // to the target's top container (RenderAncestor = root); with one on ParentB as well, the
+    // line goes child to child.
     const double CousinZoom = 0.1;
 
     // ParentB lies 5000 root units (25 viewports at CousinZoom) to the right of ParentA, so
     // the cousin line's far end is well outside any view showing the source.
-    static IModelMgr CreateCousinModel()
+    static IModelMgr CreateCousinModel(bool isSourceSplit = false, bool isTargetSplit = false)
     {
         IModelMgr modelMgr = new ModelMgr(new StateMgr());
         using var model = modelMgr.UseModel();
@@ -100,14 +101,57 @@ public class SvgServiceLineVisibilityTests
         source.AddSourceLink(link);
         target.AddTargetLink(link);
         new LineService().AddLinesFromSourceToTarget(model, link);
+        parentA.LineSplitDepth = isSourceSplit ? 1 : 0;
+        parentB.LineSplitDepth = isTargetSplit ? 1 : 0;
 
         return modelMgr;
+    }
+
+    // ParentB's left edge in px at CousinZoom (5000 root units / 0.1).
+    const double ParentBViewX = 50000;
+
+    [Fact]
+    public void GetContentSvg_ShouldRenderFunnelSegments_WhenNoSplit()
+    {
+        var modelMgr = CreateCousinModel();
+
+        // Source->ParentA (child-to-parent) and ParentA->ParentB (sibling) render as ordinary
+        // lines; nothing crosses a container border.
+        var svg = RenderView(modelMgr, 0, 0, CousinZoom);
+
+        Assert.Contains("marker-end=\"url(#arrow-line)\"", svg);
+        Assert.DoesNotContain("marker-end=\"url(#arrow-cousin)\"", svg);
+    }
+
+    [Fact]
+    public void GetContentSvg_ShouldRenderParentToChildSegment_WhenTargetNotSplit()
+    {
+        var modelMgr = CreateCousinModel(isSourceSplit: true);
+
+        // The view covers ParentB: the crossing line ends at its border and the ParentB->Target
+        // fan-out inside renders as an ordinary segment.
+        var svg = RenderView(modelMgr, ParentBViewX, 0, CousinZoom);
+
+        Assert.Contains("marker-end=\"url(#arrow-cousin)\"", svg);
+        Assert.Contains("marker-end=\"url(#arrow-line)\"", svg);
+    }
+
+    [Fact]
+    public void GetContentSvg_ShouldNotRenderParentToChildSegment_WhenTargetSplit()
+    {
+        var modelMgr = CreateCousinModel(isSourceSplit: true, isTargetSplit: true);
+
+        // The crossing line now ends at Target itself, so the fan-out segment is inactive.
+        var svg = RenderView(modelMgr, ParentBViewX, 0, CousinZoom);
+
+        Assert.Contains("marker-end=\"url(#arrow-cousin)\"", svg);
+        Assert.DoesNotContain("marker-end=\"url(#arrow-line)\"", svg);
     }
 
     [Fact]
     public void GetContentSvg_ShouldRenderCousinLine_WhenSourceIsVisible_AndTargetFarAway()
     {
-        var modelMgr = CreateCousinModel();
+        var modelMgr = CreateCousinModel(isSourceSplit: true);
 
         // The view covers ParentA/Source; ParentB is ~25 viewports away.
         var svg = RenderView(modelMgr, 0, 0, CousinZoom);
@@ -118,13 +162,28 @@ public class SvgServiceLineVisibilityTests
     [Fact]
     public void GetContentSvg_ShouldNotRenderCousinLine_WhenNoEndpointIsVisible()
     {
-        var modelMgr = CreateCousinModel();
+        var modelMgr = CreateCousinModel(isSourceSplit: true);
 
         // The view lies between ParentA and ParentB; the cousin line crosses it, but
         // neither endpoint node is visible.
         var svg = RenderView(modelMgr, 20000, 0, CousinZoom);
 
         Assert.DoesNotContain("marker-end=\"url(#arrow-cousin)\"", svg);
+    }
+
+    [Fact]
+    public void GetContentSvg_ShouldRenderFocusLineDottedInAccentStyle()
+    {
+        var modelMgr = CreateCousinModel();
+        modelMgr.WithModel(m => m.LineFocus = LineFocus.ForNode(m.Nodes[NodeId.FromName("Source")], false));
+
+        // The explorer subject's line: accent arrow, dotted (the pinned pair lines are dashed
+        // "6,6"), instead of the ordinary line ParentA->ParentB.
+        var svg = RenderView(modelMgr, 0, 0, CousinZoom);
+
+        Assert.Contains("stroke-dasharray=\"2,4\" />", svg);
+        Assert.Contains("marker-end=\"url(#arrow-direct)\" stroke-dasharray=\"2,4\"", svg);
+        Assert.DoesNotContain("stroke-dasharray=\"6,6\"", svg);
     }
 
     [Fact]

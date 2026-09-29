@@ -506,7 +506,9 @@ class InteractionService(
     // link handle.
     async Task<Pos?> GetCanvasPosAsync(PointerEvent e)
     {
-        if (!Try(out var svgBound, out var _, await screenService.GetBoundingRectangle(PointerId.CanvasElementId)))
+        if (
+            await screenService.GetBoundingRectangle(PointerId.CanvasElementId) is not ElementBoundingRectangle svgBound
+        )
             return null;
         return new Pos(e.ClientX - svgBound.X, e.ClientY - svgBound.Y);
     }

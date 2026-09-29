@@ -33,19 +33,18 @@ class ConfigService : IConfigService
 
     public async Task<Config> GetAsync()
     {
-        if (!Try(out var config, out var e, await fileService.ReadAsync<Config>(hostStoragePaths.ConfigPath)))
-        { // Return default config values
-            return new Config();
-        }
-        return config;
+        // Default config values when none is stored yet
+        return await fileService.ReadAsync<Config>(hostStoragePaths.ConfigPath) is Config config
+            ? config
+            : new Config();
     }
 
     public async Task SetAsync(Action<Config> updateAction)
     {
-        if (!Try(out var config, out var e, await fileService.ReadAsync<Config>(hostStoragePaths.ConfigPath)))
-        { // Use default config values
-            config = new Config();
-        }
+        // Default config values when none is stored yet
+        Config config = await fileService.ReadAsync<Config>(hostStoragePaths.ConfigPath) is Config stored
+            ? stored
+            : new Config();
         updateAction(config);
         await fileService.WriteAsync(hostStoragePaths.ConfigPath, config);
     }

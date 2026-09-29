@@ -51,7 +51,7 @@ public sealed class JsonRpcMessageHandler : MessageHandlerBase
     static IJsonRpcMessageFormatter CreateFormatter()
     {
         // System.Text.Json is used (rather than the more compact MessagePackFormatter) so the
-        // custom converters for R/R<T> results in RPC interfaces can be applied.
+        // custom converters for R/Result<T> results in RPC interfaces can be applied.
         var formatter = new SystemTextJsonFormatter();
         formatter.JsonSerializerOptions.Converters.Add(new ResultJsonConverter());
         formatter.JsonSerializerOptions.Converters.Add(new ResultJsonConverterFactory());

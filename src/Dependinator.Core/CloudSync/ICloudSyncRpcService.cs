@@ -9,11 +9,11 @@ namespace Dependinator.Core.CloudSync;
 [Rpc]
 internal interface ICloudSyncRpcService
 {
-    Task<R<CloudAuthState>> LoginAsync();
-    Task<R<CloudAuthState>> LogoutAsync();
-    Task<R<CloudAuthState>> GetAuthStateAsync();
-    Task<R<CloudModelList>> ListAsync();
-    Task<R<CloudModelMetadata>> PushAsync(CloudModelDocument document);
-    Task<R<CloudModelDocument>> PullAsync(string modelKey);
-    Task<R> DeleteAsync(string modelKey);
+    Task<Result<CloudAuthState>> LoginAsync();
+    Task<Result<CloudAuthState>> LogoutAsync();
+    Task<Result<CloudAuthState>> GetAuthStateAsync();
+    Task<Result<CloudModelList>> ListAsync();
+    Task<Result<CloudModelMetadata>> PushAsync(CloudModelDocument document);
+    Task<Result<CloudModelDocument>> PullAsync(string modelKey);
+    Task<Result> DeleteAsync(string modelKey);
 }

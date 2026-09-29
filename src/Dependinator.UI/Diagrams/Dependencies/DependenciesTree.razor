@@ -17,15 +17,25 @@
     }
 </style>
 
-<MudPopover Open="IsShowExplorer" Fixed="true" Class="px-5 pt-4 ml-1" MaxHeight="MaxHeight"
-            AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft">
+<MudPopover Open="IsShowExplorer" Fixed="true" Class="@(srv.IsMinimized ? "px-5 py-2 ml-1" : "px-5 pt-4 ml-1")"
+            MaxHeight="MaxHeight" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft">
     <MudStack Spacing="0">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-            <MudText Class="ml-n2"><b>@HeadingText</b></MudText>
-            <MudText Color="Color.Info" Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                <b>@(srv.Title)</b>
-            </MudText>
+            @* Minimized (after a click elsewhere in the diagram), the title bar is all that is
+               left; clicking it brings the tree back. *@
+            <div style="@(srv.IsMinimized ? "display:flex;align-items:center;gap:8px;cursor:pointer;" : "display:flex;align-items:center;gap:8px;")"
+                 @onclick="() => srv.SetMinimized(false)" data-testid="explorer-header">
+                <MudText Class="ml-n2"><b>@HeadingText</b></MudText>
+                <MudText Color="Color.Info" Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <b>@(srv.Title)</b>
+                </MudText>
+            </div>
             <MudSpacer />
+            <MudTooltip Text="@(srv.IsShowLines ? "Hide the lines in the diagram" : "Show the lines in the diagram")">
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Timeline" Size="Size.Small"
+                               Color="@(srv.IsShowLines ? Color.Info : Color.Default)"
+                               OnClick="() => srv.SetShowLines(!srv.IsShowLines)" data-testid="explorer-show-lines" />
+            </MudTooltip>
             <MudTooltip Text="Show references">
                 <MudIconButton Icon="@Icon.ReferencesIcon" Size="Size.Small"
                                Color="@(srv.TreeType == TreeType.References ? Color.Info : Color.Default)"
@@ -36,11 +46,18 @@
                                Color="@(srv.TreeType == TreeType.Dependencies ? Color.Info : Color.Default)"
                                OnClick="() => srv.ShowDependencies()" data-testid="explorer-dependencies" />
             </MudTooltip>
+            <MudTooltip Text="@(srv.IsMinimized ? "Restore" : "Minimize")">
+                <MudIconButton Icon="@(srv.IsMinimized ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ExpandLess)"
+                               Size="Size.Small" OnClick="() => srv.SetMinimized(!srv.IsMinimized)"
+                               data-testid="explorer-minimize" />
+            </MudTooltip>
             <MudTooltip Text="Close">
                 <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small"
                                OnClick="() => srv.Close()" data-testid="explorer-close" />
             </MudTooltip>
         </MudStack>
+        @if (!srv.IsMinimized)
+        {
         <MudText Typo="Typo.caption" Class="ml-n2 mud-text-secondary">@(srv.Subtitle)</MudText>
         <MudPaper Class="overflow-y-auto ml-n8" Elevation="0" MaxWidth="MaxWidth" MaxHeight="500px">
             <MudTreeView Items="@srv.TreeItems" Hover="true" Dense="true" Width="100%">
@@ -49,7 +66,8 @@
                         var item = (TreeItem)treeItem;
                     }
                     <MudTreeViewItem Items="@item.Children" Icon="@item.Icon"
-                                     OnClick="() => OnItemClickAsync(item)" @bind-Expanded="@item.Expanded">
+                                     OnClick="() => OnItemClickAsync(item)" Expanded="@item.Expanded"
+                                     ExpandedChanged="(bool expanded) => srv.SetExpanded(item, expanded)">
                         <BodyContent>
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%"
                                  class="hover-element">
@@ -99,6 +117,7 @@
                 </ItemTemplate>
             </MudTreeView>
         </MudPaper>
+        }
     </MudStack>
 </MudPopover>
 

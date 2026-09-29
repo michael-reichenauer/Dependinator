@@ -4,7 +4,6 @@ using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.CloudSync;
 using Microsoft.JSInterop;
 using Shared;
-using static Dependinator.Core.Utils.Result;
 
 namespace Dependinator.UI.Tests.Shared;
 
@@ -16,21 +15,20 @@ public class VsCodeRpcCloudSyncServiceTests
     public async Task GetAuthStateAsync_ShouldReturnError_WhenRpcCallTimesOut()
     {
         Mock<ICloudSyncRpcService> rpc = new();
-        rpc.Setup(r => r.GetAuthStateAsync()).Returns(new TaskCompletionSource<R<CloudAuthState>>().Task);
+        rpc.Setup(r => r.GetAuthStateAsync()).Returns(new TaskCompletionSource<Result<CloudAuthState>>().Task);
         VsCodeRpcCloudSyncService sut = new(new FakeJsInterop(), rpc.Object, TimeSpan.FromMilliseconds(10));
 
-        R<CloudAuthState> result = await sut.GetAuthStateAsync();
+        Result<CloudAuthState> result = await sut.GetAuthStateAsync();
 
-        Assert.False(Try(out CloudAuthState? _, out ErrorResult? error, result));
-        Assert.NotNull(error);
-        Assert.Contains("timed out", error.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("timed out", error.Message);
     }
 
     [Fact]
     public async Task LoginAsync_ShouldUseLoginTimeout_WhenRpcCallTimesOut()
     {
         Mock<ICloudSyncRpcService> rpc = new();
-        rpc.Setup(r => r.LoginAsync()).Returns(new TaskCompletionSource<R<CloudAuthState>>().Task);
+        rpc.Setup(r => r.LoginAsync()).Returns(new TaskCompletionSource<Result<CloudAuthState>>().Task);
         VsCodeRpcCloudSyncService sut = new(
             new FakeJsInterop(),
             rpc.Object,
@@ -38,11 +36,10 @@ public class VsCodeRpcCloudSyncServiceTests
             loginRequestTimeout: TimeSpan.FromMilliseconds(10)
         );
 
-        R<CloudAuthState> result = await sut.LoginAsync();
+        Result<CloudAuthState> result = await sut.LoginAsync();
 
-        Assert.False(Try(out CloudAuthState? _, out ErrorResult? error, result));
-        Assert.NotNull(error);
-        Assert.Contains("timed out", error.ErrorMessage);
+        var error = AssertError(result);
+        Assert.Contains("timed out", error.Message);
     }
 
     [Fact]
@@ -52,10 +49,9 @@ public class VsCodeRpcCloudSyncServiceTests
         rpc.Setup(r => r.GetAuthStateAsync()).ThrowsAsync(new InvalidOperationException("rpc failed"));
         VsCodeRpcCloudSyncService sut = new(new FakeJsInterop(), rpc.Object, TimeSpan.FromSeconds(1));
 
-        R<CloudAuthState> result = await sut.GetAuthStateAsync();
+        Result<CloudAuthState> result = await sut.GetAuthStateAsync();
 
-        Assert.False(Try(out CloudAuthState? _, out ErrorResult? error, result));
-        Assert.NotNull(error);
+        AssertError(result);
     }
 
     [Fact]
@@ -73,12 +69,12 @@ public class VsCodeRpcCloudSyncServiceTests
         Mock<ICloudSyncRpcService> rpc = new();
         rpc.Setup(r => r.PushAsync(It.IsAny<CloudModelDocument>()))
             .Callback<CloudModelDocument>(d => sentDocument = d)
-            .ReturnsAsync((R<CloudModelMetadata>)expected);
+            .ReturnsAsync((Result<CloudModelMetadata>)expected);
         VsCodeRpcCloudSyncService sut = new(new FakeJsInterop(), rpc.Object, TimeSpan.FromSeconds(1));
 
-        R<CloudModelMetadata> result = await sut.PushAsync("/models/sample.model", modelDto);
+        Result<CloudModelMetadata> result = await sut.PushAsync("/models/sample.model", modelDto);
 
-        Assert.True(Try(out CloudModelMetadata? metadata, out _, result));
+        var metadata = AssertOk(result);
         Assert.Same(expected, metadata);
         Assert.NotNull(sentDocument);
         Assert.Equal(CloudModelPath.CreateKey("/models/sample.model"), sentDocument.ModelKey);
@@ -97,12 +93,12 @@ public class VsCodeRpcCloudSyncServiceTests
         CloudModelDocument document = CloudModelSerializer.CreateDocument("/models/sample.model", modelDto);
         string expectedKey = CloudModelPath.CreateKey("/models/sample.model");
         Mock<ICloudSyncRpcService> rpc = new();
-        rpc.Setup(r => r.PullAsync(expectedKey)).ReturnsAsync((R<CloudModelDocument>)document);
+        rpc.Setup(r => r.PullAsync(expectedKey)).ReturnsAsync((Result<CloudModelDocument>)document);
         VsCodeRpcCloudSyncService sut = new(new FakeJsInterop(), rpc.Object, TimeSpan.FromSeconds(1));
 
-        R<ModelDto> result = await sut.PullAsync("/models/sample.model");
+        Result<ModelDto> result = await sut.PullAsync("/models/sample.model");
 
-        Assert.True(Try(out ModelDto? pulledModel, out var error, result), error?.ErrorMessage);
+        var pulledModel = AssertOk(result);
         Assert.Equal(modelDto.Name, pulledModel.Name);
         rpc.Verify(r => r.PullAsync(expectedKey), Times.Once);
     }
@@ -112,13 +108,13 @@ public class VsCodeRpcCloudSyncServiceTests
     {
         string expectedKey = CloudModelPath.CreateKey("/models/sample.model");
         Mock<ICloudSyncRpcService> rpc = new();
-        R<CloudModelDocument> noRemoteModel = R.None;
+        Result<CloudModelDocument> noRemoteModel = new NotFoundError("No remote model");
         rpc.Setup(r => r.PullAsync(expectedKey)).ReturnsAsync(noRemoteModel);
         VsCodeRpcCloudSyncService sut = new(new FakeJsInterop(), rpc.Object, TimeSpan.FromSeconds(1));
 
-        R<ModelDto> result = await sut.PullAsync("/models/sample.model");
+        Result<ModelDto> result = await sut.PullAsync("/models/sample.model");
 
-        Assert.True(result.IsNone);
+        Assert.True(result is NotFoundError);
     }
 
     sealed class FakeJsInterop : IJSInterop

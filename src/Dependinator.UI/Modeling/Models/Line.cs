@@ -43,9 +43,9 @@ class Line : IItem
     public bool IsInheritance { get; }
     public Node? RenderAncestor { get; set; }
 
-    // A cousin line crosses container boundaries between the "deepest visible representatives"
-    // of its links' endpoints (see RepLineService); like a direct line, it is rendered inside
-    // its RenderAncestor's coordinate space.
+    // A cousin line crosses container boundaries between the representatives of its links'
+    // endpoints below a node with a direct-line depth (see RepLineService); like a direct line,
+    // it is rendered inside its RenderAncestor's coordinate space.
     public bool IsCousin => RenderAncestor is not null && !IsDirect;
 
     // Transient per-zoom render state: true when this line is the current representative line
@@ -53,14 +53,10 @@ class Line : IItem
     // only active lines are rendered. Not persisted.
     public bool IsActiveRep { get; set; }
 
-    // Split-line state (transient, never persisted): the user can "split" an aggregated line
-    // one level into its target, temporarily showing dashed direct-style lines to the
-    // target's children instead. SplitParent points from a split line back to the line it was
-    // split from; SplitLines holds a split line's live children; IsSplitSuppressed hides the
-    // parent while all its links are represented by split lines (see DependenciesService).
-    public Line? SplitParent { get; set; }
-    public List<Line> SplitLines { get; } = [];
-    public bool IsSplitSuppressed { get; set; }
+    // Transient render state: the line represents links of the dependency explorer's subject
+    // (see Model.LineFocus, set by RepLineService.Sync); drawn in the accent color so the
+    // subject's lines stand out from the aggregated ones. Not persisted.
+    public bool IsFocused { get; set; }
 
     // An inheritance line segment is only anchored specially (top/bottom middle) at an end that
     // is a real link endpoint; a shared segment can end at a container boundary at the other end.

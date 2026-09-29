@@ -3,7 +3,6 @@ using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
-using static Dependinator.Core.Utils.Result;
 
 namespace Dependinator.UI.Tests.Models;
 
@@ -31,14 +30,14 @@ public class ModelServiceDesignModelTests
     [Fact]
     public async Task LoadAsync_ShouldCreateEmptyModel_WhenDesignModelIsNotCached()
     {
-        persistenceService.Setup(p => p.ReadAsync("My Design")).ReturnsAsync(R.Error("no cached model"));
-        persistenceService.Setup(p => p.WriteAsync("My Design", It.IsAny<ModelDto>())).ReturnsAsync(R.Ok);
+        persistenceService.Setup(p => p.ReadAsync("My Design")).ReturnsAsync(new Error("no cached model"));
+        persistenceService.Setup(p => p.WriteAsync("My Design", It.IsAny<ModelDto>())).ReturnsAsync(Result.Ok);
         using var modelService = CreateModelService();
 
         var result = await modelService.LoadAsync("My Design");
 
-        Assert.True(Try(out var modelInfo, out _, result));
-        Assert.Equal("My Design", modelInfo!.Path);
+        var modelInfo = AssertOk(result);
+        Assert.Equal("My Design", modelInfo.Path);
         Assert.Equal("My Design", modelMgr.ModelPath);
         // Only the root node exists in the new empty model
         Assert.Equal(1, modelMgr.WithModel(m => m.Nodes.Count));
@@ -58,7 +57,7 @@ public class ModelServiceDesignModelTests
 
         var result = await modelService.RefreshAsync();
 
-        Assert.True(Try(result));
+        AssertOk(result);
         parserService.Verify(p => p.ParseAsync(It.IsAny<string>(), It.IsAny<SolutionParseOptions>()), Times.Never);
     }
 
@@ -69,7 +68,7 @@ public class ModelServiceDesignModelTests
         modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("parse failed"));
+            .ReturnsAsync(new Error("parse failed"));
         using var modelService = CreateModelService();
 
         await modelService.SetIncludeTestProjectsAsync(true);
@@ -100,7 +99,7 @@ public class ModelServiceDesignModelTests
         modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("parse failed"));
+            .ReturnsAsync(new Error("parse failed"));
         using var modelService = CreateModelService();
 
         await modelService.RefreshAsync();
@@ -114,10 +113,10 @@ public class ModelServiceDesignModelTests
     [Fact]
     public async Task LoadAsync_ShouldParse_WhenSolutionModelIsNotCached()
     {
-        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(R.Error("no cached model"));
+        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(new Error("no cached model"));
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("parse failed"));
+            .ReturnsAsync(new Error("parse failed"));
         using var modelService = CreateModelService();
 
         await modelService.LoadAsync("My.sln");
@@ -129,15 +128,15 @@ public class ModelServiceDesignModelTests
     [Fact]
     public async Task LoadAsync_ShouldReportError_WhenParsingFails()
     {
-        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(R.Error("no cached model"));
+        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(new Error("no cached model"));
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("No .NET SDK found"));
+            .ReturnsAsync(new Error("No .NET SDK found"));
         using var modelService = CreateModelService();
 
         var result = await modelService.LoadAsync("My.sln");
 
-        Assert.False(Try(out _, out _, result));
+        AssertError(result);
         applicationEvents.Verify(
             e => e.TriggerErrorReported(It.Is<string>(m => m.Contains("My.sln") && m.Contains("No .NET SDK found"))),
             Times.Once
@@ -151,7 +150,7 @@ public class ModelServiceDesignModelTests
         modelListService.Setup(s => s.IsLocalPath("My.sln")).Returns(true);
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(R.Error("parse failed"));
+            .ReturnsAsync(new Error("parse failed"));
         using var modelService = CreateModelService();
 
         await modelService.RefreshAsync();
@@ -167,7 +166,7 @@ public class ModelServiceDesignModelTests
     [Fact]
     public async Task LoadAsync_ShouldReportError_WhenParserThrows()
     {
-        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(R.Error("no cached model"));
+        persistenceService.Setup(p => p.ReadAsync("My.sln")).ReturnsAsync(new Error("no cached model"));
         parserService
             .Setup(p => p.ParseAsync("My.sln", It.IsAny<SolutionParseOptions>()))
             .ThrowsAsync(new InvalidOperationException("connection lost"));
@@ -175,7 +174,7 @@ public class ModelServiceDesignModelTests
 
         var result = await modelService.LoadAsync("My.sln");
 
-        Assert.False(Try(out _, out _, result));
+        AssertError(result);
         applicationEvents.Verify(e => e.TriggerErrorReported(It.IsAny<string>()), Times.Once);
     }
 }

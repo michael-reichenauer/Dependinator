@@ -12,7 +12,7 @@ record FileLocationSpan(string Path, int StartLine, int EndLine);
 
 class Decompiler
 {
-    public R<Source> TryGetSource(ModuleDefinition module, string nodeName)
+    public Result<Source> TryGetSource(ModuleDefinition module, string nodeName)
     {
         if (TryGetType(module, nodeName, out TypeDefinition type))
         {
@@ -38,7 +38,7 @@ class Decompiler
         }
 
         Log.Debug($"Failed to locate source for:\n{nodeName}");
-        return R.Error("Failed to locate source for:\n{nodeName}");
+        return new Error("Failed to locate source for:\n{nodeName}");
     }
 
     record TypeLocationSpan(TypeDefinition Type, FileLocationSpan? FileLocationSpan);
