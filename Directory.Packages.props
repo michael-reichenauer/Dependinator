@@ -22,7 +22,7 @@
         <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
         <!-- Keep in sync with PLAYWRIGHT_VERSION in .devcontainer/post-create.sh -->
-        <PackageVersion Include="Microsoft.Playwright.Xunit" Version="1.62.0" />
+        <PackageVersion Include="Microsoft.Playwright.Xunit" Version="1.63.0" />
         <PackageVersion Include="OmniSharp.Extensions.LanguageServer" Version="0.19.9" />
         <PackageVersion Include="Moq" Version="4.20.72" />
         <PackageVersion Include="StreamJsonRpc" Version="2.25.29" />
