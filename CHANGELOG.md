@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.8.27 (2026-09-29)
+
+- Adjust dependencies dialog to minimize on outside click
+- Update demo animation
+
 ## 0.8.26 (2026-09-28)
 
 - Minor fixes and improvements
