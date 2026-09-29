@@ -7,7 +7,7 @@ set -euo pipefail
 # PLAYWRIGHT_VERSION must match the Microsoft.Playwright version in
 # Directory.Packages.props, so the .NET tests and the CLI share the same
 # browser builds in ~/.cache/ms-playwright.
-PLAYWRIGHT_VERSION="1.62.0"
+PLAYWRIGHT_VERSION="1.63.0"
 
 echo "Installing Playwright CLI (agent browser automation)..."
 npm install -g @playwright/cli@latest
