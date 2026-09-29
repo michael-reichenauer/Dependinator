@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.28 (2026-09-29)
+
+- Implement IAssemblyResolver.BeginSnapshot for the in-memory resolver
+
 ## 0.8.27 (2026-09-29)
 
 - Adjust dependencies dialog to minimize on outside click
