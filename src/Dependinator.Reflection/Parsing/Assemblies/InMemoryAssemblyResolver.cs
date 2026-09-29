@@ -37,4 +37,8 @@ sealed class InMemoryAssemblyResolver : ICSharpCode.Decompiler.Metadata.IAssembl
 
     public Task<MetadataFile?> ResolveModuleAsync(MetadataFile mainModule, string moduleName) =>
         Task.FromResult<MetadataFile?>(null);
+
+    // Nothing is read from the file system (every module is registered up front), so there is
+    // nothing to hold for the duration of a reference closure.
+    public IDisposable? BeginSnapshot() => null;
 }
