@@ -41,7 +41,11 @@ class SvgService : ISvgService
 
     // The user's view toggles that affect what a tile contains; captured per render so the
     // static render helpers need no service access.
-    ViewFlags Flags => new(viewOptions.IsEditingEnabled, viewOptions.ShowHiddenNodes, viewOptions.DimUnrelatedLines);
+    ViewFlags Flags =>
+        new(viewOptions.IsEditingEnabled, viewOptions.ShowHiddenNodes, viewOptions.DimUnrelatedLines)
+        {
+            Filter = viewOptions.LineFilter,
+        };
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
@@ -127,6 +131,24 @@ class SvgService : ISvgService
 
     static bool IsLineDimmed(Line line, RenderContext context) =>
         context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.Selection);
+
+    // The user's line filter (View › Lines). Explorer focus lines and user-requested direct
+    // lines are explicit asks and are always drawn.
+    internal static bool IsLineFilteredOut(Line line, LineFilter filter)
+    {
+        if (line.IsFocused || line.IsDirect)
+            return false;
+        if (filter.HideInheritance && line.IsInheritance)
+            return true;
+        if (filter.HideMember && (line.Source.Type.IsMember || line.Target.Type.IsMember))
+            return true;
+        if (filter.HideExternal && (IsExternal(line.Source) || IsExternal(line.Target)))
+            return true;
+        return line.Links.Count < filter.MinLinkCount;
+    }
+
+    static bool IsExternal(Node node) =>
+        node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
 
     Tile CreateModelTile(IModel model, TileKey tileKey)
     {
@@ -295,6 +317,8 @@ class SvgService : ISvgService
                 continue;
             if (line.Target.IsPassThrough)
                 continue; // The pass-through node covers this parent, so the segment is degenerate
+            if (IsLineFilteredOut(line, context.Flags.Filter))
+                continue;
             if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                 continue;
             yield return LineSvg.GetLineSvg(line, nodeCanvasPos, childrenZoom, IsLineDimmed(line, context));
@@ -313,6 +337,8 @@ class SvgService : ISvgService
                     continue;
                 if (line.Source.IsPassThrough && line.Target == node)
                     continue; // The pass-through node covers this parent, so the segment is degenerate
+                if (IsLineFilteredOut(line, context.Flags.Filter))
+                    continue;
                 if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                     continue;
                 yield return LineSvg.GetLineSvg(line, nodeCanvasPos, childrenZoom, IsLineDimmed(line, context));
@@ -369,6 +395,8 @@ class SvgService : ISvgService
             if (directLine.IsCousin && !directLine.IsActiveRep)
                 continue; // An inactive cousin line kept only for its user waypoints/description
             if (directLine.IsHidden && !context.Flags.ShowHidden)
+                continue;
+            if (IsLineFilteredOut(directLine, context.Flags.Filter))
                 continue;
             if (!IsEitherDirectEndpointRendered(directLine, node, nodeCanvasPos, childrenZoom, context))
                 continue;
@@ -438,6 +466,7 @@ class SvgService : ISvgService
     readonly record struct ViewFlags(bool IsEditing, bool ShowHidden, bool DimUnrelated)
     {
         public RenderSelection Selection { get; init; }
+        public LineFilter Filter { get; init; } = LineFilter.None;
     }
 
     readonly record struct RenderContext(

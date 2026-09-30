@@ -122,6 +122,41 @@
                     Hide All Direct Lines
                 </MudMenuItem>
 
+                <MudMenu Label="@LinesMenuLabel" StartIcon="@Icons.Material.Outlined.FilterAlt" IconColor="Color.Secondary"
+                         Dense="true" PopoverClass="@MenuClass" data-testid="menu-lines">
+                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Leave out</MudText>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideExternal)"
+                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideExternal = !LineFilter.HideExternal })"
+                                 title="Lines to or from external packages and framework assemblies."
+                                 data-checked="@(LineFilter.HideExternal ? "true" : "false")" data-testid="menu-lines-external">
+                        Lines to Externals
+                    </MudMenuItem>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideInheritance)"
+                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideInheritance = !LineFilter.HideInheritance })"
+                                 title="Base class and interface implementation lines (hollow arrow heads)."
+                                 data-checked="@(LineFilter.HideInheritance ? "true" : "false")" data-testid="menu-lines-inheritance">
+                        Inheritance Lines
+                    </MudMenuItem>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideMember)"
+                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideMember = !LineFilter.HideMember })"
+                                 title="Lines that start or end at a method, property, field or event."
+                                 data-checked="@(LineFilter.HideMember ? "true" : "false")" data-testid="menu-lines-member">
+                        Member Lines
+                    </MudMenuItem>
+
+                    <MudDivider />
+                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Show lines with</MudText>
+                    @foreach (var (count, label) in MinLinkChoices)
+                    {
+                        <MudMenuItem IconColor="Color.Secondary" Icon="@RadioIcon(LineFilter.MinLinkCount == count)"
+                                     OnClick="() => SetLineFilterAsync(LineFilter with { MinLinkCount = count })"
+                                     data-checked="@(LineFilter.MinLinkCount == count ? "true" : "false")"
+                                     data-testid="@($"menu-lines-min-{count}")">
+                            @label
+                        </MudMenuItem>
+                    }
+                </MudMenu>
+
                 <MudDivider />
 
                 <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Theme</MudText>
@@ -567,6 +602,33 @@
 
     string ShowHiddenNodesIcon => CheckIcon(viewOptions.ShowHiddenNodes);
     string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
+
+    static readonly (int Count, string Label)[] MinLinkChoices =
+    [
+        (1, "Any number of links"),
+        (2, "2 or more links"),
+        (5, "5 or more links"),
+        (10, "10 or more links"),
+    ];
+
+    LineFilter LineFilter => viewOptions.LineFilter;
+
+    // The submenu label says when a filter is active, since the diagram then hides lines.
+    string LinesMenuLabel => LineFilter.IsAny ? "Lines (filtered)" : "Lines";
+
+    async Task SetLineFilterAsync(LineFilter filter)
+    {
+        viewOptions.SetLineFilter(filter);
+        await configService.SetAsync(config =>
+        {
+            config.HideExternalLines = filter.HideExternal;
+            config.HideInheritanceLines = filter.HideInheritance;
+            config.HideMemberLines = filter.HideMember;
+            config.MinLinkCount = filter.MinLinkCount;
+        });
+        modelService.ClearCache(); // Which lines a tile holds depends on the filter
+        applicationEvents.TriggerUIStateChanged();
+    }
     string EditModeIcon => CheckIcon(viewOptions.IsEditingEnabled);
     string NotesSidebarIcon => CheckIcon(noteService.IsShowSidebar);
     string InvertScrollZoomIcon => CheckIcon(pointerEventService.InvertScrollZoom);

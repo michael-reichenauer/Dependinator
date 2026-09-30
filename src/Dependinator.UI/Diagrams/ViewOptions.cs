@@ -12,9 +12,21 @@ interface IViewOptions
     // selection's own lines stand out (a hovered line shows at full strength).
     bool DimUnrelatedLines { get; }
 
+    // Which lines are left out of the diagram (the explorer's own lines and user-requested
+    // direct lines are always drawn).
+    LineFilter LineFilter { get; }
+
     void SetShowHiddenNodes(bool show);
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
+    void SetLineFilter(LineFilter filter);
+}
+
+// MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on.
+readonly record struct LineFilter(bool HideExternal, bool HideInheritance, bool HideMember, int MinLinkCount)
+{
+    public static readonly LineFilter None = new(false, false, false, 1);
+    public bool IsAny => HideExternal || HideInheritance || HideMember || MinLinkCount > 1;
 }
 
 [Scoped]
@@ -23,10 +35,13 @@ class ViewOptions : IViewOptions
     public bool ShowHiddenNodes { get; private set; } = true;
     public bool IsEditingEnabled { get; private set; } = false;
     public bool DimUnrelatedLines { get; private set; } = true;
+    public LineFilter LineFilter { get; private set; } = LineFilter.None;
 
     public void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
 
     public void SetIsEditingEnabled(bool enabled) => IsEditingEnabled = enabled;
 
     public void SetDimUnrelatedLines(bool dim) => DimUnrelatedLines = dim;
+
+    public void SetLineFilter(LineFilter filter) => LineFilter = filter;
 }

@@ -17,6 +17,10 @@ class Config
     public bool IsEditingEnabled { get; set; } = false;
     public AppTheme Theme { get; set; } = AppTheme.System;
     public bool DimUnrelatedLines { get; set; } = true;
+    public bool HideExternalLines { get; set; } = false;
+    public bool HideInheritanceLines { get; set; } = false;
+    public bool HideMemberLines { get; set; } = false;
+    public int MinLinkCount { get; set; } = 1;
 }
 
 interface IConfigService
