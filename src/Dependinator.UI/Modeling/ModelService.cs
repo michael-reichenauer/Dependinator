@@ -2,9 +2,10 @@ using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
-
 // The diagram model of nodes, links, and lines: loading, refreshing, layout, naming, structure,
 // and persistence of the model shown on the canvas.
+using Dependinator.UI.Shared.VsCode;
+
 namespace Dependinator.UI.Modeling;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
@@ -36,6 +37,7 @@ class ModelService : IModelService, IDisposable
     readonly IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
     readonly IProgressService progressService;
+    readonly IVsCodeSendService vsCodeSendService;
 
     readonly Debouncer saveDebouncer = new();
 
@@ -46,9 +48,11 @@ class ModelService : IModelService, IDisposable
         IStructureService modelStructureService,
         IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
-        IProgressService progressService
+        IProgressService progressService,
+        IVsCodeSendService vsCodeSendService
     )
     {
+        this.vsCodeSendService = vsCodeSendService;
         this.modelMgr = modelMgr;
         this.modelListService = modelListService;
         this.parserService = parserService;
@@ -313,8 +317,10 @@ class ModelService : IModelService, IDisposable
             await Task.Yield();
 
             Log.Info("Parsing ...");
+            await vsCodeSendService.NotifyStatusAsync("parsing");
 
             var parseResult = await ParseAsync(path, parseOptions);
+            await vsCodeSendService.NotifyStatusAsync("idle");
             if (parseResult is not IReadOnlyList<Parsing.Item> items)
             {
                 // A failed parse leaves an empty (or unchanged) diagram, which on its own looks

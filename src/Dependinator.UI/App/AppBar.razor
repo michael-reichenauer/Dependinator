@@ -420,6 +420,7 @@
         applicationEvents.UIStateChanged += OnUiStateChanged;
         applicationEvents.ErrorReported += OnErrorReported;
         applicationEvents.InfoReported += OnInfoReported;
+        applicationEvents.SearchRequested += OnSearchRequested;
         appCloudSyncService.Changed += OnUiStateChanged;
         themeService.Changed += OnUiStateChanged;
         keyboardService.KeyDown += OnKeyDown;
@@ -483,6 +484,8 @@
         }
     }
 
+    void OnSearchRequested() => _ = InvokeAsync(OpenSearchAsync);
+
     // E.g. what a background refresh changed: worth a note, not an interruption.
     void OnInfoReported(string message)
     {
@@ -519,6 +522,7 @@
         applicationEvents.UIStateChanged -= OnUiStateChanged;
         applicationEvents.ErrorReported -= OnErrorReported;
         applicationEvents.InfoReported -= OnInfoReported;
+        applicationEvents.SearchRequested -= OnSearchRequested;
         appCloudSyncService.Changed -= OnUiStateChanged;
         themeService.Changed -= OnUiStateChanged;
         keyboardService.KeyDown -= OnKeyDown;

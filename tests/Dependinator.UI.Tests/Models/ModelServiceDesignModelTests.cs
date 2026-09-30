@@ -3,6 +3,7 @@ using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
+using Dependinator.UI.Shared.VsCode;
 
 namespace Dependinator.UI.Tests.Models;
 
@@ -15,6 +16,7 @@ public class ModelServiceDesignModelTests
     readonly Mock<IPersistenceService> persistenceService = new();
     readonly Mock<IApplicationEvents> applicationEvents = new();
     readonly Mock<IProgressService> progressService = new();
+    readonly Mock<IVsCodeSendService> vsCodeSendService = new();
 
     ModelService CreateModelService() =>
         new(
@@ -24,7 +26,8 @@ public class ModelServiceDesignModelTests
             structureService.Object,
             persistenceService.Object,
             applicationEvents.Object,
-            progressService.Object
+            progressService.Object,
+            vsCodeSendService.Object
         );
 
     [Fact]

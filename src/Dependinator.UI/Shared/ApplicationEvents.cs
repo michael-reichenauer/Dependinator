@@ -34,6 +34,9 @@ interface IApplicationEvents
     // e.g. what a background refresh changed.
     event Action<string>? InfoReported;
 
+    // Raised when the host (e.g. a VS Code command) asks for the search dialog.
+    event Action? SearchRequested;
+
     void TriggerUIStateChanged();
     void TriggerSaveNeeded();
     void TriggerUndoneRedone();
@@ -41,6 +44,7 @@ interface IApplicationEvents
     void TriggerViewChanged();
     void TriggerErrorReported(string message, ErrorAction? action = null);
     void TriggerInfoReported(string message);
+    void TriggerSearchRequested();
 
     /// <summary>
     /// Yields to the browser renderer using requestAnimationFrame.
@@ -59,6 +63,7 @@ class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
     public event Action? ViewChanged;
     public event Action<ErrorReport>? ErrorReported;
     public event Action<string>? InfoReported;
+    public event Action? SearchRequested;
 
     public void TriggerUIStateChanged() => UIStateChanged?.Invoke();
 
@@ -81,6 +86,8 @@ class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
         Log.Info($"Info reported: {message}");
         InfoReported?.Invoke(message);
     }
+
+    public void TriggerSearchRequested() => SearchRequested?.Invoke();
 
     public async Task YieldAsync() => await jSInterop.Call("waitForAnimationFrame");
 }

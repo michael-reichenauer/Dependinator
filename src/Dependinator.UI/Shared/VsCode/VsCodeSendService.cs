@@ -7,6 +7,10 @@ interface IVsCodeSendService
     Task ShowEditorAsync(FileLocation fileLocation);
     Task OpenHelpAsync();
     Task NotifyDiagramLoadedAsync();
+
+    // Tells the extension what the UI is doing ("parsing" or "idle"), for its status bar item.
+    // No-op in browser hosts.
+    Task NotifyStatusAsync(string state);
 }
 
 [Scoped]
@@ -32,6 +36,11 @@ class VsCodeSendService : IVsCodeSendService
     public async Task NotifyDiagramLoadedAsync()
     {
         await jSInterop.Call<bool>("postVsCodeMessage", new { type = "vscode/DiagramLoaded", message = "" });
+    }
+
+    public async Task NotifyStatusAsync(string state)
+    {
+        await jSInterop.Call<bool>("postVsCodeMessage", new { type = "vscode/Status", message = state });
     }
 
     // The help page is a static asset served from the Dependinator.UI RCL at
