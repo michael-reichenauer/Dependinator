@@ -59,6 +59,7 @@ class InitService : IInitService
         NodeLayout.SetDensity(config.LayoutDensity);
         viewOptions.SetShowHiddenNodes(config.ShowHiddenNodes);
         viewOptions.SetIsEditingEnabled(config.IsEditingEnabled);
+        viewOptions.SetDimUnrelatedLines(config.DimUnrelatedLines);
         pointerEventService.InvertScrollZoom = config.InvertScrollZoom;
         // The theme must be applied before the first model render, since the SVG tiles bake the
         // palette in.

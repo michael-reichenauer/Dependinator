@@ -16,6 +16,7 @@ class Config
     // chrome (link handles, resize handles) would otherwise clutter the diagram.
     public bool IsEditingEnabled { get; set; } = false;
     public AppTheme Theme { get; set; } = AppTheme.System;
+    public bool DimUnrelatedLines { get; set; } = true;
 }
 
 interface IConfigService

@@ -43,6 +43,15 @@
                         stroke-opacity: 1;
                     }
 
+                    /* Lines unrelated to the selection fade; hovering one brings it back. */
+                    .line-dim {
+                        opacity: 0.18;
+                    }
+
+                    g.line:hover .line-dim {
+                        opacity: 1;
+                    }
+
                     .selectpoint:hover * {
                         fill: #51b8fc;
                         stroke-width: 1px;

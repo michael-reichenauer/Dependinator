@@ -25,7 +25,7 @@ static class LineSvg
     // the "arrow-inheritance" marker geometry in Canvas.razor/SvgExportDocument).
     const double InheritanceMarkerLength = 14.5;
 
-    public static string GetLineSvg(Line line, Pos nodeCanvasPos, double childrenZoom)
+    public static string GetLineSvg(Line line, Pos nodeCanvasPos, double childrenZoom, bool isDimmed = false)
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
             return "";
@@ -34,22 +34,29 @@ static class LineSvg
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var elementId = PointerId.FromLine(line.Id).ElementId;
 
-        return BuildLineSvg(line, endpoints, polylinePoints, elementId);
+        return BuildLineSvg(line, endpoints, polylinePoints, elementId, isDimmed);
     }
 
-    public static string GetDirectLineSvg(Line line, Node ancestor, Pos nodeCanvasPos, double childrenZoom)
+    public static string GetDirectLineSvg(
+        Line line,
+        Node ancestor,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        bool isDimmed = false
+    )
     {
         if (line.RenderAncestor != ancestor)
             return "";
 
-        return GetLineSvg(line, nodeCanvasPos, childrenZoom);
+        return GetLineSvg(line, nodeCanvasPos, childrenZoom, isDimmed);
     }
 
     static string BuildLineSvg(
         Line line,
         LinePathGeometry.LineEndpoints endpoints,
         IReadOnlyList<Pos> polylinePoints,
-        string elementId
+        string elementId,
+        bool isDimmed
     )
     {
         // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
@@ -96,17 +103,24 @@ static class LineSvg
 
         // The second, fully transparent polyline is the hover/hit target: it traces the same
         // path but much wider, so hovering/clicking near the thin visible line still hits it.
+        // The outer group lets a hover over the hit target restore a dimmed line (see the
+        // line-dim CSS in Canvas.razor).
+        var visibleClass = isDimmed ? "line-vis line-dim" : "line-vis";
         return string.Create(
             CultureInfo.InvariantCulture,
             $"""
+            <g class="line">
+            <g class="{visibleClass}">
             <polyline points="{points}" fill="none" stroke-width="{strokeWidth:0.##}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
             <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
+            </g>
             <g class="hoverable" id="{elementId}">
               <polyline id="{elementId}" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
                 + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
               <title>{title}</title>
             </g>
             {selectedSvg}
+            </g>
             """
         );
     }

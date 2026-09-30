@@ -110,6 +110,13 @@
                     Show Notes Sidebar
                 </MudMenuItem>
 
+                <MudMenuItem IconColor="Color.Secondary" Icon="@DimUnrelatedLinesIcon" OnClick="ToggleDimUnrelatedLines"
+                             title="While a node or line is selected, fade every line that does not touch it."
+                             data-checked="@(viewOptions.DimUnrelatedLines ? "true" : "false")"
+                             data-testid="menu-dim-unrelated-lines">
+                    Dim Unrelated Lines
+                </MudMenuItem>
+
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.UnfoldLess"
                              OnClick="lineSplitService.ClearAll" data-testid="menu-hide-direct-lines">
                     Hide All Direct Lines
@@ -559,6 +566,7 @@
         isOn ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Outlined.RadioButtonUnchecked;
 
     string ShowHiddenNodesIcon => CheckIcon(viewOptions.ShowHiddenNodes);
+    string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
     string EditModeIcon => CheckIcon(viewOptions.IsEditingEnabled);
     string NotesSidebarIcon => CheckIcon(noteService.IsShowSidebar);
     string InvertScrollZoomIcon => CheckIcon(pointerEventService.InvertScrollZoom);
@@ -578,6 +586,15 @@
         // Edit-only markup (e.g. link handles) is baked into cached tiles, so the cache must be
         // cleared for the toggle to take effect immediately.
         modelService.ClearCache();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    async Task ToggleDimUnrelatedLines()
+    {
+        var newValue = !viewOptions.DimUnrelatedLines;
+        viewOptions.SetDimUnrelatedLines(newValue);
+        await configService.SetAsync(config => config.DimUnrelatedLines = newValue);
+        modelService.ClearCache(); // Dimming is baked into the cached tiles
         applicationEvents.TriggerUIStateChanged();
     }
 
