@@ -1,0 +1,84 @@
+@using Dependinator.UI.Diagrams.Interaction
+@inject IApplicationEvents applicationEvents
+@inject INoteService noteService
+@inject IManualEditService manualEditService
+@inject IAreaSelectionService areaSelectionService
+@inject IInteractionService interactionService
+@inject ISelectionService selectionService
+@inject Modeling.Models.IModelMgr modelMgr
+@implements IDisposable
+
+@* A persistent banner while a mode is armed (placing a note or node, selecting an export area,
+   dragging a link, arranging inside a node): says what the next click does and how to get out.
+   A snackbar would fade away while the user is still looking for where to click. *@
+@if (Mode is { } mode)
+{
+    <div class="dep-mode-banner dep-toolbar-card" role="status" data-testid="mode-banner">
+        <MudIcon Icon="@mode.Icon" Size="Size.Small" Color="Color.Tertiary" />
+        <span class="dep-mode-banner__text">@mode.Text</span>
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" OnClick="mode.Cancel"
+                   data-testid="mode-banner-cancel">
+            @mode.CancelLabel
+        </MudButton>
+    </div>
+}
+
+@code {
+    record ModeInfo(string Icon, string Text, string CancelLabel, Action Cancel);
+
+    ModeInfo? Mode
+    {
+        get
+        {
+            if (noteService.IsPlacingNote)
+                return new(MudBlazor.Icons.Material.Outlined.StickyNote2,
+                    "Click on the diagram to place the note.", "Cancel (Esc)", noteService.CancelPlaceNote);
+            if (manualEditService.IsPlacingNode)
+                return new(MudBlazor.Icons.Material.Outlined.AddBox,
+                    "Click on the diagram to place the node.", "Cancel (Esc)", manualEditService.CancelPlaceNode);
+            if (areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
+                return new(MudBlazor.Icons.Material.Outlined.HighlightAlt,
+                    "Drag to select the area to export.", "Cancel (Esc)", areaSelectionService.Cancel);
+            if (manualEditService.IsLinkDragActive)
+                return new(MudBlazor.Icons.Material.Outlined.Link,
+                    "Drop on a node to link to it, or on the canvas to add a new linked node.", "Cancel (Esc)",
+                    manualEditService.CancelLinkDrag);
+            if (interactionService.IsEditNodeMode)
+                return new(MudBlazor.Icons.Material.Outlined.OpenWith,
+                    $"Arranging inside {SelectedNodeName}: drag to pan and wheel to zoom its contents.", "Done (Esc)",
+                    () => interactionService.IsEditNodeMode = false);
+            return null;
+        }
+    }
+
+    string SelectedNodeName
+    {
+        get
+        {
+            if (!selectionService.SelectedId.IsNode)
+                return "the node";
+            using var model = modelMgr.UseModel();
+            return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
+                ? node.ShortName
+                : "the node";
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        applicationEvents.UIStateChanged += OnStateChanged;
+        noteService.StateChanged += OnStateChanged;
+        manualEditService.StateChanged += OnStateChanged;
+        areaSelectionService.StateChanged += OnStateChanged;
+    }
+
+    void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        applicationEvents.UIStateChanged -= OnStateChanged;
+        noteService.StateChanged -= OnStateChanged;
+        manualEditService.StateChanged -= OnStateChanged;
+        areaSelectionService.StateChanged -= OnStateChanged;
+    }
+}

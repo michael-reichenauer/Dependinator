@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling.Models;
@@ -59,7 +60,7 @@ public class SvgServiceDeepZoomTests
             ViewSize * zoom
         );
 
-        ISvgService service = new SvgService(modelMgr, Mock.Of<ITilesMgr>());
+        ISvgService service = new SvgService(modelMgr, Mock.Of<ITilesMgr>(), new ViewOptions());
         return service.GetContentSvg(canvasRect, zoom);
     }
 

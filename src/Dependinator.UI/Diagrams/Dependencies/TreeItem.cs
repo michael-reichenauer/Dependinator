@@ -23,7 +23,7 @@ class TreeItem : TreeItemData<TreeItem>
         NodeId = node.Id;
         Text = node.ShortName;
         Icon = Icons.Icon.GetIcon(node);
-        CanShowEditor = node.FileSpanOrParentSpan is not null;
+        CanShowEditor = Dependinator.Core.Build.IsVsCodeExtWasm && node.FileSpanOrParentSpan is not null;
         LinkCount = linkCount;
         this.getChildren = getChildren;
 

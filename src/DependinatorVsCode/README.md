@@ -15,15 +15,17 @@ to understand, analyze, and refactor — without leaving VS Code.
 
 - **Interactive dependency map** — explore your codebase as a zoomable,
   navigable diagram instead of scrolling through files.
-- **Drill down and back up** — open nodes to see their internals
-  (namespaces, types, members) and follow dependencies between components.
+- **Drill down and back up** — zoom into nodes (or double-click one) to see
+  their internals (namespaces, types, members) and follow dependencies
+  between components.
 - **Jump to code** — navigate from a node or dependency straight to the
   corresponding source location in the editor.
 - **Automatic refresh** — the map updates automatically when you change
   source files (configurable).
-- **Manual editing** — add your own nodes and links (drag from a node to
-  create a link), delete manual links, and start from an empty model to
-  sketch an architecture by hand.
+- **Manual editing** — turn on edit mode (the pencil in the toolbar) to
+  arrange nodes, pick icons and colors, add your own nodes and links (drag
+  from a node to create a link), add notes, and start from an empty model to
+  sketch an architecture by hand. Every edit can be undone.
 - **Multiple models** — create, switch between, and delete models from the
   app menu.
 - **Icon library** — pick icons for nodes, including curated Azure, AWS,
@@ -48,8 +50,8 @@ to understand, analyze, and refactor — without leaving VS Code.
    **Dependinator: Open**, or click the Dependinator icon
    <img src="https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/icon-toolbar.png" alt="Dependinator title-bar icon" height="16" align="top" />
    in the editor title bar.
-3. The dependency map opens in a new tab. Click nodes to drill in, and drag /
-   zoom to navigate.
+3. The dependency map opens in a new tab. Zoom into nodes (or double-click
+   one) to drill in, drag to pan, and `Ctrl+F` to find a node by name.
 
 Need more guidance? Click the **Help** button in the Dependinator app bar —
 it opens a page with detailed usage instructions, navigation tips, and

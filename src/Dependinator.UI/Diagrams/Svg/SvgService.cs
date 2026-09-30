@@ -30,12 +30,18 @@ class SvgService : ISvgService
 
     readonly IModelMgr modelMgr;
     readonly ITilesMgr tilesMgr;
+    readonly IViewOptions viewOptions;
 
-    public SvgService(IModelMgr modelMgr, ITilesMgr tilesMgr)
+    public SvgService(IModelMgr modelMgr, ITilesMgr tilesMgr, IViewOptions viewOptions)
     {
         this.modelMgr = modelMgr;
         this.tilesMgr = tilesMgr;
+        this.viewOptions = viewOptions;
     }
+
+    // The user's view toggles that affect what a tile contains; captured per render so the
+    // static render helpers need no service access.
+    ViewFlags Flags => new(viewOptions.IsEditingEnabled, viewOptions.ShowHiddenNodes);
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
@@ -85,11 +91,12 @@ class SvgService : ISvgService
 
         var offset = new Pos(-canvasRect.X / zoom, -canvasRect.Y / zoom);
         var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
-        var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None);
+        // Exports never show edit chrome (handles), whatever the current mode.
+        var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, Flags with { IsEditing = false });
         return RenderNodeContent(model.Root, context);
     }
 
-    static Tile CreateModelTile(IModel model, TileKey tileKey)
+    Tile CreateModelTile(IModel model, TileKey tileKey)
     {
         var timing = Timing.Start();
         var tileRect = tileKey.GetTileRect();
@@ -99,7 +106,7 @@ class SvgService : ISvgService
 
         RepLineService.Sync(model, tileZoom);
 
-        var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None);
+        var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, Flags);
         var rootContentSvg = RenderNodeContent(model.Root, rootContext);
 
         // Enable this if need to show tile border and/or tile with margin border
@@ -143,7 +150,7 @@ class SvgService : ISvgService
 
     static string RenderNode(Node node, RenderContext context)
     {
-        if (node.IsHidden && !ViewOptions.ShowHiddenNodes)
+        if (node.IsHidden && !context.Flags.ShowHidden)
             return "";
 
         var geometry = CalculateNodeGeometry(node, context);
@@ -159,7 +166,7 @@ class SvgService : ISvgService
             return NoteSvg.GetNoteSvg(node, geometry.CanvasRect, context.Zoom);
 
         if (node.Type.IsMember)
-            return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom);
+            return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
 
         if (node.IsPassThrough)
         { // An invisible container that covers its parent; render only its children, no chrome
@@ -171,7 +178,7 @@ class SvgService : ISvgService
         }
 
         if (NodeViewPolicy.IsShowIcon(node.Type, context.Zoom))
-            return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom);
+            return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
 
         if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
             return RenderFlattenedNodeContent(node, geometry, context);
@@ -182,7 +189,13 @@ class SvgService : ISvgService
         if (NodeViewPolicy.IsTooLargeToBeSeen(context.Zoom))
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
 
-        return NodeSvg.GetNodeContainerSvg(node, geometry.CanvasRect, context.Zoom, childrenContentSvg);
+        return NodeSvg.GetNodeContainerSvg(
+            node,
+            geometry.CanvasRect,
+            context.Zoom,
+            childrenContentSvg,
+            context.Flags.IsEditing
+        );
     }
 
     // At extreme zoom a nested svg viewport would carry offsets of millions of canvas units,
@@ -245,7 +258,7 @@ class SvgService : ISvgService
         {
             if (!line.IsActiveRep)
                 continue; // Only current representative segments are drawn (see RepLineService)
-            if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
+            if (line.IsHidden && !context.Flags.ShowHidden)
                 continue;
             if (line.Target.IsPassThrough)
                 continue; // The pass-through node covers this parent, so the segment is degenerate
@@ -263,7 +276,7 @@ class SvgService : ISvgService
                     continue; // Only current representative lines are drawn (see RepLineService)
                 if (line.Target.Parent == line.Source)
                     continue;
-                if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
+                if (line.IsHidden && !context.Flags.ShowHidden)
                     continue;
                 if (line.Source.IsPassThrough && line.Target == node)
                     continue; // The pass-through node covers this parent, so the segment is degenerate
@@ -297,7 +310,7 @@ class SvgService : ISvgService
     {
         if (endpoint == node)
             return true;
-        if (endpoint.IsHidden && !ViewOptions.ShowHiddenNodes)
+        if (endpoint.IsHidden && !context.Flags.ShowHidden)
             return false;
 
         // The endpoint's tile rect, as RenderNode computes it for this container's children
@@ -322,7 +335,7 @@ class SvgService : ISvgService
         {
             if (directLine.IsCousin && !directLine.IsActiveRep)
                 continue; // An inactive cousin line kept only for its user waypoints/description
-            if (directLine.IsHidden && !ViewOptions.ShowHiddenNodes)
+            if (directLine.IsHidden && !context.Flags.ShowHidden)
                 continue;
             if (!IsEitherDirectEndpointRendered(directLine, node, nodeCanvasPos, childrenZoom, context))
                 continue;
@@ -359,7 +372,7 @@ class SvgService : ISvgService
     {
         if (endpoint == ancestor)
             return true;
-        if (endpoint.IsHidden && !ViewOptions.ShowHiddenNodes)
+        if (endpoint.IsHidden && !context.Flags.ShowHidden)
             return false;
 
         var (endpointPos, endpointZoom) = endpoint.GetPosAndZoom();
@@ -381,12 +394,21 @@ class SvgService : ISvgService
         return RectOverlap(context.TileBounds, tileRect);
     }
 
-    readonly record struct RenderContext(Pos CanvasOffset, double Zoom, Rect TileBounds, Pos TilePosition)
+    readonly record struct ViewFlags(bool IsEditing, bool ShowHidden);
+
+    readonly record struct RenderContext(
+        Pos CanvasOffset,
+        double Zoom,
+        Rect TileBounds,
+        Pos TilePosition,
+        ViewFlags Flags
+    )
     {
-        public RenderContext With(Pos canvasOffset, double zoom) => new(canvasOffset, zoom, TileBounds, TilePosition);
+        public RenderContext With(Pos canvasOffset, double zoom) =>
+            new(canvasOffset, zoom, TileBounds, TilePosition, Flags);
 
         public RenderContext ForNestedContainer(Rect tileRect) =>
-            new(Pos.None, Zoom, TileBounds, new Pos(tileRect.X, tileRect.Y));
+            new(Pos.None, Zoom, TileBounds, new Pos(tileRect.X, tileRect.Y), Flags);
     }
 
     readonly record struct NodeGeometry(Rect CanvasRect, Rect TileRect);

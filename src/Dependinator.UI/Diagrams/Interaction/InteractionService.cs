@@ -1,8 +1,8 @@
+using Dependinator.Core;
 using Dependinator.UI.Diagrams.Dependencies;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
-using Microsoft.JSInterop;
 
 namespace Dependinator.UI.Diagrams.Interaction;
 
@@ -37,9 +37,16 @@ class InteractionService(
     IContextMenuService contextMenuService,
     IScreenService screenService,
     IAreaSelectionService areaSelectionService,
-    IJSInterop jsInterop
-) : IInteractionService, IDisposable
+    IViewOptions viewOptions,
+    IKeyboardService keyboardService,
+    INavigationService navigationService
+) : IInteractionService
 {
+    // Keyboard pan step in screen pixels (Shift multiplies it) and zoom factor per key press.
+    const double KeyPanStep = 40;
+    const double KeyPanStepShift = 200;
+    const double KeyZoomFactor = 1.25;
+
     // Delay before a held-down button switches the cursor to "move" (see OnMoveTimer).
     const int MoveDelay = 300;
 
@@ -59,7 +66,6 @@ class InteractionService(
     // Swallows the click that follows a completed area-selection drag, so the drag does not
     // also select whatever node the pointer was released on.
     bool suppressNextClick = false;
-    DotNetObjectReference<InteractionService>? selfReference;
 
     // Press position in viewport (client) coords, the coordinate space of the link-drag
     // preview overlay. Client coords are used because pointer capture retargets events to the
@@ -73,9 +79,16 @@ class InteractionService(
     string cursor = "default";
     public string Cursor
     {
-        get => areaSelectionService.IsArmed || areaSelectionService.IsSelecting ? "crosshair" : cursor;
+        get => IsPlacementMode ? "crosshair" : cursor;
         private set => cursor = value;
     }
+
+    // A mode where the next click/drag places something rather than selects: the cursor says so.
+    bool IsPlacementMode =>
+        areaSelectionService.IsArmed
+        || areaSelectionService.IsSelecting
+        || noteService.IsPlacingNote
+        || manualEditService.IsPlacingNode;
     public bool IsContainer
     {
         get
@@ -90,11 +103,12 @@ class InteractionService(
         }
     }
 
+    // Source navigation opens an editor, which only the VS Code host has.
     public bool CanShowSource
     {
         get
         {
-            if (!selectionService.IsSelected)
+            if (!Build.IsVsCodeExtWasm || !selectionService.IsSelected)
                 return false;
             using var model = modelMgr.UseModel();
             if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
@@ -108,7 +122,7 @@ class InteractionService(
     {
         get
         {
-            if (!selectionService.SelectedId.IsLine)
+            if (!Build.IsVsCodeExtWasm || !selectionService.SelectedId.IsLine)
                 return false;
             if (!dependenciesService.TryGetLine(LineId.FromId(selectionService.SelectedId.Id), out var line))
                 return false;
@@ -145,7 +159,7 @@ class InteractionService(
 
     public void IncreaseNodeSize()
     {
-        if (!ViewOptions.IsEditingEnabled)
+        if (!viewOptions.IsEditingEnabled)
             return;
         if (!selectionService.IsSelected)
             return;
@@ -156,7 +170,7 @@ class InteractionService(
 
     public void DecreaseNodeSize()
     {
-        if (!ViewOptions.IsEditingEnabled)
+        if (!viewOptions.IsEditingEnabled)
             return;
         if (!selectionService.IsSelected)
             return;
@@ -177,22 +191,90 @@ class InteractionService(
         mouseEventService.PointerUp += OnMouseUp;
         mouseEventService.Wheel += OnMouseWheel;
         mouseEventService.ContextMenu += OnContextMenu;
-
-        selfReference = jsInterop.Reference(this);
-        await jsInterop.Call("listenToEscapeKey", selfReference, nameof(OnEscapeKey));
+        keyboardService.KeyDown += OnKeyDown;
+        await Task.CompletedTask;
     }
 
-    // Cancels an armed/active area selection on Escape. A strict no-op otherwise, so it never
-    // interferes with e.g. MudBlazor dialogs, which handle Escape themselves.
-    [JSInvokable]
-    public ValueTask OnEscapeKey()
+    // The canvas keyboard gestures: Escape backs out of whatever is in progress, arrows pan,
+    // plus/minus zoom. (Search, undo/redo and fit live in the app bar; Delete in the toolbars.)
+    void OnKeyDown(KeyPress key)
     {
-        if (areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
-            areaSelectionService.Cancel();
-        return ValueTask.CompletedTask;
+        if (key.Is("Escape") && key.IsPlain)
+        {
+            CancelOrDeselect();
+            return;
+        }
+
+        if (key.IsPlain || (key.Shift && !key.Ctrl && !key.Alt))
+        {
+            var step = key.Shift ? KeyPanStepShift : KeyPanStep;
+            switch (key.Key)
+            {
+                case "ArrowLeft":
+                    panZoomService.PanBy(-step, 0);
+                    break;
+                case "ArrowRight":
+                    panZoomService.PanBy(step, 0);
+                    break;
+                case "ArrowUp":
+                    panZoomService.PanBy(0, -step);
+                    break;
+                case "ArrowDown":
+                    panZoomService.PanBy(0, step);
+                    break;
+                case "+":
+                case "=":
+                    panZoomService.ZoomBy(KeyZoomFactor);
+                    break;
+                case "-":
+                    panZoomService.ZoomBy(1 / KeyZoomFactor);
+                    break;
+                default:
+                    return;
+            }
+            selectionService.HideSelectedPosition();
+            UpdateToolbar();
+            applicationEvents.TriggerUIStateChanged();
+            return;
+        }
+
+        if (key.Ctrl && !key.Alt && key.Key is "+" or "=" or "-")
+        {
+            panZoomService.ZoomBy(key.Key == "-" ? 1 / KeyZoomFactor : KeyZoomFactor);
+            selectionService.HideSelectedPosition();
+            UpdateToolbar();
+            applicationEvents.TriggerUIStateChanged();
+        }
     }
 
-    public void Dispose() => selfReference?.Dispose();
+    // Escape backs out one step at a time: an in-progress placement or drag first, then the
+    // per-node arrange mode, then the selection itself.
+    void CancelOrDeselect()
+    {
+        if (contextMenuService.IsOpen)
+            contextMenuService.Close();
+        else if (areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
+        {
+            isAreaSelecting = false;
+            areaSelectionService.Cancel();
+        }
+        else if (noteService.IsPlacingNote)
+            noteService.CancelPlaceNote();
+        else if (manualEditService.IsPlacingNode)
+            manualEditService.CancelPlaceNode();
+        else if (manualEditService.IsLinkDragActive)
+            manualEditService.CancelLinkDrag();
+        else if (manualEditService.IsNameEntryOpen)
+            manualEditService.CancelNameEntry();
+        else if (selectionService.IsEditMode)
+            selectionService.SetEditMode(false);
+        else if (selectionService.IsSelected)
+            selectionService.Unselect();
+        else
+            return;
+
+        applicationEvents.TriggerUIStateChanged();
+    }
 
     void OnContextMenu(PointerEvent e)
     {
@@ -302,10 +384,26 @@ class InteractionService(
             return;
         }
 
-        // Double-click on empty canvas (or inside a container) starts adding a manual node there.
-        if (!ViewOptions.IsEditingEnabled)
+        // In edit mode a double-click on empty canvas (or inside an open container) adds a
+        // manual node there; otherwise a double-click zooms the view to the node.
+        if (viewOptions.IsEditingEnabled && (pointerId.IsCanvas || IsContainerNode(pointerId)))
+        {
+            _ = manualEditService.AddNodeAtAsync(e);
             return;
-        _ = manualEditService.AddNodeAtAsync(e);
+        }
+
+        if (pointerId.IsNode)
+            navigationService.ShowNodeAsync(pointerId.NodeId).RunInBackground();
+    }
+
+    bool IsContainerNode(PointerId pointerId)
+    {
+        if (!pointerId.IsNode)
+            return false;
+        using var model = modelMgr.UseModel();
+        if (!model.Nodes.TryGetValue(pointerId.NodeId, out var node))
+            return false;
+        return node.IsRoot || NodeViewPolicy.IsContainerView(node, Zoom);
     }
 
     void OnMouseDown(PointerEvent e)
@@ -362,7 +460,7 @@ class InteractionService(
             return;
         }
 
-        if (ViewOptions.IsEditingEnabled && mouseDownId.IsLinkHandle)
+        if (viewOptions.IsEditingEnabled && mouseDownId.IsLinkHandle)
         {
             if (!isDraggingLink)
             {
@@ -379,7 +477,7 @@ class InteractionService(
         }
 
         if (
-            ViewOptions.IsEditingEnabled
+            viewOptions.IsEditingEnabled
             && mouseDownId.IsLinePoint
             && selectionService.SelectedId.IsLine
             && mouseDownId.Id == selectionService.SelectedId.Id
@@ -397,7 +495,7 @@ class InteractionService(
             return;
         }
 
-        if (ViewOptions.IsEditingEnabled && mouseDownId != PointerId.Empty && mouseDownId.IsResize)
+        if (viewOptions.IsEditingEnabled && mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {
             isResizingSelectedNode = true;
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
@@ -406,7 +504,7 @@ class InteractionService(
         }
 
         if (
-            ViewOptions.IsEditingEnabled
+            viewOptions.IsEditingEnabled
             && mouseDownId == selectionService.SelectedId
             && selectionService.IsSelectedNodeMovable(Zoom)
             && mouseDownId.IsNode

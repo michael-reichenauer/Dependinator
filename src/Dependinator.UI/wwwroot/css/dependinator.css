@@ -1,9 +1,56 @@
-/* Light dropdown menus for the toolbars (AppBar / NodeToolbar).
-   The app runs in MudBlazor dark mode, but the toolbars float over a light
-   canvas and use a light card. Their menu popovers would otherwise inherit the
-   dark surface. Overriding the palette CSS variables on the popover cascades to
-   every descendant (paper background, list text, icons, dividers, disabled
-   items), turning just these menus light without touching the global theme. */
+/* Floating toolbar cards (app bar, node/line toolbars, mode banner): a translucent card in
+   the theme's surface color so the diagram still shows through. The theme is set on the
+   root element (data-theme, see applyTheme in jsInterop.js). */
+.dep-toolbar-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    box-shadow: var(--mud-elevation-2);
+}
+
+:root[data-theme="dark"] .dep-toolbar-card {
+    background: rgba(32, 34, 40, 0.92);
+}
+
+/* A disabled toolbar button must still be visible (but clearly off): MudBlazor's disabled
+   color is too faint on the translucent card. */
+.dep-toolbar-card .mud-button-root.mud-disabled .mud-icon-root {
+    color: rgba(0, 0, 0, 0.32);
+}
+
+:root[data-theme="dark"] .dep-toolbar-card .mud-button-root.mud-disabled .mud-icon-root {
+    color: rgba(255, 255, 255, 0.32);
+}
+
+/* The mode banner (ModeBanner.razor): centered under the app bar while a mode is armed. */
+.dep-mode-banner {
+    position: fixed;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1300;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 4px 12px;
+    max-width: calc(100vw - 32px);
+    font-size: 0.875rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-mode-banner__text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Dropdown menus for the toolbars (AppBar / NodeToolbar / ContextMenu). In the light theme
+   the menus are pinned light regardless of the MudBlazor palette (overriding the palette CSS
+   variables on the popover cascades to every descendant: paper background, list text, icons,
+   dividers, disabled items). In the dark theme the popover simply uses the dark palette
+   (.dep-dark-menu is a no-op marker). */
+.dep-dark-menu {
+}
+
 .dep-light-menu {
     --mud-palette-surface: #ffffff;
     --mud-palette-text-primary: rgba(0, 0, 0, 0.87);

@@ -189,25 +189,27 @@ class CanvasService(
 
     async Task ShowDemoMessageAsync()
     {
-        // Inside the VS Code extension the user already has it installed, so only
-        // suggest the extension in the browser hosts.
-        string extensionHint = Dependinator.Core.Build.IsVsCodeExtWasm
-            ? ""
-            : "To work with diagrams alongside your code, install the "
+        // Where the user's own models come from differs per host: the VS Code extension parses
+        // the workspace solution, the web app shows models synced from VS Code (or hand-drawn
+        // design models).
+        string ownModelsHint = Dependinator.Core.Build.IsVsCodeExtWasm
+            ? "Your workspace's solution is parsed and opened automatically when one is found; "
+                + "switch between solutions and models under <b>Menu › Models</b>.<br/><br/>"
+            : "To map your own code, install the "
                 + "<a href=\"https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator\" "
-                + "target=\"_blank\" rel=\"noopener\">Dependinator VS Code extension</a>.<br/><br/>";
+                + "target=\"_blank\" rel=\"noopener\">Dependinator VS Code extension</a> and enable device sync "
+                + "there and here: your models then appear under <b>Menu › Models</b>. You can also sketch an "
+                + "architecture by hand with <b>Menu › Models › New Model</b>.<br/><br/>";
 
         await dialogService.ShowMessageBoxAsync(
             "Welcome to Dependinator",
             (MarkupString)(
-                "It looks like you don't have a diagram yet, so a <b>demo diagram</b> "
-                + "has been opened for you to explore.<br/><br/>"
-                + "Pan, zoom and click the nodes to see how Dependinator visualizes "
-                + "software dependencies. You can open your own model at any time from the menu.<br/><br/>"
-                + "The <b>Help</b> page (the <b>?</b> button in the app bar) has usage "
-                + "instructions, navigation tips, and keyboard/mouse controls.<br/><br/>"
-                + extensionHint
-                + "Enable device sync to keep your diagrams in sync across your devices."
+                "You don't have a diagram yet, so a <b>demo diagram</b> has been opened for you to explore.<br/><br/>"
+                + "<b>Zoom</b> (scroll or pinch) into a node to see what is inside it, <b>drag</b> to pan, "
+                + "<b>click</b> a node for its toolbar and <b>double-click</b> it to zoom to it. "
+                + "<b>Ctrl+F</b> finds a node by name.<br/><br/>"
+                + ownModelsHint
+                + "<b>Menu › Help</b> has the full list of controls."
             ),
             yesText: "Got it"
         );

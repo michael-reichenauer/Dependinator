@@ -36,6 +36,11 @@
                                Color="@(srv.IsShowLines ? Color.Info : Color.Default)"
                                OnClick="() => srv.SetShowLines(!srv.IsShowLines)" data-testid="explorer-show-lines" />
             </MudTooltip>
+            <MudTooltip Text="@(srv.IsLinesPinned ? "Lines are kept when selecting other nodes (click to unpin)" : "Keep the lines when selecting other nodes")">
+                <MudIconButton Icon="@(srv.IsLinesPinned ? MudBlazor.Icons.Material.Filled.PushPin : MudBlazor.Icons.Material.Outlined.PushPin)"
+                               Size="Size.Small" Color="@(srv.IsLinesPinned ? Color.Info : Color.Default)"
+                               OnClick="() => srv.SetLinesPinned(!srv.IsLinesPinned)" data-testid="explorer-pin-lines" />
+            </MudTooltip>
             <MudTooltip Text="Show references">
                 <MudIconButton Icon="@Icon.ReferencesIcon" Size="Size.Small"
                                Color="@(srv.TreeType == TreeType.References ? Color.Info : Color.Default)"
@@ -51,7 +56,7 @@
                                Size="Size.Small" OnClick="() => srv.SetMinimized(!srv.IsMinimized)"
                                data-testid="explorer-minimize" />
             </MudTooltip>
-            <MudTooltip Text="Close">
+            <MudTooltip Text="Close (the lines stay until you select something else)">
                 <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small"
                                OnClick="() => srv.Close()" data-testid="explorer-close" />
             </MudTooltip>

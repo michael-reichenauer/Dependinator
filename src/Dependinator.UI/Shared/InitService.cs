@@ -22,6 +22,9 @@ class InitService : IInitService
     readonly IDatabase database;
     readonly ICanvasService canvasService;
     readonly IVsCodeMessageService vsCodeMessageService;
+    readonly IViewOptions viewOptions;
+    readonly IThemeService themeService;
+    readonly IKeyboardService keyboardService;
 
     public InitService(
         IScreenService screenService,
@@ -30,7 +33,10 @@ class InitService : IInitService
         IConfigService configService,
         IDatabase database,
         ICanvasService canvasService,
-        IVsCodeMessageService vsCodeMessageService
+        IVsCodeMessageService vsCodeMessageService,
+        IViewOptions viewOptions,
+        IThemeService themeService,
+        IKeyboardService keyboardService
     )
     {
         this.screenService = screenService;
@@ -40,6 +46,9 @@ class InitService : IInitService
         this.database = database;
         this.canvasService = canvasService;
         this.vsCodeMessageService = vsCodeMessageService;
+        this.viewOptions = viewOptions;
+        this.themeService = themeService;
+        this.keyboardService = keyboardService;
     }
 
     public async Task InitAsync(IUIComponent component)
@@ -48,8 +57,13 @@ class InitService : IInitService
         await database.Init([FileService.DBCollectionName]);
         var config = await configService.GetAsync();
         NodeLayout.SetDensity(config.LayoutDensity);
-        ViewOptions.SetShowHiddenNodes(config.ShowHiddenNodes);
+        viewOptions.SetShowHiddenNodes(config.ShowHiddenNodes);
+        viewOptions.SetIsEditingEnabled(config.IsEditingEnabled);
         pointerEventService.InvertScrollZoom = config.InvertScrollZoom;
+        // The theme must be applied before the first model render, since the SVG tiles bake the
+        // palette in.
+        await themeService.InitAsync(config.Theme);
+        await keyboardService.InitAsync();
         await screenService.InitAsync(component);
         await pointerEventService.InitAsync();
         await modelListService.InitAsync();

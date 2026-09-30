@@ -11,13 +11,14 @@
 @inject ILineEditService lineEditService
 @inject IManualEditService manualEditService
 @inject INavigationService navigationService
+@inject IViewOptions viewOptions
+@inject IKeyboardService keyboardService
 @implements IDisposable
 
 @if (HasSelectedLine)
 {
     <MudStack Style="@containerPosition" Spacing="1">
-        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar"
-                        Style="background:rgba(255,255,255,0.9);border-radius:4px;box-shadow:var(--mud-elevation-2);">
+        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar dep-toolbar-card">
             @if (selectionService.IsSelectedLineDirect)
             {
                 <MudTooltip Text="Hide line">
@@ -39,20 +40,24 @@
                 <MudTooltip Text="Show dependencies">
                     <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="line-dependencies" />
                 </MudTooltip>
-                <MudTooltip Text="Add line point">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
-                                   data-testid="line-add-point" />
-                </MudTooltip>
-                <MudTooltip Text="Remove line point">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
-                                   data-testid="line-remove-point" />
-                </MudTooltip>
-                @if (IsSelectedLineManual)
+                @* Line points reshape the (saved) line, so they are edit-mode actions like dragging them. *@
+                @if (viewOptions.IsEditingEnabled)
                 {
-                    <MudTooltip Text="Delete link">
-                        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error"
-                                       OnClick="DeleteManualLine" data-testid="line-delete" />
+                    <MudTooltip Text="Add line point">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
+                                       data-testid="line-add-point" />
                     </MudTooltip>
+                    <MudTooltip Text="Remove line point">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
+                                       data-testid="line-remove-point" />
+                    </MudTooltip>
+                    @if (IsSelectedLineManual)
+                    {
+                        <MudTooltip Text="Delete link (Del)">
+                            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error"
+                                           OnClick="DeleteManualLine" data-testid="line-delete" />
+                        </MudTooltip>
+                    }
                 }
             }
             @if (interactionService.CanShowLineSource)
@@ -125,10 +130,9 @@
 
     async Task ShowSourceAsync()
     {
-        if (!TryGetSelectedLine(out var line))
+        if (!TryGetSelectedLine(out var line) || !interactionService.CanShowLineSource)
             return;
-        if (Build.IsVsCodeExtWasm)
-            await navigationService.ShowEditor(line.Source.Id);
+        await navigationService.ShowEditor(line.Source.Id);
     }
 
     void PanToTarget()
@@ -154,9 +158,26 @@
         dependenciesService.ShowNodeAsync(node.Id);
     }
 
-    protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+    protected override void OnInitialized()
+    {
+        applicationEvents.UIStateChanged += OnUiStateChanged;
+        keyboardService.KeyDown += OnKeyDown;
+    }
 
     void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
-    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+    public void Dispose()
+    {
+        applicationEvents.UIStateChanged -= OnUiStateChanged;
+        keyboardService.KeyDown -= OnKeyDown;
+    }
+
+    // Delete removes the selected user-drawn link (parsed links cannot be deleted).
+    void OnKeyDown(KeyPress key)
+    {
+        if (!key.Is("Delete") || !key.IsPlain || !HasSelectedLine)
+            return;
+        if (viewOptions.IsEditingEnabled && IsSelectedLineManual)
+            _ = InvokeAsync(DeleteManualLine);
+    }
 }

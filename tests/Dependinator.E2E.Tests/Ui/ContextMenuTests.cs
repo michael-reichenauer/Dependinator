@@ -4,9 +4,10 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// Exercises the right-click context menu on the diagram canvas: it offers "Add Note Here" and
-// "Add Node Here", each placing the note/manual node at the clicked position (the same flows also
-// reachable via the app menu and double-click, but anchored where the user right-clicked).
+// Exercises the right-click context menu on the diagram canvas: in edit mode it offers "Add
+// Note Here" and "Add Node Here", each placing the note/manual node at the clicked position (the
+// same flows also reachable via the app menu and double-click, but anchored where the user
+// right-clicked).
 public class ContextMenuTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     const string NoteId = "Z9";
@@ -15,6 +16,7 @@ public class ContextMenuTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task ContextMenu_AddNodeHere_ShouldAddManualNodeAtClick()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
 
         await OpenContextMenuAsync();
         await Page.GetByTestId("context-menu-add-node").ClickAsync();
@@ -33,6 +35,7 @@ public class ContextMenuTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task ContextMenu_AddNoteHere_ShouldAddNoteAtClick()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
 
         await OpenContextMenuAsync();
         await Page.GetByTestId("context-menu-add-note").ClickAsync();

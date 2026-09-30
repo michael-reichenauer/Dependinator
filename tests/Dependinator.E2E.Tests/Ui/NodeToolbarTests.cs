@@ -26,6 +26,7 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task NodeToolbar_ShouldSetAndClearIconColor()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
         await App.SelectNodeByFullNameAsync("Demo.sln");
 
         // Pick Blue from the color swatch dropdown (icon tint while the node shows as an
@@ -42,6 +43,7 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task NodeToolbar_ShouldSetCloudIconViaDialogTab()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
         await App.SelectNodeByFullNameAsync("Demo.sln");
 
         // Open the icon selector dialog and switch to the Azure tab; the list swaps from the
@@ -65,6 +67,7 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task NodeToolbar_ShouldSetContainerBackgroundColor()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
 
         // Navigate into Demo.UI so its child class "Main" renders as a container. Wait for
         // a selected result row before pressing Enter — Enter without results is a no-op —
@@ -153,9 +156,12 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.ExplorerExpandButtons.First.ClickAsync();
         await Expect(App.LineTitle("Demo.UI.Main→Externals")).ToHaveCountAsync(1);
 
-        // Closing the explorer removes its lines.
-        await App.CloseExplorerAsync();
+        // Closing the explorer keeps its lines (they are what the user opened it for); hiding
+        // the lines with the header toggle first removes them.
+        await App.ExplorerShowLinesButton.ClickAsync();
         await Expect(App.FocusLines).ToHaveCountAsync(0);
+        await App.CloseExplorerAsync();
+        await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
     }
 
     [E2EFact]
@@ -170,16 +176,19 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.DependenciesTree).ToBeVisibleAsync();
     }
 
+    // The explorer folds down on a canvas click only on a narrow viewport (below MudBlazor's md
+    // breakpoint), where it would otherwise cover the diagram; on a wide screen it stays open.
     [E2EFact]
     public async Task DependenciesPanel_ShouldMinimizeOnCanvasClick_AndRestoreOnHeaderClick()
     {
+        await Page.SetViewportSizeAsync(800, 600);
         await App.GotoMainPageAsync();
         await App.SelectNodeByFullNameAsync("Demo.sln");
 
         await App.RepeatUntilVisibleAsync(() => App.NodeDependenciesButton.ClickAsync(), App.DependenciesTree);
         await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
 
-        // A click elsewhere in the diagram (empty canvas, top-right corner) folds the explorer
+        // A click elsewhere in the diagram (empty canvas, bottom-right corner) folds the explorer
         // down to its title bar; its lines stay in the diagram.
         var canvas = await App.Canvas.BoundingBoxAsync();
         await Page.Mouse.ClickAsync(canvas!.X + canvas.Width - 30, canvas.Y + canvas.Height - 30);
@@ -193,7 +202,10 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
         await App.RepeatUntilVisibleAsync(() => App.ExplorerMinimizeButton.ClickAsync(), App.DependenciesTree);
 
+        // Closing keeps the lines until something else is selected.
         await App.CloseExplorerAsync();
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+        await App.SelectNodeByFullNameAsync("Externals");
         await Expect(App.FocusLines).ToHaveCountAsync(0);
     }
 
@@ -210,7 +222,8 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.ExplorerReferencesButton.ClickAsync();
         await Expect(App.DependenciesTree).ToBeVisibleAsync();
 
-        // The header close button dismisses the explorer.
+        // The header close button dismisses the explorer; on a wide viewport a canvas click
+        // does not fold it (it stays open beside the diagram).
         await App.CloseExplorerAsync();
         await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
     }

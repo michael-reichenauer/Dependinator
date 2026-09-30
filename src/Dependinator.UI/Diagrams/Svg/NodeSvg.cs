@@ -46,7 +46,7 @@ static partial class NodeSvg
     const double LinkHandleTouchRx = 17; // Invisible touch ellipse, bridges back to the icon edge
     const double LinkHandleTouchRy = 11;
 
-    public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom)
+    public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom, bool isEditing = false)
     {
         var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
         var textZoom = TextZoom(parentZoom);
@@ -68,10 +68,16 @@ static partial class NodeSvg
             LinkHandlePos: new Pos(geometry.X + geometry.Width + LinkHandleGap, geometry.Y + geometry.Height / 2)
         );
 
-        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom);
+        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing);
     }
 
-    public static string GetNodeContainerSvg(Node node, Rect nodeCanvasRect, double parentZoom, string childrenContent)
+    public static string GetNodeContainerSvg(
+        Node node,
+        Rect nodeCanvasRect,
+        double parentZoom,
+        string childrenContent,
+        bool isEditing = false
+    )
     {
         var header = CalculateContainerHeader(nodeCanvasRect, parentZoom);
         var elementId = PointerId.FromNode(node.Id).ElementId;
@@ -80,7 +86,7 @@ static partial class NodeSvg
         var iconId = IconName(node);
         var strokeWidth = node.IsEditMode ? 10 : node.StrokeWidth;
         var hoverClass = node.IsEditMode ? "hoverableedit" : "hoverable";
-        var selectedOverlay = SelectedNodeSvg(node, nodeCanvasRect);
+        var selectedOverlay = SelectedNodeSvg(node, nodeCanvasRect, isEditing);
 
         var innerGeometry = new Rect(0, 0, nodeCanvasRect.Width, nodeCanvasRect.Height);
         var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName, node.HtmlDescription);
@@ -124,7 +130,7 @@ static partial class NodeSvg
         );
     }
 
-    public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom)
+    public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom, bool isEditing = false)
     {
         var textZoom = TextZoom(parentZoom);
         var fontSize = FontSize * textZoom;
@@ -143,7 +149,7 @@ static partial class NodeSvg
             MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.ShortName, fontSize), member.Text.Y)
         );
 
-        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom);
+        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing);
     }
 
     // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
@@ -163,7 +169,7 @@ static partial class NodeSvg
         Pos? LinkHandlePos = null
     );
 
-    static string BuildLeafNodeSvg(Node node, LeafNodeLayout layout, double descriptionFontSize)
+    static string BuildLeafNodeSvg(Node node, LeafNodeLayout layout, double descriptionFontSize, bool isEditing)
     {
         var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
@@ -174,9 +180,9 @@ static partial class NodeSvg
             layout.Bounds,
             node.HtmlLongName,
             node.HtmlDescription,
-            LinkHandleSvg(node, layout.LinkHandlePos)
+            LinkHandleSvg(node, layout.LinkHandlePos, isEditing)
         );
-        var selectedOverlay = SelectedNodeSvg(node, layout.Bounds);
+        var selectedOverlay = SelectedNodeSvg(node, layout.Bounds, isEditing);
         var descriptionSvg = BuildDescriptionSvg(
             node,
             layout.TextPos.X,
@@ -456,11 +462,10 @@ static partial class NodeSvg
     // in Canvas.razor). It sits inside the hover group so hovering the handle itself keeps it
     // visible. Dragging it to another node creates a manual link (see InteractionService).
     // Not shown while the node is selected: the selection's resize handles own the node edge
-    // (their large touch circles would swallow the handle's presses), and a selected node
-    // already offers "Add link from this node" in its toolbar.
-    static string LinkHandleSvg(Node node, Pos? pos)
+    // (their large touch circles would swallow the handle's presses).
+    static string LinkHandleSvg(Node node, Pos? pos, bool isEditing)
     {
-        if (pos is null || !ViewOptions.IsEditingEnabled || node.IsSelected)
+        if (pos is null || !isEditing || node.IsSelected)
             return "";
 
         var (x, y) = (pos.X, pos.Y);
@@ -481,7 +486,7 @@ static partial class NodeSvg
         );
     }
 
-    static string SelectedNodeSvg(Node node, Rect geometry)
+    static string SelectedNodeSvg(Node node, Rect geometry, bool isEditing)
     {
         if (!node.IsSelected)
             return "";
@@ -500,7 +505,7 @@ static partial class NodeSvg
             """
         );
 
-        if (!ViewOptions.IsEditingEnabled)
+        if (!isEditing)
             return borderSvg; // Show selection border only, no resize handles
 
         const double HandleRadius = 4; // Visible resize handle

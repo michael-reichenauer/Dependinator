@@ -27,10 +27,20 @@
     </style>
 </head>
 
-<script>
-</script>
-
-<body oncontextmenu="return false;" style="background-color:#FAFAFA;">
+<body oncontextmenu="return false;">
+    <script>
+        // Paint the last used theme's background before Blazor boots, so a reload does not
+        // flash the other theme (the app sets and stores the theme, see applyTheme).
+        (function () {
+            try {
+                var isDark = localStorage.getItem("dep-theme") === "dark"
+                    || (!localStorage.getItem("dep-theme")
+                        && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+                document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+                document.body.style.backgroundColor = isDark ? "#0D0F11" : "#FAFAFA";
+            } catch (e) { }
+        })();
+    </script>
     <component type="typeof(App)" render-mode="ServerPrerendered" />
 
     <div id="blazor-error-ui">

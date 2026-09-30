@@ -11,6 +11,11 @@ interface IPanZoomService
     Task<bool> PanZoomToAsync(Pos pos, double zoom);
     void Zoom(PointerEvent e);
     void Pan(PointerEvent e);
+
+    // Keyboard navigation: zoom by a factor (> 1 zooms in) around the viewport center, and pan
+    // by a screen-pixel delta.
+    void ZoomBy(double factor);
+    void PanBy(double dxPixels, double dyPixels);
 }
 
 [Scoped]
@@ -74,6 +79,39 @@ class PanZoomService(
         {
             var (dx, dy) = (e.MovementX * model.Zoom, e.MovementY * model.Zoom);
             newOffset = new Pos(model.Offset.X - dx, model.Offset.Y - dy);
+        }
+
+        commandService.Do(new ModelEditCommand() { Offset = newOffset }, false);
+    }
+
+    public void ZoomBy(double factor)
+    {
+        if (factor <= 0)
+            return;
+        Interlocked.Increment(ref goToRequestId);
+        Pos newOffset;
+        double newZoom;
+        using (var model = modelMgr.UseModel())
+        {
+            // model.Zoom is canvas units per pixel, so zooming in divides it.
+            newZoom = Math.Min(MaxZoom, model.Zoom / factor);
+            var svgRect = screenService.SvgRect;
+            var (cx, cy) = (svgRect.Width / 2, svgRect.Height / 2);
+            var centerX = cx * model.Zoom + model.Offset.X;
+            var centerY = cy * model.Zoom + model.Offset.Y;
+            newOffset = new Pos(centerX - cx * newZoom, centerY - cy * newZoom);
+        }
+
+        commandService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom }, false);
+    }
+
+    public void PanBy(double dxPixels, double dyPixels)
+    {
+        Interlocked.Increment(ref goToRequestId);
+        Pos newOffset;
+        using (var model = modelMgr.UseModel())
+        {
+            newOffset = new Pos(model.Offset.X + dxPixels * model.Zoom, model.Offset.Y + dyPixels * model.Zoom);
         }
 
         commandService.Do(new ModelEditCommand() { Offset = newOffset }, false);

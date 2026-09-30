@@ -20,6 +20,10 @@ interface IDependenciesService
     bool IsShowLines { get; }
     bool IsMinimized { get; }
 
+    // Keeps the lines even after another node or line is selected (otherwise a new selection
+    // clears lines left behind by a closed explorer).
+    bool IsLinesPinned { get; }
+
     TreeType TreeType { get; }
     string Title { get; }
     string Subtitle { get; }
@@ -35,6 +39,7 @@ interface IDependenciesService
     void ShowReferences();
     void ShowDependencies();
     void SetShowLines(bool isShowLines);
+    void SetLinesPinned(bool isPinned);
     void SetMinimized(bool isMinimized);
     void Close();
     void Clicked(PointerId pointerId);
@@ -45,12 +50,21 @@ class DependenciesService(
     ISelectionService selectionService,
     IApplicationEvents applicationEvents,
     IModelMgr modelMgr,
-    INavigationService navigationService
+    INavigationService navigationService,
+    IScreenService screenService
 ) : IDependenciesService
 {
+    // Below this viewport width (MudBlazor's md breakpoint) the explorer covers most of the
+    // diagram, so a click on the diagram folds it down to its title bar.
+    const double AutoMinimizeMaxWidth = 960;
+
     string selectedId = "";
     TreeType treeType = TreeType.References;
     bool isShowLines = true;
+
+    // Set by Close: the subject's lines stay in the diagram after the explorer is gone, until
+    // the user selects something else (unless pinned) or hides them.
+    bool isLinesKeptAfterClose;
 
     public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
     public TreeType TreeType => treeType;
@@ -59,20 +73,54 @@ class DependenciesService(
     public bool IsShowExplorer { get; private set; }
     public bool IsShowLines => isShowLines;
     public bool IsMinimized { get; private set; }
+    public bool IsLinesPinned { get; private set; }
 
     public void ShowReferences() => Show(TreeType.References);
 
     public void ShowDependencies() => Show(TreeType.Dependencies);
 
-    // A click elsewhere in the diagram folds the explorer down to its title bar instead of
-    // closing it: the user keeps the subject's lines while looking around, and a click on the
-    // bar (or its buttons) brings the tree back. Clicking the subject itself leaves it as is.
+    // On a narrow screen a click elsewhere in the diagram folds the explorer down to its title
+    // bar instead of closing it (it would otherwise cover the diagram): the user keeps the
+    // subject's lines while looking around, and a click on the bar brings the tree back. On a
+    // wide screen the explorer stays open beside the diagram. Clicking the subject itself
+    // leaves it as is. Lines left behind by a closed explorer go away once another node or
+    // line is selected, unless pinned.
     public void Clicked(PointerId pointerId)
     {
-        if (IsShowExplorer && !IsMinimized && pointerId.Id != selectedId)
+        if (IsShowExplorer && !IsMinimized && pointerId.Id != selectedId && IsNarrowViewport)
         {
             SetMinimized(true);
         }
+
+        if (
+            !IsShowExplorer
+            && isLinesKeptAfterClose
+            && !IsLinesPinned
+            && (pointerId.IsNode || pointerId.IsLine)
+            && pointerId.Id != selectedId
+        )
+        {
+            ClearKeptLines();
+        }
+    }
+
+    bool IsNarrowViewport => screenService.SvgRect.Width < AutoMinimizeMaxWidth;
+
+    public void SetLinesPinned(bool isPinned)
+    {
+        if (IsLinesPinned == isPinned)
+            return;
+        IsLinesPinned = isPinned;
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    void ClearKeptLines()
+    {
+        isLinesKeptAfterClose = false;
+        selectedId = "";
+        TreeItems = [];
+        UpdateFocus();
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public void SetMinimized(bool isMinimized)
@@ -91,6 +139,8 @@ class DependenciesService(
         if (this.isShowLines == isShowLines)
             return;
         this.isShowLines = isShowLines;
+        if (!isShowLines && !IsShowExplorer)
+            isLinesKeptAfterClose = false; // Hiding lines that only lingered after a close drops them for good
         UpdateFocus();
         applicationEvents.TriggerUIStateChanged();
     }
@@ -196,11 +246,15 @@ class DependenciesService(
         }
     }
 
+    // Closing the panel keeps the subject's lines in the diagram (they are what the user
+    // opened it for); a later selection or the lines toggle clears them.
     public void Close()
     {
         IsShowExplorer = false;
         IsMinimized = false;
-        selectedId = "";
+        isLinesKeptAfterClose = isShowLines;
+        if (!isLinesKeptAfterClose)
+            selectedId = "";
         UpdateFocus();
         applicationEvents.TriggerUIStateChanged();
     }
@@ -212,6 +266,7 @@ class DependenciesService(
 
         IsShowExplorer = true;
         IsMinimized = false;
+        isLinesKeptAfterClose = false;
         UpdateFocus();
         applicationEvents.TriggerUIStateChanged();
     }
@@ -223,7 +278,7 @@ class DependenciesService(
     {
         using (var model = modelMgr.UseModel())
         {
-            var focus = IsShowExplorer && isShowLines ? CreateFocus(model) : null;
+            var focus = (IsShowExplorer || isLinesKeptAfterClose) && isShowLines ? CreateFocus(model) : null;
             if (focus is null && model.LineFocus is null)
                 return;
             if (focus is not null && model.LineFocus is not null && focus.IsSameAs(model.LineFocus))

@@ -70,7 +70,8 @@ class ManualEditService(
     IStructureService structureService,
     ISelectionService selectionService,
     IDialogService dialogService,
-    IApplicationEvents applicationEvents
+    IApplicationEvents applicationEvents,
+    ISnackbar snackbar
 ) : IManualEditService
 {
     // Match the size parsed nodes get from the auto-layout.
@@ -356,10 +357,12 @@ class ManualEditService(
     public void DeleteManualNode(NodeId nodeId)
     {
         var commands = new List<Command>();
+        bool isNote;
         using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out var node) || !node.IsManual)
                 return;
+            isNote = node.IsNote;
 
             // Post-order: delete descendants (and their links) before their parents, so undo — which
             // reverts in reverse order — restores each parent before its children.
@@ -379,6 +382,22 @@ class ManualEditService(
         if (commands.Count == 0)
             return;
         commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+        ShowUndoSnackbar(isNote ? "Note deleted." : "Node deleted.");
+    }
+
+    // Deletes are undoable, so instead of a confirmation the user gets a way back afterwards.
+    void ShowUndoSnackbar(string message)
+    {
+        snackbar.Add(
+            message,
+            Severity.Normal,
+            config =>
+            {
+                config.Action = "Undo";
+                config.ActionColor = Color.Primary;
+                config.OnClick = _ => commandService.Undo();
+            }
+        );
     }
 
     public void DeleteManualLine(LineId lineId)
@@ -398,6 +417,7 @@ class ManualEditService(
         }
 
         commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+        ShowUndoSnackbar("Link deleted.");
     }
 
     void ResetNameEntry()

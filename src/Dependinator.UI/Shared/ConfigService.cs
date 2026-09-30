@@ -11,6 +11,11 @@ class Config
     public Dictionary<string, CloudSyncModelState> CloudSyncStates { get; set; } = [];
     public bool ShowHiddenNodes { get; set; } = true;
     public bool InvertScrollZoom { get; set; } = false;
+
+    // Edit mode is off by default in every host: most sessions only explore, and edit-only
+    // chrome (link handles, resize handles) would otherwise clutter the diagram.
+    public bool IsEditingEnabled { get; set; } = false;
+    public AppTheme Theme { get; set; } = AppTheme.System;
 }
 
 interface IConfigService

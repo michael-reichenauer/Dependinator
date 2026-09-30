@@ -206,6 +206,10 @@ class SelectionService(
         this.isEditMode = false;
         isSelectedLineDirect = false;
         selectedLineClickPosition = Pos.None;
+        // Forget the toolbar position too: UpdateSelectedPositionAsync skips the repaint when
+        // the position is unchanged, so re-selecting the same node at the same spot would
+        // otherwise select it in the model without ever showing it (no border, no toolbar).
+        selectedPosition = Pos.None;
         applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
     }

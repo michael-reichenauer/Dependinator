@@ -1,3 +1,4 @@
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling;
@@ -36,7 +37,7 @@ public class SvgServiceCullingTests
 
     static string RenderView(IModelMgr modelMgr, double viewX, double viewY, double zoom)
     {
-        ISvgService service = new SvgService(modelMgr, Mock.Of<ITilesMgr>());
+        ISvgService service = new SvgService(modelMgr, Mock.Of<ITilesMgr>(), new ViewOptions());
         var canvasRect = new Rect(viewX * zoom, viewY * zoom, ViewSize * zoom, ViewSize * zoom);
         return service.GetContentSvg(canvasRect, zoom);
     }

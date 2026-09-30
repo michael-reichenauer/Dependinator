@@ -3,7 +3,6 @@
 @using Dependinator.UI.Modeling
 @using Dependinator.UI.Modeling.Commands
 @using Dependinator.UI.Shared.CloudSync
-@using Microsoft.JSInterop
 
 @inject ICanvasService canvasService
 @inject IAppCloudSyncService appCloudSyncService
@@ -22,12 +21,16 @@
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
 @inject Dependinator.UI.Diagrams.ILineSplitService lineSplitService
 @inject IPointerEventService pointerEventService
+@inject Dependinator.UI.Diagrams.IViewOptions viewOptions
+@inject IThemeService themeService
+@inject IKeyboardService keyboardService
 @implements IDisposable
 
-<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-toolbar-card"
+                Style="@CssPosition">
     <MudTooltip Text="Menu">
         <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Tertiary" Dense="true"
-                 AnchorOrigin="Origin.BottomCenter" PopoverClass="dep-light-menu" data-testid="appbar-menu">
+                 AnchorOrigin="Origin.BottomCenter" PopoverClass="@MenuClass" data-testid="appbar-menu">
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync"
                          data-testid="menu-search">
                 Search …
@@ -40,7 +43,16 @@
 
             <MudDivider />
 
-            <MudMenu Label="Edit" PopoverClass="dep-light-menu" data-testid="menu-edit">
+            <MudMenu Label="Edit" PopoverClass="@MenuClass" data-testid="menu-edit">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
+                             title="Move, resize, link, color and add nodes. Off: the diagram is view-only."
+                             data-checked="@(viewOptions.IsEditingEnabled ? "true" : "false")"
+                             data-testid="menu-edit-mode">
+                    Edit Mode
+                </MudMenuItem>
+
+                <MudDivider />
+
                 <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">History</MudText>
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
                              Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo" data-testid="menu-undo">
@@ -52,27 +64,22 @@
                     Redo
                 </MudMenuItem>
 
-                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Insert</MudText>
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox" OnClick="BeginAddNode"
-                             data-testid="menu-add-node">
-                    Add Node …
-                </MudMenuItem>
+                @if (viewOptions.IsEditingEnabled)
+                {
+                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Insert</MudText>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox" OnClick="BeginAddNode"
+                                 data-testid="menu-add-node">
+                        Add Node …
+                    </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.StickyNote2"
-                             OnClick="BeginAddNote" data-testid="menu-add-note">
-                    Add Note …
-                </MudMenuItem>
-
-                <MudDivider />
-
-                <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
-                             data-testid="menu-edit-mode">
-                    Edit Mode
-                </MudMenuItem>
-
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.StickyNote2"
+                                 OnClick="BeginAddNote" data-testid="menu-add-note">
+                        Add Note …
+                    </MudMenuItem>
+                }
             </MudMenu>
 
-            <MudMenu Label="Export" PopoverClass="dep-light-menu" data-testid="menu-export">
+            <MudMenu Label="Export" PopoverClass="@MenuClass" data-testid="menu-export">
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.HighlightAlt"
                              OnClick="BeginExportArea" data-testid="menu-export-area">
                     Select Area …
@@ -89,13 +96,15 @@
                 </MudMenuItem>
             </MudMenu>
 
-            <MudMenu Label="View" PopoverClass="dep-light-menu" data-testid="menu-view">
+            <MudMenu Label="View" PopoverClass="@MenuClass" data-testid="menu-view">
                 <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes"
+                             data-checked="@(viewOptions.ShowHiddenNodes ? "true" : "false")"
                              data-testid="menu-show-hidden-nodes">
                     Show Hidden Nodes
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
+                             data-checked="@(noteService.IsShowSidebar ? "true" : "false")"
                              data-testid="menu-notes-sidebar">
                     Show Notes Sidebar
                 </MudMenuItem>
@@ -105,18 +114,31 @@
                     Hide All Direct Lines
                 </MudMenuItem>
 
-                @if (!Build.IsVsCodeExtWasm)
-                {
-                    <MudDivider />
+                <MudDivider />
 
-                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                                 OnClick="ReloadPageAsync" data-testid="menu-reload">
-                        Reload
-                    </MudMenuItem>
-                }
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Theme</MudText>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@ThemeIcon(AppTheme.System)"
+                             OnClick="() => SetThemeAsync(AppTheme.System)"
+                             title="Follows the system (or, in VS Code, the editor) color theme."
+                             data-checked="@(themeService.Theme == AppTheme.System ? "true" : "false")"
+                             data-testid="menu-theme-system">
+                    System
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@ThemeIcon(AppTheme.Light)"
+                             OnClick="() => SetThemeAsync(AppTheme.Light)"
+                             data-checked="@(themeService.Theme == AppTheme.Light ? "true" : "false")"
+                             data-testid="menu-theme-light">
+                    Light
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@ThemeIcon(AppTheme.Dark)"
+                             OnClick="() => SetThemeAsync(AppTheme.Dark)"
+                             data-checked="@(themeService.Theme == AppTheme.Dark ? "true" : "false")"
+                             data-testid="menu-theme-dark">
+                    Dark
+                </MudMenuItem>
             </MudMenu>
 
-            <MudMenu Label="Models" PopoverClass="dep-light-menu" data-testid="menu-models">
+            <MudMenu Label="Models" PopoverClass="@MenuClass" data-testid="menu-models">
                 <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Models</MudText>
                 @{
                     IReadOnlyList<ModelItem> modelItems = modelListService.GetModelItems();
@@ -177,7 +199,7 @@
                 }
             </MudMenu>
 
-            <MudMenu Label="Settings" PopoverClass="dep-light-menu" data-testid="menu-settings">
+            <MudMenu Label="Settings" PopoverClass="@MenuClass" data-testid="menu-settings">
                 <MudMenuItem IconColor="Color.Secondary" Icon="@IncludeTestProjectsIcon"
                              Disabled="@(!CanParseCurrentModel)"
                              title="Re-parses the solution. Test projects are excluded by default."
@@ -198,7 +220,7 @@
 
             <MudDivider />
 
-            <MudMenu Label="Help" PopoverClass="dep-light-menu" data-testid="menu-help-group">
+            <MudMenu Label="Help" PopoverClass="@MenuClass" data-testid="menu-help-group">
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Help" OnClick="ShowHelpAsync"
                              data-testid="menu-help">
                     Help
@@ -207,6 +229,16 @@
                              data-testid="menu-about">
                     About
                 </MudMenuItem>
+
+                @if (!Build.IsVsCodeExtWasm)
+                {
+                    <MudDivider />
+
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                                 OnClick="ReloadPageAsync" data-testid="menu-reload">
+                        Reload App
+                    </MudMenuItem>
+                }
             </MudMenu>
         </MudMenu>
     </MudTooltip>
@@ -217,36 +249,52 @@
         <MudIconButton Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync" data-testid="toolbar-search" />
     </MudTooltip>
 
-    <MudHidden Breakpoint="Breakpoint.SmAndDown">
-        <MudTooltip Text="Undo">
-            <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="@GetToolbarButtonColor(commandService.CanUndo)"
+    <MudTooltip Text="Fit to Screen (Home)">
+        <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="canvasService.PanZoomToFit"
+                       data-testid="toolbar-fit" />
+    </MudTooltip>
+
+    @* A disabled button fires no pointer events, so the tooltip needs the wrapping span to
+       keep working (and say why the button is off). *@
+    <MudTooltip Text="@(commandService.CanUndo ? "Undo (Ctrl+Z)" : "Nothing to undo")">
+        <span>
+            <MudIconButton Icon="@Icons.Material.Outlined.Undo" Disabled="@(!commandService.CanUndo)"
                            OnClick="commandService.Undo" data-testid="toolbar-undo" />
-        </MudTooltip>
-        <MudTooltip Text="Redo">
-            <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
-                           OnClick="commandService.Redo" data-testid="toolbar-redo" />
+        </span>
+    </MudTooltip>
+
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <MudTooltip Text="@(commandService.CanRedo ? "Redo (Ctrl+Y)" : "Nothing to redo")">
+            <span>
+                <MudIconButton Icon="@Icons.Material.Outlined.Redo" Disabled="@(!commandService.CanRedo)"
+                               OnClick="commandService.Redo" data-testid="toolbar-redo" />
+            </span>
         </MudTooltip>
         @if (CanParseCurrentModel)
         {
-            <MudTooltip Text="Parse">
+            <MudTooltip Text="Re-parse the solution">
                 <MudIconButton Icon="@Icons.Material.Outlined.Autorenew" OnClick="canvasService.RefreshAsync"
                                data-testid="toolbar-parse" />
             </MudTooltip>
         }
-        @if (ViewOptions.IsEditingEnabled)
-        {
-            <MudTooltip Text="Disable edit mode">
-                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Color="@Color.Warning" OnClick="ToggleEditMode"
-                               data-testid="toolbar-edit" />
-            </MudTooltip>
-        }
-        else
-        {
-            <MudTooltip Text="Enable edit mode">
-                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Tertiary"
-                               OnClick="ToggleEditMode" data-testid="toolbar-edit" />
-            </MudTooltip>
-        }
+    </MudHidden>
+
+    @if (viewOptions.IsEditingEnabled)
+    {
+        <MudTooltip Text="Edit mode is on: click to switch to view mode">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Color="@Color.Warning" OnClick="ToggleEditMode"
+                           data-checked="true" data-testid="toolbar-edit" />
+        </MudTooltip>
+    }
+    else
+    {
+        <MudTooltip Text="View mode: click to enable editing">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Tertiary"
+                           OnClick="ToggleEditMode" data-checked="false" data-testid="toolbar-edit" />
+        </MudTooltip>
+    }
+
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
         <MudTooltip Text="Help">
             <MudIconButton Icon="@Icons.Material.Outlined.Help" OnClick="ShowHelpAsync" data-testid="toolbar-help" />
         </MudTooltip>
@@ -300,17 +348,14 @@
     MudMessageBox deleteLocalOrRemoteModelBox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
 
-    DotNetObjectReference<AppBar>? selfReference;
     bool isSearchOpen;
 
     string? CurrentRecentModelPath =>
     modelListService.RecentModelPaths.Count > 0 ? modelListService.RecentModelPaths[0] : null;
     string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
-    string CssPosition =>
-    $"position:fixed;left:{15}px; top:{3}px;"
-    + "background:rgba(255,255,255,0.9);border-radius:4px;"
-    + "box-shadow:var(--mud-elevation-2);";
+    string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
+    string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
 
     protected override void OnInitialized()
     {
@@ -319,6 +364,22 @@
         applicationEvents.UIStateChanged += OnUiStateChanged;
         applicationEvents.ErrorReported += OnErrorReported;
         appCloudSyncService.Changed += OnUiStateChanged;
+        themeService.Changed += OnUiStateChanged;
+        keyboardService.KeyDown += OnKeyDown;
+    }
+
+    // The app-level shortcuts: search, undo/redo and fit. Canvas gestures (Escape, arrows,
+    // zoom) are handled by the interaction service, Delete by the toolbars.
+    void OnKeyDown(KeyPress key)
+    {
+        if (key.IsCtrl && (key.Is("f") || key.Is("t")))
+            _ = InvokeAsync(OpenSearchAsync);
+        else if (key.IsCtrl && key.Is("z"))
+            _ = InvokeAsync(commandService.Undo);
+        else if ((key.IsCtrl && key.Is("y")) || (key.IsCtrlShift && key.Is("z")))
+            _ = InvokeAsync(commandService.Redo);
+        else if ((key.IsPlain && key.Is("Home")) || (key.IsCtrl && key.Is("0")))
+            _ = InvokeAsync(canvasService.PanZoomToFit);
     }
 
     // Errors can be reported from background work (e.g. a refresh parse), so marshal to the
@@ -329,24 +390,6 @@
         _ = InvokeAsync(() =>
             snackbar.Add(message, Severity.Error, config => config.RequireInteraction = true)
         );
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-
-        if (!firstRender)
-            return;
-
-        selfReference = jsInterop.Reference(this);
-        await jsInterop.Call("listenToKeyDown", selfReference, nameof(OnSearchHotkey));
-    }
-
-    [JSInvokable]
-    public ValueTask OnSearchHotkey()
-    {
-        _ = InvokeAsync(OpenSearchAsync);
-        return ValueTask.CompletedTask;
     }
 
     async Task OpenSearchAsync()
@@ -379,7 +422,8 @@
         applicationEvents.UIStateChanged -= OnUiStateChanged;
         applicationEvents.ErrorReported -= OnErrorReported;
         appCloudSyncService.Changed -= OnUiStateChanged;
-        selfReference?.Dispose();
+        themeService.Changed -= OnUiStateChanged;
+        keyboardService.KeyDown -= OnKeyDown;
     }
 
     async Task LoginAsync()
@@ -450,23 +494,12 @@
         await canvasService.RemoveAsync();
     }
 
-    void BeginAddNote()
-    {
-        noteService.BeginPlaceNote();
-        snackbar.Add("Click on the diagram to place the note.", Severity.Info);
-    }
+    // The armed modes show their instructions in the ModeBanner until the click/drag lands.
+    void BeginAddNote() => noteService.BeginPlaceNote();
 
-    void BeginAddNode()
-    {
-        manualEditService.BeginPlaceNode();
-        snackbar.Add("Click on the diagram to place the node.", Severity.Info);
-    }
+    void BeginAddNode() => manualEditService.BeginPlaceNode();
 
-    void BeginExportArea()
-    {
-        snackbar.Add("Drag to select the area to export. Esc or right-click cancels.", Severity.Info);
-        exportService.ExportAreaAsync().RunInBackground();
-    }
+    void BeginExportArea() => exportService.ExportAreaAsync().RunInBackground();
 
     bool CanParseCurrentModel =>
     (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsParseable(modelMgr.ModelPath);
@@ -484,7 +517,7 @@
 
         // A new empty model is only useful with editing enabled; opening an existing
         // design model later leaves the toggle as the user last set it.
-        ViewOptions.SetIsEditingEnabled(true);
+        await SetEditModeAsync(true);
         await canvasService.LoadAsync(name);
         snackbar.Add("Empty model created. Use Edit > Add Node or double-click the canvas to add nodes.",
         Severity.Info);
@@ -499,31 +532,30 @@
 
     void OnUiStateChanged() => _ = InvokeAsync(StateHasChanged);
 
-    string ShowHiddenNodesIcon => ViewOptions.ShowHiddenNodes
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
+    // Toggles read as checkboxes, so their on/off state is visible at a glance.
+    static string CheckIcon(bool isOn) =>
+        isOn ? Icons.Material.Filled.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank;
 
-    string EditModeIcon => ViewOptions.IsEditingEnabled
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
+    static string RadioIcon(bool isOn) =>
+        isOn ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Outlined.RadioButtonUnchecked;
 
-    string NotesSidebarIcon => noteService.IsShowSidebar
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
-
-    string InvertScrollZoomIcon => pointerEventService.InvertScrollZoom
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
+    string ShowHiddenNodesIcon => CheckIcon(viewOptions.ShowHiddenNodes);
+    string EditModeIcon => CheckIcon(viewOptions.IsEditingEnabled);
+    string NotesSidebarIcon => CheckIcon(noteService.IsShowSidebar);
+    string InvertScrollZoomIcon => CheckIcon(pointerEventService.InvertScrollZoom);
+    string ThemeIcon(AppTheme theme) => RadioIcon(themeService.Theme == theme);
 
     bool IncludeTestProjects => modelMgr.WithModel(m => m.IncludeTestProjects);
+    string IncludeTestProjectsIcon => CheckIcon(IncludeTestProjects);
 
-    string IncludeTestProjectsIcon => IncludeTestProjects
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
+    Task SetThemeAsync(AppTheme theme) => themeService.SetThemeAsync(theme);
 
-    void ToggleEditMode()
+    Task ToggleEditMode() => SetEditModeAsync(!viewOptions.IsEditingEnabled);
+
+    async Task SetEditModeAsync(bool isEnabled)
     {
-        ViewOptions.SetIsEditingEnabled(!ViewOptions.IsEditingEnabled);
+        viewOptions.SetIsEditingEnabled(isEnabled);
+        await configService.SetAsync(config => config.IsEditingEnabled = isEnabled);
         // Edit-only markup (e.g. link handles) is baked into cached tiles, so the cache must be
         // cleared for the toggle to take effect immediately.
         modelService.ClearCache();
@@ -532,8 +564,8 @@
 
     async Task ToggleShowHiddenNodes()
     {
-        var newValue = !ViewOptions.ShowHiddenNodes;
-        ViewOptions.SetShowHiddenNodes(newValue);
+        var newValue = !viewOptions.ShowHiddenNodes;
+        viewOptions.SetShowHiddenNodes(newValue);
         await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
@@ -561,7 +593,6 @@
     }
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
-    static MudBlazor.Color GetToolbarButtonColor(bool isEnabled) => isEnabled ? Color.Tertiary : Color.Default;
 
     static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
 
