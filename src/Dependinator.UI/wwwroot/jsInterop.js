@@ -39,7 +39,11 @@ export function listenToKeyboard(instance, functionName) {
     const ctrl = e.ctrlKey || e.metaKey;
     const key = ctrl ? e.key.toLowerCase() : e.key;
     const isShortcut = ctrl ? ctrlShortcutKeys.has(key) : shortcutKeys.has(key);
-    if (!isShortcut || e.altKey)
+    if (!isShortcut)
+      return;
+    // Alt combos are left to the browser/VS Code, except Alt+Left/Right (view history back/
+    // forward) and Alt+Up (zoom out one container level).
+    if (e.altKey && key !== "ArrowLeft" && key !== "ArrowRight" && key !== "ArrowUp")
       return;
 
     e.preventDefault();

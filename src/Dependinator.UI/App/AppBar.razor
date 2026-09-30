@@ -24,6 +24,7 @@
 @inject Dependinator.UI.Diagrams.IViewOptions viewOptions
 @inject IThemeService themeService
 @inject IKeyboardService keyboardService
+@inject Dependinator.UI.Diagrams.Interaction.IViewHistoryService viewHistory
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-toolbar-card"
@@ -254,6 +255,20 @@
                        data-testid="toolbar-fit" />
     </MudTooltip>
 
+    @* View history: where the last jump (search, explorer, breadcrumb, fit) came from. *@
+    <MudTooltip Text="@(viewHistory.CanGoBack ? "Back to the previous view (Alt+←, Backspace)" : "No previous view")">
+        <span>
+            <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Disabled="@(!viewHistory.CanGoBack)"
+                           OnClick="viewHistory.GoBackAsync" data-testid="toolbar-back" />
+        </span>
+    </MudTooltip>
+    <MudTooltip Text="@(viewHistory.CanGoForward ? "Forward again (Alt+→, Shift+Backspace)" : "No next view")">
+        <span>
+            <MudIconButton Icon="@Icons.Material.Outlined.ArrowForward" Disabled="@(!viewHistory.CanGoForward)"
+                           OnClick="viewHistory.GoForwardAsync" data-testid="toolbar-forward" />
+        </span>
+    </MudTooltip>
+
     @* A disabled button fires no pointer events, so the tooltip needs the wrapping span to
        keep working (and say why the button is off). *@
     <MudTooltip Text="@(commandService.CanUndo ? "Undo (Ctrl+Z)" : "Nothing to undo")">
@@ -380,6 +395,10 @@
             _ = InvokeAsync(commandService.Redo);
         else if ((key.IsPlain && key.Is("Home")) || (key.IsCtrl && key.Is("0")))
             _ = InvokeAsync(canvasService.PanZoomToFit);
+        else if ((key.IsAlt && key.Is("ArrowLeft")) || (key.IsPlain && key.Is("Backspace")))
+            _ = InvokeAsync(viewHistory.GoBackAsync);
+        else if ((key.IsAlt && key.Is("ArrowRight")) || (key.IsShift && key.Is("Backspace")))
+            _ = InvokeAsync(viewHistory.GoForwardAsync);
     }
 
     // Errors can be reported from background work (e.g. a refresh parse), so marshal to the

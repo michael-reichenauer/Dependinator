@@ -9,6 +9,8 @@ record KeyPress(string Key, bool Ctrl, bool Shift, bool Alt)
     public bool IsPlain => !Ctrl && !Shift && !Alt;
     public bool IsCtrl => Ctrl && !Shift && !Alt;
     public bool IsCtrlShift => Ctrl && Shift && !Alt;
+    public bool IsAlt => Alt && !Ctrl && !Shift;
+    public bool IsShift => Shift && !Ctrl && !Alt;
 
     public bool Is(string key) => string.Equals(Key, key, StringComparison.OrdinalIgnoreCase);
 }

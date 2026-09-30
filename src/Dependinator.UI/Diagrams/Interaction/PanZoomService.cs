@@ -1,14 +1,18 @@
-using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams.Interaction;
 
+// Pans and zooms the viewport. The view is not part of the undo stack (undo is for edits);
+// jumps are instead recorded by the view history (IViewHistoryService).
 interface IPanZoomService
 {
-    void PanZoomToFit(Rect bounds, double maxZoom = 1, bool noCommand = false);
+    void PanZoomToFit(Rect bounds, double maxZoom = 1, bool isSilent = false);
     void PanZoom(Rect viewRect, double zoom);
     Task<bool> PanZoomToAsync(Pos pos, double zoom);
+
+    // Animates to a stored view (top-left offset and zoom), e.g. a view history entry.
+    Task<bool> PanZoomToViewAsync(Pos offset, double zoom);
     void Zoom(PointerEvent e);
     void Pan(PointerEvent e);
 
@@ -19,12 +23,8 @@ interface IPanZoomService
 }
 
 [Scoped]
-class PanZoomService(
-    IScreenService screenService,
-    IModelMgr modelMgr,
-    ICommandService commandService,
-    IApplicationEvents applicationEvents
-) : IPanZoomService
+class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicationEvents applicationEvents)
+    : IPanZoomService
 {
     const double MaxZoom = 10;
     const double Margin = 10;
@@ -67,7 +67,7 @@ class PanZoomService(
             newOffset = new Pos(x, y);
         }
 
-        commandService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom }, false);
+        SetView(newOffset, newZoom);
     }
 
     public void Pan(PointerEvent e)
@@ -81,7 +81,25 @@ class PanZoomService(
             newOffset = new Pos(model.Offset.X - dx, model.Offset.Y - dy);
         }
 
-        commandService.Do(new ModelEditCommand() { Offset = newOffset }, false);
+        SetView(newOffset, null);
+    }
+
+    // Applies a new view and tells the UI: repaint, refresh toolbars (ViewChanged) and save the
+    // view with the model. Animation steps skip the save; the final step saves once.
+    void SetView(Pos? offset, double? zoom, bool isSaveNeeded = true)
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            if (offset is { } newOffset)
+                model.Offset = newOffset;
+            if (zoom is { } newZoom)
+                model.Zoom = newZoom;
+        }
+
+        applicationEvents.TriggerViewChanged();
+        applicationEvents.TriggerUIStateChanged();
+        if (isSaveNeeded)
+            applicationEvents.TriggerSaveNeeded();
     }
 
     public void ZoomBy(double factor)
@@ -102,7 +120,7 @@ class PanZoomService(
             newOffset = new Pos(centerX - cx * newZoom, centerY - cy * newZoom);
         }
 
-        commandService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom }, false);
+        SetView(newOffset, newZoom);
     }
 
     public void PanBy(double dxPixels, double dyPixels)
@@ -114,7 +132,7 @@ class PanZoomService(
             newOffset = new Pos(model.Offset.X + dxPixels * model.Zoom, model.Offset.Y + dyPixels * model.Zoom);
         }
 
-        commandService.Do(new ModelEditCommand() { Offset = newOffset }, false);
+        SetView(newOffset, null);
     }
 
     // Animates the view to center targetPos at targetZoom in three phases: zoom out until the
@@ -219,11 +237,18 @@ class PanZoomService(
         await using var _ = new MinDelay(TimeSpan.FromMilliseconds(8));
 
         var offset = ToOffset(pos, zoom, svgRect);
-        commandService.Do(
-            new ModelEditCommand() { Offset = offset, Zoom = zoom },
-            isClearCache: false,
-            isSaveModel: false
-        );
+        SetView(offset, zoom, isSaveNeeded: false);
+    }
+
+    public async Task<bool> PanZoomToViewAsync(Pos offset, double zoom)
+    {
+        if (zoom <= 0)
+            return false;
+        await screenService.CheckResizeAsync();
+        var svgRect = screenService.SvgRect;
+        if (!IsValidSvgRect(svgRect))
+            return false;
+        return await PanZoomToAsync(ToPos(offset, zoom, svgRect), zoom);
     }
 
     (Pos, double) GetPosAndZoom(Rect svgRect)
@@ -286,7 +311,9 @@ class PanZoomService(
         Log.Info($"PanZoom newOffset={newOffset} newZoom={newZoom}");
     }
 
-    public void PanZoomToFit(Rect totalBounds, double maxZoom = 1, bool noCommand = false)
+    // isSilent applies the view without notifying (used while loading a model, before the
+    // canvas shows anything).
+    public void PanZoomToFit(Rect totalBounds, double maxZoom = 1, bool isSilent = false)
     {
         Interlocked.Increment(ref goToRequestId);
         Pos newOffset;
@@ -311,7 +338,7 @@ class PanZoomService(
 
             newOffset = new Pos(x, y);
 
-            if (noCommand)
+            if (isSilent)
             {
                 model.Offset = newOffset;
                 model.Zoom = newZoom;
@@ -319,6 +346,6 @@ class PanZoomService(
             }
         }
 
-        commandService.Do(new ModelEditCommand() { Offset = newOffset, Zoom = newZoom });
+        SetView(newOffset, newZoom);
     }
 }

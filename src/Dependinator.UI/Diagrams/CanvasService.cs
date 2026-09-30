@@ -44,7 +44,8 @@ class CanvasService(
     IModelListService recentModelsService,
     IInteractionService interactionService,
     IDialogService dialogService,
-    IVsCodeSendService vsCodeSendService
+    IVsCodeSendService vsCodeSendService,
+    IViewHistoryService viewHistory
 ) : ICanvasService
 {
     double levelZoom = 1;
@@ -113,6 +114,7 @@ class CanvasService(
         if (await modelService.LoadAsync(modelPath) is not ModelInfo modelInfo)
             return;
 
+        viewHistory.Clear(); // Views of the previous model mean nothing here
         PanZoomModel(modelInfo);
 
         await recentModelsService.AddModelAsync(modelInfo.Path);
@@ -157,6 +159,7 @@ class CanvasService(
     public void PanZoomToFit()
     {
         var bound = modelMgr.WithModel(m => m.Root.GetTotalBounds());
+        viewHistory.RecordJump();
         panZoomService.PanZoomToFit(bound, Math.Min(1, Zoom));
         applicationEvents.TriggerUIStateChanged();
     }

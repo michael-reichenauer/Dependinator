@@ -23,7 +23,8 @@ class NavigationService(
     IPanZoomService panZoomService,
     ISelectionService selectionService,
     IScreenService screenService,
-    IVsCodeSendService vsCodeSendService
+    IVsCodeSendService vsCodeSendService,
+    IViewHistoryService viewHistory
 ) : INavigationService
 {
     static readonly string RazorGeneratorName = "Razor.SourceGenerators.RazorSourceGenerator";
@@ -55,6 +56,7 @@ class NavigationService(
                 return;
 
             Log.Info($"Start Node Pos: {pos}, Zoom: {zoom}");
+            viewHistory.RecordJump();
             if (!await panZoomService.PanZoomToAsync(pos, zoom))
                 return;
             if (!TryGetNodePosAndZoom(nodeId, out pos, out zoom))

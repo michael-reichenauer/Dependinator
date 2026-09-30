@@ -183,6 +183,7 @@ class InteractionService(
     {
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
         applicationEvents.UndoneRedone += UpdateToolbar;
+        applicationEvents.ViewChanged += OnViewChanged;
 
         mouseEventService.Click += OnClick;
         mouseEventService.DblClick += OnDblClick;
@@ -248,7 +249,8 @@ class InteractionService(
     }
 
     // Escape backs out one step at a time: an in-progress placement or drag first, then the
-    // per-node arrange mode, then the selection itself.
+    // per-node arrange mode, then the selection. With nothing to cancel it does nothing, so a
+    // reflexive Escape never moves the view (zooming out is Alt+Up).
     void CancelOrDeselect()
     {
         if (contextMenuService.IsOpen)
@@ -340,6 +342,13 @@ class InteractionService(
         {
             zoomToolbarDebouncer.Debounce(300, () => selectionService.UpdateSelectedPositionAsync());
         }
+    }
+
+    // The toolbar hides while the view moves and re-anchors once it settles.
+    void OnViewChanged()
+    {
+        selectionService.HideSelectedPosition();
+        UpdateToolbar();
     }
 
     void OnClick(PointerEvent e)

@@ -7,6 +7,11 @@ interface IApplicationEvents
     event Action? UndoneRedone;
     event Action? ModelChanged;
 
+    // Raised when the viewport (pan offset or zoom) changed: wheel, drag, keyboard, fit, a
+    // navigation jump or view history. Not raised for edits; those go through the command
+    // stack and ModelChanged.
+    event Action? ViewChanged;
+
     // Raised for failures that services detect but the user must be told about (e.g. a failed
     // parse). Services can be called from background tasks, so the subscribing component is
     // responsible for marshalling to the renderer.
@@ -16,6 +21,7 @@ interface IApplicationEvents
     void TriggerSaveNeeded();
     void TriggerUndoneRedone();
     void TriggerModelChanged();
+    void TriggerViewChanged();
     void TriggerErrorReported(string message);
 
     /// <summary>
@@ -32,6 +38,7 @@ class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
     public event Action? SaveNeeded;
     public event Action? UndoneRedone;
     public event Action? ModelChanged;
+    public event Action? ViewChanged;
     public event Action<string>? ErrorReported;
 
     public void TriggerUIStateChanged() => UIStateChanged?.Invoke();
@@ -41,6 +48,8 @@ class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
     public void TriggerUndoneRedone() => UndoneRedone?.Invoke();
 
     public void TriggerModelChanged() => ModelChanged?.Invoke();
+
+    public void TriggerViewChanged() => ViewChanged?.Invoke();
 
     public void TriggerErrorReported(string message)
     {
