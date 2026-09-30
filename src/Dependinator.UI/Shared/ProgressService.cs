@@ -10,6 +10,14 @@ interface IProgressService
     bool IsDiscreetActive { get; }
     bool IsProminentActive { get; }
     string? ProminentText { get; }
+
+    // When the prominent (blocking) progress started, for an elapsed-time display.
+    DateTime? ProminentStartedUtc { get; }
+
+    // Turns the current prominent progress into the discreet corner spinner: the work goes on,
+    // the user can keep using the app, and the result lands when it is done.
+    void ContinueInBackground();
+
     IProgressScope StartDiscreet();
     IProgressScope Start(string? text = null);
 }
@@ -23,6 +31,8 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
 
     long updateStamp;
     string? prominentText;
+    bool isProminentDismissed;
+    DateTime? prominentStartedUtc;
 
     public bool IsDiscreetActive
     {
@@ -30,7 +40,8 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
         {
             lock (syncRoot)
             {
-                return FindLatestKind() is ProgressKind.Discreet;
+                var kind = FindLatestKind();
+                return kind is ProgressKind.Discreet || (kind is ProgressKind.Prominent && isProminentDismissed);
             }
         }
     }
@@ -41,9 +52,32 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
         {
             lock (syncRoot)
             {
-                return FindLatestKind() is ProgressKind.Prominent;
+                return FindLatestKind() is ProgressKind.Prominent && !isProminentDismissed;
             }
         }
+    }
+
+    public DateTime? ProminentStartedUtc
+    {
+        get
+        {
+            lock (syncRoot)
+            {
+                return prominentStartedUtc;
+            }
+        }
+    }
+
+    public void ContinueInBackground()
+    {
+        lock (syncRoot)
+        {
+            if (FindLatestKind() is not ProgressKind.Prominent)
+                return;
+            isProminentDismissed = true;
+        }
+
+        applicationEvents.TriggerUIStateChanged();
     }
 
     public string? ProminentText
@@ -69,6 +103,11 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
             var entry = new ProgressEntry(kind, ++updateStamp, NormalizeText(text));
             entries[id] = entry;
             prominentText = FindLatestText();
+            if (kind is ProgressKind.Prominent)
+            {
+                prominentStartedUtc ??= DateTime.UtcNow;
+                isProminentDismissed = false;
+            }
         }
 
         applicationEvents.TriggerUIStateChanged();
@@ -84,6 +123,11 @@ class ProgressService(IApplicationEvents applicationEvents) : IProgressService
             {
                 prominentText = FindLatestText();
                 changed = true;
+                if (!entries.Values.Any(e => e.Kind is ProgressKind.Prominent))
+                {
+                    prominentStartedUtc = null;
+                    isProminentDismissed = false;
+                }
             }
         }
 

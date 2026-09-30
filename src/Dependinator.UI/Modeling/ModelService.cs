@@ -123,7 +123,17 @@ class ModelService : IModelService, IDisposable
         {
             Log.Info("Failed to read cached model", cachedResult.Error.Message);
             if (ModelPaths.IsDesignModel(path))
+            {
+                // A design model has no source to re-parse: an unreadable cache means its content
+                // is gone, which the user must hear rather than silently get an empty model.
+                if (cachedResult.Error.Message.Contains("format version", StringComparison.OrdinalIgnoreCase))
+                {
+                    applicationEvents.TriggerErrorReported(
+                        $"The saved model '{path}' was written by an older version and could not be read, so it was opened empty."
+                    );
+                }
                 return await CreateEmptyModelAsync(path);
+            }
 
             var parsedModelInfo = await ParseNewModelAsync(path);
             TriggerSave();
@@ -200,6 +210,7 @@ class ModelService : IModelService, IDisposable
             return Result.Ok;
         }
 
+        var before = ModelChangeSummary.Capture(modelMgr);
         if (await ParseAndUpdateAsync(path, true) is Error e)
             return e;
         using (var model = modelMgr.UseModel())
@@ -211,6 +222,10 @@ class ModelService : IModelService, IDisposable
         applicationEvents.TriggerModelChanged();
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
+
+        // A refresh runs in the background, so say what it changed (nothing: stay quiet).
+        if (ModelChangeSummary.Describe(before, ModelChangeSummary.Capture(modelMgr)) is { } summary)
+            applicationEvents.TriggerInfoReported($"Model refreshed: {summary}.");
         return Result.Ok;
     }
 
@@ -288,7 +303,11 @@ class ModelService : IModelService, IDisposable
         {
             IncludeTestProjects = m.IncludeTestProjects,
         });
-        using (var progress = isRefresh ? progressService.StartDiscreet() : progressService.Start("Parsing"))
+        using (
+            var progress = isRefresh
+                ? progressService.StartDiscreet()
+                : progressService.Start($"Parsing {Path.GetFileName(path)} …")
+        )
         {
             // Let the renderer process the progress state before potentially CPU-heavy parse work starts.
             await Task.Yield();
@@ -302,7 +321,15 @@ class ModelService : IModelService, IDisposable
                 // like a solution without dependencies, so always tell the user what went wrong.
                 Error e = parseResult.Error;
                 Log.Warn($"Failed to parse {path}: {e.AllMessages()}");
-                applicationEvents.TriggerErrorReported($"Failed to parse '{Path.GetFileName(path)}'. {e.Message}");
+                var action =
+                    e.Message.Contains("test projects", StringComparison.OrdinalIgnoreCase)
+                        ? new ErrorAction("Include test projects", ErrorActionKind.IncludeTestProjects)
+                    : isRefresh ? new ErrorAction("Retry", ErrorActionKind.RetryRefresh)
+                    : new ErrorAction("Retry", ErrorActionKind.RetryLoad, path);
+                applicationEvents.TriggerErrorReported(
+                    $"Failed to parse '{Path.GetFileName(path)}'. {e.Message}",
+                    action
+                );
                 return e;
             }
 

@@ -419,6 +419,7 @@
 
         applicationEvents.UIStateChanged += OnUiStateChanged;
         applicationEvents.ErrorReported += OnErrorReported;
+        applicationEvents.InfoReported += OnInfoReported;
         appCloudSyncService.Changed += OnUiStateChanged;
         themeService.Changed += OnUiStateChanged;
         keyboardService.KeyDown += OnKeyDown;
@@ -444,12 +445,48 @@
 
     // Errors can be reported from background work (e.g. a refresh parse), so marshal to the
     // renderer. RequireInteraction keeps the message up until dismissed, since a failed parse
-    // otherwise just looks like an empty diagram.
-    void OnErrorReported(string message)
+    // otherwise just looks like an empty diagram. A report can carry an action (retry, include
+    // test projects), shown as the snackbar's button.
+    void OnErrorReported(ErrorReport report)
     {
         _ = InvokeAsync(() =>
-            snackbar.Add(message, Severity.Error, config => config.RequireInteraction = true)
+            snackbar.Add(
+                report.Message,
+                Severity.Error,
+                config =>
+                {
+                    config.RequireInteraction = true;
+                    if (report.Action is { } action)
+                    {
+                        config.Action = action.Label;
+                        config.ActionColor = Color.Inherit;
+                        config.OnClick = _ => RunErrorActionAsync(action);
+                    }
+                }
+            )
         );
+    }
+
+    async Task RunErrorActionAsync(ErrorAction action)
+    {
+        switch (action.Kind)
+        {
+            case ErrorActionKind.RetryLoad when action.Path is { } path:
+                await canvasService.LoadAsync(path);
+                break;
+            case ErrorActionKind.RetryRefresh:
+                await canvasService.RefreshAsync();
+                break;
+            case ErrorActionKind.IncludeTestProjects:
+                await modelService.SetIncludeTestProjectsAsync(true);
+                break;
+        }
+    }
+
+    // E.g. what a background refresh changed: worth a note, not an interruption.
+    void OnInfoReported(string message)
+    {
+        _ = InvokeAsync(() => snackbar.Add(message, Severity.Info));
     }
 
     async Task OpenSearchAsync()
@@ -481,6 +518,7 @@
     {
         applicationEvents.UIStateChanged -= OnUiStateChanged;
         applicationEvents.ErrorReported -= OnErrorReported;
+        applicationEvents.InfoReported -= OnInfoReported;
         appCloudSyncService.Changed -= OnUiStateChanged;
         themeService.Changed -= OnUiStateChanged;
         keyboardService.KeyDown -= OnKeyDown;

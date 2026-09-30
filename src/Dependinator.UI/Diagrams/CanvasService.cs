@@ -124,9 +124,13 @@ class CanvasService(
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
         var paths = await browserFileService.AddAsync(browserFiles);
+        if (paths.Count == 0)
+        {
+            applicationEvents.TriggerErrorReported("The dropped file could not be read.");
+            return;
+        }
 
-        var modelPath = paths.First();
-        await LoadAsync(modelPath);
+        await LoadAsync(paths[0]);
     }
 
     void PanZoomModel(ModelInfo modelInfo)

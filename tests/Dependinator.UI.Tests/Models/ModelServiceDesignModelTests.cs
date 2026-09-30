@@ -137,8 +137,13 @@ public class ModelServiceDesignModelTests
         var result = await modelService.LoadAsync("My.sln");
 
         AssertError(result);
+        // The report offers a retry of the load (the model path is only set after a parse succeeds).
         applicationEvents.Verify(
-            e => e.TriggerErrorReported(It.Is<string>(m => m.Contains("My.sln") && m.Contains("No .NET SDK found"))),
+            e =>
+                e.TriggerErrorReported(
+                    It.Is<string>(m => m.Contains("My.sln") && m.Contains("No .NET SDK found")),
+                    It.Is<ErrorAction?>(a => a != null && a.Kind == ErrorActionKind.RetryLoad && a.Path == "My.sln")
+                ),
             Times.Once
         );
     }
@@ -155,8 +160,13 @@ public class ModelServiceDesignModelTests
 
         await modelService.RefreshAsync();
 
+        // A failed refresh offers a retry of the refresh.
         applicationEvents.Verify(
-            e => e.TriggerErrorReported(It.Is<string>(m => m.Contains("parse failed"))),
+            e =>
+                e.TriggerErrorReported(
+                    It.Is<string>(m => m.Contains("parse failed")),
+                    It.Is<ErrorAction?>(a => a != null && a.Kind == ErrorActionKind.RetryRefresh)
+                ),
             Times.Once
         );
     }
@@ -175,6 +185,6 @@ public class ModelServiceDesignModelTests
         var result = await modelService.LoadAsync("My.sln");
 
         AssertError(result);
-        applicationEvents.Verify(e => e.TriggerErrorReported(It.IsAny<string>()), Times.Once);
+        applicationEvents.Verify(e => e.TriggerErrorReported(It.IsAny<string>(), It.IsAny<ErrorAction?>()), Times.Once);
     }
 }
