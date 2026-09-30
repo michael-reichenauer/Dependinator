@@ -15,6 +15,10 @@ interface IInteractionService
     bool IsEditNodeMode { get; set; }
     Task InitAsync();
     void NodePanZoomToFit();
+
+    // Zooms the view out one container level (to the parent of the container under the view
+    // center), or fits the whole diagram when already at the top level.
+    void ZoomOutOneLevel();
     void IncreaseNodeSize();
     void DecreaseNodeSize();
 }
@@ -39,7 +43,9 @@ class InteractionService(
     IAreaSelectionService areaSelectionService,
     IViewOptions viewOptions,
     IKeyboardService keyboardService,
-    INavigationService navigationService
+    INavigationService navigationService,
+    IViewContextService viewContext,
+    IViewHistoryService viewHistory
 ) : IInteractionService
 {
     // Keyboard pan step in screen pixels (Shift multiplies it) and zoom factor per key press.
@@ -206,6 +212,12 @@ class InteractionService(
             return;
         }
 
+        if (key.IsAlt && key.Is("ArrowUp"))
+        {
+            ZoomOutOneLevel();
+            return;
+        }
+
         if (key.IsPlain || (key.Shift && !key.Ctrl && !key.Alt))
         {
             var step = key.Shift ? KeyPanStepShift : KeyPanStep;
@@ -275,6 +287,25 @@ class InteractionService(
         else
             return;
 
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Framing the innermost open container as a node in its parent is exactly one level out:
+    // the user sees where that container sits among its siblings.
+    public void ZoomOutOneLevel()
+    {
+        var chain = viewContext.GetViewCenterChain();
+        if (chain.Count >= 1)
+        {
+            navigationService.ShowNodeAsync(chain[^1].Id).RunInBackground();
+            return;
+        }
+
+        var bounds = modelMgr.WithModel(m => m.Root.GetTotalBounds());
+        if (bounds == Rect.None)
+            return;
+        viewHistory.RecordJump();
+        panZoomService.PanZoomToFit(bounds, Math.Min(1, Zoom));
         applicationEvents.TriggerUIStateChanged();
     }
 

@@ -318,9 +318,11 @@ else if (HasSelectedLine)
   bool IsIconMode => !interactionService.IsContainer;
   bool CanShowSource => interactionService.CanShowSource;
 
+  // The toolbar floats above the node, but never under the fixed chrome at the top of the
+  // screen (app bar and breadcrumb): near the top it sits over the node's upper edge instead.
   string CssPosition =>
       FormattableString.Invariant($"position:fixed;left:{selectionService.SelectedNodePosition.X:0.##}px;")
-      + FormattableString.Invariant($"top:{selectionService.SelectedNodePosition.Y - ToolbarOffset:0.##}px;");
+      + FormattableString.Invariant($"top:{Math.Max(ToolbarPositioning.ChromeBottom, selectionService.SelectedNodePosition.Y - ToolbarOffset):0.##}px;");
 
   protected override void OnInitialized()
   {

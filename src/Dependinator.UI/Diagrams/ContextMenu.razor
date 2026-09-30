@@ -95,6 +95,13 @@
               </MudListItem>
               <MudDivider />
             }
+            @if (viewContext.GetViewCenterChain().Count > 0)
+            {
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.ZoomOut" IconColor="Color.Secondary"
+                           OnClick="ZoomOutOneLevel" data-testid="context-menu-zoom-out">
+                Zoom Out One Level
+              </MudListItem>
+            }
             <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" IconColor="Color.Secondary"
                          OnClick="FitToScreen" data-testid="context-menu-fit">
               Fit to Screen
@@ -135,6 +142,12 @@
   [Inject]
   IScreenService screenService { get; set; } = null!;
 
+  [Inject]
+  IViewContextService viewContext { get; set; } = null!;
+
+  [Inject]
+  IInteractionService interactionService { get; set; } = null!;
+
   string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
 
   string EditModeIcon => viewOptions.IsEditingEnabled
@@ -173,6 +186,12 @@
   {
     contextMenuService.Close();
     canvasService.PanZoomToFit();
+  }
+
+  void ZoomOutOneLevel()
+  {
+    contextMenuService.Close();
+    interactionService.ZoomOutOneLevel();
   }
 
   // Same as the app bar toggle: persisted, and the tile cache is cleared so edit chrome

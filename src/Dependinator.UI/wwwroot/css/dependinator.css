@@ -21,6 +21,63 @@
     color: rgba(255, 255, 255, 0.32);
 }
 
+/* The breadcrumb (Breadcrumb.razor): the open model and the container chain, under the app bar. */
+.dep-breadcrumb {
+    position: fixed;
+    top: 42px;
+    left: 15px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 1px 6px;
+    max-width: calc(100vw - 30px);
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-breadcrumb__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: 0;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dep-breadcrumb__item:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.dep-breadcrumb__item:last-child {
+    font-weight: 600;
+}
+
+.dep-breadcrumb__icon {
+    font-size: 1rem !important;
+    color: var(--mud-palette-tertiary);
+}
+
+.dep-breadcrumb__sep {
+    color: var(--mud-palette-text-secondary);
+    padding: 0 1px;
+}
+
+/* With nothing selected the chain is the view's location rather than a choice: shown dimmer. */
+.dep-breadcrumb--context .dep-breadcrumb__item:not(.dep-breadcrumb__model) {
+    opacity: 0.78;
+}
+
 /* The mode banner (ModeBanner.razor): centered under the app bar while a mode is armed. */
 .dep-mode-banner {
     position: fixed;

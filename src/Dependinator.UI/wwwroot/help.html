@@ -191,6 +191,15 @@
                 <i>PanZoomService</i>; <kbd>↑</kbd> <kbd>↓</kbd> and <kbd>Enter</kbd> pick a result.</li>
             <li>Use <b>Fit to Screen</b> (the toolbar button, <kbd>Home</kbd>, or the right-click menu) to
                 recenter and reset the view at any time.</li>
+            <li>The <b>breadcrumb</b> under the toolbar shows where you are: the model, then the containers down
+                to the selected node (or, with nothing selected, to the container around the middle of the
+                screen). Click any crumb to zoom to it; the model crumb fits the whole diagram.</li>
+            <li><b>Back</b> and <b>Forward</b> (the toolbar arrows, <kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>→</kbd>,
+                or <kbd>Backspace</kbd> / <kbd>Shift</kbd>+<kbd>Backspace</kbd>) retrace your jumps: every
+                search result, explorer row, breadcrumb click, double-click and Fit to Screen is a step
+                you can return from.</li>
+            <li><kbd>Alt</kbd>+<kbd>↑</kbd> (or the right-click menu) zooms out one container level per press,
+                up to the whole diagram.</li>
         </ul>
 
         <h2>Working with a node</h2>
@@ -273,6 +282,8 @@
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>+</kbd> / <kbd>-</kbd></td><td>Zoom in / out</td></tr>
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>Pan (hold <kbd>Shift</kbd> for larger steps)</td></tr>
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>Esc</kbd></td><td>Cancel a placement or drag, leave arrange mode, or clear the selection</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Alt</kbd>+<kbd>↑</kbd></td><td>Zoom out one container level</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>→</kbd></td><td>Back / forward through your jumps (also <kbd>Backspace</kbd> / <kbd>Shift</kbd>+<kbd>Backspace</kbd>)</td></tr>
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Undo / redo an edit</td></tr>
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>Delete</kbd></td><td>Delete the selected user-drawn node, note or link (edit mode)</td></tr>
             </table>
