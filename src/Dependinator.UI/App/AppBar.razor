@@ -195,6 +195,13 @@
             </MudMenu>
 
             <MudMenu Label="Models" PopoverClass="@MenuClass" data-testid="menu-models">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ViewList" OnClick="ManageModelsAsync"
+                             data-testid="menu-manage-models">
+                    Manage Models …
+                </MudMenuItem>
+
+                <MudDivider />
+
                 <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Models</MudText>
                 @{
                     IReadOnlyList<ModelItem> modelItems = modelListService.GetModelItems();
@@ -534,6 +541,15 @@
 
     bool CanParseCurrentModel =>
     (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsParseable(modelMgr.ModelPath);
+
+    async Task ManageModelsAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await dialogService.ShowAsync<ModelsDialog>((string?)null, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: "new" })
+            await NewModelAsync();
+    }
 
     async Task NewModelAsync()
     {

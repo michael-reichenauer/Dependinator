@@ -231,6 +231,86 @@
     margin-top: 8px;
 }
 
+/* The models dialog (ModelsDialog.razor). */
+.dep-models__section {
+    margin-bottom: 10px;
+}
+
+.dep-models__caption {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 4px 0;
+}
+
+.dep-models__empty {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.85rem;
+    padding: 2px 8px;
+}
+
+.dep-models__row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 6px;
+}
+
+.dep-models__row:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.dep-models__row--current {
+    background: rgba(94, 53, 177, 0.08);
+}
+
+.dep-models__open {
+    flex: 1;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    align-items: center;
+    background: none;
+    border: 0;
+    padding: 6px 8px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    min-width: 0;
+}
+
+.dep-models__icon {
+    grid-row: 1 / span 2;
+    color: var(--mud-palette-tertiary);
+}
+
+.dep-models__name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dep-models__chip {
+    font-size: 0.7rem;
+    color: var(--mud-palette-primary);
+    border: 1px solid currentColor;
+    border-radius: 10px;
+    padding: 0 6px;
+}
+
+.dep-models__sub {
+    grid-column: 2 / span 2;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* The mode banner (ModeBanner.razor): centered under the app bar while a mode is armed. */
 .dep-mode-banner {
     position: fixed;
