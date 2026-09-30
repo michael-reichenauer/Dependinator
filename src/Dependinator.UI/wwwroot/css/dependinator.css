@@ -202,6 +202,35 @@
     word-break: break-word;
 }
 
+/* The cloud status popover (CloudSyncButton.razor). */
+.dep-cloud {
+    padding: 8px 14px 10px;
+    min-width: 260px;
+    max-width: 340px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-cloud__title {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.dep-cloud__line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+    line-height: 1.4;
+}
+
+.dep-cloud__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
 /* The mode banner (ModeBanner.razor): centered under the app bar while a mode is armed. */
 .dep-mode-banner {
     position: fixed;

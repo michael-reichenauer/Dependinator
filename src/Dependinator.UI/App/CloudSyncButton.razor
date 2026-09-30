@@ -6,15 +6,76 @@
 @inject ISnackbar snackbar
 @inject Dependinator.UI.Modeling.Models.IModelMgr modelMgr
 @inject IApplicationEvents applicationEvents
+@inject IThemeService themeService
 @implements IDisposable
 
+@* The cloud button opens a status popover: who is signed in, how this model relates to its
+   cloud copy, and explicit actions (sign in, upload, download, resolve, sign out). The icon
+   itself only reports state; a click never does something different depending on it. *@
 <MudTooltip Text="@CloudStatusText">
-    <span>
-        <MudIconButton Icon="@CurrentCloudIconInfo.Icon" Color="@CurrentCloudIconInfo.Color"
-                       Class="@(IsCloudConnecting ? "cloud-connecting" : null)"
-                       Disabled="@(!appCloudSyncService.IsAvailable)" OnClick="ToggleCloudAuthAsync"
-                       data-testid="toolbar-cloud" />
-    </span>
+    <MudMenu @ref="menu" Icon="@CurrentCloudIconInfo.Icon" IconColor="@CurrentCloudIconInfo.Color"
+             Class="@(IsCloudConnecting ? "cloud-connecting" : null)" AnchorOrigin="Origin.BottomLeft"
+             TransformOrigin="Origin.TopLeft" Dense="true" PopoverClass="@MenuClass" data-testid="toolbar-cloud">
+        <div class="dep-cloud" data-testid="cloud-popover">
+            <div class="dep-cloud__title">Device sync</div>
+
+            @if (!appCloudSyncService.IsAvailable)
+            {
+                <div class="dep-cloud__line">Not available in this host.</div>
+            }
+            else if (IsCloudConnecting)
+            {
+                <div class="dep-cloud__line"><MudProgressCircular Indeterminate="true" Size="Size.Small" /> Connecting to the cloud …</div>
+            }
+            else if (!AuthState.IsAuthenticated)
+            {
+                <div class="dep-cloud__line">Off. Sign in to keep your models and views in sync across your devices.</div>
+                <div class="dep-cloud__actions">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Outlined.CloudSync" OnClick="LoginAsync" data-testid="cloud-sign-in">
+                        Enable device sync
+                    </MudButton>
+                </div>
+            }
+            else
+            {
+                <div class="dep-cloud__line" data-testid="cloud-account">
+                    <MudIcon Icon="@Icons.Material.Outlined.AccountCircle" Size="Size.Small" />
+                    <span>Signed in as <b>@(AuthState.User?.Email ?? AuthState.User?.UserId)</b></span>
+                </div>
+                <div class="dep-cloud__line" data-testid="cloud-model-status">
+                    <MudIcon Icon="@CurrentCloudIconInfo.Icon" Color="@CurrentCloudIconInfo.Color" Size="Size.Small" />
+                    <span>@ModelStatusText</span>
+                </div>
+                <div class="dep-cloud__actions">
+                    @switch (CurrentCloudSyncState)
+                    {
+                        case CloudSyncState.HasLocalChanges:
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                       StartIcon="@Icons.Material.Outlined.CloudUpload" OnClick="SyncUpAsync" data-testid="cloud-sync-up">
+                                Upload now
+                            </MudButton>
+                            break;
+                        case CloudSyncState.HasRemoteChanges:
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                       StartIcon="@Icons.Material.Outlined.CloudDownload" OnClick="() => SyncDownAsync()" data-testid="cloud-sync-down">
+                                Download now
+                            </MudButton>
+                            break;
+                        case CloudSyncState.HasConflicts:
+                            <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Small"
+                                       StartIcon="@Icons.Material.Outlined.SyncProblem" OnClick="ResolveConflictAsync" data-testid="cloud-resolve">
+                                Resolve conflict …
+                            </MudButton>
+                            break;
+                    }
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="LogoutAsync" data-testid="cloud-sign-out">
+                        Sign out
+                    </MudButton>
+                </div>
+            }
+        </div>
+    </MudMenu>
 </MudTooltip>
 
 <MudMessageBox @ref="syncDownBox" Title="Replace Local Cached Model" CancelText="Cancel">
@@ -31,12 +92,18 @@
 
 <MudMessageBox @ref="syncConflictBox" Title="Sync Conflict" YesText="Use Cloud" NoText="Keep Local" CancelText="Cancel">
     <MessageContent>
-        <MudText>Both local and cloud copies changed since last sync.</MudText>
-        <MudText Typo="Typo.body2">Choose which copy should win.</MudText>
+        <MudText>Both the local and the cloud copy of this model changed since the last sync.</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">Local copy: changed @LocalChangedText.</MudText>
+        <MudText Typo="Typo.body2">Cloud copy: changed @CloudChangedText.</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">
+            <b>Use Cloud</b> replaces the local copy (its layout changes are lost). <b>Keep Local</b> uploads the local
+            copy over the cloud one.
+        </MudText>
     </MessageContent>
 </MudMessageBox>
 
 @code {
+    MudMenu menu = null!;
     MudMessageBox syncDownBox { get; set; } = null!;
     MudMessageBox syncConflictBox { get; set; } = null!;
 
@@ -49,28 +116,52 @@
     static readonly CloudIconInfo HasConflicts = new(Icons.Material.Outlined.SyncProblem, Color.Error);
     static readonly CloudIconInfo IsSynced = new(Icons.Material.Filled.CloudDone, Color.Success);
 
+    string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
     CloudSyncState CurrentCloudSyncState => appCloudSyncService.GetCloudSyncState();
     bool IsCloudConnecting => appCloudSyncService.IsConnecting;
     CloudIconInfo CurrentCloudIconInfo => IsCloudConnecting ? Connecting : GetCloudIconInfo(CurrentCloudSyncState);
     bool HasSyncConflicts => CurrentCloudSyncState is CloudSyncState.HasConflicts;
     CloudSyncState previousCloudSyncState = CloudSyncState.NotAvailable;
+
     string CloudStatusText =>
-    !appCloudSyncService.IsAvailable
-    ? "Device sync unavailable"
-                : IsCloudConnecting
-    ? "Connecting to cloud …"
-                : AuthState.IsAuthenticated
-    ? $"Device sync enabled for {AuthState.User?.Email ?? AuthState.User?.UserId}"
-    : "Device sync disabled, click to enable";
+        !appCloudSyncService.IsAvailable ? "Device sync unavailable"
+        : IsCloudConnecting ? "Connecting to cloud …"
+        : AuthState.IsAuthenticated ? $"Device sync enabled for {AuthState.User?.Email ?? AuthState.User?.UserId}. {ModelStatusText} Click for options."
+        : "Device sync disabled. Click for options.";
+
+    string ModelStatusText => CurrentCloudSyncState switch
+    {
+        CloudSyncState.IsSynced => "This model is in sync.",
+        CloudSyncState.HasLocalChanges => "Local changes are not in the cloud yet.",
+        CloudSyncState.HasRemoteChanges => "A newer copy is in the cloud.",
+        CloudSyncState.HasConflicts => "Both the local and the cloud copy changed.",
+        _ => "This model is not synced.",
+    };
+
     string SyncDownPrompt =>
-    HasSyncConflicts
-    ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
-                : "Download the cloud copy and overwrite the local cached model?";
+        HasSyncConflicts
+            ? "Download the cloud copy and overwrite the local cached model and unsynced local changes?"
+            : "Download the cloud copy and overwrite the local cached model?";
     string SyncDownPromptDetail =>
-    HasSyncConflicts
-    ? "Both the local cached model and the cloud copy have changed since the last sync."
-                : "The current local cached layout data will be replaced.";
+        HasSyncConflicts
+            ? "Both the local cached model and the cloud copy have changed since the last sync."
+            : "The current local cached layout data will be replaced.";
+
+    string LocalChangedText => modelMgr.WithModel(m => m.UpdateStamp) is { } stamp && stamp != default
+        ? stamp.ToLocalTime().ToString("g")
+        : "unknown";
+
+    string CloudChangedText
+    {
+        get
+        {
+            var path = appCloudSyncService.CurrentNormalizedModelPath;
+            var cloud = appCloudSyncService.CloudModels.FirstOrDefault(cm =>
+                string.Equals(cm.NormalizedPath, path, StringComparison.OrdinalIgnoreCase));
+            return cloud is null ? "unknown" : $"{cloud.UpdatedUtc.ToLocalTime():g} ({cloud.CompressedSizeBytes / 1024} KB)";
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -79,6 +170,7 @@
         applicationEvents.UIStateChanged += OnUiStateChanged;
         appCloudSyncService.Changed += OnUiStateChanged;
         appCloudSyncService.BackgroundSyncError += OnBackgroundSyncError;
+        appCloudSyncService.BackgroundSyncInfo += OnBackgroundSyncInfo;
     }
 
     public void Dispose()
@@ -86,6 +178,7 @@
         applicationEvents.UIStateChanged -= OnUiStateChanged;
         appCloudSyncService.Changed -= OnUiStateChanged;
         appCloudSyncService.BackgroundSyncError -= OnBackgroundSyncError;
+        appCloudSyncService.BackgroundSyncInfo -= OnBackgroundSyncInfo;
     }
 
     static CloudIconInfo GetCloudIconInfo(CloudSyncState state) => state switch
@@ -99,34 +192,11 @@
         _ => NotAvailable
     };
 
-    async Task ToggleCloudAuthAsync()
-    {
-        // Ignore clicks while the initial auth state is still being determined.
-        if (IsCloudConnecting)
-            return;
-
-        switch (CurrentCloudSyncState)
-        {
-            case CloudSyncState.NotAvailable:
-            case CloudSyncState.IsSynced:
-                return;
-            case CloudSyncState.NotAuthenticated:
-                await LoginAsync();
-                return;
-            case CloudSyncState.HasLocalChanges:
-                await SyncUpAsync();
-                return;
-            case CloudSyncState.HasRemoteChanges:
-                await SyncDownAsync();
-                return;
-            case CloudSyncState.HasConflicts:
-                await ResolveConflictAsync();
-                return;
-        }
-    }
+    Task CloseAsync() => menu.CloseMenuAsync();
 
     async Task LoginAsync()
     {
+        await CloseAsync();
         if (await appCloudSyncService.LoginAsync() is Error error)
         {
             snackbar.Add(error.Message, Severity.Error);
@@ -136,17 +206,33 @@
         snackbar.Add("Device sync is enabled.", Severity.Success);
     }
 
+    async Task LogoutAsync()
+    {
+        await CloseAsync();
+        if (await appCloudSyncService.LogoutAsync() is Error error)
+        {
+            snackbar.Add(error.Message, Severity.Error);
+            return;
+        }
+
+        snackbar.Add("Device sync is disabled.", Severity.Info);
+    }
+
     async Task SyncUpAsync()
     {
+        await CloseAsync();
         if (await appCloudSyncService.SyncUpAsync() is Error error)
         {
             snackbar.Add(error.Message, Severity.Error);
             return;
         }
+
+        snackbar.Add("Uploaded this model to the cloud.", Severity.Success);
     }
 
     async Task ResolveConflictAsync()
     {
+        await CloseAsync();
         bool? selection = await syncConflictBox.ShowAsync();
         if (selection is true)
         {
@@ -160,6 +246,7 @@
 
     async Task SyncDownAsync(bool skipConfirmation = false)
     {
+        await CloseAsync();
         if (!skipConfirmation && await syncDownBox.ShowAsync() != true)
             return;
 
@@ -193,8 +280,8 @@
     {
         CloudSyncState currentCloudSyncState = CurrentCloudSyncState;
         if (
-        currentCloudSyncState is CloudSyncState.HasConflicts
-        && previousCloudSyncState is not CloudSyncState.HasConflicts
+            currentCloudSyncState is CloudSyncState.HasConflicts
+            && previousCloudSyncState is not CloudSyncState.HasConflicts
         )
         {
             ShowSyncConflictSnackbar();
@@ -208,20 +295,26 @@
     void ShowSyncConflictSnackbar()
     {
         snackbar.Add(
-        "Device sync conflict detected.",
-        Severity.Error,
-        options =>
-        {
-            options.Action = "Resolve";
-            options.RequireInteraction = true;
-            options.OnClick = _ => InvokeAsync(ToggleCloudAuthAsync);
-        },
-        key: "cloud-sync-conflict"
-                );
+            "Device sync conflict detected.",
+            Severity.Error,
+            options =>
+            {
+                options.Action = "Resolve";
+                options.RequireInteraction = true;
+                options.OnClick = _ => InvokeAsync(ResolveConflictAsync);
+            },
+            key: "cloud-sync-conflict"
+        );
     }
 
     void OnBackgroundSyncError(string errorMessage)
     {
         _ = InvokeAsync(() => snackbar.Add(errorMessage, Severity.Warning));
+    }
+
+    // An automatic pull replaced the model; say so, since the diagram just changed by itself.
+    void OnBackgroundSyncInfo(string message)
+    {
+        _ = InvokeAsync(() => snackbar.Add(message, Severity.Info));
     }
 }

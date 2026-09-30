@@ -232,27 +232,6 @@
                              OnClick="OnDeleteModelAsync" data-testid="menu-delete-model">
                     Delete Current Model
                 </MudMenuItem>
-
-                @if (appCloudSyncService.IsAvailable)
-                {
-                    <MudDivider />
-
-                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Device Sync</MudText>
-                    @if (AuthState.IsAuthenticated)
-                    {
-                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudOff" OnClick="LogoutAsync"
-                                     data-testid="menu-logout">
-                            Disable Device Sync
-                        </MudMenuItem>
-                    }
-                    else
-                    {
-                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudSync" OnClick="LoginAsync"
-                                     data-testid="menu-login">
-                            Enable Device Sync
-                        </MudMenuItem>
-                    }
-                }
             </MudMenu>
 
             <MudMenu Label="Settings" PopoverClass="@MenuClass" data-testid="menu-settings">
@@ -498,28 +477,6 @@
         appCloudSyncService.Changed -= OnUiStateChanged;
         themeService.Changed -= OnUiStateChanged;
         keyboardService.KeyDown -= OnKeyDown;
-    }
-
-    async Task LoginAsync()
-    {
-        if (await appCloudSyncService.LoginAsync() is Error error)
-        {
-            snackbar.Add(error.Message, Severity.Error);
-            return;
-        }
-
-        snackbar.Add("Device sync is enabled.", Severity.Success);
-    }
-
-    async Task LogoutAsync()
-    {
-        if (await appCloudSyncService.LogoutAsync() is Error error)
-        {
-            snackbar.Add(error.Message, Severity.Error);
-            return;
-        }
-
-        snackbar.Add("Device sync is disabled.", Severity.Info);
     }
 
     async Task LoadCloudModelAsync(global::Shared.CloudModelMetadata cloudModel)
