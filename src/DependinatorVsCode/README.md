@@ -61,13 +61,17 @@ keyboard/mouse controls.
 
 | Command | Description |
 | --- | --- |
-| `Dependinator: Open` | Open the Dependinator dependency map. |
+| `Dependinator: Open` | Open the Dependinator dependency map (also the icon in the editor title bar of C# and solution files, and the status bar item). |
+| `Dependinator: Reveal Current File in Diagram` | Show the node for the file at the cursor (`Ctrl+Alt+D`, `Cmd+Alt+D` on macOS; also in the editor's right-click menu). |
+| `Dependinator: Search Nodes` | Open the diagram's node search. |
+| `Dependinator: Re-parse Solution` | Parse the solution again now. |
 | `Dependinator: Install in Dev Container` | Jump to the Extensions view to install the extension inside a dev container. |
 
 ## Settings
 
 | Setting | Description |
 | --- | --- |
+| `dependinator.followActiveEditor` | Show the node for the file you switch to, so the diagram follows your work (default: `true`). |
 | `dependinator.autoRefresh.enabled` | Automatically refresh the diagram when workspace source files change (default: `true`). |
 | `dependinator.autoRefresh.delaySeconds` | Delay after the last source file change before the diagram is refreshed (default: `3`). |
 

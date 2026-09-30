@@ -14,6 +14,9 @@ import {
 } from "./webview";
 
 const commandId = "dependinator.open";
+const revealCommandId = "dependinator.reveal";
+const searchCommandId = "dependinator.search";
+const refreshCommandId = "dependinator.refresh";
 const installInDevContainerCommandId = "dependinator.installInDevContainer";
 const extensionId = "michaelreichenauer.dependinator";
 
@@ -21,6 +24,41 @@ const extensionId = "michaelreichenauer.dependinator";
 let languageClient: LanguageClient | undefined;
 let languageClientPromise: Promise<LanguageClient | undefined> | undefined;
 let activePanel: vscode.WebviewPanel | undefined;
+
+// The status bar entry: an always-available way to open the diagram, and a place where the
+// webview reports that it is parsing (see "vscode/Status" below).
+let statusBarItem: vscode.StatusBarItem | undefined;
+
+function setStatus(state: string): void {
+    if (!statusBarItem)
+        return;
+    if (state === "parsing") {
+        statusBarItem.text = "$(sync~spin) Dependinator";
+        statusBarItem.tooltip = "Dependinator is parsing the solution …";
+        return;
+    }
+    statusBarItem.text = "$(type-hierarchy-sub) Dependinator";
+    statusBarItem.tooltip = "Open the Dependinator dependency map";
+}
+
+// Follow the active editor: reveal the node for the file the user switched to, debounced so
+// flipping through tabs does not fire a navigation per tab. Only while the diagram is visible
+// and the setting is on.
+let followTimer: ReturnType<typeof setTimeout> | undefined;
+
+function followActiveEditor(editor: vscode.TextEditor | undefined): void {
+    if (!editor || !activePanel || !activePanel.visible)
+        return;
+    if (!vscode.workspace.getConfiguration("dependinator").get<boolean>("followActiveEditor", true))
+        return;
+
+    if (followTimer)
+        clearTimeout(followTimer);
+    followTimer = setTimeout(() => {
+        followTimer = undefined;
+        sendShowNodeForEditor(editor);
+    }, 300);
+}
 
 // Latch that gates UI->LSP messages until the server has sent "ui/lspReady".
 // Resettable because vscode-languageclient restarts a crashed server, which sends
@@ -270,8 +308,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
     });
 
-    // Command opens the webview hosting the WASM UI.
-    const disposable = vscode.commands.registerCommand(commandId, async () => {
+    // Opens (or reveals) the webview hosting the WASM UI and shows the active editor's node.
+    const openPanel = async (): Promise<void> => {
         logger.log("Running command Open Dependinator");
         const activeTextEditor = vscode.window.activeTextEditor;
         if (activePanel) {
@@ -292,6 +330,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             autoRefresh.dispose();
             if (activePanel === panel)
                 activePanel = undefined;
+            setStatus("idle");
         });
 
         registerWebviewMessageHandler(panel, async (message: WebviewMessage) => {
@@ -304,6 +343,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             if (message.type === "vscode/SaveFile") {
                 await saveFileFromWebview(message.message);
+                return;
+            }
+
+            if (message.type === "vscode/Status") {
+                setStatus(String(message.message ?? "idle"));
                 return;
             }
 
@@ -349,9 +393,34 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 });
             }
         });
-    });
+    };
 
-    context.subscriptions.push(disposable);
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
+    statusBarItem.command = commandId;
+    setStatus("idle");
+    statusBarItem.show();
+
+    context.subscriptions.push(
+        statusBarItem,
+        vscode.commands.registerCommand(commandId, openPanel),
+        vscode.commands.registerCommand(revealCommandId, openPanel),
+        vscode.commands.registerCommand(refreshCommandId, () => {
+            if (!activePanel) {
+                vscode.window.showInformationMessage("Open Dependinator first (Dependinator: Open).");
+                return;
+            }
+            activePanel.webview.postMessage({ type: "ui/refresh", message: "" });
+        }),
+        vscode.commands.registerCommand(searchCommandId, async () => {
+            // With the diagram already open the search dialog opens right away; otherwise the
+            // diagram opens first (the UI is not listening before it has loaded).
+            const wasOpen = !!activePanel;
+            await openPanel();
+            if (wasOpen)
+                activePanel?.webview.postMessage({ type: "ui/search", message: "" });
+        }),
+        vscode.window.onDidChangeActiveTextEditor(followActiveEditor)
+    );
 }
 
 /** Extension shutdown: stops the language server. */
