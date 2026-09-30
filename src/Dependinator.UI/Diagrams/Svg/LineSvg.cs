@@ -25,7 +25,13 @@ static class LineSvg
     // the "arrow-inheritance" marker geometry in Canvas.razor/SvgExportDocument).
     const double InheritanceMarkerLength = 14.5;
 
-    public static string GetLineSvg(Line line, Pos nodeCanvasPos, double childrenZoom, bool isDimmed = false)
+    public static string GetLineSvg(
+        Line line,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        bool isDimmed = false,
+        bool isCyclic = false
+    )
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
             return "";
@@ -34,7 +40,7 @@ static class LineSvg
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var elementId = PointerId.FromLine(line.Id).ElementId;
 
-        return BuildLineSvg(line, endpoints, polylinePoints, elementId, isDimmed);
+        return BuildLineSvg(line, endpoints, polylinePoints, elementId, isDimmed, isCyclic);
     }
 
     public static string GetDirectLineSvg(
@@ -56,7 +62,8 @@ static class LineSvg
         LinePathGeometry.LineEndpoints endpoints,
         IReadOnlyList<Pos> polylinePoints,
         string elementId,
-        bool isDimmed
+        bool isDimmed,
+        bool isCyclic
     )
     {
         // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
@@ -65,16 +72,18 @@ static class LineSvg
         var isAccent = line.IsDirect || line.IsFocused;
         var color =
             isAccent ? DColors.DirectLine
+            : isCyclic ? DColors.CycleLine
             : line.IsHidden ? DColors.LineHidden
             : line.IsCousin ? DColors.CousinLine
             : DColors.Line;
 
         // The hollow inheritance arrow head is only drawn where the line enters the real
-        // inheritance target (the supertype); hidden/accent styling takes precedence.
-        var isInheritanceHead = !isAccent && !line.IsHidden && line.HasInheritanceTargetEnd;
+        // inheritance target (the supertype); hidden/accent/cycle styling takes precedence.
+        var isInheritanceHead = !isAccent && !isCyclic && !line.IsHidden && line.HasInheritanceTargetEnd;
 
         var markerId =
             isAccent ? "arrow-direct"
+            : isCyclic ? "arrow-cycle"
             : line.IsHidden ? "arrow-hidden"
             : isInheritanceHead ? "arrow-inheritance"
             : line.IsCousin ? "arrow-cousin"
@@ -105,7 +114,7 @@ static class LineSvg
         // path but much wider, so hovering/clicking near the thin visible line still hits it.
         // The outer group lets a hover over the hit target restore a dimmed line (see the
         // line-dim CSS in Canvas.razor).
-        var visibleClass = isDimmed ? "line-vis line-dim" : "line-vis";
+        var visibleClass = (isDimmed ? "line-vis line-dim" : "line-vis") + (isCyclic ? " line-cycle" : "");
         return string.Create(
             CultureInfo.InvariantCulture,
             $"""

@@ -37,7 +37,12 @@ public class SvgServiceCullingTests
 
     static string RenderView(IModelMgr modelMgr, double viewX, double viewY, double zoom)
     {
-        ISvgService service = new SvgService(modelMgr, Mock.Of<ITilesMgr>(), new ViewOptions());
+        ISvgService service = new SvgService(
+            modelMgr,
+            Mock.Of<ITilesMgr>(),
+            new ViewOptions(),
+            new CycleService(modelMgr)
+        );
         var canvasRect = new Rect(viewX * zoom, viewY * zoom, ViewSize * zoom, ViewSize * zoom);
         return service.GetContentSvg(canvasRect, zoom);
     }

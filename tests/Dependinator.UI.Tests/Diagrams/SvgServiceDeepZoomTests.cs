@@ -60,7 +60,12 @@ public class SvgServiceDeepZoomTests
             ViewSize * zoom
         );
 
-        ISvgService service = new SvgService(modelMgr, Mock.Of<ITilesMgr>(), new ViewOptions());
+        ISvgService service = new SvgService(
+            modelMgr,
+            Mock.Of<ITilesMgr>(),
+            new ViewOptions(),
+            new CycleService(modelMgr)
+        );
         return service.GetContentSvg(canvasRect, zoom);
     }
 

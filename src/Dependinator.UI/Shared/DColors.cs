@@ -26,6 +26,11 @@ class DColors
     static readonly string DirectLineDark = "#7C4DFF";
     static readonly string DirectLineLight = "#512DA8";
 
+    // Lines that are part of a circular dependency (View › Show Cycles): a warning red that
+    // reads on both canvases.
+    static readonly string CycleLineDark = "#FF6B6B";
+    static readonly string CycleLineLight = "#C62828";
+
     // Cousin (container-crossing) lines: slightly toned down from the normal line color so they
     // read as "crossing" without cluttering dense views. Move these toward LineDark/LineLight
     // (#999999 / #555555) to make them more visible, or set them equal for no distinction.
@@ -121,6 +126,7 @@ class DColors
     public static string Line => IsDark ? LineDark : LineLight;
     public static string LineHidden => IsDark ? LineHiddenDark : LineHiddenLight;
     public static string DirectLine => IsDark ? DirectLineDark : DirectLineLight;
+    public static string CycleLine => IsDark ? CycleLineDark : CycleLineLight;
     public static string CousinLine => IsDark ? CousinLineDark : CousinLineLight;
     public static string ManualMarker => IsDark ? ManualMarkerDark : ManualMarkerLight;
     public static string NoteFill => IsDark ? NoteFillDark : NoteFillLight;

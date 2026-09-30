@@ -27,7 +27,7 @@ public class SvgExportServiceTests
     }
 
     static SvgExportService CreateService(IModelMgr modelMgr) =>
-        new(new SvgService(modelMgr, Mock.Of<ITilesMgr>(), new ViewOptions()));
+        new(new SvgService(modelMgr, Mock.Of<ITilesMgr>(), new ViewOptions(), new CycleService(modelMgr)));
 
     [Fact]
     public void GetSvgDocument_ShouldSizeDocumentFromRectAndZoom()

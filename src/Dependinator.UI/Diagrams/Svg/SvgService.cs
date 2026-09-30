@@ -31,12 +31,14 @@ class SvgService : ISvgService
     readonly IModelMgr modelMgr;
     readonly ITilesMgr tilesMgr;
     readonly IViewOptions viewOptions;
+    readonly ICycleService cycleService;
 
-    public SvgService(IModelMgr modelMgr, ITilesMgr tilesMgr, IViewOptions viewOptions)
+    public SvgService(IModelMgr modelMgr, ITilesMgr tilesMgr, IViewOptions viewOptions, ICycleService cycleService)
     {
         this.modelMgr = modelMgr;
         this.tilesMgr = tilesMgr;
         this.viewOptions = viewOptions;
+        this.cycleService = cycleService;
     }
 
     // The user's view toggles that affect what a tile contains; captured per render so the
@@ -45,6 +47,7 @@ class SvgService : ISvgService
         new(viewOptions.IsEditingEnabled, viewOptions.ShowHiddenNodes, viewOptions.DimUnrelatedLines)
         {
             Filter = viewOptions.LineFilter,
+            CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
         };
 
     public Tile GetTile(Rect viewRect, double zoom)
@@ -131,6 +134,8 @@ class SvgService : ISvgService
 
     static bool IsLineDimmed(Line line, RenderContext context) =>
         context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.Selection);
+
+    static bool IsLineCyclic(Line line, RenderContext context) => context.Flags.CyclicLines?.Contains(line.Id) == true;
 
     // The user's line filter (View › Lines). Explorer focus lines and user-requested direct
     // lines are explicit asks and are always drawn.
@@ -341,7 +346,13 @@ class SvgService : ISvgService
                     continue;
                 if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                     continue;
-                yield return LineSvg.GetLineSvg(line, nodeCanvasPos, childrenZoom, IsLineDimmed(line, context));
+                yield return LineSvg.GetLineSvg(
+                    line,
+                    nodeCanvasPos,
+                    childrenZoom,
+                    IsLineDimmed(line, context),
+                    IsLineCyclic(line, context)
+                );
             }
         }
     }
@@ -467,6 +478,9 @@ class SvgService : ISvgService
     {
         public RenderSelection Selection { get; init; }
         public LineFilter Filter { get; init; } = LineFilter.None;
+
+        // Sibling lines that are part of a circular dependency; null while cycles are not shown.
+        public IReadOnlySet<LineId>? CyclicLines { get; init; }
     }
 
     readonly record struct RenderContext(

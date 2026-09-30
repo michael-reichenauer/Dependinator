@@ -131,6 +131,77 @@
     font-size: 13px;
 }
 
+/* The cycles panel (CyclesPanel.razor), top-right over the diagram. */
+.dep-cycles {
+    position: fixed;
+    top: 42px;
+    right: 15px;
+    z-index: 1200;
+    width: min(380px, calc(100vw - 30px));
+    max-height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+    padding: 4px 8px 8px 12px;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-cycles__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dep-cycles__title {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.dep-cycles__count {
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-cycles__hint,
+.dep-cycles__empty {
+    color: var(--mud-palette-text-secondary);
+    margin: 2px 0 6px;
+}
+
+.dep-cycles__list {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dep-cycles__row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dep-cycles__row:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.dep-cycles__container {
+    font-weight: 600;
+}
+
+.dep-cycles__members {
+    color: var(--mud-palette-text-secondary);
+    word-break: break-word;
+}
+
 /* The mode banner (ModeBanner.razor): centered under the app bar while a mode is armed. */
 .dep-mode-banner {
     position: fixed;
