@@ -16,10 +16,14 @@ interface IViewOptions
     // direct lines are always drawn).
     LineFilter LineFilter { get; }
 
+    // The legend card explaining line styles and node icons (session state).
+    bool IsLegendShown { get; }
+
     void SetShowHiddenNodes(bool show);
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
     void SetLineFilter(LineFilter filter);
+    void SetLegendShown(bool shown);
 }
 
 // MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on.
@@ -36,6 +40,7 @@ class ViewOptions : IViewOptions
     public bool IsEditingEnabled { get; private set; } = false;
     public bool DimUnrelatedLines { get; private set; } = true;
     public LineFilter LineFilter { get; private set; } = LineFilter.None;
+    public bool IsLegendShown { get; private set; }
 
     public void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
 
@@ -44,4 +49,6 @@ class ViewOptions : IViewOptions
     public void SetDimUnrelatedLines(bool dim) => DimUnrelatedLines = dim;
 
     public void SetLineFilter(LineFilter filter) => LineFilter = filter;
+
+    public void SetLegendShown(bool shown) => IsLegendShown = shown;
 }

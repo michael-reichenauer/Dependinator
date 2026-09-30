@@ -78,6 +78,59 @@
     opacity: 0.78;
 }
 
+/* The legend card (Legend.razor), bottom-left over the diagram. */
+.dep-legend {
+    position: fixed;
+    left: 15px;
+    bottom: 12px;
+    z-index: 1200;
+    padding: 6px 10px 8px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-primary);
+    max-width: calc(100vw - 30px);
+}
+
+.dep-legend__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dep-legend__title {
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.dep-legend__columns {
+    display: flex;
+    gap: 18px;
+}
+
+.dep-legend__caption {
+    color: var(--mud-palette-text-secondary);
+    margin: 2px 0 2px;
+}
+
+.dep-legend__row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.dep-legend__sample {
+    flex-shrink: 0;
+    display: inline-block;
+    text-align: center;
+}
+
+.dep-legend__glyph {
+    width: 18px;
+    font-size: 13px;
+}
+
 /* The mode banner (ModeBanner.razor): centered under the app bar while a mode is armed. */
 .dep-mode-banner {
     position: fixed;
