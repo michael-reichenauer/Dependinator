@@ -34,7 +34,8 @@ static class LineSvg
         double childrenZoom,
         bool isDimmed = false,
         bool isCyclic = false,
-        bool isPath = false
+        bool isPath = false,
+        bool isViolation = false
     )
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
@@ -44,7 +45,7 @@ static class LineSvg
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var elementId = PointerId.FromLine(line.Id).ElementId;
 
-        return BuildLineSvg(line, endpoints, polylinePoints, elementId, isDimmed, isCyclic, isPath);
+        return BuildLineSvg(line, endpoints, polylinePoints, elementId, isDimmed, isCyclic, isPath, isViolation);
     }
 
     public static string GetDirectLineSvg(
@@ -53,13 +54,14 @@ static class LineSvg
         Pos nodeCanvasPos,
         double childrenZoom,
         bool isDimmed = false,
-        bool isPath = false
+        bool isPath = false,
+        bool isViolation = false
     )
     {
         if (line.RenderAncestor != ancestor)
             return "";
 
-        return GetLineSvg(line, nodeCanvasPos, childrenZoom, isDimmed, isPath: isPath);
+        return GetLineSvg(line, nodeCanvasPos, childrenZoom, isDimmed, isPath: isPath, isViolation: isViolation);
     }
 
     static string BuildLineSvg(
@@ -69,7 +71,8 @@ static class LineSvg
         string elementId,
         bool isDimmed,
         bool isCyclic,
-        bool isPath
+        bool isPath,
+        bool isViolation
     )
     {
         // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
@@ -79,6 +82,7 @@ static class LineSvg
         var isAccent = line.IsDirect || line.IsFocused;
         var color =
             isPath ? DColors.PathLine
+            : isViolation ? DColors.RuleLine
             : isAccent ? DColors.DirectLine
             : isCyclic ? DColors.CycleLine
             : line.IsHidden ? DColors.LineHidden
@@ -87,10 +91,12 @@ static class LineSvg
 
         // The hollow inheritance arrow head is only drawn where the line enters the real
         // inheritance target (the supertype); hidden/accent/cycle/path styling takes precedence.
-        var isInheritanceHead = !isPath && !isAccent && !isCyclic && !line.IsHidden && line.HasInheritanceTargetEnd;
+        var isInheritanceHead =
+            !isPath && !isViolation && !isAccent && !isCyclic && !line.IsHidden && line.HasInheritanceTargetEnd;
 
         var markerId =
             isPath ? "arrow-path"
+            : isViolation ? "arrow-rule"
             : isAccent ? "arrow-direct"
             : isCyclic ? "arrow-cycle"
             : line.IsHidden ? "arrow-hidden"
@@ -98,7 +104,7 @@ static class LineSvg
             : line.IsCousin ? "arrow-cousin"
             : "arrow-line";
 
-        var strokeWidth = isPath ? Math.Max(line.StrokeWidth, PathMinStrokeWidth) : line.StrokeWidth;
+        var strokeWidth = isPath || isViolation ? Math.Max(line.StrokeWidth, PathMinStrokeWidth) : line.StrokeWidth;
         var circleRadius = strokeWidth + StartCircleExtraRadius;
         var dashArray =
             line.IsDirect ? " stroke-dasharray=\"6,6\""
@@ -126,7 +132,8 @@ static class LineSvg
         var visibleClass =
             (isDimmed ? "line-vis line-dim" : "line-vis")
             + (isCyclic ? " line-cycle" : "")
-            + (isPath ? " line-path" : "");
+            + (isPath ? " line-path" : "")
+            + (isViolation ? " line-rule" : "");
         return string.Create(
             CultureInfo.InvariantCulture,
             $"""

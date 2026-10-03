@@ -135,6 +135,13 @@
                     Show Cycles
                 </MudMenuItem>
 
+                <MudMenuItem IconColor="Color.Secondary" Icon="@RulesIcon" OnClick="ToggleRules"
+                             title="Declare which parts must not depend on which, and see the dependencies that break those rules."
+                             data-checked="@(viewOptions.IsRulesShown ? "true" : "false")"
+                             data-testid="menu-rules">
+                    Show Architecture Rules
+                </MudMenuItem>
+
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AltRoute" OnClick="pathFinderService.Open"
                              title="Shows why one node depends on another: the shortest chain of dependencies between two nodes you choose."
                              data-testid="menu-find-path">
@@ -651,11 +658,29 @@
     string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
     string CyclesIcon => CheckIcon(viewOptions.IsCyclesShown);
+    string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
+
+    // The analysis panels (cycles, rules, path) share the top-right corner and all recolor
+    // lines, so opening one closes the others.
+    void ToggleRules()
+    {
+        if (!viewOptions.IsRulesShown)
+        {
+            viewOptions.SetCyclesShown(false);
+            pathFinderService.Close();
+        }
+        viewOptions.SetRulesShown(!viewOptions.IsRulesShown);
+        modelService.ClearCache(); // Violating lines are drawn differently, baked into the tiles
+        applicationEvents.TriggerUIStateChanged();
+    }
 
     void ToggleCycles()
     {
         if (!viewOptions.IsCyclesShown)
-            pathFinderService.Close(); // Both panels sit top-right and both recolor lines
+        {
+            pathFinderService.Close(); // The analysis panels sit top-right and all recolor lines
+            viewOptions.SetRulesShown(false);
+        }
         viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
         modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
         applicationEvents.TriggerUIStateChanged();

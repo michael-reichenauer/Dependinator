@@ -22,12 +22,16 @@ interface IViewOptions
     // Circular dependencies: the cycles panel is open and cyclic lines are drawn highlighted.
     bool IsCyclesShown { get; }
 
+    // Architecture rules: the rules panel is open and violating lines are drawn highlighted.
+    bool IsRulesShown { get; }
+
     void SetShowHiddenNodes(bool show);
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
     void SetLineFilter(LineFilter filter);
     void SetLegendShown(bool shown);
     void SetCyclesShown(bool shown);
+    void SetRulesShown(bool shown);
 }
 
 // MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on.
@@ -46,6 +50,7 @@ class ViewOptions : IViewOptions
     public LineFilter LineFilter { get; private set; } = LineFilter.None;
     public bool IsLegendShown { get; private set; }
     public bool IsCyclesShown { get; private set; }
+    public bool IsRulesShown { get; private set; }
 
     public void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
 
@@ -58,4 +63,6 @@ class ViewOptions : IViewOptions
     public void SetLegendShown(bool shown) => IsLegendShown = shown;
 
     public void SetCyclesShown(bool shown) => IsCyclesShown = shown;
+
+    public void SetRulesShown(bool shown) => IsRulesShown = shown;
 }

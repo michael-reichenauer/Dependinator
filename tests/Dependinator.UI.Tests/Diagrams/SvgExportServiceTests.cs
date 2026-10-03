@@ -33,7 +33,8 @@ public class SvgExportServiceTests
                 Mock.Of<ITilesMgr>(),
                 new ViewOptions(),
                 new CycleService(modelMgr),
-                Mock.Of<IPathFinderService>()
+                Mock.Of<IPathFinderService>(),
+                Mock.Of<IRuleService>()
             )
         );
 

@@ -33,13 +33,15 @@ class SvgService : ISvgService
     readonly IViewOptions viewOptions;
     readonly ICycleService cycleService;
     readonly IPathFinderService pathFinderService;
+    readonly IRuleService ruleService;
 
     public SvgService(
         IModelMgr modelMgr,
         ITilesMgr tilesMgr,
         IViewOptions viewOptions,
         ICycleService cycleService,
-        IPathFinderService pathFinderService
+        IPathFinderService pathFinderService,
+        IRuleService ruleService
     )
     {
         this.modelMgr = modelMgr;
@@ -47,6 +49,7 @@ class SvgService : ISvgService
         this.viewOptions = viewOptions;
         this.cycleService = cycleService;
         this.pathFinderService = pathFinderService;
+        this.ruleService = ruleService;
     }
 
     // The user's view toggles that affect what a tile contains; captured per render so the
@@ -57,6 +60,7 @@ class SvgService : ISvgService
             Filter = viewOptions.LineFilter,
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
             PathLines = pathFinderService.GetPathLineIds(),
+            ViolatingLines = viewOptions.IsRulesShown ? ruleService.GetViolatingLineIds() : null,
         };
 
     public Tile GetTile(Rect viewRect, double zoom)
@@ -152,6 +156,9 @@ class SvgService : ISvgService
     static bool IsLineCyclic(Line line, RenderContext context) => context.Flags.CyclicLines?.Contains(line.Id) == true;
 
     static bool IsLineOnPath(Line line, RenderContext context) => context.Flags.PathLines?.Contains(line.Id) == true;
+
+    static bool IsLineViolating(Line line, RenderContext context) =>
+        context.Flags.ViolatingLines?.Contains(line.Id) == true;
 
     // The user's line filter (View › Lines). Explorer focus lines and user-requested direct
     // lines are explicit asks and are always drawn.
@@ -347,7 +354,8 @@ class SvgService : ISvgService
                 nodeCanvasPos,
                 childrenZoom,
                 IsLineDimmed(line, context),
-                isPath: IsLineOnPath(line, context)
+                isPath: IsLineOnPath(line, context),
+                isViolation: IsLineViolating(line, context)
             );
         }
 
@@ -374,7 +382,8 @@ class SvgService : ISvgService
                     childrenZoom,
                     IsLineDimmed(line, context),
                     IsLineCyclic(line, context),
-                    IsLineOnPath(line, context)
+                    IsLineOnPath(line, context),
+                    IsLineViolating(line, context)
                 );
             }
         }
@@ -440,7 +449,8 @@ class SvgService : ISvgService
                 nodeCanvasPos,
                 childrenZoom,
                 IsLineDimmed(directLine, context),
-                IsLineOnPath(directLine, context)
+                IsLineOnPath(directLine, context),
+                IsLineViolating(directLine, context)
             );
             if (svg.Length > 0)
                 yield return svg;
@@ -508,6 +518,9 @@ class SvgService : ISvgService
 
         // Lines of the dependency path being shown (View › Find Path); null while no path is shown.
         public IReadOnlySet<LineId>? PathLines { get; init; }
+
+        // Lines breaking an architecture rule; null while the rules panel is closed.
+        public IReadOnlySet<LineId>? ViolatingLines { get; init; }
     }
 
     readonly record struct RenderContext(

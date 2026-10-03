@@ -57,7 +57,8 @@ public class SvgServiceLineVisibilityTests
             Mock.Of<ITilesMgr>(),
             new ViewOptions(),
             new CycleService(modelMgr),
-            Mock.Of<IPathFinderService>()
+            Mock.Of<IPathFinderService>(),
+            Mock.Of<IRuleService>()
         );
         var canvasRect = new Rect(viewX * zoom, viewY * zoom, ViewSize * zoom, ViewSize * zoom);
         return service.GetContentSvg(canvasRect, zoom);

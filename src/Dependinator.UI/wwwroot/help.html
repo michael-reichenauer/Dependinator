@@ -233,6 +233,10 @@
             <li class="feature"><b>Find cycles</b> — <b>View › Show Cycles</b> lists every container whose children
                 depend on each other in a circle (projects, namespaces or classes referencing each other) and draws
                 those lines in red; click a row to go there.</li>
+            <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
+                "this must not depend on that" by picking two nodes (a project, a namespace, a class). Every
+                dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the
+                model, so they stay checked after every re-parse.</li>
             <li class="feature"><b>Find a path</b> — why does one node depend on another? <b>View › Find Path</b>
                 lets you choose two nodes and lists the shortest chains of dependencies from the first to the
                 second; the chosen chain is drawn highlighted while every other line fades, and clicking a hop takes

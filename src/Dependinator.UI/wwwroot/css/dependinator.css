@@ -177,6 +177,7 @@
 .dep-panel__row {
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: flex-start;
     gap: 1px;
     background: none;
@@ -408,6 +409,61 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* The architecture rules panel (RulesPanel.razor): rule rows with their violations, add form. */
+.dep-rules__rule {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-rules__rule:last-child {
+    border-bottom: 0;
+}
+
+.dep-rules__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dep-rules__names {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dep-rules__arrow {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-rules__violations {
+    margin: 2px 0 2px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.dep-rules__violation {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 2px 6px;
+    padding: 2px 6px;
+}
+
+.dep-rules__add {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--mud-palette-lines-default);
 }
 
 /* The first-run tour's callout (CoachCallout.razor), bottom-center over the diagram. */
