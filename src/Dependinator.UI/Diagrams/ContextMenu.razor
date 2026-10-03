@@ -33,6 +33,10 @@
                          OnClick="contextMenuService.ZoomToAsync" data-testid="context-menu-zoom-to">
               Zoom to Node
             </MudListItem>
+            <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Link" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.CopyNodeLinkAsync" data-testid="context-menu-copy-link">
+              Copy Link to Node
+            </MudListItem>
             @if (contextMenuService.CanShowTargetSource)
             {
               <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Code" IconColor="Color.Secondary"
@@ -105,6 +109,10 @@
             <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" IconColor="Color.Secondary"
                          OnClick="FitToScreen" data-testid="context-menu-fit">
               Fit to Screen
+            </MudListItem>
+            <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Link" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.CopyViewLinkAsync" data-testid="context-menu-copy-view-link">
+              Copy Link to This View
             </MudListItem>
             <MudListItem T="string" Icon="@EditModeIcon" IconColor="Color.Secondary" OnClick="ToggleEditMode"
                          data-testid="context-menu-edit-mode">

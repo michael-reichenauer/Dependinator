@@ -4,11 +4,13 @@ using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
+using Dependinator.UI.Shared.CloudSync;
 using Dependinator.UI.Shared.Types;
 using Dependinator.UI.Shared.VsCode;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
+using Shared;
 
 // The interactive diagram canvas: rendering the model, pan/zoom, selection, and pointer-driven
 // editing of nodes and lines.
@@ -44,6 +46,8 @@ class CanvasService(
     IModelListService recentModelsService,
     IInteractionService interactionService,
     ICoachService coachService,
+    IShareLinkService shareLinkService,
+    Lazy<IAppCloudSyncService> appCloudSyncServiceLazy,
     IVsCodeSendService vsCodeSendService,
     IViewHistoryService viewHistory
 ) : ICanvasService
@@ -83,7 +87,28 @@ class CanvasService(
             ? DemoModel.Path
             : recentModelsService.StartupPath ?? DemoModel.Path;
 
-        await LoadAsync(startupPath);
+        // Opened with a share link: its model wins over the remembered one (when it can be found).
+        var link = shareLinkService.TakeStartupTarget();
+        var isLoaded = false;
+        if (link?.ModelKey is { } modelKey)
+        {
+            switch (await shareLinkService.ResolveModelAsync(modelKey))
+            {
+                case LinkedModel { LocalPath: { } localPath }:
+                    startupPath = localPath;
+                    break;
+                case LinkedModel { CloudModel: { } cloudModel }:
+                    isLoaded =
+                        await appCloudSyncServiceLazy.Value.LoadCloudModelAsync(cloudModel) is CloudModelMetadata;
+                    break;
+                case Error error:
+                    applicationEvents.TriggerErrorReported(error.Message);
+                    break;
+            }
+        }
+
+        if (!isLoaded)
+            await LoadAsync(startupPath);
 
         // Signal that the initial model has loaded and rendered (data-app-ready=true on
         // the body), so UI/e2e tests can wait on it instead of arbitrary timeouts.
@@ -92,6 +117,9 @@ class CanvasService(
         // Let the VS Code extension host know the diagram is ready, so it can reveal the
         // node for the editor that was active when the webview was first opened.
         await vsCodeSendService.NotifyDiagramLoadedAsync();
+
+        if (link is not null)
+            await shareLinkService.ApplyAsync(link);
 
         // New users get the short tour (once); it says why a demo diagram is open when it is.
         await coachService.StartIfFirstRunAsync(isDemoModel: startupPath == DemoModel.Path);

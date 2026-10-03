@@ -40,6 +40,8 @@ interface IContextMenuService
     Task ShowReferencesAsync();
     Task ShowDependenciesAsync();
     Task ZoomToAsync();
+    Task CopyNodeLinkAsync();
+    Task CopyViewLinkAsync();
     Task ShowSourceAsync();
     void HideDirectLine();
 
@@ -55,6 +57,7 @@ class ContextMenuService(
     ISelectionService selectionService,
     IDependenciesService dependenciesService,
     INavigationService navigationService,
+    IShareLinkService shareLinkService,
     IModelMgr modelMgr,
     IApplicationEvents applicationEvents
 ) : IContextMenuService
@@ -156,6 +159,20 @@ class ContextMenuService(
         if (Target != ContextMenuTarget.Node)
             return;
         await navigationService.ShowNodeAsync(targetId.NodeId);
+    }
+
+    public async Task CopyNodeLinkAsync()
+    {
+        Close();
+        if (Target != ContextMenuTarget.Node)
+            return;
+        await shareLinkService.CopyNodeLinkAsync(targetId.NodeId);
+    }
+
+    public async Task CopyViewLinkAsync()
+    {
+        Close();
+        await shareLinkService.CopyViewLinkAsync();
     }
 
     public async Task ShowSourceAsync()

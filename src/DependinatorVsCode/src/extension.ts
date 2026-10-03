@@ -351,6 +351,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 return;
             }
 
+            if (message.type === "vscode/CopyToClipboard") {
+                await vscode.env.clipboard.writeText(String(message.message ?? ""));
+                return;
+            }
+
             if (message.type === "vscode/OpenExternal") {
                 const url = String(message.message ?? "");
                 if (url)

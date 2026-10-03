@@ -24,6 +24,7 @@
 @inject Dependinator.UI.Diagrams.IViewOptions viewOptions
 @inject Dependinator.UI.Diagrams.IPathFinderService pathFinderService
 @inject Dependinator.UI.Diagrams.ICoachService coachService
+@inject IShareLinkService shareLinkService
 @inject IThemeService themeService
 @inject IKeyboardService keyboardService
 @inject Dependinator.UI.Diagrams.Interaction.IViewHistoryService viewHistory
@@ -96,6 +97,15 @@
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Image"
                              OnClick="exportService.ExportEntireDiagramAsync" data-testid="menu-export-diagram">
                     Entire Diagram …
+                </MudMenuItem>
+
+                <MudDivider />
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Link"
+                             OnClick="shareLinkService.CopyViewLinkAsync"
+                             title="Copies a dependinator.com link that opens this model at the current view."
+                             data-testid="menu-copy-view-link">
+                    Link to Current View
                 </MudMenuItem>
             </MudMenu>
 

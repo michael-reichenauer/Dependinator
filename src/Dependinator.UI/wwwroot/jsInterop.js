@@ -198,6 +198,34 @@ export function postVsCodeMessage(message) {
   return false;
 }
 
+// Copies text to the clipboard; true when it worked. The async clipboard API needs a secure
+// context and a user gesture (both given: https/localhost and a menu click); the hidden
+// textarea is the fallback for browsers that still refuse it.
+export async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall through to the legacy path
+  }
+  try {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(area);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export function isVsCodeWebView() {
   return !!(window.dependinator && typeof window.dependinator.postMessage === "function");
 }

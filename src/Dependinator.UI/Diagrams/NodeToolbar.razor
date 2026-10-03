@@ -31,6 +31,11 @@ else if (HasSelectedLine)
                      OnClick="ZoomToNode" data-testid="node-menu-zoom-to">
           Zoom to Node
         </MudMenuItem>
+        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Link"
+                     OnClick="CopyLink" title="Copies a dependinator.com link that opens this model at this node."
+                     data-testid="node-menu-copy-link">
+          Copy Link to Node
+        </MudMenuItem>
         @if (!IsNodeHidden)
         {
           <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
@@ -282,6 +287,9 @@ else if (HasSelectedLine)
   [Inject]
   IViewOptions viewOptions { get; set; } = null!;
 
+  [Inject]
+  IShareLinkService shareLinkService { get; set; } = null!;
+
 
   [Inject]
   IThemeService themeService { get; set; } = null!;
@@ -382,6 +390,9 @@ else if (HasSelectedLine)
   }
 
   void ShowReferences() => dependenciesService.ShowReferences();
+
+  Task CopyLink() =>
+    TryGetSelectedNodeId(out var nodeId) ? shareLinkService.CopyNodeLinkAsync(nodeId) : Task.CompletedTask;
 
 
   void ShowDependencies() => dependenciesService.ShowDependencies();
