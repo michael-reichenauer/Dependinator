@@ -24,6 +24,9 @@ class Config
 
     // The first-run tour (CoachService) has been shown or skipped.
     public bool IsCoachSeen { get; set; } = false;
+
+    // The minimap in the corner of the diagram (View › Show Minimap).
+    public bool ShowMinimap { get; set; } = false;
 }
 
 interface IConfigService

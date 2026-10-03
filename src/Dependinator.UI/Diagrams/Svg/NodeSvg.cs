@@ -304,7 +304,7 @@ static partial class NodeSvg
     static double EstimateTextWidth(string text, double fontSize) =>
         string.IsNullOrEmpty(text) ? 0 : text.Length * fontSize * AverageCharWidthFactor;
 
-    static (string Border, string Background) NodeColors(Node node)
+    internal static (string Border, string Background) NodeColors(Node node)
     {
         if (node.IsEditMode)
             return (DColors.EditNodeBorder, DColors.EditNodeBackground);

@@ -60,6 +60,7 @@ class InitService : IInitService
         viewOptions.SetShowHiddenNodes(config.ShowHiddenNodes);
         viewOptions.SetIsEditingEnabled(config.IsEditingEnabled);
         viewOptions.SetDimUnrelatedLines(config.DimUnrelatedLines);
+        viewOptions.SetMinimapShown(config.ShowMinimap);
         viewOptions.SetLineFilter(
             new LineFilter(
                 config.HideExternalLines,

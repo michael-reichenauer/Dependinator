@@ -411,6 +411,51 @@
     text-overflow: ellipsis;
 }
 
+/* The minimap (Minimap.razor), bottom-right over the diagram. */
+.dep-minimap {
+    position: fixed;
+    right: 15px;
+    bottom: 12px;
+    z-index: 1200;
+    padding: 4px;
+    line-height: 0;
+}
+
+.dep-minimap__svg {
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.dep-minimap__label {
+    font-size: 8px;
+    fill: var(--mud-palette-text-secondary);
+    user-select: none;
+}
+
+.dep-minimap__viewport {
+    fill: var(--mud-palette-primary);
+    fill-opacity: 0.12;
+    stroke: var(--mud-palette-primary);
+    stroke-width: 1.5;
+}
+
+.dep-minimap .dep-minimap__close {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    padding: 2px;
+    background: var(--mud-palette-surface);
+    box-shadow: var(--mud-elevation-1);
+}
+
+/* On a phone the minimap would cover too much of the diagram. */
+@media (max-width: 700px) {
+    .dep-minimap {
+        display: none;
+    }
+}
+
 /* The architecture rules panel (RulesPanel.razor): rule rows with their violations, add form. */
 .dep-rules__rule {
     padding: 4px 0;

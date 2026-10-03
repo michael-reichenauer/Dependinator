@@ -13,6 +13,10 @@ interface IPanZoomService
 
     // Animates to a stored view (top-left offset and zoom), e.g. a view history entry.
     Task<bool> PanZoomToViewAsync(Pos offset, double zoom);
+
+    // Puts the given canvas point at the viewport's center right away, keeping the zoom (the
+    // minimap's click and drag).
+    void PanTo(Pos canvasCenter);
     void Zoom(PointerEvent e);
     void Pan(PointerEvent e);
 
@@ -238,6 +242,18 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
 
         var offset = ToOffset(pos, zoom, svgRect);
         SetView(offset, zoom, isSaveNeeded: false);
+    }
+
+    public void PanTo(Pos canvasCenter)
+    {
+        Interlocked.Increment(ref goToRequestId);
+        var svgRect = screenService.SvgRect;
+        if (!IsValidSvgRect(svgRect))
+            return;
+        var zoom = modelMgr.WithModel(m => m.Zoom);
+        if (zoom <= 0)
+            return;
+        SetView(ToOffset(canvasCenter, zoom, svgRect), null);
     }
 
     public async Task<bool> PanZoomToViewAsync(Pos offset, double zoom)

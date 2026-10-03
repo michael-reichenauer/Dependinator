@@ -25,6 +25,9 @@ interface IViewOptions
     // Architecture rules: the rules panel is open and violating lines are drawn highlighted.
     bool IsRulesShown { get; }
 
+    // The minimap in the corner (persisted in Config.ShowMinimap).
+    bool IsMinimapShown { get; }
+
     void SetShowHiddenNodes(bool show);
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
@@ -32,6 +35,7 @@ interface IViewOptions
     void SetLegendShown(bool shown);
     void SetCyclesShown(bool shown);
     void SetRulesShown(bool shown);
+    void SetMinimapShown(bool shown);
 }
 
 // MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on.
@@ -51,6 +55,7 @@ class ViewOptions : IViewOptions
     public bool IsLegendShown { get; private set; }
     public bool IsCyclesShown { get; private set; }
     public bool IsRulesShown { get; private set; }
+    public bool IsMinimapShown { get; private set; }
 
     public void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
 
@@ -65,4 +70,6 @@ class ViewOptions : IViewOptions
     public void SetCyclesShown(bool shown) => IsCyclesShown = shown;
 
     public void SetRulesShown(bool shown) => IsRulesShown = shown;
+
+    public void SetMinimapShown(bool shown) => IsMinimapShown = shown;
 }

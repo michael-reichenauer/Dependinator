@@ -1,0 +1,166 @@
+@using System.Globalization
+@using Dependinator.UI.Diagrams.Interaction
+@using Dependinator.UI.Diagrams.Svg
+@using Dependinator.UI.Modeling
+@using Dependinator.UI.Modeling.Models
+@using Dependinator.UI.Shared.Types
+@using Microsoft.AspNetCore.Components.Web
+@inject IApplicationEvents applicationEvents
+@inject IViewOptions viewOptions
+@inject IModelMgr modelMgr
+@inject IScreenService screenService
+@inject IPanZoomService panZoomService
+@inject IConfigService configService
+@implements IDisposable
+
+@* The minimap: the model's top two container levels as small boxes in the corner, with a frame
+   for the part currently on screen. Clicking or dragging in it pans the diagram there (the zoom
+   stays). Drawn from node bounds, not tiles, so it is cheap to redraw on every view change. *@
+@if (viewOptions.IsMinimapShown && TryGetScene(out var scene))
+{
+  <div class="dep-minimap dep-toolbar-card" data-testid="minimap">
+    <svg class="dep-minimap__svg" width="@W" height="@H" viewBox="0 0 @W @H"
+         @onpointerdown="OnPointerDown" @onpointermove="OnPointerMove" @onpointerup="OnPointerUp"
+         @onpointerleave="OnPointerUp" @onpointerdown:preventDefault="true">
+      @foreach (var box in scene.Boxes)
+      {
+        <rect x="@F(box.Rect.X)" y="@F(box.Rect.Y)" width="@F(box.Rect.Width)" height="@F(box.Rect.Height)"
+              rx="1.5" fill="@box.Fill" stroke="@box.Stroke" stroke-width="@(box.IsTop ? "1" : "0.5")"
+              pointer-events="none" />
+      }
+      @foreach (var label in scene.Labels)
+      {
+        @* Razor reserves <text>, so the SVG text element is emitted as markup. *@
+        @((MarkupString)LabelSvg(label))
+      }
+      <rect x="@F(scene.Viewport.X)" y="@F(scene.Viewport.Y)" width="@F(scene.Viewport.Width)" height="@F(scene.Viewport.Height)"
+            class="dep-minimap__viewport" pointer-events="none" data-testid="minimap-viewport" />
+    </svg>
+    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="MudBlazor.Size.Small" Class="dep-minimap__close"
+                   title="Hide the minimap (View › Show Minimap brings it back)" OnClick="HideAsync" data-testid="minimap-close" />
+  </div>
+}
+
+@code {
+  const string W = "200";
+  const string H = "130";
+
+  record Box(Rect Rect, string Fill, string Stroke, bool IsTop);
+  record Label(double X, double Y, string Text);
+  record Scene(IReadOnlyList<Box> Boxes, IReadOnlyList<Label> Labels, Rect Viewport, MinimapFit Fit);
+
+  MinimapFit? currentFit;
+  bool isDragging;
+
+  protected override void OnInitialized()
+  {
+    applicationEvents.ViewChanged += OnChanged;
+    applicationEvents.UIStateChanged += OnChanged;
+    applicationEvents.ModelChanged += OnChanged;
+  }
+
+  void OnChanged() => InvokeAsync(StateHasChanged);
+
+  static string F(double value) => Math.Round(value, 1).ToString(CultureInfo.InvariantCulture);
+
+  static string LabelSvg(Label label) =>
+    $"<text x=\"{F(label.X)}\" y=\"{F(label.Y)}\" class=\"dep-minimap__label\" pointer-events=\"none\">"
+    + System.Web.HttpUtility.HtmlEncode(label.Text)
+    + "</text>";
+
+  // The top-level containers (projects) and their children (namespaces), placed where the
+  // diagram places them, scaled into the box; the frame is the viewport in canvas units.
+  bool TryGetScene(out Scene scene)
+  {
+    scene = null!;
+    using var model = modelMgr.UseModel();
+    var tops = model.Root.Children.Where(n => !n.IsNote && !n.IsHidden).ToList();
+    if (tops.Count == 0 || model.Zoom <= 0)
+      return false;
+
+    var topRects = tops.Select(n => (Node: n, Rect: CanvasRect(n))).ToList();
+    var bounds = Union(topRects.Select(t => t.Rect));
+    if (bounds.Width <= 0 || bounds.Height <= 0)
+      return false;
+    var fit = MinimapGeometry.Fit(bounds);
+    currentFit = fit;
+
+    var boxes = new List<Box>();
+    var labels = new List<Label>();
+    foreach (var (node, rect) in topRects)
+    {
+      var (border, background) = NodeSvg.NodeColors(node);
+      var box = fit.ToMinimap(rect);
+      boxes.Add(new Box(box, background, border, IsTop: true));
+      foreach (var child in node.Children.Where(c => !c.IsNote && !c.IsHidden))
+      {
+        var (childBorder, childBackground) = NodeSvg.NodeColors(child);
+        boxes.Add(new Box(fit.ToMinimap(CanvasRect(child)), childBackground, childBorder, IsTop: false));
+      }
+      if (box.Width >= 40 && box.Height >= 12)
+        labels.Add(new Label(box.X + 3, box.Y + 9, Truncate(node.ShortName, (int)(box.Width / 5))));
+    }
+
+    var svgRect = screenService.SvgRect;
+    var viewport = new Rect(model.Offset.X, model.Offset.Y, svgRect.Width * model.Zoom, svgRect.Height * model.Zoom);
+    scene = new Scene(boxes, labels, MinimapGeometry.Clamp(fit.ToMinimap(viewport)), fit);
+    return true;
+  }
+
+  static Rect CanvasRect(Node node)
+  {
+    var (pos, zoom) = node.GetPosAndZoom();
+    return new Rect(pos.X, pos.Y, node.Boundary.Width * zoom, node.Boundary.Height * zoom);
+  }
+
+  static Rect Union(IEnumerable<Rect> rects)
+  {
+    double x1 = double.MaxValue, y1 = double.MaxValue, x2 = double.MinValue, y2 = double.MinValue;
+    foreach (var r in rects)
+    {
+      x1 = Math.Min(x1, r.X);
+      y1 = Math.Min(y1, r.Y);
+      x2 = Math.Max(x2, r.X + r.Width);
+      y2 = Math.Max(y2, r.Y + r.Height);
+    }
+    return x1 == double.MaxValue ? Rect.None : new Rect(x1, y1, x2 - x1, y2 - y1);
+  }
+
+  static string Truncate(string text, int maxChars) =>
+    maxChars < 2 ? "" : text.Length <= maxChars ? text : text[..(maxChars - 1)] + "…";
+
+  void OnPointerDown(PointerEventArgs e)
+  {
+    isDragging = true;
+    PanTo(e.OffsetX, e.OffsetY);
+  }
+
+  void OnPointerMove(PointerEventArgs e)
+  {
+    if (isDragging && e.Buttons == 1)
+      PanTo(e.OffsetX, e.OffsetY);
+  }
+
+  void OnPointerUp(PointerEventArgs e) => isDragging = false;
+
+  void PanTo(double minimapX, double minimapY)
+  {
+    if (currentFit is not { } fit)
+      return;
+    panZoomService.PanTo(fit.ToCanvas(minimapX, minimapY));
+  }
+
+  async Task HideAsync()
+  {
+    viewOptions.SetMinimapShown(false);
+    await configService.SetAsync(config => config.ShowMinimap = false);
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  public void Dispose()
+  {
+    applicationEvents.ViewChanged -= OnChanged;
+    applicationEvents.UIStateChanged -= OnChanged;
+    applicationEvents.ModelChanged -= OnChanged;
+  }
+}

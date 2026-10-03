@@ -122,6 +122,13 @@
                     Show Notes Sidebar
                 </MudMenuItem>
 
+                <MudMenuItem IconColor="Color.Secondary" Icon="@MinimapIcon" OnClick="ToggleMinimapAsync"
+                             title="A small overview in the corner; click or drag in it to move the view."
+                             data-checked="@(viewOptions.IsMinimapShown ? "true" : "false")"
+                             data-testid="menu-minimap">
+                    Show Minimap
+                </MudMenuItem>
+
                 <MudMenuItem IconColor="Color.Secondary" Icon="@LegendIcon" OnClick="ToggleLegend"
                              data-checked="@(viewOptions.IsLegendShown ? "true" : "false")"
                              data-testid="menu-legend">
@@ -657,6 +664,15 @@
     string ShowHiddenNodesIcon => CheckIcon(viewOptions.ShowHiddenNodes);
     string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
+    string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
+
+    async Task ToggleMinimapAsync()
+    {
+        var newValue = !viewOptions.IsMinimapShown;
+        viewOptions.SetMinimapShown(newValue);
+        await configService.SetAsync(config => config.ShowMinimap = newValue);
+        applicationEvents.TriggerUIStateChanged();
+    }
     string CyclesIcon => CheckIcon(viewOptions.IsCyclesShown);
     string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
 
