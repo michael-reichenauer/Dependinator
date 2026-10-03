@@ -21,6 +21,9 @@ class Config
     public bool HideInheritanceLines { get; set; } = false;
     public bool HideMemberLines { get; set; } = false;
     public int MinLinkCount { get; set; } = 1;
+
+    // The first-run tour (CoachService) has been shown or skipped.
+    public bool IsCoachSeen { get; set; } = false;
 }
 
 interface IConfigService

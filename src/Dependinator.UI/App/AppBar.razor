@@ -23,6 +23,7 @@
 @inject IPointerEventService pointerEventService
 @inject Dependinator.UI.Diagrams.IViewOptions viewOptions
 @inject Dependinator.UI.Diagrams.IPathFinderService pathFinderService
+@inject Dependinator.UI.Diagrams.ICoachService coachService
 @inject IThemeService themeService
 @inject IKeyboardService keyboardService
 @inject Dependinator.UI.Diagrams.Interaction.IViewHistoryService viewHistory
@@ -274,6 +275,11 @@
                              data-testid="menu-help">
                     Help
                 </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TipsAndUpdates" OnClick="coachService.Start"
+                             title="Replays the short tour of the basics shown on the first start."
+                             data-testid="menu-tips">
+                    Show Tips
+                </MudMenuItem>
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout"
                              data-testid="menu-about">
                     About
@@ -505,6 +511,7 @@
             return;
 
         isSearchOpen = true;
+        coachService.NoticeSearchOpened();
         try
         {
             var dialog = await dialogService.ShowAsync<Dependinator.UI.Diagrams.SearchDialog>(

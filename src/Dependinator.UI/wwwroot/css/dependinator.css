@@ -410,6 +410,50 @@
     text-overflow: ellipsis;
 }
 
+/* The first-run tour's callout (CoachCallout.razor), bottom-center over the diagram. */
+.dep-coach {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 1300;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: min(480px, calc(100vw - 32px));
+    padding: 10px 12px 8px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-coach__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dep-coach__title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.dep-coach__count {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-coach__text a {
+    color: var(--mud-palette-primary);
+}
+
+.dep-coach__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
 /* Dropdown menus for the toolbars (AppBar / NodeToolbar / ContextMenu). In the light theme
    the menus are pinned light regardless of the MudBlazor palette (overriding the palette CSS
    variables on the popover cascades to every descendant: paper background, list text, icons,

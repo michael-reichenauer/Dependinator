@@ -43,7 +43,7 @@ class CanvasService(
     IBrowserFileService browserFileService,
     IModelListService recentModelsService,
     IInteractionService interactionService,
-    IDialogService dialogService,
+    ICoachService coachService,
     IVsCodeSendService vsCodeSendService,
     IViewHistoryService viewHistory
 ) : ICanvasService
@@ -74,17 +74,14 @@ class CanvasService(
 
     public async Task InitialShowAsync()
     {
-        bool isShowDemoMessage = false;
         using var t = Timing.Start("InitialShow");
         await screenService.CheckResizeAsync();
         // In test mode always load the embedded demo model for a fast, deterministic
-        // model, ignoring any persisted recent/local paths.
-        var startupPath = Dependinator.Core.Build.IsTestMode ? DemoModel.Path : recentModelsService.StartupPath;
-        if (startupPath is null)
-        {
-            startupPath = DemoModel.Path;
-            isShowDemoMessage = true;
-        }
+        // model, ignoring any persisted recent/local paths. First-time users (or users who
+        // reset their last diagram) have no previous model, so the demo diagram is shown.
+        var startupPath = Dependinator.Core.Build.IsTestMode
+            ? DemoModel.Path
+            : recentModelsService.StartupPath ?? DemoModel.Path;
 
         await LoadAsync(startupPath);
 
@@ -96,13 +93,8 @@ class CanvasService(
         // node for the editor that was active when the webview was first opened.
         await vsCodeSendService.NotifyDiagramLoadedAsync();
 
-        // First-time users (or users who reset their last diagram) have no previous
-        // model, so a demo diagram is shown. Let them know why, and invite them to
-        // explore the application with it.
-        if (isShowDemoMessage)
-        {
-            await ShowDemoMessageAsync();
-        }
+        // New users get the short tour (once); it says why a demo diagram is open when it is.
+        await coachService.StartIfFirstRunAsync(isDemoModel: startupPath == DemoModel.Path);
     }
 
     public async Task LoadAsync(string modelPath)
@@ -192,33 +184,5 @@ class CanvasService(
 
         applicationEvents.TriggerUIStateChanged();
         return content;
-    }
-
-    async Task ShowDemoMessageAsync()
-    {
-        // Where the user's own models come from differs per host: the VS Code extension parses
-        // the workspace solution, the web app shows models synced from VS Code (or hand-drawn
-        // design models).
-        string ownModelsHint = Dependinator.Core.Build.IsVsCodeExtWasm
-            ? "Your workspace's solution is parsed and opened automatically when one is found; "
-                + "switch between solutions and models under <b>Menu › Models</b>.<br/><br/>"
-            : "To map your own code, install the "
-                + "<a href=\"https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator\" "
-                + "target=\"_blank\" rel=\"noopener\">Dependinator VS Code extension</a> and enable device sync "
-                + "there and here: your models then appear under <b>Menu › Models</b>. You can also sketch an "
-                + "architecture by hand with <b>Menu › Models › New Model</b>.<br/><br/>";
-
-        await dialogService.ShowMessageBoxAsync(
-            "Welcome to Dependinator",
-            (MarkupString)(
-                "You don't have a diagram yet, so a <b>demo diagram</b> has been opened for you to explore.<br/><br/>"
-                + "<b>Zoom</b> (scroll or pinch) into a node to see what is inside it, <b>drag</b> to pan, "
-                + "<b>click</b> a node for its toolbar and <b>double-click</b> it to zoom to it. "
-                + "<b>Ctrl+F</b> finds a node by name.<br/><br/>"
-                + ownModelsHint
-                + "<b>Menu › Help</b> has the full list of controls."
-            ),
-            yesText: "Got it"
-        );
     }
 }
