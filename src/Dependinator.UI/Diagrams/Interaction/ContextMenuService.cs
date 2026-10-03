@@ -40,7 +40,6 @@ interface IContextMenuService
     Task ShowReferencesAsync();
     Task ShowDependenciesAsync();
     Task ZoomToAsync();
-    void FindPathFromHere();
     Task ShowSourceAsync();
     void HideDirectLine();
 
@@ -56,7 +55,6 @@ class ContextMenuService(
     ISelectionService selectionService,
     IDependenciesService dependenciesService,
     INavigationService navigationService,
-    IPathFinderService pathFinderService,
     IModelMgr modelMgr,
     IApplicationEvents applicationEvents
 ) : IContextMenuService
@@ -158,15 +156,6 @@ class ContextMenuService(
         if (Target != ContextMenuTarget.Node)
             return;
         await navigationService.ShowNodeAsync(targetId.NodeId);
-    }
-
-    // The path finder opens with this node as "from" and asks for "to".
-    public void FindPathFromHere()
-    {
-        Close();
-        if (Target != ContextMenuTarget.Node)
-            return;
-        pathFinderService.OpenFrom(targetId.NodeId);
     }
 
     public async Task ShowSourceAsync()

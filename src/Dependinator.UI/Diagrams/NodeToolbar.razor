@@ -31,11 +31,6 @@ else if (HasSelectedLine)
                      OnClick="ZoomToNode" data-testid="node-menu-zoom-to">
           Zoom to Node
         </MudMenuItem>
-        <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.AltRoute"
-                     OnClick="FindPathFromHere" title="Why does this node depend on another? Choose the other node to see the chain."
-                     data-testid="node-menu-find-path">
-          Find Path from Here …
-        </MudMenuItem>
         @if (!IsNodeHidden)
         {
           <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
@@ -287,8 +282,6 @@ else if (HasSelectedLine)
   [Inject]
   IViewOptions viewOptions { get; set; } = null!;
 
-  [Inject]
-  IPathFinderService pathFinderService { get; set; } = null!;
 
   [Inject]
   IThemeService themeService { get; set; } = null!;
@@ -390,11 +383,6 @@ else if (HasSelectedLine)
 
   void ShowReferences() => dependenciesService.ShowReferences();
 
-  void FindPathFromHere()
-  {
-    if (TryGetSelectedNodeId(out var nodeId))
-      pathFinderService.OpenFrom(nodeId);
-  }
 
   void ShowDependencies() => dependenciesService.ShowDependencies();
 

@@ -226,9 +226,9 @@
                 depend on each other in a circle (projects, namespaces or classes referencing each other) and draws
                 those lines in red; click a row to go there.</li>
             <li class="feature"><b>Find a path</b> — why does one node depend on another? <b>View › Find Path</b>
-                (or <b>Find Path from Here</b> on a node) lets you choose two nodes and lists the shortest chains of
-                dependencies from the first to the second; the chosen chain is drawn highlighted while every other
-                line fades, and clicking a hop takes you there.</li>
+                lets you choose two nodes and lists the shortest chains of dependencies from the first to the
+                second; the chosen chain is drawn highlighted while every other line fades, and clicking a hop takes
+                you there. The explorer's indirect rows (below) open the same panel for their chain.</li>
             <li class="feature"><b>Leave lines out</b> — <b>View › Lines</b> hides lines to external packages,
                 inheritance lines or member-level lines, or shows only lines carrying at least 2, 5 or 10 links.
                 The explorer's lines and direct lines you asked for are always drawn.</li>
@@ -249,6 +249,10 @@
                 (references) or the nodes it uses (dependencies).</li>
             <li class="feature"><b>Drill into the chain</b> — expand a row to split its line one level deeper
                 in the diagram; the row lists the far side's children with their link counts.</li>
+            <li class="feature"><b>Include indirect</b> — the <b>»</b> button also lists the nodes reached
+                <i>through</i> other nodes, dimmed and with their hop counts, in the same containers as the direct
+                ones. That is how you discover a dependency nobody referenced on purpose; hover such a row and
+                click the chain button to see how it comes about.</li>
             <li class="feature"><b>Navigate</b> — click a row to pan the diagram to that node; hover a row for
                 "show node", "show source code" (VS Code) and "show direct line".</li>
             <li class="feature"><b>Keep the lines</b> — closing the explorer keeps its lines until you select

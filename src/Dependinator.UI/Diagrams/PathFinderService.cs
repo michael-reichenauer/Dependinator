@@ -55,6 +55,9 @@ interface IPathFinderService
 
     void Open();
     void OpenFrom(NodeId fromId);
+
+    // Opens the panel with both ends chosen (e.g. from an explorer row).
+    void Show(NodeId fromId, NodeId toId);
     void SetFrom(NodeId id);
     void SetTo(NodeId id);
     void Swap();
@@ -119,6 +122,14 @@ class PathFinderService(
         Open();
         if (ToId is null)
             PickToRequested?.Invoke();
+    }
+
+    public void Show(NodeId fromId, NodeId toId)
+    {
+        FromId = fromId;
+        ToId = toId == fromId ? null : toId;
+        SelectedIndex = 0;
+        Open();
     }
 
     public void SetFrom(NodeId id)
@@ -198,24 +209,9 @@ class PathFinderService(
         if (from == to || from.Ancestors().Contains(to) || to.Ancestors().Contains(from))
             return new PathResult(PathStatus.Nested, []);
 
-        // The dependency graph between "units" (every non-member node), with the links behind
-        // each edge so the edge's lines can be highlighted later.
-        var edges = new Dictionary<Node, Dictionary<Node, List<Link>>>();
-        foreach (var link in model.Links.Values)
-        {
-            var source = UnitOf(link.Source);
-            var target = UnitOf(link.Target);
-            if (source == target)
-                continue;
-            if (!edges.TryGetValue(source, out var targets))
-                edges[source] = targets = [];
-            if (!targets.TryGetValue(target, out var links))
-                targets[target] = links = [];
-            links.Add(link);
-        }
-
-        var sources = UnitsOf(from).ToHashSet();
-        var targetUnits = UnitsOf(to).ToHashSet();
+        var graph = UnitGraph.Build(model);
+        var sources = UnitGraph.UnitsOf(from).ToHashSet();
+        var targetUnits = UnitGraph.UnitsOf(to).ToHashSet();
 
         // Breadth first from everything inside "from", keeping every predecessor on a shortest
         // route, until the first layer that reaches inside "to" is complete.
@@ -241,9 +237,7 @@ class PathFinderService(
                 reached.Add(node);
                 continue;
             }
-            if (!edges.TryGetValue(node, out var next))
-                continue;
-            foreach (var neighbor in next.Keys.OrderBy(n => n.Name, StringComparer.Ordinal))
+            foreach (var neighbor in graph.Next(node, isReverse: false))
             {
                 if (!distance.TryGetValue(neighbor, out var known))
                 {
@@ -289,7 +283,7 @@ class PathFinderService(
             var lineIds = new HashSet<LineId>();
             for (var i = 0; i + 1 < chain.Count; i++)
             {
-                foreach (var link in edges[chain[i]][chain[i + 1]])
+                foreach (var link in graph.LinksBetween(chain[i], chain[i + 1]))
                 {
                     foreach (var line in link.Lines)
                         lineIds.Add(line.Id);
@@ -300,16 +294,4 @@ class PathFinderService(
     }
 
     static PathHop ToHop(Node node) => new(node.Id, node.ShortName, node.LongName);
-
-    // A member counts for the type (or whatever non-member node) that holds it.
-    static Node UnitOf(Node node)
-    {
-        while (node.Type.IsMember && node.Parent is not null)
-            node = node.Parent;
-        return node;
-    }
-
-    // Every non-member node at or inside the given node (a member endpoint stands for its type).
-    static IEnumerable<Node> UnitsOf(Node node) =>
-        node.Type.IsMember ? [UnitOf(node)] : node.DescendantsAndSelfPreOrder().Where(n => !n.Type.IsMember);
 }

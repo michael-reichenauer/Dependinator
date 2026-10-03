@@ -1,3 +1,4 @@
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Dependencies;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling;
@@ -34,7 +35,8 @@ public class DependenciesServiceFocusTests
             applicationEvents.Object,
             modelMgr,
             navigationService.Object,
-            screenService.Object
+            screenService.Object,
+            Mock.Of<IPathFinderService>()
         );
     }
 

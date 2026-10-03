@@ -38,7 +38,7 @@
     @switch (result.Status)
     {
       case PathStatus.Incomplete:
-        <div class="dep-panel__empty">Choose both nodes. Right-click a node and pick "Find Path from Here …" to start from it.</div>
+        <div class="dep-panel__empty">Choose both nodes. The Dependencies explorer's indirect rows open a chain from here too.</div>
         break;
       case PathStatus.Nested:
         <div class="dep-panel__empty">One of the nodes is inside the other, so there is no dependency path between them. Choose two nodes that do not contain each other.</div>

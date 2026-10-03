@@ -24,6 +24,10 @@ interface IDependenciesService
     // clears lines left behind by a closed explorer).
     bool IsLinesPinned { get; }
 
+    // Also list the nodes the subject reaches (or is reached from) through other nodes, merged
+    // into the same containers with their hop counts.
+    bool IsIncludeIndirect { get; }
+
     TreeType TreeType { get; }
     string Title { get; }
     string Subtitle { get; }
@@ -39,6 +43,10 @@ interface IDependenciesService
     void ShowReferences();
     void ShowDependencies();
     void SetShowLines(bool isShowLines);
+    void SetIncludeIndirect(bool isIncluded);
+
+    // Opens the path finder with the chain between the subject and an indirectly reached node.
+    void ShowChain(NodeId nodeId);
     void SetLinesPinned(bool isPinned);
     void SetMinimized(bool isMinimized);
     void Close();
@@ -51,7 +59,8 @@ class DependenciesService(
     IApplicationEvents applicationEvents,
     IModelMgr modelMgr,
     INavigationService navigationService,
-    IScreenService screenService
+    IScreenService screenService,
+    IPathFinderService pathFinderService
 ) : IDependenciesService
 {
     // Below this viewport width (MudBlazor's md breakpoint) the explorer covers most of the
@@ -61,6 +70,7 @@ class DependenciesService(
     string selectedId = "";
     TreeType treeType = TreeType.References;
     bool isShowLines = true;
+    bool isIncludeIndirect;
 
     // Set by Close: the subject's lines stay in the diagram after the explorer is gone, until
     // the user selects something else (unless pinned) or hides them.
@@ -74,6 +84,7 @@ class DependenciesService(
     public bool IsShowLines => isShowLines;
     public bool IsMinimized { get; private set; }
     public bool IsLinesPinned { get; private set; }
+    public bool IsIncludeIndirect => isIncludeIndirect;
 
     public void ShowReferences() => Show(TreeType.References);
 
@@ -143,6 +154,29 @@ class DependenciesService(
             isLinesKeptAfterClose = false; // Hiding lines that only lingered after a close drops them for good
         UpdateFocus();
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    // The choice is kept for the session; the tree is rebuilt, which folds its rows again.
+    public void SetIncludeIndirect(bool isIncluded)
+    {
+        if (isIncludeIndirect == isIncluded)
+            return;
+        isIncludeIndirect = isIncluded;
+        if (IsShowExplorer)
+        {
+            TreeItems = GetTreeItems(treeType);
+            UpdateFocus();
+        }
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public void ShowChain(NodeId nodeId)
+    {
+        if (!selectionService.SelectedId.IsNode)
+            return;
+        var subjectId = NodeId.FromId(selectionService.SelectedId.Id);
+        var (fromId, toId) = treeType is TreeType.Dependencies ? (subjectId, nodeId) : (nodeId, subjectId);
+        pathFinderService.Show(fromId, toId);
     }
 
     // Expanding a row lists the far container's children in the tree, and splits the line into
@@ -304,8 +338,8 @@ class DependenciesService(
 
         foreach (var item in TreeItems.SelectMany(item => item.GetThisAndDescendants()))
         {
-            if (!item.Expanded || item.NodeId == NodeId.Empty)
-                continue;
+            if (!item.Expanded || item.NodeId == NodeId.Empty || item.IsIndirect)
+                continue; // No line of the subject leads to an indirect-only row, so nothing to split
             if (model.Nodes.TryGetValue(item.NodeId, out var farNode))
                 focus.ExpandedFarNodes.Add(farNode);
         }
@@ -323,7 +357,13 @@ class DependenciesService(
         {
             Title = selectedNode.ShortName;
             Subtitle = treeType is TreeType.References ? "Nodes that use this node" : "Nodes that this node uses";
-            return GetNodeItems(selectedNode, treeType);
+            if (isIncludeIndirect)
+                Subtitle += " (dimmed: through other nodes, with hop counts)";
+            var items = DependencyTree.ForNode(model, selectedNode, treeType, isIncludeIndirect);
+            if (items.Count > 0)
+                return items;
+            var text = treeType is TreeType.References ? "No references found" : "No dependencies found";
+            return [new TreeItem() { Text = text }];
         }
         if (model.Lines.TryGetValue(LineId.FromId(selectedId), out var selectedLine))
         {
@@ -332,69 +372,11 @@ class DependenciesService(
                 treeType is TreeType.References
                     ? "Source nodes of this line's links"
                     : "Target nodes of this line's links";
-            return GetLineItems(selectedLine, [.. selectedLine.Links], treeType);
+            return DependencyTree.ForLine(selectedLine, treeType);
         }
 
         Title = "No items found";
         Subtitle = "";
         return [];
-    }
-
-    // Returns one subtree for each line into the node (references) or out of the node
-    // (dependencies) that carries at least one link actually ending at the node or a descendant
-    // (other links just pass by on their way to some other node).
-    static IReadOnlyList<TreeItem> GetNodeItems(Node node, TreeType treeType)
-    {
-        List<TreeItem> items = [];
-
-        var lines = treeType is TreeType.References ? node.TargetLines : node.SourceLines;
-        foreach (var line in lines)
-        {
-            var isLineForNode = line.Links.Any(link =>
-            {
-                var endpoint = treeType is TreeType.References ? link.Target : link.Source;
-                return endpoint == node || endpoint.Ancestors().Contains(node);
-            });
-            if (!isLineForNode)
-                continue;
-
-            items.AddRange(GetLineItems(line, [.. line.Links], treeType));
-        }
-
-        if (!items.Any())
-        {
-            var text = treeType is TreeType.References ? "No references found" : "No dependencies found";
-            items.Add(new TreeItem() { Text = text });
-        }
-        return items;
-    }
-
-    // Returns an item for the node at the far end of the line (the source for references, the
-    // target for dependencies). Each tree branch traces one chain of lines that carry the root
-    // line's links; the item's children continue that chain from the far node. The levels are
-    // exactly the far-side funnel: the top rows are the far top containers, their children the
-    // parent-to-child fan-out, which is what expanding a row splits in the diagram.
-    static IReadOnlyList<TreeItem> GetLineItems(Line line, HashSet<Link> rootLinks, TreeType treeType)
-    {
-        var (farNode, nearNode) =
-            treeType is TreeType.References ? (line.Source, line.Target) : (line.Target, line.Source);
-
-        var farLines = treeType is TreeType.References ? farNode.TargetLines : farNode.SourceLines;
-        List<Line> nextLines = [.. farLines.Where(l => l.Links.Any(rootLinks.Contains))];
-
-        if (nearNode.Parent == farNode)
-        {
-            // A line from/to the direct parent adds no information; continue the chain past it.
-            return nextLines.SelectMany(l => GetLineItems(l, rootLinks, treeType)).ToList();
-        }
-
-        // Children are created lazily on first expand, after the model lock has been released;
-        // the captured lines/nodes may be stale if the model has been re-parsed since.
-        GetTreeItemChildren? getChildren = nextLines.Any()
-            ? () => [.. nextLines.SelectMany(l => GetLineItems(l, rootLinks, treeType))]
-            : null;
-
-        var linkCount = line.Links.Count(rootLinks.Contains);
-        return [new TreeItem(farNode, linkCount, getChildren)];
     }
 }
