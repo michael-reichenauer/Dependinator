@@ -464,6 +464,24 @@ public sealed class AppPage
         await ClickUntilSelectedAsync(() => WaitForStableNodePointAsync(visibleName));
     }
 
+    // Shift+click a node by its visible label to add it to (or remove it from) the current
+    // selection; the toolbar's "N selected" badge tells whether it took.
+    public async Task ShiftClickNodeByVisibleNameAsync(string visibleName)
+    {
+        float[] point = await WaitForStableNodePointAsync(visibleName);
+        await page.Keyboard.DownAsync("Shift");
+        try
+        {
+            await page.Mouse.ClickAsync(point[0], point[1]);
+        }
+        finally
+        {
+            await page.Keyboard.UpAsync("Shift");
+        }
+    }
+
+    public ILocator NodeSelectionCount => page.GetByTestId("node-selection-count");
+
     // Click a computed canvas point until a node toolbar actually shows. The canvas re-renders
     // continuously, so a click can land where the node was a frame ago and select nothing —
     // which surfaces much later as a missing toolbar button. Recompute the point on each

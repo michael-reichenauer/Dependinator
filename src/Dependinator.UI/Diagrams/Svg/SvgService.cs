@@ -121,12 +121,13 @@ class SvgService : ISvgService
         return RenderNodeContent(model.Root, context);
     }
 
-    // The selected node or line, for selection dimming; null when nothing is selected.
+    // The selected node(s) or line, for selection dimming; empty when nothing is selected.
     static RenderSelection FindSelection(IModel model)
     {
-        var node = model.Nodes.Values.FirstOrDefault(n => n.IsSelected);
+        var nodes = model.Nodes.Values.Where(n => n.IsSelected).ToList();
+        var node = nodes.FirstOrDefault();
         var line = node is null ? model.Lines.Values.FirstOrDefault(l => l.IsSelected) : null;
-        return new RenderSelection(node, line);
+        return new RenderSelection(node, line, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
     }
 
     // A line is dimmed while something else is selected: for a selected node, every line that
@@ -140,7 +141,11 @@ class SvgService : ISvgService
             return line != selectedLine;
         if (selection.Node is not { } node)
             return false;
-        return !IsAtOrInside(line.Source, node) && !IsAtOrInside(line.Target, node);
+        if (IsAtOrInside(line.Source, node) || IsAtOrInside(line.Target, node))
+            return false;
+        // With several nodes selected, a line touching any of them stays bright.
+        return selection.OtherNodes is not { } others
+            || !others.Any(other => IsAtOrInside(line.Source, other) || IsAtOrInside(line.Target, other));
     }
 
     static bool IsAtOrInside(Node endpoint, Node node) => endpoint == node || endpoint.Ancestors().Contains(node);
@@ -506,7 +511,7 @@ class SvgService : ISvgService
         return RectOverlap(context.TileBounds, tileRect);
     }
 
-    internal readonly record struct RenderSelection(Node? Node, Line? Line);
+    internal readonly record struct RenderSelection(Node? Node, Line? Line, IReadOnlyList<Node>? OtherNodes = null);
 
     readonly record struct ViewFlags(bool IsEditing, bool ShowHidden, bool DimUnrelated)
     {

@@ -202,7 +202,7 @@ class CoachService : ICoachService, IDisposable
                 MudBlazor.Icons.Material.Outlined.TouchApp,
                 "Click a node",
                 "Clicking a node shows its toolbar with everything you can do with it. Double-click zooms to it, "
-                    + "<b>Esc</b> deselects.",
+                    + "<b>Shift</b>+click adds more nodes, <b>Esc</b> deselects.",
                 "Next"
             ),
             CoachStep.Explore => new(

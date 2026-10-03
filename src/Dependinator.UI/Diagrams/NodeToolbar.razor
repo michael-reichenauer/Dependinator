@@ -24,6 +24,12 @@ else if (HasSelectedLine)
   @* data-container tells tests whether the selection renders as an open container or an icon. *@
   <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar dep-toolbar-card"
                   Style="@CssPosition" data-testid="node-toolbar" data-container="@(IsIconMode ? "false" : "true")">
+    @if (selectionService.SelectedNodeCount > 1)
+    {
+      <MudTooltip Text="Several nodes are selected (Shift+click adds or removes one): move, hide, color, size and delete apply to all of them.">
+        <span class="dep-toolbar__count" data-testid="node-selection-count">@selectionService.SelectedNodeCount selected</span>
+      </MudTooltip>
+    }
     <MudTooltip Text="Menu">
       <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
                PopoverClass="@MenuClass" data-testid="node-menu">
@@ -428,17 +434,33 @@ else if (HasSelectedLine)
       lineSplitService.Clear(nodeId);
   }
 
+  // Deletes the selected manual node(s); with a group, every manual node in it goes.
   async Task DeleteNode()
   {
-    if (!TryGetSelectedNodeId(out var nodeId))
+    if (!TryGetSelectedNodeId(out _))
       return;
 
-    // Confirm before removing a node together with its children; no prompt for a childless node.
-    if (SelectedNodeHasChildren && await deleteConfirmBox.ShowAsync() != true)
+    List<Modeling.Models.NodeId> manualIds;
+    bool anyHasChildren;
+    using (var model = modelMgr.UseModel())
+    {
+      var manual = selectionService.SelectedNodeIds
+        .Select(id => model.Nodes.TryGetValue(id, out var node) ? node : null)
+        .Where(node => node is { IsManual: true })
+        .ToList();
+      manualIds = manual.Select(node => node!.Id).ToList();
+      anyHasChildren = manual.Any(node => node!.Children.Count > 0);
+    }
+    if (manualIds.Count == 0)
+      return;
+
+    // Confirm before removing a node together with its children; no prompt for childless nodes.
+    if (anyHasChildren && await deleteConfirmBox.ShowAsync() != true)
       return;
 
     selectionService.Unselect();
-    manualEditService.DeleteManualNode(nodeId);
+    foreach (var manualId in manualIds)
+      manualEditService.DeleteManualNode(manualId);
   }
 
   void RenameNode()
@@ -540,16 +562,16 @@ else if (HasSelectedLine)
 
   void SetIconColor(string? colorName)
   {
-    if (!TryGetSelectedNodeId(out var nodeId))
+    if (!TryGetSelectedNodeId(out _))
       return;
-    nodeEditService.SetNodeIconColor(nodeId, colorName);
+    nodeEditService.SetNodeIconColor(selectionService.SelectedNodeIds, colorName);
   }
 
   void SetNodeColor(string? colorName)
   {
-    if (!TryGetSelectedNodeId(out var nodeId))
+    if (!TryGetSelectedNodeId(out _))
       return;
-    nodeEditService.SetNodeColor(nodeId, colorName);
+    nodeEditService.SetNodeColor(selectionService.SelectedNodeIds, colorName);
   }
 
   async Task SelectIconAsync()

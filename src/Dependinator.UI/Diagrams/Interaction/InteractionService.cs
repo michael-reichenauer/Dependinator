@@ -165,24 +165,16 @@ class InteractionService(
 
     public void IncreaseNodeSize()
     {
-        if (!viewOptions.IsEditingEnabled)
+        if (!viewOptions.IsEditingEnabled || !selectionService.SelectedId.IsNode)
             return;
-        if (!selectionService.IsSelected)
-            return;
-        var nodeId = NodeId.FromId(selectionService.SelectedId.Id);
-
-        nodeEditService.IncreaseNodeSize(nodeId);
+        nodeEditService.IncreaseNodeSize(selectionService.SelectedNodeIds);
     }
 
     public void DecreaseNodeSize()
     {
-        if (!viewOptions.IsEditingEnabled)
+        if (!viewOptions.IsEditingEnabled || !selectionService.SelectedId.IsNode)
             return;
-        if (!selectionService.IsSelected)
-            return;
-        var nodeId = NodeId.FromId(selectionService.SelectedId.Id);
-
-        nodeEditService.DecreaseNodeSize(nodeId);
+        nodeEditService.DecreaseNodeSize(selectionService.SelectedNodeIds);
     }
 
     public async Task InitAsync()
@@ -410,7 +402,11 @@ class InteractionService(
 
         dependenciesService.Clicked(pointerId);
 
-        selectionService.Select(pointerId, e).RunInBackground();
+        // Shift/Ctrl+click builds a group selection; a plain click selects just that item.
+        if (pointerId.IsNode && (e.ShiftKey || e.CtrlKey))
+            selectionService.ToggleInSelectionAsync(pointerId, e).RunInBackground();
+        else
+            selectionService.Select(pointerId, e).RunInBackground();
     }
 
     void OnDblClick(PointerEvent e)
@@ -543,15 +539,19 @@ class InteractionService(
             return;
         }
 
+        // Dragging the selected node (or any node of a group selection) moves the whole selection.
         if (
             viewOptions.IsEditingEnabled
-            && mouseDownId == selectionService.SelectedId
-            && selectionService.IsSelectedNodeMovable(Zoom)
             && mouseDownId.IsNode
+            && selectionService.IsSelectedNodeMovable(Zoom)
+            && selectionService.SelectedNodeIds.Contains(mouseDownId.NodeId)
         )
         {
             isDraggingSelectedNode = true;
-            nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
+            if (selectionService.SelectedNodeCount > 1)
+                nodeEditService.MoveSelectedNodes(e, Zoom, selectionService.SelectedNodeIds);
+            else
+                nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
             return;
         }
@@ -594,7 +594,10 @@ class InteractionService(
 
         if (isDraggingSelectedNode && mouseDownId.IsNode)
         {
-            nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
+            if (selectionService.SelectedNodeCount > 1)
+                nodeEditService.SnapSelectedNodesToGrid(selectionService.SelectedNodeIds);
+            else
+                nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedNode = false;
         }

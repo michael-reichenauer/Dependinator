@@ -411,6 +411,20 @@
     text-overflow: ellipsis;
 }
 
+/* The "N selected" badge at the start of the node toolbar (NodeToolbar.razor). */
+.dep-toolbar__count {
+    display: inline-block;
+    margin: 0 4px 0 6px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
 /* The minimap (Minimap.razor), bottom-right over the diagram. */
 .dep-minimap {
     position: fixed;

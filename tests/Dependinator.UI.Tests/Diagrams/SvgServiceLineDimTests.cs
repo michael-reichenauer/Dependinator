@@ -39,6 +39,23 @@ public class SvgServiceLineDimTests
     }
 
     [Fact]
+    public void IsLineDimmed_ShouldKeepLinesTouchingAnyNodeOfAGroupSelection()
+    {
+        var root = CreateRoot();
+        var a = AddNode(root, "A");
+        var b = AddNode(root, "B");
+        var c = AddNode(root, "C");
+        var d = AddNode(root, "D");
+        var bc = new Line(b, c);
+        var cd = new Line(c, d);
+
+        var selection = new SvgService.RenderSelection(a, null, [b]);
+
+        Assert.False(SvgService.IsLineDimmed(bc, selection)); // Touches B, part of the group
+        Assert.True(SvgService.IsLineDimmed(cd, selection));
+    }
+
+    [Fact]
     public void IsLineDimmed_ShouldKeepOnlyTheSelectedLine()
     {
         var root = CreateRoot();
