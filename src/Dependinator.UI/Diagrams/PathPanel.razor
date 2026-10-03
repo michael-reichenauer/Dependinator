@@ -1,0 +1,123 @@
+@inject IApplicationEvents applicationEvents
+@inject IPathFinderService pathFinder
+@inject INavigationService navigationService
+@inject IDialogService dialogService
+@implements IDisposable
+
+@* The path finder: pick two nodes and see the shortest chains of dependencies from the first to
+   the second. The selected chain's lines are drawn highlighted in the diagram while every other
+   line fades; clicking a hop navigates to that node. *@
+@if (pathFinder.IsOpen)
+{
+  var result = pathFinder.GetResult();
+  <div class="dep-panel dep-path dep-toolbar-card" data-testid="path-panel">
+    <div class="dep-panel__header">
+      <span class="dep-panel__title">Path</span>
+      <span class="dep-panel__count" data-testid="path-summary">@Summary(result)</span>
+      <MudSpacer />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
+                     data-testid="path-close" />
+    </div>
+    <div class="dep-panel__hint">Why does one node depend on another? Choose two nodes to list the shortest chains of dependencies from the first to the second; the chosen chain is drawn highlighted.</div>
+
+    <div class="dep-path__endpoints">
+      <span class="dep-path__label">From</span>
+      <button type="button" class="@PickClass(pathFinder.FromName)" title="Choose the node the path starts from"
+              @onclick="() => PickAsync(isFrom: true)" data-testid="path-from">
+        @(pathFinder.FromName is "" ? "Choose a node …" : pathFinder.FromName)
+      </button>
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.SwapVert" Size="Size.Small" Class="dep-path__swap"
+                     OnClick="pathFinder.Swap" title="Swap from and to" data-testid="path-swap" />
+      <span class="dep-path__label">To</span>
+      <button type="button" class="@PickClass(pathFinder.ToName)" title="Choose the node the path leads to"
+              @onclick="() => PickAsync(isFrom: false)" data-testid="path-to">
+        @(pathFinder.ToName is "" ? "Choose a node …" : pathFinder.ToName)
+      </button>
+    </div>
+
+    @switch (result.Status)
+    {
+      case PathStatus.Incomplete:
+        <div class="dep-panel__empty">Choose both nodes. Right-click a node and pick "Find Path from Here …" to start from it.</div>
+        break;
+      case PathStatus.Nested:
+        <div class="dep-panel__empty">One of the nodes is inside the other, so there is no dependency path between them. Choose two nodes that do not contain each other.</div>
+        break;
+      case PathStatus.NotFound:
+        <div class="dep-panel__empty" data-testid="path-none">No path: @pathFinder.FromName does not depend on @pathFinder.ToName, directly or indirectly.</div>
+        break;
+      default:
+        <div class="dep-panel__list">
+          @for (var i = 0; i < result.Paths.Count; i++)
+          {
+            var index = i;
+            var path = result.Paths[index];
+            <button type="button" class="dep-panel__row dep-path__row @(index == pathFinder.SelectedIndex ? "dep-panel__row--selected" : "")"
+                    title="Draw this chain in the diagram" @onclick="() => pathFinder.SelectPath(index)" data-testid="path-item">
+              @for (var h = 0; h < path.Hops.Count; h++)
+              {
+                var hop = path.Hops[h];
+                if (h > 0)
+                {
+                  <span class="dep-path__arrow">→</span>
+                }
+                <span class="dep-path__hop" title="@($"Go to {hop.LongName}")"
+                      @onclick="() => ShowAsync(hop.Id)" @onclick:stopPropagation="true">@hop.Name</span>
+              }
+            </button>
+          }
+        </div>
+        break;
+    }
+  </div>
+}
+
+@code {
+  protected override void OnInitialized()
+  {
+    applicationEvents.UIStateChanged += OnUiStateChanged;
+    pathFinder.PickToRequested += OnPickToRequested;
+  }
+
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  void OnPickToRequested() => _ = InvokeAsync(() => PickAsync(isFrom: false));
+
+  static string PickClass(string name) => name is "" ? "dep-path__pick dep-path__pick--empty" : "dep-path__pick";
+
+  static string Summary(PathResult result)
+  {
+    if (result.Status != PathStatus.Found)
+      return "";
+    var hops = result.Paths[0].HopCount;
+    var text = hops == 1 ? "1 hop" : $"{hops} hops";
+    return result.Paths.Count > 1 ? $"{text} · {result.Paths.Count} chains" : text;
+  }
+
+  Task ShowAsync(Modeling.Models.NodeId nodeId) => navigationService.ShowNodeAsync(nodeId);
+
+  // The node search dialog in picker mode: the chosen node becomes "from" or "to".
+  async Task PickAsync(bool isFrom)
+  {
+    var parameters = new DialogParameters<SearchDialog>
+    {
+      { d => d.PickCaption, isFrom ? "Path from: choose the node the path starts from" : "Path to: choose the node the path leads to" },
+    };
+    var dialog = await dialogService.ShowAsync<SearchDialog>((string?)null, parameters, SearchDialog.Options);
+    var result = await dialog.Result;
+    if (result is not { Canceled: false, Data: Modeling.Models.NodeId id })
+      return;
+    if (isFrom)
+      pathFinder.SetFrom(id);
+    else
+      pathFinder.SetTo(id);
+  }
+
+  void Close() => pathFinder.Close();
+
+  public void Dispose()
+  {
+    applicationEvents.UIStateChanged -= OnUiStateChanged;
+    pathFinder.PickToRequested -= OnPickToRequested;
+  }
+}

@@ -32,13 +32,21 @@ class SvgService : ISvgService
     readonly ITilesMgr tilesMgr;
     readonly IViewOptions viewOptions;
     readonly ICycleService cycleService;
+    readonly IPathFinderService pathFinderService;
 
-    public SvgService(IModelMgr modelMgr, ITilesMgr tilesMgr, IViewOptions viewOptions, ICycleService cycleService)
+    public SvgService(
+        IModelMgr modelMgr,
+        ITilesMgr tilesMgr,
+        IViewOptions viewOptions,
+        ICycleService cycleService,
+        IPathFinderService pathFinderService
+    )
     {
         this.modelMgr = modelMgr;
         this.tilesMgr = tilesMgr;
         this.viewOptions = viewOptions;
         this.cycleService = cycleService;
+        this.pathFinderService = pathFinderService;
     }
 
     // The user's view toggles that affect what a tile contains; captured per render so the
@@ -48,6 +56,7 @@ class SvgService : ISvgService
         {
             Filter = viewOptions.LineFilter,
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
+            PathLines = pathFinderService.GetPathLineIds(),
         };
 
     public Tile GetTile(Rect viewRect, double zoom)
@@ -132,10 +141,17 @@ class SvgService : ISvgService
 
     static bool IsAtOrInside(Node endpoint, Node node) => endpoint == node || endpoint.Ancestors().Contains(node);
 
-    static bool IsLineDimmed(Line line, RenderContext context) =>
-        context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.Selection);
+    // While a dependency path is shown, everything off the path fades so the chain stands out.
+    static bool IsLineDimmed(Line line, RenderContext context)
+    {
+        if (context.Flags.PathLines is { } pathLines)
+            return !pathLines.Contains(line.Id);
+        return context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.Selection);
+    }
 
     static bool IsLineCyclic(Line line, RenderContext context) => context.Flags.CyclicLines?.Contains(line.Id) == true;
+
+    static bool IsLineOnPath(Line line, RenderContext context) => context.Flags.PathLines?.Contains(line.Id) == true;
 
     // The user's line filter (View › Lines). Explorer focus lines and user-requested direct
     // lines are explicit asks and are always drawn.
@@ -326,7 +342,13 @@ class SvgService : ISvgService
                 continue;
             if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                 continue;
-            yield return LineSvg.GetLineSvg(line, nodeCanvasPos, childrenZoom, IsLineDimmed(line, context));
+            yield return LineSvg.GetLineSvg(
+                line,
+                nodeCanvasPos,
+                childrenZoom,
+                IsLineDimmed(line, context),
+                isPath: IsLineOnPath(line, context)
+            );
         }
 
         // All sibling lines and children to parent lines
@@ -351,7 +373,8 @@ class SvgService : ISvgService
                     nodeCanvasPos,
                     childrenZoom,
                     IsLineDimmed(line, context),
-                    IsLineCyclic(line, context)
+                    IsLineCyclic(line, context),
+                    IsLineOnPath(line, context)
                 );
             }
         }
@@ -416,7 +439,8 @@ class SvgService : ISvgService
                 node,
                 nodeCanvasPos,
                 childrenZoom,
-                IsLineDimmed(directLine, context)
+                IsLineDimmed(directLine, context),
+                IsLineOnPath(directLine, context)
             );
             if (svg.Length > 0)
                 yield return svg;
@@ -481,6 +505,9 @@ class SvgService : ISvgService
 
         // Sibling lines that are part of a circular dependency; null while cycles are not shown.
         public IReadOnlySet<LineId>? CyclicLines { get; init; }
+
+        // Lines of the dependency path being shown (View › Find Path); null while no path is shown.
+        public IReadOnlySet<LineId>? PathLines { get; init; }
     }
 
     readonly record struct RenderContext(

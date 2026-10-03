@@ -11,25 +11,25 @@
 @if (viewOptions.IsCyclesShown)
 {
   var cycles = cycleService.GetCycles();
-  <div class="dep-cycles dep-toolbar-card" data-testid="cycles-panel">
-    <div class="dep-cycles__header">
-      <span class="dep-cycles__title">Cycles</span>
-      <span class="dep-cycles__count">@(cycles.Count == 0 ? "none" : cycles.Count.ToString())</span>
+  <div class="dep-panel dep-toolbar-card" data-testid="cycles-panel">
+    <div class="dep-panel__header">
+      <span class="dep-panel__title">Cycles</span>
+      <span class="dep-panel__count">@(cycles.Count == 0 ? "none" : cycles.Count.ToString())</span>
       <MudSpacer />
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
                      data-testid="cycles-close" />
     </div>
     @if (cycles.Count == 0)
     {
-      <div class="dep-cycles__empty">No circular dependencies found: no projects, namespaces or types in any container depend on each other in a circle.</div>
+      <div class="dep-panel__empty">No circular dependencies found: no projects, namespaces or types in any container depend on each other in a circle.</div>
     }
     else
     {
-      <div class="dep-cycles__hint">Projects, namespaces or types in one container that depend on each other in a circle. Their lines are drawn red.</div>
-      <div class="dep-cycles__list">
+      <div class="dep-panel__hint">Projects, namespaces or types in one container that depend on each other in a circle. Their lines are drawn red.</div>
+      <div class="dep-panel__list">
         @foreach (var cycle in cycles)
         {
-          <button type="button" class="dep-cycles__row" title="@($"Show {cycle.ContainerName}")"
+          <button type="button" class="dep-panel__row" title="@($"Show {cycle.ContainerName}")"
                   @onclick="() => ShowAsync(cycle.ContainerId)" data-testid="cycles-item">
             <span class="dep-cycles__container">@cycle.ContainerName</span>
             <span class="dep-cycles__members">@string.Join(" ↔ ", cycle.Members.Select(m => m.Name))</span>

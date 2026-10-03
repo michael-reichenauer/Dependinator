@@ -22,6 +22,7 @@
 @inject Dependinator.UI.Diagrams.ILineSplitService lineSplitService
 @inject IPointerEventService pointerEventService
 @inject Dependinator.UI.Diagrams.IViewOptions viewOptions
+@inject Dependinator.UI.Diagrams.IPathFinderService pathFinderService
 @inject IThemeService themeService
 @inject IKeyboardService keyboardService
 @inject Dependinator.UI.Diagrams.Interaction.IViewHistoryService viewHistory
@@ -121,6 +122,12 @@
                              data-checked="@(viewOptions.IsCyclesShown ? "true" : "false")"
                              data-testid="menu-cycles">
                     Show Cycles
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AltRoute" OnClick="pathFinderService.Open"
+                             title="Shows why one node depends on another: the shortest chain of dependencies between two nodes you choose."
+                             data-testid="menu-find-path">
+                    Find Path …
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@DimUnrelatedLinesIcon" OnClick="ToggleDimUnrelatedLines"
@@ -500,15 +507,10 @@
         isSearchOpen = true;
         try
         {
-            var options = new DialogOptions
-            {
-                CloseOnEscapeKey = true,
-                NoHeader = true,
-                Position = DialogPosition.TopCenter,
-                MaxWidth = MaxWidth.Small,
-                FullWidth = true,
-            };
-            var dialog = await dialogService.ShowAsync<Dependinator.UI.Diagrams.SearchDialog>((string?)null, options);
+            var dialog = await dialogService.ShowAsync<Dependinator.UI.Diagrams.SearchDialog>(
+                (string?)null,
+                Dependinator.UI.Diagrams.SearchDialog.Options
+            );
             await dialog.Result;
         }
         finally
@@ -635,6 +637,8 @@
 
     void ToggleCycles()
     {
+        if (!viewOptions.IsCyclesShown)
+            pathFinderService.Close(); // Both panels sit top-right and both recolor lines
         viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
         modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
         applicationEvents.TriggerUIStateChanged();

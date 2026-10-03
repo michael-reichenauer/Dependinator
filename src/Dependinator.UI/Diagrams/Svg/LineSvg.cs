@@ -25,12 +25,16 @@ static class LineSvg
     // the "arrow-inheritance" marker geometry in Canvas.razor/SvgExportDocument).
     const double InheritanceMarkerLength = 14.5;
 
+    // A path line is drawn at least this wide so the chain reads even among thin lines.
+    const double PathMinStrokeWidth = 2;
+
     public static string GetLineSvg(
         Line line,
         Pos nodeCanvasPos,
         double childrenZoom,
         bool isDimmed = false,
-        bool isCyclic = false
+        bool isCyclic = false,
+        bool isPath = false
     )
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
@@ -40,7 +44,7 @@ static class LineSvg
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var elementId = PointerId.FromLine(line.Id).ElementId;
 
-        return BuildLineSvg(line, endpoints, polylinePoints, elementId, isDimmed, isCyclic);
+        return BuildLineSvg(line, endpoints, polylinePoints, elementId, isDimmed, isCyclic, isPath);
     }
 
     public static string GetDirectLineSvg(
@@ -48,13 +52,14 @@ static class LineSvg
         Node ancestor,
         Pos nodeCanvasPos,
         double childrenZoom,
-        bool isDimmed = false
+        bool isDimmed = false,
+        bool isPath = false
     )
     {
         if (line.RenderAncestor != ancestor)
             return "";
 
-        return GetLineSvg(line, nodeCanvasPos, childrenZoom, isDimmed);
+        return GetLineSvg(line, nodeCanvasPos, childrenZoom, isDimmed, isPath: isPath);
     }
 
     static string BuildLineSvg(
@@ -63,33 +68,37 @@ static class LineSvg
         IReadOnlyList<Pos> polylinePoints,
         string elementId,
         bool isDimmed,
-        bool isCyclic
+        bool isCyclic,
+        bool isPath
     )
     {
         // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
         // tell the on-demand lines apart from each other and from the solid aggregated lines:
-        // the explorer's pinned pair lines are dashed, its transient focus lines dotted.
+        // the explorer's pinned pair lines are dashed, its transient focus lines dotted. A line
+        // on the dependency path the user asked for (View › Find Path) outranks all of that.
         var isAccent = line.IsDirect || line.IsFocused;
         var color =
-            isAccent ? DColors.DirectLine
+            isPath ? DColors.PathLine
+            : isAccent ? DColors.DirectLine
             : isCyclic ? DColors.CycleLine
             : line.IsHidden ? DColors.LineHidden
             : line.IsCousin ? DColors.CousinLine
             : DColors.Line;
 
         // The hollow inheritance arrow head is only drawn where the line enters the real
-        // inheritance target (the supertype); hidden/accent/cycle styling takes precedence.
-        var isInheritanceHead = !isAccent && !isCyclic && !line.IsHidden && line.HasInheritanceTargetEnd;
+        // inheritance target (the supertype); hidden/accent/cycle/path styling takes precedence.
+        var isInheritanceHead = !isPath && !isAccent && !isCyclic && !line.IsHidden && line.HasInheritanceTargetEnd;
 
         var markerId =
-            isAccent ? "arrow-direct"
+            isPath ? "arrow-path"
+            : isAccent ? "arrow-direct"
             : isCyclic ? "arrow-cycle"
             : line.IsHidden ? "arrow-hidden"
             : isInheritanceHead ? "arrow-inheritance"
             : line.IsCousin ? "arrow-cousin"
             : "arrow-line";
 
-        var strokeWidth = line.StrokeWidth;
+        var strokeWidth = isPath ? Math.Max(line.StrokeWidth, PathMinStrokeWidth) : line.StrokeWidth;
         var circleRadius = strokeWidth + StartCircleExtraRadius;
         var dashArray =
             line.IsDirect ? " stroke-dasharray=\"6,6\""
@@ -114,7 +123,10 @@ static class LineSvg
         // path but much wider, so hovering/clicking near the thin visible line still hits it.
         // The outer group lets a hover over the hit target restore a dimmed line (see the
         // line-dim CSS in Canvas.razor).
-        var visibleClass = (isDimmed ? "line-vis line-dim" : "line-vis") + (isCyclic ? " line-cycle" : "");
+        var visibleClass =
+            (isDimmed ? "line-vis line-dim" : "line-vis")
+            + (isCyclic ? " line-cycle" : "")
+            + (isPath ? " line-path" : "");
         return string.Create(
             CultureInfo.InvariantCulture,
             $"""

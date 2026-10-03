@@ -33,6 +33,10 @@
                          OnClick="contextMenuService.ZoomToAsync" data-testid="context-menu-zoom-to">
               Zoom to Node
             </MudListItem>
+            <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.AltRoute" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.FindPathFromHere" data-testid="context-menu-find-path">
+              Find Path from Here …
+            </MudListItem>
             @if (contextMenuService.CanShowTargetSource)
             {
               <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Code" IconColor="Color.Secondary"

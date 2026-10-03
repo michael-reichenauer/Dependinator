@@ -131,8 +131,8 @@
     font-size: 13px;
 }
 
-/* The cycles panel (CyclesPanel.razor), top-right over the diagram. */
-.dep-cycles {
+/* The analysis panels (CyclesPanel.razor, PathPanel.razor), top-right over the diagram. */
+.dep-panel {
     position: fixed;
     top: 42px;
     right: 15px;
@@ -146,35 +146,35 @@
     color: var(--mud-palette-text-primary);
 }
 
-.dep-cycles__header {
+.dep-panel__header {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.dep-cycles__title {
+.dep-panel__title {
     font-weight: 600;
     font-size: 0.9rem;
 }
 
-.dep-cycles__count {
+.dep-panel__count {
     color: var(--mud-palette-text-secondary);
 }
 
-.dep-cycles__hint,
-.dep-cycles__empty {
+.dep-panel__hint,
+.dep-panel__empty {
     color: var(--mud-palette-text-secondary);
     margin: 2px 0 6px;
 }
 
-.dep-cycles__list {
+.dep-panel__list {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
-.dep-cycles__row {
+.dep-panel__row {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -189,8 +189,13 @@
     cursor: pointer;
 }
 
-.dep-cycles__row:hover {
+.dep-panel__row:hover {
     background: var(--mud-palette-action-default-hover);
+}
+
+.dep-panel__row--selected {
+    background: var(--mud-palette-action-default-hover);
+    box-shadow: inset 3px 0 0 var(--mud-palette-primary);
 }
 
 .dep-cycles__container {
@@ -200,6 +205,78 @@
 .dep-cycles__members {
     color: var(--mud-palette-text-secondary);
     word-break: break-word;
+}
+
+/* The search dialog in picker mode (PathPanel.razor): what the chosen node will be used for. */
+.search-dialog__caption {
+    display: block;
+    margin: 0 4px 6px;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* The path finder's endpoint pickers and chains (PathPanel.razor). */
+.dep-path__endpoints {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 3px 8px;
+    margin: 2px 0 8px;
+}
+
+.dep-path__label {
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-path__pick {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    background: none;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.dep-path__pick:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.dep-path__pick--empty {
+    border-style: dashed;
+    color: var(--mud-palette-text-secondary);
+    font-style: italic;
+}
+
+.dep-path__swap {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+}
+
+.dep-path__row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 4px;
+}
+
+.dep-path__arrow {
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-path__hop {
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
+}
+
+.dep-path__hop:hover {
+    color: var(--mud-palette-primary);
 }
 
 /* The cloud status popover (CloudSyncButton.razor). */

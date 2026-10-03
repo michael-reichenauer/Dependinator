@@ -64,7 +64,8 @@ public class SvgServiceDeepZoomTests
             modelMgr,
             Mock.Of<ITilesMgr>(),
             new ViewOptions(),
-            new CycleService(modelMgr)
+            new CycleService(modelMgr),
+            Mock.Of<IPathFinderService>()
         );
         return service.GetContentSvg(canvasRect, zoom);
     }

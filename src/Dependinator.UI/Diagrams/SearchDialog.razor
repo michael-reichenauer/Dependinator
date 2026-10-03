@@ -6,6 +6,10 @@
 
 <MudDialog Class="search-dialog" ContentClass="pa-2" Style="margin-top:-29px;">
   <DialogContent>
+    @if (PickCaption is not null)
+    {
+      <MudText Typo="Typo.caption" Class="search-dialog__caption" data-testid="search-pick-caption">@PickCaption</MudText>
+    }
     <MudTextField @ref="textField" T="string" Value="@query" ValueChanged="OnQueryChanged" Immediate="true"
                   Autofocus="true" Placeholder="Search nodes…" Variant="Variant.Outlined" Margin="Margin.Dense"
                   Adornment="Adornment.Start" AdornmentIcon="@MudBlazor.Icons.Material.Outlined.Search" Clearable="true"
@@ -40,6 +44,21 @@
 @code {
   [CascadingParameter]
   IMudDialogInstance MudDialog { get; set; } = null!;
+
+  // Picker mode: shown above the field, and choosing a node returns its id to the caller
+  // (the dialog result) instead of navigating to it.
+  [Parameter]
+  public string? PickCaption { get; set; }
+
+  // How the dialog is opened everywhere: a slim box at the top, closed by Escape.
+  public static readonly DialogOptions Options = new()
+  {
+    CloseOnEscapeKey = true,
+    NoHeader = true,
+    Position = DialogPosition.TopCenter,
+    MaxWidth = MaxWidth.Small,
+    FullWidth = true,
+  };
 
   MudTextField<string> textField = null!;
   string query = "";
@@ -119,6 +138,11 @@
 
   async Task SelectAsync(NodeSearchResult result)
   {
+    if (PickCaption is not null)
+    {
+      MudDialog.Close(DialogResult.Ok(result.Id));
+      return;
+    }
     MudDialog.Close(DialogResult.Ok(true));
     await navigationService.ShowNodeAsync(result.Id);
   }
