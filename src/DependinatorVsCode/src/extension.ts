@@ -46,10 +46,18 @@ function setStatus(state: string): void {
 // and the setting is on.
 let followTimer: ReturnType<typeof setTimeout> | undefined;
 
+// The document the diagram was last pointed at, by following or by "Show source" opening it.
+// Focusing that editor again (after a click in the diagram, or because the diagram just opened
+// it) is not a switch, so it is not followed: it would jump the diagram back and drop a line
+// selection.
+let lastShownDocument: string | undefined;
+
 function followActiveEditor(editor: vscode.TextEditor | undefined): void {
     if (!editor || !activePanel || !activePanel.visible)
         return;
     if (!vscode.workspace.getConfiguration("dependinator").get<boolean>("followActiveEditor", true))
+        return;
+    if (editor.document.uri.toString() === lastShownDocument)
         return;
 
     if (followTimer)
@@ -121,6 +129,7 @@ function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
         return;
 
     const line = editor.selection.active.line + 1;
+    lastShownDocument = editor.document.uri.toString();
     activePanel.webview.postMessage({
         type: "ui/ShowNode",
         message: `${path}@${line}`
@@ -196,6 +205,8 @@ async function showEditorForLocation(fileLocation: string, panel: vscode.Webview
 
     try {
         const document = await vscode.workspace.openTextDocument(uri);
+        // Set before showing: the active-editor event fires while the editor opens.
+        lastShownDocument = document.uri.toString();
         const editor = await vscode.window.showTextDocument(document, {
             preview: false,
             viewColumn: findOtherViewColumn(panel.viewColumn)
