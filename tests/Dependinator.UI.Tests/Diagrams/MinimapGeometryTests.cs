@@ -94,9 +94,10 @@ public class MinimapGeometryTests
         Assert.Equal(first, small);
 
         // A move past the inner margin drags the window along by just enough.
-        var far = MinimapGeometry.Window(first, new Rect(1300, 600, 100, 65), model);
+        var beyond = new Rect(first.X + first.Width, 600, 100, 65);
+        var far = MinimapGeometry.Window(first, beyond, model);
         var margin = first.Width * MinimapGeometry.FollowMargin;
-        Assert.Equal(1300 + 100 + margin - first.Width, far.X, 6);
+        Assert.Equal(beyond.X + beyond.Width + margin - first.Width, far.X, 6);
         Assert.Equal(first.Y, far.Y, 6);
 
         // A zoom change (new size) re-centers on the view.
