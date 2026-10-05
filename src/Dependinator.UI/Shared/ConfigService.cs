@@ -11,6 +11,22 @@ class Config
     public Dictionary<string, CloudSyncModelState> CloudSyncStates { get; set; } = [];
     public bool ShowHiddenNodes { get; set; } = true;
     public bool InvertScrollZoom { get; set; } = false;
+
+    // Edit mode is off by default in every host: most sessions only explore, and edit-only
+    // chrome (link handles, resize handles) would otherwise clutter the diagram.
+    public bool IsEditingEnabled { get; set; } = false;
+    public AppTheme Theme { get; set; } = AppTheme.System;
+    public bool DimUnrelatedLines { get; set; } = true;
+    public bool HideExternalLines { get; set; } = false;
+    public bool HideInheritanceLines { get; set; } = false;
+    public bool HideMemberLines { get; set; } = false;
+    public int MinLinkCount { get; set; } = 1;
+
+    // The first-run tour (CoachService) has been shown or skipped.
+    public bool IsCoachSeen { get; set; } = false;
+
+    // The minimap in the corner of the diagram (View › Show Minimap).
+    public bool ShowMinimap { get; set; } = false;
 }
 
 interface IConfigService

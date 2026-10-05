@@ -9,7 +9,7 @@ namespace Dependinator.E2E.Tests.Ui;
 // ("Add Node …" arms placing mode → click canvas) or by double-clicking empty canvas — both open
 // the icon selector, and the node is created with the picked icon, named after it — that it
 // survives a reload (persisted with IsManual), and that only manual nodes expose the Delete
-// action. Editing is enabled by default in the Blazor Server host.
+// action. Edit mode is off by default, so each test turns it on first.
 public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     // Each test picks a distinct icon; the added node is named after the icon's display name.
@@ -27,6 +27,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task ManualNode_ShouldBeAddedViaMenu_AtClickedPosition()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
 
         // "Add Node …" arms placing mode; the next canvas click begins the add there.
         ILocator addNode = await App.OpenSubMenuItemAsync("menu-edit", "menu-add-node");
@@ -50,6 +51,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task ManualNode_ShouldBeAddedByDoubleClick_AndPersistAcrossReload()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
 
         await AddManualNodeAsync(NodeIcon);
         await Expect(App.NodeLabel(NodeIcon)).ToBeVisibleAsync();
@@ -73,6 +75,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task ManualLink_ShouldBeDeletableFromLineToolbar()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
 
         LocatorBoundingBoxResult box =
             await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
@@ -116,6 +119,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task ManualLink_ShouldBeCreatedByDraggingLinkHandle()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
 
         LocatorBoundingBoxResult box =
             await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
@@ -152,6 +156,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task ManualNode_ShouldBeAddedAndLinked_WhenLinkHandleDroppedOnEmptyCanvas()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
 
         LocatorBoundingBoxResult box =
             await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");

@@ -3,7 +3,6 @@
 @using Dependinator.UI.Modeling
 @using Dependinator.UI.Modeling.Commands
 @using Dependinator.UI.Shared.CloudSync
-@using Microsoft.JSInterop
 
 @inject ICanvasService canvasService
 @inject IAppCloudSyncService appCloudSyncService
@@ -22,12 +21,20 @@
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
 @inject Dependinator.UI.Diagrams.ILineSplitService lineSplitService
 @inject IPointerEventService pointerEventService
+@inject Dependinator.UI.Diagrams.IViewOptions viewOptions
+@inject Dependinator.UI.Diagrams.IPathFinderService pathFinderService
+@inject Dependinator.UI.Diagrams.ICoachService coachService
+@inject IShareLinkService shareLinkService
+@inject IThemeService themeService
+@inject IKeyboardService keyboardService
+@inject Dependinator.UI.Diagrams.Interaction.IViewHistoryService viewHistory
 @implements IDisposable
 
-<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Style="@CssPosition">
+<MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-toolbar-card"
+                Style="@CssPosition">
     <MudTooltip Text="Menu">
         <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Tertiary" Dense="true"
-                 AnchorOrigin="Origin.BottomCenter" PopoverClass="dep-light-menu" data-testid="appbar-menu">
+                 AnchorOrigin="Origin.BottomCenter" PopoverClass="@MenuClass" data-testid="appbar-menu">
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync"
                          data-testid="menu-search">
                 Search …
@@ -40,7 +47,16 @@
 
             <MudDivider />
 
-            <MudMenu Label="Edit" PopoverClass="dep-light-menu" data-testid="menu-edit">
+            <MudMenu Label="Edit" PopoverClass="@MenuClass" data-testid="menu-edit">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
+                             title="Move, resize, link, color and add nodes. Off: the diagram is view-only."
+                             data-checked="@(viewOptions.IsEditingEnabled ? "true" : "false")"
+                             data-testid="menu-edit-mode">
+                    Edit Mode
+                </MudMenuItem>
+
+                <MudDivider />
+
                 <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">History</MudText>
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Undo"
                              Disabled="@(!commandService.CanUndo)" OnClick="commandService.Undo" data-testid="menu-undo">
@@ -52,27 +68,22 @@
                     Redo
                 </MudMenuItem>
 
-                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Insert</MudText>
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox" OnClick="BeginAddNode"
-                             data-testid="menu-add-node">
-                    Add Node …
-                </MudMenuItem>
+                @if (viewOptions.IsEditingEnabled)
+                {
+                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Insert</MudText>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox" OnClick="BeginAddNode"
+                                 data-testid="menu-add-node">
+                        Add Node …
+                    </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.StickyNote2"
-                             OnClick="BeginAddNote" data-testid="menu-add-note">
-                    Add Note …
-                </MudMenuItem>
-
-                <MudDivider />
-
-                <MudMenuItem IconColor="Color.Secondary" Icon="@EditModeIcon" OnClick="ToggleEditMode"
-                             data-testid="menu-edit-mode">
-                    Edit Mode
-                </MudMenuItem>
-
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.StickyNote2"
+                                 OnClick="BeginAddNote" data-testid="menu-add-note">
+                        Add Note …
+                    </MudMenuItem>
+                }
             </MudMenu>
 
-            <MudMenu Label="Export" PopoverClass="dep-light-menu" data-testid="menu-export">
+            <MudMenu Label="Export" PopoverClass="@MenuClass" data-testid="menu-export">
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.HighlightAlt"
                              OnClick="BeginExportArea" data-testid="menu-export-area">
                     Select Area …
@@ -87,17 +98,68 @@
                              OnClick="exportService.ExportEntireDiagramAsync" data-testid="menu-export-diagram">
                     Entire Diagram …
                 </MudMenuItem>
+
+                <MudDivider />
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Link"
+                             OnClick="shareLinkService.CopyViewLinkAsync"
+                             title="Copies a dependinator.com link that opens this model at the current view."
+                             data-testid="menu-copy-view-link">
+                    Link to Current View
+                </MudMenuItem>
             </MudMenu>
 
-            <MudMenu Label="View" PopoverClass="dep-light-menu" data-testid="menu-view">
+            <MudMenu Label="View" PopoverClass="@MenuClass" data-testid="menu-view">
                 <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes"
+                             data-checked="@(viewOptions.ShowHiddenNodes ? "true" : "false")"
                              data-testid="menu-show-hidden-nodes">
                     Show Hidden Nodes
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
+                             data-checked="@(noteService.IsShowSidebar ? "true" : "false")"
                              data-testid="menu-notes-sidebar">
                     Show Notes Sidebar
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@MinimapIcon" OnClick="ToggleMinimapAsync"
+                             title="A small overview in the corner; click or drag in it to move the view."
+                             data-checked="@(viewOptions.IsMinimapShown ? "true" : "false")"
+                             data-testid="menu-minimap">
+                    Show Minimap
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@LegendIcon" OnClick="ToggleLegend"
+                             data-checked="@(viewOptions.IsLegendShown ? "true" : "false")"
+                             data-testid="menu-legend">
+                    Show Legend
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@CyclesIcon" OnClick="ToggleCycles"
+                             title="Lists circular dependencies and draws their lines in red."
+                             data-checked="@(viewOptions.IsCyclesShown ? "true" : "false")"
+                             data-testid="menu-cycles">
+                    Show Cycles
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@RulesIcon" OnClick="ToggleRules"
+                             title="Declare which parts must not depend on which, and see the dependencies that break those rules."
+                             data-checked="@(viewOptions.IsRulesShown ? "true" : "false")"
+                             data-testid="menu-rules">
+                    Show Architecture Rules
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AltRoute" OnClick="pathFinderService.Open"
+                             title="Shows why one node depends on another: the shortest chain of dependencies between two nodes you choose."
+                             data-testid="menu-find-path">
+                    Find Path …
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@DimUnrelatedLinesIcon" OnClick="ToggleDimUnrelatedLines"
+                             title="While a node or line is selected, fade every line that does not touch it."
+                             data-checked="@(viewOptions.DimUnrelatedLines ? "true" : "false")"
+                             data-testid="menu-dim-unrelated-lines">
+                    Dim Unrelated Lines
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.UnfoldLess"
@@ -105,18 +167,73 @@
                     Hide All Direct Lines
                 </MudMenuItem>
 
-                @if (!Build.IsVsCodeExtWasm)
-                {
-                    <MudDivider />
-
-                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
-                                 OnClick="ReloadPageAsync" data-testid="menu-reload">
-                        Reload
+                <MudMenu Label="@LinesMenuLabel" StartIcon="@Icons.Material.Outlined.FilterAlt" IconColor="Color.Secondary"
+                         Dense="true" PopoverClass="@MenuClass" data-testid="menu-lines">
+                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Leave out</MudText>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideExternal)"
+                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideExternal = !LineFilter.HideExternal })"
+                                 title="Lines to or from external packages and framework assemblies."
+                                 data-checked="@(LineFilter.HideExternal ? "true" : "false")" data-testid="menu-lines-external">
+                        Lines to Externals
                     </MudMenuItem>
-                }
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideInheritance)"
+                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideInheritance = !LineFilter.HideInheritance })"
+                                 title="Base class and interface implementation lines (hollow arrow heads)."
+                                 data-checked="@(LineFilter.HideInheritance ? "true" : "false")" data-testid="menu-lines-inheritance">
+                        Inheritance Lines
+                    </MudMenuItem>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideMember)"
+                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideMember = !LineFilter.HideMember })"
+                                 title="Lines that start or end at a method, property, field or event."
+                                 data-checked="@(LineFilter.HideMember ? "true" : "false")" data-testid="menu-lines-member">
+                        Member Lines
+                    </MudMenuItem>
+
+                    <MudDivider />
+                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Show lines with</MudText>
+                    @foreach (var (count, label) in MinLinkChoices)
+                    {
+                        <MudMenuItem IconColor="Color.Secondary" Icon="@RadioIcon(LineFilter.MinLinkCount == count)"
+                                     OnClick="() => SetLineFilterAsync(LineFilter with { MinLinkCount = count })"
+                                     data-checked="@(LineFilter.MinLinkCount == count ? "true" : "false")"
+                                     data-testid="@($"menu-lines-min-{count}")">
+                            @label
+                        </MudMenuItem>
+                    }
+                </MudMenu>
+
+                <MudDivider />
+
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Theme</MudText>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@ThemeIcon(AppTheme.System)"
+                             OnClick="() => SetThemeAsync(AppTheme.System)"
+                             title="Follows the system (or, in VS Code, the editor) color theme."
+                             data-checked="@(themeService.Theme == AppTheme.System ? "true" : "false")"
+                             data-testid="menu-theme-system">
+                    System
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@ThemeIcon(AppTheme.Light)"
+                             OnClick="() => SetThemeAsync(AppTheme.Light)"
+                             data-checked="@(themeService.Theme == AppTheme.Light ? "true" : "false")"
+                             data-testid="menu-theme-light">
+                    Light
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@ThemeIcon(AppTheme.Dark)"
+                             OnClick="() => SetThemeAsync(AppTheme.Dark)"
+                             data-checked="@(themeService.Theme == AppTheme.Dark ? "true" : "false")"
+                             data-testid="menu-theme-dark">
+                    Dark
+                </MudMenuItem>
             </MudMenu>
 
-            <MudMenu Label="Models" PopoverClass="dep-light-menu" data-testid="menu-models">
+            <MudMenu Label="Models" PopoverClass="@MenuClass" data-testid="menu-models">
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ViewList" OnClick="ManageModelsAsync"
+                             data-testid="menu-manage-models">
+                    Manage Models …
+                </MudMenuItem>
+
+                <MudDivider />
+
                 <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Models</MudText>
                 @{
                     IReadOnlyList<ModelItem> modelItems = modelListService.GetModelItems();
@@ -154,30 +271,9 @@
                              OnClick="OnDeleteModelAsync" data-testid="menu-delete-model">
                     Delete Current Model
                 </MudMenuItem>
-
-                @if (appCloudSyncService.IsAvailable)
-                {
-                    <MudDivider />
-
-                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Device Sync</MudText>
-                    @if (AuthState.IsAuthenticated)
-                    {
-                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudOff" OnClick="LogoutAsync"
-                                     data-testid="menu-logout">
-                            Disable Device Sync
-                        </MudMenuItem>
-                    }
-                    else
-                    {
-                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.CloudSync" OnClick="LoginAsync"
-                                     data-testid="menu-login">
-                            Enable Device Sync
-                        </MudMenuItem>
-                    }
-                }
             </MudMenu>
 
-            <MudMenu Label="Settings" PopoverClass="dep-light-menu" data-testid="menu-settings">
+            <MudMenu Label="Settings" PopoverClass="@MenuClass" data-testid="menu-settings">
                 <MudMenuItem IconColor="Color.Secondary" Icon="@IncludeTestProjectsIcon"
                              Disabled="@(!CanParseCurrentModel)"
                              title="Re-parses the solution. Test projects are excluded by default."
@@ -198,15 +294,30 @@
 
             <MudDivider />
 
-            <MudMenu Label="Help" PopoverClass="dep-light-menu" data-testid="menu-help-group">
+            <MudMenu Label="Help" PopoverClass="@MenuClass" data-testid="menu-help-group">
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Help" OnClick="ShowHelpAsync"
                              data-testid="menu-help">
                     Help
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.TipsAndUpdates" OnClick="coachService.Start"
+                             title="Replays the short tour of the basics shown on the first start."
+                             data-testid="menu-tips">
+                    Show Tips
                 </MudMenuItem>
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout"
                              data-testid="menu-about">
                     About
                 </MudMenuItem>
+
+                @if (!Build.IsVsCodeExtWasm)
+                {
+                    <MudDivider />
+
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Refresh"
+                                 OnClick="ReloadPageAsync" data-testid="menu-reload">
+                        Reload App
+                    </MudMenuItem>
+                }
             </MudMenu>
         </MudMenu>
     </MudTooltip>
@@ -217,36 +328,66 @@
         <MudIconButton Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync" data-testid="toolbar-search" />
     </MudTooltip>
 
-    <MudHidden Breakpoint="Breakpoint.SmAndDown">
-        <MudTooltip Text="Undo">
-            <MudIconButton Icon="@Icons.Material.Outlined.Undo" Color="@GetToolbarButtonColor(commandService.CanUndo)"
+    <MudTooltip Text="Fit to Screen (Home)">
+        <MudIconButton Icon="@Icons.Material.Outlined.FitScreen" OnClick="canvasService.PanZoomToFit"
+                       data-testid="toolbar-fit" />
+    </MudTooltip>
+
+    @* View history: where the last jump (search, explorer, breadcrumb, fit) came from. *@
+    <MudTooltip Text="@(viewHistory.CanGoBack ? "Back to the previous view (Alt+←, Backspace)" : "No previous view")">
+        <span>
+            <MudIconButton Icon="@Icons.Material.Outlined.ArrowBack" Disabled="@(!viewHistory.CanGoBack)"
+                           OnClick="viewHistory.GoBackAsync" data-testid="toolbar-back" />
+        </span>
+    </MudTooltip>
+    <MudTooltip Text="@(viewHistory.CanGoForward ? "Forward again (Alt+→, Shift+Backspace)" : "No next view")">
+        <span>
+            <MudIconButton Icon="@Icons.Material.Outlined.ArrowForward" Disabled="@(!viewHistory.CanGoForward)"
+                           OnClick="viewHistory.GoForwardAsync" data-testid="toolbar-forward" />
+        </span>
+    </MudTooltip>
+
+    @* A disabled button fires no pointer events, so the tooltip needs the wrapping span to
+       keep working (and say why the button is off). *@
+    <MudTooltip Text="@(commandService.CanUndo ? "Undo (Ctrl+Z)" : "Nothing to undo")">
+        <span>
+            <MudIconButton Icon="@Icons.Material.Outlined.Undo" Disabled="@(!commandService.CanUndo)"
                            OnClick="commandService.Undo" data-testid="toolbar-undo" />
-        </MudTooltip>
-        <MudTooltip Text="Redo">
-            <MudIconButton Icon="@Icons.Material.Outlined.Redo" Color="@GetToolbarButtonColor(commandService.CanRedo)"
-                           OnClick="commandService.Redo" data-testid="toolbar-redo" />
+        </span>
+    </MudTooltip>
+
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <MudTooltip Text="@(commandService.CanRedo ? "Redo (Ctrl+Y)" : "Nothing to redo")">
+            <span>
+                <MudIconButton Icon="@Icons.Material.Outlined.Redo" Disabled="@(!commandService.CanRedo)"
+                               OnClick="commandService.Redo" data-testid="toolbar-redo" />
+            </span>
         </MudTooltip>
         @if (CanParseCurrentModel)
         {
-            <MudTooltip Text="Parse">
+            <MudTooltip Text="Re-parse the solution">
                 <MudIconButton Icon="@Icons.Material.Outlined.Autorenew" OnClick="canvasService.RefreshAsync"
                                data-testid="toolbar-parse" />
             </MudTooltip>
         }
-        @if (ViewOptions.IsEditingEnabled)
-        {
-            <MudTooltip Text="Disable edit mode">
-                <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Color="@Color.Warning" OnClick="ToggleEditMode"
-                               data-testid="toolbar-edit" />
-            </MudTooltip>
-        }
-        else
-        {
-            <MudTooltip Text="Enable edit mode">
-                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Tertiary"
-                               OnClick="ToggleEditMode" data-testid="toolbar-edit" />
-            </MudTooltip>
-        }
+    </MudHidden>
+
+    @if (viewOptions.IsEditingEnabled)
+    {
+        <MudTooltip Text="Edit mode is on: click to switch to view mode">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Edit" Color="@Color.Warning" OnClick="ToggleEditMode"
+                           data-checked="true" data-testid="toolbar-edit" />
+        </MudTooltip>
+    }
+    else
+    {
+        <MudTooltip Text="View mode: click to enable editing">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Tertiary"
+                           OnClick="ToggleEditMode" data-checked="false" data-testid="toolbar-edit" />
+        </MudTooltip>
+    }
+
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
         <MudTooltip Text="Help">
             <MudIconButton Icon="@Icons.Material.Outlined.Help" OnClick="ShowHelpAsync" data-testid="toolbar-help" />
         </MudTooltip>
@@ -300,17 +441,14 @@
     MudMessageBox deleteLocalOrRemoteModelBox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
 
-    DotNetObjectReference<AppBar>? selfReference;
     bool isSearchOpen;
 
     string? CurrentRecentModelPath =>
     modelListService.RecentModelPaths.Count > 0 ? modelListService.RecentModelPaths[0] : null;
     string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
-    string CssPosition =>
-    $"position:fixed;left:{15}px; top:{3}px;"
-    + "background:rgba(255,255,255,0.9);border-radius:4px;"
-    + "box-shadow:var(--mud-elevation-2);";
+    string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
+    string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
 
     protected override void OnInitialized()
     {
@@ -318,35 +456,82 @@
 
         applicationEvents.UIStateChanged += OnUiStateChanged;
         applicationEvents.ErrorReported += OnErrorReported;
+        applicationEvents.InfoReported += OnInfoReported;
+        applicationEvents.SearchRequested += OnSearchRequested;
         appCloudSyncService.Changed += OnUiStateChanged;
+        themeService.Changed += OnUiStateChanged;
+        keyboardService.KeyDown += OnKeyDown;
+    }
+
+    // The app-level shortcuts: search, undo/redo and fit. Canvas gestures (Escape, arrows,
+    // zoom) are handled by the interaction service, Delete by the toolbars.
+    void OnKeyDown(KeyPress key)
+    {
+        if (key.IsCtrl && (key.Is("f") || key.Is("t")))
+            _ = InvokeAsync(OpenSearchAsync);
+        else if (key.IsCtrl && key.Is("z"))
+            _ = InvokeAsync(commandService.Undo);
+        else if ((key.IsCtrl && key.Is("y")) || (key.IsCtrlShift && key.Is("z")))
+            _ = InvokeAsync(commandService.Redo);
+        else if ((key.IsPlain && key.Is("Home")) || (key.IsCtrl && key.Is("0")))
+            _ = InvokeAsync(canvasService.PanZoomToFit);
+        else if ((key.IsAlt && key.Is("ArrowLeft")) || (key.IsPlain && key.Is("Backspace")))
+            _ = InvokeAsync(viewHistory.GoBackAsync);
+        else if ((key.IsAlt && key.Is("ArrowRight")) || (key.IsShift && key.Is("Backspace")))
+            _ = InvokeAsync(viewHistory.GoForwardAsync);
     }
 
     // Errors can be reported from background work (e.g. a refresh parse), so marshal to the
     // renderer. RequireInteraction keeps the message up until dismissed, since a failed parse
-    // otherwise just looks like an empty diagram.
-    void OnErrorReported(string message)
+    // otherwise just looks like an empty diagram. A report can carry an action (retry, include
+    // test projects), shown as the snackbar's button.
+    void OnErrorReported(ErrorReport report)
     {
         _ = InvokeAsync(() =>
-            snackbar.Add(message, Severity.Error, config => config.RequireInteraction = true)
+            snackbar.Add(
+                report.Message,
+                Severity.Error,
+                config =>
+                {
+                    config.RequireInteraction = true;
+                    if (report.Action is { } action)
+                    {
+                        config.Action = action.Label;
+                        config.ActionColor = Color.Inherit;
+                        config.OnClick = _ => RunErrorActionAsync(action);
+                    }
+                }
+            )
         );
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    async Task RunErrorActionAsync(ErrorAction action)
     {
-        await base.OnAfterRenderAsync(firstRender);
-
-        if (!firstRender)
-            return;
-
-        selfReference = jsInterop.Reference(this);
-        await jsInterop.Call("listenToKeyDown", selfReference, nameof(OnSearchHotkey));
+        switch (action.Kind)
+        {
+            case ErrorActionKind.RetryLoad when action.Path is { } path:
+                await canvasService.LoadAsync(path);
+                break;
+            case ErrorActionKind.RetryRefresh:
+                await canvasService.RefreshAsync();
+                break;
+            case ErrorActionKind.IncludeTestProjects when action.Path is { } path:
+                // An open model gets the flag and a refresh. After a failed first parse there is
+                // no model to refresh (the path was never set), so it is loaded again with the flag.
+                if (modelMgr.ModelPath == path)
+                    await modelService.SetIncludeTestProjectsAsync(true);
+                else
+                    await canvasService.LoadAsync(path, includeTestProjects: true);
+                break;
+        }
     }
 
-    [JSInvokable]
-    public ValueTask OnSearchHotkey()
+    void OnSearchRequested() => _ = InvokeAsync(OpenSearchAsync);
+
+    // E.g. what a background refresh changed: worth a note, not an interruption.
+    void OnInfoReported(string message)
     {
-        _ = InvokeAsync(OpenSearchAsync);
-        return ValueTask.CompletedTask;
+        _ = InvokeAsync(() => snackbar.Add(message, Severity.Info));
     }
 
     async Task OpenSearchAsync()
@@ -355,17 +540,13 @@
             return;
 
         isSearchOpen = true;
+        coachService.NoticeSearchOpened();
         try
         {
-            var options = new DialogOptions
-            {
-                CloseOnEscapeKey = true,
-                NoHeader = true,
-                Position = DialogPosition.TopCenter,
-                MaxWidth = MaxWidth.Small,
-                FullWidth = true,
-            };
-            var dialog = await dialogService.ShowAsync<Dependinator.UI.Diagrams.SearchDialog>((string?)null, options);
+            var dialog = await dialogService.ShowAsync<Dependinator.UI.Diagrams.SearchDialog>(
+                (string?)null,
+                Dependinator.UI.Diagrams.SearchDialog.Options
+            );
             await dialog.Result;
         }
         finally
@@ -378,30 +559,11 @@
     {
         applicationEvents.UIStateChanged -= OnUiStateChanged;
         applicationEvents.ErrorReported -= OnErrorReported;
+        applicationEvents.InfoReported -= OnInfoReported;
+        applicationEvents.SearchRequested -= OnSearchRequested;
         appCloudSyncService.Changed -= OnUiStateChanged;
-        selfReference?.Dispose();
-    }
-
-    async Task LoginAsync()
-    {
-        if (await appCloudSyncService.LoginAsync() is Error error)
-        {
-            snackbar.Add(error.Message, Severity.Error);
-            return;
-        }
-
-        snackbar.Add("Device sync is enabled.", Severity.Success);
-    }
-
-    async Task LogoutAsync()
-    {
-        if (await appCloudSyncService.LogoutAsync() is Error error)
-        {
-            snackbar.Add(error.Message, Severity.Error);
-            return;
-        }
-
-        snackbar.Add("Device sync is disabled.", Severity.Info);
+        themeService.Changed -= OnUiStateChanged;
+        keyboardService.KeyDown -= OnKeyDown;
     }
 
     async Task LoadCloudModelAsync(global::Shared.CloudModelMetadata cloudModel)
@@ -450,26 +612,24 @@
         await canvasService.RemoveAsync();
     }
 
-    void BeginAddNote()
-    {
-        noteService.BeginPlaceNote();
-        snackbar.Add("Click on the diagram to place the note.", Severity.Info);
-    }
+    // The armed modes show their instructions in the ModeBanner until the click/drag lands.
+    void BeginAddNote() => noteService.BeginPlaceNote();
 
-    void BeginAddNode()
-    {
-        manualEditService.BeginPlaceNode();
-        snackbar.Add("Click on the diagram to place the node.", Severity.Info);
-    }
+    void BeginAddNode() => manualEditService.BeginPlaceNode();
 
-    void BeginExportArea()
-    {
-        snackbar.Add("Drag to select the area to export. Esc or right-click cancels.", Severity.Info);
-        exportService.ExportAreaAsync().RunInBackground();
-    }
+    void BeginExportArea() => exportService.ExportAreaAsync().RunInBackground();
 
     bool CanParseCurrentModel =>
     (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsParseable(modelMgr.ModelPath);
+
+    async Task ManageModelsAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await dialogService.ShowAsync<ModelsDialog>((string?)null, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: "new" })
+            await NewModelAsync();
+    }
 
     async Task NewModelAsync()
     {
@@ -484,7 +644,7 @@
 
         // A new empty model is only useful with editing enabled; opening an existing
         // design model later leaves the toggle as the user last set it.
-        ViewOptions.SetIsEditingEnabled(true);
+        await SetEditModeAsync(true);
         await canvasService.LoadAsync(name);
         snackbar.Add("Empty model created. Use Edit > Add Node or double-click the canvas to add nodes.",
         Severity.Info);
@@ -499,41 +659,121 @@
 
     void OnUiStateChanged() => _ = InvokeAsync(StateHasChanged);
 
-    string ShowHiddenNodesIcon => ViewOptions.ShowHiddenNodes
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
+    // Toggles read as checkboxes, so their on/off state is visible at a glance.
+    static string CheckIcon(bool isOn) =>
+        isOn ? Icons.Material.Filled.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank;
 
-    string EditModeIcon => ViewOptions.IsEditingEnabled
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
+    static string RadioIcon(bool isOn) =>
+        isOn ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Outlined.RadioButtonUnchecked;
 
-    string NotesSidebarIcon => noteService.IsShowSidebar
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
+    string ShowHiddenNodesIcon => CheckIcon(viewOptions.ShowHiddenNodes);
+    string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
+    string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
+    string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
 
-    string InvertScrollZoomIcon => pointerEventService.InvertScrollZoom
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
+    async Task ToggleMinimapAsync()
+    {
+        var newValue = !viewOptions.IsMinimapShown;
+        viewOptions.SetMinimapShown(newValue);
+        await configService.SetAsync(config => config.ShowMinimap = newValue);
+        applicationEvents.TriggerUIStateChanged();
+    }
+    string CyclesIcon => CheckIcon(viewOptions.IsCyclesShown);
+    string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
+
+    // The analysis panels (cycles, rules, path) share the top-right corner and all recolor
+    // lines, so opening one closes the others.
+    void ToggleRules()
+    {
+        if (!viewOptions.IsRulesShown)
+        {
+            viewOptions.SetCyclesShown(false);
+            pathFinderService.Close();
+        }
+        viewOptions.SetRulesShown(!viewOptions.IsRulesShown);
+        modelService.ClearCache(); // Violating lines are drawn differently, baked into the tiles
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    void ToggleCycles()
+    {
+        if (!viewOptions.IsCyclesShown)
+        {
+            pathFinderService.Close(); // The analysis panels sit top-right and all recolor lines
+            viewOptions.SetRulesShown(false);
+        }
+        viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
+        modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    void ToggleLegend()
+    {
+        viewOptions.SetLegendShown(!viewOptions.IsLegendShown);
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    static readonly (int Count, string Label)[] MinLinkChoices =
+    [
+        (1, "Any number of links"),
+        (2, "2 or more links"),
+        (5, "5 or more links"),
+        (10, "10 or more links"),
+    ];
+
+    LineFilter LineFilter => viewOptions.LineFilter;
+
+    // The submenu label says when a filter is active, since the diagram then hides lines.
+    string LinesMenuLabel => LineFilter.IsAny ? "Lines (filtered)" : "Lines";
+
+    async Task SetLineFilterAsync(LineFilter filter)
+    {
+        viewOptions.SetLineFilter(filter);
+        await configService.SetAsync(config =>
+        {
+            config.HideExternalLines = filter.HideExternal;
+            config.HideInheritanceLines = filter.HideInheritance;
+            config.HideMemberLines = filter.HideMember;
+            config.MinLinkCount = filter.MinLinkCount;
+        });
+        modelService.ClearCache(); // Which lines a tile holds depends on the filter
+        applicationEvents.TriggerUIStateChanged();
+    }
+    string EditModeIcon => CheckIcon(viewOptions.IsEditingEnabled);
+    string NotesSidebarIcon => CheckIcon(noteService.IsShowSidebar);
+    string InvertScrollZoomIcon => CheckIcon(pointerEventService.InvertScrollZoom);
+    string ThemeIcon(AppTheme theme) => RadioIcon(themeService.Theme == theme);
 
     bool IncludeTestProjects => modelMgr.WithModel(m => m.IncludeTestProjects);
+    string IncludeTestProjectsIcon => CheckIcon(IncludeTestProjects);
 
-    string IncludeTestProjectsIcon => IncludeTestProjects
-        ? Icons.Material.Filled.CheckCircle
-        : Icons.Material.Outlined.Circle;
+    Task SetThemeAsync(AppTheme theme) => themeService.SetThemeAsync(theme);
 
-    void ToggleEditMode()
+    Task ToggleEditMode() => SetEditModeAsync(!viewOptions.IsEditingEnabled);
+
+    async Task SetEditModeAsync(bool isEnabled)
     {
-        ViewOptions.SetIsEditingEnabled(!ViewOptions.IsEditingEnabled);
+        viewOptions.SetIsEditingEnabled(isEnabled);
+        await configService.SetAsync(config => config.IsEditingEnabled = isEnabled);
         // Edit-only markup (e.g. link handles) is baked into cached tiles, so the cache must be
         // cleared for the toggle to take effect immediately.
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }
 
+    async Task ToggleDimUnrelatedLines()
+    {
+        var newValue = !viewOptions.DimUnrelatedLines;
+        viewOptions.SetDimUnrelatedLines(newValue);
+        await configService.SetAsync(config => config.DimUnrelatedLines = newValue);
+        modelService.ClearCache(); // Dimming is baked into the cached tiles
+        applicationEvents.TriggerUIStateChanged();
+    }
+
     async Task ToggleShowHiddenNodes()
     {
-        var newValue = !ViewOptions.ShowHiddenNodes;
-        ViewOptions.SetShowHiddenNodes(newValue);
+        var newValue = !viewOptions.ShowHiddenNodes;
+        viewOptions.SetShowHiddenNodes(newValue);
         await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
@@ -561,7 +801,6 @@
     }
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
-    static MudBlazor.Color GetToolbarButtonColor(bool isEnabled) => isEnabled ? Color.Tertiary : Color.Default;
 
     static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
 

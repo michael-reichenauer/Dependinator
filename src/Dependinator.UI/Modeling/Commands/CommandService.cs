@@ -11,6 +11,14 @@ interface ICommandService
     void Do(Command command, bool isClearCache = true, bool isSaveModel = true);
     Task Redo();
     Task Undo();
+
+    // Undoes the given command if it is still the latest step (alone or merged into it), e.g.
+    // for a snackbar's Undo that must not revert an edit made since. False when it was not.
+    Task<bool> UndoIfLatest(Command command);
+
+    // Forgets every step, for when another model is opened: the steps belong to the old one
+    // (a rule command, for one, would write the old model's rule into the new one).
+    void Clear();
 }
 
 [Scoped]
@@ -35,6 +43,27 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
     public Task Undo() => ReplayAsync(undoStack, redoStack, (command, model) => command.Revert(model));
 
     public Task Redo() => ReplayAsync(redoStack, undoStack, (command, model) => command.Execute(model));
+
+    public void Clear()
+    {
+        if (undoStack.Count == 0 && redoStack.Count == 0)
+            return;
+        undoStack.Clear();
+        redoStack.Clear();
+        applicationEvents.TriggerUndoneRedone();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public async Task<bool> UndoIfLatest(Command command)
+    {
+        if (undoStack.Count == 0)
+            return false;
+        var latest = undoStack.Peek();
+        if (latest != command && !(latest is CompositeCommand composite && composite.Commands.Contains(command)))
+            return false;
+        await Undo();
+        return true;
+    }
 
     void ExecuteAndPush(Command command)
     {

@@ -37,6 +37,13 @@ interface IModel : IDisposable
     IReadOnlyDictionary<LinkId, Link> Links { get; }
     IReadOnlyDictionary<LineId, Line> Lines { get; }
 
+    // The user's architecture rules (persisted with the model) and a counter of changes to
+    // them, so rule evaluations can be cached like structure-derived state.
+    IReadOnlyList<ArchitectureRule> Rules { get; }
+    int RulesVersion { get; }
+    void AddRule(ArchitectureRule rule);
+    void RemoveRule(ArchitectureRule rule);
+
     void TryAddNode(Node node);
     void TryAddLink(Link link);
     void TryAddLine(Line line);
@@ -86,6 +93,24 @@ class Model : IModel
     public IReadOnlyDictionary<LinkId, Link> Links => links;
     public IReadOnlyDictionary<LineId, Line> Lines => lines;
 
+    readonly List<ArchitectureRule> rules = [];
+    public IReadOnlyList<ArchitectureRule> Rules => rules;
+    public int RulesVersion { get; private set; }
+
+    public void AddRule(ArchitectureRule rule)
+    {
+        if (rules.Contains(rule))
+            return;
+        rules.Add(rule);
+        RulesVersion++;
+    }
+
+    public void RemoveRule(ArchitectureRule rule)
+    {
+        if (rules.Remove(rule))
+            RulesVersion++;
+    }
+
     public ModelDto SerializeToDto() =>
         new()
         {
@@ -94,6 +119,7 @@ class Model : IModel
             Offset = Offset,
             ViewRect = ViewRect,
             IncludeTestProjects = IncludeTestProjects,
+            Rules = [.. rules.Select(r => new RuleDto { From = r.FromName, To = r.ToName })],
             Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
             Links = [.. links.Values.Select(l => l.ToDto())],
             Lines =
@@ -117,6 +143,9 @@ class Model : IModel
         Offset = modelDto.Offset;
         ViewRect = modelDto.ViewRect;
         IncludeTestProjects = modelDto.IncludeTestProjects;
+        rules.Clear();
+        rules.AddRange(modelDto.Rules.Select(r => new ArchitectureRule(r.From, r.To)).Distinct());
+        RulesVersion++;
         // Nodes and links will be set by model service in separate worker thread
     }
 
@@ -157,6 +186,8 @@ class Model : IModel
         // Must reset: Clear runs before a model is loaded, and on the uncached path the parse
         // happens before SetFromDto, so a stale value would leak into the next model's parse.
         IncludeTestProjects = false;
+        rules.Clear();
+        RulesVersion++;
 
         InitModel();
     }

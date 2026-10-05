@@ -9,6 +9,11 @@ interface INodeEditService
 {
     void MoveSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void SnapSelectedNodeToGrid(PointerId pointerId);
+
+    // The same for a group of selected nodes, as one undo step: each node moves by the pointer
+    // delta in its own container's scale. A node whose ancestor is in the group moves with it.
+    void MoveSelectedNodes(PointerEvent e, double zoom, IReadOnlyCollection<NodeId> nodeIds);
+    void SnapSelectedNodesToGrid(IReadOnlyCollection<NodeId> nodeIds);
     void SnapResizedSelectedNodeToGrid(PointerId pointerId);
     void PanSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
@@ -19,6 +24,12 @@ interface INodeEditService
     void SetNodeIcon(NodeId nodeId, string? iconName);
     void SetNodeIconColor(NodeId nodeId, string? colorName);
     void SetNodeColor(NodeId nodeId, string? colorName);
+
+    // Group variants: one undo step for all the nodes.
+    void IncreaseNodeSize(IReadOnlyCollection<NodeId> nodeIds);
+    void DecreaseNodeSize(IReadOnlyCollection<NodeId> nodeIds);
+    void SetNodeIconColor(IReadOnlyCollection<NodeId> nodeIds, string? colorName);
+    void SetNodeColor(IReadOnlyCollection<NodeId> nodeIds, string? colorName);
 }
 
 [Scoped]
@@ -60,6 +71,121 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         }
 
         commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
+    }
+
+    public void MoveSelectedNodes(PointerEvent e, double zoom, IReadOnlyCollection<NodeId> nodeIds) =>
+        Apply(
+            nodeIds,
+            node =>
+            {
+                var nodeZoom = node.GetZoom() * zoom;
+                var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
+                return new NodeEditCommand(node.Id)
+                {
+                    Boundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy },
+                };
+            },
+            isTopLevelOnly: true
+        );
+
+    // Snaps the group after a drag. Every node gets a command, also one already on the grid, so
+    // the step has the drag composite's merge key and folds into that undo step; with no node
+    // off the grid there is no step at all.
+    public void SnapSelectedNodesToGrid(IReadOnlyCollection<NodeId> nodeIds)
+    {
+        bool isAnyOffGrid;
+        using (var model = modelMgr.UseModel())
+        {
+            isAnyOffGrid = Resolve(model, nodeIds, isTopLevelOnly: true)
+                .Any(node =>
+                    NodeGrid.Snap(node.Boundary.X) != node.Boundary.X
+                    || NodeGrid.Snap(node.Boundary.Y) != node.Boundary.Y
+                );
+        }
+        if (!isAnyOffGrid)
+            return;
+
+        Apply(
+            nodeIds,
+            node =>
+            {
+                if (!node.IsRoot)
+                    node.Parent.IsChildrenLayoutCustomized = true;
+                return new NodeEditCommand(node.Id)
+                {
+                    Boundary = node.Boundary with
+                    {
+                        X = NodeGrid.Snap(node.Boundary.X),
+                        Y = NodeGrid.Snap(node.Boundary.Y),
+                    },
+                };
+            },
+            isTopLevelOnly: true
+        );
+    }
+
+    public void IncreaseNodeSize(IReadOnlyCollection<NodeId> nodeIds) =>
+        Apply(nodeIds, node => SizeCommand(node, SizeDiff));
+
+    public void DecreaseNodeSize(IReadOnlyCollection<NodeId> nodeIds) =>
+        Apply(nodeIds, node => SizeCommand(node, -SizeDiff));
+
+    public void SetNodeIconColor(IReadOnlyCollection<NodeId> nodeIds, string? colorName) =>
+        Apply(
+            nodeIds,
+            node =>
+                node.CustomIconColor == colorName ? null : new NodeEditCommand(node.Id) { IconColor = colorName ?? "" }
+        );
+
+    public void SetNodeColor(IReadOnlyCollection<NodeId> nodeIds, string? colorName) =>
+        Apply(
+            nodeIds,
+            node =>
+                node.CustomColor == colorName ? null : new NodeEditCommand(node.Id) { CustomColor = colorName ?? "" }
+        );
+
+    static NodeEditCommand SizeCommand(Node node, double diff)
+    {
+        if (!node.IsRoot)
+            node.Parent.IsChildrenLayoutCustomized = true;
+        var width =
+            diff > 0 ? NodeGrid.SnapUp(node.Boundary.Width + diff) : NodeGrid.SnapDown(node.Boundary.Width + diff);
+        var height =
+            diff > 0 ? NodeGrid.SnapUp(node.Boundary.Height + diff) : NodeGrid.SnapDown(node.Boundary.Height + diff);
+        return new NodeEditCommand(node.Id) { Boundary = node.Boundary with { Width = width, Height = height } };
+    }
+
+    // Builds one edit per node (null skips a node) and runs them as a single undo step. With
+    // isTopLevelOnly, a node whose ancestor is also in the group is left out: it moves with that
+    // ancestor, and moving it as well would move it twice.
+    void Apply(IReadOnlyCollection<NodeId> nodeIds, Func<Node, NodeEditCommand?> build, bool isTopLevelOnly = false)
+    {
+        var commands = new List<Command>();
+        using (var model = modelMgr.UseModel())
+        {
+            foreach (var node in Resolve(model, nodeIds, isTopLevelOnly))
+            {
+                if (build(node) is { } command)
+                    commands.Add(command);
+            }
+        }
+        if (commands.Count == 0)
+            return;
+        commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+    }
+
+    static List<Node> Resolve(IModel model, IReadOnlyCollection<NodeId> nodeIds, bool isTopLevelOnly)
+    {
+        var nodes = nodeIds
+            .Select(id => model.Nodes.TryGetValue(id, out var node) ? node : null)
+            .OfType<Node>()
+            .ToList();
+        if (!isTopLevelOnly)
+            return nodes;
+        var group = nodes.ToHashSet();
+        return nodes.Where(node => !node.Ancestors().Any(group.Contains)).ToList();
     }
 
     public void SnapSelectedNodeToGrid(PointerId pointerId)

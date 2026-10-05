@@ -1,0 +1,41 @@
+@inject ICoachService coach
+@implements IDisposable
+
+@* The first-run tour's callout (CoachService): one card at a time over the bottom of the
+   diagram, saying what to try; it moves on by itself when the user does it. *@
+@if (coach.IsActive)
+{
+  var card = coach.Card;
+  <div class="dep-coach dep-toolbar-card" role="dialog" aria-label="Tips" data-testid="coach"
+       data-step="@coach.Step.ToString().ToLowerInvariant()">
+    <div class="dep-coach__header">
+      <MudIcon Icon="@card.Icon" Size="Size.Small" Color="Color.Tertiary" />
+      <span class="dep-coach__title">@card.Title</span>
+      @if (coach.TaskNumber > 0)
+      {
+        <span class="dep-coach__count" data-testid="coach-count">@coach.TaskNumber of @coach.TaskCount</span>
+      }
+    </div>
+    <div class="dep-coach__text">@((MarkupString)card.Text)</div>
+    <div class="dep-coach__actions">
+      @if (coach.Step != CoachStep.Done)
+      {
+        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="coach.DismissAsync" data-testid="coach-skip">
+          @(coach.Step == CoachStep.Welcome ? "Skip" : "Skip tour")
+        </MudButton>
+      }
+      <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="coach.Next"
+                 data-testid="coach-next">
+        @card.NextLabel
+      </MudButton>
+    </div>
+  </div>
+}
+
+@code {
+  protected override void OnInitialized() => coach.Changed += OnChanged;
+
+  void OnChanged() => InvokeAsync(StateHasChanged);
+
+  public void Dispose() => coach.Changed -= OnChanged;
+}

@@ -107,8 +107,23 @@ public sealed class AppPage
     // A node icon's <use> reference on the canvas, e.g. "Solution" or "Solution--Blue".
     public ILocator NodeIconUse(string iconId) => page.Locator($"#svgcanvas use[href='#{iconId}']");
 
-    // The toolbar edit-mode toggle (AppBar.razor). Toggles NodeSvg.IsEditingEnabled.
+    // The toolbar edit-mode toggle (AppBar.razor); data-checked carries its state. Edit mode
+    // is off by default and stored in the config, so tests that edit turn it on explicitly.
     public ILocator ToolbarEdit => page.GetByTestId("toolbar-edit");
+
+    // Turns edit mode on (no-op if already on). A click landing while the toolbar re-renders
+    // can be swallowed, so the state is read back and the click repeated.
+    public async Task EnableEditModeAsync()
+    {
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            if (await ToolbarEdit.GetAttributeAsync("data-checked") == "true")
+                return;
+            await ToolbarEdit.ClickAsync();
+            await page.WaitForTimeoutAsync(250);
+        }
+        await Expect(ToolbarEdit).ToHaveAttributeAsync("data-checked", "true");
+    }
 
     // The cloud sync/auth button (AppBar.razor). Clicking it while signed out starts login.
     public ILocator CloudButton => page.GetByTestId("toolbar-cloud");
@@ -357,8 +372,7 @@ public sealed class AppPage
     // child selects that child instead. The toolbar then renders in icon mode, without the
     // container-only affordances, which otherwise only surfaces later as a missing button.
     // How tall the header strip is depends on the zoom, so try a few points and keep the one
-    // that actually selected a container — the edit pencil is the container-only marker (this
-    // suite runs against the Blazor Server host, where editing is always enabled).
+    // that actually selected a container — the node toolbar marks that with data-container.
     public async Task SelectContainerNodeAsync(string label, float timeoutSeconds = 15)
     {
         for (int attempt = 0; ; attempt++)
@@ -376,7 +390,8 @@ public sealed class AppPage
 
             try
             {
-                await MenuItem("node-edit").WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                await page.Locator("[data-testid='node-toolbar'][data-container='true']")
+                    .WaitForAsync(new() { Timeout = MenuAttemptTimeout });
                 return;
             }
             catch (Exception e) when (IsRetryable(e) && attempt + 1 < ContainerClickPoints.Length)
@@ -448,6 +463,24 @@ public sealed class AppPage
     {
         await ClickUntilSelectedAsync(() => WaitForStableNodePointAsync(visibleName));
     }
+
+    // Shift+click a node by its visible label to add it to (or remove it from) the current
+    // selection; the toolbar's "N selected" badge tells whether it took.
+    public async Task ShiftClickNodeByVisibleNameAsync(string visibleName)
+    {
+        float[] point = await WaitForStableNodePointAsync(visibleName);
+        await page.Keyboard.DownAsync("Shift");
+        try
+        {
+            await page.Mouse.ClickAsync(point[0], point[1]);
+        }
+        finally
+        {
+            await page.Keyboard.UpAsync("Shift");
+        }
+    }
+
+    public ILocator NodeSelectionCount => page.GetByTestId("node-selection-count");
 
     // Click a computed canvas point until a node toolbar actually shows. The canvas re-renders
     // continuously, so a click can land where the node was a frame ago and select nothing —

@@ -1,8 +1,11 @@
+@using Dependinator.UI.Diagrams.Interaction
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
 @implements IDisposable
 
-@* Right-click context menu on the diagram: add a note or a manual node at the clicked position. *@
+@* Right-click context menu on the diagram. Its items depend on what was right-clicked: a node
+   (analyze, zoom, source, and in edit mode rename/delete), a line (analyze, hide), or the
+   canvas (fit, edit mode, and in edit mode add a node/note at that spot). *@
 @if (contextMenuService.IsOpen)
 {
   @* Full-screen catcher: any click (or another right-click) elsewhere dismisses the menu. *@
@@ -10,16 +13,113 @@
        @oncontextmenu="Close" @oncontextmenu:preventDefault="true"></div>
 
   <div style="@CssPosition" data-testid="canvas-context-menu">
-    <MudPaper Elevation="8" Class="dep-light-menu py-1" Style="min-width:170px;">
+    <MudPaper Elevation="8" Class="@($"{MenuClass} py-1")" Style="min-width:190px;">
       <MudList T="string" Dense="true">
-        <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.StickyNote2" IconColor="Color.Secondary"
-                     OnClick="AddNote" data-testid="context-menu-add-note">
-          Add Note Here
-        </MudListItem>
-        <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.AddBox" IconColor="Color.Secondary"
-                     OnClick="AddNode" data-testid="context-menu-add-node">
-          Add Node Here
-        </MudListItem>
+        @switch (contextMenuService.Target)
+        {
+          case ContextMenuTarget.Node:
+            <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" Style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              @contextMenuService.TargetName
+            </MudText>
+            <MudListItem T="string" Icon="@Icons.Icon.ReferencesIcon" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.ShowReferencesAsync" data-testid="context-menu-references">
+              Show References
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Icon.DependenciesIcon" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.ShowDependenciesAsync" data-testid="context-menu-dependencies">
+              Show Dependencies
+            </MudListItem>
+            <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.ZoomToAsync" data-testid="context-menu-zoom-to">
+              Zoom to Node
+            </MudListItem>
+            <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Link" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.CopyNodeLinkAsync" data-testid="context-menu-copy-link">
+              Copy Link to Node
+            </MudListItem>
+            @if (contextMenuService.CanShowTargetSource)
+            {
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Code" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.ShowSourceAsync" data-testid="context-menu-source">
+                Show Source Code
+              </MudListItem>
+            }
+            @if (viewOptions.IsEditingEnabled && contextMenuService.IsTargetManualNode)
+            {
+              <MudDivider />
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.DriveFileRenameOutline" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.RenameNodeAsync" data-testid="context-menu-rename">
+                Rename Node …
+              </MudListItem>
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Delete" IconColor="Color.Error"
+                           OnClick="contextMenuService.DeleteNodeAsync" data-testid="context-menu-delete">
+                Delete Node
+              </MudListItem>
+            }
+            break;
+
+          case ContextMenuTarget.Line:
+            <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" Style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              @contextMenuService.TargetName
+            </MudText>
+            <MudListItem T="string" Icon="@Icons.Icon.ReferencesIcon" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.ShowReferencesAsync" data-testid="context-menu-references">
+              Show References
+            </MudListItem>
+            <MudListItem T="string" Icon="@Icons.Icon.DependenciesIcon" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.ShowDependenciesAsync" data-testid="context-menu-dependencies">
+              Show Dependencies
+            </MudListItem>
+            @if (contextMenuService.IsTargetDirectLine)
+            {
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Filled.Close" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.HideDirectLine" data-testid="context-menu-hide-line">
+                Hide Line
+              </MudListItem>
+            }
+            @if (contextMenuService.CanShowTargetSource)
+            {
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Code" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.ShowSourceAsync" data-testid="context-menu-source">
+                Show Source Code
+              </MudListItem>
+            }
+            break;
+
+          default:
+            @if (viewOptions.IsEditingEnabled)
+            {
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.AddBox" IconColor="Color.Secondary"
+                           OnClick="AddNode" data-testid="context-menu-add-node">
+                Add Node Here
+              </MudListItem>
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.StickyNote2" IconColor="Color.Secondary"
+                           OnClick="AddNote" data-testid="context-menu-add-note">
+                Add Note Here
+              </MudListItem>
+              <MudDivider />
+            }
+            @if (viewContext.GetViewCenterChain().Count > 0)
+            {
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.ZoomOut" IconColor="Color.Secondary"
+                           OnClick="ZoomOutOneLevel" data-testid="context-menu-zoom-out">
+                Zoom Out One Level
+              </MudListItem>
+            }
+            <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" IconColor="Color.Secondary"
+                         OnClick="FitToScreen" data-testid="context-menu-fit">
+              Fit to Screen
+            </MudListItem>
+            <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Link" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.CopyViewLinkAsync" data-testid="context-menu-copy-view-link">
+              Copy Link to This View
+            </MudListItem>
+            <MudListItem T="string" Icon="@EditModeIcon" IconColor="Color.Secondary" OnClick="ToggleEditMode"
+                         data-testid="context-menu-edit-mode">
+              @(viewOptions.IsEditingEnabled ? "Disable Edit Mode" : "Enable Edit Mode")
+            </MudListItem>
+            break;
+        }
       </MudList>
     </MudPaper>
   </div>
@@ -29,20 +129,90 @@
   [Inject]
   IContextMenuService contextMenuService { get; set; } = null!;
 
+  [Inject]
+  IViewOptions viewOptions { get; set; } = null!;
+
+  [Inject]
+  IThemeService themeService { get; set; } = null!;
+
+  [Inject]
+  ICanvasService canvasService { get; set; } = null!;
+
+  [Inject]
+  IConfigService configService { get; set; } = null!;
+
+  [Inject]
+  Modeling.IModelService modelService { get; set; } = null!;
+
+  [Inject]
+  IApplicationEvents applicationEvents { get; set; } = null!;
+
+  [Inject]
+  IScreenService screenService { get; set; } = null!;
+
+  [Inject]
+  IViewContextService viewContext { get; set; } = null!;
+
+  [Inject]
+  IInteractionService interactionService { get; set; } = null!;
+
+  string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
+
+  string EditModeIcon => viewOptions.IsEditingEnabled
+      ? MudBlazor.Icons.Material.Outlined.Visibility
+      : MudBlazor.Icons.Material.Outlined.Edit;
+
   protected override void OnInitialized() => contextMenuService.StateChanged += OnStateChanged;
 
   void OnStateChanged() => InvokeAsync(StateHasChanged);
 
-  // The menu is anchored via fixed positioning at the click's viewport coordinates.
-  string CssPosition =>
-      FormattableString.Invariant($"position:fixed;left:{contextMenuService.ScreenPos.X:0.##}px;")
-      + FormattableString.Invariant($"top:{contextMenuService.ScreenPos.Y:0.##}px;z-index:1400;");
+  // The menu is anchored via fixed positioning at the click's viewport coordinates. Near the
+  // right or bottom edge it opens towards the left/top instead, so it never runs off screen.
+  string CssPosition
+  {
+    get
+    {
+      var pos = contextMenuService.ScreenPos;
+      var view = screenService.SvgRect;
+      var horizontal = pos.X > view.Width * 0.7
+          ? FormattableString.Invariant($"right:{Math.Max(0, view.Width - pos.X):0.##}px;")
+          : FormattableString.Invariant($"left:{pos.X:0.##}px;");
+      var vertical = pos.Y > view.Height * 0.6
+          ? FormattableString.Invariant($"bottom:{Math.Max(0, view.Height - pos.Y):0.##}px;")
+          : FormattableString.Invariant($"top:{pos.Y:0.##}px;");
+      return $"position:fixed;{horizontal}{vertical}z-index:1400;";
+    }
+  }
 
   void Close() => contextMenuService.Close();
 
   void AddNote() => contextMenuService.AddNoteHere();
 
   void AddNode() => contextMenuService.AddNodeHere();
+
+  void FitToScreen()
+  {
+    contextMenuService.Close();
+    canvasService.PanZoomToFit();
+  }
+
+  void ZoomOutOneLevel()
+  {
+    contextMenuService.Close();
+    interactionService.ZoomOutOneLevel();
+  }
+
+  // Same as the app bar toggle: persisted, and the tile cache is cleared so edit chrome
+  // appears/disappears right away.
+  async Task ToggleEditMode()
+  {
+    contextMenuService.Close();
+    var isEnabled = !viewOptions.IsEditingEnabled;
+    viewOptions.SetIsEditingEnabled(isEnabled);
+    await configService.SetAsync(config => config.IsEditingEnabled = isEnabled);
+    modelService.ClearCache();
+    applicationEvents.TriggerUIStateChanged();
+  }
 
   public void Dispose() => contextMenuService.StateChanged -= OnStateChanged;
 }

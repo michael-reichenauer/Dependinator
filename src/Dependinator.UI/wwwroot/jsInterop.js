@@ -14,19 +14,69 @@ export function listenToWindowResize(elementId, instance, functionName) {
   window.addEventListener("resize", resizeEventHandler);
 }
 
-export function listenToKeyDown(instance, functionName) {
-  // Open search on Ctrl+T / Ctrl+F (Cmd on macOS). Note: in a normal browser tab
-  // Ctrl+T (new tab) is owned by the browser chrome and never reaches the page;
-  // this is reliable in the VS Code webview. Ctrl+F (find) can be prevented in-browser.
+// The app's keyboard shortcuts, forwarded to KeyboardService as (key, ctrl, shift, alt).
+// Only listed keys are forwarded (and their browser default prevented), and never while a
+// text field, a dialog or an open menu owns the keyboard: MudBlazor dialogs/menus handle
+// Escape and arrows themselves, and a Delete typed into the note dialog must stay a Delete.
+// Note: in a normal browser tab Ctrl+T (new tab) is owned by the browser chrome and never
+// reaches the page; it works in the VS Code webview. Cmd counts as Ctrl on macOS.
+const shortcutKeys = new Set([
+  "Escape", "Delete", "Backspace", "Home",
+  "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight",
+  "+", "-", "=", "0",
+]);
+const ctrlShortcutKeys = new Set(["f", "t", "z", "y", "0", "+", "-", "="]);
+
+export function listenToKeyboard(instance, functionName) {
   document.addEventListener("keydown", function (e) {
-    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey) {
-      const key = e.key.toLowerCase();
-      if (key === "t" || key === "f") {
-        e.preventDefault();
-        instance.invokeMethodAsync(functionName);
-      }
-    }
+    const target = e.target;
+    if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))
+      return;
+    // Dialogs and open menus own the keyboard (tooltips are popovers too, but not menus).
+    if (document.querySelector(".mud-dialog-container, .mud-popover-open .mud-list, .mud-popover-open .mud-menu-list"))
+      return;
+
+    const ctrl = e.ctrlKey || e.metaKey;
+    const key = ctrl ? e.key.toLowerCase() : e.key;
+    const isShortcut = ctrl ? ctrlShortcutKeys.has(key) : shortcutKeys.has(key);
+    if (!isShortcut)
+      return;
+    // Alt combos are left to the browser/VS Code, except Alt+Left/Right (view history back/
+    // forward) and Alt+Up (zoom out one container level).
+    if (e.altKey && key !== "ArrowLeft" && key !== "ArrowRight" && key !== "ArrowUp")
+      return;
+
+    e.preventDefault();
+    instance.invokeMethodAsync(functionName, key, ctrl, e.shiftKey, e.altKey);
   });
+}
+
+// Reports whether the surrounding environment is dark and keeps reporting changes: the OS/
+// browser color scheme, or, inside the VS Code webview, the editor theme kind (VS Code sets
+// vscode-light / vscode-dark / vscode-high-contrast on the body and swaps them on change).
+export function watchSystemTheme(instance, functionName) {
+  const isVsCodeDark = () =>
+    document.body.classList.contains("vscode-dark") || document.body.classList.contains("vscode-high-contrast");
+  if (isVsCodeWebView()) {
+    new MutationObserver(() => instance.invokeMethodAsync(functionName, isVsCodeDark()))
+      .observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    return isVsCodeDark();
+  }
+
+  const query = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  if (!query)
+    return false;
+  query.addEventListener("change", e => instance.invokeMethodAsync(functionName, e.matches));
+  return query.matches;
+}
+
+// Applies the theme to the page around the app (the body behind the canvas, seen while
+// loading and around dialogs). The choice is mirrored into localStorage so the host page can
+// paint the right background before Blazor boots (see index.html / _Host.cshtml).
+export function applyTheme(isDark) {
+  document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+  document.body.style.backgroundColor = isDark ? "#0D0F11" : "#FAFAFA";
+  try { localStorage.setItem("dep-theme", isDark ? "dark" : "light"); } catch (_) { }
 }
 
 export function preventDefaultTouchEvents(elementId) {
@@ -130,14 +180,6 @@ function textToBase64(text) {
   return btoa(binary);
 }
 
-export function listenToEscapeKey(instance, functionName) {
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      instance.invokeMethodAsync(functionName);
-    }
-  });
-}
-
 export function reloadPage() {
   location.reload();
 }
@@ -154,6 +196,34 @@ export function postVsCodeMessage(message) {
     return true;
   }
   return false;
+}
+
+// Copies text to the clipboard; true when it worked. The async clipboard API needs a secure
+// context and a user gesture (both given: https/localhost and a menu click); the hidden
+// textarea is the fallback for browsers that still refuse it.
+export async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall through to the legacy path
+  }
+  try {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(area);
+    return ok;
+  } catch {
+    return false;
+  }
 }
 
 export function isVsCodeWebView() {

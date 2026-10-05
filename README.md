@@ -20,15 +20,17 @@ on the Visual Studio Marketplace.
 
 - **Interactive dependency map** — explore your codebase as a zoomable,
   navigable diagram instead of scrolling through files.
-- **Drill down and back up** — open nodes to see their internals
-  (namespaces, types, members) and follow dependencies between components.
+- **Drill down and back up** — zoom into nodes (or double-click one) to see
+  their internals (namespaces, types, members) and follow dependencies
+  between components.
 - **Jump to code** — navigate from a node or dependency straight to the
   corresponding source location.
 - **Automatic refresh** — the map updates automatically when source files
   change.
-- **Manual editing** — add your own nodes and links (drag from a node to
-  create a link), delete manual links, and start from an empty model to
-  sketch an architecture by hand.
+- **Manual editing** — turn on edit mode (the pencil in the toolbar) to
+  arrange nodes, pick icons and colors, add your own nodes and links (drag
+  from a node to create a link), add notes, and start from an empty model to
+  sketch an architecture by hand. Every edit can be undone.
 - **Multiple models** — create, switch between, and delete models from the
   app menu.
 - **Icon library** — pick icons for nodes, including curated Azure, AWS,

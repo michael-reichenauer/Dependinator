@@ -26,6 +26,21 @@ class DColors
     static readonly string DirectLineDark = "#7C4DFF";
     static readonly string DirectLineLight = "#512DA8";
 
+    // Lines that are part of a circular dependency (View › Show Cycles): a warning red that
+    // reads on both canvases.
+    static readonly string CycleLineDark = "#FF6B6B";
+    static readonly string CycleLineLight = "#C62828";
+
+    // Lines on the dependency path the user asked for (View › Find Path): a cyan that is unlike
+    // the purple direct lines and the red cycle lines on both canvases.
+    static readonly string PathLineDark = "#4DD0E1";
+    static readonly string PathLineLight = "#00838F";
+
+    // Lines that break an architecture rule (View › Show Architecture Rules): an orange, warm like
+    // the cycle red but told apart from it.
+    static readonly string RuleLineDark = "#FFB74D";
+    static readonly string RuleLineLight = "#E65100";
+
     // Cousin (container-crossing) lines: slightly toned down from the normal line color so they
     // read as "crossing" without cluttering dense views. Move these toward LineDark/LineLight
     // (#999999 / #555555) to make them more visible, or set them equal for no distinction.
@@ -121,6 +136,9 @@ class DColors
     public static string Line => IsDark ? LineDark : LineLight;
     public static string LineHidden => IsDark ? LineHiddenDark : LineHiddenLight;
     public static string DirectLine => IsDark ? DirectLineDark : DirectLineLight;
+    public static string CycleLine => IsDark ? CycleLineDark : CycleLineLight;
+    public static string PathLine => IsDark ? PathLineDark : PathLineLight;
+    public static string RuleLine => IsDark ? RuleLineDark : RuleLineLight;
     public static string CousinLine => IsDark ? CousinLineDark : CousinLineLight;
     public static string ManualMarker => IsDark ? ManualMarkerDark : ManualMarkerLight;
     public static string NoteFill => IsDark ? NoteFillDark : NoteFillLight;

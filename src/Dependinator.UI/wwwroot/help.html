@@ -166,12 +166,16 @@
         <ul>
             <li class="feature"><b>Explore an interactive dependency map</b> — see your codebase as a
                 zoomable, navigable diagram instead of scrolling through files.</li>
-            <li class="feature"><b>Zoom for detail</b> — zoom into any node to reveal its internals,
-                then zoom back out to see the bigger picture.</li>
+            <li class="feature"><b>Zoom for detail</b> — zoom into any node to reveal its internals
+                (namespaces, types, members), then zoom back out to see the bigger picture.</li>
             <li class="feature"><b>Follow dependencies</b> — pick any node and trace what it depends on,
                 or what depends on it, across the whole model.</li>
             <li class="feature"><b>Jump to source</b> — in the VS Code extension, go straight from a node
                 to the code it represents (and back).</li>
+            <li class="feature"><b>Edit and annotate</b> — in edit mode, arrange nodes, pick icons and colors,
+                add your own nodes, links and notes, or sketch an architecture from an empty model.</li>
+            <li class="feature"><b>Export</b> — save the current view, a selected area or the whole diagram
+                as an SVG or PNG image.</li>
             <li class="feature"><b>Optional device sync</b> — enable device sync to keep your models and
                 views in sync across devices.</li>
         </ul>
@@ -181,54 +185,167 @@
             <li><b>Zoom in</b> (scroll or pinch) to drill into an area and see more detail; <b>zoom out</b>
                 to step back to the overview — just like panning and zooming a map.</li>
             <li><b>Drag</b> the background to pan across the model.</li>
+            <li><b>Double-click</b> a node to zoom the view to it.</li>
             <li><b>Search</b> (the magnifier in the toolbar, or <kbd>Ctrl</kbd>+<kbd>F</kbd>) to jump
-                straight to a node by name.</li>
-            <li>Use <b>Fit to Screen</b> from the menu to recenter and reset the view at any time.</li>
+                straight to a node by name. Type parts of a name, e.g. <kbd>PZS</kbd> finds
+                <i>PanZoomService</i>; <kbd>↑</kbd> <kbd>↓</kbd> and <kbd>Enter</kbd> pick a result.</li>
+            <li>Use <b>Fit to Screen</b> (the toolbar button, <kbd>Home</kbd>, or the right-click menu) to
+                recenter and reset the view at any time.</li>
+            <li>The <b>breadcrumb</b> under the toolbar shows where you are: the model, then the containers down
+                to the selected node (or, with nothing selected, to the container around the middle of the
+                screen). Click any crumb to zoom to it; the model crumb fits the whole diagram.</li>
+            <li><b>Back</b> and <b>Forward</b> (the toolbar arrows, <kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>→</kbd>,
+                or <kbd>Backspace</kbd> / <kbd>Shift</kbd>+<kbd>Backspace</kbd>) retrace your jumps: every
+                search result, explorer row, breadcrumb click, double-click and Fit to Screen is a step
+                you can return from.</li>
+            <li><kbd>Alt</kbd>+<kbd>↑</kbd> (or the right-click menu) zooms out one container level per press,
+                up to the whole diagram.</li>
         </ul>
 
         <h2>Working with a node</h2>
         <p>
             <b>Click a node</b> to select it and show its <b>toolbar</b>. From there you can:
         </p>
+        <p>
+            <b>Minimap</b> — <b>View › Show Minimap</b> puts a small overview in the bottom-right corner with a
+            frame for what is on screen; click or drag in it to move the view. It zooms in with you: deep inside
+            a container it shows that container's surroundings and scrolls along as you move.
+        </p>
+        <p>
+            <b>New here?</b> On the first start a short tour walks through the basics (zoom, click a node,
+            open the explorer, search); <b>Menu › Help › Show Tips</b> brings it back any time.
+        </p>
         <ul>
-            <li class="feature"><b>Show dependencies</b> — reveal the lines <i>to</i> the node (what
-                depends on it) or <i>from</i> the node (what it depends on).</li>
-            <li class="feature"><b>Resize the node</b> — drag its edges to give it more or less room in
-                the layout.</li>
+            <li class="feature"><b>Show references / dependencies</b> — open the Dependencies explorer for the
+                nodes that use this node (references) or the nodes it uses (dependencies).</li>
+            <li class="feature"><b>Show more lines</b> — for a container, draw the lines per child (one level
+                deeper) instead of one bundled line, and back again.</li>
+            <li class="feature"><b>Zoom to node</b> — fit the node to the screen (same as double-clicking it).</li>
             <li class="feature"><b>Go to source</b> — in the VS Code extension, nodes that map to code
                 show a button that opens the corresponding file in the editor.</li>
+            <li class="feature"><b>Select several</b> — <b>Shift</b>+click (or <b>Ctrl</b>+click) adds nodes to the
+                selection, and <b>Shift</b>+drag draws a rectangle that selects the nodes inside it; the toolbar
+                shows how many. Dragging one moves them all, and hide, color, size and delete apply to all of them
+                in one undo step.</li>
+            <li class="feature"><b>Share a link</b> — <b>Copy Link to Node</b> (node menu or right-click) and
+                <b>Export › Link to Current View</b> copy a <i>dependinator.com</i> link that opens this model at that
+                node or view. The link works for an account that has the model synced (device sync), and always
+                for the demo model.</li>
+            <li class="feature"><b>Hide the node</b> — from the toolbar menu; hidden nodes are dimmed, or
+                removed entirely with <b>View › Show Hidden Nodes</b> off.</li>
+            <li class="feature"><b>See only its lines</b> — while a node (or line) is selected, every line that does
+                not touch it is faded (<b>View › Dim Unrelated Lines</b>, on by default); hover a faded line to
+                see it at full strength.</li>
+            <li class="feature"><b>Legend</b> — <b>View › Show Legend</b> explains every line style and node icon.</li>
+            <li class="feature"><b>While parsing</b> — the overlay shows the solution and the time so far; "Continue in
+                background" lets you keep exploring while it finishes. A background refresh tells you what changed.</li>
+            <li class="feature"><b>Find cycles</b> — <b>View › Show Cycles</b> lists every container whose children
+                depend on each other in a circle (projects, namespaces or classes referencing each other) and draws
+                those lines in red; click a row to go there.</li>
+            <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
+                "this must not depend on that" by picking two nodes (a project, a namespace, a class). Every
+                dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the
+                model, so they stay checked after every re-parse.</li>
+            <li class="feature"><b>Find a path</b> — why does one node depend on another? <b>View › Find Path</b>
+                lets you choose two nodes and lists the shortest chains of dependencies from the first to the
+                second; the chosen chain is drawn highlighted while every other line fades, and clicking a hop takes
+                you there. The explorer's indirect rows (below) open the same panel for their chain.</li>
+            <li class="feature"><b>Leave lines out</b> — <b>View › Lines</b> hides lines to external packages,
+                inheritance lines or member-level lines, or shows only lines carrying at least 2, 5 or 10 links.
+                The explorer's lines and direct lines you asked for are always drawn.</li>
         </ul>
         <p>
             To see what's <i>inside</i> a node, you don't need a button — just <b>zoom in</b> on it and its
-            internals come into view.
+            internals come into view. <b>Right-click</b> a node, a line or the background for the same
+            actions as a context menu.
         </p>
 
-        <h2>The Dependencies dialog</h2>
+        <h2>The Dependencies explorer</h2>
         <p>
-            When you explore dependencies for a node, the <b>Dependencies dialog</b> lets you walk the
-            dependency graph step by step:
+            When you show a node's references or dependencies, the <b>Dependencies explorer</b> opens beside
+            the diagram and draws the node's own lines in the diagram:
         </p>
         <ul>
-            <li class="feature"><b>Choose a direction</b> — look at dependencies pointing <i>to</i> the
-                selected node (its callers / dependents) or <i>from</i> it (the things it relies on).</li>
-            <li class="feature"><b>Drill through the chain</b> — select an item on either side to make it
-                the new focus and keep following the references deeper into the system.</li>
-            <li class="feature"><b>Navigate to a node</b> — pick a dependency to highlight and center it
-                on the map, so you can see where it sits in the overall structure.</li>
+            <li class="feature"><b>Choose a direction</b> — look at the nodes that use the selected node
+                (references) or the nodes it uses (dependencies).</li>
+            <li class="feature"><b>Drill into the chain</b> — expand a row to split its line one level deeper
+                in the diagram; the row lists the far side's children with their link counts.</li>
+            <li class="feature"><b>Include indirect</b> — the <b>»</b> button also lists the nodes reached
+                <i>through</i> other nodes, dimmed and with their hop counts, in the same containers as the direct
+                ones. That is how you discover a dependency nobody referenced on purpose; hover such a row and
+                click the chain button to see how it comes about.</li>
+            <li class="feature"><b>Navigate</b> — click a row to pan the diagram to that node; hover a row for
+                "show node", "show source code" (VS Code) and "show direct line".</li>
+            <li class="feature"><b>Keep the lines</b> — closing the explorer keeps its lines until you select
+                something else; pin them to keep them while you select other nodes, or hide them with the
+                lines button or <b>View › Hide All Direct Lines</b>.</li>
         </ul>
+        <p>
+            On a small screen a click on the diagram folds the explorer down to its title bar, so it does
+            not cover the map; click the title bar to bring it back.
+        </p>
+
+        <h2>Edit mode</h2>
+        <p>
+            The diagram is view-only until you turn on <b>Edit mode</b> (the pencil in the toolbar, or
+            <b>Edit › Edit Mode</b>). The setting is remembered. In edit mode you can:
+        </p>
+        <ul>
+            <li class="feature"><b>Move and resize</b> nodes — drag a selected node, or drag its edge handles;
+                the toolbar also has grow/shrink buttons. Layout changes are remembered per model.</li>
+            <li class="feature"><b>Arrange inside</b> a container — pan and zoom the contents of the selected
+                container without moving the container itself.</li>
+            <li class="feature"><b>Icons and colors</b> — pick an icon (including Azure, AWS and Google cloud
+                icons), an icon color, and a container color (border and background).</li>
+            <li class="feature"><b>Add nodes and links</b> — double-click empty canvas, or use <b>Edit › Add Node</b>
+                or the right-click menu; drag the <b>+</b> handle that appears at the right of a hovered node
+                onto another node to link them, or onto the canvas to add a linked node.</li>
+            <li class="feature"><b>Notes</b> — place numbered notes on the diagram (<b>Edit › Add Note</b> or
+                the right-click menu) and list them with <b>View › Show Notes Sidebar</b>.</li>
+            <li class="feature"><b>Undo</b> — every edit can be undone (<kbd>Ctrl</kbd>+<kbd>Z</kbd>); a delete
+                offers Undo right in its message.</li>
+        </ul>
+        <p>
+            User-drawn nodes carry a small ✎ marker and can be renamed or deleted; parsed nodes cannot.
+            <b>Models › New Model</b> creates an empty model to sketch an architecture by hand.
+        </p>
+
+        <h2>Keyboard and mouse</h2>
+        <div class="card">
+            <table style="width:100%;border-collapse:collapse;">
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Scroll</kbd> / <kbd>pinch</kbd></td><td>Zoom in and out at the pointer</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Drag</kbd></td><td>Pan the diagram (in edit mode: move a selected node)</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Click</kbd></td><td>Select a node or line and show its toolbar</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Double-click</kbd></td><td>Zoom to the node (in edit mode on empty canvas: add a node)</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Right-click</kbd></td><td>Context menu (or cancel a placement in progress)</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Ctrl</kbd>+<kbd>F</kbd></td><td>Search nodes</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Home</kbd> / <kbd>Ctrl</kbd>+<kbd>0</kbd></td><td>Fit to screen</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>+</kbd> / <kbd>-</kbd></td><td>Zoom in / out</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>Pan (hold <kbd>Shift</kbd> for larger steps)</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Esc</kbd></td><td>Cancel a placement or drag, leave arrange mode, or clear the selection</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Alt</kbd>+<kbd>↑</kbd></td><td>Zoom out one container level</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>→</kbd></td><td>Back / forward through your jumps (also <kbd>Backspace</kbd> / <kbd>Shift</kbd>+<kbd>Backspace</kbd>)</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Undo / redo an edit</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Delete</kbd></td><td>Delete the selected user-drawn node, note or link (edit mode)</td></tr>
+            </table>
+        </div>
 
         <div class="card">
             <b>The menu</b> (the <span style="color:var(--brand-dark)">☰</span> button, top-left) is your
-            hub: open recent models and local paths, toggle hidden nodes, undo / redo, reset the layout,
-            and enable device sync.
+            hub: search and fit, undo/redo and edit mode, export as image, view options and the light/dark
+            theme, your models (<b>Models › Manage Models</b> lists the workspace's solutions, recent models,
+            models in the cloud and design models), settings, and help.
         </div>
 
         <h2>VS Code vs. the web app</h2>
         <p>
             The <b>VS Code extension</b> is where you'll do the real work of building and editing diagrams
-            alongside your code. Click the diagram button in the editor title bar to <b>show the diagram for
-            the node at your current file</b>, and from the diagram you can jump back to <b>open the
-            corresponding editor</b> — so the map and the source stay in step. The extension is available
+            alongside your code. It parses the solution in your workspace (and re-parses when files change).
+            The diagram <b>follows the editor</b>: switching to a C# file shows its node (setting
+            <i>Follow Active Editor</i>), <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>D</kbd> reveals the node at the
+            cursor, and from the diagram you can jump back to <b>open the corresponding editor</b> — so the map
+            and the source stay in step. The command palette has <i>Dependinator: Search Nodes</i> and
+            <i>Re-parse Solution</i>, and the status bar shows when it is parsing. The extension is available
             on the
             <a href="https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator"
                 target="_blank" rel="noopener">Visual Studio Marketplace</a> — in VS Code, search for
@@ -237,23 +354,25 @@
         <p>
             The <b>web app</b> at <a href="https://dependinator.com" target="_blank"
                 rel="noopener">dependinator.com</a> is the companion for <b>viewing your models outside
-            VS Code</b>, in a desktop or mobile browser. Editing works there too, but viewing and exploring
-            is its primary use case — handy for reviewing an architecture on the go or sharing a view.
-            Enable device sync in both the extension and the web app and the models you build in VS Code
-            are available wherever you are.
+            VS Code</b>, in a desktop or mobile browser. It cannot parse code itself: enable device sync in
+            both the extension and the web app and the models you build in VS Code are available wherever
+            you are. Editing works there too, and you can sketch design models by hand.
         </p>
 
         <h2>Device sync</h2>
         <p>
-            Enabling device sync (via the cloud button in the toolbar, or the menu) lets Dependinator sync
-            your models and views across devices. It's entirely optional — everything works locally without
-            an account.
+            The <b>cloud button</b> in the toolbar opens the device sync status: who is signed in, whether this
+            model is in sync, has local changes to upload, has a newer cloud copy to download, or a conflict to
+            resolve, with a button for each. Enabling device sync lets Dependinator sync your models and views
+            across devices. It's entirely optional — everything works locally without an account.
         </p>
         <p>
             To see the same diagram on, say, VS Code on your computer and <a href="https://dependinator.com"
                 target="_blank" rel="noopener">dependinator.com</a> on your phone, just
             <b>enable device sync with the same account on both devices</b>. Once it's enabled on each, your
-            models and views stay updated on every device that has sync enabled.
+            models and views stay updated on every device that has sync enabled. Changes sync automatically
+            in the background (a message tells you when the diagram was updated from the cloud); if both
+            copies changed, the conflict dialog shows when each changed and asks which one should win.
         </p>
 
         <footer>

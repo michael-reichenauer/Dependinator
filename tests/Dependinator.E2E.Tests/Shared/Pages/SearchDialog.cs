@@ -28,6 +28,23 @@ public sealed class SearchDialog
     // A result row by its (short) node name.
     public ILocator Result(string name) => Results.Filter(new() { HasTextString = name });
 
-    // Dismiss the dialog with Escape.
-    public Task CloseAsync() => page.Keyboard.PressAsync("Escape");
+    // Dismiss the dialog with Escape. A keystroke landing while the dialog is still animating in
+    // is swallowed, so Escape is pressed until the dialog is really gone.
+    public async Task CloseAsync()
+    {
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            await page.Keyboard.PressAsync("Escape");
+            try
+            {
+                await Assertions.Expect(Field).ToBeHiddenAsync(new() { Timeout = 1500 });
+                return;
+            }
+            catch (PlaywrightException)
+            {
+                // Swallowed: press again
+            }
+        }
+        await Assertions.Expect(Field).ToBeHiddenAsync();
+    }
 }

@@ -1,4 +1,5 @@
 using Dependinator.Core.Parsing;
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling.Models;
@@ -25,7 +26,17 @@ public class SvgExportServiceTests
         return modelMgr;
     }
 
-    static SvgExportService CreateService(IModelMgr modelMgr) => new(new SvgService(modelMgr, Mock.Of<ITilesMgr>()));
+    static SvgExportService CreateService(IModelMgr modelMgr) =>
+        new(
+            new SvgService(
+                modelMgr,
+                Mock.Of<ITilesMgr>(),
+                new ViewOptions(),
+                new CycleService(modelMgr),
+                Mock.Of<IPathFinderService>(),
+                Mock.Of<IRuleService>()
+            )
+        );
 
     [Fact]
     public void GetSvgDocument_ShouldSizeDocumentFromRectAndZoom()

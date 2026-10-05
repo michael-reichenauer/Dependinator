@@ -148,6 +148,12 @@ async function run() {
     await page.waitForSelector("#svgcanvas", { timeout: 30000 });
     await wait(4000); // let the model load and render
 
+    // The first-run tour starts in a fresh browser profile; it is not part of the demo. Skip
+    // also marks it as seen for this profile, so it stays away for the rest of the recording.
+    await page.waitForSelector("[data-testid=coach-skip]", { timeout: 5000 }).catch(() => null);
+    await page.evaluate(() => document.querySelector("[data-testid=coach-skip]")?.click());
+    await wait(500);
+
     // Hide snackbars (e.g. "Connection refused" when the cloud-sync API is not
     // running) — they are not part of the demo.
     await page.addStyleTag({ content: ".mud-snackbar { display: none !important; }" });

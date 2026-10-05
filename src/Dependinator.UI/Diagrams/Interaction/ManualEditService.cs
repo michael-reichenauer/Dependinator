@@ -56,8 +56,10 @@ interface IManualEditService
     Task CompleteLinkDragAsync(PointerId targetPointerId, Pos? canvasPos);
     void CancelLinkDrag();
 
-    // Deletes a leaf manual node together with its manual links (undoable).
-    void DeleteManualNode(NodeId nodeId);
+    // Deletes the manual nodes among the given ones, each with its whole subtree (children and
+    // their links), as one undoable step; asks first when any of them has children. Unselects
+    // first. False when nothing was deleted (nothing manual, or the user said no).
+    Task<bool> DeleteManualNodesAsync(IReadOnlyCollection<NodeId> nodeIds);
 
     // Deletes the manual link(s) a line represents (undoable); no-op if the line has parsed links.
     void DeleteManualLine(LineId lineId);
@@ -70,7 +72,8 @@ class ManualEditService(
     IStructureService structureService,
     ISelectionService selectionService,
     IDialogService dialogService,
-    IApplicationEvents applicationEvents
+    IApplicationEvents applicationEvents,
+    ISnackbar snackbar
 ) : IManualEditService
 {
     // Match the size parsed nodes get from the auto-layout.
@@ -352,33 +355,105 @@ class ManualEditService(
         applicationEvents.TriggerUIStateChanged(); // The canvas must hide the drag preview line
     }
 
-    // Deletes a manual node and its whole subtree (children and their links), as one undoable step.
-    public void DeleteManualNode(NodeId nodeId)
+    // Deletes the manual nodes among the given ones, each with its whole subtree (children and
+    // their links), as one undoable step. A node whose ancestor is also deleted goes with that
+    // ancestor's subtree.
+    public async Task<bool> DeleteManualNodesAsync(IReadOnlyCollection<NodeId> nodeIds)
     {
-        var commands = new List<Command>();
+        List<NodeId> ids;
+        bool anyHasChildren;
         using (var model = modelMgr.UseModel())
         {
-            if (!model.Nodes.TryGetValue(nodeId, out var node) || !node.IsManual)
-                return;
+            var manual = nodeIds
+                .Select(id => model.Nodes.TryGetValue(id, out var node) ? node : null)
+                .OfType<Node>()
+                .Where(node => node.IsManual)
+                .ToHashSet();
+            var topLevel = manual.Where(node => !node.Ancestors().Any(manual.Contains)).ToList();
+            ids = topLevel.Select(node => node.Id).ToList();
+            anyHasChildren = topLevel.Any(node => node.Children.Count > 0);
+        }
+        if (ids.Count == 0)
+            return false;
 
+        // Children go too, so that is confirmed; a childless node is simply deleted, since undo
+        // is the way back.
+        if (anyHasChildren && await ConfirmDeleteAsync(ids.Count) != true)
+            return false;
+
+        selectionService.Unselect();
+
+        var commands = new List<Command>();
+        var noteCount = 0;
+        using (var model = modelMgr.UseModel())
+        {
             // Post-order: delete descendants (and their links) before their parents, so undo — which
             // reverts in reverse order — restores each parent before its children.
             var seenLinks = new HashSet<LinkId>();
-            foreach (var descendant in node.DescendantsAndSelfPostOrder().ToList())
+            foreach (var id in ids)
             {
-                var links = descendant.SourceLinks.Concat(descendant.TargetLinks).Where(l => l.IsManual);
-                foreach (var link in links)
+                if (!model.Nodes.TryGetValue(id, out var node))
+                    continue;
+                if (node.IsNote)
+                    noteCount++;
+                foreach (var descendant in node.DescendantsAndSelfPostOrder().ToList())
                 {
-                    if (seenLinks.Add(link.Id))
-                        commands.Add(new DeleteLinkCommand(structureService, link.Source.Name, link.Target.Name));
+                    var links = descendant.SourceLinks.Concat(descendant.TargetLinks).Where(l => l.IsManual);
+                    foreach (var link in links)
+                    {
+                        if (seenLinks.Add(link.Id))
+                            commands.Add(new DeleteLinkCommand(structureService, link.Source.Name, link.Target.Name));
+                    }
+                    commands.Add(new DeleteNodeCommand(descendant.Id));
                 }
-                commands.Add(new DeleteNodeCommand(descendant.Id));
             }
         }
-
         if (commands.Count == 0)
-            return;
-        commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+            return false;
+
+        var command = commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]);
+        commandService.Do(command);
+        ShowUndoSnackbar(DeletedMessage(ids.Count, noteCount), command);
+        return true;
+    }
+
+    static string DeletedMessage(int count, int noteCount) =>
+        count == 1 ? (noteCount == 1 ? "Note deleted." : "Node deleted.")
+        : noteCount == count ? $"{count} notes deleted."
+        : $"{count} nodes deleted.";
+
+    Task<bool?> ConfirmDeleteAsync(int count) =>
+        dialogService.ShowMessageBoxAsync(
+            new MessageBoxOptions
+            {
+                Title = count == 1 ? "Delete Node" : "Delete Nodes",
+                Message =
+                    count == 1
+                        ? "Delete this node and all its child nodes?"
+                        : $"Delete these {count} nodes and all their child nodes?",
+                YesText = "Delete",
+                CancelText = "Cancel",
+            }
+        );
+
+    // Deletes are undoable, so instead of a confirmation the user gets a way back afterwards: the
+    // snackbar's Undo reverts this deletion, and only while it is still the latest edit.
+    void ShowUndoSnackbar(string message, Command command)
+    {
+        snackbar.Add(
+            message,
+            Severity.Normal,
+            config =>
+            {
+                config.Action = "Undo";
+                config.ActionColor = Color.Primary;
+                config.OnClick = async _ =>
+                {
+                    if (!await commandService.UndoIfLatest(command))
+                        snackbar.Add("Changes were made since; use Undo (Ctrl+Z) to step back.", Severity.Info);
+                };
+            }
+        );
     }
 
     public void DeleteManualLine(LineId lineId)
@@ -397,7 +472,9 @@ class ManualEditService(
             }
         }
 
-        commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+        var command = commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]);
+        commandService.Do(command);
+        ShowUndoSnackbar("Link deleted.", command);
     }
 
     void ResetNameEntry()

@@ -1,0 +1,149 @@
+@inject IApplicationEvents applicationEvents
+@inject IViewOptions viewOptions
+@inject IRuleService ruleService
+@inject INavigationService navigationService
+@inject IDialogService dialogService
+@inject Modeling.IModelService modelService
+@inject Modeling.Models.IModelMgr modelMgr
+@implements IDisposable
+
+@* Architecture rules: "X must not depend on Y", declared by picking two nodes. Each rule lists
+   the dependencies that break it (per class pair, with link counts); while the panel is open those
+   lines are drawn in the rule color. Rules are saved with the model and undoable. *@
+@if (viewOptions.IsRulesShown)
+{
+  var reports = ruleService.GetReports();
+  var violationCount = reports.Sum(r => r.Violations.Count);
+  <div class="dep-panel dep-rules dep-toolbar-card" data-testid="rules-panel">
+    <div class="dep-panel__header">
+      <span class="dep-panel__title">Rules</span>
+      <span class="dep-panel__count" data-testid="rules-summary">@Summary(reports.Count, violationCount)</span>
+      <MudSpacer />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
+                     data-testid="rules-close" />
+    </div>
+    <div class="dep-panel__hint">Architecture rules: "this must not depend on that". Dependencies that break a rule are listed here and drawn orange in the diagram. Rules are saved with the model.</div>
+
+    <div class="dep-panel__list">
+      @if (reports.Count == 0)
+      {
+        <div class="dep-panel__empty" data-testid="rules-empty">No rules yet. Add one below, for example "UI must not depend on Data".</div>
+      }
+      @foreach (var report in reports)
+      {
+        <div class="dep-rules__rule" data-testid="rules-item" data-violations="@report.Violations.Count">
+          <div class="dep-rules__head">
+            <MudIcon Icon="@StatusIcon(report)" Size="Size.Small" Color="@StatusColor(report)" />
+            <span class="dep-rules__names" title="@($"{report.FromDisplay} must not depend on {report.ToDisplay}")">
+              <b>@report.FromDisplay</b> <span class="dep-rules__arrow">must not use</span> <b>@report.ToDisplay</b>
+            </span>
+            <span class="dep-panel__count" data-testid="rules-item-count">@StatusText(report)</span>
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small" title="Remove this rule"
+                           OnClick="() => ruleService.RemoveRule(report.Rule)" data-testid="rules-remove" />
+          </div>
+          @if (report.Violations.Count > 0)
+          {
+            <div class="dep-rules__violations">
+              @foreach (var violation in report.Violations)
+              {
+                <button type="button" class="dep-panel__row dep-rules__violation"
+                        title="@($"{violation.SourceLongName} → {violation.TargetLongName}: click to go to {violation.SourceName}")"
+                        @onclick="() => ShowAsync(violation.SourceId)" data-testid="rules-violation">
+                  <span>@violation.SourceName</span>
+                  <span class="dep-rules__arrow">→</span>
+                  <span>@violation.TargetName</span>
+                  <span class="dep-panel__count">(@violation.LinkCount)</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="dep-rules__add">
+      <button type="button" class="@PickClass(fromName)" title="Choose the node that must not depend on the other"
+              @onclick="() => PickAsync(isFrom: true)" data-testid="rules-add-from">
+        @(fromName ?? "Choose a node …")
+      </button>
+      <span class="dep-rules__arrow">must not use</span>
+      <button type="button" class="@PickClass(toName)" title="Choose the node it must not depend on"
+              @onclick="() => PickAsync(isFrom: false)" data-testid="rules-add-to">
+        @(toName ?? "Choose a node …")
+      </button>
+      <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(fromId is null || toId is null)"
+                 OnClick="Add" data-testid="rules-add">
+        Add
+      </MudButton>
+    </div>
+  </div>
+}
+
+@code {
+  Modeling.Models.NodeId? fromId;
+  Modeling.Models.NodeId? toId;
+  string? fromName;
+  string? toName;
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  static string Summary(int rules, int violations) =>
+    rules == 0 ? "" : violations == 0 ? "all kept" : violations == 1 ? "1 violation" : $"{violations} violations";
+
+  static string StatusIcon(RuleReport report) =>
+    !report.IsResolved ? MudBlazor.Icons.Material.Outlined.HelpOutline
+    : report.Violations.Count == 0 ? MudBlazor.Icons.Material.Outlined.CheckCircle
+    : MudBlazor.Icons.Material.Outlined.Error;
+
+  static Color StatusColor(RuleReport report) =>
+    !report.IsResolved ? Color.Default : report.Violations.Count == 0 ? Color.Success : Color.Warning;
+
+  static string StatusText(RuleReport report) =>
+    !report.IsResolved ? "node not in model" : report.Violations.Count == 0 ? "kept" : $"{report.Violations.Count} broken";
+
+  static string PickClass(string? name) => name is null ? "dep-path__pick dep-path__pick--empty" : "dep-path__pick";
+
+  Task ShowAsync(Modeling.Models.NodeId nodeId) => navigationService.ShowNodeAsync(nodeId);
+
+  async Task PickAsync(bool isFrom)
+  {
+    var parameters = new DialogParameters<SearchDialog>
+    {
+      { d => d.PickCaption, isFrom ? "Rule: choose the node that must not depend on the other" : "Rule: choose the node it must not depend on" },
+    };
+    var dialog = await dialogService.ShowAsync<SearchDialog>((string?)null, parameters, SearchDialog.Options);
+    var result = await dialog.Result;
+    if (result is not { Canceled: false, Data: Modeling.Models.NodeId id })
+      return;
+    var name = modelMgr.WithModel(m => m.Nodes.TryGetValue(id, out var node) ? node.LongName : null);
+    if (isFrom)
+      (fromId, fromName) = (id, name);
+    else
+      (toId, toName) = (id, name);
+  }
+
+  void Add()
+  {
+    if (fromId is null || toId is null)
+      return;
+    // A rejected pair (the same node twice, or a rule that exists) keeps the picks, so the user
+    // can change one of them instead of starting over.
+    if (ruleService.AddRule(fromId, toId) is Error e)
+    {
+      applicationEvents.TriggerInfoReported(e.Message);
+      return;
+    }
+    (fromId, toId, fromName, toName) = (null, null, null, null);
+  }
+
+  void Close()
+  {
+    viewOptions.SetRulesShown(false);
+    modelService.ClearCache(); // The highlighted lines are baked into the tiles
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

@@ -1,8 +1,8 @@
+using Dependinator.Core;
 using Dependinator.UI.Diagrams.Dependencies;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
-using Microsoft.JSInterop;
 
 namespace Dependinator.UI.Diagrams.Interaction;
 
@@ -15,6 +15,10 @@ interface IInteractionService
     bool IsEditNodeMode { get; set; }
     Task InitAsync();
     void NodePanZoomToFit();
+
+    // Zooms the view out one container level (to the parent of the container under the view
+    // center), or fits the whole diagram when already at the top level.
+    void ZoomOutOneLevel();
     void IncreaseNodeSize();
     void DecreaseNodeSize();
 }
@@ -37,9 +41,18 @@ class InteractionService(
     IContextMenuService contextMenuService,
     IScreenService screenService,
     IAreaSelectionService areaSelectionService,
-    IJSInterop jsInterop
-) : IInteractionService, IDisposable
+    IViewOptions viewOptions,
+    IKeyboardService keyboardService,
+    INavigationService navigationService,
+    IViewContextService viewContext,
+    IViewHistoryService viewHistory
+) : IInteractionService
 {
+    // Keyboard pan step in screen pixels (Shift multiplies it) and zoom factor per key press.
+    const double KeyPanStep = 40;
+    const double KeyPanStepShift = 200;
+    const double KeyZoomFactor = 1.25;
+
     // Delay before a held-down button switches the cursor to "move" (see OnMoveTimer).
     const int MoveDelay = 300;
 
@@ -59,7 +72,6 @@ class InteractionService(
     // Swallows the click that follows a completed area-selection drag, so the drag does not
     // also select whatever node the pointer was released on.
     bool suppressNextClick = false;
-    DotNetObjectReference<InteractionService>? selfReference;
 
     // Press position in viewport (client) coords, the coordinate space of the link-drag
     // preview overlay. Client coords are used because pointer capture retargets events to the
@@ -73,9 +85,16 @@ class InteractionService(
     string cursor = "default";
     public string Cursor
     {
-        get => areaSelectionService.IsArmed || areaSelectionService.IsSelecting ? "crosshair" : cursor;
+        get => IsPlacementMode ? "crosshair" : cursor;
         private set => cursor = value;
     }
+
+    // A mode where the next click/drag places something rather than selects: the cursor says so.
+    bool IsPlacementMode =>
+        areaSelectionService.IsArmed
+        || areaSelectionService.IsSelecting
+        || noteService.IsPlacingNote
+        || manualEditService.IsPlacingNode;
     public bool IsContainer
     {
         get
@@ -90,11 +109,12 @@ class InteractionService(
         }
     }
 
+    // Source navigation opens an editor, which only the VS Code host has.
     public bool CanShowSource
     {
         get
         {
-            if (!selectionService.IsSelected)
+            if (!Build.IsVsCodeExtWasm || !selectionService.IsSelected)
                 return false;
             using var model = modelMgr.UseModel();
             if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
@@ -108,7 +128,7 @@ class InteractionService(
     {
         get
         {
-            if (!selectionService.SelectedId.IsLine)
+            if (!Build.IsVsCodeExtWasm || !selectionService.SelectedId.IsLine)
                 return false;
             if (!dependenciesService.TryGetLine(LineId.FromId(selectionService.SelectedId.Id), out var line))
                 return false;
@@ -145,30 +165,23 @@ class InteractionService(
 
     public void IncreaseNodeSize()
     {
-        if (!ViewOptions.IsEditingEnabled)
+        if (!viewOptions.IsEditingEnabled || !selectionService.SelectedId.IsNode)
             return;
-        if (!selectionService.IsSelected)
-            return;
-        var nodeId = NodeId.FromId(selectionService.SelectedId.Id);
-
-        nodeEditService.IncreaseNodeSize(nodeId);
+        nodeEditService.IncreaseNodeSize(selectionService.SelectedNodeIds);
     }
 
     public void DecreaseNodeSize()
     {
-        if (!ViewOptions.IsEditingEnabled)
+        if (!viewOptions.IsEditingEnabled || !selectionService.SelectedId.IsNode)
             return;
-        if (!selectionService.IsSelected)
-            return;
-        var nodeId = NodeId.FromId(selectionService.SelectedId.Id);
-
-        nodeEditService.DecreaseNodeSize(nodeId);
+        nodeEditService.DecreaseNodeSize(selectionService.SelectedNodeIds);
     }
 
     public async Task InitAsync()
     {
         moveTimer = new Timer(OnMoveTimer, null, Timeout.Infinite, Timeout.Infinite);
         applicationEvents.UndoneRedone += UpdateToolbar;
+        applicationEvents.ViewChanged += OnViewChanged;
 
         mouseEventService.Click += OnClick;
         mouseEventService.DblClick += OnDblClick;
@@ -177,22 +190,116 @@ class InteractionService(
         mouseEventService.PointerUp += OnMouseUp;
         mouseEventService.Wheel += OnMouseWheel;
         mouseEventService.ContextMenu += OnContextMenu;
-
-        selfReference = jsInterop.Reference(this);
-        await jsInterop.Call("listenToEscapeKey", selfReference, nameof(OnEscapeKey));
+        keyboardService.KeyDown += OnKeyDown;
+        await Task.CompletedTask;
     }
 
-    // Cancels an armed/active area selection on Escape. A strict no-op otherwise, so it never
-    // interferes with e.g. MudBlazor dialogs, which handle Escape themselves.
-    [JSInvokable]
-    public ValueTask OnEscapeKey()
+    // The canvas keyboard gestures: Escape backs out of whatever is in progress, arrows pan,
+    // plus/minus zoom. (Search, undo/redo and fit live in the app bar; Delete in the toolbars.)
+    void OnKeyDown(KeyPress key)
     {
-        if (areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
-            areaSelectionService.Cancel();
-        return ValueTask.CompletedTask;
+        if (key.Is("Escape") && key.IsPlain)
+        {
+            CancelOrDeselect();
+            return;
+        }
+
+        if (key.IsAlt && key.Is("ArrowUp"))
+        {
+            ZoomOutOneLevel();
+            return;
+        }
+
+        if (key.IsPlain || (key.Shift && !key.Ctrl && !key.Alt))
+        {
+            var step = key.Shift ? KeyPanStepShift : KeyPanStep;
+            switch (key.Key)
+            {
+                case "ArrowLeft":
+                    panZoomService.PanBy(-step, 0);
+                    break;
+                case "ArrowRight":
+                    panZoomService.PanBy(step, 0);
+                    break;
+                case "ArrowUp":
+                    panZoomService.PanBy(0, -step);
+                    break;
+                case "ArrowDown":
+                    panZoomService.PanBy(0, step);
+                    break;
+                case "+":
+                case "=":
+                    panZoomService.ZoomBy(KeyZoomFactor);
+                    break;
+                case "-":
+                    panZoomService.ZoomBy(1 / KeyZoomFactor);
+                    break;
+                default:
+                    return;
+            }
+            selectionService.HideSelectedPosition();
+            UpdateToolbar();
+            applicationEvents.TriggerUIStateChanged();
+            return;
+        }
+
+        if (key.Ctrl && !key.Alt && key.Key is "+" or "=" or "-")
+        {
+            panZoomService.ZoomBy(key.Key == "-" ? 1 / KeyZoomFactor : KeyZoomFactor);
+            selectionService.HideSelectedPosition();
+            UpdateToolbar();
+            applicationEvents.TriggerUIStateChanged();
+        }
     }
 
-    public void Dispose() => selfReference?.Dispose();
+    // Escape backs out one step at a time: an in-progress placement or drag first, then the
+    // per-node arrange mode, then the selection. With nothing to cancel it does nothing, so a
+    // reflexive Escape never moves the view (zooming out is Alt+Up).
+    void CancelOrDeselect()
+    {
+        if (contextMenuService.IsOpen)
+            contextMenuService.Close();
+        else if (areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
+        {
+            isAreaSelecting = false;
+            areaSelectionService.Cancel();
+        }
+        else if (noteService.IsPlacingNote)
+            noteService.CancelPlaceNote();
+        else if (manualEditService.IsPlacingNode)
+            manualEditService.CancelPlaceNode();
+        else if (manualEditService.IsLinkDragActive)
+            manualEditService.CancelLinkDrag();
+        else if (manualEditService.IsNameEntryOpen)
+            manualEditService.CancelNameEntry();
+        else if (selectionService.IsEditMode)
+            selectionService.SetEditMode(false);
+        else if (selectionService.IsSelected)
+            selectionService.Unselect();
+        else
+            return;
+
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Framing the innermost open container as a node in its parent is exactly one level out:
+    // the user sees where that container sits among its siblings.
+    public void ZoomOutOneLevel()
+    {
+        var chain = viewContext.GetViewCenterChain();
+        if (chain.Count >= 1)
+        {
+            navigationService.ShowNodeAsync(chain[^1].Id).RunInBackground();
+            return;
+        }
+
+        var bounds = modelMgr.WithModel(m => m.Root.GetTotalBounds());
+        if (bounds == Rect.None)
+            return;
+        viewHistory.RecordJump();
+        panZoomService.PanZoomToFit(bounds, Math.Min(1, Zoom));
+        applicationEvents.TriggerUIStateChanged();
+    }
 
     void OnContextMenu(PointerEvent e)
     {
@@ -260,6 +367,13 @@ class InteractionService(
         }
     }
 
+    // The toolbar hides while the view moves and re-anchors once it settles.
+    void OnViewChanged()
+    {
+        selectionService.HideSelectedPosition();
+        UpdateToolbar();
+    }
+
     void OnClick(PointerEvent e)
     {
         // Ignore clicks while armed for area selection (only a drag is meaningful) and the
@@ -288,7 +402,11 @@ class InteractionService(
 
         dependenciesService.Clicked(pointerId);
 
-        selectionService.Select(pointerId, e).RunInBackground();
+        // Shift/Ctrl+click builds a group selection; a plain click selects just that item.
+        if (pointerId.IsNode && (e.ShiftKey || e.CtrlKey))
+            selectionService.ToggleInSelectionAsync(pointerId, e).RunInBackground();
+        else
+            selectionService.Select(pointerId, e).RunInBackground();
     }
 
     void OnDblClick(PointerEvent e)
@@ -302,10 +420,26 @@ class InteractionService(
             return;
         }
 
-        // Double-click on empty canvas (or inside a container) starts adding a manual node there.
-        if (!ViewOptions.IsEditingEnabled)
+        // In edit mode a double-click on empty canvas (or inside an open container) adds a
+        // manual node there; otherwise a double-click zooms the view to the node.
+        if (viewOptions.IsEditingEnabled && (pointerId.IsCanvas || IsContainerNode(pointerId)))
+        {
+            _ = manualEditService.AddNodeAtAsync(e);
             return;
-        _ = manualEditService.AddNodeAtAsync(e);
+        }
+
+        if (pointerId.IsNode)
+            navigationService.ShowNodeAsync(pointerId.NodeId).RunInBackground();
+    }
+
+    bool IsContainerNode(PointerId pointerId)
+    {
+        if (!pointerId.IsNode)
+            return false;
+        using var model = modelMgr.UseModel();
+        if (!model.Nodes.TryGetValue(pointerId.NodeId, out var node))
+            return false;
+        return node.IsRoot || NodeViewPolicy.IsContainerView(node, Zoom);
     }
 
     void OnMouseDown(PointerEvent e)
@@ -317,6 +451,18 @@ class InteractionService(
         isResizingSelectedNode = false;
         isDraggingSelectedLinePoint = false;
         isDraggingLink = false;
+
+        // Shift+press starts a rubber band that selects the nodes inside it (a Shift+click
+        // without a real drag is too small to count and still toggles the clicked node).
+        var pressedId = PointerId.Parse(e.TargetId);
+        if (e.ShiftKey && e.IsLeftButton && !areaSelectionService.IsArmed && CanStartRubberBand(pressedId))
+        {
+            CompleteRubberBandAsync(areaSelectionService.SelectAreaAsync(AreaSelectionPurpose.SelectNodes))
+                .RunInBackground();
+            isAreaSelecting = true;
+            areaSelectionService.PointerDown(e);
+            return;
+        }
 
         // An armed area selection captures the press; no move timer or edit-mode remapping.
         if (areaSelectionService.IsArmed)
@@ -362,7 +508,7 @@ class InteractionService(
             return;
         }
 
-        if (ViewOptions.IsEditingEnabled && mouseDownId.IsLinkHandle)
+        if (viewOptions.IsEditingEnabled && mouseDownId.IsLinkHandle)
         {
             if (!isDraggingLink)
             {
@@ -379,7 +525,7 @@ class InteractionService(
         }
 
         if (
-            ViewOptions.IsEditingEnabled
+            viewOptions.IsEditingEnabled
             && mouseDownId.IsLinePoint
             && selectionService.SelectedId.IsLine
             && mouseDownId.Id == selectionService.SelectedId.Id
@@ -397,7 +543,7 @@ class InteractionService(
             return;
         }
 
-        if (ViewOptions.IsEditingEnabled && mouseDownId != PointerId.Empty && mouseDownId.IsResize)
+        if (viewOptions.IsEditingEnabled && mouseDownId != PointerId.Empty && mouseDownId.IsResize)
         {
             isResizingSelectedNode = true;
             nodeEditService.ResizeSelectedNode(e, Zoom, mouseDownId);
@@ -405,15 +551,19 @@ class InteractionService(
             return;
         }
 
+        // Dragging the selected node (or any node of a group selection) moves the whole selection.
         if (
-            ViewOptions.IsEditingEnabled
-            && mouseDownId == selectionService.SelectedId
-            && selectionService.IsSelectedNodeMovable(Zoom)
+            viewOptions.IsEditingEnabled
             && mouseDownId.IsNode
+            && selectionService.IsSelectedNodeMovable(Zoom)
+            && selectionService.SelectedNodeIds.Contains(mouseDownId.NodeId)
         )
         {
             isDraggingSelectedNode = true;
-            nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
+            if (selectionService.SelectedNodeCount > 1)
+                nodeEditService.MoveSelectedNodes(e, Zoom, selectionService.SelectedNodeIds);
+            else
+                nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
             return;
         }
@@ -429,7 +579,9 @@ class InteractionService(
         if (isAreaSelecting)
         {
             isAreaSelecting = false;
-            suppressNextClick = true;
+            // A rubber band that never grew into a rectangle is a Shift+click: let it through.
+            suppressNextClick =
+                areaSelectionService.Purpose == AreaSelectionPurpose.Export || areaSelectionService.IsDragLargeEnough;
             areaSelectionService.PointerUpAsync(e).RunInBackground();
             return;
         }
@@ -456,7 +608,10 @@ class InteractionService(
 
         if (isDraggingSelectedNode && mouseDownId.IsNode)
         {
-            nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
+            if (selectionService.SelectedNodeCount > 1)
+                nodeEditService.SnapSelectedNodesToGrid(selectionService.SelectedNodeIds);
+            else
+                nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedNode = false;
         }
@@ -475,6 +630,37 @@ class InteractionService(
             isMoving = false;
             applicationEvents.TriggerUIStateChanged(); // Restore the cursor without waiting for the next event
         }
+    }
+
+    // A band can start anywhere except on the edit handles, which have their own drags.
+    static bool CanStartRubberBand(PointerId pressedId) =>
+        !pressedId.IsLinkHandle && !pressedId.IsResize && !pressedId.IsLinePoint;
+
+    // Selects the nodes inside the finished rubber band (null when it was canceled or too small).
+    async Task CompleteRubberBandAsync(Task<Rect?> selection)
+    {
+        if (await selection is not { } band)
+            return;
+
+        List<NodeId> nodeIds;
+        using (var model = modelMgr.UseModel())
+        {
+            var zoom = model.Zoom;
+            nodeIds = RubberBandSelection
+                .FindNodes(
+                    model.Root,
+                    band,
+                    node => NodeViewPolicy.IsChildrenShown(node, zoom),
+                    node => !node.IsHidden || viewOptions.ShowHiddenNodes
+                )
+                .Select(node => node.Id)
+                .ToList();
+        }
+        if (nodeIds.Count == 0)
+            return;
+
+        await selectionService.AddToSelectionAsync(nodeIds);
+        await selectionService.UpdateSelectedPositionAsync();
     }
 
     // Finds the drop target under the cursor and completes (or cancels) the link drag. Pointer

@@ -33,22 +33,21 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
         // clicks while the initial auth probe is still running.
         await Expect(App.CloudButton).Not.ToHaveClassAsync(Connecting, new() { Timeout = 15_000 });
 
-        // The cloud button starts not-authenticated; clicking it signs in (clerkSignIn
-        // resolves as soon as the stubbed Clerk.openSignIn reports the signed-in user).
+        // The cloud button opens the status popover; its "Enable device sync" button signs in
+        // (clerkSignIn resolves as soon as the stubbed Clerk.openSignIn reports the user).
         await App.CloudButton.ClickAsync();
+        await Page.GetByTestId("cloud-sign-in").ClickAsync();
 
-        // Login is async (Functions round-trip). The cloud tooltip flips from "Device sync
-        // disabled" to "Device sync enabled for <email>" once it completes; hovering keeps the
-        // tooltip open while Expect retries.
-        await App.CloudButton.HoverAsync();
-        await Expect(Page.GetByText(new Regex("sync enabled for"))).ToBeVisibleAsync(new() { Timeout = 30_000 });
+        // Login is async (Functions round-trip). The popover then shows the account and offers
+        // Sign out; Expect retries until it does.
+        await App.CloudButton.ClickAsync();
+        await Expect(Page.GetByTestId("cloud-account")).ToContainTextAsync("Signed in as", new() { Timeout = 30_000 });
+        await Expect(Page.GetByTestId("cloud-sign-out")).ToBeVisibleAsync();
+        await Page.Keyboard.PressAsync("Escape");
 
-        // The app menu now reflects an authenticated session (Logout and the merged model
-        // list both live inside the Models submenu, so hover it to expand the flyout) ...
-        await Expect(await App.OpenSubMenuItemAsync("menu-models", "menu-logout")).ToBeVisibleAsync();
-
-        // ... and the merged model list shows the seeded cloud model by name (its presence
-        // proves the cloud model list was fetched and merged in).
+        // The merged model list (Models submenu) shows the seeded cloud model by name (its
+        // presence proves the cloud model list was fetched and merged in).
+        await App.OpenSubMenuItemAsync("menu-models", "menu-new-model");
         await Expect(App.MenuItem("menu-model-item").Filter(new() { HasText = "seed-model.sln" })).ToBeVisibleAsync();
     }
 }

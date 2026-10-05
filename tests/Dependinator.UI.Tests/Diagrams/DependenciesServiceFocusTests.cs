@@ -1,3 +1,4 @@
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Dependencies;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling;
@@ -16,6 +17,10 @@ public class DependenciesServiceFocusTests
     readonly Mock<IApplicationEvents> applicationEvents = new();
     readonly Mock<INavigationService> navigationService = new();
 
+    // A narrow viewport: on a wide one a click elsewhere leaves the explorer open (see
+    // DependenciesService.Clicked), and these tests exercise the folding behavior.
+    readonly Mock<IScreenService> screenService = new();
+
     Node source = null!;
     Node target = null!;
     Node parentA = null!;
@@ -24,7 +29,15 @@ public class DependenciesServiceFocusTests
     DependenciesService CreateService(PointerId selected)
     {
         selectionService.Setup(s => s.SelectedId).Returns(selected);
-        return new(selectionService.Object, applicationEvents.Object, modelMgr, navigationService.Object);
+        screenService.Setup(s => s.SvgRect).Returns(new Dependinator.UI.Shared.Types.Rect(0, 0, 800, 600));
+        return new(
+            selectionService.Object,
+            applicationEvents.Object,
+            modelMgr,
+            navigationService.Object,
+            screenService.Object,
+            Mock.Of<IPathFinderService>()
+        );
     }
 
     // Root -> ParentA -> Source, Root -> ParentB -> Target, one link Source -> Target.
@@ -132,8 +145,10 @@ public class DependenciesServiceFocusTests
         Assert.Contains(target, Focus!.ExpandedFarNodes);
     }
 
+    // Closing keeps the subject's lines (the focus) until the user selects another node or
+    // line; a canvas click (no node/line) leaves them. Pinned lines survive other selections.
     [Fact]
-    public void Close_ShouldClearFocus()
+    public void Close_ShouldKeepFocus_UntilAnotherItemIsSelected()
     {
         AddModel();
         var service = CreateService(PointerId.FromNode(source.Id));
@@ -142,8 +157,44 @@ public class DependenciesServiceFocusTests
 
         service.Close();
 
+        Assert.False(service.IsShowExplorer);
+        Assert.NotNull(Focus);
+        Assert.Equal(version, Version);
+
+        service.Clicked(PointerId.Empty);
+        Assert.NotNull(Focus);
+
+        service.Clicked(PointerId.FromNode(target.Id));
         Assert.Null(Focus);
         Assert.Equal(version + 1, Version);
+    }
+
+    [Fact]
+    public void Close_WithPinnedLines_ShouldKeepFocus_AfterAnotherSelection()
+    {
+        AddModel();
+        var service = CreateService(PointerId.FromNode(source.Id));
+        service.ShowDependencies();
+        service.SetLinesPinned(true);
+
+        service.Close();
+        service.Clicked(PointerId.FromNode(target.Id));
+
+        Assert.NotNull(Focus);
+    }
+
+    [Fact]
+    public void SetShowLines_Off_AfterClose_ShouldClearKeptFocus()
+    {
+        AddModel();
+        var service = CreateService(PointerId.FromNode(source.Id));
+        service.ShowDependencies();
+        service.Close();
+        Assert.NotNull(Focus);
+
+        service.SetShowLines(false);
+
+        Assert.Null(Focus);
     }
 
     [Fact]

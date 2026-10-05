@@ -12,22 +12,62 @@
 @if (progressService.IsProminentActive)
 {
     <div class="app-progress-overlay" role="presentation">
-        <div class="app-progress-panel" style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+        <div class="app-progress-panel dep-toolbar-card" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;"
+             data-testid="progress-overlay">
             <MudProgressCircular Indeterminate="true" Size="Size.Large" Color="Color.Tertiary" />
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Dark" Style="color: #111111;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Style="color: var(--mud-palette-text-primary);">
                 @ProminentText
             </MudText>
+            <MudText Typo="Typo.caption" Align="Align.Center" Style="color: var(--mud-palette-text-secondary);">
+                @ElapsedText A large solution can take a minute.
+            </MudText>
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Tertiary" OnClick="progressService.ContinueInBackground"
+                       data-testid="progress-background">
+                Continue in background
+            </MudButton>
         </div>
     </div>
 }
 
 @code {
+    // Ticks the elapsed time, and only exists while the overlay is up (it is shown a few seconds
+    // per parse, and a timer per circuit for the app's lifetime would be waste).
+    Timer? ticker;
+    readonly object tickerLock = new();
+
     string ProminentText =>
     string.IsNullOrWhiteSpace(progressService.ProminentText) ? "" : progressService.ProminentText;
 
+    string ElapsedText =>
+    progressService.ProminentStartedUtc is { } started
+        ? $"{(int)(DateTime.UtcNow - started).TotalSeconds} s so far."
+        : "";
+
     protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
-    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+    void OnUiStateChanged()
+    {
+        UpdateTicker(progressService.IsProminentActive);
+        InvokeAsync(StateHasChanged);
+    }
 
-    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+    void UpdateTicker(bool isOverlayShown)
+    {
+        lock (tickerLock)
+        {
+            if (isOverlayShown)
+                ticker ??= new Timer(_ => InvokeAsync(StateHasChanged), null, 1000, 1000);
+            else
+            {
+                ticker?.Dispose();
+                ticker = null;
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        applicationEvents.UIStateChanged -= OnUiStateChanged;
+        UpdateTicker(isOverlayShown: false);
+    }
 }

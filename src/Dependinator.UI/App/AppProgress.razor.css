@@ -25,4 +25,5 @@
 .app-progress-panel {
     padding: 1.25rem 1.5rem;
     min-width: 260px;
+    max-width: 360px;
 }

@@ -25,7 +25,18 @@ static class LineSvg
     // the "arrow-inheritance" marker geometry in Canvas.razor/SvgExportDocument).
     const double InheritanceMarkerLength = 14.5;
 
-    public static string GetLineSvg(Line line, Pos nodeCanvasPos, double childrenZoom)
+    // A path line is drawn at least this wide so the chain reads even among thin lines.
+    const double PathMinStrokeWidth = 2;
+
+    public static string GetLineSvg(
+        Line line,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        bool isDimmed = false,
+        bool isCyclic = false,
+        bool isPath = false,
+        bool isViolation = false
+    )
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
             return "";
@@ -34,46 +45,66 @@ static class LineSvg
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var elementId = PointerId.FromLine(line.Id).ElementId;
 
-        return BuildLineSvg(line, endpoints, polylinePoints, elementId);
+        return BuildLineSvg(line, endpoints, polylinePoints, elementId, isDimmed, isCyclic, isPath, isViolation);
     }
 
-    public static string GetDirectLineSvg(Line line, Node ancestor, Pos nodeCanvasPos, double childrenZoom)
+    public static string GetDirectLineSvg(
+        Line line,
+        Node ancestor,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        bool isDimmed = false,
+        bool isPath = false,
+        bool isViolation = false
+    )
     {
         if (line.RenderAncestor != ancestor)
             return "";
 
-        return GetLineSvg(line, nodeCanvasPos, childrenZoom);
+        return GetLineSvg(line, nodeCanvasPos, childrenZoom, isDimmed, isPath: isPath, isViolation: isViolation);
     }
 
     static string BuildLineSvg(
         Line line,
         LinePathGeometry.LineEndpoints endpoints,
         IReadOnlyList<Pos> polylinePoints,
-        string elementId
+        string elementId,
+        bool isDimmed,
+        bool isCyclic,
+        bool isPath,
+        bool isViolation
     )
     {
         // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
         // tell the on-demand lines apart from each other and from the solid aggregated lines:
-        // the explorer's pinned pair lines are dashed, its transient focus lines dotted.
+        // the explorer's pinned pair lines are dashed, its transient focus lines dotted. A line
+        // on the dependency path the user asked for (View › Find Path) outranks all of that.
         var isAccent = line.IsDirect || line.IsFocused;
         var color =
-            isAccent ? DColors.DirectLine
+            isPath ? DColors.PathLine
+            : isViolation ? DColors.RuleLine
+            : isAccent ? DColors.DirectLine
+            : isCyclic ? DColors.CycleLine
             : line.IsHidden ? DColors.LineHidden
             : line.IsCousin ? DColors.CousinLine
             : DColors.Line;
 
         // The hollow inheritance arrow head is only drawn where the line enters the real
-        // inheritance target (the supertype); hidden/accent styling takes precedence.
-        var isInheritanceHead = !isAccent && !line.IsHidden && line.HasInheritanceTargetEnd;
+        // inheritance target (the supertype); hidden/accent/cycle/path styling takes precedence.
+        var isInheritanceHead =
+            !isPath && !isViolation && !isAccent && !isCyclic && !line.IsHidden && line.HasInheritanceTargetEnd;
 
         var markerId =
-            isAccent ? "arrow-direct"
+            isPath ? "arrow-path"
+            : isViolation ? "arrow-rule"
+            : isAccent ? "arrow-direct"
+            : isCyclic ? "arrow-cycle"
             : line.IsHidden ? "arrow-hidden"
             : isInheritanceHead ? "arrow-inheritance"
             : line.IsCousin ? "arrow-cousin"
             : "arrow-line";
 
-        var strokeWidth = line.StrokeWidth;
+        var strokeWidth = isPath || isViolation ? Math.Max(line.StrokeWidth, PathMinStrokeWidth) : line.StrokeWidth;
         var circleRadius = strokeWidth + StartCircleExtraRadius;
         var dashArray =
             line.IsDirect ? " stroke-dasharray=\"6,6\""
@@ -96,17 +127,28 @@ static class LineSvg
 
         // The second, fully transparent polyline is the hover/hit target: it traces the same
         // path but much wider, so hovering/clicking near the thin visible line still hits it.
+        // The outer group lets a hover over the hit target restore a dimmed line (see the
+        // line-dim CSS in Canvas.razor).
+        var visibleClass =
+            (isDimmed ? "line-vis line-dim" : "line-vis")
+            + (isCyclic ? " line-cycle" : "")
+            + (isPath ? " line-path" : "")
+            + (isViolation ? " line-rule" : "");
         return string.Create(
             CultureInfo.InvariantCulture,
             $"""
+            <g class="line">
+            <g class="{visibleClass}">
             <polyline points="{points}" fill="none" stroke-width="{strokeWidth:0.##}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
             <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
+            </g>
             <g class="hoverable" id="{elementId}">
               <polyline id="{elementId}" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
                 + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
               <title>{title}</title>
             </g>
             {selectedSvg}
+            </g>
             """
         );
     }

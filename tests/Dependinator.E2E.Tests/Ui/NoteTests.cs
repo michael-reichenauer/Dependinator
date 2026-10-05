@@ -16,6 +16,7 @@ public class NoteTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task Note_ShouldBeAddedViaMenu_AndPersistAcrossReload()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
 
         await AddNoteAsync(NoteId, "Guiding note");
         await Expect(NoteText(NoteId)).ToBeVisibleAsync();
@@ -33,6 +34,7 @@ public class NoteTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task NotesSidebar_ShouldToggle_AndListNotes()
     {
         await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
         await AddNoteAsync(NoteId, "Guiding note");
 
         // Toggle the sidebar on from the app menu; it lists the note (id + description).

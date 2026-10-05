@@ -2,16 +2,20 @@ using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
-
 // The diagram model of nodes, links, and lines: loading, refreshing, layout, naming, structure,
 // and persistence of the model shown on the canvas.
+using Dependinator.UI.Shared.VsCode;
+
 namespace Dependinator.UI.Modeling;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
 
 interface IModelService
 {
-    Task<Result<ModelInfo>> LoadAsync(string path);
+    // Loads the model at the path (cached layout if any, else a fresh parse). includeTestProjects
+    // sets the parse flag for a model that has no persisted value yet, i.e. the retry after a
+    // first parse failed because the solution only has test projects.
+    Task<Result<ModelInfo>> LoadAsync(string path, bool? includeTestProjects = null);
     Task<Result> RefreshAsync();
     Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects);
     void Clear();
@@ -36,6 +40,7 @@ class ModelService : IModelService, IDisposable
     readonly IPersistenceService persistenceService;
     readonly IApplicationEvents applicationEvents;
     readonly IProgressService progressService;
+    readonly IVsCodeSendService vsCodeSendService;
 
     readonly Debouncer saveDebouncer = new();
 
@@ -46,9 +51,11 @@ class ModelService : IModelService, IDisposable
         IStructureService modelStructureService,
         IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
-        IProgressService progressService
+        IProgressService progressService,
+        IVsCodeSendService vsCodeSendService
     )
     {
+        this.vsCodeSendService = vsCodeSendService;
         this.modelMgr = modelMgr;
         this.modelListService = modelListService;
         this.parserService = parserService;
@@ -110,9 +117,11 @@ class ModelService : IModelService, IDisposable
         return persistenceService.WriteAsync(modelPath, modelDto);
     }
 
-    public async Task<Result<ModelInfo>> LoadAsync(string path)
+    public async Task<Result<ModelInfo>> LoadAsync(string path, bool? includeTestProjects = null)
     {
         Clear();
+        if (includeTestProjects is { } include)
+            modelMgr.WithModel(m => m.IncludeTestProjects = include);
 
         Log.Info("Loading ...", path);
         using var _ = Timing.Start($"Load model {path}");
@@ -123,7 +132,17 @@ class ModelService : IModelService, IDisposable
         {
             Log.Info("Failed to read cached model", cachedResult.Error.Message);
             if (ModelPaths.IsDesignModel(path))
+            {
+                // A design model has no source to re-parse: an unreadable cache means its content
+                // is gone, which the user must hear rather than silently get an empty model.
+                if (cachedResult.Error.Message.Contains("format version", StringComparison.OrdinalIgnoreCase))
+                {
+                    applicationEvents.TriggerErrorReported(
+                        $"The saved model '{path}' was written by an older version and could not be read, so it was opened empty."
+                    );
+                }
                 return await CreateEmptyModelAsync(path);
+            }
 
             var parsedModelInfo = await ParseNewModelAsync(path);
             TriggerSave();
@@ -200,6 +219,7 @@ class ModelService : IModelService, IDisposable
             return Result.Ok;
         }
 
+        var before = ModelChangeSummary.Capture(modelMgr);
         if (await ParseAndUpdateAsync(path, true) is Error e)
             return e;
         using (var model = modelMgr.UseModel())
@@ -211,6 +231,10 @@ class ModelService : IModelService, IDisposable
         applicationEvents.TriggerModelChanged();
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
+
+        // A refresh runs in the background, so say what it changed (nothing: stay quiet).
+        if (ModelChangeSummary.Describe(before, ModelChangeSummary.Capture(modelMgr)) is { } summary)
+            applicationEvents.TriggerInfoReported($"Model refreshed: {summary}.");
         return Result.Ok;
     }
 
@@ -288,21 +312,38 @@ class ModelService : IModelService, IDisposable
         {
             IncludeTestProjects = m.IncludeTestProjects,
         });
-        using (var progress = isRefresh ? progressService.StartDiscreet() : progressService.Start("Parsing"))
+        using (
+            var progress = isRefresh
+                ? progressService.StartDiscreet()
+                : progressService.Start($"Parsing {Path.GetFileName(path)} …")
+        )
         {
             // Let the renderer process the progress state before potentially CPU-heavy parse work starts.
             await Task.Yield();
 
             Log.Info("Parsing ...");
+            await vsCodeSendService.NotifyStatusAsync("parsing");
 
             var parseResult = await ParseAsync(path, parseOptions);
+            await vsCodeSendService.NotifyStatusAsync("idle");
             if (parseResult is not IReadOnlyList<Parsing.Item> items)
             {
                 // A failed parse leaves an empty (or unchanged) diagram, which on its own looks
                 // like a solution without dependencies, so always tell the user what went wrong.
                 Error e = parseResult.Error;
                 Log.Warn($"Failed to parse {path}: {e.AllMessages()}");
-                applicationEvents.TriggerErrorReported($"Failed to parse '{Path.GetFileName(path)}'. {e.Message}");
+                // The path travels with the action: a failed first parse leaves no model behind
+                // (the path is only set below, after a successful parse), so there is nothing to
+                // refresh and the retry has to load the solution again.
+                var action =
+                    e.Message.Contains("test projects", StringComparison.OrdinalIgnoreCase)
+                        ? new ErrorAction("Include test projects", ErrorActionKind.IncludeTestProjects, path)
+                    : isRefresh ? new ErrorAction("Retry", ErrorActionKind.RetryRefresh)
+                    : new ErrorAction("Retry", ErrorActionKind.RetryLoad, path);
+                applicationEvents.TriggerErrorReported(
+                    $"Failed to parse '{Path.GetFileName(path)}'. {e.Message}",
+                    action
+                );
                 return e;
             }
 

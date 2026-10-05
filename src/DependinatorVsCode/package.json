@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.8.28",
+    "version": "0.8.29",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
@@ -42,6 +42,18 @@
                 }
             },
             {
+                "command": "dependinator.reveal",
+                "title": "Dependinator: Reveal Current File in Diagram"
+            },
+            {
+                "command": "dependinator.search",
+                "title": "Dependinator: Search Nodes"
+            },
+            {
+                "command": "dependinator.refresh",
+                "title": "Dependinator: Re-parse Solution"
+            },
+            {
                 "command": "dependinator.installInDevContainer",
                 "title": "Dependinator: Install in Dev Container"
             }
@@ -51,13 +63,45 @@
                 {
                     "command": "dependinator.open",
                     "group": "navigation",
-                    "when": "true"
+                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj)$/"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "dependinator.reveal",
+                    "group": "navigation@9",
+                    "when": "resourceLangId == csharp || resourceExtname == .razor"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "dependinator.reveal",
+                    "when": "editorIsOpen"
                 }
             ]
         },
         "configuration": {
             "title": "Dependinator",
             "properties": {
+                "dependinator.followActiveEditor": {
+                    "type": "boolean",
+                    "default": true,
+                    "order": 1,
+                    "description": "Show the node for the file you switch to in the editor, so the diagram follows your work."
+                },
+                "dependinator.autoRefresh.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically refresh the diagram when workspace source files change.",
+                    "order": 2
+                },
+                "dependinator.autoRefresh.delaySeconds": {
+                    "type": "number",
+                    "default": 3,
+                    "minimum": 1,
+                    "description": "Delay in seconds after the last source file change before the diagram is refreshed.",
+                    "order": 3
+                },
                 "dependinator.cloudSync.baseUrl": {
                     "type": "string",
                     "enum": [
@@ -82,31 +126,31 @@
                         "Uses watch (Functions host directly on port 7071)."
                     ],
                     "default": "https://dependinator.com",
-                    "description": "Base URL for the Dependinator device sync API. Sign-in is handled separately by the extension."
+                    "description": "Developer setting: base URL of the device sync API. Leave on Production unless you run the sync service yourself.",
+                    "order": 10
                 },
                 "dependinator.cloudSync.clerkAccountsUrl": {
                     "type": "string",
                     "default": "",
-                    "description": "Clerk accounts URL used for device sync sign-in. Leave empty to use the built-in production Clerk instance."
+                    "description": "Developer setting: Clerk accounts URL used for device sync sign-in. Leave empty to use the built-in production Clerk instance.",
+                    "order": 11
                 },
                 "dependinator.cloudSync.clerkPublishableKey": {
                     "type": "string",
                     "default": "",
-                    "description": "Clerk publishable key used for device sync sign-in. Leave empty to use the built-in production key."
-                },
-                "dependinator.autoRefresh.enabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Automatically refresh the diagram when workspace source files change."
-                },
-                "dependinator.autoRefresh.delaySeconds": {
-                    "type": "number",
-                    "default": 3,
-                    "minimum": 1,
-                    "description": "Delay in seconds after the last source file change before the diagram is refreshed."
+                    "description": "Developer setting: Clerk publishable key used for device sync sign-in. Leave empty to use the built-in production key.",
+                    "order": 12
                 }
             }
-        }
+        },
+        "keybindings": [
+            {
+                "command": "dependinator.reveal",
+                "key": "ctrl+alt+d",
+                "mac": "cmd+alt+d",
+                "when": "editorTextFocus"
+            }
+        ]
     },
     "scripts": {
         "check-types": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",

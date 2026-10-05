@@ -127,61 +127,34 @@ public class NodeSvgTests
     [Fact]
     public void GetNodeIconSvg_ShouldIncludeLinkHandle_WhenEditingEnabled()
     {
-        var wasEnabled = ViewOptions.IsEditingEnabled;
-        try
-        {
-            ViewOptions.SetIsEditingEnabled(true);
-            var node = CreateIconNode();
+        var node = CreateIconNode();
 
-            var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0);
+        var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0, isEditing: true);
 
-            Assert.Contains("class=\"linkhandle\"", svg);
-            Assert.Contains($"{node.Id.Value}.lh", svg);
-        }
-        finally
-        {
-            ViewOptions.SetIsEditingEnabled(wasEnabled);
-        }
+        Assert.Contains("class=\"linkhandle\"", svg);
+        Assert.Contains($"{node.Id.Value}.lh", svg);
     }
 
     [Fact]
     public void GetNodeIconSvg_ShouldOmitLinkHandle_WhenNodeSelected()
     {
-        var wasEnabled = ViewOptions.IsEditingEnabled;
-        try
-        {
-            ViewOptions.SetIsEditingEnabled(true);
-            var node = CreateIconNode();
-            node.IsSelected = true;
+        var node = CreateIconNode();
+        node.IsSelected = true;
 
-            var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0);
+        var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0, isEditing: true);
 
-            // A selected node shows resize handles at its edge instead; link-adding is offered
-            // via the node toolbar.
-            Assert.DoesNotContain("linkhandle", svg);
-        }
-        finally
-        {
-            ViewOptions.SetIsEditingEnabled(wasEnabled);
-        }
+        // A selected node shows resize handles at its edge instead (their touch circles would
+        // swallow the handle's presses).
+        Assert.DoesNotContain("linkhandle", svg);
     }
 
     [Fact]
     public void GetNodeIconSvg_ShouldOmitLinkHandle_WhenEditingDisabled()
     {
-        var wasEnabled = ViewOptions.IsEditingEnabled;
-        try
-        {
-            ViewOptions.SetIsEditingEnabled(false);
-            var node = CreateIconNode();
+        var node = CreateIconNode();
 
-            var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0);
+        var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0, isEditing: false);
 
-            Assert.DoesNotContain("linkhandle", svg);
-        }
-        finally
-        {
-            ViewOptions.SetIsEditingEnabled(wasEnabled);
-        }
+        Assert.DoesNotContain("linkhandle", svg);
     }
 }

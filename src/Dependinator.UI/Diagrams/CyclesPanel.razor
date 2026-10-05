@@ -1,0 +1,58 @@
+@inject IApplicationEvents applicationEvents
+@inject IViewOptions viewOptions
+@inject ICycleService cycleService
+@inject INavigationService navigationService
+@inject Modeling.IModelService modelService
+@implements IDisposable
+
+@* Circular dependencies, one row per cycle: the container and the sibling nodes that depend on
+   each other in a circle. While open, the lines of those cycles are drawn in the warning color.
+   Clicking a row navigates to the container. *@
+@if (viewOptions.IsCyclesShown)
+{
+  var cycles = cycleService.GetCycles();
+  <div class="dep-panel dep-toolbar-card" data-testid="cycles-panel">
+    <div class="dep-panel__header">
+      <span class="dep-panel__title">Cycles</span>
+      <span class="dep-panel__count">@(cycles.Count == 0 ? "none" : cycles.Count.ToString())</span>
+      <MudSpacer />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
+                     data-testid="cycles-close" />
+    </div>
+    @if (cycles.Count == 0)
+    {
+      <div class="dep-panel__empty">No circular dependencies found: no projects, namespaces or types in any container depend on each other in a circle.</div>
+    }
+    else
+    {
+      <div class="dep-panel__hint">Projects, namespaces or types in one container that depend on each other in a circle. Their lines are drawn red.</div>
+      <div class="dep-panel__list">
+        @foreach (var cycle in cycles)
+        {
+          <button type="button" class="dep-panel__row" title="@($"Show {cycle.ContainerName}")"
+                  @onclick="() => ShowAsync(cycle.ContainerId)" data-testid="cycles-item">
+            <span class="dep-cycles__container">@cycle.ContainerName</span>
+            <span class="dep-cycles__members">@string.Join(" ↔ ", cycle.Members.Select(m => m.Name))</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+}
+
+@code {
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  Task ShowAsync(Modeling.Models.NodeId containerId) => navigationService.ShowNodeAsync(containerId);
+
+  void Close()
+  {
+    viewOptions.SetCyclesShown(false);
+    modelService.ClearCache(); // The highlighted lines are baked into the tiles
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

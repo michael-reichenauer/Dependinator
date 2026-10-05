@@ -1,9 +1,582 @@
-/* Light dropdown menus for the toolbars (AppBar / NodeToolbar).
-   The app runs in MudBlazor dark mode, but the toolbars float over a light
-   canvas and use a light card. Their menu popovers would otherwise inherit the
-   dark surface. Overriding the palette CSS variables on the popover cascades to
-   every descendant (paper background, list text, icons, dividers, disabled
-   items), turning just these menus light without touching the global theme. */
+/* Floating toolbar cards (app bar, node/line toolbars, mode banner): a translucent card in
+   the theme's surface color so the diagram still shows through. The theme is set on the
+   root element (data-theme, see applyTheme in jsInterop.js). */
+.dep-toolbar-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    box-shadow: var(--mud-elevation-2);
+}
+
+:root[data-theme="dark"] .dep-toolbar-card {
+    background: rgba(32, 34, 40, 0.92);
+}
+
+/* A disabled toolbar button must still be visible (but clearly off): MudBlazor's disabled
+   color is too faint on the translucent card. */
+.dep-toolbar-card .mud-button-root.mud-disabled .mud-icon-root {
+    color: rgba(0, 0, 0, 0.32);
+}
+
+:root[data-theme="dark"] .dep-toolbar-card .mud-button-root.mud-disabled .mud-icon-root {
+    color: rgba(255, 255, 255, 0.32);
+}
+
+/* The breadcrumb (Breadcrumb.razor): the open model and the container chain, under the app bar. */
+.dep-breadcrumb {
+    position: fixed;
+    top: 42px;
+    left: 15px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 1px 6px;
+    max-width: calc(100vw - 30px);
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-breadcrumb__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: 0;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dep-breadcrumb__item:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.dep-breadcrumb__item:last-child {
+    font-weight: 600;
+}
+
+.dep-breadcrumb__icon {
+    font-size: 1rem !important;
+    color: var(--mud-palette-tertiary);
+}
+
+.dep-breadcrumb__sep {
+    color: var(--mud-palette-text-secondary);
+    padding: 0 1px;
+}
+
+/* With nothing selected the chain is the view's location rather than a choice: shown dimmer. */
+.dep-breadcrumb--context .dep-breadcrumb__item:not(.dep-breadcrumb__model) {
+    opacity: 0.78;
+}
+
+/* The legend card (Legend.razor), bottom-left over the diagram. */
+.dep-legend {
+    position: fixed;
+    left: 15px;
+    bottom: 12px;
+    z-index: 1200;
+    padding: 6px 10px 8px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-primary);
+    max-width: calc(100vw - 30px);
+}
+
+.dep-legend__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dep-legend__title {
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.dep-legend__columns {
+    display: flex;
+    gap: 18px;
+}
+
+.dep-legend__caption {
+    color: var(--mud-palette-text-secondary);
+    margin: 2px 0 2px;
+}
+
+.dep-legend__row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.dep-legend__sample {
+    flex-shrink: 0;
+    display: inline-block;
+    text-align: center;
+}
+
+.dep-legend__glyph {
+    width: 18px;
+    font-size: 13px;
+}
+
+/* The analysis panels (CyclesPanel.razor, PathPanel.razor), top-right over the diagram. */
+.dep-panel {
+    position: fixed;
+    top: 42px;
+    right: 15px;
+    z-index: 1200;
+    width: min(380px, calc(100vw - 30px));
+    max-height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+    padding: 4px 8px 8px 12px;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-panel__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dep-panel__title {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.dep-panel__count {
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-panel__hint,
+.dep-panel__empty {
+    color: var(--mud-palette-text-secondary);
+    margin: 2px 0 6px;
+}
+
+.dep-panel__list {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dep-panel__row {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 1px;
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dep-panel__row:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.dep-panel__row--selected {
+    background: var(--mud-palette-action-default-hover);
+    box-shadow: inset 3px 0 0 var(--mud-palette-primary);
+}
+
+.dep-cycles__container {
+    font-weight: 600;
+}
+
+.dep-cycles__members {
+    color: var(--mud-palette-text-secondary);
+    word-break: break-word;
+}
+
+/* The search dialog in picker mode (PathPanel.razor): what the chosen node will be used for. */
+.search-dialog__caption {
+    display: block;
+    margin: 0 4px 6px;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* The path finder's endpoint pickers and chains (PathPanel.razor). */
+.dep-path__endpoints {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 3px 8px;
+    margin: 2px 0 8px;
+}
+
+.dep-path__label {
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-path__pick {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    background: none;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.dep-path__pick:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.dep-path__pick--empty {
+    border-style: dashed;
+    color: var(--mud-palette-text-secondary);
+    font-style: italic;
+}
+
+.dep-path__swap {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+}
+
+.dep-path__row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 4px;
+}
+
+.dep-path__arrow {
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-path__hop {
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
+}
+
+.dep-path__hop:hover {
+    color: var(--mud-palette-primary);
+}
+
+/* The cloud status popover (CloudSyncButton.razor). */
+.dep-cloud {
+    padding: 8px 14px 10px;
+    min-width: 260px;
+    max-width: 340px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-cloud__title {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.dep-cloud__line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+    line-height: 1.4;
+}
+
+.dep-cloud__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* The models dialog (ModelsDialog.razor). */
+.dep-models__section {
+    margin-bottom: 10px;
+}
+
+.dep-models__caption {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 4px 0;
+}
+
+.dep-models__empty {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.85rem;
+    padding: 2px 8px;
+}
+
+.dep-models__row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 6px;
+}
+
+.dep-models__row:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.dep-models__row--current {
+    background: rgba(94, 53, 177, 0.08);
+}
+
+.dep-models__open {
+    flex: 1;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    align-items: center;
+    background: none;
+    border: 0;
+    padding: 6px 8px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    min-width: 0;
+}
+
+.dep-models__icon {
+    grid-row: 1 / span 2;
+    color: var(--mud-palette-tertiary);
+}
+
+.dep-models__name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dep-models__chip {
+    font-size: 0.7rem;
+    color: var(--mud-palette-primary);
+    border: 1px solid currentColor;
+    border-radius: 10px;
+    padding: 0 6px;
+}
+
+.dep-models__sub {
+    grid-column: 2 / span 2;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The mode banner (ModeBanner.razor): centered under the app bar while a mode is armed. */
+.dep-mode-banner {
+    position: fixed;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1300;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 4px 12px;
+    max-width: calc(100vw - 32px);
+    font-size: 0.875rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-mode-banner__text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The "N selected" badge at the start of the node toolbar (NodeToolbar.razor). */
+.dep-toolbar__count {
+    display: inline-block;
+    margin: 0 4px 0 6px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+/* The minimap (Minimap.razor), bottom-right over the diagram. */
+.dep-minimap {
+    position: fixed;
+    right: 15px;
+    bottom: 12px;
+    z-index: 1200;
+    padding: 4px;
+    line-height: 0;
+}
+
+.dep-minimap__svg {
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.dep-minimap__label {
+    font-size: 8px;
+    fill: var(--mud-palette-text-secondary);
+    user-select: none;
+}
+
+.dep-minimap__viewport {
+    fill: var(--mud-palette-primary);
+    fill-opacity: 0.12;
+    stroke: var(--mud-palette-primary);
+    stroke-width: 1.5;
+}
+
+.dep-minimap .dep-minimap__close {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    padding: 2px;
+    background: var(--mud-palette-surface);
+    box-shadow: var(--mud-elevation-1);
+}
+
+/* On a phone the minimap would cover too much of the diagram. */
+@media (max-width: 700px) {
+    .dep-minimap {
+        display: none;
+    }
+}
+
+/* The architecture rules panel (RulesPanel.razor): rule rows with their violations, add form. */
+.dep-rules__rule {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-rules__rule:last-child {
+    border-bottom: 0;
+}
+
+.dep-rules__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dep-rules__names {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dep-rules__arrow {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-rules__violations {
+    margin: 2px 0 2px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.dep-rules__violation {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 2px 6px;
+    padding: 2px 6px;
+}
+
+.dep-rules__add {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+/* The first-run tour's callout (CoachCallout.razor), bottom-center over the diagram. */
+.dep-coach {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 1300;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: min(480px, calc(100vw - 32px));
+    padding: 10px 12px 8px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-coach__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dep-coach__title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.dep-coach__count {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-coach__text a {
+    color: var(--mud-palette-primary);
+}
+
+.dep-coach__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+/* Dropdown menus for the toolbars (AppBar / NodeToolbar / ContextMenu). In the light theme
+   the menus are pinned light regardless of the MudBlazor palette (overriding the palette CSS
+   variables on the popover cascades to every descendant: paper background, list text, icons,
+   dividers, disabled items). In the dark theme the popover simply uses the dark palette
+   (.dep-dark-menu is a no-op marker). */
+.dep-dark-menu {
+}
+
 .dep-light-menu {
     --mud-palette-surface: #ffffff;
     --mud-palette-text-primary: rgba(0, 0, 0, 0.87);
