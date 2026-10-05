@@ -32,6 +32,10 @@ interface ISelectionService
     // Shift/Ctrl+click: adds the node to the selection, or removes it again when it already is
     // part of it. With nothing (or a line) selected it is an ordinary select.
     Task ToggleInSelectionAsync(PointerId pointerId, PointerEvent e);
+
+    // Adds nodes (e.g. the ones inside a rubber band) to the selection; the first becomes the
+    // primary node when nothing is selected yet.
+    Task AddToSelectionAsync(IReadOnlyList<NodeId> nodeIds);
     void SetEditMode(bool isEditMode);
     void Unselect();
     void ToggleNodeHide();
@@ -148,6 +152,37 @@ class SelectionService(
     }
 
     public Task Select(NodeId nodeId) => Select(PointerId.FromNode(nodeId), new PointerEvent());
+
+    public async Task AddToSelectionAsync(IReadOnlyList<NodeId> nodeIds)
+    {
+        if (nodeIds.Count == 0)
+            return;
+        IEnumerable<NodeId> remaining = nodeIds;
+        if (!selectedId.IsNode)
+        {
+            Unselect(); // A selected line makes way for the nodes
+            await Select(nodeIds[0]);
+            if (!selectedId.IsNode)
+                return;
+            remaining = nodeIds.Skip(1);
+        }
+
+        using (var model = modelMgr.UseModel())
+        {
+            foreach (var nodeId in remaining)
+            {
+                if (nodeId == selectedId.NodeId || extraSelected.Contains(nodeId))
+                    continue;
+                if (!model.Nodes.TryGetValue(nodeId, out var node) || node.IsRoot)
+                    continue;
+                extraSelected.Add(nodeId);
+                node.IsSelected = true;
+                node.IsEditMode = false;
+            }
+        }
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+    }
 
     public async Task ToggleInSelectionAsync(PointerId pointerId, PointerEvent e)
     {

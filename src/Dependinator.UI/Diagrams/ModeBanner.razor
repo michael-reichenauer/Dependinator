@@ -36,7 +36,8 @@
             if (manualEditService.IsPlacingNode)
                 return new(MudBlazor.Icons.Material.Outlined.AddBox,
                     "Click on the diagram to place the node.", "Cancel (Esc)", manualEditService.CancelPlaceNode);
-            if (areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
+            if ((areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
+                && areaSelectionService.Purpose == AreaSelectionPurpose.Export)
                 return new(MudBlazor.Icons.Material.Outlined.HighlightAlt,
                     "Drag to select the area to export.", "Cancel (Esc)", areaSelectionService.Cancel);
             if (manualEditService.IsLinkDragActive)

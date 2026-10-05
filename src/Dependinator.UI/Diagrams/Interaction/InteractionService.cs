@@ -452,6 +452,18 @@ class InteractionService(
         isDraggingSelectedLinePoint = false;
         isDraggingLink = false;
 
+        // Shift+press starts a rubber band that selects the nodes inside it (a Shift+click
+        // without a real drag is too small to count and still toggles the clicked node).
+        var pressedId = PointerId.Parse(e.TargetId);
+        if (e.ShiftKey && e.IsLeftButton && !areaSelectionService.IsArmed && CanStartRubberBand(pressedId))
+        {
+            CompleteRubberBandAsync(areaSelectionService.SelectAreaAsync(AreaSelectionPurpose.SelectNodes))
+                .RunInBackground();
+            isAreaSelecting = true;
+            areaSelectionService.PointerDown(e);
+            return;
+        }
+
         // An armed area selection captures the press; no move timer or edit-mode remapping.
         if (areaSelectionService.IsArmed)
         {
@@ -567,7 +579,9 @@ class InteractionService(
         if (isAreaSelecting)
         {
             isAreaSelecting = false;
-            suppressNextClick = true;
+            // A rubber band that never grew into a rectangle is a Shift+click: let it through.
+            suppressNextClick =
+                areaSelectionService.Purpose == AreaSelectionPurpose.Export || areaSelectionService.IsDragLargeEnough;
             areaSelectionService.PointerUpAsync(e).RunInBackground();
             return;
         }
@@ -616,6 +630,37 @@ class InteractionService(
             isMoving = false;
             applicationEvents.TriggerUIStateChanged(); // Restore the cursor without waiting for the next event
         }
+    }
+
+    // A band can start anywhere except on the edit handles, which have their own drags.
+    static bool CanStartRubberBand(PointerId pressedId) =>
+        !pressedId.IsLinkHandle && !pressedId.IsResize && !pressedId.IsLinePoint;
+
+    // Selects the nodes inside the finished rubber band (null when it was canceled or too small).
+    async Task CompleteRubberBandAsync(Task<Rect?> selection)
+    {
+        if (await selection is not { } band)
+            return;
+
+        List<NodeId> nodeIds;
+        using (var model = modelMgr.UseModel())
+        {
+            var zoom = model.Zoom;
+            nodeIds = RubberBandSelection
+                .FindNodes(
+                    model.Root,
+                    band,
+                    node => NodeViewPolicy.IsChildrenShown(node, zoom),
+                    node => !node.IsHidden || viewOptions.ShowHiddenNodes
+                )
+                .Select(node => node.Id)
+                .ToList();
+        }
+        if (nodeIds.Count == 0)
+            return;
+
+        await selectionService.AddToSelectionAsync(nodeIds);
+        await selectionService.UpdateSelectedPositionAsync();
     }
 
     // Finds the drop target under the cursor and completes (or cancels) the link drag. Pointer

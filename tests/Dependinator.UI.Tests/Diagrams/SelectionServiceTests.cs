@@ -114,6 +114,29 @@ public class SelectionServiceTests
     }
 
     [Fact]
+    public async Task AddToSelection_ShouldMakeTheFirstPrimary_AndExtendAnExistingSelection()
+    {
+        Node a,
+            b,
+            c;
+        using (var model = modelMgr.UseModel())
+        {
+            a = AddNode(model, "A", model.Root);
+            b = AddNode(model, "B", model.Root);
+            c = AddNode(model, "C", model.Root);
+        }
+        var service = CreateService();
+
+        await service.AddToSelectionAsync([a.Id, b.Id]);
+        Assert.Equal(PointerId.FromNode(a.Id), service.SelectedId);
+        Assert.Equal([a.Id, b.Id], service.SelectedNodeIds);
+
+        await service.AddToSelectionAsync([b.Id, c.Id]); // B already in: only C is new
+        Assert.Equal([a.Id, b.Id, c.Id], service.SelectedNodeIds);
+        Assert.True(a.IsSelected && b.IsSelected && c.IsSelected);
+    }
+
+    [Fact]
     public async Task Select_ShouldReplaceAGroupSelection()
     {
         Node a,
