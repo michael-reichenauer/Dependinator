@@ -17,7 +17,7 @@ record DependencyPath(IReadOnlyList<PathHop> Hops, IReadOnlySet<LineId> LineIds)
 enum PathStatus
 {
     Incomplete, // "from" or "to" is not chosen (or no longer in the model)
-    Nested, // one endpoint contains the other, so "depends on" has no meaning between them
+    Nested, // one endpoint contains the other (or both are members of one type): "depends on" has no meaning
     NotFound,
     Found,
 }
@@ -76,7 +76,9 @@ class PathFinderService(
     // More than this many equally short chains is noise; the first ones (by name) are kept.
     internal const int MaxPaths = 10;
 
-    (int Version, int Nodes, int Links, NodeId? From, NodeId? To) cachedFor = (-1, -1, -1, null, null);
+    // Lines are part of the key: cousin lines are created lazily while zooming (no structure
+    // version bump), and the highlighted line set has to include them.
+    (int Version, int Nodes, int Links, int Lines, NodeId? From, NodeId? To) cachedFor = (-1, -1, -1, -1, null, null);
     PathResult result = PathResult.Incomplete;
 
     public bool IsOpen { get; private set; }
@@ -191,7 +193,7 @@ class PathFinderService(
     void EnsureUpToDate()
     {
         using var model = modelMgr.UseModel();
-        var key = (model.StructureVersion, model.Nodes.Count, model.Links.Count, FromId, ToId);
+        var key = (model.StructureVersion, model.Nodes.Count, model.Links.Count, model.Lines.Count, FromId, ToId);
         if (key == cachedFor)
             return;
 
@@ -207,7 +209,14 @@ class PathFinderService(
 
     internal static PathResult Compute(IModel model, Node from, Node to, int maxPaths = MaxPaths)
     {
-        if (from == to || from.Ancestors().Contains(to) || to.Ancestors().Contains(from))
+        // Two members of one type map to the same unit (a method calling a sibling is the type
+        // depending on itself), so they are as "nested" as a node and its child.
+        if (
+            from == to
+            || from.Ancestors().Contains(to)
+            || to.Ancestors().Contains(from)
+            || UnitGraph.UnitOf(from) == UnitGraph.UnitOf(to)
+        )
             return new PathResult(PathStatus.Nested, []);
 
         var graph = UnitGraph.Build(model);
@@ -230,7 +239,7 @@ class PathFinderService(
         while (queue.Count > 0)
         {
             var node = queue.Dequeue();
-            if (foundAt is { } layer && distance[node] >= layer)
+            if (foundAt is { } layer && distance[node] > layer)
                 break;
             if (targetUnits.Contains(node))
             {
@@ -238,6 +247,9 @@ class PathFinderService(
                 reached.Add(node);
                 continue;
             }
+            // The rest of the found layer may still hold other target units; nothing deeper is needed.
+            if (foundAt is not null)
+                continue;
             foreach (var neighbor in graph.Next(node, isReverse: false))
             {
                 if (!distance.TryGetValue(neighbor, out var known))

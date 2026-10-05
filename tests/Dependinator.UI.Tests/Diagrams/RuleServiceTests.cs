@@ -25,13 +25,14 @@ public class RuleServiceTests
         return node;
     }
 
-    static void AddLink(IModel model, Node source, Node target)
+    static Link AddLink(IModel model, Node source, Node target)
     {
         var link = new Link(source, target);
         model.TryAddLink(link);
         source.AddSourceLink(link);
         target.AddTargetLink(link);
         new LineService().AddLinesFromSourceToTarget(model, link);
+        return link;
     }
 
     [Fact]
@@ -107,6 +108,36 @@ public class RuleServiceTests
 
         service.RemoveRule(rule);
         Assert.Empty(modelMgr.WithModel(m => m.Rules));
+    }
+
+    [Fact]
+    public void GetViolatingLineIds_ShouldIncludeLinesCreatedLater_ForViolatingLinks()
+    {
+        Node ui,
+            data;
+        Link link;
+        using (var model = modelMgr.UseModel())
+        {
+            ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+            data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+            link = AddLink(model, ui, data);
+            model.AddRule(new ArchitectureRule(ui.Name, data.Name));
+        }
+
+        var service = new RuleService(modelMgr, Moq.Mock.Of<ICommandService>());
+        Assert.Contains(LineId.From(ui.Name, data.Name), service.GetViolatingLineIds());
+
+        // A cousin line materialized at another zoom carries the same link without any structure change
+        var cousinId = LineId.From("Cousin", data.Name);
+        using (var model = modelMgr.UseModel())
+        {
+            var cousin = new Line(ui, data, id: cousinId);
+            cousin.Add(link);
+            link.AddLine(cousin);
+            model.TryAddLine(cousin);
+        }
+
+        Assert.Contains(cousinId, service.GetViolatingLineIds());
     }
 
     [Fact]

@@ -46,7 +46,9 @@ interface IRuleService
 [Scoped]
 class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleService
 {
-    (int Structure, int Nodes, int Links, int Rules) cachedFor = (-1, -1, -1, -1);
+    // Lines are part of the key: cousin lines are created lazily while zooming (no structure
+    // version bump), and the highlighted line set has to include them.
+    (int Structure, int Nodes, int Links, int Lines, int Rules) cachedFor = (-1, -1, -1, -1, -1);
     IReadOnlyList<RuleReport> reports = [];
     IReadOnlySet<LineId> violatingLineIds = new HashSet<LineId>();
 
@@ -94,7 +96,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
     void EnsureUpToDate()
     {
         using var model = modelMgr.UseModel();
-        var key = (model.StructureVersion, model.Nodes.Count, model.Links.Count, model.RulesVersion);
+        var key = (model.StructureVersion, model.Nodes.Count, model.Links.Count, model.Lines.Count, model.RulesVersion);
         if (key == cachedFor)
             return;
         (reports, violatingLineIds) = Compute(model);

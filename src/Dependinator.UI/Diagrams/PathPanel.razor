@@ -41,7 +41,7 @@
         <div class="dep-panel__empty">Choose both nodes. The Dependencies explorer's indirect rows open a chain from here too.</div>
         break;
       case PathStatus.Nested:
-        <div class="dep-panel__empty">One of the nodes is inside the other, so there is no dependency path between them. Choose two nodes that do not contain each other.</div>
+        <div class="dep-panel__empty">One of the nodes is inside the other (or both are members of the same type), so there is no dependency path between them. Choose two nodes that do not contain each other.</div>
         break;
       case PathStatus.NotFound:
         <div class="dep-panel__empty" data-testid="path-none">No path: @pathFinder.FromName does not depend on @pathFinder.ToName, directly or indirectly.</div>

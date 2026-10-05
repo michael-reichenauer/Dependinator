@@ -24,13 +24,14 @@ public class PathFinderServiceTests
         return node;
     }
 
-    static void AddLink(IModel model, Node source, Node target)
+    static Link AddLink(IModel model, Node source, Node target)
     {
         var link = new Link(source, target);
         model.TryAddLink(link);
         source.AddSourceLink(link);
         target.AddTargetLink(link);
         new LineService().AddLinesFromSourceToTarget(model, link);
+        return link;
     }
 
     static string[] Names(DependencyPath path) => path.Hops.Select(h => h.Name).ToArray();
@@ -77,6 +78,38 @@ public class PathFinderServiceTests
         Assert.Equal(2, result.Paths.Count);
         Assert.Equal(["A", "B", "D"], Names(result.Paths[0]));
         Assert.Equal(["A", "C", "D"], Names(result.Paths[1]));
+    }
+
+    [Fact]
+    public void Compute_ShouldListChainsToEveryUnitInsideTheTarget()
+    {
+        using var model = modelMgr.UseModel();
+        var a = AddNode(model, "A", model.Root, NodeType.Assembly);
+        var b = AddNode(model, "B", model.Root, NodeType.Assembly);
+        var x = AddNode(model, "A.X", a);
+        var z = AddNode(model, "A.Z", a);
+        var y = AddNode(model, "B.Y", b);
+        var w = AddNode(model, "B.W", b);
+        AddLink(model, x, y);
+        AddLink(model, z, w); // Equally short, but ends at another type inside B
+
+        var result = PathFinderService.Compute(model, a, b);
+
+        Assert.Equal(2, result.Paths.Count);
+        Assert.Equal(["Z", "W"], Names(result.Paths[0]));
+        Assert.Equal(["X", "Y"], Names(result.Paths[1]));
+    }
+
+    [Fact]
+    public void Compute_ShouldReportNested_ForMembersOfTheSameType()
+    {
+        using var model = modelMgr.UseModel();
+        var a = AddNode(model, "A", model.Root);
+        var run = AddNode(model, "A.Run()", a, NodeType.MethodMember);
+        var help = AddNode(model, "A.Help()", a, NodeType.MethodMember);
+        AddLink(model, run, help);
+
+        Assert.Equal(PathStatus.Nested, PathFinderService.Compute(model, run, help).Status);
     }
 
     [Fact]
@@ -211,5 +244,40 @@ public class PathFinderServiceTests
         service.Close();
         Assert.False(service.IsOpen);
         Assert.Null(service.GetPathLineIds());
+    }
+
+    [Fact]
+    public void GetPathLineIds_ShouldIncludeLinesCreatedLater_ForLinksOnThePath()
+    {
+        Node a,
+            b;
+        Link link;
+        using (var model = modelMgr.UseModel())
+        {
+            a = AddNode(model, "A", model.Root);
+            b = AddNode(model, "B", model.Root);
+            link = AddLink(model, a, b);
+        }
+
+        var service = new PathFinderService(
+            modelMgr,
+            Moq.Mock.Of<IModelService>(),
+            Moq.Mock.Of<IApplicationEvents>(),
+            new ViewOptions()
+        );
+        service.Show(a.Id, b.Id);
+        Assert.Contains(LineId.From(a.Name, b.Name), service.GetPathLineIds()!);
+
+        // A cousin line materialized at another zoom carries the same link without any structure change
+        var cousinId = LineId.From("Cousin", b.Name);
+        using (var model = modelMgr.UseModel())
+        {
+            var cousin = new Line(a, b, id: cousinId);
+            cousin.Add(link);
+            link.AddLine(cousin);
+            model.TryAddLine(cousin);
+        }
+
+        Assert.Contains(cousinId, service.GetPathLineIds()!);
     }
 }
