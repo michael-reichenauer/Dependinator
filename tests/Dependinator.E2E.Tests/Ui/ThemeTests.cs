@@ -19,13 +19,20 @@ public class ThemeTests(ITestOutputHelper output) : E2ETestBase(output)
         // Headless browsers report a light system scheme, so System (the default) is light.
         await Expect(html).ToHaveAttributeAsync("data-theme", "light");
 
-        await SetThemeAsync("menu-theme-dark");
-        await Expect(html).ToHaveAttributeAsync("data-theme", "dark");
+        // The dark palette is process-wide in this host, so it is switched back whatever happens
+        // here; a test left dark would change what every later test renders.
+        try
+        {
+            await SetThemeAsync("menu-theme-dark");
+            await Expect(html).ToHaveAttributeAsync("data-theme", "dark");
 
-        await App.GotoMainPageAsync();
-        await Expect(html).ToHaveAttributeAsync("data-theme", "dark");
-
-        await SetThemeAsync("menu-theme-light");
+            await App.GotoMainPageAsync();
+            await Expect(html).ToHaveAttributeAsync("data-theme", "dark");
+        }
+        finally
+        {
+            await SetThemeAsync("menu-theme-light");
+        }
         await Expect(html).ToHaveAttributeAsync("data-theme", "light");
     }
 

@@ -24,7 +24,12 @@ public class ShareLinkTests(ITestOutputHelper output) : E2ETestBase(output)
     [E2EFact]
     public async Task CopyLinkToNode_ShouldPutTheLinkOnTheClipboard()
     {
-        await Context.GrantPermissionsAsync(["clipboard-read", "clipboard-write"]);
+        // Playwright can grant clipboard permissions on Chromium only (Firefox and WebKit throw
+        // "Unknown permission"), so the clipboard is stubbed and the written text is read back.
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+        );
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 
@@ -32,7 +37,7 @@ public class ShareLinkTests(ITestOutputHelper output) : E2ETestBase(output)
         await (await App.OpenNodeMenuItemAsync("node-menu-copy-link")).ClickAsync();
         await Expect(Page.GetByText("Link copied")).ToBeVisibleAsync();
 
-        string link = await Page.EvaluateAsync<string>("() => navigator.clipboard.readText()");
+        string link = await Page.EvaluateAsync<string>("() => window.__copiedText");
         Assert.Contains("?m=demo&n=", link);
         Assert.Equal("Demo*sln", Uri.UnescapeDataString(link.Split("&n=")[1]));
     }
