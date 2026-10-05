@@ -1,4 +1,5 @@
 using Dependinator.E2E.Tests.Shared;
+using Dependinator.E2E.Tests.Shared.Pages;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
 
@@ -21,18 +22,15 @@ public class BreadcrumbTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(model).ToContainTextAsync("Demo.sln");
         await Expect(items).ToHaveCountAsync(0);
 
-        // Jump to Demo.UI: it becomes the selected node, so the chain ends at it.
-        var search = await App.OpenSearchViaHotkeyAsync();
-        await search.FillAsync("Demo.UI");
-        await Expect(search.SelectedItem).ToBeVisibleAsync();
-        await search.Field.PressAsync("Enter");
-        await Expect(items.Last).ToContainTextAsync("Demo.UI");
+        // Jump to a member of Demo.UI.Main: it becomes the selected node, so the chain ends at it.
+        await App.NavigateToNodeAsync(AppPage.InsideMain);
+        await Expect(items.Last).ToContainTextAsync("OnInitialized");
 
-        // Deselecting keeps the location: the view is now centered inside the open Demo.UI
-        // container, so the "you are here" chain still ends there.
+        // Deselecting keeps the location: the view is now centered inside the open Main
+        // container, so the "you are here" chain ends there.
         await Page.Keyboard.PressAsync("Escape");
         await Expect(App.NodeToolbarMenu).ToBeHiddenAsync();
-        await Expect(items.Last).ToContainTextAsync("Demo.UI");
+        await Expect(items.Last).ToHaveTextAsync("Main");
 
         // Alt+Up zooms out one level: the innermost open container (Main) is framed inside its
         // parent, where it draws as an icon, and becomes the selected (last) crumb.

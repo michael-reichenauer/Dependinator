@@ -1,4 +1,5 @@
 using Dependinator.E2E.Tests.Shared;
+using Dependinator.E2E.Tests.Shared.Pages;
 using Microsoft.Playwright;
 using Xunit;
 using Xunit.Abstractions;
@@ -15,12 +16,9 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 
-        // Go inside Main (the "Demo.UI" query lands on its _isDarkMode field, deep inside), then
-        // zoom out until several of Main's members are on screen while Main is still open.
-        var search = await App.OpenSearchViaHotkeyAsync();
-        await search.FillAsync("Demo.UI");
-        await Expect(search.SelectedItem).ToBeVisibleAsync();
-        await search.Field.PressAsync("Enter");
+        // Go inside Main (deep, at one of its members), then zoom out until several of Main's
+        // members are on screen while Main is still open.
+        await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
         await Page.Keyboard.PressAsync("Escape");
         await Expect(App.NodeToolbarMenu).ToHaveCountAsync(0);
@@ -69,18 +67,15 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 
-        // Inside Demo.UI.Main (the "Demo.UI" query lands on its _isDarkMode field), select the
-        // container and then add one of its members with Shift+click.
-        var search = await App.OpenSearchViaHotkeyAsync();
-        await search.FillAsync("Demo.UI");
-        await Expect(search.SelectedItem).ToBeVisibleAsync();
-        await search.Field.PressAsync("Enter");
+        // Inside Demo.UI.Main, select the container and then add one of its members
+        // (the DemoTheme field) with Shift+click.
+        await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
         await App.SelectContainerNodeAsync("Demo.UI.Main");
         await Expect(App.NodeSelectionCount).ToHaveCountAsync(0);
 
         await App.RepeatUntilVisibleAsync(
-            () => App.ShiftClickNodeByVisibleNameAsync("_isDarkMode"),
+            () => App.ShiftClickNodeByVisibleNameAsync("DemoTheme"),
             App.NodeSelectionCount
         );
         await Expect(App.NodeSelectionCount).ToContainTextAsync("2 selected");
