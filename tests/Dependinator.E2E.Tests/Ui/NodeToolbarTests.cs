@@ -1,4 +1,5 @@
 using Dependinator.E2E.Tests.Shared;
+using Dependinator.E2E.Tests.Shared.Pages;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
 
@@ -69,15 +70,8 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.EnableEditModeAsync();
 
-        // Navigate into Demo.UI so its child class "Main" renders as a container. Wait for
-        // a selected result row before pressing Enter — Enter without results is a no-op —
-        // and press Enter on the field itself: the dialog's key handler is bound to the
-        // field, and a globally-pressed Enter is lost if the field momentarily lost focus
-        // (a CI flake showed Enter changing nothing, leaving the dialog open).
-        var search = await App.OpenSearchViaHotkeyAsync();
-        await search.FillAsync("Demo.UI");
-        await Expect(search.SelectedItem).ToBeVisibleAsync();
-        await search.Field.PressAsync("Enter");
+        // Navigate inside Demo.UI.Main so it renders as a container (see AppPage.InsideMain).
+        await App.NavigateToNodeAsync(AppPage.InsideMain);
 
         // Only wait for "Main" to actually render as a container before selecting it: whether
         // a node draws as a container or as an icon depends on the zoom the navigation settles
@@ -106,10 +100,7 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Same navigation as the background-color test: "Main" must render as a container so
         // its members are visible endpoints for the crossing lines.
-        var search = await App.OpenSearchViaHotkeyAsync();
-        await search.FillAsync("Demo.UI");
-        await Expect(search.SelectedItem).ToBeVisibleAsync();
-        await search.Field.PressAsync("Enter");
+        await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
         await App.SelectContainerNodeAsync("Demo.UI.Main");
 
@@ -133,10 +124,7 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
 
         // Same navigation as the background-color test: "Main" as a container.
-        var search = await App.OpenSearchViaHotkeyAsync();
-        await search.FillAsync("Demo.UI");
-        await Expect(search.SelectedItem).ToBeVisibleAsync();
-        await search.Field.PressAsync("Enter");
+        await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
         await App.SelectContainerNodeAsync("Demo.UI.Main");
         await Expect(App.FocusLines).ToHaveCountAsync(0);

@@ -158,6 +158,8 @@ Smaller items
 - Demo-model facts the tests rely on: `Demo.UI.Main` reaches `Demo.Core.Shared.ModelPaths` in
   three hops (Main → Canvas → AppBar → ModelPaths) and has no direct Core dependency;
   `Demo.Roslyn.Parsing.SourceParser` has 50 links into Core (the duplicate-row case); the
-  "Demo.UI" search query lands on `Demo.UI.Main._isDarkMode`.
+  tests go inside Main by navigating to one of its members (`AppPage.InsideMain`), since the
+  earlier "Demo.UI" fuzzy query only landed in Main by accident (a `_isDarkMode` field that no
+  longer exists).
 - `./scripts/e2e` refuses to run while `./scripts/watch` holds port 5000; the session stopped
   the watch several times for test runs.

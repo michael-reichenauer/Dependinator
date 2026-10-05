@@ -269,17 +269,36 @@ public class AppCloudSyncServiceTests
             IdleRefreshInterval: TimeSpan.FromMilliseconds(20),
             MaxIdleRefreshDuration: TimeSpan.FromMilliseconds(60)
         );
-        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], timings);
+        // The idle loop stops as soon as the clock passes its deadline, so with a real clock the
+        // delays' overshoot on a loaded machine decides how many idle checks fit into the window
+        // (a CI flake saw two instead of three). The test controls the clock instead: the window
+        // cannot expire until the test moves the clock, while the checks themselves still run on
+        // real (short) timers.
+        DateTimeOffset currentUtc = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        SutContext context = CreateSutContext(
+            modelPath,
+            syncedModel,
+            syncState,
+            [cloudModel],
+            timings,
+            () => currentUtc
+        );
 
         int listCallsAfterInitialize = context.Counters.ListCalls;
 
         context.ApplicationEvents.TriggerUIStateChanged();
-        await Task.Delay(120);
+        await WaitUntilAsync(
+            () => context.Counters.ListCalls >= listCallsAfterInitialize + 3,
+            timeoutMilliseconds: 2000
+        );
 
+        // Past the deadline the loop stops at its next iteration without queuing another check;
+        // one check whose delay was already running may still land, so let it before snapshotting.
+        currentUtc += timings.MaxIdleRefreshDuration + TimeSpan.FromMilliseconds(1);
+        await Task.Delay(100);
         int callsAfterIdleWindow = context.Counters.ListCalls;
-        Assert.True(callsAfterIdleWindow >= listCallsAfterInitialize + 3);
 
-        await Task.Delay(80);
+        await Task.Delay(100);
         Assert.Equal(callsAfterIdleWindow, context.Counters.ListCalls);
     }
 

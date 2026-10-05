@@ -1,4 +1,5 @@
 using Dependinator.E2E.Tests.Shared;
+using Dependinator.E2E.Tests.Shared.Pages;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
 
@@ -20,12 +21,8 @@ public class PathFinderTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator pathLines = Page.Locator("#svgcanvas .line-path");
         await Expect(panel).ToHaveCountAsync(0);
 
-        // Navigate into Demo.UI (its children render as containers there) and open Main's
-        // dependencies; Demo.Core is a direct dependency and lists as a top row.
-        var search = await App.OpenSearchViaHotkeyAsync();
-        await search.FillAsync("Demo.UI");
-        await Expect(search.SelectedItem).ToBeVisibleAsync();
-        await search.Field.PressAsync("Enter");
+        // Navigate inside Main so it renders as a container, and open its dependencies.
+        await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
         await App.SelectContainerNodeAsync("Demo.UI.Main");
         await App.RepeatUntilVisibleAsync(() => App.NodeDependenciesButton.ClickAsync(), App.DependenciesTree);
@@ -39,14 +36,12 @@ public class PathFinderTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.GetByTestId("explorer-indirect").ClickAsync();
         ILocator coreRow = rows.Filter(new() { HasTextString = "Demo.Core" }).First;
         await Expect(coreRow).ToBeVisibleAsync();
-        await coreRow.HoverAsync();
-        await coreRow.GetByTestId("explorer-expand-all").ClickAsync();
+        await App.ClickRowHoverButtonAsync(coreRow, "explorer-expand-all");
         ILocator modelPathsRow = rows.Filter(new() { HasTextString = "ModelPaths" }).First;
         await Expect(modelPathsRow).ToBeVisibleAsync();
         await Expect(modelPathsRow.GetByTestId("explorer-hops")).ToContainTextAsync("3 hops");
 
-        await modelPathsRow.HoverAsync();
-        await modelPathsRow.GetByTestId("explorer-show-chain").ClickAsync();
+        await App.ClickRowHoverButtonAsync(modelPathsRow, "explorer-show-chain");
         await Expect(panel).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("path-from")).ToContainTextAsync("Main");
         await Expect(Page.GetByTestId("path-to")).ToContainTextAsync("ModelPaths");
@@ -76,12 +71,14 @@ public class PathFinderTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("path-from")).ToContainTextAsync("Choose a node");
         await Expect(Page.GetByTestId("path-to")).ToContainTextAsync("Choose a node");
 
-        // Each picker is the node search in picker mode: the chosen node fills that end.
+        // Each picker is the node search in picker mode: the chosen node fills that end. Pick
+        // the row of the class itself (the ranking may list a member such as OnInitialized()
+        // above it, and "Main" also matches those rows by substring).
         var search = new Shared.Pages.SearchDialog(App, Page);
         await Page.GetByTestId("path-from").ClickAsync();
         await Expect(Page.GetByTestId("search-pick-caption")).ToBeVisibleAsync();
         await search.FillAsync("Demo.UI.Main");
-        await search.Result("Main").First.ClickAsync();
+        await search.ResultByFullName("Demo.UI.Main").ClickAsync();
         await Expect(Page.GetByTestId("path-from")).ToContainTextAsync("Main");
 
         await Page.GetByTestId("path-to").ClickAsync();

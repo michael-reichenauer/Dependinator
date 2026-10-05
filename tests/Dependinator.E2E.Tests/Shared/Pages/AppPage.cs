@@ -30,6 +30,13 @@ public sealed class AppPage
 
     const string NodeLabelSelector = "#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName";
 
+    // A member of the demo model's Demo.UI.Main class. Navigating to a member is what makes its
+    // class open as a container (the zoom settles inside it): tests that need Main's
+    // container-mode toolbar or its members on screen navigate here and then wait for
+    // WaitForContainerNodeAsync("Main"). A demo-model fact (like "Demo.sln" and "ModelPaths"):
+    // regenerating the model after a change to Main.razor may require picking another member.
+    public const string InsideMain = "Demo.UI.Main.OnInitialized()";
+
     // A diagram node's group element, matched by its label. (Node SVG ids are generated, so
     // match on the label text, which comes from the group's <title>.) The title is the node's
     // long name optionally followed by its description ("longName\n\ndescription", see
@@ -279,6 +286,27 @@ public sealed class AppPage
                 return;
             }
             catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
+    }
+
+    // Click one of an explorer row's hover-revealed buttons (DependenciesTree.razor shows them
+    // through .hover-element:hover). The row re-renders while the tree updates, and WebKit does
+    // not recompute :hover for a replaced element until the pointer moves again, so a click that
+    // still finds the button hidden nudges the pointer away, hovers the row again and retries.
+    public async Task ClickRowHoverButtonAsync(ILocator row, string testId)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            await row.HoverAsync();
+            try
+            {
+                await row.GetByTestId(testId).ClickAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
+            {
+                await page.Mouse.MoveAsync(0, 0);
+            }
         }
     }
 
@@ -611,6 +639,14 @@ public sealed class AppPage
         await WaitForModelRenderedAsync();
         await page.Keyboard.PressAsync("Control+f");
         return new SearchDialog(this, page);
+    }
+
+    // Navigate to a node by its exact full name through the search dialog (which closes on
+    // Enter and selects the node once the pan/zoom animation lands).
+    public async Task NavigateToNodeAsync(string fullName)
+    {
+        SearchDialog search = await OpenSearchViaHotkeyAsync();
+        await search.NavigateToAsync(fullName);
     }
 
     // Stub Clerk sign-in without the real Clerk: block the Clerk CDN and stub window.Clerk

@@ -1,4 +1,5 @@
 using Dependinator.E2E.Tests.Shared;
+using Dependinator.E2E.Tests.Shared.Pages;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
 
@@ -15,10 +16,7 @@ public class LineDimTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
 
         // Inside Demo.UI several sibling lines are visible; selecting Main dims the others.
-        var search = await App.OpenSearchViaHotkeyAsync();
-        await search.FillAsync("Demo.UI");
-        await Expect(search.SelectedItem).ToBeVisibleAsync();
-        await search.Field.PressAsync("Enter");
+        await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
         await App.SelectContainerNodeAsync("Demo.UI.Main");
 
