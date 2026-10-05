@@ -28,7 +28,7 @@ interface ICanvasService
     Task RefreshAsync();
     void PanZoomToFit();
     Task InitialShowAsync();
-    Task LoadAsync(string modelPath);
+    Task LoadAsync(string modelPath, bool? includeTestProjects = null);
     Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles);
 }
 
@@ -129,13 +129,13 @@ class CanvasService(
         await coachService.StartIfFirstRunAsync(isDemoModel: !isLoaded && startupPath == DemoModel.Path);
     }
 
-    public async Task LoadAsync(string modelPath)
+    public async Task LoadAsync(string modelPath, bool? includeTestProjects = null)
     {
         applicationEvents.TriggerUIStateChanged();
         await Task.Yield();
 
         // Load failures (e.g. a failed parse) are reported to the user by the model service.
-        if (await modelService.LoadAsync(modelPath) is not ModelInfo modelInfo)
+        if (await modelService.LoadAsync(modelPath, includeTestProjects) is not ModelInfo modelInfo)
             return;
 
         viewHistory.Clear(); // Views of the previous model mean nothing here

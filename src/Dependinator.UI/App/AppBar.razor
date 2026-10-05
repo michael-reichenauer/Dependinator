@@ -515,8 +515,13 @@
             case ErrorActionKind.RetryRefresh:
                 await canvasService.RefreshAsync();
                 break;
-            case ErrorActionKind.IncludeTestProjects:
-                await modelService.SetIncludeTestProjectsAsync(true);
+            case ErrorActionKind.IncludeTestProjects when action.Path is { } path:
+                // An open model gets the flag and a refresh. After a failed first parse there is
+                // no model to refresh (the path was never set), so it is loaded again with the flag.
+                if (modelMgr.ModelPath == path)
+                    await modelService.SetIncludeTestProjectsAsync(true);
+                else
+                    await canvasService.LoadAsync(path, includeTestProjects: true);
                 break;
         }
     }

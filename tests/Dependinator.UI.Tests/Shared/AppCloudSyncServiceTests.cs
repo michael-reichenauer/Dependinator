@@ -535,7 +535,7 @@ public class AppCloudSyncServiceTests
             .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()))
             .ReturnsAsync(new ModelInfo(modelPath, Rect.None, 0));
         modelService.Setup(x => x.WriteModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(Result.Ok);
-        canvasService.Setup(x => x.LoadAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        canvasService.Setup(x => x.LoadAsync(It.IsAny<string>(), It.IsAny<bool?>())).Returns(Task.CompletedTask);
 
         return new SutContext(
             new AppCloudSyncService(

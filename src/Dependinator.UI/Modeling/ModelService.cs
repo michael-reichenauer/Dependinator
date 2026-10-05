@@ -12,7 +12,10 @@ record ModelInfo(string Path, Rect ViewRect, double Zoom);
 
 interface IModelService
 {
-    Task<Result<ModelInfo>> LoadAsync(string path);
+    // Loads the model at the path (cached layout if any, else a fresh parse). includeTestProjects
+    // sets the parse flag for a model that has no persisted value yet, i.e. the retry after a
+    // first parse failed because the solution only has test projects.
+    Task<Result<ModelInfo>> LoadAsync(string path, bool? includeTestProjects = null);
     Task<Result> RefreshAsync();
     Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects);
     void Clear();
@@ -114,9 +117,11 @@ class ModelService : IModelService, IDisposable
         return persistenceService.WriteAsync(modelPath, modelDto);
     }
 
-    public async Task<Result<ModelInfo>> LoadAsync(string path)
+    public async Task<Result<ModelInfo>> LoadAsync(string path, bool? includeTestProjects = null)
     {
         Clear();
+        if (includeTestProjects is { } include)
+            modelMgr.WithModel(m => m.IncludeTestProjects = include);
 
         Log.Info("Loading ...", path);
         using var _ = Timing.Start($"Load model {path}");
@@ -327,9 +332,12 @@ class ModelService : IModelService, IDisposable
                 // like a solution without dependencies, so always tell the user what went wrong.
                 Error e = parseResult.Error;
                 Log.Warn($"Failed to parse {path}: {e.AllMessages()}");
+                // The path travels with the action: a failed first parse leaves no model behind
+                // (the path is only set below, after a successful parse), so there is nothing to
+                // refresh and the retry has to load the solution again.
                 var action =
                     e.Message.Contains("test projects", StringComparison.OrdinalIgnoreCase)
-                        ? new ErrorAction("Include test projects", ErrorActionKind.IncludeTestProjects)
+                        ? new ErrorAction("Include test projects", ErrorActionKind.IncludeTestProjects, path)
                     : isRefresh ? new ErrorAction("Retry", ErrorActionKind.RetryRefresh)
                     : new ErrorAction("Retry", ErrorActionKind.RetryLoad, path);
                 applicationEvents.TriggerErrorReported(
