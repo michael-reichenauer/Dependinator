@@ -20,8 +20,7 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
         // members are on screen while Main is still open.
         await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
-        await Page.Keyboard.PressAsync("Escape");
-        await Expect(App.NodeToolbarMenu).ToHaveCountAsync(0);
+        await App.DeselectAsync();
         LocatorBoundingBoxResult canvas =
             await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("No canvas box");
         await Page.Mouse.MoveAsync(canvas.X + canvas.Width / 2, canvas.Y + canvas.Height / 2);

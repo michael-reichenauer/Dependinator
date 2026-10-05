@@ -138,6 +138,10 @@ public sealed class AppPage
     // A MudBlazor dialog (NodeProperties / MudMessageBox) rendered as role="dialog".
     public ILocator Dialog => page.GetByRole(AriaRole.Dialog);
 
+    // The banner shown while a mode is armed (ModeBanner.razor: placing a note or node,
+    // selecting an export area, dragging a link, arranging a container).
+    public ILocator ModeBanner => page.GetByTestId("mode-banner");
+
     // The dependencies/references explorer tree (DependenciesTree.razor popover). The tree
     // renders nested .mud-treeview lists, so take the outermost (first) one.
     public ILocator DependenciesTree => page.Locator(".mud-treeview").First;
@@ -286,6 +290,41 @@ public sealed class AppPage
                 return;
             }
             catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
+    }
+
+    // Clear the selection with Escape and verify it took (the node toolbar goes away). Waits for
+    // the selection first: a navigation (NavigationService.ShowNodeAsync) selects its node only
+    // after the pan/zoom animation, so an Escape pressed before that cancels nothing and the
+    // toolbar shows up afterwards (a CI flake). A keystroke landing while something animates
+    // can also be swallowed, so Escape is pressed again until the toolbar is gone.
+    public async Task DeselectAsync()
+    {
+        await Expect(NodeToolbarMenu).ToBeVisibleAsync();
+        await PressEscapeUntilGoneAsync(NodeToolbarMenu);
+    }
+
+    // Cancel an armed mode with Escape and verify the banner is gone. Arming happens on the
+    // server after the menu click that starts it, so wait for the banner first: an Escape sent
+    // before the arming landed cancels nothing, and the mode is armed after all (a CI flake let
+    // the export-area drag open the dialog).
+    public async Task CancelModeAsync()
+    {
+        await Expect(ModeBanner).ToBeVisibleAsync();
+        await PressEscapeUntilGoneAsync(ModeBanner);
+    }
+
+    async Task PressEscapeUntilGoneAsync(ILocator target)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            await page.Keyboard.PressAsync("Escape");
+            try
+            {
+                await Expect(target).ToHaveCountAsync(0, new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (PlaywrightException) when (attempt < MenuAttempts) { }
         }
     }
 

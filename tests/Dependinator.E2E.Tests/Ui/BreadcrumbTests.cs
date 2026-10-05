@@ -28,8 +28,7 @@ public class BreadcrumbTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Deselecting keeps the location: the view is now centered inside the open Main
         // container, so the "you are here" chain ends there.
-        await Page.Keyboard.PressAsync("Escape");
-        await Expect(App.NodeToolbarMenu).ToBeHiddenAsync();
+        await App.DeselectAsync();
         await Expect(items.Last).ToHaveTextAsync("Main");
 
         // Alt+Up zooms out one level: the innermost open container (Main) is framed inside its
@@ -40,8 +39,7 @@ public class BreadcrumbTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // The model crumb fits the whole diagram: with nothing selected the chain is empty again
         // at the overview (a selected node would keep its chain, wherever the view is).
-        await Page.Keyboard.PressAsync("Escape");
-        await Expect(App.NodeToolbarMenu).ToBeHiddenAsync();
+        await App.DeselectAsync();
         await model.ClickAsync();
         await Expect(items).ToHaveCountAsync(0);
         await Expect(App.NodeLabel("Demo.sln")).ToBeVisibleAsync();
