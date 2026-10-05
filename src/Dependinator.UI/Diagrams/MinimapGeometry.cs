@@ -24,6 +24,66 @@ static class MinimapGeometry
     public const double Height = 130;
     public const double Padding = 5;
 
+    // The diagram may be zoomed in at most this many times further than the map. Beyond that
+    // the map zooms in with it and shows the part of the model around the view instead of the
+    // whole model, so the frame never shrinks below a fifth of the map.
+    public const double MaxZoomRatio = 5;
+
+    // The map scrolls only when the frame leaves this inner part of it (fraction per side), so
+    // panning moves the frame first and the map follows lazily, like a camera.
+    public const double FollowMargin = 0.15;
+
+    // The part of the model the map shows: the whole model while the view is large enough, else
+    // a window of the map's shape sized by MaxZoomRatio, centered on the view when it changes
+    // size and otherwise kept until the view's frame runs into the margin. Always inside the
+    // model's bounds (unless the window is larger than the model in that direction).
+    public static Rect Window(Rect? previous, Rect viewport, Rect model)
+    {
+        var innerWidth = Width - 2 * Padding;
+        var innerHeight = Height - 2 * Padding;
+        var scale = Math.Max(viewport.Width * MaxZoomRatio / innerWidth, viewport.Height * MaxZoomRatio / innerHeight);
+        var width = Math.Min(innerWidth * scale, model.Width);
+        var height = Math.Min(innerHeight * scale, model.Height);
+        if (width >= model.Width && height >= model.Height)
+            return model;
+
+        // Same size as last time (no zoom change): keep the window and follow lazily; otherwise
+        // (first time, or the view changed size) center it on the view.
+        double x,
+            y;
+        if (
+            previous is { } kept
+            && Math.Abs(kept.Width - width) <= width * 0.01
+            && Math.Abs(kept.Height - height) <= height * 0.01
+        )
+        {
+            x = Follow(kept.X, width, viewport.X, viewport.Width);
+            y = Follow(kept.Y, height, viewport.Y, viewport.Height);
+        }
+        else
+        {
+            x = viewport.X + viewport.Width / 2 - width / 2;
+            y = viewport.Y + viewport.Height / 2 - height / 2;
+        }
+
+        x = width >= model.Width ? model.X : Math.Clamp(x, model.X, model.X + model.Width - width);
+        y = height >= model.Height ? model.Y : Math.Clamp(y, model.Y, model.Y + model.Height - height);
+        return new Rect(x, y, width, height);
+    }
+
+    // One axis of the lazy follow: keep the window unless the frame leaves the inner part.
+    static double Follow(double windowStart, double windowSize, double frameStart, double frameSize)
+    {
+        var margin = windowSize * FollowMargin;
+        if (frameSize >= windowSize - 2 * margin)
+            return frameStart + frameSize / 2 - windowSize / 2;
+        if (frameStart < windowStart + margin)
+            return frameStart - margin;
+        if (frameStart + frameSize > windowStart + windowSize - margin)
+            return frameStart + frameSize + margin - windowSize;
+        return windowStart;
+    }
+
     public static MinimapFit Fit(Rect bounds)
     {
         var innerWidth = Width - 2 * Padding;

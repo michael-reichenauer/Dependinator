@@ -13,9 +13,12 @@
 @inject IConfigService configService
 @implements IDisposable
 
-@* The minimap: the model's top two container levels as small boxes in the corner, with a frame
-   for the part currently on screen. Clicking or dragging in it pans the diagram there (the zoom
-   stays). Drawn from node bounds, not tiles, so it is cheap to redraw on every view change. *@
+@* The minimap: an overview in the corner with a frame for the part currently on screen. It shows
+   the whole model while the view is large, and zooms in with the view (MinimapGeometry.Window)
+   so the frame never becomes a dot: deep inside a container it shows that container's surroundings
+   and scrolls as the view moves. Boxes are drawn as deep as they are big enough to see. Clicking
+   or dragging in it pans the diagram there (the zoom stays). Drawn from node bounds, not tiles,
+   so it is cheap to redraw on every view change. *@
 @if (viewOptions.IsMinimapShown && TryGetScene(out var scene))
 {
   <div class="dep-minimap dep-toolbar-card" data-testid="minimap">
@@ -49,8 +52,16 @@
   record Label(double X, double Y, string Text);
   record Scene(IReadOnlyList<Box> Boxes, IReadOnlyList<Label> Labels, Rect Viewport, MinimapFit Fit);
 
+  // Keeps the map from jumping: the part of the model shown last time (see MinimapGeometry.Window).
+  Rect? window;
   MinimapFit? currentFit;
   bool isDragging;
+
+  // Boxes smaller than this (map px) are not drawn; a box must be this big to show its children.
+  const double MinBoxSize = 2;
+  const double MinOpenWidth = 30;
+  const double MinOpenHeight = 20;
+  const int MaxBoxes = 600;
 
   protected override void OnInitialized()
   {
@@ -68,8 +79,9 @@
     + System.Web.HttpUtility.HtmlEncode(label.Text)
     + "</text>";
 
-  // The top-level containers (projects) and their children (namespaces), placed where the
-  // diagram places them, scaled into the box; the frame is the viewport in canvas units.
+  // The part of the model around the view, with every node inside it that is big enough to
+  // see, placed where the diagram places it and scaled into the box; the frame is the viewport
+  // in canvas units.
   bool TryGetScene(out Scene scene)
   {
     scene = null!;
@@ -78,33 +90,56 @@
     if (tops.Count == 0 || model.Zoom <= 0)
       return false;
 
-    var topRects = tops.Select(n => (Node: n, Rect: CanvasRect(n))).ToList();
-    var bounds = Union(topRects.Select(t => t.Rect));
+    var bounds = Union(tops.Select(n => CanvasRect(n)));
     if (bounds.Width <= 0 || bounds.Height <= 0)
       return false;
-    var fit = MinimapGeometry.Fit(bounds);
+
+    var svgRect = screenService.SvgRect;
+    var viewport = new Rect(model.Offset.X, model.Offset.Y, svgRect.Width * model.Zoom, svgRect.Height * model.Zoom);
+    var shown = MinimapGeometry.Window(window, viewport, bounds);
+    window = shown;
+    var fit = MinimapGeometry.Fit(shown);
     currentFit = fit;
 
     var boxes = new List<Box>();
     var labels = new List<Label>();
-    foreach (var (node, rect) in topRects)
-    {
-      var (border, background) = NodeSvg.NodeColors(node);
-      var box = fit.ToMinimap(rect);
-      boxes.Add(new Box(box, background, border, IsTop: true));
-      foreach (var child in node.Children.Where(c => !c.IsNote && !c.IsHidden))
-      {
-        var (childBorder, childBackground) = NodeSvg.NodeColors(child);
-        boxes.Add(new Box(fit.ToMinimap(CanvasRect(child)), childBackground, childBorder, IsTop: false));
-      }
-      if (box.Width >= 40 && box.Height >= 12)
-        labels.Add(new Label(box.X + 3, box.Y + 9, Truncate(node.ShortName, (int)(box.Width / 5))));
-    }
-
-    var svgRect = screenService.SvgRect;
-    var viewport = new Rect(model.Offset.X, model.Offset.Y, svgRect.Width * model.Zoom, svgRect.Height * model.Zoom);
+    Draw(model.Root, new Pos(0, 0), 1.0, 1);
     scene = new Scene(boxes, labels, MinimapGeometry.Clamp(fit.ToMinimap(viewport)), fit);
     return true;
+
+    // Walks down as long as boxes stay big enough to show their inside (the same placement
+    // arithmetic as Node.GetPosAndZoom, done incrementally).
+    void Draw(Node parent, Pos parentPos, double parentZoom, int depth)
+    {
+      var zoom = parent.ContainerZoom * parentZoom;
+      foreach (var child in parent.Children)
+      {
+        if (boxes.Count >= MaxBoxes)
+          return;
+        if (child.IsNote || child.IsHidden)
+          continue;
+        var pos = new Pos(
+          parentPos.X + child.Boundary.X * zoom + parent.ContainerOffset.X * parentZoom,
+          parentPos.Y + child.Boundary.Y * zoom + parent.ContainerOffset.Y * parentZoom
+        );
+        var box = fit.ToMinimap(new Rect(pos.X, pos.Y, child.Boundary.Width * zoom, child.Boundary.Height * zoom));
+        if (box.X + box.Width < 0 || box.Y + box.Height < 0 || box.X > MinimapGeometry.Width || box.Y > MinimapGeometry.Height)
+          continue;
+        if (box.Width < MinBoxSize && box.Height < MinBoxSize)
+          continue;
+
+        // A pass-through namespace covers its parent; draw its contents, not a second box.
+        if (!child.IsPassThrough)
+        {
+          var (border, background) = NodeSvg.NodeColors(child);
+          boxes.Add(new Box(box, background, border, IsTop: depth == 1));
+          if (box.Width >= 56 && box.Height >= 12 && !child.Type.IsMember)
+            labels.Add(new Label(box.X + 3, box.Y + 9, Truncate(child.ShortName, (int)(box.Width / 5))));
+        }
+        if (child.Children.Count > 0 && !child.Type.IsMember && box.Width >= MinOpenWidth && box.Height >= MinOpenHeight)
+          Draw(child, pos, zoom, depth + 1);
+      }
+    }
   }
 
   static Rect CanvasRect(Node node)
