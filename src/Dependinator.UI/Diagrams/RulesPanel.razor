@@ -128,7 +128,13 @@
   {
     if (fromId is null || toId is null)
       return;
-    ruleService.AddRule(fromId, toId);
+    // A rejected pair (the same node twice, or a rule that exists) keeps the picks, so the user
+    // can change one of them instead of starting over.
+    if (ruleService.AddRule(fromId, toId) is Error e)
+    {
+      applicationEvents.TriggerInfoReported(e.Message);
+      return;
+    }
     (fromId, toId, fromName, toName) = (null, null, null, null);
   }
 

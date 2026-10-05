@@ -98,9 +98,9 @@ public class RuleServiceTests
             .Callback<Command, bool, bool>((command, _, _) => modelMgr.WithModel(m => command.Execute(m)));
         var service = new RuleService(modelMgr, commands.Object);
 
-        service.AddRule(ui.Id, data.Id);
-        service.AddRule(ui.Id, data.Id); // Same rule again is ignored
-        service.AddRule(ui.Id, ui.Id); // A node cannot be forbidden to use itself
+        AssertOk(service.AddRule(ui.Id, data.Id));
+        AssertError(service.AddRule(ui.Id, data.Id)); // Same rule again is rejected, and says so
+        AssertError(service.AddRule(ui.Id, ui.Id)); // A node cannot be forbidden to use itself
 
         var rule = Assert.Single(modelMgr.WithModel(m => m.Rules));
         Assert.Equal(new ArchitectureRule(ui.Name, data.Name), rule);

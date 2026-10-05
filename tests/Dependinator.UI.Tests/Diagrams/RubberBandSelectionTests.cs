@@ -46,6 +46,25 @@ public class RubberBandSelectionTests
     }
 
     [Fact]
+    public void FindNodes_ShouldLeaveNotesOut()
+    {
+        var root = CreateRoot();
+        var note = AddNode(root, "1", new Rect(10, 10, 20, 20));
+        note.IsNote = true;
+        note.IsManual = true;
+        var node = AddNode(root, "Node", new Rect(40, 10, 20, 20));
+
+        var found = RubberBandSelection.FindNodes(
+            root,
+            new Rect(0, 0, 100, 100),
+            isChildrenShown: _ => false,
+            isVisible: _ => true
+        );
+
+        Assert.Equal([node], found);
+    }
+
+    [Fact]
     public void FindNodes_ShouldSkipHiddenNodes_WhenTheyAreNotShown()
     {
         var root = CreateRoot();

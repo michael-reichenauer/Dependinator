@@ -39,7 +39,8 @@ interface IRuleService
     // The lines carrying violating links (at every zoom level), for highlighting.
     IReadOnlySet<LineId> GetViolatingLineIds();
 
-    void AddRule(NodeId fromId, NodeId toId);
+    // Adds "from must not use to"; an error says why a pair is not a rule (same node, exists).
+    Result AddRule(NodeId fromId, NodeId toId);
     void RemoveRule(ArchitectureRule rule);
 }
 
@@ -73,22 +74,21 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         return violatingLineIds;
     }
 
-    public void AddRule(NodeId fromId, NodeId toId)
+    public Result AddRule(NodeId fromId, NodeId toId)
     {
         ArchitectureRule? rule;
         using (var model = modelMgr.UseModel())
         {
-            if (
-                fromId == toId
-                || !model.Nodes.TryGetValue(fromId, out var from)
-                || !model.Nodes.TryGetValue(toId, out var to)
-            )
-                return;
+            if (fromId == toId)
+                return new Error("A rule needs two different nodes.");
+            if (!model.Nodes.TryGetValue(fromId, out var from) || !model.Nodes.TryGetValue(toId, out var to))
+                return new Error("One of the nodes is no longer in the model.");
             rule = new ArchitectureRule(from.Name, to.Name);
             if (model.Rules.Contains(rule))
-                return;
+                return new Error($"\"{from.ShortName} must not use {to.ShortName}\" is already a rule.");
         }
         commandService.Do(new AddRuleCommand(rule));
+        return Result.Ok;
     }
 
     public void RemoveRule(ArchitectureRule rule) => commandService.Do(new RemoveRuleCommand(rule));

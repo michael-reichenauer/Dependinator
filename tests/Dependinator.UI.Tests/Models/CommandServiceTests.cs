@@ -52,6 +52,27 @@ public class CommandServiceTests
     }
 
     [Fact]
+    public async Task Clear_ShouldForgetUndoAndRedo_ForAnotherModel()
+    {
+        var a = AddRootNode("A");
+        var b = AddRootNode("B");
+        service.Do(new NodeEditCommand(a.Id) { Boundary = a.Boundary with { X = 200 } });
+        service.Do(new NodeEditCommand(b.Id) { Boundary = b.Boundary with { X = 300 } });
+        await service.Undo(); // B's edit waits on the redo stack
+        Assert.True(service.CanUndo);
+        Assert.True(service.CanRedo);
+
+        service.Clear();
+
+        Assert.False(service.CanUndo);
+        Assert.False(service.CanRedo);
+        await service.Undo(); // Nothing happens either way
+        await service.Redo();
+        Assert.Equal(200, a.Boundary.X);
+        Assert.Equal(100, b.Boundary.X);
+    }
+
+    [Fact]
     public async Task UndoIfLatest_ShouldUndoTheMergedStep_WhenTheCommandWasFoldedIntoIt()
     {
         var a = AddRootNode("A");

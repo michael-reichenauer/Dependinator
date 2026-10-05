@@ -3,6 +3,7 @@ using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.CloudSync;
 using Dependinator.UI.Shared.Types;
@@ -49,7 +50,8 @@ class CanvasService(
     IShareLinkService shareLinkService,
     Lazy<IAppCloudSyncService> appCloudSyncServiceLazy,
     IVsCodeSendService vsCodeSendService,
-    IViewHistoryService viewHistory
+    IViewHistoryService viewHistory,
+    ICommandService commandService
 ) : ICanvasService
 {
     double levelZoom = 1;
@@ -139,6 +141,7 @@ class CanvasService(
             return;
 
         viewHistory.Clear(); // Views of the previous model mean nothing here
+        commandService.Clear(); // Nor do its edits: undoing them here would change this model
         PanZoomModel(modelInfo);
 
         await recentModelsService.AddModelAsync(modelInfo.Path);

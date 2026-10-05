@@ -7,7 +7,8 @@ namespace Dependinator.UI.Diagrams.Interaction;
 // level the user is looking at. A container that only partly overlaps the band is looked
 // into when its children are drawn (open), so a band dragged inside an open container picks
 // the children inside it; a closed container (an icon) is taken or left as a whole, and a node
-// inside a selected container is never added on its own.
+// inside a selected container is never added on its own. Notes are left out: they are not part
+// of a group (one would otherwise become the group's primary node, with the note toolbar).
 static class RubberBandSelection
 {
     public static IReadOnlyList<Node> FindNodes(
@@ -25,7 +26,7 @@ static class RubberBandSelection
         {
             foreach (var child in parent.Children)
             {
-                if (!isVisible(child))
+                if (child.IsNote || !isVisible(child))
                     continue;
                 var rect = CanvasRect(child);
                 if (IsInside(rect, band))
