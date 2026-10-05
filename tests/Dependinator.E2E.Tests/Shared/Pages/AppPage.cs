@@ -289,6 +289,27 @@ public sealed class AppPage
         }
     }
 
+    // Click one of an explorer row's hover-revealed buttons (DependenciesTree.razor shows them
+    // through .hover-element:hover). The row re-renders while the tree updates, and WebKit does
+    // not recompute :hover for a replaced element until the pointer moves again, so a click that
+    // still finds the button hidden nudges the pointer away, hovers the row again and retries.
+    public async Task ClickRowHoverButtonAsync(ILocator row, string testId)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            await row.HoverAsync();
+            try
+            {
+                await row.GetByTestId(testId).ClickAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
+            {
+                await page.Mouse.MoveAsync(0, 0);
+            }
+        }
+    }
+
     // Open the selected node's context menu (NodeToolbar.razor) and return one of its items.
     public async Task<ILocator> OpenNodeMenuItemAsync(string testId)
     {

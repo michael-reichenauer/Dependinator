@@ -36,14 +36,12 @@ public class PathFinderTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.GetByTestId("explorer-indirect").ClickAsync();
         ILocator coreRow = rows.Filter(new() { HasTextString = "Demo.Core" }).First;
         await Expect(coreRow).ToBeVisibleAsync();
-        await coreRow.HoverAsync();
-        await coreRow.GetByTestId("explorer-expand-all").ClickAsync();
+        await App.ClickRowHoverButtonAsync(coreRow, "explorer-expand-all");
         ILocator modelPathsRow = rows.Filter(new() { HasTextString = "ModelPaths" }).First;
         await Expect(modelPathsRow).ToBeVisibleAsync();
         await Expect(modelPathsRow.GetByTestId("explorer-hops")).ToContainTextAsync("3 hops");
 
-        await modelPathsRow.HoverAsync();
-        await modelPathsRow.GetByTestId("explorer-show-chain").ClickAsync();
+        await App.ClickRowHoverButtonAsync(modelPathsRow, "explorer-show-chain");
         await Expect(panel).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("path-from")).ToContainTextAsync("Main");
         await Expect(Page.GetByTestId("path-to")).ToContainTextAsync("ModelPaths");
