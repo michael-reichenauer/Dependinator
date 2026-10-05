@@ -672,13 +672,32 @@ public sealed class AppPage
     }
 
     // Open the node search dialog via the Ctrl+F hotkey; returns its page object.
-    // Waits for the parsed model first — see WaitForModelRenderedAsync.
+    // Waits for the parsed model first — see WaitForModelRenderedAsync. The app's keyboard
+    // listener (jsInterop.js listenToKeyboard) ignores shortcuts while a dialog or a menu
+    // popover is open, and a just-clicked menu item's popover is still fading out for a moment
+    // (a CI run lost the hotkey 260 ms after a menu click), so wait for those to be gone, then
+    // verify the dialog opened and press again if the keystroke was dropped anyway.
     public async Task<SearchDialog> OpenSearchViaHotkeyAsync()
     {
         await WaitForModelRenderedAsync();
-        await page.Keyboard.PressAsync("Control+f");
-        return new SearchDialog(this, page);
+        await Expect(KeyboardOwners).ToHaveCountAsync(0);
+        SearchDialog search = new(this, page);
+        for (int attempt = 1; ; attempt++)
+        {
+            await page.Keyboard.PressAsync("Control+f");
+            try
+            {
+                await Expect(search.Field).ToBeVisibleAsync(new() { Timeout = MenuAttemptTimeout });
+                return search;
+            }
+            catch (PlaywrightException) when (attempt < MenuAttempts) { }
+        }
     }
+
+    // The elements that own the keyboard while present (the same selector jsInterop.js uses
+    // to ignore canvas shortcuts): an open dialog, or an open menu/list popover.
+    ILocator KeyboardOwners =>
+        page.Locator(".mud-dialog-container, .mud-popover-open .mud-list, .mud-popover-open .mud-menu-list");
 
     // Navigate to a node by its exact full name through the search dialog (which closes on
     // Enter and selects the node once the pan/zoom animation lands).
