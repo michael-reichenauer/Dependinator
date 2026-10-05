@@ -26,8 +26,8 @@ static class MinimapGeometry
 
     // The diagram may be zoomed in at most this many times further than the map. Beyond that
     // the map zooms in with it and shows the part of the model around the view instead of the
-    // whole model, so the frame never shrinks below a fifth of the map.
-    public const double MaxZoomRatio = 5;
+    // whole model, so the frame never shrinks below an eighth of the map.
+    public const double MaxZoomRatio = 8;
 
     // The map scrolls only when the frame leaves this inner part of it (fraction per side), so
     // panning moves the frame first and the map follows lazily, like a camera.
