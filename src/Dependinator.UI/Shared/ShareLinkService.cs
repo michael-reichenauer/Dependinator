@@ -66,13 +66,18 @@ static class ShareLink
             !double.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var x)
             || !double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var y)
             || !double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var zoom)
+            || !double.IsFinite(x)
+            || !double.IsFinite(y)
             || zoom <= 0
+            || !double.IsFinite(zoom)
         )
             return null;
         return new ViewLink(x, y, zoom);
     }
 
-    static string Format(double value) => Math.Round(value, 3).ToString("0.###", CultureInfo.InvariantCulture);
+    // Nine significant digits: the zoom shrinks eightfold per container level, so a fixed
+    // number of decimals would round a deep view's zoom away (and its center to whole pixels).
+    static string Format(double value) => value.ToString("G9", CultureInfo.InvariantCulture);
 }
 
 // Share links: copies a link to a node or to the current view, and, when the app was opened
@@ -115,8 +120,8 @@ class ShareLinkService(
     // Links from the VS Code extension open in a browser, on the web app.
     const string WebAppUrl = "https://dependinator.com/";
 
-    // How long the startup waits for the cloud sign-in to settle before giving up on a link to
-    // a cloud-only model.
+    // How long the startup waits for the cloud sign-in and the account's model list before
+    // giving up on a link to a cloud-only model.
     static readonly TimeSpan CloudReadyTimeout = TimeSpan.FromSeconds(10);
 
     bool isStartupTargetTaken;
@@ -210,11 +215,12 @@ class ShareLinkService(
         );
     }
 
-    // The sign-in state and the cloud model list arrive shortly after startup.
+    // The sign-in state and then the cloud model list arrive shortly after startup; the list is
+    // what the link needs (IsConnecting alone turns false a network round trip too early).
     async Task WaitForCloudAsync()
     {
         var deadline = DateTime.UtcNow + CloudReadyTimeout;
-        while (appCloudSyncService.IsConnecting && DateTime.UtcNow < deadline)
+        while (!appCloudSyncService.HasLoadedCloudModels && DateTime.UtcNow < deadline)
             await Task.Delay(100);
     }
 

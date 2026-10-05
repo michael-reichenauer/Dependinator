@@ -37,6 +37,11 @@ interface IAppCloudSyncService
     // (e.g. waiting for Clerk.js to load and the first /auth/me call to return).
     bool IsConnecting { get; }
 
+    // True once the account's cloud model list has been read for the first time (or there is
+    // no cloud, no account, or the sign-in check failed): CloudModels means something from then
+    // on. The list arrives a network round trip after IsConnecting turns false.
+    bool HasLoadedCloudModels { get; }
+
     CloudAuthState AuthState { get; }
     CloudSyncModelState? SyncState { get; }
     bool HasLocalChangesSinceLastSync { get; }
@@ -97,6 +102,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     bool isUiStateRefreshInProgress;
     bool isUiStateRefreshQueued;
     bool hasResolvedInitialAuth;
+    bool hasLoadedCloudModels;
     bool isDisposed;
     bool isIdleRefreshLoopRunning;
     DateTimeOffset idleRefreshDeadlineUtc = DateTimeOffset.MinValue;
@@ -141,6 +147,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
     public bool IsAvailable => cloudSyncService.IsAvailable;
     public bool IsConnecting => IsAvailable && !hasResolvedInitialAuth && !authState.IsAuthenticated;
+    public bool HasLoadedCloudModels => !IsAvailable || hasLoadedCloudModels;
     public CloudAuthState AuthState => authState;
     public CloudSyncModelState? SyncState => syncState;
     public bool HasLocalChangesSinceLastSync => hasLocalChangesSinceLastSync;
@@ -454,11 +461,14 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     {
         if (await RefreshAuthStateAsync() is Error authError)
         {
+            hasLoadedCloudModels = true; // No list is coming while signing in fails
             NotifyChanged();
             return authError;
         }
 
-        if (await RefreshCloudModelsAsync() is Error modelsError)
+        var modelsResult = await RefreshCloudModelsAsync();
+        hasLoadedCloudModels = true;
+        if (modelsResult is Error modelsError)
             return modelsError;
 
         string modelPath = modelMgr.ModelPath;

@@ -29,6 +29,26 @@ public class AppCloudSyncServiceTests
     }
 
     [Fact]
+    public async Task HasLoadedCloudModels_ShouldTurnTrue_OnceTheModelListHasBeenRead()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("synced");
+        string hash = CloudModelSerializer.GetContentHash(model);
+        CloudSyncModelState syncState = new() { Baseline = new CloudSyncBaseline(hash, hash) };
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model);
+        AppCloudSyncService sut = CreateSut(modelPath, model, syncState, [cloudModel]);
+
+        // Before the first refresh nothing is known: a share link to a cloud model has to wait.
+        Assert.False(sut.HasLoadedCloudModels);
+        Assert.Empty(sut.CloudModels);
+
+        await sut.RefreshSyncStateAsync();
+
+        Assert.True(sut.HasLoadedCloudModels);
+        Assert.Single(sut.CloudModels);
+    }
+
+    [Fact]
     public async Task GetCloudSyncState_ShouldReturnHasConflicts_WhenLocalAndCloudChangedSinceLastSync()
     {
         string modelPath = "/models/sample.model";

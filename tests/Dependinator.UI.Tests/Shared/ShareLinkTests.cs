@@ -32,6 +32,31 @@ public class ShareLinkTests
     }
 
     [Fact]
+    public void Build_ShouldKeepTheViewPrecise_DeepInsideContainers()
+    {
+        // Four container levels down the zoom is 1/8^4 of the overview's; the center is in canvas
+        // units, where a pixel is then a fraction of a thousandth.
+        var view = new ViewLink(1234.56789, -0.00042, 0.000152587890625);
+
+        var target = ShareLink.Parse(ShareLink.Build("https://dependinator.com/", "abc", null, view));
+
+        Assert.NotNull(target?.View);
+        Assert.Equal(view.CenterX, target.View.Value.CenterX, 1e-6);
+        Assert.Equal(view.CenterY, target.View.Value.CenterY, 1e-9);
+        Assert.Equal(view.Zoom, target.View.Value.Zoom, 1e-12);
+    }
+
+    [Fact]
+    public void Parse_ShouldDropAViewWithNonFiniteNumbers()
+    {
+        Assert.Null(ShareLink.Parse("https://dependinator.com/?m=demo&v=NaN,0,1")?.View);
+        Assert.Null(ShareLink.Parse("https://dependinator.com/?m=demo&v=0,Infinity,1")?.View);
+        Assert.Null(ShareLink.Parse("https://dependinator.com/?m=demo&v=0,0,NaN")?.View);
+        Assert.Null(ShareLink.Parse("https://dependinator.com/?m=demo&v=0,0,Infinity")?.View);
+        Assert.Equal("demo", ShareLink.Parse("https://dependinator.com/?m=demo&v=0,0,NaN")?.ModelKey);
+    }
+
+    [Fact]
     public void Parse_ShouldReturnNull_WithoutLinkParameters()
     {
         Assert.Null(ShareLink.Parse("https://dependinator.com/"));

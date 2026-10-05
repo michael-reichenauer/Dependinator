@@ -146,7 +146,13 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     public async Task<bool> PanZoomToAsync(Pos targetPos, double targetZoom)
     {
         var requestId = Interlocked.Increment(ref goToRequestId);
-        if (targetZoom <= 0)
+        // A non-finite target never "fits", so the zoom-out loop below would never end.
+        if (
+            targetZoom <= 0
+            || !double.IsFinite(targetZoom)
+            || !double.IsFinite(targetPos.X)
+            || !double.IsFinite(targetPos.Y)
+        )
             return false;
 
         await screenService.CheckResizeAsync();

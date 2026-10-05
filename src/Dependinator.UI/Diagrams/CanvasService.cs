@@ -90,16 +90,19 @@ class CanvasService(
         // Opened with a share link: its model wins over the remembered one (when it can be found).
         var link = shareLinkService.TakeStartupTarget();
         var isLoaded = false;
+        var isLinkedModelOpen = link?.ModelKey is null; // A link without a model applies to whatever opens
         if (link?.ModelKey is { } modelKey)
         {
             switch (await shareLinkService.ResolveModelAsync(modelKey))
             {
                 case LinkedModel { LocalPath: { } localPath }:
                     startupPath = localPath;
+                    isLinkedModelOpen = true;
                     break;
                 case LinkedModel { CloudModel: { } cloudModel }:
                     isLoaded =
                         await appCloudSyncServiceLazy.Value.LoadCloudModelAsync(cloudModel) is CloudModelMetadata;
+                    isLinkedModelOpen = isLoaded;
                     break;
                 case Error error:
                     applicationEvents.TriggerErrorReported(error.Message);
@@ -118,11 +121,12 @@ class CanvasService(
         // node for the editor that was active when the webview was first opened.
         await vsCodeSendService.NotifyDiagramLoadedAsync();
 
-        if (link is not null)
+        // The link's node or view only means something in the link's own model.
+        if (link is not null && isLinkedModelOpen)
             await shareLinkService.ApplyAsync(link);
 
         // New users get the short tour (once); it says why a demo diagram is open when it is.
-        await coachService.StartIfFirstRunAsync(isDemoModel: startupPath == DemoModel.Path);
+        await coachService.StartIfFirstRunAsync(isDemoModel: !isLoaded && startupPath == DemoModel.Path);
     }
 
     public async Task LoadAsync(string modelPath)
