@@ -1,9 +1,11 @@
+@using Dependinator.UI.Diagrams.Icons
 @inject IApplicationEvents applicationEvents
 @inject IViewOptions viewOptions
 @implements IDisposable
 
-@* The legend: what the line styles and node icons mean. The samples reuse the canvas's own
-   colors, arrow markers and icon definitions (same document, so <use href="#..."> resolves). *@
+@* The legend: what the line styles and node icons mean. The line samples reuse the canvas's own
+   colors and arrow markers (same document, so <use href="#..."> resolves). The icons are carried
+   by the legend itself: the canvas's defs only hold the icons the open model uses. *@
 @if (viewOptions.IsLegendShown)
 {
   <div class="dep-legend dep-toolbar-card" data-testid="legend">
@@ -28,7 +30,10 @@
         @foreach (var (icon, text) in NodeSamples)
         {
           <div class="dep-legend__row">
-            <svg width="18" height="18" viewBox="0 0 24 24" class="dep-legend__sample"><use href="#@icon" /></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" class="dep-legend__sample">
+              <defs>@((MarkupString)LegendIcon(icon))</defs>
+              <use href="#legend-@icon" />
+            </svg>
             <span>@text</span>
           </div>
         }
@@ -82,6 +87,11 @@
     ("Field", "Field"),
     ("Externals", "External packages"),
   ];
+
+  // The library icon under a legend-specific id (ids are document-wide, and the canvas may hold
+  // the same icon under its own id).
+  static string LegendIcon(string icon) =>
+      IconLibrary.Get(icon).Replace($"id=\"{icon}\"", $"id=\"legend-{icon}\"", StringComparison.Ordinal);
 
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 

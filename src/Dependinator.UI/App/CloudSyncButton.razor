@@ -93,7 +93,7 @@
 <MudMessageBox @ref="syncConflictBox" Title="Sync Conflict" YesText="Use Cloud" NoText="Keep Local" CancelText="Cancel">
     <MessageContent>
         <MudText>Both the local and the cloud copy of this model changed since the last sync.</MudText>
-        <MudText Typo="Typo.body2" Class="mt-2">Local copy: changed @LocalChangedText.</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">Local copy: changed on this device since the last sync.</MudText>
         <MudText Typo="Typo.body2">Cloud copy: changed @CloudChangedText.</MudText>
         <MudText Typo="Typo.body2" Class="mt-2">
             <b>Use Cloud</b> replaces the local copy (its layout changes are lost). <b>Keep Local</b> uploads the local
@@ -147,10 +147,6 @@
         HasSyncConflicts
             ? "Both the local cached model and the cloud copy have changed since the last sync."
             : "The current local cached layout data will be replaced.";
-
-    string LocalChangedText => modelMgr.WithModel(m => m.UpdateStamp) is { } stamp && stamp != default
-        ? stamp.ToLocalTime().ToString("g")
-        : "unknown";
 
     string CloudChangedText
     {
