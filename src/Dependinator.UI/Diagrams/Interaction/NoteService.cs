@@ -197,7 +197,8 @@ class NoteService(
         if (result.Delete)
         {
             selectionService.Unselect();
-            commandService.Do(new DeleteNodeCommand(nodeId));
+            var command = new DeleteNodeCommand(nodeId);
+            commandService.Do(command);
             snackbar.Add(
                 "Note deleted.",
                 Severity.Normal,
@@ -205,7 +206,12 @@ class NoteService(
                 {
                     config.Action = "Undo";
                     config.ActionColor = Color.Primary;
-                    config.OnClick = _ => commandService.Undo();
+                    // Only this deletion: an edit made since must not be reverted by the snackbar.
+                    config.OnClick = async _ =>
+                    {
+                        if (!await commandService.UndoIfLatest(command))
+                            snackbar.Add("Changes were made since; use Undo (Ctrl+Z) to step back.", Severity.Info);
+                    };
                 }
             );
             return;

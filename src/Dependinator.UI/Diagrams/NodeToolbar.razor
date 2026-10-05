@@ -230,22 +230,10 @@ else if (HasSelectedLine)
   </YesButton>
 </MudMessageBox>
 
-<MudMessageBox @ref="deleteConfirmBox" Title="Delete Node" CancelText="Cancel">
-  <MessageContent>
-    Delete this node and all its child nodes?
-  </MessageContent>
-  <YesButton>
-    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Filled.Delete">
-      Delete
-    </MudButton>
-  </YesButton>
-</MudMessageBox>
-
 
 @code {
   const double ToolbarOffset = 32;
   private MudMessageBox mbox { get; set; } = null!;
-  private MudMessageBox deleteConfirmBox { get; set; } = null!;
 
 
   bool IsEditNodeMode
@@ -434,33 +422,13 @@ else if (HasSelectedLine)
       lineSplitService.Clear(nodeId);
   }
 
-  // Deletes the selected manual node(s); with a group, every manual node in it goes.
-  async Task DeleteNode()
+  // Deletes the selected manual node(s); with a group, every manual node in it goes as one
+  // undo step. The service asks first when children would go too.
+  Task DeleteNode()
   {
     if (!TryGetSelectedNodeId(out _))
-      return;
-
-    List<Modeling.Models.NodeId> manualIds;
-    bool anyHasChildren;
-    using (var model = modelMgr.UseModel())
-    {
-      var manual = selectionService.SelectedNodeIds
-        .Select(id => model.Nodes.TryGetValue(id, out var node) ? node : null)
-        .Where(node => node is { IsManual: true })
-        .ToList();
-      manualIds = manual.Select(node => node!.Id).ToList();
-      anyHasChildren = manual.Any(node => node!.Children.Count > 0);
-    }
-    if (manualIds.Count == 0)
-      return;
-
-    // Confirm before removing a node together with its children; no prompt for childless nodes.
-    if (anyHasChildren && await deleteConfirmBox.ShowAsync() != true)
-      return;
-
-    selectionService.Unselect();
-    foreach (var manualId in manualIds)
-      manualEditService.DeleteManualNode(manualId);
+      return Task.CompletedTask;
+    return manualEditService.DeleteManualNodesAsync(selectionService.SelectedNodeIds);
   }
 
   void RenameNode()
@@ -477,12 +445,11 @@ else if (HasSelectedLine)
     return noteService.EditNoteAsync(nodeId);
   }
 
-  void DeleteNoteToolbar()
+  Task DeleteNoteToolbar()
   {
     if (!TryGetSelectedNodeId(out var nodeId))
-      return;
-    selectionService.Unselect();
-    manualEditService.DeleteManualNode(nodeId);
+      return Task.CompletedTask;
+    return manualEditService.DeleteManualNodesAsync([nodeId]);
   }
 
   // One row of the color dropdowns: Fill is the swatch dot's fill; Ring is an optional border

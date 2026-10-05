@@ -47,7 +47,7 @@ interface IContextMenuService
 
     // Manual node: editing.
     Task RenameNodeAsync();
-    void DeleteNode();
+    Task DeleteNodeAsync();
 }
 
 [Scoped]
@@ -212,13 +212,13 @@ class ContextMenuService(
         manualEditService.BeginRenameNode(targetId.NodeId, selectionService.SelectedNodePosition);
     }
 
-    public void DeleteNode()
+    // The same path as the toolbar's Delete: asks first when children would go too.
+    public async Task DeleteNodeAsync()
     {
         Close();
         if (Target != ContextMenuTarget.Node || !IsTargetManualNode)
             return;
-        selectionService.Unselect();
-        manualEditService.DeleteManualNode(targetId.NodeId);
+        await manualEditService.DeleteManualNodesAsync([targetId.NodeId]);
         applicationEvents.TriggerUIStateChanged();
     }
 

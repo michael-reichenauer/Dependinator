@@ -11,7 +11,7 @@ interface INodeEditService
     void SnapSelectedNodeToGrid(PointerId pointerId);
 
     // The same for a group of selected nodes, as one undo step: each node moves by the pointer
-    // delta in its own container's scale.
+    // delta in its own container's scale. A node whose ancestor is in the group moves with it.
     void MoveSelectedNodes(PointerEvent e, double zoom, IReadOnlyCollection<NodeId> nodeIds);
     void SnapSelectedNodesToGrid(IReadOnlyCollection<NodeId> nodeIds);
     void SnapResizedSelectedNodeToGrid(PointerId pointerId);
@@ -86,23 +86,45 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 {
                     Boundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy },
                 };
-            }
+            },
+            isTopLevelOnly: true
         );
 
-    public void SnapSelectedNodesToGrid(IReadOnlyCollection<NodeId> nodeIds) =>
+    // Snaps the group after a drag. Every node gets a command, also one already on the grid, so
+    // the step has the drag composite's merge key and folds into that undo step; with no node
+    // off the grid there is no step at all.
+    public void SnapSelectedNodesToGrid(IReadOnlyCollection<NodeId> nodeIds)
+    {
+        bool isAnyOffGrid;
+        using (var model = modelMgr.UseModel())
+        {
+            isAnyOffGrid = Resolve(model, nodeIds, isTopLevelOnly: true)
+                .Any(node =>
+                    NodeGrid.Snap(node.Boundary.X) != node.Boundary.X
+                    || NodeGrid.Snap(node.Boundary.Y) != node.Boundary.Y
+                );
+        }
+        if (!isAnyOffGrid)
+            return;
+
         Apply(
             nodeIds,
             node =>
             {
-                var snappedX = NodeGrid.Snap(node.Boundary.X);
-                var snappedY = NodeGrid.Snap(node.Boundary.Y);
-                if (snappedX == node.Boundary.X && snappedY == node.Boundary.Y)
-                    return null;
                 if (!node.IsRoot)
                     node.Parent.IsChildrenLayoutCustomized = true;
-                return new NodeEditCommand(node.Id) { Boundary = node.Boundary with { X = snappedX, Y = snappedY } };
-            }
+                return new NodeEditCommand(node.Id)
+                {
+                    Boundary = node.Boundary with
+                    {
+                        X = NodeGrid.Snap(node.Boundary.X),
+                        Y = NodeGrid.Snap(node.Boundary.Y),
+                    },
+                };
+            },
+            isTopLevelOnly: true
         );
+    }
 
     public void IncreaseNodeSize(IReadOnlyCollection<NodeId> nodeIds) =>
         Apply(nodeIds, node => SizeCommand(node, SizeDiff));
@@ -135,21 +157,35 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         return new NodeEditCommand(node.Id) { Boundary = node.Boundary with { Width = width, Height = height } };
     }
 
-    // Builds one edit per node (null skips a node) and runs them as a single undo step.
-    void Apply(IReadOnlyCollection<NodeId> nodeIds, Func<Node, NodeEditCommand?> build)
+    // Builds one edit per node (null skips a node) and runs them as a single undo step. With
+    // isTopLevelOnly, a node whose ancestor is also in the group is left out: it moves with that
+    // ancestor, and moving it as well would move it twice.
+    void Apply(IReadOnlyCollection<NodeId> nodeIds, Func<Node, NodeEditCommand?> build, bool isTopLevelOnly = false)
     {
         var commands = new List<Command>();
         using (var model = modelMgr.UseModel())
         {
-            foreach (var nodeId in nodeIds)
+            foreach (var node in Resolve(model, nodeIds, isTopLevelOnly))
             {
-                if (model.Nodes.TryGetValue(nodeId, out var node) && build(node) is { } command)
+                if (build(node) is { } command)
                     commands.Add(command);
             }
         }
         if (commands.Count == 0)
             return;
         commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+    }
+
+    static List<Node> Resolve(IModel model, IReadOnlyCollection<NodeId> nodeIds, bool isTopLevelOnly)
+    {
+        var nodes = nodeIds
+            .Select(id => model.Nodes.TryGetValue(id, out var node) ? node : null)
+            .OfType<Node>()
+            .ToList();
+        if (!isTopLevelOnly)
+            return nodes;
+        var group = nodes.ToHashSet();
+        return nodes.Where(node => !node.Ancestors().Any(group.Contains)).ToList();
     }
 
     public void SnapSelectedNodeToGrid(PointerId pointerId)

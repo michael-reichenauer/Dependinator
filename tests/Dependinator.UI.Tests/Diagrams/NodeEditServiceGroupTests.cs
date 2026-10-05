@@ -64,6 +64,56 @@ public class NodeEditServiceGroupTests
     }
 
     [Fact]
+    public async Task MoveSelectedNodes_ShouldMoveANodeOnce_WhenItsParentIsAlsoSelected()
+    {
+        Node parent,
+            child;
+        using (var model = modelMgr.UseModel())
+        {
+            parent = AddNode(model, "P", model.Root);
+            child = AddNode(model, "P.C", parent);
+        }
+        var rootZoom = modelMgr.WithModel(m => m.Root.ContainerZoom);
+
+        service.MoveSelectedNodes(new PointerEvent { MovementX = 10, MovementY = 0 }, zoom: 1, [parent.Id, child.Id]);
+
+        // The child moves with its parent; its own position inside the parent is unchanged.
+        Assert.Equal(100 + 10 * rootZoom, parent.Boundary.X, 6);
+        Assert.Equal(100, child.Boundary.X, 6);
+
+        await commandService.Undo();
+        Assert.Equal(100, parent.Boundary.X, 6);
+        Assert.False(commandService.CanUndo);
+    }
+
+    [Fact]
+    public async Task SnapSelectedNodesToGrid_ShouldFoldIntoTheDrag_AlsoWhenOnlySomeNodesAreOffGrid()
+    {
+        Node a,
+            b;
+        using (var model = modelMgr.UseModel())
+        {
+            a = AddNode(model, "A", model.Root);
+            b = AddNode(model, "B", model.Root);
+        }
+        var rootZoom = modelMgr.WithModel(m => m.Root.ContainerZoom);
+        var step = NodeGrid.SnapSize / rootZoom; // One grid step in screen pixels at this zoom
+
+        // A lands on the grid, B does not (it started one grid step off).
+        b.Boundary = b.Boundary with
+        {
+            X = b.Boundary.X + NodeGrid.SnapSize / 2,
+        };
+        service.MoveSelectedNodes(new PointerEvent { MovementX = step, MovementY = 0 }, zoom: 1, [a.Id, b.Id]);
+        service.SnapSelectedNodesToGrid([a.Id, b.Id]);
+
+        Assert.Equal(NodeGrid.Snap(b.Boundary.X), b.Boundary.X, 6);
+        await commandService.Undo(); // One step for drag and snap together
+        Assert.Equal(100, a.Boundary.X, 6);
+        Assert.False(commandService.CanUndo);
+    }
+
+    [Fact]
     public async Task GroupSizeAndColor_ShouldApplyToAll_AsOneUndoStep()
     {
         Node a,
