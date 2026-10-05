@@ -41,6 +41,8 @@ public class CoachTests(ITestOutputHelper output) : E2ETestBase(output)
         var search = await App.OpenSearchViaHotkeyAsync();
         await Expect(coach).ToHaveAttributeAsync("data-step", "done");
         await search.CloseAsync();
+        // The dialog's overlay fades out after Escape and would swallow the next click.
+        await Expect(Page.Locator(".mud-overlay-scrim")).ToHaveCountAsync(0);
 
         await Page.GetByTestId("coach-next").ClickAsync();
         await Expect(coach).ToHaveCountAsync(0);
