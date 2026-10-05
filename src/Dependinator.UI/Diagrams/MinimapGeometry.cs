@@ -33,6 +33,8 @@ static class MinimapGeometry
     // panning moves the frame first and the map follows lazily, like a camera.
     public const double FollowMargin = 0.15;
 
+    const double Epsilon = 1e-9;
+
     // The part of the model the map shows: the whole model while the view is large enough, else
     // a window of the map's shape sized by MaxZoomRatio, centered on the view when it changes
     // size and otherwise kept until the view's frame runs into the margin. Always inside the
@@ -88,7 +90,12 @@ static class MinimapGeometry
     {
         var innerWidth = Width - 2 * Padding;
         var innerHeight = Height - 2 * Padding;
-        var scale = Math.Min(innerWidth / Math.Max(bounds.Width, 1), innerHeight / Math.Max(bounds.Height, 1));
+        // Only a zero size is guarded against: deep inside a container the window is well below one
+        // canvas unit, and rounding it up would shrink the map's zoom.
+        var scale = Math.Min(
+            innerWidth / Math.Max(bounds.Width, Epsilon),
+            innerHeight / Math.Max(bounds.Height, Epsilon)
+        );
         var offsetX = Padding + (innerWidth - bounds.Width * scale) / 2 - bounds.X * scale;
         var offsetY = Padding + (innerHeight - bounds.Height * scale) / 2 - bounds.Y * scale;
         return new MinimapFit(scale, offsetX, offsetY);

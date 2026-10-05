@@ -69,6 +69,21 @@ public class MinimapGeometryTests
     }
 
     [Fact]
+    public void Fit_ShouldKeepTheRatio_ForAWindowSmallerThanOneCanvasUnit()
+    {
+        // Deep inside a container the view spans a fraction of a canvas unit; the frame must
+        // still be the map divided by the ratio, not rounded up to a whole unit.
+        var model = new Rect(0, 0, 60, 40);
+        var viewport = new Rect(10, 10, 0.08, 0.045);
+
+        var fit = MinimapGeometry.Fit(MinimapGeometry.Window(null, viewport, model));
+        var frame = fit.ToMinimap(viewport);
+
+        var innerWidth = MinimapGeometry.Width - 2 * MinimapGeometry.Padding;
+        Assert.Equal(innerWidth / MinimapGeometry.MaxZoomRatio, frame.Width, 6);
+    }
+
+    [Fact]
     public void Window_ShouldFollowLazily_WhenOnlyTheViewPositionChanges()
     {
         var model = new Rect(0, 0, 5000, 3000);
