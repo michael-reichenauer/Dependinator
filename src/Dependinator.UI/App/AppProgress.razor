@@ -30,7 +30,10 @@
 }
 
 @code {
+    // Ticks the elapsed time, and only exists while the overlay is up (it is shown a few seconds
+    // per parse, and a timer per circuit for the app's lifetime would be waste).
     Timer? ticker;
+    readonly object tickerLock = new();
 
     string ProminentText =>
     string.IsNullOrWhiteSpace(progressService.ProminentText) ? "" : progressService.ProminentText;
@@ -40,18 +43,31 @@
         ? $"{(int)(DateTime.UtcNow - started).TotalSeconds} s so far."
         : "";
 
-    protected override void OnInitialized()
+    protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+    void OnUiStateChanged()
     {
-        applicationEvents.UIStateChanged += OnUiStateChanged;
-        // The elapsed time only needs to tick while the overlay is up.
-        ticker = new Timer(_ => { if (progressService.IsProminentActive) InvokeAsync(StateHasChanged); }, null, 1000, 1000);
+        UpdateTicker(progressService.IsProminentActive);
+        InvokeAsync(StateHasChanged);
     }
 
-    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+    void UpdateTicker(bool isOverlayShown)
+    {
+        lock (tickerLock)
+        {
+            if (isOverlayShown)
+                ticker ??= new Timer(_ => InvokeAsync(StateHasChanged), null, 1000, 1000);
+            else
+            {
+                ticker?.Dispose();
+                ticker = null;
+            }
+        }
+    }
 
     public void Dispose()
     {
         applicationEvents.UIStateChanged -= OnUiStateChanged;
-        ticker?.Dispose();
+        UpdateTicker(isOverlayShown: false);
     }
 }

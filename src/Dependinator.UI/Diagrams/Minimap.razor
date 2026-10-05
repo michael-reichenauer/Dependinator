@@ -17,25 +17,18 @@
    the whole model while the view is large, and zooms in with the view (MinimapGeometry.Window)
    so the frame never becomes a dot: deep inside a container it shows that container's surroundings
    and scrolls as the view moves. Boxes are drawn as deep as they are big enough to see. Clicking
-   or dragging in it pans the diagram there (the zoom stays). Drawn from node bounds, not tiles,
-   so it is cheap to redraw on every view change. *@
+   or dragging in it pans the diagram there (the zoom stays). Drawn from node bounds, not tiles.
+   The boxes are rebuilt only when the shown window or the model changes (see TryGetScene); a
+   pan inside the window just moves the frame. *@
 @if (viewOptions.IsMinimapShown && TryGetScene(out var scene))
 {
   <div class="dep-minimap dep-toolbar-card" data-testid="minimap">
     <svg class="dep-minimap__svg" width="@W" height="@H" viewBox="0 0 @W @H"
          @onpointerdown="OnPointerDown" @onpointermove="OnPointerMove" @onpointerup="OnPointerUp"
          @onpointerleave="OnPointerUp" @onpointerdown:preventDefault="true">
-      @foreach (var box in scene.Boxes)
-      {
-        <rect x="@F(box.Rect.X)" y="@F(box.Rect.Y)" width="@F(box.Rect.Width)" height="@F(box.Rect.Height)"
-              rx="1.5" fill="@box.Fill" stroke="@box.Stroke" stroke-width="@(box.IsTop ? "1" : "0.5")"
-              pointer-events="none" />
-      }
-      @foreach (var label in scene.Labels)
-      {
-        @* Razor reserves <text>, so the SVG text element is emitted as markup. *@
-        @((MarkupString)LabelSvg(label))
-      }
+      @* One markup string for all boxes and labels: an unchanged scene costs Blazor a string
+         comparison, not a diff of hundreds of elements (and Razor reserves <text> anyway). *@
+      @scene.Content
       <rect x="@F(scene.Viewport.X)" y="@F(scene.Viewport.Y)" width="@F(scene.Viewport.Width)" height="@F(scene.Viewport.Height)"
             class="dep-minimap__viewport" pointer-events="none" data-testid="minimap-viewport" />
     </svg>
@@ -48,14 +41,23 @@
   const string W = "200";
   const string H = "130";
 
-  record Box(Rect Rect, string Fill, string Stroke, bool IsTop);
-  record Label(double X, double Y, string Text);
-  record Scene(IReadOnlyList<Box> Boxes, IReadOnlyList<Label> Labels, Rect Viewport, MinimapFit Fit);
+  record Scene(MarkupString Content, Rect Viewport);
 
   // Keeps the map from jumping: the part of the model shown last time (see MinimapGeometry.Window).
   Rect? window;
   MinimapFit? currentFit;
   bool isDragging;
+
+  // The drawn boxes and labels, kept while the shown window and the model stay the same. Nodes
+  // are laid out while tiles render, without a model-changed event, so a cached scene is also
+  // refreshed once it is older than CacheMaxAge (at most a couple of rebuilds per second while
+  // panning, instead of one per pointer move).
+  static readonly TimeSpan CacheMaxAge = TimeSpan.FromMilliseconds(500);
+  MarkupString cachedContent;
+  Rect cachedWindow = Rect.None;
+  int cachedModelVersion = -1;
+  DateTime cachedAt;
+  int modelVersion;
 
   // Boxes smaller than this (map px) are not drawn; a box must be this big to show its children.
   const double MinBoxSize = 2;
@@ -67,17 +69,18 @@
   {
     applicationEvents.ViewChanged += OnChanged;
     applicationEvents.UIStateChanged += OnChanged;
-    applicationEvents.ModelChanged += OnChanged;
+    applicationEvents.ModelChanged += OnModelChanged;
   }
 
   void OnChanged() => InvokeAsync(StateHasChanged);
 
-  static string F(double value) => Math.Round(value, 1).ToString(CultureInfo.InvariantCulture);
+  void OnModelChanged()
+  {
+    modelVersion++;
+    InvokeAsync(StateHasChanged);
+  }
 
-  static string LabelSvg(Label label) =>
-    $"<text x=\"{F(label.X)}\" y=\"{F(label.Y)}\" class=\"dep-minimap__label\" pointer-events=\"none\">"
-    + System.Web.HttpUtility.HtmlEncode(label.Text)
-    + "</text>";
+  static string F(double value) => Math.Round(value, 1).ToString(CultureInfo.InvariantCulture);
 
   // The part of the model around the view, with every node inside it that is big enough to
   // see, placed where the diagram places it and scaled into the box; the frame is the viewport
@@ -101,11 +104,23 @@
     var fit = MinimapGeometry.Fit(shown);
     currentFit = fit;
 
-    var boxes = new List<Box>();
-    var labels = new List<Label>();
-    Draw(model.Root, new Pos(0, 0), 1.0, 1);
-    scene = new Scene(boxes, labels, MinimapGeometry.Clamp(fit.ToMinimap(viewport)), fit);
+    var now = DateTime.UtcNow;
+    if (shown != cachedWindow || modelVersion != cachedModelVersion || now - cachedAt > CacheMaxAge)
+    {
+      cachedContent = (MarkupString)DrawScene(model.Root, fit);
+      (cachedWindow, cachedModelVersion, cachedAt) = (shown, modelVersion, now);
+    }
+    scene = new Scene(cachedContent, MinimapGeometry.Clamp(fit.ToMinimap(viewport)));
     return true;
+  }
+
+  // The boxes and labels of every node big enough to see, as SVG markup.
+  static string DrawScene(Node root, MinimapFit fit)
+  {
+    var svg = new System.Text.StringBuilder();
+    var boxCount = 0;
+    Draw(root, new Pos(0, 0), 1.0, 1);
+    return svg.ToString();
 
     // Walks down as long as boxes stay big enough to show their inside (the same placement
     // arithmetic as Node.GetPosAndZoom, done incrementally).
@@ -114,7 +129,7 @@
       var zoom = parent.ContainerZoom * parentZoom;
       foreach (var child in parent.Children)
       {
-        if (boxes.Count >= MaxBoxes)
+        if (boxCount >= MaxBoxes)
           return;
         if (child.IsNote || child.IsHidden)
           continue;
@@ -132,9 +147,16 @@
         if (!child.IsPassThrough)
         {
           var (border, background) = NodeSvg.NodeColors(child);
-          boxes.Add(new Box(box, background, border, IsTop: depth == 1));
+          boxCount++;
+          svg.Append($"<rect x=\"{F(box.X)}\" y=\"{F(box.Y)}\" width=\"{F(box.Width)}\" height=\"{F(box.Height)}\"")
+            .Append($" rx=\"1.5\" fill=\"{background}\" stroke=\"{border}\" stroke-width=\"{(depth == 1 ? "1" : "0.5")}\"")
+            .Append(" pointer-events=\"none\" />");
           if (box.Width >= 56 && box.Height >= 12 && !child.Type.IsMember)
-            labels.Add(new Label(box.X + 3, box.Y + 9, Truncate(child.ShortName, (int)(box.Width / 5))));
+          {
+            svg.Append($"<text x=\"{F(box.X + 3)}\" y=\"{F(box.Y + 9)}\" class=\"dep-minimap__label\" pointer-events=\"none\">")
+              .Append(System.Web.HttpUtility.HtmlEncode(Truncate(child.ShortName, (int)(box.Width / 5))))
+              .Append("</text>");
+          }
         }
         if (child.Children.Count > 0 && !child.Type.IsMember && box.Width >= MinOpenWidth && box.Height >= MinOpenHeight)
           Draw(child, pos, zoom, depth + 1);
@@ -196,6 +218,6 @@
   {
     applicationEvents.ViewChanged -= OnChanged;
     applicationEvents.UIStateChanged -= OnChanged;
-    applicationEvents.ModelChanged -= OnChanged;
+    applicationEvents.ModelChanged -= OnModelChanged;
   }
 }
