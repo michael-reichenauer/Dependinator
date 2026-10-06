@@ -82,16 +82,27 @@ function getWebviewHtml(
     <title>Dependinator</title>
     <base href="./" />
     <link href="${baseUri}_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="${baseUri}_content/Dependinator.UI/css/dependinator.css" rel="stylesheet" />
     <link href="${baseUri}Dependinator.Wasm.styles.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="${baseUri}favicon.png" />
     <style>
         body {
             overflow: hidden;
-            background-color: #000000;
         }
     </style>
 </head>
 <body>
+    <script nonce="${nonce}">
+        // Paint the editor theme's background before Blazor boots (VS Code marks the body
+        // with vscode-light / vscode-dark / vscode-high-contrast); the app takes over from
+        // there and follows theme changes (see watchSystemTheme in jsInterop.js).
+        (function () {
+            var isDark = document.body.classList.contains("vscode-dark")
+                || document.body.classList.contains("vscode-high-contrast");
+            document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+            document.body.style.backgroundColor = isDark ? "#0D0F11" : "#FAFAFA";
+        })();
+    </script>
     <div id="app">
         <svg class="loading-progress">
             <circle r="40%" cx="50%" cy="50%" />

@@ -1,0 +1,139 @@
+@using Dependinator.Core
+@using Dependinator.Core.Shared
+@using Dependinator.UI.Shared.CloudSync
+@inject IModelListService modelListService
+@inject Modeling.Models.IModelMgr modelMgr
+@inject ICanvasService canvasService
+@inject IAppCloudSyncService appCloudSyncService
+@inject IFileService fileService
+@inject ISnackbar snackbar
+
+@* The models the app knows about, in sections: the solutions of this workspace, recently opened
+   models, models only in the cloud, and hand-drawn design models. A row opens the model; a
+   cached model can be removed (a solution is simply re-parsed when opened again). *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">Models</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-models" data-testid="models-dialog">
+      @foreach (var section in Sections)
+      {
+        <div class="dep-models__section">
+          <div class="dep-models__caption">@section.Title</div>
+          @if (section.Items.Count == 0)
+          {
+            <div class="dep-models__empty">@section.Empty</div>
+          }
+          @foreach (var item in section.Items)
+          {
+            var isCurrent = IsCurrent(item);
+            <div class="dep-models__row @(isCurrent ? "dep-models__row--current" : "")" data-testid="models-item">
+              <button type="button" class="dep-models__open" title="@($"Open {item.Path}")" @onclick="() => OpenAsync(item)">
+                <MudIcon Icon="@ItemIcon(item)" Size="Size.Small" Class="dep-models__icon" />
+                <span class="dep-models__name">@item.DisplayName</span>
+                @if (isCurrent)
+                {
+                  <span class="dep-models__chip">current</span>
+                }
+                <span class="dep-models__sub">@Subtitle(item)</span>
+              </button>
+              @if (CanRemove(item))
+              {
+                <MudTooltip Text="Remove the cached model and its layout (a solution is re-parsed when opened again)">
+                  <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.DeleteOutline" Size="Size.Small"
+                                 OnClick="() => RemoveAsync(item)" data-testid="models-remove" />
+                </MudTooltip>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </DialogContent>
+  <DialogActions>
+    <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.AddBox" OnClick="NewModel" data-testid="models-new">
+      New Model …
+    </MudButton>
+    <MudSpacer />
+    <MudButton OnClick="Close" data-testid="models-close">Close</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  record Section(string Title, string Empty, IReadOnlyList<ModelItem> Items);
+
+  IReadOnlyList<Section> Sections
+  {
+    get
+    {
+      var items = modelListService.GetModelItems();
+      var workspace = items.Where(i => modelListService.IsLocalPath(i.Path) && !ModelPaths.IsDesignModel(i.Path)).ToList();
+      var design = items.Where(i => ModelPaths.IsDesignModel(i.Path)).ToList();
+      var cloudOnly = items.Where(i => i.IsCloud && !i.IsLocal && !ModelPaths.IsDesignModel(i.Path)).ToList();
+      var recent = items.Except(workspace).Except(design).Except(cloudOnly).ToList();
+
+      List<Section> sections = [];
+      if (Build.IsVsCodeExtWasm || Build.IsWeb)
+        sections.Add(new("This workspace", "No solution (.sln) found in the workspace.", workspace));
+      sections.Add(new("Recent", "Nothing opened yet.", recent));
+      sections.Add(new("In the cloud", appCloudSyncService.AuthState.IsAuthenticated
+          ? "No other models are synced to this account."
+          : "Enable device sync (the cloud button) to see models from your other devices.", cloudOnly));
+      sections.Add(new("Design models", "Hand-drawn models appear here (New Model …).", design));
+      return sections;
+    }
+  }
+
+  bool IsCurrent(ModelItem item) =>
+      string.Equals(item.Path, modelMgr.ModelPath, StringComparison.OrdinalIgnoreCase)
+      || (item.IsCloud && string.Equals(item.CloudModel?.NormalizedPath, appCloudSyncService.CurrentNormalizedModelPath, StringComparison.OrdinalIgnoreCase));
+
+  static string ItemIcon(ModelItem item) =>
+      ModelPaths.IsDesignModel(item.Path) ? MudBlazor.Icons.Material.Outlined.DesignServices
+      : item.IsCloud && !item.IsLocal ? MudBlazor.Icons.Material.Outlined.CloudDownload
+      : MudBlazor.Icons.Material.Outlined.Schema;
+
+  static string Subtitle(ModelItem item)
+  {
+    var kind = ModelPaths.IsDesignModel(item.Path) ? "design model" : "solution";
+    var cloud = item.CloudModel is { } cm ? $", synced {cm.UpdatedUtc.ToLocalTime():g}" : "";
+    var where = item.IsLocal ? item.Path : "cloud only";
+    return $"{kind}{cloud} · {where}";
+  }
+
+  // Only cached local copies that are not open can be removed here; the open model is deleted
+  // from the Models menu, which also offers to delete its cloud copy.
+  bool CanRemove(ModelItem item) => item.IsLocal && !IsCurrent(item) && !modelListService.IsLocalPath(item.Path);
+
+  async Task OpenAsync(ModelItem item)
+  {
+    MudDialog.Close(DialogResult.Ok("open"));
+    if (item.IsLocal)
+    {
+      await canvasService.LoadAsync(item.Path);
+      return;
+    }
+
+    if (await appCloudSyncService.LoadCloudModelAsync(item.CloudModel!) is Error error)
+    {
+      snackbar.Add(error.Message, Severity.Error);
+      return;
+    }
+    snackbar.Add($"Loaded cloud model for {item.DisplayName}.", Severity.Success);
+  }
+
+  async Task RemoveAsync(ModelItem item)
+  {
+    await fileService.DeleteAsync(item.Path); // A missing cached file is fine: nothing to remove
+    await modelListService.RemoveModelAsync(item.Path);
+    snackbar.Add($"Removed the cached model for {item.DisplayName}.", Severity.Info);
+    StateHasChanged();
+  }
+
+  void NewModel() => MudDialog.Close(DialogResult.Ok("new"));
+
+  void Close() => MudDialog.Cancel();
+}

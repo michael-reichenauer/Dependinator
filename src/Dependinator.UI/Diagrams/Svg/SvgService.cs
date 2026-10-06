@@ -30,12 +30,38 @@ class SvgService : ISvgService
 
     readonly IModelMgr modelMgr;
     readonly ITilesMgr tilesMgr;
+    readonly IViewOptions viewOptions;
+    readonly ICycleService cycleService;
+    readonly IPathFinderService pathFinderService;
+    readonly IRuleService ruleService;
 
-    public SvgService(IModelMgr modelMgr, ITilesMgr tilesMgr)
+    public SvgService(
+        IModelMgr modelMgr,
+        ITilesMgr tilesMgr,
+        IViewOptions viewOptions,
+        ICycleService cycleService,
+        IPathFinderService pathFinderService,
+        IRuleService ruleService
+    )
     {
         this.modelMgr = modelMgr;
         this.tilesMgr = tilesMgr;
+        this.viewOptions = viewOptions;
+        this.cycleService = cycleService;
+        this.pathFinderService = pathFinderService;
+        this.ruleService = ruleService;
     }
+
+    // The user's view toggles that affect what a tile contains; captured per render so the
+    // static render helpers need no service access.
+    ViewFlags Flags =>
+        new(viewOptions.IsEditingEnabled, viewOptions.ShowHiddenNodes, viewOptions.DimUnrelatedLines)
+        {
+            Filter = viewOptions.LineFilter,
+            CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
+            PathLines = pathFinderService.GetPathLineIds(),
+            ViolatingLines = viewOptions.IsRulesShown ? ruleService.GetViolatingLineIds() : null,
+        };
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
@@ -85,11 +111,79 @@ class SvgService : ISvgService
 
         var offset = new Pos(-canvasRect.X / zoom, -canvasRect.Y / zoom);
         var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
-        var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None);
+        // Exports never show edit chrome (handles) or selection dimming, whatever the current state.
+        var flags = Flags with
+        {
+            IsEditing = false,
+            DimUnrelated = false,
+        };
+        var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, flags);
         return RenderNodeContent(model.Root, context);
     }
 
-    static Tile CreateModelTile(IModel model, TileKey tileKey)
+    // The selected node(s) or line, for selection dimming; empty when nothing is selected.
+    static RenderSelection FindSelection(IModel model)
+    {
+        var nodes = model.Nodes.Values.Where(n => n.IsSelected).ToList();
+        var node = nodes.FirstOrDefault();
+        var line = node is null ? model.Lines.Values.FirstOrDefault(l => l.IsSelected) : null;
+        return new RenderSelection(node, line, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
+    }
+
+    // A line is dimmed while something else is selected: for a selected node, every line that
+    // does not touch the node or its inside; for a selected line, every other line. Explorer
+    // focus lines are what the user asked to see and are never dimmed.
+    internal static bool IsLineDimmed(Line line, RenderSelection selection)
+    {
+        if (line.IsFocused)
+            return false;
+        if (selection.Line is { } selectedLine)
+            return line != selectedLine;
+        if (selection.Node is not { } node)
+            return false;
+        if (IsAtOrInside(line.Source, node) || IsAtOrInside(line.Target, node))
+            return false;
+        // With several nodes selected, a line touching any of them stays bright.
+        return selection.OtherNodes is not { } others
+            || !others.Any(other => IsAtOrInside(line.Source, other) || IsAtOrInside(line.Target, other));
+    }
+
+    static bool IsAtOrInside(Node endpoint, Node node) => endpoint == node || endpoint.Ancestors().Contains(node);
+
+    // While a dependency path is shown, everything off the path fades so the chain stands out.
+    static bool IsLineDimmed(Line line, RenderContext context)
+    {
+        if (context.Flags.PathLines is { } pathLines)
+            return !pathLines.Contains(line.Id);
+        return context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.Selection);
+    }
+
+    static bool IsLineCyclic(Line line, RenderContext context) => context.Flags.CyclicLines?.Contains(line.Id) == true;
+
+    static bool IsLineOnPath(Line line, RenderContext context) => context.Flags.PathLines?.Contains(line.Id) == true;
+
+    static bool IsLineViolating(Line line, RenderContext context) =>
+        context.Flags.ViolatingLines?.Contains(line.Id) == true;
+
+    // The user's line filter (View › Lines). Explorer focus lines and user-requested direct
+    // lines are explicit asks and are always drawn.
+    internal static bool IsLineFilteredOut(Line line, LineFilter filter)
+    {
+        if (line.IsFocused || line.IsDirect)
+            return false;
+        if (filter.HideInheritance && line.IsInheritance)
+            return true;
+        if (filter.HideMember && (line.Source.Type.IsMember || line.Target.Type.IsMember))
+            return true;
+        if (filter.HideExternal && (IsExternal(line.Source) || IsExternal(line.Target)))
+            return true;
+        return line.Links.Count < filter.MinLinkCount;
+    }
+
+    static bool IsExternal(Node node) =>
+        node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
+
+    Tile CreateModelTile(IModel model, TileKey tileKey)
     {
         var timing = Timing.Start();
         var tileRect = tileKey.GetTileRect();
@@ -99,7 +193,8 @@ class SvgService : ISvgService
 
         RepLineService.Sync(model, tileZoom);
 
-        var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None);
+        var flags = Flags with { Selection = FindSelection(model) };
+        var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, flags);
         var rootContentSvg = RenderNodeContent(model.Root, rootContext);
 
         // Enable this if need to show tile border and/or tile with margin border
@@ -143,7 +238,7 @@ class SvgService : ISvgService
 
     static string RenderNode(Node node, RenderContext context)
     {
-        if (node.IsHidden && !ViewOptions.ShowHiddenNodes)
+        if (node.IsHidden && !context.Flags.ShowHidden)
             return "";
 
         var geometry = CalculateNodeGeometry(node, context);
@@ -159,7 +254,7 @@ class SvgService : ISvgService
             return NoteSvg.GetNoteSvg(node, geometry.CanvasRect, context.Zoom);
 
         if (node.Type.IsMember)
-            return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom);
+            return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
 
         if (node.IsPassThrough)
         { // An invisible container that covers its parent; render only its children, no chrome
@@ -171,7 +266,7 @@ class SvgService : ISvgService
         }
 
         if (NodeViewPolicy.IsShowIcon(node.Type, context.Zoom))
-            return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom);
+            return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
 
         if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
             return RenderFlattenedNodeContent(node, geometry, context);
@@ -182,7 +277,13 @@ class SvgService : ISvgService
         if (NodeViewPolicy.IsTooLargeToBeSeen(context.Zoom))
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
 
-        return NodeSvg.GetNodeContainerSvg(node, geometry.CanvasRect, context.Zoom, childrenContentSvg);
+        return NodeSvg.GetNodeContainerSvg(
+            node,
+            geometry.CanvasRect,
+            context.Zoom,
+            childrenContentSvg,
+            context.Flags.IsEditing
+        );
     }
 
     // At extreme zoom a nested svg viewport would carry offsets of millions of canvas units,
@@ -245,13 +346,22 @@ class SvgService : ISvgService
         {
             if (!line.IsActiveRep)
                 continue; // Only current representative segments are drawn (see RepLineService)
-            if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
+            if (line.IsHidden && !context.Flags.ShowHidden)
                 continue;
             if (line.Target.IsPassThrough)
                 continue; // The pass-through node covers this parent, so the segment is degenerate
+            if (IsLineFilteredOut(line, context.Flags.Filter))
+                continue;
             if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                 continue;
-            yield return LineSvg.GetLineSvg(line, nodeCanvasPos, childrenZoom);
+            yield return LineSvg.GetLineSvg(
+                line,
+                nodeCanvasPos,
+                childrenZoom,
+                IsLineDimmed(line, context),
+                isPath: IsLineOnPath(line, context),
+                isViolation: IsLineViolating(line, context)
+            );
         }
 
         // All sibling lines and children to parent lines
@@ -263,13 +373,23 @@ class SvgService : ISvgService
                     continue; // Only current representative lines are drawn (see RepLineService)
                 if (line.Target.Parent == line.Source)
                     continue;
-                if (line.IsHidden && !ViewOptions.ShowHiddenNodes)
+                if (line.IsHidden && !context.Flags.ShowHidden)
                     continue;
                 if (line.Source.IsPassThrough && line.Target == node)
                     continue; // The pass-through node covers this parent, so the segment is degenerate
+                if (IsLineFilteredOut(line, context.Flags.Filter))
+                    continue;
                 if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                     continue;
-                yield return LineSvg.GetLineSvg(line, nodeCanvasPos, childrenZoom);
+                yield return LineSvg.GetLineSvg(
+                    line,
+                    nodeCanvasPos,
+                    childrenZoom,
+                    IsLineDimmed(line, context),
+                    IsLineCyclic(line, context),
+                    IsLineOnPath(line, context),
+                    IsLineViolating(line, context)
+                );
             }
         }
     }
@@ -297,7 +417,7 @@ class SvgService : ISvgService
     {
         if (endpoint == node)
             return true;
-        if (endpoint.IsHidden && !ViewOptions.ShowHiddenNodes)
+        if (endpoint.IsHidden && !context.Flags.ShowHidden)
             return false;
 
         // The endpoint's tile rect, as RenderNode computes it for this container's children
@@ -322,11 +442,21 @@ class SvgService : ISvgService
         {
             if (directLine.IsCousin && !directLine.IsActiveRep)
                 continue; // An inactive cousin line kept only for its user waypoints/description
-            if (directLine.IsHidden && !ViewOptions.ShowHiddenNodes)
+            if (directLine.IsHidden && !context.Flags.ShowHidden)
+                continue;
+            if (IsLineFilteredOut(directLine, context.Flags.Filter))
                 continue;
             if (!IsEitherDirectEndpointRendered(directLine, node, nodeCanvasPos, childrenZoom, context))
                 continue;
-            var svg = LineSvg.GetDirectLineSvg(directLine, node, nodeCanvasPos, childrenZoom);
+            var svg = LineSvg.GetDirectLineSvg(
+                directLine,
+                node,
+                nodeCanvasPos,
+                childrenZoom,
+                IsLineDimmed(directLine, context),
+                IsLineOnPath(directLine, context),
+                IsLineViolating(directLine, context)
+            );
             if (svg.Length > 0)
                 yield return svg;
         }
@@ -359,7 +489,7 @@ class SvgService : ISvgService
     {
         if (endpoint == ancestor)
             return true;
-        if (endpoint.IsHidden && !ViewOptions.ShowHiddenNodes)
+        if (endpoint.IsHidden && !context.Flags.ShowHidden)
             return false;
 
         var (endpointPos, endpointZoom) = endpoint.GetPosAndZoom();
@@ -381,12 +511,36 @@ class SvgService : ISvgService
         return RectOverlap(context.TileBounds, tileRect);
     }
 
-    readonly record struct RenderContext(Pos CanvasOffset, double Zoom, Rect TileBounds, Pos TilePosition)
+    internal readonly record struct RenderSelection(Node? Node, Line? Line, IReadOnlyList<Node>? OtherNodes = null);
+
+    readonly record struct ViewFlags(bool IsEditing, bool ShowHidden, bool DimUnrelated)
     {
-        public RenderContext With(Pos canvasOffset, double zoom) => new(canvasOffset, zoom, TileBounds, TilePosition);
+        public RenderSelection Selection { get; init; }
+        public LineFilter Filter { get; init; } = LineFilter.None;
+
+        // Sibling lines that are part of a circular dependency; null while cycles are not shown.
+        public IReadOnlySet<LineId>? CyclicLines { get; init; }
+
+        // Lines of the dependency path being shown (View › Find Path); null while no path is shown.
+        public IReadOnlySet<LineId>? PathLines { get; init; }
+
+        // Lines breaking an architecture rule; null while the rules panel is closed.
+        public IReadOnlySet<LineId>? ViolatingLines { get; init; }
+    }
+
+    readonly record struct RenderContext(
+        Pos CanvasOffset,
+        double Zoom,
+        Rect TileBounds,
+        Pos TilePosition,
+        ViewFlags Flags
+    )
+    {
+        public RenderContext With(Pos canvasOffset, double zoom) =>
+            new(canvasOffset, zoom, TileBounds, TilePosition, Flags);
 
         public RenderContext ForNestedContainer(Rect tileRect) =>
-            new(Pos.None, Zoom, TileBounds, new Pos(tileRect.X, tileRect.Y));
+            new(Pos.None, Zoom, TileBounds, new Pos(tileRect.X, tileRect.Y), Flags);
     }
 
     readonly record struct NodeGeometry(Rect CanvasRect, Rect TileRect);

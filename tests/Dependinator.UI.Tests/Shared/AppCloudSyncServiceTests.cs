@@ -29,6 +29,26 @@ public class AppCloudSyncServiceTests
     }
 
     [Fact]
+    public async Task HasLoadedCloudModels_ShouldTurnTrue_OnceTheModelListHasBeenRead()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("synced");
+        string hash = CloudModelSerializer.GetContentHash(model);
+        CloudSyncModelState syncState = new() { Baseline = new CloudSyncBaseline(hash, hash) };
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model);
+        AppCloudSyncService sut = CreateSut(modelPath, model, syncState, [cloudModel]);
+
+        // Before the first refresh nothing is known: a share link to a cloud model has to wait.
+        Assert.False(sut.HasLoadedCloudModels);
+        Assert.Empty(sut.CloudModels);
+
+        await sut.RefreshSyncStateAsync();
+
+        Assert.True(sut.HasLoadedCloudModels);
+        Assert.Single(sut.CloudModels);
+    }
+
+    [Fact]
     public async Task GetCloudSyncState_ShouldReturnHasConflicts_WhenLocalAndCloudChangedSinceLastSync()
     {
         string modelPath = "/models/sample.model";
@@ -249,17 +269,36 @@ public class AppCloudSyncServiceTests
             IdleRefreshInterval: TimeSpan.FromMilliseconds(20),
             MaxIdleRefreshDuration: TimeSpan.FromMilliseconds(60)
         );
-        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], timings);
+        // The idle loop stops as soon as the clock passes its deadline, so with a real clock the
+        // delays' overshoot on a loaded machine decides how many idle checks fit into the window
+        // (a CI flake saw two instead of three). The test controls the clock instead: the window
+        // cannot expire until the test moves the clock, while the checks themselves still run on
+        // real (short) timers.
+        DateTimeOffset currentUtc = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        SutContext context = CreateSutContext(
+            modelPath,
+            syncedModel,
+            syncState,
+            [cloudModel],
+            timings,
+            () => currentUtc
+        );
 
         int listCallsAfterInitialize = context.Counters.ListCalls;
 
         context.ApplicationEvents.TriggerUIStateChanged();
-        await Task.Delay(120);
+        await WaitUntilAsync(
+            () => context.Counters.ListCalls >= listCallsAfterInitialize + 3,
+            timeoutMilliseconds: 2000
+        );
 
+        // Past the deadline the loop stops at its next iteration without queuing another check;
+        // one check whose delay was already running may still land, so let it before snapshotting.
+        currentUtc += timings.MaxIdleRefreshDuration + TimeSpan.FromMilliseconds(1);
+        await Task.Delay(100);
         int callsAfterIdleWindow = context.Counters.ListCalls;
-        Assert.True(callsAfterIdleWindow >= listCallsAfterInitialize + 3);
 
-        await Task.Delay(80);
+        await Task.Delay(100);
         Assert.Equal(callsAfterIdleWindow, context.Counters.ListCalls);
     }
 
@@ -515,7 +554,7 @@ public class AppCloudSyncServiceTests
             .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()))
             .ReturnsAsync(new ModelInfo(modelPath, Rect.None, 0));
         modelService.Setup(x => x.WriteModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(Result.Ok);
-        canvasService.Setup(x => x.LoadAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        canvasService.Setup(x => x.LoadAsync(It.IsAny<string>(), It.IsAny<bool?>())).Returns(Task.CompletedTask);
 
         return new SutContext(
             new AppCloudSyncService(

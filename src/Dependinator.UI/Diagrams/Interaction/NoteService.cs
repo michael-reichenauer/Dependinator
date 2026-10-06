@@ -54,7 +54,8 @@ class NoteService(
     ISelectionService selectionService,
     IDialogService dialogService,
     INavigationService navigationService,
-    IApplicationEvents applicationEvents
+    IApplicationEvents applicationEvents,
+    ISnackbar snackbar
 ) : INoteService
 {
     // The note circle's bounding box in root child coordinates (a couple of grid cells).
@@ -161,7 +162,10 @@ class NoteService(
         using (var model = modelMgr.UseModel())
         {
             if (model.Nodes.ContainsKey(NodeId.FromName(name)))
-                return; // Id already used under this parent; the model is the source of truth.
+            {
+                snackbar.Add($"A note with id '{result.Id}' already exists here. Choose another id.", Severity.Warning);
+                return;
+            }
         }
 
         commandService.Do(
@@ -193,7 +197,23 @@ class NoteService(
         if (result.Delete)
         {
             selectionService.Unselect();
-            commandService.Do(new DeleteNodeCommand(nodeId));
+            var command = new DeleteNodeCommand(nodeId);
+            commandService.Do(command);
+            snackbar.Add(
+                "Note deleted.",
+                Severity.Normal,
+                config =>
+                {
+                    config.Action = "Undo";
+                    config.ActionColor = Color.Primary;
+                    // Only this deletion: an edit made since must not be reverted by the snackbar.
+                    config.OnClick = async _ =>
+                    {
+                        if (!await commandService.UndoIfLatest(command))
+                            snackbar.Add("Changes were made since; use Undo (Ctrl+Z) to step back.", Severity.Info);
+                    };
+                }
+            );
             return;
         }
 
@@ -204,7 +224,10 @@ class NoteService(
         {
             using var model = modelMgr.UseModel();
             if (model.Nodes.ContainsKey(NodeId.FromName(newFullName)))
-                return; // New id already used under this parent.
+            {
+                snackbar.Add($"A note with id '{result.Id}' already exists here. Choose another id.", Severity.Warning);
+                return;
+            }
         }
 
         var commands = new List<Command>();

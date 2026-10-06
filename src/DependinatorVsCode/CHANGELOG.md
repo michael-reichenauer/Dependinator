@@ -1,8 +1,62 @@
 # Change Log
 
-## 0.8.16 (2026-07-23)
+## 0.8.28 (2026-09-29)
+
+- Implement IAssemblyResolver.BeginSnapshot for the in-memory resolver
+
+## 0.8.27 (2026-09-29)
+
+- Adjust dependencies dialog to minimize on outside click
+- Update demo animation
+
+## 0.8.26 (2026-09-28)
 
 - Minor fixes and improvements
+
+## 0.8.25 (2026-09-11)
+
+- Minor fixes and improvements
+
+## 0.8.24 (2026-09-11)
+
+- Add support for optionally parsing test projects
+- Rename Show Notes Sidebar
+- Show error message when parsing fails
+- Add option to invert zoom mouse wheel direction
+
+## 0.8.23 (2026-09-04)
+
+- Fix package version alignment
+
+## 0.8.22 (2026-08-23)
+
+- In VSCode Ext, open the solution
+
+## 0.8.21 (2026-08-23)
+
+- Fix publish issue
+
+## 0.8.20 (2026-07-26)
+
+- Regenerate demo model
+- Regenerate demo recording
+- Optimize rendering
+- Optimize tiles cache, based on size and eviction
+
+## 0.8.19 (2026-07-23)
+
+- Add link to changelog in release notes
+- Adjust release notes to explain vsix files
+- Update info about purpose of dependinator.com
+- Fix issue with error after parse
+
+## 0.8.18 (2026-07-23)
+
+- Update packages
+
+## 0.8.17 (2026-07-23)
+
+- Move CHANGELOG.md to root folder
 
 ## 0.8.15 (2026-07-22)
 

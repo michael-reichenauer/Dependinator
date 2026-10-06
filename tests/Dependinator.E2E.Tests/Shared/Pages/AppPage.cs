@@ -30,6 +30,13 @@ public sealed class AppPage
 
     const string NodeLabelSelector = "#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName";
 
+    // A member of the demo model's Demo.UI.Main class. Navigating to a member is what makes its
+    // class open as a container (the zoom settles inside it): tests that need Main's
+    // container-mode toolbar or its members on screen navigate here and then wait for
+    // WaitForContainerNodeAsync("Main"). A demo-model fact (like "Demo.sln" and "ModelPaths"):
+    // regenerating the model after a change to Main.razor may require picking another member.
+    public const string InsideMain = "Demo.UI.Main.OnInitialized()";
+
     // A diagram node's group element, matched by its label. (Node SVG ids are generated, so
     // match on the label text, which comes from the group's <title>.) The title is the node's
     // long name optionally followed by its description ("longName\n\ndescription", see
@@ -107,14 +114,33 @@ public sealed class AppPage
     // A node icon's <use> reference on the canvas, e.g. "Solution" or "Solution--Blue".
     public ILocator NodeIconUse(string iconId) => page.Locator($"#svgcanvas use[href='#{iconId}']");
 
-    // The toolbar edit-mode toggle (AppBar.razor). Toggles NodeSvg.IsEditingEnabled.
+    // The toolbar edit-mode toggle (AppBar.razor); data-checked carries its state. Edit mode
+    // is off by default and stored in the config, so tests that edit turn it on explicitly.
     public ILocator ToolbarEdit => page.GetByTestId("toolbar-edit");
+
+    // Turns edit mode on (no-op if already on). A click landing while the toolbar re-renders
+    // can be swallowed, so the state is read back and the click repeated.
+    public async Task EnableEditModeAsync()
+    {
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            if (await ToolbarEdit.GetAttributeAsync("data-checked") == "true")
+                return;
+            await ToolbarEdit.ClickAsync();
+            await page.WaitForTimeoutAsync(250);
+        }
+        await Expect(ToolbarEdit).ToHaveAttributeAsync("data-checked", "true");
+    }
 
     // The cloud sync/auth button (AppBar.razor). Clicking it while signed out starts login.
     public ILocator CloudButton => page.GetByTestId("toolbar-cloud");
 
     // A MudBlazor dialog (NodeProperties / MudMessageBox) rendered as role="dialog".
     public ILocator Dialog => page.GetByRole(AriaRole.Dialog);
+
+    // The banner shown while a mode is armed (ModeBanner.razor: placing a note or node,
+    // selecting an export area, dragging a link, arranging a container).
+    public ILocator ModeBanner => page.GetByTestId("mode-banner");
 
     // The dependencies/references explorer tree (DependenciesTree.razor popover). The tree
     // renders nested .mud-treeview lists, so take the outermost (first) one.
@@ -267,6 +293,62 @@ public sealed class AppPage
         }
     }
 
+    // Clear the selection with Escape and verify it took (the node toolbar goes away). Waits for
+    // the selection first: a navigation (NavigationService.ShowNodeAsync) selects its node only
+    // after the pan/zoom animation, so an Escape pressed before that cancels nothing and the
+    // toolbar shows up afterwards (a CI flake). A keystroke landing while something animates
+    // can also be swallowed, so Escape is pressed again until the toolbar is gone.
+    public async Task DeselectAsync()
+    {
+        await Expect(NodeToolbarMenu).ToBeVisibleAsync();
+        await PressEscapeUntilGoneAsync(NodeToolbarMenu);
+    }
+
+    // Cancel an armed mode with Escape and verify the banner is gone. Arming happens on the
+    // server after the menu click that starts it, so wait for the banner first: an Escape sent
+    // before the arming landed cancels nothing, and the mode is armed after all (a CI flake let
+    // the export-area drag open the dialog).
+    public async Task CancelModeAsync()
+    {
+        await Expect(ModeBanner).ToBeVisibleAsync();
+        await PressEscapeUntilGoneAsync(ModeBanner);
+    }
+
+    async Task PressEscapeUntilGoneAsync(ILocator target)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            await page.Keyboard.PressAsync("Escape");
+            try
+            {
+                await Expect(target).ToHaveCountAsync(0, new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (PlaywrightException) when (attempt < MenuAttempts) { }
+        }
+    }
+
+    // Click one of an explorer row's hover-revealed buttons (DependenciesTree.razor shows them
+    // through .hover-element:hover). The row re-renders while the tree updates, and WebKit does
+    // not recompute :hover for a replaced element until the pointer moves again, so a click that
+    // still finds the button hidden nudges the pointer away, hovers the row again and retries.
+    public async Task ClickRowHoverButtonAsync(ILocator row, string testId)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            await row.HoverAsync();
+            try
+            {
+                await row.GetByTestId(testId).ClickAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
+            {
+                await page.Mouse.MoveAsync(0, 0);
+            }
+        }
+    }
+
     // Open the selected node's context menu (NodeToolbar.razor) and return one of its items.
     public async Task<ILocator> OpenNodeMenuItemAsync(string testId)
     {
@@ -357,8 +439,7 @@ public sealed class AppPage
     // child selects that child instead. The toolbar then renders in icon mode, without the
     // container-only affordances, which otherwise only surfaces later as a missing button.
     // How tall the header strip is depends on the zoom, so try a few points and keep the one
-    // that actually selected a container — the edit pencil is the container-only marker (this
-    // suite runs against the Blazor Server host, where editing is always enabled).
+    // that actually selected a container — the node toolbar marks that with data-container.
     public async Task SelectContainerNodeAsync(string label, float timeoutSeconds = 15)
     {
         for (int attempt = 0; ; attempt++)
@@ -376,7 +457,8 @@ public sealed class AppPage
 
             try
             {
-                await MenuItem("node-edit").WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                await page.Locator("[data-testid='node-toolbar'][data-container='true']")
+                    .WaitForAsync(new() { Timeout = MenuAttemptTimeout });
                 return;
             }
             catch (Exception e) when (IsRetryable(e) && attempt + 1 < ContainerClickPoints.Length)
@@ -448,6 +530,24 @@ public sealed class AppPage
     {
         await ClickUntilSelectedAsync(() => WaitForStableNodePointAsync(visibleName));
     }
+
+    // Shift+click a node by its visible label to add it to (or remove it from) the current
+    // selection; the toolbar's "N selected" badge tells whether it took.
+    public async Task ShiftClickNodeByVisibleNameAsync(string visibleName)
+    {
+        float[] point = await WaitForStableNodePointAsync(visibleName);
+        await page.Keyboard.DownAsync("Shift");
+        try
+        {
+            await page.Mouse.ClickAsync(point[0], point[1]);
+        }
+        finally
+        {
+            await page.Keyboard.UpAsync("Shift");
+        }
+    }
+
+    public ILocator NodeSelectionCount => page.GetByTestId("node-selection-count");
 
     // Click a computed canvas point until a node toolbar actually shows. The canvas re-renders
     // continuously, so a click can land where the node was a frame ago and select nothing —
@@ -572,12 +672,39 @@ public sealed class AppPage
     }
 
     // Open the node search dialog via the Ctrl+F hotkey; returns its page object.
-    // Waits for the parsed model first — see WaitForModelRenderedAsync.
+    // Waits for the parsed model first — see WaitForModelRenderedAsync. The app's keyboard
+    // listener (jsInterop.js listenToKeyboard) ignores shortcuts while a dialog or a menu
+    // popover is open, and a just-clicked menu item's popover is still fading out for a moment
+    // (a CI run lost the hotkey 260 ms after a menu click), so wait for those to be gone, then
+    // verify the dialog opened and press again if the keystroke was dropped anyway.
     public async Task<SearchDialog> OpenSearchViaHotkeyAsync()
     {
         await WaitForModelRenderedAsync();
-        await page.Keyboard.PressAsync("Control+f");
-        return new SearchDialog(this, page);
+        await Expect(KeyboardOwners).ToHaveCountAsync(0);
+        SearchDialog search = new(this, page);
+        for (int attempt = 1; ; attempt++)
+        {
+            await page.Keyboard.PressAsync("Control+f");
+            try
+            {
+                await Expect(search.Field).ToBeVisibleAsync(new() { Timeout = MenuAttemptTimeout });
+                return search;
+            }
+            catch (PlaywrightException) when (attempt < MenuAttempts) { }
+        }
+    }
+
+    // The elements that own the keyboard while present (the same selector jsInterop.js uses
+    // to ignore canvas shortcuts): an open dialog, or an open menu/list popover.
+    ILocator KeyboardOwners =>
+        page.Locator(".mud-dialog-container, .mud-popover-open .mud-list, .mud-popover-open .mud-menu-list");
+
+    // Navigate to a node by its exact full name through the search dialog (which closes on
+    // Enter and selects the node once the pan/zoom animation lands).
+    public async Task NavigateToNodeAsync(string fullName)
+    {
+        SearchDialog search = await OpenSearchViaHotkeyAsync();
+        await search.NavigateToAsync(fullName);
     }
 
     // Stub Clerk sign-in without the real Clerk: block the Clerk CDN and stub window.Clerk

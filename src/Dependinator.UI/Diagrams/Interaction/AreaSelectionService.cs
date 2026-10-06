@@ -3,15 +3,27 @@ using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams.Interaction;
 
-// Rubber-band area selection: armed (e.g. from the app menu), the next left-drag on the canvas
-// draws a selection rectangle (the Canvas renders the overlay while IsSelecting is true) and
-// resolves to the selected rectangle in canvas coordinates. Used by image export; designed to
-// be reusable for future group operations (move/recolor the nodes within a rectangle).
+// What a drawn rectangle is for: the image export (armed from the menu, banner shown) or a
+// rubber-band node selection (Shift+drag, no banner).
+enum AreaSelectionPurpose
+{
+    Export,
+    SelectNodes,
+}
+
+// Rubber-band area selection: armed (from the app menu, or by a Shift+press), the next
+// left-drag on the canvas draws a selection rectangle (the Canvas renders the overlay while
+// IsSelecting is true) and resolves to the selected rectangle in canvas coordinates. Used by
+// the image export and by the rubber-band node selection.
 interface IAreaSelectionService
 {
     // Armed: crosshair mode, waiting for the press. Selecting: dragging, overlay visible.
     bool IsArmed { get; }
     bool IsSelecting { get; }
+    AreaSelectionPurpose Purpose { get; }
+
+    // True once the drag is big enough to count as a rectangle rather than a click.
+    bool IsDragLargeEnough { get; }
 
     // Drag start/end in viewport (client) coords, the coordinate space of the fixed overlay.
     Pos StartClient { get; }
@@ -20,7 +32,7 @@ interface IAreaSelectionService
 
     // Arms the mode; the returned task resolves with the selected rectangle in canvas
     // coordinates, or null if canceled (Escape, right-click, a too-small drag, or re-arming).
-    Task<Rect?> SelectAreaAsync();
+    Task<Rect?> SelectAreaAsync(AreaSelectionPurpose purpose = AreaSelectionPurpose.Export);
     void Cancel();
 
     // Called only by the InteractionService gesture routing.
@@ -41,14 +53,21 @@ class AreaSelectionService(IModelMgr modelMgr, IScreenService screenService, IAp
 
     public bool IsArmed { get; private set; }
     public bool IsSelecting { get; private set; }
+    public AreaSelectionPurpose Purpose { get; private set; }
     public Pos StartClient { get; private set; } = Pos.None;
     public Pos EndClient { get; private set; } = Pos.None;
     public event Action? StateChanged;
 
-    public Task<Rect?> SelectAreaAsync()
+    public bool IsDragLargeEnough =>
+        IsSelecting
+        && Math.Abs(EndClient.X - StartClient.X) >= MinDragSize
+        && Math.Abs(EndClient.Y - StartClient.Y) >= MinDragSize;
+
+    public Task<Rect?> SelectAreaAsync(AreaSelectionPurpose purpose = AreaSelectionPurpose.Export)
     {
         Cancel(); // A previous armed/active selection is superseded (its task resolves null).
         pending = new TaskCompletionSource<Rect?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Purpose = purpose;
         IsArmed = true;
         OnStateChanged();
         return pending.Task;

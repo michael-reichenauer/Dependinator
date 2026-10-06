@@ -7,6 +7,14 @@ interface IVsCodeSendService
     Task ShowEditorAsync(FileLocation fileLocation);
     Task OpenHelpAsync();
     Task NotifyDiagramLoadedAsync();
+
+    // Tells the extension what the UI is doing ("parsing" or "idle"), for its status bar item.
+    // No-op in browser hosts.
+    Task NotifyStatusAsync(string state);
+
+    // Puts text on the clipboard through the extension (the webview's own clipboard API is not
+    // reliable). False in browser hosts.
+    Task<bool> CopyToClipboardAsync(string text);
 }
 
 [Scoped]
@@ -32,6 +40,16 @@ class VsCodeSendService : IVsCodeSendService
     public async Task NotifyDiagramLoadedAsync()
     {
         await jSInterop.Call<bool>("postVsCodeMessage", new { type = "vscode/DiagramLoaded", message = "" });
+    }
+
+    public async Task<bool> CopyToClipboardAsync(string text)
+    {
+        return await jSInterop.Call<bool>("postVsCodeMessage", new { type = "vscode/CopyToClipboard", message = text });
+    }
+
+    public async Task NotifyStatusAsync(string state)
+    {
+        await jSInterop.Call<bool>("postVsCodeMessage", new { type = "vscode/Status", message = state });
     }
 
     // The help page is a static asset served from the Dependinator.UI RCL at

@@ -20,7 +20,8 @@ interface IVsCodeMessageService
 class VsCodeMessageService(
     IJSInterop jSInterop,
     IJsonRpcService jsonRpcService,
-    IVsCodeReceiveService vsCodeIntegrationService
+    IVsCodeReceiveService vsCodeIntegrationService,
+    IApplicationEvents applicationEvents
 ) : IVsCodeMessageService, IAsyncDisposable
 {
     DotNetObjectReference<VsCodeMessageService>? reference;
@@ -64,7 +65,10 @@ class VsCodeMessageService(
 
         if (type == "ui/error")
         {
+            // E.g. the language server could not start: without it nothing parses, so the
+            // user must see it rather than wait for a diagram that never comes.
             Log.Error("Communication Error", message);
+            applicationEvents.TriggerErrorReported($"VS Code: {message}");
             return;
         }
 

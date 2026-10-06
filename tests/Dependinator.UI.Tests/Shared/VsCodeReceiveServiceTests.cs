@@ -14,7 +14,7 @@ public class VsCodeReceiveServiceTests
         Mock<INavigationService> navigation = new();
         Mock<ICanvasService> canvas = new();
         canvas.Setup(c => c.RefreshAsync()).Returns(Task.CompletedTask);
-        VsCodeReceiveService sut = new(navigation.Object, canvas.Object);
+        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object);
 
         await sut.ReceivedMessageAsync("ui/refresh", "");
 
@@ -28,7 +28,7 @@ public class VsCodeReceiveServiceTests
         Mock<ICanvasService> canvas = new();
         TaskCompletionSource firstRefresh = new();
         canvas.SetupSequence(c => c.RefreshAsync()).Returns(firstRefresh.Task).Returns(Task.CompletedTask);
-        VsCodeReceiveService sut = new(navigation.Object, canvas.Object);
+        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object);
 
         Task firstCall = sut.ReceivedMessageAsync("ui/refresh", "");
         await sut.ReceivedMessageAsync("ui/refresh", "");
@@ -46,7 +46,7 @@ public class VsCodeReceiveServiceTests
     {
         Mock<INavigationService> navigation = new();
         Mock<ICanvasService> canvas = new();
-        VsCodeReceiveService sut = new(navigation.Object, canvas.Object);
+        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object);
 
         await sut.ReceivedMessageAsync("ui/ShowNode", "some/file.cs@42");
 
@@ -59,11 +59,26 @@ public class VsCodeReceiveServiceTests
     {
         Mock<INavigationService> navigation = new();
         Mock<ICanvasService> canvas = new();
-        VsCodeReceiveService sut = new(navigation.Object, canvas.Object);
+        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object);
 
         await sut.ReceivedMessageAsync("ui/unknown", "message");
 
         navigation.VerifyNoOtherCalls();
         canvas.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task ReceivedMessageAsync_ShouldRequestSearchOnUiSearch()
+    {
+        Mock<IApplicationEvents> events = new();
+        VsCodeReceiveService sut = new(
+            new Mock<INavigationService>().Object,
+            new Mock<ICanvasService>().Object,
+            events.Object
+        );
+
+        await sut.ReceivedMessageAsync("ui/search", "");
+
+        events.Verify(e => e.TriggerSearchRequested(), Times.Once);
     }
 }

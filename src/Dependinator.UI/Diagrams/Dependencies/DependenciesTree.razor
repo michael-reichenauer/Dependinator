@@ -36,6 +36,16 @@
                                Color="@(srv.IsShowLines ? Color.Info : Color.Default)"
                                OnClick="() => srv.SetShowLines(!srv.IsShowLines)" data-testid="explorer-show-lines" />
             </MudTooltip>
+            <MudTooltip Text="@IndirectTooltip">
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.DoubleArrow" Size="Size.Small"
+                               Color="@(srv.IsIncludeIndirect ? Color.Info : Color.Default)"
+                               OnClick="() => srv.SetIncludeIndirect(!srv.IsIncludeIndirect)" data-testid="explorer-indirect" />
+            </MudTooltip>
+            <MudTooltip Text="@(srv.IsLinesPinned ? "Lines are kept when selecting other nodes (click to unpin)" : "Keep the lines when selecting other nodes")">
+                <MudIconButton Icon="@(srv.IsLinesPinned ? MudBlazor.Icons.Material.Filled.PushPin : MudBlazor.Icons.Material.Outlined.PushPin)"
+                               Size="Size.Small" Color="@(srv.IsLinesPinned ? Color.Info : Color.Default)"
+                               OnClick="() => srv.SetLinesPinned(!srv.IsLinesPinned)" data-testid="explorer-pin-lines" />
+            </MudTooltip>
             <MudTooltip Text="Show references">
                 <MudIconButton Icon="@Icon.ReferencesIcon" Size="Size.Small"
                                Color="@(srv.TreeType == TreeType.References ? Color.Info : Color.Default)"
@@ -51,7 +61,7 @@
                                Size="Size.Small" OnClick="() => srv.SetMinimized(!srv.IsMinimized)"
                                data-testid="explorer-minimize" />
             </MudTooltip>
-            <MudTooltip Text="Close">
+            <MudTooltip Text="Close (the lines stay until you select something else)">
                 <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small"
                                OnClick="() => srv.Close()" data-testid="explorer-close" />
             </MudTooltip>
@@ -73,10 +83,18 @@
                                  class="hover-element">
 
                                 <div style="justify-self: start; display: flex; align-items: baseline; gap: 6px;">
-                                    <MudText>@item.Text</MudText>
+                                    <MudText Class="@(item.IsIndirect ? "mud-text-secondary" : "")">@item.Text</MudText>
                                     @if (item.LinkCount > 0)
                                     {
                                         <MudText Typo="Typo.caption" Class="mud-text-secondary">(@item.LinkCount)</MudText>
+                                    }
+                                    else if (item.HopCount > 0)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary" data-testid="explorer-hops">(@item.HopCount hops)</MudText>
+                                    }
+                                    else if (item.IsIndirect)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">(indirect)</MudText>
                                     }
                                 </div>
 
@@ -88,7 +106,7 @@
                                             <MudTooltip Text="Expand/collapse all">
                                                 <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Expand" Size="Size.Small"
                                                                Color="Color.Inherit" Class="ml-3 hover-button"
-                                                               OnClick="() => srv.ToggleExpandAll(item)" />
+                                                               OnClick="() => srv.ToggleExpandAll(item)" data-testid="explorer-expand-all" />
                                             </MudTooltip>
                                         }
                                         <MudTooltip Text="Show node in diagram">
@@ -102,6 +120,14 @@
                                                 <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" Size="Size.Small"
                                                                Color="Color.Inherit" Class="ml-3 hover-button"
                                                                OnClick="() => srv.ShowEditorAsync(item.NodeId)" />
+                                            </MudTooltip>
+                                        }
+                                        @if (item.HopCount > 0)
+                                        {
+                                            <MudTooltip Text="@ChainTooltip">
+                                                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.AltRoute" Size="Size.Small"
+                                                               Color="Color.Inherit" Class="ml-3 hover-button"
+                                                               OnClick="() => srv.ShowChain(item.NodeId)" data-testid="explorer-show-chain" />
                                             </MudTooltip>
                                         }
                                         <MudTooltip Text="Show direct line to this node">
@@ -126,6 +152,16 @@
     bool IsShowExplorer => srv.IsShowExplorer;
 
     string HeadingText => srv.TreeType == TreeType.References ? "References:" : "Dependencies:";
+
+    string IndirectTooltip =>
+        srv.IsIncludeIndirect ? "Indirect ones are included (click to list only direct ones)"
+        : srv.TreeType == TreeType.References ? "Include indirect references: nodes that reach this node through other nodes"
+        : "Include indirect dependencies: nodes this node reaches through other nodes";
+
+    string ChainTooltip =>
+        srv.TreeType == TreeType.References
+            ? "Show the chain of dependencies from this node"
+            : "Show the chain of dependencies to this node";
 
     int MaxHeight => (int)screenService.SvgRect.Height - 5;
     int MaxWidth => (int)screenService.SvgRect.Width - 20;

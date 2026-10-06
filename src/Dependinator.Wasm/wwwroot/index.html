@@ -3,11 +3,10 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <meta name="HandheldFriendly" content="true" />
-
-    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" /> -->
+    <meta name="description"
+          content="Dependinator visualizes the structure and dependencies of a C#/.NET codebase as an interactive, navigable map." />
     <title>Dependinator</title>
     <base href="/" />
     <!-- Warm up the TLS connection to Clerk early so the cloud sign-in/token
@@ -27,7 +26,20 @@
     </style>
 </head>
 
-<body oncontextmenu="return false;" style="background-color:#000000;">
+<body oncontextmenu="return false;">
+    <script>
+        // Paint the last used theme's background before Blazor boots, so a reload does not
+        // flash the other theme (the app sets and stores the theme, see applyTheme).
+        (function () {
+            try {
+                var isDark = localStorage.getItem("dep-theme") === "dark"
+                    || (!localStorage.getItem("dep-theme")
+                        && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+                document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+                document.body.style.backgroundColor = isDark ? "#0D0F11" : "#FAFAFA";
+            } catch (e) { }
+        })();
+    </script>
     <div id="app">
         <svg class="loading-progress">
             <circle r="40%" cx="50%" cy="50%" />

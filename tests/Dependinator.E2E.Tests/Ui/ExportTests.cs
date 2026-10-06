@@ -49,6 +49,8 @@ public class ExportTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
 
         await (await App.OpenSubMenuItemAsync("menu-export", "menu-export-area")).ClickAsync();
+        // Arming lands on the server after the click; a drag before that pans instead.
+        await Expect(App.ModeBanner).ToBeVisibleAsync();
         await DragOnCanvasAsync();
 
         await Expect(App.Dialog).ToBeVisibleAsync();
@@ -65,7 +67,7 @@ public class ExportTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
 
         await (await App.OpenSubMenuItemAsync("menu-export", "menu-export-area")).ClickAsync();
-        await Page.Keyboard.PressAsync("Escape");
+        await App.CancelModeAsync();
 
         // The armed selection is canceled: a drag pans the canvas instead of selecting,
         // and no export dialog opens.

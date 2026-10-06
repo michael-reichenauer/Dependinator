@@ -3,12 +3,15 @@ using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
+using Dependinator.UI.Shared.CloudSync;
 using Dependinator.UI.Shared.Types;
 using Dependinator.UI.Shared.VsCode;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
+using Shared;
 
 // The interactive diagram canvas: rendering the model, pan/zoom, selection, and pointer-driven
 // editing of nodes and lines.
@@ -26,7 +29,7 @@ interface ICanvasService
     Task RefreshAsync();
     void PanZoomToFit();
     Task InitialShowAsync();
-    Task LoadAsync(string modelPath);
+    Task LoadAsync(string modelPath, bool? includeTestProjects = null);
     Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles);
 }
 
@@ -43,8 +46,12 @@ class CanvasService(
     IBrowserFileService browserFileService,
     IModelListService recentModelsService,
     IInteractionService interactionService,
-    IDialogService dialogService,
-    IVsCodeSendService vsCodeSendService
+    ICoachService coachService,
+    IShareLinkService shareLinkService,
+    Lazy<IAppCloudSyncService> appCloudSyncServiceLazy,
+    IVsCodeSendService vsCodeSendService,
+    IViewHistoryService viewHistory,
+    ICommandService commandService
 ) : ICanvasService
 {
     double levelZoom = 1;
@@ -73,19 +80,40 @@ class CanvasService(
 
     public async Task InitialShowAsync()
     {
-        bool isShowDemoMessage = false;
         using var t = Timing.Start("InitialShow");
         await screenService.CheckResizeAsync();
         // In test mode always load the embedded demo model for a fast, deterministic
-        // model, ignoring any persisted recent/local paths.
-        var startupPath = Dependinator.Core.Build.IsTestMode ? DemoModel.Path : recentModelsService.StartupPath;
-        if (startupPath is null)
+        // model, ignoring any persisted recent/local paths. First-time users (or users who
+        // reset their last diagram) have no previous model, so the demo diagram is shown.
+        var startupPath = Dependinator.Core.Build.IsTestMode
+            ? DemoModel.Path
+            : recentModelsService.StartupPath ?? DemoModel.Path;
+
+        // Opened with a share link: its model wins over the remembered one (when it can be found).
+        var link = shareLinkService.TakeStartupTarget();
+        var isLoaded = false;
+        var isLinkedModelOpen = link?.ModelKey is null; // A link without a model applies to whatever opens
+        if (link?.ModelKey is { } modelKey)
         {
-            startupPath = DemoModel.Path;
-            isShowDemoMessage = true;
+            switch (await shareLinkService.ResolveModelAsync(modelKey))
+            {
+                case LinkedModel { LocalPath: { } localPath }:
+                    startupPath = localPath;
+                    isLinkedModelOpen = true;
+                    break;
+                case LinkedModel { CloudModel: { } cloudModel }:
+                    isLoaded =
+                        await appCloudSyncServiceLazy.Value.LoadCloudModelAsync(cloudModel) is CloudModelMetadata;
+                    isLinkedModelOpen = isLoaded;
+                    break;
+                case Error error:
+                    applicationEvents.TriggerErrorReported(error.Message);
+                    break;
+            }
         }
 
-        await LoadAsync(startupPath);
+        if (!isLoaded)
+            await LoadAsync(startupPath);
 
         // Signal that the initial model has loaded and rendered (data-app-ready=true on
         // the body), so UI/e2e tests can wait on it instead of arbitrary timeouts.
@@ -95,24 +123,25 @@ class CanvasService(
         // node for the editor that was active when the webview was first opened.
         await vsCodeSendService.NotifyDiagramLoadedAsync();
 
-        // First-time users (or users who reset their last diagram) have no previous
-        // model, so a demo diagram is shown. Let them know why, and invite them to
-        // explore the application with it.
-        if (isShowDemoMessage)
-        {
-            await ShowDemoMessageAsync();
-        }
+        // The link's node or view only means something in the link's own model.
+        if (link is not null && isLinkedModelOpen)
+            await shareLinkService.ApplyAsync(link);
+
+        // New users get the short tour (once); it says why a demo diagram is open when it is.
+        await coachService.StartIfFirstRunAsync(isDemoModel: !isLoaded && startupPath == DemoModel.Path);
     }
 
-    public async Task LoadAsync(string modelPath)
+    public async Task LoadAsync(string modelPath, bool? includeTestProjects = null)
     {
         applicationEvents.TriggerUIStateChanged();
         await Task.Yield();
 
         // Load failures (e.g. a failed parse) are reported to the user by the model service.
-        if (await modelService.LoadAsync(modelPath) is not ModelInfo modelInfo)
+        if (await modelService.LoadAsync(modelPath, includeTestProjects) is not ModelInfo modelInfo)
             return;
 
+        viewHistory.Clear(); // Views of the previous model mean nothing here
+        commandService.Clear(); // Nor do its edits: undoing them here would change this model
         PanZoomModel(modelInfo);
 
         await recentModelsService.AddModelAsync(modelInfo.Path);
@@ -122,9 +151,13 @@ class CanvasService(
     public async Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles)
     {
         var paths = await browserFileService.AddAsync(browserFiles);
+        if (paths.Count == 0)
+        {
+            applicationEvents.TriggerErrorReported("The dropped file could not be read.");
+            return;
+        }
 
-        var modelPath = paths.First();
-        await LoadAsync(modelPath);
+        await LoadAsync(paths[0]);
     }
 
     void PanZoomModel(ModelInfo modelInfo)
@@ -157,6 +190,7 @@ class CanvasService(
     public void PanZoomToFit()
     {
         var bound = modelMgr.WithModel(m => m.Root.GetTotalBounds());
+        viewHistory.RecordJump();
         panZoomService.PanZoomToFit(bound, Math.Min(1, Zoom));
         applicationEvents.TriggerUIStateChanged();
     }
@@ -185,31 +219,5 @@ class CanvasService(
 
         applicationEvents.TriggerUIStateChanged();
         return content;
-    }
-
-    async Task ShowDemoMessageAsync()
-    {
-        // Inside the VS Code extension the user already has it installed, so only
-        // suggest the extension in the browser hosts.
-        string extensionHint = Dependinator.Core.Build.IsVsCodeExtWasm
-            ? ""
-            : "To work with diagrams alongside your code, install the "
-                + "<a href=\"https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator\" "
-                + "target=\"_blank\" rel=\"noopener\">Dependinator VS Code extension</a>.<br/><br/>";
-
-        await dialogService.ShowMessageBoxAsync(
-            "Welcome to Dependinator",
-            (MarkupString)(
-                "It looks like you don't have a diagram yet, so a <b>demo diagram</b> "
-                + "has been opened for you to explore.<br/><br/>"
-                + "Pan, zoom and click the nodes to see how Dependinator visualizes "
-                + "software dependencies. You can open your own model at any time from the menu.<br/><br/>"
-                + "The <b>Help</b> page (the <b>?</b> button in the app bar) has usage "
-                + "instructions, navigation tips, and keyboard/mouse controls.<br/><br/>"
-                + extensionHint
-                + "Enable device sync to keep your diagrams in sync across your devices."
-            ),
-            yesText: "Got it"
-        );
     }
 }

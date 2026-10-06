@@ -1,0 +1,66 @@
+@using Dependinator.Core.Shared
+@using Dependinator.UI.Diagrams
+@inject IApplicationEvents applicationEvents
+@inject IViewContextService viewContext
+@inject Modeling.Models.IModelMgr modelMgr
+@inject INavigationService navigationService
+@inject ICanvasService canvasService
+@implements IDisposable
+
+@* Wayfinding bar under the app bar: the open model, then the chain of containers down to the
+   selected node or, with nothing selected, to the innermost open container under the viewport
+   center (the "you are here" a map app shows through its place labels). Every crumb pans and
+   zooms to that node; the model crumb fits the whole diagram. *@
+@if (ModelName.Length > 0)
+{
+  var chain = Chain;
+  <nav class="dep-breadcrumb dep-toolbar-card @(IsSelectionChain ? "" : "dep-breadcrumb--context")"
+       aria-label="Location" data-testid="breadcrumb">
+    <button type="button" class="dep-breadcrumb__item dep-breadcrumb__model" @onclick="FitToScreen"
+            title="@ModelTitle" data-testid="breadcrumb-model">
+      <MudIcon Icon="@ModelIcon" Size="Size.Small" Class="dep-breadcrumb__icon" />
+      <span>@ModelName</span>
+    </button>
+    @foreach (var item in chain)
+    {
+      <span class="dep-breadcrumb__sep">›</span>
+      <button type="button" class="dep-breadcrumb__item" @onclick="() => ShowNodeAsync(item.Id)" title="@item.LongName"
+              data-testid="breadcrumb-item">
+        @item.Name
+      </button>
+    }
+  </nav>
+}
+
+@code {
+  bool IsSelectionChain;
+
+  IReadOnlyList<ViewContextItem> Chain
+  {
+    get
+    {
+      var selected = viewContext.GetSelectedChain();
+      IsSelectionChain = selected.Count > 0;
+      return IsSelectionChain ? selected : viewContext.GetViewCenterChain();
+    }
+  }
+
+  string ModelPath => modelMgr.ModelPath;
+  bool IsDesignModel => ModelPaths.IsDesignModel(ModelPath);
+
+  string ModelName => string.IsNullOrEmpty(ModelPath) ? "" : (IsDesignModel ? ModelPath : Path.GetFileName(ModelPath));
+
+  string ModelTitle => IsDesignModel ? $"{ModelPath} (design model). Click to fit to screen." : $"{ModelPath} (solution). Click to fit to screen.";
+
+  string ModelIcon => IsDesignModel ? MudBlazor.Icons.Material.Outlined.DesignServices : MudBlazor.Icons.Material.Outlined.Schema;
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  void FitToScreen() => canvasService.PanZoomToFit();
+
+  Task ShowNodeAsync(Modeling.Models.NodeId nodeId) => navigationService.ShowNodeAsync(nodeId);
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

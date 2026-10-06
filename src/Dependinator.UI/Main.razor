@@ -1,27 +1,17 @@
-﻿@using Dependinator.UI.App
+@using Dependinator.UI.App
+@inject IThemeService themeService
+@implements IDisposable
 
-<MudThemeProvider Theme="DependinatorTheme" @bind-IsDarkMode="@_isDarkMode" />
+<MudThemeProvider Theme="DependinatorTheme" IsDarkMode="@themeService.IsDark" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
     <Canvas />
-    @* <MudHidden Breakpoint="Breakpoint.SmAndDown">
-        <AppBar />
-        <MudMainContent>
-            <Canvas />
-        </MudMainContent>
-    </MudHidden>
-    <MudHidden Breakpoint="Breakpoint.MdAndUp">
-        <Canvas />
-    </MudHidden> *@
-
 </MudLayout>
 
 @code {
-    bool _isDarkMode = false;
-
     MudTheme DependinatorTheme = new MudTheme
     {
         PaletteLight = new PaletteLight()
@@ -36,7 +26,16 @@
             AppbarText = Colors.DeepPurple.Lighten5,
             Secondary = Colors.DeepPurple.Lighten4,
             Primary = Colors.DeepPurple.Lighten5,
-            Tertiary = Colors.DeepPurple.Darken2,
+            // The primary is near white, so filled primary buttons and the selection badge need
+            // dark text (MudBlazor's default contrast text is white).
+            PrimaryContrastText = Colors.DeepPurple.Darken4,
+            Tertiary = Colors.DeepPurple.Lighten3,
         },
     };
+
+    protected override void OnInitialized() => themeService.Changed += OnThemeChanged;
+
+    void OnThemeChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => themeService.Changed -= OnThemeChanged;
 }

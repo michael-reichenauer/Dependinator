@@ -121,6 +121,14 @@ dotnet list Dependinator.sln package --vulnerable
 
 **Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core` and `Reflection → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, Reflection, hosts, or UI frameworks (MudBlazor/ASP.NET Core), and Shared must not reference other Dependinator projects. Don't add references against this direction.
 
+## Committing
+
+Commit on your own whenever a good logical step is complete and would benefit from being a
+separate commit: a working, formatted, tested unit of change (build green, unit tests green,
+e2e where UI changed). A large task or phase may well end up as several commits rather than
+one; the user reviews the commits in git afterwards. Do not push unless asked. Work on the
+current feature branch, never directly on `main` or `dev`.
+
 ## Commit Style
 
 Imperative, concise subject under 72 chars (e.g., `Fix parsing of generic constraints`). Include rationale in commit body when non-obvious. Link issues with `Fixes #123` in PRs.

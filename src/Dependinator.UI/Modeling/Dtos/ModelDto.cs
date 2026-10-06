@@ -21,4 +21,15 @@ record ModelDto
     public required IReadOnlyList<NodeDto> Nodes { get; init; }
     public required IReadOnlyList<LinkDto> Links { get; init; }
     public IReadOnlyList<LineDto> Lines { get; init; } = [];
+
+    // Defaulted, so models saved before rules existed still deserialize (no FormatVersion bump).
+    public IReadOnlyList<RuleDto> Rules { get; init; } = [];
+}
+
+// An architecture rule: "From" must not depend on "To" (node names, see ArchitectureRule).
+[Serializable]
+record RuleDto
+{
+    public required string From { get; init; }
+    public required string To { get; init; }
 }

@@ -12,14 +12,20 @@ class VsCodeReceiveService : IVsCodeReceiveService
 {
     readonly INavigationService navigationService;
     readonly ICanvasService canvasService;
+    readonly IApplicationEvents applicationEvents;
 
     bool isRefreshing;
     bool isRefreshPending;
 
-    public VsCodeReceiveService(INavigationService navigationService, ICanvasService canvasService)
+    public VsCodeReceiveService(
+        INavigationService navigationService,
+        ICanvasService canvasService,
+        IApplicationEvents applicationEvents
+    )
     {
         this.navigationService = navigationService;
         this.canvasService = canvasService;
+        this.applicationEvents = applicationEvents;
     }
 
     public async Task ReceivedMessageAsync(string type, string message)
@@ -31,6 +37,9 @@ class VsCodeReceiveService : IVsCodeReceiveService
                 break;
             case "ui/refresh":
                 await RefreshAsync();
+                break;
+            case "ui/search":
+                applicationEvents.TriggerSearchRequested(); // The "Dependinator: Search Nodes" command
                 break;
         }
     }

@@ -1,0 +1,107 @@
+@using Dependinator.UI.Diagrams.Icons
+@inject IApplicationEvents applicationEvents
+@inject IViewOptions viewOptions
+@implements IDisposable
+
+@* The legend: what the line styles and node icons mean. The line samples reuse the canvas's own
+   colors and arrow markers (same document, so <use href="#..."> resolves). The icons are carried
+   by the legend itself: the canvas's defs only hold the icons the open model uses. *@
+@if (viewOptions.IsLegendShown)
+{
+  <div class="dep-legend dep-toolbar-card" data-testid="legend">
+    <div class="dep-legend__header">
+      <span class="dep-legend__title">Legend</span>
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
+                     data-testid="legend-close" />
+    </div>
+    <div class="dep-legend__columns">
+      <div>
+        <div class="dep-legend__caption">Lines</div>
+        @foreach (var (svg, text) in LineSamples)
+        {
+          <div class="dep-legend__row">
+            <svg width="56" height="14" viewBox="0 0 56 14" class="dep-legend__sample">@((MarkupString)svg)</svg>
+            <span>@text</span>
+          </div>
+        }
+      </div>
+      <div>
+        <div class="dep-legend__caption">Nodes</div>
+        @foreach (var (icon, text) in NodeSamples)
+        {
+          <div class="dep-legend__row">
+            <svg width="18" height="18" viewBox="0 0 24 24" class="dep-legend__sample">
+              <defs>@((MarkupString)LegendIcon(icon))</defs>
+              <use href="#legend-@icon" />
+            </svg>
+            <span>@text</span>
+          </div>
+        }
+        <div class="dep-legend__row">
+          <span class="dep-legend__sample dep-legend__glyph" style="color:@DColors.ManualMarker">✎</span>
+          <span>Drawn by you (not parsed)</span>
+        </div>
+        <div class="dep-legend__row">
+          <svg width="18" height="18" viewBox="0 0 24 24" class="dep-legend__sample">
+            <circle cx="12" cy="12" r="9" fill="@DColors.NoteFill" stroke="@DColors.NoteBorder" stroke-width="1.5" />
+            <text x="12" y="16" text-anchor="middle" font-size="11" font-weight="600" fill="@DColors.NoteText">1</text>
+          </svg>
+          <span>Note</span>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@code {
+  static string Sample(string color, string marker, string dash = "", double width = 1.5, string extra = "") =>
+      $"<polyline points=\"3,7 46,7\" fill=\"none\" stroke=\"{color}\" stroke-width=\"{width}\" marker-end=\"url(#{marker})\"{dash}{extra} />"
+      + $"<circle cx=\"3\" cy=\"7\" r=\"2.5\" fill=\"{color}\"{extra} />";
+
+  IReadOnlyList<(string Svg, string Text)> LineSamples =>
+  [
+    (Sample(DColors.Line, "arrow-line"), "Dependency (thicker = more links)"),
+    (Sample(DColors.Line, "arrow-inheritance"), "Inherits / implements"),
+    (Sample(DColors.CousinLine, "arrow-cousin"), "Crossing line (lines shown per child)"),
+    (Sample(DColors.DirectLine, "arrow-direct", " stroke-dasharray=\"6,6\"", 2), "Direct line you asked for"),
+    (Sample(DColors.DirectLine, "arrow-direct", " stroke-dasharray=\"2,4\"", 2), "Dependencies explorer line"),
+    (Sample(DColors.LineHidden, "arrow-hidden"), "Line of a hidden node"),
+    (Sample(DColors.CycleLine, "arrow-cycle"), "Part of a circular dependency (View › Show Cycles)"),
+    (Sample(DColors.PathLine, "arrow-path", "", 2), "On the dependency path you asked for (View › Find Path)"),
+    (Sample(DColors.RuleLine, "arrow-rule", "", 2), "Breaks an architecture rule (View › Show Architecture Rules)"),
+    (Sample(DColors.Line, "arrow-line", "", 1.5, " opacity=\"0.25\""), "Unrelated to the selection"),
+  ];
+
+  static readonly (string Icon, string Text)[] NodeSamples =
+  [
+    ("Solution", "Solution"),
+    ("Assembly", "Project / assembly"),
+    ("Namespace", "Namespace"),
+    ("Type", "Class"),
+    ("Interface", "Interface"),
+    ("Record", "Record"),
+    ("Struct", "Struct"),
+    ("Enum", "Enum"),
+    ("Method", "Method"),
+    ("Property", "Property"),
+    ("Field", "Field"),
+    ("Externals", "External packages"),
+  ];
+
+  // The library icon under a legend-specific id (ids are document-wide, and the canvas may hold
+  // the same icon under its own id).
+  static string LegendIcon(string icon) =>
+      IconLibrary.Get(icon).Replace($"id=\"{icon}\"", $"id=\"legend-{icon}\"", StringComparison.Ordinal);
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  void Close()
+  {
+    viewOptions.SetLegendShown(false);
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

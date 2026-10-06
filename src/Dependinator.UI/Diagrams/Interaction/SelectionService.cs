@@ -15,6 +15,12 @@ interface ISelectionService
     Pos SelectedLineClickPosition { get; }
     bool IsSelectedLineDirect { get; }
 
+    // Every selected node: the primary one (SelectedId, which anchors the toolbar) plus the
+    // ones added with Shift/Ctrl+click. Group actions (move, hide, color, size, delete) apply
+    // to all of them.
+    IReadOnlyCollection<NodeId> SelectedNodeIds { get; }
+    int SelectedNodeCount { get; }
+
     Task UpdateSelectedPositionAsync();
     void HideSelectedPosition();
     bool IsSelectedNodeMovable(double zoom);
@@ -22,6 +28,14 @@ interface ISelectionService
     bool IsSelectedNodeParentHidden();
     Task Select(PointerId pointerId, PointerEvent e);
     Task Select(NodeId nodeId);
+
+    // Shift/Ctrl+click: adds the node to the selection, or removes it again when it already is
+    // part of it. With nothing (or a line) selected it is an ordinary select.
+    Task ToggleInSelectionAsync(PointerId pointerId, PointerEvent e);
+
+    // Adds nodes (e.g. the ones inside a rubber band) to the selection; the first becomes the
+    // primary node when nothing is selected yet.
+    Task AddToSelectionAsync(IReadOnlyList<NodeId> nodeIds);
     void SetEditMode(bool isEditMode);
     void Unselect();
     void ToggleNodeHide();
@@ -50,8 +64,16 @@ class SelectionService(
     bool isEditMode = false;
     bool isSelectedLineDirect = false;
 
+    // Nodes added to the selection beyond the primary one (insertion order kept).
+    readonly List<NodeId> extraSelected = [];
+
     public PointerId SelectedId => selectedId;
     public bool IsSelected => selectedId != PointerId.Empty;
+
+    public IReadOnlyCollection<NodeId> SelectedNodeIds =>
+        selectedId.IsNode ? [selectedId.NodeId, .. extraSelected] : [];
+
+    public int SelectedNodeCount => SelectedNodeIds.Count;
 
     public bool IsEditMode => isEditMode;
 
@@ -131,6 +153,67 @@ class SelectionService(
 
     public Task Select(NodeId nodeId) => Select(PointerId.FromNode(nodeId), new PointerEvent());
 
+    public async Task AddToSelectionAsync(IReadOnlyList<NodeId> nodeIds)
+    {
+        if (nodeIds.Count == 0)
+            return;
+        IEnumerable<NodeId> remaining = nodeIds;
+        if (!selectedId.IsNode)
+        {
+            Unselect(); // A selected line makes way for the nodes
+            await Select(nodeIds[0]);
+            if (!selectedId.IsNode)
+                return;
+            remaining = nodeIds.Skip(1);
+        }
+
+        using (var model = modelMgr.UseModel())
+        {
+            foreach (var nodeId in remaining)
+            {
+                if (nodeId == selectedId.NodeId || extraSelected.Contains(nodeId))
+                    continue;
+                if (!model.Nodes.TryGetValue(nodeId, out var node) || node.IsRoot)
+                    continue;
+                extraSelected.Add(nodeId);
+                node.IsSelected = true;
+                node.IsEditMode = false;
+            }
+        }
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public async Task ToggleInSelectionAsync(PointerId pointerId, PointerEvent e)
+    {
+        if (!pointerId.IsNode || !selectedId.IsNode)
+        {
+            await Select(pointerId, e);
+            return;
+        }
+        if (pointerId.Id == selectedId.Id)
+            return; // The primary node stays; Escape or a plain click elsewhere clears the selection
+
+        var nodeId = pointerId.NodeId;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(nodeId, out var node) || node.IsRoot)
+                return;
+            if (extraSelected.Remove(nodeId))
+            {
+                node.IsSelected = false;
+            }
+            else
+            {
+                extraSelected.Add(nodeId);
+                node.IsSelected = true;
+                node.IsEditMode = false;
+            }
+        }
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
     public async Task Select(PointerId pointerId, PointerEvent e)
     {
         if (IsSelected && selectedId.Id == pointerId.Id)
@@ -192,8 +275,14 @@ class SelectionService(
                     node.IsSelected = false;
                     node.IsEditMode = false;
                 }
+                foreach (var extraId in extraSelected)
+                {
+                    if (model.Nodes.TryGetValue(extraId, out var extra))
+                        extra.IsSelected = false;
+                }
             }
         }
+        extraSelected.Clear();
         if (selectedId.IsLine)
         {
             using (var model = modelMgr.UseModel())
@@ -206,6 +295,10 @@ class SelectionService(
         this.isEditMode = false;
         isSelectedLineDirect = false;
         selectedLineClickPosition = Pos.None;
+        // Forget the toolbar position too: UpdateSelectedPositionAsync skips the repaint when
+        // the position is unchanged, so re-selecting the same node at the same spot would
+        // otherwise select it in the model without ever showing it (no border, no toolbar).
+        selectedPosition = Pos.None;
         applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
     }
@@ -291,6 +384,8 @@ class SelectionService(
         return node.Parent.IsHidden;
     }
 
+    // Hides (or shows) every selected node; the primary node's state decides the direction, so
+    // a mixed group ends up uniform.
     public void ToggleNodeHide()
     {
         if (!IsSelected)
@@ -299,7 +394,12 @@ class SelectionService(
         {
             if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
                 return;
-            node.SetHidden(!node.IsHidden, true);
+            var hidden = !node.IsHidden;
+            foreach (var nodeId in SelectedNodeIds)
+            {
+                if (model.Nodes.TryGetValue(nodeId, out var selected))
+                    selected.SetHidden(hidden, true);
+            }
         }
 
         modelService.CheckLineVisibility();
