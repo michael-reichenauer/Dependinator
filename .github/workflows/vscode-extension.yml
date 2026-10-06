@@ -59,11 +59,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump extension version
+      # A release bumps the minor version and resets patch to 0 (0.8.31 -> 0.9.0).
+      # Local dev builds (scripts/build-ext) bump the patch version instead, so a
+      # locally built package never carries a released version number.
+      - name: Bump extension minor version
         id: bump_version
         run: |
           cd src/DependinatorVsCode
-          npm version patch --no-git-tag-version
+          npm version minor --no-git-tag-version
           VERSION=$(node -p 'require("./package.json").version')
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 

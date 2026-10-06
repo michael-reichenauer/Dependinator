@@ -26,6 +26,7 @@ from anywhere (they `cd` to the repo root themselves), e.g. `./scripts/watch`.
 | --- | --- |
 | `build-ext` | npm install + patch-version bump + package the extension into a `.vsix`. |
 | `install-ext` | `build-ext`, then install the `.vsix` into the local VS Code. |
+| `release` | Release: merge `dev` into `main` with changelog bullets in the merge message and push; CI then deploys production and publishes the extension with its minor version bumped (the bullets become the CHANGELOG entry). `-m "bullet"` (repeatable, default: commit subjects since the last release), `-y` (no prompt), `-n` (preview only). |
 
 ## Assets & maintenance
 
