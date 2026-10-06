@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.29 (2026-10-05)
+
+- Minor fixes and improvements
+
 ## 0.8.28 (2026-09-29)
 
 - Implement IAssemblyResolver.BeginSnapshot for the in-memory resolver
