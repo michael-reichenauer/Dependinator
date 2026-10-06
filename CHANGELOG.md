@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.30 (2026-10-06)
+
+- Minor fixes and improvements
+
 ## 0.8.29 (2026-10-05)
 
 - Minor fixes and improvements
