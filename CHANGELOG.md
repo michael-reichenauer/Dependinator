@@ -1,5 +1,20 @@
 # Change Log
 
+## 0.8.31 (2026-10-06)
+
+- Add first time usage guide
+- Add support for Theme (dark/light)
+- Add breadcrumb support for selected node name
+- Dim lines unrelated to current selection
+- Add lines filter
+- Add support for legend
+- Add Manage models dialog
+- Add more feedback, like progress, summery, ....
+- Add support for showing active node
+- Add architecture rules
+- Add Mini-map support
+- Add support for multi-selection
+
 ## 0.8.30 (2026-10-06)
 
 - Minor fixes and improvements
