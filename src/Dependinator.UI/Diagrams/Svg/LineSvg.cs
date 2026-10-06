@@ -28,6 +28,11 @@ static class LineSvg
     // A path line is drawn at least this wide so the chain reads even among thin lines.
     const double PathMinStrokeWidth = 2;
 
+    // Every aggregated line is drawn at this one width; a line only shows its link-count width
+    // (Line.WeightedStrokeWidth) while it is emphasized (see SvgService.IsLineWeighted), since
+    // the counts are only readable when comparing the few lines of a selection.
+    const double PlainStrokeWidth = 1;
+
     public static string GetLineSvg(
         Line line,
         Pos nodeCanvasPos,
@@ -35,7 +40,8 @@ static class LineSvg
         bool isDimmed = false,
         bool isCyclic = false,
         bool isPath = false,
-        bool isViolation = false
+        bool isViolation = false,
+        bool isWeighted = false
     )
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
@@ -45,7 +51,17 @@ static class LineSvg
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var elementId = PointerId.FromLine(line.Id).ElementId;
 
-        return BuildLineSvg(line, endpoints, polylinePoints, elementId, isDimmed, isCyclic, isPath, isViolation);
+        return BuildLineSvg(
+            line,
+            endpoints,
+            polylinePoints,
+            elementId,
+            isDimmed,
+            isCyclic,
+            isPath,
+            isViolation,
+            isWeighted
+        );
     }
 
     public static string GetDirectLineSvg(
@@ -55,13 +71,22 @@ static class LineSvg
         double childrenZoom,
         bool isDimmed = false,
         bool isPath = false,
-        bool isViolation = false
+        bool isViolation = false,
+        bool isWeighted = false
     )
     {
         if (line.RenderAncestor != ancestor)
             return "";
 
-        return GetLineSvg(line, nodeCanvasPos, childrenZoom, isDimmed, isPath: isPath, isViolation: isViolation);
+        return GetLineSvg(
+            line,
+            nodeCanvasPos,
+            childrenZoom,
+            isDimmed,
+            isPath: isPath,
+            isViolation: isViolation,
+            isWeighted: isWeighted
+        );
     }
 
     static string BuildLineSvg(
@@ -72,7 +97,8 @@ static class LineSvg
         bool isDimmed,
         bool isCyclic,
         bool isPath,
-        bool isViolation
+        bool isViolation,
+        bool isWeighted
     )
     {
         // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
@@ -104,7 +130,9 @@ static class LineSvg
             : line.IsCousin ? "arrow-cousin"
             : "arrow-line";
 
-        var strokeWidth = isPath || isViolation ? Math.Max(line.StrokeWidth, PathMinStrokeWidth) : line.StrokeWidth;
+        // Direct lines keep their fixed accent width; other lines are thin unless emphasized.
+        var baseWidth = line.IsDirect || isWeighted ? line.WeightedStrokeWidth : PlainStrokeWidth;
+        var strokeWidth = isPath || isViolation ? Math.Max(baseWidth, PathMinStrokeWidth) : baseWidth;
         var circleRadius = strokeWidth + StartCircleExtraRadius;
         var dashArray =
             line.IsDirect ? " stroke-dasharray=\"6,6\""
@@ -119,7 +147,7 @@ static class LineSvg
             : polylinePoints;
         var points = ToPolylinePoints(visiblePoints);
         var hitPoints = ToPolylinePoints(polylinePoints);
-        var selectedSvg = SelectedLineSvg(line, polylinePoints);
+        var selectedSvg = SelectedLineSvg(line, polylinePoints, strokeWidth);
 
         var title = $"{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})";
         if (!string.IsNullOrWhiteSpace(line.HtmlDescription))
@@ -153,14 +181,13 @@ static class LineSvg
         );
     }
 
-    static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints)
+    static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints, double strokeWidth)
     {
         if (!line.IsSelected)
             return "";
 
         var color = DColors.LineSelected;
         var segmentControlColor = DColors.Selected;
-        var strokeWidth = line.StrokeWidth;
         var circleRadius = strokeWidth + SelectedCircleExtraRadius;
         var points = ToPolylinePoints(polylinePoints);
         var start = polylinePoints.First();

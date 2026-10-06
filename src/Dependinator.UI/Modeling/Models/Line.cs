@@ -8,9 +8,12 @@ record LinePos(double X1, double Y1, double X2, double Y2);
 class Line : IItem
 {
     const double DirectStrokeWidth = 2;
-    const double BaseStrokeWidth = 1;
     const double HiddenStrokeWidth = 1;
-    const double AdditionalStrokeWidthPerLink = 0.05;
+
+    // The link-count (weighted) stroke width: 1 link = 1, 2 = 1.5, 4 = 2, 8 = 2.5, 16+ = 3.
+    // A log scale, so the few lines of a selected node tell their counts apart (see LineSvg).
+    const double BaseStrokeWidth = 1;
+    const double StrokeWidthPerDoubling = 0.5;
     const double MaxStrokeWidth = 3;
 
     readonly Dictionary<Id, Link> links = new();
@@ -63,7 +66,9 @@ class Line : IItem
     public bool HasInheritanceSourceEnd => IsInheritance && links.Values.Any(l => l.Source == Source);
     public bool HasInheritanceTargetEnd => IsInheritance && links.Values.Any(l => l.Target == Target);
 
-    public double StrokeWidth => strokeWidth;
+    // The stroke width that encodes the link count; only drawn while the line is emphasized
+    // (the selection's lines, explorer focus lines), otherwise lines share one thin width.
+    public double WeightedStrokeWidth => strokeWidth;
     public bool IsSelected { get; internal set; }
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
     public IReadOnlyList<Pos> SegmentPoints => segmentPoints;
@@ -142,7 +147,7 @@ class Line : IItem
             return;
         }
 
-        var computedWidth = BaseStrokeWidth + (linkCount - 1) * AdditionalStrokeWidthPerLink;
+        var computedWidth = BaseStrokeWidth + StrokeWidthPerDoubling * Math.Log2(linkCount);
         strokeWidth = Math.Min(computedWidth, MaxStrokeWidth);
     }
 }

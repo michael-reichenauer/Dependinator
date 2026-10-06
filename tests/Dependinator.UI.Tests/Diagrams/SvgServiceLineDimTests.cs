@@ -8,6 +8,7 @@ namespace Dependinator.UI.Tests.Diagrams;
 
 // The selection dimming rule: with a node selected only lines touching the node (or its inside)
 // stay at full strength; with a line selected only that line; explorer focus lines never dim.
+// The same lines, plus focus lines, are the only ones drawn at their link-count width.
 public class SvgServiceLineDimTests
 {
     static Node CreateRoot() => new("", null!) { Type = NodeType.Root };
@@ -82,5 +83,34 @@ public class SvgServiceLineDimTests
 
         Assert.False(SvgService.IsLineDimmed(bc, new SvgService.RenderSelection(a, null)));
         Assert.False(SvgService.IsLineDimmed(new Line(b, c), new SvgService.RenderSelection(null, null)));
+    }
+
+    [Fact]
+    public void IsLineWeighted_ShouldWeightOnlyTheSelectionsLinesAndFocusLines()
+    {
+        var root = CreateRoot();
+        var a = AddNode(root, "A");
+        var b = AddNode(root, "B");
+        var c = AddNode(root, "C");
+        var ab = new Line(a, b);
+        var bc = new Line(b, c);
+        var focused = new Line(b, c) { IsFocused = true };
+
+        // Nothing selected: every line is plain, except an explorer focus line.
+        var none = new SvgService.RenderSelection(null, null);
+        Assert.False(SvgService.IsLineWeighted(ab, none));
+        Assert.False(SvgService.IsLineWeighted(bc, none));
+        Assert.True(SvgService.IsLineWeighted(focused, none));
+
+        // A selected node weights the lines touching it, i.e. the ones dimming keeps bright.
+        var nodeSelection = new SvgService.RenderSelection(a, null);
+        Assert.True(SvgService.IsLineWeighted(ab, nodeSelection));
+        Assert.False(SvgService.IsLineWeighted(bc, nodeSelection));
+        Assert.True(SvgService.IsLineWeighted(focused, nodeSelection));
+
+        // A selected line weights only itself.
+        var lineSelection = new SvgService.RenderSelection(null, bc);
+        Assert.True(SvgService.IsLineWeighted(bc, lineSelection));
+        Assert.False(SvgService.IsLineWeighted(ab, lineSelection));
     }
 }
