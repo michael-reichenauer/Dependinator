@@ -200,10 +200,22 @@ public class SvgServiceLineVisibilityTests
         var modelMgr = CreateModel(out Line line);
         line.IsHidden = true;
 
-        // ShowHiddenNodes defaults to true, so the line renders in the hidden style, as before.
+        // ShowHiddenNodes defaults to true, so the line renders in the hidden style: faint and
+        // dash-dotted, so it is told apart from a line merely dimmed by the selection.
         var svg = RenderView(modelMgr, 0, 0);
 
-        Assert.Contains("marker-end=\"url(#arrow-hidden)\"", svg);
+        Assert.Contains("marker-end=\"url(#arrow-hidden)\" stroke-dasharray=\"6,4,1,4\"", svg);
         Assert.DoesNotContain("marker-end=\"url(#arrow-line)\"", svg);
+    }
+
+    [Fact]
+    public void GetContentSvg_ShouldRenderVisibleLineSolid()
+    {
+        var modelMgr = CreateModel(out Line _);
+
+        var svg = RenderView(modelMgr, 0, 0);
+
+        Assert.Contains("marker-end=\"url(#arrow-line)\" />", svg);
+        Assert.DoesNotContain("stroke-dasharray", svg);
     }
 }

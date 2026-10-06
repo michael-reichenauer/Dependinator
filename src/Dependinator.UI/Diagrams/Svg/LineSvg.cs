@@ -105,6 +105,9 @@ static class LineSvg
         // tell the on-demand lines apart from each other and from the solid aggregated lines:
         // the explorer's pinned pair lines are dashed, its transient focus lines dotted. A line
         // on the dependency path the user asked for (View › Find Path) outranks all of that.
+        // A hidden node's lines are dash-dotted as well as faint: faint alone is what a line
+        // unrelated to the selection looks like (the line-dim CSS in Canvas.razor), so the
+        // pattern is what tells "goes to a hidden node" apart from "not what you selected".
         var isAccent = line.IsDirect || line.IsFocused;
         var color =
             isPath ? DColors.PathLine
@@ -137,6 +140,7 @@ static class LineSvg
         var dashArray =
             line.IsDirect ? " stroke-dasharray=\"6,6\""
             : line.IsFocused ? " stroke-dasharray=\"2,4\""
+            : line.IsHidden ? " stroke-dasharray=\"6,4,1,4\""
             : "";
 
         // The hollow marker starts at the polyline end (refX=0) and extends forward, so the
