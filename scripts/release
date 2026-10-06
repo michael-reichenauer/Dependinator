@@ -1,0 +1,114 @@
+#!/bin/bash
+# Release: merge dev into main and push. Every push to main is a release (see
+# .github/workflows/azure-static-web-apps-*.yml): CI deploys production and then
+# bumps/publishes the VS Code extension. The "- " bullet lines of the triggering
+# commit's message become the extension's CHANGELOG entry and GitHub release notes,
+# so this script puts real bullets into the merge commit instead of the
+# "Minor fixes and improvements" fallback a bare merge gets.
+#
+# Usage: ./scripts/release [-y] [-n] [-m "bullet"]...
+#   -m   Changelog bullet (repeatable). Without -m the bullets are the commit subjects
+#        on dev since the last release tag; "Bump ..." (Dependabot) commits collapse
+#        into one "Update dependencies" bullet.
+#   -y   Don't ask for confirmation (needed when not run from a terminal).
+#   -n   Dry run: show the merge message and stop before changing anything.
+#
+# Steps: fetch; local dev picks up origin/main (CI's version-bump commit, normally a
+# fast-forward); main = origin/main + a --no-ff merge of dev with the bullets; push
+# main and dev; return to the branch you started on.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+usage() { sed -n '9,14p' "$0" >&2; exit 2; }
+
+bullets=()
+confirm=true
+dry_run=false
+while getopts ":m:yn" opt; do
+    case "$opt" in
+        m) bullets+=("- ${OPTARG#- }") ;;
+        y) confirm=false ;;
+        n) dry_run=true ;;
+        *) usage ;;
+    esac
+done
+shift $((OPTIND - 1))
+[ $# -eq 0 ] || usage
+
+if [ -n "$(git status --porcelain)" ]; then
+    echo "Working tree is not clean; commit or stash first." >&2
+    exit 1
+fi
+start_branch=$(git rev-parse --abbrev-ref HEAD)
+
+git fetch origin --prune
+
+if ! git merge-base --is-ancestor origin/dev dev; then
+    echo "Local dev is behind origin/dev; pull dev first." >&2
+    exit 1
+fi
+if ! git merge-base --is-ancestor main origin/main; then
+    echo "Local main has commits that are not on origin/main; push or drop them first." >&2
+    exit 1
+fi
+
+# Everything on dev that is not yet in the last release.
+last_tag=$(git describe --tags --abbrev=0 --match 'v*' origin/main 2>/dev/null || true)
+since=${last_tag:-origin/main}
+if [ ${#bullets[@]} -eq 0 ]; then
+    dependency_bumps=false
+    while IFS= read -r subject; do
+        case "$subject" in
+            "Bump "*) dependency_bumps=true ;;
+            "VS Code extension v"*) ;;
+            *) bullets+=("- $subject") ;;
+        esac
+    done < <(git log --no-merges --pretty='%s' "$since..dev")
+    if $dependency_bumps; then
+        bullets+=("- Update dependencies")
+    fi
+fi
+if [ ${#bullets[@]} -eq 0 ]; then
+    echo "Nothing to release: dev has no new commits since $since." >&2
+    exit 1
+fi
+
+msg_file=$(mktemp)
+trap 'rm -f "$msg_file"' EXIT
+{
+    echo "Merge branch 'dev'"
+    echo
+    printf '%s\n' "${bullets[@]}"
+} > "$msg_file"
+
+echo "Release (changes since ${since}), merge commit message:"
+echo
+cat "$msg_file"
+echo
+if $dry_run; then
+    echo "Dry run: nothing merged or pushed."
+    exit 0
+fi
+if $confirm; then
+    if [ ! -t 0 ]; then
+        echo "Not running in a terminal: re-run with -y to release, or -n to preview." >&2
+        exit 1
+    fi
+    read -r -p "Merge dev into main and push (this releases)? [y/N] " answer
+    case "$answer" in
+        y | Y) ;;
+        *) echo "Aborted."; exit 1 ;;
+    esac
+fi
+
+git checkout -q dev
+git merge --no-edit origin/main
+git checkout -q main
+git merge --ff-only origin/main
+git merge --no-ff --no-edit -F "$msg_file" dev
+git push origin main dev
+git checkout -q "$start_branch"
+
+echo
+echo "Pushed main. CI/CD deploys production and publishes the extension:"
+echo "  https://github.com/michael-reichenauer/Dependinator/actions"

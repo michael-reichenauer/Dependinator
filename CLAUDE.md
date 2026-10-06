@@ -64,9 +64,13 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 ./scripts/trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
 # CI: e2e.yml and unit-tests.yml run on push to feature branches (main/dev excluded);
 # the CI/CD workflow (azure-static-web-apps-*.yml) calls them before deploy, with e2e
-# getting browsers=all + sync=true on push as the full gate. On main pushes, CI/CD then
-# calls vscode-extension.yml after deploy to build/publish the extension (that workflow
-# runs its own test gate only on manual workflow_dispatch).
+# getting browsers=all + sync=true on push as the full gate. A dev push deploys the
+# pre-release site. Every main push is a release: CI/CD deploys production and then
+# calls vscode-extension.yml to bump/publish the extension (that workflow runs its own
+# test gate only on manual workflow_dispatch), so main only moves for a release —
+# ./scripts/release merges dev into main (with changelog bullets) and pushes.
+# Dependabot PRs target dev (.github/dependabot.yml); security PRs still target main —
+# merge their branch into dev instead, the main PR closes itself after the next release.
 # Playwright traces are uploaded as an artifact on e2e failure.
 
 # VS Code extension
@@ -76,6 +80,7 @@ npm run package --prefix ./src/DependinatorVsCode
 npm run install:vsix --prefix ./src/DependinatorVsCode
 ./scripts/build-ext                                    # npm install + version bump + package
 ./scripts/install-ext                                  # ./scripts/build-ext + install the VSIX into VS Code
+./scripts/release [-m "bullet"]...                     # release: merge dev into main + push (bullets -> CHANGELOG); -y no prompt, -n preview
 
 # Icons
 ./scripts/import-icons                                 # re-import curated Azure/AWS/Google icons into src/Dependinator.UI/Diagrams/Icons/Library/ (manifests in scripts/cloud-icons/)
