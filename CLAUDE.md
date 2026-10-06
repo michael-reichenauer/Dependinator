@@ -66,9 +66,10 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 # the CI/CD workflow (azure-static-web-apps-*.yml) calls them before deploy, with e2e
 # getting browsers=all + sync=true on push as the full gate. A dev push deploys the
 # pre-release site. Every main push is a release: CI/CD deploys production and then
-# calls vscode-extension.yml to bump/publish the extension (that workflow runs its own
-# test gate only on manual workflow_dispatch), so main only moves for a release —
-# ./scripts/release merges dev into main (with changelog bullets) and pushes.
+# calls vscode-extension.yml to bump the extension's minor version (0.8.x -> 0.9.0) and
+# publish it (that workflow runs its own test gate only on manual workflow_dispatch), so
+# main only moves for a release — ./scripts/release merges dev into main (with changelog
+# bullets) and pushes.
 # Dependabot PRs target dev (.github/dependabot.yml); security PRs still target main —
 # merge their branch into dev instead, the main PR closes itself after the next release.
 # Playwright traces are uploaded as an artifact on e2e failure.

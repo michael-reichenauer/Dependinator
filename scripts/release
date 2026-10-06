@@ -1,7 +1,8 @@
 #!/bin/bash
 # Release: merge dev into main and push. Every push to main is a release (see
 # .github/workflows/azure-static-web-apps-*.yml): CI deploys production and then
-# bumps/publishes the VS Code extension. The "- " bullet lines of the triggering
+# publishes the VS Code extension with its minor version bumped (0.8.31 -> 0.9.0).
+# The "- " bullet lines of the triggering
 # commit's message become the extension's CHANGELOG entry and GitHub release notes,
 # so this script puts real bullets into the merge commit instead of the
 # "Minor fixes and improvements" fallback a bare merge gets.
