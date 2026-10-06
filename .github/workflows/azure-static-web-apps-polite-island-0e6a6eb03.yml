@@ -1,5 +1,9 @@
 name: Dependinator CI/CD
 
+# A dev push deploys the pre-release site; every main push is a release (production
+# deploy, then the VS Code extension is bumped and published). Dependabot PRs target
+# dev (.github/dependabot.yml), so main only moves for a deliberate release
+# (./scripts/release merges dev into main with changelog bullets and pushes).
 on:
   push:
     branches: [main, dev]

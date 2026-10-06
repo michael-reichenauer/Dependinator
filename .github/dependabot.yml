@@ -9,9 +9,21 @@ updates:
   - package-ecosystem: "nuget"
     # Look for NuGet dependency info from the root directory
     directory: "/"
+    # Open the PRs against dev, not main: a bump is then verified on the pre-release
+    # site and ships with the next dev -> main release, instead of every merged PR
+    # publishing a release of its own (each main push deploys production and publishes
+    # the VS Code extension). Security updates are not affected by this setting: GitHub
+    # always opens those against the default branch (main); merge their branch into dev
+    # instead, and the main PR closes itself after the next release.
+    target-branch: "dev"
     # Check the nuget registry for updates every week
     schedule:
       interval: "weekly"
+    # One PR per week for all minor and patch bumps; major bumps stay separate PRs.
+    groups:
+      nuget-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
     ignore:
       # MSBuild 18.10+ is the .NET 11 line (lib/net11.0 only). On the net10.0 projects it
       # falls back to netstandard2.0 and every build warns "doesn't support net10.0". Stay on
