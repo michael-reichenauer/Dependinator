@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.9.0 (2026-10-06)
+
+- Bump the extension's minor version on release instead of the patch
+
 ## 0.8.32 (2026-10-06)
 
 - Minor fixes and improvements
