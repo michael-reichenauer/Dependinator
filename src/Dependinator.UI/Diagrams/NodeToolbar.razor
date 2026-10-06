@@ -58,12 +58,34 @@ else if (HasSelectedLine)
             Show Node
           </MudMenuItem>
         }
-        @if (HasSelectedNodeLineSplits)
+
+        @* Direct lines are view state, not an edit, so they are offered in both modes. They live
+           in the menu only (no toolbar buttons) while the feature settles. *@
+        @if (SelectedNodeHasChildren)
         {
-          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess"
-                       OnClick="HideDirectLines" data-testid="node-menu-hide-direct-lines">
-            Merge Lines Back (Hide Direct Lines)
+          <MudDivider />
+          <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" data-testid="node-lines-depth">
+            @LinesCaption
+          </MudText>
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldMore"
+                       OnClick="IncreaseLineDepth" title="Split this node's lines per child, one level deeper."
+                       data-testid="node-menu-lines-deeper">
+            Split Lines One Level Deeper
           </MudMenuItem>
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess"
+                       OnClick="DecreaseLineDepth" Disabled="@(SelectedNodeLineDepth == 0)"
+                       title="Merge the split lines back one level." data-testid="node-menu-lines-shallower">
+            Merge Lines Back One Level
+          </MudMenuItem>
+          @if (HasSelectedNodeLineSplits)
+          {
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess"
+                         OnClick="HideDirectLines"
+                         title="Merge every split line of this node and its descendants back into the bundle."
+                         data-testid="node-menu-hide-direct-lines">
+              Merge All Lines Back (Hide Direct Lines)
+            </MudMenuItem>
+          }
         }
 
         @* Everything below changes the model, so it needs edit mode (like dragging does). *@
@@ -119,21 +141,6 @@ else if (HasSelectedLine)
       <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
     </MudTooltip>
 
-    @if (SelectedNodeHasChildren)
-    {
-      <MudTooltip Text="Merge lines back one level">
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess" OnClick="DecreaseLineDepth"
-                       Disabled="@(SelectedNodeLineDepth == 0)" data-testid="node-lines-shallower" />
-      </MudTooltip>
-      <MudTooltip Text="Split this node's lines per child (one level deeper)">
-        <MudBadge Content="@SelectedNodeLineDepth" Visible="@(SelectedNodeLineDepth > 0)" Color="Color.Secondary"
-                  Overlap="true" Origin="Origin.TopRight" data-testid="node-lines-depth">
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.UnfoldMore" OnClick="IncreaseLineDepth"
-                         data-testid="node-lines-deeper" />
-        </MudBadge>
-      </MudTooltip>
-    }
-
     @if (viewOptions.IsEditingEnabled)
     {
       <MudTooltip Text="Decrease node size">
@@ -177,11 +184,6 @@ else if (HasSelectedLine)
                        data-testid="node-show-source" />
       </MudTooltip>
     }
-
-    <MudTooltip Text="Zoom to node">
-      <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.FitScreen" OnClick="ZoomToNode"
-                     data-testid="node-fit-to-screen" />
-    </MudTooltip>
 
     @if (!IsIconMode)
     {
@@ -403,6 +405,13 @@ else if (HasSelectedLine)
 
   int SelectedNodeLineDepth => TryGetSelectedNodeId(out var nodeId) ? lineSplitService.GetDepth(nodeId) : 0;
   bool HasSelectedNodeLineSplits => TryGetSelectedNodeId(out var nodeId) && lineSplitService.HasSplits(nodeId);
+
+  // The menu section's caption shows how many levels the node's lines are split (the toolbar
+  // badge used to).
+  string LinesCaption =>
+      SelectedNodeLineDepth is var depth and > 0
+          ? $"Direct Lines (split {depth} {(depth == 1 ? "level" : "levels")})"
+          : "Direct Lines";
 
   void IncreaseLineDepth()
   {

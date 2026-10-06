@@ -57,11 +57,13 @@ public sealed class AppPage
     public ILocator NodeReferencesButton => page.GetByTestId("node-references");
     public ILocator NodeDependenciesButton => page.GetByTestId("node-dependencies");
 
-    // Direct-line depth buttons on the node toolbar (NodeToolbar.razor); the "one level up"
-    // button is disabled while the selected node has no split depth.
-    public ILocator NodeLinesDeeper => page.GetByTestId("node-lines-deeper");
-    public ILocator NodeLinesShallower => page.GetByTestId("node-lines-shallower");
-    public ILocator NodeLinesShallowerDisabled => page.Locator("[data-testid='node-lines-shallower'][disabled]");
+    // Direct-line depth items in the node menu (NodeToolbar.razor); "Merge Lines Back One Level"
+    // is disabled while the selected node has no split depth. MudMenuItem renders Disabled as a
+    // roleless <div aria-disabled> with a mud-disabled class, so match on the class.
+    public ILocator NodeLinesDeeper => MenuItem("node-menu-lines-deeper");
+    public ILocator NodeLinesShallower => MenuItem("node-menu-lines-shallower");
+    public ILocator NodeLinesShallowerDisabled =>
+        page.Locator("[data-testid='node-menu-lines-shallower'].mud-disabled");
 
     // Crossing ("cousin") lines drawn by RepLineService for split nodes; absent in the
     // aggregated default view.
@@ -355,6 +357,24 @@ public sealed class AppPage
         ILocator item = MenuItem(testId);
         await OpenMenuAsync(NodeToolbarMenu, item);
         return item;
+    }
+
+    // Open the node menu and click one of its items. A click on an item inside a MudBlazor
+    // popover is swallowed just like a click that opens one, so re-open and click again until
+    // the popover closes, which is what a handled click does.
+    public async Task ClickNodeMenuItemAsync(string testId)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            ILocator item = await OpenNodeMenuItemAsync(testId);
+            await item.ClickAsync(new() { Timeout = MenuAttemptTimeout });
+            try
+            {
+                await item.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
     }
 
     // Open the node toolbar's colour dropdown and return a container-background swatch row.
