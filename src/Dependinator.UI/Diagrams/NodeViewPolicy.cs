@@ -18,7 +18,25 @@ static class NodeViewPolicy
     // viewport instead.
     const double MaxNestedViewportZoom = 1000;
 
+    // Up to this zoom a container's background is drawn at full strength; beyond it the fill
+    // fades out (see ContainerBackgroundOpacity).
+    const double BackgroundFadeStartZoom = 2 * MinContainerZoom;
+
     public static bool IsTooLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
+
+    // Fill opacity of a container's background at the node's own zoom. The tint reads as "where
+    // you are" when the box has just opened, then gives way to the children's own backgrounds as
+    // the view zooms further in. Zoom is multiplicative, so the fade runs in log space (each
+    // doubling removes the same share), and it reaches zero exactly at MaxNodeZoom, where the
+    // chrome is dropped altogether, so that cut is invisible.
+    public static double ContainerBackgroundOpacity(double zoom)
+    {
+        if (zoom <= BackgroundFadeStartZoom)
+            return 1;
+        if (zoom >= MaxNodeZoom)
+            return 0;
+        return 1 - Math.Log(zoom / BackgroundFadeStartZoom) / Math.Log(MaxNodeZoom / BackgroundFadeStartZoom);
+    }
 
     public static bool IsRenderedFlat(double zoom) => zoom > MaxNestedViewportZoom;
 

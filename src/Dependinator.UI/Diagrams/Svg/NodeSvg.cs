@@ -82,6 +82,7 @@ static partial class NodeSvg
         var header = CalculateContainerHeader(nodeCanvasRect, parentZoom);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (border, background) = NodeColors(node);
+        var backgroundOpacity = NodeViewPolicy.ContainerBackgroundOpacity(parentZoom);
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var iconId = IconName(node);
         var strokeWidth = node.IsEditMode ? 10 : node.StrokeWidth;
@@ -112,7 +113,7 @@ static partial class NodeSvg
             CultureInfo.InvariantCulture,
             $"""
             <svg x="{nodeCanvasRect.X:0.##}" y="{nodeCanvasRect.Y:0.##}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" viewBox="{0} {0} {nodeCanvasRect.Width:0.##} {nodeCanvasRect.Height:0.##}" xmlns="http://www.w3.org/2000/svg">
-              <rect x="{0}" y="{0}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" stroke-width="{strokeWidth:0.##}" rx="5" fill="{background}" stroke="{border}" {nodeOpacity}/>
+              <rect x="{0}" y="{0}" width="{nodeCanvasRect.Width:0.##}" height="{nodeCanvasRect.Height:0.##}" stroke-width="{strokeWidth:0.##}" rx="5" fill="{background}" fill-opacity="{backgroundOpacity:0.##}" stroke="{border}" {nodeOpacity}/>
               {hoverGroup}
               {childrenContent}
             </svg>
