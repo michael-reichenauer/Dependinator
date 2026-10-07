@@ -17,7 +17,10 @@
     }
 </style>
 
-<MudPopover Open="IsShowExplorer" Fixed="true" Class="@(srv.IsMinimized ? "px-5 py-2 ml-1" : "px-5 pt-4 ml-1")"
+@* The popover is anchored to this empty fixed element, which sits just under the app bar and
+   the breadcrumb (ToolbarPositioning.ChromeBottom) so the explorer never covers their buttons. *@
+<div style="@AnchorStyle">
+<MudPopover Open="IsShowExplorer" Fixed="true" Class="@(srv.IsMinimized ? "px-5 py-2" : "px-5 pt-4")"
             MaxHeight="MaxHeight" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft">
     <MudStack Spacing="0">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
@@ -146,6 +149,7 @@
         }
     </MudStack>
 </MudPopover>
+</div>
 
 
 @code {
@@ -163,8 +167,12 @@
             ? "Show the chain of dependencies from this node"
             : "Show the chain of dependencies to this node";
 
-    int MaxHeight => (int)screenService.SvgRect.Height - 5;
-    int MaxWidth => (int)screenService.SvgRect.Width - 20;
+    const int Left = 15;
+
+    string AnchorStyle => $"position:fixed;top:{(int)ToolbarPositioning.ChromeBottom}px;left:{Left}px;width:0;height:0;";
+
+    int MaxHeight => (int)(screenService.SvgRect.Height - ToolbarPositioning.ChromeBottom) - 15;
+    int MaxWidth => (int)screenService.SvgRect.Width - 2 * Left;
 
     Task OnItemClickAsync(TreeItem item) =>
         item.NodeId != Modeling.Models.NodeId.Empty ? srv.ShowNodeAsync(item.NodeId) : Task.CompletedTask;
