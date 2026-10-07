@@ -100,17 +100,18 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         // The manual link renders as a line between the two nodes. (Not ToBeVisible: a
         // horizontal line's group has a zero-height bounding box, which Playwright
         // considers not visible.)
-        ILocator line = LineGroup(LinkSourceIcon, LinkTargetIcon);
+        ILocator line = App.Line(LinkSourceIcon, LinkTargetIcon);
         await Expect(line).ToHaveCountAsync(1);
 
-        // Unselect the source node so its toolbar cannot cover the line, then select the line
-        // by clicking its midpoint (the line group carries a wide invisible hit polyline).
+        // Unselect the source node so its toolbar cannot cover the line, then select the line.
         await Page.Mouse.ClickAsync(box.X + 60, box.Y + box.Height - 40);
-        LocatorBoundingBoxResult lineBox = await WaitForStableLineBoxAsync(line);
-        await Page.Mouse.ClickAsync(lineBox.X + lineBox.Width / 2, lineBox.Y + lineBox.Height / 2);
+        await App.SelectLineAsync(line);
 
-        // A line showing only a manual link exposes Delete; deleting removes the line.
+        // A line showing only a manual link exposes Delete; deleting removes the line. An
+        // ordinary line like this one has no jumps to its ends (direct and explorer lines do).
         await Expect(Page.GetByTestId("line-delete")).ToBeVisibleAsync();
+        await Expect(App.LinePanSourceButton).ToHaveCountAsync(0);
+        await Expect(App.LinePanTargetButton).ToHaveCountAsync(0);
         await Page.GetByTestId("line-delete").ClickAsync();
         await Expect(line).ToHaveCountAsync(0);
     }
@@ -149,7 +150,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.Mouse.UpAsync();
 
         await Expect(Page.Locator(".link-drag-overlay")).ToBeHiddenAsync();
-        await Expect(LineGroup(DragSourceIcon, DragTargetIcon)).ToHaveCountAsync(1);
+        await Expect(App.Line(DragSourceIcon, DragTargetIcon)).ToHaveCountAsync(1);
     }
 
     [E2EFact]
@@ -190,7 +191,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await PickIconAsync(DragCanvasIcon);
 
         await Expect(App.NodeLabel(DragCanvasIcon)).ToBeVisibleAsync();
-        await Expect(LineGroup(DragCancelIcon, DragCanvasIcon)).ToHaveCountAsync(1);
+        await Expect(App.Line(DragCancelIcon, DragCanvasIcon)).ToHaveCountAsync(1);
     }
 
     // Hovers the node to reveal its drag-to-link handle, then moves onto the handle's visible
@@ -240,43 +241,6 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
 
         throw new InvalidOperationException($"Node '{label}' did not render/stabilize within {timeout.TotalSeconds}s.");
     }
-
-    // Canvas re-renders (e.g. after an unselect click) can momentarily detach the line's SVG
-    // group, so poll until its bounds exist and stop moving between two reads (same approach
-    // as AppPage.WaitForStableNodeBoxAsync).
-    async Task<LocatorBoundingBoxResult> WaitForStableLineBoxAsync(ILocator line, float timeoutSeconds = 15)
-    {
-        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        LocatorBoundingBoxResult? previous = null;
-
-        while (stopwatch.Elapsed < timeout)
-        {
-            LocatorBoundingBoxResult? box = null;
-            if (await line.CountAsync() > 0)
-                box = await line.BoundingBoxAsync();
-
-            bool isStable =
-                box is not null
-                && previous is not null
-                && Math.Abs(box.X - previous.X) < 1
-                && Math.Abs(box.Y - previous.Y) < 1;
-            if (isStable)
-                return box!;
-
-            previous = box;
-            await Task.Delay(100);
-        }
-
-        throw new InvalidOperationException($"Line did not render/stabilize within {timeout.TotalSeconds}s.");
-    }
-
-    // The SVG group of the dependency line between two nodes, matched by its
-    // "source→target (n)" title. Anchored at the start so an ancestor group whose text
-    // merely contains the line's title does not match too (same approach as AppPage.Node).
-    ILocator LineGroup(string sourceName, string targetName) =>
-        Page.Locator("#svgcanvas g.hoverable")
-            .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(sourceName)}→{Regex.Escape(targetName)}") });
 
     // Double-clicks an empty area of the canvas and picks an icon in the selector dialog.
     async Task AddManualNodeAsync(string iconName)

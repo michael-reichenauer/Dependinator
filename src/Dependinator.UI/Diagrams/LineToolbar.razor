@@ -18,18 +18,13 @@
 @if (HasSelectedLine)
 {
     <MudStack Style="@containerPosition" Spacing="1">
-        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar dep-toolbar-card">
+        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text"
+                        Class="dep-mini-toolbar dep-toolbar-card" data-testid="line-toolbar">
             @if (selectionService.IsSelectedLineDirect)
             {
                 <MudTooltip Text="Hide line">
                     <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine"
                                    data-testid="line-close" />
-                </MudTooltip>
-                <MudTooltip Text="Go to source node">
-                    <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" data-testid="line-pan-source" />
-                </MudTooltip>
-                <MudTooltip Text="Go to target node">
-                    <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" data-testid="line-pan-target" />
                 </MudTooltip>
             }
             else
@@ -40,24 +35,37 @@
                 <MudTooltip Text="Show dependencies">
                     <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="line-dependencies" />
                 </MudTooltip>
-                @* Line points reshape the (saved) line, so they are edit-mode actions like dragging them. *@
-                @if (viewOptions.IsEditingEnabled)
+            }
+            @* A direct line and a line the dependency explorer draws for its subject can end deep
+               inside another container, so they offer a jump to either end; an aggregated line
+               runs between nodes that are both in view. *@
+            @if (selectionService.IsSelectedLineDirect || IsSelectedLineFocused)
+            {
+                <MudTooltip Text="Go to source node">
+                    <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" data-testid="line-pan-source" />
+                </MudTooltip>
+                <MudTooltip Text="Go to target node">
+                    <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" data-testid="line-pan-target" />
+                </MudTooltip>
+            }
+            @* Line points reshape the (saved) line, so they are edit-mode actions like dragging them;
+               a direct line is a transient view aid with nothing to save. *@
+            @if (!selectionService.IsSelectedLineDirect && viewOptions.IsEditingEnabled)
+            {
+                <MudTooltip Text="Add line point">
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
+                                   data-testid="line-add-point" />
+                </MudTooltip>
+                <MudTooltip Text="Remove line point">
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
+                                   data-testid="line-remove-point" />
+                </MudTooltip>
+                @if (IsSelectedLineManual)
                 {
-                    <MudTooltip Text="Add line point">
-                        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
-                                       data-testid="line-add-point" />
+                    <MudTooltip Text="Delete link (Del)">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error"
+                                       OnClick="DeleteManualLine" data-testid="line-delete" />
                     </MudTooltip>
-                    <MudTooltip Text="Remove line point">
-                        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
-                                       data-testid="line-remove-point" />
-                    </MudTooltip>
-                    @if (IsSelectedLineManual)
-                    {
-                        <MudTooltip Text="Delete link (Del)">
-                            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error"
-                                           OnClick="DeleteManualLine" data-testid="line-delete" />
-                        </MudTooltip>
-                    }
                 }
             }
             @if (interactionService.CanShowLineSource)
@@ -100,6 +108,12 @@
             selectionService.SelectedLineClickPosition
         );
     }
+    // The line is one the dependency explorer draws for its subject (see Model.LineFocus).
+    // IsFocused is render state that RepLineService re-resolves on every structure change
+    // (explorer opened, row expanded, lines hidden), so it is read live rather than cached
+    // at selection time like IsSelectedLineDirect.
+    bool IsSelectedLineFocused => TryGetSelectedLine(out var line) && line.IsFocused;
+
     // The line shows only user-drawn link(s), so it can be deleted (parsed links cannot).
     bool IsSelectedLineManual =>
         TryGetSelectedLine(out var line) && line.Links.Any() && line.Links.All(l => l.IsManual);
