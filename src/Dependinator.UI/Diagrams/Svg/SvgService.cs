@@ -150,6 +150,15 @@ class SvgService : ISvgService
 
     static bool IsAtOrInside(Node endpoint, Node node) => endpoint == node || endpoint.Ancestors().Contains(node);
 
+    // A line shows its link-count width only while it is what the user is looking at: the lines
+    // of the selection (the ones dimming keeps bright) and explorer focus lines. Without a
+    // selection every line is drawn at the same thin width (see LineSvg), whatever the Dim
+    // Unrelated Lines toggle says, so selecting a node still sets its lines apart with dimming off.
+    internal static bool IsLineWeighted(Line line, RenderSelection selection) =>
+        line.IsFocused || (!selection.IsEmpty && !IsLineDimmed(line, selection));
+
+    static bool IsLineWeighted(Line line, RenderContext context) => IsLineWeighted(line, context.Flags.Selection);
+
     // While a dependency path is shown, everything off the path fades so the chain stands out.
     static bool IsLineDimmed(Line line, RenderContext context)
     {
@@ -360,7 +369,8 @@ class SvgService : ISvgService
                 childrenZoom,
                 IsLineDimmed(line, context),
                 isPath: IsLineOnPath(line, context),
-                isViolation: IsLineViolating(line, context)
+                isViolation: IsLineViolating(line, context),
+                isWeighted: IsLineWeighted(line, context)
             );
         }
 
@@ -388,7 +398,8 @@ class SvgService : ISvgService
                     IsLineDimmed(line, context),
                     IsLineCyclic(line, context),
                     IsLineOnPath(line, context),
-                    IsLineViolating(line, context)
+                    IsLineViolating(line, context),
+                    IsLineWeighted(line, context)
                 );
             }
         }
@@ -455,7 +466,8 @@ class SvgService : ISvgService
                 childrenZoom,
                 IsLineDimmed(directLine, context),
                 IsLineOnPath(directLine, context),
-                IsLineViolating(directLine, context)
+                IsLineViolating(directLine, context),
+                IsLineWeighted(directLine, context)
             );
             if (svg.Length > 0)
                 yield return svg;
@@ -511,7 +523,10 @@ class SvgService : ISvgService
         return RectOverlap(context.TileBounds, tileRect);
     }
 
-    internal readonly record struct RenderSelection(Node? Node, Line? Line, IReadOnlyList<Node>? OtherNodes = null);
+    internal readonly record struct RenderSelection(Node? Node, Line? Line, IReadOnlyList<Node>? OtherNodes = null)
+    {
+        public bool IsEmpty => Node is null && Line is null;
+    }
 
     readonly record struct ViewFlags(bool IsEditing, bool ShowHidden, bool DimUnrelated)
     {

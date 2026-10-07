@@ -104,18 +104,25 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.WaitForContainerNodeAsync("Main");
         await App.SelectContainerNodeAsync("Demo.UI.Main");
 
-        // Aggregated default: no crossing lines anywhere, and nothing to merge yet.
+        // Aggregated default: no crossing lines anywhere, and nothing to merge back yet (the
+        // line items live in the node menu, which stays open for the next step).
         await Expect(App.CousinLines).ToHaveCountAsync(0);
+        await App.OpenNodeMenuItemAsync("node-menu-lines-shallower");
         await Expect(App.NodeLinesShallowerDisabled).ToBeVisibleAsync();
 
         // One level deeper: Main's members get their own lines to the sibling containers they
-        // use (e.g. BuildRenderTree -> Diagrams). Clicks on the re-rendering toolbar can be
-        // swallowed, so repeat until a crossing line shows up.
-        await App.RepeatUntilVisibleAsync(() => App.NodeLinesDeeper.ClickAsync(), App.CousinLines.First);
+        // use (e.g. BuildRenderTree -> Diagrams). A menu click can still be swallowed by the
+        // re-rendering toolbar, so repeat until a crossing line shows up.
+        await App.RepeatUntilVisibleAsync(
+            () => App.ClickNodeMenuItemAsync("node-menu-lines-deeper"),
+            App.CousinLines.First
+        );
 
-        // One level up again restores the bundle; the button disables itself at depth zero.
-        await App.RepeatUntilVisibleAsync(() => App.NodeLinesShallower.ClickAsync(), App.NodeLinesShallowerDisabled);
+        // One level up again restores the bundle; the item disables itself at depth zero.
+        await App.ClickNodeMenuItemAsync("node-menu-lines-shallower");
         await Expect(App.CousinLines).ToHaveCountAsync(0);
+        await App.OpenNodeMenuItemAsync("node-menu-lines-shallower");
+        await Expect(App.NodeLinesShallowerDisabled).ToBeVisibleAsync();
     }
 
     [E2EFact]

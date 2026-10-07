@@ -125,6 +125,18 @@ public class NodeSvgTests
     }
 
     [Fact]
+    public void GetNodeContainerSvg_ShouldFadeBackground_WhenZoomedIn()
+    {
+        var node = CreateIconNode();
+
+        var opened = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 2.0, "");
+        var deep = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 16.0, "");
+
+        Assert.Contains("fill-opacity=\"1\"", opened);
+        Assert.Contains("fill-opacity=\"0.5\"", deep);
+    }
+
+    [Fact]
     public void GetNodeIconSvg_ShouldIncludeLinkHandle_WhenEditingEnabled()
     {
         var node = CreateIconNode();

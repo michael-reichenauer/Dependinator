@@ -78,18 +78,21 @@ class DColors
         new("Purple", "#B366FF", "#120D1A"),
     ];
 
+    // Backgrounds are pastel tints a small step below the near-white canvas (~1.05:1 contrast
+    // against it, all hues alike); the high-luminance hues (cyan..yellow) are less saturated so
+    // they read about as strong as the others rather than louder.
     static readonly IReadOnlyList<DColor> nodeColorsLight =
     [
-        new("Gray", "#4D4D4D", "#FFFFFF"),
-        new("Blue", "#004C99", "#F9FCFF"),
-        new("Cyan", "#008080", "#F9FFFF"),
-        new("Teal", "#0D6640", "#F9FFFD"),
-        new("Green", "#5C8001", "#FDFFFA"),
-        new("Yellow", "#996600", "#FFFEFA"),
-        new("Orange", "#994C00", "#FFFBF9"),
-        new("Red", "#990000", "#FFFAFA"),
-        new("Pink", "#99334D", "#FFFAFD"),
-        new("Purple", "#4C0080", "#FCF9FF"),
+        new("Gray", "#4D4D4D", "#F5F5F5"),
+        new("Blue", "#004C99", "#EDF6FF"),
+        new("Cyan", "#008080", "#E0FAFA"),
+        new("Teal", "#0D6640", "#E2FAF2"),
+        new("Green", "#5C8001", "#EDF9DC"),
+        new("Yellow", "#996600", "#FBF5DC"),
+        new("Orange", "#994C00", "#FFF2ED"),
+        new("Red", "#990000", "#FFF2F2"),
+        new("Pink", "#99334D", "#FFF1F8"),
+        new("Purple", "#4C0080", "#F9F2FF"),
     ];
 
     // Node Light
