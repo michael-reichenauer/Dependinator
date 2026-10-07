@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.10.0 (2026-10-07)
+
+- Draw lines at one width; widen the selection's lines by link count
+- Make light-mode container backgrounds visible
+- Fade container backgrounds out while zooming in
+- Draw hidden-node lines dash-dotted
+- Move line-split and zoom-to-node actions off the node toolbar
+
 ## 0.9.0 (2026-10-06)
 
 - Bump the extension's minor version on release instead of the patch
