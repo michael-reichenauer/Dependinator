@@ -29,8 +29,12 @@ interface IDependenciesService
     bool IsIncludeIndirect { get; }
 
     TreeType TreeType { get; }
+
+    // The subject's short name, and the subtitle sentence around it: the view renders
+    // SubtitleBefore + Title + SubtitleAfter with the name highlighted (e.g. "Nodes that Main uses").
     string Title { get; }
-    string Subtitle { get; }
+    string SubtitleBefore { get; }
+    string SubtitleAfter { get; }
     IReadOnlyList<TreeItem> TreeItems { get; }
 
     Task ShowNodeAsync(NodeId nodeId);
@@ -79,7 +83,8 @@ class DependenciesService(
     public IReadOnlyList<TreeItem> TreeItems { get; private set; } = [];
     public TreeType TreeType => treeType;
     public string Title { get; private set; } = "";
-    public string Subtitle { get; private set; } = "";
+    public string SubtitleBefore { get; private set; } = "";
+    public string SubtitleAfter { get; private set; } = "";
     public bool IsShowExplorer { get; private set; }
     public bool IsShowLines => isShowLines;
     public bool IsMinimized { get; private set; }
@@ -356,9 +361,10 @@ class DependenciesService(
         if (model.Nodes.TryGetValue(NodeId.FromId(selectedId), out var selectedNode))
         {
             Title = selectedNode.ShortName;
-            Subtitle = treeType is TreeType.References ? "Nodes that use this node" : "Nodes that this node uses";
+            (SubtitleBefore, SubtitleAfter) =
+                treeType is TreeType.References ? ("Nodes that use ", "") : ("Nodes that ", " uses");
             if (isIncludeIndirect)
-                Subtitle += " (dimmed: through other nodes, with hop counts)";
+                SubtitleAfter += " (dimmed: through other nodes, with hop counts)";
             var items = DependencyTree.ForNode(model, selectedNode, treeType, isIncludeIndirect);
             if (items.Count > 0)
                 return items;
@@ -368,15 +374,15 @@ class DependenciesService(
         if (model.Lines.TryGetValue(LineId.FromId(selectedId), out var selectedLine))
         {
             Title = $"{selectedLine.Source.ShortName}→{selectedLine.Target.ShortName}";
-            Subtitle =
-                treeType is TreeType.References
-                    ? "Source nodes of this line's links"
-                    : "Target nodes of this line's links";
+            SubtitleBefore =
+                treeType is TreeType.References ? "Source nodes of the links in " : "Target nodes of the links in ";
+            SubtitleAfter = "";
             return DependencyTree.ForLine(selectedLine, treeType);
         }
 
-        Title = "No items found";
-        Subtitle = "";
+        Title = "";
+        SubtitleBefore = "No items found";
+        SubtitleAfter = "";
         return [];
     }
 }
