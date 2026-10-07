@@ -77,6 +77,19 @@ public sealed class AppPage
     // A line's hover title, "Source→Target (n)" with the nodes' long names (LineSvg).
     public ILocator LineTitle(string text) => page.Locator("#svgcanvas title", new() { HasTextString = text });
 
+    // The SVG group of the dependency line between two nodes, matched by its "source→target (n)"
+    // title. Anchored at the start so an ancestor group whose text merely contains the line's
+    // title does not match too (same approach as Node).
+    public ILocator Line(string sourceName, string targetName) =>
+        page.Locator("#svgcanvas g.hoverable")
+            .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(sourceName)}→{Regex.Escape(targetName)}") });
+
+    // The selected-line toolbar (LineToolbar.razor) and its jumps to the line's ends, offered on
+    // direct lines and on the lines the dependency explorer draws for its subject.
+    public ILocator LineToolbar => page.GetByTestId("line-toolbar");
+    public ILocator LinePanSourceButton => page.GetByTestId("line-pan-source");
+    public ILocator LinePanTargetButton => page.GetByTestId("line-pan-target");
+
     // The expand arrows of the explorer tree rows (MudTreeViewItem), in document order.
     public ILocator ExplorerExpandButtons => page.Locator(".mud-treeview button.mud-treeview-item-expand-button");
     public ILocator ExplorerShowLinesButton => page.GetByTestId("explorer-show-lines");
@@ -531,6 +544,152 @@ public sealed class AppPage
         }
 
         throw new InvalidOperationException($"Node '{label}' did not render/stabilize within {timeout.TotalSeconds}s.");
+    }
+
+    // Select a line by clicking a point on it, retrying until the line toolbar shows (a click
+    // landing while the canvas re-renders is swallowed silently). The point lies on the part of
+    // the line that is inside the viewport: a line to a far-off node (a direct or explorer line
+    // at a deep zoom) can extend far beyond the screen, so the midpoint of its bounds is no
+    // use. Later attempts try other points along the visible part, in case the first one is
+    // covered by a toolbar or the explorer popover.
+    public async Task SelectLineAsync(ILocator line)
+    {
+        float[] fractions = [0.5f, 0.25f, 0.75f];
+        for (int attempt = 1; ; attempt++)
+        {
+            (float x, float y) = await WaitForStableLinePointAsync(line, fractions[(attempt - 1) % fractions.Length]);
+            await page.Mouse.ClickAsync(x, y);
+            try
+            {
+                await LineToolbar.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
+    }
+
+    // A screen point on the line's visible part, read until it stops moving between two reads:
+    // the canvas pans/zooms with animations, and a re-render can momentarily detach the line's
+    // SVG group (same approach as WaitForStableNodeBoxAsync).
+    async Task<(float X, float Y)> WaitForStableLinePointAsync(ILocator line, float fraction, float timeoutSeconds = 15)
+    {
+        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        (float X, float Y)? previous = null;
+
+        while (stopwatch.Elapsed < timeout)
+        {
+            (float X, float Y)? point = await TryGetVisibleLinePointAsync(line, fraction);
+
+            bool isStable =
+                point is not null
+                && previous is not null
+                && Math.Abs(point.Value.X - previous.Value.X) < 1
+                && Math.Abs(point.Value.Y - previous.Value.Y) < 1;
+            if (isStable)
+                return point!.Value;
+
+            previous = point;
+            await Task.Delay(100);
+        }
+
+        throw new InvalidOperationException($"Line did not render/stabilize within {timeout.TotalSeconds}s.");
+    }
+
+    // The point at the given fraction of the first stretch of the line that crosses the
+    // viewport (inset for the app bar and breadcrumb at the top). The line's hit polyline (the
+    // wide transparent one in its group, see LineSvg) is mapped to screen coordinates with the
+    // SVG's screen matrix; null while the line is not rendered or lies entirely off screen.
+    async Task<(float X, float Y)?> TryGetVisibleLinePointAsync(ILocator line, float fraction)
+    {
+        float[] coordinates;
+        try
+        {
+            coordinates = await line.Locator("polyline")
+                .EvaluateAsync<float[]>(
+                    """
+                    el => {
+                        const m = el.getScreenCTM();
+                        const out = [];
+                        for (let i = 0; i < el.points.numberOfItems; i++) {
+                            const p = el.points.getItem(i);
+                            out.push(m.a * p.x + m.c * p.y + m.e, m.b * p.x + m.d * p.y + m.f);
+                        }
+                        return out;
+                    }
+                    """,
+                    null,
+                    new() { Timeout = 1_000 }
+                );
+        }
+        catch (Exception e) when (IsRetryable(e))
+        {
+            return null;
+        }
+
+        const float Margin = 20;
+        const float ChromeHeight = 90;
+        PageViewportSizeResult viewport = page.ViewportSize ?? new() { Width = 1280, Height = 720 };
+        float left = Margin;
+        float top = ChromeHeight;
+        float right = viewport.Width - Margin;
+        float bottom = viewport.Height - Margin;
+
+        for (int i = 0; i + 3 < coordinates.Length; i += 2)
+        {
+            (float X, float Y)? point = ClipSegmentPoint(
+                (coordinates[i], coordinates[i + 1]),
+                (coordinates[i + 2], coordinates[i + 3]),
+                left,
+                top,
+                right,
+                bottom,
+                fraction
+            );
+            if (point is not null)
+                return point;
+        }
+
+        return null;
+    }
+
+    // Liang-Barsky clip of the segment a→b to the rectangle; returns the point at the given
+    // fraction of the clipped part, or null when the segment misses the rectangle.
+    static (float X, float Y)? ClipSegmentPoint(
+        (float X, float Y) a,
+        (float X, float Y) b,
+        float left,
+        float top,
+        float right,
+        float bottom,
+        float fraction
+    )
+    {
+        float dx = b.X - a.X;
+        float dy = b.Y - a.Y;
+        float t0 = 0;
+        float t1 = 1;
+        foreach (
+            (float p, float q) in new[] { (-dx, a.X - left), (dx, right - a.X), (-dy, a.Y - top), (dy, bottom - a.Y) }
+        )
+        {
+            if (p == 0)
+            {
+                if (q < 0)
+                    return null; // Parallel to this edge and outside it
+                continue;
+            }
+            float r = q / p;
+            if (p < 0)
+                t0 = Math.Max(t0, r);
+            else
+                t1 = Math.Min(t1, r);
+        }
+        if (t0 > t1)
+            return null;
+
+        float t = t0 + (t1 - t0) * fraction;
+        return (a.X + dx * t, a.Y + dy * t);
     }
 
     // Select a diagram node by its visible (short) label — the text shown on the canvas,
