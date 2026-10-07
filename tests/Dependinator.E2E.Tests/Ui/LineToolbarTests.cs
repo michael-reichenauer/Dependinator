@@ -26,13 +26,11 @@ public class LineToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator line = App.Line("Demo.UI.Main", "Externals");
         await Expect(line).ToHaveCountAsync(1);
 
-        // The explorer line is not a direct line (no hide button) and keeps the explore actions,
-        // and it adds the jumps to its ends.
+        // The explorer line keeps the explore actions and adds the jumps to its ends.
         await App.SelectLineAsync(line);
         await Expect(App.LinePanSourceButton).ToBeVisibleAsync();
         await Expect(App.LinePanTargetButton).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("line-references")).ToBeVisibleAsync();
-        await Expect(Page.GetByTestId("line-close")).ToHaveCountAsync(0);
 
         // Going to the target navigates to the far end and selects it (the breadcrumb chain
         // ends at the selected node).

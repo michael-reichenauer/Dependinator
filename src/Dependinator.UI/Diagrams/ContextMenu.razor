@@ -70,13 +70,6 @@
                          OnClick="contextMenuService.ShowDependenciesAsync" data-testid="context-menu-dependencies">
               Show Dependencies
             </MudListItem>
-            @if (contextMenuService.IsTargetDirectLine)
-            {
-              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Filled.Close" IconColor="Color.Secondary"
-                           OnClick="contextMenuService.HideDirectLine" data-testid="context-menu-hide-line">
-                Hide Line
-              </MudListItem>
-            }
             @if (contextMenuService.CanShowTargetSource)
             {
               <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Code" IconColor="Color.Secondary"

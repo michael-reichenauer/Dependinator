@@ -41,9 +41,7 @@ interface IDependenciesService
     void SetExpanded(TreeItem treeItem, bool expanded);
     void ToggleExpandAll(TreeItem treeItem);
     Task ShowEditorAsync(NodeId nodeId);
-    void ShowDirectLine(NodeId nodeId);
     bool TryGetLine(LineId lineId, out Line line);
-    void HideDirectLine(LineId lineId);
     void ShowReferences();
     void ShowDependencies();
     void SetShowLines(bool isShowLines);
@@ -194,65 +192,10 @@ class DependenciesService(
         UpdateFocus();
     }
 
-    public void ShowDirectLine(NodeId otherNodeId)
-    {
-        if (!selectionService.SelectedId.IsNode)
-            return;
-
-        var thisNodeId = NodeId.FromId(selectionService.SelectedId.Id);
-        if (thisNodeId == otherNodeId)
-            return;
-
-        var (sourceId, targetId) =
-            treeType is TreeType.Dependencies ? (thisNodeId, otherNodeId) : (otherNodeId, thisNodeId);
-
-        using var model = modelMgr.UseModel();
-
-        if (!model.Nodes.TryGetValue(sourceId, out var sourceNode))
-            return;
-        if (!model.Nodes.TryGetValue(targetId, out var targetNode))
-            return;
-
-        var directLineId = LineId.FromDirect(sourceNode.Name, targetNode.Name);
-        if (model.Lines.TryGetValue(directLineId, out var existingLine))
-            return;
-
-        var ancestor = sourceNode.LowestCommonAncestor(targetNode);
-        var directLine = new Line(sourceNode, targetNode, isDirect: true, id: directLineId)
-        {
-            RenderAncestor = ancestor,
-            IsHidden = false,
-        };
-
-        ancestor.AddDirectLine(directLine);
-        model.TryAddLine(directLine);
-
-        applicationEvents.TriggerModelChanged();
-        applicationEvents.TriggerUIStateChanged();
-    }
-
     public bool TryGetLine(LineId lineId, out Line line)
     {
         using var model = modelMgr.UseModel();
         return model.Lines.TryGetValue(lineId, out line!);
-    }
-
-    public void HideDirectLine(LineId lineId)
-    {
-        var shouldUnselect = selectionService.SelectedId.IsLine && selectionService.SelectedId.Id == lineId.Value;
-
-        using var model = modelMgr.UseModel();
-
-        if (!model.Lines.TryGetValue(lineId, out var line))
-            return;
-
-        model.RemoveLine(line);
-
-        applicationEvents.TriggerModelChanged();
-
-        if (shouldUnselect)
-            selectionService.Unselect();
-        applicationEvents.TriggerUIStateChanged();
     }
 
     public async Task ShowNodeAsync(NodeId nodeId)

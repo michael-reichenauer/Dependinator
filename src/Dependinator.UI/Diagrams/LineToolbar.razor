@@ -20,26 +20,16 @@
     <MudStack Style="@containerPosition" Spacing="1">
         <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text"
                         Class="dep-mini-toolbar dep-toolbar-card" data-testid="line-toolbar">
-            @if (selectionService.IsSelectedLineDirect)
-            {
-                <MudTooltip Text="Hide line">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" OnClick="CloseDirectLine"
-                                   data-testid="line-close" />
-                </MudTooltip>
-            }
-            else
-            {
-                <MudTooltip Text="Show references">
-                    <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="line-references" />
-                </MudTooltip>
-                <MudTooltip Text="Show dependencies">
-                    <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="line-dependencies" />
-                </MudTooltip>
-            }
-            @* A direct line and a line the dependency explorer draws for its subject can end deep
-               inside another container, so they offer a jump to either end; an aggregated line
-               runs between nodes that are both in view. *@
-            @if (selectionService.IsSelectedLineDirect || IsSelectedLineFocused)
+            <MudTooltip Text="Show references">
+                <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="line-references" />
+            </MudTooltip>
+            <MudTooltip Text="Show dependencies">
+                <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="line-dependencies" />
+            </MudTooltip>
+            @* A line the dependency explorer draws for its subject can end deep inside another
+               container, so it offers a jump to either end; an aggregated line runs between
+               nodes that are both in view. *@
+            @if (IsSelectedLineFocused)
             {
                 <MudTooltip Text="Go to source node">
                     <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" data-testid="line-pan-source" />
@@ -48,9 +38,8 @@
                     <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" data-testid="line-pan-target" />
                 </MudTooltip>
             }
-            @* Line points reshape the (saved) line, so they are edit-mode actions like dragging them;
-               a direct line is a transient view aid with nothing to save. *@
-            @if (!selectionService.IsSelectedLineDirect && viewOptions.IsEditingEnabled)
+            @* Line points reshape the (saved) line, so they are edit-mode actions like dragging them. *@
+            @if (viewOptions.IsEditingEnabled)
             {
                 <MudTooltip Text="Add line point">
                     <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
@@ -111,7 +100,7 @@
     // The line is one the dependency explorer draws for its subject (see Model.LineFocus).
     // IsFocused is render state that RepLineService re-resolves on every structure change
     // (explorer opened, row expanded, lines hidden), so it is read live rather than cached
-    // at selection time like IsSelectedLineDirect.
+    // at selection time.
     bool IsSelectedLineFocused => TryGetSelectedLine(out var line) && line.IsFocused;
 
     // The line shows only user-drawn link(s), so it can be deleted (parsed links cannot).
@@ -125,14 +114,6 @@
         var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
         selectionService.Unselect();
         manualEditService.DeleteManualLine(lineId);
-    }
-
-    void CloseDirectLine()
-    {
-        if (!selectionService.SelectedId.IsLine)
-            return;
-        var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
-        dependenciesService.HideDirectLine(lineId);
     }
 
     void PanToSource()

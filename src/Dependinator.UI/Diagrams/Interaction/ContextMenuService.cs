@@ -24,7 +24,6 @@ interface IContextMenuService
     ContextMenuTarget Target { get; }
     string TargetName { get; }
     bool IsTargetManualNode { get; }
-    bool IsTargetDirectLine { get; }
     bool CanShowTargetSource { get; }
     event Action? StateChanged;
 
@@ -43,7 +42,6 @@ interface IContextMenuService
     Task CopyNodeLinkAsync();
     Task CopyViewLinkAsync();
     Task ShowSourceAsync();
-    void HideDirectLine();
 
     // Manual node: editing.
     Task RenameNodeAsync();
@@ -71,7 +69,6 @@ class ContextMenuService(
     public ContextMenuTarget Target { get; private set; } = ContextMenuTarget.Canvas;
     public string TargetName { get; private set; } = "";
     public bool IsTargetManualNode { get; private set; }
-    public bool IsTargetDirectLine { get; private set; }
     public bool CanShowTargetSource { get; private set; }
     public event Action? StateChanged;
 
@@ -93,7 +90,6 @@ class ContextMenuService(
         Target = ContextMenuTarget.Canvas;
         TargetName = "";
         IsTargetManualNode = false;
-        IsTargetDirectLine = false;
         CanShowTargetSource = false;
 
         using var model = modelMgr.UseModel();
@@ -112,7 +108,6 @@ class ContextMenuService(
         {
             Target = ContextMenuTarget.Line;
             TargetName = $"{line.Source.ShortName}→{line.Target.ShortName}";
-            IsTargetDirectLine = line.IsDirect;
             CanShowTargetSource = Build.IsVsCodeExtWasm && line.Source.FileSpanOrParentSpan is not null;
         }
     }
@@ -191,14 +186,6 @@ class ContextMenuService(
                 return;
         }
         await navigationService.ShowEditor(nodeId);
-    }
-
-    public void HideDirectLine()
-    {
-        Close();
-        if (Target != ContextMenuTarget.Line || !IsTargetDirectLine)
-            return;
-        dependenciesService.HideDirectLine(LineId.FromId(targetId.Id));
     }
 
     // The inline name field anchors at the selected node's toolbar position, so select first.
