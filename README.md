@@ -1,133 +1,110 @@
-# Dependinator
+<p align="center">
+  <img src="docs/images/logo.png" width="96" alt="Dependinator logo" />
+</p>
 
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/michaelreichenauer.dependinator?label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/michaelreichenauer.dependinator)](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
+<h1 align="center">Dependinator</h1>
 
-Dependinator visualizes the structure and dependencies of your C#/.NET
-codebase as an interactive, navigable map, making complex architectures easier
-to understand, analyze, and refactor. It is published as a
-[VS Code extension](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
-on the Visual Studio Marketplace.
+<p align="center">
+  See your C#/.NET codebase as an interactive dependency map, right inside VS Code.
+</p>
 
-> ⚠️ **Beta** — Dependinator is under active development and published as an
-> early preview for a small group of testers. Expect rough edges, missing
-> features, and breaking changes between versions. It is not yet a finished
-> product.
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator"><img src="https://img.shields.io/visual-studio-marketplace/v/michaelreichenauer.dependinator?label=VS%20Code%20Marketplace&color=7C4DFF" alt="VS Code Marketplace" /></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator"><img src="https://img.shields.io/visual-studio-marketplace/i/michaelreichenauer.dependinator?color=7C4DFF" alt="Installs" /></a>
+  <a href="https://github.com/michael-reichenauer/Dependinator/actions/workflows/azure-static-web-apps-polite-island-0e6a6eb03.yml"><img src="https://github.com/michael-reichenauer/Dependinator/actions/workflows/azure-static-web-apps-polite-island-0e6a6eb03.yml/badge.svg?branch=main" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license" /></a>
+</p>
 
-![Dependinator in action: navigating to a node with search and exploring its dependencies in the Dependencies explorer](src/DependinatorVsCode/resources/demo.gif)
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator"><b>Install in VS Code</b></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://dependinator.com"><b>Try the live demo</b></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://dependinator.com/help">User guide</a>
+  &nbsp;&middot;&nbsp;
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
+
+![The Dependinator map of a solution: projects as containers, their namespaces and types inside, and dependencies as lines between them](docs/images/hero.png)
+
+Dependinator parses your solution and draws it as a zoomable map. Projects,
+namespaces, types and members are nested nodes; dependencies are the lines
+between them. Zoom out for the big picture, zoom in to see how a component works
+inside, and jump from any node straight to its source.
+
+## Why
+
+- **Get oriented fast.** Joining a project or opening an old codebase? See how
+  it is put together before reading a single file.
+- **Refactor with confidence.** Find the tangles, see what depends on what, and
+  check that a change lands where you expect.
+- **Keep an architecture picture that stays true.** The map is generated from
+  the code and refreshes as you edit. Annotate it with notes, icons and
+  hand-drawn nodes, and it still reflects reality tomorrow.
 
 ## Features
 
-- **Interactive dependency map** — explore your codebase as a zoomable,
-  navigable diagram instead of scrolling through files.
-- **Drill down and back up** — zoom into nodes (or double-click one) to see
-  their internals (namespaces, types, members) and follow dependencies
-  between components.
-- **Jump to code** — navigate from a node or dependency straight to the
-  corresponding source location.
-- **Automatic refresh** — the map updates automatically when source files
-  change.
-- **Manual editing** — turn on edit mode (the pencil in the toolbar) to
-  arrange nodes, pick icons and colors, add your own nodes and links (drag
-  from a node to create a link), add notes, and start from an empty model to
-  sketch an architecture by hand. Every edit can be undone.
-- **Multiple models** — create, switch between, and delete models from the
-  app menu.
-- **Icon library** — pick icons for nodes, including curated Azure, AWS,
-  and Google cloud-service icons.
-- **Export as image** — save the current diagram as an image.
-- **Optional device sync** — enable device sync to keep your models updated
-  on all devices that have sync enabled, including the web app at
-  [dependinator.com](https://dependinator.com).
+- **Interactive map.** Pan, zoom and double-click to drill into any node. The
+  breadcrumb and search (`Ctrl+F`) take you anywhere in one step.
+- **Dependencies explorer.** Pick a node and browse everything it uses and
+  everything that uses it, down to member level.
+- **Jump to code.** Open the source of a node or dependency in the editor. The
+  map can also follow the file you are editing.
+- **Automatic refresh.** The map updates when source files change.
+- **Edit mode.** Arrange nodes, pick icons and colors, add notes, draw your own
+  nodes and links, or sketch an architecture from an empty model. Every edit can
+  be undone.
+- **Icon library** with curated Azure, AWS and Google Cloud service icons.
+- **Light and dark themes**, a mini-map, a legend, and export of the diagram as
+  an image.
+- **Multiple models** per workspace, with optional sync across devices.
 
-## Try it
+## Get started
 
-- **VS Code extension** — install
-  [Dependinator](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
-  from the Visual Studio Marketplace (search for "Dependinator" in the
-  Extensions view) and run **Dependinator: Open** in a workspace with a
-  `.sln` file. This is the primary way to use Dependinator: parse your
-  code and create, edit, and view models. See
-  [src/DependinatorVsCode/README.md](src/DependinatorVsCode/README.md)
-  for details.
-- **Web app** — [dependinator.com](https://dependinator.com) is the
-  companion app for viewing your models outside VS Code (editing works
-  too, but viewing is its primary use case). Enable device sync in both
-  the extension and the web app to see your models from wherever you
-  like — or just try the built-in demo model without signing in.
+1. Install [Dependinator](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
+   from the Marketplace, or search for "Dependinator" in the Extensions view.
+2. Open a folder that contains a `.sln` file.
+3. Run **Dependinator: Open** from the command palette, or click the
+   Dependinator icon in the editor title bar.
 
-In the app, the **Help** button in the app bar opens a page with usage
-instructions, navigation tips, and keyboard/mouse controls.
+The map opens in a new tab. Zoom into nodes (or double-click one) to drill in,
+drag to pan, and press `Ctrl+F` to find a node by name. The **Help** button in
+the app bar opens the [user guide](https://dependinator.com/help) with all
+keyboard and mouse controls.
 
----
+**Requirements:** a .NET solution (`.sln`) with C# projects. No local `dotnet`
+installation is needed; the extension bundles a self-contained language server.
 
-# Development
+### In action
 
-This repo contains the shared UI and core logic plus multiple hosts (Blazor
-Server, Blazor WebAssembly), an Azure Functions API used for cloud sync, and
-the VS Code extension.
+![Navigating to a node with search and exploring its dependencies in the Dependencies explorer](src/DependinatorVsCode/resources/demo.gif)
 
-## Solution structure
+## Web app and device sync
 
-`Dependinator.sln` (targeting `net10.0`, SDK pinned in `global.json`) stays at the repo root; production project folders live under `src/` and test projects under `tests/`. Dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`), enforced by `tests/Dependinator.Architecture.Tests/`.
+[dependinator.com](https://dependinator.com) is the companion web app. Open it
+to explore the built-in demo model without installing or signing in, and to
+view your own models from any browser or device once device sync is enabled.
+Sync is optional: without signing in, everything stays local.
 
-**Hosts:**
-- `src/Dependinator.Web/`: Blazor Server host for local development.
-- `src/Dependinator.Wasm/`: Blazor WebAssembly host (Azure Static Web Apps target) and Web UI for the VS Code extension.
-- `src/Dependinator.Lsp/`: LSP server executable.
-- `src/Api/`: Azure Functions API for cloud sync.
+Parsing code happens in VS Code. The web app views and edits models, including
+ones sketched by hand, but does not parse solutions itself.
 
-**Libraries:**
-- `src/Dependinator.UI/`: Shared UI (`App/`, `Diagrams/`, `Modeling/`).
-- `src/Dependinator.Core/`: Core parsing, domain logic, models, and utilities.
-- `src/Dependinator.Roslyn/`: Roslyn-based parsing.
-- `src/Shared/`: Shared DTOs/models between client and API.
+## Status
 
-**Tests:**
-- `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Api.Tests/`: xUnit unit tests.
-- `tests/Dependinator.Architecture.Tests/`: NetArchTest layering guards.
-- `tests/Dependinator.E2E.Tests/`: Playwright UI tests (run via `./scripts/e2e`).
+Dependinator is in **beta**. The core works end to end, but expect rough edges
+and the occasional breaking change between versions. Today it supports C#
+solutions (`.sln` files with C# projects); other languages are not parsed yet.
 
-**VS Code extension** (not part of `Dependinator.sln`):
-- `src/DependinatorVsCode/`: TypeScript extension packaging the web UI + language server.
+Feedback shapes what gets built next. Please
+[open an issue](https://github.com/michael-reichenauer/Dependinator/issues/new/choose)
+for bugs, questions and ideas.
 
-## Prerequisites
+## Contributing
 
-- **.NET SDK 11.0 preview** (pinned in `global.json`; the C# 15 union patterns need its compiler) plus the **.NET 10 SDK/runtime** for the `net10.0` target. The devcontainer installs both; elsewhere run the `dotnet-install.sh` line from `scripts/installdevtools`.
-- **Node.js + npm** — for the VS Code extension and SWA CLI.
-- **Azurite** (`npm i -g azurite`) — local Azure Storage emulator, needed by `./scripts/watch` and `./scripts/run`.
-- **Azure Functions Core Tools** (`func`) — needed by `./scripts/watch` and `./scripts/run`.
-- **SWA CLI** (`npm i -g @azure/static-web-apps-cli`) — needed by `./scripts/run`.
-- **Playwright browsers** — for `./scripts/e2e`.
-
-The devcontainer (`.devcontainer/`) provisions the .NET SDK, Node, `func`, and Playwright browsers out of the box. **Azurite** and the **SWA CLI** are not preinstalled — add them with the `npm i -g` commands above if you need `./scripts/watch` or `./scripts/run`.
-
-## Quick start
-- Build: `./scripts/build`
-- Run server (live dev, with cloud sync): `./scripts/watch`
-- Run WASM + API + Azurite locally: `./scripts/run`
-- Unit tests: `dotnet test Dependinator.sln`
-- UI/e2e tests: `./scripts/e2e` (chromium; `-a` for all browsers)
-- All tests (unit + e2e): `./scripts/test`
-
-## Cloud sync
-
-Cloud sync uses [Clerk](https://clerk.com) for authentication (magic links / email OTP). The API validates Clerk-issued JWTs via JWKS.
-
-### Azure Static Web Apps deployment
-
-- See `swa-cli.config.json` for the `dependinator-test` configuration.
-- Required Static Web App application settings:
-  - `CloudSync__ClerkIssuer`
-  - `CloudSync__ContainerName`
-  - `CloudSync__MaxUserQuotaBytes`
-  - `CloudSync__StorageConnectionString`
-
-### VS Code extension
-
-- The `dependinator.cloudSync.baseUrl` setting controls which API endpoint the extension uses.
-- The extension serves a local Clerk sign-in page and stores the session JWT in VS Code secrets.
+Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers the
+development setup, the repository layout and the conventions. The repo includes
+a devcontainer, so you can build, run and test everything without local setup.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+[MIT](LICENSE)

@@ -25,7 +25,7 @@
 - Add lines filter
 - Add support for legend
 - Add Manage models dialog
-- Add more feedback, like progress, summery, ....
+- Add more feedback, like progress and summary
 - Add support for showing active node
 - Add architecture rules
 - Add Mini-map support
