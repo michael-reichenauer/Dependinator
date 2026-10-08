@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.80.0 (2026-10-08)
+
+- Offer go-to-source/target on dependency explorer lines
+- Place the dependency explorer below the app bar and breadcrumb
+- Move the explorer's node name from the title row into the subtitle
+- Remove the explorer's "show direct line" row button
+- Bump the nuget-minor-patch group with 2 updates
+- Add contributing guide, issue templates and community files
+- Rework the README around users and re-record the demo
+- Add Marketplace links, social preview tags and a /help route
+- Point questions at GitHub Discussions
+- Set the extension version so the next release is 0.80.0
+
 ## 0.10.0 (2026-10-07)
 
 - Draw lines at one width; widen the selection's lines by link count
