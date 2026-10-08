@@ -11,6 +11,13 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches: [main, dev]
 
+# Least-privilege GITHUB_TOKEN: the repository default is write-all, so the workflow states what
+# each job needs instead. A reusable workflow gets at most what its calling job has (unit-tests
+# and e2e declare contents: read themselves); the deploy job adds what the Azure deploy action
+# needs to comment the preview url on a pull request; vscode_extension pushes the version bump.
+permissions:
+  contents: read
+
 jobs:
   # Gate the deploy on the test suites passing (reusable workflows). They run only when a
   # deploy would (not on PR close), so they don't block the close job below.
@@ -33,6 +40,10 @@ jobs:
     if: github.actor != 'dependabot[bot]' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed'))
     runs-on: ubuntu-latest
     name: Build and Deploy Job
+    permissions:
+      contents: read
+      pull-requests: write # repo_token: the preview url comment on the pull request
+      issues: write # pull request comments go through the issues API
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -92,6 +103,7 @@ jobs:
     if: github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
+    permissions: {} # only the Azure deployment token is used here
     steps:
       - name: Close Pull Request
         id: closepullrequest
