@@ -162,7 +162,7 @@ function resolveSource(index, entry) {
 function normalizeSvg(svg, name, where) {
     svg = svg.replace(/<\?xml[^>]*\?>/g, "");
     svg = svg.replace(/<!DOCTYPE[^>]*>/g, "");
-    svg = svg.replace(/<!--[\s\S]*?-->/g, "");
+    svg = stripComments(svg, where);
     svg = svg.replace(/<title>[\s\S]*?<\/title>/g, "");
 
     svg = inlineStyles(svg, where);
@@ -178,6 +178,18 @@ function normalizeSvg(svg, name, where) {
     // Single line, matching the hand-authored library files.
     svg = svg.replace(/[\r\n\t]+/g, " ").replace(/>\s+</g, "><").trim();
     return svg + "\n";
+}
+
+// Removes every "<!-- ... -->" comment. Not a single regex replace: one pass leaves a comment
+// start behind when comments nest ("<!<!---->--"), which is the incomplete sanitization CodeQL
+// flags (js/incomplete-multi-character-sanitization). An unterminated comment is a broken icon.
+function stripComments(svg, where) {
+    for (let start = svg.indexOf("<!--"); start !== -1; start = svg.indexOf("<!--")) {
+        const end = svg.indexOf("-->", start + "<!--".length);
+        if (end === -1) fail(`${where}: unterminated comment`);
+        svg = svg.slice(0, start) + svg.slice(end + "-->".length);
+    }
+    return svg;
 }
 
 // Converts a <style> block of ".cls-N { decls }" rules (Google legacy icons) into presentation
