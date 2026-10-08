@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: User guide
+    url: https://dependinator.com/help
+    about: Usage instructions, navigation tips and keyboard/mouse controls.
+  - name: Try the web app
+    url: https://dependinator.com
+    about: Explore the built-in demo model in your browser, no sign-in needed.
