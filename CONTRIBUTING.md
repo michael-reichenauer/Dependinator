@@ -7,6 +7,8 @@ requests are all welcome.
 
 - **Report a bug or request a feature** using the
   [issue templates](https://github.com/michael-reichenauer/Dependinator/issues/new/choose).
+- **Ask a question or share an idea** in
+  [Discussions](https://github.com/michael-reichenauer/Dependinator/discussions).
 - **Try it on your own solutions** and tell us what breaks, what is slow, or what
   is confusing. Real-world feedback is the most valuable input right now.
 - **Send a pull request.** Small, focused changes are easiest to review. For

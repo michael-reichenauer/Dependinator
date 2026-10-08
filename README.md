@@ -96,7 +96,7 @@ solutions (`.sln` files with C# projects); other languages are not parsed yet.
 
 Feedback shapes what gets built next. Please
 [open an issue](https://github.com/michael-reichenauer/Dependinator/issues/new/choose)
-for bugs, questions and ideas.
+for bugs and feature requests, or [start a discussion](https://github.com/michael-reichenauer/Dependinator/discussions) for questions and ideas.
 
 ## Contributing
 

@@ -10,6 +10,7 @@
         "url": "https://github.com/michael-reichenauer/Dependinator/issues"
     },
     "homepage": "https://dependinator.com",
+    "qna": "https://github.com/michael-reichenauer/Dependinator/discussions/categories/q-a",
     "icon": "media/icon-192.png",
     "preview": true,
     "galleryBanner": {

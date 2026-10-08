@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Ask a question
+    url: https://github.com/michael-reichenauer/Dependinator/discussions/categories/q-a
+    about: Not sure if it is a bug, or just want to know how to do something? Ask in Discussions.
   - name: User guide
     url: https://dependinator.com/help
     about: Usage instructions, navigation tips and keyboard/mouse controls.

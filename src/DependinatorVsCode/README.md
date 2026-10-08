@@ -99,13 +99,15 @@ use case; parsing code and creating models is what the extension is for.
 Found a bug or have a feature request? Please
 [open an issue](https://github.com/michael-reichenauer/Dependinator/issues/new/choose).
 For a problem, include the Dependinator version and anything in the
-"Dependinator" channel of the Output panel.
+"Dependinator" channel of the Output panel. Questions and ideas are welcome in
+[Discussions](https://github.com/michael-reichenauer/Dependinator/discussions).
 
 ## Links
 
 - Web app (view your models anywhere): https://dependinator.com
 - User guide: https://dependinator.com/help
 - Repository: https://github.com/michael-reichenauer/Dependinator
+- Discussions: https://github.com/michael-reichenauer/Dependinator/discussions
 - Contributing / building the extension: see [DEVELOPMENT.md](DEVELOPMENT.md)
 
 ## License
