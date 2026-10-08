@@ -35,7 +35,7 @@ body:
     attributes:
       label: Dependinator version
       description: Extension version (Extensions view) or the web app's Menu › About.
-      placeholder: "0.10.0"
+      placeholder: "0.80.0"
     validations:
       required: true
   - type: input
