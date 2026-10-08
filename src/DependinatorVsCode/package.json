@@ -6,6 +6,10 @@
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
+    "bugs": {
+        "url": "https://github.com/michael-reichenauer/Dependinator/issues"
+    },
+    "homepage": "https://dependinator.com",
     "icon": "media/icon-192.png",
     "preview": true,
     "galleryBanner": {
