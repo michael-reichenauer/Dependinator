@@ -4,10 +4,10 @@ using OmniSharp.Extensions.JsonRpc;
 namespace Dependinator.Lsp.CloudSync;
 
 [Method("dependinator/cloudSync/configChanged")]
-public record CloudSyncConfigChanged(string? BaseUrl) : IRequest;
+public record CloudSyncConfigChanged(string? BaseUrl) : IRequest<Unit>;
 
 [Method("dependinator/cloudSync/tokenChanged")]
-public record CloudSyncTokenChanged(string? AccessToken) : IRequest;
+public record CloudSyncTokenChanged(string? AccessToken) : IRequest<Unit>;
 
 // Receives cloud-sync setting and token updates pushed by the VS Code extension
 // (e.g. baseUrl setting edits and token changes from other VS Code windows).

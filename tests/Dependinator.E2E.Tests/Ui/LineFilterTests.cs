@@ -30,14 +30,8 @@ public class LineFilterTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     // The Lines submenu is nested under View: open View, hover Lines, then the item.
-    async Task<ILocator> OpenExternalItemAsync()
-    {
-        await App.OpenSubMenuItemAsync("menu-view", "menu-lines");
-        await App.MenuItem("menu-lines").HoverAsync();
-        ILocator item = App.MenuItem("menu-lines-external");
-        await item.WaitForAsync();
-        return item;
-    }
+    Task<ILocator> OpenExternalItemAsync() =>
+        App.OpenSubMenuItemAsync("menu-view", "menu-lines", "menu-lines-external");
 
     async Task ToggleExternalAsync(bool expectOn)
     {

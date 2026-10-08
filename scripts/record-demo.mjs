@@ -116,6 +116,19 @@ async function waitForQuiet(page, timeoutMs = 300000) {
     }
 }
 
+// Clicks Skip on the first-run tour callout if it is showing. Skip also marks the tour as
+// seen for this browser profile, so it stays away for the rest of the recording.
+async function dismissCoach(page) {
+    await page.waitForSelector("[data-testid=coach-skip]", { timeout: 5000 }).catch(() => null);
+    const skipped = await page.evaluate(() => {
+        const skip = document.querySelector("[data-testid=coach-skip]");
+        if (!skip) return false;
+        skip.click();
+        return true;
+    });
+    if (skipped) await wait(500);
+}
+
 async function fitToScreen(page, useCursor) {
     const menuButton = await rectOf(page, (id) => document.querySelector(`${id} button`), "[data-testid=appbar-menu]");
     if (useCursor) await clickRect(page, menuButton);
@@ -148,11 +161,12 @@ async function run() {
     await page.waitForSelector("#svgcanvas", { timeout: 30000 });
     await wait(4000); // let the model load and render
 
-    // The first-run tour starts in a fresh browser profile; it is not part of the demo. Skip
-    // also marks it as seen for this profile, so it stays away for the rest of the recording.
-    await page.waitForSelector("[data-testid=coach-skip]", { timeout: 5000 }).catch(() => null);
-    await page.evaluate(() => document.querySelector("[data-testid=coach-skip]")?.click());
-    await wait(500);
+    // The first-run tour starts in a fresh browser profile; it is not part of the demo. It
+    // only appears once the model has loaded, which on a freshly started app can take a
+    // while, so keep dismissing it until the scene starts (see dismissCoach) and hide the
+    // callout outright as a safety net, so it can never end up in the recording.
+    await page.addStyleTag({ content: ".dep-coach { display: none !important; }" });
+    await dismissCoach(page);
 
     // Hide snackbars (e.g. "Connection refused" when the cloud-sync API is not
     // running) — they are not part of the demo.
@@ -196,6 +210,7 @@ async function run() {
     // it to finish so the scene inputs are processed without lag.
     console.log("Waiting for the app to be idle ...");
     await waitForQuiet(page);
+    await dismissCoach(page);
 
     // ---- Scene starts here -------------------------------------------------
     const sceneStart = Date.now();

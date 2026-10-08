@@ -1,0 +1,58 @@
+name: Bug report
+description: Something does not work as expected.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. A few details make it much easier to reproduce and fix.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead? Screenshots or a short recording help a lot.
+      placeholder: |
+        1. Open a solution with ...
+        2. Run "Dependinator: Open"
+        3. Zoom into ...
+        Expected: ...
+        Actual: ...
+    validations:
+      required: true
+  - type: dropdown
+    id: host
+    attributes:
+      label: Where did it happen?
+      options:
+        - VS Code extension
+        - Web app (dependinator.com)
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Dependinator version
+      description: Extension version (Extensions view) or the web app's Menu › About.
+      placeholder: "0.80.0"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: VS Code version, operating system and, for the web app, the browser.
+      placeholder: "VS Code 1.95, Windows 11 / Chrome 130"
+  - type: input
+    id: solution
+    attributes:
+      label: Solution
+      description: Roughly how big is the solution (projects, target frameworks)? Anything unusual about it (SDK-style vs legacy projects, multi-targeting, generated code)?
+      placeholder: "12 projects, net8.0 + netstandard2.0"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: In VS Code, open the Output panel and select the "Dependinator" channel. In the web app, open the browser console. Paste anything relevant.
+      render: text

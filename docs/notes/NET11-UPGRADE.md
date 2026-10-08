@@ -3,7 +3,7 @@
 The `Result` / `Result<T>` union types (`src/Dependinator.Core/Utils/Result.cs`) need the C# 15 compiler,
 so the repo builds with the **.NET 11 RC1 SDK** (`global.json`) while every project still targets
 **net10.0**. Two follow-ups remain, in order. The first is small and due at GA; the second is optional.
-Background: `result-union-kit.md`, section 7.
+Background: the `result-union-kit.md` notes (kept outside the repo), section 7.
 
 ## Phase A: .NET 11 GA (expected November 2026), target framework stays net10.0
 

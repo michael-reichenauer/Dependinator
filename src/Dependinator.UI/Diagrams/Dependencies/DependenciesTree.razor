@@ -17,18 +17,25 @@
     }
 </style>
 
-<MudPopover Open="IsShowExplorer" Fixed="true" Class="@(srv.IsMinimized ? "px-5 py-2 ml-1" : "px-5 pt-4 ml-1")"
+@* The popover is anchored to this empty fixed element, which sits just under the app bar and
+   the breadcrumb (ToolbarPositioning.ChromeBottom) so the explorer never covers their buttons. *@
+<div style="@AnchorStyle">
+<MudPopover Open="IsShowExplorer" Fixed="true" Class="@(srv.IsMinimized ? "px-5 py-2" : "px-5 pt-4")"
             MaxHeight="MaxHeight" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.TopLeft">
     <MudStack Spacing="0">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             @* Minimized (after a click elsewhere in the diagram), the title bar is all that is
-               left; clicking it brings the tree back. *@
+               left; clicking it brings the tree back. The subject's name is only shown here
+               then, as the subtitle line that normally carries it is hidden. *@
             <div style="@(srv.IsMinimized ? "display:flex;align-items:center;gap:8px;cursor:pointer;" : "display:flex;align-items:center;gap:8px;")"
                  @onclick="() => srv.SetMinimized(false)" data-testid="explorer-header">
                 <MudText Class="ml-n2"><b>@HeadingText</b></MudText>
-                <MudText Color="Color.Info" Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    <b>@(srv.Title)</b>
-                </MudText>
+                @if (srv.IsMinimized)
+                {
+                    <MudText Color="Color.Info" Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <b>@(srv.Title)</b>
+                    </MudText>
+                }
             </div>
             <MudSpacer />
             <MudTooltip Text="@(srv.IsShowLines ? "Hide the lines in the diagram" : "Show the lines in the diagram")">
@@ -68,7 +75,9 @@
         </MudStack>
         @if (!srv.IsMinimized)
         {
-        <MudText Typo="Typo.caption" Class="ml-n2 mud-text-secondary">@(srv.Subtitle)</MudText>
+        <MudText Typo="Typo.body2" Class="ml-n2 mud-text-secondary" data-testid="explorer-subtitle">
+            @(srv.SubtitleBefore)<b style="color: var(--mud-palette-info);">@(srv.Title)</b>@(srv.SubtitleAfter)
+        </MudText>
         <MudPaper Class="overflow-y-auto ml-n8" Elevation="0" MaxWidth="MaxWidth" MaxHeight="500px">
             <MudTreeView Items="@srv.TreeItems" Hover="true" Dense="true" Width="100%">
                 <ItemTemplate Context="treeItem">
@@ -130,11 +139,6 @@
                                                                OnClick="() => srv.ShowChain(item.NodeId)" data-testid="explorer-show-chain" />
                                             </MudTooltip>
                                         }
-                                        <MudTooltip Text="Show direct line to this node">
-                                            <MudIconButton Icon="@Icon.DirectConnection"
-                                                           Size="Size.Small" Color="Color.Inherit" Class="ml-3 hover-button"
-                                                           OnClick="() => srv.ShowDirectLine(item.NodeId)" />
-                                        </MudTooltip>
                                     </div>
                                 }
                             </div>
@@ -146,12 +150,14 @@
         }
     </MudStack>
 </MudPopover>
+</div>
 
 
 @code {
     bool IsShowExplorer => srv.IsShowExplorer;
 
-    string HeadingText => srv.TreeType == TreeType.References ? "References:" : "Dependencies:";
+    string HeadingText =>
+        (srv.TreeType == TreeType.References ? "References" : "Dependencies") + (srv.IsMinimized ? ":" : "");
 
     string IndirectTooltip =>
         srv.IsIncludeIndirect ? "Indirect ones are included (click to list only direct ones)"
@@ -163,8 +169,12 @@
             ? "Show the chain of dependencies from this node"
             : "Show the chain of dependencies to this node";
 
-    int MaxHeight => (int)screenService.SvgRect.Height - 5;
-    int MaxWidth => (int)screenService.SvgRect.Width - 20;
+    const int Left = 15;
+
+    string AnchorStyle => $"position:fixed;top:{(int)ToolbarPositioning.ChromeBottom}px;left:{Left}px;width:0;height:0;";
+
+    int MaxHeight => (int)(screenService.SvgRect.Height - ToolbarPositioning.ChromeBottom) - 15;
+    int MaxWidth => (int)screenService.SvgRect.Width - 2 * Left;
 
     Task OnItemClickAsync(TreeItem item) =>
         item.NodeId != Modeling.Models.NodeId.Empty ? srv.ShowNodeAsync(item.NodeId) : Task.CompletedTask;
