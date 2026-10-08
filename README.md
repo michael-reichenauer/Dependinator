@@ -9,8 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator"><img src="https://img.shields.io/visual-studio-marketplace/v/michaelreichenauer.dependinator?label=VS%20Code%20Marketplace&color=7C4DFF" alt="VS Code Marketplace" /></a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator"><img src="https://img.shields.io/visual-studio-marketplace/i/michaelreichenauer.dependinator?color=7C4DFF" alt="Installs" /></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator"><img src="https://vsmarketplacebadges.dev/version-short/michaelreichenauer.dependinator.svg?label=VS%20Code%20Marketplace&color=7C4DFF" alt="VS Code Marketplace" /></a>
   <a href="https://github.com/michael-reichenauer/Dependinator/actions/workflows/azure-static-web-apps-polite-island-0e6a6eb03.yml"><img src="https://github.com/michael-reichenauer/Dependinator/actions/workflows/azure-static-web-apps-polite-island-0e6a6eb03.yml/badge.svg?branch=main" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license" /></a>
 </p>
