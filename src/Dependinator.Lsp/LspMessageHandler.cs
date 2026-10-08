@@ -6,7 +6,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 namespace Dependinator.Lsp;
 
 [Method("lsp/message")]
-public record LspMessage(string Message) : IRequest;
+public record LspMessage(string Message) : IRequest<Unit>;
 
 public record UIMessage(string Message)
 {

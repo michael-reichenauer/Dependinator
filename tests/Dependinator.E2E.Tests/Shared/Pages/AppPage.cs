@@ -266,9 +266,17 @@ public sealed class AppPage
     // menu-item locator by its data-testid (nested MudMenu flyouts open on hover). The hover
     // retries too: the parent item can be re-rendered (detached) mid-hover, or the flyout can
     // fail to open when the hover races the menu's own opening render.
-    public async Task<ILocator> OpenSubMenuItemAsync(string parentTestId, string testId)
+    public Task<ILocator> OpenSubMenuItemAsync(string parentTestId, string testId) =>
+        OpenSubMenuItemAsync([parentTestId], testId);
+
+    // Same for an item two levels down (e.g. View › Lines › External): hover the parent, then
+    // the child submenu it reveals. A plain HoverAsync on the child has no retry, so a popover
+    // re-render that detaches it (or closes the menu) waits out the full default timeout.
+    public Task<ILocator> OpenSubMenuItemAsync(string parentTestId, string childTestId, string testId) =>
+        OpenSubMenuItemAsync([parentTestId, childTestId], testId);
+
+    async Task<ILocator> OpenSubMenuItemAsync(string[] parentTestIds, string testId)
     {
-        ILocator parent = MenuItem(parentTestId);
         ILocator item = MenuItem(testId);
 
         for (int attempt = 1; ; attempt++)
@@ -279,8 +287,11 @@ public sealed class AppPage
                 // can close again right after it opened — a re-render, or a click that only
                 // looked successful because the item was still visible while the previous
                 // popover faded out — and re-hovering a parent that is gone never recovers.
-                await OpenMenuAsync(Menu, parent, attempts: 1);
-                await parent.HoverAsync(new() { Timeout = MenuAttemptTimeout });
+                await OpenMenuAsync(Menu, MenuItem(parentTestIds[0]), attempts: 1);
+                foreach (string parentTestId in parentTestIds)
+                {
+                    await MenuItem(parentTestId).HoverAsync(new() { Timeout = MenuAttemptTimeout });
+                }
                 await item.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
                 return item;
             }

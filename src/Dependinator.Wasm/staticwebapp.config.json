@@ -1,4 +1,10 @@
 {
+    "routes": [
+        {
+            "route": "/help",
+            "rewrite": "/_content/Dependinator.UI/help.html"
+        }
+    ],
     "platform": {
         "apiRuntime": "dotnet-isolated:8.0"
     },
