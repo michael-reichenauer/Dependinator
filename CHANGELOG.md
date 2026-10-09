@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.81.0 (2026-10-08)
+
+- Limit the CI/CD workflow's GITHUB_TOKEN permissions
+- Strip nested comments when importing cloud icons
+
 ## 0.80.0 (2026-10-08)
 
 - Offer go-to-source/target on dependency explorer lines
