@@ -33,6 +33,8 @@ resources with their Azure icons, parameters and outputs, and the dependencies
 between them. Zoom out for the big picture, zoom in to see how a component works
 inside, and jump from any node straight to its source.
 
+![The Dependinator map of a Bicep deployment: the network module with its network security groups, NAT gateway, public IP, private DNS zones and virtual network drawn with Azure icons, and the module's parameters and outputs as rows](docs/images/bicep.png)
+
 ## Why
 
 - **Get oriented fast.** Joining a project or opening an old codebase? See how

@@ -7,6 +7,8 @@ between them. A Bicep deployment is drawn the same way: modules and resources
 with their Azure icons, parameters and outputs, and the dependencies between them. Zoom out for the big picture, zoom in to see how a component works
 inside, and jump from any node straight to its source.
 
+![The Dependinator map of a Bicep deployment: the network module with its network security groups, NAT gateway, public IP, private DNS zones and virtual network drawn with Azure icons, and the module's parameters and outputs as rows](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/docs/images/bicep.png)
+
 ![The Dependinator map of a solution: projects as containers, their namespaces and types inside, and dependencies as lines between them](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/docs/images/hero.png)
 
 Dependinator is in beta: the core works end to end, but expect rough edges and
