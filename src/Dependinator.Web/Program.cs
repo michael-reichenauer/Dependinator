@@ -1,3 +1,4 @@
+using Dependinator.Bicep;
 using Dependinator.Core;
 using Dependinator.Core.CloudSync;
 using Dependinator.Core.Rpc;
@@ -45,6 +46,7 @@ public class Program
             });
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddDependinatorRoslynServices();
+        builder.Services.AddDependinatorBicepServices();
 
         // Cloud sync — registered after AddDependinatorServices so the explicit
         // ICloudSyncService binding overrides Scrutor's assembly-scanned defaults.

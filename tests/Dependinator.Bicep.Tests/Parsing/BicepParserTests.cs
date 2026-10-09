@@ -1,0 +1,240 @@
+using Dependinator.Bicep.Parsing;
+using Dependinator.Bicep.Tests.Parsing.Utils;
+using Dependinator.Core.Parsing;
+
+namespace Dependinator.Bicep.Tests.Parsing;
+
+// Parses Samples/main.bicep (see BicepFixture) and checks the model built from it: node names
+// encode the hierarchy ("main*bicep.web.config"), existing resources go under $Externals, local
+// modules are expanded, and links follow the deployment's dependencies and value flow.
+[Collection(nameof(BicepCollection))]
+public class BicepParserTests(BicepFixture fixture)
+{
+    const string Main = "main*bicep";
+    const string Storage = "main*bicep.storage";
+
+    IReadOnlyList<Item> Items => fixture.Items;
+
+    [Theory]
+    [InlineData("/repo/infra/main.bicep")]
+    [InlineData("C:\\repo\\Main.BICEP")]
+    public void CanParse_ShouldBeTrue_ForBicepFiles(string path)
+    {
+        Assert.True(new BicepParser(new BicepCompilerHost()).CanParse(path));
+    }
+
+    [Theory]
+    [InlineData("/repo/Dependinator.sln")]
+    [InlineData("/repo/main.bicepparam")]
+    [InlineData("My design")]
+    public void CanParse_ShouldBeFalse_ForOtherPaths(string path)
+    {
+        Assert.False(new BicepParser(new BicepCompilerHost()).CanParse(path));
+    }
+
+    [Fact]
+    public async Task ParseAsync_ShouldReturnError_WhenFileIsMissing()
+    {
+        var missingPath = Path.Combine(Path.GetTempPath(), $"Missing-{Guid.NewGuid()}.bicep");
+
+        var e = AssertError(
+            await new BicepParser(new BicepCompilerHost()).ParseAsync(missingPath, SolutionParseOptions.Default)
+        );
+
+        Assert.Contains("not found", e.Message);
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldCreateRootNode_ForTheEntryFile()
+    {
+        var root = Items.Node(Main);
+
+        Assert.Equal(NodeType.Solution, root.Properties.Type);
+        Assert.Equal("Sample web deployment used by the Dependinator.Bicep tests.", root.Properties.Description);
+        Assert.Equal("Resource-Group", root.Properties.IconName);
+        Assert.EndsWith("main.bicep", root.Properties.FileSpan!.Path);
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldCreateResourceNodes_WithAzureIcons()
+    {
+        var plan = Items.Node($"{Main}.plan");
+        Assert.Equal(NodeType.Resource, plan.Properties.Type);
+        Assert.Equal("App-Service-Plan", plan.Properties.IconName);
+        Assert.Equal(
+            "The hosting plan shared by the web app and its slot. (Microsoft.Web/serverfarms@2023-12-01)",
+            plan.Properties.Description
+        );
+
+        Assert.Equal("App-Service", Items.Node($"{Main}.web").Properties.IconName);
+        Assert.Equal("Cache-for-Redis", Items.Node($"{Main}.redis").Properties.IconName);
+        Assert.Equal("Event-Grid", Items.Node($"{Main}.topics").Properties.IconName);
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldNestChildResources_UnderTheirParent()
+    {
+        // Nested declaration syntax and the "parent:" property both nest.
+        Assert.Equal(NodeType.Resource, Items.Node($"{Main}.web.config").Properties.Type);
+        Assert.Equal(NodeType.Resource, Items.Node($"{Main}.web.slot").Properties.Type);
+        Assert.False(Items.HasNode($"{Main}.config"));
+        Assert.False(Items.HasNode($"{Main}.slot"));
+
+        // A child type without an icon of its own uses its parent type's icon.
+        Assert.Equal("App-Service", Items.Node($"{Main}.web.slot").Properties.IconName);
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldPlaceExistingResources_UnderExternals()
+    {
+        var vnet = Items.Node("$Externals.vnet");
+
+        Assert.Equal(NodeType.Resource, vnet.Properties.Type);
+        Assert.Equal("Virtual-Network", vnet.Properties.IconName);
+        Assert.Contains("existing", vnet.Properties.Description);
+        Assert.False(Items.HasNode($"{Main}.vnet"));
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldCreateMemberNodes_ForParamsVarsAndOutputs()
+    {
+        var location = Items.Node($"{Main}.location");
+        Assert.Equal(NodeType.ParameterMember, location.Properties.Type);
+        Assert.Equal("Azure region for all resources. (param string)", location.Properties.Description);
+
+        var prefix = Items.Node($"{Main}.prefix");
+        Assert.Equal(NodeType.VariableMember, prefix.Properties.Type);
+        Assert.True(prefix.Properties.IsPrivate);
+
+        Assert.Equal(NodeType.OutputMember, Items.Node($"{Main}.webHost").Properties.Type);
+        Assert.Equal(NodeType.ParameterMember, Items.Node($"{Main}.deployRedis").Properties.Type);
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldMarkLoopsAndConditions_InDescriptions()
+    {
+        Assert.EndsWith("(loop)", Items.Node($"{Main}.topics").Properties.Description);
+        Assert.EndsWith("(conditional)", Items.Node($"{Main}.redis").Properties.Description);
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldExpandLocalModules_BeneathTheModuleNode()
+    {
+        var storage = Items.Node(Storage);
+        Assert.Equal(NodeType.Module, storage.Properties.Type);
+        Assert.Equal("Storage account with a blob container.", storage.Properties.Description);
+
+        Assert.Equal(NodeType.ParameterMember, Items.Node($"{Storage}.location").Properties.Type);
+        Assert.Equal("Storage-Account", Items.Node($"{Storage}.account").Properties.IconName);
+        Assert.Equal("Blob-Storage", Items.Node($"{Storage}.account.blobs").Properties.IconName);
+        Assert.Equal("Blob-Storage", Items.Node($"{Storage}.account.blobs.container").Properties.IconName);
+        Assert.EndsWith("storage.bicep", Items.Node($"{Storage}.account").Properties.FileSpan!.Path);
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldSuffixOutputs_ThatShareAnIdentifier()
+    {
+        // storage.bicep has both "var accountName" and "output accountName".
+        Assert.Equal(NodeType.VariableMember, Items.Node($"{Storage}.accountName").Properties.Type);
+        Assert.Equal(NodeType.OutputMember, Items.Node($"{Storage}.accountName (output)").Properties.Type);
+        Assert.Equal(NodeType.OutputMember, Items.Node($"{Storage}.blobEndpoint").Properties.Type);
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldKeepRegistryModules_AsLeafNodes()
+    {
+        var keyVault = Items.Node($"{Main}.keyVault");
+
+        Assert.Equal(NodeType.Module, keyVault.Properties.Type);
+        Assert.Contains("br/public:avm/res/key-vault/vault:0.9.0", keyVault.Properties.Description);
+        Assert.DoesNotContain(Items.Nodes(), n => n.Name.StartsWith($"{Main}.keyVault."));
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldLinkResourceDependencies()
+    {
+        Assert.True(Items.HasLink($"{Main}.web", $"{Main}.plan"), "web -> plan (serverFarmId)");
+        Assert.True(Items.HasLink($"{Main}.redis", $"{Main}.plan"), "redis -> plan (dependsOn)");
+        Assert.True(Items.HasLink($"{Main}.web", "$Externals.vnet"), "web -> existing vnet");
+
+        // Nesting is not a dependency: no child -> parent or parent -> child links.
+        Assert.False(Items.HasLink($"{Main}.web.config", $"{Main}.web"));
+        Assert.False(Items.HasLink($"{Main}.web.slot", $"{Main}.web"));
+        Assert.False(Items.HasLink($"{Storage}.account.blobs", $"{Storage}.account"));
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldLinkParameterAndVariableUsage()
+    {
+        Assert.True(Items.HasLink($"{Main}.plan", $"{Main}.location"), "plan -> location");
+        Assert.True(Items.HasLink($"{Main}.plan", $"{Main}.prefix"), "plan -> prefix (name)");
+        Assert.True(Items.HasLink($"{Main}.prefix", $"{Main}.environment"), "var -> param");
+        Assert.True(Items.HasLink($"{Main}.topics", $"{Main}.topicNames"), "loop -> array param");
+        Assert.True(Items.HasLink($"{Storage}.account", $"{Storage}.subnetId"), "module resource -> module param");
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldLinkOutputs_ToWhatTheyExpose()
+    {
+        Assert.True(Items.HasLink($"{Main}.webHost", $"{Main}.web"));
+        Assert.True(Items.HasLink($"{Storage}.accountName (output)", $"{Storage}.account"));
+        Assert.True(Items.HasLink($"{Storage}.blobEndpoint", $"{Storage}.account"));
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldLinkModuleOutputReads_ToTheOutputNode()
+    {
+        // "storage.outputs.accountName" links to the module's output, not to the whole module.
+        Assert.True(Items.HasLink($"{Main}.storageAccountName", $"{Storage}.accountName (output)"));
+        Assert.True(Items.HasLink($"{Main}.web.config", $"{Storage}.accountName (output)"));
+        Assert.False(Items.HasLink($"{Main}.storageAccountName", Storage));
+        Assert.False(Items.HasLink($"{Main}.web.config", Storage));
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldLinkModuleParameters_ToTheValuesTheyAreGiven()
+    {
+        Assert.True(Items.HasLink($"{Storage}.location", $"{Main}.location"));
+        Assert.True(Items.HasLink($"{Storage}.namePrefix", $"{Main}.prefix"));
+        Assert.True(Items.HasLink($"{Storage}.subnetId", "$Externals.vnet"));
+
+        // The module-level links are replaced by the finer parameter links.
+        Assert.False(Items.HasLink(Storage, $"{Main}.location"));
+        Assert.False(Items.HasLink(Storage, "$Externals.vnet"));
+
+        // A registry module is not expanded, so its parameter values link to the module itself.
+        Assert.True(Items.HasLink($"{Main}.keyVault", $"{Main}.prefix"));
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldSetFileSpans_FromTheDeclarations()
+    {
+        var mainLines = File.ReadAllLines(Root.MainBicepPath);
+        var web = Items.Node($"{Main}.web");
+        Assert.Equal(Root.MainBicepPath, web.Properties.FileSpan!.Path);
+        Assert.Equal(Array.FindIndex(mainLines, l => l.StartsWith("resource web ")), web.Properties.FileSpan.StartLine);
+        Assert.True(web.Properties.FileSpan.EndLine > web.Properties.FileSpan.StartLine);
+
+        // A decorated declaration starts at its first decorator.
+        var plan = Items.Node($"{Main}.plan");
+        Assert.Equal(
+            Array.FindIndex(mainLines, l => l.StartsWith("@description('The hosting plan")),
+            plan.Properties.FileSpan!.StartLine
+        );
+
+        var storageLines = File.ReadAllLines(Root.StorageModulePath);
+        var container = Items.Node($"{Storage}.account.blobs.container");
+        Assert.Equal(Root.StorageModulePath, container.Properties.FileSpan!.Path);
+        Assert.Equal(
+            Array.FindIndex(storageLines, l => l.StartsWith("resource container ")),
+            container.Properties.FileSpan.StartLine
+        );
+    }
+
+    [Fact]
+    public void ParseAsync_ShouldSetTargetTypes_OnLinks()
+    {
+        var link = Items.Links().First(l => l.Source == $"{Main}.web" && l.Target == $"{Main}.plan");
+        Assert.Equal(NodeType.Resource, link.Properties.TargetType);
+    }
+}

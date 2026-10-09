@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Dependinator.Bicep</AssemblyName>
+        <RootNamespace>Dependinator.Bicep</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Azure.Bicep.Core" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Dependinator.Core/Dependinator.Core.csproj" />
+    </ItemGroup>
+</Project>
