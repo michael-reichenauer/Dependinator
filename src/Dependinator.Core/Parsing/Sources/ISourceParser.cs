@@ -1,9 +1,10 @@
-// Abstraction for parsing source code of a solution or project to enrich the model with
-// metadata that is not available from compiled binaries. Implementations are host-specific.
+// A parser for one kind of model file (e.g. a C# solution or a Bicep deployment). ParserService
+// asks each registered parser whether it can parse a path and dispatches to the first that can,
+// so adding a language means registering another implementation, not touching the dispatch.
 namespace Dependinator.Core.Parsing.Sources;
 
 interface ISourceParser
 {
-    Task<Result<IReadOnlyList<Parsing.Item>>> ParseSolutionAsync(string slnPaths, Parsing.SolutionParseOptions options);
-    Task<Result<IReadOnlyList<Parsing.Item>>> ParseProjectAsync(string projectPath);
+    bool CanParse(string path);
+    Task<Result<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, Parsing.SolutionParseOptions options);
 }

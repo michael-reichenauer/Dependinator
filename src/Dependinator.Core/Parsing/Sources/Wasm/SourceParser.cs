@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using Dependinator.Core.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 // Browser/WebAssembly implementation of source parsing. Since a full parser cannot run in
@@ -7,14 +8,16 @@ namespace Dependinator.Core.Parsing.Sources.Wasm;
 
 class SourceParser(HttpClient httpClient) : ISourceParser
 {
+    public bool CanParse(string path) => path == DemoModel.DemoSolutionName;
+
     // The browser only ever loads the pre-parsed demo model, so parse options do not apply.
-    public async Task<Result<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath, SolutionParseOptions options)
+    public async Task<Result<IReadOnlyList<Item>>> ParseAsync(string path, SolutionParseOptions options)
     {
         try
         {
-            if (solutionPath != "/Demo.sln")
-                return new Error($"Parsing not supported '{solutionPath}'");
-            Log.Info("Downloading demo.model ...", solutionPath);
+            if (!CanParse(path))
+                return new Error($"Parsing not supported '{path}'");
+            Log.Info("Downloading demo.model ...", path);
             var compressedBytes = await httpClient.GetByteArrayAsync("demo.model");
             Log.Info("Downloaded demo.model");
 
@@ -25,22 +28,15 @@ class SourceParser(HttpClient httpClient) : ISourceParser
 
             var items = Json.Deserialize<List<Item>>(json);
             if (items is null)
-                return new Error($"Failed to deserialize browser demo model for: {solutionPath}");
+                return new Error($"Failed to deserialize browser demo model for: {path}");
 
             return items;
         }
         catch (Exception ex)
         {
             Log.Exception(ex, "Error downloading");
-            return new Error($"Failed to load browser demo model for: {solutionPath}\n{ex.Message}");
+            return new Error($"Failed to load browser demo model for: {path}\n{ex.Message}");
         }
-    }
-
-    public Task<Result<IReadOnlyList<Item>>> ParseProjectAsync(string projectPath)
-    {
-        return Task.FromResult<Result<IReadOnlyList<Item>>>(
-            new Error($"Source parsing is not supported in browser runtime: {projectPath}.")
-        );
     }
 }
 

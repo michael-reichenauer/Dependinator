@@ -140,16 +140,32 @@ public class SourceParserTests(RoslynFixture fixture)
         );
     }
 
+    [Theory]
+    [InlineData("/repo/Dependinator.sln")]
+    [InlineData("C:\\repo\\App.SLN")]
+    [InlineData("/Demo.sln")]
+    public void CanParse_ShouldBeTrue_ForSolutionAndDemoPaths(string path)
+    {
+        Assert.True(new SourceParser().CanParse(path));
+    }
+
+    [Theory]
+    [InlineData("/repo/main.bicep")]
+    [InlineData("/repo/App.csproj")]
+    [InlineData("My design")]
+    public void CanParse_ShouldBeFalse_ForOtherPaths(string path)
+    {
+        Assert.False(new SourceParser().CanParse(path));
+    }
+
     [Fact]
-    public async Task ParseSolutionAsync_ShouldLoadEmbeddedDemoModel_ForDemoSolutionPath()
+    public async Task ParseAsync_ShouldLoadEmbeddedDemoModel_ForDemoSolutionPath()
     {
         var sourceParser = new SourceParser();
 
         // "/Demo.sln" is resolved from the embedded pre-parsed demo model (no Roslyn parse),
         // which is what UI/e2e tests load via Build.IsTestMode.
-        var items = AssertOk(
-            await sourceParser.ParseSolutionAsync(DemoModel.DemoSolutionName, SolutionParseOptions.Default)
-        );
+        var items = AssertOk(await sourceParser.ParseAsync(DemoModel.DemoSolutionName, SolutionParseOptions.Default));
 
         var nodes = items.Nodes().ToList();
         Assert.NotEmpty(nodes);
@@ -161,9 +177,7 @@ public class SourceParserTests(RoslynFixture fixture)
     public async Task TestSolutionSourceParserAsync()
     {
         var sourceParser = new SourceParser();
-        var items = AssertOk(
-            await sourceParser.ParseSolutionAsync(Root.SolutionFilePath, SolutionParseOptions.Default)
-        );
+        var items = AssertOk(await sourceParser.ParseAsync(Root.SolutionFilePath, SolutionParseOptions.Default));
 
         var nodes = items.Nodes().OrderBy(n => n.Name).ToList();
         Assert.NotEmpty(nodes);
@@ -175,11 +189,11 @@ public class SourceParserTests(RoslynFixture fixture)
     }
 
     [Fact]
-    public async Task ParseSolutionAsync_ShouldReturnError_WhenSolutionFileIsMissing()
+    public async Task ParseAsync_ShouldReturnError_WhenSolutionFileIsMissing()
     {
         var missingPath = Path.Combine(Path.GetTempPath(), $"Missing-{Guid.NewGuid()}.sln");
 
-        var result = await new SourceParser().ParseSolutionAsync(missingPath, SolutionParseOptions.Default);
+        var result = await new SourceParser().ParseAsync(missingPath, SolutionParseOptions.Default);
 
         var e = AssertError(result);
         Assert.Contains("not found", e.Message);
@@ -187,7 +201,7 @@ public class SourceParserTests(RoslynFixture fixture)
 
     // A solution without loadable projects must be an error, not an empty (0 node) model.
     [Fact]
-    public async Task ParseSolutionAsync_ShouldReturnError_WhenSolutionHasNoProjects()
+    public async Task ParseAsync_ShouldReturnError_WhenSolutionHasNoProjects()
     {
         var solutionPath = Path.Combine(Path.GetTempPath(), $"Empty-{Guid.NewGuid()}.sln");
         await File.WriteAllTextAsync(
@@ -203,7 +217,7 @@ public class SourceParserTests(RoslynFixture fixture)
 
         try
         {
-            var result = await new SourceParser().ParseSolutionAsync(solutionPath, SolutionParseOptions.Default);
+            var result = await new SourceParser().ParseAsync(solutionPath, SolutionParseOptions.Default);
 
             var e = AssertError(result);
             Assert.Contains("No C# projects", e.Message);

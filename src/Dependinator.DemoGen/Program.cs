@@ -22,7 +22,7 @@ internal class Program
         string outputPath = DemoModel.DemoOutputPath;
 
         Console.WriteLine($"Parsing {solutionPath} ...");
-        var parseResult = await new SourceParser().ParseSolutionAsync(solutionPath, SolutionParseOptions.Default);
+        var parseResult = await new SourceParser().ParseAsync(solutionPath, SolutionParseOptions.Default);
         if (parseResult is not IReadOnlyList<Item> items)
         {
             Console.Error.WriteLine($"Failed to parse solution: {parseResult.Error.Message}");

@@ -11,7 +11,10 @@ namespace Dependinator.Roslyn.Parsing;
 [Transient]
 class SourceParser : ISourceParser
 {
-    public async Task<Result<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath, SolutionParseOptions options)
+    public bool CanParse(string path) =>
+        path == DemoModel.DemoSolutionName || path.EndsWith(".sln", StringComparison.OrdinalIgnoreCase);
+
+    public async Task<Result<IReadOnlyList<Item>>> ParseAsync(string solutionPath, SolutionParseOptions options)
     {
         // The demo model is pre-parsed and embedded, so load it directly instead of
         // running Roslyn. Used as a fallback when no real model is available and by

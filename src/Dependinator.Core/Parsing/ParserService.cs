@@ -1,101 +1,32 @@
-﻿using System.Threading.Channels;
 using Dependinator.Core.Parsing.Sources;
-using Dependinator.Core.Parsing.Utils;
 using Dependinator.Core.Rpc;
 
-// Orchestrates parsing of a solution, projects, or assemblies into the code model
-// of nodes and links. ParserService picks the appropriate parser for a given path and
-// combines reflection-based structure with source-level metadata.
+// Orchestrates parsing of a model file (a solution, a Bicep deployment, ...) into the code model
+// of nodes and links. ParserService picks the parser that supports the given path.
 // -> Utils: Uses Result, logging and other common utilities.
 namespace Dependinator.Core.Parsing;
 
-// Parses the a solution or assemblies to extract code structure and meta data.
-// Uses both reflection to parse binaries for structure and Roselyn to parse source for more meta data.
 [Rpc]
 internal interface IParserService
 {
-    // Parse assemblies
     Task<Result<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, SolutionParseOptions options);
 }
 
 [Singleton]
-class ParserService(IEnumerable<IParser> parsers, ISourceParser sourceParser) : IParserService
+class ParserService(IEnumerable<ISourceParser> parsers) : IParserService
 {
-    readonly IEnumerable<IParser> parsers = parsers;
-    private readonly ISourceParser sourceParser = sourceParser;
+    readonly IReadOnlyList<ISourceParser> parsers = parsers.ToList();
 
     public async Task<Result<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, SolutionParseOptions options)
     {
         using var _ = Timing.Start("Parsed sources");
+
+        var parser = parsers.FirstOrDefault(p => p.CanParse(path));
+        if (parser is null)
+            return new Error($"No parser for '{path}'");
+
         // Options arrive over JSON-RPC, where nullable annotations are not enforced, so a remote
         // caller can still send null.
-        return await sourceParser.ParseSolutionAsync(path, options ?? SolutionParseOptions.Default);
-
-        // try
-        // {
-        //     Channel<Item> channel = Channel.CreateUnbounded<Item>();
-        //     var items = new ChannelItemsAdapter(channel.Writer);
-
-        //     var parserResult = GetParser(path);
-        //     if (parserResult is not IParser parser)
-        //         return new Error($"File not supported: {path}", parserResult.Error);
-
-        //     // await Task.Run(async () =>
-        //     // {
-        //     using var t = Timing.Start($"Parsed {path}");
-        //     await parser.ParseAsync(path, items);
-        //     channel.Writer.Complete();
-        //     // });
-
-        //     var allItems = await channel.Reader.ReadAllAsync().ToListAsync();
-        //     Log.Info($"Returning {allItems.Count} items ({items.NodeCount} nodes, {items.LinkCount} links)");
-        //     return allItems;
-        // }
-        // catch (Exception e)
-        // {
-        //     Log.Exception(e, "Error in parser");
-        //     return new Error("Failed to parse", e);
-        // }
-    }
-
-    Result<IParser> GetParser(string path)
-    {
-        var parser = parsers.FirstOrDefault(p => p.CanSupport(path));
-        if (parser == null)
-            return new Error($"No supported parser for {path}");
-
-        return parser;
-    }
-
-    sealed class ChannelItemsAdapter(ChannelWriter<Item> writer) : IItems
-    {
-        public int NodeCount;
-        public int LinkCount;
-
-        public async Task SendAsync(Node node)
-        {
-            try
-            {
-                NodeCount++;
-                await writer.WriteAsync(new Item(node, null));
-            }
-            catch (Exception e)
-            {
-                Log.Exception(e, "Error sending node");
-            }
-        }
-
-        public async Task SendAsync(Link link)
-        {
-            try
-            {
-                LinkCount++;
-                await writer.WriteAsync(new Item(null, link));
-            }
-            catch (Exception e)
-            {
-                Log.Exception(e, "Error sending link");
-            }
-        }
+        return await parser.ParseAsync(path, options ?? SolutionParseOptions.Default);
     }
 }
