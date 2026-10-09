@@ -57,7 +57,7 @@ public class IconLibraryTests
         // ./scripts/import-icons — update the counts when the manifests change).
         Assert.Equal(19, icons.Count(icon => icon.Group == "Default"));
         Assert.Equal(20, icons.Count(icon => icon.Group == "General"));
-        Assert.Equal(69, icons.Count(icon => icon.Group == "Azure"));
+        Assert.Equal(83, icons.Count(icon => icon.Group == "Azure"));
         Assert.Equal(61, icons.Count(icon => icon.Group == "Aws"));
         Assert.Equal(55, icons.Count(icon => icon.Group == "Google"));
         Assert.Equal(

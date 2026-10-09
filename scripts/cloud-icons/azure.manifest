@@ -86,3 +86,23 @@ Recovery-Services-Vaults    = Recovery-Services-Vault
 Azure-DevOps                = Azure-DevOps
 IoT-Hub                     = IoT-Hub
 Stream-Analytics-Jobs       = Stream-Analytics
+
+# Management & governance (Bicep deployment scopes and ARM resources)
+Resource-Groups             = Resource-Group
+Subscriptions               = Subscription
+Management-Groups           = Management-Group
+Policy                      = Azure-Policy
+Templates                   = ARM-Template
+Entra-Identity-Roles-and-Administrators = Role-Assignment
+
+# Networking (resources common in Bicep deployments)
+Network-Security-Groups     = Network-Security-Group
+Public-IP-Addresses         = Public-IP
+Private-Endpoints           = Private-Endpoint
+Network-Interfaces          = Network-Interface
+Route-Tables                = Route-Table
+
+# Compute & data (additions)
+App-Service-Plans           = App-Service-Plan
+SQL-Server                  = SQL-Server
+Table                       = Table-Storage
