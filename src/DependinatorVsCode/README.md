@@ -67,7 +67,7 @@ navigation tips, and keyboard/mouse controls.
 
 | Command | Description |
 | --- | --- |
-| `Dependinator: Open` | Open the Dependinator dependency map (also the icon in the editor title bar of C# and solution files, and the status bar item). |
+| `Dependinator: Open` | Open the Dependinator dependency map (also the icon in the editor title bar of C#, solution and Bicep files, and the status bar item). |
 | `Dependinator: Reveal Current File in Diagram` | Show the node for the file at the cursor (`Ctrl+Alt+D`, `Cmd+Alt+D` on macOS; also in the editor's right-click menu). |
 | `Dependinator: Search Nodes` | Open the diagram's node search. |
 | `Dependinator: Re-parse Solution` | Parse the solution again now. |

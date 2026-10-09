@@ -101,11 +101,13 @@ async function waitForLspReady(): Promise<void> {
     await lspReadyPromise;
 }
 
-function isCSharpDocument(document: vscode.TextDocument): boolean {
-    if (document.languageId === "csharp")
+/** True for documents the model is parsed from: C# sources and Bicep files. */
+function isSourceDocument(document: vscode.TextDocument): boolean {
+    if (document.languageId === "csharp" || document.languageId === "bicep")
         return true;
 
-    return document.fileName.toLowerCase().endsWith(".cs");
+    const fileName = document.fileName.toLowerCase();
+    return fileName.endsWith(".cs") || fileName.endsWith(".bicep");
 }
 
 function getDocumentPath(document: vscode.TextDocument): string | undefined {
@@ -116,12 +118,12 @@ function getDocumentPath(document: vscode.TextDocument): string | undefined {
     return uri.length > 0 ? uri : undefined;
 }
 
-/** Asks the webview UI to reveal the node for the active C# editor's file and line. */
+/** Asks the webview UI to reveal the node for the active source editor's file and line. */
 function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
     if (!editor || !activePanel)
         return;
 
-    if (!isCSharpDocument(editor.document))
+    if (!isSourceDocument(editor.document))
         return;
 
     const path = getDocumentPath(editor.document);
@@ -151,7 +153,7 @@ function isAutoRefreshRelevant(uri: vscode.Uri): boolean {
  * disposables owning the watcher and its pending debounce timer.
  */
 function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
-    const watcher = vscode.workspace.createFileSystemWatcher("**/*.{cs,csproj,sln}");
+    const watcher = vscode.workspace.createFileSystemWatcher("**/*.{cs,csproj,sln,bicep,bicepparam}");
     let pendingTimer: ReturnType<typeof setTimeout> | undefined;
 
     const onFileEvent = (uri: vscode.Uri): void => {

@@ -68,14 +68,14 @@
                 {
                     "command": "dependinator.open",
                     "group": "navigation",
-                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj)$/"
+                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj|bicep)$/"
                 }
             ],
             "editor/context": [
                 {
                     "command": "dependinator.reveal",
                     "group": "navigation@9",
-                    "when": "resourceLangId == csharp || resourceExtname == .razor"
+                    "when": "resourceLangId == csharp || resourceLangId == bicep || resourceExtname == .razor"
                 }
             ],
             "commandPalette": [
