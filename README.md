@@ -5,7 +5,7 @@
 <h1 align="center">Dependinator</h1>
 
 <p align="center">
-  See your C#/.NET codebase as an interactive dependency map, right inside VS Code.
+  See your C#/.NET codebase or Azure Bicep deployment as an interactive dependency map, right inside VS Code.
 </p>
 
 <p align="center">
@@ -62,7 +62,7 @@ inside, and jump from any node straight to its source.
 
 1. Install [Dependinator](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
    from the Marketplace, or search for "Dependinator" in the Extensions view.
-2. Open a folder that contains a `.sln` file.
+2. Open a folder that contains a `.sln` file or a Bicep deployment (a `.bicep` entry file).
 3. Run **Dependinator: Open** from the command palette, or click the
    Dependinator icon in the editor title bar.
 
@@ -71,8 +71,9 @@ drag to pan, and press `Ctrl+F` to find a node by name. The **Help** button in
 the app bar opens the [user guide](https://dependinator.com/help) with all
 keyboard and mouse controls.
 
-**Requirements:** a .NET solution (`.sln`) with C# projects. No local `dotnet`
-installation is needed; the extension bundles a self-contained language server.
+**Requirements:** a .NET solution (`.sln`) with C# projects, or Azure Bicep files. No local
+`dotnet` or `bicep` installation is needed; the extension bundles a self-contained language
+server with the Bicep compiler.
 
 ### In action
 
@@ -92,7 +93,9 @@ ones sketched by hand, but does not parse solutions itself.
 
 Dependinator is in **beta**. The core works end to end, but expect rough edges
 and the occasional breaking change between versions. Today it supports C#
-solutions (`.sln` files with C# projects); other languages are not parsed yet.
+solutions (`.sln` files with C# projects) and Azure Bicep deployments (`.bicep`
+files with their local modules, drawn with Azure icons); other languages are not
+parsed yet.
 
 Feedback shapes what gets built next. Please
 [open an issue](https://github.com/michael-reichenauer/Dependinator/issues/new/choose)

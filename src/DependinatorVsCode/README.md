@@ -1,9 +1,10 @@
 # Dependinator
 
-See your C#/.NET codebase as an interactive dependency map, right inside VS Code.
+See your C#/.NET codebase or Azure Bicep deployment as an interactive dependency map, right inside VS Code.
 Dependinator parses your solution and draws it as a zoomable map: projects,
 namespaces, types and members are nested nodes, dependencies are the lines
-between them. Zoom out for the big picture, zoom in to see how a component works
+between them. A Bicep deployment is drawn the same way: modules and resources
+with their Azure icons, parameters and outputs, and the dependencies between them. Zoom out for the big picture, zoom in to see how a component works
 inside, and jump from any node straight to its source.
 
 ![The Dependinator map of a solution: projects as containers, their namespaces and types inside, and dependencies as lines between them](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/docs/images/hero.png)
@@ -42,14 +43,15 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 
 ## Requirements
 
-- A workspace containing a **.NET solution (`.sln`)** with C# projects.
-  Dependinator parses the solution to build the dependency map.
-- No local `dotnet` installation is needed; the extension bundles a
-  self-contained language server.
+- A workspace containing a **.NET solution (`.sln`)** with C# projects, or an
+  **Azure Bicep deployment** (a `.bicep` entry file and its local modules).
+  Dependinator parses it to build the dependency map.
+- No local `dotnet` or `bicep` installation is needed; the extension bundles a
+  self-contained language server with the Bicep compiler.
 
 ## Getting started
 
-1. Install the extension and open a folder containing a `.sln` file.
+1. Install the extension and open a folder containing a `.sln` or `.bicep` file.
 2. Open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run
    **Dependinator: Open**, or click the Dependinator icon
    <img src="https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/icon-toolbar.png" alt="Dependinator title-bar icon" height="16" align="top" />
