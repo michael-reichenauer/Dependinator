@@ -30,6 +30,11 @@ class NodeProperties
     // this cannot be derived from the module name.
     public bool? IsExecutable { get; init; }
     public FileSpan? FileSpan { get; init; }
+
+    // Parser-chosen icon (an IconLibrary id, e.g. an Azure service icon for a Bicep resource);
+    // null keeps the node-type default icon, NoValue.String clears a previously parsed icon.
+    // A user-selected custom icon in the UI always takes precedence over this.
+    public string? IconName { get; init; }
 }
 
 class LinkProperties
@@ -73,6 +78,16 @@ enum NodeType
     EventMember,
     PropertyMember,
     MethodMember,
+
+    // Infrastructure models (e.g. Bicep): Module is a deployment module (a sub-template
+    // container), Resource an infrastructure resource whose icon comes from NodeProperties.IconName,
+    // and the three *Member values render as rows under their file or module, like C# members.
+    // Appended at the end: NodeType crosses JSON-RPC as an int.
+    Module,
+    Resource,
+    ParameterMember,
+    VariableMember,
+    OutputMember,
 }
 
 static class NodeDescriptions

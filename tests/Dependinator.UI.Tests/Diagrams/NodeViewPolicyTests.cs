@@ -1,3 +1,4 @@
+using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams;
 
 namespace Dependinator.UI.Tests.Diagrams;
@@ -30,5 +31,25 @@ public class NodeViewPolicyTests
         Assert.Equal(0.0, NodeViewPolicy.ContainerBackgroundOpacity(1000.0));
         Assert.False(NodeViewPolicy.IsTooLargeToBeSeen(64.0));
         Assert.True(NodeViewPolicy.IsTooLargeToBeSeen(64.01));
+    }
+
+    // NodeType is internal, so the theories take the enum member name.
+    [Theory]
+    [InlineData("ParameterMember")]
+    [InlineData("VariableMember")]
+    [InlineData("OutputMember")]
+    [InlineData("MethodMember")]
+    public void IsShowIcon_ShouldBeTrue_ForMemberTypes_AtAnyZoom(string type)
+    {
+        // Members are always leaf rows; they never open as containers however far one zooms in.
+        Assert.True(NodeViewPolicy.IsShowIcon(Enum.Parse<NodeType>(type), 100.0));
+    }
+
+    [Theory]
+    [InlineData("Resource")]
+    [InlineData("Module")]
+    public void IsShowIcon_ShouldBeFalse_ForInfrastructureContainers_WhenZoomedIn(string type)
+    {
+        Assert.False(NodeViewPolicy.IsShowIcon(Enum.Parse<NodeType>(type), 100.0));
     }
 }

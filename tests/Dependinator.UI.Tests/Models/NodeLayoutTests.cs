@@ -357,4 +357,54 @@ public class NodeLayoutTests
         var snapped = Math.Round(value / grid) * grid;
         Assert.True(Math.Abs(value - snapped) < 0.001, $"Expected {name}={value} to align to {grid} grid");
     }
+
+    // C# types hold member rows; so do Bicep files and modules (params, vars, outputs next to
+    // resources), so the row layout keys on the children, not on the parent being a type.
+    // NodeType is internal, so the theory takes the enum member name.
+    [Theory]
+    [InlineData("ClassType")]
+    [InlineData("Solution")]
+    [InlineData("Module")]
+    public void AdjustChildren_ShouldLayOutMembersAsRows_WhateverTheParentType(string parentType)
+    {
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var parent = new ModelNode("Parent", root) { Type = Enum.Parse<NodeType>(parentType) };
+        root.AddChild(parent);
+        var first = new ModelNode("Parent.first", parent) { Type = NodeType.ParameterMember };
+        var second = new ModelNode("Parent.second", parent) { Type = NodeType.OutputMember };
+        var resource = new ModelNode("Parent.resource", parent) { Type = NodeType.Resource };
+        parent.AddChild(first);
+        parent.AddChild(second);
+        parent.AddChild(resource);
+
+        NodeLayout.AdjustChildren(parent);
+
+        Assert.Equal(18, first.Boundary.Height);
+        Assert.Equal(18, second.Boundary.Height);
+        Assert.Equal(NodeLayout.DefaultSize.Height, resource.Boundary.Height);
+        Assert.Equal(first.Boundary.X, second.Boundary.X);
+        Assert.True(second.Boundary.Y > first.Boundary.Y);
+        Assert.True(resource.Boundary.X > first.Boundary.X);
+    }
+
+    [Fact]
+    public void AdjustChildren_ShouldUseGridLayout_WhenNoChildIsAMember()
+    {
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var parent = new ModelNode("Parent", root) { Type = NodeType.Solution };
+        root.AddChild(parent);
+        var first = new ModelNode("Parent.first", parent) { Type = NodeType.Resource };
+        var second = new ModelNode("Parent.second", parent) { Type = NodeType.Module };
+        parent.AddChild(first);
+        parent.AddChild(second);
+
+        NodeLayout.AdjustChildren(parent);
+
+        Assert.Equal(NodeLayout.DefaultSize.Height, first.Boundary.Height);
+        Assert.Equal(NodeLayout.DefaultSize.Height, second.Boundary.Height);
+    }
 }

@@ -67,7 +67,11 @@ class Node : IItem
 
     public string Color { get; set; } = "";
 
-    // User-selected icon name (an IconLibrary id); null means the node-type default icon.
+    // Parser-supplied icon name (an IconLibrary id, e.g. the Azure icon of a Bicep resource);
+    // null means the node-type default icon. CustomIconName, the user's choice, wins over it.
+    public string? IconName { get; set; }
+
+    // User-selected icon name (an IconLibrary id); null means the parsed or node-type default icon.
     public string? CustomIconName { get; set; }
 
     // User-selected icon tint (an IconLibrary.IconColors name); null means the default violet.
@@ -154,6 +158,7 @@ class Node : IItem
                 IsPrivate = IsPrivate,
                 IsExecutable = IsExecutable,
                 FileSpan = fileSpan,
+                IconName = IconName,
             },
             Boundary = boundary != Rect.None ? boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
@@ -177,6 +182,7 @@ class Node : IItem
         IsPrivate = dto.Properties.IsPrivate;
         IsExecutable = dto.Properties.IsExecutable;
         fileSpan = dto.Properties.FileSpan;
+        IconName = dto.Properties.IconName;
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
@@ -201,6 +207,7 @@ class Node : IItem
             node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description
         );
         fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
+        IconName = node.Properties.IconName == NoValue.String ? null : node.Properties.IconName ?? IconName;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)

@@ -61,7 +61,7 @@ class NodeLayout
             return;
         }
 
-        if (IsTypeWithMembers(parent))
+        if (HasMemberChildren(parent))
         {
             ArrangeTypeChildren(parent);
             return;
@@ -82,8 +82,9 @@ class NodeLayout
             ApplyContainerTransform(parent, GetChildrenBounds(parent.Children), density.TargetLinearCoverage);
     }
 
-    static bool IsTypeWithMembers(Node parent) =>
-        parent.Type.IsType && parent.Children.Any(child => child.Type.IsMember);
+    // Members (C# type members, Bicep params/vars/outputs) are laid out as rows; a C# type is the
+    // usual such parent, but a Bicep file or module holds member rows next to resources too.
+    static bool HasMemberChildren(Node parent) => parent.Children.Any(child => child.Type.IsMember);
 
     static void ArrangeChildren(Node parent, IReadOnlyList<Node> children, LayoutMetrics metrics)
     {
@@ -142,7 +143,7 @@ class NodeLayout
             .Select(child => child.Boundary)
             .ToList();
 
-        if (IsTypeWithMembers(parent))
+        if (HasMemberChildren(parent))
         {
             ArrangeOnlyNewTypeChildren(parent, newChildren, occupied, memberMetrics, regularMetrics);
             return;
@@ -454,7 +455,10 @@ class NodeLayout
             NodeType.MethodMember => 2,
             NodeType.EventMember => 3,
             NodeType.FieldMember => 4,
-            _ => 5,
+            NodeType.ParameterMember => 5,
+            NodeType.VariableMember => 6,
+            NodeType.OutputMember => 7,
+            _ => 8,
         };
 
     static LayoutMetrics RootMetrics() =>
