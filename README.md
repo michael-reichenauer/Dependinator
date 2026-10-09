@@ -28,6 +28,8 @@
 
 Dependinator parses your solution and draws it as a zoomable map. Projects,
 namespaces, types and members are nested nodes; dependencies are the lines
+between them. An Azure Bicep deployment is drawn the same way: modules and
+resources with their Azure icons, parameters and outputs, and the dependencies
 between them. Zoom out for the big picture, zoom in to see how a component works
 inside, and jump from any node straight to its source.
 
@@ -45,6 +47,9 @@ inside, and jump from any node straight to its source.
 
 - **Interactive map.** Pan, zoom and double-click to drill into any node. The
   breadcrumb and search (`Ctrl+F`) take you anywhere in one step.
+- **C# and Bicep.** .NET solutions are parsed with Roslyn, Azure Bicep
+  deployments with the Bicep compiler; resources carry their Azure icons, local
+  modules expand in place, and existing resources show as externals.
 - **Dependencies explorer.** Pick a node and browse everything it uses and
   everything that uses it, down to member level.
 - **Jump to code.** Open the source of a node or dependency in the editor. The
@@ -83,12 +88,13 @@ server with the Bicep compiler.
 ## Web app and device sync
 
 [dependinator.com](https://dependinator.com) is the companion web app. Open it
-to explore the built-in demo model without installing or signing in, and to
+to explore the built-in demo models (a C# solution and a Bicep deployment)
+without installing or signing in, and to
 view your own models from any browser or device once device sync is enabled.
 Sync is optional: without signing in, everything stays local.
 
 Parsing code happens in VS Code. The web app views and edits models, including
-ones sketched by hand, but does not parse solutions itself.
+ones sketched by hand, but does not parse code itself.
 
 ## Status
 

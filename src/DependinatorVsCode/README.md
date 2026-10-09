@@ -27,6 +27,9 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 
 - **Interactive map.** Pan, zoom and double-click to drill into any node. The
   breadcrumb and search (`Ctrl+F`) take you anywhere in one step.
+- **C# and Bicep.** .NET solutions are parsed with Roslyn, Azure Bicep
+  deployments with the Bicep compiler; resources carry their Azure icons, local
+  modules expand in place, and existing resources show as externals.
 - **Dependencies explorer.** Pick a node and browse everything it uses and
   everything that uses it, down to member level.
 - **Jump to code.** Open the source of a node or dependency in the editor. The
@@ -72,7 +75,7 @@ navigation tips, and keyboard/mouse controls.
 | `Dependinator: Open` | Open the Dependinator dependency map (also the icon in the editor title bar of C#, solution and Bicep files, and the status bar item). |
 | `Dependinator: Reveal Current File in Diagram` | Show the node for the file at the cursor (`Ctrl+Alt+D`, `Cmd+Alt+D` on macOS; also in the editor's right-click menu). |
 | `Dependinator: Search Nodes` | Open the diagram's node search. |
-| `Dependinator: Re-parse Solution` | Parse the solution again now. |
+| `Dependinator: Re-parse Model` | Parse the solution or Bicep deployment again now. |
 | `Dependinator: Install in Dev Container` | Jump to the Extensions view to install the extension inside a dev container. |
 
 ## Settings

@@ -9,7 +9,7 @@ requests are all welcome.
   [issue templates](https://github.com/michael-reichenauer/Dependinator/issues/new/choose).
 - **Ask a question or share an idea** in
   [Discussions](https://github.com/michael-reichenauer/Dependinator/discussions).
-- **Try it on your own solutions** and tell us what breaks, what is slow, or what
+- **Try it on your own solutions and Bicep deployments** and tell us what breaks, what is slow, or what
   is confusing. Real-world feedback is the most valuable input right now.
 - **Send a pull request.** Small, focused changes are easiest to review. For
   anything larger, open an issue first so we can agree on the approach.
@@ -65,7 +65,7 @@ The e2e tests target the running app at `http://localhost:5000`; see
 
 `Dependinator.sln` targets `net10.0`. Production projects live under `src/`,
 tests under `tests/`. The dependency direction is `Hosts → UI → Core → Shared`
-(with `Roslyn → Core`), enforced by `tests/Dependinator.Architecture.Tests/`.
+(with `Roslyn → Core` and `Bicep → Core`), enforced by `tests/Dependinator.Architecture.Tests/`.
 
 **Hosts**
 
@@ -73,7 +73,7 @@ tests under `tests/`. The dependency direction is `Hosts → UI → Core → Sha
 - `src/Dependinator.Wasm/`: Blazor WebAssembly host, deployed to Azure Static
   Web Apps as [dependinator.com](https://dependinator.com) and embedded in the
   VS Code extension.
-- `src/Dependinator.Lsp/`: Language server executable that parses solutions for the extension.
+- `src/Dependinator.Lsp/`: Language server executable that parses solutions and Bicep deployments for the extension.
 - `src/Api/`: Azure Functions API for cloud sync.
 
 **Libraries**
@@ -81,6 +81,7 @@ tests under `tests/`. The dependency direction is `Hosts → UI → Core → Sha
 - `src/Dependinator.UI/`: shared UI (`App/`, `Diagrams/`, `Modeling/`).
 - `src/Dependinator.Core/`: parsing orchestration, domain logic, models, utilities.
 - `src/Dependinator.Roslyn/`: Roslyn-based parsing.
+- `src/Dependinator.Bicep/`: Azure Bicep parsing with the Bicep compiler library.
 - `src/Shared/`: DTOs shared between client and API.
 
 **Tests**

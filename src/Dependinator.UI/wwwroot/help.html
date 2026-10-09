@@ -164,10 +164,11 @@
 
         <h2>What you can do</h2>
         <ul>
-            <li class="feature"><b>Explore an interactive dependency map</b> — see your codebase as a
-                zoomable, navigable diagram instead of scrolling through files.</li>
+            <li class="feature"><b>Explore an interactive dependency map</b> — see your codebase, or your Azure
+                Bicep deployment, as a zoomable, navigable diagram instead of scrolling through files.</li>
             <li class="feature"><b>Zoom for detail</b> — zoom into any node to reveal its internals
-                (namespaces, types, members), then zoom back out to see the bigger picture.</li>
+                (namespaces, types and members; modules and resources in a Bicep deployment), then zoom back
+                out to see the bigger picture.</li>
             <li class="feature"><b>Follow dependencies</b> — pick any node and trace what it depends on,
                 or what depends on it, across the whole model.</li>
             <li class="feature"><b>Jump to source</b> — in the VS Code extension, go straight from a node
@@ -230,20 +231,20 @@
             <li class="feature"><b>Share a link</b> — <b>Copy Link to Node</b> (node menu or right-click) and
                 <b>Export › Link to Current View</b> copy a <i>dependinator.com</i> link that opens this model at that
                 node or view. The link works for an account that has the model synced (device sync), and always
-                for the demo model.</li>
+                for the demo models.</li>
             <li class="feature"><b>Hide the node</b> — from the toolbar menu; hidden nodes are dimmed, or
                 removed entirely with <b>View › Show Hidden Nodes</b> off.</li>
             <li class="feature"><b>See only its lines</b> — while a node (or line) is selected, every line that does
                 not touch it is faded (<b>View › Dim Unrelated Lines</b>, on by default); hover a faded line to
                 see it at full strength.</li>
             <li class="feature"><b>Legend</b> — <b>View › Show Legend</b> explains every line style and node icon.</li>
-            <li class="feature"><b>While parsing</b> — the overlay shows the solution and the time so far; "Continue in
+            <li class="feature"><b>While parsing</b> — the overlay shows the model being parsed and the time so far; "Continue in
                 background" lets you keep exploring while it finishes. A background refresh tells you what changed.</li>
             <li class="feature"><b>Find cycles</b> — <b>View › Show Cycles</b> lists every container whose children
-                depend on each other in a circle (projects, namespaces or classes referencing each other) and draws
+                depend on each other in a circle (projects, namespaces, classes or resources referencing each other) and draws
                 those lines in red; click a row to go there.</li>
             <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
-                "this must not depend on that" by picking two nodes (a project, a namespace, a class). Every
+                "this must not depend on that" by picking two nodes (a project, a namespace, a class, a resource). Every
                 dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the
                 model, so they stay checked after every re-parse.</li>
             <li class="feature"><b>Find a path</b> — why does one node depend on another? <b>View › Find Path</b>
@@ -341,11 +342,11 @@
         <p>
             The <b>VS Code extension</b> is where you'll do the real work of building and editing diagrams
             alongside your code. It parses the solution or Bicep deployment in your workspace (and re-parses when files change).
-            The diagram <b>follows the editor</b>: switching to a C# file shows its node (setting
+            The diagram <b>follows the editor</b>: switching to a C# or Bicep file shows its node (setting
             <i>Follow Active Editor</i>), <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>D</kbd> reveals the node at the
             cursor, and from the diagram you can jump back to <b>open the corresponding editor</b> — so the map
             and the source stay in step. The command palette has <i>Dependinator: Search Nodes</i> and
-            <i>Re-parse Solution</i>, and the status bar shows when it is parsing. The extension is available
+            <i>Re-parse Model</i>, and the status bar shows when it is parsing. The extension is available
             on the
             <a href="https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator"
                 target="_blank" rel="noopener">Visual Studio Marketplace</a> — in VS Code, search for
