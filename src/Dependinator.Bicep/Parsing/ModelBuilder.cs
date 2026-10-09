@@ -303,7 +303,8 @@ class ModelBuilder(string entryPath)
     }
 
     // "params: { location: location }" links the module's own parameter node (when the module
-    // was expanded) to the value's symbol, instead of the whole module to it.
+    // was expanded) to the value's symbol, instead of the whole module to it. A value read from
+    // another module's output ("storage.outputs.accountName") links to that output node.
     void AddModuleParameterLinks(SemanticModel model, ModuleSymbol module, Dictionary<DeclaredSymbol, string> names)
     {
         if (!names.TryGetValue(module, out var moduleName))
@@ -323,11 +324,32 @@ class ModelBuilder(string entryPath)
             if (!nodeTypes.ContainsKey(parameterName))
                 continue;
 
+            var modulesLinkedByOutput = new HashSet<ModuleSymbol>();
+            foreach (var access in SyntaxAggregator.AggregateByType<PropertyAccessSyntax>(property.Value))
+            {
+                if (
+                    access.BaseExpression is PropertyAccessSyntax { PropertyName.IdentifierName: "outputs" } outputs
+                    && model.GetSymbolInfo(outputs.BaseExpression) is ModuleSymbol sourceModule
+                    && names.TryGetValue(sourceModule, out var sourceModuleName)
+                    && outputNodes.TryGetValue(
+                        (sourceModuleName, access.PropertyName.IdentifierName),
+                        out var outputName
+                    )
+                )
+                {
+                    AddLink(parameterName, outputName);
+                    modulesLinkedByOutput.Add(sourceModule);
+                }
+            }
+
             foreach (var access in SyntaxAggregator.AggregateByType<VariableAccessSyntax>(property.Value))
             {
                 if (
                     model.GetSymbolInfo(access) is DeclaredSymbol referenced
                     && names.TryGetValue(referenced, out var target)
+                    && !(
+                        referenced is ModuleSymbol referencedModule && modulesLinkedByOutput.Contains(referencedModule)
+                    )
                 )
                     AddLink(parameterName, target);
             }

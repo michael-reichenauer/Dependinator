@@ -31,6 +31,9 @@ The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution fol
 **VS Code extension (not part of `Dependinator.sln`):**
 - `src/DependinatorVsCode/` — TypeScript extension packaging the web UI + language server (`src/extension.ts`, `src/webview.ts`, `src/languageServer.ts`, `src/cloudSyncAuth.ts`)
 
+**Examples (not part of `Dependinator.sln`):**
+- `examples/bicep/` — the "webshop" Bicep deployment (`webshop.bicep` + `modules/`), a large realistic model to try out and demo Bicep support; the Blazor Server host and VS Code list it automatically, and `tests/Dependinator.Bicep.Tests` compiles it without errors and checks its shape (keep it compiling when bumping `Azure.Bicep.Core`)
+
 **Dev tools (not part of `Dependinator.sln`):**
 - `src/Dependinator.DemoGen/` — console tool that regenerates the embedded demo model; run via `./scripts/gen-demo` (kept out of the solution so it never appears in the parsed model)
 

@@ -49,7 +49,21 @@ to its parents, then a provider default, then the generic tintable `Cloud` icon.
 new generic facility (`NodeProperties.IconName` / `Node.IconName`); a user's custom icon still wins
 and survives re-parse.
 
+## Example deployment
+
+`examples/bicep/webshop.bicep` (subscription scope, 21 files, ~2,900 lines) is a realistic
+fictional e-commerce platform: resource groups, network, identity, monitoring, Key Vault, SQL,
+storage, Cosmos DB, Redis, Service Bus, Event Grid, App Service, Functions, Container Apps, API
+Management, Front Door, DNS records in an existing zone, and optional AI Search and OpenAI. It
+exercises loops, conditionals, nested children, `parent:` and `scope:`, an existing parent with
+deployed children, module outputs flowing into other modules' parameters, user-defined types and
+a shared module expanded ten times. `WebshopExampleTests` compiles it without errors and checks
+the model shape, so it doubles as a regression guard for the pinned compiler package.
+
 ## Parked follow-ups
+
+- An embedded, pre-parsed Bicep demo model for the browser hosts (like `demo.model` for C#),
+  generated from the example deployment, so the standalone web app can show a Bicep model too.
 
 - ARM JSON templates as entry points or expanded modules (today a JSON module is a leaf).
 - `.bicepparam` files (a `using` does not make the target file a module; parameter files are not

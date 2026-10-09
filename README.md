@@ -63,6 +63,7 @@ inside, and jump from any node straight to its source.
 1. Install [Dependinator](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
    from the Marketplace, or search for "Dependinator" in the Extensions view.
 2. Open a folder that contains a `.sln` file or a Bicep deployment (a `.bicep` entry file).
+   No Bicep files at hand? [examples/bicep](examples/bicep) holds a realistic multi-file deployment to try.
 3. Run **Dependinator: Open** from the command palette, or click the
    Dependinator icon in the editor title bar.
 
