@@ -118,4 +118,30 @@ public class FileSpanPathsTests
 
         Assert.Equal(dto.Properties.FileSpan, restored!.Properties.FileSpan);
     }
+
+    // A Bicep model's root is the entry file's folder: module spans below it persist relative,
+    // modules in sibling folders keep their absolute path (the existing rule for any model).
+    [Fact]
+    public void ToRelative_ShouldRelativizeModuleSpan_UnderBicepModelFolder()
+    {
+        var dto = Dto(new FileSpan("/workspaces/App/infra/modules/storage.bicep", 3, 9));
+
+        var relative = FileSpanPaths.ToRelative(dto, "/workspaces/App/infra/main.bicep");
+
+        Assert.Equal(new FileSpan("modules/storage.bicep", 3, 9), relative.Properties.FileSpan);
+        Assert.Equal(
+            dto.Properties.FileSpan,
+            FileSpanPaths.ToAbsolute(relative, "/workspaces/App/infra/main.bicep").Properties.FileSpan
+        );
+    }
+
+    [Fact]
+    public void ToRelative_ShouldKeepAbsolutePath_ForModuleInSiblingFolder()
+    {
+        var span = new FileSpan("/workspaces/App/shared/net.bicep", 1, 2);
+
+        var relative = FileSpanPaths.ToRelative(Dto(span), "/workspaces/App/infra/main.bicep");
+
+        Assert.Equal(span, relative.Properties.FileSpan);
+    }
 }

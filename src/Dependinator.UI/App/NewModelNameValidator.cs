@@ -15,7 +15,7 @@ static class NewModelNameValidator
         if (trimmedName.Contains('/') || trimmedName.Contains('\\'))
             return "Name cannot contain '/' or '\\'";
         if (ModelPaths.IsParseable(trimmedName))
-            return "Name cannot end with '.sln'";
+            return "Name cannot end with '.sln' or '.bicep'";
         if (!TryCreateKey(trimmedName, out string? nameKey))
             return "Name is not valid";
 

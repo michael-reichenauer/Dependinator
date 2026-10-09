@@ -77,7 +77,7 @@
 
       List<Section> sections = [];
       if (Build.IsVsCodeExtWasm || Build.IsWeb)
-        sections.Add(new("This workspace", "No solution (.sln) found in the workspace.", workspace));
+        sections.Add(new("This workspace", "No solution (.sln) or Bicep deployment (.bicep) found in the workspace.", workspace));
       sections.Add(new("Recent", "Nothing opened yet.", recent));
       sections.Add(new("In the cloud", appCloudSyncService.AuthState.IsAuthenticated
           ? "No other models are synced to this account."
@@ -98,7 +98,7 @@
 
   static string Subtitle(ModelItem item)
   {
-    var kind = ModelPaths.IsDesignModel(item.Path) ? "design model" : "solution";
+    var kind = ModelPaths.KindName(item.Path);
     var cloud = item.CloudModel is { } cm ? $", synced {cm.UpdatedUtc.ToLocalTime():g}" : "";
     var where = item.IsLocal ? item.Path : "cloud only";
     return $"{kind}{cloud} · {where}";

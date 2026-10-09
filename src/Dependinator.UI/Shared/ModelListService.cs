@@ -122,10 +122,13 @@ class ModelListService(
     {
         recentPaths = (await configService.GetAsync()).RecentPaths;
         cloudPaths = GetCloudPaths();
+        // Standalone Wasm has no local models. The Blazor Server host keeps the working solution
+        // first and adds whatever else its workspace folder holds (e.g. sample Bicep deployments).
         localPaths =
-            Build.IsVsCodeExtWasm ? await workspaceFileService.GetSolutionFilePathsAsync()
-            : Build.IsWeb ? [DemoModel.WorkingSolutionPath]
-            : []; // Standalone Wasm has no local models
+            Build.IsVsCodeExtWasm ? await workspaceFileService.GetModelFilePathsAsync()
+            : Build.IsWeb ? [DemoModel.WorkingSolutionPath, .. await workspaceFileService.GetModelFilePathsAsync()]
+            : [];
+        localPaths = localPaths.Distinct().ToList();
 
         // Seed recent paths with the first available model (cloud for standalone Wasm)
         if (!recentPaths.Any())
