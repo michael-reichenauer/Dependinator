@@ -128,7 +128,7 @@ class CanvasService(
             await shareLinkService.ApplyAsync(link);
 
         // New users get the short tour (once); it says why a demo diagram is open when it is.
-        await coachService.StartIfFirstRunAsync(isDemoModel: !isLoaded && startupPath == DemoModel.Path);
+        await coachService.StartIfFirstRunAsync(isDemoModel: !isLoaded && DemoModel.IsDemo(startupPath));
     }
 
     public async Task LoadAsync(string modelPath, bool? includeTestProjects = null)

@@ -9,7 +9,8 @@ record ModelItem(
     string DisplayName,
     bool IsLocal,
     bool IsCloud,
-    global::Shared.CloudModelMetadata? CloudModel
+    global::Shared.CloudModelMetadata? CloudModel,
+    bool IsDemo = false
 );
 
 interface IModelListService
@@ -19,6 +20,9 @@ interface IModelListService
     IReadOnlyList<string> RecentModelPaths { get; }
     IReadOnlyList<string> LocalPaths { get; }
     IReadOnlyList<string> CloudPaths { get; }
+
+    // The built-in demo models offered where nothing else can be opened (see DemoModel.ListedPaths).
+    IReadOnlyList<string> DemoPaths { get; }
     string? LastUsedPath { get; }
     string? StartupPath { get; }
     bool IsLocalPath(string path);
@@ -45,6 +49,7 @@ class ModelListService(
     public IReadOnlyList<string> RecentModelPaths => recentPaths;
     public IReadOnlyList<string> LocalPaths => localPaths;
     public IReadOnlyList<string> CloudPaths => cloudPaths;
+    public IReadOnlyList<string> DemoPaths => DemoModel.ListedPaths;
     public string? LastUsedPath => recentPaths.Any() ? recentPaths[0] : null;
 
     // The model to show when the app starts. Browser hosts resume the most recently used
@@ -84,13 +89,15 @@ class ModelListService(
                 Path.GetFileName(path),
                 IsLocal: true,
                 IsCloud: false,
-                CloudModel: null
+                CloudModel: null,
+                IsDemo: DemoModel.IsDemo(path)
             );
             orderedNormalizedPaths.Add(normalizedPath);
         }
 
         recentPaths.ForEach(AddLocal);
         localPaths.ForEach(AddLocal);
+        DemoPaths.ForEach(AddLocal);
 
         foreach (
             global::Shared.CloudModelMetadata cloudModel in appCloudSyncService.CloudModels.OrderByDescending(cm =>

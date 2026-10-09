@@ -1,5 +1,8 @@
 #!/bin/bash
-# Regenerate the embedded demo model (src/Dependinator.Wasm/wwwroot/demo.model)
-# by parsing Dependinator.sln. See src/Dependinator.DemoGen/Program.cs.
+# Regenerate the embedded demo models in src/Dependinator.Wasm/wwwroot:
+#   ./scripts/gen-demo          both
+#   ./scripts/gen-demo csharp   demo.model from Dependinator.sln (e2e tests encode its facts!)
+#   ./scripts/gen-demo bicep    demo-bicep.model from examples/bicep/webshop.bicep
+# See src/Dependinator.DemoGen/Program.cs.
 cd "$(dirname "$0")/.."
-dotnet run --project ./src/Dependinator.DemoGen/Dependinator.DemoGen.csproj
+dotnet run --project ./src/Dependinator.DemoGen/Dependinator.DemoGen.csproj -- "$@"

@@ -35,7 +35,7 @@ The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution fol
 - `examples/bicep/` — the "webshop" Bicep deployment (`webshop.bicep` + `modules/`), a large realistic model to try out and demo Bicep support; the Blazor Server host and VS Code list it automatically, and `tests/Dependinator.Bicep.Tests` compiles it without errors and checks its shape (keep it compiling when bumping `Azure.Bicep.Core`)
 
 **Dev tools (not part of `Dependinator.sln`):**
-- `src/Dependinator.DemoGen/` — console tool that regenerates the embedded demo model; run via `./scripts/gen-demo` (kept out of the solution so it never appears in the parsed model)
+- `src/Dependinator.DemoGen/` — console tool that regenerates the embedded demo models (`demo.model` from the solution, `demo-bicep.model` from `examples/bicep`); run via `./scripts/gen-demo [csharp|bicep]` (kept out of the solution so it never appears in the parsed model)
 
 ## Build & Development Commands
 
@@ -91,8 +91,9 @@ npm run install:vsix --prefix ./src/DependinatorVsCode
 # Icons
 ./scripts/import-icons                                 # re-import curated Azure/AWS/Google icons into src/Dependinator.UI/Diagrams/Icons/Library/ (manifests in scripts/cloud-icons/)
 
-# Demo model
-./scripts/gen-demo                                     # regenerate src/Dependinator.Wasm/wwwroot/demo.model by parsing Dependinator.sln
+# Demo models (pre-parsed, gzipped item lists in src/Dependinator.Wasm/wwwroot, also embedded in the parser libraries)
+./scripts/gen-demo csharp                              # regenerate demo.model by parsing Dependinator.sln (e2e tests encode its facts: run the full e2e suite after)
+./scripts/gen-demo bicep                               # regenerate demo-bicep.model from examples/bicep/webshop.bicep (after changing the example)
 
 # Demo gif (VS Code extension README)
 ./scripts/record-demo                                  # re-record src/DependinatorVsCode/resources/demo.gif (scenario in scripts/record-demo.mjs; needs ffmpeg + global @playwright/cli)

@@ -10,8 +10,11 @@ using System.Runtime.CompilerServices;
 // namespaces with file-top "using Bicep.Core...;" directives (they resolve from the global
 // namespace) and never write "Bicep.Core.*" qualified names in code. Bicep.Core.Parsing and
 // Bicep.Core.Utils are not imported: they hold twins of Dependinator's Parsing/Result names.
+// Also: a compiler dependency (JsonPath.Net) has a root namespace "Json" that shadows Core's
+// Json helper in every project referencing this one; alias it (using ModelJson = ...Utils.Json).
 
 [assembly: InternalsVisibleTo("Dependinator.Bicep.Tests")]
+[assembly: InternalsVisibleTo("Dependinator.DemoGen")]
 [assembly: AssemblyDescription(
     "Dependinator.Bicep parses Azure Bicep deployments with the Bicep compiler library (Azure.Bicep.Core) into the Dependinator.Core model of resources, modules and their dependencies."
 )]

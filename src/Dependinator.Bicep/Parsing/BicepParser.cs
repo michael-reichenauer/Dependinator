@@ -1,6 +1,7 @@
 using Bicep.Core.Diagnostics;
 using Bicep.Core.Semantics;
 using Bicep.Core.Text;
+using Dependinator.Core.Shared;
 
 namespace Dependinator.Bicep.Parsing;
 
@@ -10,11 +11,17 @@ namespace Dependinator.Bicep.Parsing;
 [Transient]
 class BicepParser(BicepCompilerHost compilerHost) : ISourceParser
 {
-    public bool CanParse(string path) => path.EndsWith(".bicep", StringComparison.OrdinalIgnoreCase);
+    public bool CanParse(string path) =>
+        path == DemoModel.DemoBicepName || path.EndsWith(".bicep", StringComparison.OrdinalIgnoreCase);
 
     // The options are per-model settings for solution parsing (test projects); none apply to Bicep.
     public async Task<Result<IReadOnlyList<Item>>> ParseAsync(string path, SolutionParseOptions options)
     {
+        // The demo deployment is pre-parsed and embedded (generated from examples/bicep by
+        // ./scripts/gen-demo bicep), so load it directly instead of compiling anything.
+        if (path == DemoModel.DemoBicepName)
+            return await EmbeddedModel.LoadAsync(typeof(BicepParser).Assembly, "Dependinator.Bicep.demo-bicep.model");
+
         if (!File.Exists(path))
             return new Error($"Bicep file not found: {path}");
 

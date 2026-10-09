@@ -104,7 +104,7 @@ class CoachService : ICoachService, IDisposable
 
     public void Start()
     {
-        isDemoModel = modelMgr.WithModel(m => m.Path) == DemoModel.Path;
+        isDemoModel = DemoModel.IsDemo(modelMgr.WithModel(m => m.Path));
         Begin();
     }
 

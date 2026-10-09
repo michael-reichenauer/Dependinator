@@ -3,23 +3,26 @@ using Dependinator.Core.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 // Browser/WebAssembly implementation of source parsing. Since a full parser cannot run in
-// the browser, it loads a precompiled demo model instead of parsing real source.
+// the browser, it downloads the pre-parsed demo models (static assets, see DemoModel) instead of
+// parsing real source.
 namespace Dependinator.Core.Parsing.Sources.Wasm;
 
 class SourceParser(HttpClient httpClient) : ISourceParser
 {
-    public bool CanParse(string path) => path == DemoModel.DemoSolutionName;
+    public bool CanParse(string path) => DemoModel.IsDemo(path);
 
-    // The browser only ever loads the pre-parsed demo model, so parse options do not apply.
+    // The browser only ever loads the pre-parsed demo models, so parse options do not apply.
     public async Task<Result<IReadOnlyList<Item>>> ParseAsync(string path, SolutionParseOptions options)
     {
+        if (!CanParse(path))
+            return new Error($"Parsing not supported '{path}'");
+
+        var fileName = DemoModel.ModelFileName(path);
         try
         {
-            if (!CanParse(path))
-                return new Error($"Parsing not supported '{path}'");
-            Log.Info("Downloading demo.model ...", path);
-            var compressedBytes = await httpClient.GetByteArrayAsync("demo.model");
-            Log.Info("Downloaded demo.model");
+            Log.Info($"Downloading {fileName} ...", path);
+            var compressedBytes = await httpClient.GetByteArrayAsync(fileName);
+            Log.Info($"Downloaded {fileName}");
 
             using var input = new MemoryStream(compressedBytes);
             using var gzip = new GZipStream(input, CompressionMode.Decompress);

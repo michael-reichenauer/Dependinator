@@ -60,10 +60,17 @@ deployed children, module outputs flowing into other modules' parameters, user-d
 a shared module expanded ten times. `WebshopExampleTests` compiles it without errors and checks
 the model shape, so it doubles as a regression guard for the pinned compiler package.
 
-## Parked follow-ups
+## Demo model
 
-- An embedded, pre-parsed Bicep demo model for the browser hosts (like `demo.model` for C#),
-  generated from the example deployment, so the standalone web app can show a Bicep model too.
+`/Demo.bicep` is the example deployment pre-parsed by `./scripts/gen-demo bicep` into
+`src/Dependinator.Wasm/wwwroot/demo-bicep.model` (root renamed `webshop*bicep` -> `Demo*bicep`),
+served to the browser app as a static asset and embedded into `Dependinator.Bicep`, so the Web/LSP
+hosts open it without the compiler (`BicepParser` handles the demo path first). `DemoModel.ListedPaths`
+offers both demos in the Models menu in the standalone web app and the e2e test host ("Demo models"
+section in Manage Models); share links use the key `demo-bicep`. Regenerate it after changing the
+example; `BicepParserTests` and the e2e `BicepDemoTests` check a few of its facts.
+
+## Parked follow-ups
 
 - ARM JSON templates as entry points or expanded modules (today a JSON module is a leaf).
 - `.bicepparam` files (a `using` does not make the target file a module; parameter files are not

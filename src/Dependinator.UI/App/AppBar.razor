@@ -817,6 +817,7 @@
     {
         string source = item switch
         {
+            { IsDemo: true } => "Demo",
             { IsLocal: true, IsCloud: true } => "Local + cloud",
             { IsCloud: true } => "Cloud",
             _ when ModelPaths.IsDesignModel(item.Path) => "Design",

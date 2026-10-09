@@ -20,14 +20,23 @@ record ShareLinkTarget(string? ModelKey, string? NodeName, ViewLink? View);
 
 // The link format: https://dependinator.com/?m=<model key>&n=<node name>&v=<x>,<y>,<zoom>.
 // The model key is the cloud sync key of the model's path (so the same model has the same key
-// on every device), or "demo" for the built-in demo model. Node names are stable across
-// parses, which ids (hashes) also are, but names make links readable.
+// on every device), or "demo" / "demo-bicep" for the built-in demo models. Node names are stable
+// across parses, which ids (hashes) also are, but names make links readable.
 static class ShareLink
 {
     public const string DemoKey = "demo";
+    public const string DemoBicepKey = "demo-bicep";
 
     public static string ModelKeyFor(string modelPath) =>
-        modelPath == DemoModel.Path ? DemoKey : CloudModelPath.CreateKey(modelPath);
+        modelPath == DemoModel.Path ? DemoKey
+        : modelPath == DemoModel.DemoBicepName ? DemoBicepKey
+        : CloudModelPath.CreateKey(modelPath);
+
+    // The demo model a key stands for, or null for a cloud-synced model's key.
+    public static string? DemoPathFor(string modelKey) =>
+        modelKey == DemoKey ? DemoModel.Path
+        : modelKey == DemoBicepKey ? DemoModel.DemoBicepName
+        : null;
 
     public static string Build(string baseUrl, string modelKey, string? nodeName, ViewLink? view)
     {
@@ -181,7 +190,7 @@ class ShareLinkService(
         }
 
         // The link opens on the web app; a model gets there by being synced to the cloud.
-        var isReachable = modelPath == DemoModel.Path || appCloudSyncService.SyncState?.Baseline is not null;
+        var isReachable = DemoModel.IsDemo(modelPath) || appCloudSyncService.SyncState?.Baseline is not null;
         applicationEvents.TriggerInfoReported(
             isReachable
                 ? "Link copied. It opens on dependinator.com for an account that has this model synced."
@@ -192,8 +201,8 @@ class ShareLinkService(
 
     public async Task<Result<LinkedModel>> ResolveModelAsync(string modelKey)
     {
-        if (modelKey == ShareLink.DemoKey)
-            return new LinkedModel(DemoModel.Path, null);
+        if (ShareLink.DemoPathFor(modelKey) is { } demoPath)
+            return new LinkedModel(demoPath, null);
 
         var local = modelListService
             .GetModelItems()
