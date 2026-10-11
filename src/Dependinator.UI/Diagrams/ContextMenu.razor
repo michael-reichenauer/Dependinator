@@ -44,6 +44,14 @@
                 Show Source Code
               </MudListItem>
             }
+            @if (viewOptions.IsEditingEnabled)
+            {
+              <MudDivider />
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Badge" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.EditAliasAsync" data-testid="context-menu-alias">
+                Display Name …
+              </MudListItem>
+            }
             @if (viewOptions.IsEditingEnabled && contextMenuService.IsTargetManualNode)
             {
               <MudDivider />

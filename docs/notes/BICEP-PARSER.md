@@ -121,7 +121,9 @@ the hand-drawn diagrams:
    returns after a reload): a user text drawn at the line's middle, with an optional description
    under it like a node's. Later option: show the parsed
    `Line.Description` as the label when the user set none.
-3. Display alias for parsed nodes ("Storefront" for `frontend`), search matching both names.
+3. Display alias (done Oct 2026: `Node.Alias`, `NodeAliasService`, `NodeEditCommand.Alias`; every
+   name display site uses `DisplayName`, tooltips keep the long name first, search matches both
+   names): the user's name for a parsed node ("Storefront" for `frontend`).
 4. Hide as an undoable command, plus "hide all rows of this kind".
 5. Re-parse robustness: a node whose parent changes keeps a boundary in the old parent's
    coordinates; a stale container that only holds a note or a manual node survives unmarked.

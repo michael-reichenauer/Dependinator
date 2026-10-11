@@ -50,6 +50,9 @@ interface IContextMenuService
 
     // Line: the user's label on it.
     Task EditLineLabelAsync();
+
+    // Node: the user's display name for it.
+    Task EditAliasAsync();
 }
 
 [Scoped]
@@ -57,6 +60,7 @@ class ContextMenuService(
     INoteService noteService,
     IZoneService zoneService,
     ILineLabelService lineLabelService,
+    INodeAliasService nodeAliasService,
     IManualEditService manualEditService,
     ISelectionService selectionService,
     IDependenciesService dependenciesService,
@@ -210,6 +214,17 @@ class ContextMenuService(
         if (!await SelectTargetAsync())
             return;
         manualEditService.BeginRenameNode(targetId.NodeId, selectionService.SelectedNodePosition);
+    }
+
+    // The alias dialog acts on the selected node, so select first (as the toolbar would have).
+    public async Task EditAliasAsync()
+    {
+        Close();
+        if (Target != ContextMenuTarget.Node)
+            return;
+        if (!await SelectTargetAsync())
+            return;
+        await nodeAliasService.EditAliasAsync(targetId.NodeId);
     }
 
     // The label dialog acts on the selected line, so select first (as the toolbar would have).

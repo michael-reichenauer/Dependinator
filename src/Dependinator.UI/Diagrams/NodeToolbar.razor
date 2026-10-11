@@ -99,6 +99,11 @@ else if (HasSelectedLine)
                          OnClick="SelectIconAsync" data-testid="node-menu-set-icon">
               Set Icon …
             </MudMenuItem>
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Badge"
+                         OnClick="EditAlias" title="A name of your own shown instead of the one from the code."
+                         data-testid="node-menu-alias">
+              Display Name …
+            </MudMenuItem>
             <MudMenu Label="Icon Color" StartIcon="@MudBlazor.Icons.Material.Outlined.Palette" IconColor="Color.Secondary"
                      Dense="true" PopoverClass="@MenuClass" data-testid="node-menu-icon-color">
               @IconColorMenuItems
@@ -316,6 +321,9 @@ else if (HasSelectedLine)
   IZoneService zoneService { get; set; } = null!;
 
   [Inject]
+  INodeAliasService nodeAliasService { get; set; } = null!;
+
+  [Inject]
   INodeEditService nodeEditService { get; set; } = null!;
 
   [Inject]
@@ -496,11 +504,18 @@ else if (HasSelectedLine)
     return noteService.EditNoteAsync(nodeId);
   }
 
-  Task EditZone()
+  // The dialogs are not awaited: MudMenu closes an item's menu when its handler returns, so an
+  // awaited dialog would leave the menu open behind it.
+  void EditZone()
   {
-    if (!TryGetSelectedNodeId(out var nodeId))
-      return Task.CompletedTask;
-    return zoneService.EditZoneAsync(nodeId);
+    if (TryGetSelectedNodeId(out var nodeId))
+      zoneService.EditZoneAsync(nodeId).RunInBackground();
+  }
+
+  void EditAlias()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      nodeAliasService.EditAliasAsync(nodeId).RunInBackground();
   }
 
   Task DeleteNoteToolbar()
