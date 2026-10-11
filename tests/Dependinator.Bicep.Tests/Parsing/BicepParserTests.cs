@@ -107,6 +107,16 @@ public class BicepParserTests(BicepFixture fixture)
     }
 
     [Fact]
+    public void ParseAsync_ShouldNestScopedResources_UnderTheirScopeTarget()
+    {
+        // An extension resource ("scope: web") nests under the resource it extends, like a child,
+        // and the scope dependency is that nesting rather than a link.
+        Assert.True(Items.HasNode($"{Main}.web.webDiagnostics"));
+        Assert.False(Items.HasNode($"{Main}.webDiagnostics"));
+        Assert.False(Items.HasLink($"{Main}.web.webDiagnostics", $"{Main}.web"));
+    }
+
+    [Fact]
     public void ParseAsync_ShouldPlaceExistingResources_UnderExternals()
     {
         var vnet = Items.Node("$Externals.vnet");

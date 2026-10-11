@@ -50,20 +50,30 @@ public class WebshopExampleTests
         var icons = resources.Select(r => r.Properties.IconName).Distinct().ToList();
         Assert.True(icons.Count >= 20, $"Only {icons.Count} distinct icons: {string.Join(", ", icons)}");
 
-        // Subscription-scope root, resource groups and the modules deployed into them (scope links).
+        // Subscription-scope root, resource groups and the modules deployed into them: "scope:
+        // rgPlatform" nests the module under its resource group (the scope link is the nesting),
+        // while a function scope such as resourceGroup(name) keeps the module at the root.
         Assert.Equal("Subscription", items.Node(Main).Properties.IconName);
         Assert.Equal("Resource-Group", items.Node($"{Main}.rgData").Properties.IconName);
-        AssertLink(items, $"{Main}.networking", $"{Main}.rgPlatform");
+        AssertNode(items, $"{Main}.rgPlatform.networking");
+        Assert.False(items.HasLink($"{Main}.rgPlatform.networking", $"{Main}.rgPlatform"));
+        AssertNode(items, $"{Main}.dns");
+
+        // Extension resources nest under the resource they are scoped to, unless that one is
+        // existing: then they stay in the module and link to the $Externals node.
+        AssertNode(items, $"{Main}.rgData.sqlServer.sqlServer.deleteLock");
+        AssertNode(items, $"{Main}.rgData.sqlServer.auditDiagnostics");
+        AssertLink(items, $"{Main}.rgData.sqlServer.auditDiagnostics", "$Externals.sqlServer.masterDatabase");
 
         // Nested children, an expanded shared module and an existing resource with deployed children.
-        AssertNode(items, $"{Main}.storage.storageAccount.blobServices.productImages");
-        AssertNode(items, $"{Main}.storage.blobPrivateEndpoint.privateEndpoint.dnsZoneGroup");
+        AssertNode(items, $"{Main}.rgData.storage.storageAccount.blobServices.productImages");
+        AssertNode(items, $"{Main}.rgData.storage.blobPrivateEndpoint.privateEndpoint.dnsZoneGroup");
         AssertNode(items, "$Externals.dns.zone");
         AssertLink(items, $"{Main}.dns.shopRecord", "$Externals.dns.zone");
 
         // Module outputs flow into other modules' parameters.
-        AssertLink(items, $"{Main}.appService.sqlServerFqdn", $"{Main}.sqlServer.serverFqdn");
-        AssertLink(items, $"{Main}.events.storageAccountId", $"{Main}.storage.storageAccountId");
+        AssertLink(items, $"{Main}.rgApps.appService.sqlServerFqdn", $"{Main}.rgData.sqlServer.serverFqdn");
+        AssertLink(items, $"{Main}.rgData.events.storageAccountId", $"{Main}.rgData.storage.storageAccountId");
     }
 
     static void AssertNode(IReadOnlyList<Item> items, string name)

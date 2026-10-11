@@ -15,6 +15,9 @@ namespace Dependinator.Bicep.Parsing;
 //   main*bicep.location             a parameter / variable / output (member rows)
 //   main*bicep.web                  a resource (NodeType.Resource, Azure icon of its type)
 //   main*bicep.web.config           a child resource (nested syntax or "parent:" property)
+//   main*bicep.web.diagnostics      an extension resource "scope:"d to a resource deployed in the
+//                                   same file nests under it (so do modules deployed into a
+//                                   resource group the file creates: main*bicep.rgData.storage)
 //   main*bicep.storage              a module (NodeType.Module); a local module's own file is
 //   main*bicep.storage.account      expanded beneath it, recursively
 //   $Externals.vnet                 an "existing" resource: deployed elsewhere, only referenced
@@ -102,11 +105,28 @@ class ModelBuilder(string entryPath)
             );
         }
 
-        // Resources: name every one first (a child declared before its parent still nests), then
-        // emit parents before children so the structure never needs synthesized placeholders.
-        var resources = model
-            .DeclaredResources.Select(r => (Resource: r, Name: ResourceName(model, r, prefix, externalsPrefix)))
-            .ToList();
+        // Resources: name every one first (a child declared before its parent still nests, and a
+        // resource "scope:"d to another nests under it), then emit parents before children so the
+        // structure never needs synthesized placeholders.
+        var byResource = new Dictionary<ResourceSymbol, DeclaredResourceMetadata>(ReferenceEqualityComparer.Instance);
+        foreach (var resource in model.DeclaredResources)
+            byResource[resource.Symbol] = resource;
+        var finalNames = new Dictionary<DeclaredResourceMetadata, string>(ReferenceEqualityComparer.Instance);
+        var resolving = new HashSet<DeclaredResourceMetadata>(ReferenceEqualityComparer.Instance);
+        string FinalName(DeclaredResourceMetadata resource)
+        {
+            if (finalNames.TryGetValue(resource, out var known))
+                return known;
+            // The guard only matters for a scope cycle, which the compiler rejects anyway.
+            var scopeTarget = resolving.Add(resource) ? ScopeTarget(model, resource, byResource) : null;
+            var name = scopeTarget is not null
+                ? Names.Child(FinalName(scopeTarget), resource.Symbol.Name)
+                : ResourceName(model, resource, prefix, externalsPrefix);
+            resolving.Remove(resource);
+            return finalNames[resource] = name;
+        }
+
+        var resources = model.DeclaredResources.Select(r => (Resource: r, Name: FinalName(r))).ToList();
         foreach (var (resource, name) in resources.OrderBy(r => r.Name.Count(c => c == '.')).ThenBy(r => r.Name))
         {
             names[resource.Symbol] = name;
@@ -123,13 +143,46 @@ class ModelBuilder(string entryPath)
             );
         }
 
+        // A module deployed into a resource group this file creates ("scope: rgData") nests under
+        // that resource group node; every resource is named by now.
         foreach (var module in model.Root.ModuleDeclarations)
         {
-            names[module] = Names.Child(prefix, module.Name);
+            var scopeTarget = ScopeTarget(model, module.DeclaringModule.TryGetBody(), byResource);
+            var parentName = scopeTarget is not null ? names[scopeTarget.Symbol] : prefix;
+            names[module] = Names.Child(parentName, module.Name);
             AddModule(model, module, names[module], modulePath, visited);
         }
 
         AddLinks(model, names);
+    }
+
+    // The resource a declaration is "scope:"d to, when that is a resource deployed in the same
+    // file (an extension resource on one of the file's own resources, a module deployed into a
+    // resource group the file creates). A function scope such as resourceGroup('x') resolves to
+    // no symbol and an existing resource lives under $Externals: neither is nested under.
+    static DeclaredResourceMetadata? ScopeTarget(
+        SemanticModel model,
+        DeclaredResourceMetadata resource,
+        Dictionary<ResourceSymbol, DeclaredResourceMetadata> byResource
+    ) =>
+        resource.IsExistingResource
+            ? null
+            : ScopeTarget(model, resource.Symbol.DeclaringResource.TryGetBody(), byResource);
+
+    static DeclaredResourceMetadata? ScopeTarget(
+        SemanticModel model,
+        ObjectSyntax? body,
+        Dictionary<ResourceSymbol, DeclaredResourceMetadata> byResource
+    )
+    {
+        var scope = body?.Properties.FirstOrDefault(p => p.TryGetKeyText() == "scope")?.Value;
+        return
+            scope is not null
+            && model.GetSymbolInfo(scope) is ResourceSymbol symbol
+            && byResource.TryGetValue(symbol, out var target)
+            && !target.IsExistingResource
+            ? target
+            : null;
     }
 
     // The node name of a resource from its ancestor chain. An "existing" resource (deployed

@@ -51,6 +51,19 @@ resource slot 'Microsoft.Web/sites/slots@2023-12-01' = {
   location: location
 }
 
+resource webDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'all-metrics'
+  scope: web
+  properties: {
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
 resource redis 'Microsoft.Cache/redis@2023-08-01' = if (deployRedis) {
   name: '${prefix}-redis'
   location: location
