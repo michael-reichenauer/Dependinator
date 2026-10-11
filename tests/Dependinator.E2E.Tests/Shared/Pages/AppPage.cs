@@ -28,7 +28,8 @@ public sealed class AppPage
     // so match all three (see NodeSvg.cs).
     public ILocator NodeLabel(string text) => page.Locator(NodeLabelSelector, new() { HasText = text }).First;
 
-    const string NodeLabelSelector = "#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName";
+    const string NodeLabelSelector =
+        "#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName, #svgcanvas text.zoneName";
 
     // A member of the demo model's Demo.UI.Main class. Navigating to a member is what makes its
     // class open as a container (the zoom settles inside it): tests that need Main's

@@ -1,6 +1,7 @@
 @using Dependinator.UI.Diagrams.Interaction
 @inject IApplicationEvents applicationEvents
 @inject INoteService noteService
+@inject IZoneService zoneService
 @inject IManualEditService manualEditService
 @inject IAreaSelectionService areaSelectionService
 @inject IInteractionService interactionService
@@ -36,6 +37,9 @@
             if (manualEditService.IsPlacingNode)
                 return new(MudBlazor.Icons.Material.Outlined.AddBox,
                     "Click on the diagram to place the node.", "Cancel (Esc)", manualEditService.CancelPlaceNode);
+            if (zoneService.IsPlacingZone)
+                return new(MudBlazor.Icons.Material.Outlined.SelectAll,
+                    "Click on the diagram to place the zone's top-left corner.", "Cancel (Esc)", zoneService.CancelPlaceZone);
             if ((areaSelectionService.IsArmed || areaSelectionService.IsSelecting)
                 && areaSelectionService.Purpose == AreaSelectionPurpose.Export)
                 return new(MudBlazor.Icons.Material.Outlined.HighlightAlt,
@@ -69,6 +73,7 @@
     {
         applicationEvents.UIStateChanged += OnStateChanged;
         noteService.StateChanged += OnStateChanged;
+        zoneService.StateChanged += OnStateChanged;
         manualEditService.StateChanged += OnStateChanged;
         areaSelectionService.StateChanged += OnStateChanged;
     }
@@ -79,6 +84,7 @@
     {
         applicationEvents.UIStateChanged -= OnStateChanged;
         noteService.StateChanged -= OnStateChanged;
+        zoneService.StateChanged -= OnStateChanged;
         manualEditService.StateChanged -= OnStateChanged;
         areaSelectionService.StateChanged -= OnStateChanged;
     }

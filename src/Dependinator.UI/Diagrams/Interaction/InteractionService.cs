@@ -38,6 +38,7 @@ class InteractionService(
     IDependenciesService dependenciesService,
     IManualEditService manualEditService,
     INoteService noteService,
+    IZoneService zoneService,
     IContextMenuService contextMenuService,
     IScreenService screenService,
     IAreaSelectionService areaSelectionService,
@@ -64,6 +65,9 @@ class InteractionService(
     bool moveTimerRunning = false;
     bool isMoving = false;
     bool isDraggingSelectedNode = false;
+
+    // While a zone is dragged alone: the zone and the sibling nodes inside it, moved together.
+    IReadOnlyCollection<NodeId>? zoneDragIds;
     bool isResizingSelectedNode = false;
     bool isDraggingSelectedLinePoint = false;
     bool isDraggingLink = false;
@@ -94,6 +98,7 @@ class InteractionService(
         areaSelectionService.IsArmed
         || areaSelectionService.IsSelecting
         || noteService.IsPlacingNote
+        || zoneService.IsPlacingZone
         || manualEditService.IsPlacingNode;
     public bool IsContainer
     {
@@ -266,6 +271,8 @@ class InteractionService(
         }
         else if (noteService.IsPlacingNote)
             noteService.CancelPlaceNote();
+        else if (zoneService.IsPlacingZone)
+            zoneService.CancelPlaceZone();
         else if (manualEditService.IsPlacingNode)
             manualEditService.CancelPlaceNode();
         else if (manualEditService.IsLinkDragActive)
@@ -313,6 +320,11 @@ class InteractionService(
         if (noteService.IsPlacingNote)
         {
             noteService.CancelPlaceNote();
+            return;
+        }
+        if (zoneService.IsPlacingZone)
+        {
+            zoneService.CancelPlaceZone();
             return;
         }
         if (manualEditService.IsLinkDragActive)
@@ -393,6 +405,13 @@ class InteractionService(
             return;
         }
 
+        // While placing a zone, a click puts its top-left corner there (opens the zone dialog).
+        if (zoneService.IsPlacingZone)
+        {
+            _ = zoneService.PlaceZoneAtAsync(e);
+            return;
+        }
+
         // While placing a node, a click begins adding it there (opens the icon selector dialog).
         if (manualEditService.IsPlacingNode)
         {
@@ -420,6 +439,14 @@ class InteractionService(
             return;
         }
 
+        // Double-click on a zone edits its label and subtitle in edit mode (a zone is never a
+        // container, so in view mode it falls through to zooming to it like any leaf).
+        if (viewOptions.IsEditingEnabled && pointerId.IsNode && zoneService.IsZoneNode(pointerId.NodeId))
+        {
+            _ = zoneService.EditZoneAsync(pointerId.NodeId);
+            return;
+        }
+
         // In edit mode a double-click on empty canvas (or inside an open container) adds a
         // manual node there; otherwise a double-click zooms the view to the node.
         if (viewOptions.IsEditingEnabled && (pointerId.IsCanvas || IsContainerNode(pointerId)))
@@ -430,6 +457,16 @@ class InteractionService(
 
         if (pointerId.IsNode)
             navigationService.ShowNodeAsync(pointerId.NodeId).RunInBackground();
+    }
+
+    // The nodes a zone drag moves: the zone and the siblings drawn inside it; null when the
+    // pressed node is not a zone.
+    IReadOnlyCollection<NodeId>? ZoneDragSet(NodeId nodeId)
+    {
+        using var model = modelMgr.UseModel();
+        if (!model.Nodes.TryGetValue(nodeId, out var node) || !node.IsZone)
+            return null;
+        return [node.Id, .. ZoneContents.NodesInside(node).Select(n => n.Id)];
     }
 
     bool IsContainerNode(PointerId pointerId)
@@ -559,9 +596,15 @@ class InteractionService(
             && selectionService.SelectedNodeIds.Contains(mouseDownId.NodeId)
         )
         {
+            // A zone dragged on its own carries the nodes drawn inside it (the set is fixed when
+            // the drag starts, so a node leaving the zone mid-drag still follows).
+            if (!isDraggingSelectedNode)
+                zoneDragIds = ZoneDragSet(mouseDownId.NodeId);
             isDraggingSelectedNode = true;
             if (selectionService.SelectedNodeCount > 1)
                 nodeEditService.MoveSelectedNodes(e, Zoom, selectionService.SelectedNodeIds);
+            else if (zoneDragIds is { } zoneIds)
+                nodeEditService.MoveSelectedNodes(e, Zoom, zoneIds);
             else
                 nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
@@ -610,6 +653,8 @@ class InteractionService(
         {
             if (selectionService.SelectedNodeCount > 1)
                 nodeEditService.SnapSelectedNodesToGrid(selectionService.SelectedNodeIds);
+            else if (zoneDragIds is { } zoneIds)
+                nodeEditService.SnapSelectedNodesToGrid(zoneIds);
             else
                 nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
@@ -617,6 +662,7 @@ class InteractionService(
         }
 
         mouseDownId = PointerId.Empty;
+        zoneDragIds = null;
 
         if (moveTimerRunning)
         {

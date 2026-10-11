@@ -31,9 +31,10 @@ interface IContextMenuService
     void Open(PointerEvent e);
     void Close();
 
-    // Canvas: adds a note / a manual node at the remembered right-click position.
+    // Canvas: adds a note / a manual node / a zone at the remembered right-click position.
     void AddNoteHere();
     void AddNodeHere();
+    void AddZoneHere();
 
     // Node and line: analysis and navigation on the right-clicked item.
     Task ShowReferencesAsync();
@@ -51,6 +52,7 @@ interface IContextMenuService
 [Scoped]
 class ContextMenuService(
     INoteService noteService,
+    IZoneService zoneService,
     IManualEditService manualEditService,
     ISelectionService selectionService,
     IDependenciesService dependenciesService,
@@ -83,8 +85,9 @@ class ContextMenuService(
     }
 
     // A right-click on a node's own box (an icon, or an open container's chrome) targets that
-    // node; a right-click inside a container's content area, on a note or on the canvas
-    // targets the canvas (add here). A line targets the line.
+    // node; a right-click inside a container's content area, on a note or a zone (background:
+    // the user is adding next to it, into its parent) or on the canvas targets the canvas (add
+    // here). A line targets the line.
     void ResolveTarget()
     {
         Target = ContextMenuTarget.Canvas;
@@ -95,7 +98,7 @@ class ContextMenuService(
         using var model = modelMgr.UseModel();
         if (targetId.IsNode && model.Nodes.TryGetValue(targetId.NodeId, out var node))
         {
-            if (node.IsRoot || node.IsNote || NodeViewPolicy.IsContainerView(node, model.Zoom))
+            if (node.IsRoot || NodeViewPolicy.IsAnnotation(node) || NodeViewPolicy.IsContainerView(node, model.Zoom))
                 return;
             Target = ContextMenuTarget.Node;
             TargetName = node.ShortName;
@@ -130,6 +133,12 @@ class ContextMenuService(
     {
         Close();
         _ = manualEditService.AddNodeAtAsync(pendingEvent);
+    }
+
+    public void AddZoneHere()
+    {
+        Close();
+        _ = zoneService.PlaceZoneAtAsync(pendingEvent);
     }
 
     public async Task ShowReferencesAsync()

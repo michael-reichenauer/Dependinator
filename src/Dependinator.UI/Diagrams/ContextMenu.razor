@@ -90,6 +90,10 @@
                            OnClick="AddNote" data-testid="context-menu-add-note">
                 Add Note Here
               </MudListItem>
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.SelectAll" IconColor="Color.Secondary"
+                           OnClick="AddZone" data-testid="context-menu-add-zone">
+                Add Zone Here
+              </MudListItem>
               <MudDivider />
             }
             @if (viewContext.GetViewCenterChain().Count > 0)
@@ -182,6 +186,8 @@
   void AddNote() => contextMenuService.AddNoteHere();
 
   void AddNode() => contextMenuService.AddNodeHere();
+
+  void AddZone() => contextMenuService.AddZoneHere();
 
   void FitToScreen()
   {

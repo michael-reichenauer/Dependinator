@@ -156,4 +156,31 @@ public class SelectionServiceTests
         Assert.False(a.IsSelected);
         Assert.True(b.IsSelected);
     }
+
+    [Fact]
+    public async Task IsSelectedNodeMovable_ShouldBeTrueForAZone_HoweverMuchOfTheScreenItCovers()
+    {
+        // A zone is drawn around a group and often fills the view; a plain node that large reads
+        // as "the screen" and dragging it pans instead.
+        Node zone,
+            box;
+        using (var model = modelMgr.UseModel())
+        {
+            zone = AddNode(model, "Edge", model.Root);
+            zone.IsZone = true;
+            zone.IsManual = true;
+            zone.Boundary = new Rect(0, 0, 100000, 100000);
+            box = AddNode(model, "Box", model.Root);
+            box.Boundary = new Rect(0, 0, 100000, 100000);
+        }
+        var service = CreateService();
+
+        await service.Select(zone.Id);
+        Assert.True(service.IsSelected);
+        Assert.True(service.IsSelectedNodeMovable(1));
+
+        service.Unselect();
+        await service.Select(box.Id);
+        Assert.False(service.IsSelected); // too large to be selected at all
+    }
 }

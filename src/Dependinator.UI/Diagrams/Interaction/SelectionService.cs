@@ -217,6 +217,12 @@ class SelectionService(
         {
             if (pointerId.IsLine)
                 await TrySelectOrRefreshLineAsync(pointerId, e, isNewSelection: false);
+            else if (selectedPosition == Pos.None)
+            {
+                // The node was selected before it was on screen (e.g. selected right after being
+                // added, ahead of the render), so its toolbar is not placed yet: place it now.
+                await UpdateSelectedPositionAsync();
+            }
             return;
         }
 
@@ -353,7 +359,9 @@ class SelectionService(
 
         if (node.IsHidden && node.Parent.IsHidden)
             return false;
-        return IsNodeMovable(node, zoom);
+        // A zone is drawn around a group and usually fills much of the screen; the user selected
+        // it on purpose, so dragging it moves it (and the nodes inside) rather than panning.
+        return node.IsZone || IsNodeMovable(node, zoom);
     }
 
     public bool IsSelectedNodeHidden()

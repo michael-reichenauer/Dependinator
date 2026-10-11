@@ -17,6 +17,7 @@
 @inject IJSInterop jsInterop
 @inject IVsCodeSendService vsCodeSendService
 @inject Dependinator.UI.Diagrams.Interaction.INoteService noteService
+@inject Dependinator.UI.Diagrams.Interaction.IZoneService zoneService
 @inject Dependinator.UI.Diagrams.Interaction.IManualEditService manualEditService
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
 @inject Dependinator.UI.Diagrams.ILineSplitService lineSplitService
@@ -79,6 +80,12 @@
                     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.StickyNote2"
                                  OnClick="BeginAddNote" data-testid="menu-add-note">
                         Add Note …
+                    </MudMenuItem>
+
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.SelectAll"
+                                 OnClick="BeginAddZone" title="A labeled background area that groups the nodes drawn over it."
+                                 data-testid="menu-add-zone">
+                        Add Zone …
                     </MudMenuItem>
                 }
             </MudMenu>
@@ -620,6 +627,8 @@
 
     // The armed modes show their instructions in the ModeBanner until the click/drag lands.
     void BeginAddNote() => noteService.BeginPlaceNote();
+
+    void BeginAddZone() => zoneService.BeginPlaceZone();
 
     void BeginAddNode() => manualEditService.BeginPlaceNode();
 

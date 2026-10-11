@@ -144,7 +144,7 @@ class ManualEditService(
         string fullName;
         using (var model = modelMgr.UseModel())
         {
-            var shortName = UniqueShortName(model, parentName, IconLibrary.ToDisplayName(iconName));
+            var shortName = DiagramPlacement.UniqueShortName(model, parentName, IconLibrary.ToDisplayName(iconName));
             fullName = DiagramPlacement.ComposeFullName(parentName, shortName);
         }
 
@@ -173,19 +173,6 @@ class ManualEditService(
         if (result is null || result.Canceled)
             return null;
         return result.Data as string;
-    }
-
-    // The first of "Name", "Name 2", "Name 3", … not already used under the parent (full name is
-    // the node identity, so the same short name can still be used under other parents).
-    static string UniqueShortName(IModel model, string parentName, string baseName)
-    {
-        for (var i = 1; ; i++)
-        {
-            var candidate = i == 1 ? baseName : $"{baseName} {i}";
-            var fullName = DiagramPlacement.ComposeFullName(parentName, candidate);
-            if (!model.Nodes.ContainsKey(NodeId.FromName(fullName)))
-                return candidate;
-        }
     }
 
     public void BeginRenameNode(NodeId nodeId, Pos screenPos)
@@ -330,7 +317,7 @@ class ManualEditService(
         string fullName;
         using (var model = modelMgr.UseModel())
         {
-            var shortName = UniqueShortName(model, parentName, IconLibrary.ToDisplayName(iconName));
+            var shortName = DiagramPlacement.UniqueShortName(model, parentName, IconLibrary.ToDisplayName(iconName));
             fullName = DiagramPlacement.ComposeFullName(parentName, shortName);
         }
 
@@ -390,6 +377,7 @@ class ManualEditService(
 
         var commands = new List<Command>();
         var noteCount = 0;
+        var zoneCount = 0;
         using (var model = modelMgr.UseModel())
         {
             // Post-order: delete descendants (and their links) before their parents, so undo — which
@@ -401,6 +389,8 @@ class ManualEditService(
                     continue;
                 if (node.IsNote)
                     noteCount++;
+                else if (node.IsZone)
+                    zoneCount++;
                 foreach (var descendant in node.DescendantsAndSelfPostOrder().ToList())
                 {
                     var links = descendant.SourceLinks.Concat(descendant.TargetLinks).Where(l => l.IsManual);
@@ -418,13 +408,19 @@ class ManualEditService(
 
         var command = commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]);
         commandService.Do(command);
-        ShowUndoSnackbar(DeletedMessage(ids.Count, noteCount), command);
+        ShowUndoSnackbar(DeletedMessage(ids.Count, noteCount, zoneCount), command);
         return true;
     }
 
-    static string DeletedMessage(int count, int noteCount) =>
-        count == 1 ? (noteCount == 1 ? "Note deleted." : "Node deleted.")
+    static string DeletedMessage(int count, int noteCount, int zoneCount) =>
+        count == 1
+            ? (
+                noteCount == 1 ? "Note deleted."
+                : zoneCount == 1 ? "Zone deleted."
+                : "Node deleted."
+            )
         : noteCount == count ? $"{count} notes deleted."
+        : zoneCount == count ? $"{count} zones deleted."
         : $"{count} nodes deleted.";
 
     Task<bool?> ConfirmDeleteAsync(int count) =>
