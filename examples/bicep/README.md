@@ -16,6 +16,12 @@ meant to be deployed as-is: names, SKUs, principals, images and the DNS zone are
 Only entry points are listed: a `.bicep` file that another file uses as a module (everything
 under `modules/`) is shown nested inside the module that references it.
 
+## Architecture
+
+[ARCHITECTURE.md](ARCHITECTURE.md) has four review-style diagrams of the platform: the runtime view with the
+request and order flows, the deployment view per resource group, the network view and the identity and
+security view, each with the points worth discussing.
+
 ## What is in it
 
 `webshop.bicep` is a subscription-scope orchestrator. It creates three resource groups and
