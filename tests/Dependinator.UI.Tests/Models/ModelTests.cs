@@ -182,13 +182,21 @@ public class ModelTests
 
         var kept = LineId.From("A", "B");
         var dropped = LineId.From("A", "Gone");
-        model.SetPendingLineLabel(kept, new PendingLineLabel("uses", "A", "B"));
-        model.SetPendingLineLabel(dropped, new PendingLineLabel("old", "A", "Gone"));
-        model.SetPendingLineLabel(LineId.FromId("legacy"), new PendingLineLabel("legacy", null, null));
+        model.SetPendingLineLabel(kept, new PendingLineLabel("uses", "to the API", "A", "B"));
+        model.SetPendingLineLabel(dropped, new PendingLineLabel("old", null, "A", "Gone"));
+        model.SetPendingLineLabel(LineId.FromId("legacy"), new PendingLineLabel("legacy", null, null, null));
 
         var lines = model.SerializeToDto().Lines;
 
-        Assert.Contains(lines, l => l.LineId == kept.Value && l.Label == "uses" && l.Source == "A" && l.Target == "B");
+        Assert.Contains(
+            lines,
+            l =>
+                l.LineId == kept.Value
+                && l.Label == "uses"
+                && l.LabelDescription == "to the API"
+                && l.Source == "A"
+                && l.Target == "B"
+        );
         Assert.Contains(lines, l => l.LineId == "legacy" && l.Label == "legacy");
         Assert.DoesNotContain(lines, l => l.LineId == dropped.Value);
 

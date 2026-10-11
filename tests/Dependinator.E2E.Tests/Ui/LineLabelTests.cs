@@ -18,9 +18,10 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await App.SelectLineAsync(App.Line("Demo.sln", "Externals"));
         await Page.GetByTestId("line-label").ClickAsync();
-        await SaveLabelAsync("uses");
+        await SaveLabelAsync("uses", "framework and packages");
 
         await Expect(LineLabel("uses")).ToBeVisibleAsync();
+        await Expect(LineDescription("framework and packages")).ToBeVisibleAsync();
 
         // The debounced save writes to IndexedDB; give it a moment, then reload.
         await Page.WaitForTimeoutAsync(1500);
@@ -28,6 +29,7 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.WaitForModelRenderedAsync();
 
         await Expect(LineLabel("uses")).ToBeVisibleAsync();
+        await Expect(LineDescription("framework and packages")).ToBeVisibleAsync();
     }
 
     [E2EFact]
@@ -50,11 +52,15 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
 
     ILocator LineLabel(string text) => Page.Locator("#svgcanvas text.lineLabel", new() { HasText = text });
 
-    async Task SaveLabelAsync(string label)
+    ILocator LineDescription(string text) => Page.Locator("#svgcanvas text.lineDescription", new() { HasText = text });
+
+    async Task SaveLabelAsync(string label, string description = "")
     {
         ILocator field = Page.GetByTestId("line-label-text");
         await Expect(field).ToBeVisibleAsync();
         await App.FillReliablyAsync(field, label);
+        if (description.Length > 0)
+            await App.FillReliablyAsync(Page.GetByTestId("line-label-description"), description);
         await Page.GetByTestId("line-label-save").ClickAsync();
     }
 }

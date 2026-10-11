@@ -93,6 +93,12 @@ class Line : IItem
     public string? Label { get; private set; }
     public string? HtmlLabel { get; private set; }
 
+    // The user's description under the label (smaller, like a node's description under its
+    // name); also the user's text, not the parsed Description.
+    public string? LabelDescription { get; private set; }
+    public string? HtmlLabelDescription { get; private set; }
+    public bool HasLabel => Label is not null || LabelDescription is not null;
+
     public bool IsHidden
     {
         get => isHidden;
@@ -131,10 +137,12 @@ class Line : IItem
 
     public void ClearDescription() => SetDescription(null, DateTime.MinValue);
 
-    public void SetLabel(string? text)
+    public void SetLabel(string? text, string? description = null)
     {
         Label = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
         HtmlLabel = Label is not null ? HttpUtility.HtmlEncode(Label) : null;
+        LabelDescription = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        HtmlLabelDescription = LabelDescription is not null ? HttpUtility.HtmlEncode(LabelDescription) : null;
     }
 
     public override string ToString() => $"{Source}->{Target} ({links.Count})";

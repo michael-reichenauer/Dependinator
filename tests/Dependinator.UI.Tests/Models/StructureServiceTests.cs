@@ -432,17 +432,20 @@ public class StructureServiceTests
         var service = new StructureService(new Mock<ILineService>().Object);
 
         var (_, _, line) = AddNodesWithLine(model, "Source", "Target");
-        line.SetLabel("orders");
+        line.SetLabel("orders", "and payments");
 
         var lineDto = Assert.Single(model.SerializeToDto().Lines);
         Assert.Equal("orders", lineDto.Label);
+        Assert.Equal("and payments", lineDto.LabelDescription);
         Assert.Equal("Source", lineDto.Source);
         Assert.Equal("Target", lineDto.Target);
 
         line.SetLabel(null);
+        Assert.False(line.HasLabel);
         service.SetLineLayoutDto(model, lineDto);
 
         Assert.Equal("orders", line.Label);
+        Assert.Equal("and payments", line.LabelDescription);
     }
 
     [Fact]

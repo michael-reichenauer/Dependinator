@@ -79,6 +79,7 @@ public class SvgExportDocumentTests
         var svg = SvgExportDocument.Create("", 100, 100, "#FFF");
 
         Assert.Contains(".lineLabel", svg);
+        Assert.Contains(".lineDescription", svg);
         Assert.Contains("paint-order: stroke;", svg);
     }
 }

@@ -12,7 +12,7 @@ static partial class NodeSvg
 {
     const int NameIconSize = 9;
     internal const int FontSize = 8; // Also the member icon size, see NodeAnchors
-    const int DescriptionFontSize = 6;
+    internal const int DescriptionFontSize = 6;
 
     // Name/description text stops scaling with zoom beyond this factor, so zooming in reveals
     // more description text instead of just growing the letters. Containers appear at

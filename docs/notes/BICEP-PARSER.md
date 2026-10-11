@@ -118,7 +118,8 @@ the hand-drawn diagrams:
    "snet-apps"), saved like a note, no structural effect.
 2. Line labels (done Oct 2026: `LineLabelService`, `LineLabelCommand`, `Line.Label` with a
    per-id pending store in `Model` so a label outlives the line object and a split line's label
-   returns after a reload): a user text drawn at the line's middle. Later option: show the parsed
+   returns after a reload): a user text drawn at the line's middle, with an optional description
+   under it like a node's. Later option: show the parsed
    `Line.Description` as the label when the user set none.
 3. Display alias for parsed nodes ("Storefront" for `frontend`), search matching both names.
 4. Hide as an undoable command, plus "hide all rows of this kind".

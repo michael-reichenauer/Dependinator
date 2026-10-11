@@ -101,4 +101,43 @@ public class LineSvgLabelTests
         // The line itself carries no second copy of the label.
         Assert.Equal(1, svg.Split("class=\"lineLabel\"").Length - 1);
     }
+
+    [Fact]
+    public void GetLineSvg_ShouldDrawTheDescription_UnderTheLabel()
+    {
+        var root = CreateRoot();
+        var source = new Node("a", root) { Boundary = new Rect(0, 0, 100, 100), Type = NodeType.ClassType };
+        var target = new Node("b", root) { Boundary = new Rect(300, 0, 100, 100), Type = NodeType.ClassType };
+        root.AddChild(source);
+        root.AddChild(target);
+        var line = new Line(source, target);
+        line.SetLabel("orders", "to the API");
+
+        var svg = LineSvg.GetLineSvg(line, new Pos(0, 0), 1);
+
+        Assert.Contains(">orders</text>", svg);
+        Assert.Contains("class=\"lineDescription\"", svg);
+        Assert.Contains(">to the API</text>", svg);
+        var labelY = double.Parse(
+            System
+                .Text.RegularExpressions.Regex.Match(svg, "class=\"lineLabel\" x=\"[^\"]*\" y=\"([^\"]*)\"")
+                .Groups[1]
+                .Value,
+            System.Globalization.CultureInfo.InvariantCulture
+        );
+        var descriptionY = double.Parse(
+            System
+                .Text.RegularExpressions.Regex.Match(svg, "class=\"lineDescription\" x=\"[^\"]*\" y=\"([^\"]*)\"")
+                .Groups[1]
+                .Value,
+            System.Globalization.CultureInfo.InvariantCulture
+        );
+        Assert.True(descriptionY > labelY, "the description sits under the label");
+
+        // A description alone is drawn too, on the line itself.
+        line.SetLabel(null, "to the API");
+        var only = LineSvg.GetLineSvg(line, new Pos(0, 0), 1);
+        Assert.DoesNotContain("lineLabel", only);
+        Assert.Contains(">to the API</text>", only);
+    }
 }

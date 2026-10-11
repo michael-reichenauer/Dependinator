@@ -104,4 +104,30 @@ public class LineLabelCommandTests
 
         Assert.Null(command.LabelCopy);
     }
+
+    [Fact]
+    public void Execute_ShouldSetAndClearTheDescription_WithTheLabel()
+    {
+        var (model, line) = CreateModelWithLine();
+        using var _ = model;
+
+        var set = new LineLabelCommand(line.Id) { Label = "orders", Description = "to the API" };
+        set.Execute(model);
+        Assert.Equal("orders", line.Label);
+        Assert.Equal("to the API", line.LabelDescription);
+        Assert.Equal("to the API", line.HtmlLabelDescription);
+        Assert.True(line.HasLabel);
+
+        // Only the description changes; the label stays.
+        var describe = new LineLabelCommand(line.Id) { Description = "to the <API>" };
+        describe.Execute(model);
+        Assert.Equal("orders", line.Label);
+        Assert.Equal("to the &lt;API&gt;", line.HtmlLabelDescription);
+
+        describe.Revert(model);
+        Assert.Equal("to the API", line.LabelDescription);
+
+        new LineLabelCommand(line.Id) { Label = "", Description = "" }.Execute(model);
+        Assert.False(line.HasLabel);
+    }
 }

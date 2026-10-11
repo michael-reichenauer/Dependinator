@@ -8,6 +8,8 @@
     <MudTextField @ref="labelField" T="string" @bind-Value="Label" Label="Label" Immediate="true"
                   HelperText="Short text drawn on the line, e.g. what flows across it" OnKeyDown="OnKeyDown"
                   data-testid="line-label-text" />
+    <MudTextField T="string" @bind-Value="Description" Label="Description (optional)" Lines="2" Class="mt-3"
+                  HelperText="Smaller text under the label" data-testid="line-label-description" />
   </DialogContent>
   <DialogActions>
     @if (HasLabel)
@@ -25,6 +27,7 @@
   [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
   [Parameter] public string Label { get; set; } = "";
+  [Parameter] public string Description { get; set; } = "";
   [Parameter] public bool HasLabel { get; set; }
 
   MudTextField<string> labelField = null!;
@@ -44,10 +47,11 @@
       Save();
   }
 
-  // An empty text saves as "no label".
-  void Save() => MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult((Label ?? "").Trim(), false)));
+  // Empty texts save as "no label".
+  void Save() =>
+      MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult((Label ?? "").Trim(), (Description ?? "").Trim(), false)));
 
-  void Clear() => MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult("", true)));
+  void Clear() => MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult("", "", true)));
 
   void Cancel() => MudDialog.Cancel();
 }

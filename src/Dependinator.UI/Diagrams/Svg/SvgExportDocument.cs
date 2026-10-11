@@ -108,6 +108,16 @@ static class SvgExportDocument
                 stroke-width: 3px;
                 stroke-linejoin: round;
             }
+            .lineDescription {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                font-style: italic;
+                fill: {{DColors.Text}};
+                fill-opacity: 0.75;
+                paint-order: stroke;
+                stroke: {{DColors.CanvasBackground}};
+                stroke-width: 3px;
+                stroke-linejoin: round;
+            }
             """;
 
     // The line arrow-head markers, copied from the canvas defs in Canvas.razor.

@@ -5,8 +5,9 @@ using MudBlazor;
 
 namespace Dependinator.UI.Diagrams.Interaction;
 
-// Result returned by LineLabelDialog: the (possibly edited) label, or a request to remove it.
-record LineLabelDialogResult(string Label, bool Clear);
+// Result returned by LineLabelDialog: the (possibly edited) label and description, or a request
+// to remove them.
+record LineLabelDialogResult(string Label, string Description, bool Clear);
 
 // Edits a line's user label (the short text drawn on the line) through a small dialog; the
 // change is one undoable command. Reached from the line toolbar, the line's right-click menu
@@ -22,18 +23,21 @@ class LineLabelService(IModelMgr modelMgr, ICommandService commandService, IDial
 {
     public async Task EditLabelAsync(LineId lineId)
     {
-        string current;
+        string currentLabel;
+        string currentDescription;
         using (var model = modelMgr.UseModel())
         {
             if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
-            current = line.Label ?? "";
+            currentLabel = line.Label ?? "";
+            currentDescription = line.LabelDescription ?? "";
         }
 
         var parameters = new DialogParameters
         {
-            { nameof(LineLabelDialog.Label), current },
-            { nameof(LineLabelDialog.HasLabel), current.Length > 0 },
+            { nameof(LineLabelDialog.Label), currentLabel },
+            { nameof(LineLabelDialog.Description), currentDescription },
+            { nameof(LineLabelDialog.HasLabel), currentLabel.Length > 0 || currentDescription.Length > 0 },
         };
         var options = new DialogOptions
         {
@@ -47,9 +51,10 @@ class LineLabelService(IModelMgr modelMgr, ICommandService commandService, IDial
             return;
 
         var label = result.Clear ? "" : result.Label;
-        if (label == current)
+        var description = result.Clear ? "" : result.Description;
+        if (label == currentLabel && description == currentDescription)
             return;
 
-        commandService.Do(new LineLabelCommand(lineId) { Label = label });
+        commandService.Do(new LineLabelCommand(lineId) { Label = label, Description = description });
     }
 }
