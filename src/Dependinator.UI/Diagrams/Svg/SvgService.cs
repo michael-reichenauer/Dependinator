@@ -235,32 +235,57 @@ class SvgService : ISvgService
         var childrenZoom = context.Zoom * node.ContainerZoom;
         var childrenContext = context.With(childrenCanvasOffset, childrenZoom);
 
+        // Zones are background: drawn first so the sibling lines and nodes lie on top of them,
+        // with their selection chrome drawn last so the siblings cannot cover it.
+        var zonesSvg = node
+            .Children.Where(child => child.IsZone)
+            .Select(child => RenderNode(child, childrenContext))
+            .Where(svg => svg.Length > 0);
         var childNodeSvg = node
-            .Children.Select(child => RenderNode(child, childrenContext))
+            .Children.Where(child => !child.IsZone)
+            .Select(child => RenderNode(child, childrenContext))
             .Where(svg => svg.Length > 0);
         var linesSvg = RenderNodeLines(node, childrenCanvasOffset, childrenZoom, context);
 
         // Cousin and direct lines draw above the child nodes: they cross into containers whose
         // opaque fill would otherwise cover them.
         var directLinesSvg = RenderDirectNodeLines(node, childrenCanvasOffset, childrenZoom, context);
+        var zoneOverlaysSvg = node
+            .Children.Where(child => child.IsZone)
+            .Select(child => RenderZoneOverlay(child, childrenContext))
+            .Where(svg => svg.Length > 0);
 
-        return linesSvg.Concat(childNodeSvg).Concat(directLinesSvg).Join("\n");
+        return zonesSvg.Concat(linesSvg).Concat(childNodeSvg).Concat(directLinesSvg).Concat(zoneOverlaysSvg).Join("\n");
+    }
+
+    // A selected zone's outline and resize handles, emitted after the siblings that are drawn
+    // over the zone itself.
+    static string RenderZoneOverlay(Node zone, RenderContext context) =>
+        IsRendered(zone, context, out var geometry)
+            ? NodeSvg.SelectedNodeSvg(zone, geometry.CanvasRect, context.Flags.IsEditing)
+            : "";
+
+    // Whether the node is drawn at all in this tile: not hidden (unless hidden nodes are shown),
+    // overlapping the tile, and at least MinRenderSize in one dimension.
+    static bool IsRendered(Node node, RenderContext context, out NodeGeometry geometry)
+    {
+        geometry = CalculateNodeGeometry(node, context);
+        if (node.IsHidden && !context.Flags.ShowHidden)
+            return false;
+        if (!RectOverlap(context.TileBounds, geometry.TileRect))
+            return false;
+        return geometry.TileRect.Width >= MinRenderSize || geometry.TileRect.Height >= MinRenderSize;
     }
 
     static string RenderNode(Node node, RenderContext context)
     {
-        if (node.IsHidden && !context.Flags.ShowHidden)
+        if (!IsRendered(node, context, out var geometry))
             return "";
 
-        var geometry = CalculateNodeGeometry(node, context);
-
-        if (!RectOverlap(context.TileBounds, geometry.TileRect))
-            return "";
-        if (geometry.TileRect.Width < MinRenderSize && geometry.TileRect.Height < MinRenderSize)
-            return "";
-
-        // A note is a leaf annotation drawn as a circle; it has no children or chrome, so short-
-        // circuit before the member/icon/container branches.
+        // Annotations are leaves without children or chrome: a zone is a labeled background
+        // rectangle, a note a circle. Short-circuit before the member/icon/container branches.
+        if (node.IsZone)
+            return ZoneSvg.GetZoneSvg(node, geometry.CanvasRect, context.Zoom);
         if (node.IsNote)
             return NoteSvg.GetNoteSvg(node, geometry.CanvasRect, context.Zoom);
 

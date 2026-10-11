@@ -44,20 +44,29 @@ static class NodeViewPolicy
         nodeType.IsMember || zoom <= MinContainerZoom;
 
     // The node is shown as an expanded box with visible children (not an icon and not zoomed
-    // past visibility).
+    // past visibility). Annotations (zones, notes) are leaves at every zoom: nothing is ever
+    // placed inside them, dropped onto them or opened from them.
     public static bool IsContainerView(Node node, double modelZoom)
     {
+        if (IsAnnotation(node))
+            return false;
         var nodeZoom = 1 / (node.GetZoom() * modelZoom);
         return !IsTooLargeToBeSeen(nodeZoom) && !IsShowIcon(node.Type, nodeZoom);
     }
 
     // The node's children are rendered at this zoom: pass-through nodes always show children,
-    // icons and members never do, and containers do even when zoomed in past their own chrome.
+    // icons, members and annotations never do, and containers do even when zoomed in past
+    // their own chrome.
     public static bool IsChildrenShown(Node node, double modelZoom)
     {
         if (node.IsPassThrough)
             return true;
+        if (IsAnnotation(node))
+            return false;
         var nodeZoom = 1 / (node.GetZoom() * modelZoom);
         return !IsShowIcon(node.Type, nodeZoom);
     }
+
+    // A user-drawn annotation (a zone or a note): never a container, never a link endpoint.
+    public static bool IsAnnotation(Node node) => node.IsZone || node.IsNote;
 }

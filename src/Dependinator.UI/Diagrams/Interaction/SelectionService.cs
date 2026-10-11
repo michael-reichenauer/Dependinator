@@ -231,7 +231,9 @@ class SelectionService(
             {
                 if (model.Nodes.TryGetValue(pointerId.NodeId, out var node))
                 {
-                    if (IsNodeMovable(node, model.Zoom))
+                    // A zone is selectable however much of the screen it covers (it is drawn
+                    // around a group and often fills the view); only moving it keeps the limit.
+                    if (node.IsZone || IsNodeMovable(node, model.Zoom))
                     {
                         isMovable = true;
                         node.IsSelected = true;

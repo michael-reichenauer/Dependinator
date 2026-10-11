@@ -63,7 +63,7 @@ class ViewContextService(
     {
         foreach (var child in node.Children)
         {
-            if (child.IsNote || (child.IsHidden && !viewOptions.ShowHiddenNodes))
+            if (NodeViewPolicy.IsAnnotation(child) || (child.IsHidden && !viewOptions.ShowHiddenNodes))
                 continue;
             if (!NodeViewPolicy.IsChildrenShown(child, modelZoom))
                 continue;
@@ -84,7 +84,10 @@ class ViewContextService(
             return [];
 
         using var model = modelMgr.UseModel();
-        if (!model.Nodes.TryGetValue(selectionService.SelectedId.NodeId, out var node) || node.IsNote)
+        if (
+            !model.Nodes.TryGetValue(selectionService.SelectedId.NodeId, out var node)
+            || NodeViewPolicy.IsAnnotation(node)
+        )
             return [];
 
         return node.AncestorsAndSelf().Where(IsShownInChain).Reverse().Select(ToItem).ToList();

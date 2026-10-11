@@ -53,4 +53,45 @@ public class NodeViewPolicyTests
     {
         Assert.False(NodeViewPolicy.IsShowIcon(Enum.Parse<NodeType>(type), 100.0));
     }
+
+    [Theory]
+    [InlineData(0.01)]
+    [InlineData(1.0)]
+    [InlineData(100.0)]
+    public void IsContainerView_ShouldBeFalse_ForZonesAndNotes_AtAnyZoom(double modelZoom)
+    {
+        // Annotations are leaves however large they are on screen: nothing is placed inside a
+        // zone, dropped onto it or opened from it.
+        var root = new Dependinator.UI.Modeling.Models.Node("", null!) { Type = NodeType.Root, ContainerZoom = 1 };
+        var zone = new Dependinator.UI.Modeling.Models.Node("Edge", root)
+        {
+            IsManual = true,
+            IsZone = true,
+            Boundary = new Dependinator.UI.Shared.Types.Rect(0, 0, 400, 300),
+            ContainerZoom = 1,
+        };
+        var note = new Dependinator.UI.Modeling.Models.Node("1", root)
+        {
+            IsManual = true,
+            IsNote = true,
+            Boundary = new Dependinator.UI.Shared.Types.Rect(0, 0, 40, 40),
+            ContainerZoom = 1,
+        };
+        var plain = new Dependinator.UI.Modeling.Models.Node("Box", root)
+        {
+            IsManual = true,
+            Boundary = new Dependinator.UI.Shared.Types.Rect(0, 0, 400, 300),
+            ContainerZoom = 1,
+        };
+        root.AddChild(zone);
+        root.AddChild(note);
+        root.AddChild(plain);
+
+        Assert.False(NodeViewPolicy.IsContainerView(zone, modelZoom));
+        Assert.False(NodeViewPolicy.IsContainerView(note, modelZoom));
+        Assert.False(NodeViewPolicy.IsChildrenShown(zone, modelZoom));
+        Assert.True(NodeViewPolicy.IsAnnotation(zone));
+        Assert.True(NodeViewPolicy.IsAnnotation(note));
+        Assert.False(NodeViewPolicy.IsAnnotation(plain));
+    }
 }

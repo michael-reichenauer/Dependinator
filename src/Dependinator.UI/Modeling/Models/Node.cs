@@ -138,6 +138,13 @@ class Node : IItem
     // they persist and survive re-parse, but render via NoteSvg instead of the normal node chrome.
     public bool IsNote { get; set; }
 
+    // A zone is a user-drawn, labeled background area inside a container ("Edge", "Data", a
+    // subnet): the user's own grouping of the parsed nodes. Zones are manual nodes (also
+    // IsManual) that persist and survive re-parse, render behind their siblings via ZoneSvg,
+    // are never containers or link endpoints, and keep the boundary the user gave them (layout
+    // never moves them). The name is the label, the Description an optional subtitle.
+    public bool IsZone { get; set; }
+
     // Sets the description and keeps the pre-encoded HtmlDescription in sync; the single write
     // path for descriptions (note edits, SetFromDto, Update).
     public void SetDescription(string? description)
@@ -172,6 +179,7 @@ class Node : IItem
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
             IsManual = IsManual,
             IsNote = IsNote,
+            IsZone = IsZone,
         };
 
     public void SetFromDto(NodeDto dto)
@@ -196,6 +204,7 @@ class Node : IItem
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
         IsManual = dto.IsManual;
         IsNote = dto.IsNote;
+        IsZone = dto.IsZone;
     }
 
     public void Update(Parsing.Node node)

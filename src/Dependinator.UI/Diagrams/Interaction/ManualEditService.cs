@@ -286,7 +286,12 @@ class ManualEditService(
             {
                 if (!model.Nodes.TryGetValue(targetPointerId.NodeId, out var node))
                     return;
-                if (!node.IsRoot && !NodeViewPolicy.IsContainerView(node, model.Zoom))
+                // A zone or note is background for a drop: the linked node goes into its parent.
+                if (
+                    !node.IsRoot
+                    && !NodeViewPolicy.IsAnnotation(node)
+                    && !NodeViewPolicy.IsContainerView(node, model.Zoom)
+                )
                     linkTargetName = node.Name;
             }
             else if (!targetPointerId.IsCanvas)

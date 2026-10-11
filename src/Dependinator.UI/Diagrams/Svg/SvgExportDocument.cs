@@ -85,6 +85,21 @@ static class SvgExportDocument
                 fill-opacity: 0.7;
                 text-anchor: start;
             }
+            .zoneName {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                fill: {{DColors.Text}};
+                fill-opacity: 0.8;
+                dominant-baseline: hanging;
+                text-anchor: start;
+            }
+            .zoneDescription {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                font-style: italic;
+                fill: {{DColors.Text}};
+                fill-opacity: 0.6;
+                dominant-baseline: hanging;
+                text-anchor: start;
+            }
             """;
 
     // The line arrow-head markers, copied from the canvas defs in Canvas.razor.

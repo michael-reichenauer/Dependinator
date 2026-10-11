@@ -272,7 +272,7 @@ static partial class NodeSvg
 
     // Effective zoom for text and header icons: follows the diagram zoom until MaxTextZoom,
     // then stays capped so text keeps a readable size instead of growing with the node.
-    static double TextZoom(double parentZoom) => Math.Min(parentZoom, MaxTextZoom);
+    internal static double TextZoom(double parentZoom) => Math.Min(parentZoom, MaxTextZoom);
 
     // Once the font size is capped, further zooming leaves unused space below the node (layout
     // distances keep scaling while text does not). Convert that surplus into extra description
@@ -280,7 +280,7 @@ static partial class NodeSvg
     static int ScaledMaxLines(int maxLines, double parentZoom, double textZoom) =>
         textZoom <= 0 ? maxLines : (int)(maxLines * parentZoom / textZoom);
 
-    static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
+    internal static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
         node.IsHidden ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
 
     // A small pencil glyph placed just after the node's name label, marking a manually added
@@ -487,7 +487,7 @@ static partial class NodeSvg
         );
     }
 
-    static string SelectedNodeSvg(Node node, Rect geometry, bool isEditing)
+    internal static string SelectedNodeSvg(Node node, Rect geometry, bool isEditing)
     {
         if (!node.IsSelected)
             return "";

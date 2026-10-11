@@ -53,4 +53,8 @@ record NodeDto
     // True for note annotations (rendered as a circle with a short id). Omitted for other nodes.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsNote { get; set; }
+
+    // True for zones (user-drawn labeled background areas). Omitted for other nodes.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsZone { get; set; }
 }

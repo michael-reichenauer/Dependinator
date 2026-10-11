@@ -4,20 +4,23 @@ using Dependinator.UI.Shared.Types;
 namespace Dependinator.UI.Modeling.Commands;
 
 // Adds a manually created (user-drawn) node under an existing parent. Revert removes it. When
-// isNote is true the node is a note annotation (rendered as a circle) with the given description.
+// isNote is true the node is a note annotation (rendered as a circle) with the given description;
+// when isZone is true it is a zone (a labeled background area) whose description is its subtitle.
 class AddNodeCommand(
     string name,
     string parentName,
     Rect boundary,
     bool isNote = false,
     string? description = null,
-    string? iconName = null
+    string? iconName = null,
+    bool isZone = false
 ) : Command
 {
     readonly string name = name;
     readonly string parentName = parentName;
     readonly Rect boundary = boundary;
     readonly bool isNote = isNote;
+    readonly bool isZone = isZone;
     readonly string? description = description;
     readonly string? iconName = iconName;
 
@@ -32,6 +35,7 @@ class AddNodeCommand(
         {
             IsManual = true,
             IsNote = isNote,
+            IsZone = isZone,
             Boundary = boundary,
             CustomIconName = iconName,
             UpdateStamp = model.UpdateStamp,

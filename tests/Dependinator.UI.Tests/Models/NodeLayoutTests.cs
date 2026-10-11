@@ -433,4 +433,52 @@ public class NodeLayoutTests
         Assert.Equal(NodeLayout.DefaultSize.Height, first.Boundary.Height);
         Assert.Equal(NodeLayout.DefaultSize.Height, second.Boundary.Height);
     }
+
+    [Fact]
+    public void AdjustChildren_ShouldKeepZonesAndNotesWhereTheyAre_WhenForced()
+    {
+        // "Reset Children Layout" rearranges the parsed nodes but never the user's annotations.
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var parent = new ModelNode("Parent", root) { Type = NodeType.Namespace };
+        root.AddChild(parent);
+        var zoneRect = new Dependinator.UI.Shared.Types.Rect(500, 500, 320, 200);
+        var noteRect = new Dependinator.UI.Shared.Types.Rect(700, 20, 40, 40);
+        var zone = new ModelNode("Parent.Edge", parent)
+        {
+            IsManual = true,
+            IsZone = true,
+            Boundary = zoneRect,
+        };
+        var note = new ModelNode("Parent.1", parent)
+        {
+            IsManual = true,
+            IsNote = true,
+            Boundary = noteRect,
+        };
+        var a = new ModelNode("Parent.A", parent)
+        {
+            Type = NodeType.ClassType,
+            Boundary = new Dependinator.UI.Shared.Types.Rect(900, 900, 100, 100),
+        };
+        var b = new ModelNode("Parent.B", parent)
+        {
+            Type = NodeType.ClassType,
+            Boundary = new Dependinator.UI.Shared.Types.Rect(950, 950, 100, 100),
+        };
+        parent.AddChild(zone);
+        parent.AddChild(note);
+        parent.AddChild(a);
+        parent.AddChild(b);
+        parent.IsChildrenLayoutCustomized = true;
+
+        NodeLayout.AdjustChildren(parent, forceAllChildren: true);
+
+        Assert.Equal(zoneRect, zone.Boundary);
+        Assert.Equal(noteRect, note.Boundary);
+        Assert.NotEqual(new Dependinator.UI.Shared.Types.Rect(900, 900, 100, 100), a.Boundary);
+        Assert.NotEqual(new Dependinator.UI.Shared.Types.Rect(950, 950, 100, 100), b.Boundary);
+        Assert.NotEqual(a.Boundary, b.Boundary);
+    }
 }

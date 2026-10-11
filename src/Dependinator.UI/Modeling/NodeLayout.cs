@@ -73,7 +73,7 @@ class NodeLayout
         if (!LayeredLayout.TryArrange(parent, metrics))
         {
             SortChildren(parent.Children);
-            ArrangeChildren(parent, parent.Children, metrics);
+            ArrangeChildren(parent, parent.Children.Where(IsArranged).ToList(), metrics);
         }
 
         // The root's container transform is the fixed identity-like frame the canvas viewport
@@ -85,6 +85,10 @@ class NodeLayout
     // Members (C# type members, Bicep params/vars/outputs) are laid out as rows; a C# type is the
     // usual such parent, but a Bicep file or module holds member rows next to resources too.
     static bool HasMemberChildren(Node parent) => parent.Children.Any(child => child.Type.IsMember);
+
+    // Zones and notes stay where the user put them: a layout (also a forced "Reset Children
+    // Layout") arranges the other children around them. They still count for the container fit.
+    internal static bool IsArranged(Node child) => !child.IsZone && !child.IsNote;
 
     static void ArrangeChildren(Node parent, IReadOnlyList<Node> children, LayoutMetrics metrics)
     {
@@ -107,7 +111,7 @@ class NodeLayout
         var regularMetrics = RegularMetrics(density);
 
         var members = parent.Children.Where(c => c.Type.IsMember).ToList();
-        var nonMembers = parent.Children.Where(c => !c.Type.IsMember).ToList();
+        var nonMembers = parent.Children.Where(c => !c.Type.IsMember && IsArranged(c)).ToList();
 
         Sorter.Sort(members, CompareMemberChildren);
         SortChildren(nonMembers);

@@ -89,7 +89,7 @@
   {
     scene = null!;
     using var model = modelMgr.UseModel();
-    var tops = model.Root.Children.Where(n => !n.IsNote && !n.IsHidden).ToList();
+    var tops = model.Root.Children.Where(n => !n.IsNote && !n.IsZone && !n.IsHidden).ToList();
     if (tops.Count == 0 || model.Zoom <= 0)
       return false;
 
@@ -131,7 +131,7 @@
       {
         if (boxCount >= MaxBoxes)
           return;
-        if (child.IsNote || child.IsHidden)
+        if (child.IsNote || child.IsZone || child.IsHidden)
           continue;
         var pos = new Pos(
           parentPos.X + child.Boundary.X * zoom + parent.ContainerOffset.X * parentZoom,

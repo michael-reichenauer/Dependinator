@@ -240,4 +240,36 @@ public class ManualCommandTests
         Assert.True(restored!.IsManual);
         Assert.Contains(restored, model.Root.Children);
     }
+
+    [Fact]
+    public void AddNodeCommand_AsZone_ShouldSetFlagsBoundaryAndCustomizeParent()
+    {
+        using var model = CreateModel();
+        AddRootNode(model, "Container");
+        var boundary = new Rect(40, 60, 320, 200);
+        var command = new AddNodeCommand(
+            "Container.Edge",
+            "Container",
+            boundary,
+            description: "Public entry",
+            isZone: true
+        );
+
+        command.Execute(model);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Container.Edge"), out var zone));
+        Assert.True(zone!.IsZone);
+        Assert.True(zone.IsManual);
+        Assert.False(zone.IsNote);
+        Assert.Equal(boundary, zone.Boundary);
+        Assert.Equal("Public entry", zone.Description);
+        Assert.True(zone.Parent.IsChildrenLayoutCustomized);
+
+        // Delete and restore keep the zone a zone.
+        var delete = new DeleteNodeCommand(NodeId.FromName("Container.Edge"));
+        delete.Execute(model);
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("Container.Edge")));
+        delete.Revert(model);
+        Assert.True(model.Nodes[NodeId.FromName("Container.Edge")].IsZone);
+    }
 }
