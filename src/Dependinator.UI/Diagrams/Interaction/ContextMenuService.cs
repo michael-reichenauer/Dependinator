@@ -47,12 +47,16 @@ interface IContextMenuService
     // Manual node: editing.
     Task RenameNodeAsync();
     Task DeleteNodeAsync();
+
+    // Line: the user's label on it.
+    Task EditLineLabelAsync();
 }
 
 [Scoped]
 class ContextMenuService(
     INoteService noteService,
     IZoneService zoneService,
+    ILineLabelService lineLabelService,
     IManualEditService manualEditService,
     ISelectionService selectionService,
     IDependenciesService dependenciesService,
@@ -206,6 +210,17 @@ class ContextMenuService(
         if (!await SelectTargetAsync())
             return;
         manualEditService.BeginRenameNode(targetId.NodeId, selectionService.SelectedNodePosition);
+    }
+
+    // The label dialog acts on the selected line, so select first (as the toolbar would have).
+    public async Task EditLineLabelAsync()
+    {
+        Close();
+        if (Target != ContextMenuTarget.Line)
+            return;
+        if (!await SelectTargetAsync())
+            return;
+        await lineLabelService.EditLabelAsync(LineId.FromId(targetId.Id));
     }
 
     // The same path as the toolbar's Delete: asks first when children would go too.

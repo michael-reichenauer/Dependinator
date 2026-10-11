@@ -94,5 +94,11 @@ public class LineSvgLabelTests
 
         Assert.Contains("class=\"lineLabel\"", svg);
         Assert.Contains(">uses</text>", svg);
+        // The label layer comes after the nodes, so a short line's label is not under the icons.
+        Assert.True(
+            svg.IndexOf(">uses</text>", StringComparison.Ordinal) > svg.IndexOf(">B</text>", StringComparison.Ordinal)
+        );
+        // The line itself carries no second copy of the label.
+        Assert.Equal(1, svg.Split("class=\"lineLabel\"").Length - 1);
     }
 }

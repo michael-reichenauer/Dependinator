@@ -41,7 +41,8 @@ static class LineSvg
         bool isCyclic = false,
         bool isPath = false,
         bool isViolation = false,
-        bool isWeighted = false
+        bool isWeighted = false,
+        bool includeLabel = true
     )
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
@@ -61,8 +62,22 @@ static class LineSvg
             isCyclic,
             isPath,
             isViolation,
-            isWeighted
+            isWeighted,
+            includeLabel
         );
+    }
+
+    // A line's label on its own, for the label layer SvgService draws above the child nodes
+    // (the sibling lines themselves lie under the nodes, which would cover a label drawn with
+    // them). Dimmed like its line; hovering the line does not restore it, which is fine.
+    public static string GetLineLabelSvg(Line line, Pos nodeCanvasPos, double childrenZoom, bool isDimmed)
+    {
+        if (line.HtmlLabel is null || !LinePathGeometry.TryGetLocalEndpoints(line, out _))
+            return "";
+
+        var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
+        var text = LabelSvg(line, polylinePoints, childrenZoom);
+        return isDimmed ? $"""<g class="line-dim">{text}</g>""" : text;
     }
 
     public static string GetDirectLineSvg(
@@ -100,7 +115,8 @@ static class LineSvg
         bool isCyclic,
         bool isPath,
         bool isViolation,
-        bool isWeighted
+        bool isWeighted,
+        bool includeLabel
     )
     {
         // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
@@ -154,7 +170,7 @@ static class LineSvg
         var points = ToPolylinePoints(visiblePoints);
         var hitPoints = ToPolylinePoints(polylinePoints);
         var selectedSvg = SelectedLineSvg(line, polylinePoints, strokeWidth);
-        var labelSvg = LabelSvg(line, polylinePoints, childrenZoom);
+        var labelSvg = includeLabel ? LabelSvg(line, polylinePoints, childrenZoom) : "";
 
         var title = $"{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})";
         if (!string.IsNullOrWhiteSpace(line.HtmlDescription))

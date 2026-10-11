@@ -77,6 +77,14 @@
                 Show Source Code
               </MudListItem>
             }
+            @if (viewOptions.IsEditingEnabled)
+            {
+              <MudDivider />
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Label" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.EditLineLabelAsync" data-testid="context-menu-line-label">
+                Edit Label …
+              </MudListItem>
+            }
             break;
 
           default:

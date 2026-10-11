@@ -247,6 +247,10 @@ class SvgService : ISvgService
             .Where(svg => svg.Length > 0);
         var linesSvg = RenderNodeLines(node, childrenCanvasOffset, childrenZoom, context);
 
+        // The lines' labels draw above the child nodes: a short line's label would otherwise
+        // end up under the node icons at its ends.
+        var lineLabelsSvg = RenderNodeLineLabels(node, childrenCanvasOffset, childrenZoom, context);
+
         // Cousin and direct lines draw above the child nodes: they cross into containers whose
         // opaque fill would otherwise cover them.
         var directLinesSvg = RenderDirectNodeLines(node, childrenCanvasOffset, childrenZoom, context);
@@ -255,7 +259,13 @@ class SvgService : ISvgService
             .Select(child => RenderZoneOverlay(child, childrenContext))
             .Where(svg => svg.Length > 0);
 
-        return zonesSvg.Concat(linesSvg).Concat(childNodeSvg).Concat(directLinesSvg).Concat(zoneOverlaysSvg).Join("\n");
+        return zonesSvg
+            .Concat(linesSvg)
+            .Concat(childNodeSvg)
+            .Concat(lineLabelsSvg)
+            .Concat(directLinesSvg)
+            .Concat(zoneOverlaysSvg)
+            .Join("\n");
     }
 
     // A selected zone's outline and resize handles, emitted after the siblings that are drawn
@@ -372,7 +382,48 @@ class SvgService : ISvgService
         return true;
     }
 
+    // The sibling lines and the fan-out segments of this container; their labels go into a layer
+    // of their own above the child nodes (see RenderNodeContent), so the lines are drawn without.
     static IEnumerable<string> RenderNodeLines(Node node, Pos nodeCanvasPos, double childrenZoom, RenderContext context)
+    {
+        foreach (var (line, isCyclic) in DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context))
+        {
+            yield return LineSvg.GetLineSvg(
+                line,
+                nodeCanvasPos,
+                childrenZoom,
+                IsLineDimmed(line, context),
+                isCyclic,
+                IsLineOnPath(line, context),
+                IsLineViolating(line, context),
+                IsLineWeighted(line, context),
+                includeLabel: false
+            );
+        }
+    }
+
+    static IEnumerable<string> RenderNodeLineLabels(
+        Node node,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        RenderContext context
+    )
+    {
+        foreach (var (line, _) in DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context))
+        {
+            var labelSvg = LineSvg.GetLineLabelSvg(line, nodeCanvasPos, childrenZoom, IsLineDimmed(line, context));
+            if (labelSvg.Length > 0)
+                yield return labelSvg;
+        }
+    }
+
+    // The lines of this container that are drawn in this tile, with whether each is cyclic.
+    static IEnumerable<(Line Line, bool IsCyclic)> DrawnNodeLines(
+        Node node,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        RenderContext context
+    )
     {
         // Parent-to-child segments are the fan-out of incoming links inside this container
         // (and direct parent-to-child links); only the segments below the links' current
@@ -390,15 +441,7 @@ class SvgService : ISvgService
                 continue;
             if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                 continue;
-            yield return LineSvg.GetLineSvg(
-                line,
-                nodeCanvasPos,
-                childrenZoom,
-                IsLineDimmed(line, context),
-                isPath: IsLineOnPath(line, context),
-                isViolation: IsLineViolating(line, context),
-                isWeighted: IsLineWeighted(line, context)
-            );
+            yield return (line, false);
         }
 
         // All sibling lines and children to parent lines
@@ -418,16 +461,7 @@ class SvgService : ISvgService
                     continue;
                 if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                     continue;
-                yield return LineSvg.GetLineSvg(
-                    line,
-                    nodeCanvasPos,
-                    childrenZoom,
-                    IsLineDimmed(line, context),
-                    IsLineCyclic(line, context),
-                    IsLineOnPath(line, context),
-                    IsLineViolating(line, context),
-                    IsLineWeighted(line, context)
-                );
+                yield return (line, IsLineCyclic(line, context));
             }
         }
     }

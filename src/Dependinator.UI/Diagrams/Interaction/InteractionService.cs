@@ -39,6 +39,7 @@ class InteractionService(
     IManualEditService manualEditService,
     INoteService noteService,
     IZoneService zoneService,
+    ILineLabelService lineLabelService,
     IContextMenuService contextMenuService,
     IScreenService screenService,
     IAreaSelectionService areaSelectionService,
@@ -444,6 +445,13 @@ class InteractionService(
         if (viewOptions.IsEditingEnabled && pointerId.IsNode && zoneService.IsZoneNode(pointerId.NodeId))
         {
             _ = zoneService.EditZoneAsync(pointerId.NodeId);
+            return;
+        }
+
+        // Double-click on a line in edit mode edits its label.
+        if (viewOptions.IsEditingEnabled && pointerId.IsLine)
+        {
+            _ = lineLabelService.EditLabelAsync(LineId.FromId(pointerId.Id));
             return;
         }
 

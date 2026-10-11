@@ -580,6 +580,20 @@ public sealed class AppPage
         }
     }
 
+    // Double-click a line (edit mode: opens its label dialog), retrying until the given locator
+    // (e.g. the dialog's field) shows, since a click during a re-render is swallowed.
+    public async Task DoubleClickLineAsync(ILocator line, ILocator expected)
+    {
+        await RepeatUntilVisibleAsync(
+            async () =>
+            {
+                (float x, float y) = await WaitForStableLinePointAsync(line, 0.5f);
+                await page.Mouse.DblClickAsync(x, y);
+            },
+            expected
+        );
+    }
+
     // A screen point on the line's visible part, read until it stops moving between two reads:
     // the canvas pans/zooms with animations, and a re-render can momentarily detach the line's
     // SVG group (same approach as WaitForStableNodeBoxAsync).

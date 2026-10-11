@@ -116,8 +116,10 @@ the hand-drawn diagrams:
    siblings, never containers or link endpoints, kept out of layout, dragged with the nodes
    inside them): a user-drawn, labeled background rectangle inside a container ("Edge", "Data",
    "snet-apps"), saved like a note, no structural effect.
-2. Line labels: a user text on a line, edited from the line toolbar, drawn when the line is
-   selected or the view is zoomed in.
+2. Line labels (done Oct 2026: `LineLabelService`, `LineLabelCommand`, `Line.Label` with a
+   per-id pending store in `Model` so a label outlives the line object and a split line's label
+   returns after a reload): a user text drawn at the line's middle. Later option: show the parsed
+   `Line.Description` as the label when the user set none.
 3. Display alias for parsed nodes ("Storefront" for `frontend`), search matching both names.
 4. Hide as an undoable command, plus "hide all rows of this kind".
 5. Re-parse robustness: a node whose parent changes keeps a boundary in the old parent's
