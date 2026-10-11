@@ -24,6 +24,7 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
     const int UppercaseBoundaryBonus = 20;
     const int GapPenalty = 2;
     const int MaxGapPenalized = 10;
+    const int ExactMatchBonus = 1000;
     const int MaxResultItems = 100;
 
     // Separators used in a node's full name (e.g. "Demo.Core.RootClass"); a query containing
@@ -59,12 +60,23 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
             if (score is null)
                 continue;
 
+            // The node named exactly like the query always ranks first: a longer name can
+            // outscore the exact alignment through a later word boundary ("rgPlatform.networking"
+            // scores higher against "rgPlatform.networking.natGateway" than against itself).
+            if (
+                string.Equals(query, shortName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(query, name, StringComparison.OrdinalIgnoreCase)
+            )
+                score += ExactMatchBonus;
+
             results.Add((new NodeSearchResult(id, shortName, name), score.Value));
         }
 
+        // Ties: the shorter short name, then the shallower node, then the name.
         var response = results
             .OrderByDescending(r => r.Score)
             .ThenBy(r => r.Result.ShortName.Length)
+            .ThenBy(r => r.Result.FullName.Length)
             .ThenBy(r => r.Result.ShortName, StringComparer.Ordinal)
             .Select(r => r.Result)
             .Take(MaxResultItems)

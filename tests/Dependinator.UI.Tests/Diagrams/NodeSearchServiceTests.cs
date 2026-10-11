@@ -121,6 +121,23 @@ public class NodeSearchServiceTests
     }
 
     [Fact]
+    public void Search_ShouldRankTheQualifiedNode_AboveItsChildren()
+    {
+        // "rgPlatform.networking" and "rgPlatform.networking.natGateway" score the same on the
+        // full name and have short names of equal length; the shallower node must win, so an
+        // exact qualified query lands on that node.
+        var sut = CreateService(
+            ("natGateway", "rgPlatform.networking.natGateway"),
+            ("networking", "rgPlatform.networking"),
+            ("vnet", "rgPlatform.networking.vnet")
+        );
+
+        var results = sut.Search("rgPlatform.networking");
+
+        Assert.Equal("rgPlatform.networking", results[0].FullName);
+    }
+
+    [Fact]
     public void Search_ShouldNotMatchFullName_ForPlainQuery()
     {
         // A plain (non-qualified) query only matches short names — so "Demo" does NOT match
