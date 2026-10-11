@@ -167,8 +167,10 @@
             <li class="feature"><b>Explore an interactive dependency map</b> — see your codebase, or your Azure
                 Bicep deployment, as a zoomable, navigable diagram instead of scrolling through files.</li>
             <li class="feature"><b>Zoom for detail</b> — zoom into any node to reveal its internals
-                (namespaces, types and members; modules and resources in a Bicep deployment), then zoom back
-                out to see the bigger picture.</li>
+                (namespaces, types and members; in a Bicep deployment the resource groups, the modules deployed
+                into them with the icon of what they mainly deploy, their resources, and settings such as role
+                assignments and diagnostics as rows under the resource they configure), then zoom back out to
+                see the bigger picture.</li>
             <li class="feature"><b>Follow dependencies</b> — pick any node and trace what it depends on,
                 or what depends on it, across the whole model.</li>
             <li class="feature"><b>Jump to source</b> — in the VS Code extension, go straight from a node
@@ -253,7 +255,9 @@
                 you there. The explorer's indirect rows (below) open the same panel for their chain.</li>
             <li class="feature"><b>Leave lines out</b> — <b>View › Lines</b> hides lines to external packages,
                 inheritance lines or member-level lines, or shows only lines carrying at least 2, 5 or 10 links.
-                The explorer's lines and direct lines you asked for are always drawn.</li>
+                <b>Configuration lines</b> (Bicep values flowing into parameters and variables, such as a location
+                or tags) are left out by default; turn them on there when you want to see them. The explorer's
+                lines and direct lines you asked for are always drawn.</li>
         </ul>
         <p>
             To see what's <i>inside</i> a node, you don't need a button — just <b>zoom in</b> on it and its

@@ -31,8 +31,10 @@ references are parsed as part of it.
 | entry file | `Solution`, icon of the target scope (resource group, subscription, management group) | `main*bicep` (shown as `main.bicep`) |
 | param / var / output | `ParameterMember` / `VariableMember` (private) / `OutputMember` rows | `main*bicep.location` |
 | resource | `Resource`, Azure icon of its type (`AzureIcons`) | `main*bicep.web` |
-| child resource (nested or `parent:`) | nested under its parent | `main*bicep.web.config` |
-| module | `Module`; a local module's file is expanded beneath it, recursively | `main*bicep.storage`, `main*bicep.storage.account` |
+| child resource (nested or `parent:`) | nested under its parent | `main*bicep.web.slot` |
+| resource or module with `scope:` on a resource deployed in the same file | nested under that resource (an extension resource under what it extends, a module under the resource group it is deployed into); a function scope or an existing target nests nothing | `main*bicep.web.diagnostics`, `main*bicep.rgData.storage` |
+| auxiliary resource (`AuxiliaryResources`: role assignment, lock, diagnostic setting, DNS zone group, app settings, policy...) without children | `ResourceMember` row under its parent, icon of its type | `main*bicep.web.config` |
+| module | `Module`; a local module's file is expanded beneath it, recursively; its icon is that of its principal resource (most incoming links inside the module, then most descendants) or of `metadata icon = '...'` in the module file | `main*bicep.storage`, `main*bicep.storage.account` |
 | `existing` resource | under `$Externals` (deployed elsewhere, only referenced) | `$Externals.vnet` |
 
 An output may share its identifier with a parameter or variable (outputs are not referenceable, the
@@ -42,12 +44,24 @@ Links come from the compiler's dependency graph (`ResourceDependencyVisitor`: `d
 `parent`, `scope`, property reads, through variables) plus the symbols each declaration references
 (walked without descending into nested child resources). A module's `params` link the module's own
 parameter nodes to the given values and `module.outputs.x` reads link to the output node, so the
-diagram shows the value flow instead of a coarse link to the whole module.
+diagram shows the value flow instead of a coarse link to the whole module. A link whose target is a
+parameter or variable row is flagged `IsConfiguration` (value plumbing: `location`, `tags`, a name
+prefix); the diagram leaves such lines out by default (View › Lines › Configuration Lines, a line
+that also carries a real dependency stays), the Dependencies explorer still lists them. On the
+webshop that is 478 of 760 links.
 
 Icons: `AzureIcons` maps resource types to the Azure icons in the UI library; a child type falls back
 to its parents, then a provider default, then the generic tintable `Cloud` icon. A parsed icon is a
 new generic facility (`NodeProperties.IconName` / `Node.IconName`); a user's custom icon still wins
-and survives re-parse.
+and survives re-parse. The entry file's icon is its target scope, a module's that of its principal
+resource; `metadata icon = 'Key-Vault'` at the top of either file overrides it with any id from the
+UI icon library.
+
+Readability of the parsed model (Oct 2026): the four rules above (scope nesting, auxiliary rows,
+principal icons, configuration lines hidden) were added after comparing the parsed webshop with its
+hand-drawn architecture diagrams (`examples/bicep/ARCHITECTURE.md`): the root view went from 19
+modules in a hairball to the three resource groups with their modules inside, like the deployment
+view. The user's part (zones, labels, aliases) is listed under "Design follow-ups" below.
 
 ## Example deployment
 
@@ -80,9 +94,30 @@ example; `BicepParserTests` and the e2e `BicepDemoTests` check a few of its fact
 - Indexed module collections (`mods[i].outputs.x`), currently linked to the module node.
 - Dedicated glyphs for parameters, variables and outputs (placeholders: Property, Field, Event) and
   a legend row for infrastructure nodes.
+- Line descriptions for the aggregated module-to-module lines (which outputs feed which
+  parameters), once lines can show a label.
 - Choosing among several entry points when a workspace has many (all are listed; the first
   solution, then the first deployment, is the startup model).
 - Resource kinds that the type alone cannot tell apart (a function app is `Microsoft.Web/sites`,
   OpenAI is `Microsoft.CognitiveServices/accounts`) keep the type's icon.
 - Terraform, TypeScript/JavaScript and Go parsers, and `.slnx`/`.csproj` entry points, follow the
   same seam: an `ISourceParser` with `CanParse`, registered by the hosts.
+
+## Design follow-ups
+
+The app's intent is cooperation: parsing supplies the real building blocks and tracks change, the
+user adds the layout and the logic code cannot express. What the design layer stores today per
+node name (and keeps across a re-parse while the name is unchanged): position, size, container
+transform, custom icon and colours, hidden flag, manual nodes (manual children only), manual links,
+notes, line bend points, architecture rules. Candidates, roughly by value for closing the gap to
+the hand-drawn diagrams:
+
+1. Zones: a user-drawn, labeled background rectangle inside a container ("Edge", "Data",
+   "snet-apps"), saved like a note, no structural effect.
+2. Line labels: a user text on a line, edited from the line toolbar, drawn when the line is
+   selected or the view is zoomed in.
+3. Display alias for parsed nodes ("Storefront" for `frontend`), search matching both names.
+4. Hide as an undoable command, plus "hide all rows of this kind".
+5. Re-parse robustness: a node whose parent changes keeps a boundary in the old parent's
+   coordinates; a stale container that only holds a note or a manual node survives unmarked.
+6. Perspectives: a named set of hidden nodes, line filter and arrangement, switchable.

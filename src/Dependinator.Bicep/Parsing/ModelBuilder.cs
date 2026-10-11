@@ -321,8 +321,9 @@ class ModelBuilder(string entryPath)
 
     // The icon of a module's principal resource: the direct child resource with the most incoming
     // links inside the module (outputs, sibling references and module parameters point at it),
-    // then the most descendants, then the first emitted. A module made only of modules takes its
-    // first module's icon; a module without either keeps the default module icon.
+    // then the most descendants, then the first emitted; an auxiliary row counts only when there
+    // is no real resource (a policy-only module). A module made only of modules takes its first
+    // module's icon; a module without either keeps the default module icon.
     string? PrincipalResourceIcon(string moduleName)
     {
         var prefix = moduleName + ".";
@@ -331,8 +332,9 @@ class ModelBuilder(string entryPath)
             .ToList();
         var principal =
             children
-                .Where(c => c.Value == NodeType.Resource)
-                .OrderByDescending(c => links.Count(l => l.Target == c.Key))
+                .Where(c => c.Value is NodeType.Resource or NodeType.ResourceMember)
+                .OrderBy(c => c.Value == NodeType.Resource ? 0 : 1)
+                .ThenByDescending(c => links.Count(l => l.Target == c.Key))
                 .ThenByDescending(c => nodeTypes.Keys.Count(k => k.StartsWith(c.Key + ".")))
                 .ThenBy(c => nodeIndex[c.Key])
                 .Select(c => c.Key)
