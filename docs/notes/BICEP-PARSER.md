@@ -112,7 +112,9 @@ transform, custom icon and colours, hidden flag, manual nodes (manual children o
 notes, line bend points, architecture rules. Candidates, roughly by value for closing the gap to
 the hand-drawn diagrams:
 
-1. Zones: a user-drawn, labeled background rectangle inside a container ("Edge", "Data",
+1. Zones (done Oct 2026: `ZoneService`, `ZoneSvg`, `IsZone` manual nodes; drawn behind their
+   siblings, never containers or link endpoints, kept out of layout, dragged with the nodes
+   inside them): a user-drawn, labeled background rectangle inside a container ("Edge", "Data",
    "snet-apps"), saved like a note, no structural effect.
 2. Line labels: a user text on a line, edited from the line toolbar, drawn when the line is
    selected or the view is zoomed in.

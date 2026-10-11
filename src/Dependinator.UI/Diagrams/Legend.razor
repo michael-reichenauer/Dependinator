@@ -48,12 +48,21 @@
           </svg>
           <span>Note</span>
         </div>
+        <div class="dep-legend__row">
+          <svg width="18" height="18" viewBox="0 0 24 24" class="dep-legend__sample">
+            <rect x="2" y="4" width="20" height="16" rx="3" fill="@ZoneSample.Background" fill-opacity="0.5"
+                  stroke="@ZoneSample.Border" stroke-width="1.5" stroke-dasharray="3,2" />
+          </svg>
+          <span>Zone (your grouping)</span>
+        </div>
       </div>
     </div>
   </div>
 }
 
 @code {
+  static (string Border, string Background) ZoneSample => DColors.NodeColorByName("Blue");
+
   static string Sample(string color, string marker, string dash = "", double width = 1.5, string extra = "") =>
       $"<polyline points=\"3,7 46,7\" fill=\"none\" stroke=\"{color}\" stroke-width=\"{width}\" marker-end=\"url(#{marker})\"{dash}{extra} />"
       + $"<circle cx=\"3\" cy=\"7\" r=\"2.5\" fill=\"{color}\"{extra} />";

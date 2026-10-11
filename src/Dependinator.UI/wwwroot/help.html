@@ -176,7 +176,7 @@
             <li class="feature"><b>Jump to source</b> — in the VS Code extension, go straight from a node
                 to the code it represents (and back).</li>
             <li class="feature"><b>Edit and annotate</b> — in edit mode, arrange nodes, pick icons and colors,
-                add your own nodes, links and notes, or sketch an architecture from an empty model.</li>
+                add your own nodes, links, notes and zones, or sketch an architecture from an empty model.</li>
             <li class="feature"><b>Export</b> — save the current view, a selected area or the whole diagram
                 as an SVG or PNG image.</li>
             <li class="feature"><b>Optional device sync</b> — enable device sync to keep your models and
@@ -307,6 +307,11 @@
                 onto another node to link them, or onto the canvas to add a linked node.</li>
             <li class="feature"><b>Notes</b> — place numbered notes on the diagram (<b>Edit › Add Note</b> or
                 the right-click menu) and list them with <b>View › Show Notes Sidebar</b>.</li>
+            <li class="feature"><b>Zones</b> — draw a labeled background area (<b>Edit › Add Zone</b> or the
+                right-click menu) to group nodes the way you think about them: a tier, a subnet, a team. Resize it
+                over the nodes; dragging the zone moves the nodes inside it along. The parsed structure, the lines
+                and the layout are untouched, the zone survives re-parsing, and double-clicking it edits its label
+                and subtitle.</li>
             <li class="feature"><b>Undo</b> — every edit can be undone (<kbd>Ctrl</kbd>+<kbd>Z</kbd>); a delete
                 offers Undo right in its message.</li>
         </ul>
@@ -331,7 +336,7 @@
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>Alt</kbd>+<kbd>↑</kbd></td><td>Zoom out one container level</td></tr>
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>→</kbd></td><td>Back / forward through your jumps (also <kbd>Backspace</kbd> / <kbd>Shift</kbd>+<kbd>Backspace</kbd>)</td></tr>
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Undo / redo an edit</td></tr>
-                <tr><td style="padding:3px 8px 3px 0;"><kbd>Delete</kbd></td><td>Delete the selected user-drawn node, note or link (edit mode)</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Delete</kbd></td><td>Delete the selected user-drawn node, note, zone or link (edit mode)</td></tr>
             </table>
         </div>
 
