@@ -64,7 +64,7 @@
                 return "the node";
             using var model = modelMgr.UseModel();
             return model.Nodes.TryGetValue(Modeling.Models.NodeId.FromId(selectionService.SelectedId.Id), out var node)
-                ? node.ShortName
+                ? node.DisplayName
                 : "the node";
         }
     }

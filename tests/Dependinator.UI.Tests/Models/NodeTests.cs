@@ -172,4 +172,27 @@ public class NodeTests
     }
 
     static ModelNode CreateNode() => new("Model.web", new ModelNode("", null!) { Type = NodeType.Root });
+
+    [Fact]
+    public void Update_ShouldNotTouchTheAlias_AndDtoShouldRoundTripIt()
+    {
+        var node = CreateNode();
+        node.SetAlias(" Store <front> ");
+
+        node.Update(new Node(node.Name, new() { IconName = "Key-Vault" }));
+
+        Assert.Equal("Store <front>", node.Alias);
+        Assert.Equal("Store &lt;front&gt;", node.HtmlAlias);
+        Assert.Equal("Store <front>", node.DisplayName);
+        Assert.Equal("web", node.ShortName); // the name from the code is untouched
+
+        var restored = CreateNode();
+        restored.SetFromDto(node.ToDto());
+        Assert.Equal("Store <front>", restored.Alias);
+
+        node.SetAlias("  ");
+        Assert.Null(node.Alias);
+        Assert.Equal("web", node.DisplayName);
+        Assert.DoesNotContain("Alias", System.Text.Json.JsonSerializer.Serialize(node.ToDto()));
+    }
 }

@@ -88,7 +88,7 @@ public class NodeSearchServiceTests
 
         // Only PanZoomService contains p..z..s as a subsequence.
         Assert.Single(results);
-        Assert.Equal("PanZoomService", results[0].ShortName);
+        Assert.Equal("PanZoomService", results[0].DisplayName);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class NodeSearchServiceTests
 
         Assert.Equal(3, results.Count);
         // Exact short-name match ranks first.
-        Assert.Equal("Service", results[0].ShortName);
+        Assert.Equal("Service", results[0].DisplayName);
     }
 
     [Fact]
@@ -147,12 +147,43 @@ public class NodeSearchServiceTests
         Assert.Empty(sut.Search("Demo"));
     }
 
-    static NodeSearchService CreateService(params (string ShortName, string Name)[] nodes)
+    [Fact]
+    public void Search_ShouldFindANode_ByItsAliasAndByItsName()
     {
-        var candidates = nodes.Select(n => (NodeId.FromName(n.Name), n.ShortName, n.Name)).ToList();
+        var sut = CreateAliasedService(("frontend", "Demo.frontend", "Storefront"), ("api", "Demo.api", null));
+
+        var byAlias = Assert.Single(sut.Search("Store"));
+        Assert.Equal("Storefront", byAlias.DisplayName);
+        Assert.Equal("Demo.frontend", byAlias.FullName); // the real name, for the row and navigation
+
+        var byName = Assert.Single(sut.Search("frontend"));
+        Assert.Equal("Storefront", byName.DisplayName);
+    }
+
+    [Fact]
+    public void Search_ShouldRankTheExactAlias_First()
+    {
+        var sut = CreateAliasedService(
+            ("storefrontTests", "Demo.storefrontTests", null),
+            ("frontend", "Demo.frontend", "Storefront")
+        );
+
+        var results = sut.Search("Storefront");
+
+        Assert.Equal("Demo.frontend", results[0].FullName);
+    }
+
+    static NodeSearchService CreateService(params (string ShortName, string Name)[] nodes) =>
+        CreateAliasedService([.. nodes.Select(n => (n.ShortName, n.Name, (string?)null))]);
+
+    static NodeSearchService CreateAliasedService(params (string ShortName, string Name, string? Alias)[] nodes)
+    {
+        var candidates = nodes.Select(n => (NodeId.FromName(n.Name), n.ShortName, n.Name, n.Alias)).ToList();
 
         var modelMgr = new Mock<IModelMgr>();
-        modelMgr.Setup(m => m.WithModel(It.IsAny<Func<IModel, List<(NodeId, string, string)>>>())).Returns(candidates);
+        modelMgr
+            .Setup(m => m.WithModel(It.IsAny<Func<IModel, List<(NodeId, string, string, string?)>>>()))
+            .Returns(candidates);
 
         return new NodeSearchService(modelMgr.Object);
     }

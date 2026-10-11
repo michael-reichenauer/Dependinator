@@ -94,4 +94,27 @@ public class CycleServiceTests
 
         Assert.Empty(new CycleService(modelMgr).GetCycles());
     }
+
+    [Fact]
+    public void GetCycles_ShouldShowTheDisplayName_AlsoAfterAnAliasEdit()
+    {
+        Node a;
+        using (var model = modelMgr.UseModel())
+        {
+            var container = AddNode(model, "C", model.Root);
+            a = AddNode(model, "C.A", container);
+            var b = AddNode(model, "C.B", container);
+            AddLink(model, a, b);
+            AddLink(model, b, a);
+        }
+        var service = new CycleService(modelMgr);
+        Assert.Equal(["A", "B"], Assert.Single(service.GetCycles()).Members.Select(m => m.Name));
+
+        // The alias edit bumps the structure version, so the cached rows are rebuilt.
+        modelMgr.WithModel(m =>
+            new Dependinator.UI.Modeling.Commands.NodeEditCommand(a.Id) { Alias = "Alpha" }.Execute(m)
+        );
+
+        Assert.Equal(["Alpha", "B"], Assert.Single(service.GetCycles()).Members.Select(m => m.Name));
+    }
 }

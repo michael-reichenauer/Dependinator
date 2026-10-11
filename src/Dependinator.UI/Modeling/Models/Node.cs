@@ -82,6 +82,20 @@ class Node : IItem
     // auto-assigned Color above. Independent of CustomIconColor.
     public string? CustomColor { get; set; }
 
+    // The user's display name ("Storefront" for a node named frontend); null means the name
+    // from the code. Shown wherever the user reads the node's name; the real Name stays the
+    // identity (ids, links, share links, rules) and the tooltip and search still carry it.
+    public string? Alias { get; private set; }
+    public string? HtmlAlias { get; private set; }
+    public string DisplayName => Alias ?? ShortName;
+    public string HtmlDisplayName => HtmlAlias ?? HtmlShortName;
+
+    public void SetAlias(string? alias)
+    {
+        Alias = string.IsNullOrWhiteSpace(alias) ? null : alias.Trim();
+        HtmlAlias = Alias is not null ? HttpUtility.HtmlEncode(Alias) : null;
+    }
+
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
@@ -172,6 +186,7 @@ class Node : IItem
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
             Color = Color,
             CustomColor = CustomColor,
+            Alias = Alias,
             IconName = CustomIconName,
             IconColor = CustomIconColor,
             IsUserSetHidden = IsUserSetHidden,
@@ -197,6 +212,7 @@ class Node : IItem
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
         Color = dto.Color ?? Color;
         CustomColor = dto.CustomColor;
+        SetAlias(dto.Alias);
         CustomIconName = dto.IconName;
         CustomIconColor = dto.IconColor;
         IsUserSetHidden = dto.IsUserSetHidden;

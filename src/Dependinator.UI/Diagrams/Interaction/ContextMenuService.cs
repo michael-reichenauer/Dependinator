@@ -105,7 +105,7 @@ class ContextMenuService(
             if (node.IsRoot || NodeViewPolicy.IsAnnotation(node) || NodeViewPolicy.IsContainerView(node, model.Zoom))
                 return;
             Target = ContextMenuTarget.Node;
-            TargetName = node.ShortName;
+            TargetName = node.DisplayName;
             IsTargetManualNode = node.IsManual;
             CanShowTargetSource = Build.IsVsCodeExtWasm && node.FileSpanOrParentSpan is not null;
             return;
@@ -114,7 +114,7 @@ class ContextMenuService(
         if (targetId.IsLine && model.Lines.TryGetValue(LineId.FromId(targetId.Id), out var line))
         {
             Target = ContextMenuTarget.Line;
-            TargetName = $"{line.Source.ShortName}→{line.Target.ShortName}";
+            TargetName = $"{line.Source.DisplayName}→{line.Target.DisplayName}";
             CanShowTargetSource = Build.IsVsCodeExtWasm && line.Source.FileSpanOrParentSpan is not null;
         }
     }

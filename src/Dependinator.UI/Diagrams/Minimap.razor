@@ -154,7 +154,7 @@
           if (box.Width >= 56 && box.Height >= 12 && !child.Type.IsMember)
           {
             svg.Append($"<text x=\"{F(box.X + 3)}\" y=\"{F(box.Y + 9)}\" class=\"dep-minimap__label\" pointer-events=\"none\">")
-              .Append(System.Web.HttpUtility.HtmlEncode(Truncate(child.ShortName, (int)(box.Width / 5))))
+              .Append(System.Web.HttpUtility.HtmlEncode(Truncate(child.DisplayName, (int)(box.Width / 5))))
               .Append("</text>");
           }
         }

@@ -2,7 +2,8 @@ using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Diagrams;
 
-record NodeSearchResult(NodeId Id, string ShortName, string FullName);
+// DisplayName is the user's alias when set, else the short name; FullName the real long name.
+record NodeSearchResult(NodeId Id, string DisplayName, string FullName);
 
 // Searches all named (non-root) nodes by their short name using a VS Code Ctrl-T style
 // fuzzy matcher: typed letters must appear as a subsequence, and uppercase letters favor
@@ -43,7 +44,7 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
         var candidates = modelMgr.WithModel(model =>
             model
                 .Nodes.Values.Where(n => !n.IsRoot && !n.IsPassThrough)
-                .Select(n => (n.Id, n.ShortName, n.LongName))
+                .Select(n => (n.Id, n.ShortName, n.LongName, n.Alias))
                 .ToList()
         );
 
@@ -52,9 +53,12 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
         bool matchFullName = query.IndexOfAny(PathSeparators) >= 0;
 
         var results = new List<(NodeSearchResult Result, int Score)>(candidates.Count);
-        foreach (var (id, shortName, name) in candidates)
+        foreach (var (id, shortName, name, alias) in candidates)
         {
+            // A node is found by its name from the code and by the user's display name alike.
             var score = FuzzyMatch(query, shortName);
+            if (alias is not null)
+                score = Best(score, FuzzyMatch(query, alias));
             if (score is null && matchFullName)
                 score = FuzzyMatch(query, name);
             if (score is null)
@@ -66,24 +70,30 @@ class NodeSearchService(IModelMgr modelMgr) : INodeSearchService
             if (
                 string.Equals(query, shortName, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(query, name, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(query, alias, StringComparison.OrdinalIgnoreCase)
             )
                 score += ExactMatchBonus;
 
-            results.Add((new NodeSearchResult(id, shortName, name), score.Value));
+            results.Add((new NodeSearchResult(id, alias ?? shortName, name), score.Value));
         }
 
-        // Ties: the shorter short name, then the shallower node, then the name.
+        // Ties: the shorter display name, then the shallower node, then the name.
         var response = results
             .OrderByDescending(r => r.Score)
-            .ThenBy(r => r.Result.ShortName.Length)
+            .ThenBy(r => r.Result.DisplayName.Length)
             .ThenBy(r => r.Result.FullName.Length)
-            .ThenBy(r => r.Result.ShortName, StringComparer.Ordinal)
+            .ThenBy(r => r.Result.DisplayName, StringComparer.Ordinal)
             .Select(r => r.Result)
             .Take(MaxResultItems)
             .ToList();
 
         return response;
     }
+
+    static int? Best(int? a, int? b) =>
+        a is null ? b
+        : b is null ? a
+        : Math.Max(a.Value, b.Value);
 
     // Returns the best match score, or null if the query cannot be matched.
     //

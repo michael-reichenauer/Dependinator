@@ -96,6 +96,7 @@ public class ManualCommandTests
     {
         using var model = CreateModel();
         new AddNodeCommand("Old", model.Root.Name, new Rect(20, 30, 100, 100)).Execute(model);
+        model.Nodes[NodeId.FromName("Old")].SetAlias("Shown");
 
         var command = new RenameNodeCommand(CreateStructureService(), "Old", "New");
         command.Execute(model);
@@ -103,6 +104,7 @@ public class ManualCommandTests
         Assert.False(model.Nodes.ContainsKey(NodeId.FromName("Old")));
         Assert.True(model.Nodes.TryGetValue(NodeId.FromName("New"), out var renamed));
         Assert.True(renamed!.IsManual);
+        Assert.Equal("Shown", renamed.Alias);
         Assert.Equal(new Rect(20, 30, 100, 100), renamed.Boundary);
         Assert.Contains(renamed, model.Root.Children);
 

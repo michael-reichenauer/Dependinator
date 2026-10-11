@@ -37,6 +37,10 @@ record NodeDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? IconColor { get; init; }
 
+    // The user's display name; omitted when the node shows its name from the code.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? Alias { get; init; }
+
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsUserSetHidden { get; set; }
 

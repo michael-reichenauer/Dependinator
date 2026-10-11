@@ -98,5 +98,5 @@ class ViewContextService(
     static bool IsShownInChain(Node node) =>
         !node.IsRoot && !node.IsPassThrough && node.Type != Dependinator.Core.Parsing.NodeType.Solution;
 
-    static ViewContextItem ToItem(Node node) => new(node.Id, node.ShortName, node.LongName);
+    static ViewContextItem ToItem(Node node) => new(node.Id, node.DisplayName, node.LongName);
 }
