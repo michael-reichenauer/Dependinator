@@ -235,6 +235,59 @@ public class StructureServiceTests
     }
 
     [Fact]
+    public void AddOrUpdateLink_ShouldTakeIsConfiguration_FromEachParse()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+
+        AddNode(model, "Source", model.Root);
+        AddNode(model, "Target", model.Root);
+
+        service.AddOrUpdateLink(
+            model,
+            new ParsingLink("Source", "Target", new Dependinator.Core.Parsing.LinkProperties { IsConfiguration = true })
+        );
+
+        Assert.True(model.Links.TryGetValue(new LinkId("Source", "Target"), out var link));
+        Assert.True(link.IsConfiguration);
+        Assert.True(model.Lines[LineId.From("Source", "Target")].IsConfiguration);
+
+        // A new parse without the flag (the value is now a real dependency) clears it; the line
+        // is the same line, configuration is not a line identity.
+        model.UpdateStamp = new DateTime(2024, 1, 2);
+        service.AddOrUpdateLink(model, new ParsingLink("Source", "Target", new()));
+
+        Assert.False(link.IsConfiguration);
+        Assert.False(model.Lines[LineId.From("Source", "Target")].IsConfiguration);
+    }
+
+    [Fact]
+    public void SetLinkDto_ShouldRoundtripIsConfiguration()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+
+        AddNode(model, "Source", model.Root);
+        AddNode(model, "Target", model.Root);
+        service.AddOrUpdateLink(
+            model,
+            new ParsingLink("Source", "Target", new Dependinator.Core.Parsing.LinkProperties { IsConfiguration = true })
+        );
+
+        var linkDto = Assert.Single(model.SerializeToDto().Links);
+        Assert.True(linkDto.IsConfiguration);
+
+        using var restoredModel = new ModelMgr(new StateMgr()).UseModel();
+        restoredModel.UpdateStamp = new DateTime(2024, 1, 1);
+        service.SetLinkDto(restoredModel, linkDto);
+
+        Assert.True(restoredModel.Links.TryGetValue(new LinkId("Source", "Target"), out var restoredLink));
+        Assert.True(restoredLink.IsConfiguration);
+    }
+
+    [Fact]
     public void SetLinkDto_ShouldRoundtripIsInheritance()
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();

@@ -66,6 +66,11 @@ class Line : IItem
     public bool HasInheritanceSourceEnd => IsInheritance && links.Values.Any(l => l.Source == Source);
     public bool HasInheritanceTargetEnd => IsInheritance && links.Values.Any(l => l.Target == Target);
 
+    // Every link behind the line is configuration plumbing (values into parameter and variable
+    // rows), so the View › Lines filter may leave the line out; a line that also carries a real
+    // dependency stays.
+    public bool IsConfiguration => links.Count > 0 && links.Values.All(l => l.IsConfiguration);
+
     // The stroke width that encodes the link count; only drawn while the line is emphasized
     // (the selection's lines, explorer focus lines), otherwise lines share one thin width.
     public double WeightedStrokeWidth => strokeWidth;

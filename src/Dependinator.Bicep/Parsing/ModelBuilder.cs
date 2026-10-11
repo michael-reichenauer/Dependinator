@@ -542,7 +542,18 @@ class ModelBuilder(string entryPath)
             )
                 continue;
             NodeType? targetType = nodeTypes.TryGetValue(target, out var type) ? type : null;
-            yield return new Item(null, new Link(source, target, new LinkProperties { TargetType = targetType }));
+            // A value read from a parameter or variable is configuration plumbing (hidden by
+            // default in the diagram); a module parameter fed by another module's output, a
+            // resource reference or an output's exposure is the deployment's real wiring.
+            bool? isConfiguration = targetType is NodeType.ParameterMember or NodeType.VariableMember ? true : null;
+            yield return new Item(
+                null,
+                new Link(
+                    source,
+                    target,
+                    new LinkProperties { TargetType = targetType, IsConfiguration = isConfiguration }
+                )
+            );
         }
     }
 

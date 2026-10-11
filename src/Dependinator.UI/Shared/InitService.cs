@@ -66,6 +66,7 @@ class InitService : IInitService
                 config.HideExternalLines,
                 config.HideInheritanceLines,
                 config.HideMemberLines,
+                config.HideConfigurationLines,
                 Math.Max(1, config.MinLinkCount)
             )
         );

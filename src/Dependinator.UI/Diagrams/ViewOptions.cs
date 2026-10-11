@@ -38,10 +38,18 @@ interface IViewOptions
     void SetMinimapShown(bool shown);
 }
 
-// MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on.
-readonly record struct LineFilter(bool HideExternal, bool HideInheritance, bool HideMember, int MinLinkCount)
+// MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on. HideConfiguration
+// (lines that only carry values into parameter and variable rows, Bicep) is on by default, so
+// IsAny leaves it out: the "(filtered)" menu label only flags filters the user turned on.
+readonly record struct LineFilter(
+    bool HideExternal,
+    bool HideInheritance,
+    bool HideMember,
+    bool HideConfiguration,
+    int MinLinkCount
+)
 {
-    public static readonly LineFilter None = new(false, false, false, 1);
+    public static readonly LineFilter None = new(false, false, false, false, 1);
     public bool IsAny => HideExternal || HideInheritance || HideMember || MinLinkCount > 1;
 }
 

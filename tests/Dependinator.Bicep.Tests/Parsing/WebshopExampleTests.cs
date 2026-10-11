@@ -94,6 +94,26 @@ public class WebshopExampleTests
         // Module outputs flow into other modules' parameters.
         AssertLink(items, $"{Main}.rgApps.appService.sqlServerFqdn", $"{Main}.rgData.sqlServer.serverFqdn");
         AssertLink(items, $"{Main}.rgData.events.storageAccountId", $"{Main}.rgData.storage.storageAccountId");
+
+        // Values read from parameters and variables are configuration links (hidden by default);
+        // module wiring and resource references are not.
+        Assert.True(items.Link($"{Main}.rgData.storage.location", $"{Main}.location").Properties.IsConfiguration);
+        Assert.Null(
+            items
+                .Link(
+                    $"{Main}.rgData.storage.privateEndpointSubnetId",
+                    $"{Main}.rgPlatform.networking.privateEndpointSubnetId"
+                )
+                .Properties.IsConfiguration
+        );
+        Assert.Null(
+            items
+                .Link(
+                    $"{Main}.rgData.storage.blobPrivateEndpoint.targetResourceId",
+                    $"{Main}.rgData.storage.storageAccount"
+                )
+                .Properties.IsConfiguration
+        );
     }
 
     static void AssertNode(IReadOnlyList<Item> items, string name)

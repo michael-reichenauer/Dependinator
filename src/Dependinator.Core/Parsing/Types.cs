@@ -42,6 +42,11 @@ class LinkProperties
     public string? Description { get; init; }
     public NodeType? TargetType { get; init; }
     public bool? IsInheritance { get; init; }
+
+    // The link only carries a value into a parameter or variable row (e.g. a Bicep resource
+    // reading "location"): configuration plumbing a diagram hides by default; the dependency
+    // explorer still lists it.
+    public bool? IsConfiguration { get; init; }
 }
 
 record Source(string Text, FileLocation Location);

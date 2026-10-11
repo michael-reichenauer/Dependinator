@@ -21,6 +21,12 @@ static class ItemsExtensions
         public bool HasLink(string source, string target) =>
             items.Links().Any(l => l.Source == source && l.Target == target);
 
+        public Link Link(string source, string target) =>
+            items.Links().FirstOrDefault(l => l.Source == source && l.Target == target)
+            ?? throw new Xunit.Sdk.XunitException(
+                $"No link {source} -> {target}. Links from the source:\n  {string.Join("\n  ", items.LinkTargetsOf(source))}"
+            );
+
         public IEnumerable<string> LinkTargetsOf(string source) =>
             items.Links().Where(l => l.Source == source).Select(l => l.Target);
     }

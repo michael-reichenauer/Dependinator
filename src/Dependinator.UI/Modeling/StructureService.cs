@@ -73,6 +73,7 @@ class StructureService(ILineService linesService) : IStructureService
             link.UpdateStamp = model.UpdateStamp;
             link.Source.UpdateStamp = model.UpdateStamp;
             link.Target.UpdateStamp = model.UpdateStamp;
+            link.IsConfiguration = parsedLink.Properties.IsConfiguration == true;
 
             if (link.IsInheritance != isInheritance)
             { // Kind changed, rebuild the link's lines since inheritance links use separate lines
@@ -92,6 +93,7 @@ class StructureService(ILineService linesService) : IStructureService
 
         link = new Models.Link(source, target);
         link.IsInheritance = isParsedInheritance;
+        link.IsConfiguration = parsedLink.Properties.IsConfiguration == true;
         link.UpdateStamp = model.UpdateStamp;
 
         // Stamp the endpoints like the existing-link path above: nodes that are only referenced
@@ -229,6 +231,7 @@ class StructureService(ILineService linesService) : IStructureService
         link.UpdateStamp = model.UpdateStamp;
         link.IsManual = linkDto.IsManual;
         link.IsInheritance = linkDto.IsInheritance;
+        link.IsConfiguration = linkDto.IsConfiguration;
 
         AddLink(model, link);
     }

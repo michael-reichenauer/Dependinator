@@ -188,6 +188,12 @@
                                  data-checked="@(LineFilter.HideMember ? "true" : "false")" data-testid="menu-lines-member">
                         Member Lines
                     </MudMenuItem>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideConfiguration)"
+                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideConfiguration = !LineFilter.HideConfiguration })"
+                                 title="Lines that only carry values into parameters and variables (Bicep); the Dependencies explorer still lists them."
+                                 data-checked="@(LineFilter.HideConfiguration ? "true" : "false")" data-testid="menu-lines-configuration">
+                        Configuration Lines
+                    </MudMenuItem>
 
                     <MudDivider />
                     <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Show lines with</MudText>
@@ -734,6 +740,7 @@
             config.HideExternalLines = filter.HideExternal;
             config.HideInheritanceLines = filter.HideInheritance;
             config.HideMemberLines = filter.HideMember;
+            config.HideConfigurationLines = filter.HideConfiguration;
             config.MinLinkCount = filter.MinLinkCount;
         });
         modelService.ClearCache(); // Which lines a tile holds depends on the filter

@@ -21,14 +21,20 @@ public class SvgServiceLineFilterTests
         return node;
     }
 
-    static Line AddLine(Node source, Node target, int linkCount, bool isInheritance = false)
+    static Line AddLine(
+        Node source,
+        Node target,
+        int linkCount,
+        bool isInheritance = false,
+        bool isConfiguration = false
+    )
     {
         var line = new Line(source, target, isInheritance: isInheritance);
         for (int i = 0; i < linkCount; i++)
         {
             // Links are keyed by (source, target), so each link gets its own member as source.
             var member = AddNode(source, $"{source.Name}.L{i}", NodeType.MethodMember);
-            line.Add(new Link(member, target) { IsInheritance = isInheritance });
+            line.Add(new Link(member, target) { IsInheritance = isInheritance, IsConfiguration = isConfiguration });
         }
         return line;
     }
@@ -76,6 +82,29 @@ public class SvgServiceLineFilterTests
     }
 
     [Fact]
+    public void IsLineFilteredOut_ShouldHideConfigurationLines_OnlyWhenEveryLinkIsConfiguration()
+    {
+        // A Bicep module reading the root's "location" parameter is plumbing; a line that also
+        // carries a real dependency (a resource reference) stays whatever the filter says.
+        var root = CreateRoot();
+        var module = AddNode(root, "Module", NodeType.Module);
+        var location = AddNode(root, "location", NodeType.ParameterMember);
+        var other = AddNode(root, "Other", NodeType.Module);
+
+        var plumbing = AddLine(module, location, 2, isConfiguration: true);
+        var mixed = AddLine(module, other, 1, isConfiguration: true);
+        mixed.Add(new Link(AddNode(module, "Module.res", NodeType.Resource), other));
+
+        var hideConfiguration = LineFilter.None with { HideConfiguration = true };
+        Assert.True(SvgService.IsLineFilteredOut(plumbing, hideConfiguration));
+        Assert.False(SvgService.IsLineFilteredOut(mixed, hideConfiguration));
+        Assert.False(SvgService.IsLineFilteredOut(plumbing, LineFilter.None));
+
+        // The default-on filter does not make the menu say "filtered".
+        Assert.False(hideConfiguration.IsAny);
+    }
+
+    [Fact]
     public void IsLineFilteredOut_ShouldNeverHideFocusOrDirectLines()
     {
         var root = CreateRoot();
@@ -85,7 +114,7 @@ public class SvgServiceLineFilterTests
         focused.IsFocused = true;
         var direct = new Line(a, b, isDirect: true);
 
-        var everything = new LineFilter(true, true, true, 100);
+        var everything = new LineFilter(true, true, true, true, 100);
 
         Assert.False(SvgService.IsLineFilteredOut(focused, everything));
         Assert.False(SvgService.IsLineFilteredOut(direct, everything));

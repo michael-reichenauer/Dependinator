@@ -182,6 +182,8 @@ class SvgService : ISvgService
             return false;
         if (filter.HideInheritance && line.IsInheritance)
             return true;
+        if (filter.HideConfiguration && line.IsConfiguration)
+            return true;
         if (filter.HideMember && (line.Source.Type.IsMember || line.Target.Type.IsMember))
             return true;
         if (filter.HideExternal && (IsExternal(line.Source) || IsExternal(line.Target)))

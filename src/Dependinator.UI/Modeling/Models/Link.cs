@@ -15,7 +15,12 @@ class Link : IItem
     }
 
     public LinkDto ToDto() =>
-        new(Source.Name, Target.Name, Target.Type.ToString()) { IsManual = IsManual, IsInheritance = IsInheritance };
+        new(Source.Name, Target.Name, Target.Type.ToString())
+        {
+            IsManual = IsManual,
+            IsInheritance = IsInheritance,
+            IsConfiguration = IsConfiguration,
+        };
 
     public LinkId Id { get; }
     public Node Source { get; }
@@ -27,6 +32,10 @@ class Link : IItem
 
     // The source type inherits/implements the target type (UML generalization/realization).
     public bool IsInheritance { get; set; }
+
+    // The link only carries a value into a parameter or variable row (Bicep); such lines are
+    // hidden by default (View › Lines), the explorer still lists them.
+    public bool IsConfiguration { get; set; }
 
     public void AddLine(Line line)
     {
