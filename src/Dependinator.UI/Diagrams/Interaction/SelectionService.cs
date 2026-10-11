@@ -1,4 +1,5 @@
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
@@ -43,9 +44,9 @@ interface ISelectionService
 [Scoped]
 class SelectionService(
     IModelMgr modelMgr,
-    IModelService modelService,
     IApplicationEvents applicationEvents,
-    IScreenService screenService
+    IScreenService screenService,
+    ICommandService commandService
 ) : ISelectionService
 {
     // Offset from the clicked point on a line to where its toolbar is anchored.
@@ -388,26 +389,21 @@ class SelectionService(
 
     // Hides (or shows) every selected node; the primary node's state decides the direction, so
     // a mixed group ends up uniform.
+    // Hides the selection (the whole group follows the primary node's new state), or shows it
+    // again, as one undoable step like every other edit.
     public void ToggleNodeHide()
     {
         if (!IsSelected)
             return;
+        bool hidden;
         using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
                 return;
-            var hidden = !node.IsHidden;
-            foreach (var nodeId in SelectedNodeIds)
-            {
-                if (model.Nodes.TryGetValue(nodeId, out var selected))
-                    selected.SetHidden(hidden, true);
-            }
+            hidden = !node.IsHidden;
         }
 
-        modelService.CheckLineVisibility();
-
-        applicationEvents.TriggerModelChanged();
-        applicationEvents.TriggerUIStateChanged();
+        commandService.Do(new HideNodesCommand([.. SelectedNodeIds], hidden));
     }
 
     // A node is movable while it reads as an object on screen rather than as the screen itself:
