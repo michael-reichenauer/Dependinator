@@ -480,6 +480,33 @@ public class StructureServiceTests
     }
 
     [Fact]
+    public void RenameNode_ShouldKeepTheLineLabels_OnTheRecreatedLines()
+    {
+        // A rename recreates the links touching the node, and their lines get the ids of the
+        // renamed endpoints, so the labels have to follow them (there, and back on undo).
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+        AddNode(model, "A", model.Root);
+        AddNode(model, "B", model.Root);
+        service.AddManualLink(model, "A", "B");
+        model.Lines[LineId.From("A", "B")].SetLabel("orders", "and payments");
+
+        service.RenameNode(model, "A", "A2");
+
+        var renamed = model.Lines[LineId.From("A2", "B")];
+        Assert.Equal("orders", renamed.Label);
+        Assert.Equal("and payments", renamed.LabelDescription);
+        // Nothing stale is saved: the label sits on the line, not in a pending entry.
+        Assert.Single(model.SerializeToDto().Lines);
+
+        service.RenameNode(model, "A2", "A");
+
+        Assert.Equal("orders", model.Lines[LineId.From("A", "B")].Label);
+        Assert.Single(model.SerializeToDto().Lines);
+    }
+
+    [Fact]
     public void RemoveLine_ShouldKeepTheLabel_ForALineRecreatedWithTheSameId()
     {
         // A node moving to another parent removes and re-adds its links, so its lines are new
