@@ -303,6 +303,55 @@ public sealed class AppPage
         }
     }
 
+    // Assert a checkbox-style submenu item's state (its data-checked attribute), then close the
+    // menu. The submenu can close again right after it opened (a re-render, e.g. the one a
+    // toggle's re-parse triggers when it completes), and an assertion on the locator that
+    // OpenSubMenuItemAsync returned then polls an item that never comes back ("element(s) not
+    // found"). So each attempt reopens the submenu and reads the state again.
+    public async Task ExpectSubMenuItemCheckedAsync(string parentTestId, string testId, bool isChecked)
+    {
+        string expected = isChecked ? "true" : "false";
+        ILocator item = MenuItem(testId);
+        for (int attempt = 1; ; attempt++)
+        {
+            await OpenSubMenuItemAsync(parentTestId, testId);
+            try
+            {
+                await Expect(item)
+                    .ToHaveAttributeAsync("data-checked", expected, new() { Timeout = MenuAttemptTimeout });
+                break;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
+            {
+                await ResetPopoversAsync();
+            }
+        }
+
+        await CloseSubMenuAsync(item);
+        if (await MenuItem("menu-search").IsVisibleAsync())
+            await CloseMenuAsync();
+    }
+
+    // Close an open submenu with Escape, repeated until the given item in it is gone. The first
+    // Escape after a submenu opened is lost (every trace of the Settings tests showed it, on all
+    // three browsers), so the item is polled briefly and Escape pressed again, rather than
+    // waiting out a full menu attempt per lost keystroke the way CloseMenuAsync does.
+    async Task CloseSubMenuAsync(ILocator itemInSubMenu)
+    {
+        const int attempts = 10;
+        const float pollTimeout = 1_000;
+        for (int attempt = 1; ; attempt++)
+        {
+            await page.Keyboard.PressAsync("Escape");
+            try
+            {
+                await itemInSubMenu.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = pollTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < attempts) { }
+        }
+    }
+
     // Repeat a canvas gesture until it produces the expected UI. A pointer gesture landing while
     // the canvas re-renders is swallowed silently — nothing opens, and nothing reports an error
     // — so the only way to tell it actually arrived is to look for its result and gesture again.
