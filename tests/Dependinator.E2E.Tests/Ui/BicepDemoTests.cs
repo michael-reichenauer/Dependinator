@@ -54,6 +54,29 @@ public class BicepDemoTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(budgetToEmail).ToHaveCountAsync(0);
     }
 
+    // View › Rows leaves out whole kinds of rows: with parameter rows hidden, the root's
+    // alertEmail parameter is gone from the diagram; the choice lives in the config and
+    // survives a reload.
+    [E2EFact]
+    public async Task ParameterRows_ShouldBeLeftOutByTheRowsFilter_AndPersist()
+    {
+        await OpenBicepDemoAsync();
+        await NavigateToAsync("alertEmail");
+        await Expect(App.NodeLabel("alertEmail")).ToBeVisibleAsync();
+
+        await ToggleRowsAsync("menu-rows-parameters", expectHidden: true);
+        await Expect(App.NodeLabel("alertEmail")).ToBeHiddenAsync();
+
+        // The test host reopens the C# demo on a reload, so open the Bicep demo again; search
+        // still finds the row and takes the view there, but the row stays left out.
+        await OpenBicepDemoAsync();
+        await NavigateToAsync("alertEmail");
+        await Expect(App.NodeLabel("alertEmail")).ToBeHiddenAsync();
+
+        await ToggleRowsAsync("menu-rows-parameters", expectHidden: false);
+        await Expect(App.NodeLabel("alertEmail")).ToBeVisibleAsync();
+    }
+
     async Task OpenBicepDemoAsync()
     {
         await App.GotoMainPageAsync();
@@ -83,6 +106,16 @@ public class BicepDemoTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await (await OpenConfigurationItemAsync()).ClickAsync();
         await Expect(await OpenConfigurationItemAsync())
+            .ToHaveAttributeAsync("data-checked", expectHidden ? "true" : "false");
+        await App.CloseMenuAsync();
+    }
+
+    Task<ILocator> OpenRowsItemAsync(string testId) => App.OpenSubMenuItemAsync("menu-view", "menu-rows", testId);
+
+    async Task ToggleRowsAsync(string testId, bool expectHidden)
+    {
+        await (await OpenRowsItemAsync(testId)).ClickAsync();
+        await Expect(await OpenRowsItemAsync(testId))
             .ToHaveAttributeAsync("data-checked", expectHidden ? "true" : "false");
         await App.CloseMenuAsync();
     }

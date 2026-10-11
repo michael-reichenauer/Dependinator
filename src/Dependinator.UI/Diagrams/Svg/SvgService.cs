@@ -58,6 +58,7 @@ class SvgService : ISvgService
         new(viewOptions.IsEditingEnabled, viewOptions.ShowHiddenNodes, viewOptions.DimUnrelatedLines)
         {
             Filter = viewOptions.LineFilter,
+            Rows = viewOptions.RowFilter,
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
             PathLines = pathFinderService.GetPathLineIds(),
             ViolatingLines = viewOptions.IsRulesShown ? ruleService.GetViolatingLineIds() : null,
@@ -174,10 +175,16 @@ class SvgService : ISvgService
     static bool IsLineViolating(Line line, RenderContext context) =>
         context.Flags.ViolatingLines?.Contains(line.Id) == true;
 
-    // The user's line filter (View › Lines). Explorer focus lines and user-requested direct
-    // lines are explicit asks and are always drawn.
-    internal static bool IsLineFilteredOut(Line line, LineFilter filter)
+    internal static bool IsLineFilteredOut(Line line, LineFilter filter) =>
+        IsLineFilteredOut(line, filter, RowFilter.None);
+
+    // The user's line filter (View › Lines) and row filter (View › Rows). A line to a row that
+    // is left out goes with the row, whatever the line is; among the drawn rows, explorer focus
+    // lines and user-requested direct lines are explicit asks and are always drawn.
+    internal static bool IsLineFilteredOut(Line line, LineFilter filter, RowFilter rows)
     {
+        if (rows.Hides(line.Source.Type) || rows.Hides(line.Target.Type))
+            return true;
         if (line.IsFocused || line.IsDirect)
             return false;
         if (filter.HideInheritance && line.IsInheritance)
@@ -276,11 +283,14 @@ class SvgService : ISvgService
             : "";
 
     // Whether the node is drawn at all in this tile: not hidden (unless hidden nodes are shown),
-    // overlapping the tile, and at least MinRenderSize in one dimension.
+    // not a row kind the user left out, overlapping the tile, and at least MinRenderSize in one
+    // dimension.
     static bool IsRendered(Node node, RenderContext context, out NodeGeometry geometry)
     {
         geometry = CalculateNodeGeometry(node, context);
         if (node.IsHidden && !context.Flags.ShowHidden)
+            return false;
+        if (context.Flags.Rows.Hides(node.Type))
             return false;
         if (!RectOverlap(context.TileBounds, geometry.TileRect))
             return false;
@@ -437,7 +447,7 @@ class SvgService : ISvgService
                 continue;
             if (line.Target.IsPassThrough)
                 continue; // The pass-through node covers this parent, so the segment is degenerate
-            if (IsLineFilteredOut(line, context.Flags.Filter))
+            if (IsLineFilteredOut(line, context.Flags.Filter, context.Flags.Rows))
                 continue;
             if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                 continue;
@@ -457,7 +467,7 @@ class SvgService : ISvgService
                     continue;
                 if (line.Source.IsPassThrough && line.Target == node)
                     continue; // The pass-through node covers this parent, so the segment is degenerate
-                if (IsLineFilteredOut(line, context.Flags.Filter))
+                if (IsLineFilteredOut(line, context.Flags.Filter, context.Flags.Rows))
                     continue;
                 if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                     continue;
@@ -491,6 +501,8 @@ class SvgService : ISvgService
             return true;
         if (endpoint.IsHidden && !context.Flags.ShowHidden)
             return false;
+        if (context.Flags.Rows.Hides(endpoint.Type))
+            return false;
 
         // The endpoint's tile rect, as RenderNode computes it for this container's children
         // (see CalculateNodeGeometry with the children context).
@@ -516,7 +528,7 @@ class SvgService : ISvgService
                 continue; // An inactive cousin line kept only for its user waypoints/description
             if (directLine.IsHidden && !context.Flags.ShowHidden)
                 continue;
-            if (IsLineFilteredOut(directLine, context.Flags.Filter))
+            if (IsLineFilteredOut(directLine, context.Flags.Filter, context.Flags.Rows))
                 continue;
             if (!IsEitherDirectEndpointRendered(directLine, node, nodeCanvasPos, childrenZoom, context))
                 continue;
@@ -564,6 +576,8 @@ class SvgService : ISvgService
             return true;
         if (endpoint.IsHidden && !context.Flags.ShowHidden)
             return false;
+        if (context.Flags.Rows.Hides(endpoint.Type))
+            return false;
 
         var (endpointPos, endpointZoom) = endpoint.GetPosAndZoom();
         var (ancestorPos, ancestorZoom) = ancestor.GetPosAndZoom();
@@ -593,6 +607,7 @@ class SvgService : ISvgService
     {
         public RenderSelection Selection { get; init; }
         public LineFilter Filter { get; init; } = LineFilter.None;
+        public RowFilter Rows { get; init; } = RowFilter.None;
 
         // Sibling lines that are part of a circular dependency; null while cycles are not shown.
         public IReadOnlySet<LineId>? CyclicLines { get; init; }

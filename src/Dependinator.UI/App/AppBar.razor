@@ -215,6 +215,35 @@
                     }
                 </MudMenu>
 
+                <MudMenu Label="@RowsMenuLabel" StartIcon="@Icons.Material.Outlined.FilterList" IconColor="Color.Secondary"
+                         Dense="true" PopoverClass="@MenuClass" data-testid="menu-rows">
+                    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Leave out</MudText>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideParameters)"
+                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideParameters = !RowFilter.HideParameters })"
+                                 title="Parameter rows (Bicep) and their lines; the Dependencies explorer and search still list them."
+                                 data-checked="@(RowFilter.HideParameters ? "true" : "false")" data-testid="menu-rows-parameters">
+                        Parameter Rows
+                    </MudMenuItem>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideVariables)"
+                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideVariables = !RowFilter.HideVariables })"
+                                 title="Variable rows (Bicep) and their lines."
+                                 data-checked="@(RowFilter.HideVariables ? "true" : "false")" data-testid="menu-rows-variables">
+                        Variable Rows
+                    </MudMenuItem>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideOutputs)"
+                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideOutputs = !RowFilter.HideOutputs })"
+                                 title="Output rows (Bicep) and their lines."
+                                 data-checked="@(RowFilter.HideOutputs ? "true" : "false")" data-testid="menu-rows-outputs">
+                        Output Rows
+                    </MudMenuItem>
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideSettings)"
+                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideSettings = !RowFilter.HideSettings })"
+                                 title="Rows for role assignments, diagnostic settings, locks and other resources that configure the resource above them (Bicep)."
+                                 data-checked="@(RowFilter.HideSettings ? "true" : "false")" data-testid="menu-rows-settings">
+                        Setting Rows
+                    </MudMenuItem>
+                </MudMenu>
+
                 <MudDivider />
 
                 <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Theme</MudText>
@@ -753,6 +782,23 @@
             config.MinLinkCount = filter.MinLinkCount;
         });
         modelService.ClearCache(); // Which lines a tile holds depends on the filter
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    RowFilter RowFilter => viewOptions.RowFilter;
+    string RowsMenuLabel => RowFilter.IsAny ? "Rows (filtered)" : "Rows";
+
+    async Task SetRowFilterAsync(RowFilter filter)
+    {
+        viewOptions.SetRowFilter(filter);
+        await configService.SetAsync(config =>
+        {
+            config.HideParameterRows = filter.HideParameters;
+            config.HideVariableRows = filter.HideVariables;
+            config.HideOutputRows = filter.HideOutputs;
+            config.HideSettingRows = filter.HideSettings;
+        });
+        modelService.ClearCache(); // Which rows and lines a tile holds depends on the filter
         applicationEvents.TriggerUIStateChanged();
     }
     string EditModeIcon => CheckIcon(viewOptions.IsEditingEnabled);

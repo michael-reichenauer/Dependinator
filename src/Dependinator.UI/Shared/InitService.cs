@@ -70,6 +70,14 @@ class InitService : IInitService
                 Math.Max(1, config.MinLinkCount)
             )
         );
+        viewOptions.SetRowFilter(
+            new RowFilter(
+                config.HideParameterRows,
+                config.HideVariableRows,
+                config.HideOutputRows,
+                config.HideSettingRows
+            )
+        );
         pointerEventService.InvertScrollZoom = config.InvertScrollZoom;
         // The theme must be applied before the first model render, since the SVG tiles bake the
         // palette in.

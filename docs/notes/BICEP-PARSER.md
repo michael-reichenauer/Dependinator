@@ -124,7 +124,11 @@ the hand-drawn diagrams:
 3. Display alias (done Oct 2026: `Node.Alias`, `NodeAliasService`, `NodeEditCommand.Alias`; every
    name display site uses `DisplayName`, tooltips keep the long name first, search matches both
    names): the user's name for a parsed node ("Storefront" for `frontend`).
-4. Hide as an undoable command, plus "hide all rows of this kind".
+4. Hide as an undoable command (done Oct 2026: `HideNodesCommand`, line visibility shared in
+   `LineVisibility`), plus "hide all rows of this kind" (done as the View › Rows filter:
+   `RowFilter` in `ViewOptions`, stored in the config like the line filter; rows are skipped in
+   `SvgService.IsRendered` and their lines in `IsLineFilteredOut`, layout gaps accepted). Not
+   done: a per-container "hide this kind here".
 5. Re-parse robustness: a node whose parent changes keeps a boundary in the old parent's
    coordinates; a stale container that only holds a note or a manual node survives unmarked.
 6. Perspectives: a named set of hidden nodes, line filter and arrangement, switchable.

@@ -107,7 +107,7 @@
     var now = DateTime.UtcNow;
     if (shown != cachedWindow || modelVersion != cachedModelVersion || now - cachedAt > CacheMaxAge)
     {
-      cachedContent = (MarkupString)DrawScene(model.Root, fit);
+      cachedContent = (MarkupString)DrawScene(model.Root, fit, viewOptions.RowFilter);
       (cachedWindow, cachedModelVersion, cachedAt) = (shown, modelVersion, now);
     }
     scene = new Scene(cachedContent, MinimapGeometry.Clamp(fit.ToMinimap(viewport)));
@@ -115,7 +115,7 @@
   }
 
   // The boxes and labels of every node big enough to see, as SVG markup.
-  static string DrawScene(Node root, MinimapFit fit)
+  static string DrawScene(Node root, MinimapFit fit, RowFilter rows)
   {
     var svg = new System.Text.StringBuilder();
     var boxCount = 0;
@@ -131,7 +131,7 @@
       {
         if (boxCount >= MaxBoxes)
           return;
-        if (child.IsNote || child.IsZone || child.IsHidden)
+        if (child.IsNote || child.IsZone || child.IsHidden || rows.Hides(child.Type))
           continue;
         var pos = new Pos(
           parentPos.X + child.Boundary.X * zoom + parent.ContainerOffset.X * parentZoom,
