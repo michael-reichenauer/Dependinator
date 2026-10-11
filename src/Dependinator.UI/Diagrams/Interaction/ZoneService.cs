@@ -13,7 +13,10 @@ record ZoneDialogResult(string Label, string Subtitle, bool Delete);
 // them): arming "place zone" mode from the menu, placing a zone at the clicked position (with a
 // free label pre-filled), and editing or deleting an existing one. A zone is a manual Node
 // (IsZone) parented into whatever container it is dropped in, like a note, so it scales and
-// hides with that container. All mutations go through the undoable CommandService.
+// hides with that container. Its label is the node's display alias (any text, "10.0.1.0/24"
+// included); the node's own name is a generated identity ("Zone", "Zone 2") under the parent,
+// since names are split on "." and "/" and must be unique. All mutations go through the
+// undoable CommandService.
 interface IZoneService
 {
     // True while the user has chosen "Add zone" and the next canvas click places the zone.
@@ -37,7 +40,6 @@ interface IZoneService
 class ZoneService(
     IModelMgr modelMgr,
     ICommandService commandService,
-    IStructureService structureService,
     ISelectionService selectionService,
     IDialogService dialogService,
     ISnackbar snackbar
@@ -79,7 +81,6 @@ class ZoneService(
 
         Rect boundary;
         string parentName;
-        string defaultLabel;
         using (var model = modelMgr.UseModel())
         {
             // Resolve the parent the same way manual-node add does (a zone is never a container
@@ -89,45 +90,45 @@ class ZoneService(
 
             boundary = new Rect(NodeGrid.Snap(local.X), NodeGrid.Snap(local.Y), DefaultWidth, DefaultHeight);
             parentName = container.Name;
-            defaultLabel = DiagramPlacement.UniqueShortName(model, parentName, DefaultLabel);
         }
 
-        var result = await ShowDialogAsync(defaultLabel, "", isEdit: false);
+        var result = await ShowDialogAsync(DefaultLabel, "", isEdit: false);
         if (result is null || result.Delete)
             return;
 
-        // The label is the zone's short name; its identity is qualified by its parent (like
-        // parsed and manual nodes), so the same label can be reused under different parents.
-        var name = DiagramPlacement.ComposeFullName(parentName, result.Label);
+        // The identity is the first free "Zone", "Zone 2", ... under the parent (decided after
+        // the dialog, in case another zone was added meanwhile); the label is the alias.
+        string name;
         using (var model = modelMgr.UseModel())
         {
-            if (model.Nodes.ContainsKey(NodeId.FromName(name)))
-            {
-                snackbar.Add(
-                    $"A node named '{result.Label}' already exists here. Choose another label.",
-                    Severity.Warning
-                );
-                return;
-            }
+            name = DiagramPlacement.ComposeFullName(
+                parentName,
+                DiagramPlacement.UniqueShortName(model, parentName, DefaultLabel)
+            );
         }
 
-        commandService.Do(new AddNodeCommand(name, parentName, boundary, description: result.Subtitle, isZone: true));
+        commandService.Do(
+            new AddNodeCommand(
+                name,
+                parentName,
+                boundary,
+                description: result.Subtitle,
+                isZone: true,
+                alias: result.Label
+            )
+        );
         await selectionService.Select(NodeId.FromName(name));
     }
 
     public async Task EditZoneAsync(NodeId nodeId)
     {
         string oldLabel;
-        string oldFullName;
-        string parentName;
         string oldSubtitle;
         using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(nodeId, out var node) || !node.IsZone)
                 return;
-            oldLabel = node.ShortName;
-            oldFullName = node.Name;
-            parentName = node.Parent?.Name ?? "";
+            oldLabel = node.DisplayName;
             oldSubtitle = node.Description ?? "";
         }
 
@@ -158,39 +159,17 @@ class ZoneService(
             return;
         }
 
-        // Re-qualify the typed label under the zone's existing parent to get its new identity.
-        var newFullName = DiagramPlacement.ComposeFullName(parentName, result.Label);
-        var isRename = newFullName != oldFullName;
-        if (isRename)
-        {
-            using var model = modelMgr.UseModel();
-            if (model.Nodes.ContainsKey(NodeId.FromName(newFullName)))
-            {
-                snackbar.Add(
-                    $"A node named '{result.Label}' already exists here. Choose another label.",
-                    Severity.Warning
-                );
-                return;
-            }
-        }
-
-        var commands = new List<Command>();
-        if (isRename)
-            commands.Add(new RenameNodeCommand(structureService, oldFullName, newFullName));
+        // The label is the alias, so an edit never renames the node: its identity and the
+        // selection stay.
+        var edit = new NodeEditCommand(nodeId);
+        if (result.Label != oldLabel)
+            edit.Alias = result.Label;
         if (result.Subtitle != oldSubtitle)
-            commands.Add(new NodeEditCommand(NodeId.FromName(newFullName)) { Description = result.Subtitle });
-
-        if (commands.Count == 0)
+            edit.Description = result.Subtitle;
+        if (edit.Alias is null && edit.Description is null)
             return;
 
-        commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
-
-        if (isRename)
-        {
-            // A rename replaces the node, so the previous selection (old name) is stale.
-            selectionService.Unselect();
-            await selectionService.Select(NodeId.FromName(newFullName));
-        }
+        commandService.Do(edit);
     }
 
     async Task<ZoneDialogResult?> ShowDialogAsync(string label, string subtitle, bool isEdit)

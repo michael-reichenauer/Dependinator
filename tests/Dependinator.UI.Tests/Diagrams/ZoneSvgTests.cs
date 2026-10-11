@@ -45,6 +45,21 @@ public class ZoneSvgTests
     }
 
     [Fact]
+    public void GetZoneSvg_ShouldDrawTheAlias_AsTheLabel()
+    {
+        // The label is the zone's alias: free text that the identity name could not hold, since
+        // names are split on "." and "/" ("10.0.1.0/24" would otherwise read "24").
+        var zone = CreateZone("apps subnet");
+        zone.SetAlias("10.0.1.0/24");
+
+        var svg = ZoneSvg.GetZoneSvg(zone, new Rect(0, 0, 320, 200), 1);
+
+        Assert.Contains(">10.0.1.0/24</text>", svg);
+        Assert.Contains("<title>10.0.1.0/24\n\napps subnet</title>", svg);
+        Assert.DoesNotContain(">Edge</text>", svg);
+    }
+
+    [Fact]
     public void GetZoneSvg_ShouldOmitTheSubtitle_WhenThereIsNone_AndFadeWhenHidden()
     {
         var zone = CreateZone();

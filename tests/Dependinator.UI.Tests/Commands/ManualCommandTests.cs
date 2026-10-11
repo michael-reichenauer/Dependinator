@@ -56,6 +56,27 @@ public class ManualCommandTests
     }
 
     [Fact]
+    public void AddNodeCommand_ShouldSetTheAlias_WhenGiven()
+    {
+        // A zone's label is its alias; its name is a generated identity under the parent.
+        using var model = CreateModel();
+        var command = new AddNodeCommand(
+            "Zone",
+            model.Root.Name,
+            new Rect(0, 0, 320, 200),
+            isZone: true,
+            alias: "10.0.1.0/24"
+        );
+
+        command.Execute(model);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Zone"), out var zone));
+        Assert.True(zone!.IsZone);
+        Assert.Equal("10.0.1.0/24", zone.Alias);
+        Assert.Equal("10.0.1.0/24", zone.DisplayName);
+    }
+
+    [Fact]
     public void ParentQualifiedNames_AllowSameShortName_UnderDifferentParents()
     {
         using var model = CreateModel();

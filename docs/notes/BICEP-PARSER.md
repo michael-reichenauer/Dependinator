@@ -115,7 +115,9 @@ the hand-drawn diagrams:
 1. Zones (done Oct 2026: `ZoneService`, `ZoneSvg`, `IsZone` manual nodes; drawn behind their
    siblings, never containers or link endpoints, kept out of layout, dragged with the nodes
    inside them): a user-drawn, labeled background rectangle inside a container ("Edge", "Data",
-   "snet-apps"), saved like a note, no structural effect.
+   "snet-apps"), saved like a note, no structural effect. The label is the zone's display alias
+   (free text, "10.0.1.0/24" included); the node name is a generated identity ("Zone", "Zone 2")
+   under the parent, since node names are split on "." and "/" and must be unique.
 2. Line labels (done Oct 2026: `LineLabelService`, `LineLabelCommand`, `Line.Label` with a
    per-id pending store in `Model` so a label outlives the line object and a split line's label
    returns after a reload): a user text drawn at the line's middle, with an optional description

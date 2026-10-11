@@ -156,7 +156,9 @@ class Node : IItem
     // subnet): the user's own grouping of the parsed nodes. Zones are manual nodes (also
     // IsManual) that persist and survive re-parse, render behind their siblings via ZoneSvg,
     // are never containers or link endpoints, and keep the boundary the user gave them (layout
-    // never moves them). The name is the label, the Description an optional subtitle.
+    // never moves them). The label is the display name (Alias, free text: a subnet "10.0.1.0/24"
+    // is fine), the Description an optional subtitle; the Name is a generated identity ("Zone",
+    // "Zone 2") under the parent.
     public bool IsZone { get; set; }
 
     // Sets the description and keeps the pre-encoded HtmlDescription in sync; the single write

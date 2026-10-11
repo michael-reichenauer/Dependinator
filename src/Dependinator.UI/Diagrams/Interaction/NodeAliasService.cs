@@ -10,7 +10,8 @@ record NodeAliasDialogResult(string Alias, bool Clear);
 
 // Edits a node's display name (the user's name shown instead of the one from the code) through a
 // small dialog; the change is one undoable command. Reached from the node toolbar menu and the
-// node's right-click menu. Notes and zones have no alias: their label is their editable name.
+// node's right-click menu. Not for annotations: a note has no name to alias, and a zone's label
+// is its alias, edited in the zone dialog (ZoneService).
 interface INodeAliasService
 {
     Task EditAliasAsync(NodeId nodeId);

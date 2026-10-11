@@ -37,9 +37,11 @@ static class ZoneSvg
         var labelY = y + LabelInset * textZoom;
         var subtitleY = labelY + fontSize * 1.35;
 
+        // The label is the zone's display name (its alias; the identity name for zones made
+        // before labels became aliases).
         var title = string.IsNullOrWhiteSpace(node.HtmlDescription)
-            ? node.HtmlShortName
-            : $"{node.HtmlShortName}\n\n{node.HtmlDescription}";
+            ? node.HtmlDisplayName
+            : $"{node.HtmlDisplayName}\n\n{node.HtmlDescription}";
 
         // The visible rect is the hover/hit target (its id resolves to the node); the texts sit
         // outside the group with pointer-events="none" so hovering does not stroke them.
@@ -59,7 +61,7 @@ static class ZoneSvg
                     * textZoom:0.##},{4 * textZoom:0.##}"/>
                   <title>{title}</title>
                 </g>
-                <text class="zoneName" x="{labelX:0.##}" y="{labelY:0.##}" font-size="{fontSize:0.##}px" font-weight="bold" {textOpacity}>{node.HtmlShortName}</text>
+                <text class="zoneName" x="{labelX:0.##}" y="{labelY:0.##}" font-size="{fontSize:0.##}px" font-weight="bold" {textOpacity}>{node.HtmlDisplayName}</text>
                 {subtitleSvg}
                 """
             )
