@@ -7,6 +7,13 @@ param tags object
 param customDomainName string
 
 param webOriginHostName string
+
+@description('Resource id of the storefront web app, reached over Private Link (no public endpoint).')
+param webOriginResourceId string
+
+@description('Region of the storefront, where Front Door creates its private link connection.')
+param webOriginLocation string
+
 param apiOriginHostName string
 param logAnalyticsWorkspaceId string
 
@@ -116,6 +123,16 @@ resource profile 'Microsoft.Cdn/profiles@2024-02-01' = {
         priority: 1
         weight: 1000
         enabledState: 'Enabled'
+        // The private endpoint connection this creates on the web app must be approved once
+        // (portal or az network private-endpoint-connection approve) before traffic flows.
+        sharedPrivateLinkResource: {
+          privateLink: {
+            id: webOriginResourceId
+          }
+          groupId: 'sites'
+          privateLinkLocation: webOriginLocation
+          requestMessage: 'Front Door origin for the webshop storefront'
+        }
       }
     }
   }
@@ -235,5 +252,6 @@ resource profileDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
   }
 }
 
+output frontDoorId string = profile.properties.frontDoorId
 output endpointHostName string = profile::endpoint.properties.hostName
 output customDomainValidationToken string = profile::shopDomain.properties.validationProperties.validationToken

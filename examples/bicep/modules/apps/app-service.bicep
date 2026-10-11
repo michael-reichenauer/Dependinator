@@ -1,4 +1,4 @@
-metadata description = 'Linux App Service plan with the storefront and the catalog API web apps, a staging slot, Key Vault referenced settings and diagnostics.'
+metadata description = 'Linux App Service plan with the storefront and the catalog API web apps (no public endpoints: Front Door reaches the storefront over Private Link, API Management reaches the API over a private endpoint), a staging slot, Key Vault referenced settings and diagnostics.'
 
 param prefix string
 param location string
@@ -8,6 +8,8 @@ param zoneRedundant bool
 param appsIdentityId string
 param appsIdentityClientId string
 param appsSubnetId string
+param privateEndpointSubnetId string
+param sitesPrivateDnsZoneId string
 param appInsightsConnectionString string
 param logAnalyticsWorkspaceId string
 param keyVaultName string
@@ -58,6 +60,8 @@ resource frontend 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
+    // Reached only through Front Door's Private Link origin (see front-door.bicep).
+    publicNetworkAccess: 'Disabled'
     virtualNetworkSubnetId: appsSubnetId
     keyVaultReferenceIdentity: appsIdentityId
     siteConfig: {
@@ -68,16 +72,6 @@ resource frontend 'Microsoft.Web/sites@2023-12-01' = {
       ftpsState: 'Disabled'
       healthCheckPath: '/health'
       vnetRouteAllEnabled: true
-      ipSecurityRestrictionsDefaultAction: 'Deny'
-      ipSecurityRestrictions: [
-        {
-          name: 'allow-front-door'
-          priority: 100
-          action: 'Allow'
-          tag: 'ServiceTag'
-          ipAddress: 'AzureFrontDoor.Backend'
-        }
-      ]
     }
   }
 
@@ -106,6 +100,8 @@ resource api 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
+    // Reached only through its private endpoint (API Management and the storefront use the VNet).
+    publicNetworkAccess: 'Disabled'
     virtualNetworkSubnetId: appsSubnetId
     keyVaultReferenceIdentity: appsIdentityId
     siteConfig: {
@@ -144,6 +140,7 @@ resource api 'Microsoft.Web/sites@2023-12-01' = {
     properties: {
       serverFarmId: plan.id
       httpsOnly: true
+      publicNetworkAccess: 'Disabled'
       virtualNetworkSubnetId: appsSubnetId
       siteConfig: {
         linuxFxVersion: 'DOTNETCORE|9.0'
@@ -153,6 +150,19 @@ resource api 'Microsoft.Web/sites@2023-12-01' = {
         autoSwapSlotName: 'production'
       }
     }
+  }
+}
+
+module apiPrivateEndpoint '../shared/private-endpoint.bicep' = {
+  name: 'pe-${api.name}'
+  params: {
+    name: 'pe-${prefix}-api'
+    location: location
+    tags: tags
+    subnetId: privateEndpointSubnetId
+    targetResourceId: api.id
+    groupId: 'sites'
+    privateDnsZoneId: sitesPrivateDnsZoneId
   }
 }
 
@@ -181,6 +191,7 @@ resource apiDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
 }
 
 output planId string = plan.id
+output frontendId string = frontend.id
 output frontendHostName string = frontend.properties.defaultHostName
 output apiHostName string = api.properties.defaultHostName
 output apiStagingHostName string = api::staging.properties.defaultHostName

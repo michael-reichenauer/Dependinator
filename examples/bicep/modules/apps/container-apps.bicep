@@ -1,4 +1,4 @@
-metadata description = 'Container registry and a Container Apps environment running the catalog and checkout services.'
+metadata description = 'Container registry and an internal Container Apps environment (reachable from the VNet only) running the catalog and checkout services.'
 
 import { uniqueResourceName } from '../types.bicep'
 
@@ -11,6 +11,7 @@ param imageTags { catalog: string, checkout: string }
 param appsIdentityId string
 param appsIdentityPrincipalId string
 param appsIdentityClientId string
+param vnetId string
 param containerAppsSubnetId string
 param privateEndpointSubnetId string
 param registryPrivateDnsZoneId string
@@ -86,7 +87,8 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
     }
     vnetConfiguration: {
       infrastructureSubnetId: containerAppsSubnetId
-      internal: false
+      // Internal load balancer: the apps are reachable from the VNet (API Management) only.
+      internal: true
     }
     workloadProfiles: [
       {
@@ -94,6 +96,19 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
         workloadProfileType: 'Consumption'
       }
     ]
+  }
+}
+
+// An internal environment needs a private DNS zone for its default domain, so VNet clients
+// (API Management, the web apps) resolve the apps' FQDNs to the environment's internal IP. The
+// domain is only known once the environment exists, so the zone is created by a nested module.
+module environmentDns 'container-apps-dns.bicep' = {
+  name: 'cae-${prefix}-dns'
+  params: {
+    zoneName: environment.properties.defaultDomain
+    staticIp: environment.properties.staticIp
+    vnetId: vnetId
+    tags: tags
   }
 }
 

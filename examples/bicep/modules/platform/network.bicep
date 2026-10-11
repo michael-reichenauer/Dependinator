@@ -15,12 +15,14 @@ var privateDnsZoneNames = {
   sql: 'privatelink${environment().suffixes.sqlServerHostname}'
   blob: 'privatelink.blob.${environment().suffixes.storage}'
   queue: 'privatelink.queue.${environment().suffixes.storage}'
+  table: 'privatelink.table.${environment().suffixes.storage}'
   cosmos: 'privatelink.documents.azure.com'
   redis: 'privatelink.redis.cache.windows.net'
   serviceBus: 'privatelink.servicebus.windows.net'
   search: 'privatelink.search.windows.net'
   openAi: 'privatelink.openai.azure.com'
   registry: 'privatelink.azurecr.io'
+  sites: 'privatelink.azurewebsites.net'
 }
 
 resource appsNsg 'Microsoft.Network/networkSecurityGroups@2024-01-01' = {
@@ -28,20 +30,9 @@ resource appsNsg 'Microsoft.Network/networkSecurityGroups@2024-01-01' = {
   location: location
   tags: tags
   properties: {
+    // The web apps have no public endpoints (Front Door uses Private Link, API Management the
+    // API's private endpoint), so nothing from the Internet is expected on this subnet.
     securityRules: [
-      {
-        name: 'allow-front-door-https'
-        properties: {
-          priority: 100
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: 'Tcp'
-          sourceAddressPrefix: 'AzureFrontDoor.Backend'
-          sourcePortRange: '*'
-          destinationAddressPrefix: settings.subnets.apps
-          destinationPortRange: '443'
-        }
-      }
       {
         name: 'deny-internet-inbound'
         properties: {
@@ -192,6 +183,23 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
           ]
         }
       }
+      {
+        name: 'snet-apim'
+        properties: {
+          addressPrefix: settings.subnets.apim
+          natGateway: {
+            id: natGateway.id
+          }
+          delegations: [
+            {
+              name: 'api-management'
+              properties: {
+                serviceName: 'Microsoft.Web/serverFarms'
+              }
+            }
+          ]
+        }
+      }
     ]
   }
 }
@@ -244,8 +252,9 @@ output appsSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subne
 output containerAppsSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'snet-container-apps')
 output privateEndpointSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'snet-private-endpoints')
 output integrationSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'snet-integration')
+output apimSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'snet-apim')
 
-@description('Private DNS zone resource ids by service key (keyVault, sql, blob, queue, cosmos, redis, serviceBus, search, openAi, registry).')
+@description('Private DNS zone resource ids by service key (keyVault, sql, blob, queue, table, cosmos, redis, serviceBus, search, openAi, registry, sites).')
 output privateDnsZoneIds object = toObject(
   items(privateDnsZoneNames),
   entry => entry.key,

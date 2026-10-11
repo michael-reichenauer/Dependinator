@@ -17,6 +17,8 @@ type networkSettings = {
     privateEndpoints: string
     @description('Function app regional VNet integration.')
     integration: string
+    @description('API Management (Standard v2) outbound VNet integration.')
+    apim: string
   }
 }
 

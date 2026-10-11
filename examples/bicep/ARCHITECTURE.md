@@ -10,8 +10,10 @@ source of truth, and the diagrams are regenerated from a small script when the d
 ![Runtime view](architecture/1-runtime.svg)
 
 Shoppers reach **Front Door Premium** (WAF, managed certificate on `shop.contoso-webshop.example`).
-Front Door serves the storefront directly and sends everything under `/api/*` to **API Management**,
-which publishes the catalog API (an App Service web app) and the checkout API (a Container App).
+Front Door serves the storefront over a Private Link origin and sends everything under `/api/*` to
+**API Management**, a VNet-integrated gateway that accepts Front Door's requests only and publishes
+the catalog API (an App Service web app behind a private endpoint) and the checkout API (a Container
+App in an internal environment).
 Checkout calls the internal catalog service for prices and stock, keeps carts in **Cosmos DB** and
 hands orders and payments to **Service Bus** queues. The **order processor** (Functions, Elastic
 Premium) is triggered by those queues and writes the orders database and product-view events.
@@ -20,9 +22,9 @@ publishes order events to partners. The catalog API uses SQL, Redis, storage, **
 **Azure OpenAI** (the product assistant), and reads the payment provider key through a Key Vault
 reference.
 
-Points to discuss: the storefront talks to the catalog API directly (not through API Management);
-the order processor is the only writer of the orders database; thumbnails and partner events are
-fire-and-forget through Event Grid.
+Points to discuss: the storefront talks to the catalog API directly over the VNet (not through API
+Management); the order processor is the only writer of the orders database; thumbnails and partner
+events are fire-and-forget through Event Grid.
 
 ## 2. Deployment view: what one deployment creates, and where
 
@@ -30,10 +32,11 @@ fire-and-forget through Event Grid.
 
 `webshop.bicep` runs at subscription scope and creates three resource groups per environment.
 **Platform** holds what every other part depends on: Log Analytics and Application Insights, the two
-user-assigned identities, Key Vault, the virtual network with its NSGs and NAT gateway, and the
-private DNS zones. **Data** holds the stores and messaging plus their private endpoints; in production
-the SQL server carries a delete lock. **Apps** holds the compute and the edge, with the AI services
-present only when `deployAi` is set. Records for the shop host name are written into a DNS zone that
+user-assigned identities, Key Vault, the virtual network with its five delegated subnets, NSGs and NAT
+gateway, and the twelve private DNS zones. **Data** holds the stores and messaging plus their private endpoints; in production
+the SQL server carries a delete lock. **Apps** holds the compute and the edge (the catalog API's private endpoint, the internal Container
+Apps environment with its own DNS zone, the VNet-integrated API Management gateway and its Front
+Door-only policy), with the AI services present only when `deployAi` is set. Records for the shop host name are written into a DNS zone that
 already exists in a shared resource group. Module outputs flow left to right: subnet and DNS zone ids
 and the workspace id into the data modules, service endpoints into the apps, and the Front Door host
 name and domain-validation token into DNS.
@@ -45,20 +48,23 @@ shared DNS zone should stay outside this template; the production-only budget an
 
 ![Network view](architecture/3-network.svg)
 
-The virtual network (`10.40.0.0/16`) has four delegated subnets: App Service and Functions use
-regional VNet integration from `snet-apps` and `snet-integration`, the Container Apps environment
-owns `snet-container-apps` (a /23, as the platform requires), and `snet-private-endpoints` holds one
-private endpoint per data service. All nine data services have public network access disabled and
-resolve through private DNS zones linked to the network. Outbound traffic from every app subnet
-leaves through the NAT gateway's static public IP, which partners can allow-list. Inbound, the
-storefront accepts only the `AzureFrontDoor.Backend` service tag; the catalog API and the checkout
-app expose public endpoints that API Management calls.
+The virtual network (`10.40.0.0/16`) has five delegated subnets: App Service and Functions use
+regional VNet integration from `snet-apps` and `snet-integration`, API Management (Standard v2 or
+Premium v2) integrates outbound through `snet-apim`, the Container Apps environment owns
+`snet-container-apps` (a /23, as the platform requires) as an internal environment, and
+`snet-private-endpoints` holds the private endpoints of the catalog API and the nine data services.
+All of those have public network access disabled and resolve through private DNS zones linked to the
+network; the environment's default domain gets its own zone. Nothing but Front Door and the API
+Management gateway is reachable from the Internet: Front Door uses a Private Link origin for the
+storefront, and API Management only honours requests that carry this Front Door's id. Outbound
+traffic from every delegated subnet leaves through the NAT gateway's static public IP, which
+partners can allow-list.
 
-Points to discuss: API Management runs outside the network (`virtualNetworkType: None`), so the
-catalog API and checkout keep public endpoints; moving API Management into the VNet or fronting the
-backends with private endpoints would close them. Storage has private endpoints for blob and queue
-only, and its public access is disabled, so the sessions table is unreachable as deployed: add a table
-endpoint (and its private DNS zone) or drop the table.
+Points to discuss: Front Door's private endpoint connection on the storefront must be approved once
+after the first deployment (portal or a pipeline step), or the origin stays unhealthy. VNet
+integration needs a v2 API Management tier, which rules out the cheaper Developer tier for test
+environments. With the Container Apps environment internal, developers need a VNet path (Bastion or
+VPN) to call the apps directly.
 
 ## 4. Identity and security view: who is allowed to do what
 

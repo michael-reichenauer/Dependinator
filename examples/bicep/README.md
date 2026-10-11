@@ -31,22 +31,22 @@ deploys one module into each, passing outputs between them:
 |---|---|---|
 | Platform | `platform/monitoring.bicep` | Log Analytics, Application Insights, action group, metric alerts |
 | Platform | `platform/identity.bicep` | Two user-assigned managed identities (apps, background jobs) |
-| Platform | `platform/network.bicep` | VNet with delegated subnets, NSGs, NAT gateway, private DNS zones (loop) |
+| Platform | `platform/network.bicep` | VNet with five delegated subnets, NSGs, NAT gateway, twelve private DNS zones (loop) |
 | Platform | `security/keyvault.bicep` | Key Vault (RBAC), secret, role assignments (loop), private endpoint |
 | Data | `data/sql.bicep` | SQL server (Entra-only), two databases, auditing, private endpoint |
-| Data | `data/storage.bicep` | Storage account, blob/queue/table services and their children, lifecycle, RBAC, two private endpoints |
+| Data | `data/storage.bicep` | Storage account, blob/queue/table services and their children, lifecycle, RBAC, three private endpoints |
 | Data | `data/cosmos.bicep` | Serverless Cosmos DB account, database, containers, data-plane RBAC, private endpoint |
 | Data | `data/redis.bicep` | Azure Cache for Redis, diagnostics, private endpoint |
 | Messaging | `messaging/servicebus.bicep` | Premium namespace, queues, topic with subscriptions and a rule, RBAC, private endpoint |
 | Messaging | `messaging/events.bicep` | Event Grid system topic (blob events to a queue) and a custom topic |
-| Apps | `apps/app-service.bicep` | Linux plan, storefront and API web apps, staging slot, app settings, diagnostics |
+| Apps | `apps/app-service.bicep` | Linux plan, storefront and API web apps without public endpoints (Private Link origin, private endpoint), staging slot, app settings, diagnostics |
 | Apps | `apps/functions.bicep` | Elastic Premium function app for order processing with its storage account |
-| Apps | `apps/container-apps.bicep` | Container registry, Container Apps environment, catalog and checkout apps |
-| Apps | `apps/api-management.bicep` | API Management with two APIs, a product, a policy and a Key Vault named value |
+| Apps | `apps/container-apps.bicep` | Container registry, internal Container Apps environment with its DNS zone (`container-apps-dns.bicep`), catalog and checkout apps |
+| Apps | `apps/api-management.bicep` | VNet-integrated API Management (v2) with two APIs, a product, a Key Vault named value, and a Front Door-only policy applied by `api-management-policy.bicep` |
 | Edge | `apps/front-door.bicep` | Front Door Premium profile, endpoint, origin groups, routes, custom domain, WAF |
 | Edge | `platform/dns.bicep` | CNAME and TXT records in an *existing* public DNS zone |
 | AI | `ai/search.bicep`, `ai/openai.bicep` | AI Search and Azure OpenAI with model deployments (conditional on `deployAi`) |
-| Shared | `shared/private-endpoint.bicep` | Reused ten times: a private endpoint plus its DNS zone group |
+| Shared | `shared/private-endpoint.bicep` | Reused twelve times: a private endpoint plus its DNS zone group |
 | Shared | `types.bicep` | Exported user-defined types and a naming function |
 
 The `environments/` folder holds `.bicepparam` files for dev and prod. Parameter files are not

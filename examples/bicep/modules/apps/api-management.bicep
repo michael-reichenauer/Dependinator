@@ -1,14 +1,18 @@
-metadata description = 'API Management gateway publishing the catalog and checkout APIs, with the payment key as a Key Vault named value.'
+metadata description = 'API Management (Standard v2, VNet integrated) publishing the catalog and checkout APIs over the private network, with the payment key as a Key Vault named value.'
 
 param prefix string
 param location string
 param tags object
 
+@description('A v2 tier: only Standard v2 and Premium v2 support outbound VNet integration.')
 @allowed([
-  'Developer'
   'StandardV2'
+  'PremiumV2'
 ])
-param skuName string = 'Developer'
+param skuName string = 'StandardV2'
+
+@description('Delegated subnet (Microsoft.Web/serverFarms) the gateway uses to reach the backends.')
+param apimSubnetId string
 
 param appsIdentityId string
 param appsIdentityClientId string
@@ -34,7 +38,13 @@ resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
   properties: {
     publisherEmail: 'api-platform@contoso-webshop.example'
     publisherName: 'Contoso Webshop'
-    virtualNetworkType: 'None'
+    // Outbound VNet integration: the gateway stays public (Front Door calls it) but reaches the
+    // catalog API's private endpoint and the internal Container Apps environment over the VNet.
+    publicNetworkAccess: 'Enabled'
+    virtualNetworkType: 'External'
+    virtualNetworkConfiguration: {
+      subnetResourceId: apimSubnetId
+    }
     customProperties: {
       'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10': 'false'
       'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11': 'false'
@@ -131,5 +141,6 @@ resource apimDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-previ
   }
 }
 
+output serviceName string = apim.name
 output gatewayUrl string = apim.properties.gatewayUrl
 output gatewayHostName string = replace(apim.properties.gatewayUrl, 'https://', '')

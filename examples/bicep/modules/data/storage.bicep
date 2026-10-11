@@ -1,4 +1,4 @@
-metadata description = 'Storage account for product images, invoices, work queues and session tables, with lifecycle rules, RBAC and private endpoints.'
+metadata description = 'Storage account for product images, invoices, work queues and session tables, with lifecycle rules, RBAC and blob, queue and table private endpoints.'
 
 import { uniqueResourceName } from '../types.bicep'
 
@@ -15,6 +15,7 @@ param queueContributorPrincipalId string
 param privateEndpointSubnetId string
 param blobPrivateDnsZoneId string
 param queuePrivateDnsZoneId string
+param tablePrivateDnsZoneId string
 
 var roleIds = {
   storageBlobDataContributor: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
@@ -170,6 +171,19 @@ module queuePrivateEndpoint '../shared/private-endpoint.bicep' = {
     targetResourceId: storageAccount.id
     groupId: 'queue'
     privateDnsZoneId: queuePrivateDnsZoneId
+  }
+}
+
+module tablePrivateEndpoint '../shared/private-endpoint.bicep' = {
+  name: 'pe-${storageAccount.name}-table'
+  params: {
+    name: 'pe-${prefix}-table'
+    location: location
+    tags: tags
+    subnetId: privateEndpointSubnetId
+    targetResourceId: storageAccount.id
+    groupId: 'table'
+    privateDnsZoneId: tablePrivateDnsZoneId
   }
 }
 

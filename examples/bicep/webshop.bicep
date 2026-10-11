@@ -58,6 +58,7 @@ var network networkSettings = {
     containerApps: '10.40.2.0/23'
     privateEndpoints: '10.40.4.0/24'
     integration: '10.40.5.0/24'
+    apim: '10.40.6.0/24'
   }
 }
 
@@ -220,6 +221,7 @@ module storage 'modules/data/storage.bicep' = {
     privateEndpointSubnetId: networking.outputs.privateEndpointSubnetId
     blobPrivateDnsZoneId: networking.outputs.privateDnsZoneIds.blob
     queuePrivateDnsZoneId: networking.outputs.privateDnsZoneIds.queue
+    tablePrivateDnsZoneId: networking.outputs.privateDnsZoneIds.table
   }
 }
 
@@ -298,6 +300,8 @@ module appService 'modules/apps/app-service.bicep' = {
     appsIdentityId: identity.outputs.appsIdentityId
     appsIdentityClientId: identity.outputs.appsIdentityClientId
     appsSubnetId: networking.outputs.appsSubnetId
+    privateEndpointSubnetId: networking.outputs.privateEndpointSubnetId
+    sitesPrivateDnsZoneId: networking.outputs.privateDnsZoneIds.sites
     appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
     logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
     keyVaultName: keyVault.outputs.vaultName
@@ -342,6 +346,7 @@ module containerApps 'modules/apps/container-apps.bicep' = {
     appsIdentityId: identity.outputs.appsIdentityId
     appsIdentityPrincipalId: identity.outputs.appsIdentityPrincipalId
     appsIdentityClientId: identity.outputs.appsIdentityClientId
+    vnetId: networking.outputs.vnetId
     containerAppsSubnetId: networking.outputs.containerAppsSubnetId
     privateEndpointSubnetId: networking.outputs.privateEndpointSubnetId
     registryPrivateDnsZoneId: networking.outputs.privateDnsZoneIds.registry
@@ -361,7 +366,8 @@ module apiManagement 'modules/apps/api-management.bicep' = {
     prefix: prefix
     location: location
     tags: tags
-    skuName: isProduction ? 'StandardV2' : 'Developer'
+    skuName: isProduction ? 'PremiumV2' : 'StandardV2'
+    apimSubnetId: networking.outputs.apimSubnetId
     appsIdentityId: identity.outputs.appsIdentityId
     appsIdentityClientId: identity.outputs.appsIdentityClientId
     keyVaultUri: keyVault.outputs.vaultUri
@@ -379,8 +385,20 @@ module frontDoor 'modules/apps/front-door.bicep' = {
     tags: tags
     customDomainName: 'shop.${dnsZoneName}'
     webOriginHostName: appService.outputs.frontendHostName
+    webOriginResourceId: appService.outputs.frontendId
+    webOriginLocation: location
     apiOriginHostName: apiManagement.outputs.gatewayHostName
     logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
+  }
+}
+
+// Applied after Front Door exists: its profile id is the only accepted X-Azure-FDID.
+module apiManagementPolicy 'modules/apps/api-management-policy.bicep' = {
+  scope: rgApps
+  name: 'api-management-policy'
+  params: {
+    apimName: apiManagement.outputs.serviceName
+    frontDoorId: frontDoor.outputs.frontDoorId
   }
 }
 
