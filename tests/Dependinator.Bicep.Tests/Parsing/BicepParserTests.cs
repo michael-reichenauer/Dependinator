@@ -96,8 +96,9 @@ public class BicepParserTests(BicepFixture fixture)
     [Fact]
     public void ParseAsync_ShouldNestChildResources_UnderTheirParent()
     {
-        // Nested declaration syntax and the "parent:" property both nest.
-        Assert.Equal(NodeType.Resource, Items.Node($"{Main}.web.config").Properties.Type);
+        // Nested declaration syntax and the "parent:" property both nest; app settings are a
+        // row (an auxiliary resource), the slot a box.
+        Assert.Equal(NodeType.ResourceMember, Items.Node($"{Main}.web.config").Properties.Type);
         Assert.Equal(NodeType.Resource, Items.Node($"{Main}.web.slot").Properties.Type);
         Assert.False(Items.HasNode($"{Main}.config"));
         Assert.False(Items.HasNode($"{Main}.slot"));
@@ -111,9 +112,13 @@ public class BicepParserTests(BicepFixture fixture)
     {
         // An extension resource ("scope: web") nests under the resource it extends, like a child,
         // and the scope dependency is that nesting rather than a link.
-        Assert.True(Items.HasNode($"{Main}.web.webDiagnostics"));
+        var diagnostics = Items.Node($"{Main}.web.webDiagnostics");
         Assert.False(Items.HasNode($"{Main}.webDiagnostics"));
         Assert.False(Items.HasLink($"{Main}.web.webDiagnostics", $"{Main}.web"));
+
+        // A setting is a row under its resource (with the icon of its type), not a box.
+        Assert.Equal(NodeType.ResourceMember, diagnostics.Properties.Type);
+        Assert.Equal("Monitor", diagnostics.Properties.IconName);
     }
 
     [Fact]

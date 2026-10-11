@@ -63,6 +63,18 @@ public class WebshopExampleTests
         // existing: then they stay in the module and link to the $Externals node.
         AssertNode(items, $"{Main}.rgData.sqlServer.sqlServer.deleteLock");
         AssertNode(items, $"{Main}.rgData.sqlServer.auditDiagnostics");
+        Assert.Equal(
+            NodeType.ResourceMember,
+            items.Node($"{Main}.rgData.sqlServer.sqlServer.deleteLock").Properties.Type
+        );
+        Assert.Equal(
+            NodeType.ResourceMember,
+            items.Node($"{Main}.rgData.storage.storageAccount.blobContributorRole").Properties.Type
+        );
+        Assert.Equal(
+            NodeType.Resource,
+            items.Node($"{Main}.rgData.storage.blobPrivateEndpoint.privateEndpoint").Properties.Type
+        );
         AssertLink(items, $"{Main}.rgData.sqlServer.auditDiagnostics", "$Externals.sqlServer.masterDatabase");
 
         // Nested children, an expanded shared module and an existing resource with deployed children.

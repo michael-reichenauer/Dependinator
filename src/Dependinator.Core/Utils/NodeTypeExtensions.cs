@@ -17,7 +17,8 @@ static class NodeTypeExtensions
                     or NodeType.PropertyMember
                     or NodeType.ParameterMember
                     or NodeType.VariableMember
-                    or NodeType.OutputMember;
+                    or NodeType.OutputMember
+                    or NodeType.ResourceMember;
 
         public bool IsType =>
             nodeType

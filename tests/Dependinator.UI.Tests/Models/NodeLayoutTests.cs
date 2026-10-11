@@ -390,6 +390,32 @@ public class NodeLayoutTests
     }
 
     [Fact]
+    public void AdjustChildren_ShouldLayOutAuxiliaryResourcesAsRows_UnderAResource()
+    {
+        // A storage account with a role assignment, a diagnostic setting and a child resource:
+        // the auxiliary resources are rows, the child resource a box next to them.
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var account = new ModelNode("account", root) { Type = NodeType.Resource };
+        root.AddChild(account);
+        var role = new ModelNode("account.role", account) { Type = NodeType.ResourceMember };
+        var diagnostics = new ModelNode("account.diagnostics", account) { Type = NodeType.ResourceMember };
+        var blobs = new ModelNode("account.blobs", account) { Type = NodeType.Resource };
+        account.AddChild(role);
+        account.AddChild(diagnostics);
+        account.AddChild(blobs);
+
+        NodeLayout.AdjustChildren(account);
+
+        Assert.Equal(18, role.Boundary.Height);
+        Assert.Equal(18, diagnostics.Boundary.Height);
+        Assert.Equal(NodeLayout.DefaultSize.Height, blobs.Boundary.Height);
+        Assert.Equal(role.Boundary.X, diagnostics.Boundary.X);
+        Assert.True(blobs.Boundary.X > role.Boundary.X);
+    }
+
+    [Fact]
     public void AdjustChildren_ShouldUseGridLayout_WhenNoChildIsAMember()
     {
         NodeLayout.SetDensity(NodeLayoutDensity.Balanced);

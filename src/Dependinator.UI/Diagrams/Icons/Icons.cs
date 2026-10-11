@@ -44,6 +44,7 @@ static class Icon
         { Parsing.NodeType.ParameterMember, "Property" },
         { Parsing.NodeType.VariableMember, "Field" },
         { Parsing.NodeType.OutputMember, "Event" },
+        { Parsing.NodeType.ResourceMember, "Cloud" },
     };
 
     // The name of the default icon for a node type (an IconLibrary id), falling back to "Module".

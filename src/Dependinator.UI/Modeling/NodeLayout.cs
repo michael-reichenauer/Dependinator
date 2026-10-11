@@ -455,10 +455,11 @@ class NodeLayout
             NodeType.MethodMember => 2,
             NodeType.EventMember => 3,
             NodeType.FieldMember => 4,
-            NodeType.ParameterMember => 5,
-            NodeType.VariableMember => 6,
-            NodeType.OutputMember => 7,
-            _ => 8,
+            NodeType.ResourceMember => 5,
+            NodeType.ParameterMember => 6,
+            NodeType.VariableMember => 7,
+            NodeType.OutputMember => 8,
+            _ => 9,
         };
 
     static LayoutMetrics RootMetrics() =>

@@ -17,7 +17,8 @@ namespace Dependinator.Bicep.Parsing;
 //   main*bicep.web.config           a child resource (nested syntax or "parent:" property)
 //   main*bicep.web.diagnostics      an extension resource "scope:"d to a resource deployed in the
 //                                   same file nests under it (so do modules deployed into a
-//                                   resource group the file creates: main*bicep.rgData.storage)
+//                                   resource group the file creates: main*bicep.rgData.storage);
+//                                   an auxiliary leaf resource (AuxiliaryResources) is a row
 //   main*bicep.storage              a module (NodeType.Module); a local module's own file is
 //   main*bicep.storage.account      expanded beneath it, recursively, and the module shows the
 //                                   icon of its principal resource (or of "metadata icon = '...'")
@@ -133,12 +134,20 @@ class ModelBuilder(string entryPath)
         {
             names[resource.Symbol] = name;
             var typeReference = resource.TypeReference;
+            // An auxiliary resource (a setting, assignment or lock) without children of its own
+            // is a row under the resource it configures, not a box next to it.
+            var nodeType =
+                !resource.IsExistingResource
+                && AuxiliaryResources.IsAuxiliary(typeReference.FormatType())
+                && !resources.Any(r => r.Name.StartsWith(name + "."))
+                    ? NodeType.ResourceMember
+                    : NodeType.Resource;
             var iconName = resource.IsAzResource
                 ? AzureIcons.ForResourceType(typeReference.FormatType())
                 : AzureIcons.Fallback;
             AddNode(
                 name,
-                NodeType.Resource,
+                nodeType,
                 Describe(model, resource.Symbol, typeReference.FormatName() + ResourceMarkers(resource)),
                 Locations.ToFileSpan(model, resource.Symbol.DeclaringSyntax),
                 iconName: iconName

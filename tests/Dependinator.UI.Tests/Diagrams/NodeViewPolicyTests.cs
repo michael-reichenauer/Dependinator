@@ -38,6 +38,7 @@ public class NodeViewPolicyTests
     [InlineData("ParameterMember")]
     [InlineData("VariableMember")]
     [InlineData("OutputMember")]
+    [InlineData("ResourceMember")]
     [InlineData("MethodMember")]
     public void IsShowIcon_ShouldBeTrue_ForMemberTypes_AtAnyZoom(string type)
     {

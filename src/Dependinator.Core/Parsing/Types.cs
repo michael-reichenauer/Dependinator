@@ -81,13 +81,16 @@ enum NodeType
 
     // Infrastructure models (e.g. Bicep): Module is a deployment module (a sub-template
     // container), Resource an infrastructure resource whose icon comes from NodeProperties.IconName,
-    // and the three *Member values render as rows under their file or module, like C# members.
+    // and the *Member values render as rows under their file or module, like C# members.
+    // ResourceMember is an auxiliary resource (a role assignment, diagnostic setting, lock, DNS
+    // zone group, app settings...) shown as a row under the resource it configures; always a leaf.
     // Appended at the end: NodeType crosses JSON-RPC as an int.
     Module,
     Resource,
     ParameterMember,
     VariableMember,
     OutputMember,
+    ResourceMember,
 }
 
 static class NodeDescriptions
