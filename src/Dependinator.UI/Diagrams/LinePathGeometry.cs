@@ -164,6 +164,37 @@ static class LinePathGeometry
             || endpoints.X1 >= endpoints.X2 && endpoints.Y1 <= endpoints.Y2;
     }
 
+    // The point halfway along the polyline's length: where a line's label sits.
+    public static Pos MidPoint(IReadOnlyList<Pos> points)
+    {
+        if (points.Count == 0)
+            return Pos.None;
+        if (points.Count == 1)
+            return points[0];
+
+        var total = 0.0;
+        for (var i = 1; i < points.Count; i++)
+            total += Distance(points[i - 1], points[i]);
+
+        var remaining = total / 2;
+        for (var i = 1; i < points.Count; i++)
+        {
+            var length = Distance(points[i - 1], points[i]);
+            if (length >= remaining && length > 0)
+            {
+                var t = remaining / length;
+                return new Pos(
+                    points[i - 1].X + (points[i].X - points[i - 1].X) * t,
+                    points[i - 1].Y + (points[i].Y - points[i - 1].Y) * t
+                );
+            }
+            remaining -= length;
+        }
+        return points[^1];
+    }
+
+    static double Distance(Pos a, Pos b) => Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
+
     public static IReadOnlyList<Pos> GetRenderedPolylinePoints(Line line, Pos nodeCanvasPos, double childrenZoom)
     {
         if (!TryGetLocalEndpoints(line, out var endpoints))

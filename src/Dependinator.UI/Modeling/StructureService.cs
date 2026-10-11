@@ -282,13 +282,25 @@ class StructureService(ILineService linesService) : IStructureService
 
     public void SetLineLayoutDto(IModel model, LineDto lineLayoutDto)
     {
-        if (!model.Lines.TryGetValue(LineId.FromId(lineLayoutDto.LineId), out var line))
+        var lineId = LineId.FromId(lineLayoutDto.LineId);
+        if (!model.Lines.TryGetValue(lineId, out var line))
+        {
+            // A labeled line that only exists after a render (a split or explorer line): the
+            // label waits for it (see Model.TryAddLine).
+            if (lineLayoutDto.Label is not null)
+                model.SetPendingLineLabel(
+                    lineId,
+                    new PendingLineLabel(lineLayoutDto.Label, lineLayoutDto.Source, lineLayoutDto.Target)
+                );
             return;
+        }
 
         line.SetSegmentPoints(lineLayoutDto.SegmentPoints);
         line.IsSegmentsUserSet = lineLayoutDto.IsSegmentsUserSet ?? lineLayoutDto.SegmentPoints.Count > 0;
         if (lineLayoutDto.Description is not null)
             line.SetDescription(lineLayoutDto.Description, model.UpdateStamp);
+        if (lineLayoutDto.Label is not null)
+            line.SetLabel(lineLayoutDto.Label);
     }
 
     public void ClearNotUpdated(IModel model)

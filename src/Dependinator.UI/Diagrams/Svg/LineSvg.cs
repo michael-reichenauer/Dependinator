@@ -56,6 +56,7 @@ static class LineSvg
             endpoints,
             polylinePoints,
             elementId,
+            childrenZoom,
             isDimmed,
             isCyclic,
             isPath,
@@ -94,6 +95,7 @@ static class LineSvg
         LinePathGeometry.LineEndpoints endpoints,
         IReadOnlyList<Pos> polylinePoints,
         string elementId,
+        double childrenZoom,
         bool isDimmed,
         bool isCyclic,
         bool isPath,
@@ -152,6 +154,7 @@ static class LineSvg
         var points = ToPolylinePoints(visiblePoints);
         var hitPoints = ToPolylinePoints(polylinePoints);
         var selectedSvg = SelectedLineSvg(line, polylinePoints, strokeWidth);
+        var labelSvg = LabelSvg(line, polylinePoints, childrenZoom);
 
         var title = $"{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})";
         if (!string.IsNullOrWhiteSpace(line.HtmlDescription))
@@ -173,6 +176,7 @@ static class LineSvg
             <g class="{visibleClass}">
             <polyline points="{points}" fill="none" stroke-width="{strokeWidth:0.##}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
             <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
+            {labelSvg}
             </g>
             <g class="hoverable" id="{elementId}">
               <polyline id="{elementId}" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
@@ -182,6 +186,23 @@ static class LineSvg
             {selectedSvg}
             </g>
             """
+        );
+    }
+
+    // The user's label at the line's middle; inside the visible group so it dims and fades with
+    // the line. The lineLabel class draws a background-colored halo (paint-order) so the text
+    // stays legible over the line and whatever it crosses; the font follows the node names.
+    static string LabelSvg(Line line, IReadOnlyList<Pos> polylinePoints, double childrenZoom)
+    {
+        if (line.HtmlLabel is null)
+            return "";
+
+        var middle = LinePathGeometry.MidPoint(polylinePoints);
+        var fontSize = NodeSvg.FontSize * NodeSvg.TextZoom(childrenZoom);
+        var opacity = line.IsHidden ? " opacity=\"0.3\"" : "";
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<text class="lineLabel" x="{middle.X:0.##}" y="{middle.Y:0.##}" font-size="{fontSize:0.##}px" text-anchor="middle" dominant-baseline="central"{opacity}>{line.HtmlLabel}</text>"""
         );
     }
 

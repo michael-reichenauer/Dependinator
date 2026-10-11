@@ -423,4 +423,75 @@ public class StructureServiceTests
         model.TryAddLine(line);
         return (source, target, line);
     }
+
+    [Fact]
+    public void SetLineLayoutDto_ShouldRestoreTheLabel_AndWriteTheEndpointNamesWithIt()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var (_, _, line) = AddNodesWithLine(model, "Source", "Target");
+        line.SetLabel("orders");
+
+        var lineDto = Assert.Single(model.SerializeToDto().Lines);
+        Assert.Equal("orders", lineDto.Label);
+        Assert.Equal("Source", lineDto.Source);
+        Assert.Equal("Target", lineDto.Target);
+
+        line.SetLabel(null);
+        service.SetLineLayoutDto(model, lineDto);
+
+        Assert.Equal("orders", line.Label);
+    }
+
+    [Fact]
+    public void SetLineLayoutDto_ShouldKeepTheLabelPending_UntilTheLineExists()
+    {
+        // A split or explorer line only exists after a render: its saved label waits for it.
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+        var source = AddNode(model, "Source", model.Root);
+        var target = AddNode(model, "Target", model.Root);
+        var lineId = LineId.From("Source", "Target");
+
+        service.SetLineLayoutDto(
+            model,
+            new Dependinator.UI.Modeling.Dtos.LineDto
+            {
+                LineId = lineId.Value,
+                SegmentPoints = [],
+                Label = "uses",
+                Source = "Source",
+                Target = "Target",
+            }
+        );
+        Assert.Equal("uses", model.PendingLineLabels[lineId].Label);
+
+        var line = new Line(source, target);
+        model.TryAddLine(line);
+
+        Assert.Equal("uses", line.Label);
+        Assert.Empty(model.PendingLineLabels);
+    }
+
+    [Fact]
+    public void RemoveLine_ShouldKeepTheLabel_ForALineRecreatedWithTheSameId()
+    {
+        // A node moving to another parent removes and re-adds its links, so its lines are new
+        // objects; the label follows the line id.
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var (source, target, line) = AddNodesWithLine(model, "Source", "Target");
+        line.SetLabel("calls");
+
+        model.RemoveLine(line);
+        Assert.Equal("calls", model.PendingLineLabels[line.Id].Label);
+
+        var recreated = new Line(source, target);
+        model.TryAddLine(recreated);
+
+        Assert.Equal("calls", recreated.Label);
+        Assert.Empty(model.PendingLineLabels);
+    }
 }

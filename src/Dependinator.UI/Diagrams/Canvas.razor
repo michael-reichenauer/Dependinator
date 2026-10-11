@@ -175,6 +175,21 @@
                         text-anchor: start;
                         pointer-events: none;
                     }
+
+                    /* A line's user label: a background-colored halo keeps it legible over the line. */
+                    .lineLabel {
+                        font-family: Verdana, Helvetica, Arial, sans-serif;
+                        fill:
+                            @DColors.Text
+                        ;
+                        paint-order: stroke;
+                        stroke:
+                            @DColors.CanvasBackground
+                        ;
+                        stroke-width: 3px;
+                        stroke-linejoin: round;
+                        pointer-events: none;
+                    }
         </style>
         <defs>
             <marker id="arrow-line" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">

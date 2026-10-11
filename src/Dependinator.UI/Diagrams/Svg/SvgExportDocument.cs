@@ -100,6 +100,14 @@ static class SvgExportDocument
                 dominant-baseline: hanging;
                 text-anchor: start;
             }
+            .lineLabel {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                fill: {{DColors.Text}};
+                paint-order: stroke;
+                stroke: {{DColors.CanvasBackground}};
+                stroke-width: 3px;
+                stroke-linejoin: round;
+            }
             """;
 
     // The line arrow-head markers, copied from the canvas defs in Canvas.razor.

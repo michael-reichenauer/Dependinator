@@ -48,6 +48,11 @@ interface IModel : IDisposable
     void TryAddLink(Link link);
     void TryAddLine(Line line);
 
+    // Line labels whose line does not exist right now (a split line before its next render, a
+    // line recreated after its node moved): applied by TryAddLine when the line comes back.
+    IReadOnlyDictionary<LineId, PendingLineLabel> PendingLineLabels { get; }
+    void SetPendingLineLabel(LineId lineId, PendingLineLabel label);
+
     void RemoveNode(Node node);
     void RemoveLink(Link link);
     void RemoveLine(Line line);
@@ -58,9 +63,13 @@ interface IModel : IDisposable
     void SetFromDto(string path, ModelDto modelDto);
 }
 
+// A line label waiting for its line; the endpoint names say whether it can still come back.
+record PendingLineLabel(string Label, string? SourceName, string? TargetName);
+
 class Model : IModel
 {
     readonly Action disposeAction;
+    readonly Dictionary<LineId, PendingLineLabel> pendingLineLabels = [];
 
     public Model(Action disposeAction)
     {
@@ -125,16 +134,40 @@ class Model : IModel
             Lines =
             [
                 .. lines
-                    .Values.Where(l => !l.IsDirect && (l.SegmentPoints.Count > 0 || l.Description is not null))
+                    .Values.Where(l =>
+                        !l.IsDirect && (l.SegmentPoints.Count > 0 || l.Description is not null || l.Label is not null)
+                    )
                     .Select(l => new LineDto()
                     {
                         LineId = l.Id.Value,
                         SegmentPoints = [.. l.SegmentPoints],
                         IsSegmentsUserSet = l.IsSegmentsUserSet,
                         Description = l.Description,
+                        Label = l.Label,
+                        Source = l.Label is not null ? l.Source.Name : null,
+                        Target = l.Label is not null ? l.Target.Name : null,
+                    }),
+                // A pending label is kept while both its nodes exist (the line may come back);
+                // one whose node is gone is dropped here.
+                .. pendingLineLabels
+                    .Where(p => HasNode(p.Value.SourceName) && HasNode(p.Value.TargetName))
+                    .Select(p => new LineDto()
+                    {
+                        LineId = p.Key.Value,
+                        SegmentPoints = [],
+                        Label = p.Value.Label,
+                        Source = p.Value.SourceName,
+                        Target = p.Value.TargetName,
                     }),
             ],
         };
+
+    // An unknown name (an older file without endpoint names) counts as present.
+    bool HasNode(string? name) => name is null || nodes.ContainsKey(NodeId.FromName(name));
+
+    public IReadOnlyDictionary<LineId, PendingLineLabel> PendingLineLabels => pendingLineLabels;
+
+    public void SetPendingLineLabel(LineId lineId, PendingLineLabel label) => pendingLineLabels[lineId] = label;
 
     public void SetFromDto(string path, ModelDto modelDto)
     {
@@ -170,6 +203,8 @@ class Model : IModel
         if (lines.ContainsKey(line.Id))
             return;
         lines[line.Id] = line;
+        if (pendingLineLabels.Remove(line.Id, out var pending))
+            line.SetLabel(pending.Label);
     }
 
     public void Clear()
@@ -178,6 +213,7 @@ class Model : IModel
         nodes.Clear();
         links.Clear();
         lines.Clear();
+        pendingLineLabels.Clear();
         LineFocus = null;
         Path = "";
         ViewRect = Rect.None;
@@ -221,6 +257,10 @@ class Model : IModel
 
     public void RemoveLine(Line line)
     {
+        // The label waits for the line to come back (its node moved, a link changed kind, a
+        // delete was undone); it is dropped at save time once one of its nodes is gone.
+        if (line.Label is { } label)
+            pendingLineLabels[line.Id] = new PendingLineLabel(label, line.Source.Name, line.Target.Name);
         lines.Remove(line.Id);
         line.RenderAncestor?.RemoveDirectLine(line);
         line.Target.Remove(line);

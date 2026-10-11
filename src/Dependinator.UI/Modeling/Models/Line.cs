@@ -86,6 +86,13 @@ class Line : IItem
     public string? HtmlDescription { get; private set; }
     public DateTime DescriptionUpdateStamp { get; private set; }
 
+    // The user's label drawn on the line (what flows across it, which outputs feed which
+    // parameters): the user's text, unlike Description, which the parse owns and clears when
+    // stale. Persisted; the model keeps it in a pending store while the line is recreated, see
+    // Model.TryAddLine.
+    public string? Label { get; private set; }
+    public string? HtmlLabel { get; private set; }
+
     public bool IsHidden
     {
         get => isHidden;
@@ -123,6 +130,12 @@ class Line : IItem
     }
 
     public void ClearDescription() => SetDescription(null, DateTime.MinValue);
+
+    public void SetLabel(string? text)
+    {
+        Label = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+        HtmlLabel = Label is not null ? HttpUtility.HtmlEncode(Label) : null;
+    }
 
     public override string ToString() => $"{Source}->{Target} ({links.Count})";
 
