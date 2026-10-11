@@ -71,6 +71,14 @@ public class WebshopExampleTests
         AssertNode(items, "$Externals.dns.zone");
         AssertLink(items, $"{Main}.dns.shopRecord", "$Externals.dns.zone");
 
+        // Modules carry the icon of what they mainly deploy (the shared private-endpoint module
+        // becomes a private-endpoint icon wherever it is used).
+        Assert.Equal("Virtual-Network", items.Node($"{Main}.rgPlatform.networking").Properties.IconName);
+        Assert.Equal("Key-Vault", items.Node($"{Main}.rgPlatform.keyVault").Properties.IconName);
+        Assert.Equal("Storage-Account", items.Node($"{Main}.rgData.storage").Properties.IconName);
+        Assert.Equal("Front-Door", items.Node($"{Main}.rgApps.frontDoor").Properties.IconName);
+        Assert.Equal("Private-Endpoint", items.Node($"{Main}.rgData.storage.blobPrivateEndpoint").Properties.IconName);
+
         // Module outputs flow into other modules' parameters.
         AssertLink(items, $"{Main}.rgApps.appService.sqlServerFqdn", $"{Main}.rgData.sqlServer.serverFqdn");
         AssertLink(items, $"{Main}.rgData.events.storageAccountId", $"{Main}.rgData.storage.storageAccountId");

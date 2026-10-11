@@ -9,9 +9,12 @@ public class BicepFixture : IAsyncLifetime
 {
     internal IReadOnlyList<Item> Items { get; private set; } = [];
 
+    // Shared by tests that parse a file of their own (the type index is loaded once per host).
+    internal BicepCompilerHost CompilerHost { get; } = new();
+
     public async Task InitializeAsync()
     {
-        var parser = new BicepParser(new BicepCompilerHost());
+        var parser = new BicepParser(CompilerHost);
         Items = AssertOk(await parser.ParseAsync(Root.MainBicepPath, SolutionParseOptions.Default));
     }
 

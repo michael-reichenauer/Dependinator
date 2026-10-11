@@ -19,7 +19,8 @@ namespace Dependinator.Bicep.Parsing;
 //                                   same file nests under it (so do modules deployed into a
 //                                   resource group the file creates: main*bicep.rgData.storage)
 //   main*bicep.storage              a module (NodeType.Module); a local module's own file is
-//   main*bicep.storage.account      expanded beneath it, recursively
+//   main*bicep.storage.account      expanded beneath it, recursively, and the module shows the
+//                                   icon of its principal resource (or of "metadata icon = '...'")
 //   $Externals.vnet                 an "existing" resource: deployed elsewhere, only referenced
 //
 // Links come from the compiler's own dependency graph (dependsOn, parent, scope, property
@@ -27,6 +28,7 @@ namespace Dependinator.Bicep.Parsing;
 class ModelBuilder(string entryPath)
 {
     readonly List<Item> nodeItems = [];
+    readonly Dictionary<string, int> nodeIndex = [];
     readonly Dictionary<string, NodeType> nodeTypes = [];
     readonly List<(string Source, string Target)> links = [];
 
@@ -46,7 +48,7 @@ class ModelBuilder(string entryPath)
             NodeType.Solution,
             description,
             Locations.ToFileSpan(model, model.SourceFile.ProgramSyntax),
-            iconName: AzureIcons.ForScope(model.TargetScope)
+            iconName: MetadataIcon(model) ?? AzureIcons.ForScope(model.TargetScope)
         );
 
         AddFile(model, rootName, modulePath: "", visited: [model.SourceFile.FileHandle.Uri]);
@@ -291,8 +293,68 @@ class ModelBuilder(string entryPath)
             DescriptionHelper.TryGetFromDecorator(model, declaration)
             ?? DescriptionHelper.TryGetFromSemanticModel(moduleModel)
             ?? $"module {pathText}{markerText}";
-        AddNode(moduleName, NodeType.Module, description, span);
+        AddNode(moduleName, NodeType.Module, description, span, iconName: MetadataIcon(moduleModel));
         AddFile(moduleModel, moduleName, childModulePath, visited.Add(moduleUri));
+
+        // Without a declared icon the module shows what it mainly deploys, known once its file is
+        // walked (the principal is picked by the links inside the module).
+        if (IconOf(moduleName) is null && PrincipalResourceIcon(moduleName) is { } icon)
+            SetIconName(moduleName, icon);
+    }
+
+    // "metadata icon = 'Key-Vault'" at the top of a file picks its node's icon: an id from the
+    // UI's icon library (an unknown id falls back to the node type's default icon).
+    static string? MetadataIcon(SemanticModel model) =>
+        model.Root.MetadataDeclarations.FirstOrDefault(m => m.Name == "icon")?.DeclaringSyntax
+            is MetadataDeclarationSyntax { Value: StringSyntax value }
+            ? value.TryGetLiteralValue()
+            : null;
+
+    // The icon of a module's principal resource: the direct child resource with the most incoming
+    // links inside the module (outputs, sibling references and module parameters point at it),
+    // then the most descendants, then the first emitted. A module made only of modules takes its
+    // first module's icon; a module without either keeps the default module icon.
+    string? PrincipalResourceIcon(string moduleName)
+    {
+        var prefix = moduleName + ".";
+        var children = nodeTypes
+            .Where(kv => kv.Key.StartsWith(prefix) && !kv.Key.AsSpan(prefix.Length).Contains('.'))
+            .ToList();
+        var principal =
+            children
+                .Where(c => c.Value == NodeType.Resource)
+                .OrderByDescending(c => links.Count(l => l.Target == c.Key))
+                .ThenByDescending(c => nodeTypes.Keys.Count(k => k.StartsWith(c.Key + ".")))
+                .ThenBy(c => nodeIndex[c.Key])
+                .Select(c => c.Key)
+                .FirstOrDefault()
+            ?? children
+                .Where(c => c.Value == NodeType.Module)
+                .OrderBy(c => nodeIndex[c.Key])
+                .Select(c => c.Key)
+                .FirstOrDefault();
+        return principal is null ? null : IconOf(principal);
+    }
+
+    string? IconOf(string name) => nodeItems[nodeIndex[name]].Node!.Properties.IconName;
+
+    void SetIconName(string name, string iconName)
+    {
+        var properties = nodeItems[nodeIndex[name]].Node!.Properties;
+        nodeItems[nodeIndex[name]] = new Item(
+            new Node(
+                name,
+                new NodeProperties
+                {
+                    Type = properties.Type,
+                    Description = properties.Description,
+                    FileSpan = properties.FileSpan,
+                    IconName = iconName,
+                    IsPrivate = properties.IsPrivate,
+                }
+            ),
+            null
+        );
     }
 
     void AddLinks(SemanticModel model, Dictionary<DeclaredSymbol, string> names)
@@ -425,6 +487,7 @@ class ModelBuilder(string entryPath)
     )
     {
         nodeTypes[name] = type;
+        nodeIndex[name] = nodeItems.Count;
         nodeItems.Add(
             new Item(
                 new Node(

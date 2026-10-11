@@ -164,6 +164,62 @@ public class BicepParserTests(BicepFixture fixture)
     }
 
     [Fact]
+    public void ParseAsync_ShouldGiveModules_TheIconOfTheirPrincipalResource()
+    {
+        // storage.bicep mainly deploys its storage account (its outputs and children point at it).
+        Assert.Equal("Storage-Account", Items.Node(Storage).Properties.IconName);
+
+        // A module that is not expanded has no resources to pick from.
+        Assert.Null(Items.Node($"{Main}.keyVault").Properties.IconName);
+    }
+
+    [Fact]
+    public async Task ParseAsync_ShouldUseTheMetadataIcon_WhenAFileDeclaresOne()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"Dependinator-{Guid.NewGuid()}");
+        Directory.CreateDirectory(folder);
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(folder, "main.bicep"),
+                """
+                metadata icon = 'Key-Vault'
+                param location string = resourceGroup().location
+                module shared 'shared.bicep' = { name: 'shared', params: { location: location } }
+                output id string = shared.outputs.id
+                """
+            );
+            File.WriteAllText(
+                Path.Combine(folder, "shared.bicep"),
+                """
+                metadata icon = 'Monitor'
+                param location string
+                resource account 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+                  name: 'st${uniqueString(resourceGroup().id)}'
+                  location: location
+                  kind: 'StorageV2'
+                  sku: { name: 'Standard_LRS' }
+                }
+                output id string = account.id
+                """
+            );
+
+            var parser = new BicepParser(fixture.CompilerHost);
+            var items = AssertOk(
+                await parser.ParseAsync(Path.Combine(folder, "main.bicep"), SolutionParseOptions.Default)
+            );
+
+            // The declared icon wins over the target-scope icon and over the principal resource.
+            Assert.Equal("Key-Vault", items.Node(Main).Properties.IconName);
+            Assert.Equal("Monitor", items.Node($"{Main}.shared").Properties.IconName);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
     public void ParseAsync_ShouldSuffixOutputs_ThatShareAnIdentifier()
     {
         // storage.bicep has both "var accountName" and "output accountName".
