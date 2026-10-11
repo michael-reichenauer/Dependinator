@@ -185,7 +185,7 @@ public class BicepParserTests(BicepFixture fixture)
         Directory.CreateDirectory(folder);
         try
         {
-            File.WriteAllText(
+            await File.WriteAllTextAsync(
                 Path.Combine(folder, "main.bicep"),
                 """
                 metadata icon = 'Key-Vault'
@@ -194,7 +194,7 @@ public class BicepParserTests(BicepFixture fixture)
                 output id string = shared.outputs.id
                 """
             );
-            File.WriteAllText(
+            await File.WriteAllTextAsync(
                 Path.Combine(folder, "shared.bicep"),
                 """
                 metadata icon = 'Monitor'
