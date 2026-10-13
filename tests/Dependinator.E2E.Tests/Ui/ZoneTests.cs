@@ -60,11 +60,13 @@ public class ZoneTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Clicking the label hits the zone's own rectangle under it (labels take no pointer
         // events), which selects the zone: the toolbar offers the zone editor, no icon picker.
-        LocatorBoundingBoxResult label =
-            await ZoneLabel("Data").BoundingBoxAsync()
-            ?? throw new InvalidOperationException("Zone label not rendered.");
+        // The point is taken from the zone's rectangle, where the label sits in the top-left
+        // corner: WebKit reports a wrong bounding box for the label <text> (offset by its own
+        // x/y inside the nested tile <svg>), so a click at its center lands on empty canvas.
+        LocatorBoundingBoxResult zone =
+            await App.Node("Data").BoundingBoxAsync() ?? throw new InvalidOperationException("Zone not rendered.");
         await App.RepeatUntilVisibleAsync(
-            () => Page.Mouse.ClickAsync(label.X + label.Width / 2, label.Y + label.Height / 2),
+            () => Page.Mouse.ClickAsync(zone.X + 12, zone.Y + 8),
             Page.GetByTestId("node-edit-zone")
         );
         await Expect(Page.GetByTestId("node-set-icon")).ToHaveCountAsync(0);
