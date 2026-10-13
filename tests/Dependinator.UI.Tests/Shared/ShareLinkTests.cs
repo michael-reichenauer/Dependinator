@@ -80,6 +80,10 @@ public class ShareLinkTests
     public void ModelKeyFor_ShouldBeDemoForTheDemoModel_AndTheCloudKeyOtherwise()
     {
         Assert.Equal("demo", ShareLink.ModelKeyFor(Dependinator.Core.Shared.DemoModel.Path));
+        Assert.Equal("demo-bicep", ShareLink.ModelKeyFor(Dependinator.Core.Shared.DemoModel.DemoBicepName));
+        Assert.Equal(Dependinator.Core.Shared.DemoModel.Path, ShareLink.DemoPathFor("demo"));
+        Assert.Equal(Dependinator.Core.Shared.DemoModel.DemoBicepName, ShareLink.DemoPathFor("demo-bicep"));
+        Assert.Null(ShareLink.DemoPathFor("abc123"));
         Assert.Equal(
             global::Shared.CloudModelPath.CreateKey("C:\\Code\\My App\\My.sln"),
             ShareLink.ModelKeyFor("C:\\Code\\My App\\My.sln")

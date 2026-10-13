@@ -11,7 +11,10 @@ namespace Dependinator.Roslyn.Parsing;
 [Transient]
 class SourceParser : ISourceParser
 {
-    public async Task<Result<IReadOnlyList<Item>>> ParseSolutionAsync(string solutionPath, SolutionParseOptions options)
+    public bool CanParse(string path) =>
+        path == DemoModel.DemoSolutionName || path.EndsWith(".sln", StringComparison.OrdinalIgnoreCase);
+
+    public async Task<Result<IReadOnlyList<Item>>> ParseAsync(string solutionPath, SolutionParseOptions options)
     {
         // The demo model is pre-parsed and embedded, so load it directly instead of
         // running Roslyn. Used as a fallback when no real model is available and by
@@ -272,32 +275,9 @@ class SourceParser : ISourceParser
         return 0;
     }
 
-    // Reads the gzip-compressed, pre-parsed demo model embedded in this assembly
-    // (Dependinator.Roslyn.demo.model) and deserializes it into parsed items.
-    static async Task<Result<IReadOnlyList<Item>>> LoadEmbeddedDemoModelAsync()
-    {
-        try
-        {
-            const string resourceName = "Dependinator.Roslyn.demo.model";
-            await using var stream = typeof(SourceParser).Assembly.GetManifestResourceStream(resourceName);
-            if (stream is null)
-                return new Error($"Embedded demo model resource '{resourceName}' was not found.");
-
-            await using var gzip = new GZipStream(stream, CompressionMode.Decompress);
-            using var reader = new StreamReader(gzip);
-            var json = await reader.ReadToEndAsync();
-
-            var items = Json.Deserialize<List<Item>>(json);
-            if (items is null)
-                return new Error("Failed to deserialize the embedded demo model.");
-
-            return items;
-        }
-        catch (Exception e)
-        {
-            return new Error(e);
-        }
-    }
+    // The pre-parsed demo model, embedded as Dependinator.Roslyn.demo.model (see DemoModel).
+    static Task<Result<IReadOnlyList<Item>>> LoadEmbeddedDemoModelAsync() =>
+        EmbeddedModel.LoadAsync(typeof(SourceParser).Assembly, "Dependinator.Roslyn.demo.model");
 
     static readonly string[] TestNameSuffixes = ["Test", "Tests", "Spec", "Specs"];
 

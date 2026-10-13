@@ -31,9 +31,10 @@ interface IContextMenuService
     void Open(PointerEvent e);
     void Close();
 
-    // Canvas: adds a note / a manual node at the remembered right-click position.
+    // Canvas: adds a note / a manual node / a zone at the remembered right-click position.
     void AddNoteHere();
     void AddNodeHere();
+    void AddZoneHere();
 
     // Node and line: analysis and navigation on the right-clicked item.
     Task ShowReferencesAsync();
@@ -46,11 +47,20 @@ interface IContextMenuService
     // Manual node: editing.
     Task RenameNodeAsync();
     Task DeleteNodeAsync();
+
+    // Line: the user's label on it.
+    Task EditLineLabelAsync();
+
+    // Node: the user's display name for it.
+    Task EditAliasAsync();
 }
 
 [Scoped]
 class ContextMenuService(
     INoteService noteService,
+    IZoneService zoneService,
+    ILineLabelService lineLabelService,
+    INodeAliasService nodeAliasService,
     IManualEditService manualEditService,
     ISelectionService selectionService,
     IDependenciesService dependenciesService,
@@ -83,8 +93,9 @@ class ContextMenuService(
     }
 
     // A right-click on a node's own box (an icon, or an open container's chrome) targets that
-    // node; a right-click inside a container's content area, on a note or on the canvas
-    // targets the canvas (add here). A line targets the line.
+    // node; a right-click inside a container's content area, on a note or a zone (background:
+    // the user is adding next to it, into its parent) or on the canvas targets the canvas (add
+    // here). A line targets the line.
     void ResolveTarget()
     {
         Target = ContextMenuTarget.Canvas;
@@ -95,10 +106,10 @@ class ContextMenuService(
         using var model = modelMgr.UseModel();
         if (targetId.IsNode && model.Nodes.TryGetValue(targetId.NodeId, out var node))
         {
-            if (node.IsRoot || node.IsNote || NodeViewPolicy.IsContainerView(node, model.Zoom))
+            if (node.IsRoot || NodeViewPolicy.IsAnnotation(node) || NodeViewPolicy.IsContainerView(node, model.Zoom))
                 return;
             Target = ContextMenuTarget.Node;
-            TargetName = node.ShortName;
+            TargetName = node.DisplayName;
             IsTargetManualNode = node.IsManual;
             CanShowTargetSource = Build.IsVsCodeExtWasm && node.FileSpanOrParentSpan is not null;
             return;
@@ -107,7 +118,7 @@ class ContextMenuService(
         if (targetId.IsLine && model.Lines.TryGetValue(LineId.FromId(targetId.Id), out var line))
         {
             Target = ContextMenuTarget.Line;
-            TargetName = $"{line.Source.ShortName}→{line.Target.ShortName}";
+            TargetName = $"{line.Source.DisplayName}→{line.Target.DisplayName}";
             CanShowTargetSource = Build.IsVsCodeExtWasm && line.Source.FileSpanOrParentSpan is not null;
         }
     }
@@ -130,6 +141,12 @@ class ContextMenuService(
     {
         Close();
         _ = manualEditService.AddNodeAtAsync(pendingEvent);
+    }
+
+    public void AddZoneHere()
+    {
+        Close();
+        _ = zoneService.PlaceZoneAtAsync(pendingEvent);
     }
 
     public async Task ShowReferencesAsync()
@@ -197,6 +214,28 @@ class ContextMenuService(
         if (!await SelectTargetAsync())
             return;
         manualEditService.BeginRenameNode(targetId.NodeId, selectionService.SelectedNodePosition);
+    }
+
+    // The alias dialog acts on the selected node, so select first (as the toolbar would have).
+    public async Task EditAliasAsync()
+    {
+        Close();
+        if (Target != ContextMenuTarget.Node)
+            return;
+        if (!await SelectTargetAsync())
+            return;
+        await nodeAliasService.EditAliasAsync(targetId.NodeId);
+    }
+
+    // The label dialog acts on the selected line, so select first (as the toolbar would have).
+    public async Task EditLineLabelAsync()
+    {
+        Close();
+        if (Target != ContextMenuTarget.Line)
+            return;
+        if (!await SelectTargetAsync())
+            return;
+        await lineLabelService.EditLabelAsync(LineId.FromId(targetId.Id));
     }
 
     // The same path as the toolbar's Delete: asks first when children would go too.

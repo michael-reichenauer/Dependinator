@@ -85,7 +85,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                 return new Error("One of the nodes is no longer in the model.");
             rule = new ArchitectureRule(from.Name, to.Name);
             if (model.Rules.Contains(rule))
-                return new Error($"\"{from.ShortName} must not use {to.ShortName}\" is already a rule.");
+                return new Error($"\"{from.DisplayName} must not use {to.DisplayName}\" is already a rule.");
         }
         commandService.Do(new AddRuleCommand(rule));
         return Result.Ok;
@@ -151,10 +151,10 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                 .ThenBy(kv => kv.Key.Item2.LongName, StringComparer.OrdinalIgnoreCase)
                 .Select(kv => new RuleViolation(
                     kv.Key.Item1.Id,
-                    kv.Key.Item1.ShortName,
+                    kv.Key.Item1.DisplayName,
                     kv.Key.Item1.LongName,
                     kv.Key.Item2.Id,
-                    kv.Key.Item2.ShortName,
+                    kv.Key.Item2.DisplayName,
                     kv.Key.Item2.LongName,
                     kv.Value.Links.Count
                 ))

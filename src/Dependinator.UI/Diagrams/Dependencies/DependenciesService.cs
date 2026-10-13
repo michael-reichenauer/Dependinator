@@ -303,7 +303,7 @@ class DependenciesService(
 
         if (model.Nodes.TryGetValue(NodeId.FromId(selectedId), out var selectedNode))
         {
-            Title = selectedNode.ShortName;
+            Title = selectedNode.DisplayName;
             (SubtitleBefore, SubtitleAfter) =
                 treeType is TreeType.References ? ("Nodes that use ", "") : ("Nodes that ", " uses");
             if (isIncludeIndirect)
@@ -316,7 +316,7 @@ class DependenciesService(
         }
         if (model.Lines.TryGetValue(LineId.FromId(selectedId), out var selectedLine))
         {
-            Title = $"{selectedLine.Source.ShortName}→{selectedLine.Target.ShortName}";
+            Title = $"{selectedLine.Source.DisplayName}→{selectedLine.Target.DisplayName}";
             SubtitleBefore =
                 treeType is TreeType.References ? "Source nodes of the links in " : "Target nodes of the links in ";
             SubtitleAfter = "";

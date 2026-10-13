@@ -93,32 +93,56 @@ else if (HasSelectedLine)
         {
           <MudDivider />
           <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Appearance</MudText>
-          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols"
-                       OnClick="SelectIconAsync" data-testid="node-menu-set-icon">
-            Set Icon …
-          </MudMenuItem>
-          <MudMenu Label="Icon Color" StartIcon="@MudBlazor.Icons.Material.Outlined.Palette" IconColor="Color.Secondary"
-                   Dense="true" PopoverClass="@MenuClass" data-testid="node-menu-icon-color">
-            @IconColorMenuItems
-          </MudMenu>
-          <MudMenu Label="Container Color" StartIcon="@MudBlazor.Icons.Material.Outlined.FormatColorFill"
+          @if (!IsSelectedNodeZone)
+          {
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols"
+                         OnClick="SelectIconAsync" data-testid="node-menu-set-icon">
+              Set Icon …
+            </MudMenuItem>
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Badge"
+                         OnClick="EditAlias" title="A name of your own shown instead of the one from the code."
+                         data-testid="node-menu-alias">
+              Display Name …
+            </MudMenuItem>
+            <MudMenu Label="Icon Color" StartIcon="@MudBlazor.Icons.Material.Outlined.Palette" IconColor="Color.Secondary"
+                     Dense="true" PopoverClass="@MenuClass" data-testid="node-menu-icon-color">
+              @IconColorMenuItems
+            </MudMenu>
+          }
+          <MudMenu Label="@(IsSelectedNodeZone ? "Zone Color" : "Container Color")"
+                   StartIcon="@MudBlazor.Icons.Material.Outlined.FormatColorFill"
                    IconColor="Color.Secondary" Dense="true" PopoverClass="@MenuClass"
                    title="Border and background of the node when it is shown as a container"
                    data-testid="node-menu-color">
             @NodeColorMenuItems
           </MudMenu>
 
-          <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Layout</MudText>
-          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
-                       OnClick="LayoutChildren" data-testid="node-menu-reset-children">
-            Reset Children Layout
-          </MudMenuItem>
-          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DeveloperBoardOff"
-                       OnClick="LayoutDescendants" data-testid="node-menu-reset-descendants">
-            Reset All Descendants Layout
-          </MudMenuItem>
+          @if (!IsSelectedNodeZone)
+          {
+            <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Layout</MudText>
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FormatShapes"
+                         OnClick="LayoutChildren" data-testid="node-menu-reset-children">
+              Reset Children Layout
+            </MudMenuItem>
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DeveloperBoardOff"
+                         OnClick="LayoutDescendants" data-testid="node-menu-reset-descendants">
+              Reset All Descendants Layout
+            </MudMenuItem>
+          }
 
-          @if (IsSelectedNodeManual)
+          @if (IsSelectedNodeZone)
+          {
+            <MudDivider />
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Edit"
+                         OnClick="EditZone" data-testid="node-menu-edit-zone">
+              Edit Zone …
+            </MudMenuItem>
+            <MudMenuItem IconColor="Color.Error" Icon="@MudBlazor.Icons.Material.Outlined.Delete"
+                         OnClick="DeleteNode" data-testid="node-menu-delete">
+              Delete Zone
+            </MudMenuItem>
+          }
+          else if (IsSelectedNodeManual)
           {
             <MudDivider />
             <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DriveFileRenameOutline"
@@ -134,12 +158,16 @@ else if (HasSelectedLine)
       </MudMenu>
     </MudTooltip>
 
-    <MudTooltip Text="Show references">
-      <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="node-references" />
-    </MudTooltip>
-    <MudTooltip Text="Show dependencies">
-      <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
-    </MudTooltip>
+    @* A zone has no links of its own. *@
+    @if (!IsSelectedNodeZone)
+    {
+      <MudTooltip Text="Show references">
+        <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="node-references" />
+      </MudTooltip>
+      <MudTooltip Text="Show dependencies">
+        <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
+      </MudTooltip>
+    }
 
     @if (viewOptions.IsEditingEnabled)
     {
@@ -151,30 +179,45 @@ else if (HasSelectedLine)
         <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize"
                        data-testid="node-increase-size" />
       </MudTooltip>
-      <MudTooltip Text="Set icon">
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols" OnClick="SelectIconAsync"
-                       data-testid="node-set-icon" />
-      </MudTooltip>
-      @* Both color choices are offered whatever the current zoom: the icon tint applies when the
-         node shows as an icon, the container color (border + background) when it is open. *@
-      <MudTooltip Text="Set colors">
-        <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Palette" Dense="true" AnchorOrigin="Origin.BottomCenter"
-                 PopoverClass="@MenuClass" data-testid="node-set-color">
-          <div class="d-flex" style="gap:4px;">
-            <div>
-              <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Icon</MudText>
-              @IconColorMenuItems
+      @if (IsSelectedNodeZone)
+      {
+        <MudTooltip Text="Edit zone label and subtitle">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="EditZone" data-testid="node-edit-zone" />
+        </MudTooltip>
+        <MudTooltip Text="Set zone color">
+          <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Palette" Dense="true" AnchorOrigin="Origin.BottomCenter"
+                   PopoverClass="@MenuClass" data-testid="node-set-color">
+            @NodeColorMenuItems
+          </MudMenu>
+        </MudTooltip>
+      }
+      else
+      {
+        <MudTooltip Text="Set icon">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols" OnClick="SelectIconAsync"
+                         data-testid="node-set-icon" />
+        </MudTooltip>
+        @* Both color choices are offered whatever the current zoom: the icon tint applies when the
+           node shows as an icon, the container color (border + background) when it is open. *@
+        <MudTooltip Text="Set colors">
+          <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Palette" Dense="true" AnchorOrigin="Origin.BottomCenter"
+                   PopoverClass="@MenuClass" data-testid="node-set-color">
+            <div class="d-flex" style="gap:4px;">
+              <div>
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Icon</MudText>
+                @IconColorMenuItems
+              </div>
+              <MudDivider Vertical="true" FlexItem="true" />
+              <div>
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" title="Border and background when open">
+                  Container
+                </MudText>
+                @NodeColorMenuItems
+              </div>
             </div>
-            <MudDivider Vertical="true" FlexItem="true" />
-            <div>
-              <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" title="Border and background when open">
-                Container
-              </MudText>
-              @NodeColorMenuItems
-            </div>
-          </div>
-        </MudMenu>
-      </MudTooltip>
+          </MudMenu>
+        </MudTooltip>
+      }
     }
 
     @if (CanShowSource)
@@ -275,6 +318,12 @@ else if (HasSelectedLine)
   INoteService noteService { get; set; } = null!;
 
   [Inject]
+  IZoneService zoneService { get; set; } = null!;
+
+  [Inject]
+  INodeAliasService nodeAliasService { get; set; } = null!;
+
+  [Inject]
   INodeEditService nodeEditService { get; set; } = null!;
 
   [Inject]
@@ -300,6 +349,7 @@ else if (HasSelectedLine)
   bool IsNodeHidden => selectionService.IsSelectedNodeHidden();
   bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
   bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
+  bool IsSelectedNodeZone => SelectedNodeIs(node => node.IsZone);
   bool SelectedNodeHasChildren => SelectedNodeIs(node => node.Children.Count > 0);
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
 
@@ -452,6 +502,20 @@ else if (HasSelectedLine)
     if (!TryGetSelectedNodeId(out var nodeId))
       return Task.CompletedTask;
     return noteService.EditNoteAsync(nodeId);
+  }
+
+  // The dialogs are not awaited: MudMenu closes an item's menu when its handler returns, so an
+  // awaited dialog would leave the menu open behind it.
+  void EditZone()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      zoneService.EditZoneAsync(nodeId).RunInBackground();
+  }
+
+  void EditAlias()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      nodeAliasService.EditAliasAsync(nodeId).RunInBackground();
   }
 
   Task DeleteNoteToolbar()

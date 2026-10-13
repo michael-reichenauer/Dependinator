@@ -1,3 +1,4 @@
+using Dependinator.Bicep;
 using Dependinator.Core;
 using Dependinator.Core.CloudSync;
 using Dependinator.Core.Rpc;
@@ -45,6 +46,7 @@ public class Program
             });
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddDependinatorRoslynServices();
+        builder.Services.AddDependinatorBicepServices();
 
         // Cloud sync — registered after AddDependinatorServices so the explicit
         // ICloudSyncService binding overrides Scrutor's assembly-scanned defaults.
@@ -66,7 +68,11 @@ public class Program
         var app = builder.Build();
         app.Services.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
         app.Services.UseJsonRpc();
-        app.Services.GetRequiredService<IWorkspaceFileService>().SetWorkspaceFolders(["/workspaces/Dependinator"]);
+        // The dev host lists this repository's models (the working solution and the sample Bicep
+        // deployments), so the workspace is the repository root wherever it is checked out (CI
+        // runs the e2e tests from another folder than the dev container's /workspaces/Dependinator).
+        app.Services.GetRequiredService<IWorkspaceFileService>()
+            .SetWorkspaceFolders([FindRepositoryRoot(app.Environment.ContentRootPath)]);
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())
@@ -87,5 +93,18 @@ public class Program
         app.MapFallbackToPage("/_Host");
 
         app.Run();
+    }
+
+    // The nearest folder at or above the content root (the project folder under dotnet run) that
+    // holds Dependinator.sln; the dev container's checkout when there is none (a published host).
+    static string FindRepositoryRoot(string contentRootPath)
+    {
+        for (var folder = new DirectoryInfo(contentRootPath); folder is not null; folder = folder.Parent)
+        {
+            if (File.Exists(Path.Combine(folder.FullName, "Dependinator.sln")))
+                return folder.FullName;
+        }
+
+        return Path.GetDirectoryName(DemoModel.WorkingSolutionPath)!;
     }
 }

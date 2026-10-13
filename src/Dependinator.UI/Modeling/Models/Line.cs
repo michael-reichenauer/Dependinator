@@ -66,6 +66,11 @@ class Line : IItem
     public bool HasInheritanceSourceEnd => IsInheritance && links.Values.Any(l => l.Source == Source);
     public bool HasInheritanceTargetEnd => IsInheritance && links.Values.Any(l => l.Target == Target);
 
+    // Every link behind the line is configuration plumbing (values into parameter and variable
+    // rows), so the View › Lines filter may leave the line out; a line that also carries a real
+    // dependency stays.
+    public bool IsConfiguration => links.Count > 0 && links.Values.All(l => l.IsConfiguration);
+
     // The stroke width that encodes the link count; only drawn while the line is emphasized
     // (the selection's lines, explorer focus lines), otherwise lines share one thin width.
     public double WeightedStrokeWidth => strokeWidth;
@@ -80,6 +85,19 @@ class Line : IItem
     public string? Description { get; private set; }
     public string? HtmlDescription { get; private set; }
     public DateTime DescriptionUpdateStamp { get; private set; }
+
+    // The user's label drawn on the line (what flows across it, which outputs feed which
+    // parameters): the user's text, unlike Description, which the parse owns and clears when
+    // stale. Persisted; the model keeps it in a pending store while the line is recreated, see
+    // Model.TryAddLine.
+    public string? Label { get; private set; }
+    public string? HtmlLabel { get; private set; }
+
+    // The user's description under the label (smaller, like a node's description under its
+    // name); also the user's text, not the parsed Description.
+    public string? LabelDescription { get; private set; }
+    public string? HtmlLabelDescription { get; private set; }
+    public bool HasLabel => Label is not null || LabelDescription is not null;
 
     public bool IsHidden
     {
@@ -118,6 +136,14 @@ class Line : IItem
     }
 
     public void ClearDescription() => SetDescription(null, DateTime.MinValue);
+
+    public void SetLabel(string? text, string? description = null)
+    {
+        Label = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+        HtmlLabel = Label is not null ? HttpUtility.HtmlEncode(Label) : null;
+        LabelDescription = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        HtmlLabelDescription = LabelDescription is not null ? HttpUtility.HtmlEncode(LabelDescription) : null;
+    }
 
     public override string ToString() => $"{Source}->{Target} ({links.Count})";
 

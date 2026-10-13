@@ -1,6 +1,7 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
@@ -16,7 +17,6 @@ public class SelectionServiceTests
     readonly ModelMgr modelMgr = new(new StateMgr());
     readonly Mock<IScreenService> screenService = new();
     readonly Mock<IApplicationEvents> applicationEvents = new();
-    readonly Mock<IModelService> modelService = new();
 
     public SelectionServiceTests()
     {
@@ -25,6 +25,7 @@ public class SelectionServiceTests
             .Setup(s => s.GetBoundingRectangle(It.IsAny<string>()))
             .ReturnsAsync((Result<ElementBoundingRectangle>)new Error("Not on screen"));
         modelMgr.WithModel(m => m.Zoom = 1);
+        commandService = new CommandService(Mock.Of<IApplicationEvents>(), modelMgr);
     }
 
     static Node AddNode(IModel model, string name, Node parent)
@@ -35,8 +36,9 @@ public class SelectionServiceTests
         return node;
     }
 
-    SelectionService CreateService() =>
-        new(modelMgr, modelService.Object, applicationEvents.Object, screenService.Object);
+    readonly CommandService commandService;
+
+    SelectionService CreateService() => new(modelMgr, applicationEvents.Object, screenService.Object, commandService);
 
     static PointerEvent ShiftClick => new() { ShiftKey = true };
 
@@ -111,6 +113,13 @@ public class SelectionServiceTests
 
         service.ToggleNodeHide();
         Assert.False(a.IsHidden || b.IsHidden);
+
+        // Each toggle is one undo step.
+        await commandService.Undo();
+        Assert.True(a.IsHidden && b.IsHidden);
+        await commandService.Undo();
+        Assert.False(a.IsHidden || b.IsHidden);
+        Assert.False(commandService.CanUndo);
     }
 
     [Fact]
@@ -155,5 +164,32 @@ public class SelectionServiceTests
         Assert.Equal([b.Id], service.SelectedNodeIds);
         Assert.False(a.IsSelected);
         Assert.True(b.IsSelected);
+    }
+
+    [Fact]
+    public async Task IsSelectedNodeMovable_ShouldBeTrueForAZone_HoweverMuchOfTheScreenItCovers()
+    {
+        // A zone is drawn around a group and often fills the view; a plain node that large reads
+        // as "the screen" and dragging it pans instead.
+        Node zone,
+            box;
+        using (var model = modelMgr.UseModel())
+        {
+            zone = AddNode(model, "Edge", model.Root);
+            zone.IsZone = true;
+            zone.IsManual = true;
+            zone.Boundary = new Rect(0, 0, 100000, 100000);
+            box = AddNode(model, "Box", model.Root);
+            box.Boundary = new Rect(0, 0, 100000, 100000);
+        }
+        var service = CreateService();
+
+        await service.Select(zone.Id);
+        Assert.True(service.IsSelected);
+        Assert.True(service.IsSelectedNodeMovable(1));
+
+        service.Unselect();
+        await service.Select(box.Id);
+        Assert.False(service.IsSelected); // too large to be selected at all
     }
 }

@@ -235,6 +235,59 @@ public class StructureServiceTests
     }
 
     [Fact]
+    public void AddOrUpdateLink_ShouldTakeIsConfiguration_FromEachParse()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+
+        AddNode(model, "Source", model.Root);
+        AddNode(model, "Target", model.Root);
+
+        service.AddOrUpdateLink(
+            model,
+            new ParsingLink("Source", "Target", new Dependinator.Core.Parsing.LinkProperties { IsConfiguration = true })
+        );
+
+        Assert.True(model.Links.TryGetValue(new LinkId("Source", "Target"), out var link));
+        Assert.True(link.IsConfiguration);
+        Assert.True(model.Lines[LineId.From("Source", "Target")].IsConfiguration);
+
+        // A new parse without the flag (the value is now a real dependency) clears it; the line
+        // is the same line, configuration is not a line identity.
+        model.UpdateStamp = new DateTime(2024, 1, 2);
+        service.AddOrUpdateLink(model, new ParsingLink("Source", "Target", new()));
+
+        Assert.False(link.IsConfiguration);
+        Assert.False(model.Lines[LineId.From("Source", "Target")].IsConfiguration);
+    }
+
+    [Fact]
+    public void SetLinkDto_ShouldRoundtripIsConfiguration()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+
+        AddNode(model, "Source", model.Root);
+        AddNode(model, "Target", model.Root);
+        service.AddOrUpdateLink(
+            model,
+            new ParsingLink("Source", "Target", new Dependinator.Core.Parsing.LinkProperties { IsConfiguration = true })
+        );
+
+        var linkDto = Assert.Single(model.SerializeToDto().Links);
+        Assert.True(linkDto.IsConfiguration);
+
+        using var restoredModel = new ModelMgr(new StateMgr()).UseModel();
+        restoredModel.UpdateStamp = new DateTime(2024, 1, 1);
+        service.SetLinkDto(restoredModel, linkDto);
+
+        Assert.True(restoredModel.Links.TryGetValue(new LinkId("Source", "Target"), out var restoredLink));
+        Assert.True(restoredLink.IsConfiguration);
+    }
+
+    [Fact]
     public void SetLinkDto_ShouldRoundtripIsInheritance()
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();
@@ -369,5 +422,106 @@ public class StructureServiceTests
         var line = new Line(source, target);
         model.TryAddLine(line);
         return (source, target, line);
+    }
+
+    [Fact]
+    public void SetLineLayoutDto_ShouldRestoreTheLabel_AndWriteTheEndpointNamesWithIt()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+
+        var (_, _, line) = AddNodesWithLine(model, "Source", "Target");
+        line.SetLabel("orders", "and payments");
+
+        var lineDto = Assert.Single(model.SerializeToDto().Lines);
+        Assert.Equal("orders", lineDto.Label);
+        Assert.Equal("and payments", lineDto.LabelDescription);
+        Assert.Equal("Source", lineDto.Source);
+        Assert.Equal("Target", lineDto.Target);
+
+        line.SetLabel(null);
+        Assert.False(line.HasLabel);
+        service.SetLineLayoutDto(model, lineDto);
+
+        Assert.Equal("orders", line.Label);
+        Assert.Equal("and payments", line.LabelDescription);
+    }
+
+    [Fact]
+    public void SetLineLayoutDto_ShouldKeepTheLabelPending_UntilTheLineExists()
+    {
+        // A split or explorer line only exists after a render: its saved label waits for it.
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new Mock<ILineService>().Object);
+        var source = AddNode(model, "Source", model.Root);
+        var target = AddNode(model, "Target", model.Root);
+        var lineId = LineId.From("Source", "Target");
+
+        service.SetLineLayoutDto(
+            model,
+            new Dependinator.UI.Modeling.Dtos.LineDto
+            {
+                LineId = lineId.Value,
+                SegmentPoints = [],
+                Label = "uses",
+                Source = "Source",
+                Target = "Target",
+            }
+        );
+        Assert.Equal("uses", model.PendingLineLabels[lineId].Label);
+
+        var line = new Line(source, target);
+        model.TryAddLine(line);
+
+        Assert.Equal("uses", line.Label);
+        Assert.Empty(model.PendingLineLabels);
+    }
+
+    [Fact]
+    public void RenameNode_ShouldKeepTheLineLabels_OnTheRecreatedLines()
+    {
+        // A rename recreates the links touching the node, and their lines get the ids of the
+        // renamed endpoints, so the labels have to follow them (there, and back on undo).
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+        AddNode(model, "A", model.Root);
+        AddNode(model, "B", model.Root);
+        service.AddManualLink(model, "A", "B");
+        model.Lines[LineId.From("A", "B")].SetLabel("orders", "and payments");
+
+        service.RenameNode(model, "A", "A2");
+
+        var renamed = model.Lines[LineId.From("A2", "B")];
+        Assert.Equal("orders", renamed.Label);
+        Assert.Equal("and payments", renamed.LabelDescription);
+        // Nothing stale is saved: the label sits on the line, not in a pending entry.
+        Assert.Single(model.SerializeToDto().Lines);
+
+        service.RenameNode(model, "A2", "A");
+
+        Assert.Equal("orders", model.Lines[LineId.From("A", "B")].Label);
+        Assert.Single(model.SerializeToDto().Lines);
+    }
+
+    [Fact]
+    public void RemoveLine_ShouldKeepTheLabel_ForALineRecreatedWithTheSameId()
+    {
+        // A node moving to another parent removes and re-adds its links, so its lines are new
+        // objects; the label follows the line id.
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var (source, target, line) = AddNodesWithLine(model, "Source", "Target");
+        line.SetLabel("calls");
+
+        model.RemoveLine(line);
+        Assert.Equal("calls", model.PendingLineLabels[line.Id].Label);
+
+        var recreated = new Line(source, target);
+        model.TryAddLine(recreated);
+
+        Assert.Equal("calls", recreated.Label);
+        Assert.Empty(model.PendingLineLabels);
     }
 }

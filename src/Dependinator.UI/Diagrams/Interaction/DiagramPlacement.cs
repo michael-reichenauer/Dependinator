@@ -45,4 +45,17 @@ static class DiagramPlacement
     // keep just the short name.
     public static string ComposeFullName(string parentName, string shortName) =>
         string.IsNullOrEmpty(parentName) ? shortName : $"{parentName}.{shortName}";
+
+    // The first of "Name", "Name 2", "Name 3", … not already used under the parent (full name is
+    // the node identity, so the same short name can still be used under other parents).
+    public static string UniqueShortName(IModel model, string parentName, string baseName)
+    {
+        for (var i = 1; ; i++)
+        {
+            var candidate = i == 1 ? baseName : $"{baseName} {i}";
+            var fullName = ComposeFullName(parentName, candidate);
+            if (!model.Nodes.ContainsKey(NodeId.FromName(fullName)))
+                return candidate;
+        }
+    }
 }

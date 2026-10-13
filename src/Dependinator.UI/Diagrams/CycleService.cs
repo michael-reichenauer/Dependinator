@@ -80,12 +80,12 @@ class CycleService(IModelMgr modelMgr) : ICycleService
                 if (component.Count < 2)
                     continue;
 
-                var members = component.OrderBy(n => n.ShortName, StringComparer.OrdinalIgnoreCase).ToList();
+                var members = component.OrderBy(n => n.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
                 found.Add(
                     new Cycle(
                         container.Id,
-                        container.ShortName,
-                        members.Select(n => new CycleMember(n.Id, n.ShortName)).ToList()
+                        container.DisplayName,
+                        members.Select(n => new CycleMember(n.Id, n.DisplayName)).ToList()
                     )
                 );
 

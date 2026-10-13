@@ -32,6 +32,10 @@
         <PackageVersion Include="Verify.Xunit" Version="31.12.5" />
         <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
         <PackageVersion Include="Microsoft.Build.Locator" Version="1.11.2" />
+        <!-- The Bicep compiler as a library (src/Dependinator.Bicep). Microsoft calls the package
+             unsupported and may change its API in any release, so it is pinned here and ignored by
+             Dependabot (.github/dependabot.yml): bump it deliberately and build. -->
+        <PackageVersion Include="Azure.Bicep.Core" Version="0.48.1" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.6.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.6.0" />

@@ -152,4 +152,23 @@ public class DependencyTreeTests
         Assert.Equal([z], chain.FarChain);
         Assert.Equal(2, chain.Hops);
     }
+
+    [Fact]
+    public void ForNode_ShouldShowTheDisplayName_InTheRows()
+    {
+        using var model = modelMgr.UseModel();
+        var a = AddNode(model, "A", model.Root, NodeType.Assembly);
+        var b = AddNode(model, "B", model.Root, NodeType.Assembly);
+        var x = AddNode(model, "A.X", a);
+        var y = AddNode(model, "B.Y", b);
+        AddLink(model, x, y);
+        b.SetAlias("Backend");
+        y.SetAlias("Orders API");
+
+        var items = DependencyTree.ForNode(model, x, TreeType.Dependencies, includeIndirect: false);
+
+        var row = Assert.Single(items);
+        Assert.Equal("Backend", row.Text);
+        Assert.Equal("Orders API", Assert.Single(Expand(row)).Text);
+    }
 }

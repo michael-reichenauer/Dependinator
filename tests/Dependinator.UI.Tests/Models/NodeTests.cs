@@ -96,4 +96,103 @@ public class NodeTests
 
         Assert.Equal(new Rect(0, 0, 15, 10), bounds);
     }
+
+    // The parser-supplied icon (IconName) follows the same update rules as the other parsed
+    // properties and stays separate from the user's custom icon, which survives every re-parse.
+    [Fact]
+    public void Update_ShouldSetParsedIconName()
+    {
+        var node = CreateNode();
+
+        node.Update(new Node(node.Name, new() { Type = NodeType.Resource, IconName = "Key-Vault" }));
+
+        Assert.Equal("Key-Vault", node.IconName);
+        Assert.Equal(NodeType.Resource, node.Type);
+    }
+
+    [Fact]
+    public void Update_ShouldKeepIconName_WhenParsedIconIsNull()
+    {
+        var node = CreateNode();
+        node.IconName = "Key-Vault";
+
+        node.Update(new Node(node.Name, new() { Description = "Updated" }));
+
+        Assert.Equal("Key-Vault", node.IconName);
+    }
+
+    [Fact]
+    public void Update_ShouldClearIconName_OnNoValue()
+    {
+        var node = CreateNode();
+        node.IconName = "Key-Vault";
+
+        node.Update(new Node(node.Name, new() { IconName = NoValue.String }));
+
+        Assert.Null(node.IconName);
+    }
+
+    [Fact]
+    public void Update_ShouldNotTouchCustomIcon()
+    {
+        var node = CreateNode();
+        node.CustomIconName = "Database";
+        node.CustomIconColor = "Blue";
+
+        node.Update(new Node(node.Name, new() { IconName = "Key-Vault" }));
+
+        Assert.Equal("Database", node.CustomIconName);
+        Assert.Equal("Blue", node.CustomIconColor);
+        Assert.Equal("Key-Vault", node.IconName);
+    }
+
+    [Fact]
+    public void ToDto_SetFromDto_ShouldRoundTripParsedAndCustomIconsSeparately()
+    {
+        var node = CreateNode();
+        node.IconName = "Key-Vault";
+        node.CustomIconName = "Database";
+
+        var dto = node.ToDto();
+        var restored = CreateNode();
+        restored.SetFromDto(dto);
+
+        Assert.Equal("Key-Vault", dto.Properties.IconName);
+        Assert.Equal("Database", dto.IconName);
+        Assert.Equal("Key-Vault", restored.IconName);
+        Assert.Equal("Database", restored.CustomIconName);
+    }
+
+    [Fact]
+    public void ToDto_ShouldOmitParsedIconName_WhenNotSet()
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(CreateNode().ToDto());
+
+        Assert.DoesNotContain("IconName", json);
+    }
+
+    static ModelNode CreateNode() => new("Model.web", new ModelNode("", null!) { Type = NodeType.Root });
+
+    [Fact]
+    public void Update_ShouldNotTouchTheAlias_AndDtoShouldRoundTripIt()
+    {
+        var node = CreateNode();
+        node.SetAlias(" Store <front> ");
+
+        node.Update(new Node(node.Name, new() { IconName = "Key-Vault" }));
+
+        Assert.Equal("Store <front>", node.Alias);
+        Assert.Equal("Store &lt;front&gt;", node.HtmlAlias);
+        Assert.Equal("Store <front>", node.DisplayName);
+        Assert.Equal("web", node.ShortName); // the name from the code is untouched
+
+        var restored = CreateNode();
+        restored.SetFromDto(node.ToDto());
+        Assert.Equal("Store <front>", restored.Alias);
+
+        node.SetAlias("  ");
+        Assert.Null(node.Alias);
+        Assert.Equal("web", node.DisplayName);
+        Assert.DoesNotContain("Alias", System.Text.Json.JsonSerializer.Serialize(node.ToDto()));
+    }
 }

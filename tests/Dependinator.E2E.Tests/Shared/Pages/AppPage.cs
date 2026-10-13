@@ -28,7 +28,8 @@ public sealed class AppPage
     // so match all three (see NodeSvg.cs).
     public ILocator NodeLabel(string text) => page.Locator(NodeLabelSelector, new() { HasText = text }).First;
 
-    const string NodeLabelSelector = "#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName";
+    const string NodeLabelSelector =
+        "#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName, #svgcanvas text.zoneName";
 
     // A member of the demo model's Demo.UI.Main class. Navigating to a member is what makes its
     // class open as a container (the zoom settles inside it): tests that need Main's
@@ -299,6 +300,55 @@ public sealed class AppPage
             {
                 await ResetPopoversAsync();
             }
+        }
+    }
+
+    // Assert a checkbox-style submenu item's state (its data-checked attribute), then close the
+    // menu. The submenu can close again right after it opened (a re-render, e.g. the one a
+    // toggle's re-parse triggers when it completes), and an assertion on the locator that
+    // OpenSubMenuItemAsync returned then polls an item that never comes back ("element(s) not
+    // found"). So each attempt reopens the submenu and reads the state again.
+    public async Task ExpectSubMenuItemCheckedAsync(string parentTestId, string testId, bool isChecked)
+    {
+        string expected = isChecked ? "true" : "false";
+        ILocator item = MenuItem(testId);
+        for (int attempt = 1; ; attempt++)
+        {
+            await OpenSubMenuItemAsync(parentTestId, testId);
+            try
+            {
+                await Expect(item)
+                    .ToHaveAttributeAsync("data-checked", expected, new() { Timeout = MenuAttemptTimeout });
+                break;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
+            {
+                await ResetPopoversAsync();
+            }
+        }
+
+        await CloseSubMenuAsync(item);
+        if (await MenuItem("menu-search").IsVisibleAsync())
+            await CloseMenuAsync();
+    }
+
+    // Close an open submenu with Escape, repeated until the given item in it is gone. The first
+    // Escape after a submenu opened is lost (every trace of the Settings tests showed it, on all
+    // three browsers), so the item is polled briefly and Escape pressed again, rather than
+    // waiting out a full menu attempt per lost keystroke the way CloseMenuAsync does.
+    async Task CloseSubMenuAsync(ILocator itemInSubMenu)
+    {
+        const int attempts = 10;
+        const float pollTimeout = 1_000;
+        for (int attempt = 1; ; attempt++)
+        {
+            await page.Keyboard.PressAsync("Escape");
+            try
+            {
+                await itemInSubMenu.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = pollTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < attempts) { }
         }
     }
 
@@ -577,6 +627,20 @@ public sealed class AppPage
             }
             catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
         }
+    }
+
+    // Double-click a line (edit mode: opens its label dialog), retrying until the given locator
+    // (e.g. the dialog's field) shows, since a click during a re-render is swallowed.
+    public async Task DoubleClickLineAsync(ILocator line, ILocator expected)
+    {
+        await RepeatUntilVisibleAsync(
+            async () =>
+            {
+                (float x, float y) = await WaitForStableLinePointAsync(line, 0.5f);
+                await page.Mouse.DblClickAsync(x, y);
+            },
+            expected
+        );
     }
 
     // A screen point on the line's visible part, read until it stops moving between two reads:

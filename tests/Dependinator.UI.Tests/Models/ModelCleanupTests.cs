@@ -189,4 +189,29 @@ public class ModelCleanupTests
         model.TryAddLink(link);
         return line;
     }
+
+    [Fact]
+    public void ClearNotUpdated_ShouldKeepLineLabels_WhileClearingStaleDescriptions()
+    {
+        // The user's label is not the parser's: a re-parse never clears it.
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var structureService = new StructureService(new Mock<ILineService>().Object);
+        var stamp = new DateTime(2024, 1, 1);
+        model.UpdateStamp = stamp;
+
+        var source = new Node("Source", model.Root) { UpdateStamp = stamp };
+        var target = new Node("Target", model.Root) { UpdateStamp = stamp };
+        model.Root.AddChild(source);
+        model.Root.AddChild(target);
+        model.TryAddNode(source);
+        model.TryAddNode(target);
+        var line = AddLine(model, source, target, stamp);
+        line.SetDescription("Stale description", stamp.AddDays(-1));
+        line.SetLabel("orders");
+
+        structureService.ClearNotUpdated(model);
+
+        Assert.Null(line.Description);
+        Assert.Equal("orders", line.Label);
+    }
 }

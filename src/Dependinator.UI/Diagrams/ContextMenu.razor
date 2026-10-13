@@ -44,6 +44,14 @@
                 Show Source Code
               </MudListItem>
             }
+            @if (viewOptions.IsEditingEnabled)
+            {
+              <MudDivider />
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Badge" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.EditAliasAsync" data-testid="context-menu-alias">
+                Display Name …
+              </MudListItem>
+            }
             @if (viewOptions.IsEditingEnabled && contextMenuService.IsTargetManualNode)
             {
               <MudDivider />
@@ -77,6 +85,14 @@
                 Show Source Code
               </MudListItem>
             }
+            @if (viewOptions.IsEditingEnabled)
+            {
+              <MudDivider />
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Label" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.EditLineLabelAsync" data-testid="context-menu-line-label">
+                Edit Label …
+              </MudListItem>
+            }
             break;
 
           default:
@@ -89,6 +105,10 @@
               <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.StickyNote2" IconColor="Color.Secondary"
                            OnClick="AddNote" data-testid="context-menu-add-note">
                 Add Note Here
+              </MudListItem>
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.SelectAll" IconColor="Color.Secondary"
+                           OnClick="AddZone" data-testid="context-menu-add-zone">
+                Add Zone Here
               </MudListItem>
               <MudDivider />
             }
@@ -182,6 +202,8 @@
   void AddNote() => contextMenuService.AddNoteHere();
 
   void AddNode() => contextMenuService.AddNodeHere();
+
+  void AddZone() => contextMenuService.AddZoneHere();
 
   void FitToScreen()
   {

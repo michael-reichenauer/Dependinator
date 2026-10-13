@@ -21,7 +21,7 @@ class TreeItem : TreeItemData<TreeItem>
     {
         Value = this;
         NodeId = node.Id;
-        Text = node.ShortName;
+        Text = node.DisplayName;
         Icon = Icons.Icon.GetIcon(node);
         CanShowEditor = Dependinator.Core.Build.IsVsCodeExtWasm && node.FileSpanOrParentSpan is not null;
         LinkCount = linkCount;

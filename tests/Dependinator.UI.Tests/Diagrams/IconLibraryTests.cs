@@ -23,6 +23,7 @@ public class IconLibraryTests
         "Enum",
         "Struct",
         "Record",
+        "Cloud",
     ];
 
     [Fact]
@@ -56,7 +57,7 @@ public class IconLibraryTests
         // ./scripts/import-icons — update the counts when the manifests change).
         Assert.Equal(19, icons.Count(icon => icon.Group == "Default"));
         Assert.Equal(20, icons.Count(icon => icon.Group == "General"));
-        Assert.Equal(69, icons.Count(icon => icon.Group == "Azure"));
+        Assert.Equal(83, icons.Count(icon => icon.Group == "Azure"));
         Assert.Equal(61, icons.Count(icon => icon.Group == "Aws"));
         Assert.Equal(55, icons.Count(icon => icon.Group == "Google"));
         Assert.Equal(
@@ -298,5 +299,54 @@ public class IconLibraryTests
             .ToList();
 
         Assert.Equal(ids.Count, ids.Distinct().Count());
+    }
+
+    [Fact]
+    public void GetIconName_ShouldUseParsedIcon_WhenNoCustomIcon()
+    {
+        var node = CreateNode(NodeType.Resource);
+        node.IconName = "Key-Vault";
+
+        Assert.Equal("Key-Vault", Icon.GetIconName(node));
+    }
+
+    [Fact]
+    public void GetIconName_ShouldPreferCustomIcon_OverParsedIcon()
+    {
+        var node = CreateNode(NodeType.Resource);
+        node.IconName = "Key-Vault";
+        node.CustomIconName = "Database";
+
+        Assert.Equal("Database", Icon.GetIconName(node));
+    }
+
+    [Fact]
+    public void GetIconName_ShouldFallBackToTypeDefault_WhenParsedIconIsUnknown()
+    {
+        var node = CreateNode(NodeType.Resource);
+        node.IconName = "No-Such-Icon";
+
+        Assert.Equal("Cloud", Icon.GetIconName(node));
+    }
+
+    [Fact]
+    public void GetIconName_ShouldApplyColor_ToParsedTintableIcon()
+    {
+        var node = CreateNode(NodeType.Resource);
+        node.IconName = "Database";
+        node.CustomIconColor = "Blue";
+
+        Assert.Equal("Database--Blue", Icon.GetIconName(node));
+    }
+
+    [Fact]
+    public void GetIconName_ShouldIgnoreColor_ForParsedCloudProviderIcon()
+    {
+        // Official provider icons keep their own colors (no tint variants).
+        var node = CreateNode(NodeType.Resource);
+        node.IconName = "Key-Vault";
+        node.CustomIconColor = "Blue";
+
+        Assert.Equal("Key-Vault", Icon.GetIconName(node));
     }
 }

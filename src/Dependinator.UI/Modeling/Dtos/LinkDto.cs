@@ -12,4 +12,8 @@ record LinkDto(string SourceName, string TargetName, string TargetType)
     // True when the source type inherits/implements the target type.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsInheritance { get; init; }
+
+    // True when the link only carries a value into a parameter or variable row (Bicep).
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsConfiguration { get; init; }
 }

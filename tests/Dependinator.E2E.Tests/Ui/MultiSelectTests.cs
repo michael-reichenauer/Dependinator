@@ -61,7 +61,7 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
-    public async Task ShiftClick_ShouldSelectSeveral_HideThemTogether_AndEscapeClearsAll()
+    public async Task ShiftClick_ShouldSelectSeveral_HideThemTogether_UndoInOneStep_AndEscapeClearsAll()
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
@@ -92,11 +92,27 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
         }
         Assert.True(after >= before + 2, $"Expected at least two more faded nodes, had {before}, now {after}.");
 
-        // Show them again (the primary node decides the direction), then clear the selection.
-        // The menu popover takes the first Escape while it is still closing, so wait for it to
-        // be gone and press again if the selection is still there.
-        await (await App.OpenNodeMenuItemAsync("node-menu-toggle-hide")).ClickAsync();
+        // Hiding the group is one undoable step: Ctrl+Z brings both back. Shortcuts are ignored
+        // while the menu popover is still closing, so wait for it to be gone and press again if
+        // the undo button is still enabled.
+        ILocator undo = App.MenuItem("toolbar-undo");
+        await Expect(undo).ToBeEnabledAsync();
         await Expect(App.MenuItem("node-menu-toggle-hide")).ToHaveCountAsync(0);
+        for (int attempt = 0; attempt < 5 && await undo.IsEnabledAsync(); attempt++)
+        {
+            await Page.Keyboard.PressAsync("Control+z");
+            await Page.WaitForTimeoutAsync(300);
+        }
+        await Expect(undo).ToBeDisabledAsync();
+        await Expect(App.MenuItem("toolbar-redo")).ToBeEnabledAsync();
+        for (int attempt = 0; attempt < 50 && after > before; attempt++)
+        {
+            await Page.WaitForTimeoutAsync(100);
+            after = await faded.CountAsync();
+        }
+        Assert.Equal(before, after);
+
+        // Then clear the selection.
         for (int attempt = 0; attempt < 5 && await App.NodeSelectionCount.CountAsync() > 0; attempt++)
         {
             await Page.Keyboard.PressAsync("Escape");

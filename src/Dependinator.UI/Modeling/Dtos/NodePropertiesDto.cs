@@ -22,4 +22,9 @@ record NodePropertiesDto
     // caches saved before this field existed, where navigation then needs the re-parse).
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public FileSpan? FileSpan { get; init; }
+
+    // Parser-supplied icon (see Parsing.NodeProperties.IconName); omitted for nodes whose icon
+    // is the node-type default. Distinct from NodeDto.IconName, the user's custom icon.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? IconName { get; init; }
 }

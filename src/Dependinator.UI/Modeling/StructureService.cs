@@ -73,6 +73,7 @@ class StructureService(ILineService linesService) : IStructureService
             link.UpdateStamp = model.UpdateStamp;
             link.Source.UpdateStamp = model.UpdateStamp;
             link.Target.UpdateStamp = model.UpdateStamp;
+            link.IsConfiguration = parsedLink.Properties.IsConfiguration == true;
 
             if (link.IsInheritance != isInheritance)
             { // Kind changed, rebuild the link's lines since inheritance links use separate lines
@@ -92,6 +93,7 @@ class StructureService(ILineService linesService) : IStructureService
 
         link = new Models.Link(source, target);
         link.IsInheritance = isParsedInheritance;
+        link.IsConfiguration = parsedLink.Properties.IsConfiguration == true;
         link.UpdateStamp = model.UpdateStamp;
 
         // Stamp the endpoints like the existing-link path above: nodes that are only referenced
@@ -126,9 +128,9 @@ class StructureService(ILineService linesService) : IStructureService
     // Renames a node and its whole subtree by rebuilding each node under a new parent-qualified
     // name (the name is the node's identity): the renamed node takes toName and every descendant is
     // re-prefixed accordingly. All links touching any node in the subtree are recreated with the
-    // remapped endpoint names (endpoints outside the subtree are unchanged). No-op if the source is
-    // missing or the target name is already taken. Symmetric, so a command can revert by renaming
-    // back.
+    // remapped endpoint names (endpoints outside the subtree are unchanged), and the labels of
+    // their lines follow. No-op if the source is missing or the target name is already taken.
+    // Symmetric, so a command can revert by renaming back.
     public void RenameNode(IModel model, string fromName, string toName)
     {
         if (fromName == toName)
@@ -172,9 +174,24 @@ class StructureService(ILineService linesService) : IStructureService
         // Remove the old links and nodes, then rebuild the subtree under the new names and re-add the
         // remapped links (and their lines).
         var oldLinks = subtree.SelectMany(n => n.SourceLinks.Concat(n.TargetLinks)).Distinct().ToList();
+        var oldLines = oldLinks.SelectMany(l => l.Lines).Distinct().ToList();
         oldLinks.ForEach(model.RemoveLink);
         foreach (var node in fromNode.DescendantsAndSelfPostOrder().ToList())
             model.RemoveNode(node);
+
+        // A removed line parks its label under its id (Model.RemoveLine), but the line that
+        // replaces it is named after the renamed endpoints: re-park the label under that id
+        // before the links (and their lines) are re-added, so TryAddLine picks it up.
+        foreach (var line in oldLines.Where(l => l.HasLabel && !model.Lines.ContainsKey(l.Id)))
+        {
+            var source = nameMap.GetValueOrDefault(line.Source.Name, line.Source.Name);
+            var target = nameMap.GetValueOrDefault(line.Target.Name, line.Target.Name);
+            var lineId =
+                line.IsDirect ? LineId.FromDirect(source, target)
+                : line.IsInheritance ? LineId.FromInheritance(source, target)
+                : LineId.From(source, target);
+            model.SetPendingLineLabel(lineId, new PendingLineLabel(line.Label, line.LabelDescription, source, target));
+        }
 
         foreach (var (newName, newParentName, dto) in plan)
         {
@@ -229,6 +246,7 @@ class StructureService(ILineService linesService) : IStructureService
         link.UpdateStamp = model.UpdateStamp;
         link.IsManual = linkDto.IsManual;
         link.IsInheritance = linkDto.IsInheritance;
+        link.IsConfiguration = linkDto.IsConfiguration;
 
         AddLink(model, link);
     }
@@ -279,13 +297,30 @@ class StructureService(ILineService linesService) : IStructureService
 
     public void SetLineLayoutDto(IModel model, LineDto lineLayoutDto)
     {
-        if (!model.Lines.TryGetValue(LineId.FromId(lineLayoutDto.LineId), out var line))
+        var lineId = LineId.FromId(lineLayoutDto.LineId);
+        if (!model.Lines.TryGetValue(lineId, out var line))
+        {
+            // A labeled line that only exists after a render (a split or explorer line): the
+            // label waits for it (see Model.TryAddLine).
+            if (lineLayoutDto.Label is not null || lineLayoutDto.LabelDescription is not null)
+                model.SetPendingLineLabel(
+                    lineId,
+                    new PendingLineLabel(
+                        lineLayoutDto.Label,
+                        lineLayoutDto.LabelDescription,
+                        lineLayoutDto.Source,
+                        lineLayoutDto.Target
+                    )
+                );
             return;
+        }
 
         line.SetSegmentPoints(lineLayoutDto.SegmentPoints);
         line.IsSegmentsUserSet = lineLayoutDto.IsSegmentsUserSet ?? lineLayoutDto.SegmentPoints.Count > 0;
         if (lineLayoutDto.Description is not null)
             line.SetDescription(lineLayoutDto.Description, model.UpdateStamp);
+        if (lineLayoutDto.Label is not null || lineLayoutDto.LabelDescription is not null)
+            line.SetLabel(lineLayoutDto.Label, lineLayoutDto.LabelDescription);
     }
 
     public void ClearNotUpdated(IModel model)

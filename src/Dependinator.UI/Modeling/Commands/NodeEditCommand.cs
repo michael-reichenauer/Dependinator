@@ -37,6 +37,10 @@ class NodeEditCommand(NodeId nodeId) : Command
     public string? Description { get; set; }
     public string? DescriptionCopy { get; private set; }
 
+    // Display alias; "" means clear back to the name from the code (stored as null on the node).
+    public string? Alias { get; set; }
+    public string? AliasCopy { get; private set; }
+
     public override void Execute(IModel model)
     {
         if (!model.Nodes.TryGetValue(nodeId, out var node))
@@ -58,6 +62,14 @@ class NodeEditCommand(NodeId nodeId) : Command
         {
             DescriptionCopy = node.Description ?? "";
             node.SetDescription(Description == "" ? null : Description);
+        }
+        if (Alias != null)
+        {
+            AliasCopy = node.Alias ?? "";
+            node.SetAlias(Alias == "" ? null : Alias);
+            // The cycles, rules and path panels cache their rows (with names) per structure
+            // version; a new name must invalidate them like a structural change would.
+            model.BumpStructureVersion();
         }
     }
 
@@ -103,6 +115,13 @@ class NodeEditCommand(NodeId nodeId) : Command
             Description = node.Description ?? "";
             node.SetDescription(DescriptionCopy == "" ? null : DescriptionCopy);
             DescriptionCopy = null;
+        }
+        if (AliasCopy != null)
+        {
+            Alias = node.Alias ?? "";
+            node.SetAlias(AliasCopy == "" ? null : AliasCopy);
+            AliasCopy = null;
+            model.BumpStructureVersion();
         }
     }
 }

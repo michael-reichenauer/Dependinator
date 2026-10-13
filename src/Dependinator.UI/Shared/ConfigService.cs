@@ -20,7 +20,17 @@ class Config
     public bool HideExternalLines { get; set; } = false;
     public bool HideInheritanceLines { get; set; } = false;
     public bool HideMemberLines { get; set; } = false;
+
+    // Configuration lines (Bicep values flowing into parameter and variable rows) are plumbing:
+    // left out by default, the explorer still shows them.
+    public bool HideConfigurationLines { get; set; } = true;
     public int MinLinkCount { get; set; } = 1;
+
+    // Row kinds left out of the diagram (View › Rows), see RowFilter.
+    public bool HideParameterRows { get; set; } = false;
+    public bool HideVariableRows { get; set; } = false;
+    public bool HideOutputRows { get; set; } = false;
+    public bool HideSettingRows { get; set; } = false;
 
     // The first-run tour (CoachService) has been shown or skipped.
     public bool IsCoachSeen { get; set; } = false;

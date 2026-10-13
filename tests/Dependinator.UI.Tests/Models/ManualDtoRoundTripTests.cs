@@ -84,4 +84,22 @@ public class ManualDtoRoundTripTests
         Assert.DoesNotContain("IsManual", JsonSerializer.Serialize(new LinkDto("A", "B", "None")));
         Assert.Contains("IsManual", JsonSerializer.Serialize(new LinkDto("A", "B", "None") { IsManual = true }));
     }
+
+    [Fact]
+    public void NodeDto_ShouldRoundTripIsZone_AndOmitItWhenFalse()
+    {
+        var root = new Node("", null!) { Type = Dependinator.Core.Parsing.NodeType.Root };
+        var zone = new Node("Edge", root) { IsManual = true, IsZone = true };
+        zone.SetDescription("Front Door and API Management");
+
+        var restored = new Node("Edge", root);
+        restored.SetFromDto(zone.ToDto());
+
+        Assert.True(zone.ToDto().IsZone);
+        Assert.True(restored.IsZone);
+        Assert.Equal("Front Door and API Management", restored.Description);
+
+        var json = JsonSerializer.Serialize(new Node("Parsed", root).ToDto());
+        Assert.DoesNotContain("IsZone", json);
+    }
 }

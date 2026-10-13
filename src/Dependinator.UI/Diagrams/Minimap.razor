@@ -89,7 +89,7 @@
   {
     scene = null!;
     using var model = modelMgr.UseModel();
-    var tops = model.Root.Children.Where(n => !n.IsNote && !n.IsHidden).ToList();
+    var tops = model.Root.Children.Where(n => !n.IsNote && !n.IsZone && !n.IsHidden).ToList();
     if (tops.Count == 0 || model.Zoom <= 0)
       return false;
 
@@ -107,7 +107,7 @@
     var now = DateTime.UtcNow;
     if (shown != cachedWindow || modelVersion != cachedModelVersion || now - cachedAt > CacheMaxAge)
     {
-      cachedContent = (MarkupString)DrawScene(model.Root, fit);
+      cachedContent = (MarkupString)DrawScene(model.Root, fit, viewOptions.RowFilter);
       (cachedWindow, cachedModelVersion, cachedAt) = (shown, modelVersion, now);
     }
     scene = new Scene(cachedContent, MinimapGeometry.Clamp(fit.ToMinimap(viewport)));
@@ -115,7 +115,7 @@
   }
 
   // The boxes and labels of every node big enough to see, as SVG markup.
-  static string DrawScene(Node root, MinimapFit fit)
+  static string DrawScene(Node root, MinimapFit fit, RowFilter rows)
   {
     var svg = new System.Text.StringBuilder();
     var boxCount = 0;
@@ -131,7 +131,7 @@
       {
         if (boxCount >= MaxBoxes)
           return;
-        if (child.IsNote || child.IsHidden)
+        if (child.IsNote || child.IsZone || child.IsHidden || rows.Hides(child.Type))
           continue;
         var pos = new Pos(
           parentPos.X + child.Boundary.X * zoom + parent.ContainerOffset.X * parentZoom,
@@ -154,7 +154,7 @@
           if (box.Width >= 56 && box.Height >= 12 && !child.Type.IsMember)
           {
             svg.Append($"<text x=\"{F(box.X + 3)}\" y=\"{F(box.Y + 9)}\" class=\"dep-minimap__label\" pointer-events=\"none\">")
-              .Append(System.Web.HttpUtility.HtmlEncode(Truncate(child.ShortName, (int)(box.Width / 5))))
+              .Append(System.Web.HttpUtility.HtmlEncode(Truncate(child.DisplayName, (int)(box.Width / 5))))
               .Append("</text>");
           }
         }

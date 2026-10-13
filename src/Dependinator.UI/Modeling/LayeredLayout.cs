@@ -35,7 +35,7 @@ static class LayeredLayout
     static Graph? BuildGraph(Node parent)
     {
         var children = parent
-            .Children.Where(child => !child.IsPassThrough)
+            .Children.Where(child => !child.IsPassThrough && NodeLayout.IsArranged(child))
             .OrderBy(child => child.Name, StringComparer.Ordinal)
             .ToList();
         if (children.Count < 2)

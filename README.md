@@ -5,7 +5,7 @@
 <h1 align="center">Dependinator</h1>
 
 <p align="center">
-  See your C#/.NET codebase as an interactive dependency map, right inside VS Code.
+  See your C#/.NET codebase or Azure Bicep deployment as an interactive dependency map, right inside VS Code.
 </p>
 
 <p align="center">
@@ -28,8 +28,12 @@
 
 Dependinator parses your solution and draws it as a zoomable map. Projects,
 namespaces, types and members are nested nodes; dependencies are the lines
+between them. An Azure Bicep deployment is drawn the same way: modules and
+resources with their Azure icons, parameters and outputs, and the dependencies
 between them. Zoom out for the big picture, zoom in to see how a component works
 inside, and jump from any node straight to its source.
+
+![The Dependinator map of a Bicep deployment: the network module with its network security groups, NAT gateway, public IP, private DNS zones and virtual network drawn with Azure icons, and the module's parameters and outputs as rows](docs/images/bicep.png)
 
 ## Why
 
@@ -45,6 +49,9 @@ inside, and jump from any node straight to its source.
 
 - **Interactive map.** Pan, zoom and double-click to drill into any node. The
   breadcrumb and search (`Ctrl+F`) take you anywhere in one step.
+- **C# and Bicep.** .NET solutions are parsed with Roslyn, Azure Bicep
+  deployments with the Bicep compiler; resources carry their Azure icons, local
+  modules expand in place, and existing resources show as externals.
 - **Dependencies explorer.** Pick a node and browse everything it uses and
   everything that uses it, down to member level.
 - **Jump to code.** Open the source of a node or dependency in the editor. The
@@ -62,7 +69,8 @@ inside, and jump from any node straight to its source.
 
 1. Install [Dependinator](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
    from the Marketplace, or search for "Dependinator" in the Extensions view.
-2. Open a folder that contains a `.sln` file.
+2. Open a folder that contains a `.sln` file or a Bicep deployment (a `.bicep` entry file).
+   No Bicep files at hand? [examples/bicep](examples/bicep) holds a realistic multi-file deployment to try.
 3. Run **Dependinator: Open** from the command palette, or click the
    Dependinator icon in the editor title bar.
 
@@ -71,8 +79,9 @@ drag to pan, and press `Ctrl+F` to find a node by name. The **Help** button in
 the app bar opens the [user guide](https://dependinator.com/help) with all
 keyboard and mouse controls.
 
-**Requirements:** a .NET solution (`.sln`) with C# projects. No local `dotnet`
-installation is needed; the extension bundles a self-contained language server.
+**Requirements:** a .NET solution (`.sln`) with C# projects, or Azure Bicep files. No local
+`dotnet` or `bicep` installation is needed; the extension bundles a self-contained language
+server with the Bicep compiler.
 
 ### In action
 
@@ -81,18 +90,21 @@ installation is needed; the extension bundles a self-contained language server.
 ## Web app and device sync
 
 [dependinator.com](https://dependinator.com) is the companion web app. Open it
-to explore the built-in demo model without installing or signing in, and to
+to explore the built-in demo models (a C# solution and a Bicep deployment)
+without installing or signing in, and to
 view your own models from any browser or device once device sync is enabled.
 Sync is optional: without signing in, everything stays local.
 
 Parsing code happens in VS Code. The web app views and edits models, including
-ones sketched by hand, but does not parse solutions itself.
+ones sketched by hand, but does not parse code itself.
 
 ## Status
 
 Dependinator is in **beta**. The core works end to end, but expect rough edges
 and the occasional breaking change between versions. Today it supports C#
-solutions (`.sln` files with C# projects); other languages are not parsed yet.
+solutions (`.sln` files with C# projects) and Azure Bicep deployments (`.bicep`
+files with their local modules, drawn with Azure icons); other languages are not
+parsed yet.
 
 Feedback shapes what gets built next. Please
 [open an issue](https://github.com/michael-reichenauer/Dependinator/issues/new/choose)

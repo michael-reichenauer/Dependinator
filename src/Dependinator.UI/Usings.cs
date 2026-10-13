@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Dependinator.Wasm")]
 [assembly: InternalsVisibleTo("Dependinator.Web")]
 [assembly: InternalsVisibleTo("Dependinator.UI.Tests")]
+[assembly: InternalsVisibleTo("Dependinator.Bicep.Tests")] // icon-library lookups of the Azure icon mapping
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // DI and tests access
 
 [assembly: AssemblyDescription("Dependinator is the UI for visualizing and exploring software dependencies.")]

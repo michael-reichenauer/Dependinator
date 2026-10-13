@@ -66,7 +66,16 @@ class InitService : IInitService
                 config.HideExternalLines,
                 config.HideInheritanceLines,
                 config.HideMemberLines,
+                config.HideConfigurationLines,
                 Math.Max(1, config.MinLinkCount)
+            )
+        );
+        viewOptions.SetRowFilter(
+            new RowFilter(
+                config.HideParameterRows,
+                config.HideVariableRows,
+                config.HideOutputRows,
+                config.HideSettingRows
             )
         );
         pointerEventService.InvertScrollZoom = config.InvertScrollZoom;

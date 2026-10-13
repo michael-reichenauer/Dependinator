@@ -50,7 +50,7 @@
 
   string ModelName => string.IsNullOrEmpty(ModelPath) ? "" : (IsDesignModel ? ModelPath : Path.GetFileName(ModelPath));
 
-  string ModelTitle => IsDesignModel ? $"{ModelPath} (design model). Click to fit to screen." : $"{ModelPath} (solution). Click to fit to screen.";
+  string ModelTitle => $"{ModelPath} ({ModelPaths.KindName(ModelPath)}). Click to fit to screen.";
 
   string ModelIcon => IsDesignModel ? MudBlazor.Icons.Material.Outlined.DesignServices : MudBlazor.Icons.Material.Outlined.Schema;
 

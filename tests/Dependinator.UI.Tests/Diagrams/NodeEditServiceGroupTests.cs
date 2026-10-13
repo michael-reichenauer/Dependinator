@@ -139,4 +139,45 @@ public class NodeEditServiceGroupTests
         Assert.Null(b.CustomColor);
         Assert.False(commandService.CanUndo);
     }
+
+    [Fact]
+    public async Task MoveSelectedNodes_AfterASingleNodeEdit_ShouldUndoTheGroupDragFirst()
+    {
+        // The zone-drag sequence: the zone alone is resized (single-node edits merged into one
+        // step), then the zone and the nodes inside it are dragged in several moves and snapped
+        // (group edits merged into one step). One undo must revert the whole drag, not the resize
+        // and not nothing.
+        Node zone,
+            a,
+            b;
+        using (var model = modelMgr.UseModel())
+        {
+            var parent = AddNode(model, "P", model.Root);
+            zone = AddNode(model, "P.Zone", parent);
+            zone.IsZone = true;
+            zone.IsManual = true;
+            zone.Boundary = new Rect(0, 0, 320, 200);
+            a = AddNode(model, "P.A", parent);
+            a.Boundary = new Rect(20, 20, 100, 100);
+            b = AddNode(model, "P.B", parent);
+            b.Boundary = new Rect(160, 20, 100, 100);
+        }
+
+        service.IncreaseNodeSize(zone.Id);
+        var resized = zone.Boundary;
+        await Task.Delay(600); // a later gesture: no merge with the resize
+
+        var group = new[] { zone.Id, a.Id, b.Id };
+        for (var i = 0; i < 3; i++)
+            service.MoveSelectedNodes(new PointerEvent { MovementX = 40, MovementY = 20 }, zoom: 1, group);
+        service.SnapSelectedNodesToGrid(group);
+        Assert.NotEqual(20, a.Boundary.X);
+
+        await commandService.Undo();
+
+        Assert.Equal(resized, zone.Boundary);
+        Assert.Equal(new Rect(20, 20, 100, 100), a.Boundary);
+        Assert.Equal(new Rect(160, 20, 100, 100), b.Boundary);
+        Assert.True(commandService.CanUndo); // the resize is still there to undo
+    }
 }

@@ -5,8 +5,8 @@ namespace Dependinator.Tests;
 
 // Assertions on Result and Result<T> that hand back the case they assert, so a test reads
 //
-//     var items = AssertOk(await parser.ParseSolutionAsync(path, options));
-//     var e = AssertError(await parser.ParseSolutionAsync(path, options));
+//     var items = AssertOk(await parser.ParseAsync(path, options));
+//     var e = AssertError(await parser.ParseAsync(path, options));
 //
 // Available everywhere through the static global using in each test project's Usings.cs. The file is
 // linked into the other test projects (internal, so the copies never clash through InternalsVisibleTo).

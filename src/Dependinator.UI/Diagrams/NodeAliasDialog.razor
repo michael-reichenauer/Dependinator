@@ -1,0 +1,55 @@
+@using MudBlazor
+
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">Display name</MudText>
+  </TitleContent>
+  <DialogContent>
+    <MudTextField @ref="aliasField" T="string" @bind-Value="Alias" Label="Display name" Immediate="true"
+                  HelperText="@HelperText" OnKeyDown="OnKeyDown" data-testid="node-alias-text" />
+  </DialogContent>
+  <DialogActions>
+    @if (HasAlias)
+    {
+      <MudButton Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Outlined.Undo" OnClick="Clear"
+                 data-testid="node-alias-clear">Remove</MudButton>
+    }
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="node-alias-cancel">Cancel</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="node-alias-save">Save</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public string Alias { get; set; } = "";
+  [Parameter] public string RealName { get; set; } = "";
+  [Parameter] public bool HasAlias { get; set; }
+
+  MudTextField<string> aliasField = null!;
+
+  string HelperText => $"Shown instead of \"{RealName}\", which stays in the tooltip and in search";
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender && aliasField is not null)
+    {
+      await aliasField.FocusAsync();
+      await aliasField.SelectAsync();
+    }
+  }
+
+  void OnKeyDown(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter")
+      Save();
+  }
+
+  // An empty text saves as "no alias" (the name from the code is shown again).
+  void Save() => MudDialog.Close(DialogResult.Ok(new NodeAliasDialogResult((Alias ?? "").Trim(), false)));
+
+  void Clear() => MudDialog.Close(DialogResult.Ok(new NodeAliasDialogResult("", true)));
+
+  void Cancel() => MudDialog.Cancel();
+}
