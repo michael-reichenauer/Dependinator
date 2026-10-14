@@ -36,6 +36,9 @@ class NodeLayout
     // reset, which the user asked for, may take more.
     const long InlineThoroughWorkBudget = 250_000;
     const long ResetThoroughWorkBudget = 2_000_000;
+
+    // The work budget of a background refinement (see LayoutRefineService), done in slices.
+    public const long RefineThoroughWorkBudget = 10_000_000;
     const double PlacementPadding = 4;
     static readonly DensityProfile SpaciousProfile = new(GapScale: 1.35, TargetLinearCoverage: 0.42);
     static readonly DensityProfile CompactProfile = new(GapScale: 0.72, TargetLinearCoverage: 0.62);
@@ -103,6 +106,7 @@ class NodeLayout
     public static void AdjustChildren(Node parent, bool forceAllChildren = false)
     {
         parent.IsChildrenLayoutRequired = false;
+        parent.IsChildrenLayoutRefinePending = false;
         BumpGeneration();
 
         if (parent.Children.Count == 0)
@@ -132,10 +136,14 @@ class NodeLayout
     static void ArrangeChildren(Node parent, long thoroughWorkBudget)
     {
         var density = GetDensityProfile();
-        var metrics = parent.IsRoot ? RootMetrics() : RegularMetrics(density);
+        var metrics = MetricsFor(parent);
         var sizeOf = ChildSizes(parent, SizedChildren(parent.Children), metrics);
 
-        if (!LayeredLayout.TryArrange(parent, metrics, sizeOf, thoroughWorkBudget, out _))
+        if (LayeredLayout.TryArrange(parent, metrics, sizeOf, thoroughWorkBudget, out var isThorough))
+        {
+            parent.IsChildrenLayoutRefinePending = !isThorough;
+        }
+        else
         {
             SortChildren(parent.Children);
             ArrangeAsShelves(
@@ -722,6 +730,10 @@ class NodeLayout
             NodeType.OutputMember => 8,
             _ => 9,
         };
+
+    // The metrics of the container's (non-member) children.
+    internal static LayoutMetrics MetricsFor(Node parent) =>
+        parent.IsRoot ? RootMetrics() : RegularMetrics(GetDensityProfile());
 
     static LayoutMetrics RootMetrics() =>
         new(DefaultWidth, DefaultHeight, RootGap * RootProfile.GapScale, RootGap * RootProfile.GapScale, 1.0);

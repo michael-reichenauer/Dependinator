@@ -102,6 +102,10 @@ class Node : IItem
     public bool IsChildrenLayoutRequired { get; set; } = false;
     public bool IsChildrenLayoutCustomized { get; set; } = false;
 
+    // The children got the fast layered layout only (too much work for the thorough pass when
+    // first shown); LayoutRefineService refines it in idle moments. Transient, not saved.
+    public bool IsChildrenLayoutRefinePending { get; set; }
+
     Rect boundary = Rect.None;
 
     // A pass-through node is an invisible container that always exactly covers its parent's

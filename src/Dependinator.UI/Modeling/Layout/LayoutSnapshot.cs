@@ -81,6 +81,41 @@ sealed class LayoutSnapshot
         return new LayoutSnapshot(new LayoutGraph(vertices, edges, metrics, parentAspect), children, lines);
     }
 
+    // The layout the children have now, as a result (for comparing a computed one with it).
+    public LayoutResult CurrentResult() =>
+        new(
+            [.. nodes.Select(node => node.Boundary)],
+            [.. lines.Select(line => (IReadOnlyList<Pos>?)[.. line.SegmentPoints])]
+        );
+
+    // Changes whenever anything a layout of the container's children depends on or sets
+    // changes: the container's size and transform, its children and their boundaries, and their
+    // lines (endpoints, weight, visibility and waypoints). Only compared within one process.
+    public static int Fingerprint(Node parent)
+    {
+        var hash = new HashCode();
+        hash.Add(parent.Boundary);
+        hash.Add(parent.ContainerZoom);
+        hash.Add(parent.ContainerOffset);
+        hash.Add(parent.IsChildrenLayoutCustomized);
+        hash.Add(parent.Children.Count);
+        foreach (var child in parent.Children)
+        {
+            hash.Add(child.Name);
+            hash.Add(child.Boundary);
+            foreach (var line in child.SourceLines)
+            {
+                hash.Add(line.Target.Name);
+                hash.Add(line.Links.Count);
+                hash.Add(line.IsHidden);
+                hash.Add(line.IsSegmentsUserSet);
+                foreach (var point in line.SegmentPoints)
+                    hash.Add(point);
+            }
+        }
+        return hash.ToHashCode();
+    }
+
     public void Apply(LayoutResult result)
     {
         for (var index = 0; index < nodes.Count; index++)

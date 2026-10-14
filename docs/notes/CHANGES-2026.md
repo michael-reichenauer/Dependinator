@@ -144,7 +144,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   steps (60, 100, 140, 180), so the big and coordinating parts stand out and small utilities
   stay small. Bigger nodes open as containers earlier while zooming in. Nodes are centered in
   their columns and pulled toward their neighbors from both sides, so lines run straighter.
-  Models saved with the older layout are laid out again, except containers the user arranged.
+  A thorough layout pass orders nodes for fewer line crossings and routes long lines around
+  nodes; it runs when a container is first shown, or for a large container in idle moments
+  afterwards (refined in place, never while the view is zoomed into it). Models saved with the
+  older layout are laid out again, except containers the user arranged.
 - **Hidden nodes (Mar).** A menu toggle shows or hides hidden nodes. Hiding became undoable on
   Oct 11.
 - **Edit mode (Apr).** Edit buttons show only in edit mode. Since Sep 30 the mode is persisted,
