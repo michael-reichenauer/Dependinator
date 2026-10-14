@@ -64,7 +64,12 @@ public class LayeredLayoutGoldenTests
                     ("Hub", "Out4"),
                     ("Hub", "Out5")
                 );
-                return new() { ["Hub"] = 180, ["Out3"] = 140, ["In2"] = 60 };
+                return new()
+                {
+                    ["Hub"] = 180,
+                    ["Out3"] = 140,
+                    ["In2"] = 60,
+                };
             case "SkipLines":
                 Links(model, parent, ("A", "B"), ("B", "C"), ("C", "D"), ("A", "C"), ("A", "D"), ("B", "D"));
                 return new() { ["B"] = 140, ["C"] = 180 };

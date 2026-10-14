@@ -30,6 +30,12 @@ class NodeLayout
     const double MaximumZoom = 1.0;
     const double MinimumDimension = 0.0001;
     const int PlacementScanLimit = 5000;
+
+    // Work budgets of the thorough layered layout pass (see ThoroughLayoutRun): containers whose
+    // layout is estimated to fit get it right away when first shown, others the fast pass; a
+    // reset, which the user asked for, may take more.
+    const long InlineThoroughWorkBudget = 250_000;
+    const long ResetThoroughWorkBudget = 2_000_000;
     const double PlacementPadding = 4;
     static readonly DensityProfile SpaciousProfile = new(GapScale: 1.35, TargetLinearCoverage: 0.42);
     static readonly DensityProfile CompactProfile = new(GapScale: 0.72, TargetLinearCoverage: 0.62);
@@ -118,18 +124,18 @@ class NodeLayout
         if (HasMemberChildren(parent))
             ArrangeTypeChildren(parent);
         else
-            ArrangeChildren(parent);
+            ArrangeChildren(parent, forceAllChildren ? ResetThoroughWorkBudget : InlineThoroughWorkBudget);
 
         RescaleResizedContent(sizesBefore);
     }
 
-    static void ArrangeChildren(Node parent)
+    static void ArrangeChildren(Node parent, long thoroughWorkBudget)
     {
         var density = GetDensityProfile();
         var metrics = parent.IsRoot ? RootMetrics() : RegularMetrics(density);
         var sizeOf = ChildSizes(parent, SizedChildren(parent.Children), metrics);
 
-        if (!LayeredLayout.TryArrange(parent, metrics, sizeOf))
+        if (!LayeredLayout.TryArrange(parent, metrics, sizeOf, thoroughWorkBudget, out _))
         {
             SortChildren(parent.Children);
             ArrangeAsShelves(

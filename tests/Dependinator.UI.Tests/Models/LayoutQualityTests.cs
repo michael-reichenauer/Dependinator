@@ -42,7 +42,13 @@ public class LayoutQualityTests
         Rect[] boundaries = [new(0, 0, 100, 100), new(300, 0, 100, 100), new(600, 0, 100, 100)];
 
         var straight = Evaluate(boundaries, [(0, 2)]);
-        var routed = Evaluate(boundaries, [(0, 2)], [[new Pos(350, 150)]]);
+        var routed = Evaluate(
+            boundaries,
+            [(0, 2)],
+            [
+                [new Pos(350, 150)],
+            ]
+        );
 
         Assert.Equal(1, straight.LinesThroughNodes);
         Assert.Equal(0, routed.LinesThroughNodes);
@@ -58,7 +64,15 @@ public class LayoutQualityTests
     {
         var graph = new LayoutGraph(
             [.. boundaries.Select((rect, index) => new LayoutVertex($"N{index}", rect.Width, rect.Height, 0, 0))],
-            [.. edges.Select(edge => new LayoutEdge(edge.Source, edge.Target, 1, IsHidden: false, IsUserRouted: false))],
+            [
+                .. edges.Select(edge => new LayoutEdge(
+                    edge.Source,
+                    edge.Target,
+                    1,
+                    IsHidden: false,
+                    IsUserRouted: false
+                )),
+            ],
             new LayoutMetrics(100, 100, 70, 70, 1.0),
             1.0
         );

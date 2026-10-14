@@ -24,7 +24,7 @@ static class LayeredEngine
 
     // Pull of a node's own current height in a placement sweep when no neighbor pulls it: weak,
     // so it only fills in between the nodes that are pulled.
-    const double AnchorWeight = 0.01;
+    internal const double AnchorWeight = 0.01;
 
     // The layered structure both layout passes share; null when no child has any relation, so
     // the caller can pack the children instead.
@@ -480,7 +480,7 @@ static class LayeredEngine
 
     // Nodes without any relations are utility/leftover nodes; pack them as a block at the
     // bottom right of the layered content, largest first, then by name.
-    static void PlaceIsolated(Graph graph, LayoutMetrics metrics)
+    internal static void PlaceIsolated(Graph graph, LayoutMetrics metrics)
     {
         if (graph.Isolated.Count == 0)
             return;
@@ -514,7 +514,7 @@ static class LayeredEngine
     // intermediate columns, so they do not cut straight through nodes. Straight lines between
     // adjacent columns are left alone. Hidden lines are skipped (stale auto waypoints cleared),
     // and lines whose waypoints the user placed are never touched.
-    static IReadOnlyList<Pos>?[] RouteLines(Graph graph, LayoutMetrics metrics)
+    internal static IReadOnlyList<Pos>?[] RouteLines(Graph graph, LayoutMetrics metrics)
     {
         var columns = graph
             .Nodes.GroupBy(node => node.ColumnIndex ?? 0)
@@ -588,7 +588,7 @@ static class LayeredEngine
 
     static double CenterY(Rect rect) => rect.Y + rect.Height / 2;
 
-    static double SnapHalfUp(double value) => Math.Floor(value / NodeGrid.SnapSize + 0.5) * NodeGrid.SnapSize;
+    internal static double SnapHalfUp(double value) => Math.Floor(value / NodeGrid.SnapSize + 0.5) * NodeGrid.SnapSize;
 
     static double InterpolateY(Pos start, Pos end, double x) =>
         start.Y + (end.Y - start.Y) * ((x - start.X) / (end.X - start.X));
