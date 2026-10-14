@@ -108,8 +108,6 @@ class SvgService : ISvgService
         if (model.Root.Children.Count == 0 || canvasRect.Width <= 0 || canvasRect.Height <= 0 || zoom <= 0)
             return "";
 
-        RepLineService.Sync(model, zoom);
-
         var offset = new Pos(-canvasRect.X / zoom, -canvasRect.Y / zoom);
         var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
         // Exports never show edit chrome (handles) or selection dimming, whatever the current state.
@@ -119,7 +117,7 @@ class SvgService : ISvgService
             DimUnrelated = false,
         };
         var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, flags);
-        return RenderNodeContent(model.Root, context);
+        return RenderRootContent(model, zoom, context);
     }
 
     // The selected node(s) or line, for selection dimming; empty when nothing is selected.
@@ -209,11 +207,9 @@ class SvgService : ISvgService
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
-        RepLineService.Sync(model, tileZoom);
-
         var flags = Flags with { Selection = FindSelection(model) };
         var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, flags);
-        var rootContentSvg = RenderNodeContent(model.Root, rootContext);
+        var rootContentSvg = RenderRootContent(model, tileZoom, rootContext);
 
         // Enable this if need to show tile border and/or tile with margin border
         // var tileBorderSvg = $"""<rect x="{0}" y="{0}" width="{tileRect.Width:0.##}" height="{tileRect.Height:0.##}" stroke-width="{3}" rx="5" fill="none" stroke="red"/>""";
@@ -232,6 +228,25 @@ class SvgService : ISvgService
 
         Log.Info($"Tile {tileKey}: {tileSvg.Length} chars in {timing.ElapsedMs}ms");
         return new Tile(tileKey, tileSvg, tileZoom, tileOffset);
+    }
+
+    // Rendering lays out containers lazily (EnsureChildrenLayout) the first time their children
+    // show, which can resize and open nodes the line representatives were resolved without; such
+    // a render is redone with freshly synced reps (a few times at most, as each round can reveal
+    // more containers to lay out).
+    static string RenderRootContent(IModel model, double zoom, RenderContext rootContext)
+    {
+        const int MaxRenderRounds = 3;
+        var content = "";
+        for (var round = 0; round < MaxRenderRounds; round++)
+        {
+            RepLineService.Sync(model, zoom);
+            var generation = NodeLayout.Generation;
+            content = RenderNodeContent(model.Root, rootContext);
+            if (NodeLayout.Generation == generation)
+                break;
+        }
+        return content;
     }
 
     static string RenderNodeContent(Node node, RenderContext context)
@@ -321,7 +336,7 @@ class SvgService : ISvgService
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
         }
 
-        if (NodeViewPolicy.IsShowIcon(node.Type, context.Zoom))
+        if (NodeViewPolicy.IsShowIcon(node, context.Zoom))
             return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
 
         if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
@@ -330,7 +345,7 @@ class SvgService : ISvgService
         var nestedContext = context.ForNestedContainer(geometry.TileRect);
         var childrenContentSvg = RenderNodeContent(node, nestedContext);
 
-        if (NodeViewPolicy.IsTooLargeToBeSeen(context.Zoom))
+        if (NodeViewPolicy.IsTooLargeToBeSeen(node, context.Zoom))
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
 
         return NodeSvg.GetNodeContainerSvg(

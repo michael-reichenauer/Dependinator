@@ -37,6 +37,17 @@ class NodeLayout
 
     public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
 
+    // Bumped whenever node geometry changes (layout, container fit, node edits), so per-zoom
+    // derived state such as the line representatives (RepLineService) knows that nodes may have
+    // crossed an open/icon threshold although the zoom stayed the same (see NodeViewPolicy:
+    // the threshold depends on the node's size). Process-wide: with several Blazor Server
+    // circuits a bump only costs the others one extra check.
+    static long generation;
+
+    public static long Generation => Interlocked.Read(ref generation);
+
+    public static void BumpGeneration() => Interlocked.Increment(ref generation);
+
     public static void SetDensity(NodeLayoutDensity density) => Density = density;
 
     static double SnapToGrid(double value) => Math.Round(value / NodeGrid.SnapSize) * NodeGrid.SnapSize;
@@ -79,6 +90,7 @@ class NodeLayout
     public static void AdjustChildren(Node parent, bool forceAllChildren = false)
     {
         parent.IsChildrenLayoutRequired = false;
+        BumpGeneration();
 
         if (parent.Children.Count == 0)
             return;
@@ -399,6 +411,7 @@ class NodeLayout
     // e.g. when a node's pass-through state changes and its effective boundary jumps in size.
     public static void FitContainerTransform(Node parent)
     {
+        BumpGeneration();
         var children = parent.Children.Where(child => child.Boundary != Rect.None).ToList();
         if (children.Count == 0)
             return;

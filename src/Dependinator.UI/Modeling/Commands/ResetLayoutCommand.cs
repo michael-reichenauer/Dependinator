@@ -61,6 +61,7 @@ class ResetLayoutCommand(NodeId nodeId, bool recursively) : Command
 
         public void Restore(IModel model)
         {
+            NodeLayout.BumpGeneration();
             foreach (var (id, state) in nodes)
             {
                 if (!model.Nodes.TryGetValue(id, out var node))

@@ -128,11 +128,24 @@ public class NodeSvgTests
     public void GetNodeContainerSvg_ShouldFadeBackground_WhenZoomedIn()
     {
         var node = CreateIconNode();
+        node.Boundary = new Rect(0, 0, 100, 100); // The reference size of the zoom thresholds
 
         var opened = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 2.0, "");
         var deep = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 16.0, "");
 
         Assert.Contains("fill-opacity=\"1\"", opened);
+        Assert.Contains("fill-opacity=\"0.5\"", deep);
+    }
+
+    [Fact]
+    public void GetNodeContainerSvg_LargeNode_ShouldFadeAtLowerZoom()
+    {
+        // The fade follows the node's on-screen size: twice as large fades at half the zoom.
+        var node = CreateIconNode();
+        node.Boundary = new Rect(0, 0, 200, 200);
+
+        var deep = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 8.0, "");
+
         Assert.Contains("fill-opacity=\"0.5\"", deep);
     }
 
