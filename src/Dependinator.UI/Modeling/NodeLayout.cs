@@ -43,6 +43,39 @@ class NodeLayout
 
     public static Rect SnapPositionToGrid(Rect rect) => rect with { X = SnapToGrid(rect.X), Y = SnapToGrid(rect.Y) };
 
+    // "Reset Children Layout": hands the container back to the automatic layout. Clears the
+    // customized flag, so later re-parses lay the container out fully again instead of only
+    // placing new children, and the user's waypoints on the lines drawn inside it, which were
+    // placed for the old positions; then lays out all children. Recursion runs top-down, since a
+    // parent's layout sizes a child before the child lays out its own children.
+    public static void ResetChildrenLayout(Node node, bool recursively)
+    {
+        node.IsChildrenLayoutCustomized = false;
+        foreach (var line in LinesDrawnInside(node).Where(line => line.IsSegmentsUserSet))
+        {
+            line.IsSegmentsUserSet = false;
+            line.SetSegmentPoints([]);
+        }
+
+        AdjustChildren(node, forceAllChildren: true);
+
+        if (recursively)
+            node.Children.ForEach(child => ResetChildrenLayout(child, recursively));
+    }
+
+    // The lines rendered in the container's coordinate space: the fan-out from the container
+    // to its children, the children's sibling and child-to-container lines, and the direct
+    // lines the container renders (see SvgService.DrawnNodeLines).
+    internal static IEnumerable<Line> LinesDrawnInside(Node container) =>
+        container
+            .SourceLines.Where(line => line.Target.Parent == container)
+            .Concat(
+                container.Children.SelectMany(child =>
+                    child.SourceLines.Where(line => line.Target.Parent != line.Source)
+                )
+            )
+            .Concat(container.DirectLines);
+
     public static void AdjustChildren(Node parent, bool forceAllChildren = false)
     {
         parent.IsChildrenLayoutRequired = false;

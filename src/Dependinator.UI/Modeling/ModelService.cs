@@ -245,12 +245,7 @@ class ModelService : IModelService, IDisposable
         return Task.CompletedTask;
     }
 
-    void LayoutNode(Node node, bool recursively)
-    {
-        NodeLayout.AdjustChildren(node, forceAllChildren: true);
-        if (recursively)
-            node.Children.ForEach(n => LayoutNode(n, recursively));
-    }
+    static void LayoutNode(Node node, bool recursively) => NodeLayout.ResetChildrenLayout(node, recursively);
 
     async Task<Result<ModelInfo>> ParseNewModelAsync(string path)
     {
