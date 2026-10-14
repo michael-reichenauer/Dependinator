@@ -9,6 +9,7 @@
 @inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
 @inject ILineEditService lineEditService
+@inject ILineLabelService lineLabelService
 @inject IManualEditService manualEditService
 @inject INavigationService navigationService
 @inject IViewOptions viewOptions
@@ -38,9 +39,13 @@
                     <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" data-testid="line-pan-target" />
                 </MudTooltip>
             }
-            @* Line points reshape the (saved) line, so they are edit-mode actions like dragging them. *@
+            @* Labels and line points change the (saved) line, so they are edit-mode actions like dragging them. *@
             @if (viewOptions.IsEditingEnabled)
             {
+                <MudTooltip Text="Edit label (or double-click the line)">
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Label" OnClick="EditLabel"
+                                   data-testid="line-label" />
+                </MudTooltip>
                 <MudTooltip Text="Add line point">
                     <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
                                    data-testid="line-add-point" />
@@ -79,6 +84,10 @@
 
     void ShowReferences() => dependenciesService.ShowReferences();
     void ShowDependencies() => dependenciesService.ShowDependencies();
+    Task EditLabel() =>
+        selectionService.SelectedId.IsLine
+            ? lineLabelService.EditLabelAsync(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id))
+            : Task.CompletedTask;
     async Task AddSegmentPoint()
     {
         if (!selectionService.SelectedId.IsLine)

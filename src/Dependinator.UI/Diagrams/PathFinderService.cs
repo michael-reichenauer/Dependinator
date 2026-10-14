@@ -187,7 +187,7 @@ class PathFinderService(
         if (id is null)
             return "";
         using var model = modelMgr.UseModel();
-        return model.Nodes.TryGetValue(id, out var node) ? node.ShortName : "";
+        return model.Nodes.TryGetValue(id, out var node) ? node.DisplayName : "";
     }
 
     void EnsureUpToDate()
@@ -306,5 +306,5 @@ class PathFinderService(
         }
     }
 
-    static PathHop ToHop(Node node) => new(node.Id, node.ShortName, node.LongName);
+    static PathHop ToHop(Node node) => new(node.Id, node.DisplayName, node.LongName);
 }

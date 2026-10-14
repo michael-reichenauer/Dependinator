@@ -12,7 +12,7 @@ static partial class NodeSvg
 {
     const int NameIconSize = 9;
     internal const int FontSize = 8; // Also the member icon size, see NodeAnchors
-    const int DescriptionFontSize = 6;
+    internal const int DescriptionFontSize = 6;
 
     // Name/description text stops scaling with zoom beyond this factor, so zooming in reveals
     // more description text instead of just growing the letters. Containers appear at
@@ -64,7 +64,7 @@ static partial class NodeSvg
             DescriptionMaxLines: ScaledMaxLines(IconDescriptionMaxLines, parentZoom, textZoom),
             Bounds: geometry,
             // The name is centered under the icon, so the marker goes half the text width right.
-            MarkerPos: new Pos(textPos.X + EstimateTextWidth(node.ShortName, fontSize) / 2, textPos.Y + fontSize / 2),
+            MarkerPos: new Pos(textPos.X + EstimateTextWidth(node.DisplayName, fontSize) / 2, textPos.Y + fontSize / 2),
             LinkHandlePos: new Pos(geometry.X + geometry.Width + LinkHandleGap, geometry.Y + geometry.Height / 2)
         );
 
@@ -90,7 +90,7 @@ static partial class NodeSvg
         var selectedOverlay = SelectedNodeSvg(node, nodeCanvasRect, isEditing);
 
         var innerGeometry = new Rect(0, 0, nodeCanvasRect.Width, nodeCanvasRect.Height);
-        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, node.HtmlLongName, node.HtmlDescription);
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node), node.HtmlDescription);
         var textZoom = TextZoom(parentZoom);
         var descriptionFontSize = DescriptionFontSize * textZoom;
         var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * textZoom;
@@ -118,12 +118,12 @@ static partial class NodeSvg
               {childrenContent}
             </svg>
             <use href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
-            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
             {descriptionSvg}
             {selectedOverlay}
             {ManualMarkerSvg(
                 node,
-                header.TextPos.X + EstimateTextWidth(node.ShortName, header.FontSize),
+                header.TextPos.X + EstimateTextWidth(node.DisplayName, header.FontSize),
                 header.TextPos.Y + header.FontSize / 2,
                 header.FontSize
             )}
@@ -147,7 +147,7 @@ static partial class NodeSvg
             DescriptionY: member.Text.Y + fontSize / 2 + DescriptionLineGap * textZoom,
             DescriptionMaxLines: ScaledMaxLines(MemberDescriptionMaxLines, parentZoom, textZoom),
             Bounds: member.Bounds,
-            MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.ShortName, fontSize), member.Text.Y)
+            MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.DisplayName, fontSize), member.Text.Y)
         );
 
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing);
@@ -179,7 +179,7 @@ static partial class NodeSvg
             elementId,
             "hoverable",
             layout.Bounds,
-            node.HtmlLongName,
+            TitleName(node),
             node.HtmlDescription,
             LinkHandleSvg(node, layout.LinkHandlePos, isEditing)
         );
@@ -199,7 +199,7 @@ static partial class NodeSvg
             CultureInfo.InvariantCulture,
             $"""
             <use href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />
-            <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity}>{node.HtmlShortName}</text>
+            <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
@@ -238,7 +238,7 @@ static partial class NodeSvg
 
         var gap = MemberTextGap * textZoom;
         var padding = MemberHorizontalPadding * textZoom;
-        var textWidth = Math.Max(fontSize, EstimateTextWidth(node.ShortName, fontSize));
+        var textWidth = Math.Max(fontSize, EstimateTextWidth(node.DisplayName, fontSize));
 
         var layoutWidth = iconSize + gap + textWidth + padding;
         var layoutHeight = Math.Max(iconSize, fontSize);
@@ -272,7 +272,7 @@ static partial class NodeSvg
 
     // Effective zoom for text and header icons: follows the diagram zoom until MaxTextZoom,
     // then stays capped so text keeps a readable size instead of growing with the node.
-    static double TextZoom(double parentZoom) => Math.Min(parentZoom, MaxTextZoom);
+    internal static double TextZoom(double parentZoom) => Math.Min(parentZoom, MaxTextZoom);
 
     // Once the font size is capped, further zooming leaves unused space below the node (layout
     // distances keep scaling while text does not). Convert that surplus into extra description
@@ -280,7 +280,7 @@ static partial class NodeSvg
     static int ScaledMaxLines(int maxLines, double parentZoom, double textZoom) =>
         textZoom <= 0 ? maxLines : (int)(maxLines * parentZoom / textZoom);
 
-    static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
+    internal static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
         node.IsHidden ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
 
     // A small pencil glyph placed just after the node's name label, marking a manually added
@@ -436,6 +436,11 @@ static partial class NodeSvg
         return lines;
     }
 
+    // The tooltip's first line: the real long name (the identity, also what the e2e locators
+    // match), followed by the user's display name when one is set.
+    static string TitleName(Node node) =>
+        node.HtmlAlias is null ? node.HtmlLongName : $"{node.HtmlLongName} ({node.HtmlAlias})";
+
     static string BuildHoverGroup(
         string elementId,
         string cssClass,
@@ -487,7 +492,7 @@ static partial class NodeSvg
         );
     }
 
-    static string SelectedNodeSvg(Node node, Rect geometry, bool isEditing)
+    internal static string SelectedNodeSvg(Node node, Rect geometry, bool isEditing)
     {
         if (!node.IsSelected)
             return "";

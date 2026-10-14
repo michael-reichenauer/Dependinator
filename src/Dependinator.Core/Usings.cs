@@ -8,6 +8,8 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Dependinator.Lsp.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Roslyn")]
 [assembly: InternalsVisibleTo("Dependinator.Roslyn.Tests")]
+[assembly: InternalsVisibleTo("Dependinator.Bicep")]
+[assembly: InternalsVisibleTo("Dependinator.Bicep.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Reflection")]
 [assembly: InternalsVisibleTo("Dependinator.Reflection.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Web")]

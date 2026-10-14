@@ -34,3 +34,6 @@ updates:
         versions: [">=18.10.0"]
       - dependency-name: "Microsoft.NET.StringTools"
         versions: [">=18.10.0"]
+      # The Bicep compiler library is unsupported by Microsoft and may change its API in any
+      # release (see Directory.Packages.props); it is bumped by hand after a build check.
+      - dependency-name: "Azure.Bicep.Core"

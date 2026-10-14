@@ -36,6 +36,15 @@ static class Icon
         { Parsing.NodeType.ConstructorMember, "Constructor" },
         { Parsing.NodeType.EventMember, "Event" },
         { Parsing.NodeType.PropertyMember, "Property" },
+        // Infrastructure (Bicep) node types. Resources normally carry a parsed IconName (an Azure
+        // service icon); these are the defaults when none applies. The General "Cloud" icon is
+        // tintable, and the member glyphs are placeholders until dedicated ones exist.
+        { Parsing.NodeType.Module, "Module" },
+        { Parsing.NodeType.Resource, "Cloud" },
+        { Parsing.NodeType.ParameterMember, "Property" },
+        { Parsing.NodeType.VariableMember, "Field" },
+        { Parsing.NodeType.OutputMember, "Event" },
+        { Parsing.NodeType.ResourceMember, "Cloud" },
     };
 
     // The name of the default icon for a node type (an IconLibrary id), falling back to "Module".
@@ -44,14 +53,15 @@ static class Icon
 
     public static string GetIcon(Parsing.NodeType nodeType) => IconLibrary.Get(GetIconName(nodeType));
 
-    // The icon name for a node, honoring a user-selected custom icon and icon color; unknown
-    // (e.g. stale persisted) names or colors fall back to the node-type default/base icon.
+    // The icon name for a node: a user-selected custom icon wins, then a parser-supplied icon,
+    // then the node-type default; the icon color applies to whichever is chosen. Unknown (e.g.
+    // stale persisted) names or colors fall back to the next level / the base icon.
     public static string GetIconName(Modeling.Models.Node node)
     {
         var name =
-            node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName)
-                ? customIconName
-                : GetIconName(node.Type);
+            node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName) ? customIconName
+            : node.IconName is { } iconName && IconLibrary.Contains(iconName) ? iconName
+            : GetIconName(node.Type);
 
         if (node.CustomIconColor is { } color && IconLibrary.Contains(IconLibrary.VariantName(name, color)))
             return IconLibrary.VariantName(name, color);

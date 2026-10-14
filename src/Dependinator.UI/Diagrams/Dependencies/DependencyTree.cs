@@ -88,7 +88,9 @@ static class DependencyTree
         }
 
         // Containers and nodes reached only indirectly follow the direct ones, by name.
-        foreach (var (head, chains) in indirectByHead.OrderBy(kv => kv.Key.ShortName, StringComparer.OrdinalIgnoreCase))
+        foreach (
+            var (head, chains) in indirectByHead.OrderBy(kv => kv.Key.DisplayName, StringComparer.OrdinalIgnoreCase)
+        )
         {
             var tails = Tails(chains);
             var hops = chains.Where(c => c.FarChain.Count == 1).Select(c => c.Hops).DefaultIfEmpty(0).Min();

@@ -164,16 +164,19 @@
 
         <h2>What you can do</h2>
         <ul>
-            <li class="feature"><b>Explore an interactive dependency map</b> — see your codebase as a
-                zoomable, navigable diagram instead of scrolling through files.</li>
+            <li class="feature"><b>Explore an interactive dependency map</b> — see your codebase, or your Azure
+                Bicep deployment, as a zoomable, navigable diagram instead of scrolling through files.</li>
             <li class="feature"><b>Zoom for detail</b> — zoom into any node to reveal its internals
-                (namespaces, types, members), then zoom back out to see the bigger picture.</li>
+                (namespaces, types and members; in a Bicep deployment the resource groups, the modules deployed
+                into them with the icon of what they mainly deploy, their resources, and settings such as role
+                assignments and diagnostics as rows under the resource they configure), then zoom back out to
+                see the bigger picture.</li>
             <li class="feature"><b>Follow dependencies</b> — pick any node and trace what it depends on,
                 or what depends on it, across the whole model.</li>
             <li class="feature"><b>Jump to source</b> — in the VS Code extension, go straight from a node
                 to the code it represents (and back).</li>
             <li class="feature"><b>Edit and annotate</b> — in edit mode, arrange nodes, pick icons and colors,
-                add your own nodes, links and notes, or sketch an architecture from an empty model.</li>
+                add your own nodes, links, notes and zones, or sketch an architecture from an empty model.</li>
             <li class="feature"><b>Export</b> — save the current view, a selected area or the whole diagram
                 as an SVG or PNG image.</li>
             <li class="feature"><b>Optional device sync</b> — enable device sync to keep your models and
@@ -230,20 +233,20 @@
             <li class="feature"><b>Share a link</b> — <b>Copy Link to Node</b> (node menu or right-click) and
                 <b>Export › Link to Current View</b> copy a <i>dependinator.com</i> link that opens this model at that
                 node or view. The link works for an account that has the model synced (device sync), and always
-                for the demo model.</li>
+                for the demo models.</li>
             <li class="feature"><b>Hide the node</b> — from the toolbar menu; hidden nodes are dimmed, or
                 removed entirely with <b>View › Show Hidden Nodes</b> off.</li>
             <li class="feature"><b>See only its lines</b> — while a node (or line) is selected, every line that does
                 not touch it is faded (<b>View › Dim Unrelated Lines</b>, on by default); hover a faded line to
                 see it at full strength.</li>
             <li class="feature"><b>Legend</b> — <b>View › Show Legend</b> explains every line style and node icon.</li>
-            <li class="feature"><b>While parsing</b> — the overlay shows the solution and the time so far; "Continue in
+            <li class="feature"><b>While parsing</b> — the overlay shows the model being parsed and the time so far; "Continue in
                 background" lets you keep exploring while it finishes. A background refresh tells you what changed.</li>
             <li class="feature"><b>Find cycles</b> — <b>View › Show Cycles</b> lists every container whose children
-                depend on each other in a circle (projects, namespaces or classes referencing each other) and draws
+                depend on each other in a circle (projects, namespaces, classes or resources referencing each other) and draws
                 those lines in red; click a row to go there.</li>
             <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
-                "this must not depend on that" by picking two nodes (a project, a namespace, a class). Every
+                "this must not depend on that" by picking two nodes (a project, a namespace, a class, a resource). Every
                 dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the
                 model, so they stay checked after every re-parse.</li>
             <li class="feature"><b>Find a path</b> — why does one node depend on another? <b>View › Find Path</b>
@@ -252,7 +255,15 @@
                 you there. The explorer's indirect rows (below) open the same panel for their chain.</li>
             <li class="feature"><b>Leave lines out</b> — <b>View › Lines</b> hides lines to external packages,
                 inheritance lines or member-level lines, or shows only lines carrying at least 2, 5 or 10 links.
-                The explorer's lines and direct lines you asked for are always drawn.</li>
+                <b>Configuration lines</b> (Bicep values flowing into parameters and variables, such as a location
+                or tags) are left out by default; turn them on there when you want to see them. The explorer's
+                lines and direct lines you asked for are always drawn.</li>
+            <li class="feature"><b>Leave rows out</b> — <b>View › Rows</b> hides whole kinds of rows at once, with
+                their lines: Bicep parameters, variables, outputs, or the setting rows (role assignments,
+                diagnostics, locks) under a resource. A view setting, not an edit: the rows stay in the model,
+                the explorer and search, and their places in the layout stay empty until you show them again.
+                To hide particular nodes instead, use <b>Hide</b> in the node menu; a whole selection hides in
+                one undo step.</li>
         </ul>
         <p>
             To see what's <i>inside</i> a node, you don't need a button — just <b>zoom in</b> on it and its
@@ -302,6 +313,21 @@
                 onto another node to link them, or onto the canvas to add a linked node.</li>
             <li class="feature"><b>Notes</b> — place numbered notes on the diagram (<b>Edit › Add Note</b> or
                 the right-click menu) and list them with <b>View › Show Notes Sidebar</b>.</li>
+            <li class="feature"><b>Zones</b> — draw a labeled background area (<b>Edit › Add Zone</b> or the
+                right-click menu) to group nodes the way you think about them: a tier, a subnet, a team. Resize it
+                over the nodes; dragging the zone moves the nodes inside it along. The parsed structure, the lines
+                and the layout are untouched, the zone survives re-parsing, and double-clicking it edits its label
+                and subtitle.</li>
+            <li class="feature"><b>Line labels and bend points</b> — select a line and use its label button (or
+                double-click the line, or right-click › Edit Label) to put a short text on it, with an optional
+                description under it like a node's: what flows across it, which outputs feed which parameters. The
+                label sits at the line's middle, fades with the line and
+                stays through re-parsing while the line exists (it comes back with a line that disappears and
+                returns). The <b>+</b> / <b>−</b> buttons add and remove bend points you can drag.</li>
+            <li class="feature"><b>Display names</b> — give any node a name of your own (node menu or right-click ›
+                <b>Display Name</b>): "Storefront" for <code>frontend</code>, "UI" for a long project name. The real
+                name stays the node's identity: it shows in the tooltip and the breadcrumb hover, search finds the
+                node by either name, and links and share links keep working.</li>
             <li class="feature"><b>Undo</b> — every edit can be undone (<kbd>Ctrl</kbd>+<kbd>Z</kbd>); a delete
                 offers Undo right in its message.</li>
         </ul>
@@ -326,26 +352,26 @@
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>Alt</kbd>+<kbd>↑</kbd></td><td>Zoom out one container level</td></tr>
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>→</kbd></td><td>Back / forward through your jumps (also <kbd>Backspace</kbd> / <kbd>Shift</kbd>+<kbd>Backspace</kbd>)</td></tr>
                 <tr><td style="padding:3px 8px 3px 0;"><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Undo / redo an edit</td></tr>
-                <tr><td style="padding:3px 8px 3px 0;"><kbd>Delete</kbd></td><td>Delete the selected user-drawn node, note or link (edit mode)</td></tr>
+                <tr><td style="padding:3px 8px 3px 0;"><kbd>Delete</kbd></td><td>Delete the selected user-drawn node, note, zone or link (edit mode)</td></tr>
             </table>
         </div>
 
         <div class="card">
             <b>The menu</b> (the <span style="color:var(--brand-dark)">☰</span> button, top-left) is your
             hub: search and fit, undo/redo and edit mode, export as image, view options and the light/dark
-            theme, your models (<b>Models › Manage Models</b> lists the workspace's solutions, recent models,
+            theme, your models (<b>Models › Manage Models</b> lists the workspace's solutions and Bicep deployments, recent models,
             models in the cloud and design models), settings, and help.
         </div>
 
         <h2>VS Code vs. the web app</h2>
         <p>
             The <b>VS Code extension</b> is where you'll do the real work of building and editing diagrams
-            alongside your code. It parses the solution in your workspace (and re-parses when files change).
-            The diagram <b>follows the editor</b>: switching to a C# file shows its node (setting
+            alongside your code. It parses the solution or Bicep deployment in your workspace (and re-parses when files change).
+            The diagram <b>follows the editor</b>: switching to a C# or Bicep file shows its node (setting
             <i>Follow Active Editor</i>), <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>D</kbd> reveals the node at the
             cursor, and from the diagram you can jump back to <b>open the corresponding editor</b> — so the map
             and the source stay in step. The command palette has <i>Dependinator: Search Nodes</i> and
-            <i>Re-parse Solution</i>, and the status bar shows when it is parsing. The extension is available
+            <i>Re-parse Model</i>, and the status bar shows when it is parsing. The extension is available
             on the
             <a href="https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator"
                 target="_blank" rel="noopener">Visual Studio Marketplace</a> — in VS Code, search for

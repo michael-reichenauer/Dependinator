@@ -80,4 +80,24 @@ public class RubberBandSelectionTests
 
         Assert.Equal([shown], found);
     }
+
+    [Fact]
+    public void FindNodes_ShouldLeaveZonesOut()
+    {
+        // A zone enclosing a group is background: the band picks the nodes, not the zone.
+        var root = CreateRoot();
+        var zone = AddNode(root, "Edge", new Rect(0, 0, 90, 90));
+        zone.IsZone = true;
+        zone.IsManual = true;
+        var node = AddNode(root, "Node", new Rect(20, 20, 20, 20));
+
+        var found = RubberBandSelection.FindNodes(
+            root,
+            new Rect(-10, -10, 120, 120),
+            isChildrenShown: _ => false,
+            isVisible: _ => true
+        );
+
+        Assert.Equal([node], found);
+    }
 }

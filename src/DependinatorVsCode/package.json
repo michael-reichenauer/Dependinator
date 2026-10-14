@@ -1,7 +1,7 @@
 {
     "name": "dependinator",
     "displayName": "Dependinator",
-    "description": "Dependinator visualizes code structure and dependencies as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
+    "description": "Dependinator visualizes the structure and dependencies of C#/.NET code and Azure Bicep deployments as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
     "version": "0.81.0",
     "publisher": "michaelreichenauer",
     "license": "MIT",
@@ -22,7 +22,10 @@
         "architecture",
         "diagram",
         "C#",
-        ".NET"
+        ".NET",
+        "Bicep",
+        "Azure",
+        "infrastructure"
     ],
     "engines": {
         "vscode": "^1.91.0"
@@ -56,7 +59,7 @@
             },
             {
                 "command": "dependinator.refresh",
-                "title": "Dependinator: Re-parse Solution"
+                "title": "Dependinator: Re-parse Model"
             },
             {
                 "command": "dependinator.installInDevContainer",
@@ -68,14 +71,14 @@
                 {
                     "command": "dependinator.open",
                     "group": "navigation",
-                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj)$/"
+                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj|bicep)$/"
                 }
             ],
             "editor/context": [
                 {
                     "command": "dependinator.reveal",
                     "group": "navigation@9",
-                    "when": "resourceLangId == csharp || resourceExtname == .razor"
+                    "when": "resourceLangId == csharp || resourceLangId == bicep || resourceExtname == .razor"
                 }
             ],
             "commandPalette": [

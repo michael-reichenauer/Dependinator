@@ -1,4 +1,5 @@
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
@@ -43,9 +44,9 @@ interface ISelectionService
 [Scoped]
 class SelectionService(
     IModelMgr modelMgr,
-    IModelService modelService,
     IApplicationEvents applicationEvents,
-    IScreenService screenService
+    IScreenService screenService,
+    ICommandService commandService
 ) : ISelectionService
 {
     // Offset from the clicked point on a line to where its toolbar is anchored.
@@ -217,6 +218,12 @@ class SelectionService(
         {
             if (pointerId.IsLine)
                 await TrySelectOrRefreshLineAsync(pointerId, e, isNewSelection: false);
+            else if (selectedPosition == Pos.None)
+            {
+                // The node was selected before it was on screen (e.g. selected right after being
+                // added, ahead of the render), so its toolbar is not placed yet: place it now.
+                await UpdateSelectedPositionAsync();
+            }
             return;
         }
 
@@ -231,7 +238,9 @@ class SelectionService(
             {
                 if (model.Nodes.TryGetValue(pointerId.NodeId, out var node))
                 {
-                    if (IsNodeMovable(node, model.Zoom))
+                    // A zone is selectable however much of the screen it covers (it is drawn
+                    // around a group and often fills the view); only moving it keeps the limit.
+                    if (node.IsZone || IsNodeMovable(node, model.Zoom))
                     {
                         isMovable = true;
                         node.IsSelected = true;
@@ -351,7 +360,9 @@ class SelectionService(
 
         if (node.IsHidden && node.Parent.IsHidden)
             return false;
-        return IsNodeMovable(node, zoom);
+        // A zone is drawn around a group and usually fills much of the screen; the user selected
+        // it on purpose, so dragging it moves it (and the nodes inside) rather than panning.
+        return node.IsZone || IsNodeMovable(node, zoom);
     }
 
     public bool IsSelectedNodeHidden()
@@ -378,26 +389,21 @@ class SelectionService(
 
     // Hides (or shows) every selected node; the primary node's state decides the direction, so
     // a mixed group ends up uniform.
+    // Hides the selection (the whole group follows the primary node's new state), or shows it
+    // again, as one undoable step like every other edit.
     public void ToggleNodeHide()
     {
         if (!IsSelected)
             return;
+        bool hidden;
         using (var model = modelMgr.UseModel())
         {
             if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
                 return;
-            var hidden = !node.IsHidden;
-            foreach (var nodeId in SelectedNodeIds)
-            {
-                if (model.Nodes.TryGetValue(nodeId, out var selected))
-                    selected.SetHidden(hidden, true);
-            }
+            hidden = !node.IsHidden;
         }
 
-        modelService.CheckLineVisibility();
-
-        applicationEvents.TriggerModelChanged();
-        applicationEvents.TriggerUIStateChanged();
+        commandService.Do(new HideNodesCommand([.. SelectedNodeIds], hidden));
     }
 
     // A node is movable while it reads as an object on screen rather than as the screen itself:

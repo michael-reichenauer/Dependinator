@@ -1,0 +1,57 @@
+@using MudBlazor
+
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">Line label</MudText>
+  </TitleContent>
+  <DialogContent>
+    <MudTextField @ref="labelField" T="string" @bind-Value="Label" Label="Label" Immediate="true"
+                  HelperText="Short text drawn on the line, e.g. what flows across it" OnKeyDown="OnKeyDown"
+                  data-testid="line-label-text" />
+    <MudTextField T="string" @bind-Value="Description" Label="Description (optional)" Lines="2" Class="mt-3"
+                  HelperText="Smaller text under the label" data-testid="line-label-description" />
+  </DialogContent>
+  <DialogActions>
+    @if (HasLabel)
+    {
+      <MudButton Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Outlined.LabelOff" OnClick="Clear"
+                 data-testid="line-label-clear">Remove</MudButton>
+    }
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="line-label-cancel">Cancel</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="line-label-save">Save</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public string Label { get; set; } = "";
+  [Parameter] public string Description { get; set; } = "";
+  [Parameter] public bool HasLabel { get; set; }
+
+  MudTextField<string> labelField = null!;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender && labelField is not null)
+    {
+      await labelField.FocusAsync();
+      await labelField.SelectAsync();
+    }
+  }
+
+  void OnKeyDown(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter")
+      Save();
+  }
+
+  // Empty texts save as "no label".
+  void Save() =>
+      MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult((Label ?? "").Trim(), (Description ?? "").Trim(), false)));
+
+  void Clear() => MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult("", "", true)));
+
+  void Cancel() => MudDialog.Cancel();
+}

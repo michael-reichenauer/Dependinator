@@ -4,7 +4,7 @@ using NetArchTest.Rules;
 namespace Dependinator.Architecture.Tests;
 
 // Guards the solution's layering direction against future drift. The dependency direction is
-// Hosts -> UI -> Core -> Shared (with Roslyn -> Core and Reflection -> Core). Today the project references already make
+// Hosts -> UI -> Core -> Shared (with Roslyn -> Core, Bicep -> Core and Reflection -> Core). Today the project references already make
 // upward dependencies impossible to compile, but these tests fail loudly if someone later adds
 // such a reference (e.g. Core taking a dependency on UI for a "quick fix").
 public class LayeringTests
@@ -14,6 +14,7 @@ public class LayeringTests
     static readonly Assembly SharedAssembly = typeof(global::Shared.CloudUserInfo).Assembly;
     static readonly Assembly RoslynAssembly = Assembly.Load("Dependinator.Roslyn");
     static readonly Assembly ReflectionAssembly = Assembly.Load("Dependinator.Reflection");
+    static readonly Assembly BicepAssembly = Assembly.Load("Dependinator.Bicep");
 
     static readonly string[] HostAssemblies = ["Dependinator.Web", "Dependinator.Wasm", "Dependinator.Lsp", "Api"];
 
@@ -22,7 +23,13 @@ public class LayeringTests
     {
         AssertNoDependencyOn(
             CoreAssembly,
-            ["Dependinator.UI", "Dependinator.Roslyn", "Dependinator.Reflection", .. HostAssemblies]
+            [
+                "Dependinator.UI",
+                "Dependinator.Roslyn",
+                "Dependinator.Bicep",
+                "Dependinator.Reflection",
+                .. HostAssemblies,
+            ]
         );
     }
 
@@ -41,7 +48,13 @@ public class LayeringTests
     [Fact]
     public void Roslyn_ShouldNotDependOnUiOrHosts()
     {
-        AssertNoDependencyOn(RoslynAssembly, ["Dependinator.UI", .. HostAssemblies]);
+        AssertNoDependencyOn(RoslynAssembly, ["Dependinator.UI", "Dependinator.Bicep", .. HostAssemblies]);
+    }
+
+    [Fact]
+    public void Bicep_ShouldNotDependOnUiOrHosts()
+    {
+        AssertNoDependencyOn(BicepAssembly, ["Dependinator.UI", "Dependinator.Roslyn", .. HostAssemblies]);
     }
 
     [Fact]
@@ -59,6 +72,7 @@ public class LayeringTests
                 "Dependinator.Core",
                 "Dependinator.UI",
                 "Dependinator.Roslyn",
+                "Dependinator.Bicep",
                 "Dependinator.Reflection",
                 .. HostAssemblies,
             ]

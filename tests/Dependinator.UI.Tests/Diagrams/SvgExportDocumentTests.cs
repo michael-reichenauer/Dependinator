@@ -72,4 +72,14 @@ public class SvgExportDocumentTests
             CultureInfo.CurrentCulture = previous;
         }
     }
+
+    [Fact]
+    public void Create_ShouldStyleLineLabels_WithAHalo()
+    {
+        var svg = SvgExportDocument.Create("", 100, 100, "#FFF");
+
+        Assert.Contains(".lineLabel", svg);
+        Assert.Contains(".lineDescription", svg);
+        Assert.Contains("paint-order: stroke;", svg);
+    }
 }

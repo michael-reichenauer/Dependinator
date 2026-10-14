@@ -16,6 +16,9 @@ interface IViewOptions
     // direct lines are always drawn).
     LineFilter LineFilter { get; }
 
+    // Which kinds of member rows are left out of the diagram (with their lines).
+    RowFilter RowFilter { get; }
+
     // The legend card explaining line styles and node icons (session state).
     bool IsLegendShown { get; }
 
@@ -32,17 +35,46 @@ interface IViewOptions
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
     void SetLineFilter(LineFilter filter);
+    void SetRowFilter(RowFilter filter);
     void SetLegendShown(bool shown);
     void SetCyclesShown(bool shown);
     void SetRulesShown(bool shown);
     void SetMinimapShown(bool shown);
 }
 
-// MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on.
-readonly record struct LineFilter(bool HideExternal, bool HideInheritance, bool HideMember, int MinLinkCount)
+// MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on. HideConfiguration
+// (lines that only carry values into parameter and variable rows, Bicep) is on by default, so
+// IsAny leaves it out: the "(filtered)" menu label only flags filters the user turned on.
+readonly record struct LineFilter(
+    bool HideExternal,
+    bool HideInheritance,
+    bool HideMember,
+    bool HideConfiguration,
+    int MinLinkCount
+)
 {
-    public static readonly LineFilter None = new(false, false, false, 1);
+    public static readonly LineFilter None = new(false, false, false, false, 1);
     public bool IsAny => HideExternal || HideInheritance || HideMember || MinLinkCount > 1;
+}
+
+// Whole kinds of rows left out at once (View › Rows): Bicep parameters, variables and outputs,
+// and the setting rows (role assignments, diagnostics, locks...) under the resource they
+// configure. A view option like the line filter, not an edit: the rows stay in the model, the
+// explorer and search, and their places in the layout stay empty.
+readonly record struct RowFilter(bool HideParameters, bool HideVariables, bool HideOutputs, bool HideSettings)
+{
+    public static readonly RowFilter None = new(false, false, false, false);
+    public bool IsAny => HideParameters || HideVariables || HideOutputs || HideSettings;
+
+    public bool Hides(Parsing.NodeType type) =>
+        type switch
+        {
+            Parsing.NodeType.ParameterMember => HideParameters,
+            Parsing.NodeType.VariableMember => HideVariables,
+            Parsing.NodeType.OutputMember => HideOutputs,
+            Parsing.NodeType.ResourceMember => HideSettings,
+            _ => false,
+        };
 }
 
 [Scoped]
@@ -52,6 +84,7 @@ class ViewOptions : IViewOptions
     public bool IsEditingEnabled { get; private set; } = false;
     public bool DimUnrelatedLines { get; private set; } = true;
     public LineFilter LineFilter { get; private set; } = LineFilter.None;
+    public RowFilter RowFilter { get; private set; } = RowFilter.None;
     public bool IsLegendShown { get; private set; }
     public bool IsCyclesShown { get; private set; }
     public bool IsRulesShown { get; private set; }
@@ -64,6 +97,8 @@ class ViewOptions : IViewOptions
     public void SetDimUnrelatedLines(bool dim) => DimUnrelatedLines = dim;
 
     public void SetLineFilter(LineFilter filter) => LineFilter = filter;
+
+    public void SetRowFilter(RowFilter filter) => RowFilter = filter;
 
     public void SetLegendShown(bool shown) => IsLegendShown = shown;
 

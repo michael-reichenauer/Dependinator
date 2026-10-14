@@ -41,7 +41,8 @@ static class LineSvg
         bool isCyclic = false,
         bool isPath = false,
         bool isViolation = false,
-        bool isWeighted = false
+        bool isWeighted = false,
+        bool includeLabel = true
     )
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
@@ -56,12 +57,27 @@ static class LineSvg
             endpoints,
             polylinePoints,
             elementId,
+            childrenZoom,
             isDimmed,
             isCyclic,
             isPath,
             isViolation,
-            isWeighted
+            isWeighted,
+            includeLabel
         );
+    }
+
+    // A line's label on its own, for the label layer SvgService draws above the child nodes
+    // (the sibling lines themselves lie under the nodes, which would cover a label drawn with
+    // them). Dimmed like its line; hovering the line does not restore it, which is fine.
+    public static string GetLineLabelSvg(Line line, Pos nodeCanvasPos, double childrenZoom, bool isDimmed)
+    {
+        if (!line.HasLabel || !LinePathGeometry.TryGetLocalEndpoints(line, out _))
+            return "";
+
+        var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
+        var text = LabelSvg(line, polylinePoints, childrenZoom);
+        return isDimmed ? $"""<g class="line-dim">{text}</g>""" : text;
     }
 
     public static string GetDirectLineSvg(
@@ -94,11 +110,13 @@ static class LineSvg
         LinePathGeometry.LineEndpoints endpoints,
         IReadOnlyList<Pos> polylinePoints,
         string elementId,
+        double childrenZoom,
         bool isDimmed,
         bool isCyclic,
         bool isPath,
         bool isViolation,
-        bool isWeighted
+        bool isWeighted,
+        bool includeLabel
     )
     {
         // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
@@ -152,6 +170,7 @@ static class LineSvg
         var points = ToPolylinePoints(visiblePoints);
         var hitPoints = ToPolylinePoints(polylinePoints);
         var selectedSvg = SelectedLineSvg(line, polylinePoints, strokeWidth);
+        var labelSvg = includeLabel ? LabelSvg(line, polylinePoints, childrenZoom) : "";
 
         var title = $"{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})";
         if (!string.IsNullOrWhiteSpace(line.HtmlDescription))
@@ -173,6 +192,7 @@ static class LineSvg
             <g class="{visibleClass}">
             <polyline points="{points}" fill="none" stroke-width="{strokeWidth:0.##}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
             <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
+            {labelSvg}
             </g>
             <g class="hoverable" id="{elementId}">
               <polyline id="{elementId}" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
@@ -183,6 +203,42 @@ static class LineSvg
             </g>
             """
         );
+    }
+
+    // The user's label at the line's middle, with its description under it in the smaller italic
+    // used for node descriptions. The lineLabel/lineDescription classes draw a background-colored
+    // halo (paint-order) so the text stays legible over the line and whatever it crosses; the
+    // font follows the node names.
+    static string LabelSvg(Line line, IReadOnlyList<Pos> polylinePoints, double childrenZoom)
+    {
+        if (!line.HasLabel)
+            return "";
+
+        var middle = LinePathGeometry.MidPoint(polylinePoints);
+        var textZoom = NodeSvg.TextZoom(childrenZoom);
+        var fontSize = NodeSvg.FontSize * textZoom;
+        var descriptionFontSize = NodeSvg.DescriptionFontSize * textZoom;
+        var opacity = line.IsHidden ? " opacity=\"0.3\"" : "";
+
+        // With both texts the pair is centered on the line: the label just above, the
+        // description just below; a single text sits on the line itself.
+        var hasBoth = line.HtmlLabel is not null && line.HtmlLabelDescription is not null;
+        var labelY = hasBoth ? middle.Y - fontSize * 0.55 : middle.Y;
+        var descriptionY = hasBoth ? middle.Y + descriptionFontSize * 0.75 : middle.Y;
+
+        var labelSvg = line.HtmlLabel is null
+            ? ""
+            : string.Create(
+                CultureInfo.InvariantCulture,
+                $"""<text class="lineLabel" x="{middle.X:0.##}" y="{labelY:0.##}" font-size="{fontSize:0.##}px" text-anchor="middle" dominant-baseline="central"{opacity}>{line.HtmlLabel}</text>"""
+            );
+        var descriptionSvg = line.HtmlLabelDescription is null
+            ? ""
+            : string.Create(
+                CultureInfo.InvariantCulture,
+                $"""<text class="lineDescription" x="{middle.X:0.##}" y="{descriptionY:0.##}" font-size="{descriptionFontSize:0.##}px" text-anchor="middle" dominant-baseline="central"{opacity}>{line.HtmlLabelDescription}</text>"""
+            );
+        return labelSvg + descriptionSvg;
     }
 
     static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints, double strokeWidth)

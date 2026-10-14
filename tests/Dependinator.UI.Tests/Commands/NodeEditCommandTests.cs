@@ -142,4 +142,50 @@ public class NodeEditCommandTests
 
         Assert.Equal("Database", node.CustomIconName);
     }
+
+    [Fact]
+    public void Execute_ShouldSetAlias_AndRevertRestorePrevious()
+    {
+        var (model, node) = CreateModelWithNode();
+        node.SetAlias("Shop");
+        var version = model.StructureVersion;
+        var command = new NodeEditCommand(node.Id) { Alias = "Storefront" };
+
+        command.Execute(model);
+        Assert.Equal("Storefront", node.Alias);
+        Assert.Equal("Storefront", node.DisplayName);
+        Assert.True(model.StructureVersion > version); // name-dependent panel caches refresh
+
+        command.Revert(model);
+        Assert.Equal("Shop", node.Alias);
+    }
+
+    [Fact]
+    public void Execute_ShouldClearAlias_WhenAliasIsEmpty()
+    {
+        var (model, node) = CreateModelWithNode();
+        node.SetAlias("Shop");
+        var command = new NodeEditCommand(node.Id) { Alias = "" };
+
+        command.Execute(model);
+        Assert.Null(node.Alias);
+        Assert.Equal("Node", node.DisplayName);
+
+        command.Revert(model);
+        Assert.Equal("Shop", node.Alias);
+    }
+
+    [Fact]
+    public void Execute_ShouldSetAlias_WhenNodeHadNone_AndRevertRestoreNull()
+    {
+        var (model, node) = CreateModelWithNode();
+        var command = new NodeEditCommand(node.Id) { Alias = "Storefront" };
+
+        command.Execute(model);
+        Assert.Equal("Storefront", node.Alias);
+
+        command.Revert(model);
+        Assert.Null(node.Alias);
+        Assert.Equal("Node", node.DisplayName);
+    }
 }

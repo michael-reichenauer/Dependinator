@@ -5,7 +5,8 @@ namespace Dependinator.Core.Shared;
 [Rpc]
 interface IWorkspaceFileService
 {
-    Task<IReadOnlyList<string>> GetSolutionFilePathsAsync();
+    // The workspace's parseable model files: every .sln, then every .bicep entry point.
+    Task<IReadOnlyList<string>> GetModelFilePathsAsync();
     void SetWorkspaceFolders(IReadOnlyList<string> paths);
 }
 
@@ -21,19 +22,27 @@ class WorkspaceFileService : IWorkspaceFileService
 
     IReadOnlyList<string> rootPaths = [];
 
-    public async Task<IReadOnlyList<string>> GetSolutionFilePathsAsync()
+    public async Task<IReadOnlyList<string>> GetModelFilePathsAsync()
     {
         await Task.CompletedTask;
-        // Order shallowest first, then by path, so the workspace's top level solution comes
-        // first regardless of enumeration order; callers treat the first as the workspace
-        // solution (e.g. the model the VS Code extension starts on).
-        var paths = EnumerateFiles(rootPaths, "*.sln")
+        // Solutions first, then Bicep entry points (the .bicep files no other file uses as a
+        // module). Each group is ordered shallowest first, then by path, so the workspace's top
+        // level solution comes first regardless of enumeration order; callers treat the first
+        // path as the workspace model (e.g. the model the VS Code extension starts on).
+        var solutionPaths = OrderShallowestFirst(EnumerateFiles(rootPaths, "*.sln"));
+        var bicepPaths = BicepEntryPoints.Find(
+            OrderShallowestFirst(EnumerateFiles(rootPaths, "*.bicep")),
+            File.ReadAllText
+        );
+        Log.Info("Model file paths", solutionPaths, bicepPaths);
+        return [.. solutionPaths, .. bicepPaths];
+    }
+
+    static List<string> OrderShallowestFirst(IEnumerable<string> paths) =>
+        paths
             .OrderBy(path => path.Count(c => c is '/' or '\\'))
             .ThenBy(path => path, StringComparer.OrdinalIgnoreCase)
             .ToList();
-        Log.Info("Solution Paths", paths);
-        return paths;
-    }
 
     public void SetWorkspaceFolders(IReadOnlyList<string> paths)
     {

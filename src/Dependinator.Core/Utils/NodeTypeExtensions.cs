@@ -14,7 +14,11 @@ static class NodeTypeExtensions
                     or NodeType.ConstructorMember
                     or NodeType.EventMember
                     or NodeType.MethodMember
-                    or NodeType.PropertyMember;
+                    or NodeType.PropertyMember
+                    or NodeType.ParameterMember
+                    or NodeType.VariableMember
+                    or NodeType.OutputMember
+                    or NodeType.ResourceMember;
 
         public bool IsType =>
             nodeType

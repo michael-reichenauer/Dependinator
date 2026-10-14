@@ -18,14 +18,12 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
 
         // Test projects are excluded by default.
-        await Expect(await OpenIncludeTestProjectsAsync()).ToHaveAttributeAsync("data-checked", "false");
+        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-include-test-projects", isChecked: false);
 
-        await (await OpenIncludeTestProjectsAsync()).ClickAsync();
-        await Expect(await OpenIncludeTestProjectsAsync()).ToHaveAttributeAsync("data-checked", "true");
+        await ToggleIncludeTestProjectsAsync(expectOn: true);
 
         // And back off again.
-        await (await OpenIncludeTestProjectsAsync()).ClickAsync();
-        await Expect(await OpenIncludeTestProjectsAsync()).ToHaveAttributeAsync("data-checked", "false");
+        await ToggleIncludeTestProjectsAsync(expectOn: false);
     }
 
     // Only wheel-down (a positive delta) is used to probe the zoom direction: headless
@@ -57,19 +55,19 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
 
     Task<ILocator> OpenInvertScrollZoomAsync() => App.OpenSubMenuItemAsync("menu-settings", "menu-invert-scroll-zoom");
 
-    // Assert the toggle state via the menu, then close the menu again so the canvas is free
-    // for wheel gestures (an open menu's overlay would swallow them).
-    async Task ExpectInvertScrollZoomAsync(bool isOn)
-    {
-        await Expect(await OpenInvertScrollZoomAsync()).ToHaveAttributeAsync("data-checked", isOn ? "true" : "false");
-        await App.CloseMenuAsync();
-    }
+    // Assert the toggle state via the menu (which is closed again, so the canvas is free for
+    // wheel gestures: an open menu's overlay would swallow them).
+    Task ExpectInvertScrollZoomAsync(bool isOn) =>
+        App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-invert-scroll-zoom", isOn);
 
     // Click the toggle and verify it really flipped: a click landing while the popover
-    // re-renders is swallowed silently, so the state is read back before moving on.
+    // re-renders is swallowed silently, so the state is read back before moving on. A handled
+    // click closes the menu; let it finish fading out before reopening it (see
+    // ToggleIncludeTestProjectsAsync).
     async Task ToggleInvertScrollZoomAsync(bool expectOn)
     {
         await (await OpenInvertScrollZoomAsync()).ClickAsync();
+        await Expect(App.MenuItem("menu-search")).ToBeHiddenAsync();
         await ExpectInvertScrollZoomAsync(expectOn);
     }
 
@@ -131,6 +129,22 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
             await App.Node("Demo.sln").First.BoundingBoxAsync()
             ?? throw new InvalidOperationException("Root node is not rendered.");
         return box.Width;
+    }
+
+    // Click the toggle and verify the state flipped. A handled click closes the whole menu: let
+    // it finish fading out, or reopening it right away finds the old popover still showing and
+    // hovers an item that is about to vanish. The click also re-parses the model, and the
+    // re-parse's completion re-renders the app, which can close a menu opened meanwhile; so a
+    // refresh in progress (the discreet spinner) is let finish too. That wait can pass before
+    // the spinner shows (the click reaches the server asynchronously, and the embedded demo
+    // re-parses in an instant), so the reopening check is what makes the read reliable. The
+    // click is not retried: clicking a toggle twice would flip it back.
+    async Task ToggleIncludeTestProjectsAsync(bool expectOn)
+    {
+        await (await OpenIncludeTestProjectsAsync()).ClickAsync();
+        await Expect(App.MenuItem("menu-search")).ToBeHiddenAsync();
+        await Expect(Page.Locator(".app-progress-discreet")).ToHaveCountAsync(0);
+        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-include-test-projects", expectOn);
     }
 
     Task<ILocator> OpenIncludeTestProjectsAsync() =>

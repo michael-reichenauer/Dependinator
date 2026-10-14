@@ -32,7 +32,8 @@ public class NewModelNameValidatorTests
     [Theory]
     [InlineData("MyModel.sln")]
     [InlineData("MyModel.SLN")]
-    public void Validate_ShouldReject_SolutionSuffix(string name)
+    [InlineData("infra.bicep")]
+    public void Validate_ShouldReject_ParseableFileSuffix(string name)
     {
         Assert.NotNull(NewModelNameValidator.Validate(name, ExistingPaths));
     }

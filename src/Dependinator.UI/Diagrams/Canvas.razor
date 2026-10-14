@@ -152,6 +152,60 @@
                         text-anchor: start;
                         pointer-events: none;
                     }
+
+                    .zoneName {
+                        font-family: Verdana, Helvetica, Arial, sans-serif;
+                        fill:
+                            @DColors.Text
+                        ;
+                        fill-opacity: 0.8;
+                        dominant-baseline: hanging;
+                        text-anchor: start;
+                        pointer-events: none;
+                    }
+
+                    .zoneDescription {
+                        font-family: Verdana, Helvetica, Arial, sans-serif;
+                        font-style: italic;
+                        fill:
+                            @DColors.Text
+                        ;
+                        fill-opacity: 0.6;
+                        dominant-baseline: hanging;
+                        text-anchor: start;
+                        pointer-events: none;
+                    }
+
+                    /* A line's user label: a background-colored halo keeps it legible over the line. */
+                    .lineLabel {
+                        font-family: Verdana, Helvetica, Arial, sans-serif;
+                        fill:
+                            @DColors.Text
+                        ;
+                        paint-order: stroke;
+                        stroke:
+                            @DColors.CanvasBackground
+                        ;
+                        stroke-width: 3px;
+                        stroke-linejoin: round;
+                        pointer-events: none;
+                    }
+
+                    .lineDescription {
+                        font-family: Verdana, Helvetica, Arial, sans-serif;
+                        font-style: italic;
+                        fill:
+                            @DColors.Text
+                        ;
+                        fill-opacity: 0.75;
+                        paint-order: stroke;
+                        stroke:
+                            @DColors.CanvasBackground
+                        ;
+                        stroke-width: 3px;
+                        stroke-linejoin: round;
+                        pointer-events: none;
+                    }
         </style>
         <defs>
             <marker id="arrow-line" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">

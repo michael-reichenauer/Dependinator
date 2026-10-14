@@ -132,4 +132,13 @@ public class CoachServiceTests
         Assert.True(service.IsActive);
         Assert.Equal(CoachStep.Welcome, service.Step);
     }
+
+    [Fact]
+    public void ZoomCard_ShouldPointToTheInvertScrollZoomSetting()
+    {
+        // Natural scrolling (the macOS default) flips the wheel, so the zoom step says where to flip it back.
+        CoachCard card = CoachService.GetCard(CoachStep.Zoom, isDemoModel: true);
+
+        Assert.Contains("Invert Scroll Zoom", card.Text);
+    }
 }

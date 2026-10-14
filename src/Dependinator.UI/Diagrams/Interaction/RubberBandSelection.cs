@@ -26,7 +26,7 @@ static class RubberBandSelection
         {
             foreach (var child in parent.Children)
             {
-                if (child.IsNote || !isVisible(child))
+                if (child.IsNote || child.IsZone || !isVisible(child))
                     continue;
                 var rect = CanvasRect(child);
                 if (IsInside(rect, band))

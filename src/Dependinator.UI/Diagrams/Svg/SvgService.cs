@@ -58,6 +58,7 @@ class SvgService : ISvgService
         new(viewOptions.IsEditingEnabled, viewOptions.ShowHiddenNodes, viewOptions.DimUnrelatedLines)
         {
             Filter = viewOptions.LineFilter,
+            Rows = viewOptions.RowFilter,
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
             PathLines = pathFinderService.GetPathLineIds(),
             ViolatingLines = viewOptions.IsRulesShown ? ruleService.GetViolatingLineIds() : null,
@@ -174,13 +175,21 @@ class SvgService : ISvgService
     static bool IsLineViolating(Line line, RenderContext context) =>
         context.Flags.ViolatingLines?.Contains(line.Id) == true;
 
-    // The user's line filter (View › Lines). Explorer focus lines and user-requested direct
-    // lines are explicit asks and are always drawn.
-    internal static bool IsLineFilteredOut(Line line, LineFilter filter)
+    internal static bool IsLineFilteredOut(Line line, LineFilter filter) =>
+        IsLineFilteredOut(line, filter, RowFilter.None);
+
+    // The user's line filter (View › Lines) and row filter (View › Rows). A line to a row that
+    // is left out goes with the row, whatever the line is; among the drawn rows, explorer focus
+    // lines and user-requested direct lines are explicit asks and are always drawn.
+    internal static bool IsLineFilteredOut(Line line, LineFilter filter, RowFilter rows)
     {
+        if (rows.Hides(line.Source.Type) || rows.Hides(line.Target.Type))
+            return true;
         if (line.IsFocused || line.IsDirect)
             return false;
         if (filter.HideInheritance && line.IsInheritance)
+            return true;
+        if (filter.HideConfiguration && line.IsConfiguration)
             return true;
         if (filter.HideMember && (line.Source.Type.IsMember || line.Target.Type.IsMember))
             return true;
@@ -233,32 +242,70 @@ class SvgService : ISvgService
         var childrenZoom = context.Zoom * node.ContainerZoom;
         var childrenContext = context.With(childrenCanvasOffset, childrenZoom);
 
+        // Zones are background: drawn first so the sibling lines and nodes lie on top of them,
+        // with their selection chrome drawn last so the siblings cannot cover it.
+        var zonesSvg = node
+            .Children.Where(child => child.IsZone)
+            .Select(child => RenderNode(child, childrenContext))
+            .Where(svg => svg.Length > 0);
         var childNodeSvg = node
-            .Children.Select(child => RenderNode(child, childrenContext))
+            .Children.Where(child => !child.IsZone)
+            .Select(child => RenderNode(child, childrenContext))
             .Where(svg => svg.Length > 0);
         var linesSvg = RenderNodeLines(node, childrenCanvasOffset, childrenZoom, context);
+
+        // The lines' labels draw above the child nodes: a short line's label would otherwise
+        // end up under the node icons at its ends.
+        var lineLabelsSvg = RenderNodeLineLabels(node, childrenCanvasOffset, childrenZoom, context);
 
         // Cousin and direct lines draw above the child nodes: they cross into containers whose
         // opaque fill would otherwise cover them.
         var directLinesSvg = RenderDirectNodeLines(node, childrenCanvasOffset, childrenZoom, context);
+        var zoneOverlaysSvg = node
+            .Children.Where(child => child.IsZone)
+            .Select(child => RenderZoneOverlay(child, childrenContext))
+            .Where(svg => svg.Length > 0);
 
-        return linesSvg.Concat(childNodeSvg).Concat(directLinesSvg).Join("\n");
+        return zonesSvg
+            .Concat(linesSvg)
+            .Concat(childNodeSvg)
+            .Concat(lineLabelsSvg)
+            .Concat(directLinesSvg)
+            .Concat(zoneOverlaysSvg)
+            .Join("\n");
+    }
+
+    // A selected zone's outline and resize handles, emitted after the siblings that are drawn
+    // over the zone itself.
+    static string RenderZoneOverlay(Node zone, RenderContext context) =>
+        IsRendered(zone, context, out var geometry)
+            ? NodeSvg.SelectedNodeSvg(zone, geometry.CanvasRect, context.Flags.IsEditing)
+            : "";
+
+    // Whether the node is drawn at all in this tile: not hidden (unless hidden nodes are shown),
+    // not a row kind the user left out, overlapping the tile, and at least MinRenderSize in one
+    // dimension.
+    static bool IsRendered(Node node, RenderContext context, out NodeGeometry geometry)
+    {
+        geometry = CalculateNodeGeometry(node, context);
+        if (node.IsHidden && !context.Flags.ShowHidden)
+            return false;
+        if (context.Flags.Rows.Hides(node.Type))
+            return false;
+        if (!RectOverlap(context.TileBounds, geometry.TileRect))
+            return false;
+        return geometry.TileRect.Width >= MinRenderSize || geometry.TileRect.Height >= MinRenderSize;
     }
 
     static string RenderNode(Node node, RenderContext context)
     {
-        if (node.IsHidden && !context.Flags.ShowHidden)
+        if (!IsRendered(node, context, out var geometry))
             return "";
 
-        var geometry = CalculateNodeGeometry(node, context);
-
-        if (!RectOverlap(context.TileBounds, geometry.TileRect))
-            return "";
-        if (geometry.TileRect.Width < MinRenderSize && geometry.TileRect.Height < MinRenderSize)
-            return "";
-
-        // A note is a leaf annotation drawn as a circle; it has no children or chrome, so short-
-        // circuit before the member/icon/container branches.
+        // Annotations are leaves without children or chrome: a zone is a labeled background
+        // rectangle, a note a circle. Short-circuit before the member/icon/container branches.
+        if (node.IsZone)
+            return ZoneSvg.GetZoneSvg(node, geometry.CanvasRect, context.Zoom);
         if (node.IsNote)
             return NoteSvg.GetNoteSvg(node, geometry.CanvasRect, context.Zoom);
 
@@ -345,7 +392,48 @@ class SvgService : ISvgService
         return true;
     }
 
+    // The sibling lines and the fan-out segments of this container; their labels go into a layer
+    // of their own above the child nodes (see RenderNodeContent), so the lines are drawn without.
     static IEnumerable<string> RenderNodeLines(Node node, Pos nodeCanvasPos, double childrenZoom, RenderContext context)
+    {
+        foreach (var (line, isCyclic) in DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context))
+        {
+            yield return LineSvg.GetLineSvg(
+                line,
+                nodeCanvasPos,
+                childrenZoom,
+                IsLineDimmed(line, context),
+                isCyclic,
+                IsLineOnPath(line, context),
+                IsLineViolating(line, context),
+                IsLineWeighted(line, context),
+                includeLabel: false
+            );
+        }
+    }
+
+    static IEnumerable<string> RenderNodeLineLabels(
+        Node node,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        RenderContext context
+    )
+    {
+        foreach (var (line, _) in DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context))
+        {
+            var labelSvg = LineSvg.GetLineLabelSvg(line, nodeCanvasPos, childrenZoom, IsLineDimmed(line, context));
+            if (labelSvg.Length > 0)
+                yield return labelSvg;
+        }
+    }
+
+    // The lines of this container that are drawn in this tile, with whether each is cyclic.
+    static IEnumerable<(Line Line, bool IsCyclic)> DrawnNodeLines(
+        Node node,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        RenderContext context
+    )
     {
         // Parent-to-child segments are the fan-out of incoming links inside this container
         // (and direct parent-to-child links); only the segments below the links' current
@@ -359,19 +447,11 @@ class SvgService : ISvgService
                 continue;
             if (line.Target.IsPassThrough)
                 continue; // The pass-through node covers this parent, so the segment is degenerate
-            if (IsLineFilteredOut(line, context.Flags.Filter))
+            if (IsLineFilteredOut(line, context.Flags.Filter, context.Flags.Rows))
                 continue;
             if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                 continue;
-            yield return LineSvg.GetLineSvg(
-                line,
-                nodeCanvasPos,
-                childrenZoom,
-                IsLineDimmed(line, context),
-                isPath: IsLineOnPath(line, context),
-                isViolation: IsLineViolating(line, context),
-                isWeighted: IsLineWeighted(line, context)
-            );
+            yield return (line, false);
         }
 
         // All sibling lines and children to parent lines
@@ -387,20 +467,11 @@ class SvgService : ISvgService
                     continue;
                 if (line.Source.IsPassThrough && line.Target == node)
                     continue; // The pass-through node covers this parent, so the segment is degenerate
-                if (IsLineFilteredOut(line, context.Flags.Filter))
+                if (IsLineFilteredOut(line, context.Flags.Filter, context.Flags.Rows))
                     continue;
                 if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                     continue;
-                yield return LineSvg.GetLineSvg(
-                    line,
-                    nodeCanvasPos,
-                    childrenZoom,
-                    IsLineDimmed(line, context),
-                    IsLineCyclic(line, context),
-                    IsLineOnPath(line, context),
-                    IsLineViolating(line, context),
-                    IsLineWeighted(line, context)
-                );
+                yield return (line, IsLineCyclic(line, context));
             }
         }
     }
@@ -430,6 +501,8 @@ class SvgService : ISvgService
             return true;
         if (endpoint.IsHidden && !context.Flags.ShowHidden)
             return false;
+        if (context.Flags.Rows.Hides(endpoint.Type))
+            return false;
 
         // The endpoint's tile rect, as RenderNode computes it for this container's children
         // (see CalculateNodeGeometry with the children context).
@@ -455,7 +528,7 @@ class SvgService : ISvgService
                 continue; // An inactive cousin line kept only for its user waypoints/description
             if (directLine.IsHidden && !context.Flags.ShowHidden)
                 continue;
-            if (IsLineFilteredOut(directLine, context.Flags.Filter))
+            if (IsLineFilteredOut(directLine, context.Flags.Filter, context.Flags.Rows))
                 continue;
             if (!IsEitherDirectEndpointRendered(directLine, node, nodeCanvasPos, childrenZoom, context))
                 continue;
@@ -503,6 +576,8 @@ class SvgService : ISvgService
             return true;
         if (endpoint.IsHidden && !context.Flags.ShowHidden)
             return false;
+        if (context.Flags.Rows.Hides(endpoint.Type))
+            return false;
 
         var (endpointPos, endpointZoom) = endpoint.GetPosAndZoom();
         var (ancestorPos, ancestorZoom) = ancestor.GetPosAndZoom();
@@ -532,6 +607,7 @@ class SvgService : ISvgService
     {
         public RenderSelection Selection { get; init; }
         public LineFilter Filter { get; init; } = LineFilter.None;
+        public RowFilter Rows { get; init; } = RowFilter.None;
 
         // Sibling lines that are part of a circular dependency; null while cycles are not shown.
         public IReadOnlySet<LineId>? CyclicLines { get; init; }

@@ -167,4 +167,40 @@ public class ModelTests
 
         return (source, target);
     }
+
+    [Fact]
+    public void SerializeToDto_ShouldWritePendingLineLabels_OnlyWhileTheirNodesExist()
+    {
+        var modelMgr = new ModelMgr(new StateMgr());
+        using var model = modelMgr.UseModel();
+        var a = new Node("A", model.Root);
+        var b = new Node("B", model.Root);
+        model.Root.AddChild(a);
+        model.Root.AddChild(b);
+        model.TryAddNode(a);
+        model.TryAddNode(b);
+
+        var kept = LineId.From("A", "B");
+        var dropped = LineId.From("A", "Gone");
+        model.SetPendingLineLabel(kept, new PendingLineLabel("uses", "to the API", "A", "B"));
+        model.SetPendingLineLabel(dropped, new PendingLineLabel("old", null, "A", "Gone"));
+        model.SetPendingLineLabel(LineId.FromId("legacy"), new PendingLineLabel("legacy", null, null, null));
+
+        var lines = model.SerializeToDto().Lines;
+
+        Assert.Contains(
+            lines,
+            l =>
+                l.LineId == kept.Value
+                && l.Label == "uses"
+                && l.LabelDescription == "to the API"
+                && l.Source == "A"
+                && l.Target == "B"
+        );
+        Assert.Contains(lines, l => l.LineId == "legacy" && l.Label == "legacy");
+        Assert.DoesNotContain(lines, l => l.LineId == dropped.Value);
+
+        model.Clear();
+        Assert.Empty(model.PendingLineLabels);
+    }
 }

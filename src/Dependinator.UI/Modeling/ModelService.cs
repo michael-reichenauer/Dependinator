@@ -158,16 +158,7 @@ class ModelService : IModelService, IDisposable
     public void CheckLineVisibility()
     {
         using var model = modelMgr.UseModel();
-        foreach (var line in model.Lines.Values)
-        {
-            if (line.IsDirect)
-            {
-                line.IsHidden = false;
-                continue;
-            }
-
-            line.IsHidden = line.Links.All(link => link.Source.IsHidden || link.Target.IsHidden);
-        }
+        LineVisibility.Update(model);
     }
 
     // Creates and persists a new empty design model (root node only). Design models are

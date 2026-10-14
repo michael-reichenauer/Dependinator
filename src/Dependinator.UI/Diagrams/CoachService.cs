@@ -104,7 +104,7 @@ class CoachService : ICoachService, IDisposable
 
     public void Start()
     {
-        isDemoModel = modelMgr.WithModel(m => m.Path) == DemoModel.Path;
+        isDemoModel = DemoModel.IsDemo(modelMgr.WithModel(m => m.Path));
         Begin();
     }
 
@@ -195,7 +195,8 @@ class CoachService : ICoachService, IDisposable
                 MudBlazor.Icons.Material.Outlined.ZoomIn,
                 "Zoom to look inside",
                 "Scroll (or pinch) over a node to zoom into it: its namespaces, classes and members come into "
-                    + "view as you go. Drag to pan; <b>Fit to Screen</b> in the toolbar brings everything back. Try it now.",
+                    + "view as you go. Drag to pan; <b>Fit to Screen</b> in the toolbar brings everything back. Try it now. "
+                    + "Zooming the wrong way? <b>Menu&nbsp;› Settings&nbsp;› Invert Scroll Zoom</b> flips it.",
                 "Next"
             ),
             CoachStep.Select => new(

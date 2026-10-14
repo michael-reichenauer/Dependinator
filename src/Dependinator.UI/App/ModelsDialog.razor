@@ -70,19 +70,22 @@
     get
     {
       var items = modelListService.GetModelItems();
-      var workspace = items.Where(i => modelListService.IsLocalPath(i.Path) && !ModelPaths.IsDesignModel(i.Path)).ToList();
-      var design = items.Where(i => ModelPaths.IsDesignModel(i.Path)).ToList();
-      var cloudOnly = items.Where(i => i.IsCloud && !i.IsLocal && !ModelPaths.IsDesignModel(i.Path)).ToList();
-      var recent = items.Except(workspace).Except(design).Except(cloudOnly).ToList();
+      var demos = items.Where(i => i.IsDemo).ToList();
+      var workspace = items.Where(i => !i.IsDemo && modelListService.IsLocalPath(i.Path) && !ModelPaths.IsDesignModel(i.Path)).ToList();
+      var design = items.Where(i => !i.IsDemo && ModelPaths.IsDesignModel(i.Path)).ToList();
+      var cloudOnly = items.Where(i => !i.IsDemo && i.IsCloud && !i.IsLocal && !ModelPaths.IsDesignModel(i.Path)).ToList();
+      var recent = items.Except(demos).Except(workspace).Except(design).Except(cloudOnly).ToList();
 
       List<Section> sections = [];
       if (Build.IsVsCodeExtWasm || Build.IsWeb)
-        sections.Add(new("This workspace", "No solution (.sln) found in the workspace.", workspace));
+        sections.Add(new("This workspace", "No solution (.sln) or Bicep deployment (.bicep) found in the workspace.", workspace));
       sections.Add(new("Recent", "Nothing opened yet.", recent));
       sections.Add(new("In the cloud", appCloudSyncService.AuthState.IsAuthenticated
           ? "No other models are synced to this account."
           : "Enable device sync (the cloud button) to see models from your other devices.", cloudOnly));
       sections.Add(new("Design models", "Hand-drawn models appear here (New Model …).", design));
+      if (modelListService.DemoPaths.Count > 0)
+        sections.Add(new("Demo models", "", demos));
       return sections;
     }
   }
@@ -98,15 +101,16 @@
 
   static string Subtitle(ModelItem item)
   {
-    var kind = ModelPaths.IsDesignModel(item.Path) ? "design model" : "solution";
+    var kind = ModelPaths.KindName(item.Path);
     var cloud = item.CloudModel is { } cm ? $", synced {cm.UpdatedUtc.ToLocalTime():g}" : "";
-    var where = item.IsLocal ? item.Path : "cloud only";
+    var where = item.IsDemo ? "built-in demo" : item.IsLocal ? item.Path : "cloud only";
     return $"{kind}{cloud} · {where}";
   }
 
   // Only cached local copies that are not open can be removed here; the open model is deleted
   // from the Models menu, which also offers to delete its cloud copy.
-  bool CanRemove(ModelItem item) => item.IsLocal && !IsCurrent(item) && !modelListService.IsLocalPath(item.Path);
+  bool CanRemove(ModelItem item) =>
+      item.IsLocal && !item.IsDemo && !IsCurrent(item) && !modelListService.IsLocalPath(item.Path);
 
   async Task OpenAsync(ModelItem item)
   {

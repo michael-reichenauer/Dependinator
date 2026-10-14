@@ -56,6 +56,27 @@ public class ManualCommandTests
     }
 
     [Fact]
+    public void AddNodeCommand_ShouldSetTheAlias_WhenGiven()
+    {
+        // A zone's label is its alias; its name is a generated identity under the parent.
+        using var model = CreateModel();
+        var command = new AddNodeCommand(
+            "Zone",
+            model.Root.Name,
+            new Rect(0, 0, 320, 200),
+            isZone: true,
+            alias: "10.0.1.0/24"
+        );
+
+        command.Execute(model);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Zone"), out var zone));
+        Assert.True(zone!.IsZone);
+        Assert.Equal("10.0.1.0/24", zone.Alias);
+        Assert.Equal("10.0.1.0/24", zone.DisplayName);
+    }
+
+    [Fact]
     public void ParentQualifiedNames_AllowSameShortName_UnderDifferentParents()
     {
         using var model = CreateModel();
@@ -96,6 +117,7 @@ public class ManualCommandTests
     {
         using var model = CreateModel();
         new AddNodeCommand("Old", model.Root.Name, new Rect(20, 30, 100, 100)).Execute(model);
+        model.Nodes[NodeId.FromName("Old")].SetAlias("Shown");
 
         var command = new RenameNodeCommand(CreateStructureService(), "Old", "New");
         command.Execute(model);
@@ -103,6 +125,7 @@ public class ManualCommandTests
         Assert.False(model.Nodes.ContainsKey(NodeId.FromName("Old")));
         Assert.True(model.Nodes.TryGetValue(NodeId.FromName("New"), out var renamed));
         Assert.True(renamed!.IsManual);
+        Assert.Equal("Shown", renamed.Alias);
         Assert.Equal(new Rect(20, 30, 100, 100), renamed.Boundary);
         Assert.Contains(renamed, model.Root.Children);
 
@@ -239,5 +262,37 @@ public class ManualCommandTests
         Assert.True(model.Nodes.TryGetValue(NodeId.FromName("MyNode"), out var restored));
         Assert.True(restored!.IsManual);
         Assert.Contains(restored, model.Root.Children);
+    }
+
+    [Fact]
+    public void AddNodeCommand_AsZone_ShouldSetFlagsBoundaryAndCustomizeParent()
+    {
+        using var model = CreateModel();
+        AddRootNode(model, "Container");
+        var boundary = new Rect(40, 60, 320, 200);
+        var command = new AddNodeCommand(
+            "Container.Edge",
+            "Container",
+            boundary,
+            description: "Public entry",
+            isZone: true
+        );
+
+        command.Execute(model);
+
+        Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Container.Edge"), out var zone));
+        Assert.True(zone!.IsZone);
+        Assert.True(zone.IsManual);
+        Assert.False(zone.IsNote);
+        Assert.Equal(boundary, zone.Boundary);
+        Assert.Equal("Public entry", zone.Description);
+        Assert.True(zone.Parent.IsChildrenLayoutCustomized);
+
+        // Delete and restore keep the zone a zone.
+        var delete = new DeleteNodeCommand(NodeId.FromName("Container.Edge"));
+        delete.Execute(model);
+        Assert.False(model.Nodes.ContainsKey(NodeId.FromName("Container.Edge")));
+        delete.Revert(model);
+        Assert.True(model.Nodes[NodeId.FromName("Container.Edge")].IsZone);
     }
 }

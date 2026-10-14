@@ -85,6 +85,39 @@ static class SvgExportDocument
                 fill-opacity: 0.7;
                 text-anchor: start;
             }
+            .zoneName {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                fill: {{DColors.Text}};
+                fill-opacity: 0.8;
+                dominant-baseline: hanging;
+                text-anchor: start;
+            }
+            .zoneDescription {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                font-style: italic;
+                fill: {{DColors.Text}};
+                fill-opacity: 0.6;
+                dominant-baseline: hanging;
+                text-anchor: start;
+            }
+            .lineLabel {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                fill: {{DColors.Text}};
+                paint-order: stroke;
+                stroke: {{DColors.CanvasBackground}};
+                stroke-width: 3px;
+                stroke-linejoin: round;
+            }
+            .lineDescription {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                font-style: italic;
+                fill: {{DColors.Text}};
+                fill-opacity: 0.75;
+                paint-order: stroke;
+                stroke: {{DColors.CanvasBackground}};
+                stroke-width: 3px;
+                stroke-linejoin: round;
+            }
             """;
 
     // The line arrow-head markers, copied from the canvas defs in Canvas.razor.

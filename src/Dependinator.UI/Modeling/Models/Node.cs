@@ -67,7 +67,11 @@ class Node : IItem
 
     public string Color { get; set; } = "";
 
-    // User-selected icon name (an IconLibrary id); null means the node-type default icon.
+    // Parser-supplied icon name (an IconLibrary id, e.g. the Azure icon of a Bicep resource);
+    // null means the node-type default icon. CustomIconName, the user's choice, wins over it.
+    public string? IconName { get; set; }
+
+    // User-selected icon name (an IconLibrary id); null means the parsed or node-type default icon.
     public string? CustomIconName { get; set; }
 
     // User-selected icon tint (an IconLibrary.IconColors name); null means the default violet.
@@ -77,6 +81,20 @@ class Node : IItem
     // User-selected container color (a DColors.CustomNodeColors name); null means the
     // auto-assigned Color above. Independent of CustomIconColor.
     public string? CustomColor { get; set; }
+
+    // The user's display name ("Storefront" for a node named frontend); null means the name
+    // from the code. Shown wherever the user reads the node's name; the real Name stays the
+    // identity (ids, links, share links, rules) and the tooltip and search still carry it.
+    public string? Alias { get; private set; }
+    public string? HtmlAlias { get; private set; }
+    public string DisplayName => Alias ?? ShortName;
+    public string HtmlDisplayName => HtmlAlias ?? HtmlShortName;
+
+    public void SetAlias(string? alias)
+    {
+        Alias = string.IsNullOrWhiteSpace(alias) ? null : alias.Trim();
+        HtmlAlias = Alias is not null ? HttpUtility.HtmlEncode(Alias) : null;
+    }
 
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
@@ -134,6 +152,15 @@ class Node : IItem
     // they persist and survive re-parse, but render via NoteSvg instead of the normal node chrome.
     public bool IsNote { get; set; }
 
+    // A zone is a user-drawn, labeled background area inside a container ("Edge", "Data", a
+    // subnet): the user's own grouping of the parsed nodes. Zones are manual nodes (also
+    // IsManual) that persist and survive re-parse, render behind their siblings via ZoneSvg,
+    // are never containers or link endpoints, and keep the boundary the user gave them (layout
+    // never moves them). The label is the display name (Alias, free text: a subnet "10.0.1.0/24"
+    // is fine), the Description an optional subtitle; the Name is a generated identity ("Zone",
+    // "Zone 2") under the parent.
+    public bool IsZone { get; set; }
+
     // Sets the description and keeps the pre-encoded HtmlDescription in sync; the single write
     // path for descriptions (note edits, SetFromDto, Update).
     public void SetDescription(string? description)
@@ -154,12 +181,14 @@ class Node : IItem
                 IsPrivate = IsPrivate,
                 IsExecutable = IsExecutable,
                 FileSpan = fileSpan,
+                IconName = IconName,
             },
             Boundary = boundary != Rect.None ? boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
             Zoom = ContainerZoom != DefaultContainerZoom ? ContainerZoom : null,
             Color = Color,
             CustomColor = CustomColor,
+            Alias = Alias,
             IconName = CustomIconName,
             IconColor = CustomIconColor,
             IsUserSetHidden = IsUserSetHidden,
@@ -167,6 +196,7 @@ class Node : IItem
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
             IsManual = IsManual,
             IsNote = IsNote,
+            IsZone = IsZone,
         };
 
     public void SetFromDto(NodeDto dto)
@@ -177,12 +207,14 @@ class Node : IItem
         IsPrivate = dto.Properties.IsPrivate;
         IsExecutable = dto.Properties.IsExecutable;
         fileSpan = dto.Properties.FileSpan;
+        IconName = dto.Properties.IconName;
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
         ContainerZoom = dto.Zoom ?? DefaultContainerZoom;
         Color = dto.Color ?? Color;
         CustomColor = dto.CustomColor;
+        SetAlias(dto.Alias);
         CustomIconName = dto.IconName;
         CustomIconColor = dto.IconColor;
         IsUserSetHidden = dto.IsUserSetHidden;
@@ -190,6 +222,7 @@ class Node : IItem
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
         IsManual = dto.IsManual;
         IsNote = dto.IsNote;
+        IsZone = dto.IsZone;
     }
 
     public void Update(Parsing.Node node)
@@ -201,6 +234,7 @@ class Node : IItem
             node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description
         );
         fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
+        IconName = node.Properties.IconName == NoValue.String ? null : node.Properties.IconName ?? IconName;
     }
 
     public void SetHidden(bool hidden, bool isUserSet)

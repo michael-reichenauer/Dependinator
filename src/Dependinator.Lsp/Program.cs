@@ -1,3 +1,4 @@
+using Dependinator.Bicep;
 using Dependinator.Core;
 using Dependinator.Core.CloudSync;
 using Dependinator.Core.Rpc;
@@ -27,6 +28,7 @@ internal class Program
                     {
                         services.AddDependinatorCoreServices();
                         services.AddDependinatorRoslynServices();
+                        services.AddDependinatorBicepServices();
                         services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();
                         services.AddSingleton(new HttpClient());
                         services.AddSingleton<LspCloudSyncContext>();
