@@ -1,5 +1,21 @@
 # Change Log
 
+## 0.82.0 (2026-10-14)
+
+- Add Azure Bicep support: open a deployment (an entry-point .bicep file and its local modules) as a dependency map, with resources drawn using Azure icons
+- Nest Bicep resources and modules under their deployment scope, such as a resource group; a module takes the icon of its main resource
+- Show Bicep parameters, variables, outputs and auxiliary resources as rows, and hide configuration lines by default (View › Lines)
+- List Bicep deployments as workspace models in VS Code, re-parse when .bicep files change, and reveal the current Bicep file in the diagram
+- Add a Bicep demo to the web app's Models menu, built from a large example deployment (examples/bicep)
+- Add zones: labelled background areas for grouping nodes
+- Add line labels with an optional description, edited from the toolbar, the context menu or by double-clicking a line
+- Add display aliases: show a node under a friendlier name in the diagram and in search
+- Add View › Rows to leave out whole kinds of rows
+- Make hiding nodes undoable
+- Rank the node whose name exactly matches the search query first
+- Point to Settings › Invert Scroll Zoom in the first-run tour's zoom step
+- Show Bicep support in the README, with new screenshots and a re-recorded demo
+
 ## 0.81.0 (2026-10-08)
 
 - Limit the CI/CD workflow's GITHUB_TOKEN permissions
