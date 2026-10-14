@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="docs/images/logo.png" width="96" alt="Dependinator logo" />
-</p>
-
-<h1 align="center">Dependinator</h1>
+<h1 align="center">
+  <img src="docs/images/logo.png" width="64" align="middle" alt="" /> Dependinator
+</h1>
 
 <p align="center">
   See your C#/.NET codebase or Azure Bicep deployment as an interactive dependency map, right inside VS Code.
