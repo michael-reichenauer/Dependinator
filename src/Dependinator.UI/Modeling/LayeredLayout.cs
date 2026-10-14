@@ -12,9 +12,22 @@ static class LayeredLayout
 {
     const int MaxOrderingSweeps = 8;
 
-    public static bool TryArrange(Node parent, LayoutMetrics metrics)
+    // Sweeps of the vertical placement (see AssignCoordinates): first along the flow, pulled by
+    // the left (upstream) neighbors only, then back and forth pulled by both sides.
+    static readonly (bool IsLeftToRight, bool UseLeft, bool UseRight)[] PlacementSweeps =
+    [
+        (true, true, false),
+        (false, true, true),
+        (true, true, true),
+    ];
+
+    // Pull of a node's own current height in a placement sweep when no neighbor pulls it: weak,
+    // so it only fills in between the nodes that are pulled.
+    const double AnchorWeight = 0.01;
+
+    public static bool TryArrange(Node parent, LayoutMetrics metrics, Func<Node, Size> sizeOf)
     {
-        var graph = BuildGraph(parent);
+        var graph = BuildGraph(parent, sizeOf);
         if (graph is null)
             return false;
 
@@ -32,7 +45,7 @@ static class LayeredLayout
     // and lines to/from the parent itself represent references crossing the parent boundary
     // (in by construction from the left, out to the right). Returns null when there are no
     // relations at all, so the caller can fall back to the plain grid layout.
-    static Graph? BuildGraph(Node parent)
+    static Graph? BuildGraph(Node parent, Func<Node, Size> sizeOf)
     {
         var children = parent
             .Children.Where(child => !child.IsPassThrough && NodeLayout.IsArranged(child))
@@ -41,7 +54,7 @@ static class LayeredLayout
         if (children.Count < 2)
             return null;
 
-        var graphNodes = children.Select(child => new GraphNode(child)).ToList();
+        var graphNodes = children.Select(child => new GraphNode(child, sizeOf(child))).ToList();
         var nodesByChild = graphNodes.ToDictionary(graphNode => graphNode.Node);
         var edges = new List<GraphEdge>();
 
@@ -212,8 +225,8 @@ static class LayeredLayout
     static void CompactLayers(Graph graph, Node parent, LayoutMetrics metrics)
     {
         var nodeCount = graph.Nodes.Count;
-        var cellWidth = metrics.Width + metrics.HorizontalGap;
-        var cellHeight = metrics.Height + metrics.VerticalGap;
+        var cellWidth = graph.Nodes.Average(node => node.Width) + metrics.HorizontalGap;
+        var cellHeight = graph.Nodes.Average(node => node.Height) + metrics.VerticalGap;
         var parentAspect =
             parent.Boundary.Height <= 0 ? 1.0 : parent.Boundary.Width / Math.Max(1.0, parent.Boundary.Height);
 
@@ -335,14 +348,13 @@ static class LayeredLayout
     }
 
     // Places layers as columns left to right, wrapping over-tall layers into adjacent
-    // sub-columns. A priority pass then pulls each node toward the average vertical position
-    // of its already placed left-side neighbors, preserving order and minimum gaps.
+    // sub-columns. Each column is as wide as its widest node, with the nodes centered in it.
+    // Vertically, a few sweeps pull each node's center toward the weighted average center of
+    // its neighbors in other columns (first the upstream ones, then both sides), keeping the
+    // column order and the minimum gaps, so nodes move up as well as down to straighten lines.
     static void AssignCoordinates(Graph graph, LayoutMetrics metrics)
     {
-        var cellWidth = metrics.Width + metrics.HorizontalGap;
-        var cellHeight = metrics.Height + metrics.VerticalGap;
         var columns = new List<List<GraphNode>>();
-
         for (var layerIndex = 0; layerIndex < graph.LayerCount; layerIndex++)
         {
             var layerNodes = graph
@@ -357,73 +369,157 @@ static class LayeredLayout
             }
         }
 
+        var columnX = NodeGrid.Snap(metrics.HorizontalGap);
         for (var columnIndex = 0; columnIndex < columns.Count; columnIndex++)
         {
             var column = columns[columnIndex];
-            var x = metrics.HorizontalGap + columnIndex * cellWidth;
-            var previousBottom = 0.0;
+            var columnWidth = column.Max(node => node.Width);
+            graph.Columns.Add(new ColumnExtent(columnX, columnWidth));
 
-            for (var row = 0; row < column.Count; row++)
+            var stackedTop = metrics.VerticalGap;
+            foreach (var node in column)
             {
-                var node = column[row];
-                var slotY = metrics.VerticalGap + row * cellHeight;
-                var desiredY = DesiredY(node, columnIndex, columns, slotY);
-                var y = Math.Max(desiredY, row == 0 ? metrics.VerticalGap : previousBottom + metrics.VerticalGap);
-
-                node.Node.Boundary = NodeLayout.SnapPositionToGrid(new Rect(x, y, metrics.Width, metrics.Height));
                 node.ColumnIndex = columnIndex;
-                previousBottom = node.Node.Boundary.Y + metrics.Height;
+                node.X = NodeGrid.Snap(columnX + (columnWidth - node.Width) / 2);
+                node.CenterY = stackedTop + node.Height / 2;
+                stackedTop += node.Height + metrics.VerticalGap;
+            }
+
+            columnX = NodeGrid.Snap(columnX + columnWidth + metrics.HorizontalGap);
+        }
+
+        foreach (var (isLeftToRight, useLeft, useRight) in PlacementSweeps)
+        {
+            for (var step = 0; step < columns.Count; step++)
+            {
+                var columnIndex = isLeftToRight ? step : columns.Count - 1 - step;
+                PlaceColumn(columns[columnIndex], columnIndex, useLeft, useRight, metrics.VerticalGap);
             }
         }
 
-        graph.ColumnCount = columns.Count;
+        SnapColumns(columns, metrics);
     }
 
-    static double DesiredY(GraphNode node, int columnIndex, List<List<GraphNode>> columns, double slotY)
+    // Order-preserving placement of one column: the node centers as close as possible (weighted
+    // least squares) to where their neighbors pull them, keeping the column order and at least
+    // the gap between nodes. Substituting z_i = c_i - o_i (o_i the cumulative minimum offset of
+    // node i from the first) turns this into isotonic regression, solved by pooling adjacent
+    // violators: blocks of nodes that would overlap move together to their weighted mean.
+    static void PlaceColumn(List<GraphNode> column, int columnIndex, bool useLeft, bool useRight, double gap)
     {
-        var weightSum = 0.0;
-        var ySum = 0.0;
-
-        foreach (var (neighbor, weight) in Neighbors(node))
+        var offsets = new double[column.Count];
+        for (var index = 1; index < column.Count; index++)
         {
-            if (neighbor.ColumnIndex is not int neighborColumn || neighborColumn >= columnIndex)
-                continue;
-            weightSum += weight;
-            ySum += neighbor.Node.Boundary.Y * weight;
+            offsets[index] = offsets[index - 1] + column[index - 1].Height / 2 + gap + column[index].Height / 2;
         }
 
-        return weightSum == 0 ? slotY : ySum / weightSum;
+        var blocks = new List<(double Value, double Weight, int Count)>();
+        for (var index = 0; index < column.Count; index++)
+        {
+            var (desired, weight) = DesiredCenter(column[index], columnIndex, useLeft, useRight);
+            var value = desired - offsets[index];
+            var count = 1;
+            while (blocks.Count > 0 && blocks[^1].Value > value)
+            {
+                var previous = blocks[^1];
+                blocks.RemoveAt(blocks.Count - 1);
+                value = (previous.Value * previous.Weight + value * weight) / (previous.Weight + weight);
+                weight += previous.Weight;
+                count += previous.Count;
+            }
+            blocks.Add((value, weight, count));
+        }
+
+        var nodeIndex = 0;
+        foreach (var block in blocks)
+        {
+            for (var index = 0; index < block.Count; index++, nodeIndex++)
+            {
+                column[nodeIndex].CenterY = block.Value + offsets[nodeIndex];
+            }
+        }
+    }
+
+    // The weighted average center of the node's neighbors in the columns on the used sides, and
+    // the total pull; heavy lines pull harder, damped logarithmically. Without such neighbors the
+    // node weakly keeps its current height.
+    static (double Center, double Weight) DesiredCenter(GraphNode node, int columnIndex, bool useLeft, bool useRight)
+    {
+        var weightSum = 0.0;
+        var centerSum = 0.0;
+        foreach (var (neighbor, weight) in Neighbors(node))
+        {
+            if (neighbor.ColumnIndex is not int neighborColumn)
+                continue;
+            var isUsed = (useLeft && neighborColumn < columnIndex) || (useRight && neighborColumn > columnIndex);
+            if (!isUsed)
+                continue;
+            var pull = 1 + Math.Log2(weight);
+            weightSum += pull;
+            centerSum += neighbor.CenterY * pull;
+        }
+
+        return weightSum == 0 ? (node.CenterY, AnchorWeight) : (centerSum / weightSum, weightSum);
+    }
+
+    // Snaps the placed nodes to the grid top-down per column, never closer than the gap, then
+    // moves the whole content so its top is at the gap (sweeps may have moved nodes upward).
+    // Rounds half up, not to even like NodeGrid.Snap: the size steps' half heights all sit at
+    // the same offset from the grid, so equal centers then snap alike and lines stay straight.
+    static void SnapColumns(List<List<GraphNode>> columns, LayoutMetrics metrics)
+    {
+        foreach (var column in columns)
+        {
+            var minTop = double.MinValue;
+            foreach (var node in column)
+            {
+                node.Y = Math.Max(SnapHalfUp(node.CenterY - node.Height / 2), minTop);
+                minTop = SnapHalfUp(node.Y + node.Height + metrics.VerticalGap);
+            }
+        }
+
+        var nodes = columns.SelectMany(column => column).ToList();
+        var shift = NodeGrid.Snap(metrics.VerticalGap) - nodes.Min(node => node.Y);
+        foreach (var node in nodes)
+        {
+            node.Y += shift;
+            node.Node.Boundary = new Rect(node.X, node.Y, node.Width, node.Height);
+        }
     }
 
     // Nodes without any relations are utility/leftover nodes; pack them as a block at the
-    // bottom right of the layered content, ordered by importance and name.
+    // bottom right of the layered content, largest first, then by name.
     static void PlaceIsolated(Graph graph, LayoutMetrics metrics)
     {
         if (graph.Isolated.Count == 0)
             return;
 
-        var cellWidth = metrics.Width + metrics.HorizontalGap;
-        var cellHeight = metrics.Height + metrics.VerticalGap;
+        var isolated = graph
+            .Isolated.OrderByDescending(node => node.Width * node.Height)
+            .ThenBy(node => node.Node.Name, StringComparer.Ordinal)
+            .ToList();
+        var (positions, blockSize) = NodeLayout.PackShelves(
+            isolated.Select(node => new Size(node.Width, node.Height)).ToList(),
+            targetAspect: 1.0,
+            metrics
+        );
 
-        var isolated = graph.Isolated.OrderBy(node => node.Node.Name, StringComparer.Ordinal).ToList();
-        var blockColumns = (int)Math.Ceiling(Math.Sqrt(isolated.Count));
-        var blockRows = (int)Math.Ceiling(isolated.Count / (double)blockColumns);
-
-        var startX = metrics.HorizontalGap + graph.ColumnCount * cellWidth;
+        var startX =
+            graph.Columns.Count == 0
+                ? NodeGrid.Snap(metrics.HorizontalGap)
+                : NodeGrid.Snap(graph.Columns[^1].X + graph.Columns[^1].Width + metrics.HorizontalGap);
         var contentBottom =
-            graph.Nodes.Count == 0
-                ? metrics.VerticalGap
-                : graph.Nodes.Max(node => node.Node.Boundary.Y + node.Node.Boundary.Height);
-        var startY = Math.Max(metrics.VerticalGap, contentBottom - (blockRows * cellHeight - metrics.VerticalGap));
+            graph.Nodes.Count == 0 ? 0 : graph.Nodes.Max(node => node.Node.Boundary.Y + node.Node.Boundary.Height);
+        var startY = NodeGrid.Snap(Math.Max(metrics.VerticalGap, contentBottom - blockSize.Height));
 
         for (var index = 0; index < isolated.Count; index++)
         {
-            var column = index % blockColumns;
-            var row = index / blockColumns;
-            var x = startX + column * cellWidth;
-            var y = startY + row * cellHeight;
-            isolated[index].Node.Boundary = NodeLayout.SnapPositionToGrid(
-                new Rect(x, y, metrics.Width, metrics.Height)
+            var node = isolated[index];
+            node.Node.Boundary = new Rect(
+                startX + positions[index].X,
+                startY + positions[index].Y,
+                node.Width,
+                node.Height
             );
         }
     }
@@ -455,7 +551,7 @@ static class LayeredLayout
                 continue;
             }
 
-            line.SetSegmentPoints(RouteSkipEdge(edge, sourceColumn, targetColumn, columns, metrics));
+            line.SetSegmentPoints(RouteSkipEdge(edge, sourceColumn, targetColumn, columns, graph.Columns, metrics));
         }
     }
 
@@ -464,6 +560,7 @@ static class LayeredLayout
         int sourceColumn,
         int targetColumn,
         Dictionary<int, List<Rect>> columns,
+        IReadOnlyList<ColumnExtent> columnExtents,
         LayoutMetrics metrics
     )
     {
@@ -475,7 +572,6 @@ static class LayeredLayout
         var start = new Pos(goingRight ? sourceRect.X + sourceRect.Width : sourceRect.X, CenterY(sourceRect));
         var end = new Pos(goingRight ? targetRect.X : targetRect.X + targetRect.Width, CenterY(targetRect));
 
-        var cellWidth = metrics.Width + metrics.HorizontalGap;
         var points = new List<Pos>();
         var step = goingRight ? 1 : -1;
 
@@ -484,7 +580,7 @@ static class LayeredLayout
             if (!columns.TryGetValue(column, out var rects) || rects.Count == 0)
                 continue;
 
-            var columnCenterX = metrics.HorizontalGap + column * cellWidth + metrics.Width / 2;
+            var columnCenterX = columnExtents[column].X + columnExtents[column].Width / 2;
             var straightY = InterpolateY(start, end, columnCenterX);
             if (!CrossesNode(rects, straightY))
                 continue;
@@ -497,6 +593,8 @@ static class LayeredLayout
     }
 
     static double CenterY(Rect rect) => rect.Y + rect.Height / 2;
+
+    static double SnapHalfUp(double value) => Math.Floor(value / NodeGrid.SnapSize + 0.5) * NodeGrid.SnapSize;
 
     static double InterpolateY(Pos start, Pos end, double x) =>
         start.Y + (end.Y - start.Y) * ((x - start.X) / (end.X - start.X));
@@ -530,12 +628,19 @@ static class LayeredLayout
         public List<GraphNode> TopologicalOrder { get; set; } = [];
         public int LayerCount { get; set; }
         public int MaxRowsPerColumn { get; set; } = 1;
-        public int ColumnCount { get; set; }
+        public List<ColumnExtent> Columns { get; } = [];
     }
 
-    class GraphNode(Node node)
+    readonly record struct ColumnExtent(double X, double Width);
+
+    class GraphNode(Node node, Size size)
     {
         public Node Node { get; } = node;
+        public double Width { get; } = size.Width;
+        public double Height { get; } = size.Height;
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double CenterY { get; set; }
         public List<GraphEdge> OutEdges { get; } = [];
         public List<GraphEdge> InEdges { get; } = [];
         public double ExternalIn { get; set; }

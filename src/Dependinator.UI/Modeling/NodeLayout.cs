@@ -114,11 +114,19 @@ class NodeLayout
 
         var density = GetDensityProfile();
         var metrics = parent.IsRoot ? RootMetrics() : RegularMetrics(density);
+        var sizeOf = ChildSizes(metrics);
 
-        if (!LayeredLayout.TryArrange(parent, metrics))
+        if (!LayeredLayout.TryArrange(parent, metrics, sizeOf))
         {
             SortChildren(parent.Children);
-            ArrangeChildren(parent, parent.Children.Where(IsArranged).ToList(), metrics);
+            ArrangeAsShelves(
+                parent.Children.Where(IsArranged).ToList(),
+                sizeOf,
+                metrics,
+                TargetAspect(parent, metrics),
+                metrics.HorizontalGap,
+                metrics.VerticalGap
+            );
         }
 
         // The root's container transform is the fixed identity-like frame the canvas viewport
@@ -135,18 +143,126 @@ class NodeLayout
     // Layout") arranges the other children around them. They still count for the container fit.
     internal static bool IsArranged(Node child) => !child.IsZone && !child.IsNote;
 
-    static void ArrangeChildren(Node parent, IReadOnlyList<Node> children, LayoutMetrics metrics)
+    // The size of each arranged (non-member) child.
+    static Func<Node, Size> ChildSizes(LayoutMetrics metrics)
     {
-        var columns = FindBestColumnCount(parent, children.Count, metrics);
+        var size = new Size(metrics.Width, metrics.Height);
+        return _ => size;
+    }
 
-        for (var index = 0; index < children.Count; index++)
+    // Arranges the nodes as shelf-packed rows from (startX, startY), largest first; equally
+    // large nodes keep their order (a stable sort). Returns the right edge of the block.
+    static double ArrangeAsShelves(
+        IReadOnlyList<Node> nodes,
+        Func<Node, Size> sizeOf,
+        LayoutMetrics metrics,
+        double targetAspect,
+        double startX,
+        double startY
+    )
+    {
+        if (nodes.Count == 0)
+            return startX;
+
+        var ordered = nodes.OrderByDescending(node => sizeOf(node).Width * sizeOf(node).Height).ToList();
+        var sizes = ordered.Select(sizeOf).ToList();
+        var (positions, blockSize) = PackShelves(sizes, targetAspect, metrics);
+
+        var x = NodeGrid.Snap(startX);
+        var y = NodeGrid.Snap(startY);
+        for (var index = 0; index < ordered.Count; index++)
         {
-            var column = index % columns;
-            var row = index / columns;
-            var x = metrics.HorizontalGap + column * (metrics.Width + metrics.HorizontalGap);
-            var y = metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
-            children[index].Boundary = SnapPositionToGrid(new Rect(x, y, metrics.Width, metrics.Height));
+            ordered[index].Boundary = new Rect(
+                x + positions[index].X,
+                y + positions[index].Y,
+                sizes[index].Width,
+                sizes[index].Height
+            );
         }
+        return x + blockSize.Width;
+    }
+
+    // Packs boxes in the given order into rows ("shelves") separated by the metrics' gaps, each
+    // box centered vertically in its row. Tries every row width that ends at a box and keeps the
+    // packing whose block best matches the target aspect with the least empty area (the same
+    // trade-off as FindBestColumnCount). Positions are offsets from the block's top-left corner,
+    // on the snap grid.
+    internal static (IReadOnlyList<Pos> Positions, Size BlockSize) PackShelves(
+        IReadOnlyList<Size> sizes,
+        double targetAspect,
+        LayoutMetrics metrics
+    )
+    {
+        var gapX = NodeGrid.Snap(metrics.HorizontalGap);
+        var gapY = NodeGrid.Snap(metrics.VerticalGap);
+        var occupiedArea = sizes.Sum(size => size.Width * size.Height);
+
+        IReadOnlyList<Pos> bestPositions = [];
+        var bestSize = new Size(0, 0);
+        var bestScore = double.MaxValue;
+        var rowWidthLimit = -gapX;
+        foreach (var size in sizes)
+        {
+            rowWidthLimit += gapX + size.Width;
+            var (positions, blockSize) = PackShelvesWithin(sizes, rowWidthLimit, gapX, gapY);
+
+            var aspect = blockSize.Width / Math.Max(MinimumDimension, blockSize.Height);
+            var emptyRatio = 1 - occupiedArea / Math.Max(MinimumDimension, blockSize.Width * blockSize.Height);
+            var score = Math.Abs(Math.Log(aspect / targetAspect)) + EmptyCellPenaltyWeight * emptyRatio;
+            if (score >= bestScore)
+                continue;
+
+            bestScore = score;
+            bestPositions = positions;
+            bestSize = blockSize;
+        }
+        return (bestPositions, bestSize);
+    }
+
+    static (IReadOnlyList<Pos> Positions, Size BlockSize) PackShelvesWithin(
+        IReadOnlyList<Size> sizes,
+        double rowWidthLimit,
+        double gapX,
+        double gapY
+    )
+    {
+        var positions = new Pos[sizes.Count];
+        var xs = new double[sizes.Count];
+        var rowStart = 0;
+        var x = 0.0;
+        var rowTop = 0.0;
+        var rowHeight = 0.0;
+        var blockWidth = 0.0;
+
+        void FinishRow(int rowEnd)
+        {
+            for (var index = rowStart; index < rowEnd; index++)
+            {
+                var y = rowTop + (rowHeight - sizes[index].Height) / 2;
+                positions[index] = new Pos(NodeGrid.Snap(xs[index]), NodeGrid.Snap(y));
+            }
+        }
+
+        for (var index = 0; index < sizes.Count; index++)
+        {
+            var size = sizes[index];
+            if (index > rowStart && x + size.Width > rowWidthLimit + MinimumDimension)
+            {
+                FinishRow(index);
+                rowTop += rowHeight + gapY;
+                rowStart = index;
+                x = 0;
+                rowHeight = 0;
+            }
+
+            xs[index] = x;
+            blockWidth = Math.Max(blockWidth, x + size.Width);
+            rowHeight = Math.Max(rowHeight, size.Height);
+            x += size.Width + gapX;
+        }
+        FinishRow(sizes.Count);
+
+        return (positions, new Size(blockWidth, rowTop + rowHeight));
     }
 
     static void ArrangeTypeChildren(Node parent)
@@ -173,7 +289,14 @@ class NodeLayout
         cursorX = ArrangeGroup(parent, privateMembers, memberMetrics, cursorX, startY);
         if (members.Count > 0 && nonMembers.Count > 0)
             cursorX += regularMetrics.HorizontalGap;
-        _ = ArrangeGroup(parent, nonMembers, regularMetrics, cursorX, startY);
+        _ = ArrangeAsShelves(
+            nonMembers,
+            ChildSizes(regularMetrics),
+            regularMetrics,
+            TargetAspect(parent, regularMetrics),
+            cursorX + regularMetrics.HorizontalGap,
+            startY + regularMetrics.VerticalGap
+        );
 
         ApplyContainerTransform(parent, GetChildrenBounds(parent.Children), density.TargetLinearCoverage);
     }
@@ -199,7 +322,14 @@ class NodeLayout
         }
 
         SortChildren(newChildren);
-        PlaceNodesInFreeSlots(parent, newChildren, occupied, regularMetrics, regularMetrics.HorizontalGap);
+        PlaceNodesInFreeSlots(
+            parent,
+            newChildren,
+            ChildSizes(regularMetrics),
+            occupied,
+            regularMetrics,
+            regularMetrics.HorizontalGap
+        );
     }
 
     static void ArrangeOnlyNewTypeChildren(
@@ -232,14 +362,15 @@ class NodeLayout
 
         var minStartX = Math.Max(memberMetrics.HorizontalGap, regularMetrics.HorizontalGap);
         var publicStartX = PreferredStartX(existingPublicMembers, minStartX);
-        PlaceNodesInFreeSlots(parent, newPublicMembers, occupied, memberMetrics, publicStartX);
+        var memberSize = new Size(memberMetrics.Width, memberMetrics.Height);
+        PlaceNodesInFreeSlots(parent, newPublicMembers, _ => memberSize, occupied, memberMetrics, publicStartX);
 
         var publicRight = MaxRight(existingPublicMembers, newPublicMembers.Select(m => m.Boundary));
         var privateStartX = PreferredStartX(
             existingPrivateMembers,
             Math.Max(minStartX, publicRight + memberMetrics.HorizontalGap)
         );
-        PlaceNodesInFreeSlots(parent, newPrivateMembers, occupied, memberMetrics, privateStartX);
+        PlaceNodesInFreeSlots(parent, newPrivateMembers, _ => memberSize, occupied, memberMetrics, privateStartX);
 
         var membersRight = MaxRight(
             existingPublicMembers.Concat(existingPrivateMembers),
@@ -249,12 +380,20 @@ class NodeLayout
             existingNonMembers,
             Math.Max(minStartX, membersRight + regularMetrics.HorizontalGap)
         );
-        PlaceNodesInFreeSlots(parent, newNonMembers, occupied, regularMetrics, nonMemberStartX);
+        PlaceNodesInFreeSlots(
+            parent,
+            newNonMembers,
+            ChildSizes(regularMetrics),
+            occupied,
+            regularMetrics,
+            nonMemberStartX
+        );
     }
 
     static void PlaceNodesInFreeSlots(
         Node parent,
         IReadOnlyList<Node> nodes,
+        Func<Node, Size> sizeOf,
         List<Rect> occupied,
         LayoutMetrics metrics,
         double preferredStartX
@@ -262,17 +401,20 @@ class NodeLayout
     {
         foreach (var node in nodes)
         {
-            var boundary = FindNextFreeRect(parent, occupied, metrics, preferredStartX);
+            var boundary = FindNextFreeRect(parent, occupied, metrics, preferredStartX, sizeOf(node));
             node.Boundary = boundary;
             occupied.Add(boundary);
         }
     }
 
+    // The first cell of a row-major scan (cells of the metrics' size) where a node of the given
+    // size fits without overlapping the occupied rects.
     static Rect FindNextFreeRect(
         Node parent,
         IReadOnlyList<Rect> occupied,
         LayoutMetrics metrics,
-        double preferredStartX
+        double preferredStartX,
+        Size size
     )
     {
         var startX = Math.Max(metrics.HorizontalGap, preferredStartX);
@@ -286,14 +428,14 @@ class NodeLayout
             var row = index / columns;
             var x = startX + column * (metrics.Width + metrics.HorizontalGap);
             var y = metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
-            var candidate = SnapPositionToGrid(new Rect(x, y, metrics.Width, metrics.Height));
+            var candidate = SnapPositionToGrid(new Rect(x, y, size.Width, size.Height));
             if (occupied.All(existing => !Overlaps(candidate, existing)))
                 return candidate;
         }
 
         var fallbackX =
             occupied.Count == 0 ? startX : occupied.Max(rect => rect.X + rect.Width) + metrics.HorizontalGap;
-        return SnapPositionToGrid(new Rect(fallbackX, metrics.VerticalGap, metrics.Width, metrics.Height));
+        return SnapPositionToGrid(new Rect(fallbackX, metrics.VerticalGap, size.Width, size.Height));
     }
 
     static bool Overlaps(Rect first, Rect second)
@@ -354,8 +496,7 @@ class NodeLayout
         if (childrenCount <= 1)
             return 1;
 
-        var parentAspect = parent.Boundary.Height <= 0 ? 1.0 : parent.Boundary.Width / parent.Boundary.Height;
-        var targetAspect = Math.Max(0.2, parentAspect * metrics.AspectBias);
+        var targetAspect = TargetAspect(parent, metrics);
 
         var bestColumns = 1;
         var bestScore = double.MaxValue;
@@ -378,6 +519,13 @@ class NodeLayout
             bestColumns = columns;
         }
         return bestColumns;
+    }
+
+    // The aspect ratio a block of children should have to fill the parent well.
+    static double TargetAspect(Node parent, LayoutMetrics metrics)
+    {
+        var parentAspect = parent.Boundary.Height <= 0 ? 1.0 : parent.Boundary.Width / parent.Boundary.Height;
+        return Math.Max(0.2, parentAspect * metrics.AspectBias);
     }
 
     static (double Width, double Height) LayoutSize(int columns, int rows, LayoutMetrics metrics)
