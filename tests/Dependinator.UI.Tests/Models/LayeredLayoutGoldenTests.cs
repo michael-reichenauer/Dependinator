@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Layout;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
