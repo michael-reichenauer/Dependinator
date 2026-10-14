@@ -127,7 +127,8 @@ Orientation and lines
 Parsing and models
 
 - Parse progress with phases and a Cancel button (needs a cancellation token through the RPC).
-- Whole-diagram layout reset (View › Reset Layout) and per-node reset through the undo stack.
+- Whole-diagram layout reset (View › Reset Layout). The per-node reset goes through the undo
+  stack since Oct 14 (`ResetLayoutCommand`).
 - `LayoutDensity` (Balanced/Compact/Spacious) exposed under Settings.
 - Zoom-out cap derived from model bounds (`PanZoomService.MaxZoom` is still a fixed 10).
 - Surfacing the remaining silent failures: duplicate note id, swallowed file-write errors,

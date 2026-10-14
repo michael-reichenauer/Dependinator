@@ -136,7 +136,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   - Line segments, with points added or removed where clicked.
   - Nodes drawn over lines.
 
-  The initial layout was improved in Jul.
+  The initial layout was improved in Jul. Since Oct 14 a reset can be undone and hands the
+  container back to the automatic layout (it stayed "user-arranged" before).
 - **Hidden nodes (Mar).** A menu toggle shows or hides hidden nodes. Hiding became undoable on
   Oct 11.
 - **Edit mode (Apr).** Edit buttons show only in edit mode. Since Sep 30 the mode is persisted,

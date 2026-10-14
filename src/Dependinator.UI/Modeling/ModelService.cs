@@ -21,7 +21,6 @@ interface IModelService
     void Clear();
     void ClearCache();
     void CheckLineVisibility();
-    Task LayoutNode(NodeId nodeId, bool recursively = false);
     Result<ModelDto> GetCurrentModelDto();
     Task<Result> WriteModelAsync(string modelPath, ModelDto modelDto);
     Task<Result<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
@@ -228,24 +227,6 @@ class ModelService : IModelService, IDisposable
             applicationEvents.TriggerInfoReported($"Model refreshed: {summary}.");
         return Result.Ok;
     }
-
-    public Task LayoutNode(NodeId nodeId, bool recursively = false)
-    {
-        using (var model = modelMgr.UseModel())
-        {
-            if (!model.Nodes.TryGetValue(nodeId, out Node? node))
-                return Task.CompletedTask;
-
-            LayoutNode(node, recursively);
-        }
-
-        applicationEvents.TriggerModelChanged();
-        applicationEvents.TriggerUIStateChanged();
-        applicationEvents.TriggerSaveNeeded();
-        return Task.CompletedTask;
-    }
-
-    static void LayoutNode(Node node, bool recursively) => NodeLayout.ResetChildrenLayout(node, recursively);
 
     async Task<Result<ModelInfo>> ParseNewModelAsync(string path)
     {
