@@ -433,5 +433,15 @@ class ModelService : IModelService, IDisposable
         modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));
         modelDto.Lines.ForEach(l => modelStructureService.SetLineLayoutDto(model, l));
         PassThroughService.UpdatePassThroughFlags(model);
+        RequireChildrenLayoutIfOlder(model, modelDto.LayoutVersion);
+    }
+
+    // A model saved with an older automatic layout gets it redone (lazily, as containers are
+    // shown), except in the containers the user arranged; the flags are saved with the model
+    // until each container is laid out.
+    internal static void RequireChildrenLayoutIfOlder(IModel model, int layoutVersion)
+    {
+        if (layoutVersion < NodeLayout.CurrentLayoutVersion)
+            RequireChildrenLayout(model);
     }
 }

@@ -18,6 +18,10 @@ record ModelDto
     // Defaulted, so models cached before this existed still deserialize (no FormatVersion bump).
     public bool IncludeTestProjects { get; init; }
 
+    // The automatic layout version the model was saved with (NodeLayout.CurrentLayoutVersion);
+    // 0 for models saved before it existed. Defaulted (no FormatVersion bump).
+    public int LayoutVersion { get; init; }
+
     public required IReadOnlyList<NodeDto> Nodes { get; init; }
     public required IReadOnlyList<LinkDto> Links { get; init; }
     public IReadOnlyList<LineDto> Lines { get; init; } = [];

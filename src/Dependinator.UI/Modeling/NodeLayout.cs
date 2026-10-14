@@ -35,6 +35,12 @@ class NodeLayout
     static readonly DensityProfile BalancedProfile = new(GapScale: 1.0, TargetLinearCoverage: 0.5);
     static readonly DensityProfile RootProfile = new(GapScale: 5.00, TargetLinearCoverage: 0.42);
 
+    // Bumped when the automatic layout changes enough that existing automatic layouts should be
+    // redone: a model saved with an older version gets its containers laid out again when
+    // loaded, except those the user arranged (see ModelService.LoadCachedModelDataAsync).
+    // 1: sizes by code and centrality (NodeSizing), straighter lines.
+    public const int CurrentLayoutVersion = 1;
+
     public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
 
     // Bumped whenever node geometry changes (layout, container fit, node edits), so per-zoom
@@ -106,15 +112,21 @@ class NodeLayout
             return;
         }
 
-        if (HasMemberChildren(parent))
-        {
-            ArrangeTypeChildren(parent);
-            return;
-        }
+        var sizesBefore = CaptureSizes(parent.Children);
 
+        if (HasMemberChildren(parent))
+            ArrangeTypeChildren(parent);
+        else
+            ArrangeChildren(parent);
+
+        RescaleResizedContent(sizesBefore);
+    }
+
+    static void ArrangeChildren(Node parent)
+    {
         var density = GetDensityProfile();
         var metrics = parent.IsRoot ? RootMetrics() : RegularMetrics(density);
-        var sizeOf = ChildSizes(metrics);
+        var sizeOf = ChildSizes(parent, SizedChildren(parent.Children), metrics);
 
         if (!LayeredLayout.TryArrange(parent, metrics, sizeOf))
         {
@@ -143,11 +155,55 @@ class NodeLayout
     // Layout") arranges the other children around them. They still count for the container fit.
     internal static bool IsArranged(Node child) => !child.IsZone && !child.IsNote;
 
-    // The size of each arranged (non-member) child.
-    static Func<Node, Size> ChildSizes(LayoutMetrics metrics)
+    // The children that get a node size of their own (see NodeSizing): not member rows, zones,
+    // notes or pass-through nodes (whose boundary is derived from the parent).
+    static IReadOnlyList<Node> SizedChildren(IEnumerable<Node> children) =>
+        children.Where(child => IsArranged(child) && !child.Type.IsMember && !child.IsPassThrough).ToList();
+
+    // The size of each arranged (non-member) child: its size step among the sized siblings,
+    // or the metrics' default size for a child without one.
+    static Func<Node, Size> ChildSizes(Node parent, IReadOnlyList<Node> sizedChildren, LayoutMetrics metrics)
     {
-        var size = new Size(metrics.Width, metrics.Height);
-        return _ => size;
+        var sides = NodeSizing.ComputeSides(sizedChildren, parent);
+        var defaultSize = new Size(metrics.Width, metrics.Height);
+        return node => sides.TryGetValue(node, out var side) ? new Size(side, side) : defaultSize;
+    }
+
+    static List<(Node Child, Size Size)> CaptureSizes(IEnumerable<Node> children) =>
+        children
+            .Where(child => !child.IsPassThrough && child.Boundary != Rect.None)
+            .Select(child => (child, new Size(child.Boundary.Width, child.Boundary.Height)))
+            .ToList();
+
+    // A layout may resize children (see NodeSizing). A resized child whose own children are
+    // already laid out keeps their look: its content transform is scaled by the size change and
+    // the content re-centered, so e.g. the user's arrangement inside a node survives a reset of
+    // the node's parent. With a pass-through chain the deepest chain node holds the content
+    // transform (see PassThroughService); the chain's derived boundaries follow the resize.
+    static void RescaleResizedContent(IReadOnlyList<(Node Child, Size Size)> sizesBefore)
+    {
+        foreach (var (child, before) in sizesBefore)
+        {
+            var after = child.Boundary;
+            if (after.Width == before.Width && after.Height == before.Height)
+                continue;
+            if (before.Width <= 0 || before.Height <= 0)
+                continue;
+
+            var container = child;
+            while (container.Children.Count == 1 && container.Children[0].IsPassThrough)
+                container = container.Children[0];
+            if (container.Children.Count == 0 || container.IsChildrenLayoutRequired)
+                continue;
+
+            var scale = Math.Min(after.Width / before.Width, after.Height / before.Height);
+            var offset = container.ContainerOffset;
+            container.ContainerZoom *= scale;
+            container.ContainerOffset = new Pos(
+                offset.X * scale + (after.Width - before.Width * scale) / 2,
+                offset.Y * scale + (after.Height - before.Height * scale) / 2
+            );
+        }
     }
 
     // Arranges the nodes as shelf-packed rows from (startX, startY), largest first; equally
@@ -291,7 +347,7 @@ class NodeLayout
             cursorX += regularMetrics.HorizontalGap;
         _ = ArrangeAsShelves(
             nonMembers,
-            ChildSizes(regularMetrics),
+            ChildSizes(parent, SizedChildren(nonMembers), regularMetrics),
             regularMetrics,
             TargetAspect(parent, regularMetrics),
             cursorX + regularMetrics.HorizontalGap,
@@ -325,7 +381,7 @@ class NodeLayout
         PlaceNodesInFreeSlots(
             parent,
             newChildren,
-            ChildSizes(regularMetrics),
+            ChildSizes(parent, SizedChildren(parent.Children), regularMetrics),
             occupied,
             regularMetrics,
             regularMetrics.HorizontalGap
@@ -383,7 +439,7 @@ class NodeLayout
         PlaceNodesInFreeSlots(
             parent,
             newNonMembers,
-            ChildSizes(regularMetrics),
+            ChildSizes(parent, SizedChildren(parent.Children), regularMetrics),
             occupied,
             regularMetrics,
             nonMemberStartX

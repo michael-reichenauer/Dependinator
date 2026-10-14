@@ -194,6 +194,7 @@ class Node : IItem
             IsUserSetHidden = IsUserSetHidden,
             IsParentSetHidden = IsParentSetHidden,
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
+            IsChildrenLayoutRequired = IsChildrenLayoutRequired,
             IsManual = IsManual,
             IsNote = IsNote,
             IsZone = IsZone,
@@ -220,6 +221,7 @@ class Node : IItem
         IsUserSetHidden = dto.IsUserSetHidden;
         IsParentSetHidden = dto.IsParentSetHidden;
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
+        IsChildrenLayoutRequired = dto.IsChildrenLayoutRequired;
         IsManual = dto.IsManual;
         IsNote = dto.IsNote;
         IsZone = dto.IsZone;
