@@ -135,7 +135,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **AI prompt for a cycle (Oct 19).** A button on each cycle copies a prompt that asks an AI chat
   whether the cycle is intended (with a reason to accept it with) or should be broken, and how. It
   lists the members with their descriptions and the links in each direction, grouped per member or,
-  when there are many, per type. The first step towards suggesting reasons with Claude directly.
+  when there are many, per type. In the web host and VS Code it also shows the source of the
+  directions made by only one or two types, the ones most likely to be broken or explained. The
+  first step towards suggesting reasons with Claude directly.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design

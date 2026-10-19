@@ -249,7 +249,8 @@
                 normally. It is reported again if another node joins it. Accepting is saved with the model and can be
                 undone. If a refactor removes an accepted cycle, its entry stays, marked "no longer a cycle", until you
                 remove it. Not sure? The sparkle button on a row copies a prompt for an AI chat (such as claude.ai) that
-                asks whether the cycle is intended, with a reason to accept it with, or how to break it.</li>
+                asks whether the cycle is intended, with a reason to accept it with, or how to break it. In VS Code and
+                the local web app the prompt includes the source code behind the cycle's thinnest dependencies.</li>
             <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
                 "this must not depend on that" by picking two nodes (a project, a namespace, a class, a resource). Every
                 dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the

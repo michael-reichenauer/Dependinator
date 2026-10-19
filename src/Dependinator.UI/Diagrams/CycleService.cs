@@ -57,9 +57,6 @@ interface ICycleService
     void Accept(Cycle cycle, string reason);
     void SetReason(AcceptedCycle accepted, string reason);
     void Unaccept(IReadOnlyList<AcceptedCycle> accepted);
-
-    // The text that asks an AI whether the cycle is intended or should be broken (CyclePrompt).
-    string GetPrompt(Cycle cycle);
 }
 
 [Scoped]
@@ -117,12 +114,6 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
         if (accepted.Count == 0)
             return;
         commandService.Do(new AcceptedCycleCommand([], accepted));
-    }
-
-    public string GetPrompt(Cycle cycle)
-    {
-        using var model = modelMgr.UseModel();
-        return CyclePrompt.Build(model, cycle);
     }
 
     void EnsureUpToDate()

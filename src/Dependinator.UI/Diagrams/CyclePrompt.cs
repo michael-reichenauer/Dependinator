@@ -6,6 +6,12 @@ using NodeType = Dependinator.Core.Parsing.NodeType;
 
 namespace Dependinator.UI.Diagrams;
 
+// Code a prompt would show: for one direction of the cycle, the types that make its links.
+record SourceRequest(string Direction, IReadOnlyList<SourceUnit> Units);
+
+// The code read for a SourceRequest.
+record SourceSection(string Direction, IReadOnlyList<SourceExcerpt> Excerpts);
+
 // The text that asks an AI whether a circular dependency is intended, and can be accepted with
 // a reason to store, or should be broken, and how. The user pastes it into an AI chat. Its shape
 // was tried on real cycles: a sound verdict needs the members with their descriptions and the
@@ -13,6 +19,9 @@ namespace Dependinator.UI.Diagrams;
 // hence the Assumptions line. Links are listed per member that makes them (a property's getter
 // counts as the property; target members are grouped under their type) while that stays short,
 // and per type otherwise, so a cycle with thousands of links still gives a prompt of a few pages.
+// Where the host can read the files, the source behind the thin directions (made by one or two
+// types) is shown too: without it, an answer can propose a move that would not compile. Thin is
+// counted in types, not links: a class that classifies an enum makes a link per enum value.
 static partial class CyclePrompt
 {
     const int MaxDetailedSources = 12;
@@ -20,12 +29,50 @@ static partial class CyclePrompt
     const int MaxTargetMembers = 8;
     const int MaxDescriptionLength = 300;
     const int MaxReasonLength = 200;
+    const int MaxSourceUnitsPerDirection = 2;
+    const int MaxSourceLines = 400;
 
-    public static string Build(IModel model, Cycle cycle)
+    // The code to show with the prompt: for each direction made by only a type or two (a likely
+    // one to break, or to explain), those types; the thinnest directions first.
+    public static IReadOnlyList<SourceRequest> GetSourceRequests(IModel model, Cycle cycle)
+    {
+        if (!model.Nodes.TryGetValue(cycle.ContainerId, out var container))
+            return [];
+        var thin = LinksBetween(Members(model, cycle))
+            .Select(d =>
+                (Direction: d.Key, ByType: d.Value.GroupBy(l => Unit(l.Source)).ToList(), Links: d.Value.Count)
+            )
+            .Where(d => d.ByType.Count <= MaxSourceUnitsPerDirection)
+            .OrderBy(d => d.ByType.Count)
+            .ThenBy(d => d.Links);
+
+        List<SourceRequest> requests = [];
+        foreach (var (direction, byType, _) in thin)
+        {
+            List<SourceUnit> units = [.. byType.Where(g => HasSource(g.Key)).Select(SourceOf)];
+            if (units.Count > 0)
+                requests.Add(new($"{Name(direction.From, container)} → {Name(direction.To, container)}", units));
+        }
+        return requests;
+    }
+
+    // A type's span, and the declaration lines of its members that make the links.
+    static SourceUnit SourceOf(IGrouping<Node, Link> linksOfType)
+    {
+        var span = linksOfType.Key.FileSpan!;
+        var memberLines = linksOfType
+            .Select(l => Member(l.Source))
+            .Where(m => m != linksOfType.Key && m.FileSpan?.Path == span.Path)
+            .Select(m => m.FileSpan!.StartLine)
+            .Distinct();
+        return new SourceUnit(span, [.. memberLines]);
+    }
+
+    public static string Build(IModel model, Cycle cycle, IReadOnlyList<SourceSection>? sources = null)
     {
         if (!model.Nodes.TryGetValue(cycle.ContainerId, out var container))
             return "";
-        List<Node> members = [.. cycle.Members.Select(m => model.Nodes.GetValueOrDefault(m.Id)).OfType<Node>()];
+        var members = Members(model, cycle);
 
         var text = new StringBuilder();
         text.AppendLine(
@@ -65,9 +112,65 @@ static partial class CyclePrompt
             }
         }
 
+        if (sources is { Count: > 0 })
+            AppendSource(text, model, sources);
+
         text.AppendLine().Append(TaskSection);
         return text.ToString();
     }
+
+    static List<Node> Members(IModel model, Cycle cycle) =>
+        [.. cycle.Members.Select(m => model.Nodes.GetValueOrDefault(m.Id)).OfType<Node>()];
+
+    // Types, and the modules and resources of infrastructure models, have spans worth showing.
+    static bool HasSource(Node node) =>
+        node.FileSpan is not null && (node.Type.IsType || node.Type is NodeType.Module or NodeType.Resource);
+
+    static void AppendSource(StringBuilder text, IModel model, IReadOnlyList<SourceSection> sources)
+    {
+        text.AppendLine().AppendLine("## Source").AppendLine();
+        text.AppendLine(
+            "The code behind the directions made by only one or two types, the ones most likely to be broken or to be explained."
+        );
+        var shownLines = 0;
+        foreach (var source in sources)
+        {
+            text.AppendLine().AppendLine($"### {source.Direction}");
+            foreach (var excerpt in source.Excerpts)
+            {
+                if (shownLines + excerpt.Lines.Count > MaxSourceLines)
+                {
+                    text.AppendLine().AppendLine("(The rest of the source is left out.)");
+                    return;
+                }
+                shownLines += excerpt.Lines.Count;
+                text.AppendLine();
+                text.AppendLine($"{DisplayPath(model, excerpt.Path)}, lines {excerpt.StartLine}–{excerpt.EndLine}:");
+                text.AppendLine().AppendLine($"```{FenceLanguage(excerpt.Path)}");
+                foreach (var line in excerpt.Lines)
+                    text.AppendLine(line);
+                text.AppendLine("```");
+            }
+        }
+    }
+
+    // A path relative to the model's folder (where the .sln is), when inside it.
+    static string DisplayPath(IModel model, string path)
+    {
+        var folder = Path.GetDirectoryName(model.Path);
+        if (string.IsNullOrEmpty(folder))
+            return path;
+        var relative = Path.GetRelativePath(folder, path);
+        return relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? path : relative;
+    }
+
+    static string FenceLanguage(string path) =>
+        Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".cs" => "csharp",
+            ".bicep" => "bicep",
+            _ => "",
+        };
 
     static readonly string TaskSection = $"""
         ## Your task
@@ -201,16 +304,25 @@ static partial class CyclePrompt
         return member.Type == NodeType.ConstructorMember || name == unit.ShortName.Split('<')[0] ? "constructor" : name;
     }
 
-    // The closest node that is not a member: a member's type, or the node itself.
-    static Node Unit(Node node) => node.AncestorsAndSelf().First(n => !n.Type.IsMember);
+    // The closest node that is not a member: a member's type, or the node itself. Made-up parents
+    // in between are passed: a conversion operator's name has dots ("implicit operator A.B"), so
+    // it is filed under parent nodes created for "A" inside its type. In a model without types
+    // (tests), the closest node that is not a member.
+    static Node Unit(Node node)
+    {
+        var nonMembers = node.AncestorsAndSelf().Where(n => !n.Type.IsMember).ToList();
+        return nonMembers.FirstOrDefault(n => n.Type is not (NodeType.None or NodeType.Root or NodeType.Parent))
+            ?? nonMembers[0];
+    }
 
-    // The member directly under the node's type (a getter or a local function counts as its
-    // property or method), or the node itself when it is not a member.
+    // The member the node is part of (a getter or a local function counts as its property or
+    // method), or the node itself when it is not a member.
     static Node Member(Node node)
     {
-        var unit = Unit(node);
-        while (node != unit && node.Parent != unit)
-            node = node.Parent;
+        if (!node.Type.IsMember)
+            return node;
+        while (node.Parent is { Type.IsMember: true } parent)
+            node = parent;
         return node;
     }
 

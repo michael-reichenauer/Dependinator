@@ -1,15 +1,19 @@
+using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
+using FileSpan = Dependinator.Core.Parsing.FileSpan;
 using Node = Dependinator.UI.Modeling.Models.Node;
 using NodeType = Dependinator.Core.Parsing.NodeType;
+using Parsing = Dependinator.Core.Parsing;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
 // The prompt that asks an AI about a cycle: the members with their descriptions, the links per
-// direction (per member that makes them, or per type when there are many), and the answer format.
+// direction (per member that makes them, or per type when there are many), the source behind the
+// direction with the fewest links when the files can be read, and the answer format.
 public class CyclePromptTests
 {
     readonly ModelMgr modelMgr = new(new StateMgr());
@@ -30,6 +34,37 @@ public class CyclePromptTests
         source.AddSourceLink(link);
         target.AddTargetLink(link);
         new LineService().AddLinesFromSourceToTarget(model, link);
+    }
+
+    static void SetSpan(Node node, string path, int startLine, int endLine) =>
+        node.Update(
+            new Parsing.Node(
+                node.Name,
+                new Parsing.NodeProperties { FileSpan = new FileSpan(path, startLine, endLine) }
+            )
+        );
+
+    // Parsing (three types using Utils.Log) and Utils (an extension using Parsing.NodeType once).
+    Cycle AddParsingUtilsCycle()
+    {
+        using var model = modelMgr.UseModel();
+        model.Path = "/repo/App.sln";
+        var core = AddNode(model, "Core", model.Root, NodeType.Namespace);
+        var parsing = AddNode(model, "Core.Parsing", core, NodeType.Namespace);
+        var utils = AddNode(model, "Core.Utils", core, NodeType.Namespace);
+        var service = AddNode(model, "Core.Parsing.Service", parsing, NodeType.ClassType);
+        var nodeType = AddNode(model, "Core.Parsing.NodeType", parsing, NodeType.EnumType);
+        var log = AddNode(model, "Core.Utils.Log", utils, NodeType.ClassType);
+        var extensions = AddNode(model, "Core.Utils.Ext", utils, NodeType.ClassType);
+        var isMember = AddNode(model, "Core.Utils.Ext.IsMember", extensions, NodeType.PropertyMember);
+        SetSpan(service, "/repo/src/Parsing/Service.cs", 1, 50);
+        SetSpan(extensions, "/repo/src/Utils/Ext.cs", 5, 20);
+        SetSpan(isMember, "/repo/src/Utils/Ext.cs", 9, 9);
+        AddLink(model, AddNode(model, "Core.Parsing.Service.A()", service, NodeType.MethodMember), log);
+        AddLink(model, AddNode(model, "Core.Parsing.Reader", parsing, NodeType.ClassType), log);
+        AddLink(model, AddNode(model, "Core.Parsing.Writer", parsing, NodeType.ClassType), log);
+        AddLink(model, isMember, nodeType);
+        return CycleService.Compute(model).Cycles.Single();
     }
 
     static string PromptForTheOnlyCycle(IModel model) =>
@@ -196,5 +231,87 @@ public class CyclePromptTests
             "Part of it was accepted before, with the reason \"A and B are one concept\", but B joined the cycle since.",
             prompt
         );
+    }
+
+    [Fact]
+    public void GetSourceRequests_ShouldPickTheDirectionsMadeByOneOrTwoTypes()
+    {
+        var cycle = AddParsingUtilsCycle();
+        using var model = modelMgr.UseModel();
+
+        var requests = CyclePrompt.GetSourceRequests(model, cycle);
+
+        // Parsing → Utils is made by three types.
+        var request = Assert.Single(requests);
+        Assert.Equal("Utils → Parsing", request.Direction);
+        var unit = Assert.Single(request.Units);
+        Assert.Equal(new FileSpan("/repo/src/Utils/Ext.cs", 5, 20), unit.Span);
+        Assert.Equal([9], unit.MemberLines);
+    }
+
+    [Fact]
+    public void GetSourceRequests_ShouldFindTheTypeOfAMemberFiledUnderMadeUpNodes()
+    {
+        Cycle cycle;
+        using (var model = modelMgr.UseModel())
+        {
+            var container = AddNode(model, "C", model.Root, NodeType.Namespace);
+            var a = AddNode(model, "C.A", container, NodeType.StructType);
+            var b = AddNode(model, "C.B", container, NodeType.StructType);
+            SetSpan(b, "/repo/B.cs", 10, 40);
+            // "implicit operator C.A(C.B)" is named with dots, so a parent is made up for "C".
+            var madeUp = AddNode(model, "C.B.implicitoperatorC", b, NodeType.Parent);
+            var conversion = AddNode(model, "C.B.implicitoperatorC.A(C.B)", madeUp, NodeType.MethodMember);
+            SetSpan(conversion, "/repo/B.cs", 20, 20);
+            AddLink(model, conversion, a);
+            AddLink(model, a, b);
+            cycle = CycleService.Compute(model).Cycles.Single();
+        }
+        using var reading = modelMgr.UseModel();
+
+        var requests = CyclePrompt.GetSourceRequests(reading, cycle);
+
+        var unit = Assert.Single(requests.Where(r => r.Direction == "B → A")).Units.Single();
+        Assert.Equal(new FileSpan("/repo/B.cs", 10, 40), unit.Span);
+        Assert.Equal([20], unit.MemberLines);
+    }
+
+    [Fact]
+    public void Build_ShouldShowTheSource_WithPathsRelativeToTheModel()
+    {
+        var cycle = AddParsingUtilsCycle();
+        using var model = modelMgr.UseModel();
+        SourceSection[] sources =
+        [
+            new("Utils → Parsing", [new SourceExcerpt("/repo/src/Utils/Ext.cs", 5, ["class Ext", "{", "}"])]),
+        ];
+
+        var prompt = CyclePrompt.Build(model, cycle, sources).ReplaceLineEndings("\n");
+
+        Assert.Contains(
+            "## Source\n\nThe code behind the directions made by only one or two types, the ones most likely to be "
+                + "broken or to be explained.\n\n### Utils → Parsing\n\nsrc/Utils/Ext.cs, lines 5–7:\n\n"
+                + "```csharp\nclass Ext\n{\n}\n```\n\n## Your task",
+            prompt
+        );
+    }
+
+    [Fact]
+    public async Task GetPromptAsync_ShouldShowTheSourceItCanRead_AndLeaveOutWhatItCannot()
+    {
+        var cycle = AddParsingUtilsCycle();
+        var files = new Mock<IWorkspaceFileService>();
+        files
+            .Setup(f => f.ReadSourceFileAsync("/repo/src/Utils/Ext.cs"))
+            .ReturnsAsync((Result<string>)"// Kept in Utils on purpose\nclass Ext\n{\n}\n");
+        var service = new CyclePromptService(modelMgr, files.Object);
+
+        var prompt = await service.GetPromptAsync(cycle);
+
+        Assert.Contains("```csharp\n// Kept in Utils on purpose\nclass Ext\n", prompt.ReplaceLineEndings("\n"));
+
+        files.Setup(f => f.ReadSourceFileAsync(It.IsAny<string>())).ReturnsAsync((Result<string>)new Error("No file"));
+
+        Assert.DoesNotContain("## Source", await service.GetPromptAsync(cycle));
     }
 }

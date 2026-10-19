@@ -5,6 +5,7 @@
 @inject IDialogService dialogService
 @inject Modeling.IModelService modelService
 @inject IClipboardService clipboardService
+@inject ICyclePromptService cyclePromptService
 @implements IDisposable
 
 @* Circular dependencies, one row per cycle: the container and the sibling nodes that depend on
@@ -130,7 +131,7 @@
   // the cycle with, or a change to make.
   async Task CopyPromptAsync(Cycle cycle)
   {
-    if (!await clipboardService.CopyAsync(cycleService.GetPrompt(cycle)))
+    if (!await clipboardService.CopyAsync(await cyclePromptService.GetPromptAsync(cycle)))
     {
       applicationEvents.TriggerErrorReported("Could not copy the prompt to the clipboard.");
       return;
