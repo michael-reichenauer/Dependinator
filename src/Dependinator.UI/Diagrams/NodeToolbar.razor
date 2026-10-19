@@ -1,5 +1,6 @@
 ﻿@using Dependinator.UI.Diagrams.Dependencies
 @using Dependinator.UI.Diagrams.Icons
+@using Dependinator.UI.Modeling.Commands
 @using Dependinator.Core
 @using Dependinator.Core.Parsing
 @using Dependinator.Core.Shared
@@ -309,6 +310,9 @@ else if (HasSelectedLine)
   Modeling.Models.IModelMgr modelMgr { get; set; } = null!;
 
   [Inject]
+  ICommandService commandService { get; set; } = null!;
+
+  [Inject]
   INavigationService navigationService { get; set; } = null!;
 
   [Inject]
@@ -415,7 +419,7 @@ else if (HasSelectedLine)
       return;
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
-    await modelService.LayoutNode(nodeId);
+    commandService.Do(new ResetLayoutCommand(nodeId, recursively: false));
     await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
   }
@@ -430,7 +434,7 @@ else if (HasSelectedLine)
     }
     var isEdit = selectionService.IsEditMode;
     selectionService.Unselect();
-    await modelService.LayoutNode(nodeId, true);
+    commandService.Do(new ResetLayoutCommand(nodeId, recursively: true));
     await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
   }

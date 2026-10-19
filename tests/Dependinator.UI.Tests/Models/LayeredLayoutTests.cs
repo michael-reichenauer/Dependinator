@@ -1,5 +1,6 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Layout;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
@@ -173,7 +174,11 @@ public class LayeredLayoutTests
         AddChild(model, parent, "A");
         AddChild(model, parent, "B");
 
-        var arranged = LayeredLayout.TryArrange(parent, new LayoutMetrics(100, 100, 70, 70, 1.0));
+        var arranged = LayeredLayout.TryArrange(
+            parent,
+            new LayoutMetrics(100, 100, 70, 70, 1.0),
+            _ => NodeLayout.DefaultSize
+        );
 
         Assert.False(arranged);
     }
@@ -354,6 +359,155 @@ public class LayeredLayoutTests
         Assert.False(customized.IsChildrenLayoutRequired);
         Assert.False(a.IsChildrenLayoutRequired);
     }
+
+    [Fact]
+    public void TryArrange_ChainOfDifferentSizes_ShouldAlignCenters()
+    {
+        // Centers of connected nodes line up, so their line is straight whatever the sizes
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 400));
+        var a = AddChild(model, parent, "A");
+        var b = AddChild(model, parent, "B");
+        var c = AddChild(model, parent, "C");
+        AddLink(model, a, b);
+        AddLink(model, b, c);
+
+        Arrange(
+            parent,
+            new()
+            {
+                ["A"] = 60,
+                ["B"] = 180,
+                ["C"] = 100,
+            }
+        );
+
+        Assert.Equal(CenterY(a), CenterY(b));
+        Assert.Equal(CenterY(b), CenterY(c));
+        Assert.True(a.Boundary.X + a.Boundary.Width < b.Boundary.X);
+        Assert.True(b.Boundary.X + b.Boundary.Width < c.Boundary.X);
+    }
+
+    [Fact]
+    public void TryArrange_FanOut_ShouldCenterSourceBetweenTargets()
+    {
+        // The source has no upstream neighbors; it is pulled to the middle of its targets
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 400));
+        var a = AddChild(model, parent, "A");
+        var b = AddChild(model, parent, "B");
+        var c = AddChild(model, parent, "C");
+        AddLink(model, a, b);
+        AddLink(model, a, c);
+
+        Arrange(parent, []);
+
+        var middle = (CenterY(b) + CenterY(c)) / 2;
+        Assert.InRange(CenterY(a), middle - NodeGrid.SnapSize / 2, middle + NodeGrid.SnapSize / 2);
+    }
+
+    [Fact]
+    public void TryArrange_DifferentSizesInAColumn_ShouldCenterThemInIt()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 400));
+        var a = AddChild(model, parent, "A");
+        var b = AddChild(model, parent, "B");
+        var c = AddChild(model, parent, "C");
+        AddLink(model, a, b);
+        AddLink(model, a, c);
+
+        Arrange(parent, new() { ["B"] = 180, ["C"] = 60 });
+
+        Assert.Equal(CenterX(b), CenterX(c));
+        Assert.False(IsOverlapping(b.Boundary, c.Boundary));
+    }
+
+    [Fact]
+    public void TryArrange_SkipEdgeAcrossWideColumn_ShouldRouteThroughTheColumnCenter()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 400));
+        var a = AddChild(model, parent, "A");
+        var b = AddChild(model, parent, "B");
+        var c = AddChild(model, parent, "C");
+        AddLink(model, a, b);
+        AddLink(model, b, c);
+        AddLink(model, a, c);
+
+        Arrange(parent, new() { ["B"] = 180 });
+
+        var waypoint = Assert.Single(a.SourceLines.Single(line => line.Target == c).SegmentPoints);
+        Assert.Equal(CenterX(b), waypoint.X);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(8)]
+    public void TryArrange_RandomGraphs_ShouldPlaceNodesOnTheGridWithoutOverlaps(int seed)
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        var parent = AddParent(model, new Rect(0, 0, 1200, 800));
+        var random = new Random(seed);
+        var count = 5 + seed * 5;
+        var children = Enumerable.Range(0, count).Select(index => AddChild(model, parent, $"N{index}")).ToList();
+        for (var index = 0; index < count * 3 / 2; index++)
+        {
+            var source = children[random.Next(count)];
+            var target = children[random.Next(count)];
+            if (source != target)
+                AddLink(model, source, target);
+        }
+        double[] steps = [60, 100, 140, 180];
+        var sides = children.ToDictionary(child => child.Name, _ => steps[random.Next(steps.Length)]);
+
+        Arrange(parent, sides);
+
+        foreach (var child in children)
+        {
+            Assert.Equal(sides[child.Name], child.Boundary.Width);
+            Assert.Equal(0, child.Boundary.X % NodeGrid.SnapSize);
+            Assert.Equal(0, child.Boundary.Y % NodeGrid.SnapSize);
+        }
+        for (var first = 0; first < count; first++)
+        {
+            for (var second = first + 1; second < count; second++)
+            {
+                Assert.False(
+                    IsOverlapping(children[first].Boundary, children[second].Boundary),
+                    $"{children[first].Name} {children[first].Boundary} overlaps {children[second].Name} {children[second].Boundary}"
+                );
+            }
+        }
+    }
+
+    static void Arrange(ModelNode parent, Dictionary<string, double> sides)
+    {
+        var metrics = new LayoutMetrics(100, 100, 70, 70, 1.0);
+        var arranged = LayeredLayout.TryArrange(
+            parent,
+            metrics,
+            node => sides.TryGetValue(node.Name, out var side) ? new Size(side, side) : NodeLayout.DefaultSize
+        );
+        Assert.True(arranged);
+    }
+
+    static double CenterX(ModelNode node) => node.Boundary.X + node.Boundary.Width / 2;
+
+    static double CenterY(ModelNode node) => node.Boundary.Y + node.Boundary.Height / 2;
+
+    // Overlapping or closer than one snap step
+    static bool IsOverlapping(Rect first, Rect second) =>
+        first.X < second.X + second.Width + NodeGrid.SnapSize
+        && second.X < first.X + first.Width + NodeGrid.SnapSize
+        && first.Y < second.Y + second.Height + NodeGrid.SnapSize
+        && second.Y < first.Y + first.Height + NodeGrid.SnapSize;
 
     static Dictionary<string, Rect> LayoutWithInsertionOrder(int[] order)
     {

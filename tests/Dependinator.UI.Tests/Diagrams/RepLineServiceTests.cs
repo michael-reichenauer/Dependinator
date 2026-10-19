@@ -1,7 +1,9 @@
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
+using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
@@ -624,6 +626,31 @@ public class RepLineServiceTests
         Assert.True(GetLine(model, "Source", "ParentA").IsActiveRep);
         Assert.True(GetLine(model, "ParentA", "ParentB").IsActiveRep);
         Assert.False(GetLine(model, "ParentA", "ParentB").IsFocused);
+    }
+
+    [Fact]
+    public void Sync_NodeResizedAtSameZoom_ShouldResolveRepsAgain()
+    {
+        // Whether a node opens depends on its size (NodeViewPolicy), so a resize (or a layout)
+        // at an unchanged zoom can open it: the layout generation makes Sync re-check instead
+        // of skipping the unchanged zoom.
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        AddLink(model, source, target);
+        parentA.LineSplitDepth = 1;
+        parentA.Boundary = new Rect(0, 0, 100, 100);
+
+        RepLineService.Sync(model, IconZoom);
+        Assert.True(GetLine(model, "ParentA", "ParentB").IsActiveRep);
+
+        new NodeEditCommand(parentA.Id) { Boundary = new Rect(0, 0, 300, 300) }.Execute(model);
+        RepLineService.Sync(model, IconZoom);
+
+        Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.False(GetLine(model, "ParentA", "ParentB").IsActiveRep);
     }
 
     static IModel NewModel() => new ModelMgr(new StateMgr()).UseModel();

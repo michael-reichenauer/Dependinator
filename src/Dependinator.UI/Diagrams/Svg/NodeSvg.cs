@@ -15,9 +15,10 @@ static partial class NodeSvg
     internal const int DescriptionFontSize = 6;
 
     // Name/description text stops scaling with zoom beyond this factor, so zooming in reveals
-    // more description text instead of just growing the letters. Containers appear at
-    // NodeViewPolicy.MinContainerZoom (2.0), so text still grows a bit "into" the node before
-    // plateauing at 24px names and 18px descriptions.
+    // more description text instead of just growing the letters. A default-size node opens as a
+    // container at NodeViewPolicy.MinContainerZoom (2.0), so text still grows a bit "into" the
+    // node before plateauing at 24px names and 18px descriptions. Text follows the zoom, not the
+    // node's size, so labels of small and large nodes stay equally readable.
     const double MaxTextZoom = 3.0;
     const int DescriptionMinWidth = 25;
     const int DescriptionMaxWidth = 100;
@@ -82,7 +83,7 @@ static partial class NodeSvg
         var header = CalculateContainerHeader(nodeCanvasRect, parentZoom);
         var elementId = PointerId.FromNode(node.Id).ElementId;
         var (border, background) = NodeColors(node);
-        var backgroundOpacity = NodeViewPolicy.ContainerBackgroundOpacity(parentZoom);
+        var backgroundOpacity = NodeViewPolicy.ContainerBackgroundOpacity(node, parentZoom);
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var iconId = IconName(node);
         var strokeWidth = node.IsEditMode ? 10 : node.StrokeWidth;

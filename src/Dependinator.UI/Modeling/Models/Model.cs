@@ -128,6 +128,7 @@ class Model : IModel
             Offset = Offset,
             ViewRect = ViewRect,
             IncludeTestProjects = IncludeTestProjects,
+            LayoutVersion = NodeLayout.CurrentLayoutVersion,
             Rules = [.. rules.Select(r => new RuleDto { From = r.FromName, To = r.ToName })],
             Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
             Links = [.. links.Values.Select(l => l.ToDto())],

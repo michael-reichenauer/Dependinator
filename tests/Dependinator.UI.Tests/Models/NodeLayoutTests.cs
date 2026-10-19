@@ -289,6 +289,65 @@ public class NodeLayoutTests
         );
     }
 
+    [Fact]
+    public void PackShelves_ShouldNotOverlapAndCenterEachRowVertically()
+    {
+        List<Size> sizes = [new(180, 180), new(140, 140), new(100, 100), new(60, 60), new(60, 60)];
+
+        var (positions, blockSize) = NodeLayout.PackShelves(sizes, 1.0, new LayoutMetrics(100, 100, 70, 70, 1.0));
+
+        var rects = sizes
+            .Select((size, index) => new Rect(positions[index].X, positions[index].Y, size.Width, size.Height))
+            .ToList();
+        Assert.All(rects, AssertGridAligned);
+        for (var first = 0; first < rects.Count; first++)
+        {
+            Assert.InRange(rects[first].X + rects[first].Width, 0, blockSize.Width);
+            Assert.InRange(rects[first].Y + rects[first].Height, 0, blockSize.Height);
+            for (var second = first + 1; second < rects.Count; second++)
+            {
+                Assert.False(IsOverlapping(rects[first], rects[second]));
+                var isSameRow =
+                    rects[first].Y < rects[second].Y + rects[second].Height
+                    && rects[second].Y < rects[first].Y + rects[first].Height;
+                if (isSameRow)
+                    Assert.Equal(rects[first].Y + rects[first].Height / 2, rects[second].Y + rects[second].Height / 2);
+            }
+        }
+    }
+
+    [Fact]
+    public void PackShelves_EqualSizes_ShouldFormTheGridClosestToTheTargetAspect()
+    {
+        var sizes = Enumerable.Repeat(new Size(100, 100), 12).ToList();
+
+        var (positions, _) = NodeLayout.PackShelves(sizes, 4.0 / 3, new LayoutMetrics(100, 100, 70, 70, 1.0));
+
+        Assert.Equal(4, positions.Select(position => position.X).Distinct().Count());
+        Assert.Equal(3, positions.Select(position => position.Y).Distinct().Count());
+    }
+
+    [Fact]
+    public void AdjustChildren_NoRelations_ShouldKeepTheOrderOfEquallyLargeChildren()
+    {
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var parent = new ModelNode("Parent", root) { Type = NodeType.Namespace, Boundary = new Rect(0, 0, 1200, 800) };
+        root.AddChild(parent);
+        var names = new[] { "Zeta", "Alpha", "Mid" };
+        foreach (var name in names)
+            parent.AddChild(new ModelNode($"Parent.{name}", parent) { Type = NodeType.ClassType });
+
+        NodeLayout.AdjustChildren(parent);
+
+        var ordered = parent
+            .Children.OrderBy(child => child.Boundary.Y)
+            .ThenBy(child => child.Boundary.X)
+            .Select(child => child.Name)
+            .ToList();
+        Assert.Equal(names.Select(name => $"Parent.{name}"), ordered);
+    }
+
     static Rect GetDisplayedBounds(ModelNode parent)
     {
         var first = parent.Children[0].Boundary;

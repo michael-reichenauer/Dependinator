@@ -25,6 +25,7 @@ class InitService : IInitService
     readonly IViewOptions viewOptions;
     readonly IThemeService themeService;
     readonly IKeyboardService keyboardService;
+    readonly ILayoutRefineService layoutRefineService;
 
     public InitService(
         IScreenService screenService,
@@ -36,7 +37,8 @@ class InitService : IInitService
         IVsCodeMessageService vsCodeMessageService,
         IViewOptions viewOptions,
         IThemeService themeService,
-        IKeyboardService keyboardService
+        IKeyboardService keyboardService,
+        ILayoutRefineService layoutRefineService
     )
     {
         this.screenService = screenService;
@@ -49,6 +51,7 @@ class InitService : IInitService
         this.viewOptions = viewOptions;
         this.themeService = themeService;
         this.keyboardService = keyboardService;
+        this.layoutRefineService = layoutRefineService;
     }
 
     public async Task InitAsync(IUIComponent component)
@@ -87,5 +90,6 @@ class InitService : IInitService
         await pointerEventService.InitAsync();
         await modelListService.InitAsync();
         await canvasService.InitAsync();
+        layoutRefineService.Start();
     }
 }
