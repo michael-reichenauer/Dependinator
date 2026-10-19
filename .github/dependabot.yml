@@ -37,3 +37,7 @@ updates:
       # The Bicep compiler library is unsupported by Microsoft and may change its API in any
       # release (see Directory.Packages.props); it is bumped by hand after a build check.
       - dependency-name: "Azure.Bicep.Core"
+      # MessagePack is only a security pin for StreamJsonRpc (see Directory.Packages.props), which is
+      # built against MessagePack 2.x; 3.x is a breaking API change, so take only 2.5.x patches.
+      - dependency-name: "MessagePack"
+        update-types: ["version-update:semver-major"]

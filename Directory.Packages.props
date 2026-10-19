@@ -44,6 +44,13 @@
              "doesn't support net10.0". Dependabot ignores 18.10+ for the three; ./scripts/updatepackages -u does not. -->
         <PackageVersion Include="Microsoft.Build.Framework" Version="18.9.6" />
         <PackageVersion Include="Microsoft.NET.StringTools" Version="18.9.6" />
+        <!-- Security pins: patched versions of vulnerable transitive packages, referenced directly where they
+             enter (MessagePack via StreamJsonRpc in Dependinator.Core; System.Security.Cryptography.Pkcs/Xml via
+             Azure.Bicep.Core > Microsoft.Windows.Compatibility in Dependinator.Bicep). Drop a pin, with its
+             PackageReference, once the parent package itself requires a patched version. -->
+        <PackageVersion Include="MessagePack" Version="2.5.307" />
+        <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+        <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.13" />
     </ItemGroup>
     <PropertyGroup Condition="'$(PublishAot)' == 'true'">
         <DefineConstants>$(DefineConstants);NATIVEAOT</DefineConstants>
