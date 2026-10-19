@@ -21,7 +21,6 @@ interface IModelService
     void Clear();
     void ClearCache();
     void CheckLineVisibility();
-    Task LayoutNode(NodeId nodeId, bool recursively = false);
     Result<ModelDto> GetCurrentModelDto();
     Task<Result> WriteModelAsync(string modelPath, ModelDto modelDto);
     Task<Result<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
@@ -229,29 +228,6 @@ class ModelService : IModelService, IDisposable
         return Result.Ok;
     }
 
-    public Task LayoutNode(NodeId nodeId, bool recursively = false)
-    {
-        using (var model = modelMgr.UseModel())
-        {
-            if (!model.Nodes.TryGetValue(nodeId, out Node? node))
-                return Task.CompletedTask;
-
-            LayoutNode(node, recursively);
-        }
-
-        applicationEvents.TriggerModelChanged();
-        applicationEvents.TriggerUIStateChanged();
-        applicationEvents.TriggerSaveNeeded();
-        return Task.CompletedTask;
-    }
-
-    void LayoutNode(Node node, bool recursively)
-    {
-        NodeLayout.AdjustChildren(node, forceAllChildren: true);
-        if (recursively)
-            node.Children.ForEach(n => LayoutNode(n, recursively));
-    }
-
     async Task<Result<ModelInfo>> ParseNewModelAsync(string path)
     {
         if (await ParseAndUpdateAsync(path) is Error e)
@@ -457,5 +433,15 @@ class ModelService : IModelService, IDisposable
         modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));
         modelDto.Lines.ForEach(l => modelStructureService.SetLineLayoutDto(model, l));
         PassThroughService.UpdatePassThroughFlags(model);
+        RequireChildrenLayoutIfOlder(model, modelDto.LayoutVersion);
+    }
+
+    // A model saved with an older automatic layout gets it redone (lazily, as containers are
+    // shown), except in the containers the user arranged; the flags are saved with the model
+    // until each container is laid out.
+    internal static void RequireChildrenLayoutIfOlder(IModel model, int layoutVersion)
+    {
+        if (layoutVersion < NodeLayout.CurrentLayoutVersion)
+            RequireChildrenLayout(model);
     }
 }

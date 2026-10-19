@@ -3,6 +3,7 @@
   "Name": "",
   "Offset": {},
   "ViewRect": {},
+  "LayoutVersion": 1,
   "Nodes": [
     {
       "Name": "",
@@ -14,7 +15,8 @@
         "Height": 1000
       },
       "Zoom": 1,
-      "Color": "Gray"
+      "Color": "Gray",
+      "IsChildrenLayoutRequired": true
     },
     {
       "Name": "$Externals",
@@ -23,42 +25,48 @@
       "Properties": {
         "Description": "External references used by, but not part of, this solution (e.g. third-party packages and framework assemblies)."
       },
-      "Color": "Purple"
+      "Color": "Purple",
+      "IsChildrenLayoutRequired": true
     },
     {
       "Name": "Dependinator*UI*Tests",
       "ParentName": "$Externals",
       "Type": "Parent",
       "Properties": {},
-      "Color": "Purple"
+      "Color": "Purple",
+      "IsChildrenLayoutRequired": true
     },
     {
       "Name": "Dependinator*UI*Tests.Dependinator",
       "ParentName": "Dependinator*UI*Tests",
       "Type": "Parent",
       "Properties": {},
-      "Color": "Green"
+      "Color": "Green",
+      "IsChildrenLayoutRequired": true
     },
     {
       "Name": "Dependinator*UI*Tests.Dependinator.UI",
       "ParentName": "Dependinator*UI*Tests.Dependinator",
       "Type": "Parent",
       "Properties": {},
-      "Color": "Pink"
+      "Color": "Pink",
+      "IsChildrenLayoutRequired": true
     },
     {
       "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests",
       "ParentName": "Dependinator*UI*Tests.Dependinator.UI",
       "Type": "Parent",
       "Properties": {},
-      "Color": "Red"
+      "Color": "Red",
+      "IsChildrenLayoutRequired": true
     },
     {
       "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models",
       "ParentName": "Dependinator*UI*Tests.Dependinator.UI.Tests",
       "Type": "Parent",
       "Properties": {},
-      "Color": "Purple"
+      "Color": "Purple",
+      "IsChildrenLayoutRequired": true
     },
     {
       "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData",
@@ -67,7 +75,8 @@
       "Properties": {
         "IsPrivate": false
       },
-      "Color": "Cyan"
+      "Color": "Cyan",
+      "IsChildrenLayoutRequired": true
     },
     {
       "Name": "Dependinator*UI*Tests.Dependinator.UI.Tests.Models.ModelTestData.ctor()",

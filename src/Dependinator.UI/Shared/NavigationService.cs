@@ -1,5 +1,6 @@
 using Dependinator.Core;
 using Dependinator.Core.Parsing;
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
@@ -90,6 +91,8 @@ class NavigationService(
                 applicationEvents.TriggerModelChanged();
 
             (pos, zoom) = node.GetCenterPosAndZoom();
+            // Frame a large node smaller, so it shows as an icon (see NodeViewPolicy)
+            zoom *= NodeViewPolicy.FramingZoomFactor(node);
         }
         if (zoom <= 0)
             return false;

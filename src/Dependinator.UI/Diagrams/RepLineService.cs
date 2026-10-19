@@ -27,7 +27,12 @@ namespace Dependinator.UI.Diagrams;
 // comes from suffix comparison instead of set-based LCA lookups.
 static class RepLineService
 {
-    record SyncState(double Zoom, int StructureVersion, List<KeyValuePair<Node, bool>> ExpansionStates);
+    record SyncState(
+        double Zoom,
+        int StructureVersion,
+        long LayoutGeneration,
+        List<KeyValuePair<Node, bool>> ExpansionStates
+    );
 
     sealed class LinkGroup
     {
@@ -41,17 +46,24 @@ static class RepLineService
     // model structure (which includes the split and focus state, see Model.BumpStructureVersion) and on
     // the expansion state of exactly the nodes the last resolution visited, so the sync can be
     // skipped when the structure version matches and every one of those nodes still has the
-    // same expansion state at the new zoom. Node property changes (e.g. a resize adjusting
-    // ContainerZoom) do not bump the version; reps can be momentarily stale in that edge case
-    // until the next structure change or expansion flip.
+    // same expansion state at the new zoom. Geometry changes (a layout, a resize, a container
+    // zoom edit) keep the structure version but bump NodeLayout.Generation: since whether a node
+    // opens depends on its size, the expansion states are then re-checked at the same zoom too.
     static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IModel, SyncState> lastSync = new();
 
     public static void Sync(IModel model, double zoom)
     {
+        var layoutGeneration = NodeLayout.Generation;
         if (lastSync.TryGetValue(model, out var state) && state.StructureVersion == model.StructureVersion)
         {
-            if (state.Zoom == zoom || AllExpansionStatesUnchanged(state.ExpansionStates, zoom))
+            if (state.Zoom == zoom && state.LayoutGeneration == layoutGeneration)
                 return;
+            if (AllExpansionStatesUnchanged(state.ExpansionStates, zoom))
+            {
+                if (state.LayoutGeneration != layoutGeneration)
+                    lastSync.AddOrUpdate(model, state with { Zoom = zoom, LayoutGeneration = layoutGeneration });
+                return;
+            }
         }
 
         foreach (var line in model.Lines.Values)
@@ -80,7 +92,10 @@ static class RepLineService
             }
         }
 
-        lastSync.AddOrUpdate(model, new SyncState(zoom, model.StructureVersion, [.. isChildrenShownCache]));
+        lastSync.AddOrUpdate(
+            model,
+            new SyncState(zoom, model.StructureVersion, layoutGeneration, [.. isChildrenShownCache])
+        );
     }
 
     // A rep walk descends only through nodes it saw as expanded and stops at the first

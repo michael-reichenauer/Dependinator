@@ -46,6 +46,8 @@ class NodeEditCommand(NodeId nodeId) : Command
         if (!model.Nodes.TryGetValue(nodeId, out var node))
             return;
 
+        if (Boundary != null || ContainerZoom != null || ContainerOffset != null)
+            NodeLayout.BumpGeneration();
         if (Boundary != null)
             (BoundaryCopy, node.Boundary) = (node.Boundary, Boundary);
         if (ContainerZoom != null)
@@ -78,6 +80,8 @@ class NodeEditCommand(NodeId nodeId) : Command
         if (!model.Nodes.TryGetValue(nodeId, out var node))
             return;
 
+        if (BoundaryCopy != null || ContainerZoomCopy != null || ContainerOffsetCopy != null)
+            NodeLayout.BumpGeneration();
         if (BoundaryCopy != null)
             (Boundary, node.Boundary, BoundaryCopy) = (node.Boundary, BoundaryCopy, null);
         if (ContainerZoomCopy != null)

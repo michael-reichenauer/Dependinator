@@ -27,7 +27,8 @@ project works.
   filters, legend, cycles, Manage Models, VS Code commands.
 - **Oct**: the rest of the UX review (path finder, tour, share links, architecture rules, minimap,
   group and rubber-band selection), new line and container visuals, a release flow through `dev`,
-  a README and community-files rework, the Bicep parser, and zones, line labels and aliases.
+  a README and community-files rework, the Bicep parser, zones, line labels and aliases, and
+  node sizes by code and centrality in the automatic layout.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -136,7 +137,17 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   - Line segments, with points added or removed where clicked.
   - Nodes drawn over lines.
 
-  The initial layout was improved in Jul.
+  The initial layout was improved in Jul. Since Oct 14 a reset can be undone and hands the
+  container back to the automatic layout (it stayed "user-arranged" before).
+- **Node sizes and straighter lines (Oct 14).** The automatic layout sizes each node by its
+  code (declaration lines, summed up the tree) and how central it is among its siblings, in four
+  steps (60, 100, 140, 180), so the big and coordinating parts stand out and small utilities
+  stay small. Bigger nodes open as containers earlier while zooming in. Nodes are centered in
+  their columns and pulled toward their neighbors from both sides, so lines run straighter.
+  A thorough layout pass orders nodes for fewer line crossings and routes long lines around
+  nodes; it runs when a container is first shown, or for a large container in idle moments
+  afterwards (refined in place, never while the view is zoomed into it). Models saved with the
+  older layout are laid out again, except containers the user arranged.
 - **Hidden nodes (Mar).** A menu toggle shows or hides hidden nodes. Hiding became undoable on
   Oct 11.
 - **Edit mode (Apr).** Edit buttons show only in edit mode. Since Sep 30 the mode is persisted,
@@ -217,6 +228,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Release flow (Oct 6).** Dependabot PRs target `dev`, grouped. `./scripts/release` merges `dev`
   into `main` with changelog bullets. Each release bumps the minor version.
 - **Security (Oct 8).** CodeQL alerts fixed and the workflow's `GITHUB_TOKEN` permissions limited.
+  Vulnerable transitive packages (MessagePack, System.Security.Cryptography.Pkcs/Xml) pinned to
+  patched versions until their parent packages catch up (Oct 19).
 - **Demo recording (Jul).** `./scripts/record-demo` re-records the README demo gif.
 
 ## Docs and presentation

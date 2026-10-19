@@ -1,11 +1,23 @@
 using Dependinator.UI.Modeling.Models;
+using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams;
 
 // How a node is presented at a given zoom level: as an icon, as an expanded container with
-// visible children, or not at all because the view has zoomed in past it.
+// visible children, or not at all because the view has zoomed in past it. The zoom thresholds
+// are for a node of ReferenceNodeSize; a node's own size scales its effective zoom, so a node
+// twice that size opens at half the zoom, i.e. when it is equally large on screen. Bigger
+// (more important, see NodeSizing) nodes therefore open first while zooming in.
 static class NodeViewPolicy
 {
+    // The default node size (NodeLayout.DefaultSize) the zoom thresholds below are tuned for.
+    const double ReferenceNodeSize = 100;
+
+    // "Show node" frames a node at most this large on screen, which keeps it below the container
+    // threshold (MinContainerZoom × ReferenceNodeSize = 200), so a framed node shows as an icon,
+    // also in a tile rendered up to TileKey.ZoomFactor (1.3) larger than the view's zoom.
+    const double MaxFramedNodeSize = 150;
+
     // Beyond this zoom a node's own chrome (border, name) is too large to be seen; only its
     // children remain meaningful.
     const double MaxNodeZoom = 8 * 1 / Node.DefaultContainerZoom;
@@ -22,14 +34,33 @@ static class NodeViewPolicy
     // fades out (see ContainerBackgroundOpacity).
     const double BackgroundFadeStartZoom = 2 * MinContainerZoom;
 
-    public static bool IsTooLargeToBeSeen(double zoom) => zoom > MaxNodeZoom;
+    // The zoom at which the node's own size is drawn, scaled by its size relative to the
+    // reference size. The root (a fixed frame), member rows (never containers) and nodes not
+    // laid out yet (Rect.None, sized by their parent's coming layout) keep the raw zoom.
+    public static double EffectiveZoom(Node node, double zoom)
+    {
+        var boundary = node.Boundary;
+        if (node.IsRoot || node.Type.IsMember || boundary == Rect.None)
+            return zoom;
+        return zoom * Math.Min(boundary.Width, boundary.Height) / ReferenceNodeSize;
+    }
+
+    // Multiplier for the model zoom that "show node" pans to (the node at 1 pixel per unit), so
+    // that a node larger than MaxFramedNodeSize is framed smaller, as an icon.
+    public static double FramingZoomFactor(Node node) =>
+        Math.Max(1, Math.Max(node.Boundary.Width, node.Boundary.Height) / MaxFramedNodeSize);
+
+    public static bool IsTooLargeToBeSeen(Node node, double zoom) => EffectiveZoom(node, zoom) > MaxNodeZoom;
 
     // Fill opacity of a container's background at the node's own zoom. The tint reads as "where
     // you are" when the box has just opened, then gives way to the children's own backgrounds as
     // the view zooms further in. Zoom is multiplicative, so the fade runs in log space (each
     // doubling removes the same share), and it reaches zero exactly at MaxNodeZoom, where the
     // chrome is dropped altogether, so that cut is invisible.
-    public static double ContainerBackgroundOpacity(double zoom)
+    public static double ContainerBackgroundOpacity(Node node, double zoom) =>
+        ContainerBackgroundOpacity(EffectiveZoom(node, zoom));
+
+    static double ContainerBackgroundOpacity(double zoom)
     {
         if (zoom <= BackgroundFadeStartZoom)
             return 1;
@@ -40,8 +71,8 @@ static class NodeViewPolicy
 
     public static bool IsRenderedFlat(double zoom) => zoom > MaxNestedViewportZoom;
 
-    public static bool IsShowIcon(Parsing.NodeType nodeType, double zoom) =>
-        nodeType.IsMember || zoom <= MinContainerZoom;
+    public static bool IsShowIcon(Node node, double zoom) =>
+        node.Type.IsMember || EffectiveZoom(node, zoom) <= MinContainerZoom;
 
     // The node is shown as an expanded box with visible children (not an icon and not zoomed
     // past visibility). Annotations (zones, notes) are leaves at every zoom: nothing is ever
@@ -51,7 +82,7 @@ static class NodeViewPolicy
         if (IsAnnotation(node))
             return false;
         var nodeZoom = 1 / (node.GetZoom() * modelZoom);
-        return !IsTooLargeToBeSeen(nodeZoom) && !IsShowIcon(node.Type, nodeZoom);
+        return !IsTooLargeToBeSeen(node, nodeZoom) && !IsShowIcon(node, nodeZoom);
     }
 
     // The node's children are rendered at this zoom: pass-through nodes always show children,
@@ -64,7 +95,7 @@ static class NodeViewPolicy
         if (IsAnnotation(node))
             return false;
         var nodeZoom = 1 / (node.GetZoom() * modelZoom);
-        return !IsShowIcon(node.Type, nodeZoom);
+        return !IsShowIcon(node, nodeZoom);
     }
 
     // A user-drawn annotation (a zone or a note): never a container, never a link endpoint.

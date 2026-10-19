@@ -50,6 +50,11 @@ record NodeDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsChildrenLayoutCustomized { get; set; }
 
+    // True while the children still need an automatic layout (laid out lazily when first shown),
+    // so a save before that does not keep a stale layout; omitted once they are laid out.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsChildrenLayoutRequired { get; set; }
+
     // True for user-drawn nodes; omitted for parsed nodes so their serialized form is unchanged.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsManual { get; set; }
