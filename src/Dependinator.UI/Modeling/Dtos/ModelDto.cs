@@ -28,6 +28,9 @@ record ModelDto
 
     // Defaulted, so models saved before rules existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<RuleDto> Rules { get; init; } = [];
+
+    // Defaulted, so models saved before accepted cycles existed still deserialize (no FormatVersion bump).
+    public IReadOnlyList<AcceptedCycleDto> AcceptedCycles { get; init; } = [];
 }
 
 // An architecture rule: "From" must not depend on "To" (node names, see ArchitectureRule).
@@ -36,4 +39,13 @@ record RuleDto
 {
     public required string From { get; init; }
     public required string To { get; init; }
+}
+
+// A circular dependency the user accepted, with why (node names, see AcceptedCycle).
+[Serializable]
+record AcceptedCycleDto
+{
+    public required string Container { get; init; }
+    public required IReadOnlyList<string> Members { get; init; }
+    public string Reason { get; init; } = "";
 }

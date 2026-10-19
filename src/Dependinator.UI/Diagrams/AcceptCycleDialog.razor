@@ -1,0 +1,61 @@
+@using MudBlazor
+
+@* Accepts a circular dependency as intended (or edits an acceptance): the cycle, and why it is
+   fine, shown in the cycles panel. Editing also offers to stop accepting it. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">@(IsEdit ? "Accepted cycle" : "Accept cycle")</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-cycles__dialog-cycle" data-testid="accept-cycle-text">
+      <span class="dep-cycles__container">@ContainerName</span>
+      <span class="dep-cycles__members">@Members</span>
+    </div>
+    <MudTextField @ref="reasonField" T="string" @bind-Value="Reason" Label="Why is this cycle fine?" Lines="3"
+                  Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
+                  HelperText="Shown with the accepted cycle. It is reported again if another node joins it."
+                  data-testid="accept-cycle-reason" />
+  </DialogContent>
+  <DialogActions>
+    @if (IsEdit)
+    {
+      <MudButton Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Outlined.Delete" OnClick="Unaccept"
+                 data-testid="accept-cycle-unaccept">Stop accepting</MudButton>
+    }
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="accept-cycle-cancel">Cancel</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="accept-cycle-save">
+      @(IsEdit ? "Save" : "Accept")
+    </MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public string ContainerName { get; set; } = "";
+  [Parameter] public string Members { get; set; } = "";
+  [Parameter] public string Reason { get; set; } = "";
+  [Parameter] public bool IsEdit { get; set; }
+
+  MudTextField<string> reasonField = null!;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender && reasonField is not null)
+      await reasonField.FocusAsync();
+  }
+
+  // Enter starts a new line in the reason; Ctrl+Enter (Cmd+Enter) saves.
+  void OnKeyDown(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter" && (e.CtrlKey || e.MetaKey))
+      Save();
+  }
+
+  void Save() => MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult((Reason ?? "").Trim(), false)));
+
+  void Unaccept() => MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult("", true)));
+
+  void Cancel() => MudDialog.Cancel();
+}

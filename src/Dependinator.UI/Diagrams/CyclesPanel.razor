@@ -2,50 +2,160 @@
 @inject IViewOptions viewOptions
 @inject ICycleService cycleService
 @inject INavigationService navigationService
+@inject IDialogService dialogService
 @inject Modeling.IModelService modelService
 @implements IDisposable
 
 @* Circular dependencies, one row per cycle: the container and the sibling nodes that depend on
    each other in a circle. While open, the lines of those cycles are drawn in the warning color.
-   Clicking a row navigates to the container. *@
+   Clicking a row navigates to the container. A cycle that is intended can be accepted with a
+   reason (saved with the model, undoable): it moves to the collapsed Accepted section and its
+   lines are drawn normally. An acceptance whose cycle is gone stays, marked, until removed. *@
 @if (viewOptions.IsCyclesShown)
 {
   var cycles = cycleService.GetCycles();
+  var accepted = cycleService.GetAcceptedCycles();
+  var gone = accepted.Where(a => !a.StillOccurs).ToList();
   <div class="dep-panel dep-toolbar-card" data-testid="cycles-panel">
     <div class="dep-panel__header">
       <span class="dep-panel__title">Cycles</span>
-      <span class="dep-panel__count">@(cycles.Count == 0 ? "none" : cycles.Count.ToString())</span>
+      <span class="dep-panel__count" data-testid="cycles-count">@(cycles.Count == 0 ? "none" : cycles.Count.ToString())</span>
       <MudSpacer />
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
                      data-testid="cycles-close" />
     </div>
     @if (cycles.Count == 0)
     {
-      <div class="dep-panel__empty">No circular dependencies found: no projects, namespaces or types in any container depend on each other in a circle.</div>
+      <div class="dep-panel__empty">
+        @(accepted.Count == 0
+          ? "No circular dependencies found: no projects, namespaces or types in any container depend on each other in a circle."
+          : "No circular dependencies besides the accepted ones.")
+      </div>
     }
     else
     {
-      <div class="dep-panel__hint">Projects, namespaces or types in one container that depend on each other in a circle. Their lines are drawn red.</div>
-      <div class="dep-panel__list">
-        @foreach (var cycle in cycles)
-        {
-          <button type="button" class="dep-panel__row" title="@($"Show {cycle.ContainerName}")"
-                  @onclick="() => ShowAsync(cycle.ContainerId)" data-testid="cycles-item">
-            <span class="dep-cycles__container">@cycle.ContainerName</span>
-            <span class="dep-cycles__members">@string.Join(" ↔ ", cycle.Members.Select(m => m.Name))</span>
-          </button>
-        }
-      </div>
+      <div class="dep-panel__hint">Projects, namespaces or types in one container that depend on each other in a circle. Their lines are drawn red. Accept a cycle that is intended, with why.</div>
     }
+    <div class="dep-panel__list">
+      @foreach (var cycle in cycles)
+      {
+        <div class="dep-cycles__item" data-testid="cycles-item">
+          <button type="button" class="dep-panel__row dep-cycles__row" title="@($"Show {cycle.ContainerName}")"
+                  @onclick="() => ShowAsync(cycle.ContainerId)" data-testid="cycles-item-show">
+            <span class="dep-cycles__container">@cycle.ContainerName</span>
+            <span class="dep-cycles__members">@Join(cycle.Members.Select(m => m.Name))</span>
+            @if (cycle.AcceptedBefore is { } before)
+            {
+              <span class="dep-cycles__note" data-testid="cycles-item-grown">Accepted before; @JoinedSince(cycle, before) joined it since.</span>
+            }
+          </button>
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.TaskAlt" Size="Size.Small"
+                         title="Accept this cycle as intended, with why" OnClick="() => AcceptAsync(cycle)"
+                         data-testid="cycles-accept" />
+        </div>
+      }
+
+      @if (accepted.Count > 0)
+      {
+        <button type="button" class="dep-cycles__accepted-toggle" @onclick="() => isAcceptedOpen = !isAcceptedOpen"
+                aria-expanded="@(isAcceptedOpen ? "true" : "false")" data-testid="cycles-accepted-toggle">
+          <MudIcon Icon="@(isAcceptedOpen ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ChevronRight)"
+                   Size="Size.Small" />
+          <span>Accepted (@accepted.Count)</span>
+          @if (gone.Count > 0)
+          {
+            <span class="dep-cycles__gone" data-testid="cycles-accepted-gone-count">· @gone.Count no longer @(gone.Count == 1 ? "a cycle" : "cycles")</span>
+          }
+        </button>
+        @if (isAcceptedOpen)
+        {
+          @foreach (var report in accepted)
+          {
+            <div class="dep-cycles__item" data-testid="cycles-accepted-item"
+                 data-still-occurs="@(report.StillOccurs ? "true" : "false")">
+              <button type="button" class="dep-panel__row dep-cycles__row" disabled="@(report.ContainerId is null)"
+                      title="@(report.ContainerId is null ? "The container is no longer in the model" : $"Show {report.ContainerName}")"
+                      @onclick="() => ShowAsync(report.ContainerId!)" data-testid="cycles-accepted-show">
+                <span class="dep-cycles__container">@report.ContainerName</span>
+                <span class="dep-cycles__members">@Join(report.MemberNames)</span>
+                <span class="dep-cycles__reason" data-testid="cycles-accepted-reason">@(report.Accepted.Reason == "" ? "No reason given" : report.Accepted.Reason)</span>
+                @if (!report.StillOccurs)
+                {
+                  <span class="dep-cycles__gone">No longer a cycle; remove it if the change is done.</span>
+                }
+              </button>
+              @if (report.StillOccurs)
+              {
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Size="Size.Small" title="Edit the reason"
+                               OnClick="() => EditAsync(report)" data-testid="cycles-accepted-edit" />
+              }
+              <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
+                             title="@(report.StillOccurs ? "Stop accepting: report this cycle again" : "Remove: the cycle is gone")"
+                             OnClick="() => cycleService.Unaccept([report.Accepted])" data-testid="cycles-accepted-remove" />
+            </div>
+          }
+          @if (gone.Count > 1)
+          {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-cycles__remove-gone"
+                       OnClick="() => cycleService.Unaccept(gone.Select(r => r.Accepted).ToList())"
+                       data-testid="cycles-accepted-remove-gone">
+              Remove the @gone.Count that are no longer cycles
+            </MudButton>
+          }
+        }
+      }
+    </div>
   </div>
 }
 
 @code {
+  bool isAcceptedOpen;
+
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
   void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
+  static string Join(IEnumerable<string> names) => string.Join(" ↔ ", names);
+
+  static string JoinedSince(Cycle cycle, Modeling.Models.AcceptedCycle before) =>
+    string.Join(", ", cycle.Members.Where(m => !before.MemberNames.Contains(m.NodeName)).Select(m => m.Name));
+
   Task ShowAsync(Modeling.Models.NodeId containerId) => navigationService.ShowNodeAsync(containerId);
+
+  async Task AcceptAsync(Cycle cycle)
+  {
+    // A cycle that grew since it was accepted starts from the earlier reason.
+    var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
+      cycle.AcceptedBefore?.Reason ?? "", isEdit: false);
+    if (result is not null)
+      cycleService.Accept(cycle, result.Reason);
+  }
+
+  async Task EditAsync(AcceptedCycleReport report)
+  {
+    var result = await ShowDialogAsync(report.ContainerName, Join(report.MemberNames), report.Accepted.Reason, isEdit: true);
+    if (result is null)
+      return;
+    if (result.IsUnaccept)
+      cycleService.Unaccept([report.Accepted]);
+    else
+      cycleService.SetReason(report.Accepted, result.Reason);
+  }
+
+  async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit)
+  {
+    var parameters = new DialogParameters
+    {
+      { nameof(AcceptCycleDialog.ContainerName), containerName },
+      { nameof(AcceptCycleDialog.Members), members },
+      { nameof(AcceptCycleDialog.Reason), reason },
+      { nameof(AcceptCycleDialog.IsEdit), isEdit },
+    };
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+    var dialog = await dialogService.ShowAsync<AcceptCycleDialog>(null, parameters, options);
+    var result = await dialog.Result;
+    return result is { Canceled: false, Data: AcceptCycleDialogResult data } ? data : null;
+  }
 
   void Close()
   {
