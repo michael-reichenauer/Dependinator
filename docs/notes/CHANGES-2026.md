@@ -27,8 +27,8 @@ project works.
   filters, legend, cycles, Manage Models, VS Code commands.
 - **Oct**: the rest of the UX review (path finder, tour, share links, architecture rules, minimap,
   group and rubber-band selection), new line and container visuals, a release flow through `dev`,
-  a README and community-files rework, the Bicep parser, zones, line labels and aliases, and
-  node sizes by code and centrality in the automatic layout.
+  a README and community-files rework, the Bicep parser, zones, line labels and aliases,
+  node sizes by code and centrality in the automatic layout, and accepted cycles.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -126,6 +126,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   lines widen by link count. Container backgrounds now show in light mode and fade out while
   zooming in. Lines to hidden nodes are dash-dotted. Line-split and zoom-to-node moved off the
   node toolbar.
+- **Accepted cycles (Oct 19).** A cycle that is intended can be accepted with a reason. It moves
+  to a collapsed Accepted section of the cycles panel and its lines are no longer drawn red. The
+  acceptance is saved with the model and can be undone. The cycle is reported again if a node
+  joins it. An acceptance whose cycle is gone is kept, marked "no longer a cycle", until the user
+  removes it.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design

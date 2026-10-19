@@ -1,33 +1,70 @@
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
+using NodeType = Dependinator.Core.Parsing.NodeType;
 
 namespace Dependinator.UI.Diagrams;
 
-readonly record struct CycleMember(NodeId Id, string Name);
+// Name is what the panel shows; NodeName is the node's full name, the key an acceptance stores.
+readonly record struct CycleMember(NodeId Id, string Name, string NodeName);
 
 // A set of sibling nodes inside one container that depend on each other in a circle
-// (a strongly connected component of the container's child graph).
-record Cycle(NodeId ContainerId, string ContainerName, IReadOnlyList<CycleMember> Members);
+// (a strongly connected component of the container's child graph). AcceptedBefore is an earlier
+// acceptance in the container that the cycle has outgrown (a node joined it since), so the panel
+// can say why it is back.
+record Cycle(
+    NodeId ContainerId,
+    string ContainerName,
+    string ContainerNodeName,
+    IReadOnlyList<CycleMember> Members,
+    AcceptedCycle? AcceptedBefore = null
+);
+
+// An accepted cycle as the panel shows it: display names where the nodes still exist (the stored
+// names otherwise), and whether a cycle in the model still matches it; false once a refactor broke
+// the cycle, then the acceptance is only kept for the user to remove.
+record AcceptedCycleReport(
+    AcceptedCycle Accepted,
+    NodeId? ContainerId,
+    string ContainerName,
+    IReadOnlyList<string> MemberNames,
+    bool StillOccurs
+);
+
+// What the accept-cycle dialog returns: the reason to save, or that the user stopped accepting.
+record AcceptCycleDialogResult(string Reason, bool IsUnaccept);
 
 // Finds circular dependencies: for every container, the graph of its children (an edge A→B for
 // each link from inside A to inside B) is searched for strongly connected components with at
 // least two nodes. Those are the cycles a developer wants to know about at that level: two
 // projects that reference each other, namespaces that call back and forth, classes that need
 // each other. Member-level cycles (methods of one class calling each other) are left out.
-// Results are cached per structure version.
+// Cycles the user accepted as intended (with a reason, saved with the model) are reported apart
+// and not highlighted. Results are cached per structure and acceptances version.
 interface ICycleService
 {
+    // The cycles that are not accepted.
     IReadOnlyList<Cycle> GetCycles();
 
-    // The ids of the sibling lines that are part of a cycle (both directions), for highlighting.
+    IReadOnlyList<AcceptedCycleReport> GetAcceptedCycles();
+
+    // The ids of the sibling lines that are part of a cycle that is not accepted (both
+    // directions), for highlighting.
     IReadOnlySet<LineId> GetCyclicLineIds();
+
+    // Accepts a cycle as intended, with why, replacing the earlier acceptances it covers (the
+    // cycle grew since). Like the other changes below it is undoable and saved with the model.
+    void Accept(Cycle cycle, string reason);
+    void SetReason(AcceptedCycle accepted, string reason);
+    void Unaccept(IReadOnlyList<AcceptedCycle> accepted);
 }
 
 [Scoped]
-class CycleService(IModelMgr modelMgr) : ICycleService
+class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleService
 {
-    (int Version, int Nodes, int Links) cachedFor = (-1, -1, -1);
+    (int Version, int Nodes, int Links, int Accepted) cachedFor = (-1, -1, -1, -1);
     IReadOnlyList<Cycle> cycles = [];
+    IReadOnlyList<AcceptedCycleReport> acceptedCycles = [];
     IReadOnlySet<LineId> cyclicLineIds = new HashSet<LineId>();
 
     public IReadOnlyList<Cycle> GetCycles()
@@ -36,24 +73,65 @@ class CycleService(IModelMgr modelMgr) : ICycleService
         return cycles;
     }
 
+    public IReadOnlyList<AcceptedCycleReport> GetAcceptedCycles()
+    {
+        EnsureUpToDate();
+        return acceptedCycles;
+    }
+
     public IReadOnlySet<LineId> GetCyclicLineIds()
     {
         EnsureUpToDate();
         return cyclicLineIds;
     }
 
+    public void Accept(Cycle cycle, string reason)
+    {
+        var accepted = new AcceptedCycle(
+            cycle.ContainerNodeName,
+            [.. cycle.Members.Select(m => m.NodeName)],
+            reason.Trim()
+        );
+        var covered = modelMgr.WithModel(m =>
+            m.AcceptedCycles.Where(a =>
+                    a.ContainerName == accepted.ContainerName && a.MemberNames.All(accepted.MemberNames.Contains)
+                )
+                .ToList()
+        );
+        commandService.Do(new AcceptedCycleCommand([accepted], covered));
+    }
+
+    public void SetReason(AcceptedCycle accepted, string reason)
+    {
+        var updated = accepted with { Reason = reason.Trim() };
+        if (updated == accepted)
+            return;
+        commandService.Do(new AcceptedCycleCommand([updated], [accepted]));
+    }
+
+    public void Unaccept(IReadOnlyList<AcceptedCycle> accepted)
+    {
+        if (accepted.Count == 0)
+            return;
+        commandService.Do(new AcceptedCycleCommand([], accepted));
+    }
+
     void EnsureUpToDate()
     {
         using var model = modelMgr.UseModel();
-        var key = (model.StructureVersion, model.Nodes.Count, model.Links.Count);
+        var key = (model.StructureVersion, model.Nodes.Count, model.Links.Count, model.AcceptedCyclesVersion);
         if (key == cachedFor)
             return;
 
-        (cycles, cyclicLineIds) = Compute(model);
+        (cycles, acceptedCycles, cyclicLineIds) = Compute(model);
         cachedFor = key;
     }
 
-    internal static (IReadOnlyList<Cycle> Cycles, IReadOnlySet<LineId> LineIds) Compute(IModel model)
+    internal static (
+        IReadOnlyList<Cycle> Cycles,
+        IReadOnlyList<AcceptedCycleReport> Accepted,
+        IReadOnlySet<LineId> LineIds
+    ) Compute(IModel model)
     {
         // Per container: the child graph, from the links whose endpoints sit in different children.
         var graphs = new Dictionary<Node, Dictionary<Node, HashSet<Node>>>();
@@ -71,6 +149,8 @@ class CycleService(IModelMgr modelMgr) : ICycleService
             targets.Add(to);
         }
 
+        var acceptedByContainer = model.AcceptedCycles.ToLookup(a => a.ContainerName, StringComparer.Ordinal);
+        var occurring = new HashSet<AcceptedCycle>();
         var found = new List<Cycle>();
         var lineIds = new HashSet<LineId>();
         foreach (var (container, graph) in graphs)
@@ -80,12 +160,25 @@ class CycleService(IModelMgr modelMgr) : ICycleService
                 if (component.Count < 2)
                     continue;
 
+                // Accepted while every member is in an acceptance: a cycle that shrank still is,
+                // one that a node joined is not.
+                var names = component.Select(n => n.Name).ToHashSet(StringComparer.Ordinal);
+                var candidates = acceptedByContainer[container.Name].ToList();
+                var matching = candidates.Where(a => names.IsSubsetOf(a.MemberNames)).ToList();
+                if (matching.Count > 0)
+                {
+                    occurring.UnionWith(matching);
+                    continue;
+                }
+
                 var members = component.OrderBy(n => n.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
                 found.Add(
                     new Cycle(
                         container.Id,
-                        container.DisplayName,
-                        members.Select(n => new CycleMember(n.Id, n.DisplayName)).ToList()
+                        ContainerLabel(container),
+                        container.Name,
+                        members.Select(n => new CycleMember(n.Id, n.DisplayName, n.Name)).ToList(),
+                        candidates.FirstOrDefault(a => a.MemberNames.Any(names.Contains))
                     )
                 );
 
@@ -104,8 +197,34 @@ class CycleService(IModelMgr modelMgr) : ICycleService
         }
 
         found.Sort((a, b) => string.Compare(a.ContainerName, b.ContainerName, StringComparison.OrdinalIgnoreCase));
-        return (found, lineIds);
+
+        var accepted = model
+            .AcceptedCycles.Select(a =>
+            {
+                model.Nodes.TryGetValue(NodeId.FromName(a.ContainerName), out var container);
+                return new AcceptedCycleReport(
+                    a,
+                    container?.Id,
+                    DisplayName(model, a.ContainerName),
+                    [.. a.MemberNames.Select(name => DisplayName(model, name)).Order(StringComparer.OrdinalIgnoreCase)],
+                    occurring.Contains(a)
+                );
+            })
+            .OrderBy(r => r.ContainerName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(r => string.Join(" ", r.MemberNames), StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return (found, accepted, lineIds);
     }
+
+    // The root has no name of its own; its children are the model's top-level nodes.
+    static string ContainerLabel(Node container) => container.IsRoot ? "Top level" : container.DisplayName;
+
+    // The node's display name, or the short form of a stored name whose node is gone.
+    static string DisplayName(IModel model, string nodeName) =>
+        model.Nodes.TryGetValue(NodeId.FromName(nodeName), out var node)
+            ? ContainerLabel(node)
+            : NodeName.GetDisplayNames(nodeName, NodeType.None, false).shortName;
 
     // The two children of the closest common ancestor that contain the endpoints, or false
     // when one endpoint contains the other (no sibling pair, so no cycle at any level).

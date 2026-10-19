@@ -208,6 +208,65 @@
     word-break: break-word;
 }
 
+/* A cycle row with its buttons (accept, or edit/remove for an accepted one) to the right. */
+.dep-cycles__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.dep-cycles__row {
+    flex: 1;
+    min-width: 0;
+}
+
+.dep-cycles__row:disabled {
+    cursor: default;
+}
+
+.dep-cycles__row:disabled:hover {
+    background: none;
+}
+
+.dep-cycles__note,
+.dep-cycles__gone {
+    color: var(--mud-palette-warning);
+    font-weight: normal;
+}
+
+.dep-cycles__reason {
+    font-style: italic;
+    word-break: break-word;
+    white-space: pre-line;
+}
+
+.dep-cycles__accepted-toggle {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 6px 0 2px;
+    border: 0;
+    border-top: 1px solid var(--mud-palette-lines-default);
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dep-cycles__remove-gone {
+    align-self: flex-start;
+}
+
+.dep-cycles__dialog-cycle {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
 /* The search dialog in picker mode (PathPanel.razor): what the chosen node will be used for. */
 .search-dialog__caption {
     display: block;
