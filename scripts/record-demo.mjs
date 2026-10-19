@@ -210,6 +210,10 @@ async function run() {
     // it to finish so the scene inputs are processed without lag.
     console.log("Waiting for the app to be idle ...");
     await waitForQuiet(page);
+    // Large containers get a quick layout first and are refined in idle moments
+    // (LayoutRefineService); stay idle long enough for that to finish, so no container is
+    // rearranged during the scene.
+    await wait(15000);
     await dismissCoach(page);
 
     // ---- Scene starts here -------------------------------------------------
