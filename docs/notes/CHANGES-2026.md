@@ -222,7 +222,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   verify-and-retry page objects and a 15 s expect timeout. There are about 760 unit tests across
   the other test projects.
 - **CI (Jun 20).** Unit-test and e2e workflows run on feature-branch pushes. CI/CD runs them
-  before deploying; the full gate covers all browsers plus sync.
+  before deploying; the full gate covers all browsers plus sync. Since Oct 19 the browsers run
+  as parallel jobs (the serial run had grown to ~15 min of a 20 min gate).
 - **Release automation (Jul 21–23).** `CHANGELOG.md` is generated from commit messages, a push to
   `main` creates a release, and the CI/CD and extension workflows were unified.
 - **Release flow (Oct 6).** Dependabot PRs target `dev`, grouped. `./scripts/release` merges `dev`
