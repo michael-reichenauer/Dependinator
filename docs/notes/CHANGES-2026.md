@@ -28,7 +28,8 @@ project works.
 - **Oct**: the rest of the UX review (path finder, tour, share links, architecture rules, minimap,
   group and rubber-band selection), new line and container visuals, a release flow through `dev`,
   a README and community-files rework, the Bicep parser, zones, line labels and aliases,
-  node sizes by code and centrality in the automatic layout, and accepted cycles.
+  node sizes by code and centrality in the automatic layout, accepted cycles, and AI prompts for
+  cycles.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -131,6 +132,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   acceptance is saved with the model and can be undone. The cycle is reported again if a node
   joins it. An acceptance whose cycle is gone is kept, marked "no longer a cycle", until the user
   removes it.
+- **AI prompt for a cycle (Oct 19).** A button on each cycle copies a prompt that asks an AI chat
+  whether the cycle is intended (with a reason to accept it with) or should be broken, and how. It
+  lists the members with their descriptions and the links in each direction, grouped per member or,
+  when there are many, per type. The first step towards suggesting reasons with Claude directly.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design

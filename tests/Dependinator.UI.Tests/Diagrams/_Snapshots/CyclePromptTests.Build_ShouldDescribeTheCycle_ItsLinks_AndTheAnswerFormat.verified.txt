@@ -1,0 +1,34 @@
+﻿I use Dependinator, a tool that maps the structure and dependencies of a codebase. It found a circular dependency, and I need to decide whether to accept it as intended (with a short reason that is stored with the model) or to break it.
+
+The codebase is Demo.sln: Demo visualizes code.
+
+## The cycle
+
+In namespace Demo.Core.Utils, these siblings depend on each other in a circle:
+
+- Result (struct): "The result of an operation that either succeeds or fails: Success or Error"
+- Result<T> (struct): "The result of an operation that either produces a value or fails: T or Error"
+
+## The dependencies that form it
+
+Result → Result<T> (1 link)
+- Result.Catch<T>(Func<T>) → Result<T>
+  "Runs a function that reports failure by throwing and returns its value, or the exception as an error."
+
+Result<T> → Result (3 links)
+- Result<T>.ToResult() → Result (constructor, Ok)
+  "Dropping the value keeps the outcome"
+
+## Your task
+
+Decide whether this cycle should be accepted as intended or broken. Base the decision on the dependencies above: how many links go each way, what they are for, and whether the members are really one concept.
+
+Answer in this format:
+
+Verdict: Accept or Break
+Why: 2–4 sentences.
+Assumptions: what you assumed about code that is not shown here, or "None".
+Reason to store: (only if Accept) at most 200 characters, specific to these members, for a future maintainer; not a general statement about cycles.
+Change: (only if Break) the smallest concrete change that removes one direction, and which direction.
+
+If the information is not enough to decide, say what you would need to see instead of guessing.

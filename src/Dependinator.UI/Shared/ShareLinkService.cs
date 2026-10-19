@@ -5,7 +5,6 @@ using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.CloudSync;
 using Dependinator.UI.Shared.Types;
-using Dependinator.UI.Shared.VsCode;
 using Microsoft.AspNetCore.Components;
 using Shared;
 
@@ -121,8 +120,7 @@ class ShareLinkService(
     IPanZoomService panZoomService,
     INavigationService navigationService,
     IScreenService screenService,
-    IJSInterop jsInterop,
-    IVsCodeSendService vsCodeSendService,
+    IClipboardService clipboardService,
     IApplicationEvents applicationEvents
 ) : IShareLinkService
 {
@@ -180,10 +178,7 @@ class ShareLinkService(
 
     async Task CopyAsync(string link, string modelPath)
     {
-        var isCopied = Dependinator.Core.Build.IsVsCodeExtWasm
-            ? await vsCodeSendService.CopyToClipboardAsync(link)
-            : await jsInterop.Call<bool>("copyToClipboard", link);
-        if (!isCopied)
+        if (!await clipboardService.CopyAsync(link))
         {
             applicationEvents.TriggerErrorReported($"Could not copy the link. It is: {link}");
             return;

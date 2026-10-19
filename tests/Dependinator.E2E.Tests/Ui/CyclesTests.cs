@@ -1,12 +1,14 @@
 using Dependinator.E2E.Tests.Shared;
 using Microsoft.Playwright;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises View › Show Cycles: the panel opens with the cycles found in the model (or says
 // there are none) and closes again from its button; a cycle accepted with a reason moves to the
-// Accepted section, its reason can be edited, and removing the acceptance brings it back.
+// Accepted section, its reason can be edited, and removing the acceptance brings it back; a
+// cycle's AI prompt can be copied.
 public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -55,6 +57,31 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await accepted.GetByTestId("cycles-accepted-remove").ClickAsync();
         await Expect(accepted).ToHaveCountAsync(0);
         await Expect(cycles).ToHaveCountAsync(open);
+    }
+
+    [E2EFact]
+    public async Task CopyPrompt_ShouldPutAnAiPromptForTheCycleOnTheClipboard()
+    {
+        // Playwright can grant clipboard permissions on Chromium only, so the clipboard is
+        // stubbed and the written text is read back (as in ShareLinkTests).
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+        );
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
+
+        ILocator cycle = Page.GetByTestId("cycles-item").First;
+        string member = (await cycle.Locator(".dep-cycles__members").InnerTextAsync()).Split(" ↔ ")[0];
+        await cycle.GetByTestId("cycles-copy-prompt").ClickAsync();
+        await Expect(Page.GetByText("AI prompt copied")).ToBeVisibleAsync();
+
+        string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
+        Assert.Contains("## The cycle", prompt);
+        Assert.Contains(member, prompt);
+        Assert.Contains(" → ", prompt);
+        Assert.Contains("Verdict: Accept or Break", prompt);
     }
 
     // Fills the reason in the accept dialog and saves it.
