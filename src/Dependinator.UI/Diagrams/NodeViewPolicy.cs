@@ -14,8 +14,9 @@ static class NodeViewPolicy
     const double ReferenceNodeSize = 100;
 
     // "Show node" frames a node at most this large on screen, which keeps it below the container
-    // threshold (MinContainerZoom × ReferenceNodeSize), so a framed node shows as an icon.
-    const double MaxFramedNodeSize = 180;
+    // threshold (MinContainerZoom × ReferenceNodeSize = 200), so a framed node shows as an icon,
+    // also in a tile rendered up to TileKey.ZoomFactor (1.3) larger than the view's zoom.
+    const double MaxFramedNodeSize = 150;
 
     // Beyond this zoom a node's own chrome (border, name) is too large to be seen; only its
     // children remain meaningful.
