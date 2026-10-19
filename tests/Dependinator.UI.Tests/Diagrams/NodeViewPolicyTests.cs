@@ -146,9 +146,10 @@ public class NodeViewPolicyTests
 
     [Theory]
     [InlineData(100, 100, 1.0)]
-    [InlineData(180, 180, 1.0)]
-    [InlineData(360, 120, 2.0)]
-    public void FramingZoomFactor_ShouldFrameLargeNodesAtMost180Pixels(double width, double height, double expected)
+    [InlineData(150, 150, 1.0)]
+    [InlineData(180, 180, 1.2)]
+    [InlineData(360, 120, 2.4)]
+    public void FramingZoomFactor_ShouldFrameLargeNodesAtMost150Pixels(double width, double height, double expected)
     {
         var node = new ModelNode("Node", null!) { Type = NodeType.ClassType, Boundary = new Rect(0, 0, width, height) };
 
