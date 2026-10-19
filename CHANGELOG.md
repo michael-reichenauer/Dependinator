@@ -1,5 +1,17 @@
 # Change Log
 
+## 0.83.0 (2026-10-19)
+
+- Size nodes by their amount of code and how connected they are, so the central parts of a model are drawn larger and small utilities stay small
+- Lay out containers with fewer line crossings and straighter lines
+- Refine large containers' layouts in the background while the app is idle
+- Open larger nodes as containers earlier while zooming in
+- Lay out saved models again with the new layout; containers you arranged yourself are kept
+- Make Reset Children Layout and Reset Descendants undoable; a reset container follows the automatic layout again after a re-parse
+- Keep a node framed by Show node small enough to stay an icon
+- Re-record the demo gif and README images with the new layout
+- Update dependencies and pin patched versions of vulnerable packages
+
 ## 0.82.0 (2026-10-14)
 
 - Add Azure Bicep support: open a deployment (an entry-point .bicep file and its local modules) as a dependency map, with resources drawn using Azure icons
