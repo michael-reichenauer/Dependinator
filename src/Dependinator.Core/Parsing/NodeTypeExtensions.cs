@@ -1,8 +1,4 @@
-using Dependinator.Core.Parsing;
-
-// Note: kept in the globally imported Utils namespace (not Dependinator.Core.Parsing) so the
-// extension members are in scope in Dependinator.UI, which only aliases the Parsing namespace.
-namespace Dependinator.Core.Utils;
+namespace Dependinator.Core.Parsing;
 
 static class NodeTypeExtensions
 {
