@@ -17,6 +17,8 @@
     <ItemGroup>
         <PackageReference Include="Scrutor" />
         <PackageReference Include="StreamJsonRpc" />
+        <!-- Security pin: StreamJsonRpc still requires a vulnerable MessagePack (Directory.Packages.props) -->
+        <PackageReference Include="MessagePack" />
         <PackageReference Include="Microsoft.Build.Locator" />
         <PackageReference Include="Microsoft.Build.Framework" ExcludeAssets="runtime" PrivateAssets="all" />
         <PackageReference Include="Microsoft.NET.StringTools" ExcludeAssets="runtime" PrivateAssets="all" />

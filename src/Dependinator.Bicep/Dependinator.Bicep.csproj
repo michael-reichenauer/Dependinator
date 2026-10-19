@@ -10,6 +10,9 @@
 
     <ItemGroup>
         <PackageReference Include="Azure.Bicep.Core" />
+        <!-- Security pins: Azure.Bicep.Core still brings in vulnerable versions (Directory.Packages.props) -->
+        <PackageReference Include="System.Security.Cryptography.Pkcs" />
+        <PackageReference Include="System.Security.Cryptography.Xml" />
     </ItemGroup>
 
     <ItemGroup>

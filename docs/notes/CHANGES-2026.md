@@ -228,6 +228,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Release flow (Oct 6).** Dependabot PRs target `dev`, grouped. `./scripts/release` merges `dev`
   into `main` with changelog bullets. Each release bumps the minor version.
 - **Security (Oct 8).** CodeQL alerts fixed and the workflow's `GITHUB_TOKEN` permissions limited.
+  Vulnerable transitive packages (MessagePack, System.Security.Cryptography.Pkcs/Xml) pinned to
+  patched versions until their parent packages catch up (Oct 19).
 - **Demo recording (Jul).** `./scripts/record-demo` re-records the README demo gif.
 
 ## Docs and presentation
