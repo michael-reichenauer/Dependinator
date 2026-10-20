@@ -251,9 +251,11 @@
                 remove it. Not sure? The sparkle button on a row copies a prompt for an AI chat (such as claude.ai) that
                 asks whether the cycle is intended, with a reason to accept it with, or how to break it. In VS Code and
                 the local web app the prompt includes the source code behind the cycle's thinnest dependencies, and
-                <b>Suggest with Claude</b> in the accept dialog asks Claude directly, with your own Anthropic API key
-                (VS Code: the command "Dependinator: Set Claude API Key"). It fills in a suggested reason, or shows
-                the change Claude would make; nothing is saved until you accept.</li>
+                <b>Suggest with Claude</b> in the accept dialog asks Claude directly, with your own Anthropic API key.
+                In VS Code you are asked for the key the first time (in a box at the top of the window; the dialog
+                says so), and again if Claude does not accept it; the command "Dependinator: Set Claude API Key"
+                changes it. It fills in a suggested reason, or shows the change Claude would make; nothing is saved
+                until you accept.</li>
             <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
                 "this must not depend on that" by picking two nodes (a project, a namespace, a class, a resource). Every
                 dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the

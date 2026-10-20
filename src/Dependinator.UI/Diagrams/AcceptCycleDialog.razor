@@ -3,7 +3,9 @@
 @* Accepts a circular dependency as intended (or edits an acceptance): the cycle, and why it is
    fine, shown in the cycles panel. Editing also offers to stop accepting it. Where the host can
    ask Claude, "Suggest with Claude" asks for a verdict: accepting fills in the reason (nothing is
-   saved until the user accepts), breaking shows the change to make instead. *@
+   saved until the user accepts), breaking shows the change to make instead. In VS Code the API
+   key is entered in an input box at the top of the window, which is easy to miss while watching
+   this dialog, so the dialog points there while it waits. *@
 <MudDialog>
   <TitleContent>
     <MudText Typo="Typo.h6">@(IsEdit ? "Accepted cycle" : "Accept cycle")</MudText>
@@ -20,12 +22,19 @@
                    Disabled="isSuggesting" OnClick="SuggestAsync" data-testid="accept-cycle-suggest">
           Suggest with Claude
         </MudButton>
-        @if (isSuggesting)
+        @if (step is SuggestStep.AskingClaude)
         {
           <MudProgressCircular Size="Size.Small" Indeterminate="true" />
           <span class="dep-cycles__suggest-note">Asking Claude, this can take up to a minute.</span>
         }
       </div>
+      @if (step is SuggestStep.EnteringApiKey or SuggestStep.EnteringNewApiKey)
+      {
+        <MudAlert Severity="Severity.Info" Icon="@MudBlazor.Icons.Material.Filled.ArrowUpward" Class="mt-2"
+                  data-testid="accept-cycle-enter-key">
+          @EnterKeyMessage(step.Value)
+        </MudAlert>
+      }
       @if (suggestError is not null)
       {
         <div class="dep-cycles__suggest-error" data-testid="accept-cycle-suggest-error">@suggestError</div>
@@ -84,11 +93,12 @@
   [Parameter] public string Reason { get; set; } = "";
   [Parameter] public bool IsEdit { get; set; }
 
-  // Asks Claude for a verdict on the cycle; null where the host cannot ask Claude.
-  [Parameter] public Func<Task<Result<CycleSuggestion>>>? Suggest { get; set; }
+  // Asks Claude for a verdict on the cycle, telling each step; null where the host cannot ask Claude.
+  [Parameter] public Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? Suggest { get; set; }
 
   MudTextField<string> reasonField = null!;
   bool isSuggesting;
+  SuggestStep? step;
   CycleSuggestion? suggestion;
   string? suggestError;
 
@@ -106,8 +116,13 @@
       return;
     isSuggesting = true;
     suggestError = null;
-    var result = await Suggest();
+    var result = await Suggest(next =>
+    {
+      step = next;
+      _ = InvokeAsync(StateHasChanged);
+    });
     isSuggesting = false;
+    step = null;
     if (result is not CycleSuggestion s)
     {
       suggestError = result.Error.Message;
@@ -117,6 +132,15 @@
     if (s.IsAccept && string.IsNullOrWhiteSpace(Reason))
       Reason = s.Reason;
   }
+
+  // Where to enter the key: in VS Code an input box at the top of the window, outside this UI. The
+  // web host takes it from its environment, so there the check is over at once.
+  static string EnterKeyMessage(SuggestStep step) =>
+    !Dependinator.Core.Build.IsVsCodeExtWasm ? "Checking the Claude API key ..."
+    : step is SuggestStep.EnteringNewApiKey
+      ? "Claude did not accept the stored API key. Enter a new one in the box at the top of the VS Code window."
+    : "Suggest with Claude uses your own Anthropic API key, from console.anthropic.com (billed to your account, "
+      + "a few cents per suggestion). Enter it in the box at the top of the VS Code window.";
 
   // Enter starts a new line in the reason; Ctrl+Enter (Cmd+Enter) saves.
   void OnKeyDown(KeyboardEventArgs e)

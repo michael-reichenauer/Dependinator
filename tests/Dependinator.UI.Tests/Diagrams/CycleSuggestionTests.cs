@@ -57,35 +57,102 @@ public class CycleSuggestionTests
         Assert.Equal("Claude's answer could not be read.", error.Message);
     }
 
+    readonly Mock<ICyclePromptService> prompts = new();
+    readonly Mock<IClaudeService> claude = new();
+    readonly List<SuggestStep> steps = [];
+
+    public CycleSuggestionTests() => prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
+
+    Task<Result<CycleSuggestion>> SuggestAsync() =>
+        new CycleSuggestionService(prompts.Object, claude.Object).SuggestAsync(Cycle, steps.Add);
+
     [Fact]
     public async Task SuggestAsync_ShouldAskClaudeWithTheCyclePromptAndTheAnswerSchema()
     {
-        var prompts = new Mock<ICyclePromptService>();
-        prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
-        var claude = new Mock<IClaudeService>();
+        claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Set);
         claude
             .Setup(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema))
             .ReturnsAsync((Result<string>)AcceptAnswer);
-        var service = new CycleSuggestionService(prompts.Object, claude.Object);
 
-        var suggestion = AssertOk(await service.SuggestAsync(Cycle));
+        var suggestion = AssertOk(await SuggestAsync());
 
         Assert.True(suggestion.IsAccept);
+        Assert.Equal([SuggestStep.AskingClaude], steps);
+        claude.Verify(c => c.AskUserForApiKeyAsync(), Times.Never);
     }
 
     [Fact]
-    public async Task SuggestAsync_ShouldPassOnClaudesError()
+    public async Task SuggestAsync_ShouldAskForAKeyFirst_WhenNoneIsSet_AndSayWhileWaiting()
     {
-        var prompts = new Mock<ICyclePromptService>();
-        prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
-        var claude = new Mock<IClaudeService>();
+        claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Missing);
+        claude.Setup(c => c.AskUserForApiKeyAsync()).ReturnsAsync(Result.Ok);
+        claude
+            .Setup(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema))
+            .ReturnsAsync((Result<string>)AcceptAnswer);
+
+        AssertOk(await SuggestAsync());
+
+        Assert.Equal([SuggestStep.EnteringApiKey, SuggestStep.AskingClaude], steps);
+    }
+
+    [Fact]
+    public async Task SuggestAsync_ShouldStop_WhenTheUserEntersNoKey()
+    {
+        claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Missing);
+        claude.Setup(c => c.AskUserForApiKeyAsync()).ReturnsAsync((Result)new Error("No Claude API key was entered."));
+
+        var error = AssertError(await SuggestAsync());
+
+        Assert.Equal("No Claude API key was entered.", error.Message);
+        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SuggestAsync_ShouldAskForANewKey_WhenClaudeDoesNotAcceptTheStoredOne_AndTryAgain()
+    {
+        claude
+            .SetupSequence(c => c.GetApiKeyStateAsync())
+            .ReturnsAsync(ClaudeApiKeyState.Set)
+            .ReturnsAsync(ClaudeApiKeyState.Rejected)
+            .ReturnsAsync(ClaudeApiKeyState.Rejected);
+        claude.Setup(c => c.AskUserForApiKeyAsync()).ReturnsAsync(Result.Ok);
+        claude
+            .SetupSequence(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema))
+            .ReturnsAsync((Result<string>)new Error("Claude did not accept the API key."))
+            .ReturnsAsync((Result<string>)AcceptAnswer);
+
+        AssertOk(await SuggestAsync());
+
+        Assert.Equal([SuggestStep.AskingClaude, SuggestStep.EnteringNewApiKey, SuggestStep.AskingClaude], steps);
+        claude.Verify(c => c.AskUserForApiKeyAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task SuggestAsync_ShouldAskForANewKeyOnlyOnce_WhenThatOneIsNotAcceptedEither()
+    {
+        claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Rejected);
+        claude.Setup(c => c.AskUserForApiKeyAsync()).ReturnsAsync(Result.Ok);
         claude
             .Setup(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync((Result<string>)new Error("Claude did not accept the API key."));
-        var service = new CycleSuggestionService(prompts.Object, claude.Object);
 
-        var error = AssertError(await service.SuggestAsync(Cycle));
+        var error = AssertError(await SuggestAsync());
 
         Assert.Equal("Claude did not accept the API key.", error.Message);
+        Assert.Equal([SuggestStep.EnteringNewApiKey, SuggestStep.AskingClaude], steps);
+    }
+
+    [Fact]
+    public async Task SuggestAsync_ShouldPassOnOtherErrors_WithoutAskingForAKey()
+    {
+        claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Set);
+        claude
+            .Setup(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync((Result<string>)new Error("Could not reach Claude."));
+
+        var error = AssertError(await SuggestAsync());
+
+        Assert.Equal("Could not reach Claude.", error.Message);
+        claude.Verify(c => c.AskUserForApiKeyAsync(), Times.Never);
     }
 }

@@ -41,12 +41,23 @@ public record CycleSuggestion(bool IsAccept, string Why, string Assumptions, str
     record Answer(string Verdict, string Why, string Assumptions, string ReasonToStore, string Change);
 }
 
+// What the dialog says while a suggestion is on its way. In VS Code the key is entered in an
+// input box at the top of the window, outside the UI the user is watching, so the dialog says so.
+public enum SuggestStep
+{
+    EnteringApiKey,
+    EnteringNewApiKey,
+    AskingClaude,
+}
+
 interface ICycleSuggestionService
 {
     // Whether this host can ask Claude: the web host and VS Code, not the standalone browser app.
     bool IsAvailable { get; }
 
-    Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle);
+    // Asks Claude about the cycle. Without a key, or with one Claude did not accept, the user is
+    // asked for a key first (once per call); onStep tells the dialog what is going on.
+    Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle, Action<SuggestStep> onStep);
 }
 
 // Asks Claude about a cycle with the prompt the user can also copy (CyclePromptService).
@@ -56,17 +67,34 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IClaudeServ
 {
     public bool IsAvailable => Dependinator.Core.Build.IsWeb || Dependinator.Core.Build.IsVsCodeExtWasm;
 
-    public async Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle)
+    public async Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle, Action<SuggestStep> onStep)
     {
         // The e2e tests exercise the dialog without a key or network.
         if (Dependinator.Core.Build.IsTestMode)
             return TestModeSuggestion;
 
-        var prompt = await cyclePromptService.GetPromptAsync(cycle);
-        var answer = await claudeService.AskAsync(prompt, CycleSuggestion.JsonSchema);
-        if (answer is not string json)
-            return answer.Error;
-        return CycleSuggestion.Parse(json);
+        var hasAskedForKey = false;
+        string? prompt = null;
+        while (true)
+        {
+            var state = await claudeService.GetApiKeyStateAsync();
+            if (state is not ClaudeApiKeyState.Set)
+            {
+                onStep(state is ClaudeApiKeyState.Missing ? SuggestStep.EnteringApiKey : SuggestStep.EnteringNewApiKey);
+                if (await claudeService.AskUserForApiKeyAsync() is Error e)
+                    return e;
+                hasAskedForKey = true;
+            }
+
+            onStep(SuggestStep.AskingClaude);
+            prompt ??= await cyclePromptService.GetPromptAsync(cycle);
+            var answer = await claudeService.AskAsync(prompt, CycleSuggestion.JsonSchema);
+            if (answer is string json)
+                return CycleSuggestion.Parse(json);
+            // A key Claude did not accept: ask for a new one, once.
+            if (hasAskedForKey || await claudeService.GetApiKeyStateAsync() is not ClaudeApiKeyState.Rejected)
+                return answer.Error;
+        }
     }
 
     static readonly CycleSuggestion TestModeSuggestion = new(

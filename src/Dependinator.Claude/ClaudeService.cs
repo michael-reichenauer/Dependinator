@@ -11,25 +11,51 @@ namespace Dependinator.Claude;
 // schema (structured output, so the caller can rely on its shape). Claude Opus 5.5 at medium
 // effort: an answer takes seconds to a minute and costs a few cents. A request a safety
 // classifier declines is retried server-side on the model Anthropic recommends for that case
-// (fallbacks "default"), so a false positive does not end in a refusal.
+// (fallbacks "default"), so a false positive does not end in a refusal. A key Claude did not
+// accept is remembered, so the UI can ask for a new one rather than send it again.
 [Singleton]
 class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
 {
     const string Model = "claude-opus-5-5";
     const int MaxTokens = 16000;
 
+    string? rejectedApiKey;
+
+    // Where requests go; tests point it at a local server.
+    internal string? BaseUrl { get; init; }
+
+    public async Task<ClaudeApiKeyState> GetApiKeyStateAsync() =>
+        await apiKeyProvider.GetApiKeyAsync() switch
+        {
+            null or "" => ClaudeApiKeyState.Missing,
+            var key when key == rejectedApiKey => ClaudeApiKeyState.Rejected,
+            _ => ClaudeApiKeyState.Set,
+        };
+
+    // When the user gives no new key after Claude rejected the stored one (or the host cannot ask),
+    // the error says why a key is needed.
+    public async Task<Result> AskUserForApiKeyAsync()
+    {
+        if (await apiKeyProvider.AskUserForApiKeyAsync() is not Error e)
+            return Result.Ok;
+        return await GetApiKeyStateAsync() is ClaudeApiKeyState.Rejected
+            ? new Error($"Claude did not accept the API key. {apiKeyProvider.SetKeyHint}")
+            : e;
+    }
+
     public async Task<Result<string>> AskAsync(string prompt, string jsonSchema)
     {
-        var apiKey = await GetApiKeyAsync();
-        if (apiKey is not string key)
-            return apiKey.Error;
+        if (await apiKeyProvider.GetApiKeyAsync() is not { Length: > 0 } key)
+            return new Error($"No Claude API key. {apiKeyProvider.SetKeyHint}");
         var schema = Result.Catch(() => JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonSchema)!);
         if (schema is not Dictionary<string, JsonElement> schemaProperties)
             return new Error("The answer schema is not valid JSON.", schema.Error);
 
         try
         {
-            AnthropicClient client = new() { ApiKey = key };
+            AnthropicClient client = BaseUrl is null
+                ? new() { ApiKey = key }
+                : new() { ApiKey = key, BaseUrl = BaseUrl };
             var response = await client.Beta.Messages.Create(
                 new MessageCreateParams
                 {
@@ -56,6 +82,7 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
         }
         catch (AnthropicUnauthorizedException)
         {
+            rejectedApiKey = key;
             return new Error($"Claude did not accept the API key. {apiKeyProvider.SetKeyHint}");
         }
         catch (AnthropicRateLimitException)
@@ -71,10 +98,4 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
             return new Error("Could not reach Claude. Check the network connection.", e);
         }
     }
-
-    // The stored key, or else one the user gives now.
-    async Task<Result<string>> GetApiKeyAsync() =>
-        await apiKeyProvider.GetApiKeyAsync() is { Length: > 0 } key
-            ? key
-            : await apiKeyProvider.AskUserForApiKeyAsync();
 }

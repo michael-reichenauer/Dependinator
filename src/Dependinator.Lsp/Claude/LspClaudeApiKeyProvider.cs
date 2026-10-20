@@ -25,7 +25,8 @@ class LspClaudeApiKeyProvider(ILanguageServerFacade server) : IClaudeApiKeyProvi
     // The user may take a while to find and paste a key.
     static readonly TimeSpan askTimeout = TimeSpan.FromMinutes(10);
 
-    public string SetKeyHint => "Run the command \"Dependinator: Set Claude API Key\" to set a new one.";
+    public string SetKeyHint =>
+        "Try again to enter a new one, or use the command \"Dependinator: Set Claude API Key\".";
 
     public async Task<string?> GetApiKeyAsync()
     {

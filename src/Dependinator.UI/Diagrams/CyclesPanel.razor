@@ -144,8 +144,8 @@
   async Task AcceptAsync(Cycle cycle)
   {
     // A cycle that grew since it was accepted starts from the earlier reason.
-    Func<Task<Result<CycleSuggestion>>>? suggest =
-      cycleSuggestionService.IsAvailable ? () => cycleSuggestionService.SuggestAsync(cycle) : null;
+    Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest =
+      cycleSuggestionService.IsAvailable ? onStep => cycleSuggestionService.SuggestAsync(cycle, onStep) : null;
     var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
       cycle.AcceptedBefore?.Reason ?? "", isEdit: false, suggest);
     if (result is not null)
@@ -164,7 +164,7 @@
   }
 
   async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit,
-    Func<Task<Result<CycleSuggestion>>>? suggest = null)
+    Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest = null)
   {
     var parameters = new DialogParameters
     {
