@@ -46,7 +46,7 @@ class LspClaudeApiKeyProvider(ILanguageServerFacade server) : IClaudeApiKeyProvi
                 .Returning<ClaudeApiKeyResult>(cts.Token);
             return result.ApiKey is { Length: > 0 } key
                 ? key
-                : new Error("No Claude API key was entered. It is needed to ask Claude.");
+                : new Error("No Claude API key was entered. Ask Claude again to enter one.");
         }
         catch (OperationCanceledException)
         {

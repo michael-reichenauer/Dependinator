@@ -254,7 +254,8 @@
                 includes the source code behind the cycle's thinnest dependencies. Paste the AI's answer back into the box
                 that opens, and it is used like Claude's. There, <b>Ask Claude</b> asks Claude
                 directly, with your own Anthropic API key (VS Code asks for it the first time, in a box at the top of the
-                window, and the dialog says so; the command "Dependinator: Set Claude API Key" changes it). <b>Ask
+                window, and the dialog says so; the command "Dependinator: Set Claude API Key" changes it). If asking
+                fails (no key, a key not accepted, no credits left), <b>Copy prompt instead</b> takes the AI chat route. <b>Ask
                 again</b> for a second opinion: each answer is kept, and when they differ you pick the one that convinces
                 you. An accepting answer fills in the reason. A breaking one shows the change and offers <b>Copy fix
                 prompt</b>, a prompt for Claude Code (or another AI that can change the code) to make it; <b>Fix

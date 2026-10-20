@@ -187,7 +187,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
             .ToHaveTextAsync("Test mode: move one member out of the cycle.");
 
         await toFix.GetByTestId("cycles-tofix-copy-fix").ClickAsync();
-        await Expect(Page.GetByText("Fix prompt copied")).ToBeVisibleAsync();
+        await Expect(Page.GetByText("The fix prompt is copied")).ToBeVisibleAsync();
         string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
         Assert.StartsWith("Please break a circular dependency", prompt);
         Assert.Contains("Test mode: move one member out of the cycle.", prompt);

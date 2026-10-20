@@ -235,8 +235,7 @@
       applicationEvents.TriggerErrorReported("Could not copy the fix prompt to the clipboard.");
       return;
     }
-    applicationEvents.TriggerInfoReported(
-      "Fix prompt copied. Paste it into Claude Code, or another AI that can change the code.");
+    applicationEvents.TriggerInfoReported(AcceptCycleDialog.FixPromptCopiedNote);
   }
 
   async Task ReviewAsync(Cycle cycle)

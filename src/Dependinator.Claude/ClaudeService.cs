@@ -90,12 +90,34 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
             return new Error("Too many requests to Claude with this API key just now. Please try again in a minute.");
         }
         catch (AnthropicApiException e)
+            when (ApiMessage(e).Contains("credit balance", StringComparison.OrdinalIgnoreCase))
         {
-            return new Error($"Claude could not answer: {e.Message}", e);
+            return new Error(
+                "Your Anthropic account has no credits left. Add some under Billing at console.anthropic.com.",
+                e
+            );
+        }
+        catch (AnthropicApiException e)
+        {
+            return new Error($"Claude could not answer: {ApiMessage(e)}", e);
         }
         catch (AnthropicIOException e)
         {
             return new Error("Could not reach Claude. Check the network connection.", e);
         }
+    }
+
+    // Anthropic's own sentence from an error's body ({"error": {"message": ...}}), which the SDK
+    // puts after the status code in its message; the whole message when there is none.
+    static string ApiMessage(AnthropicApiException e)
+    {
+        var start = e.Message.IndexOf('{');
+        if (start < 0)
+            return e.Message;
+        var message = Result.Catch(() =>
+            JsonDocument.Parse(e.Message[start..]).RootElement.GetProperty("error").GetProperty("message").GetString()
+            ?? throw new JsonException("No message")
+        );
+        return message is string text ? text : e.Message;
     }
 }

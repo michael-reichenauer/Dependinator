@@ -87,6 +87,42 @@ public class ClaudeServiceTests
     }
 
     [Fact]
+    public async Task AskAsync_ShouldSaySo_WhenTheAccountHasNoCreditsLeft()
+    {
+        using var api = new FakeAnthropicApi(
+            HttpStatusCode.BadRequest,
+            """
+            { "type": "error", "error": { "type": "invalid_request_error",
+              "message": "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits." } }
+            """
+        );
+        keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync("sk-ant-test");
+        var service = new ClaudeService(keys.Object) { BaseUrl = api.Url };
+
+        var error = AssertError(await service.AskAsync("Hello", Schema));
+
+        Assert.Equal(
+            "Your Anthropic account has no credits left. Add some under Billing at console.anthropic.com.",
+            error.Message
+        );
+    }
+
+    [Fact]
+    public async Task AskAsync_ShouldPassOnTheApisOwnMessage_WithoutItsStatusAndJson()
+    {
+        using var api = new FakeAnthropicApi(
+            HttpStatusCode.BadRequest,
+            """{ "type": "error", "error": { "type": "invalid_request_error", "message": "prompt is too long" } }"""
+        );
+        keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync("sk-ant-test");
+        var service = new ClaudeService(keys.Object) { BaseUrl = api.Url };
+
+        var error = AssertError(await service.AskAsync("Hello", Schema));
+
+        Assert.Equal("Claude could not answer: prompt is too long", error.Message);
+    }
+
+    [Fact]
     public async Task AskAsync_ShouldSendThePromptWithTheSchema_AndReturnClaudesText()
     {
         using var api = new FakeAnthropicApi(
