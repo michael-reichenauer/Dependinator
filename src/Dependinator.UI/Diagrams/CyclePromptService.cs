@@ -8,6 +8,9 @@ interface ICyclePromptService
     // The text that asks an AI whether the cycle is intended or should be broken (CyclePrompt),
     // with the source behind its thin directions where the host can read the files.
     Task<string> GetPromptAsync(Cycle cycle);
+
+    // The text that asks an AI that can change the code to break the cycle as suggested.
+    string GetFixPrompt(Cycle cycle, CycleSuggestion suggestion);
 }
 
 [Scoped]
@@ -27,6 +30,12 @@ class CyclePromptService(IModelMgr modelMgr, IWorkspaceFileService workspaceFile
 
         using (var model = modelMgr.UseModel())
             return CyclePrompt.Build(model, cycle, sources);
+    }
+
+    public string GetFixPrompt(Cycle cycle, CycleSuggestion suggestion)
+    {
+        using var model = modelMgr.UseModel();
+        return CyclePrompt.BuildFix(model, cycle, suggestion);
     }
 
     // The web host and the VS Code extension see the workspace files; the standalone browser

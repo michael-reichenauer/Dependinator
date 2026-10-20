@@ -254,8 +254,9 @@
                 <b>Suggest with Claude</b> in the accept dialog asks Claude directly, with your own Anthropic API key.
                 In VS Code you are asked for the key the first time (in a box at the top of the window; the dialog
                 says so), and again if Claude does not accept it; the command "Dependinator: Set Claude API Key"
-                changes it. It fills in a suggested reason, or shows the change Claude would make; nothing is saved
-                until you accept.</li>
+                changes it. It fills in a suggested reason, or, when Claude suggests breaking the cycle, shows the change
+                and offers <b>Copy fix prompt</b>: a prompt for Claude Code (or another AI that can change the code) to
+                make it. Nothing is saved until you accept.</li>
             <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
                 "this must not depend on that" by picking two nodes (a project, a namespace, a class, a resource). Every
                 dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the

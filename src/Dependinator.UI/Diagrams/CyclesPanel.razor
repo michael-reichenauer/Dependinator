@@ -147,7 +147,7 @@
     Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest =
       cycleSuggestionService.IsAvailable ? onStep => cycleSuggestionService.SuggestAsync(cycle, onStep) : null;
     var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
-      cycle.AcceptedBefore?.Reason ?? "", isEdit: false, suggest);
+      cycle.AcceptedBefore?.Reason ?? "", isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s));
     if (result is not null)
       cycleService.Accept(cycle, result.Reason);
   }
@@ -164,7 +164,8 @@
   }
 
   async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit,
-    Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest = null)
+    Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest = null,
+    Func<CycleSuggestion, string>? fixPrompt = null)
   {
     var parameters = new DialogParameters
     {
@@ -173,6 +174,7 @@
       { nameof(AcceptCycleDialog.Reason), reason },
       { nameof(AcceptCycleDialog.IsEdit), isEdit },
       { nameof(AcceptCycleDialog.Suggest), suggest },
+      { nameof(AcceptCycleDialog.FixPrompt), fixPrompt },
     };
     // Wider with Claude's suggestion, which can run to a paragraph.
     var maxWidth = suggest is null ? MaxWidth.ExtraSmall : MaxWidth.Small;

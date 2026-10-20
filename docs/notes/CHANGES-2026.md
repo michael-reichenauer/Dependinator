@@ -143,7 +143,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   to make, and nothing is saved until the user accepts. It uses the user's own Anthropic API key
   (VS Code secret storage via a new command, or `ANTHROPIC_API_KEY` for the web host). In VS Code
   the key is asked for on first use, and again when Claude does not accept it, with the dialog
-  pointing at the input box at the top of the window, since the user is watching the dialog; the request
+  pointing at the input box at the top of the window, since the user is watching the dialog. When
+  Claude suggests breaking the cycle, the main button copies a fix prompt for Claude Code (or another
+  AI that can change the code) instead, and accepting stays possible as "Accept anyway". The request
   runs in the LSP or the web host through Anthropic's C# SDK (new `Dependinator.Claude` library),
   never in the browser app.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).

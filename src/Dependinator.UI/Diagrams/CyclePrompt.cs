@@ -82,7 +82,68 @@ static partial class CyclePrompt
         );
         if (Codebase(container) is { } codebase)
             text.AppendLine().AppendLine(codebase);
+        AppendCycle(text, cycle, container, members);
 
+        if (sources is { Count: > 0 })
+            AppendSource(text, model, sources);
+
+        text.AppendLine().Append(TaskSection);
+        return text.ToString();
+    }
+
+    // The prompt for an AI that can change the code (Claude Code, say), to break the cycle as
+    // Claude's verdict suggested: the cycle, the suggested change with the assumptions to check
+    // first, and where to look. It shows no source, since such an AI reads the code itself.
+    public static string BuildFix(IModel model, Cycle cycle, CycleSuggestion suggestion)
+    {
+        if (!model.Nodes.TryGetValue(cycle.ContainerId, out var container))
+            return "";
+        var members = Members(model, cycle);
+
+        var text = new StringBuilder();
+        text.AppendLine(
+            "Please break a circular dependency in this codebase. Dependinator, a tool that maps the structure "
+                + "and dependencies of the code, found it, and a review of it suggested how to break it."
+        );
+        AppendCycle(text, cycle, container, members);
+
+        text.AppendLine().AppendLine("## The suggested change").AppendLine();
+        text.AppendLine(suggestion.Change);
+        text.AppendLine().AppendLine($"Why: {suggestion.Why}");
+        if (suggestion.Assumptions is not ("" or "None" or "None."))
+            text.AppendLine().AppendLine($"Assumptions to check first: {suggestion.Assumptions}");
+
+        var files = GetSourceRequests(model, cycle)
+            .SelectMany(r => r.Units)
+            .Select(u => DisplayPath(model, u.Span.Path))
+            .Distinct()
+            .ToList();
+        if (files.Count > 0)
+        {
+            text.AppendLine().AppendLine("## Where to look").AppendLine();
+            text.AppendLine("The code behind the directions made by only one or two types:");
+            foreach (var file in files)
+                text.AppendLine($"- {file}");
+        }
+
+        text.AppendLine().Append(FixTaskSection);
+        return text.ToString();
+    }
+
+    const string FixTaskSection = """
+        ## Your task
+
+        1. Check the assumptions above in the code first. If one does not hold, say so, and propose another change before editing.
+        2. Make the smallest change that removes one direction of the cycle, without changing behavior.
+        3. Update the code that refers to what you moved or renamed.
+        4. Build, and run the tests.
+        5. Summarize what you changed. Dependinator shows whether the cycle is gone after its next parse.
+
+        """;
+
+    // The cycle's members, and the links between them per direction.
+    static void AppendCycle(StringBuilder text, Cycle cycle, Node container, List<Node> members)
+    {
         text.AppendLine().AppendLine("## The cycle").AppendLine();
         text.AppendLine(
             container.IsRoot
@@ -111,12 +172,6 @@ static partial class CyclePrompt
                 AppendLinks(text, directionLinks, container);
             }
         }
-
-        if (sources is { Count: > 0 })
-            AppendSource(text, model, sources);
-
-        text.AppendLine().Append(TaskSection);
-        return text.ToString();
     }
 
     static List<Node> Members(IModel model, Cycle cycle) =>

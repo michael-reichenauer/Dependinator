@@ -69,9 +69,10 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IClaudeServ
 
     public async Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle, Action<SuggestStep> onStep)
     {
-        // The e2e tests exercise the dialog without a key or network.
+        // The e2e tests exercise the dialog without a key or network: a pair is accepted, a
+        // larger cycle broken, so both verdicts can be tried.
         if (Dependinator.Core.Build.IsTestMode)
-            return TestModeSuggestion;
+            return cycle.Members.Count == 2 ? TestModeAccept : TestModeBreak;
 
         var hasAskedForKey = false;
         string? prompt = null;
@@ -97,11 +98,19 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IClaudeServ
         }
     }
 
-    static readonly CycleSuggestion TestModeSuggestion = new(
+    static readonly CycleSuggestion TestModeAccept = new(
         true,
         "Test mode: Claude was not asked.",
         "None",
         "Suggested in test mode",
         ""
+    );
+
+    static readonly CycleSuggestion TestModeBreak = new(
+        false,
+        "Test mode: Claude was not asked.",
+        "None",
+        "",
+        "Test mode: move one member out of the cycle."
     );
 }

@@ -1,9 +1,11 @@
 @using MudBlazor
+@inject IClipboardService clipboardService
 
 @* Accepts a circular dependency as intended (or edits an acceptance): the cycle, and why it is
    fine, shown in the cycles panel. Editing also offers to stop accepting it. Where the host can
    ask Claude, "Suggest with Claude" asks for a verdict: accepting fills in the reason (nothing is
-   saved until the user accepts), breaking shows the change to make instead. In VS Code the API
+   saved until the user accepts), breaking shows the change to make instead and offers a prompt for
+   an AI that can change the code as the main action, with accepting anyway still possible. In VS Code the API
    key is entered in an input box at the top of the window, which is easy to miss while watching
    this dialog, so the dialog points there while it waits. *@
 <MudDialog>
@@ -51,6 +53,12 @@
           {
             <div><b>Change:</b> @s.Change</div>
           }
+          @if (isFixPromptCopied)
+          {
+            <div class="dep-cycles__suggestion-note" data-testid="accept-cycle-fix-copied">
+              The fix prompt is copied. Paste it into Claude Code, or another AI that can change the code.
+            </div>
+          }
           @if (s.Assumptions is not ("" or "None" or "None."))
           {
             <div class="dep-cycles__suggestion-note"><b>Assumptions:</b> @s.Assumptions</div>
@@ -79,9 +87,18 @@
     }
     <MudSpacer />
     <MudButton OnClick="Cancel" data-testid="accept-cycle-cancel">Cancel</MudButton>
-    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="accept-cycle-save">
-      @(IsEdit ? "Save" : "Accept")
-    </MudButton>
+    @if (IsBreakSuggested)
+    {
+      <MudButton Variant="Variant.Text" OnClick="Save" data-testid="accept-cycle-save">Accept anyway</MudButton>
+      <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+                 OnClick="CopyFixPromptAsync" data-testid="accept-cycle-copy-fix">Copy fix prompt</MudButton>
+    }
+    else
+    {
+      <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="accept-cycle-save">
+        @(IsEdit ? "Save" : "Accept")
+      </MudButton>
+    }
   </DialogActions>
 </MudDialog>
 
@@ -96,11 +113,18 @@
   // Asks Claude for a verdict on the cycle, telling each step; null where the host cannot ask Claude.
   [Parameter] public Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? Suggest { get; set; }
 
+  // The prompt that asks an AI that can change the code to break the cycle as suggested.
+  [Parameter] public Func<CycleSuggestion, string>? FixPrompt { get; set; }
+
   MudTextField<string> reasonField = null!;
   bool isSuggesting;
   SuggestStep? step;
   CycleSuggestion? suggestion;
   string? suggestError;
+  bool isFixPromptCopied;
+
+  // Claude suggests breaking the cycle: fixing it is the main action, accepting it the override.
+  bool IsBreakSuggested => suggestion is { IsAccept: false } && FixPrompt is not null;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -116,6 +140,7 @@
       return;
     isSuggesting = true;
     suggestError = null;
+    isFixPromptCopied = false;
     var result = await Suggest(next =>
     {
       step = next;
@@ -131,6 +156,14 @@
     suggestion = s;
     if (s.IsAccept && string.IsNullOrWhiteSpace(Reason))
       Reason = s.Reason;
+  }
+
+  async Task CopyFixPromptAsync()
+  {
+    if (suggestion is not { } s || FixPrompt is null)
+      return;
+    isFixPromptCopied = await clipboardService.CopyAsync(FixPrompt(s));
+    suggestError = isFixPromptCopied ? null : "Could not copy the fix prompt to the clipboard.";
   }
 
   // Where to enter the key: in VS Code an input box at the top of the window, outside this UI. The

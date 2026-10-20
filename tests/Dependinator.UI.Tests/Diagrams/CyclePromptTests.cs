@@ -297,6 +297,36 @@ public class CyclePromptTests
     }
 
     [Fact]
+    public void BuildFix_ShouldAskToMakeTheSuggestedChange_CheckingTheAssumptionsFirst()
+    {
+        var cycle = AddParsingUtilsCycle();
+        using var model = modelMgr.UseModel();
+        var suggestion = new CycleSuggestion(
+            false,
+            "One misplaced class.",
+            "UI only aliases Parsing.",
+            "",
+            "Move Ext into Parsing."
+        );
+
+        var prompt = CyclePrompt.BuildFix(model, cycle, suggestion).ReplaceLineEndings("\n");
+
+        Assert.StartsWith("Please break a circular dependency in this codebase.", prompt);
+        Assert.Contains("Utils → Parsing (1 link)\n- Utils.Ext.IsMember → Parsing.NodeType\n", prompt);
+        Assert.Contains(
+            "## The suggested change\n\nMove Ext into Parsing.\n\nWhy: One misplaced class.\n\n"
+                + "Assumptions to check first: UI only aliases Parsing.\n",
+            prompt
+        );
+        Assert.Contains(
+            "## Where to look\n\nThe code behind the directions made by only one or two types:\n- src/Utils/Ext.cs\n",
+            prompt
+        );
+        Assert.Contains("## Your task\n\n1. Check the assumptions above in the code first.", prompt);
+        Assert.DoesNotContain("## Source", prompt);
+    }
+
+    [Fact]
     public async Task GetPromptAsync_ShouldShowTheSourceItCanRead_AndLeaveOutWhatItCannot()
     {
         var cycle = AddParsingUtilsCycle();
