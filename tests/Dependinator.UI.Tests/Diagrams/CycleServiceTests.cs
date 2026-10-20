@@ -192,7 +192,10 @@ public class CycleServiceTests
         var cycle = Assert.Single(service.GetCycles());
         Assert.Equal(["A", "B", "D"], cycle.Members.Select(m => m.Name));
         Assert.Equal("Intended", cycle.AcceptedBefore?.Reason);
-        Assert.False(Assert.Single(service.GetAcceptedCycles()).StillOccurs);
+        var outgrown = Assert.Single(service.GetAcceptedCycles());
+        Assert.False(outgrown.StillOccurs);
+        Assert.False(outgrown.IsGone);
+        Assert.Equal(["D"], outgrown.Joined);
 
         // Accepting the grown cycle replaces the earlier acceptance it covers.
         service.Accept(cycle, "Still intended");
@@ -325,6 +328,41 @@ public class CycleServiceTests
         Assert.Empty(service.GetCyclicLineIds());
         service.Unaccept([report.Accepted]);
         Assert.Empty(service.GetCyclesToFix());
+    }
+
+    [Fact]
+    public void GetCyclesToFix_ShouldSayTheCycleChanged_WhenANodeJoinsIt_NotThatItIsFixed()
+    {
+        var (_, _, _, d) = AddCycle();
+        var service = NewService();
+        service.FixLater(Assert.Single(service.GetCycles()), "Move A's use of B");
+
+        modelMgr.WithModel(m => AddLink(m, d, m.Nodes[NodeId.FromName("C.B")])); // D now uses B back
+
+        var report = Assert.Single(service.GetCyclesToFix());
+        Assert.True(report.HasChanged);
+        Assert.False(report.IsGone);
+        Assert.Equal(["D"], report.Joined);
+        var cycle = Assert.Single(service.GetCycles());
+        Assert.True(cycle.AcceptedBefore?.IsToFix);
+    }
+
+    [Fact]
+    public void GetAcceptedCycles_ShouldListTheOnesNoLongerOccurringFirst()
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            var container = AddNode(model, "A", model.Root);
+            var a = AddNode(model, "A.X", container);
+            var b = AddNode(model, "A.Y", container);
+            AddLink(model, a, b);
+            AddLink(model, b, a);
+            model.AddAcceptedCycle(new AcceptedCycle("Z", ["Z.X", "Z.Y"], "Gone"));
+        }
+        var service = NewService();
+        service.Accept(Assert.Single(service.GetCycles()), "Occurs");
+
+        Assert.Equal(["Gone", "Occurs"], service.GetAcceptedCycles().Select(r => r.Accepted.Reason));
     }
 
     [Fact]

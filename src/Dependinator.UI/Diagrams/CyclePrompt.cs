@@ -262,6 +262,11 @@ static partial class CyclePrompt
             ", ",
             cycle.Members.Where(m => !before.MemberNames.Contains(m.NodeName)).Select(m => m.Name)
         );
+        if (before.IsToFix)
+        {
+            var change = before.Reason == "" ? "" : $", with the planned change \"{before.Reason}\"";
+            return $"Part of it was marked to fix before{change}, but {joined} joined the cycle since.";
+        }
         var reason = before.Reason == "" ? "without a reason" : $"with the reason \"{before.Reason}\"";
         return $"Part of it was accepted before, {reason}, but {joined} joined the cycle since.";
     }

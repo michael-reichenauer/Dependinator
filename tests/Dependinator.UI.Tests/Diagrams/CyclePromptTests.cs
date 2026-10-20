@@ -231,6 +231,12 @@ public class CyclePromptTests
             "Part of it was accepted before, with the reason \"A and B are one concept\", but B joined the cycle since.",
             prompt
         );
+
+        var markedToFix = cycle with { AcceptedBefore = new AcceptedCycle("C", ["C.A"], "Move it", IsToFix: true) };
+        Assert.Contains(
+            "Part of it was marked to fix before, with the planned change \"Move it\", but B joined the cycle since.",
+            CyclePrompt.Build(model, markedToFix)
+        );
     }
 
     [Fact]

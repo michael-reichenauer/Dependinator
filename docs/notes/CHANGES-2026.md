@@ -147,7 +147,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   Claude suggests breaking the cycle, the main button copies a fix prompt for Claude Code (or another
   AI that can change the code) instead, and accepting stays possible as "Accept anyway". "Fix later"
   moves such a cycle to a To fix section with the planned change (saved with the model like an
-  acceptance); its lines stay red, and its fix prompt can be copied from there. The request
+  acceptance); its lines stay red, and its fix prompt can be copied from there. A refresh message
+  now also tells what changed about cycles ("1 cycle to fix is gone, 1 new cycle"), and accepted or
+  to-fix entries whose cycle is gone or grew (a node joined) are marked so, and listed first. The request
   runs in the LSP or the web host through Anthropic's C# SDK (new `Dependinator.Claude` library),
   never in the browser app.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).

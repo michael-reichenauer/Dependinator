@@ -10,8 +10,8 @@ readonly record struct CycleMember(NodeId Id, string Name, string NodeName);
 
 // A set of sibling nodes inside one container that depend on each other in a circle
 // (a strongly connected component of the container's child graph). AcceptedBefore is an earlier
-// acceptance in the container that the cycle has outgrown (a node joined it since), so the panel
-// can say why it is back.
+// acceptance, or mark to fix, in the container that the cycle has outgrown (a node joined it
+// since), so the panel can say why it is back.
 record Cycle(
     NodeId ContainerId,
     string ContainerName,
@@ -21,17 +21,23 @@ record Cycle(
 );
 
 // An accepted cycle, or one to fix later, as the panel shows it: display names where the nodes
-// still exist (the stored names otherwise), and whether a cycle in the model still matches it;
-// false once a refactor broke the cycle, then the entry is only kept for the user to remove.
-// Cycle is the matching cycle of one to fix, for its fix prompt.
+// still exist (the stored names otherwise), and whether a cycle in the model still matches it.
+// When none does, either a node joined the cycle (Joined: it is listed with the open cycles
+// again), or it is gone, say after a refactor broke it; then the entry is only kept for the user
+// to remove. Cycle is the matching cycle of one to fix, for its fix prompt.
 record AcceptedCycleReport(
     AcceptedCycle Accepted,
     NodeId? ContainerId,
     string ContainerName,
     IReadOnlyList<string> MemberNames,
     bool StillOccurs,
-    Cycle? Cycle = null
-);
+    Cycle? Cycle = null,
+    IReadOnlyList<string>? Joined = null
+)
+{
+    public bool HasChanged => Joined is { Count: > 0 };
+    public bool IsGone => !StillOccurs && !HasChanged;
+}
 
 // What the accept-cycle dialog returns: the reason to save, that the user stopped accepting, or
 // that the cycle is to be fixed later (the reason is then the planned change).
@@ -175,6 +181,7 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
         var acceptedByContainer = model.AcceptedCycles.ToLookup(a => a.ContainerName, StringComparer.Ordinal);
         var occurring = new HashSet<AcceptedCycle>();
         var toFixCycles = new Dictionary<AcceptedCycle, Cycle>();
+        var joined = new Dictionary<AcceptedCycle, IReadOnlyList<string>>();
         var found = new List<Cycle>();
         var lineIds = new HashSet<LineId>();
         foreach (var (container, graph) in graphs)
@@ -190,19 +197,26 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
                 var names = component.Select(n => n.Name).ToHashSet(StringComparer.Ordinal);
                 var candidates = acceptedByContainer[container.Name].ToList();
                 var matching = candidates.Where(a => names.IsSubsetOf(a.MemberNames)).ToList();
+                var members = component.OrderBy(n => n.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
+                // Entries this cycle outgrew: the nodes that joined, for the panel to say so.
+                var outgrown = candidates
+                    .Where(a => !matching.Contains(a) && a.MemberNames.Any(names.Contains))
+                    .ToList();
+                foreach (var entry in outgrown)
+                    joined[entry] =
+                    [
+                        .. members.Where(n => !entry.MemberNames.Contains(n.Name)).Select(n => n.DisplayName),
+                    ];
                 occurring.UnionWith(matching);
                 if (matching.Any(a => !a.IsToFix))
                     continue;
 
-                var members = component.OrderBy(n => n.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
                 var cycle = new Cycle(
                     container.Id,
                     ContainerLabel(container),
                     container.Name,
                     members.Select(n => new CycleMember(n.Id, n.DisplayName, n.Name)).ToList(),
-                    matching.Count == 0
-                        ? candidates.FirstOrDefault(a => !a.IsToFix && a.MemberNames.Any(names.Contains))
-                        : null
+                    matching.Count == 0 ? outgrown.FirstOrDefault() : null
                 );
                 if (matching.Count == 0)
                     found.Add(cycle);
@@ -235,10 +249,13 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
                     DisplayName(model, a.ContainerName),
                     [.. a.MemberNames.Select(name => DisplayName(model, name)).Order(StringComparer.OrdinalIgnoreCase)],
                     occurring.Contains(a),
-                    toFixCycles.GetValueOrDefault(a)
+                    toFixCycles.GetValueOrDefault(a),
+                    occurring.Contains(a) ? null : joined.GetValueOrDefault(a)
                 );
             })
-            .OrderBy(r => r.ContainerName, StringComparer.OrdinalIgnoreCase)
+            // The ones to look at first: gone or changed.
+            .OrderBy(r => r.StillOccurs)
+            .ThenBy(r => r.ContainerName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(r => string.Join(" ", r.MemberNames), StringComparer.OrdinalIgnoreCase)
             .ToList();
 

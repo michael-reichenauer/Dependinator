@@ -16,14 +16,15 @@
    lines are drawn normally. A cycle Claude suggests breaking can be marked to fix later instead:
    it moves to the To fix section with the planned change, keeps its red lines, and offers a fix
    prompt for an AI that can change the code. An entry whose cycle is gone stays, marked, until
-   removed. *@
+   removed; one whose cycle a node joined says so (the grown cycle is listed as open again). Those
+   entries come first in their section, and the section header counts them. *@
 @if (viewOptions.IsCyclesShown)
 {
   var cycles = cycleService.GetCycles();
   var accepted = cycleService.GetAcceptedCycles();
-  var gone = accepted.Where(a => !a.StillOccurs).ToList();
+  var gone = accepted.Where(a => a.IsGone).ToList();
   var toFix = cycleService.GetCyclesToFix();
-  var fixedOnes = toFix.Where(r => !r.StillOccurs).ToList();
+  var fixedOnes = toFix.Where(r => r.IsGone).ToList();
   <div class="dep-panel dep-toolbar-card" data-testid="cycles-panel">
     <div class="dep-panel__header">
       <span class="dep-panel__title">Cycles</span>
@@ -55,7 +56,7 @@
             <span class="dep-cycles__members">@Join(cycle.Members.Select(m => m.Name))</span>
             @if (cycle.AcceptedBefore is { } before)
             {
-              <span class="dep-cycles__note" data-testid="cycles-item-grown">Accepted before; @JoinedSince(cycle, before) joined it since.</span>
+              <span class="dep-cycles__note" data-testid="cycles-item-grown">@(before.IsToFix ? "Marked to fix" : "Accepted") before; @JoinedSince(cycle, before) joined it since.</span>
             }
           </button>
           <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" Size="Size.Small"
@@ -76,8 +77,9 @@
           <span>To fix (@toFix.Count)</span>
           @if (fixedOnes.Count > 0)
           {
-            <span class="dep-cycles__gone">· @fixedOnes.Count no longer @(fixedOnes.Count == 1 ? "a cycle" : "cycles")</span>
+            <span class="dep-cycles__gone" data-testid="cycles-tofix-gone-count">· @fixedOnes.Count no longer @(fixedOnes.Count == 1 ? "a cycle" : "cycles")</span>
           }
+          @ChangedCount(toFix)
         </button>
         @if (isToFixOpen)
         {
@@ -91,7 +93,11 @@
                 <span class="dep-cycles__container">@report.ContainerName</span>
                 <span class="dep-cycles__members">@Join(report.MemberNames)</span>
                 <span class="dep-cycles__reason" data-testid="cycles-tofix-change">@(report.Accepted.Reason == "" ? "No change planned" : report.Accepted.Reason)</span>
-                @if (!report.StillOccurs)
+                @if (report.HasChanged)
+                {
+                  <span class="dep-cycles__gone" data-testid="cycles-tofix-changed">@ChangedNote(report)</span>
+                }
+                else if (report.IsGone)
                 {
                   <span class="dep-cycles__gone">No longer a cycle; remove it if it is fixed.</span>
                 }
@@ -103,7 +109,7 @@
                                OnClick="() => CopyFixPromptAsync(cycle, report.Accepted.Reason)" data-testid="cycles-tofix-copy-fix" />
               }
               <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
-                             title="@(report.StillOccurs ? "Remove: report this cycle as open again" : "Remove: it is fixed")"
+                             title="@(report.StillOccurs ? "Remove: report this cycle as open again" : report.HasChanged ? "Remove: the changed cycle is listed with the open ones" : "Remove: it is fixed")"
                              OnClick="() => cycleService.Unaccept([report.Accepted])" data-testid="cycles-tofix-remove" />
             </div>
           }
@@ -129,6 +135,7 @@
           {
             <span class="dep-cycles__gone" data-testid="cycles-accepted-gone-count">· @gone.Count no longer @(gone.Count == 1 ? "a cycle" : "cycles")</span>
           }
+          @ChangedCount(accepted)
         </button>
         @if (isAcceptedOpen)
         {
@@ -142,7 +149,11 @@
                 <span class="dep-cycles__container">@report.ContainerName</span>
                 <span class="dep-cycles__members">@Join(report.MemberNames)</span>
                 <span class="dep-cycles__reason" data-testid="cycles-accepted-reason">@(report.Accepted.Reason == "" ? "No reason given" : report.Accepted.Reason)</span>
-                @if (!report.StillOccurs)
+                @if (report.HasChanged)
+                {
+                  <span class="dep-cycles__gone" data-testid="cycles-accepted-changed">@ChangedNote(report)</span>
+                }
+                else if (report.IsGone)
                 {
                   <span class="dep-cycles__gone">No longer a cycle; remove it if the change is done.</span>
                 }
@@ -153,7 +164,7 @@
                                OnClick="() => EditAsync(report)" data-testid="cycles-accepted-edit" />
               }
               <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
-                             title="@(report.StillOccurs ? "Stop accepting: report this cycle again" : "Remove: the cycle is gone")"
+                             title="@(report.StillOccurs ? "Stop accepting: report this cycle again" : report.HasChanged ? "Remove: the changed cycle is listed with the open ones" : "Remove: the cycle is gone")"
                              OnClick="() => cycleService.Unaccept([report.Accepted])" data-testid="cycles-accepted-remove" />
             </div>
           }
@@ -180,6 +191,21 @@
   void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
   static string Join(IEnumerable<string> names) => string.Join(" ↔ ", names);
+
+  static string ChangedNote(AcceptedCycleReport report) =>
+    $"The cycle changed: {string.Join(", ", report.Joined ?? [])} joined it. It is listed with the open cycles again.";
+
+  // "· 1 changed" in a section header, when an entry's cycle grew.
+  static RenderFragment ChangedCount(IReadOnlyList<AcceptedCycleReport> reports) => builder =>
+  {
+    var changed = reports.Count(r => r.HasChanged);
+    if (changed == 0)
+      return;
+    builder.OpenElement(0, "span");
+    builder.AddAttribute(1, "class", "dep-cycles__gone");
+    builder.AddContent(2, $"· {changed} changed");
+    builder.CloseElement();
+  };
 
   static string JoinedSince(Cycle cycle, Modeling.Models.AcceptedCycle before) =>
     string.Join(", ", cycle.Members.Where(m => !before.MemberNames.Contains(m.NodeName)).Select(m => m.Name));
@@ -214,11 +240,12 @@
 
   async Task AcceptAsync(Cycle cycle)
   {
-    // A cycle that grew since it was accepted starts from the earlier reason.
+    // A cycle that grew since it was accepted starts from the earlier reason (not from a planned change).
+    var reason = cycle.AcceptedBefore is { IsToFix: false } before ? before.Reason : "";
     Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest =
       cycleSuggestionService.IsAvailable ? onStep => cycleSuggestionService.SuggestAsync(cycle, onStep) : null;
     var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
-      cycle.AcceptedBefore?.Reason ?? "", isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s));
+      reason, isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s));
     if (result is null)
       return;
     if (result.IsFixLater)

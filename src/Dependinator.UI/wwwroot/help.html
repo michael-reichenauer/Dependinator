@@ -257,7 +257,9 @@
                 changes it. It fills in a suggested reason, or, when Claude suggests breaking the cycle, shows the change
                 and offers <b>Copy fix prompt</b>: a prompt for Claude Code (or another AI that can change the code) to
                 make it. <b>Fix later</b> moves the cycle to the <b>To fix</b> section with the planned change; its lines
-                stay red, and its fix prompt can be copied from there. Nothing else is saved until you accept.</li>
+                stay red, and its fix prompt can be copied from there. Nothing else is saved until you accept. When a
+                refresh breaks an accepted or to-fix cycle, or a node joins one, the refresh message says so, and the
+                entry is marked and listed first in its section.</li>
             <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
                 "this must not depend on that" by picking two nodes (a project, a namespace, a class, a resource). Every
                 dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the
