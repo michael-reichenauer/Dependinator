@@ -62,6 +62,10 @@
                 "title": "Dependinator: Re-parse Model"
             },
             {
+                "command": "dependinator.setClaudeApiKey",
+                "title": "Dependinator: Set Claude API Key"
+            },
+            {
                 "command": "dependinator.installInDevContainer",
                 "title": "Dependinator: Install in Dev Container"
             }

@@ -6,6 +6,7 @@
 @inject Modeling.IModelService modelService
 @inject IClipboardService clipboardService
 @inject ICyclePromptService cyclePromptService
+@inject ICycleSuggestionService cycleSuggestionService
 @implements IDisposable
 
 @* Circular dependencies, one row per cycle: the container and the sibling nodes that depend on
@@ -143,8 +144,10 @@
   async Task AcceptAsync(Cycle cycle)
   {
     // A cycle that grew since it was accepted starts from the earlier reason.
+    Func<Task<Result<CycleSuggestion>>>? suggest =
+      cycleSuggestionService.IsAvailable ? () => cycleSuggestionService.SuggestAsync(cycle) : null;
     var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
-      cycle.AcceptedBefore?.Reason ?? "", isEdit: false);
+      cycle.AcceptedBefore?.Reason ?? "", isEdit: false, suggest);
     if (result is not null)
       cycleService.Accept(cycle, result.Reason);
   }
@@ -160,7 +163,8 @@
       cycleService.SetReason(report.Accepted, result.Reason);
   }
 
-  async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit)
+  async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit,
+    Func<Task<Result<CycleSuggestion>>>? suggest = null)
   {
     var parameters = new DialogParameters
     {
@@ -168,8 +172,11 @@
       { nameof(AcceptCycleDialog.Members), members },
       { nameof(AcceptCycleDialog.Reason), reason },
       { nameof(AcceptCycleDialog.IsEdit), isEdit },
+      { nameof(AcceptCycleDialog.Suggest), suggest },
     };
-    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+    // Wider with Claude's suggestion, which can run to a paragraph.
+    var maxWidth = suggest is null ? MaxWidth.ExtraSmall : MaxWidth.Small;
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = maxWidth, FullWidth = true };
     var dialog = await dialogService.ShowAsync<AcceptCycleDialog>(null, parameters, options);
     var result = await dialog.Result;
     return result is { Canceled: false, Data: AcceptCycleDialogResult data } ? data : null;

@@ -8,7 +8,7 @@ namespace Dependinator.E2E.Tests.Ui;
 // Exercises View › Show Cycles: the panel opens with the cycles found in the model (or says
 // there are none) and closes again from its button; a cycle accepted with a reason moves to the
 // Accepted section, its reason can be edited, and removing the acceptance brings it back; a
-// cycle's AI prompt can be copied.
+// cycle's AI prompt can be copied, and Claude can suggest the reason.
 public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -57,6 +57,27 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await accepted.GetByTestId("cycles-accepted-remove").ClickAsync();
         await Expect(accepted).ToHaveCountAsync(0);
         await Expect(cycles).ToHaveCountAsync(open);
+    }
+
+    [E2EFact]
+    public async Task AcceptCycle_ShouldFillInTheReasonClaudeSuggests()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
+        await Page.GetByTestId("cycles-item").First.GetByTestId("cycles-accept").ClickAsync();
+        ILocator field = Page.GetByTestId("accept-cycle-reason");
+        await Expect(field).ToBeVisibleAsync();
+
+        // In test mode the app answers for Claude (no key or network), so this covers the dialog.
+        await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToHaveAttributeAsync("data-verdict", "accept");
+        await Expect(field).ToHaveValueAsync("Suggested in test mode");
+
+        await Page.GetByTestId("accept-cycle-save").ClickAsync();
+        await Expect(field).ToHaveCountAsync(0);
+        await Page.GetByTestId("cycles-accepted-toggle").ClickAsync();
+        await Expect(Page.GetByTestId("cycles-accepted-reason")).ToHaveTextAsync("Suggested in test mode");
     }
 
     [E2EFact]

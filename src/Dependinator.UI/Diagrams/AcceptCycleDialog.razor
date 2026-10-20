@@ -1,7 +1,9 @@
 @using MudBlazor
 
 @* Accepts a circular dependency as intended (or edits an acceptance): the cycle, and why it is
-   fine, shown in the cycles panel. Editing also offers to stop accepting it. *@
+   fine, shown in the cycles panel. Editing also offers to stop accepting it. Where the host can
+   ask Claude, "Suggest with Claude" asks for a verdict: accepting fills in the reason (nothing is
+   saved until the user accepts), breaking shows the change to make instead. *@
 <MudDialog>
   <TitleContent>
     <MudText Typo="Typo.h6">@(IsEdit ? "Accepted cycle" : "Accept cycle")</MudText>
@@ -11,6 +13,50 @@
       <span class="dep-cycles__container">@ContainerName</span>
       <span class="dep-cycles__members">@Members</span>
     </div>
+    @if (Suggest is not null)
+    {
+      <div class="dep-cycles__suggest">
+        <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" Size="Size.Small" Variant="Variant.Outlined"
+                   Disabled="isSuggesting" OnClick="SuggestAsync" data-testid="accept-cycle-suggest">
+          Suggest with Claude
+        </MudButton>
+        @if (isSuggesting)
+        {
+          <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+          <span class="dep-cycles__suggest-note">Asking Claude, this can take up to a minute.</span>
+        }
+      </div>
+      @if (suggestError is not null)
+      {
+        <div class="dep-cycles__suggest-error" data-testid="accept-cycle-suggest-error">@suggestError</div>
+      }
+      @if (suggestion is { } s)
+      {
+        <div class="dep-cycles__suggestion" data-testid="accept-cycle-suggestion"
+             data-verdict="@(s.IsAccept ? "accept" : "break")">
+          <div class="dep-cycles__suggestion-verdict">
+            @(s.IsAccept ? "Claude suggests accepting it" : "Claude suggests breaking it")
+          </div>
+          <div>@s.Why</div>
+          @if (!s.IsAccept && s.Change != "")
+          {
+            <div><b>Change:</b> @s.Change</div>
+          }
+          @if (s.Assumptions is not ("" or "None" or "None."))
+          {
+            <div class="dep-cycles__suggestion-note"><b>Assumptions:</b> @s.Assumptions</div>
+          }
+          @if (s.IsAccept && s.Reason != "" && s.Reason != Reason)
+          {
+            <div class="dep-cycles__suggestion-note">
+              <b>Suggested reason:</b> @s.Reason
+              <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => Reason = s.Reason"
+                         data-testid="accept-cycle-use-reason">Use it</MudButton>
+            </div>
+          }
+        </div>
+      }
+    }
     <MudTextField @ref="reasonField" T="string" @bind-Value="Reason" Label="Why is this cycle fine?" Lines="3"
                   Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
                   HelperText="Shown with the accepted cycle. It is reported again if another node joins it."
@@ -38,12 +84,38 @@
   [Parameter] public string Reason { get; set; } = "";
   [Parameter] public bool IsEdit { get; set; }
 
+  // Asks Claude for a verdict on the cycle; null where the host cannot ask Claude.
+  [Parameter] public Func<Task<Result<CycleSuggestion>>>? Suggest { get; set; }
+
   MudTextField<string> reasonField = null!;
+  bool isSuggesting;
+  CycleSuggestion? suggestion;
+  string? suggestError;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
     if (firstRender && reasonField is not null)
       await reasonField.FocusAsync();
+  }
+
+  // An accepting verdict fills in an empty reason; a reason the user wrote is kept, and the
+  // suggested one is offered next to it.
+  async Task SuggestAsync()
+  {
+    if (Suggest is null)
+      return;
+    isSuggesting = true;
+    suggestError = null;
+    var result = await Suggest();
+    isSuggesting = false;
+    if (result is not CycleSuggestion s)
+    {
+      suggestError = result.Error.Message;
+      return;
+    }
+    suggestion = s;
+    if (s.IsAccept && string.IsNullOrWhiteSpace(Reason))
+      Reason = s.Reason;
   }
 
   // Enter starts a new line in the reason; Ctrl+Enter (Cmd+Enter) saves.

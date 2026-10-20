@@ -28,8 +28,8 @@ project works.
 - **Oct**: the rest of the UX review (path finder, tour, share links, architecture rules, minimap,
   group and rubber-band selection), new line and container visuals, a release flow through `dev`,
   a README and community-files rework, the Bicep parser, zones, line labels and aliases,
-  node sizes by code and centrality in the automatic layout, accepted cycles, and AI prompts for
-  cycles.
+  node sizes by code and centrality in the automatic layout, accepted cycles, and AI prompts and
+  Claude's suggestions for cycles.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -138,6 +138,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   when there are many, per type. In the web host and VS Code it also shows the source of the
   directions made by only one or two types, the ones most likely to be broken or explained. The
   first step towards suggesting reasons with Claude directly.
+- **Suggest with Claude (Oct 20).** The accept-cycle dialog asks Claude for a verdict on the cycle
+  with the same prompt: an accepting verdict fills in the reason, a breaking one shows the change
+  to make, and nothing is saved until the user accepts. It uses the user's own Anthropic API key
+  (VS Code secret storage via a new command, or `ANTHROPIC_API_KEY` for the web host); the request
+  runs in the LSP or the web host through Anthropic's C# SDK (new `Dependinator.Claude` library),
+  never in the browser app.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design

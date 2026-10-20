@@ -1,4 +1,5 @@
 using Dependinator.Bicep;
+using Dependinator.Claude;
 using Dependinator.Core;
 using Dependinator.Core.CloudSync;
 using Dependinator.Core.Rpc;
@@ -47,6 +48,8 @@ public class Program
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddDependinatorRoslynServices();
         builder.Services.AddDependinatorBicepServices();
+        builder.Services.AddDependinatorClaudeServices();
+        builder.Services.AddSingleton<IClaudeApiKeyProvider, EnvironmentClaudeApiKeyProvider>();
 
         // Cloud sync — registered after AddDependinatorServices so the explicit
         // ICloudSyncService binding overrides Scrutor's assembly-scanned defaults.
@@ -67,6 +70,7 @@ public class Program
 
         var app = builder.Build();
         app.Services.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
+        app.Services.UseJsonRpcClasses(typeof(DependinatorClaudeServiceCollectionExtensions));
         app.Services.UseJsonRpc();
         // The dev host lists this repository's models (the working solution and the sample Bicep
         // deployments), so the workspace is the repository root wherever it is checked out (CI

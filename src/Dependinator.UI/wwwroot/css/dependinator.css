@@ -267,6 +267,50 @@
     gap: 2px;
 }
 
+/* "Suggest with Claude" in the accept dialog, and Claude's verdict below it. */
+.dep-cycles__suggest {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.dep-cycles__suggest-note {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.dep-cycles__suggest-error {
+    margin-top: 8px;
+    color: var(--mud-palette-error);
+    font-size: 0.875rem;
+    white-space: pre-line;
+}
+
+.dep-cycles__suggestion {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--mud-palette-primary);
+    background: var(--mud-palette-background-gray);
+    font-size: 0.875rem;
+    word-break: break-word;
+}
+
+.dep-cycles__suggestion[data-verdict="break"] {
+    border-left-color: var(--mud-palette-warning);
+}
+
+.dep-cycles__suggestion-verdict {
+    font-weight: 600;
+}
+
+.dep-cycles__suggestion-note {
+    color: var(--mud-palette-text-secondary);
+}
+
 /* The search dialog in picker mode (PathPanel.razor): what the chosen node will be used for. */
 .search-dialog__caption {
     display: block;

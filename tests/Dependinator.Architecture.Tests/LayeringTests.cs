@@ -4,7 +4,7 @@ using NetArchTest.Rules;
 namespace Dependinator.Architecture.Tests;
 
 // Guards the solution's layering direction against future drift. The dependency direction is
-// Hosts -> UI -> Core -> Shared (with Roslyn -> Core, Bicep -> Core and Reflection -> Core). Today the project references already make
+// Hosts -> UI -> Core -> Shared (with Roslyn -> Core, Bicep -> Core, Reflection -> Core and Claude -> Core). Today the project references already make
 // upward dependencies impossible to compile, but these tests fail loudly if someone later adds
 // such a reference (e.g. Core taking a dependency on UI for a "quick fix").
 public class LayeringTests
@@ -15,6 +15,7 @@ public class LayeringTests
     static readonly Assembly RoslynAssembly = Assembly.Load("Dependinator.Roslyn");
     static readonly Assembly ReflectionAssembly = Assembly.Load("Dependinator.Reflection");
     static readonly Assembly BicepAssembly = Assembly.Load("Dependinator.Bicep");
+    static readonly Assembly ClaudeAssembly = Assembly.Load("Dependinator.Claude");
 
     static readonly string[] HostAssemblies = ["Dependinator.Web", "Dependinator.Wasm", "Dependinator.Lsp", "Api"];
 
@@ -28,6 +29,7 @@ public class LayeringTests
                 "Dependinator.Roslyn",
                 "Dependinator.Bicep",
                 "Dependinator.Reflection",
+                "Dependinator.Claude",
                 .. HostAssemblies,
             ]
         );
@@ -58,6 +60,24 @@ public class LayeringTests
     }
 
     [Fact]
+    public void Claude_ShouldNotDependOnUiOrParsersOrHosts()
+    {
+        AssertNoDependencyOn(
+            ClaudeAssembly,
+            ["Dependinator.UI", "Dependinator.Roslyn", "Dependinator.Bicep", .. HostAssemblies]
+        );
+    }
+
+    // Core and UI run in the browser too (the Wasm host), so the Anthropic SDK stays out of them:
+    // the UI reaches Claude through Core's IClaudeService over RPC.
+    [Fact]
+    public void CoreAndUi_ShouldNotDependOnTheClaudeSdk()
+    {
+        AssertNoDependencyOn(CoreAssembly, ["Dependinator.Claude", "Anthropic"]);
+        AssertNoDependencyOn(UiAssembly, ["Dependinator.Claude", "Anthropic"]);
+    }
+
+    [Fact]
     public void Reflection_ShouldNotDependOnUiOrHosts()
     {
         AssertNoDependencyOn(ReflectionAssembly, ["Dependinator.UI", .. HostAssemblies]);
@@ -74,6 +94,7 @@ public class LayeringTests
                 "Dependinator.Roslyn",
                 "Dependinator.Bicep",
                 "Dependinator.Reflection",
+                "Dependinator.Claude",
                 .. HostAssemblies,
             ]
         );

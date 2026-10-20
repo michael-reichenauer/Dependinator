@@ -22,9 +22,10 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 - `src/Dependinator.Roslyn/` — Roslyn-based parsing (`Parsing/`)
 - `src/Dependinator.Bicep/` — Azure Bicep parsing (`Parsing/`) with the Bicep compiler library `Azure.Bicep.Core` (pinned in `Directory.Packages.props`, ignored by Dependabot); never write `Bicep.Core.*` qualified inside its `Dependinator.Bicep` namespace (see its `Usings.cs`)
 - `src/Dependinator.Reflection/` — reflection-based parsing of compiled assemblies/solutions (`Parsing/`); currently inactive, not referenced by any host
+- `src/Dependinator.Claude/` — asks Claude with the user's own Anthropic API key (official `Anthropic` C# SDK); implements Core's `IClaudeService` RPC for the Web host and the LSP
 - `src/Shared/` — shared DTOs/models between client and API
 
-**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Bicep.Tests/` (parses the sample deployment under its `Samples/`), `tests/Dependinator.Reflection.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
+**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Bicep.Tests/` (parses the sample deployment under its `Samples/`), `tests/Dependinator.Reflection.Tests/`, `tests/Dependinator.Claude.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
 
 The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution folders.
 
@@ -123,6 +124,8 @@ dotnet list Dependinator.sln package --vulnerable
 
 **Parsing pipeline:** `src/Dependinator.Core/Parsing/` orchestrates via `ParserService`, which dispatches to the first registered `ISourceParser` whose `CanParse(path)` matches (Roslyn for `.sln`, Bicep for `.bicep`, the browser stub for the demo model only). Roslyn-specific logic lives in `src/Dependinator.Roslyn/Parsing/`; Bicep parsing (an entry-point `.bicep` plus its local modules, resources drawn with Azure icons via a parser-supplied `NodeProperties.IconName`) lives in `src/Dependinator.Bicep/Parsing/`. The older reflection/assembly parsing (Mono.Cecil + decompilation, MSBuild solutions, json model files) lives in `src/Dependinator.Reflection/` — inactive; re-activate by referencing the project and calling `AddDependinatorReflectionServices()`.
 
+**AI help (Claude):** the cycles panel copies a prompt for any AI chat (`CyclePrompt`, with source from `IWorkspaceFileService.ReadSourceFileAsync` in the Web host and VS Code), and the accept dialog's "Suggest with Claude" sends it through Core's `[Rpc] IClaudeService` (structured output). Like cloud sync, the UI never calls the API itself: the Web host runs `src/Dependinator.Claude` in process with the key from `ANTHROPIC_API_KEY`; in VS Code the LSP runs it and asks the extension for the key (`DependinatorVsCode/src/claudeApiKey.ts`, VS Code secret storage, command "Dependinator: Set Claude API Key"). The standalone Wasm app offers neither source nor Claude. Third-party apps may not use a user's claude.ai subscription, hence the user's own API key.
+
 **Cloud sync auth:** All hosts use Clerk for authentication. The API validates Clerk-issued JWTs via JWKS. Browser hosts (Blazor Server and WASM) use Clerk.js for sign-in and attach Bearer tokens to API requests. The VS Code extension serves a local sign-in page with Clerk.js and stores the JWT in VS Code secrets. All API calls use Bearer tokens via the `Authorization` or `X-Dependinator-Authorization` header.
 
 **Wasm cloud sync routing:** the browser-hosted `Dependinator.Wasm` calls `/api` directly; the VS Code-hosted `Dependinator.Wasm` routes cloud sync over the JSON-RPC tunnel to the LSP (`src/Dependinator.Lsp/CloudSync/`), which makes the API calls. The extension (`DependinatorVsCode/src/cloudSyncAuth.ts`) only performs the Clerk sign-in and stores the access token.
@@ -131,7 +134,7 @@ dotnet list Dependinator.sln package --vulnerable
 
 **VS Code extension:** when editing functionality used by the extension, check `src/DependinatorVsCode/scripts/` for corresponding build steps.
 
-**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`, `Bicep → Core` and `Reflection → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, Bicep, Reflection, hosts, or UI frameworks (MudBlazor/ASP.NET Core), and Shared must not reference other Dependinator projects. Don't add references against this direction.
+**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`, `Bicep → Core`, `Reflection → Core` and `Claude → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, Bicep, Reflection, Claude, hosts, or UI frameworks (MudBlazor/ASP.NET Core), Core and UI must not reference the Anthropic SDK (they ship to the browser), and Shared must not reference other Dependinator projects. Don't add references against this direction.
 
 ## Committing
 
