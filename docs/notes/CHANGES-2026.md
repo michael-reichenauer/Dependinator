@@ -132,15 +132,17 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   acceptance is saved with the model and can be undone. The cycle is reported again if a node
   joins it. An acceptance whose cycle is gone is kept, marked "no longer a cycle", until the user
   removes it.
-- **AI prompt for a cycle (Oct 19).** A button on each cycle copies a prompt that asks an AI chat
+- **AI prompt for a cycle (Oct 19).** A copy button in each cycle's review copies a prompt that asks an AI chat
   whether the cycle is intended (with a reason to accept it with) or should be broken, and how. It
   lists the members with their descriptions and the links in each direction, grouped per member or,
   when there are many, per type. In the web host and VS Code it also shows the source of the
   directions made by only one or two types, the ones most likely to be broken or explained. The
   first step towards suggesting reasons with Claude directly.
-- **Suggest with Claude (Oct 20).** The accept-cycle dialog asks Claude for a verdict on the cycle
-  with the same prompt: an accepting verdict fills in the reason, a breaking one shows the change
-  to make, and nothing is saved until the user accepts. It uses the user's own Anthropic API key
+- **Ask Claude (Oct 20).** Each cycle has one Review button; its dialog copies the AI prompt and
+  asks Claude for a verdict on the cycle with it: an accepting verdict fills in the reason, a
+  breaking one shows the change to make, and nothing is saved until the user decides. "Ask again"
+  keeps every answer, so the user can pick one when they differ (a borderline cycle), and accepting
+  anyway keeps the suggested fix in the reason. It uses the user's own Anthropic API key
   (VS Code secret storage via a new command, or `ANTHROPIC_API_KEY` for the web host). In VS Code
   the key is asked for on first use, and again when Claude does not accept it, with the dialog
   pointing at the input box at the top of the window, since the user is watching the dialog. When

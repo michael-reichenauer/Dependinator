@@ -244,22 +244,22 @@
                 background" lets you keep exploring while it finishes. A background refresh tells you what changed.</li>
             <li class="feature"><b>Find cycles</b> — <b>View › Show Cycles</b> lists every container whose children
                 depend on each other in a circle (projects, namespaces, classes or resources referencing each other) and draws
-                those lines in red; click a row to go there. A cycle that is intended can be <b>accepted</b> with a
-                reason (the check button on its row): it moves to the Accepted section and its lines are drawn
-                normally. It is reported again if another node joins it. Accepting is saved with the model and can be
-                undone. If a refactor removes an accepted cycle, its entry stays, marked "no longer a cycle", until you
-                remove it. Not sure? The sparkle button on a row copies a prompt for an AI chat (such as claude.ai) that
-                asks whether the cycle is intended, with a reason to accept it with, or how to break it. In VS Code and
-                the local web app the prompt includes the source code behind the cycle's thinnest dependencies, and
-                <b>Suggest with Claude</b> in the accept dialog asks Claude directly, with your own Anthropic API key.
-                In VS Code you are asked for the key the first time (in a box at the top of the window; the dialog
-                says so), and again if Claude does not accept it; the command "Dependinator: Set Claude API Key"
-                changes it. It fills in a suggested reason, or, when Claude suggests breaking the cycle, shows the change
-                and offers <b>Copy fix prompt</b>: a prompt for Claude Code (or another AI that can change the code) to
-                make it. <b>Fix later</b> moves the cycle to the <b>To fix</b> section with the planned change; its lines
-                stay red, and its fix prompt can be copied from there. Nothing else is saved until you accept. When a
-                refresh breaks an accepted or to-fix cycle, or a node joins one, the refresh message says so, and the
-                entry is marked and listed first in its section.</li>
+                those lines in red; click a row to go there. The <b>review</b> button on a row opens the cycle's review.
+                A cycle that is intended can be <b>accepted</b> with a reason: it moves to the Accepted section and its
+                lines are drawn normally. It is reported again if another node joins it. Accepting is saved with the model
+                and can be undone. Not sure? The copy button in the review copies a prompt for an AI chat (such as
+                claude.ai) that asks whether the cycle is intended, or how to break it; in VS Code and the local web app it
+                includes the source code behind the cycle's thinnest dependencies. There, <b>Ask Claude</b> asks Claude
+                directly, with your own Anthropic API key (VS Code asks for it the first time, in a box at the top of the
+                window, and the dialog says so; the command "Dependinator: Set Claude API Key" changes it). <b>Ask
+                again</b> for a second opinion: each answer is kept, and when they differ you pick the one that convinces
+                you. An accepting answer fills in the reason. A breaking one shows the change and offers <b>Copy fix
+                prompt</b>, a prompt for Claude Code (or another AI that can change the code) to make it; <b>Fix
+                later</b>, which moves the cycle to the <b>To fix</b> section with the planned change (its lines stay red,
+                and its fix prompt can be copied from there); or <b>Accept anyway</b>, with the suggested fix kept in the
+                reason. Nothing is saved until you decide. If a refactor breaks an accepted or to-fix cycle, or a node
+                joins one, the refresh message says so, and the entry is marked and listed first in its section until you
+                remove it.</li>
             <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
                 "this must not depend on that" by picking two nodes (a project, a namespace, a class, a resource). Every
                 dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the

@@ -1,81 +1,121 @@
 @using MudBlazor
 @inject IClipboardService clipboardService
 
-@* Accepts a circular dependency as intended (or edits an acceptance): the cycle, and why it is
-   fine, shown in the cycles panel. Editing also offers to stop accepting it. Where the host can
-   ask Claude, "Suggest with Claude" asks for a verdict: accepting fills in the reason (nothing is
-   saved until the user accepts), breaking shows the change to make instead and offers a prompt for
-   an AI that can change the code as the main action, with fixing later (the planned change saved)
-   and accepting anyway as the alternatives. In VS Code the API
-   key is entered in an input box at the top of the window, which is easy to miss while watching
-   this dialog, so the dialog points there while it waits. *@
+@* Reviews a circular dependency (or edits an acceptance): accept it as intended, with why, shown
+   in the cycles panel; editing also offers to stop accepting it. The header copies a prompt for
+   any AI chat, and, where the host can ask Claude, "Ask Claude" asks for a verdict. Each answer is
+   kept while the dialog is open (answers can differ for a borderline cycle, and the dialog says so
+   then), and the selected one drives the rest: accepting fills in the reason, breaking shows the
+   change to make, with a prompt for an AI that can change the code as the main action, and fixing
+   later or accepting anyway as the alternatives. A reason the dialog filled in follows the
+   selected answer until the user edits it. Nothing is saved until the user decides. In VS Code
+   the API key is entered in an input box at the top of the window, which is easy to miss while
+   watching this dialog, so the dialog points there while it waits. *@
 <MudDialog>
   <TitleContent>
-    <MudText Typo="Typo.h6">@(IsEdit ? "Accepted cycle" : "Accept cycle")</MudText>
+    <div class="dep-cycles__dialog-title">
+      <MudText Typo="Typo.h6">@(IsEdit ? "Accepted cycle" : "Review cycle")</MudText>
+      <MudSpacer />
+      @if (CopyPrompt is not null)
+      {
+        @if (Suggest is null)
+        {
+          <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Size="Size.Small" Variant="Variant.Outlined"
+                     OnClick="CopyPromptAsync" data-testid="accept-cycle-copy-prompt">Copy AI prompt</MudButton>
+        }
+        else
+        {
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Size="Size.Small"
+                         title="Copy a prompt that asks any AI chat about this cycle"
+                         OnClick="CopyPromptAsync" data-testid="accept-cycle-copy-prompt" />
+        }
+      }
+      @if (Suggest is not null)
+      {
+        <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" Size="Size.Small"
+                   Variant="@(answers.Count == 0 ? Variant.Outlined : Variant.Text)" Disabled="isSuggesting"
+                   title="Ask Claude whether this cycle is intended or should be broken, with your own API key"
+                   OnClick="SuggestAsync" data-testid="accept-cycle-suggest">
+          @(answers.Count == 0 ? "Ask Claude" : "Ask again")
+        </MudButton>
+      }
+    </div>
   </TitleContent>
   <DialogContent>
     <div class="dep-cycles__dialog-cycle" data-testid="accept-cycle-text">
       <span class="dep-cycles__container">@ContainerName</span>
       <span class="dep-cycles__members">@Members</span>
     </div>
-    @if (Suggest is not null)
+    @if (copyNote is not null)
+    {
+      <div class="dep-cycles__suggest-note mt-2" data-testid="accept-cycle-copied">@copyNote</div>
+    }
+    @if (step is SuggestStep.AskingClaude)
     {
       <div class="dep-cycles__suggest">
-        <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" Size="Size.Small" Variant="Variant.Outlined"
-                   Disabled="isSuggesting" OnClick="SuggestAsync" data-testid="accept-cycle-suggest">
-          Suggest with Claude
-        </MudButton>
-        @if (step is SuggestStep.AskingClaude)
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+        <span class="dep-cycles__suggest-note">Asking Claude, this can take up to a minute.</span>
+      </div>
+    }
+    @if (step is SuggestStep.EnteringApiKey or SuggestStep.EnteringNewApiKey)
+    {
+      <MudAlert Severity="Severity.Info" Icon="@MudBlazor.Icons.Material.Filled.ArrowUpward" Class="mt-2"
+                data-testid="accept-cycle-enter-key">
+        @EnterKeyMessage(step.Value)
+      </MudAlert>
+    }
+    @if (suggestError is not null)
+    {
+      <div class="dep-cycles__suggest-error" data-testid="accept-cycle-suggest-error">@suggestError</div>
+    }
+    @if (answers.Count > 1)
+    {
+      <div class="dep-cycles__answers">
+        @for (var i = 0; i < answers.Count; i++)
         {
-          <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-          <span class="dep-cycles__suggest-note">Asking Claude, this can take up to a minute.</span>
+          var index = i;
+          <MudButton Size="Size.Small" Variant="@(index == selected ? Variant.Filled : Variant.Outlined)"
+                     Color="@(index == selected ? Color.Primary : Color.Default)" OnClick="() => Select(index)"
+                     data-testid="accept-cycle-answer" data-selected="@(index == selected ? "true" : "false")">
+            @($"{index + 1} · {(answers[index].IsAccept ? "Accept" : "Break")}")
+          </MudButton>
         }
       </div>
-      @if (step is SuggestStep.EnteringApiKey or SuggestStep.EnteringNewApiKey)
+      @if (AnswersDiffer)
       {
-        <MudAlert Severity="Severity.Info" Icon="@MudBlazor.Icons.Material.Filled.ArrowUpward" Class="mt-2"
-                  data-testid="accept-cycle-enter-key">
-          @EnterKeyMessage(step.Value)
-        </MudAlert>
-      }
-      @if (suggestError is not null)
-      {
-        <div class="dep-cycles__suggest-error" data-testid="accept-cycle-suggest-error">@suggestError</div>
-      }
-      @if (suggestion is { } s)
-      {
-        <div class="dep-cycles__suggestion" data-testid="accept-cycle-suggestion"
-             data-verdict="@(s.IsAccept ? "accept" : "break")">
-          <div class="dep-cycles__suggestion-verdict">
-            @(s.IsAccept ? "Claude suggests accepting it" : "Claude suggests breaking it")
-          </div>
-          <div>@s.Why</div>
-          @if (!s.IsAccept && s.Change != "")
-          {
-            <div><b>Change:</b> @s.Change</div>
-          }
-          @if (isFixPromptCopied)
-          {
-            <div class="dep-cycles__suggestion-note" data-testid="accept-cycle-fix-copied">
-              The fix prompt is copied. Paste it into Claude Code, or another AI that can change the code.
-            </div>
-          }
-          @if (s.Assumptions is not ("" or "None" or "None."))
-          {
-            <div class="dep-cycles__suggestion-note"><b>Assumptions:</b> @s.Assumptions</div>
-          }
-          @if (s.IsAccept && s.Reason != "" && s.Reason != Reason)
-          {
-            <div class="dep-cycles__suggestion-note">
-              <b>Suggested reason:</b> @s.Reason
-              <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => Reason = s.Reason"
-                         data-testid="accept-cycle-use-reason">Use it</MudButton>
-            </div>
-          }
+        <div class="dep-cycles__suggest-note" data-testid="accept-cycle-answers-differ">
+          Claude's answers differ, so this is a judgement call. Pick the one that convinces you, or decide yourself.
         </div>
       }
     }
-    <MudTextField @ref="reasonField" T="string" @bind-Value="Reason" Label="Why is this cycle fine?" Lines="3"
+    @if (Selected is { } s)
+    {
+      <div class="dep-cycles__suggestion" data-testid="accept-cycle-suggestion"
+           data-verdict="@(s.IsAccept ? "accept" : "break")">
+        <div class="dep-cycles__suggestion-verdict">
+          @(s.IsAccept ? "Claude suggests accepting it" : "Claude suggests breaking it")
+        </div>
+        <div>@s.Why</div>
+        @if (!s.IsAccept && s.Change != "")
+        {
+          <div><b>Change:</b> @s.Change</div>
+        }
+        @if (s.Assumptions is not ("" or "None" or "None."))
+        {
+          <div class="dep-cycles__suggestion-note"><b>Assumptions:</b> @s.Assumptions</div>
+        }
+        @if (s.IsAccept && s.Reason != "" && s.Reason != Reason)
+        {
+          <div class="dep-cycles__suggestion-note">
+            <b>Suggested reason:</b> @s.Reason
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => UseReason(s.Reason)"
+                       data-testid="accept-cycle-use-reason">Use it</MudButton>
+          </div>
+        }
+      </div>
+    }
+    <MudTextField @ref="reasonField" T="string" @bind-Value="Reason"
+                  Label="@(IsBreakSuggested ? "Why accept it anyway?" : "Why is this cycle fine?")" Lines="3"
                   Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
                   HelperText="Shown with the accepted cycle. It is reported again if another node joins it."
                   data-testid="accept-cycle-reason" />
@@ -113,6 +153,9 @@
   [Parameter] public string Reason { get; set; } = "";
   [Parameter] public bool IsEdit { get; set; }
 
+  // The prompt that asks any AI chat about the cycle, to copy.
+  [Parameter] public Func<Task<string>>? CopyPrompt { get; set; }
+
   // Asks Claude for a verdict on the cycle, telling each step; null where the host cannot ask Claude.
   [Parameter] public Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? Suggest { get; set; }
 
@@ -122,12 +165,18 @@
   MudTextField<string> reasonField = null!;
   bool isSuggesting;
   SuggestStep? step;
-  CycleSuggestion? suggestion;
+  readonly List<CycleSuggestion> answers = [];
+  int selected = -1;
+  string? prefilledReason;
   string? suggestError;
-  bool isFixPromptCopied;
+  string? copyNote;
+
+  CycleSuggestion? Selected => selected >= 0 ? answers[selected] : null;
 
   // Claude suggests breaking the cycle: fixing it is the main action, accepting it the override.
-  bool IsBreakSuggested => suggestion is { IsAccept: false } && FixPrompt is not null;
+  bool IsBreakSuggested => Selected is { IsAccept: false } && FixPrompt is not null;
+
+  bool AnswersDiffer => answers.Any(a => a.IsAccept) && answers.Any(a => !a.IsAccept);
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -135,15 +184,15 @@
       await reasonField.FocusAsync();
   }
 
-  // An accepting verdict fills in an empty reason; a reason the user wrote is kept, and the
-  // suggested one is offered next to it.
+  // Each answer is kept, and the new one selected; an error leaves the earlier answers as they are.
   async Task SuggestAsync()
   {
     if (Suggest is null)
       return;
     isSuggesting = true;
     suggestError = null;
-    isFixPromptCopied = false;
+    copyNote = null;
+    RefreshTitle();
     var result = await Suggest(next =>
     {
       step = next;
@@ -151,22 +200,63 @@
     });
     isSuggesting = false;
     step = null;
+    RefreshTitle();
     if (result is not CycleSuggestion s)
     {
       suggestError = result.Error.Message;
       return;
     }
-    suggestion = s;
-    if (s.IsAccept && string.IsNullOrWhiteSpace(Reason))
-      Reason = s.Reason;
+    answers.Add(s);
+    Select(answers.Count - 1);
+    RefreshTitle();
+  }
+
+  // The title row (with "Ask Claude") is rendered by the dialog instance, which does not render
+  // again with this component, so it is told to.
+  void RefreshTitle() => MudDialog.StateHasChanged();
+
+  // The reason field follows the selected answer while it holds what the dialog filled in (or is
+  // empty); a reason the user wrote is kept, and an accepting answer's reason offered next to it.
+  void Select(int index)
+  {
+    selected = index;
+    copyNote = null;
+    if (string.IsNullOrWhiteSpace(Reason) || Reason == prefilledReason)
+      UseReason(ReasonFrom(answers[index]));
+  }
+
+  void UseReason(string reason)
+  {
+    Reason = reason;
+    prefilledReason = reason;
+  }
+
+  // Accepting anyway keeps the suggested fix with the acceptance, for whoever looks at it later.
+  static string ReasonFrom(CycleSuggestion answer) =>
+    answer.IsAccept ? answer.Reason
+    : answer.Change == "" ? "Accepted anyway, though Claude suggested breaking it."
+    : $"Accepted anyway; suggested fix: {answer.Change}";
+
+  async Task CopyPromptAsync()
+  {
+    if (CopyPrompt is null)
+      return;
+    await CopyAsync(await CopyPrompt(),
+      "The prompt is copied. Paste it into an AI chat, such as claude.ai, then accept or fix the cycle with its answer.");
   }
 
   async Task CopyFixPromptAsync()
   {
-    if (suggestion is not { } s || FixPrompt is null)
+    if (Selected is not { } s || FixPrompt is null)
       return;
-    isFixPromptCopied = await clipboardService.CopyAsync(FixPrompt(s));
-    suggestError = isFixPromptCopied ? null : "Could not copy the fix prompt to the clipboard.";
+    await CopyAsync(FixPrompt(s), "The fix prompt is copied. Paste it into Claude Code, or another AI that can change the code.");
+  }
+
+  async Task CopyAsync(string text, string note)
+  {
+    var isCopied = await clipboardService.CopyAsync(text);
+    copyNote = isCopied ? note : null;
+    suggestError = isCopied ? null : "Could not copy to the clipboard.";
   }
 
   // Where to enter the key: in VS Code an input box at the top of the window, outside this UI. The
@@ -175,8 +265,8 @@
     !Dependinator.Core.Build.IsVsCodeExtWasm ? "Checking the Claude API key ..."
     : step is SuggestStep.EnteringNewApiKey
       ? "Claude did not accept the stored API key. Enter a new one in the box at the top of the VS Code window."
-    : "Suggest with Claude uses your own Anthropic API key, from console.anthropic.com (billed to your account, "
-      + "a few cents per suggestion). Enter it in the box at the top of the VS Code window.";
+    : "Asking Claude uses your own Anthropic API key, from console.anthropic.com (billed to your account, "
+      + "a few cents per answer). Enter it in the box at the top of the VS Code window.";
 
   // Enter starts a new line in the reason; Ctrl+Enter (Cmd+Enter) saves.
   void OnKeyDown(KeyboardEventArgs e)
@@ -190,7 +280,7 @@
   void Unaccept() => MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult("", true)));
 
   void FixLater() =>
-    MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult(suggestion?.Change ?? "", false, IsFixLater: true)));
+    MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult(Selected?.Change ?? "", false, IsFixLater: true)));
 
   void Cancel() => MudDialog.Cancel();
 }

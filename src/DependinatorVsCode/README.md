@@ -78,7 +78,7 @@ navigation tips, and keyboard/mouse controls.
 | `Dependinator: Reveal Current File in Diagram` | Show the node for the file at the cursor (`Ctrl+Alt+D`, `Cmd+Alt+D` on macOS; also in the editor's right-click menu). |
 | `Dependinator: Search Nodes` | Open the diagram's node search. |
 | `Dependinator: Re-parse Model` | Parse the solution or Bicep deployment again now. |
-| `Dependinator: Set Claude API Key` | Store (or, left empty, remove) your own Anthropic API key, from console.anthropic.com, for "Suggest with Claude" when accepting a cycle (you are also asked for it on first use). It is kept in VS Code's secret storage and sent only to Anthropic. |
+| `Dependinator: Set Claude API Key` | Store (or, left empty, remove) your own Anthropic API key, from console.anthropic.com, for "Ask Claude" when reviewing a cycle (you are also asked for it on first use). It is kept in VS Code's secret storage and sent only to Anthropic. |
 | `Dependinator: Install in Dev Container` | Jump to the Extensions view to install the extension inside a dev container. |
 
 ## Settings

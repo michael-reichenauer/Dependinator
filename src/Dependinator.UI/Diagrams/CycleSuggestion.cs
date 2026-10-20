@@ -69,10 +69,10 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IClaudeServ
 
     public async Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle, Action<SuggestStep> onStep)
     {
-        // The e2e tests exercise the dialog without a key or network: a pair is accepted, a
-        // larger cycle broken, so both verdicts can be tried.
+        // The e2e tests exercise the dialog without a key or network: a larger cycle is to be
+        // broken, a pair accepted and, asked again, broken, so differing answers can be tried too.
         if (Dependinator.Core.Build.IsTestMode)
-            return cycle.Members.Count == 2 ? TestModeAccept : TestModeBreak;
+            return cycle.Members.Count == 2 && testModeAsks++ % 2 == 0 ? TestModeAccept : TestModeBreak;
 
         var hasAskedForKey = false;
         string? prompt = null;
@@ -97,6 +97,8 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IClaudeServ
                 return answer.Error;
         }
     }
+
+    int testModeAsks;
 
     static readonly CycleSuggestion TestModeAccept = new(
         true,

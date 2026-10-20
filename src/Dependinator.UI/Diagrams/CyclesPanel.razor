@@ -11,9 +11,10 @@
 
 @* Circular dependencies, one row per cycle: the container and the sibling nodes that depend on
    each other in a circle. While open, the lines of those cycles are drawn in the warning color.
-   Clicking a row navigates to the container. A cycle that is intended can be accepted with a
-   reason (saved with the model, undoable): it moves to the collapsed Accepted section and its
-   lines are drawn normally. A cycle Claude suggests breaking can be marked to fix later instead:
+   Clicking a row navigates to the container. Its review button opens the review dialog (an AI
+   prompt to copy, Claude's verdict where the host can ask Claude). A cycle that is intended can be
+   accepted with a reason (saved with the model, undoable): it moves to the collapsed Accepted
+   section and its lines are drawn normally. A cycle Claude suggests breaking can be marked to fix later instead:
    it moves to the To fix section with the planned change, keeps its red lines, and offers a fix
    prompt for an AI that can change the code. An entry whose cycle is gone stays, marked, until
    removed; one whose cycle a node joined says so (the grown cycle is listed as open again). Those
@@ -44,7 +45,7 @@
     }
     else
     {
-      <div class="dep-panel__hint">Projects, namespaces or types in one container that depend on each other in a circle. Their lines are drawn red. Accept a cycle that is intended, with why.</div>
+      <div class="dep-panel__hint">Projects, namespaces or types in one container that depend on each other in a circle. Their lines are drawn red. Review a cycle to accept it as intended, with why, or to ask an AI whether and how to break it.</div>
     }
     <div class="dep-panel__list">
       @foreach (var cycle in cycles)
@@ -59,12 +60,8 @@
               <span class="dep-cycles__note" data-testid="cycles-item-grown">@(before.IsToFix ? "Marked to fix" : "Accepted") before; @JoinedSince(cycle, before) joined it since.</span>
             }
           </button>
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" Size="Size.Small"
-                         title="Copy a prompt that asks an AI whether this cycle is intended or should be broken"
-                         OnClick="() => CopyPromptAsync(cycle)" data-testid="cycles-copy-prompt" />
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.TaskAlt" Size="Size.Small"
-                         title="Accept this cycle as intended, with why" OnClick="() => AcceptAsync(cycle)"
-                         data-testid="cycles-accept" />
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.RateReview" Size="Size.Small"
+                         title="@ReviewTitle" OnClick="() => ReviewAsync(cycle)" data-testid="cycles-review" />
         </div>
       }
 
@@ -212,18 +209,9 @@
 
   Task ShowAsync(Modeling.Models.NodeId containerId) => navigationService.ShowNodeAsync(containerId);
 
-  // The user pastes the prompt into an AI chat and brings the verdict back: a reason to accept
-  // the cycle with, or a change to make.
-  async Task CopyPromptAsync(Cycle cycle)
-  {
-    if (!await clipboardService.CopyAsync(await cyclePromptService.GetPromptAsync(cycle)))
-    {
-      applicationEvents.TriggerErrorReported("Could not copy the prompt to the clipboard.");
-      return;
-    }
-    applicationEvents.TriggerInfoReported(
-      "AI prompt copied. Paste it into an AI chat, such as claude.ai: it answers whether to accept the cycle, with a reason, or how to break it.");
-  }
+  string ReviewTitle => cycleSuggestionService.IsAvailable
+    ? "Review this cycle: accept it as intended, or let Claude suggest whether and how to break it"
+    : "Review this cycle: accept it as intended, with why, or copy a prompt for an AI chat";
 
   // From the To fix list, where only the planned change is kept.
   async Task CopyFixPromptAsync(Cycle cycle, string plannedChange)
@@ -238,14 +226,15 @@
       "Fix prompt copied. Paste it into Claude Code, or another AI that can change the code.");
   }
 
-  async Task AcceptAsync(Cycle cycle)
+  async Task ReviewAsync(Cycle cycle)
   {
     // A cycle that grew since it was accepted starts from the earlier reason (not from a planned change).
     var reason = cycle.AcceptedBefore is { IsToFix: false } before ? before.Reason : "";
     Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest =
       cycleSuggestionService.IsAvailable ? onStep => cycleSuggestionService.SuggestAsync(cycle, onStep) : null;
     var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
-      reason, isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s));
+      reason, isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s),
+      () => cyclePromptService.GetPromptAsync(cycle));
     if (result is null)
       return;
     if (result.IsFixLater)
@@ -267,7 +256,7 @@
 
   async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit,
     Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest = null,
-    Func<CycleSuggestion, string>? fixPrompt = null)
+    Func<CycleSuggestion, string>? fixPrompt = null, Func<Task<string>>? copyPrompt = null)
   {
     var parameters = new DialogParameters
     {
@@ -277,9 +266,10 @@
       { nameof(AcceptCycleDialog.IsEdit), isEdit },
       { nameof(AcceptCycleDialog.Suggest), suggest },
       { nameof(AcceptCycleDialog.FixPrompt), fixPrompt },
+      { nameof(AcceptCycleDialog.CopyPrompt), copyPrompt },
     };
-    // Wider with Claude's suggestion, which can run to a paragraph.
-    var maxWidth = suggest is null ? MaxWidth.ExtraSmall : MaxWidth.Small;
+    // Wider for a review, with its header buttons and Claude's answer, which can run to a paragraph.
+    var maxWidth = isEdit ? MaxWidth.ExtraSmall : MaxWidth.Small;
     var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = maxWidth, FullWidth = true };
     var dialog = await dialogService.ShowAsync<AcceptCycleDialog>(null, parameters, options);
     var result = await dialog.Result;

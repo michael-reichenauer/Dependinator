@@ -267,7 +267,22 @@
     gap: 2px;
 }
 
-/* "Suggest with Claude" in the accept dialog, and Claude's verdict below it. */
+/* The review dialog's title row, with the copy-prompt and "Ask Claude" buttons on the right. */
+.dep-cycles__dialog-title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* One chip per answer from Claude, when asked more than once. */
+.dep-cycles__answers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+/* Asking Claude in the review dialog, and Claude's verdict. */
 .dep-cycles__suggest {
     display: flex;
     align-items: center;

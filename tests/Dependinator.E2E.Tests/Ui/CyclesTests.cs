@@ -6,10 +6,10 @@ using Xunit.Abstractions;
 namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises View › Show Cycles: the panel opens with the cycles found in the model (or says
-// there are none) and closes again from its button; a cycle accepted with a reason moves to the
-// Accepted section, its reason can be edited, and removing the acceptance brings it back; a
-// cycle's AI prompt can be copied, and Claude can suggest the reason, or a fix prompt to copy
-// and a To fix entry.
+// there are none) and closes again from its button; a cycle accepted with a reason in the review
+// dialog moves to the Accepted section, its reason can be edited, and removing the acceptance
+// brings it back; the dialog copies a cycle's AI prompt, and Claude's answers suggest the reason,
+// or a fix prompt to copy and a To fix entry.
 public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -41,7 +41,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(cycles.First).ToBeVisibleAsync();
         int open = await cycles.CountAsync();
 
-        await cycles.First.GetByTestId("cycles-accept").ClickAsync();
+        await cycles.First.GetByTestId("cycles-review").ClickAsync();
         await AcceptReasonAsync("Intended: one concept");
         await Expect(cycles).ToHaveCountAsync(open - 1);
 
@@ -61,18 +61,35 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
-    public async Task AcceptCycle_ShouldFillInTheReasonClaudeSuggests()
+    public async Task AskClaude_ShouldFillInTheReason_AndLetTheUserPickAmongDifferingAnswers()
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
-        await Page.GetByTestId("cycles-item").First.GetByTestId("cycles-accept").ClickAsync();
+        await Page.GetByTestId("cycles-item").First.GetByTestId("cycles-review").ClickAsync();
         ILocator field = Page.GetByTestId("accept-cycle-reason");
         await Expect(field).ToBeVisibleAsync();
+        ILocator ask = Page.GetByTestId("accept-cycle-suggest");
+        ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
 
-        // In test mode the app answers for Claude (no key or network), so this covers the dialog.
-        await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
-        await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToHaveAttributeAsync("data-verdict", "accept");
+        // In test mode the app answers for Claude (no key or network): a pair is accepted, and
+        // broken when asked again.
+        await Expect(ask).ToHaveTextAsync("Ask Claude");
+        await ask.ClickAsync();
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
+        await Expect(field).ToHaveValueAsync("Suggested in test mode");
+        await Expect(ask).ToHaveTextAsync("Ask again");
+
+        // The second answer differs: both are kept, and the reason follows the selected one.
+        await ask.ClickAsync();
+        ILocator answers = Page.GetByTestId("accept-cycle-answer");
+        await Expect(answers).ToHaveCountAsync(2);
+        await Expect(Page.GetByTestId("accept-cycle-answers-differ")).ToBeVisibleAsync();
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
+        await Expect(field)
+            .ToHaveValueAsync("Accepted anyway; suggested fix: Test mode: move one member out of the cycle.");
+        await answers.First.ClickAsync();
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
         await Expect(field).ToHaveValueAsync("Suggested in test mode");
 
         await Page.GetByTestId("accept-cycle-save").ClickAsync();
@@ -95,13 +112,15 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // In test mode the app answers for Claude: a cycle of more than two is to be broken.
         ILocator cycle = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "TaskExtensions" });
-        await cycle.GetByTestId("cycles-accept").ClickAsync();
+        await cycle.GetByTestId("cycles-review").ClickAsync();
         await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToHaveAttributeAsync("data-verdict", "break");
         await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept anyway");
+        await Expect(Page.GetByTestId("accept-cycle-reason"))
+            .ToHaveValueAsync("Accepted anyway; suggested fix: Test mode: move one member out of the cycle.");
 
         await Page.GetByTestId("accept-cycle-copy-fix").ClickAsync();
-        await Expect(Page.GetByTestId("accept-cycle-fix-copied")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("accept-cycle-copied")).ToContainTextAsync("fix prompt is copied");
         string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
         Assert.StartsWith("Please break a circular dependency", prompt);
         Assert.Contains("Test mode: move one member out of the cycle.", prompt);
@@ -126,7 +145,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         int openCount = await open.CountAsync();
 
         // In test mode a cycle of more than two is to be broken (see the test above).
-        await open.Filter(new() { HasTextString = "TaskExtensions" }).GetByTestId("cycles-accept").ClickAsync();
+        await open.Filter(new() { HasTextString = "TaskExtensions" }).GetByTestId("cycles-review").ClickAsync();
         await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToHaveAttributeAsync("data-verdict", "break");
         await Page.GetByTestId("accept-cycle-fix-later").ClickAsync();
@@ -163,8 +182,9 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         ILocator cycle = Page.GetByTestId("cycles-item").First;
         string member = (await cycle.Locator(".dep-cycles__members").InnerTextAsync()).Split(" ↔ ")[0];
-        await cycle.GetByTestId("cycles-copy-prompt").ClickAsync();
-        await Expect(Page.GetByText("AI prompt copied")).ToBeVisibleAsync();
+        await cycle.GetByTestId("cycles-review").ClickAsync();
+        await Page.GetByTestId("accept-cycle-copy-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-copied")).ToContainTextAsync("prompt is copied");
 
         string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
         Assert.Contains("## The cycle", prompt);
