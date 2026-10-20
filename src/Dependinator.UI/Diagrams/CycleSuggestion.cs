@@ -1,13 +1,17 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Dependinator.Core.Claude;
 
 namespace Dependinator.UI.Diagrams;
 
-// Claude's verdict on a cycle, as the accept dialog shows it: accept it, with the reason to
+// Claude's verdict on a cycle, as the review dialog shows it: accept it, with the reason to
 // store, or break it, with the change that does. Assumptions are what Claude took for granted
-// about code the prompt does not show, so the user knows what to check.
-public record CycleSuggestion(bool IsAccept, string Why, string Assumptions, string Reason, string Change)
+// about code the prompt does not show, so the user knows what to check. IsPasted: the answer of
+// another AI chat to the copied prompt, pasted back by the user.
+public partial record CycleSuggestion(bool IsAccept, string Why, string Assumptions, string Reason, string Change)
 {
+    public bool IsPasted { get; init; }
+
     // The fields of CyclePrompt's answer format; structured output makes Claude's JSON match it.
     public const string JsonSchema = """
         {
@@ -39,6 +43,60 @@ public record CycleSuggestion(bool IsAccept, string Why, string Assumptions, str
     }
 
     record Answer(string Verdict, string Why, string Assumptions, string ReasonToStore, string Change);
+
+    // An AI chat's answer to the copied prompt, pasted back: the lines of the prompt's answer
+    // format ("Verdict: Break", "Why: ..."), wherever they are in the text, markdown emphasis and
+    // list marks aside. A field runs until the next one.
+    public static Result<CycleSuggestion> ParseText(string text)
+    {
+        Dictionary<string, string> fields = [];
+        var labels = FieldLabel().Matches(text);
+        for (var i = 0; i < labels.Count; i++)
+        {
+            var start = labels[i].Index + labels[i].Length;
+            var end = i + 1 < labels.Count ? labels[i + 1].Index : text.Length;
+            var label = labels[i].Groups["label"].Value.ToLowerInvariant();
+            fields.TryAdd(label.StartsWith("reason") ? "reason" : label, Clean(text[start..end]));
+        }
+
+        if (VerdictWord().Match(fields.GetValueOrDefault("verdict", "")) is not { Success: true } verdict)
+            return new Error(
+                "The answer has no \"Verdict: Accept\" or \"Verdict: Break\" line, so it could not be read."
+            );
+        var isAccept = verdict.Value.Equals("accept", StringComparison.OrdinalIgnoreCase);
+        return new CycleSuggestion(
+            isAccept,
+            fields.GetValueOrDefault("why", ""),
+            fields.GetValueOrDefault("assumptions", ""),
+            isAccept ? fields.GetValueOrDefault("reason", "") : "",
+            isAccept ? "" : fields.GetValueOrDefault("change", "")
+        )
+        {
+            IsPasted = true,
+        };
+    }
+
+    // A field's text without the format's "(only if Accept)" note, emphasis marks or quotes
+    // around it; "N/A" or a dash for a field that does not apply is empty.
+    static string Clean(string value)
+    {
+        var text = OnlyIfNote().Replace(value.Trim(), "").Trim().Trim('*', '_').Trim();
+        if (text.Length > 1 && text[0] is '"' or '“' && text[^1] is '"' or '”')
+            text = text[1..^1].Trim();
+        return text is "N/A" or "n/a" or "-" or "—" or "–" ? "" : text;
+    }
+
+    [GeneratedRegex(
+        @"^[ \t>*_#-]*(?<label>verdict|why|assumptions|reason to store|reason|change)[ \t*_]*:[ \t*_]*",
+        RegexOptions.IgnoreCase | RegexOptions.Multiline
+    )]
+    private static partial Regex FieldLabel();
+
+    [GeneratedRegex(@"\b(accept|break)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex VerdictWord();
+
+    [GeneratedRegex(@"^\(only if (accept|break)\)", RegexOptions.IgnoreCase)]
+    private static partial Regex OnlyIfNote();
 }
 
 // What the dialog says while a suggestion is on its way. In VS Code the key is entered in an

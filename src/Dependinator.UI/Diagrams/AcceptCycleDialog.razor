@@ -3,7 +3,8 @@
 
 @* Reviews a circular dependency (or edits an acceptance): accept it as intended, with why, shown
    in the cycles panel; editing also offers to stop accepting it. The header copies a prompt for
-   any AI chat, and, where the host can ask Claude, "Ask Claude" asks for a verdict. Each answer is
+   any AI chat, whose answer can be pasted back, and, where the host can ask Claude, "Ask Claude"
+   asks for a verdict. Pasted answers and Claude's are alike. Each answer is
    kept while the dialog is open (answers can differ for a borderline cycle, and the dialog says so
    then), and the selected one drives the rest: accepting fills in the reason, breaking shows the
    change to make, with a prompt for an AI that can change the code as the main action, and fixing
@@ -33,7 +34,7 @@
       @if (Suggest is not null)
       {
         <MudButton StartIcon="@(isSuggesting ? null : MudBlazor.Icons.Material.Outlined.AutoAwesome)" Size="Size.Small"
-                   Variant="@(answers.Count == 0 ? Variant.Outlined : Variant.Text)" Disabled="isSuggesting"
+                   Variant="@(HasClaudeAnswered ? Variant.Text : Variant.Outlined)" Disabled="isSuggesting"
                    Class="dep-cycles__ask-claude"
                    title="Ask Claude whether this cycle is intended or should be broken, with your own API key"
                    OnClick="SuggestAsync" data-testid="accept-cycle-suggest">
@@ -44,7 +45,7 @@
           }
           else
           {
-            @(answers.Count == 0 ? "Ask Claude" : "Ask again")
+            @(HasClaudeAnswered ? "Ask again" : "Ask Claude")
           }
         </MudButton>
       }
@@ -58,6 +59,22 @@
     @if (copyNote is not null)
     {
       <div class="dep-cycles__suggest-note mt-2" data-testid="accept-cycle-copied">@copyNote</div>
+    }
+    @if (isPasteOpen)
+    {
+      <div class="dep-cycles__paste" data-testid="accept-cycle-paste">
+        <MudTextField T="string" @bind-Value="pastedAnswer" Label="Paste the AI's answer here" Lines="4"
+                      Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense"
+                      data-testid="accept-cycle-paste-text" />
+        <div class="dep-cycles__paste-actions">
+          <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@string.IsNullOrWhiteSpace(pastedAnswer)"
+                     OnClick="UsePastedAnswer" data-testid="accept-cycle-paste-use">Use answer</MudButton>
+        </div>
+        @if (pasteError is not null)
+        {
+          <div class="dep-cycles__suggest-error" data-testid="accept-cycle-paste-error">@pasteError</div>
+        }
+      </div>
     }
     @if (step is SuggestStep.EnteringApiKey or SuggestStep.EnteringNewApiKey)
     {
@@ -79,14 +96,14 @@
           <MudButton Size="Size.Small" Variant="@(index == selected ? Variant.Filled : Variant.Outlined)"
                      Color="@(index == selected ? Color.Primary : Color.Default)" OnClick="() => Select(index)"
                      data-testid="accept-cycle-answer" data-selected="@(index == selected ? "true" : "false")">
-            @($"{index + 1} · {(answers[index].IsAccept ? "Accept" : "Break")}")
+            @($"{index + 1} · {(answers[index].IsAccept ? "Accept" : "Break")}{(answers[index].IsPasted ? " (pasted)" : "")}")
           </MudButton>
         }
       </div>
       @if (AnswersDiffer)
       {
         <div class="dep-cycles__suggest-note" data-testid="accept-cycle-answers-differ">
-          Claude's answers differ, so this is a judgement call. Pick the one that convinces you, or decide yourself.
+          The answers differ, so this is a judgement call. Pick the one that convinces you, or decide yourself.
         </div>
       }
     }
@@ -105,7 +122,7 @@
       <div class="dep-cycles__suggestion" data-testid="accept-cycle-suggestion"
            data-verdict="@(s.IsAccept ? "accept" : "break")">
         <div class="dep-cycles__suggestion-verdict">
-          @(s.IsAccept ? "Claude suggests accepting it" : "Claude suggests breaking it")
+          @($"{Source(s)} suggests {(s.IsAccept ? "accepting" : "breaking")} it")
         </div>
         <div>@s.Why</div>
         @if (!s.IsAccept && s.Change != "")
@@ -190,6 +207,14 @@
 
   bool AnswersDiffer => answers.Any(a => a.IsAccept) && answers.Any(a => !a.IsAccept);
 
+  bool HasClaudeAnswered => answers.Any(a => !a.IsPasted);
+
+  bool isPasteOpen;
+  string pastedAnswer = "";
+  string? pasteError;
+
+  static string Source(CycleSuggestion answer) => answer.IsPasted ? "The AI" : "Claude";
+
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
     if (firstRender && reasonField is not null)
@@ -246,7 +271,7 @@
   // Accepting anyway keeps the suggested fix with the acceptance, for whoever looks at it later.
   static string ReasonFrom(CycleSuggestion answer) =>
     answer.IsAccept ? answer.Reason
-    : answer.Change == "" ? "Accepted anyway, though Claude suggested breaking it."
+    : answer.Change == "" ? $"Accepted anyway, though {(answer.IsPasted ? "an AI" : "Claude")} suggested breaking it."
     : $"Accepted anyway; suggested fix: {answer.Change}";
 
   async Task CopyPromptAsync()
@@ -254,7 +279,29 @@
     if (CopyPrompt is null)
       return;
     await CopyAsync(await CopyPrompt(),
-      "The prompt is copied. Paste it into an AI chat, such as claude.ai, then accept or fix the cycle with its answer.");
+      "The prompt is copied. Paste it into an AI chat, such as claude.ai, then paste its answer below.");
+    if (copyNote is not null)
+    {
+      isPasteOpen = true;
+      pasteError = null;
+    }
+  }
+
+  // A pasted answer joins Claude's, selected; one that cannot be read stays in the box, to fix.
+  void UsePastedAnswer()
+  {
+    var answer = CycleSuggestion.ParseText(pastedAnswer);
+    if (answer is not CycleSuggestion s)
+    {
+      pasteError = answer.Error.Message;
+      return;
+    }
+    isPasteOpen = false;
+    pastedAnswer = "";
+    pasteError = null;
+    answers.Add(s);
+    Select(answers.Count - 1);
+    RefreshTitle();
   }
 
   async Task CopyFixPromptAsync()

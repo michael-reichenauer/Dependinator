@@ -297,7 +297,18 @@
     margin-right: 6px;
 }
 
-/* One chip per answer from Claude, when asked more than once. */
+/* The box an AI chat's answer to the copied prompt is pasted into. */
+.dep-cycles__paste {
+    margin-top: 10px;
+}
+
+.dep-cycles__paste-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+/* One chip per answer (Claude's, or pasted), when there are several. */
 .dep-cycles__answers {
     display: flex;
     flex-wrap: wrap;

@@ -8,8 +8,8 @@ namespace Dependinator.E2E.Tests.Ui;
 // Exercises View › Show Cycles: the panel opens with the cycles found in the model (or says
 // there are none) and closes again from its button; a cycle accepted with a reason in the review
 // dialog moves to the Accepted section, its reason can be edited, and removing the acceptance
-// brings it back; the dialog copies a cycle's AI prompt, and Claude's answers suggest the reason,
-// or a fix prompt to copy and a To fix entry.
+// brings it back; the dialog copies a cycle's AI prompt and reads the answer pasted back, and
+// answers (Claude's or pasted) suggest the reason, or a fix prompt to copy and a To fix entry.
 public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -198,7 +198,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
-    public async Task CopyPrompt_ShouldPutAnAiPromptForTheCycleOnTheClipboard()
+    public async Task CopyPrompt_ShouldPutAnAiPromptOnTheClipboard_AndReadTheAnswerPastedBack()
     {
         // Playwright can grant clipboard permissions on Chromium only, so the clipboard is
         // stubbed and the written text is read back (as in ShareLinkTests).
@@ -213,7 +213,8 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator cycle = Page.GetByTestId("cycles-item").First;
         string member = (await cycle.Locator(".dep-cycles__members").InnerTextAsync()).Split(" ↔ ")[0];
         await cycle.GetByTestId("cycles-review").ClickAsync();
-        await Page.GetByTestId("accept-cycle-copy-prompt").ClickAsync();
+        ILocator copy = Page.GetByTestId("accept-cycle-copy-prompt");
+        await copy.ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-copied")).ToContainTextAsync("prompt is copied");
 
         string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
@@ -221,6 +222,34 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         Assert.Contains(member, prompt);
         Assert.Contains(" → ", prompt);
         Assert.Contains("Verdict: Accept or Break", prompt);
+
+        // The AI chat's answer is pasted back: one without a verdict cannot be read.
+        ILocator answerBox = Page.GetByTestId("accept-cycle-paste-text");
+        ILocator useAnswer = Page.GetByTestId("accept-cycle-paste-use");
+        await App.FillReliablyAsync(answerBox, "Looks fine to me.");
+        await useAnswer.ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-paste-error")).ToContainTextAsync("could not be read");
+
+        await App.FillReliablyAsync(
+            answerBox,
+            "**Verdict:** Break\n**Why:** One misplaced class.\n**Change:** Move it."
+        );
+        await useAnswer.ClickAsync();
+        ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
+        await Expect(verdict).ToContainTextAsync("The AI suggests breaking it");
+        await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept anyway");
+        await Expect(Page.GetByTestId("accept-cycle-reason"))
+            .ToHaveValueAsync("Accepted anyway; suggested fix: Move it.");
+
+        // A second pasted answer joins the first, as with Claude's answers.
+        await copy.ClickAsync();
+        await App.FillReliablyAsync(answerBox, "Verdict: Accept\nReason to store: One concept.");
+        await useAnswer.ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-answer")).ToHaveCountAsync(2);
+        await Expect(Page.GetByTestId("accept-cycle-answer").Last).ToHaveTextAsync("2 · Accept (pasted)");
+        await Expect(Page.GetByTestId("accept-cycle-answers-differ")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("accept-cycle-reason")).ToHaveValueAsync("One concept.");
     }
 
     // Fills the reason in the accept dialog and saves it.

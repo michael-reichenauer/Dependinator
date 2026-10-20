@@ -57,6 +57,67 @@ public class CycleSuggestionTests
         Assert.Equal("Claude's answer could not be read.", error.Message);
     }
 
+    [Fact]
+    public void ParseText_ShouldReadThePromptsAnswerFormat_AsPastedFromAnAiChat()
+    {
+        var suggestion = AssertOk(
+            CycleSuggestion.ParseText(
+                """
+                Here is my assessment.
+
+                **Verdict:** Accept
+                **Why:** Result and Result<T> are one union.
+                **Assumptions:** None
+                **Reason to store:** (only if Accept) "One union, in non-generic and generic form."
+                **Change:** N/A
+
+                Let me know if you want more detail.
+                """
+            )
+        );
+
+        Assert.True(suggestion.IsAccept);
+        Assert.True(suggestion.IsPasted);
+        Assert.Equal("Result and Result<T> are one union.", suggestion.Why);
+        Assert.Equal("None", suggestion.Assumptions);
+        Assert.Equal("One union, in non-generic and generic form.", suggestion.Reason);
+        Assert.Equal("", suggestion.Change);
+    }
+
+    [Fact]
+    public void ParseText_ShouldReadAChangeOverSeveralLines_AndLeaveOutTheReasonOfABreak()
+    {
+        var suggestion = AssertOk(
+            CycleSuggestion.ParseText(
+                """
+                - Verdict: break
+                - Why: One misplaced class.
+                - Reason to store: -
+                - Change: Remove the Utils → Parsing direction:
+                  1. Move Ext into Parsing.
+                  2. Import it in UI.
+                """
+            )
+        );
+
+        Assert.False(suggestion.IsAccept);
+        Assert.Equal("", suggestion.Reason);
+        Assert.Equal(
+            "Remove the Utils → Parsing direction:\n  1. Move Ext into Parsing.\n  2. Import it in UI.",
+            suggestion.Change.ReplaceLineEndings("\n")
+        );
+    }
+
+    [Fact]
+    public void ParseText_ShouldFail_WithoutAVerdict()
+    {
+        var error = AssertError(
+            CycleSuggestion.ParseText("I think this cycle is fine because the types belong together.")
+        );
+
+        Assert.StartsWith("The answer has no \"Verdict: Accept\" or \"Verdict: Break\" line", error.Message);
+    }
+
     readonly Mock<ICyclePromptService> prompts = new();
     readonly Mock<IClaudeService> claude = new();
     readonly List<SuggestStep> steps = [];
