@@ -30,6 +30,7 @@ public class DependenciesServiceFocusTests
     {
         selectionService.Setup(s => s.SelectedId).Returns(selected);
         screenService.Setup(s => s.SvgRect).Returns(new Dependinator.UI.Shared.Types.Rect(0, 0, 800, 600));
+        screenService.Setup(s => s.IsNarrow).Returns(true); // An 800 px wide diagram
         return new(
             selectionService.Object,
             applicationEvents.Object,

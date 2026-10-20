@@ -47,4 +47,33 @@ public class WorkspaceFileServiceTests
 
         Assert.Empty(await service.GetModelFilePathsAsync());
     }
+
+    [Fact]
+    public async Task ReadSourceFileAsync_ShouldReadFilesInTheWorkspace_Only()
+    {
+        var parent = Path.Combine(Path.GetTempPath(), $"dep-workspace-{Guid.NewGuid():N}");
+        var root = Path.Combine(parent, "repo");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "src"));
+            await File.WriteAllTextAsync(Path.Combine(root, "src", "A.cs"), "class A { }\n");
+            await File.WriteAllTextAsync(Path.Combine(parent, "secret.txt"), "outside");
+            await File.WriteAllTextAsync(Path.Combine(parent, "repo2.cs"), "a sibling folder's name prefix");
+            var service = new WorkspaceFileService();
+            service.SetWorkspaceFolders([root]);
+
+            Assert.Equal(
+                "class A { }\n",
+                AssertOk(await service.ReadSourceFileAsync(Path.Combine(root, "src", "A.cs")))
+            );
+            AssertError(await service.ReadSourceFileAsync(Path.Combine(root, "src", "Missing.cs")));
+            AssertError(await service.ReadSourceFileAsync(Path.Combine(parent, "secret.txt")));
+            AssertError(await service.ReadSourceFileAsync(Path.Combine(root, "..", "secret.txt")));
+            AssertError(await service.ReadSourceFileAsync(root + "2.cs"));
+        }
+        finally
+        {
+            Directory.Delete(parent, recursive: true);
+        }
+    }
 }

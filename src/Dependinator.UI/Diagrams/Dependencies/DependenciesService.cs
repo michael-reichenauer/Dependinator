@@ -65,10 +65,6 @@ class DependenciesService(
     IPathFinderService pathFinderService
 ) : IDependenciesService
 {
-    // Below this viewport width (MudBlazor's md breakpoint) the explorer covers most of the
-    // diagram, so a click on the diagram folds it down to its title bar.
-    const double AutoMinimizeMaxWidth = 960;
-
     string selectedId = "";
     TreeType treeType = TreeType.References;
     bool isShowLines = true;
@@ -101,7 +97,7 @@ class DependenciesService(
     // line is selected, unless pinned.
     public void Clicked(PointerId pointerId)
     {
-        if (IsShowExplorer && !IsMinimized && pointerId.Id != selectedId && IsNarrowViewport)
+        if (IsShowExplorer && !IsMinimized && pointerId.Id != selectedId && screenService.IsNarrow)
         {
             SetMinimized(true);
         }
@@ -117,8 +113,6 @@ class DependenciesService(
             ClearKeptLines();
         }
     }
-
-    bool IsNarrowViewport => screenService.SvgRect.Width < AutoMinimizeMaxWidth;
 
     public void SetLinesPinned(bool isPinned)
     {

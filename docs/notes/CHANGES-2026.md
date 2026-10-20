@@ -28,7 +28,8 @@ project works.
 - **Oct**: the rest of the UX review (path finder, tour, share links, architecture rules, minimap,
   group and rubber-band selection), new line and container visuals, a release flow through `dev`,
   a README and community-files rework, the Bicep parser, zones, line labels and aliases,
-  node sizes by code and centrality in the automatic layout, and accepted cycles.
+  node sizes by code and centrality in the automatic layout, accepted cycles, and AI prompts and
+  Claude's suggestions for cycles.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -131,6 +132,33 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   acceptance is saved with the model and can be undone. The cycle is reported again if a node
   joins it. An acceptance whose cycle is gone is kept, marked "no longer a cycle", until the user
   removes it.
+- **AI prompt for a cycle (Oct 19).** A copy button in each cycle's review copies a prompt that asks an AI chat
+  whether the cycle is intended (with a reason to accept it with) or should be broken, and how. It
+  lists the members with their descriptions and the links in each direction, grouped per member or,
+  when there are many, per type. In the web host and VS Code it also shows the source of the
+  directions made by only one or two types, the ones most likely to be broken or explained. The
+  first step towards suggesting reasons with Claude directly.
+- **Ask Claude (Oct 20).** Each cycle has one Review button; its dialog copies the AI prompt and
+  asks Claude for a verdict on the cycle with it: an accepting verdict fills in the reason, a
+  breaking one shows the change to make, and nothing is saved until the user decides. "Ask again"
+  keeps every answer, so the user can pick one when they differ (a borderline cycle), and accepting
+  anyway keeps the suggested fix in the reason. The answer of another AI chat to the copied prompt
+  can be pasted back into the review and is read like Claude's, so the whole review works without an
+  API key, also in the browser app; when asking Claude fails (no key, a key not accepted, no credits
+  left, which now says so plainly), the review offers that route instead. The cycles panel can be
+  folded down to its title bar,
+  like the dependencies explorer (and is, on a narrow screen, by a click in the diagram). It uses the user's own Anthropic API key
+  (VS Code secret storage via a new command, or `ANTHROPIC_API_KEY` for the web host). In VS Code
+  the key is asked for on first use, and again when Claude does not accept it, with the dialog
+  pointing at the input box at the top of the window, since the user is watching the dialog. When
+  Claude suggests breaking the cycle, the main button copies a fix prompt for Claude Code (or another
+  AI that can change the code) instead, and accepting stays possible as "Accept anyway". "Fix later"
+  moves such a cycle to a To fix section with the planned change (saved with the model like an
+  acceptance); its lines stay red, and its fix prompt can be copied from there. A refresh message
+  now also tells what changed about cycles ("1 cycle to fix is gone, 1 new cycle"), and accepted or
+  to-fix entries whose cycle is gone or grew (a node joined) are marked so, and listed first. The request
+  runs in the LSP or the web host through Anthropic's C# SDK (new `Dependinator.Claude` library),
+  never in the browser app.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design
