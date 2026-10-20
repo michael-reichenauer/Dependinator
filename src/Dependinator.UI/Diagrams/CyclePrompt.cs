@@ -109,7 +109,8 @@ static partial class CyclePrompt
 
         text.AppendLine().AppendLine("## The suggested change").AppendLine();
         text.AppendLine(suggestion.Change);
-        text.AppendLine().AppendLine($"Why: {suggestion.Why}");
+        if (suggestion.Why != "")
+            text.AppendLine().AppendLine($"Why: {suggestion.Why}");
         if (suggestion.Assumptions is not ("" or "None" or "None."))
             text.AppendLine().AppendLine($"Assumptions to check first: {suggestion.Assumptions}");
 

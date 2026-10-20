@@ -8,7 +8,8 @@ namespace Dependinator.E2E.Tests.Ui;
 // Exercises View › Show Cycles: the panel opens with the cycles found in the model (or says
 // there are none) and closes again from its button; a cycle accepted with a reason moves to the
 // Accepted section, its reason can be edited, and removing the acceptance brings it back; a
-// cycle's AI prompt can be copied, and Claude can suggest the reason, or a fix prompt to copy.
+// cycle's AI prompt can be copied, and Claude can suggest the reason, or a fix prompt to copy
+// and a To fix entry.
 public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -108,6 +109,43 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         // Copying the fix prompt accepts nothing.
         await Page.GetByTestId("accept-cycle-cancel").ClickAsync();
         await Expect(cycle).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
+    public async Task FixLater_ShouldListTheCycleToFix_WithItsFixPrompt_AndBackWhenRemoved()
+    {
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+        );
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
+        ILocator open = Page.GetByTestId("cycles-item");
+        await Expect(open.First).ToBeVisibleAsync();
+        int openCount = await open.CountAsync();
+
+        // In test mode a cycle of more than two is to be broken (see the test above).
+        await open.Filter(new() { HasTextString = "TaskExtensions" }).GetByTestId("cycles-accept").ClickAsync();
+        await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToHaveAttributeAsync("data-verdict", "break");
+        await Page.GetByTestId("accept-cycle-fix-later").ClickAsync();
+
+        await Expect(open).ToHaveCountAsync(openCount - 1);
+        ILocator toFix = Page.GetByTestId("cycles-tofix-item");
+        await Expect(toFix).ToHaveCountAsync(1);
+        await Expect(toFix.GetByTestId("cycles-tofix-change"))
+            .ToHaveTextAsync("Test mode: move one member out of the cycle.");
+
+        await toFix.GetByTestId("cycles-tofix-copy-fix").ClickAsync();
+        await Expect(Page.GetByText("Fix prompt copied")).ToBeVisibleAsync();
+        string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
+        Assert.StartsWith("Please break a circular dependency", prompt);
+        Assert.Contains("Test mode: move one member out of the cycle.", prompt);
+
+        await toFix.GetByTestId("cycles-tofix-remove").ClickAsync();
+        await Expect(toFix).ToHaveCountAsync(0);
+        await Expect(open).ToHaveCountAsync(openCount);
     }
 
     [E2EFact]

@@ -13,12 +13,17 @@
    each other in a circle. While open, the lines of those cycles are drawn in the warning color.
    Clicking a row navigates to the container. A cycle that is intended can be accepted with a
    reason (saved with the model, undoable): it moves to the collapsed Accepted section and its
-   lines are drawn normally. An acceptance whose cycle is gone stays, marked, until removed. *@
+   lines are drawn normally. A cycle Claude suggests breaking can be marked to fix later instead:
+   it moves to the To fix section with the planned change, keeps its red lines, and offers a fix
+   prompt for an AI that can change the code. An entry whose cycle is gone stays, marked, until
+   removed. *@
 @if (viewOptions.IsCyclesShown)
 {
   var cycles = cycleService.GetCycles();
   var accepted = cycleService.GetAcceptedCycles();
   var gone = accepted.Where(a => !a.StillOccurs).ToList();
+  var toFix = cycleService.GetCyclesToFix();
+  var fixedOnes = toFix.Where(r => !r.StillOccurs).ToList();
   <div class="dep-panel dep-toolbar-card" data-testid="cycles-panel">
     <div class="dep-panel__header">
       <span class="dep-panel__title">Cycles</span>
@@ -30,9 +35,10 @@
     @if (cycles.Count == 0)
     {
       <div class="dep-panel__empty">
-        @(accepted.Count == 0
+        @(accepted.Count == 0 && toFix.Count == 0
           ? "No circular dependencies found: no projects, namespaces or types in any container depend on each other in a circle."
-          : "No circular dependencies besides the accepted ones.")
+          : toFix.Count == 0 ? "No circular dependencies besides the accepted ones."
+          : "No other circular dependencies than those below.")
       </div>
     }
     else
@@ -59,6 +65,57 @@
                          title="Accept this cycle as intended, with why" OnClick="() => AcceptAsync(cycle)"
                          data-testid="cycles-accept" />
         </div>
+      }
+
+      @if (toFix.Count > 0)
+      {
+        <button type="button" class="dep-cycles__accepted-toggle" @onclick="() => isToFixOpen = !isToFixOpen"
+                aria-expanded="@(isToFixOpen ? "true" : "false")" data-testid="cycles-tofix-toggle">
+          <MudIcon Icon="@(isToFixOpen ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ChevronRight)"
+                   Size="Size.Small" />
+          <span>To fix (@toFix.Count)</span>
+          @if (fixedOnes.Count > 0)
+          {
+            <span class="dep-cycles__gone">· @fixedOnes.Count no longer @(fixedOnes.Count == 1 ? "a cycle" : "cycles")</span>
+          }
+        </button>
+        @if (isToFixOpen)
+        {
+          @foreach (var report in toFix)
+          {
+            <div class="dep-cycles__item" data-testid="cycles-tofix-item"
+                 data-still-occurs="@(report.StillOccurs ? "true" : "false")">
+              <button type="button" class="dep-panel__row dep-cycles__row" disabled="@(report.ContainerId is null)"
+                      title="@(report.ContainerId is null ? "The container is no longer in the model" : $"Show {report.ContainerName}")"
+                      @onclick="() => ShowAsync(report.ContainerId!)" data-testid="cycles-tofix-show">
+                <span class="dep-cycles__container">@report.ContainerName</span>
+                <span class="dep-cycles__members">@Join(report.MemberNames)</span>
+                <span class="dep-cycles__reason" data-testid="cycles-tofix-change">@(report.Accepted.Reason == "" ? "No change planned" : report.Accepted.Reason)</span>
+                @if (!report.StillOccurs)
+                {
+                  <span class="dep-cycles__gone">No longer a cycle; remove it if it is fixed.</span>
+                }
+              </button>
+              @if (report.Cycle is { } cycle)
+              {
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Size="Size.Small"
+                               title="Copy a prompt that asks an AI that can change the code to make the planned change"
+                               OnClick="() => CopyFixPromptAsync(cycle, report.Accepted.Reason)" data-testid="cycles-tofix-copy-fix" />
+              }
+              <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
+                             title="@(report.StillOccurs ? "Remove: report this cycle as open again" : "Remove: it is fixed")"
+                             OnClick="() => cycleService.Unaccept([report.Accepted])" data-testid="cycles-tofix-remove" />
+            </div>
+          }
+          @if (fixedOnes.Count > 1)
+          {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-cycles__remove-gone"
+                       OnClick="() => cycleService.Unaccept(fixedOnes.Select(r => r.Accepted).ToList())"
+                       data-testid="cycles-tofix-remove-fixed">
+              Remove the @fixedOnes.Count that are no longer cycles
+            </MudButton>
+          }
+        }
       }
 
       @if (accepted.Count > 0)
@@ -116,6 +173,7 @@
 
 @code {
   bool isAcceptedOpen;
+  bool isToFixOpen = true;
 
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
@@ -141,6 +199,19 @@
       "AI prompt copied. Paste it into an AI chat, such as claude.ai: it answers whether to accept the cycle, with a reason, or how to break it.");
   }
 
+  // From the To fix list, where only the planned change is kept.
+  async Task CopyFixPromptAsync(Cycle cycle, string plannedChange)
+  {
+    var prompt = cyclePromptService.GetFixPrompt(cycle, new CycleSuggestion(false, "", "", "", plannedChange));
+    if (!await clipboardService.CopyAsync(prompt))
+    {
+      applicationEvents.TriggerErrorReported("Could not copy the fix prompt to the clipboard.");
+      return;
+    }
+    applicationEvents.TriggerInfoReported(
+      "Fix prompt copied. Paste it into Claude Code, or another AI that can change the code.");
+  }
+
   async Task AcceptAsync(Cycle cycle)
   {
     // A cycle that grew since it was accepted starts from the earlier reason.
@@ -148,7 +219,11 @@
       cycleSuggestionService.IsAvailable ? onStep => cycleSuggestionService.SuggestAsync(cycle, onStep) : null;
     var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
       cycle.AcceptedBefore?.Reason ?? "", isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s));
-    if (result is not null)
+    if (result is null)
+      return;
+    if (result.IsFixLater)
+      cycleService.FixLater(cycle, result.Reason);
+    else
       cycleService.Accept(cycle, result.Reason);
   }
 

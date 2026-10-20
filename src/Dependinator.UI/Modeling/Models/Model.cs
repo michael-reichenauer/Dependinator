@@ -162,6 +162,7 @@ class Model : IModel
                     Container = a.ContainerName,
                     Members = a.MemberNames,
                     Reason = a.Reason,
+                    IsToFix = a.IsToFix,
                 }),
             ],
             Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
@@ -218,7 +219,9 @@ class Model : IModel
         RulesVersion++;
         acceptedCycles.Clear();
         acceptedCycles.AddRange(
-            modelDto.AcceptedCycles.Select(a => new AcceptedCycle(a.Container, a.Members, a.Reason ?? "")).Distinct()
+            modelDto
+                .AcceptedCycles.Select(a => new AcceptedCycle(a.Container, a.Members, a.Reason ?? "", a.IsToFix))
+                .Distinct()
         );
         AcceptedCyclesVersion++;
         // Nodes and links will be set by model service in separate worker thread

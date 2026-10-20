@@ -41,11 +41,13 @@ record RuleDto
     public required string To { get; init; }
 }
 
-// A circular dependency the user accepted, with why (node names, see AcceptedCycle).
+// A circular dependency the user accepted, with why, or marked to fix later, with the planned
+// change (node names, see AcceptedCycle).
 [Serializable]
 record AcceptedCycleDto
 {
     public required string Container { get; init; }
     public required IReadOnlyList<string> Members { get; init; }
     public string Reason { get; init; } = "";
+    public bool IsToFix { get; init; }
 }

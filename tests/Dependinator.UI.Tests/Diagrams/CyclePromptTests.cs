@@ -327,6 +327,21 @@ public class CyclePromptTests
     }
 
     [Fact]
+    public void BuildFix_ShouldDoWithOnlyThePlannedChange_AsKeptForACycleToFix()
+    {
+        var cycle = AddParsingUtilsCycle();
+        using var model = modelMgr.UseModel();
+
+        var prompt = CyclePrompt
+            .BuildFix(model, cycle, new CycleSuggestion(false, "", "", "", "Move Ext into Parsing."))
+            .ReplaceLineEndings("\n");
+
+        Assert.Contains("## The suggested change\n\nMove Ext into Parsing.\n\n## Where to look", prompt);
+        Assert.DoesNotContain("Why:", prompt);
+        Assert.DoesNotContain("Assumptions to check first", prompt);
+    }
+
+    [Fact]
     public async Task GetPromptAsync_ShouldShowTheSourceItCanRead_AndLeaveOutWhatItCannot()
     {
         var cycle = AddParsingUtilsCycle();

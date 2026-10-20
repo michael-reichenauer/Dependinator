@@ -145,7 +145,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   the key is asked for on first use, and again when Claude does not accept it, with the dialog
   pointing at the input box at the top of the window, since the user is watching the dialog. When
   Claude suggests breaking the cycle, the main button copies a fix prompt for Claude Code (or another
-  AI that can change the code) instead, and accepting stays possible as "Accept anyway". The request
+  AI that can change the code) instead, and accepting stays possible as "Accept anyway". "Fix later"
+  moves such a cycle to a To fix section with the planned change (saved with the model like an
+  acceptance); its lines stay red, and its fix prompt can be copied from there. The request
   runs in the LSP or the web host through Anthropic's C# SDK (new `Dependinator.Claude` library),
   never in the browser app.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).

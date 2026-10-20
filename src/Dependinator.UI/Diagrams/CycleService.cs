@@ -20,19 +20,22 @@ record Cycle(
     AcceptedCycle? AcceptedBefore = null
 );
 
-// An accepted cycle as the panel shows it: display names where the nodes still exist (the stored
-// names otherwise), and whether a cycle in the model still matches it; false once a refactor broke
-// the cycle, then the acceptance is only kept for the user to remove.
+// An accepted cycle, or one to fix later, as the panel shows it: display names where the nodes
+// still exist (the stored names otherwise), and whether a cycle in the model still matches it;
+// false once a refactor broke the cycle, then the entry is only kept for the user to remove.
+// Cycle is the matching cycle of one to fix, for its fix prompt.
 record AcceptedCycleReport(
     AcceptedCycle Accepted,
     NodeId? ContainerId,
     string ContainerName,
     IReadOnlyList<string> MemberNames,
-    bool StillOccurs
+    bool StillOccurs,
+    Cycle? Cycle = null
 );
 
-// What the accept-cycle dialog returns: the reason to save, or that the user stopped accepting.
-record AcceptCycleDialogResult(string Reason, bool IsUnaccept);
+// What the accept-cycle dialog returns: the reason to save, that the user stopped accepting, or
+// that the cycle is to be fixed later (the reason is then the planned change).
+record AcceptCycleDialogResult(string Reason, bool IsUnaccept, bool IsFixLater = false);
 
 // Finds circular dependencies: for every container, the graph of its children (an edge A→B for
 // each link from inside A to inside B) is searched for strongly connected components with at
@@ -40,21 +43,28 @@ record AcceptCycleDialogResult(string Reason, bool IsUnaccept);
 // projects that reference each other, namespaces that call back and forth, classes that need
 // each other. Member-level cycles (methods of one class calling each other) are left out.
 // Cycles the user accepted as intended (with a reason, saved with the model) are reported apart
-// and not highlighted. Results are cached per structure and acceptances version.
+// and not highlighted. Cycles the user marked to fix later (with the planned change) are reported
+// apart too, but still highlighted, since they are still a problem. Results are cached per
+// structure and acceptances version.
 interface ICycleService
 {
-    // The cycles that are not accepted.
+    // The cycles that are neither accepted nor marked to fix later.
     IReadOnlyList<Cycle> GetCycles();
 
     IReadOnlyList<AcceptedCycleReport> GetAcceptedCycles();
+
+    IReadOnlyList<AcceptedCycleReport> GetCyclesToFix();
 
     // The ids of the sibling lines that are part of a cycle that is not accepted (both
     // directions), for highlighting.
     IReadOnlySet<LineId> GetCyclicLineIds();
 
-    // Accepts a cycle as intended, with why, replacing the earlier acceptances it covers (the
-    // cycle grew since). Like the other changes below it is undoable and saved with the model.
+    // Accepts a cycle as intended, with why, replacing the earlier entries it covers (the cycle
+    // grew since). Like the other changes below it is undoable and saved with the model.
     void Accept(Cycle cycle, string reason);
+
+    // Marks a cycle to fix later, with the planned change, replacing the entries it covers.
+    void FixLater(Cycle cycle, string plannedChange);
     void SetReason(AcceptedCycle accepted, string reason);
     void Unaccept(IReadOnlyList<AcceptedCycle> accepted);
 }
@@ -65,6 +75,7 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
     (int Version, int Nodes, int Links, int Accepted) cachedFor = (-1, -1, -1, -1);
     IReadOnlyList<Cycle> cycles = [];
     IReadOnlyList<AcceptedCycleReport> acceptedCycles = [];
+    IReadOnlyList<AcceptedCycleReport> cyclesToFix = [];
     IReadOnlySet<LineId> cyclicLineIds = new HashSet<LineId>();
 
     public IReadOnlyList<Cycle> GetCycles()
@@ -79,18 +90,29 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
         return acceptedCycles;
     }
 
+    public IReadOnlyList<AcceptedCycleReport> GetCyclesToFix()
+    {
+        EnsureUpToDate();
+        return cyclesToFix;
+    }
+
     public IReadOnlySet<LineId> GetCyclicLineIds()
     {
         EnsureUpToDate();
         return cyclicLineIds;
     }
 
-    public void Accept(Cycle cycle, string reason)
+    public void Accept(Cycle cycle, string reason) => Decide(cycle, reason, isToFix: false);
+
+    public void FixLater(Cycle cycle, string plannedChange) => Decide(cycle, plannedChange, isToFix: true);
+
+    void Decide(Cycle cycle, string reason, bool isToFix)
     {
         var accepted = new AcceptedCycle(
             cycle.ContainerNodeName,
             [.. cycle.Members.Select(m => m.NodeName)],
-            reason.Trim()
+            reason.Trim(),
+            isToFix
         );
         var covered = modelMgr.WithModel(m =>
             m.AcceptedCycles.Where(a =>
@@ -123,13 +145,14 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
         if (key == cachedFor)
             return;
 
-        (cycles, acceptedCycles, cyclicLineIds) = Compute(model);
+        (cycles, acceptedCycles, cyclesToFix, cyclicLineIds) = Compute(model);
         cachedFor = key;
     }
 
     internal static (
         IReadOnlyList<Cycle> Cycles,
         IReadOnlyList<AcceptedCycleReport> Accepted,
+        IReadOnlyList<AcceptedCycleReport> ToFix,
         IReadOnlySet<LineId> LineIds
     ) Compute(IModel model)
     {
@@ -151,6 +174,7 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
 
         var acceptedByContainer = model.AcceptedCycles.ToLookup(a => a.ContainerName, StringComparer.Ordinal);
         var occurring = new HashSet<AcceptedCycle>();
+        var toFixCycles = new Dictionary<AcceptedCycle, Cycle>();
         var found = new List<Cycle>();
         var lineIds = new HashSet<LineId>();
         foreach (var (container, graph) in graphs)
@@ -160,27 +184,30 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
                 if (component.Count < 2)
                     continue;
 
-                // Accepted while every member is in an acceptance: a cycle that shrank still is,
-                // one that a node joined is not.
+                // Decided on while every member is in an entry: a cycle that shrank still is, one
+                // that a node joined is not. An accepted one is quiet; one to fix is listed apart
+                // but stays highlighted.
                 var names = component.Select(n => n.Name).ToHashSet(StringComparer.Ordinal);
                 var candidates = acceptedByContainer[container.Name].ToList();
                 var matching = candidates.Where(a => names.IsSubsetOf(a.MemberNames)).ToList();
-                if (matching.Count > 0)
-                {
-                    occurring.UnionWith(matching);
+                occurring.UnionWith(matching);
+                if (matching.Any(a => !a.IsToFix))
                     continue;
-                }
 
                 var members = component.OrderBy(n => n.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
-                found.Add(
-                    new Cycle(
-                        container.Id,
-                        ContainerLabel(container),
-                        container.Name,
-                        members.Select(n => new CycleMember(n.Id, n.DisplayName, n.Name)).ToList(),
-                        candidates.FirstOrDefault(a => a.MemberNames.Any(names.Contains))
-                    )
+                var cycle = new Cycle(
+                    container.Id,
+                    ContainerLabel(container),
+                    container.Name,
+                    members.Select(n => new CycleMember(n.Id, n.DisplayName, n.Name)).ToList(),
+                    matching.Count == 0
+                        ? candidates.FirstOrDefault(a => !a.IsToFix && a.MemberNames.Any(names.Contains))
+                        : null
                 );
+                if (matching.Count == 0)
+                    found.Add(cycle);
+                foreach (var toFix in matching)
+                    toFixCycles[toFix] = cycle;
 
                 var inComponent = component.ToHashSet();
                 foreach (var from in component)
@@ -198,7 +225,7 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
 
         found.Sort((a, b) => string.Compare(a.ContainerName, b.ContainerName, StringComparison.OrdinalIgnoreCase));
 
-        var accepted = model
+        var reports = model
             .AcceptedCycles.Select(a =>
             {
                 model.Nodes.TryGetValue(NodeId.FromName(a.ContainerName), out var container);
@@ -207,14 +234,20 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
                     container?.Id,
                     DisplayName(model, a.ContainerName),
                     [.. a.MemberNames.Select(name => DisplayName(model, name)).Order(StringComparer.OrdinalIgnoreCase)],
-                    occurring.Contains(a)
+                    occurring.Contains(a),
+                    toFixCycles.GetValueOrDefault(a)
                 );
             })
             .OrderBy(r => r.ContainerName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(r => string.Join(" ", r.MemberNames), StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        return (found, accepted, lineIds);
+        return (
+            found,
+            [.. reports.Where(r => !r.Accepted.IsToFix)],
+            [.. reports.Where(r => r.Accepted.IsToFix)],
+            lineIds
+        );
     }
 
     // The root has no name of its own; its children are the model's top-level nodes.

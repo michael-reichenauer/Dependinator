@@ -280,6 +280,54 @@ public class CycleServiceTests
     }
 
     [Fact]
+    public void FixLater_ShouldListTheCycleToFix_AndKeepHighlightingItsLines()
+    {
+        var (_, a, b, _) = AddCycle();
+        var service = NewService();
+
+        service.FixLater(Assert.Single(service.GetCycles()), " Move B's use of A into A ");
+
+        Assert.Empty(service.GetCycles());
+        Assert.Empty(service.GetAcceptedCycles());
+        var report = Assert.Single(service.GetCyclesToFix());
+        Assert.True(report.StillOccurs);
+        Assert.True(report.Accepted.IsToFix);
+        Assert.Equal("Move B's use of A into A", report.Accepted.Reason);
+        Assert.Equal(["A", "B"], report.Cycle?.Members.Select(m => m.Name));
+        Assert.Contains(LineId.From(a.Name, b.Name), service.GetCyclicLineIds());
+
+        // Undo reports it as an open cycle again.
+        modelMgr.WithModel(m => Assert.Single(done).Revert(m));
+        Assert.Single(service.GetCycles());
+        Assert.Empty(service.GetCyclesToFix());
+    }
+
+    [Fact]
+    public void GetCyclesToFix_ShouldKeepOneWhoseCycleIsGone_ForTheUserToRemove()
+    {
+        Link bToA;
+        using (var model = modelMgr.UseModel())
+        {
+            var container = AddNode(model, "C", model.Root);
+            var a = AddNode(model, "C.A", container);
+            var b = AddNode(model, "C.B", container);
+            AddLink(model, a, b);
+            bToA = AddLink(model, b, a);
+        }
+        var service = NewService();
+        service.FixLater(Assert.Single(service.GetCycles()), "Remove B's use of A");
+
+        modelMgr.WithModel(m => m.RemoveLink(bToA)); // Fixed
+
+        var report = Assert.Single(service.GetCyclesToFix());
+        Assert.False(report.StillOccurs);
+        Assert.Null(report.Cycle);
+        Assert.Empty(service.GetCyclicLineIds());
+        service.Unaccept([report.Accepted]);
+        Assert.Empty(service.GetCyclesToFix());
+    }
+
+    [Fact]
     public void GetCycles_ShouldLabelATopLevelCycle()
     {
         using (var model = modelMgr.UseModel())
@@ -312,5 +360,12 @@ public class CycleServiceTests
         Assert.Empty(model.AcceptedCycles);
         model.SetFromDto("path", dto);
         Assert.Equal([new AcceptedCycle("C", ["C.A", "C.B"], "Why")], model.AcceptedCycles);
+
+        // One to fix later keeps that, and its planned change.
+        model.AddAcceptedCycle(new AcceptedCycle("D", ["D.A", "D.B"], "Move it", IsToFix: true));
+        var toFixDto = model.SerializeToDto().AcceptedCycles.Single(a => a.Container == "D");
+        Assert.True(toFixDto.IsToFix);
+        model.SetFromDto("path", model.SerializeToDto());
+        Assert.Contains(new AcceptedCycle("D", ["D.A", "D.B"], "Move it", IsToFix: true), model.AcceptedCycles);
     }
 }
