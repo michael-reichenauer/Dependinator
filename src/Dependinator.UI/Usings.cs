@@ -1,3 +1,5 @@
+// Only the NodeType extension members, not the whole namespace (its Node/Link/Item/Source clash with UI types)
+global using static Dependinator.Core.Parsing.NodeTypeExtensions;
 global using Dependinator.Core.Utils;
 global using Dependinator.Core.Utils.Logging;
 global using Dependinator.UI.Shared;
