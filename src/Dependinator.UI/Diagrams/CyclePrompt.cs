@@ -80,6 +80,13 @@ static partial class CyclePrompt
                 + "circular dependency, and I need to decide whether to accept it as intended (with a short "
                 + "reason that is stored with the model) or to break it."
         );
+        // The prompt may be pasted into an AI that can change the code (Claude Code, say), which
+        // would take the asked-for change as a task; reading the code makes the verdict better.
+        text.AppendLine()
+            .AppendLine(
+                "This is a review only: do not change, create or commit any files, and do not run commands "
+                    + "that do. If you can read the code, use it to check your answer."
+            );
         if (Codebase(container) is { } codebase)
             text.AppendLine().AppendLine(codebase);
         AppendCycle(text, cycle, container, members);
@@ -239,7 +246,7 @@ static partial class CyclePrompt
         Why: 2–4 sentences.
         Assumptions: what you assumed about code that is not shown here, or "None".
         Reason to store: (only if Accept) at most {MaxReasonLength} characters, specific to these members, for a future maintainer; not a general statement about cycles.
-        Change: (only if Break) the smallest concrete change that removes one direction, and which direction.
+        Change: (only if Break) the smallest concrete change that removes one direction, and which direction (describe it; do not make it).
 
         If the information is not enough to decide, say what you would need to see instead of guessing.
 
