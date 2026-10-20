@@ -29,6 +29,33 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(panel).ToHaveCountAsync(0);
     }
 
+    // Like the dependencies explorer: the panel folds down to its title bar from its button, and
+    // on a narrow screen on a click in the diagram, which it would otherwise cover; a click on
+    // the title bar brings the list back.
+    [E2EFact]
+    public async Task CyclesPanel_ShouldMinimizeOnCanvasClickOnANarrowScreen_AndRestoreOnHeaderClick()
+    {
+        await Page.SetViewportSizeAsync(800, 600);
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
+        ILocator cycles = Page.GetByTestId("cycles-item");
+        ILocator header = Page.GetByTestId("cycles-header");
+        ILocator minimize = Page.GetByTestId("cycles-minimize");
+        await Expect(cycles.First).ToBeVisibleAsync();
+
+        // Empty canvas at the bottom left, away from the panel at the top right.
+        var canvas = await App.Canvas.BoundingBoxAsync();
+        await Page.Mouse.ClickAsync(canvas!.X + 30, canvas.Y + canvas.Height - 30);
+        await Expect(cycles).ToHaveCountAsync(0);
+        await Expect(header).ToBeVisibleAsync();
+
+        await App.RepeatUntilVisibleAsync(() => header.ClickAsync(), cycles.First);
+        await minimize.ClickAsync();
+        await Expect(cycles).ToHaveCountAsync(0);
+        await App.RepeatUntilVisibleAsync(() => minimize.ClickAsync(), cycles.First);
+    }
+
     [E2EFact]
     public async Task AcceptCycle_ShouldMoveItToAccepted_WithItsReason_AndBackWhenRemoved()
     {

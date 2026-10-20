@@ -422,6 +422,14 @@ class InteractionService(
 
         dependenciesService.Clicked(pointerId);
 
+        // On a narrow screen a click in the diagram folds the cycles panel down to its title bar,
+        // as it does the explorer, so the diagram it covers can be worked with; its lines stay.
+        if (viewOptions.IsCyclesShown && !viewOptions.IsCyclesMinimized && screenService.IsNarrow)
+        {
+            viewOptions.SetCyclesMinimized(true);
+            applicationEvents.TriggerUIStateChanged();
+        }
+
         // Shift/Ctrl+click builds a group selection; a plain click selects just that item.
         if (pointerId.IsNode && (e.ShiftKey || e.CtrlKey))
             selectionService.ToggleInSelectionAsync(pointerId, e).RunInBackground();

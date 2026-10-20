@@ -209,6 +209,17 @@
 }
 
 /* A cycle row with its buttons (accept, or edit/remove for an accepted one) to the right. */
+/* The cycles panel's title and count; minimized, a click on them restores the panel. */
+.dep-cycles__title {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.dep-cycles__title--minimized {
+    cursor: pointer;
+}
+
 /* The row's buttons sit beside its lines, centered. */
 .dep-cycles__item {
     display: flex;

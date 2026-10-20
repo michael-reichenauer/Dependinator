@@ -27,6 +27,10 @@ interface IScreenService
 {
     Rect SvgRect { get; }
 
+    // Below MudBlazor's md breakpoint (960 px), where a panel beside the diagram covers much of
+    // it, so a click in the diagram folds such panels down to their title bar.
+    bool IsNarrow { get; }
+
     Task InitAsync(IUIComponent component);
     Task<Result<ElementBoundingRectangle>> GetBoundingRectangle(string elementId);
 
@@ -58,6 +62,10 @@ class ScreenService : IScreenService, IDisposable
     }
 
     public Rect SvgRect { get; private set; } = Rect.None;
+
+    public bool IsNarrow => SvgRect.Width < NarrowMaxWidth;
+
+    const double NarrowMaxWidth = 960;
 
     public async Task InitAsync(IUIComponent component)
     {

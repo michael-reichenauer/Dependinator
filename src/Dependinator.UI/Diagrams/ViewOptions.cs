@@ -25,6 +25,10 @@ interface IViewOptions
     // Circular dependencies: the cycles panel is open and cyclic lines are drawn highlighted.
     bool IsCyclesShown { get; }
 
+    // The cycles panel folded down to its title bar (its lines stay highlighted); showing or
+    // closing the panel restores it.
+    bool IsCyclesMinimized { get; }
+
     // Architecture rules: the rules panel is open and violating lines are drawn highlighted.
     bool IsRulesShown { get; }
 
@@ -38,6 +42,7 @@ interface IViewOptions
     void SetRowFilter(RowFilter filter);
     void SetLegendShown(bool shown);
     void SetCyclesShown(bool shown);
+    void SetCyclesMinimized(bool minimized);
     void SetRulesShown(bool shown);
     void SetMinimapShown(bool shown);
 }
@@ -87,6 +92,7 @@ class ViewOptions : IViewOptions
     public RowFilter RowFilter { get; private set; } = RowFilter.None;
     public bool IsLegendShown { get; private set; }
     public bool IsCyclesShown { get; private set; }
+    public bool IsCyclesMinimized { get; private set; }
     public bool IsRulesShown { get; private set; }
     public bool IsMinimapShown { get; private set; }
 
@@ -102,7 +108,13 @@ class ViewOptions : IViewOptions
 
     public void SetLegendShown(bool shown) => IsLegendShown = shown;
 
-    public void SetCyclesShown(bool shown) => IsCyclesShown = shown;
+    public void SetCyclesShown(bool shown)
+    {
+        IsCyclesShown = shown;
+        IsCyclesMinimized = false;
+    }
+
+    public void SetCyclesMinimized(bool minimized) => IsCyclesMinimized = minimized && IsCyclesShown;
 
     public void SetRulesShown(bool shown) => IsRulesShown = shown;
 

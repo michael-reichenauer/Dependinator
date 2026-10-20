@@ -18,7 +18,8 @@
    it moves to the To fix section with the planned change, keeps its red lines, and offers a fix
    prompt for an AI that can change the code. An entry whose cycle is gone stays, marked, until
    removed; one whose cycle a node joined says so (the grown cycle is listed as open again). Those
-   entries come first in their section, and the section header counts them. *@
+   entries come first in their section, and the section header counts them. The panel can be
+   folded down to its title bar, and on a narrow screen a click in the diagram does that. *@
 @if (viewOptions.IsCyclesShown)
 {
   var cycles = cycleService.GetCycles();
@@ -28,12 +29,23 @@
   var fixedOnes = toFix.Where(r => r.IsGone).ToList();
   <div class="dep-panel dep-toolbar-card" data-testid="cycles-panel">
     <div class="dep-panel__header">
-      <span class="dep-panel__title">Cycles</span>
-      <span class="dep-panel__count" data-testid="cycles-count">@(cycles.Count == 0 ? "none" : cycles.Count.ToString())</span>
+      @* Minimized, the title bar is all that is left; clicking it brings the list back. *@
+      <div class="dep-cycles__title @(viewOptions.IsCyclesMinimized ? "dep-cycles__title--minimized" : "")"
+           @onclick="() => SetMinimized(false)" data-testid="cycles-header">
+        <span class="dep-panel__title">Cycles</span>
+        <span class="dep-panel__count" data-testid="cycles-count">@(cycles.Count == 0 ? "none" : cycles.Count.ToString())</span>
+      </div>
       <MudSpacer />
+      <MudTooltip Text="@(viewOptions.IsCyclesMinimized ? "Restore" : "Minimize")">
+        <MudIconButton Icon="@(viewOptions.IsCyclesMinimized ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ExpandLess)"
+                       Size="Size.Small" OnClick="() => SetMinimized(!viewOptions.IsCyclesMinimized)"
+                       data-testid="cycles-minimize" />
+      </MudTooltip>
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
                      data-testid="cycles-close" />
     </div>
+    @if (!viewOptions.IsCyclesMinimized)
+    {
     @if (cycles.Count == 0)
     {
       <div class="dep-panel__empty">
@@ -176,6 +188,7 @@
         }
       }
     </div>
+    }
   </div>
 }
 
@@ -274,6 +287,15 @@
     var dialog = await dialogService.ShowAsync<AcceptCycleDialog>(null, parameters, options);
     var result = await dialog.Result;
     return result is { Canceled: false, Data: AcceptCycleDialogResult data } ? data : null;
+  }
+
+  // Folded down, the panel leaves the diagram it covers free while its lines stay highlighted.
+  void SetMinimized(bool minimized)
+  {
+    if (viewOptions.IsCyclesMinimized == minimized)
+      return;
+    viewOptions.SetCyclesMinimized(minimized);
+    applicationEvents.TriggerUIStateChanged();
   }
 
   void Close()

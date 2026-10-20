@@ -142,7 +142,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   asks Claude for a verdict on the cycle with it: an accepting verdict fills in the reason, a
   breaking one shows the change to make, and nothing is saved until the user decides. "Ask again"
   keeps every answer, so the user can pick one when they differ (a borderline cycle), and accepting
-  anyway keeps the suggested fix in the reason. It uses the user's own Anthropic API key
+  anyway keeps the suggested fix in the reason. The cycles panel can be folded down to its title bar,
+  like the dependencies explorer (and is, on a narrow screen, by a click in the diagram). It uses the user's own Anthropic API key
   (VS Code secret storage via a new command, or `ANTHROPIC_API_KEY` for the web host). In VS Code
   the key is asked for on first use, and again when Claude does not accept it, with the dialog
   pointing at the input box at the top of the window, since the user is watching the dialog. When
