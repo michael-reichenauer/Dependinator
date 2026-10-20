@@ -209,9 +209,10 @@
 }
 
 /* A cycle row with its buttons (accept, or edit/remove for an accepted one) to the right. */
+/* The row's buttons sit beside its lines, centered. */
 .dep-cycles__item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 2px;
 }
 
@@ -274,6 +275,17 @@
     gap: 4px;
 }
 
+/* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
+.dep-cycles__ask-claude .mud-button-icon-start {
+    color: #d97757;
+}
+
+.dep-cycles__ask-claude .dep-cycles__ask-claude-progress {
+    width: 14px !important;
+    height: 14px !important;
+    margin-right: 6px;
+}
+
 /* One chip per answer from Claude, when asked more than once. */
 .dep-cycles__answers {
     display: flex;
@@ -312,6 +324,24 @@
     background: var(--mud-palette-background-gray);
     font-size: 0.875rem;
     word-break: break-word;
+}
+
+/* A long answer scrolls inside its panel, so the reason and the buttons stay in view. */
+.dep-cycles__suggestion {
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+/* While asking: the answer's place, framed like the answer. */
+.dep-cycles__suggestion--pending {
+    border-left-color: var(--mud-palette-lines-default);
+}
+
+.dep-cycles__suggest-pending {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--mud-palette-text-secondary);
 }
 
 .dep-cycles__suggestion[data-verdict="break"] {

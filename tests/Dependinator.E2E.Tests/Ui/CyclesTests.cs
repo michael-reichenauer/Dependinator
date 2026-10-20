@@ -76,7 +76,10 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         // broken when asked again.
         await Expect(ask).ToHaveTextAsync("Ask Claude");
         await ask.ClickAsync();
+        // While it asks, the answer's place shows that it does.
+        await Expect(Page.GetByTestId("accept-cycle-asking")).ToBeVisibleAsync();
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
+        await Expect(Page.GetByTestId("accept-cycle-asking")).ToHaveCountAsync(0);
         await Expect(field).ToHaveValueAsync("Suggested in test mode");
         await Expect(ask).ToHaveTextAsync("Ask again");
 

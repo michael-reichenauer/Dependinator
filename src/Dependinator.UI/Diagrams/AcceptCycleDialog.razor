@@ -32,11 +32,20 @@
       }
       @if (Suggest is not null)
       {
-        <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" Size="Size.Small"
+        <MudButton StartIcon="@(isSuggesting ? null : MudBlazor.Icons.Material.Outlined.AutoAwesome)" Size="Size.Small"
                    Variant="@(answers.Count == 0 ? Variant.Outlined : Variant.Text)" Disabled="isSuggesting"
+                   Class="dep-cycles__ask-claude"
                    title="Ask Claude whether this cycle is intended or should be broken, with your own API key"
                    OnClick="SuggestAsync" data-testid="accept-cycle-suggest">
-          @(answers.Count == 0 ? "Ask Claude" : "Ask again")
+          @if (isSuggesting)
+          {
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="dep-cycles__ask-claude-progress" />
+            <span>Asking ...</span>
+          }
+          else
+          {
+            @(answers.Count == 0 ? "Ask Claude" : "Ask again")
+          }
         </MudButton>
       }
     </div>
@@ -49,13 +58,6 @@
     @if (copyNote is not null)
     {
       <div class="dep-cycles__suggest-note mt-2" data-testid="accept-cycle-copied">@copyNote</div>
-    }
-    @if (step is SuggestStep.AskingClaude)
-    {
-      <div class="dep-cycles__suggest">
-        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-        <span class="dep-cycles__suggest-note">Asking Claude, this can take up to a minute.</span>
-      </div>
     }
     @if (step is SuggestStep.EnteringApiKey or SuggestStep.EnteringNewApiKey)
     {
@@ -88,7 +90,17 @@
         </div>
       }
     }
-    @if (Selected is { } s)
+    @if (step is SuggestStep.AskingClaude)
+    {
+      @* Where the answer will appear. *@
+      <div class="dep-cycles__suggestion dep-cycles__suggestion--pending" data-testid="accept-cycle-asking">
+        <div class="dep-cycles__suggest-pending">
+          <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+          <span>Asking Claude, this can take up to a minute.</span>
+        </div>
+      </div>
+    }
+    else if (Selected is { } s)
     {
       <div class="dep-cycles__suggestion" data-testid="accept-cycle-suggestion"
            data-verdict="@(s.IsAccept ? "accept" : "break")">

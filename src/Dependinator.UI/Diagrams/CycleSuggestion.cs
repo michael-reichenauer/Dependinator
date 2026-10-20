@@ -71,8 +71,13 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IClaudeServ
     {
         // The e2e tests exercise the dialog without a key or network: a larger cycle is to be
         // broken, a pair accepted and, asked again, broken, so differing answers can be tried too.
+        // A short wait lets them see the dialog while it asks.
         if (Dependinator.Core.Build.IsTestMode)
+        {
+            onStep(SuggestStep.AskingClaude);
+            await Task.Delay(TestModeAnswerDelay);
             return cycle.Members.Count == 2 && testModeAsks++ % 2 == 0 ? TestModeAccept : TestModeBreak;
+        }
 
         var hasAskedForKey = false;
         string? prompt = null;
@@ -99,6 +104,7 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IClaudeServ
     }
 
     int testModeAsks;
+    static readonly TimeSpan TestModeAnswerDelay = TimeSpan.FromMilliseconds(800);
 
     static readonly CycleSuggestion TestModeAccept = new(
         true,

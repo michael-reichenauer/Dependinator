@@ -60,7 +60,7 @@
               <span class="dep-cycles__note" data-testid="cycles-item-grown">@(before.IsToFix ? "Marked to fix" : "Accepted") before; @JoinedSince(cycle, before) joined it since.</span>
             }
           </button>
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.RateReview" Size="Size.Small"
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.RateReview" Size="Size.Small" Color="Color.Primary"
                          title="@ReviewTitle" OnClick="() => ReviewAsync(cycle)" data-testid="cycles-review" />
         </div>
       }
