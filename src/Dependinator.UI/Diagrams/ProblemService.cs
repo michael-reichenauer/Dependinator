@@ -120,7 +120,7 @@ class ProblemService(
 
     // A cached model's problems can name a node a later edit or parse removed.
     static NodeId? NodeIdIn(IModel model, string? nodeName) =>
-        nodeName is not null && model.Nodes.ContainsKey(NodeId.FromName(nodeName)) ? NodeId.FromName(nodeName) : null;
+        nodeName is not null && NodeId.FromName(nodeName) is var id && model.Nodes.ContainsKey(id) ? id : null;
 
     static string Count(int count, string singular, string? plural = null) =>
         $"{count} {(count == 1 ? singular : plural ?? singular + "s")}";

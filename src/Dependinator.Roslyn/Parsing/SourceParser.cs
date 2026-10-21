@@ -84,7 +84,8 @@ class SourceParser : ISourceParser
 
         Error? firstProjectError = null;
         var failedCount = 0;
-        HashSet<string> projectsWithProblems = [];
+        List<Project> failedProjects = [];
+        Dictionary<string, ParseProblem> compileErrors = [];
         foreach (var (project, parseProjectTask) in parseProjectTasks)
         {
             var projectResult = await parseProjectTask;
@@ -93,18 +94,31 @@ class SourceParser : ISourceParser
                 Log.Warn($"Failed to parse project {project.Name}: {projectResult.Error.Message}");
                 firstProjectError ??= projectResult.Error;
                 failedCount++;
-                // The project is missing from the model, which is a problem the user should see.
-                solutionNodes.Add(
-                    new Item(null, null, Problem: new ParseProblem($"{project.Name} could not be parsed", 1))
-                );
+                failedProjects.Add(project);
                 continue;
             }
-            // A multi-targeted project is loaded once per target framework, into the same
-            // module node, so report its compile errors once.
-            solutionNodes.AddRange(
-                items.Where(i => i.Problem?.NodeName is not { } node || projectsWithProblems.Add(node))
-            );
+            solutionNodes.AddRange(items.Where(i => i.Problem is null));
+
+            // A multi-targeted project is loaded once per target framework, into the same module
+            // node, so its compile errors are reported once, for the framework with the most.
+            foreach (var problem in items.Select(i => i.Problem).OfType<ParseProblem>())
+            {
+                var key = problem.NodeName ?? problem.Message;
+                if (!compileErrors.TryGetValue(key, out var other) || other.ErrorCount < problem.ErrorCount)
+                    compileErrors[key] = problem;
+            }
         }
+        solutionNodes.AddRange(compileErrors.Values.Select(p => new Item(null, null, Problem: p)));
+
+        // A project missing from the model is a problem the user should see, unless another of
+        // its target frameworks parsed.
+        var parsedPaths = projects.Except(failedProjects).Select(p => p.FilePath).ToHashSet();
+        solutionNodes.AddRange(
+            failedProjects
+                .Where(p => !parsedPaths.Contains(p.FilePath))
+                .DistinctBy(p => p.FilePath)
+                .Select(p => new Item(null, null, Problem: new ParseProblem($"{p.Name} could not be parsed", 1)))
+        );
 
         // Some projects failing still yields a usable (if partial) model, but all of them failing
         // means there is nothing to show, so report it instead of returning a lone solution node.
