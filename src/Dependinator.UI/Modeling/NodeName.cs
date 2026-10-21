@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.RegularExpressions;
 using Dependinator.Core.Parsing;
 
@@ -12,15 +11,16 @@ static partial class NodeName
         bool isExecutable
     )
     {
-        var parts = Parsing.Utils.NodeName.SplitParts(nodeName);
+        IReadOnlyList<string> parts = Parsing.Utils.NodeName.SplitParts(nodeName);
 
-        // A member's short name leaves out its parameters. A type has none, except a C# extension
-        // block, which is named after its receiver: "extension(NodeType)".
-        string namePart = nodeType.IsType ? parts[^1] : parts[^1].Split('(')[0];
-        string shortName = ToNiceParameters(ToNiceText(namePart));
+        // A member's short name leaves out its parameters. Other nodes have none, but their names
+        // can have brackets too: a C# extension block is named after its receiver,
+        // "extension(NodeType)", and a manual node can be named "Cache (v2)".
+        string namePart = nodeType.IsMember ? parts[^1].Split('(')[0] : parts[^1];
+        string shortName = ToNiceText(WithoutQualifiers(namePart));
 
         var subParts = nodeName.StartsWith('$') ? parts : parts.Skip(1);
-        string longName = string.Join(".", subParts.Where(part => !part.StartsWith('?')));
+        string longName = string.Join(".", subParts.Where(part => !part.StartsWith('?')).Select(WithoutQualifiers));
 
         if (string.IsNullOrEmpty(longName))
         {
@@ -28,7 +28,7 @@ static partial class NodeName
         }
         else
         {
-            longName = ToNiceParameters(ToNiceText(longName));
+            longName = ToNiceText(longName);
         }
 
         if (nodeType == NodeType.Assembly && !shortName.EndsWith(".dll") && !shortName.EndsWith(".exe"))
@@ -56,43 +56,15 @@ static partial class NodeName
         return name;
     }
 
-    // The type names in parameter lists, indexer parameters and generic arguments without their
-    // namespaces: "Do(System.Int32,Ns.Item)" reads "Do(Int32,Item)". The dots outside brackets
-    // separate the name's parts and stay.
-    static string ToNiceParameters(string name)
-    {
-        var text = new StringBuilder(name.Length);
-        var depth = 0;
-        var bracketsStart = 0;
-        for (var i = 0; i < name.Length; i++)
-        {
-            switch (name[i])
-            {
-                case '<' or '(' or '[':
-                    if (depth == 0)
-                    {
-                        text.Append(name, bracketsStart, i + 1 - bracketsStart);
-                        bracketsStart = i + 1;
-                    }
-                    depth++;
-                    break;
-                case '>' or ')' or ']' when depth > 0:
-                    depth--;
-                    if (depth == 0)
-                    {
-                        text.Append(Qualifiers().Replace(name[bracketsStart..i], ""));
-                        bracketsStart = i;
-                    }
-                    break;
-            }
-        }
+    // The type names in a part's brackets (parameter lists, indexer parameters, generic arguments,
+    // an extension block's receiver) without their namespaces: "Do(System.Int32,global::Ns.Item)"
+    // reads "Do(Int32,Item)". A part has dots only inside its brackets: the other dots separate
+    // the parts. Before ToNiceText, which turns the "*" of encoded names into dots.
+    static string WithoutQualifiers(string part) => Qualifiers().Replace(part, "");
 
-        var rest = name[bracketsStart..];
-        return text.Append(depth > 0 ? Qualifiers().Replace(rest, "") : rest).ToString();
-    }
-
-    // "global::Ns.Sub." in "global::Ns.Sub.Item"
-    [GeneratedRegex(@"(global::)?(\w+\.)+")]
+    // "global::Ns.Sub." in "global::Ns.Sub.Item" and "global::" in "global::Item" (a type in the
+    // global namespace), but not a module named "global::"
+    [GeneratedRegex(@"global::(\w+\.)*(?=\w)|(\w+\.)+")]
     private static partial Regex Qualifiers();
 
     static string ToNiceText(string name) =>

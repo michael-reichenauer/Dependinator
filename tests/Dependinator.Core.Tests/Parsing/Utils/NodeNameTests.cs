@@ -23,6 +23,13 @@ public class NodeNameTests
     [InlineData("Mod.Ns.Sample.operator<(Ns.Sample,Ns.Sample)", "Mod.Ns.Sample")]
     [InlineData("Mod.Ns.Sample.operator>(Ns.Sample,Ns.Sample)", "Mod.Ns.Sample")]
     [InlineData("Mod.Ns.Sample.operator>>(Ns.Sample,int)", "Mod.Ns.Sample")]
+    [InlineData("Mod.Ns.Sample.operator<(Ns.Generic<Ns.A>,int)", "Mod.Ns.Sample")]
+    [InlineData("Mod.Ns.Generic<T>.operator>(Ns.Generic<T>,int)", "Mod.Ns.Generic<T>")]
+    // A bracket in a manual node's name that is never closed, or closes none
+    [InlineData("Design.Latency < 50ms.Cache", "Design.Latency < 50ms")]
+    [InlineData("Design.Cache [beta.Child", "Design.Cache [beta")]
+    [InlineData("Design.Fast) path.Child", "Design.Fast) path")]
+    [InlineData("Design.Use (x<y).Child", "Design.Use (x<y)")]
     public void ParseParentName_ShouldReturnContainingName(string fullName, string expected)
     {
         Assert.Equal(expected, NodeName.ParseParentName(fullName));
@@ -46,37 +53,13 @@ public class NodeNameTests
         );
         Assert.Equal(["Mod", "Ns", "Outer", "Inner"], NodeName.SplitParts("Mod.Ns.Outer/Inner"));
         Assert.Equal(["Root"], NodeName.SplitParts("Root"));
+        Assert.Equal(["Design", "Latency < 50ms", "Cache"], NodeName.SplitParts("Design.Latency < 50ms.Cache"));
     }
 
     [Fact]
     public void ParentName_ShouldBeRoot_ForTopLevelName()
     {
         Assert.Equal(NodeName.Root, NodeName.From("Single").ParentName);
-    }
-
-    [Theory]
-    [InlineData("Mod.Ns.Sample", "Sample")]
-    [InlineData("Mod.Ns.List`1", "List<T>")]
-    [InlineData("Mod.Ns.op_Equality", "==")]
-    [InlineData("Mod.Ns.Sample.Method()", "Method")]
-    public void DisplayShortName_ShouldReturnLastPart(string fullName, string expectedShort)
-    {
-        Assert.Equal(expectedShort, NodeName.From(fullName).DisplayShortName);
-    }
-
-    [Fact]
-    public void DisplayLongName_ShouldDropModulePart()
-    {
-        Assert.Equal("Ns.Sample", NodeName.From("Mod.Ns.Sample").DisplayLongName);
-    }
-
-    [Fact]
-    public void DisplayLongName_ShouldSimplifyParameterTypesToShortNames()
-    {
-        Assert.Equal(
-            "Ns.Sample.Do(Int32,String)",
-            NodeName.From("Mod.Ns.Sample.Do(System.Int32,System.String)").DisplayLongName
-        );
     }
 
     [Fact]

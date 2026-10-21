@@ -64,6 +64,41 @@ public class NodeNameTests
         Assert.Equal((longName, shortName), NodeName.GetDisplayNames(name, Enum.Parse<NodeType>(type), false));
     }
 
+    [Theory]
+    // A stored cycle member whose node is gone, and an extension block of an external package
+    [InlineData(
+        "Mod.Ns.Ext.extension(global::Ns.Item)",
+        nameof(NodeType.None),
+        "Ns.Ext.extension(Item)",
+        "extension(Item)"
+    )]
+    [InlineData(
+        "Mod.Ns.Ext.extension(global::Ns.Item)",
+        nameof(NodeType.Parent),
+        "Ns.Ext.extension(Item)",
+        "extension(Item)"
+    )]
+    // A receiver type in the global namespace
+    [InlineData(
+        "Mod.Ns.Ext.extension(global::Item)",
+        nameof(NodeType.ClassType),
+        "Ns.Ext.extension(Item)",
+        "extension(Item)"
+    )]
+    [InlineData("My(App)*sln", nameof(NodeType.Solution), "My(App).sln", "My(App).sln")]
+    // Manual nodes, with a bracket that is never closed
+    [InlineData("Design.Cache (v2)", nameof(NodeType.None), "Cache (v2)", "Cache (v2)")]
+    [InlineData("Design.Latency < 50ms.Cache", nameof(NodeType.None), "Latency < 50ms.Cache", "Cache")]
+    public void GetDisplayNames_ShouldKeepTheBracketsOfNodesOtherThanMembers(
+        string name,
+        string type,
+        string longName,
+        string shortName
+    )
+    {
+        Assert.Equal((longName, shortName), NodeName.GetDisplayNames(name, Enum.Parse<NodeType>(type), false));
+    }
+
     [Fact]
     public void GetDisplayNames_ShouldShortenEveryParameterList()
     {

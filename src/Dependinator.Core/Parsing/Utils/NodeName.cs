@@ -1,11 +1,12 @@
-﻿namespace Dependinator.Core.Parsing.Utils;
+﻿using System.Buffers;
+
+namespace Dependinator.Core.Parsing.Utils;
 
 internal class NodeName : IEquatable<NodeName>
 {
-    record DisplayParts(string ShortName, string LongName);
-
     public static NodeName Root = From("");
-    readonly Lazy<DisplayParts> displayParts;
+    static readonly char[] PartSeparators = ['.', '/'];
+    static readonly SearchValues<char> Brackets = SearchValues.Create("<([");
 
     readonly Lazy<NodeName> parentName;
 
@@ -14,13 +15,10 @@ internal class NodeName : IEquatable<NodeName>
         FullName = fullName;
 
         parentName = new Lazy<NodeName>(GetParentName);
-        displayParts = new Lazy<DisplayParts>(GetDisplayParts);
     }
 
     public string FullName { get; }
     public NodeName ParentName => parentName.Value;
-    public string DisplayShortName => displayParts.Value.ShortName;
-    public string DisplayLongName => displayParts.Value.LongName;
 
     public static NodeName From(string fullName)
     {
@@ -29,16 +27,21 @@ internal class NodeName : IEquatable<NodeName>
 
     public static string ParseParentName(string name)
     {
-        var separators = GetPartSeparators(name);
-        return separators.Count > 0 ? name[..separators[^1]] : "";
+        int index = name.AsSpan().ContainsAny(Brackets)
+            ? GetPartSeparators(name).LastOrDefault(-1)
+            : name.LastIndexOfAny(PartSeparators);
+        return index > -1 ? name[..index] : "";
     }
 
     // The name's parts, e.g. ["Mod", "Ns", "Type<A.B>", "Do(A.B)"] for "Mod.Ns.Type<A.B>.Do(A.B)"
     public static IReadOnlyList<string> SplitParts(string name)
     {
+        if (!name.AsSpan().ContainsAny(Brackets))
+            return name.Split(PartSeparators);
+
         List<string> parts = [];
-        var start = 0;
-        foreach (var separator in GetPartSeparators(name))
+        int start = 0;
+        foreach (int separator in GetPartSeparators(name))
         {
             parts.Add(name[start..separator]);
             start = separator + 1;
@@ -50,24 +53,43 @@ internal class NodeName : IEquatable<NodeName>
     // The indexes of the '.' and '/' part separators. Those inside brackets belong to a type name
     // within the part: a generic argument (Ns.Type<A.B>.Member), a parameter (Ns.Type.Do(A.B)),
     // an indexer parameter (Ns.Type.this[A.B].get) or a C# extension block's receiver
-    // (Ns.Extensions.extension(A.B).Member, a member inside its block).
+    // (Ns.Extensions.extension(A.B).Member, a member inside its block). A bracket that is never
+    // closed, or closes none, is no bracket: the '<' or '>' of an operator (Ns.Type.operator<(A.B))
+    // or one in a manual node's name ("Latency < 50ms.Child").
     static List<int> GetPartSeparators(string name)
     {
         List<int> separators = [];
-        int depth = 0;
+        // The brackets still open: the bracket that closes each, and the separators before it
+        List<(char Close, int SeparatorCount)> open = [];
         for (int i = 0; i < name.Length; i++)
         {
-            switch (name[i])
+            char c = name[i];
+            switch (c)
             {
-                case '<' or '(' or '[':
-                    depth++;
+                case '.' or '/':
+                    separators.Add(i);
+                    break;
+                case '<':
+                    open.Add(('>', separators.Count));
+                    break;
+                case '(':
+                    open.Add((')', separators.Count));
+                    break;
+                case '[':
+                    open.Add((']', separators.Count));
                     break;
                 case '>' or ')' or ']':
-                    // Never below 0: the '>' of an operator (operator>) closes no bracket
-                    depth = Math.Max(0, depth - 1);
-                    break;
-                case '.' or '/' when depth == 0:
-                    separators.Add(i);
+                    int opening = open.Count - 1;
+                    while (opening >= 0 && open[opening].Close != c)
+                        opening--;
+                    if (opening < 0)
+                        break;
+
+                    // The separators since it opened are inside it, also those of brackets opened
+                    // inside it and never closed
+                    int separatorCount = open[opening].SeparatorCount;
+                    separators.RemoveRange(separatorCount, separators.Count - separatorCount);
+                    open.RemoveRange(opening, open.Count - opening);
                     break;
             }
         }
@@ -97,76 +119,5 @@ internal class NodeName : IEquatable<NodeName>
     {
         var parentName = ParseParentName(FullName);
         return parentName != "" ? From(parentName) : Root;
-    }
-
-    DisplayParts GetDisplayParts()
-    {
-        string name = "";
-
-        var parts = SplitParts(FullName);
-
-        string namePart = parts[^1];
-        int index = namePart.IndexOf('(');
-        if (index > -1)
-        {
-            name = namePart.Substring(0, index);
-        }
-        else
-        {
-            name = namePart;
-        }
-
-        name = ToNiceText(name);
-
-        var subParts = FullName.StartsWith("$") ? parts : parts.Skip(1);
-        string fullName = string.Join(".", subParts.Where(part => !part.StartsWith("?")));
-
-        if (string.IsNullOrEmpty(fullName))
-        {
-            fullName = ToNiceText(FullName);
-        }
-        else
-        {
-            fullName = ToNiceText(fullName);
-            fullName = ToNiceParameters(fullName);
-        }
-
-        return new DisplayParts(name, fullName);
-    }
-
-    static string ToNiceParameters(string fullName)
-    {
-        int index1 = fullName.IndexOf('(');
-        int index2 = fullName.IndexOf(')');
-
-        if (index1 > -1 && index2 > index1 + 1)
-        {
-            string parameters = fullName.Substring(index1 + 1, index2 - index1 - 1);
-            string[] parametersParts = parameters.Split(",".ToCharArray());
-
-            // Simplify parameter types to just get last part of each type
-            parameters = string.Join(",", parametersParts.Select(part => part.Split(".".ToCharArray()).Last()));
-
-            fullName = $"{fullName.Substring(0, index1)}({parameters})";
-        }
-
-        return fullName;
-    }
-
-    static string ToNiceText(string name)
-    {
-        return name.Replace("*", ".")
-            .Replace("#", ".")
-            .Replace("?", "")
-            .Replace("$", "")
-            .Replace("%", "")
-            .Replace("/", ".")
-            .Replace("`1", "<T>")
-            .Replace("`2", "<T,T>")
-            .Replace("`3", "<T,T,T>")
-            .Replace("`4", "<T,T,T,T>")
-            .Replace("`5", "<T,T,T,T,T>")
-            .Replace("op_Equality", "==")
-            .Replace("op_Inequality", "!=");
     }
 }
