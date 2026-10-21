@@ -37,12 +37,15 @@ class Node : IItem
     FileSpan? fileSpan;
 
     // For assembly nodes: the project builds an executable; shown as "Name (exe)" instead
-    // of "Name (dll)". Affects the display names, so they are recomputed on change.
+    // of "Name (dll)". Affects the display names, so they are recomputed on change (only then:
+    // every parse sets it on every node).
     public bool? IsExecutable
     {
         get => isExecutable;
         set
         {
+            if (isExecutable == value)
+                return;
             isExecutable = value;
             SetDisplayNames();
         }
@@ -57,6 +60,8 @@ class Node : IItem
         get => type;
         set
         {
+            if (type == value)
+                return;
             type = value;
             SetDisplayNames();
         }

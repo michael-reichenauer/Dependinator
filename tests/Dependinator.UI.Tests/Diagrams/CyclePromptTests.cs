@@ -99,7 +99,7 @@ public class CyclePromptTests
                 model,
                 "Demo*Core*dll.Demo.Core.Utils.Result.Result(Demo.Core.Utils.Error)",
                 result,
-                NodeType.MethodMember // As the C# parser types constructors
+                NodeType.ConstructorMember
             );
             var catchT = AddNode(
                 model,
@@ -166,9 +166,9 @@ public class CyclePromptTests
         var b = AddNode(model, "C.B", container, NodeType.Namespace);
         var item = AddNode(model, "C.A.Item", a, NodeType.ClassType);
         var extensions = AddNode(model, "C.A.Ext", a, NodeType.ClassType);
-        // Two members whose display names are the same, as for C# extension block members.
-        var isA = AddNode(model, "C.A.Ext.extension(global::C.B.T).IsA", extensions, NodeType.PropertyMember);
-        var isB = AddNode(model, "C.A.Ext.extension(global::C.B.T).IsB", extensions, NodeType.PropertyMember);
+        // Two members whose display names are the same: overloads taking types of the same name.
+        var isA = AddNode(model, "C.A.Ext.Use(C.B.T)", extensions, NodeType.MethodMember);
+        var isB = AddNode(model, "C.A.Ext.Use(C.A.T)", extensions, NodeType.MethodMember);
         var result = AddNode(model, "C.B.Result<global::C.A.Item>", b, NodeType.StructType);
         var constructor = AddNode(
             model,
@@ -184,8 +184,28 @@ public class CyclePromptTests
         var prompt = PromptForTheOnlyCycle(model);
 
         Assert.Contains($"- A (namespace): \"{firstSentence}\"\n", prompt);
-        Assert.Contains("A → B (2 links)\n- A.Ext.extension(T) → B.Result<Item> (constructor, Ok)\n\n", prompt);
+        Assert.Contains("A → B (2 links)\n- A.Ext.Use(T) → B.Result<Item> (constructor, Ok)\n\n", prompt);
         Assert.Contains("B → A (1 link)\n- B.Result<Item> → A.Item\n", prompt);
+    }
+
+    [Fact]
+    public void Build_ShouldLabelAConstructor_InAModelParsedBeforeConstructorsWereTyped()
+    {
+        using var model = modelMgr.UseModel();
+        var container = AddNode(model, "C", model.Root, NodeType.Namespace);
+        var a = AddNode(model, "C.A", container, NodeType.Namespace);
+        var b = AddNode(model, "C.B", container, NodeType.Namespace);
+        var item = AddNode(model, "C.A.Item", a, NodeType.ClassType);
+        var use = AddNode(model, "C.A.Item.Use()", item, NodeType.MethodMember);
+        var result = AddNode(model, "C.B.Result<T>", b, NodeType.StructType);
+        // The C# parser typed constructors as methods named after their type
+        var constructor = AddNode(model, "C.B.Result<T>.Result(string)", result, NodeType.MethodMember);
+        AddLink(model, use, constructor);
+        AddLink(model, result, item);
+
+        var prompt = PromptForTheOnlyCycle(model);
+
+        Assert.Contains("- A.Item.Use() → B.Result<T> (constructor)\n", prompt);
     }
 
     [Fact]
@@ -265,7 +285,8 @@ public class CyclePromptTests
             var a = AddNode(model, "C.A", container, NodeType.StructType);
             var b = AddNode(model, "C.B", container, NodeType.StructType);
             SetSpan(b, "/repo/B.cs", 10, 40);
-            // "implicit operator C.A(C.B)" is named with dots, so a parent is made up for "C".
+            // In a model parsed before conversion operators were named without the dots of their
+            // target type, "implicit operator C.A(C.B)" is filed under a parent made up for "C".
             var madeUp = AddNode(model, "C.B.implicitoperatorC", b, NodeType.Parent);
             var conversion = AddNode(model, "C.B.implicitoperatorC.A(C.B)", madeUp, NodeType.MethodMember);
             SetSpan(conversion, "/repo/B.cs", 20, 20);
@@ -277,7 +298,7 @@ public class CyclePromptTests
 
         var requests = CyclePrompt.GetSourceRequests(reading, cycle);
 
-        var unit = Assert.Single(requests.Where(r => r.Direction == "B → A")).Units.Single();
+        var unit = Assert.Single(requests, r => r.Direction == "B → A").Units.Single();
         Assert.Equal(new FileSpan("/repo/B.cs", 10, 40), unit.Span);
         Assert.Equal([20], unit.MemberLines);
     }

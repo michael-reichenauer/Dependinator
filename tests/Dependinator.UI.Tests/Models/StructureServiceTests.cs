@@ -136,6 +136,51 @@ public class StructureServiceTests
     }
 
     [Fact]
+    public void AddOrUpdateNode_ShouldMoveACachedNodeToTheParentItsNameTells_AndDropTheOldMadeUpParent()
+    {
+        using var model = new ModelMgr(new StateMgr()).UseModel();
+        model.UpdateStamp = new DateTime(2024, 1, 1);
+        var service = new StructureService(new LineService());
+        // Cached before the dots in an indexer's brackets were part of its name: a parent was made
+        // up for "this[Ns"
+        var solution = AddNode(model, "Mod", model.Root);
+        var sample = AddNode(model, "Mod.Sample", solution);
+        var madeUp = AddNode(model, "Mod.Sample.this[Ns", sample);
+        var indexer = AddNode(model, "Mod.Sample.this[Ns.Key]", madeUp);
+        var getter = AddNode(model, "Mod.Sample.this[Ns.Key].get", indexer);
+        AddNode(model, "Mod.Other", solution);
+        var link = new ParsingLink(getter.Name, "Mod.Other", new Dependinator.Core.Parsing.LinkProperties());
+        service.AddOrUpdateLink(model, link);
+
+        model.UpdateStamp = new DateTime(2024, 1, 2);
+        foreach (
+            var (name, type) in new[]
+            {
+                ("Mod", NodeType.Solution),
+                ("Mod.Sample", NodeType.ClassType),
+                ("Mod.Sample.this[Ns.Key]", NodeType.PropertyMember),
+                ("Mod.Sample.this[Ns.Key].get", NodeType.MethodMember),
+                ("Mod.Other", NodeType.ClassType),
+            }
+        )
+            service.AddOrUpdateNode(
+                model,
+                new ParsingNode(name, new Dependinator.Core.Parsing.NodeProperties { Type = type })
+            );
+        service.AddOrUpdateLink(model, link);
+        service.ClearNotUpdated(model);
+
+        Assert.Same(sample, indexer.Parent);
+        Assert.Same(indexer, getter.Parent);
+        Assert.False(model.Nodes.ContainsKey(madeUp.Id));
+        // The getter's lines pass through the indexer's new parent, not the removed made-up one
+        Assert.True(model.Links.ContainsKey(new LinkId(getter.Name, "Mod.Other")));
+        Assert.NotEmpty(getter.SourceLines);
+        Assert.DoesNotContain(model.Lines.Values, l => l.Source == madeUp || l.Target == madeUp);
+        Assert.Contains(model.Lines.Values, l => l.Source == indexer);
+    }
+
+    [Fact]
     public void AddOrUpdateLink_ShouldHideNewTargetNodesUnderHiddenParent()
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();
