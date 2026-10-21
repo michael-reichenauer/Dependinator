@@ -1,0 +1,140 @@
+#!/bin/bash
+# Install what building and testing Dependinator needs on a fresh Ubuntu 24.04 machine, such
+# as a Claude Code cloud session, which does not use the devcontainer:
+#
+#   - .NET SDK 10 (runtime of the net10.0 projects and CSharpier) and the .NET 11 preview SDK
+#     pinned in global.json, in /usr/share/dotnet (like the devcontainer)
+#   - Azurite (Api.Tests start one; ./scripts/e2e -s) and Azure Functions Core Tools (-s)
+#   - Playwright browsers + their OS packages at the Microsoft.Playwright.Xunit version in
+#     Directory.Packages.props (./scripts/e2e), and playwright-cli (ui-check skill)
+#   - the repo's dotnet tools (CSharpier) and NuGet packages
+#
+#   ./scripts/cloud-setup              install what is missing (safe to re-run)
+#   ./scripts/cloud-setup -b chromium  only these Playwright browsers (default: all three)
+#   ./scripts/cloud-setup --hook       the SessionStart hook in .claude/settings.json: does
+#                                      nothing outside a cloud session (CLAUDE_CODE_REMOTE),
+#                                      logs to /tmp/cloud-setup.log and prints one summary
+#                                      line, since hook output becomes Claude's context
+#
+# Runs as root or through sudo. Beyond the cloud's "Trusted" network defaults, the downloads
+# need builds.dotnet.microsoft.com, ci.dot.net, aka.ms, cdn.playwright.dev,
+# playwright.download.prss.microsoft.com and crl3.digicert.com (CLAUDE.md, "Cloud sessions").
+# A full install took ~4.5 min in a fresh x86_64 container, a re-run ~15 s.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+HOOK=0
+BROWSERS="chromium firefox webkit"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --hook) HOOK=1 ;;
+        -b) BROWSERS="$2"; shift ;;
+        *) echo "Usage: ./scripts/cloud-setup [--hook] [-b \"chromium firefox webkit\"]" >&2; exit 1 ;;
+    esac
+    shift
+done
+
+if [[ "$HOOK" == "1" ]]; then
+    [[ "${CLAUDE_CODE_REMOTE:-}" == "true" ]] || exit 0
+    log=/tmp/cloud-setup.log
+    start=$SECONDS
+    if "$0" -b "$BROWSERS" >"$log" 2>&1; then
+        echo "Cloud toolchain ready in $((SECONDS - start)) s (.NET SDKs, Azurite, func, Playwright: $BROWSERS); log: $log"
+    else
+        # Never fail the session start; tell Claude what is missing instead.
+        echo "Cloud toolchain setup FAILED (log: $log). Last lines:"
+        tail -n 15 "$log"
+        echo "A download error usually means a host missing from the environment's network allowlist (see scripts/cloud-setup)."
+    fi
+    exit 0
+fi
+
+export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 DEBIAN_FRONTEND=noninteractive
+
+# Run as root, keeping PATH so sudo finds node/npm installed under a user's nvm dir.
+as_root() {
+    if [[ "$(id -u)" == "0" ]]; then
+        "$@"
+    else
+        sudo env "PATH=$PATH" DEBIAN_FRONTEND=noninteractive "$@"
+    fi
+}
+
+# npm global install, through sudo only when the global prefix is not writable.
+npm_install_global() {
+    if [[ -w "$(npm prefix -g)" ]]; then npm install -g "$@"; else as_root npm install -g "$@"; fi
+}
+
+step() {
+    echo ""
+    echo "=== $*"
+}
+
+DOTNET_DIR=/usr/share/dotnet
+SDK_VERSION="$(jq -r .sdk.version global.json 2>/dev/null || sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' global.json)"
+PLAYWRIGHT_VERSION="$(sed -n 's/.*"Microsoft.Playwright.Xunit" Version="\([^"]*\)".*/\1/p' Directory.Packages.props)"
+
+step "OS packages"
+missing=()
+for pkg in curl ca-certificates jq lsof libicu74; do
+    dpkg -s "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+done
+if [[ ${#missing[@]} -gt 0 ]]; then
+    as_root apt-get update -q
+    as_root apt-get install -y -q "${missing[@]}"
+else
+    echo "present"
+fi
+
+step ".NET SDKs (10.0 + $SDK_VERSION from global.json)"
+installed_sdks="$("$DOTNET_DIR/dotnet" --list-sdks 2>/dev/null || true)"
+if ! grep -q "^10\." <<<"$installed_sdks" || ! grep -q "^$SDK_VERSION " <<<"$installed_sdks"; then
+    curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+    grep -q "^10\." <<<"$installed_sdks" ||
+        as_root bash /tmp/dotnet-install.sh --channel 10.0 --install-dir "$DOTNET_DIR"
+    grep -q "^$SDK_VERSION " <<<"$installed_sdks" ||
+        as_root bash /tmp/dotnet-install.sh --version "$SDK_VERSION" --install-dir "$DOTNET_DIR"
+fi
+as_root ln -sf "$DOTNET_DIR/dotnet" /usr/local/bin/dotnet
+dotnet --list-sdks
+
+step "Node.js"
+if ! command -v npm >/dev/null 2>&1; then
+    echo "Node.js with npm is required (the cloud image and the devcontainer have it)." >&2
+    exit 1
+fi
+node --version
+
+step "Azurite"
+command -v azurite >/dev/null 2>&1 || npm_install_global azurite
+azurite --version
+
+step "Azure Functions Core Tools"
+if ! command -v func >/dev/null 2>&1; then
+    # From the Microsoft apt feed (the npm package downloads its binary from a CDN instead).
+    curl -fsSL "https://packages.microsoft.com/config/ubuntu/$(. /etc/os-release && echo "$VERSION_ID")/packages-microsoft-prod.deb" \
+        -o /tmp/packages-microsoft-prod.deb
+    as_root dpkg -i /tmp/packages-microsoft-prod.deb
+    as_root apt-get update -q
+    as_root apt-get install -y -q azure-functions-core-tools-4
+fi
+func --version
+
+step "Playwright $PLAYWRIGHT_VERSION browsers ($BROWSERS)"
+# shellcheck disable=SC2086 # BROWSERS is a word list
+as_root npx -y "playwright@$PLAYWRIGHT_VERSION" install-deps $BROWSERS
+# shellcheck disable=SC2086
+npx -y "playwright@$PLAYWRIGHT_VERSION" install $BROWSERS
+
+step "playwright-cli (ui-check skill)"
+command -v playwright-cli >/dev/null 2>&1 || npm_install_global @playwright/cli@latest
+# Its own Playwright may need another chromium build than the tests; the skill uses
+# --browser=chromium. (Not 'install --skills': that rewrites the committed skill files.)
+playwright-cli install-browser chromium
+
+step "dotnet tools and NuGet packages"
+dotnet tool restore
+dotnet restore Dependinator.sln
+
+echo ""
+echo "Cloud setup done."
