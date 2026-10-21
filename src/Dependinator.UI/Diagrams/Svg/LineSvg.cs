@@ -178,6 +178,9 @@ static class LineSvg
 
         // The second, fully transparent polyline is the hover/hit target: it traces the same
         // path but much wider, so hovering/clicking near the thin visible line still hits it.
+        // The .hoverable:hover rule skips it (line-hit), so hovering does not shrink it: WebKit
+        // hit-tests a press right after the hover restyle against the shrunken stroke and
+        // misses the line. The third polyline, never a target, draws the hover highlight.
         // The outer group lets a hover over the hit target restore a dimmed line (see the
         // line-dim CSS in Canvas.razor).
         var visibleClass =
@@ -195,8 +198,9 @@ static class LineSvg
             {labelSvg}
             </g>
             <g class="hoverable" id="{elementId}">
-              <polyline id="{elementId}" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
+              <polyline id="{elementId}" class="line-hit" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
                 + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
+              <polyline points="{hitPoints}" fill="none" stroke="none" pointer-events="none" stroke-linecap="round" stroke-linejoin="round" />
               <title>{title}</title>
             </g>
             {selectedSvg}

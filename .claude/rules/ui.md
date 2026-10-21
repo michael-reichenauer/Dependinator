@@ -32,6 +32,10 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   - the `Sync` skip via `StructureVersion` plus the expansion memo, so zooming skips Sync in the
     default view.
 - Lines render on top of child nodes, with anchors at centered edge midpoints.
+- Hover CSS must never change a hit target's geometry: WebKit hit-tests a press that follows
+  the hover restyle against the restyled shape. The `.hoverable:hover` rule once shrank a line's
+  wide hit polyline to 2 px, and WebKit clicks landed on the canvas. It now skips `.line-hit`,
+  and a separate `pointer-events="none"` polyline draws the hover highlight (`LineSvg`).
 - `NodeViewPolicy.IsRenderedFlat` (zoom > 1000) prevents the blank deep-zoom canvas caused by
   single-precision nested `<svg>` offsets (`SvgServiceDeepZoomTests`).
 - Perf regressions first show up as flaky menu timeouts in unrelated e2e tests.

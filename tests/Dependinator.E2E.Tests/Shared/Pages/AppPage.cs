@@ -680,7 +680,7 @@ public sealed class AppPage
         float[] coordinates;
         try
         {
-            coordinates = await line.Locator("polyline")
+            coordinates = await line.Locator("polyline.line-hit")
                 .EvaluateAsync<float[]>(
                     """
                     el => {

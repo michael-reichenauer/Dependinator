@@ -33,7 +33,9 @@
                         ;
                     }
 
-                    .hoverable:hover * {
+                    /* Not a line's hit target (line-hit): restyling it would shrink it under
+                       the pointer (see LineSvg). */
+                    .hoverable:hover *:not(.line-hit) {
                         stroke:
                             @DColors.Selected
                         ;
