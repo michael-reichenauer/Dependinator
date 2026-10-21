@@ -21,7 +21,7 @@
         <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
         <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
-        <!-- Keep in sync with PLAYWRIGHT_VERSION in .devcontainer/post-create.sh -->
+        <!-- .devcontainer/post-create.sh and scripts/cloud-setup install the browsers for this version -->
         <PackageVersion Include="Microsoft.Playwright.Xunit" Version="1.63.0" />
         <PackageVersion Include="OmniSharp.Extensions.LanguageServer" Version="0.19.11" />
         <PackageVersion Include="Moq" Version="4.21.0" />

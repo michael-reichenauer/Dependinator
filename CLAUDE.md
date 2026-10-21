@@ -97,7 +97,7 @@ npm run install:vsix --prefix ./src/DependinatorVsCode
 ./scripts/gen-demo bicep                               # regenerate demo-bicep.model from examples/bicep/webshop.bicep (after changing the example)
 
 # Demo gif (VS Code extension README)
-./scripts/record-demo                                  # re-record src/DependinatorVsCode/resources/demo.gif (scenario in scripts/record-demo.mjs; needs ffmpeg + global @playwright/cli)
+./scripts/record-demo                                  # re-record src/DependinatorVsCode/resources/demo.gif (scenario in scripts/record-demo.mjs; needs ffmpeg + global @playwright/cli; it once left demo.model modified: check git status after)
 
 # Packages
 ./scripts/updatepackages -u                            # upgrade non-major packages
@@ -108,6 +108,7 @@ dotnet list Dependinator.sln package --vulnerable
 
 `./scripts/run` requires `func` (Azure Functions Core Tools), `azurite`, and `swa` (SWA CLI) to be installed.
 `./scripts/watch` requires `func` and `azurite` (no SWA CLI needed).
+`./scripts/cloud-setup` installs the whole build and test toolchain (all but `swa`) on a fresh Ubuntu 24.04 machine, such as a cloud session.
 
 ## Tooling & Conventions
 
@@ -117,8 +118,16 @@ dotnet list Dependinator.sln package --vulnerable
 - **Results:** fallible operations return `Result` / `Result<T>` (`src/Dependinator.Core/Utils/Result.cs`), C# 15 unions matched on the case type. Propagate with `if (await X() is Error e) return e;` and `if (result is not T value) return result.Error;`; create errors with `new Error("...")`, `new Error("...", inner)` or `new Error(exception)`; wrap a throwing API with `Result.Catch(...)`; a `switch` over a result is exhaustive with its two arms (CS8509 is a build error). There is no `Try` helper, no typed value accessor and no `union` keyword (CSharpier cannot parse it yet). `NotFoundError` exists only for the cloud pull's 404. Name the exact declared type in a pattern: `Source`, `Item`, `Node` and `Link` exist in more than one namespace, and a pattern on the wrong twin compiles and never matches. Generic code matches `result.Value is T value`. Never use `default(Result)`. Tests assert with `AssertOk(result)` / `AssertError(result)` (`tests/Dependinator.Core.Tests/Utils/ResultAssert.cs`, linked into the other test projects).
 - **.NET 11 GA follow-up:** the checklist for the GA SDK (`LangVersion` 15, no preview) and for a later move to net11.0 is `docs/notes/NET11-UPGRADE.md`.
 - **Tests:** xUnit + Moq + Verify.Xunit. Name tests as `MethodName_ShouldDoX()`. `tests/Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` (at the repo root) dynamically via `tests/Dependinator.Core.Tests/Root.cs` — do not hardcode `/workspaces/...` paths in tests.
-- **UI/e2e tests:** `tests/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./scripts/e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. Keep the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props` in sync with `PLAYWRIGHT_VERSION` in `.devcontainer/post-create.sh`.
+- **UI/e2e tests:** `tests/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./scripts/e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. The browser builds follow the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props`: `.devcontainer/post-create.sh` and `scripts/cloud-setup` read it from there; after a bump, re-run `post-create.sh` (or rebuild the devcontainer) to fetch matching browsers.
 - **Browser checks:** after UI changes, use the `ui-check` skill (`.claude/skills/ui-check/`) to verify behavior with `playwright-cli` and run `./scripts/e2e`.
+- **Project knowledge:** the traps, decisions and parked ideas found while working live in `.claude/rules/`: `workflow.md` is always loaded, the others load with the files they concern (e2e tests, UI, parsing). Record new durable knowledge there, not in a local memory, so every session (cloud ones too) has it.
+
+## Cloud sessions
+
+Claude Code on the web runs in a fresh Ubuntu VM with the repo cloned, without the devcontainer. The SessionStart hook in `.claude/settings.json` runs `./scripts/cloud-setup --hook` when `CLAUDE_CODE_REMOTE=true`. It installs .NET SDK 10 and the `global.json` SDK, Azurite, `func`, the Playwright browsers and playwright-cli, then restores tools and packages, so `./scripts/test`, `./scripts/e2e [-a] [-s]` and the `ui-check` skill work as they do locally. Its one-line result is in the session context and its log in `/tmp/cloud-setup.log`. The environment's own setup script (claude.ai environment settings; its text is in the `scripts/cloud-setup` header) runs the same script before the session starts, so the toolchain is in the cached snapshot and the hook takes ~12 s. Sessions run as root with the repo at `/home/user/Dependinator`.
+
+- If the setup failed with a download error, the environment's network allowlist lacks a host. It needs Custom access: the Trusted defaults plus `builds.dotnet.microsoft.com`, `ci.dot.net`, `aka.ms`, `cdn.playwright.dev`, `playwright.download.prss.microsoft.com`, `crl3.digicert.com` (NuGet signature revocation checks), and for the app pages under test `renewed-hen-98.clerk.accounts.dev` and `fonts.gstatic.com`. Tell the user which host was blocked. The app's Application Insights telemetry hosts (`*.applicationinsights.azure.com`, `*.monitor.azure.com`) can stay blocked.
+- A session started on `dev` or `main` creates its own `mr/<topic>` branch first. The GitHub proxy does not restrict which branches a push updates, so the rule against committing to `dev`/`main` is the only guard. Push the branch at the end of each turn or larger step: an idle VM is reclaimed, and the push is how the user gets the work. Each feature-branch push runs CI (unit tests + chromium e2e), so don't push after every small commit.
 
 ## Architecture Notes
 
@@ -141,8 +150,9 @@ dotnet list Dependinator.sln package --vulnerable
 Commit on your own whenever a good logical step is complete and would benefit from being a
 separate commit: a working, formatted, tested unit of change (build green, unit tests green,
 e2e where UI changed). A large task or phase may well end up as several commits rather than
-one; the user reviews the commits in git afterwards. Do not push unless asked. Work on the
-current feature branch, never directly on `main` or `dev`.
+one; the user reviews the commits in git afterwards. Pushing the feature branch is fine. Work on
+the current feature branch, never directly on `main` or `dev`: they move only through merges
+(`.claude/rules/workflow.md`), and a push deploys them (dev the pre-release site, main a release).
 
 ## Commit Style
 

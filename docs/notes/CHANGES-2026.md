@@ -282,6 +282,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   Vulnerable transitive packages (MessagePack, System.Security.Cryptography.Pkcs/Xml) pinned to
   patched versions until their parent packages catch up (Oct 19).
 - **Demo recording (Jul).** `./scripts/record-demo` re-records the README demo gif.
+- **Claude Code cloud sessions (Oct 21).** Sessions started from the web or the phone run in a
+  fresh VM without the devcontainer:
+  - `./scripts/cloud-setup` (run by a SessionStart hook) installs the build and test toolchain;
+  - the project knowledge that had lived in local memory moved to `.claude/rules/`, so every
+    session has it;
+  - feature branches may now be pushed without asking.
 
 ## Docs and presentation
 
