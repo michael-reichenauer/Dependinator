@@ -153,7 +153,7 @@ static class MethodLinkParser
         if (
             type is not INamedTypeSymbol namedType
             || IgnoredTypes.IsIgnored(namedType)
-            || SymbolEqualityComparer.Default.Equals(namedType, member.ContainingType)
+            || SymbolEqualityComparer.Default.Equals(namedType.OriginalDefinition, member.ContainingType)
         )
             yield break;
 

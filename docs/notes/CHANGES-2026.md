@@ -98,7 +98,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   hierarchy. Conversion operators are named by their target type alone (`implicitoperatorResult`),
   so its namespace no longer makes up nodes inside the type. A namespace with a comment above
   its declaration in more than one file gets none as its description, as a note about one file
-  cannot be told from the namespace's description.
+  cannot be told from the namespace's description. Links to a use of a generic (`Result<int>`)
+  and to an extension method call target the declared node (`Result<T>`, `Ancestors(Node)`), not
+  a made-up one named after the use.
 
 ## Viewing, navigation and analysis
 

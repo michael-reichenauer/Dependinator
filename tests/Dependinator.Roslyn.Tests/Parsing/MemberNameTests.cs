@@ -52,6 +52,32 @@ public static class ExtensionBlockSample
     }
 }
 
+public class GenericSample<T>
+{
+    public T Value { get; set; } = default!;
+    public T field = default!;
+
+    public T Get() => Value;
+
+    public GenericSample<int> AsInt(GenericSample<string> other) => null!;
+}
+
+public static class GenericSampleExtensions
+{
+    public static int Classic(this ConstructorSample sample, int add) => add;
+
+    extension<T>(GenericSample<T> sample)
+    {
+        public bool HasValue => sample.Value is not null;
+    }
+}
+
+public class GenericSampleUser
+{
+    public int Use(GenericSample<int> sample, ConstructorSample other) =>
+        sample.Value + sample.field + sample.Get() + other.Classic(1) + (sample.HasValue ? 1 : 0);
+}
+
 // How members that C# writes with spaces, dots or parentheses in their names are named and typed
 [Collection(nameof(RoslynCollection))]
 public class MemberNameTests(RoslynFixture fixture)
@@ -151,6 +177,50 @@ public class MemberNameTests(RoslynFixture fixture)
 
         // The other block's member of the same name is a node of its own
         Assert.Equal(2, items.Nodes().Count(n => n.Name.EndsWith(".IsSmall")));
+    }
+
+    [Fact]
+    public void ParseType_ShouldLinkToDeclarations_WhenCodeUsesGenericsAndExtensionMethods()
+    {
+        // A use names a generic's construction (GenericSample<int>) and an extension method call
+        // its reduced form (Classic(int)): no node has those names.
+        var declarationNames = fixture
+            .AllTestTypes.Where(t =>
+                t.Name is nameof(GenericSample<>) or nameof(GenericSampleExtensions) or nameof(ConstructorSample)
+                || t.ContainingType?.Name == nameof(GenericSampleExtensions)
+            )
+            .SelectMany(t => TypeParser.ParseType(t, fixture.Compilation, fixture.ModelName))
+            .Nodes()
+            .Select(n => n.Name)
+            .ToHashSet();
+        var genericName = Names.GetFullName(typeof(GenericSample<>)).Replace("`1", "<T>");
+
+        var targets = Parse<GenericSampleUser>().Links().Select(l => l.Target).ToList();
+
+        var extensionsName = Names.GetFullName(typeof(GenericSampleExtensions));
+        Assert.Equal(
+            [
+                Names.GetFullName(typeof(ConstructorSample)),
+                genericName,
+                $"{genericName}.Get()",
+                $"{genericName}.Value",
+                $"{genericName}.field",
+                $"{extensionsName}.Classic({typeof(ConstructorSample).FullName},int)",
+                $"{extensionsName}.extension<T>(global::{typeof(GenericSample<>).Namespace}.GenericSample<T>).HasValue",
+            ],
+            targets.Distinct().Order(StringComparer.Ordinal)
+        );
+        Assert.All(targets, target => Assert.Contains(target, declarationNames));
+    }
+
+    [Fact]
+    public void ParseType_ShouldNotLinkMemberToItsOwnType_WhenItUsesAConstructionOfIt()
+    {
+        var items = Parse<GenericSample<int>>();
+        var genericName = Names.GetFullName(typeof(GenericSample<>)).Replace("`1", "<T>");
+
+        var asInt = items.Nodes().Single(n => n.Name.StartsWith($"{genericName}.AsInt(")).Name;
+        Assert.Empty(items.Links().Where(l => l.Source == asInt));
     }
 
     IReadOnlyList<Item> Parse<T>() =>
