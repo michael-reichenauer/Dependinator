@@ -3,6 +3,7 @@ using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using Link = Dependinator.UI.Modeling.Models.Link;
 using Node = Dependinator.UI.Modeling.Models.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
@@ -13,14 +14,17 @@ namespace Dependinator.UI.Tests.Diagrams;
 // Nothing drawn above the hit polyline may take a press either (the selection overlay).
 public class LineSvgHitTargetTests
 {
-    static Line CreateLine()
+    static Line CreateLine(bool isInheritance = false)
     {
         var root = new Node("", null!) { Type = NodeType.Root, ContainerZoom = 1 };
         var source = new Node("a", root) { Boundary = new Rect(0, 0, 100, 100), Type = NodeType.ClassType };
         var target = new Node("b", root) { Boundary = new Rect(300, 0, 100, 100), Type = NodeType.ClassType };
         root.AddChild(source);
         root.AddChild(target);
-        return new Line(source, target);
+        var line = new Line(source, target, isInheritance: isInheritance);
+        if (isInheritance)
+            line.Add(new Link(source, target) { IsInheritance = true });
+        return line;
     }
 
     static XElement Render(Line line) => XElement.Parse($"<svg>{LineSvg.GetLineSvg(line, new Pos(0, 0), 1)}</svg>");
@@ -43,11 +47,23 @@ public class LineSvgHitTargetTests
         Assert.Null(highlight.Attribute("stroke"));
         Assert.Equal("none", (string?)highlight.Attribute("pointer-events"));
         Assert.Equal("none", (string?)highlight.Attribute("fill"));
-        // Along the visible path, which an inheritance line trims out of its hollow arrow head.
+    }
+
+    [Fact]
+    public void GetLineSvg_ShouldKeepTheHoverHighlight_OutOfTheInheritanceArrowHead()
+    {
+        var svg = Render(CreateLine(isInheritance: true));
+
+        // The visible path stops short of the target for the hollow arrow head, and the
+        // highlight follows it, while the hit target keeps the full length.
         var visible = svg.Descendants("g")
-            .Single(g => (string?)g.Attribute("class") == "line-vis")
+            .Single(g => ((string?)g.Attribute("class"))?.StartsWith("line-vis") == true)
             .Element("polyline")!;
+        var group = svg.Descendants("g").Single(g => (string?)g.Attribute("class") == "hoverable");
+        var hit = group.Elements("polyline").Single(p => (string?)p.Attribute("class") == LineSvg.HitClass);
+        var highlight = group.Elements("polyline").Single(p => (string?)p.Attribute("class") == LineSvg.HoverClass);
         Assert.Equal((string?)visible.Attribute("points"), (string?)highlight.Attribute("points"));
+        Assert.NotEqual((string?)hit.Attribute("points"), (string?)highlight.Attribute("points"));
     }
 
     [Fact]

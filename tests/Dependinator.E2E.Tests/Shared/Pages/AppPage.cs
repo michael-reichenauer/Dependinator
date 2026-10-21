@@ -644,12 +644,14 @@ public sealed class AppPage
     }
 
     // Hover a line at a point on its visible part, retrying until the browser reports its group
-    // as hovered (a move landing while the canvas re-renders can leave no hover).
+    // as hovered (a move landing while the canvas re-renders can leave no hover). Later attempts
+    // try other points, as in SelectLineAsync, in case the first one is covered.
     public async Task HoverLineAsync(ILocator line)
     {
+        float[] fractions = [0.5f, 0.25f, 0.75f];
         for (int attempt = 1; ; attempt++)
         {
-            (float x, float y) = await WaitForStableLinePointAsync(line, 0.5f);
+            (float x, float y) = await WaitForStableLinePointAsync(line, fractions[(attempt - 1) % fractions.Length]);
             await page.Mouse.MoveAsync(x, y);
             for (int i = 0; i < 10; i++)
             {

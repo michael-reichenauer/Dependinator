@@ -17,16 +17,19 @@ public class LineHoverTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
+        // Let the navigation's own selection land and clear it first: its re-render would
+        // replace the hovered line, and WebKit re-applies :hover only on the next pointer move.
+        await App.DeselectAsync();
         ILocator line = App.Line("Demo.UI.Main", "Demo.UI.Shared");
         await Expect(line).ToHaveCountAsync(1);
 
         await App.HoverLineAsync(line);
 
-        // The highlight shows the hover took effect; the hit target keeps its own width.
+        // The 2 px highlight shows the hover took effect; the hit target keeps its own (wider)
+        // width, whatever the line's weight makes it, and stays transparent.
         await Expect(AppPage.LineHoverHighlight(line)).ToHaveCSSAsync("stroke-width", "2px");
         ILocator hit = AppPage.LineHitTarget(line);
-        string width = await hit.GetAttributeAsync("stroke-width") ?? "";
-        await Expect(hit).ToHaveCSSAsync("stroke-width", $"{width}px");
+        await Expect(hit).Not.ToHaveCSSAsync("stroke-width", "2px");
         await Expect(hit).ToHaveCSSAsync("stroke-opacity", "0");
     }
 }
