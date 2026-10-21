@@ -66,15 +66,14 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
 
 ## Ideas waiting for a session
 
-- **Problems indicator, phase 2:** phase 1 (Oct 21, `ProblemService` + `App/ProblemIndicator.razor`)
-  shows open cycles (as many as the Cycles panel lists) and broken rules as warnings, and
-  keeps its last summary while a parse is in progress. Agreed with the user for phase 2: parse
-  problems as data, an optional `Problem` on `Item` (like `LineDescription`) over the `[Rpc]` parse
-  API, saved with the model (`ModelDto`); compile errors only as a brief per-project summary (the
-  user checks VS Code for each error), no compile warnings for now (many users never fix them,
-  so the indicator would always be on). Also: a namespace commented in several files, links to
-  missing targets (delegate `Invoke`), unresolved rules (info, list only). Phase 3: badges on
-  nodes, aggregated up the hierarchy. Rule violations count per broken rule, not per type pair.
+- **Problems indicator, next:** phases 1-2 are done (Oct 21): `ProblemService` +
+  `App/ProblemIndicator.razor` show open cycles and broken rules as warnings, and compile errors
+  as errors (`ParseProblem` on `Item`, one per C# project or Bicep file, saved in
+  `ModelDto.ParseProblems`). Decided with the user: errors only as a brief summary (the editor
+  lists each error), no compile warnings for now (many users never fix them, so the indicator
+  would always be on), rule violations counted per broken rule. Still open: a namespace
+  commented in several files and links to missing targets (delegate `Invoke`) as problems,
+  unresolved rules (info, list only), and phase 3, badges on nodes aggregated up the hierarchy.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

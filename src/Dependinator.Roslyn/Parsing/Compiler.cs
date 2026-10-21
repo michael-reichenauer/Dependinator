@@ -10,6 +10,9 @@ using Microsoft.CodeAnalysis.MSBuild;
 
 namespace Dependinator.Roslyn.Parsing;
 
+// A project's compilation, with its compile errors counted.
+record CompiledProject(Compilation Compilation, int ErrorCount);
+
 static class Compiler
 {
     public static Result<MSBuildWorkspace> CreateWorkspace()
@@ -30,7 +33,7 @@ static class Compiler
         }
     }
 
-    public static async Task<Result<Compilation>> GetCompilationAsync(Project project)
+    public static async Task<Result<CompiledProject>> GetCompilationAsync(Project project)
     {
         var compilation = await project.GetCompilationAsync();
         if (compilation is null)
@@ -41,12 +44,13 @@ static class Compiler
         compilation = RunSourceGenerators(project, compilation);
 
         // Compile errors (e.g. missing references) can cause missing nodes/links in the model,
-        // so log a hint. The parse still proceeds with whatever Roslyn could resolve.
+        // so they are reported (as a parse problem, see SourceParser). The parse still proceeds
+        // with whatever Roslyn could resolve.
         var errorCount = compilation.GetDiagnostics().Count(d => d.Severity == DiagnosticSeverity.Error);
         if (errorCount > 0)
             Log.Warn($"{errorCount} errors in {project.Name}");
 
-        return compilation;
+        return new CompiledProject(compilation, errorCount);
     }
 
     public static IEnumerable<INamedTypeSymbol> GetAllTypes(Compilation compilation)

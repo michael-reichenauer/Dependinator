@@ -199,6 +199,35 @@ public class SourceParserTests(RoslynFixture fixture)
         Assert.Contains("not found", e.Message);
     }
 
+    // Compile errors can silently drop nodes and links, so a project with errors gets one brief
+    // problem on its assembly node, for the problem indicator; one without gets none.
+    [Theory]
+    [InlineData("class A { Missing m; Unknown u; }", 2)]
+    [InlineData("class A { }", 0)]
+    public async Task ParseProjectAsync_ShouldReportCompileErrors_AsOneProblemForTheProject(string code, int errors)
+    {
+        using var workspace = new AdhocWorkspace();
+        var project = workspace
+            .AddProject("Sample", LanguageNames.CSharp)
+            .WithCompilationOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+            .AddMetadataReference(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
+            .AddDocument("A.cs", code)
+            .Project;
+
+        var items = AssertOk(await new SourceParser().ParseProjectAsync(project, null));
+
+        var problems = items.Where(i => i.Problem is not null).Select(i => i.Problem!).ToList();
+        if (errors == 0)
+        {
+            Assert.Empty(problems);
+            return;
+        }
+        var problem = Assert.Single(problems);
+        Assert.Equal(errors, problem.ErrorCount);
+        Assert.Equal($"{errors} compile errors in Sample", problem.Message);
+        Assert.Contains(items, i => i.Node?.Name == problem.NodeName && i.Node.Properties.Type == NodeType.Assembly);
+    }
+
     // A solution without loadable projects must be an error, not an empty (0 node) model.
     [Fact]
     public async Task ParseAsync_ShouldReturnError_WhenSolutionHasNoProjects()

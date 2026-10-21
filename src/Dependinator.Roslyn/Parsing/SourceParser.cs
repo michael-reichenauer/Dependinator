@@ -157,10 +157,13 @@ class SourceParser : ISourceParser
     public async Task<Result<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
     {
         var compilationResult = await Compiler.GetCompilationAsync(project);
-        if (compilationResult is not Compilation compilation)
+        if (compilationResult is not CompiledProject compiled)
             return compilationResult.Error;
 
-        return ParseProjectCompilation(compilation, parentName, project.FilePath).ToList();
+        var items = ParseProjectCompilation(compiled.Compilation, parentName, project.FilePath).ToList();
+        if (compiled.ErrorCount > 0)
+            items.Add(CompileErrorsItem(compiled.ErrorCount, project.Name, Names.GetModuleName(compiled.Compilation)));
+        return items;
     }
 
     static IEnumerable<Item> ParseProjectCompilation(Compilation compilation, string? parentName, string? projectPath)
@@ -196,6 +199,18 @@ class SourceParser : ISourceParser
         foreach (var item in NamespaceParser.ParseNamespaces(compilation, moduleName))
             yield return item;
     }
+
+    // A project's compile errors in brief, on its assembly node.
+    internal static Item CompileErrorsItem(int errorCount, string projectName, string moduleName) =>
+        new(
+            null,
+            null,
+            Problem: new ParseProblem(
+                $"{errorCount} compile {(errorCount == 1 ? "error" : "errors")} in {projectName}",
+                errorCount,
+                moduleName
+            )
+        );
 
     // Reads the [assembly: AssemblyDescription("...")] value from the project's compiled
     // assembly attributes, used as the description for the assembly node, together with a

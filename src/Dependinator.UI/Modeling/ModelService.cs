@@ -329,6 +329,8 @@ class ModelService : IModelService, IDisposable
             {
                 model.Path = path;
                 model.UpdateStamp = DateTime.UtcNow;
+                // Each parse reports all problems, so it replaces the last parse's.
+                model.SetParseProblems([.. items.Select(i => i.Problem).OfType<Parsing.ParseProblem>()]);
             }
 
             applicationEvents.TriggerModelChanged();

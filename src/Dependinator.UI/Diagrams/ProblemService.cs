@@ -11,13 +11,14 @@ enum ProblemSeverity
 
 enum ProblemKind
 {
+    ParseErrors,
     Cycles,
     RuleViolations,
 }
 
-// One row of the problem indicator's list: a kind of problem, how many there are, and the text
-// the row shows.
-record ProblemGroup(ProblemKind Kind, ProblemSeverity Severity, int Count, string Text);
+// One row of the problem indicator's list: a kind of problem, how many there are, the text the
+// row shows, and for a parse problem the node it concerns (shown on a click).
+record ProblemGroup(ProblemKind Kind, ProblemSeverity Severity, int Count, string Text, string? NodeName = null);
 
 record ProblemSummary(IReadOnlyList<ProblemGroup> Groups)
 {
@@ -29,8 +30,8 @@ record ProblemSummary(IReadOnlyList<ProblemGroup> Groups)
 }
 
 // Collects what is wrong in the model for the problem indicator in the app bar, so the user sees
-// that there are cycles or broken architecture rules without opening their panels: the open
-// cycles, as many as the Cycles panel lists (accepted ones are intended, and ones marked to fix
+// it without opening a panel or the log: the errors the last parse reported (compile errors,
+// one row per project or Bicep file, counted per error), the open cycles, as many as the Cycles panel lists (accepted ones are intended, and ones marked to fix
 // later are already known), and the rules that have violations, counted per rule (the Rules
 // panel lists the dependencies). Rules whose nodes are gone are not counted.
 // The summary is cached per model version. Unlike the rule service it ignores the line count,
@@ -50,7 +51,14 @@ class ProblemService(
     IProgressService progressService
 ) : IProblemService
 {
-    (int Structure, int Nodes, int Links, int Accepted, int Rules) cachedFor = (-1, -1, -1, -1, -1);
+    (int Structure, int Nodes, int Links, int Accepted, int Rules, int ParseProblems) cachedFor = (
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+    );
     ProblemSummary summary = ProblemSummary.None;
 
     public ProblemSummary GetSummary()
@@ -59,7 +67,14 @@ class ProblemService(
             return summary;
 
         var key = modelMgr.WithModel(m =>
-            (m.StructureVersion, m.Nodes.Count, m.Links.Count, m.AcceptedCyclesVersion, m.RulesVersion)
+            (
+                m.StructureVersion,
+                m.Nodes.Count,
+                m.Links.Count,
+                m.AcceptedCyclesVersion,
+                m.RulesVersion,
+                m.ParseProblemsVersion
+            )
         );
         if (key == cachedFor)
             return summary;
@@ -71,7 +86,18 @@ class ProblemService(
 
     ProblemSummary Compute()
     {
-        List<ProblemGroup> groups = [];
+        List<ProblemGroup> groups =
+        [
+            .. modelMgr
+                .WithModel(m => m.ParseProblems)
+                .Select(p => new ProblemGroup(
+                    ProblemKind.ParseErrors,
+                    ProblemSeverity.Error,
+                    p.ErrorCount,
+                    p.Message,
+                    p.NodeName
+                )),
+        ];
 
         var cycles = cycleService.GetCycles().Count;
         if (cycles > 0)

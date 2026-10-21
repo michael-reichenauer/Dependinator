@@ -3,12 +3,15 @@
 @inject IProblemService problemService
 @inject IApplicationEvents applicationEvents
 @inject IThemeService themeService
+@inject INavigationService navigationService
+@inject Dependinator.UI.Modeling.Models.IModelMgr modelMgr
 @implements IDisposable
 
 @* The problem indicator: error and warning counts, like the VS Code status bar, so problems in
    the model are visible without opening a panel. Hidden while there are none. Its tooltip names
-   them (off while the list is open, which it would cover), and a click lists them, one row per
-   kind, each opening the panel that shows its details. *@
+   them (off while the list is open, which it would cover), and a click lists them: a row per
+   project (or Bicep file) with compile errors, which shows its node (the editor lists the errors
+   themselves), and a row per kind of analysis problem, which opens its panel. *@
 @{
   // Cached per model version, so cheap on every render.
   summary = problemService.GetSummary();
@@ -37,7 +40,7 @@
         @foreach (var group in summary.Groups)
         {
           <MudMenuItem Icon="@SeverityIcon(group.Severity)" IconColor="@SeverityColor(group.Severity)"
-                       OnClick="() => OpenAsync(group.Kind)" data-testid="problems-item" data-kind="@group.Kind">
+                       OnClick="() => OpenAsync(group)" data-testid="problems-item" data-kind="@group.Kind">
             @group.Text
           </MudMenuItem>
         }
@@ -80,13 +83,23 @@
 
   void OnChanged() => _ = InvokeAsync(StateHasChanged);
 
-  Task OpenAsync(ProblemKind kind) =>
-    kind switch
+  Task OpenAsync(ProblemGroup group) =>
+    group.Kind switch
     {
+      ProblemKind.ParseErrors => ShowNodeAsync(group.NodeName),
       ProblemKind.Cycles => OnShowCycles.InvokeAsync(),
       ProblemKind.RuleViolations => OnShowRules.InvokeAsync(),
       _ => Task.CompletedTask,
     };
+
+  // The node may be gone (a model opened from the cache before a refresh dropped the project).
+  Task ShowNodeAsync(string? nodeName)
+  {
+    if (nodeName is null)
+      return Task.CompletedTask;
+    var id = Dependinator.UI.Modeling.Models.NodeId.FromName(nodeName);
+    return modelMgr.WithModel(m => m.Nodes.ContainsKey(id)) ? navigationService.ShowNodeAsync(id) : Task.CompletedTask;
+  }
 
   public void Dispose()
   {
