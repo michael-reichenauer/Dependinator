@@ -58,16 +58,25 @@ public class NamespaceParserTests(RoslynFixture fixture)
     }
 
     [Fact]
-    public void ParseNamespaces_ShouldUseNoComment_WhenSeveralFilesHaveOneAboveTheNamespace()
+    public void ParseNamespaces_ShouldShowEveryCommentWithItsLocation_WhenSeveralFilesHaveOneAboveTheNamespace()
     {
-        // Which of the comments is the namespace's description and which a note about its file
-        // cannot be told, so neither is used. The span points at the first one.
+        // One of them is likely a note about its file: the user sees both and where they are.
         var namespaceNode = items.Nodes().Single(n => n.Name.EndsWith(".Parsing.NamespaceTwoDocsSample"));
 
-        Assert.Null(namespaceNode.Properties.Description);
+        Assert.Equal(
+            "NamespaceTwoDocsSampleA.cs:2: Sample namespace description.\n"
+                + "NamespaceTwoDocsSampleB.cs:3: Note: a file header about the type below, not about the namespace.",
+            namespaceNode.Properties.Description
+        );
         Assert.NotNull(namespaceNode.Properties.FileSpan);
         Assert.EndsWith("NamespaceTwoDocsSampleA.cs", namespaceNode.Properties.FileSpan.Path);
         Assert.Equal(1, namespaceNode.Properties.FileSpan.StartLine);
+
+        // Arrow lines are line descriptions, whichever file they are in
+        var lineDescription = items
+            .LineDescriptions()
+            .Single(d => d.Source.EndsWith(".Parsing.NamespaceTwoDocsSample"));
+        Assert.Equal("Dependinator.Roslyn.Tests.Parsing.NamespaceDocSample", lineDescription.Target);
     }
 
     [Fact]

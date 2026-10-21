@@ -29,12 +29,12 @@ static class CommentExtractor
         return NoValue.String;
     }
 
-    public static (string? Comment, FileSpan? FileSpan) GetNamespaceCommentAndSpan(INamespaceSymbol ns)
+    public static (IReadOnlyList<(string Comment, FileSpan Span)> Comments, FileSpan? FileSpan) GetNamespaceComments(
+        INamespaceSymbol ns
+    )
     {
-        // A namespace can be declared across many files; its description is the leading comment
-        // of the one declaration that has one (a comment placed directly above `namespace X;`).
-        // When several files have a comment there, which one describes the namespace and which
-        // are notes about their file cannot be told, so none is used.
+        // A namespace can be declared across many files; its comments are the leading comments of
+        // its declarations (a comment placed directly above `namespace X;`), in path order.
         // A declaration of `namespace X.Y;` also declares the parent namespace X, so only
         // declarations whose written name matches the namespace exactly are considered
         // (a comment above `namespace X.Y;` must not become the description of X).
@@ -51,23 +51,15 @@ static class CommentExtractor
             .ThenBy(d => d.Span.StartLine)
             .ToList();
 
-        var commented = declarations
-            .Select(d => (Comment: GetLeadingComment(d.Declaration), d.Span))
-            .Where(d => !string.IsNullOrWhiteSpace(d.Comment))
-            .ToList();
-
-        if (commented.Count == 1)
-            return commented[0];
-        if (commented.Count > 1)
+        List<(string Comment, FileSpan Span)> comments = [];
+        foreach (var (declaration, span) in declarations)
         {
-            var paths = string.Join(", ", commented.Select(d => d.Span.Path));
-            Log.Warn(
-                $"Namespace {namespaceName} has a comment above its declaration in several files ({paths}), none used"
-            );
-            return (null, commented[0].Span);
+            if (GetLeadingComment(declaration) is { } comment && !string.IsNullOrWhiteSpace(comment))
+                comments.Add((comment, span));
         }
 
-        return (null, declarations.Count > 0 ? declarations[0].Span : null);
+        var fileSpan = comments.Count > 0 ? comments[0].Span : declarations.FirstOrDefault().Span;
+        return (comments, fileSpan);
     }
 
     static FileSpan GetNamespaceNameSpan(BaseNamespaceDeclarationSyntax declaration)

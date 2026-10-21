@@ -100,8 +100,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
     namespace no longer makes up nodes inside the type;
   - links to a use of a generic (`Result<int>`) or to an extension method call target the
     declared node (`Result<T>`, `Ancestors(Node)`) rather than a made-up one;
-  - a namespace with a comment above its declaration in more than one file gets no description,
-    as a note about one file cannot be told from the namespace's description.
+  - a namespace with a comment above its declaration in more than one file shows all of them,
+    each after its file and line, so a note about one file that reads as the namespace's
+    description can be seen and moved.
 
 ## Viewing, navigation and analysis
 
