@@ -28,7 +28,8 @@ static class NamespaceParser
                     new NodeProperties
                     {
                         Type = NodeType.Namespace,
-                        Description = description,
+                        // NoValue clears a description whose comments were removed
+                        Description = description ?? NoValue.String,
                         FileSpan = fileSpan,
                     }
                 ),
@@ -43,23 +44,30 @@ static class NamespaceParser
     // The namespace's description is the comment above its declaration. Comments above it in more
     // than one file are all shown, each after its location: one of them is likely a note about its
     // file rather than a description of the namespace, and the user can see that and where to fix it.
+    // The same comment in several files is shown once.
     static (string? Description, IReadOnlyList<(string Target, string Text)> LineDescriptions) GetDescriptions(
         IReadOnlyList<(string Comment, FileSpan Span)> comments
     )
     {
-        var parsed = comments.Select(c => (Parsed: CommentDescriptions.Parse(c.Comment), c.Span)).ToList();
-        var descriptions = parsed
-            .Where(p => p.Parsed.NodeDescription is not null)
-            .Select(p => (Text: p.Parsed.NodeDescription!, p.Span))
-            .ToList();
+        List<(CommentDescriptions.Result Parsed, FileSpan Span)> parsed =
+        [
+            .. comments.Select(c => (CommentDescriptions.Parse(c.Comment), c.Span)),
+        ];
+        List<(string Text, FileSpan Span)> descriptions =
+        [
+            .. parsed
+                .Where(p => p.Parsed.NodeDescription is not null)
+                .Select(p => (Text: p.Parsed.NodeDescription!, p.Span))
+                .DistinctBy(d => d.Text),
+        ];
 
-        var description = descriptions.Count switch
+        string? description = descriptions.Count switch
         {
             0 => null,
             1 => descriptions[0].Text,
-            _ => string.Join(Environment.NewLine, descriptions.Select(d => $"{Location(d.Span)}: {d.Text}")),
+            _ => string.Join("\n", descriptions.Select(d => $"{Location(d.Span)}: {d.Text}")),
         };
-        return (description, [.. parsed.SelectMany(p => p.Parsed.LineDescriptions)]);
+        return (description, [.. parsed.SelectMany(p => p.Parsed.LineDescriptions).Distinct()]);
     }
 
     // "Util.cs:3": the file and line of a namespace declaration

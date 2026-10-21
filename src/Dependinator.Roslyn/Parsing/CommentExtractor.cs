@@ -34,7 +34,8 @@ static class CommentExtractor
     )
     {
         // A namespace can be declared across many files; its comments are the leading comments of
-        // its declarations (a comment placed directly above `namespace X;`), in path order.
+        // its declarations (a comment placed directly above `namespace X;`), in path order. A comment
+        // with a blank line below it is none: it is likely a file header, such as a license.
         // A declaration of `namespace X.Y;` also declares the parent namespace X, so only
         // declarations whose written name matches the namespace exactly are considered
         // (a comment above `namespace X.Y;` must not become the description of X).
@@ -54,11 +55,11 @@ static class CommentExtractor
         List<(string Comment, FileSpan Span)> comments = [];
         foreach (var (declaration, span) in declarations)
         {
-            if (GetLeadingComment(declaration) is { } comment && !string.IsNullOrWhiteSpace(comment))
+            if (GetLeadingComment(declaration, isBlankLineBelowAllowed: false) is { } comment)
                 comments.Add((comment, span));
         }
 
-        var fileSpan = comments.Count > 0 ? comments[0].Span : declarations.FirstOrDefault().Span;
+        FileSpan? fileSpan = comments.Count > 0 ? comments[0].Span : declarations.FirstOrDefault().Span;
         return (comments, fileSpan);
     }
 
@@ -96,8 +97,9 @@ static class CommentExtractor
 
     // Collects the comment block adjacent to the declaration, walking the leading trivia
     // backwards from the declaration and stopping at a blank line (so a detached comment
-    // higher up in the file is not treated as the declaration's comment).
-    static string? GetLeadingComment(SyntaxNode declarationNode)
+    // higher up in the file is not treated as the declaration's comment). A blank line between
+    // the comment and the declaration is passed only when isBlankLineBelowAllowed.
+    static string? GetLeadingComment(SyntaxNode declarationNode, bool isBlankLineBelowAllowed = true)
     {
         var leadingTrivia = declarationNode.GetLeadingTrivia();
         List<string> commentLines = [];
@@ -112,11 +114,8 @@ static class CommentExtractor
 
             if (trivia.IsKind(SyntaxKind.EndOfLineTrivia))
             {
-                if (!isInsideCommentBlock)
-                    continue;
-
                 endOfLineCount++;
-                if (endOfLineCount > 1)
+                if (endOfLineCount > 1 && (isInsideCommentBlock || !isBlankLineBelowAllowed))
                     break;
                 continue;
             }
@@ -135,7 +134,8 @@ static class CommentExtractor
         if (!commentLines.Any())
             return null;
 
-        var comment = string.Join(Environment.NewLine, commentLines);
+        // "\n" rather than the platform's line end, so a model is the same parsed on any platform
+        var comment = string.Join("\n", commentLines);
         return string.IsNullOrWhiteSpace(comment) ? null : comment;
     }
 

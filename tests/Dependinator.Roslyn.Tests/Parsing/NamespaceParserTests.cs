@@ -53,7 +53,7 @@ public class NamespaceParserTests(RoslynFixture fixture)
             .Nodes()
             .Single(n => n.Properties.Type == NodeType.Namespace && n.Name.EndsWith(".Roslyn.Tests.Parsing"));
 
-        Assert.Null(namespaceNode.Properties.Description);
+        Assert.Equal(NoValue.String, namespaceNode.Properties.Description);
         Assert.NotNull(namespaceNode.Properties.FileSpan);
     }
 
@@ -80,6 +80,23 @@ public class NamespaceParserTests(RoslynFixture fixture)
     }
 
     [Fact]
+    public void ParseNamespaces_ShouldShowACommentOnce_WhenSeveralFilesHaveTheSameOne()
+    {
+        var namespaceNode = items.Nodes().Single(n => n.Name.EndsWith(".Parsing.NamespaceSameDocSample"));
+
+        Assert.Equal("The same description in two files.", namespaceNode.Properties.Description);
+    }
+
+    [Fact]
+    public void ParseNamespaces_ShouldNotTakeAFileHeader_WithABlankLineBelowIt()
+    {
+        // Every file starts with the license header, and a blank line is between it and the namespace
+        var namespaceNode = items.Nodes().Single(n => n.Name.EndsWith(".Parsing.NamespaceLicenseSample"));
+
+        Assert.Equal(NoValue.String, namespaceNode.Properties.Description);
+    }
+
+    [Fact]
     public void TestNamespaceWithoutCommentHasFileSpanButNoDescription()
     {
         // Undocumented namespaces get a file span pointing at the first namespace declaration,
@@ -87,7 +104,8 @@ public class NamespaceParserTests(RoslynFixture fixture)
         var namespaceNode = items.Nodes().Single(n => n.Name.EndsWith(".Parsing.NamespaceNoDocSample"));
 
         Assert.Equal(NodeType.Namespace, namespaceNode.Properties.Type);
-        Assert.Null(namespaceNode.Properties.Description);
+        // NoValue rather than null, so a description whose comment was removed is cleared
+        Assert.Equal(NoValue.String, namespaceNode.Properties.Description);
         Assert.NotNull(namespaceNode.Properties.FileSpan);
         Assert.EndsWith("NamespaceNoDocSample.cs", namespaceNode.Properties.FileSpan.Path);
         Assert.Equal(0, namespaceNode.Properties.FileSpan.StartLine);
