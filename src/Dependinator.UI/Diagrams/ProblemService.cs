@@ -31,9 +31,10 @@ record ProblemSummary(IReadOnlyList<ProblemGroup> Groups)
 
 // Collects what is wrong in the model for the problem indicator in the app bar, so the user sees
 // it without opening a panel or the log: the errors the last parse reported (compile errors,
-// one row per project or Bicep file, counted per error), the open cycles, as many as the Cycles panel lists (accepted ones are intended, and ones marked to fix
-// later are already known), and the rules that have violations, counted per rule (the Rules
-// panel lists the dependencies). Rules whose nodes are gone are not counted.
+// one row per project or Bicep file, counted per error), the open cycles, as many as the Cycles
+// panel lists (accepted ones are intended, and ones marked to fix later are already known), and
+// the rules that have violations, counted per rule (the Rules panel lists the dependencies).
+// Rules whose nodes are gone are not counted.
 // The summary is cached per model version. Unlike the rule service it ignores the line count,
 // which grows while zooming without changing the counts. While a parse or load is in progress the
 // model changes with every batch, so the last summary is kept until the progress ends (which
