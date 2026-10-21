@@ -28,8 +28,8 @@ project works.
 - **Oct**: the rest of the UX review (path finder, tour, share links, architecture rules, minimap,
   group and rubber-band selection), new line and container visuals, a release flow through `dev`,
   a README and community-files rework, the Bicep parser, zones, line labels and aliases,
-  node sizes by code and centrality in the automatic layout, accepted cycles, and AI prompts and
-  Claude's suggestions for cycles.
+  node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
+  Claude's suggestions for cycles, and C# member naming fixes.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -97,12 +97,16 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   - a C# 14 extension block is a node named by its receiver, `extension(NodeType)`, with its
     members inside under their own names (dots in brackets no longer split a node name);
   - conversion operators are named by their target type alone (`implicitoperatorResult`), so its
-    namespace no longer makes up nodes inside the type;
-  - links to a use of a generic (`Result<int>`) or to an extension method call target the
-    declared node (`Result<T>`, `Ancestors(Node)`) rather than a made-up one;
+    namespace no longer makes up nodes inside the type (qualified when two targets share a name);
+  - links to a use of a generic (`Result<int>`) or to an extension method call, also the static
+    form `Ext.Twice(x)` of a block member, target the declared node (`Result<T>`,
+    `Ancestors(Node)`) rather than a made-up one;
   - a namespace with a comment above its declaration in more than one file shows all of them,
     each after its file and line, so a note about one file that reads as the namespace's
-    description can be seen and moved.
+    description can be seen and moved. The same comment is shown once, a file header with a
+    blank line below it (a license) is none, and a removed comment clears the description;
+  - a cached model's nodes move to their new parents when it is refreshed, and a stray bracket
+    in a design node's name ("Latency < 50ms") no longer joins the parts after it.
 
 ## Viewing, navigation and analysis
 
