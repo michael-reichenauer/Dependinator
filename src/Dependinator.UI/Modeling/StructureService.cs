@@ -27,7 +27,7 @@ class StructureService(ILineService linesService) : IStructureService
     {
         if (!model.Nodes.TryGetValue(NodeId.FromName(parsedNode.Name), out var node))
         { // New node, add it to the model and parent
-            var parent = GetOrCreateParent(model, parsedNode);
+            var parent = GetOrCreateParent(model, ParentName(parsedNode, parsedNode.Properties.Type));
 
             node = new Models.Node(parsedNode.Name, parent);
 
@@ -49,12 +49,11 @@ class StructureService(ILineService linesService) : IStructureService
         node.Update(parsedNode);
         node.UpdateStamp = model.UpdateStamp;
 
-        var parentName = parsedNode.Properties.Parent;
-
-        if (parentName is not null && node.Parent.Name != parentName)
-        { // The node has changed parent, remove it from the old parent and add it to the new parent
-            MoveNodeToParent(model, node, parentName);
-        }
+        // The node has changed parent: a parser's explicit parent, or the name rules changed since
+        // the model was cached (e.g. C# extension block members now nested in their block)
+        string parentName = ParentName(parsedNode, node.Type);
+        if (node.Parent.Name != parentName)
+            MoveNodeToParent(model, node, GetOrCreateParent(model, parentName));
     }
 
     public void AddOrUpdateLink(IModel model, Parsing.Link parsedLink)
@@ -359,16 +358,19 @@ class StructureService(ILineService linesService) : IStructureService
             line.ClearDescription();
     }
 
-    void MoveNodeToParent(IModel model, Models.Node node, string parentName)
+    void MoveNodeToParent(IModel model, Models.Node node, Models.Node parent)
     {
-        // Link lines need to be re-adjusted, so first remove all links and lines
-        var lines = node.SourceLines.Concat(node.TargetLines).Concat(node.DirectLines).ToList();
-        var links = lines.SelectMany(line => line.Links).ToList();
+        // Link lines need to be re-adjusted, so first remove all links and lines, also those of the
+        // node's descendants: their lines pass through the node's ancestors
+        List<Models.Link> links = node.DescendantsAndSelfPreOrder()
+            .SelectMany(n => n.SourceLines.Concat(n.TargetLines).Concat(n.DirectLines))
+            .SelectMany(line => line.Links)
+            .Distinct()
+            .ToList();
 
         links.ForEach(model.RemoveLink);
 
         node.Parent.RemoveChild(node);
-        var parent = GetOrCreateNode(model, parentName);
         parent.AddChild(node);
 
         // Sync inherited hidden state with the new parent: hide when moved into a hidden
@@ -389,32 +391,21 @@ class StructureService(ILineService linesService) : IStructureService
         }
     }
 
-    Models.Node GetOrCreateNode(IModel model, string name)
+    // The parser's explicit parent, or the parent the name tells. A top-level name of a node of
+    // the code's own (not a solution, module or the Externals node itself) is an external one.
+    static string ParentName(Parsing.Node parsedNode, NodeType? type)
     {
-        var nodeId = NodeId.FromName(name);
-        if (!model.Nodes.TryGetValue(nodeId, out var item))
-        {
-            var parent = DefaultParsingNode(name);
-            AddOrUpdateNode(model, parent);
-            return model.Nodes[nodeId];
-        }
+        if (parsedNode.Properties.Parent is { } parentName)
+            return parentName;
 
-        return item;
+        string nameParentName = Parsing.Utils.NodeName.ParseParentName(parsedNode.Name);
+        return nameParentName == "" && type is not (NodeType.Externals or NodeType.Solution or NodeType.Assembly)
+            ? ExternalsNodeName
+            : nameParentName;
     }
 
-    Models.Node GetOrCreateParent(IModel model, Parsing.Node parsedNode)
+    Models.Node GetOrCreateParent(IModel model, string parentName)
     {
-        var parentName = parsedNode.Properties.Parent;
-        if (parentName is null)
-        {
-            parentName = Parsing.Utils.NodeName.ParseParentName(parsedNode.Name);
-            if (
-                parentName == ""
-                && parsedNode.Properties.Type is not (NodeType.Externals or NodeType.Solution or NodeType.Assembly)
-            )
-                parentName = ExternalsNodeName;
-        }
-
         var isExternals = parentName == ExternalsNodeName;
         var nodeId = NodeId.FromName(parentName);
         if (!model.Nodes.TryGetValue(nodeId, out var item))
