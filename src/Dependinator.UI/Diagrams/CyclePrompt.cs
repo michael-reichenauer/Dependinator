@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.RegularExpressions;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using NodeType = Dependinator.Core.Parsing.NodeType;
@@ -22,7 +21,7 @@ record SourceSection(string Direction, IReadOnlyList<SourceExcerpt> Excerpts);
 // Where the host can read the files, the source behind the thin directions (made by one or two
 // types) is shown too: without it, an answer can propose a move that would not compile. Thin is
 // counted in types, not links: a class that classifies an enum makes a link per enum value.
-static partial class CyclePrompt
+static class CyclePrompt
 {
     const int MaxDetailedSources = 12;
     const int MaxLinesPerDirection = 30;
@@ -364,11 +363,25 @@ static partial class CyclePrompt
     }
 
     // A used member by its name alone: overloads read as one, and their parameters are noise here.
-    static string MemberLabel(Node member) =>
-        member.Type == NodeType.ConstructorMember ? "constructor" : Name(member, Unit(member)).Split('(')[0];
+    // A model parsed before the C# parser typed constructors (one opened where it is not parsed
+    // again, as in the standalone web app) has them as methods named after their type.
+    static string MemberLabel(Node member)
+    {
+        var unit = Unit(member);
+        var name = Name(member, unit).Split('(')[0];
+        return member.Type == NodeType.ConstructorMember || name == unit.ShortName.Split('<')[0] ? "constructor" : name;
+    }
 
-    // The closest node that is not a member: a member's type, or the node itself.
-    static Node Unit(Node node) => node.AncestorsAndSelf().First(n => !n.Type.IsMember);
+    // The closest node that is not a member: a member's type, or the node itself. In a model parsed
+    // before conversion operators were named without the dots of their target type
+    // ("implicitoperatorNs.Result"), made-up parents are between the operator and its type and are
+    // passed. In a model without types (tests), the closest node that is not a member.
+    static Node Unit(Node node)
+    {
+        var nonMembers = node.AncestorsAndSelf().Where(n => !n.Type.IsMember).ToList();
+        return nonMembers.FirstOrDefault(n => n.Type is not (NodeType.None or NodeType.Root or NodeType.Parent))
+            ?? nonMembers[0];
+    }
 
     // The member the node is part of (a getter or a local function counts as its property or
     // method), or the node itself when it is not a member.
@@ -381,20 +394,15 @@ static partial class CyclePrompt
         return node;
     }
 
-    // The node's name relative to the given ancestor, its full name otherwise, without the
-    // namespaces in generic arguments: "Result<IParser>", not "Result<global::Demo.IParser>".
+    // The node's name relative to the given ancestor, its full name otherwise. A long name has no
+    // namespaces in brackets: "Result<IParser>", not "Result<global::Demo.IParser>".
     static string Name(Node node, Node relativeTo)
     {
         var prefix = relativeTo.LongName + ".";
-        var name =
-            !relativeTo.IsRoot && node.LongName.StartsWith(prefix, StringComparison.Ordinal)
-                ? node.LongName[prefix.Length..]
-                : node.LongName;
-        return GlobalQualifier().Replace(name, "");
+        return !relativeTo.IsRoot && node.LongName.StartsWith(prefix, StringComparison.Ordinal)
+            ? node.LongName[prefix.Length..]
+            : node.LongName;
     }
-
-    [GeneratedRegex(@"global::(\w+\.)*")]
-    private static partial Regex GlobalQualifier();
 
     static string Described(Node node) => node.Description is { } description ? $": \"{Clip(description)}\"" : "";
 

@@ -189,6 +189,26 @@ public class CyclePromptTests
     }
 
     [Fact]
+    public void Build_ShouldLabelAConstructor_InAModelParsedBeforeConstructorsWereTyped()
+    {
+        using var model = modelMgr.UseModel();
+        var container = AddNode(model, "C", model.Root, NodeType.Namespace);
+        var a = AddNode(model, "C.A", container, NodeType.Namespace);
+        var b = AddNode(model, "C.B", container, NodeType.Namespace);
+        var item = AddNode(model, "C.A.Item", a, NodeType.ClassType);
+        var use = AddNode(model, "C.A.Item.Use()", item, NodeType.MethodMember);
+        var result = AddNode(model, "C.B.Result<T>", b, NodeType.StructType);
+        // The C# parser typed constructors as methods named after their type
+        var constructor = AddNode(model, "C.B.Result<T>.Result(string)", result, NodeType.MethodMember);
+        AddLink(model, use, constructor);
+        AddLink(model, result, item);
+
+        var prompt = PromptForTheOnlyCycle(model);
+
+        Assert.Contains("- A.Item.Use() → B.Result<T> (constructor)\n", prompt);
+    }
+
+    [Fact]
     public void Build_ShouldListLinksPerType_AndCapThem_WhenManyMembersMakeThem()
     {
         using var model = modelMgr.UseModel();
@@ -253,6 +273,34 @@ public class CyclePromptTests
         var unit = Assert.Single(request.Units);
         Assert.Equal(new FileSpan("/repo/src/Utils/Ext.cs", 5, 20), unit.Span);
         Assert.Equal([9], unit.MemberLines);
+    }
+
+    [Fact]
+    public void GetSourceRequests_ShouldFindTheTypeOfAMemberFiledUnderMadeUpNodes()
+    {
+        Cycle cycle;
+        using (var model = modelMgr.UseModel())
+        {
+            var container = AddNode(model, "C", model.Root, NodeType.Namespace);
+            var a = AddNode(model, "C.A", container, NodeType.StructType);
+            var b = AddNode(model, "C.B", container, NodeType.StructType);
+            SetSpan(b, "/repo/B.cs", 10, 40);
+            // In a model parsed before conversion operators were named without the dots of their
+            // target type, "implicit operator C.A(C.B)" is filed under a parent made up for "C".
+            var madeUp = AddNode(model, "C.B.implicitoperatorC", b, NodeType.Parent);
+            var conversion = AddNode(model, "C.B.implicitoperatorC.A(C.B)", madeUp, NodeType.MethodMember);
+            SetSpan(conversion, "/repo/B.cs", 20, 20);
+            AddLink(model, conversion, a);
+            AddLink(model, a, b);
+            cycle = CycleService.Compute(model).Cycles.Single();
+        }
+        using var reading = modelMgr.UseModel();
+
+        var requests = CyclePrompt.GetSourceRequests(reading, cycle);
+
+        var unit = Assert.Single(requests, r => r.Direction == "B → A").Units.Single();
+        Assert.Equal(new FileSpan("/repo/B.cs", 10, 40), unit.Span);
+        Assert.Equal([20], unit.MemberLines);
     }
 
     [Fact]
