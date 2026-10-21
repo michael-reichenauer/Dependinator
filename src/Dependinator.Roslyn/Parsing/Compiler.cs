@@ -39,16 +39,20 @@ static class Compiler
         if (compilation is null)
             return new Error($"No compilation (project may not be supported/loaded) for {project.FilePath}.");
 
-        // MSBuildWorkspace.GetCompilationAsync does not run source generators, so types
-        // produced by e.g. the Razor generator (.razor components) are missing. Run them manually.
-        compilation = RunSourceGenerators(project, compilation);
+        // MSBuildWorkspace.GetCompilationAsync runs the source generators it can load, but not
+        // the Razor generator, so .razor components would be missing. Run that one manually.
+        compilation = RunUnloadableSourceGenerators(project, compilation);
 
         // Compile errors (e.g. missing references) can cause missing nodes/links in the model,
         // so they are reported (as a parse problem, see SourceParser). The parse still proceeds
         // with whatever Roslyn could resolve.
-        var errorCount = compilation.GetDiagnostics().Count(d => d.Severity == DiagnosticSeverity.Error);
+        var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
+        var errorCount = errors.Count;
         if (errorCount > 0)
-            Log.Warn($"{errorCount} errors in {project.Name}");
+            Log.Warn(
+                $"{errorCount} errors in {project.Name}, e.g.: "
+                    + string.Join(" | ", errors.Take(5).Select(e => e.ToString()))
+            );
 
         return new CompiledProject(compilation, errorCount);
     }
@@ -98,17 +102,16 @@ static class Compiler
         }
     }
 
-    static Compilation RunSourceGenerators(Project project, Compilation compilation)
+    static Compilation RunUnloadableSourceGenerators(Project project, Compilation compilation)
     {
         var generators = new List<ISourceGenerator>();
         foreach (var reference in project.AnalyzerReferences)
         {
-            var fromReference = reference.GetGenerators(project.Language);
-            if (fromReference.Any())
-            {
-                generators.AddRange(fromReference);
+            // The workspace already ran the generators Roslyn's loader finds (their output is
+            // in the compilation): running them again would define every generated type twice
+            // (49 false "already contains a definition" errors in the Functions project).
+            if (reference.GetGenerators(project.Language).Any())
                 continue;
-            }
 
             // Roslyn's analyzer loader silently returns no generators for the Razor source
             // generator because it can't resolve its sibling DLLs. Fall back to manual loading.

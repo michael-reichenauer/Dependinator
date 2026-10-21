@@ -4,7 +4,6 @@
 @inject IApplicationEvents applicationEvents
 @inject IThemeService themeService
 @inject INavigationService navigationService
-@inject Dependinator.UI.Modeling.Models.IModelMgr modelMgr
 @implements IDisposable
 
 @* The problem indicator: error and warning counts, like the VS Code status bar, so problems in
@@ -40,6 +39,7 @@
         @foreach (var group in summary.Groups)
         {
           <MudMenuItem Icon="@SeverityIcon(group.Severity)" IconColor="@SeverityColor(group.Severity)"
+                       Disabled="@(group.Kind == ProblemKind.ParseErrors && group.NodeId is null)"
                        OnClick="() => OpenAsync(group)" data-testid="problems-item" data-kind="@group.Kind">
             @group.Text
           </MudMenuItem>
@@ -68,7 +68,11 @@
   bool isOpen; // The tooltip would cover the list
 
   string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
-  string TooltipText => string.Join(", ", summary.Groups.Select(g => g.Text));
+  // At most a few rows, so a solution with many projects with errors keeps a readable tooltip.
+  const int MaxTooltipRows = 3;
+  string TooltipText =>
+    string.Join(", ", summary.Groups.Take(MaxTooltipRows).Select(g => g.Text))
+    + (summary.Groups.Count > MaxTooltipRows ? $" and {summary.Groups.Count - MaxTooltipRows} more" : "");
 
   static string SeverityIcon(ProblemSeverity severity) =>
     severity == ProblemSeverity.Error ? ErrorIcon : WarningIcon;
@@ -86,20 +90,14 @@
   Task OpenAsync(ProblemGroup group) =>
     group.Kind switch
     {
-      ProblemKind.ParseErrors => ShowNodeAsync(group.NodeName),
+      ProblemKind.ParseErrors => ShowNodeAsync(group.NodeId),
       ProblemKind.Cycles => OnShowCycles.InvokeAsync(),
       ProblemKind.RuleViolations => OnShowRules.InvokeAsync(),
       _ => Task.CompletedTask,
     };
 
-  // The node may be gone (a model opened from the cache before a refresh dropped the project).
-  Task ShowNodeAsync(string? nodeName)
-  {
-    if (nodeName is null)
-      return Task.CompletedTask;
-    var id = Dependinator.UI.Modeling.Models.NodeId.FromName(nodeName);
-    return modelMgr.WithModel(m => m.Nodes.ContainsKey(id)) ? navigationService.ShowNodeAsync(id) : Task.CompletedTask;
-  }
+  Task ShowNodeAsync(Dependinator.UI.Modeling.Models.NodeId? nodeId) =>
+    nodeId is { } id ? navigationService.ShowNodeAsync(id) : Task.CompletedTask;
 
   public void Dispose()
   {

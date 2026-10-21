@@ -17,8 +17,8 @@ enum ProblemKind
 }
 
 // One row of the problem indicator's list: a kind of problem, how many there are, the text the
-// row shows, and for a parse problem the node it concerns (shown on a click).
-record ProblemGroup(ProblemKind Kind, ProblemSeverity Severity, int Count, string Text, string? NodeName = null);
+// row shows, and for a parse problem the node it concerns (shown on a click), if it is in the model.
+record ProblemGroup(ProblemKind Kind, ProblemSeverity Severity, int Count, string Text, NodeId? NodeId = null);
 
 record ProblemSummary(IReadOnlyList<ProblemGroup> Groups)
 {
@@ -86,18 +86,16 @@ class ProblemService(
 
     ProblemSummary Compute()
     {
-        List<ProblemGroup> groups =
-        [
-            .. modelMgr
-                .WithModel(m => m.ParseProblems)
-                .Select(p => new ProblemGroup(
+        List<ProblemGroup> groups = modelMgr.WithModel(m =>
+            m.ParseProblems.Select(p => new ProblemGroup(
                     ProblemKind.ParseErrors,
                     ProblemSeverity.Error,
                     p.ErrorCount,
                     p.Message,
-                    p.NodeName
-                )),
-        ];
+                    NodeIdIn(m, p.NodeName)
+                ))
+                .ToList()
+        );
 
         var cycles = cycleService.GetCycles().Count;
         if (cycles > 0)
@@ -119,6 +117,10 @@ class ProblemService(
 
         return groups.Count == 0 ? ProblemSummary.None : new(groups);
     }
+
+    // A cached model's problems can name a node a later edit or parse removed.
+    static NodeId? NodeIdIn(IModel model, string? nodeName) =>
+        nodeName is not null && model.Nodes.ContainsKey(NodeId.FromName(nodeName)) ? NodeId.FromName(nodeName) : null;
 
     static string Count(int count, string singular, string? plural = null) =>
         $"{count} {(count == 1 ? singular : plural ?? singular + "s")}";

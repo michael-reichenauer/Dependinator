@@ -165,8 +165,10 @@ public class ProblemServiceTests
     {
         AddTwoCycles();
         modelMgr.WithModel(m =>
-            m.SetParseProblems([new("49 compile errors in Api", 49, "Api"), new("1 compile error in UI", 1, "UI")])
-        );
+        {
+            AddNode(m, "Api", m.Root, NodeType.Assembly);
+            m.SetParseProblems([new("49 compile errors in Api", 49, "Api"), new("1 compile error in UI", 1, "UI")]);
+        });
 
         var summary = NewService().GetSummary();
 
@@ -179,7 +181,8 @@ public class ProblemServiceTests
         var api = summary.Groups[0];
         Assert.Equal(ProblemSeverity.Error, api.Severity);
         Assert.Equal("49 compile errors in Api", api.Text);
-        Assert.Equal("Api", api.NodeName);
+        Assert.Equal(NodeId.FromName("Api"), api.NodeId);
+        Assert.Null(summary.Groups[1].NodeId); // UI is not in the model
     }
 
     [Fact]

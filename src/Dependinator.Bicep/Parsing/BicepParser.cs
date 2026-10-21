@@ -65,7 +65,9 @@ class BicepParser(BicepCompilerHost compilerHost) : ISourceParser
                 Log.Warn($"{filePath}({line + 1}): {diagnostic.Code} {diagnostic.Message}");
             }
 
-            var errors = diagnostics.Count(d => d.Level is DiagnosticLevel.Error);
+            // A module with errors also gives its user BCP104 ("The referenced module has
+            // errors"): the same errors, already counted in the module's own file.
+            var errors = diagnostics.Count(d => d.Level is DiagnosticLevel.Error && d.Code != "BCP104");
             if (errors > 0)
                 errorCounts.Add((filePath, errors));
         }
@@ -78,19 +80,22 @@ class BicepParser(BicepCompilerHost compilerHost) : ISourceParser
     internal static IEnumerable<Item> ErrorItems(string entryPath, IReadOnlyList<(string Path, int Errors)> errorCounts)
     {
         var rootName = Names.GetRootName(entryPath);
-        var folder = Path.GetDirectoryName(entryPath) ?? "";
+        var folder = Path.GetDirectoryName(Path.GetFullPath(entryPath)) ?? "";
         return errorCounts
             .OrderBy(e => e.Path, StringComparer.Ordinal)
             .Select(e => new Item(
                 null,
                 null,
                 Problem: new ParseProblem(
-                    $"{e.Errors} {(e.Errors == 1 ? "error" : "errors")} in {Path.GetRelativePath(folder, e.Path)}",
+                    $"{e.Errors} {(e.Errors == 1 ? "error" : "errors")} in {RelativePath(folder, e.Path)}",
                     e.Errors,
                     rootName
                 )
             ));
     }
+
+    static string RelativePath(string folder, string path) =>
+        folder == "" ? Path.GetFileName(path) : Path.GetRelativePath(folder, path);
 
     static string FirstErrorText(SemanticModel model)
     {

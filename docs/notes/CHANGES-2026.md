@@ -184,7 +184,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   nodes and links: the C# parser reports them per project and the Bicep parser per file, briefly
   (the editor lists each error), shown as an error count with one row per project that shows its
   node. They are saved with the model, so a model opened from the cache shows them before its
-  refresh. Compile warnings are left out for now: many projects have warnings nobody fixes.
+  refresh. Compile warnings are left out for now: many projects have warnings nobody fixes. A
+  project that fails to parse is listed too. Showing them exposed 61 false errors in Dependinator
+  itself: the C# parser ran the Functions and Regex source generators a second time.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design

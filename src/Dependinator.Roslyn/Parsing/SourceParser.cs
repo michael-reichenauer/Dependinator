@@ -84,6 +84,7 @@ class SourceParser : ISourceParser
 
         Error? firstProjectError = null;
         var failedCount = 0;
+        HashSet<string> projectsWithProblems = [];
         foreach (var (project, parseProjectTask) in parseProjectTasks)
         {
             var projectResult = await parseProjectTask;
@@ -92,9 +93,17 @@ class SourceParser : ISourceParser
                 Log.Warn($"Failed to parse project {project.Name}: {projectResult.Error.Message}");
                 firstProjectError ??= projectResult.Error;
                 failedCount++;
+                // The project is missing from the model, which is a problem the user should see.
+                solutionNodes.Add(
+                    new Item(null, null, Problem: new ParseProblem($"{project.Name} could not be parsed", 1))
+                );
                 continue;
             }
-            solutionNodes.AddRange(items);
+            // A multi-targeted project is loaded once per target framework, into the same
+            // module node, so report its compile errors once.
+            solutionNodes.AddRange(
+                items.Where(i => i.Problem?.NodeName is not { } node || projectsWithProblems.Add(node))
+            );
         }
 
         // Some projects failing still yields a usable (if partial) model, but all of them failing

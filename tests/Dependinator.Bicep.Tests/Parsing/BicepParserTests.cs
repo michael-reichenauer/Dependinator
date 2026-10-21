@@ -252,14 +252,12 @@ public class BicepParserTests(BicepFixture fixture)
                 await parser.ParseAsync(Path.Combine(folder, "main.bicep"), SolutionParseOptions.Default)
             );
 
-            // The entry file gets one too: Bicep reports that the module it uses has errors.
+            // Not the entry file, though Bicep reports there that the module it uses has errors.
             var deployment = items.Single(i => i.Node?.Properties.Type == NodeType.Solution).Node!.Name;
+            var problem = Assert.Single(items, i => i.Problem is not null).Problem;
             Assert.Equal(
-                [
-                    new ParseProblem("1 error in main.bicep", 1, deployment),
-                    new ParseProblem($"2 errors in {Path.Combine("modules", "shared.bicep")}", 2, deployment),
-                ],
-                items.Where(i => i.Problem is not null).Select(i => i.Problem!)
+                new ParseProblem($"2 errors in {Path.Combine("modules", "shared.bicep")}", 2, deployment),
+                problem
             );
         }
         finally
