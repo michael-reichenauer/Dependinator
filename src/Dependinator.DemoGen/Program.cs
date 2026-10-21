@@ -75,8 +75,18 @@ internal class Program
         );
     }
 
-    static async Task<int> WriteModelAsync(IReadOnlyList<Item> items, Func<string, string> rename, string outputPath)
+    static async Task<int> WriteModelAsync(
+        IReadOnlyList<Item> parsedItems,
+        Func<string, string> rename,
+        string outputPath
+    )
     {
+        // Problems are about the machine it was parsed on (an unrestored package, say), not part of
+        // the demo, which would show them in its problem indicator; they are reported here instead.
+        foreach (var problem in parsedItems.Select(i => i.Problem).OfType<ParseProblem>())
+            Console.Error.WriteLine($"Warning: {problem.Message} (left out of the demo model)");
+        IReadOnlyList<Item> items = [.. parsedItems.Where(i => i.Problem is null)];
+
         string json = rename(ModelJson.Serialize(items));
         await using (FileStream file = File.Create(outputPath))
         await using (GZipStream gzip = new(file, CompressionLevel.SmallestSize))

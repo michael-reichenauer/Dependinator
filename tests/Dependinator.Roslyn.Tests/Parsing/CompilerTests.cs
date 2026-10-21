@@ -17,7 +17,7 @@ public class CompilerTests
         {
             var project = await workspace.OpenProjectAsync(projectPath);
 
-            var compilation = AssertOk(await Compiler.GetCompilationAsync(project));
+            var compilation = AssertOk(await Compiler.GetCompilationAsync(project)).Compilation;
 
             var allTypes = Compiler.GetAllTypes(compilation).ToList();
 

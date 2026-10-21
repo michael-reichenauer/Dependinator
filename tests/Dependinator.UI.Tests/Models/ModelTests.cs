@@ -76,6 +76,35 @@ public class ModelTests
         Assert.True(restored.WithModel(m => m.IncludeTestProjects));
     }
 
+    // Saved, so the problem indicator shows them for a model opened from the cache; an older file
+    // without them has none, and Clear drops them with the model.
+    [Fact]
+    public void ParseProblems_ShouldRoundTripThroughDto_AndBeClearedWithTheModel()
+    {
+        var modelMgr = new ModelMgr(new StateMgr());
+        var problem = new Dependinator.Core.Parsing.ParseProblem("49 compile errors in Api", 49, "Api");
+        var dto = modelMgr.WithModel(m =>
+        {
+            m.SetParseProblems([problem]);
+            return m.SerializeToDto();
+        });
+
+        var json = Json.Serialize(dto);
+        var restored = new ModelMgr(new StateMgr());
+        restored.WithModel(m =>
+            m.SetFromDto("My.sln", Json.Deserialize<Dependinator.UI.Modeling.Dtos.ModelDto>(json)!)
+        );
+        Assert.Equal([problem], restored.WithModel(m => m.ParseProblems));
+
+        var old = Json.Deserialize<Dependinator.UI.Modeling.Dtos.ModelDto>(
+            """{ "FormatVersion": "8", "Name": "My.sln", "Nodes": [], "Links": [] }"""
+        );
+        Assert.Empty(old!.ParseProblems);
+
+        restored.WithModel(m => m.Clear());
+        Assert.Empty(restored.WithModel(m => m.ParseProblems));
+    }
+
     [Fact]
     public void Clear_ShouldResetIncludeTestProjects()
     {

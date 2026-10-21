@@ -180,7 +180,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   shows that the model has open cycles and broken architecture rules without opening their
   panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one
   row per kind, each opening its panel. Accepted cycles, cycles to fix later and rules nobody
-  breaks don't count. Compile errors from parsing are planned to show there next, as errors.
+  breaks don't count. Since the same day it also counts compile errors, which can silently drop
+  nodes and links: the C# parser reports them per project and the Bicep parser per file, briefly
+  (the editor lists each error), shown as an error count with one row per project that shows its
+  node. They are saved with the model, so a model opened from the cache shows them before its
+  refresh. Compile warnings are left out for now: many projects have warnings nobody fixes. A
+  project that fails to parse is listed too. Showing them exposed 61 false errors in Dependinator
+  itself: the C# parser ran the Functions and Regex source generators a second time.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design

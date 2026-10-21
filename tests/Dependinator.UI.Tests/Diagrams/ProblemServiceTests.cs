@@ -10,7 +10,8 @@ using Node = Dependinator.UI.Modeling.Models.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
-// The problem indicator's summary: open cycles are warnings, as many as the Cycles panel lists
+// The problem indicator's summary: the last parse's problems (compile errors) are errors, one
+// group per project, counted per error; open cycles are warnings, as many as the Cycles panel lists
 // (accepted ones and ones to fix later are decided on); architecture rules count once per broken
 // rule, with their dependencies in the text; a model without problems has an empty summary. It
 // follows model changes, but not while a parse or load is in progress.
@@ -157,5 +158,41 @@ public class ProblemServiceTests
 
         progress.Setup(p => p.IsDiscreetActive).Returns(false);
         Assert.Equal(2, service.GetSummary().WarningCount);
+    }
+
+    [Fact]
+    public void GetSummary_ShouldListParseProblemsAsErrors_OneGroupPerProject_BeforeTheCycles()
+    {
+        AddTwoCycles();
+        modelMgr.WithModel(m =>
+        {
+            AddNode(m, "Api", m.Root, NodeType.Assembly);
+            m.SetParseProblems([new("49 compile errors in Api", 49, "Api"), new("1 compile error in UI", 1, "UI")]);
+        });
+
+        var summary = NewService().GetSummary();
+
+        Assert.Equal(50, summary.ErrorCount);
+        Assert.Equal(2, summary.WarningCount);
+        Assert.Equal(
+            [ProblemKind.ParseErrors, ProblemKind.ParseErrors, ProblemKind.Cycles],
+            summary.Groups.Select(g => g.Kind)
+        );
+        var api = summary.Groups[0];
+        Assert.Equal(ProblemSeverity.Error, api.Severity);
+        Assert.Equal("49 compile errors in Api", api.Text);
+        Assert.Equal(NodeId.FromName("Api"), api.NodeId);
+        Assert.Null(summary.Groups[1].NodeId); // UI is not in the model
+    }
+
+    [Fact]
+    public void GetSummary_ShouldFollowANewParse()
+    {
+        var service = NewService();
+        modelMgr.WithModel(m => m.SetParseProblems([new("1 compile error in UI", 1, "UI")]));
+        Assert.Equal(1, service.GetSummary().ErrorCount);
+
+        modelMgr.WithModel(m => m.SetParseProblems([]));
+        Assert.True(service.GetSummary().IsEmpty);
     }
 }

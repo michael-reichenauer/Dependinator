@@ -51,6 +51,12 @@ interface IModel : IDisposable
     void AddAcceptedCycle(AcceptedCycle accepted);
     void RemoveAcceptedCycle(AcceptedCycle accepted);
 
+    // The problems the last parse found (persisted with the model), replaced by each parse, with
+    // a change counter like the rules'.
+    IReadOnlyList<ParseProblem> ParseProblems { get; }
+    int ParseProblemsVersion { get; }
+    void SetParseProblems(IReadOnlyList<ParseProblem> problems);
+
     void TryAddNode(Node node);
     void TryAddLink(Link link);
     void TryAddLine(Line line);
@@ -145,6 +151,16 @@ class Model : IModel
             AcceptedCyclesVersion++;
     }
 
+    IReadOnlyList<ParseProblem> parseProblems = [];
+    public IReadOnlyList<ParseProblem> ParseProblems => parseProblems;
+    public int ParseProblemsVersion { get; private set; }
+
+    public void SetParseProblems(IReadOnlyList<ParseProblem> problems)
+    {
+        parseProblems = problems;
+        ParseProblemsVersion++;
+    }
+
     public ModelDto SerializeToDto() =>
         new()
         {
@@ -163,6 +179,15 @@ class Model : IModel
                     Members = a.MemberNames,
                     Reason = a.Reason,
                     IsToFix = a.IsToFix,
+                }),
+            ],
+            ParseProblems =
+            [
+                .. parseProblems.Select(p => new ParseProblemDto
+                {
+                    Message = p.Message,
+                    ErrorCount = p.ErrorCount,
+                    NodeName = p.NodeName,
                 }),
             ],
             Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
@@ -224,6 +249,9 @@ class Model : IModel
                 .Distinct()
         );
         AcceptedCyclesVersion++;
+        SetParseProblems([
+            .. modelDto.ParseProblems.Select(p => new ParseProblem(p.Message, p.ErrorCount, p.NodeName)),
+        ]);
         // Nodes and links will be set by model service in separate worker thread
     }
 
@@ -271,6 +299,7 @@ class Model : IModel
         RulesVersion++;
         acceptedCycles.Clear();
         AcceptedCyclesVersion++;
+        SetParseProblems([]);
 
         InitModel();
     }

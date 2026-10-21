@@ -84,6 +84,8 @@ class SourceParser : ISourceParser
 
         Error? firstProjectError = null;
         var failedCount = 0;
+        List<Project> failedProjects = [];
+        Dictionary<string, ParseProblem> compileErrors = [];
         foreach (var (project, parseProjectTask) in parseProjectTasks)
         {
             var projectResult = await parseProjectTask;
@@ -92,10 +94,31 @@ class SourceParser : ISourceParser
                 Log.Warn($"Failed to parse project {project.Name}: {projectResult.Error.Message}");
                 firstProjectError ??= projectResult.Error;
                 failedCount++;
+                failedProjects.Add(project);
                 continue;
             }
-            solutionNodes.AddRange(items);
+            solutionNodes.AddRange(items.Where(i => i.Problem is null));
+
+            // A multi-targeted project is loaded once per target framework, into the same module
+            // node, so its compile errors are reported once, for the framework with the most.
+            foreach (var problem in items.Select(i => i.Problem).OfType<ParseProblem>())
+            {
+                var key = problem.NodeName ?? problem.Message;
+                if (!compileErrors.TryGetValue(key, out var other) || other.ErrorCount < problem.ErrorCount)
+                    compileErrors[key] = problem;
+            }
         }
+        solutionNodes.AddRange(compileErrors.Values.Select(p => new Item(null, null, Problem: p)));
+
+        // A project missing from the model is a problem the user should see, unless another of
+        // its target frameworks parsed.
+        var parsedPaths = projects.Except(failedProjects).Select(p => p.FilePath).ToHashSet();
+        solutionNodes.AddRange(
+            failedProjects
+                .Where(p => !parsedPaths.Contains(p.FilePath))
+                .DistinctBy(p => p.FilePath)
+                .Select(p => new Item(null, null, Problem: new ParseProblem($"{p.Name} could not be parsed", 1)))
+        );
 
         // Some projects failing still yields a usable (if partial) model, but all of them failing
         // means there is nothing to show, so report it instead of returning a lone solution node.
@@ -157,10 +180,13 @@ class SourceParser : ISourceParser
     public async Task<Result<IReadOnlyList<Item>>> ParseProjectAsync(Project project, string? parentName)
     {
         var compilationResult = await Compiler.GetCompilationAsync(project);
-        if (compilationResult is not Compilation compilation)
+        if (compilationResult is not CompiledProject compiled)
             return compilationResult.Error;
 
-        return ParseProjectCompilation(compilation, parentName, project.FilePath).ToList();
+        var items = ParseProjectCompilation(compiled.Compilation, parentName, project.FilePath).ToList();
+        if (compiled.ErrorCount > 0)
+            items.Add(CompileErrorsItem(compiled.ErrorCount, project.Name, Names.GetModuleName(compiled.Compilation)));
+        return items;
     }
 
     static IEnumerable<Item> ParseProjectCompilation(Compilation compilation, string? parentName, string? projectPath)
@@ -196,6 +222,18 @@ class SourceParser : ISourceParser
         foreach (var item in NamespaceParser.ParseNamespaces(compilation, moduleName))
             yield return item;
     }
+
+    // A project's compile errors in brief, on its assembly node.
+    internal static Item CompileErrorsItem(int errorCount, string projectName, string moduleName) =>
+        new(
+            null,
+            null,
+            Problem: new ParseProblem(
+                $"{errorCount} compile {(errorCount == 1 ? "error" : "errors")} in {projectName}",
+                errorCount,
+                moduleName
+            )
+        );
 
     // Reads the [assembly: AssemblyDescription("...")] value from the project's compiled
     // assembly attributes, used as the description for the assembly node, together with a

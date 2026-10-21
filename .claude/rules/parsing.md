@@ -27,6 +27,13 @@ paths:
   - `AddDependinatorXServices()`, registered in the Lsp and Web `Program.cs`;
   - an architecture-test rule;
   - `ModelPaths` / `WorkspaceFileService` discovery for its file kind.
+- **Source generators:** `MSBuildWorkspace` runs the generators Roslyn's loader can load (the
+  Functions SDK, Regex); `Compiler.RunUnloadableSourceGenerators` runs only the rest (Razor).
+  Running a loadable one again defines its types twice: that gave 49 false compile errors in Api
+  and 12 in UI until Oct 21, found once the problem indicator showed them.
+- **Parse problems:** a parser reports what can leave the model incomplete as a `ParseProblem`
+  item (`Types.cs`), one brief summary per project or file, never per error. DemoGen leaves them
+  out of the demo models.
 - **Bicep** (beyond CLAUDE.md; design and follow-ups in `docs/notes/BICEP-PARSER.md`):
   - Never import `Bicep.Core.Parsing` or `Bicep.Core.Utils`: they are twins of Dependinator names.
   - JsonPath.Net's root namespace `Json` shadows Core's `Json` helper in every project that

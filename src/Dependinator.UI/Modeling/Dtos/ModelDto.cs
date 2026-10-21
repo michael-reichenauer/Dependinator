@@ -31,6 +31,20 @@ record ModelDto
 
     // Defaulted, so models saved before accepted cycles existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<AcceptedCycleDto> AcceptedCycles { get; init; } = [];
+
+    // The problems the last parse found (compile errors), so the problem indicator shows them
+    // for a model opened from the cache, before (or without) a new parse. Defaulted (no
+    // FormatVersion bump).
+    public IReadOnlyList<ParseProblemDto> ParseProblems { get; init; } = [];
+}
+
+// A problem the last parse found (see Dependinator.Core.Parsing.ParseProblem).
+[Serializable]
+record ParseProblemDto
+{
+    public required string Message { get; init; }
+    public int ErrorCount { get; init; }
+    public string? NodeName { get; init; }
 }
 
 // An architecture rule: "From" must not depend on "To" (node names, see ArchitectureRule).

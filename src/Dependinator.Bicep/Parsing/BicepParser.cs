@@ -28,7 +28,7 @@ class BicepParser(BicepCompilerHost compilerHost) : ISourceParser
         try
         {
             var compilation = await Task.Run(() => compilerHost.Compile(path));
-            LogDiagnostics(compilation);
+            var errorCounts = LogDiagnostics(compilation);
 
             var model = compilation.GetEntrypointSemanticModel();
             if (model.HasParsingErrors())
@@ -38,7 +38,8 @@ class BicepParser(BicepCompilerHost compilerHost) : ISourceParser
             Log.Info(
                 $"Parsed {path}: {items.Count(i => i.Node is not null)} nodes, {items.Count(i => i.Link is not null)} links"
             );
-            return items;
+            IReadOnlyList<Item> withProblems = [.. items, .. ErrorItems(path, errorCounts)];
+            return withProblems;
         }
         catch (Exception e)
         {
@@ -49,18 +50,58 @@ class BicepParser(BicepCompilerHost compilerHost) : ISourceParser
 
     // Semantic problems (unknown resource types, unrestored registry modules, type mismatches)
     // are logged but do not stop the model from being built; only syntax errors do (see above).
-    static void LogDiagnostics(Compilation compilation)
+    // Returns the number of errors per file path, for the problem indicator.
+    static IReadOnlyList<(string Path, int Errors)> LogDiagnostics(Compilation compilation)
     {
+        List<(string Path, int Errors, int ModuleErrors)> errorCounts = [];
         foreach (var (file, diagnostics) in compilation.GetAllDiagnosticsByBicepFile())
         {
+            var filePath = file.FileHandle.Uri.GetFilePath();
             foreach (
                 var diagnostic in diagnostics.Where(d => d.Level is DiagnosticLevel.Warning or DiagnosticLevel.Error)
             )
             {
                 var line = TextCoordinateConverter.GetPosition(file.LineStarts, diagnostic.Span.Position).line;
-                Log.Warn($"{file.FileHandle.Uri.GetFilePath()}({line + 1}): {diagnostic.Code} {diagnostic.Message}");
+                Log.Warn($"{filePath}({line + 1}): {diagnostic.Code} {diagnostic.Message}");
             }
+
+            var errors = diagnostics.Where(d => d.Level is DiagnosticLevel.Error).ToList();
+            if (errors.Count > 0)
+                errorCounts.Add((filePath, errors.Count, errors.Count(d => d.Code == ModuleHasErrors)));
         }
+
+        // A module with errors also gives each file using it a "referenced module has errors":
+        // the same errors, counted in the module's own file, unless no Bicep file has any (a
+        // JSON or registry module), when that error is all there is.
+        var hasOwnErrors = errorCounts.Any(e => e.Errors > e.ModuleErrors);
+        return
+        [
+            .. errorCounts
+                .Select(e => (e.Path, Errors: hasOwnErrors ? e.Errors - e.ModuleErrors : e.Errors))
+                .Where(e => e.Errors > 0),
+        ];
+    }
+
+    const string ModuleHasErrors = "BCP104";
+
+    // Errors can leave resources or links out of the model, so each file with errors is one brief
+    // problem on the deployment's node (a module file can be deployed more than once); the
+    // editor lists the errors themselves.
+    internal static IEnumerable<Item> ErrorItems(string entryPath, IReadOnlyList<(string Path, int Errors)> errorCounts)
+    {
+        var rootName = Names.GetRootName(entryPath);
+        var folder = Path.GetDirectoryName(Path.GetFullPath(entryPath))!;
+        return errorCounts
+            .OrderBy(e => e.Path, StringComparer.Ordinal)
+            .Select(e => new Item(
+                null,
+                null,
+                Problem: new ParseProblem(
+                    $"{e.Errors} {(e.Errors == 1 ? "error" : "errors")} in {Path.GetRelativePath(folder, e.Path)}",
+                    e.Errors,
+                    rootName
+                )
+            ));
     }
 
     static string FirstErrorText(SemanticModel model)

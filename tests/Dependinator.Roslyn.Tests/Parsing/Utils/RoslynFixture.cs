@@ -37,7 +37,7 @@ public sealed class RoslynFixture : IAsyncLifetime
 
         Workspace = workspace;
         Project = await Workspace.OpenProjectAsync(Root.ProjectFilePath);
-        var compilation = AssertOk(await Compiler.GetCompilationAsync(Project));
+        var compilation = AssertOk(await Compiler.GetCompilationAsync(Project)).Compilation;
 
         Compilation = compilation;
         AllTestTypes = Compiler.GetAllTypes(compilation).ToList();
