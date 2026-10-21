@@ -10,23 +10,26 @@ using Node = Dependinator.UI.Modeling.Models.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
-// The problem indicator's summary: open cycles and cycles to fix later are warnings, accepted
-// ones are not problems; architecture rules count once per broken rule, with their dependencies
-// in the text; a model without problems has an empty summary. It follows model changes.
+// The problem indicator's summary: open cycles are warnings, as many as the Cycles panel lists
+// (accepted ones and ones to fix later are decided on); architecture rules count once per broken
+// rule, with their dependencies in the text; a model without problems has an empty summary. It
+// follows model changes, but not while a parse or load is in progress.
 public class ProblemServiceTests
 {
     readonly ModelMgr modelMgr = new(new StateMgr());
 
+    readonly Mock<IProgressService> progress = new();
+
+    // The rule and cycle services only use their command service for changes, which these tests
+    // make on the model directly.
     ProblemService NewService()
     {
-        var commands = new Mock<ICommandService>();
-        commands
-            .Setup(c => c.Do(It.IsAny<Command>(), true, true))
-            .Callback<Command, bool, bool>((command, _, _) => modelMgr.WithModel(m => command.Execute(m)));
+        var commands = Mock.Of<ICommandService>();
         return new ProblemService(
             modelMgr,
-            new CycleService(modelMgr, commands.Object),
-            new RuleService(modelMgr, commands.Object)
+            new CycleService(modelMgr, commands),
+            new RuleService(modelMgr, commands),
+            progress.Object
         );
     }
 
@@ -93,7 +96,7 @@ public class ProblemServiceTests
     }
 
     [Fact]
-    public void GetSummary_ShouldCountCyclesToFixLater_ButNotAcceptedOnes()
+    public void GetSummary_ShouldNotCountAcceptedCycles_OrOnesToFixLater()
     {
         AddTwoCycles();
         modelMgr.WithModel(m =>
@@ -102,10 +105,7 @@ public class ProblemServiceTests
             m.AddAcceptedCycle(new AcceptedCycle("Z", ["Z.X", "Z.Y"], "Split Y", IsToFix: true));
         });
 
-        var group = Assert.Single(NewService().GetSummary().Groups);
-
-        Assert.Equal(1, group.Count);
-        Assert.Equal("1 cycle to fix later", group.Text);
+        Assert.True(NewService().GetSummary().IsEmpty);
     }
 
     [Fact]
@@ -143,5 +143,19 @@ public class ProblemServiceTests
 
         modelMgr.WithModel(m => m.AddAcceptedCycle(new AcceptedCycle("C", ["C.A", "C.B"], "Intended", IsToFix: false)));
         Assert.Equal("1 cycle", Assert.Single(service.GetSummary().Groups).Text);
+    }
+
+    [Fact]
+    public void GetSummary_ShouldKeepTheLastSummary_WhileAParseIsInProgress()
+    {
+        var service = NewService();
+        Assert.True(service.GetSummary().IsEmpty);
+
+        progress.Setup(p => p.IsDiscreetActive).Returns(true);
+        AddTwoCycles();
+        Assert.True(service.GetSummary().IsEmpty);
+
+        progress.Setup(p => p.IsDiscreetActive).Returns(false);
+        Assert.Equal(2, service.GetSummary().WarningCount);
     }
 }

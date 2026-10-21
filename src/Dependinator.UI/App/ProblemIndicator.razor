@@ -9,6 +9,10 @@
    the model are visible without opening a panel. Hidden while there are none. Its tooltip names
    them (off while the list is open, which it would cover), and a click lists them, one row per
    kind, each opening the panel that shows its details. *@
+@{
+  // Cached per model version, so cheap on every render.
+  summary = problemService.GetSummary();
+}
 @if (!summary.IsEmpty)
 {
   <MudTooltip Text="@TooltipText" Disabled="@isOpen">
@@ -74,15 +78,7 @@
     applicationEvents.UIStateChanged += OnChanged;
   }
 
-  // Cached per model version, so cheap on every render.
-  protected override void OnParametersSet() => summary = problemService.GetSummary();
-
-  void OnChanged() =>
-    _ = InvokeAsync(() =>
-    {
-      summary = problemService.GetSummary();
-      StateHasChanged();
-    });
+  void OnChanged() => _ = InvokeAsync(StateHasChanged);
 
   Task OpenAsync(ProblemKind kind) =>
     kind switch

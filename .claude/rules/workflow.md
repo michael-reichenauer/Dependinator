@@ -67,7 +67,8 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
 ## Ideas waiting for a session
 
 - **Problems indicator, phase 2:** phase 1 (Oct 21, `ProblemService` + `App/ProblemIndicator.razor`)
-  shows open/to-fix cycles and broken rules as warnings. Agreed with the user for phase 2: parse
+  shows open cycles (as many as the Cycles panel lists) and broken rules as warnings, and
+  keeps its last summary while a parse is in progress. Agreed with the user for phase 2: parse
   problems as data, an optional `Problem` on `Item` (like `LineDescription`) over the `[Rpc]` parse
   API, saved with the model (`ModelDto`); compile errors only as a brief per-project summary (the
   user checks VS Code for each error), no compile warnings for now (many users never fix them,
