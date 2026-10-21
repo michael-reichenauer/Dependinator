@@ -22,9 +22,10 @@ page objects). Each rule below comes from a real CI or local failure.
   the 5 s default flaked on slow runners): read the trace (`E2E_TRACE=1`, `./scripts/trace`; CI
   uploads `playwright-traces-<browser>`) instead of re-running.
 - `LineDimTests` failed once in a full run and passed 3/3 alone: rerun a suspect class alone first
-  (`E2E=1 BROWSER=chromium E2E_BASE_URL=http://localhost:5000 dotnet test
-  tests/Dependinator.E2E.Tests --no-build --filter "FullyQualifiedName~LineDimTests"` against an
-  app started with `DEPENDINATOR_E2E=1`); investigate if it fails alone.
+  (`E2E=1 BROWSER=chromium dotnet test tests/Dependinator.E2E.Tests --no-build --filter
+  "FullyQualifiedName~LineDimTests"` against an app started with `DEPENDINATOR_E2E=1`; keep the
+  default base URL `http://127.0.0.1:5000`, since `localhost` can resolve to ::1, where nothing
+  listens); investigate if it fails alone.
 - A very slow but green firefox/webkit run is a Blazor circuit reconnecting (unfixed; the 5 min
   `JSInteropDefaultCallTimeout` in the Web `Program.cs` is a suspect).
 - Fixed flakes whose return means the fix fell short. Read the trace; don't just re-run:

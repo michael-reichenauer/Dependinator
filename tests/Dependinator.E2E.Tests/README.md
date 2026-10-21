@@ -217,10 +217,10 @@ here. Instead:
 
 ## Version pinning
 
-`Microsoft.Playwright.Xunit` (Directory.Packages.props) and `PLAYWRIGHT_VERSION`
-in `.devcontainer/post-create.sh` must stay on the same version so the tests
-find matching browser builds in `~/.cache/ms-playwright`. When bumping the NuGet
-package, update the script and run it once (or rebuild the devcontainer).
+`.devcontainer/post-create.sh` (and `scripts/cloud-setup` in cloud sessions)
+read the `Microsoft.Playwright.Xunit` version from Directory.Packages.props and
+install the matching browser builds into `~/.cache/ms-playwright`. After bumping
+the NuGet package, run the script once (or rebuild the devcontainer).
 
 Signed-in cloud-sync flows are not covered yet — they need a Clerk test-user
 strategy first.

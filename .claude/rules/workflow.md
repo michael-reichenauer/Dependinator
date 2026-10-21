@@ -38,7 +38,7 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
 - `pkill -f` / `pgrep -f` match their own Bash command line: a pattern that also appears elsewhere
   in the same command (say a later `dotnet run --project ./src/Dependinator.Web`) kills the
   tool's shell (exit 144) and silently skips the rest. Stop processes by pid, found by port
-  (`ss -ltnp | grep ':5000 '`), in a call of their own, then build or start in the next call.
+  (`lsof -ti tcp:5000 -sTCP:LISTEN`), in a call of their own, then build or start in the next call.
   `func start` and the `dotnet watch` host can ignore SIGTERM: `kill -9` them by pid, including
   the `Api.dll` func workers. `./scripts/watch` is a chain (script → `dotnet watch` → watch host
   → `dotnet run` → `Dependinator.Web`); a surviving watch host relaunches the app on the next

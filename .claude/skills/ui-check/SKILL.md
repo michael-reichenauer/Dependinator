@@ -51,10 +51,10 @@ Notes:
 
 ### Driving the diagram (learned the hard way)
 
-- **Start the app yourself:**
-  `ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:5000 dotnet run --project src/Dependinator.Web --no-launch-profile`.
-  Without Development the static web assets return 404; without `ASPNETCORE_URLS` the app
-  listens on 8080.
+- **Start the app yourself:** `dotnet run --project src/Dependinator.Web` (in the background).
+  Its launch profile sets Development, in which `Program.cs` pins Kestrel to 127.0.0.1:5000 and
+  serves the static web assets. Without Development, as with `--no-launch-profile`, the assets
+  return 404. Add `DEPENDINATOR_E2E=1` for the embedded demo model, like `./scripts/e2e`.
 - **Browser:** use `open --browser=chromium`; the default `chrome` channel is not installed.
 - **Persistence checks:** every `open` starts a fresh context with empty IndexedDB, so checking
   that something persisted by re-opening looks like data loss. Use `reload` or `goto` in the same

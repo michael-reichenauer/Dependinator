@@ -5,6 +5,12 @@ paths:
   - "src/Dependinator.Bicep/**"
   - "src/Dependinator.Lsp/**"
   - "src/Dependinator.DemoGen/**"
+  - "src/Dependinator.Core/Shared/ModelPaths.cs"
+  - "src/Dependinator.Core/Shared/WorkspaceFileService.cs"
+  - "src/Dependinator.UI/Modeling/ModelService.cs"
+  - "src/Dependinator.UI/Modeling/StructureService.cs"
+  - "src/Dependinator.UI/Diagrams/CyclePrompt*.cs"
+  - "src/Dependinator.Web/Program.cs"
 ---
 
 # Parsing: traps and decisions

@@ -3,7 +3,7 @@
 # as a Claude Code cloud session, which does not use the devcontainer:
 #
 #   - .NET SDK 10 (runtime of the net10.0 projects and CSharpier) and the .NET 11 preview SDK
-#     pinned in global.json, in /usr/share/dotnet (like the devcontainer)
+#     pinned in global.json (exactly, like CI), in /usr/share/dotnet (like the devcontainer)
 #   - Azurite (Api.Tests start one; ./scripts/e2e -s) and Azure Functions Core Tools (-s)
 #   - Playwright browsers + their OS packages at the Microsoft.Playwright.Xunit version in
 #     Directory.Packages.props (./scripts/e2e), and playwright-cli (ui-check skill)
@@ -19,6 +19,7 @@
 # Runs as root or through sudo. Beyond the cloud's "Trusted" network defaults, the downloads
 # need builds.dotnet.microsoft.com, ci.dot.net, aka.ms, cdn.playwright.dev,
 # playwright.download.prss.microsoft.com and crl3.digicert.com (CLAUDE.md, "Cloud sessions").
+#
 # A full install takes ~4.5 min, a re-run ~12 s. The cloud environment's "Setup script" field
 # (claude.ai, environment settings) runs this before each new session, so the toolchain lands in
 # the environment's cached snapshot and the hook only re-checks it:
@@ -27,15 +28,21 @@
 #   setup=$(find / -maxdepth 6 \( -path /proc -o -path /sys \) -prune -o -path '*/Dependinator/scripts/cloud-setup' -print -quit 2>/dev/null)
 #   [ -n "$setup" ] && "$setup" || true
 set -euo pipefail
-cd "$(dirname "$0")/.."
+SCRIPT="$(realpath "$0")"
+cd "$(dirname "$SCRIPT")/.."
+
+usage() {
+    echo "Usage: ./scripts/cloud-setup [--hook] [-b \"chromium firefox webkit\"]" >&2
+    exit 1
+}
 
 HOOK=0
 BROWSERS="chromium firefox webkit"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --hook) HOOK=1 ;;
-        -b) BROWSERS="$2"; shift ;;
-        *) echo "Usage: ./scripts/cloud-setup [--hook] [-b \"chromium firefox webkit\"]" >&2; exit 1 ;;
+        -b) [[ $# -ge 2 ]] || usage; BROWSERS="$2"; shift ;;
+        *) usage ;;
     esac
     shift
 done
@@ -44,7 +51,7 @@ if [[ "$HOOK" == "1" ]]; then
     [[ "${CLAUDE_CODE_REMOTE:-}" == "true" ]] || exit 0
     log=/tmp/cloud-setup.log
     start=$SECONDS
-    if "$0" -b "$BROWSERS" >"$log" 2>&1; then
+    if "$SCRIPT" -b "$BROWSERS" >"$log" 2>&1; then
         echo "Cloud toolchain ready in $((SECONDS - start)) s (.NET SDKs, Azurite, func, Playwright: $BROWSERS); log: $log"
     else
         # Never fail the session start; tell Claude what is missing instead.
@@ -76,9 +83,11 @@ step() {
     echo "=== $*"
 }
 
+# Downloads that later run as root go to a private directory, not to fixed /tmp paths.
+DOWNLOADS="$(mktemp -d)"
+trap 'rm -rf "$DOWNLOADS"' EXIT
+
 DOTNET_DIR=/usr/share/dotnet
-SDK_VERSION="$(jq -r .sdk.version global.json 2>/dev/null || sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' global.json)"
-PLAYWRIGHT_VERSION="$(sed -n 's/.*"Microsoft.Playwright.Xunit" Version="\([^"]*\)".*/\1/p' Directory.Packages.props)"
 
 step "OS packages"
 missing=()
@@ -92,14 +101,22 @@ else
     echo "present"
 fi
 
+SDK_VERSION="$(jq -r '.sdk.version // empty' global.json)"
+PLAYWRIGHT_VERSION="$(sed -n 's/.*"Microsoft.Playwright.Xunit" Version="\([^"]*\)".*/\1/p' Directory.Packages.props)"
+if [[ -z "$SDK_VERSION" || -z "$PLAYWRIGHT_VERSION" ]]; then
+    echo "Could not read the SDK version from global.json ('$SDK_VERSION') or the" >&2
+    echo "Microsoft.Playwright.Xunit version from Directory.Packages.props ('$PLAYWRIGHT_VERSION')." >&2
+    exit 1
+fi
+
 step ".NET SDKs (10.0 + $SDK_VERSION from global.json)"
 installed_sdks="$("$DOTNET_DIR/dotnet" --list-sdks 2>/dev/null || true)"
 if ! grep -q "^10\." <<<"$installed_sdks" || ! grep -q "^$SDK_VERSION " <<<"$installed_sdks"; then
-    curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+    curl -fsSL https://dot.net/v1/dotnet-install.sh -o "$DOWNLOADS/dotnet-install.sh"
     grep -q "^10\." <<<"$installed_sdks" ||
-        as_root bash /tmp/dotnet-install.sh --channel 10.0 --install-dir "$DOTNET_DIR"
+        as_root bash "$DOWNLOADS/dotnet-install.sh" --channel 10.0 --install-dir "$DOTNET_DIR"
     grep -q "^$SDK_VERSION " <<<"$installed_sdks" ||
-        as_root bash /tmp/dotnet-install.sh --version "$SDK_VERSION" --install-dir "$DOTNET_DIR"
+        as_root bash "$DOWNLOADS/dotnet-install.sh" --version "$SDK_VERSION" --install-dir "$DOTNET_DIR"
 fi
 as_root ln -sf "$DOTNET_DIR/dotnet" /usr/local/bin/dotnet
 dotnet --list-sdks
@@ -119,18 +136,26 @@ step "Azure Functions Core Tools"
 if ! command -v func >/dev/null 2>&1; then
     # From the Microsoft apt feed (the npm package downloads its binary from a CDN instead).
     curl -fsSL "https://packages.microsoft.com/config/ubuntu/$(. /etc/os-release && echo "$VERSION_ID")/packages-microsoft-prod.deb" \
-        -o /tmp/packages-microsoft-prod.deb
-    as_root dpkg -i /tmp/packages-microsoft-prod.deb
+        -o "$DOWNLOADS/packages-microsoft-prod.deb"
+    as_root dpkg -i "$DOWNLOADS/packages-microsoft-prod.deb"
     as_root apt-get update -q
     as_root apt-get install -y -q azure-functions-core-tools-4
 fi
 func --version
 
 step "Playwright $PLAYWRIGHT_VERSION browsers ($BROWSERS)"
-# shellcheck disable=SC2086 # BROWSERS is a word list
-as_root npx -y "playwright@$PLAYWRIGHT_VERSION" install-deps $BROWSERS
-# shellcheck disable=SC2086
-npx -y "playwright@$PLAYWRIGHT_VERSION" install $BROWSERS
+# install-deps runs apt-get update + install every time, so a marker skips the whole step once
+# it succeeded for this version and browser set (a re-run then needs no Ubuntu mirror).
+marker="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}/.cloud-setup-$PLAYWRIGHT_VERSION-${BROWSERS// /-}"
+if [[ -f "$marker" ]]; then
+    echo "installed earlier ($marker)"
+else
+    # shellcheck disable=SC2086 # BROWSERS is a word list
+    as_root npx -y "playwright@$PLAYWRIGHT_VERSION" install-deps $BROWSERS
+    # shellcheck disable=SC2086
+    npx -y "playwright@$PLAYWRIGHT_VERSION" install $BROWSERS
+    touch "$marker"
+fi
 
 step "playwright-cli (ui-check skill)"
 command -v playwright-cli >/dev/null 2>&1 || npm_install_global @playwright/cli@latest
