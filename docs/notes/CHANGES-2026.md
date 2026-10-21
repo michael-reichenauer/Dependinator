@@ -91,16 +91,17 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 
   It ships with the `examples/bicep` "webshop" deployment and a Bicep demo model.
 
-- **C# member fixes (Oct 21).** Constructors are constructor nodes (their own icon, listed
-  first), and a static constructor no longer shares a node with the parameterless one. A C# 14
-  extension block is a node named by its receiver, `extension(NodeType)`, with its members inside
-  and shown by their own names: brackets in a node name now keep their dots out of the name's
-  hierarchy. Conversion operators are named by their target type alone (`implicitoperatorResult`),
-  so its namespace no longer makes up nodes inside the type. A namespace with a comment above
-  its declaration in more than one file gets none as its description, as a note about one file
-  cannot be told from the namespace's description. Links to a use of a generic (`Result<int>`)
-  and to an extension method call target the declared node (`Result<T>`, `Ancestors(Node)`), not
-  a made-up one named after the use.
+- **C# member fixes (Oct 21).** The Roslyn parser names and types members as they are written:
+  - constructors are constructor nodes with their own icon, and a static constructor has a node
+    of its own;
+  - a C# 14 extension block is a node named by its receiver, `extension(NodeType)`, with its
+    members inside under their own names (dots in brackets no longer split a node name);
+  - conversion operators are named by their target type alone (`implicitoperatorResult`), so its
+    namespace no longer makes up nodes inside the type;
+  - links to a use of a generic (`Result<int>`) or to an extension method call target the
+    declared node (`Result<T>`, `Ancestors(Node)`) rather than a made-up one;
+  - a namespace with a comment above its declaration in more than one file gets no description,
+    as a note about one file cannot be told from the namespace's description.
 
 ## Viewing, navigation and analysis
 

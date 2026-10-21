@@ -93,7 +93,9 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
-        await Page.GetByTestId("cycles-item").First.GetByTestId("cycles-review").ClickAsync();
+        // A pair, as test mode accepts no larger cycle
+        ILocator pair = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "Result<T>" });
+        await pair.GetByTestId("cycles-review").ClickAsync();
         ILocator field = Page.GetByTestId("accept-cycle-reason");
         await Expect(field).ToBeVisibleAsync();
         ILocator ask = Page.GetByTestId("accept-cycle-suggest");
