@@ -244,5 +244,31 @@ public class ProblemServiceTests
         Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("B")]);
     }
 
+    // Like the indicator, a broken rule counts once per node, not once per dependency; and
+    // problems in hidden nodes are left out.
+    [Fact]
+    public void GetNodeProblems_ShouldCountABrokenRuleOncePerNode_AndSkipHiddenNodes()
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            var ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+            var data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+            var repo = AddNode(model, "Data.Repo", data);
+            AddLink(model, AddNode(model, "UI.View", ui), repo);
+            AddLink(model, AddNode(model, "UI.Form", ui), repo);
+            var hidden = AddNode(model, "Data.Hidden", data);
+            hidden.IsUserSetHidden = true;
+            model.AddRule(new ArchitectureRule(ui.Name, data.Name));
+            model.SetParseProblems([new("2 compile errors in Hidden", 2, hidden.Name)]);
+        }
+
+        var problems = NewService().GetNodeProblems();
+
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("UI")]);
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("UI.View")]);
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("UI.Form")]);
+        Assert.False(problems.ContainsKey(NodeId.FromName("Data")));
+    }
+
     NodeId NodeIdRoot() => modelMgr.WithModel(m => m.Root.Id);
 }

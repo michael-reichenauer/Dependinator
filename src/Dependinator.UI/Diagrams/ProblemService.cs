@@ -145,33 +145,47 @@ class ProblemService(
 
     // Each problem counts at the node it belongs to and at every ancestor above it (not the root,
     // which is never drawn). A cycle belongs to the container its members are in; one among the
-    // top-level nodes, whose container is the root, to each of its members instead.
+    // top-level nodes, whose container is the root, to each of its members instead. A broken rule
+    // counts once per node, like in the indicator, however many of its dependencies start there.
+    // Problems in hidden nodes are left out, since there is nothing visible to lead to.
     IReadOnlyDictionary<NodeId, NodeProblems> ComputeNodeProblems()
     {
-        List<(NodeId Id, NodeProblems Problems)> own = [];
-        foreach (var group in summary.Groups.Where(g => g.Kind == ProblemKind.ParseErrors && g.NodeId is not null))
-            own.Add((group.NodeId!, new(group.Count, 0)));
-        foreach (var cycle in cycleService.GetCycles())
-        {
-            var isTopLevel = modelMgr.WithModel(m => m.Nodes.TryGetValue(cycle.ContainerId, out var c) && c.IsRoot);
-            if (isTopLevel)
-                own.AddRange(cycle.Members.Select(member => (member.Id, new NodeProblems(0, 1))));
-            else
-                own.Add((cycle.ContainerId, new(0, 1)));
-        }
-        foreach (var violation in ruleService.GetReports().SelectMany(r => r.Violations))
-            own.Add((violation.SourceId, new(0, 1)));
+        var cycles = cycleService.GetCycles();
+        var brokenRules = ruleService.GetReports().Where(r => r.Violations.Count > 0).ToList();
 
         return modelMgr.WithModel(m =>
         {
             var result = new Dictionary<NodeId, NodeProblems>();
-            foreach (var (id, problems) in own)
+            var counted = new HashSet<(NodeId, ArchitectureRule)>();
+
+            void Add(NodeId id, NodeProblems problems, ArchitectureRule? rule = null)
             {
-                if (!m.Nodes.TryGetValue(id, out var node))
-                    continue;
+                if (!m.Nodes.TryGetValue(id, out var node) || node.IsHidden)
+                    return;
                 for (var n = node; !n.IsRoot; n = n.Parent)
+                {
+                    if (rule is not null && !counted.Add((n.Id, rule)))
+                        return; // Counted here, and so at the ancestors
                     result[n.Id] = result.GetValueOrDefault(n.Id) + problems;
+                }
             }
+
+            foreach (var group in summary.Groups.Where(g => g.Kind == ProblemKind.ParseErrors))
+                if (group.NodeId is { } id)
+                    Add(id, new(group.Count, 0));
+            foreach (var cycle in cycles)
+            {
+                if (m.Nodes.TryGetValue(cycle.ContainerId, out var container) && container.IsRoot)
+                {
+                    foreach (var member in cycle.Members)
+                        Add(member.Id, new(0, 1));
+                }
+                else
+                    Add(cycle.ContainerId, new(0, 1));
+            }
+            foreach (var report in brokenRules)
+            foreach (var violation in report.Violations)
+                Add(violation.SourceId, new(0, 1), report.Rule);
             return result;
         });
     }

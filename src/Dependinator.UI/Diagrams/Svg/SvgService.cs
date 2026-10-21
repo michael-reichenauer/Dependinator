@@ -66,7 +66,6 @@ class SvgService : ISvgService
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
             PathLines = pathFinderService.GetPathLineIds(),
             ViolatingLines = viewOptions.IsRulesShown ? ruleService.GetViolatingLineIds() : null,
-            NodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null,
         };
 
     public Tile GetTile(Rect viewRect, double zoom)
@@ -108,7 +107,7 @@ class SvgService : ISvgService
         // Create a new tile and cache it
         using (var model = modelMgr.UseModel())
         {
-            tile = CreateModelTile(model, tileKey);
+            tile = CreateModelTile(model, tileKey, nodeProblems);
         }
         using (var tiles = tilesMgr.UseTiles())
         {
@@ -132,7 +131,6 @@ class SvgService : ISvgService
         {
             IsEditing = false,
             DimUnrelated = false,
-            NodeProblems = null,
         };
         var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, flags);
         return RenderRootContent(model, zoom, context);
@@ -217,7 +215,7 @@ class SvgService : ISvgService
     static bool IsExternal(Node node) =>
         node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
 
-    Tile CreateModelTile(IModel model, TileKey tileKey)
+    Tile CreateModelTile(IModel model, TileKey tileKey, IReadOnlyDictionary<NodeId, NodeProblems>? nodeProblems)
     {
         var timing = Timing.Start();
         var tileRect = tileKey.GetTileRect();
@@ -225,7 +223,12 @@ class SvgService : ISvgService
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
-        var flags = Flags with { Selection = FindSelection(model) };
+        // The problems GetTile checked the cache against, so the tile matches them.
+        var flags = Flags with
+        {
+            Selection = FindSelection(model),
+            NodeProblems = nodeProblems,
+        };
         var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, flags);
         var rootContentSvg = RenderRootContent(model, tileZoom, rootContext);
 
@@ -343,7 +346,13 @@ class SvgService : ISvgService
             return NoteSvg.GetNoteSvg(node, geometry.CanvasRect, context.Zoom);
 
         if (node.Type.IsMember)
-            return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
+            return NodeSvg.GetMemberNodeSvg(
+                node,
+                geometry.CanvasRect,
+                context.Zoom,
+                context.Flags.IsEditing,
+                ProblemsOf(node, context)
+            );
 
         if (node.IsPassThrough)
         { // An invisible container that covers its parent; render only its children, no chrome

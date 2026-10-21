@@ -86,7 +86,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
         ILocator badges = Page.Locator(".problemBadge");
-        await Expect(badges.First).ToHaveAttributeAsync("data-warnings", new Regex(@"^[1-9]\d*$"));
+        await Expect(Page.Locator(".problemBadge:not([data-warnings='0'])").First).ToBeAttachedAsync();
 
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-problem-badges")).ClickAsync();
         await Expect(badges).ToHaveCountAsync(0);

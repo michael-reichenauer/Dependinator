@@ -179,7 +179,13 @@ static partial class NodeSvg
         );
     }
 
-    public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom, bool isEditing = false)
+    public static string GetMemberNodeSvg(
+        Node node,
+        Rect nodeCanvasRect,
+        double parentZoom,
+        bool isEditing = false,
+        NodeProblems? problems = null
+    )
     {
         var textZoom = TextZoom(parentZoom);
         var fontSize = FontSize * textZoom;
@@ -198,7 +204,8 @@ static partial class NodeSvg
             MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.DisplayName, fontSize), member.Text.Y)
         );
 
-        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing);
+        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
+            + ProblemBadgeSvg(problems, member.Bounds, textZoom);
     }
 
     // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
