@@ -13,6 +13,13 @@ static class Names
             | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
     );
 
+    static readonly SymbolDisplayFormat TypeNameFormat = new(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameOnly,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
+            | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+    );
+
     public static string GetSolutionName(string solutionPath)
     {
         return EncodeName(Path.GetFileName(solutionPath));
@@ -65,7 +72,24 @@ static class Names
         // A static constructor displays like the parameterless instance constructor, "Type()"
         if (symbol is IMethodSymbol { MethodKind: MethodKind.StaticConstructor })
             memberName = $"static{memberName}";
+        if (symbol is IMethodSymbol { MethodKind: MethodKind.Conversion } conversion)
+            memberName = WithoutTargetTypeQualifiers(memberName, conversion);
         return $"{fullTypeName}.{memberName}";
+    }
+
+    // A conversion operator displays with its target type qualified, "implicitoperatorNs.Result(int)",
+    // and the target's dots would make parent nodes for "implicitoperatorNs" inside the type, so the
+    // target type is named alone: "implicitoperatorResult(int)".
+    static string WithoutTargetTypeQualifiers(string memberName, IMethodSymbol conversion)
+    {
+        var targetType = conversion.ReturnType.ToDisplayString(MemberFormat).Replace(" ", "");
+        var operatorEnd = memberName.IndexOf("operator", StringComparison.Ordinal) + "operator".Length;
+        var targetIndex = memberName.IndexOf(targetType, operatorEnd, StringComparison.Ordinal);
+        if (targetIndex < 0)
+            return memberName;
+
+        var targetName = conversion.ReturnType.ToDisplayString(TypeNameFormat).Replace(" ", "");
+        return memberName[..targetIndex] + targetName + memberName[(targetIndex + targetType.Length)..];
     }
 
     public static string GetFullName(ISymbol symbol)

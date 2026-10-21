@@ -95,7 +95,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   first), and a static constructor no longer shares a node with the parameterless one. A C# 14
   extension block is a node named by its receiver, `extension(NodeType)`, with its members inside
   and shown by their own names: brackets in a node name now keep their dots out of the name's
-  hierarchy.
+  hierarchy. Conversion operators are named by their target type alone (`implicitoperatorResult`),
+  so its namespace no longer makes up nodes inside the type.
 
 ## Viewing, navigation and analysis
 

@@ -21,6 +21,22 @@ public class ConstructorSampleUser
     public ConstructorSample Create() => new(1);
 }
 
+public class ConversionSample
+{
+    public static implicit operator ConversionSample(int value) => new();
+
+    public static explicit operator int(ConversionSample sample) => 0;
+
+    public static explicit operator long(ConversionSample sample) => 0;
+
+    public static explicit operator OtherClass(ConversionSample sample) => new();
+}
+
+public class IndexerSample
+{
+    public int this[OtherClass key] => 0;
+}
+
 public static class ExtensionBlockSample
 {
     extension(ConstructorSample sample)
@@ -76,6 +92,43 @@ public class MemberNameTests(RoslynFixture fixture)
             "ConstructorSample(int)"
         );
         Assert.Equal(NodeType.ConstructorMember, link.Properties.TargetType);
+    }
+
+    [Fact]
+    public void ParseType_ShouldNameConversionOperatorsByTheirTargetTypeWithoutNamespace()
+    {
+        var items = Parse<ConversionSample>();
+        var typeName = Names.GetFullName(typeof(ConversionSample));
+        var sampleType = typeof(ConversionSample).FullName;
+
+        Assert.Equal(
+            [
+                $"{typeName}.explicitoperatorOtherClass({sampleType})",
+                $"{typeName}.explicitoperatorint({sampleType})",
+                $"{typeName}.explicitoperatorlong({sampleType})",
+                $"{typeName}.implicitoperatorConversionSample(int)",
+            ],
+            items.Nodes().Where(n => n.Name != typeName).Select(n => n.Name).Order(StringComparer.Ordinal)
+        );
+        // The target type's namespace would make parent nodes for it inside the type
+        Assert.All(
+            items.Nodes().Where(n => n.Name != typeName),
+            n => Assert.Equal(typeName, NodeName.ParseParentName(n.Name))
+        );
+    }
+
+    [Fact]
+    public void ParseType_ShouldNestIndexerAccessorInIndexer_WhenItsParameterTypeIsQualified()
+    {
+        var items = Parse<IndexerSample>();
+        var typeName = Names.GetFullName(typeof(IndexerSample));
+
+        var indexer = items.Node<IndexerSample>($"this[{typeof(OtherClass).FullName}]");
+        Assert.Equal(typeName, NodeName.ParseParentName(indexer.Name));
+        Assert.Equal(
+            indexer.Name,
+            NodeName.ParseParentName(items.Node<IndexerSample>($"{indexer.Name[(typeName.Length + 1)..]}.get").Name)
+        );
     }
 
     [Fact]

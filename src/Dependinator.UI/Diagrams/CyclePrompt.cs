@@ -367,16 +367,8 @@ static partial class CyclePrompt
     static string MemberLabel(Node member) =>
         member.Type == NodeType.ConstructorMember ? "constructor" : Name(member, Unit(member)).Split('(')[0];
 
-    // The closest node that is not a member: a member's type, or the node itself. Made-up parents
-    // in between are passed: a conversion operator's name has dots ("implicit operator A.B"), so
-    // it is filed under parent nodes created for "A" inside its type. In a model without types
-    // (tests), the closest node that is not a member.
-    static Node Unit(Node node)
-    {
-        var nonMembers = node.AncestorsAndSelf().Where(n => !n.Type.IsMember).ToList();
-        return nonMembers.FirstOrDefault(n => n.Type is not (NodeType.None or NodeType.Root or NodeType.Parent))
-            ?? nonMembers[0];
-    }
+    // The closest node that is not a member: a member's type, or the node itself.
+    static Node Unit(Node node) => node.AncestorsAndSelf().First(n => !n.Type.IsMember);
 
     // The member the node is part of (a getter or a local function counts as its property or
     // method), or the node itself when it is not a member.

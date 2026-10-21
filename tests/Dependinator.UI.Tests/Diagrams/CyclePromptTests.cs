@@ -256,33 +256,6 @@ public class CyclePromptTests
     }
 
     [Fact]
-    public void GetSourceRequests_ShouldFindTheTypeOfAMemberFiledUnderMadeUpNodes()
-    {
-        Cycle cycle;
-        using (var model = modelMgr.UseModel())
-        {
-            var container = AddNode(model, "C", model.Root, NodeType.Namespace);
-            var a = AddNode(model, "C.A", container, NodeType.StructType);
-            var b = AddNode(model, "C.B", container, NodeType.StructType);
-            SetSpan(b, "/repo/B.cs", 10, 40);
-            // "implicit operator C.A(C.B)" is named with dots, so a parent is made up for "C".
-            var madeUp = AddNode(model, "C.B.implicitoperatorC", b, NodeType.Parent);
-            var conversion = AddNode(model, "C.B.implicitoperatorC.A(C.B)", madeUp, NodeType.MethodMember);
-            SetSpan(conversion, "/repo/B.cs", 20, 20);
-            AddLink(model, conversion, a);
-            AddLink(model, a, b);
-            cycle = CycleService.Compute(model).Cycles.Single();
-        }
-        using var reading = modelMgr.UseModel();
-
-        var requests = CyclePrompt.GetSourceRequests(reading, cycle);
-
-        var unit = Assert.Single(requests.Where(r => r.Direction == "B → A")).Units.Single();
-        Assert.Equal(new FileSpan("/repo/B.cs", 10, 40), unit.Span);
-        Assert.Equal([20], unit.MemberLines);
-    }
-
-    [Fact]
     public void Build_ShouldShowTheSource_WithPathsRelativeToTheModel()
     {
         var cycle = AddParsingUtilsCycle();
