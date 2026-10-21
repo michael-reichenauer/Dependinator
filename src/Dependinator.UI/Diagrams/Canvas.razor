@@ -1,5 +1,6 @@
 @using Dependinator.UI.App
 @using Dependinator.UI.Diagrams.Dependencies
+@using Dependinator.UI.Diagrams.Svg
 @using Microsoft.AspNetCore.Components.Forms
 
 <AppBar />
@@ -33,14 +34,21 @@
                         ;
                     }
 
-                    /* Not a line's hit target (line-hit): restyling it would shrink it under
-                       the pointer (see LineSvg). */
-                    .hoverable:hover *:not(.line-hit) {
+                    /* Not a line's hit target: restyling it would shrink it under the pointer
+                       (see LineSvg). :where keeps the rule's specificity, so later overrides
+                       still win by source order. */
+                    .hoverable:hover *:where(:not(.@(LineSvg.HitClass))) {
                         stroke:
                             @DColors.Selected
                         ;
                         stroke-width: 2px;
                         stroke-opacity: 1;
+                    }
+
+                    /* The line hover highlight (unstroked until the rule above applies). */
+                    .@(LineSvg.HoverClass) {
+                        stroke-linecap: round;
+                        stroke-linejoin: round;
                     }
 
                     .hoverableedit:hover * {
