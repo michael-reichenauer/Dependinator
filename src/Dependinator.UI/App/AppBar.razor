@@ -142,6 +142,13 @@
                     Show Legend
                 </MudMenuItem>
 
+                <MudMenuItem IconColor="Color.Secondary" Icon="@ProblemBadgesIcon" OnClick="ToggleProblemBadgesAsync"
+                             title="Marks the nodes that contain compile errors, cycles or dependencies that break a rule, with how many."
+                             data-checked="@(viewOptions.IsProblemBadgesShown ? "true" : "false")"
+                             data-testid="menu-problem-badges">
+                    Show Problem Badges
+                </MudMenuItem>
+
                 <MudMenuItem IconColor="Color.Secondary" Icon="@CyclesIcon" OnClick="ToggleCycles"
                              title="Lists circular dependencies and draws their lines in red."
                              data-checked="@(viewOptions.IsCyclesShown ? "true" : "false")"
@@ -716,6 +723,16 @@
     string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
     string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
+    string ProblemBadgesIcon => CheckIcon(viewOptions.IsProblemBadgesShown);
+
+    async Task ToggleProblemBadgesAsync()
+    {
+        var newValue = !viewOptions.IsProblemBadgesShown;
+        viewOptions.SetProblemBadgesShown(newValue);
+        await configService.SetAsync(config => config.ShowProblemBadges = newValue);
+        modelService.ClearCache(); // The badges are baked into the tiles
+        applicationEvents.TriggerUIStateChanged();
+    }
 
     async Task ToggleMinimapAsync()
     {

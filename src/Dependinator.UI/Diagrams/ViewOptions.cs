@@ -35,6 +35,9 @@ interface IViewOptions
     // The minimap in the corner (persisted in Config.ShowMinimap).
     bool IsMinimapShown { get; }
 
+    // Badges on the nodes that contain problems (persisted in Config.ShowProblemBadges).
+    bool IsProblemBadgesShown { get; }
+
     void SetShowHiddenNodes(bool show);
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
@@ -45,6 +48,7 @@ interface IViewOptions
     void SetCyclesMinimized(bool minimized);
     void SetRulesShown(bool shown);
     void SetMinimapShown(bool shown);
+    void SetProblemBadgesShown(bool shown);
 }
 
 // MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on. HideConfiguration
@@ -95,6 +99,7 @@ class ViewOptions : IViewOptions
     public bool IsCyclesMinimized { get; private set; }
     public bool IsRulesShown { get; private set; }
     public bool IsMinimapShown { get; private set; }
+    public bool IsProblemBadgesShown { get; private set; } = true;
 
     public void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
 
@@ -119,4 +124,6 @@ class ViewOptions : IViewOptions
     public void SetRulesShown(bool shown) => IsRulesShown = shown;
 
     public void SetMinimapShown(bool shown) => IsMinimapShown = shown;
+
+    public void SetProblemBadgesShown(bool shown) => IsProblemBadgesShown = shown;
 }

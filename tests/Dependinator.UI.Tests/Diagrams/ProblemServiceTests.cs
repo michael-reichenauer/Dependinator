@@ -195,4 +195,54 @@ public class ProblemServiceTests
         modelMgr.WithModel(m => m.SetParseProblems([]));
         Assert.True(service.GetSummary().IsEmpty);
     }
+
+    // A badge leads from the top down: each problem counts at its node and every ancestor.
+    [Fact]
+    public void GetNodeProblems_ShouldCountEachProblemAtItsNode_AndAtEveryAncestor()
+    {
+        Node api;
+        using (var model = modelMgr.UseModel())
+        {
+            var solution = AddNode(model, "Sln", model.Root, NodeType.Solution);
+            var core = AddNode(model, "Sln.Core", solution, NodeType.Assembly);
+            var a = AddNode(model, "Sln.Core.A", core);
+            var b = AddNode(model, "Sln.Core.B", core);
+            AddLink(model, a, b);
+            AddLink(model, b, a); // A cycle in Core
+            api = AddNode(model, "Sln.Api", solution, NodeType.Assembly);
+            var handler = AddNode(model, "Sln.Api.Handler", api);
+            AddLink(model, handler, a);
+            model.AddRule(new ArchitectureRule(api.Name, core.Name)); // Broken by Handler
+            model.SetParseProblems([new("3 compile errors in Api", 3, api.Name)]);
+        }
+
+        var problems = NewService().GetNodeProblems();
+
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("Sln.Core")]);
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("Sln.Api.Handler")]);
+        Assert.Equal(new NodeProblems(3, 1), problems[api.Id]);
+        Assert.Equal(new NodeProblems(3, 2), problems[NodeId.FromName("Sln")]);
+        Assert.False(problems.ContainsKey(NodeId.FromName("Sln.Core.A")));
+        Assert.False(problems.ContainsKey(NodeIdRoot()));
+    }
+
+    // With no container to put it on, a cycle among the top-level nodes marks each of them.
+    [Fact]
+    public void GetNodeProblems_ShouldMarkTheMembers_OfACycleAtTheTopLevel()
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            var a = AddNode(model, "A", model.Root, NodeType.Assembly);
+            var b = AddNode(model, "B", model.Root, NodeType.Assembly);
+            AddLink(model, a, b);
+            AddLink(model, b, a);
+        }
+
+        var problems = NewService().GetNodeProblems();
+
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("A")]);
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("B")]);
+    }
+
+    NodeId NodeIdRoot() => modelMgr.WithModel(m => m.Root.Id);
 }

@@ -78,6 +78,23 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("cycles-item").First).ToBeVisibleAsync();
     }
 
+    // The diagram marks where the cycles are: the top-level solution node has a badge counting
+    // the problems inside it, which the View menu turns off and on again.
+    [E2EFact]
+    public async Task ProblemBadges_ShouldMarkTheSolution_AndFollowTheViewMenu()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        ILocator badges = Page.Locator(".problemBadge");
+        await Expect(badges.First).ToHaveAttributeAsync("data-warnings", new Regex(@"^[1-9]\d*$"));
+
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-problem-badges")).ClickAsync();
+        await Expect(badges).ToHaveCountAsync(0);
+
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-problem-badges")).ClickAsync();
+        await Expect(badges.First).ToBeAttachedAsync();
+    }
+
     [E2EFact]
     public async Task AcceptCycle_ShouldMoveItToAccepted_WithItsReason_AndBackWhenRemoved()
     {

@@ -144,6 +144,10 @@ class DColors
     public static string RuleLine => IsDark ? RuleLineDark : RuleLineLight;
     public static string CousinLine => IsDark ? CousinLineDark : CousinLineLight;
     public static string ManualMarker => IsDark ? ManualMarkerDark : ManualMarkerLight;
+
+    // Problem badges on nodes (white count on top), the problem indicator's error and warning.
+    public static string ProblemError => "#D32F2F";
+    public static string ProblemWarning => "#E65100";
     public static string NoteFill => IsDark ? NoteFillDark : NoteFillLight;
     public static string NoteBorder => IsDark ? NoteBorderDark : NoteBorderLight;
     public static string NoteText => "#FFFFFF";

@@ -34,6 +34,8 @@ class SvgService : ISvgService
     readonly ICycleService cycleService;
     readonly IPathFinderService pathFinderService;
     readonly IRuleService ruleService;
+    readonly IProblemService problemService;
+    IReadOnlyDictionary<NodeId, NodeProblems>? tilesNodeProblems;
 
     public SvgService(
         IModelMgr modelMgr,
@@ -41,7 +43,8 @@ class SvgService : ISvgService
         IViewOptions viewOptions,
         ICycleService cycleService,
         IPathFinderService pathFinderService,
-        IRuleService ruleService
+        IRuleService ruleService,
+        IProblemService problemService
     )
     {
         this.modelMgr = modelMgr;
@@ -50,6 +53,7 @@ class SvgService : ISvgService
         this.cycleService = cycleService;
         this.pathFinderService = pathFinderService;
         this.ruleService = ruleService;
+        this.problemService = problemService;
     }
 
     // The user's view toggles that affect what a tile contains; captured per render so the
@@ -62,6 +66,7 @@ class SvgService : ISvgService
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
             PathLines = pathFinderService.GetPathLineIds(),
             ViolatingLines = viewOptions.IsRulesShown ? ruleService.GetViolatingLineIds() : null,
+            NodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null,
         };
 
     public Tile GetTile(Rect viewRect, double zoom)
@@ -77,10 +82,21 @@ class SvgService : ISvgService
             model.Zoom = zoom;
         }
 
+        // The badges are baked into the tiles, and the problems can change without a model
+        // change: the counts of a parse are only taken once its progress ends. Read before the
+        // tiles lock, since it takes the model lock.
+        var nodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null;
+
         TileKey tileKey;
         Tile tile;
         using (var tiles = tilesMgr.UseTiles())
         {
+            if (!ReferenceEquals(nodeProblems, tilesNodeProblems))
+            {
+                tiles.ClearCache();
+                tilesNodeProblems = nodeProblems;
+            }
+
             if (tiles.TryGetLastUsed(viewRect, zoom, out tile))
                 return tile; // Same tile as last call
 
@@ -110,11 +126,13 @@ class SvgService : ISvgService
 
         var offset = new Pos(-canvasRect.X / zoom, -canvasRect.Y / zoom);
         var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
-        // Exports never show edit chrome (handles) or selection dimming, whatever the current state.
+        // Exports never show edit chrome (handles), selection dimming or problem badges, whatever
+        // the current state.
         var flags = Flags with
         {
             IsEditing = false,
             DimUnrelated = false,
+            NodeProblems = null,
         };
         var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, flags);
         return RenderRootContent(model, zoom, context);
@@ -337,7 +355,13 @@ class SvgService : ISvgService
         }
 
         if (NodeViewPolicy.IsShowIcon(node, context.Zoom))
-            return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
+            return NodeSvg.GetNodeIconSvg(
+                node,
+                geometry.CanvasRect,
+                context.Zoom,
+                context.Flags.IsEditing,
+                ProblemsOf(node, context)
+            );
 
         if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
             return RenderFlattenedNodeContent(node, geometry, context);
@@ -353,9 +377,13 @@ class SvgService : ISvgService
             geometry.CanvasRect,
             context.Zoom,
             childrenContentSvg,
-            context.Flags.IsEditing
+            context.Flags.IsEditing,
+            ProblemsOf(node, context)
         );
     }
+
+    static NodeProblems? ProblemsOf(Node node, RenderContext context) =>
+        context.Flags.NodeProblems?.TryGetValue(node.Id, out var problems) == true ? problems : null;
 
     // At extreme zoom a nested svg viewport would carry offsets of millions of canvas units,
     // which browsers combine in single-precision floats, displacing the subtree far off-screen
@@ -632,6 +660,9 @@ class SvgService : ISvgService
 
         // Lines breaking an architecture rule; null while the rules panel is closed.
         public IReadOnlySet<LineId>? ViolatingLines { get; init; }
+
+        // The problems in or inside each node, for its badge; null while badges are off.
+        public IReadOnlyDictionary<NodeId, NodeProblems>? NodeProblems { get; init; }
     }
 
     readonly record struct RenderContext(

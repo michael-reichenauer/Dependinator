@@ -29,6 +29,14 @@ record ProblemSummary(IReadOnlyList<ProblemGroup> Groups)
     public bool IsEmpty => Groups.Count == 0;
 }
 
+// The problems in a node or anywhere inside it, for its badge in the diagram: errors (compile
+// errors) and warnings (cycles inside it, dependencies from it that break a rule).
+readonly record struct NodeProblems(int Errors, int Warnings)
+{
+    public static NodeProblems operator +(NodeProblems a, NodeProblems b) =>
+        new(a.Errors + b.Errors, a.Warnings + b.Warnings);
+}
+
 // Collects what is wrong in the model for the problem indicator in the app bar, so the user sees
 // it without opening a panel or the log: the errors the last parse reported (compile errors,
 // one row per project or Bicep file, counted per error), the open cycles, as many as the Cycles
@@ -42,6 +50,11 @@ record ProblemSummary(IReadOnlyList<ProblemGroup> Groups)
 interface IProblemService
 {
     ProblemSummary GetSummary();
+
+    // Per node, the problems in it or inside it (nodes without any are left out), so a badge
+    // leads from the top level down to where they are. Cached like the summary, and the same
+    // instance until the counts change.
+    IReadOnlyDictionary<NodeId, NodeProblems> GetNodeProblems();
 }
 
 [Scoped]
@@ -61,6 +74,13 @@ class ProblemService(
         -1
     );
     ProblemSummary summary = ProblemSummary.None;
+    IReadOnlyDictionary<NodeId, NodeProblems> nodeProblems = new Dictionary<NodeId, NodeProblems>();
+
+    public IReadOnlyDictionary<NodeId, NodeProblems> GetNodeProblems()
+    {
+        GetSummary();
+        return nodeProblems;
+    }
 
     public ProblemSummary GetSummary()
     {
@@ -81,6 +101,10 @@ class ProblemService(
             return summary;
 
         summary = Compute();
+        // Kept when unchanged, so a renderer can tell by reference that its badges are current.
+        var newNodeProblems = ComputeNodeProblems();
+        if (!IsSame(newNodeProblems, nodeProblems))
+            nodeProblems = newNodeProblems;
         cachedFor = key;
         return summary;
     }
@@ -118,6 +142,42 @@ class ProblemService(
 
         return groups.Count == 0 ? ProblemSummary.None : new(groups);
     }
+
+    // Each problem counts at the node it belongs to and at every ancestor above it (not the root,
+    // which is never drawn). A cycle belongs to the container its members are in; one among the
+    // top-level nodes, whose container is the root, to each of its members instead.
+    IReadOnlyDictionary<NodeId, NodeProblems> ComputeNodeProblems()
+    {
+        List<(NodeId Id, NodeProblems Problems)> own = [];
+        foreach (var group in summary.Groups.Where(g => g.Kind == ProblemKind.ParseErrors && g.NodeId is not null))
+            own.Add((group.NodeId!, new(group.Count, 0)));
+        foreach (var cycle in cycleService.GetCycles())
+        {
+            var isTopLevel = modelMgr.WithModel(m => m.Nodes.TryGetValue(cycle.ContainerId, out var c) && c.IsRoot);
+            if (isTopLevel)
+                own.AddRange(cycle.Members.Select(member => (member.Id, new NodeProblems(0, 1))));
+            else
+                own.Add((cycle.ContainerId, new(0, 1)));
+        }
+        foreach (var violation in ruleService.GetReports().SelectMany(r => r.Violations))
+            own.Add((violation.SourceId, new(0, 1)));
+
+        return modelMgr.WithModel(m =>
+        {
+            var result = new Dictionary<NodeId, NodeProblems>();
+            foreach (var (id, problems) in own)
+            {
+                if (!m.Nodes.TryGetValue(id, out var node))
+                    continue;
+                for (var n = node; !n.IsRoot; n = n.Parent)
+                    result[n.Id] = result.GetValueOrDefault(n.Id) + problems;
+            }
+            return result;
+        });
+    }
+
+    static bool IsSame(IReadOnlyDictionary<NodeId, NodeProblems> a, IReadOnlyDictionary<NodeId, NodeProblems> b) =>
+        a.Count == b.Count && a.All(kv => b.TryGetValue(kv.Key, out var other) && other == kv.Value);
 
     // A cached model's problems can name a node a later edit or parse removed.
     static NodeId? NodeIdIn(IModel model, string? nodeName) =>
