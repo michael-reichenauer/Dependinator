@@ -5,7 +5,6 @@ internal class NodeName : IEquatable<NodeName>
     record DisplayParts(string ShortName, string LongName);
 
     public static NodeName Root = From("");
-    static readonly char[] PartsSeparators = "./".ToCharArray();
     readonly Lazy<DisplayParts> displayParts;
 
     readonly Lazy<NodeName> parentName;
@@ -30,25 +29,50 @@ internal class NodeName : IEquatable<NodeName>
 
     public static string ParseParentName(string name)
     {
-        // Members of generic types have the type's <T> before the member name
-        // (e.g. Ns.Type<T>.Member), so part separators inside <> must be skipped
-        // rather than cutting the name at the first '<'.
+        var separators = GetPartSeparators(name);
+        return separators.Count > 0 ? name[..separators[^1]] : "";
+    }
+
+    // The name's parts, e.g. ["Mod", "Ns", "Type<A.B>", "Do(A.B)"] for "Mod.Ns.Type<A.B>.Do(A.B)"
+    public static IReadOnlyList<string> SplitParts(string name)
+    {
+        List<string> parts = [];
+        var start = 0;
+        foreach (var separator in GetPartSeparators(name))
+        {
+            parts.Add(name[start..separator]);
+            start = separator + 1;
+        }
+        parts.Add(name[start..]);
+        return parts;
+    }
+
+    // The indexes of the '.' and '/' part separators. Those inside brackets belong to a type name
+    // within the part: a generic argument (Ns.Type<A.B>.Member), a parameter (Ns.Type.Do(A.B)),
+    // an indexer parameter (Ns.Type.this[A.B].get) or a C# extension block's receiver
+    // (Ns.Extensions.extension(A.B).Member, a member inside its block).
+    static List<int> GetPartSeparators(string name)
+    {
+        List<int> separators = [];
         int depth = 0;
-        int index = -1;
         for (int i = 0; i < name.Length; i++)
         {
-            char c = name[i];
-            if (c == '(')
-                break;
-            if (c == '<')
-                depth++;
-            else if (c == '>')
-                depth--;
-            else if (depth == 0 && (c == '.' || c == '/'))
-                index = i;
+            switch (name[i])
+            {
+                case '<' or '(' or '[':
+                    depth++;
+                    break;
+                case '>' or ')' or ']':
+                    // Never below 0: the '>' of an operator (operator>) closes no bracket
+                    depth = Math.Max(0, depth - 1);
+                    break;
+                case '.' or '/' when depth == 0:
+                    separators.Add(i);
+                    break;
+            }
         }
 
-        return index > -1 ? name[..index] : "";
+        return separators;
     }
 
     public bool IsSame(string nameText) => nameText == FullName;
@@ -79,9 +103,9 @@ internal class NodeName : IEquatable<NodeName>
     {
         string name = "";
 
-        string[] parts = FullName.Split(PartsSeparators);
+        var parts = SplitParts(FullName);
 
-        string namePart = parts[parts.Length - 1];
+        string namePart = parts[^1];
         int index = namePart.IndexOf('(');
         if (index > -1)
         {

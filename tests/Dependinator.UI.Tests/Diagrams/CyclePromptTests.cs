@@ -166,9 +166,9 @@ public class CyclePromptTests
         var b = AddNode(model, "C.B", container, NodeType.Namespace);
         var item = AddNode(model, "C.A.Item", a, NodeType.ClassType);
         var extensions = AddNode(model, "C.A.Ext", a, NodeType.ClassType);
-        // Two members whose display names are the same, as for C# extension block members.
-        var isA = AddNode(model, "C.A.Ext.extension(global::C.B.T).IsA", extensions, NodeType.PropertyMember);
-        var isB = AddNode(model, "C.A.Ext.extension(global::C.B.T).IsB", extensions, NodeType.PropertyMember);
+        // Two members whose display names are the same: overloads taking types of the same name.
+        var isA = AddNode(model, "C.A.Ext.Use(C.B.T)", extensions, NodeType.MethodMember);
+        var isB = AddNode(model, "C.A.Ext.Use(C.A.T)", extensions, NodeType.MethodMember);
         var result = AddNode(model, "C.B.Result<global::C.A.Item>", b, NodeType.StructType);
         var constructor = AddNode(
             model,
@@ -184,7 +184,7 @@ public class CyclePromptTests
         var prompt = PromptForTheOnlyCycle(model);
 
         Assert.Contains($"- A (namespace): \"{firstSentence}\"\n", prompt);
-        Assert.Contains("A → B (2 links)\n- A.Ext.extension(T) → B.Result<Item> (constructor, Ok)\n\n", prompt);
+        Assert.Contains("A → B (2 links)\n- A.Ext.Use(T) → B.Result<Item> (constructor, Ok)\n\n", prompt);
         Assert.Contains("B → A (1 link)\n- B.Result<Item> → A.Item\n", prompt);
     }
 

@@ -1,4 +1,5 @@
 using Dependinator.Core.Parsing;
+using Dependinator.Core.Parsing.Utils;
 using Dependinator.Roslyn.Parsing;
 using Dependinator.Roslyn.Tests.Parsing.Utils;
 
@@ -18,6 +19,21 @@ public class ConstructorSample
 public class ConstructorSampleUser
 {
     public ConstructorSample Create() => new(1);
+}
+
+public static class ExtensionBlockSample
+{
+    extension(ConstructorSample sample)
+    {
+        public bool IsSmall => true;
+
+        public int Twice() => 2;
+    }
+
+    extension(OtherClass other)
+    {
+        public bool IsSmall => other.GetLength("") < 10;
+    }
 }
 
 // How members that C# writes with spaces, dots or parentheses in their names are named and typed
@@ -60,6 +76,28 @@ public class MemberNameTests(RoslynFixture fixture)
             "ConstructorSample(int)"
         );
         Assert.Equal(NodeType.ConstructorMember, link.Properties.TargetType);
+    }
+
+    [Fact]
+    public void ParseType_ShouldNestExtensionBlockMembersInTheirBlock()
+    {
+        var items = fixture
+            .AllTestTypes.Where(t => t.ContainingType?.Name == nameof(ExtensionBlockSample))
+            .SelectMany(t => TypeParser.ParseType(t, fixture.Compilation, fixture.ModelName))
+            .ToList();
+        var typeName = Names.GetFullName(typeof(ExtensionBlockSample));
+        var blockName = $"{typeName}.extension(global::{typeof(ConstructorSample).FullName})";
+
+        var block = items.Nodes().Single(n => n.Name == blockName);
+        Assert.Equal(typeName, NodeName.ParseParentName(block.Name));
+        var isSmall = items.Nodes().Single(n => n.Name == $"{blockName}.IsSmall");
+        Assert.Equal(NodeType.PropertyMember, isSmall.Properties.Type);
+        Assert.Equal(blockName, NodeName.ParseParentName(isSmall.Name));
+        Assert.Equal(isSmall.Name, NodeName.ParseParentName($"{blockName}.IsSmall.get"));
+        Assert.Equal(blockName, NodeName.ParseParentName(items.Nodes().Single(n => n.Name.EndsWith(".Twice()")).Name));
+
+        // The other block's member of the same name is a node of its own
+        Assert.Equal(2, items.Nodes().Count(n => n.Name.EndsWith(".IsSmall")));
     }
 
     IReadOnlyList<Item> Parse<T>() =>

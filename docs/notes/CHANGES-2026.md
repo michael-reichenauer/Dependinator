@@ -92,7 +92,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   It ships with the `examples/bicep` "webshop" deployment and a Bicep demo model.
 
 - **C# member fixes (Oct 21).** Constructors are constructor nodes (their own icon, listed
-  first), and a static constructor no longer shares a node with the parameterless one.
+  first), and a static constructor no longer shares a node with the parameterless one. A C# 14
+  extension block is a node named by its receiver, `extension(NodeType)`, with its members inside
+  and shown by their own names: brackets in a node name now keep their dots out of the name's
+  hierarchy.
 
 ## Viewing, navigation and analysis
 
