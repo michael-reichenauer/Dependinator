@@ -643,6 +643,34 @@ public sealed class AppPage
         );
     }
 
+    // Hover a line at a point on its visible part, retrying until the browser reports its group
+    // as hovered (a move landing while the canvas re-renders can leave no hover). Later attempts
+    // try other points, as in SelectLineAsync, in case the first one is covered.
+    public async Task HoverLineAsync(ILocator line)
+    {
+        float[] fractions = [0.5f, 0.25f, 0.75f];
+        for (int attempt = 1; ; attempt++)
+        {
+            (float x, float y) = await WaitForStableLinePointAsync(line, fractions[(attempt - 1) % fractions.Length]);
+            await page.Mouse.MoveAsync(x, y);
+            for (int i = 0; i < 10; i++)
+            {
+                if (await line.EvaluateAsync<bool>("el => el.matches(':hover')"))
+                    return;
+                await Task.Delay(100);
+            }
+            if (attempt == MenuAttempts)
+                throw new InvalidOperationException("The line did not show as hovered.");
+            await page.Mouse.MoveAsync(1, 1);
+        }
+    }
+
+    // The wide transparent hit polyline in a line's hover group, and the polyline that draws the
+    // hover highlight (the class names are LineSvg.HitClass and LineSvg.HoverClass).
+    public static ILocator LineHitTarget(ILocator line) => line.Locator("polyline.line-hit");
+
+    public static ILocator LineHoverHighlight(ILocator line) => line.Locator("polyline.line-hover");
+
     // A screen point on the line's visible part, read until it stops moving between two reads:
     // the canvas pans/zooms with animations, and a re-render can momentarily detach the line's
     // SVG group (same approach as WaitForStableNodeBoxAsync).
@@ -680,7 +708,7 @@ public sealed class AppPage
         float[] coordinates;
         try
         {
-            coordinates = await line.Locator("polyline")
+            coordinates = await LineHitTarget(line)
                 .EvaluateAsync<float[]>(
                     """
                     el => {

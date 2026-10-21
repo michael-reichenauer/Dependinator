@@ -32,7 +32,9 @@ page objects). Each rule below comes from a real CI or local failure.
   - menu-open timeouts despite the `AppPage` retries;
   - truncated note text (the Blazor echo window exceeds `FillReliablyAsync`'s 250 ms);
   - a search that finds nothing (one of the parse-wait layers regressed);
-  - Settings submenu checks.
+  - Settings submenu checks;
+  - WebKit line clicks that select nothing (`SelectLineAsync` timing out on the line toolbar):
+    the hover rule restyles a hit target again (see the Lines rules in `ui.md`).
 
 ## Driving the app
 
