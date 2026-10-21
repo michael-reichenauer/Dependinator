@@ -1,0 +1,99 @@
+@using Dependinator.UI.Diagrams
+
+@inject IProblemService problemService
+@inject IApplicationEvents applicationEvents
+@inject IThemeService themeService
+@implements IDisposable
+
+@* The problem indicator: error and warning counts, like the VS Code status bar, so problems in
+   the model are visible without opening a panel. Hidden while there are none. Its tooltip names
+   them (off while the list is open, which it would cover), and a click lists them, one row per
+   kind, each opening the panel that shows its details. *@
+@if (!summary.IsEmpty)
+{
+  <MudTooltip Text="@TooltipText" Disabled="@isOpen">
+    <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true"
+             PopoverClass="@MenuClass" @bind-Open="isOpen" data-testid="problems-menu">
+      <ActivatorContent>
+        <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-problems" aria-label="@($"Problems: {TooltipText}")"
+                   OnClick="@(e => context.ToggleAsync(e))" data-testid="problems-indicator">
+          @if (summary.ErrorCount > 0)
+          {
+            <MudIcon Icon="@ErrorIcon" Color="Color.Error" Size="Size.Small" />
+            <span class="dep-problems__count" data-testid="problems-errors">@summary.ErrorCount</span>
+          }
+          @if (summary.WarningCount > 0)
+          {
+            <MudIcon Icon="@WarningIcon" Color="Color.Warning" Size="Size.Small" />
+            <span class="dep-problems__count" data-testid="problems-warnings">@summary.WarningCount</span>
+          }
+        </MudButton>
+      </ActivatorContent>
+      <ChildContent>
+        @foreach (var group in summary.Groups)
+        {
+          <MudMenuItem Icon="@SeverityIcon(group.Severity)" IconColor="@SeverityColor(group.Severity)"
+                       OnClick="() => OpenAsync(group.Kind)" data-testid="problems-item" data-kind="@group.Kind">
+            @group.Text
+          </MudMenuItem>
+        }
+      </ChildContent>
+    </MudMenu>
+  </MudTooltip>
+}
+
+<style>
+  .dep-problems { min-width: 0; padding-left: 6px; padding-right: 6px; gap: 2px; text-transform: none; }
+  .dep-problems__count { margin-right: 4px; font-weight: 500; }
+</style>
+
+@code {
+  [Parameter]
+  public EventCallback OnShowCycles { get; set; }
+
+  [Parameter]
+  public EventCallback OnShowRules { get; set; }
+
+  const string ErrorIcon = Icons.Material.Outlined.ErrorOutline;
+  const string WarningIcon = Icons.Material.Outlined.WarningAmber;
+
+  ProblemSummary summary = ProblemSummary.None;
+  bool isOpen; // The tooltip would cover the list
+
+  string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
+  string TooltipText => string.Join(", ", summary.Groups.Select(g => g.Text));
+
+  static string SeverityIcon(ProblemSeverity severity) =>
+    severity == ProblemSeverity.Error ? ErrorIcon : WarningIcon;
+
+  static Color SeverityColor(ProblemSeverity severity) =>
+    severity == ProblemSeverity.Error ? Color.Error : Color.Warning;
+
+  protected override void OnInitialized()
+  {
+    applicationEvents.UIStateChanged += OnChanged;
+  }
+
+  // Cached per model version, so cheap on every render.
+  protected override void OnParametersSet() => summary = problemService.GetSummary();
+
+  void OnChanged() =>
+    _ = InvokeAsync(() =>
+    {
+      summary = problemService.GetSummary();
+      StateHasChanged();
+    });
+
+  Task OpenAsync(ProblemKind kind) =>
+    kind switch
+    {
+      ProblemKind.Cycles => OnShowCycles.InvokeAsync(),
+      ProblemKind.RuleViolations => OnShowRules.InvokeAsync(),
+      _ => Task.CompletedTask,
+    };
+
+  public void Dispose()
+  {
+    applicationEvents.UIStateChanged -= OnChanged;
+  }
+}

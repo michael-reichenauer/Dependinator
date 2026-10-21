@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
 using Microsoft.Playwright;
 using Xunit;
@@ -54,6 +55,27 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await minimize.ClickAsync();
         await Expect(cycles).ToHaveCountAsync(0);
         await App.RepeatUntilVisibleAsync(() => minimize.ClickAsync(), cycles.First);
+    }
+
+    // The cycles are visible without opening the panel: the problem indicator in the app bar
+    // counts them, and its cycles row opens the panel.
+    [E2EFact]
+    public async Task ProblemIndicator_ShouldCountTheCycles_AndOpenTheCyclesPanel()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        ILocator panel = Page.GetByTestId("cycles-panel");
+        ILocator indicator = Page.GetByTestId("problems-indicator");
+        ILocator cycleRow = Page.Locator("[data-testid=problems-item][data-kind=Cycles]");
+        await Expect(panel).ToHaveCountAsync(0);
+
+        // The demo model (Dependinator itself) has several cycles.
+        await Expect(Page.GetByTestId("problems-warnings")).ToHaveTextAsync(new Regex(@"^[1-9]\d*$"));
+        await App.RepeatUntilVisibleAsync(() => indicator.ClickAsync(), cycleRow);
+        await Expect(cycleRow).ToContainTextAsync("cycles");
+        await cycleRow.ClickAsync();
+        await Expect(panel).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("cycles-item").First).ToBeVisibleAsync();
     }
 
     [E2EFact]
