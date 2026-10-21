@@ -62,6 +62,9 @@ static class Names
     public static string GetFullMemberName(ISymbol symbol, string fullTypeName)
     {
         var memberName = symbol.ToDisplayString(MemberFormat).Replace(" ", "");
+        // A static constructor displays like the parameterless instance constructor, "Type()"
+        if (symbol is IMethodSymbol { MethodKind: MethodKind.StaticConstructor })
+            memberName = $"static{memberName}";
         return $"{fullTypeName}.{memberName}";
     }
 

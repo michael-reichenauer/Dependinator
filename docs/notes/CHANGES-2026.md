@@ -91,6 +91,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 
   It ships with the `examples/bicep` "webshop" deployment and a Bicep demo model.
 
+- **C# member fixes (Oct 21).** Constructors are constructor nodes (their own icon, listed
+  first), and a static constructor no longer shares a node with the parameterless one.
+
 ## Viewing, navigation and analysis
 
 - **Search (Jun).** A fuzzy search dialog (Ctrl+F) with go-to-node. Since Oct the node whose name

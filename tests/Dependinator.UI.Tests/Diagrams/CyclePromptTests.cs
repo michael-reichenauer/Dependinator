@@ -99,7 +99,7 @@ public class CyclePromptTests
                 model,
                 "Demo*Core*dll.Demo.Core.Utils.Result.Result(Demo.Core.Utils.Error)",
                 result,
-                NodeType.MethodMember // As the C# parser types constructors
+                NodeType.ConstructorMember
             );
             var catchT = AddNode(
                 model,

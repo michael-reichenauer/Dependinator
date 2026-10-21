@@ -364,13 +364,8 @@ static partial class CyclePrompt
     }
 
     // A used member by its name alone: overloads read as one, and their parameters are noise here.
-    // The C# parser types constructors as methods named after their type.
-    static string MemberLabel(Node member)
-    {
-        var unit = Unit(member);
-        var name = Name(member, unit).Split('(')[0];
-        return member.Type == NodeType.ConstructorMember || name == unit.ShortName.Split('<')[0] ? "constructor" : name;
-    }
+    static string MemberLabel(Node member) =>
+        member.Type == NodeType.ConstructorMember ? "constructor" : Name(member, Unit(member)).Split('(')[0];
 
     // The closest node that is not a member: a member's type, or the node itself. Made-up parents
     // in between are passed: a conversion operator's name has dots ("implicit operator A.B"), so
