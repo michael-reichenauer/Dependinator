@@ -32,6 +32,26 @@ public class ConversionSample
     public static explicit operator OtherClass(ConversionSample sample) => new();
 }
 
+public class ConversionTwinTargets
+{
+    public class A
+    {
+        public class Item { }
+    }
+
+    public class B
+    {
+        public class Item { }
+    }
+}
+
+public class ConversionTwinSample
+{
+    public static explicit operator ConversionTwinTargets.A.Item(ConversionTwinSample sample) => new();
+
+    public static explicit operator ConversionTwinTargets.B.Item(ConversionTwinSample sample) => new();
+}
+
 public class IndexerSample
 {
     public int this[OtherClass key] => 0;
@@ -137,6 +157,27 @@ public class MemberNameTests(RoslynFixture fixture)
             items.Nodes().Where(n => n.Name != typeName).Select(n => n.Name).Order(StringComparer.Ordinal)
         );
         // The target type's namespace would make parent nodes for it inside the type
+        Assert.All(
+            items.Nodes().Where(n => n.Name != typeName),
+            n => Assert.Equal(typeName, NodeName.ParseParentName(n.Name))
+        );
+    }
+
+    [Fact]
+    public void ParseType_ShouldQualifyConversionTargets_WhenTheTypeConvertsToTwoTypesOfOneName()
+    {
+        var items = Parse<ConversionTwinSample>();
+        var typeName = Names.GetFullName(typeof(ConversionTwinSample));
+        var sampleType = typeof(ConversionTwinSample).FullName;
+        var targetsType = typeof(ConversionTwinTargets).FullName!.Replace('.', '*');
+
+        Assert.Equal(
+            [
+                $"{typeName}.explicitoperator{targetsType}*A*Item({sampleType})",
+                $"{typeName}.explicitoperator{targetsType}*B*Item({sampleType})",
+            ],
+            items.Nodes().Where(n => n.Name != typeName).Select(n => n.Name).Order(StringComparer.Ordinal)
+        );
         Assert.All(
             items.Nodes().Where(n => n.Name != typeName),
             n => Assert.Equal(typeName, NodeName.ParseParentName(n.Name))

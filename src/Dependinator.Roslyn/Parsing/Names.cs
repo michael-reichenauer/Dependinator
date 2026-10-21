@@ -79,18 +79,39 @@ static class Names
 
     // A conversion operator displays with its target type qualified, "implicitoperatorNs.Result(int)",
     // and the target's dots would make parent nodes for "implicitoperatorNs" inside the type, so the
-    // target type is named alone: "implicitoperatorResult(int)".
+    // target type is named alone: "implicitoperatorResult(int)". When the type also converts to
+    // another type of that name, both keep their qualifiers, with "*" for "." as in module names:
+    // "implicitoperatorNs*Result(int)".
     static string WithoutTargetTypeQualifiers(string memberName, IMethodSymbol conversion)
     {
-        var targetType = conversion.ReturnType.ToDisplayString(MemberFormat).Replace(" ", "");
-        var operatorEnd = memberName.IndexOf("operator", StringComparison.Ordinal) + "operator".Length;
-        var targetIndex = memberName.IndexOf(targetType, operatorEnd, StringComparison.Ordinal);
+        string targetType = ToMemberNameText(conversion.ReturnType, MemberFormat);
+        int operatorEnd = memberName.IndexOf("operator", StringComparison.Ordinal) + "operator".Length;
+        int targetIndex = memberName.IndexOf(targetType, operatorEnd, StringComparison.Ordinal);
         if (targetIndex < 0)
             return memberName;
 
-        var targetName = conversion.ReturnType.ToDisplayString(TypeNameFormat).Replace(" ", "");
+        string targetName = HasTargetNameTwin(conversion)
+            ? targetType.Replace('.', '*')
+            : ToMemberNameText(conversion.ReturnType, TypeNameFormat);
         return memberName[..targetIndex] + targetName + memberName[(targetIndex + targetType.Length)..];
     }
+
+    // The type converts to another type with the same name the same way, e.g. "explicit operator
+    // A.Item" and "explicit operator B.Item", or Result<A.X> and Result<B.X>.
+    static bool HasTargetNameTwin(IMethodSymbol conversion)
+    {
+        string targetName = ToMemberNameText(conversion.ReturnType, TypeNameFormat);
+        return conversion
+            .ContainingType.GetMembers(conversion.Name)
+            .OfType<IMethodSymbol>()
+            .Any(other =>
+                !SymbolEqualityComparer.Default.Equals(other.ReturnType, conversion.ReturnType)
+                && ToMemberNameText(other.ReturnType, TypeNameFormat) == targetName
+            );
+    }
+
+    static string ToMemberNameText(ITypeSymbol type, SymbolDisplayFormat format) =>
+        type.ToDisplayString(format).Replace(" ", "");
 
     public static string GetFullName(ISymbol symbol)
     {
