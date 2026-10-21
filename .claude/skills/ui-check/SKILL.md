@@ -49,6 +49,46 @@ Notes:
 - A "Connection refused (127.0.0.1:7071)" snackbar is expected when the app
   runs without the cloud-sync API (e.g. `func`/`azurite` not installed) — it is not a bug.
 
+### Driving the diagram (learned the hard way)
+
+- **Start the app yourself:**
+  `ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:5000 dotnet run --project src/Dependinator.Web --no-launch-profile`.
+  Without Development the static web assets return 404; without `ASPNETCORE_URLS` the app
+  listens on 8080.
+- **Browser:** use `open --browser=chromium`; the default `chrome` channel is not installed.
+- **Persistence checks:** every `open` starts a fresh context with empty IndexedDB, so checking
+  that something persisted by re-opening looks like data loss. Use `reload` or `goto` in the same
+  session, and confirm in `~/Dependinator.log` ("Read model …" vs "Parsing …").
+- **Clicking:**
+  - Select nodes with one `click <ref>`. Separate `mousedown`/`mouseup` commands take longer than
+    the app's 500 ms click timeout.
+  - `#svgcanvas text` locators time out on click, so click canvas points with
+    `page.mouse.click(x, y)` taken from a screenshot.
+  - Double-clicking the canvas creates a node, and hovering a node pops up its toolbar: move the
+    mouse to empty canvas before a screenshot.
+- **Navigating:**
+  - Ctrl+F, type the name, click a result: the app animates to the node in ~3-4 s.
+  - The first result for a prefix is often a deeper node, so check the breadcrumb.
+  - To reach a container level, click a breadcrumb entry (e.g.
+    `page.getByText('Dependinator.Core (dll)', { exact: true })`). It animates to that node with
+    its children laid out. "Zoom to node" on the root only recentres it.
+- **Zooming:** synthetic `WheelEvent`s barely register; use `page.mouse.wheel` in a `run-code`
+  script with ~150 ms waits, after `page.mouse.move` (zoom centres on the pointer). Negative
+  (zoom-in) deltas were not delivered in some sessions, so verify zoom by a node's
+  `getBoundingClientRect().width`, not by the `#svgcanvas` viewBox.
+- **run-code scripts** are `async page => { ... }` (a top-level `await page` is a SyntaxError).
+  Pass them with `--filename=script.js`.
+- **Menus:** the main menu is `appbar-menu` (the hamburger at the top left). View is a hover
+  submenu (`menu-view`): open the hamburger, then hover. Clicking `menu-view` directly times out.
+- **Theme:** `page.emulateMedia({ colorScheme: 'dark' })` switches the app (default theme System)
+  without the menu.
+- **README images:** `docs/images/hero.png` and `bicep.png` are 1600x1000 captures
+  (`playwright-cli resize 1600 1000`):
+  - hero: wheel-zoom into the solution from the start view until Dependinator.UI opens as a
+    container;
+  - bicep: Models menu › webshop.bicep, search "networking", then zoom into the module to one step
+    before vnet opens, so all resources stay icons.
+
 ## 3. Run the e2e test suite
 
 After UI-affecting changes, run:
