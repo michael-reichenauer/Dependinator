@@ -186,7 +186,8 @@ static class LineSvg
         // The .hoverable:hover rule skips it (HitClass), so hovering does not shrink it: WebKit
         // hit-tests a press right after the hover restyle against the shrunken stroke and
         // misses the line. The third polyline, never a target and unstroked until hovered,
-        // draws the hover highlight (its caps and joins come from the HoverClass rule).
+        // draws the hover highlight along the visible (trimmed) path, so it stays out of a
+        // hollow arrow head (its caps and joins come from the HoverClass rule).
         // The outer group lets a hover over the hit target restore a dimmed line (see the
         // line-dim CSS in Canvas.razor).
         var visibleClass =
@@ -206,7 +207,7 @@ static class LineSvg
             <g class="hoverable" id="{elementId}">
               <polyline id="{elementId}" class="{HitClass}" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
                 + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
-              <polyline class="{HoverClass}" points="{hitPoints}" fill="none" pointer-events="none" />
+              <polyline class="{HoverClass}" points="{points}" fill="none" pointer-events="none" />
               <title>{title}</title>
             </g>
             {selectedSvg}
@@ -285,13 +286,15 @@ static class LineSvg
             )
         );
 
+        // The overlay lies above the hit polyline and carries no id, so it lets presses through
+        // to the line: a press on a dash would otherwise click "nothing" and deselect the line.
         return string.Create(
             CultureInfo.InvariantCulture,
             $"""
             <polyline points="{points}" fill="none" stroke="{color}" stroke-width="{strokeWidth
-                + SelectedStrokeExtraWidth:0.##}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3,50"/>
-            <circle cx="{start.X:0.##}" cy="{start.Y:0.##}" r="{circleRadius:0.##}" fill="{color}" />
-            <circle cx="{end.X:0.##}" cy="{end.Y:0.##}" r="{circleRadius:0.##}" fill="{color}" />
+                + SelectedStrokeExtraWidth:0.##}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3,50" pointer-events="none"/>
+            <circle cx="{start.X:0.##}" cy="{start.Y:0.##}" r="{circleRadius:0.##}" fill="{color}" pointer-events="none" />
+            <circle cx="{end.X:0.##}" cy="{end.Y:0.##}" r="{circleRadius:0.##}" fill="{color}" pointer-events="none" />
             {handlesSvg}
             """
         );
