@@ -19,7 +19,13 @@
 # Runs as root or through sudo. Beyond the cloud's "Trusted" network defaults, the downloads
 # need builds.dotnet.microsoft.com, ci.dot.net, aka.ms, cdn.playwright.dev,
 # playwright.download.prss.microsoft.com and crl3.digicert.com (CLAUDE.md, "Cloud sessions").
-# A full install took ~4.5 min in a fresh x86_64 container, a re-run ~15 s.
+# A full install takes ~4.5 min, a re-run ~12 s. The cloud environment's "Setup script" field
+# (claude.ai, environment settings) runs this before each new session, so the toolchain lands in
+# the environment's cached snapshot and the hook only re-checks it:
+#
+#   #!/bin/bash
+#   setup=$(find / -maxdepth 6 \( -path /proc -o -path /sys \) -prune -o -path '*/Dependinator/scripts/cloud-setup' -print -quit 2>/dev/null)
+#   [ -n "$setup" ] && "$setup" || true
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
