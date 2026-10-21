@@ -31,12 +31,14 @@ static class CommentExtractor
 
     public static (string? Comment, FileSpan? FileSpan) GetNamespaceCommentAndSpan(INamespaceSymbol ns)
     {
-        // A namespace can be declared across many files; use the first declaration that
-        // has a leading comment (e.g. a comment placed directly above `namespace X;`).
+        // A namespace can be declared across many files; its description is the leading comment
+        // of the one declaration that has one (a comment placed directly above `namespace X;`).
+        // When several files have a comment there, which one describes the namespace and which
+        // are notes about their file cannot be told, so none is used.
         // A declaration of `namespace X.Y;` also declares the parent namespace X, so only
         // declarations whose written name matches the namespace exactly are considered
         // (a comment above `namespace X.Y;` must not become the description of X).
-        // The span is the commented declaration's location, or the first declaration's
+        // The span is the first commented declaration's location, or the first declaration's
         // location if none has a comment, so "show source" can navigate to a place where
         // a namespace comment can be edited or added.
         var namespaceName = ns.ToDisplayString();
@@ -49,11 +51,20 @@ static class CommentExtractor
             .ThenBy(d => d.Span.StartLine)
             .ToList();
 
-        foreach (var (declaration, span) in declarations)
+        var commented = declarations
+            .Select(d => (Comment: GetLeadingComment(d.Declaration), d.Span))
+            .Where(d => !string.IsNullOrWhiteSpace(d.Comment))
+            .ToList();
+
+        if (commented.Count == 1)
+            return commented[0];
+        if (commented.Count > 1)
         {
-            var comment = GetLeadingComment(declaration);
-            if (!string.IsNullOrWhiteSpace(comment))
-                return (comment, span);
+            var paths = string.Join(", ", commented.Select(d => d.Span.Path));
+            Log.Warn(
+                $"Namespace {namespaceName} has a comment above its declaration in several files ({paths}), none used"
+            );
+            return (null, commented[0].Span);
         }
 
         return (null, declarations.Count > 0 ? declarations[0].Span : null);

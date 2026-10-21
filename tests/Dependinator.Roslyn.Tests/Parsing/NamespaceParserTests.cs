@@ -58,6 +58,19 @@ public class NamespaceParserTests(RoslynFixture fixture)
     }
 
     [Fact]
+    public void ParseNamespaces_ShouldUseNoComment_WhenSeveralFilesHaveOneAboveTheNamespace()
+    {
+        // Which of the comments is the namespace's description and which a note about its file
+        // cannot be told, so neither is used. The span points at the first one.
+        var namespaceNode = items.Nodes().Single(n => n.Name.EndsWith(".Parsing.NamespaceTwoDocsSample"));
+
+        Assert.Null(namespaceNode.Properties.Description);
+        Assert.NotNull(namespaceNode.Properties.FileSpan);
+        Assert.EndsWith("NamespaceTwoDocsSampleA.cs", namespaceNode.Properties.FileSpan.Path);
+        Assert.Equal(1, namespaceNode.Properties.FileSpan.StartLine);
+    }
+
+    [Fact]
     public void TestNamespaceWithoutCommentHasFileSpanButNoDescription()
     {
         // Undocumented namespaces get a file span pointing at the first namespace declaration,

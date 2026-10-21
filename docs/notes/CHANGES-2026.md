@@ -96,7 +96,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   extension block is a node named by its receiver, `extension(NodeType)`, with its members inside
   and shown by their own names: brackets in a node name now keep their dots out of the name's
   hierarchy. Conversion operators are named by their target type alone (`implicitoperatorResult`),
-  so its namespace no longer makes up nodes inside the type.
+  so its namespace no longer makes up nodes inside the type. A namespace with a comment above
+  its declaration in more than one file gets none as its description, as a note about one file
+  cannot be told from the namespace's description.
 
 ## Viewing, navigation and analysis
 
