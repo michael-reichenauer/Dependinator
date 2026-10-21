@@ -98,6 +98,11 @@ public class GenericSampleUser
         sample.Value + sample.field + sample.Get() + other.Classic(1) + (sample.HasValue ? 1 : 0);
 }
 
+public class ExtensionBlockSampleUser
+{
+    public int Use(ConstructorSample sample) => ExtensionBlockSample.Twice(sample);
+}
+
 // How members that C# writes with spaces, dots or parentheses in their names are named and typed
 [Collection(nameof(RoslynCollection))]
 public class MemberNameTests(RoslynFixture fixture)
@@ -255,13 +260,25 @@ public class MemberNameTests(RoslynFixture fixture)
     }
 
     [Fact]
+    public void ParseType_ShouldLinkToTheBlockMember_WhenCodeCallsAnExtensionBlockMemberInItsStaticForm()
+    {
+        var typeName = Names.GetFullName(typeof(ExtensionBlockSample));
+        var twice = $"{typeName}.extension(global::{typeof(ConstructorSample).FullName}).Twice()";
+
+        var targets = Parse<ExtensionBlockSampleUser>().Links().Select(l => l.Target).ToList();
+
+        Assert.Contains(twice, targets);
+        Assert.DoesNotContain(targets, t => t.StartsWith($"{typeName}.Twice(", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void ParseType_ShouldNotLinkMemberToItsOwnType_WhenItUsesAConstructionOfIt()
     {
         var items = Parse<GenericSample<int>>();
         var genericName = Names.GetFullName(typeof(GenericSample<>)).Replace("`1", "<T>");
 
         var asInt = items.Nodes().Single(n => n.Name.StartsWith($"{genericName}.AsInt(")).Name;
-        Assert.Empty(items.Links().Where(l => l.Source == asInt));
+        Assert.DoesNotContain(items.Links(), l => l.Source == asInt);
     }
 
     IReadOnlyList<Item> Parse<T>() =>
