@@ -66,11 +66,15 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
 
 ## Ideas waiting for a session
 
-- **Problems indicator:** a count next to Cycles/Rules that opens a list of parse problems with
-  locations, which today only reach the log: a namespace commented in several files, per-project
-  compile errors from `Compiler.GetCompilationAsync` (they silently drop nodes and links), links
-  to missing targets (delegate `Invoke`). The parser would report problems as data over the
-  `[Rpc]` parse API; a panel like `CyclesPanel.razor` lists them with go-to-source.
+- **Problems indicator, phase 2:** phase 1 (Oct 21, `ProblemService` + `App/ProblemIndicator.razor`)
+  shows open cycles (as many as the Cycles panel lists) and broken rules as warnings, and
+  keeps its last summary while a parse is in progress. Agreed with the user for phase 2: parse
+  problems as data, an optional `Problem` on `Item` (like `LineDescription`) over the `[Rpc]` parse
+  API, saved with the model (`ModelDto`); compile errors only as a brief per-project summary (the
+  user checks VS Code for each error), no compile warnings for now (many users never fix them,
+  so the indicator would always be on). Also: a namespace commented in several files, links to
+  missing targets (delegate `Invoke`), unresolved rules (info, list only). Phase 3: badges on
+  nodes, aggregated up the hierarchy. Rule violations count per broken rule, not per type pair.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

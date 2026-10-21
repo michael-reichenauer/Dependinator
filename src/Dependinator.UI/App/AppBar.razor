@@ -435,6 +435,8 @@
         </MudTooltip>
     </MudHidden>
 
+    <ProblemIndicator OnShowCycles="ShowCycles" OnShowRules="ShowRules" />
+
 </MudButtonGroup>
 
 <MudMessageBox @ref="deleteLocalModelBox" Title="Delete Current Model" CancelText="Cancel">
@@ -749,6 +751,24 @@
         viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
         modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    // From the problem indicator: opens the panel (unfolded), or leaves it open.
+    void ShowCycles()
+    {
+        if (!viewOptions.IsCyclesShown)
+            ToggleCycles();
+        else if (viewOptions.IsCyclesMinimized)
+        {
+            viewOptions.SetCyclesMinimized(false);
+            applicationEvents.TriggerUIStateChanged();
+        }
+    }
+
+    void ShowRules()
+    {
+        if (!viewOptions.IsRulesShown)
+            ToggleRules();
     }
 
     void ToggleLegend()

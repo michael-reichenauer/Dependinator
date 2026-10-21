@@ -29,7 +29,7 @@ project works.
   group and rubber-band selection), new line and container visuals, a release flow through `dev`,
   a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
-  Claude's suggestions for cycles, and C# member naming fixes.
+  Claude's suggestions for cycles, C# member naming fixes, and a problem indicator.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -176,6 +176,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   to-fix entries whose cycle is gone or grew (a node joined) are marked so, and listed first. The request
   runs in the LSP or the web host through Anthropic's C# SDK (new `Dependinator.Claude` library),
   never in the browser app.
+- **Problem indicator (Oct 21).** A warning count in the app bar, like the VS Code status bar,
+  shows that the model has open cycles and broken architecture rules without opening their
+  panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one
+  row per kind, each opening its panel. Accepted cycles, cycles to fix later and rules nobody
+  breaks don't count. Compile errors from parsing are planned to show there next, as errors.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design
