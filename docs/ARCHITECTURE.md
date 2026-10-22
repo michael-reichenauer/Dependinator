@@ -1,8 +1,7 @@
 # Dependinator: architecture
 
 An overview of how Dependinator is built, for the people who work on it and the people who plan
-it. Seven views, each answering one question, drawn the way they would be discussed in an
-architecture review: who uses the product, where the code runs, how the code is organized, how
+it. Seven views, each answering one question: who uses the product, where the code runs, how the code is organized, how
 source code becomes a picture, how the VS Code parts talk, how cloud sync and sign-in work, and how
 a change reaches users. The code is the source of truth; the diagrams are generated from a small
 script and are meant to be updated with it (see the end of this page).
@@ -17,7 +16,7 @@ own notes, icons and hand-drawn nodes on top.
 
 | | |
 |---|---|
-| **Shipped as** | A VS Code extension on the Marketplace (the product), and a web app at [dependinator.com](https://dependinator.com) for trying it out and for viewing synced models |
+| **Shipped as** | A VS Code extension on the Marketplace (the product), and a web app at [dependinator.com](https://dependinator.com) for viewing synced models from anywhere and making small adjustments (with demo models to get started) |
 | **Languages it reads** | C# (`.sln` with C# projects, through Roslyn) and Azure Bicep (an entry `.bicep` file and its local modules, through the Bicep compiler) |
 | **Stack** | .NET 10 (built with the .NET 11 preview SDK for C# 15 unions), Blazor WebAssembly and Blazor Server, MudBlazor, StreamJsonRpc, OmniSharp LSP, TypeScript for the extension, Azure Static Web Apps, Azure Functions and Blob Storage, Clerk for sign-in |
 | **Size** | About 41k lines of product code, 70% of it in the shared UI library; about 25k lines of tests |
@@ -29,20 +28,22 @@ own notes, icons and hand-drawn nodes on top.
 ![Context view](architecture/1-context.svg)
 
 There are three ways in. **Developers** install the VS Code extension, open a folder with a `.sln`
-or a Bicep deployment, and run *Dependinator: Open*; this is the product. **Evaluators** open
-dependinator.com in a browser, where the built-in demo models (this repository and the webshop
-Bicep example) open without installing anything, and where they can sketch design models by hand
-and open models synced from VS Code. **Contributors** run the Blazor Server dev host, which parses
+or a Bicep deployment, and run *Dependinator: Open*; this is the product. **The same users, away
+from VS Code**, open dependinator.com in a browser on any device to view the models they synced
+from VS Code and make small adjustments, such as notes, layout or a hand-drawn design model. Until
+there are synced models, the built-in demo models (this repository and the webshop Bicep example)
+let a new user get started without installing anything. **Contributors** run the Blazor Server dev host, which parses
 this repository and is also the app the e2e tests drive.
 
 Only three external services are involved, and all are optional for the core use: **Clerk** signs
 users in for cloud sync, the small **cloud sync API** (our own Azure Functions over Blob Storage)
 stores the synced models, and the **Anthropic Claude API** reviews a circular dependency when the
-user asks, with the user's own API key.
+user asks, with the user's own API key. Claude is called from the VS Code extension's language
+server and from the dev host, never from the browser app.
 
 Points to discuss: source code never leaves the machine through sync, only the drawn model does,
 but the Claude review sends code excerpts of the cycle it asks about. The web app cannot parse
-code, so its value to a new user depends on the demo models and on sync.
+code: what it shows comes from VS Code through sync, or from the demo models.
 
 ## 2. Hosts view: one UI, three hosts
 
@@ -57,10 +58,11 @@ executable bundled per platform, which hosts the parsers. The UI cannot read fil
 inside a webview, so it calls the parser through an RPC proxy and the call is carried to the
 server (view 5). Models are cached in the webview's IndexedDB.
 
-On **dependinator.com** the same WebAssembly build is served by Azure Static Web Apps. There is no
-parser in the browser: the two demo models were parsed at build time by `Dependinator.DemoGen` and
-are downloaded as gzipped files. The site's `/api` routes go to `src/Api`, the Functions app for
-cloud sync. `main` deploys production and `dev` a pre-release site.
+On **dependinator.com** the same WebAssembly build is served by Azure Static Web Apps, mainly to
+view and adjust synced models from any device. The site's `/api` routes go to `src/Api`, the
+Functions app for cloud sync. There is no parser in the browser: the two demo models that help a
+new user get started were parsed at build time by `Dependinator.DemoGen` and are downloaded as
+gzipped files. `main` deploys production and `dev` a pre-release site.
 
 The **Blazor Server** host (`Dependinator.Web`) runs the UI on the server and the parsers in the
 same process, so a contributor gets hot reload and real parsing of this repository with one

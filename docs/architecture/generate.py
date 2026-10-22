@@ -167,7 +167,7 @@ d.group(280, 70, 660, 630, "Dependinator", "one Blazor UI, three hosts, one smal
 d.group(990, 70, 380, 630, "External", "not run by Dependinator")
 
 d.person("developer", 130, 182, "Developer", "VS Code, a C# solution\nor a Bicep deployment")
-d.person("visitor", 130, 382, "Evaluator", "a browser, nothing\ninstalled")
+d.person("visitor", 130, 382, "Developer, anywhere", "a browser on\nany device")
 d.person("contributor", 130, 582, "Contributor", "works on Dependinator\nitself")
 
 d.box("vscode", 320, 120, 300, 125, "VS Code extension", [
@@ -176,10 +176,10 @@ d.box("vscode", 320, 120, 300, 125, "VS Code extension", [
     "jumps between the diagram and the code",
     "webview UI + bundled .NET language server"], icon="View", tint=ACCENT)
 d.box("web", 320, 320, 300, 125, "Web app · dependinator.com", [
-    "Azure Static Web Apps",
-    "built-in demo models (pre-parsed),",
-    "hand-drawn design models, share links",
-    "and models synced from the cloud"], icon="Static-Web-Apps")
+    "view synced models from anywhere",
+    "and make small adjustments; share links",
+    "demo models to get started",
+    "Azure Static Web Apps"], icon="Static-Web-Apps")
 d.box("dev", 320, 520, 300, 125, "Dev host · localhost:5000", [
     "Blazor Server, for development",
     "parses this repository with Roslyn",
@@ -201,13 +201,16 @@ d.edge("contributor", "dev", "browser", ACCENT, label_dy=-8)
 d.edge("vscode.r", "src", "reads and parses the workspace", ACCENT, label_at=0.45, label_dy=-8)
 d.port("vscode.sync", 560, 245)
 d.edge("vscode.sync", "api.t", "optional sync", ASYNC, dashed=True, via=[(560, 280), (800, 280)], label_at=0.62, label_dy=-6)
-d.edge("web.r", "api.l", "/api", ASYNC, dashed=True, label_dy=-8)
-d.edge("api.r", "clerk", "validates sign-in tokens", label_at=0.45, label_dy=-8)
-d.edge("dev.r", "claude", "\"Ask Claude\" about a cycle (also from VS Code)", label_at=0.45, label_dy=-8)
+d.edge("web.r", "api.l", "sync", ASYNC, dashed=True, label_dy=-8)
+d.edge("api.r", "clerk", "validates sign-in tokens", label_at=0.68, label_dy=-8)
+d.port("vscode.ai", 620, 225); d.port("claude.in", 1152, 565)
+d.edge("vscode.ai", "claude.in", "\"Ask Claude\" about a cycle", via=[(965, 225), (965, 565)], label_at=0.2, label_dy=-6)
+d.port("dev.ai", 620, 600); d.port("claude.in2", 1152, 600)
+d.edge("dev.ai", "claude.in2", "\"Ask Claude\" (dev host)", label_at=0.45, label_dy=-6)
 d.note(40, 735, ["Solid blue: how people reach the product and how it reads code. Dashed brown: the optional cloud sync.",
                  "Parsing runs locally, in VS Code or the dev host. Cloud sync stores the drawn model (nodes, links, layout, notes), never source files;",
                  "asking Claude about a cycle sends a prompt with the code excerpts involved, with the user's own API key."], size=11)
-write("1-context.svg", d, "Context view of Dependinator: developers use the VS Code extension, which parses their workspace; evaluators use the web app at dependinator.com; contributors use the Blazor Server dev host. The VS Code extension and the web app can sync models through a small Azure Functions API with Blob Storage that validates Clerk sign-in tokens; the Claude API is used, optionally, with the user's own key.")
+write("1-context.svg", d, "Context view of Dependinator: developers use the VS Code extension, which parses their workspace; the same users view and adjust their synced models on dependinator.com from any device; contributors use the Blazor Server dev host. The VS Code extension and the web app can sync models through a small Azure Functions API with Blob Storage that validates Clerk sign-in tokens; the VS Code extension and the dev host call the Claude API, optionally, with the user's own key.")
 
 # ------------------------------------------------------------------------------------------
 # 2. Hosts view: where the code runs
@@ -239,10 +242,10 @@ d.edge("webview.b", "idb1", None)
 
 d.group(570, 60, 480, 620, "Browser · dependinator.com", "Azure Static Web Apps: main = production, dev = pre-release")
 d.box("browser", 600, 110, 420, 140, "Browser · Blazor WebAssembly", [
+    "view and adjust synced models from any device",
     "Dependinator.Wasm + UI + Core: the same UI as in VS Code",
-    "no parser in the browser: the demo models are files",
-    "parsed at build time (./scripts/gen-demo)",
-    "design models, share links, cloud models; IndexedDB cache"], icon="View", tint=ACCENT)
+    "no parser in the browser; demo models to get started are",
+    "parsed at build time (./scripts/gen-demo); IndexedDB cache"], icon="View", tint=ACCENT)
 d.node("swa", 690, 360, "Static-Web-Apps", "Static content", "the published Wasm app,\ndemo.model, demo-bicep.model")
 d.node("func", 930, 360, "Azure-Functions", "src/Api", "Functions, isolated worker,\n/api/auth/me, /api/models")
 d.node("clerk2", 690, 570, "Authentication", "Clerk", "sign-in (Clerk.js)")
