@@ -1,5 +1,6 @@
 @using MudBlazor
 @inject IClipboardService clipboardService
+@inject IVsCodeSendService vsCodeSendService
 
 @* Reviews a circular dependency (or edits an acceptance): accept it as intended, with why, shown
    in the cycles panel; editing also offers to stop accepting it. The header copies a prompt for
@@ -67,6 +68,11 @@
                       Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense"
                       data-testid="accept-cycle-paste-text" />
         <div class="dep-cycles__paste-actions">
+          @* The prompt is already on the clipboard, so claude.ai opens empty, to paste into: a
+             prompt with code is too long, and too private, to pass in the address. *@
+          <MudButton Size="Size.Small" Variant="Variant.Text" EndIcon="@MudBlazor.Icons.Material.Outlined.OpenInNew"
+                     title="Open claude.ai in the browser, to paste the prompt into"
+                     OnClick="OpenClaudeAsync" data-testid="accept-cycle-open-claude">Open claude.ai</MudButton>
           <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@string.IsNullOrWhiteSpace(pastedAnswer)"
                      OnClick="UsePastedAnswer" data-testid="accept-cycle-paste-use">Use answer</MudButton>
         </div>
@@ -296,6 +302,10 @@
       pasteError = null;
     }
   }
+
+  const string ClaudeUrl = "https://claude.ai/new";
+
+  Task OpenClaudeAsync() => vsCodeSendService.OpenExternalAsync(ClaudeUrl);
 
   // A pasted answer joins Claude's, selected; one that cannot be read stays in the box, to fix.
   void UsePastedAnswer()

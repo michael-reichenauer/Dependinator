@@ -304,7 +304,7 @@
 
 .dep-cycles__paste-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     margin-top: 4px;
 }
 
