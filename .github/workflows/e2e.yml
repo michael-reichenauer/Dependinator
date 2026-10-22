@@ -1,14 +1,13 @@
 name: E2E (Playwright)
 
-# Runs the Dependinator.E2E.Tests UI suite via ./scripts/e2e. On a plain push (feature branches;
-# main/dev are excluded since the CI/CD workflow calls this there) it runs Chromium only,
-# no cloud-sync — a quick check. The CI/CD and extension workflows call it before
-# publishing and pass browsers=all + sync=true, so the pre-publish gate covers all
-# browsers and the cloud-sync ([SyncFact]) tests. Can also be run manually. Playwright
-# traces are uploaded as an artifact on failure (open the .zip at trace.playwright.dev).
+# Runs the Dependinator.E2E.Tests UI suite via ./scripts/e2e. The Build workflow calls it on every
+# push with Chromium only, no cloud-sync — a quick check. The Release workflow calls it on what it
+# releases with browsers=all + sync=true, so the pre-publish gate covers all browsers and the
+# cloud-sync ([SyncFact]) tests. Can also be run manually. Each browser
+# runs as its own parallel job (one job running all three in turn took ~15 min of the gate).
+# Playwright traces are uploaded as a playwright-traces-<browser> artifact on failure
+# (open the .zip at trace.playwright.dev).
 on:
-  push:
-    branches-ignore: [main, dev]
   workflow_call:
     inputs:
       browsers:
@@ -17,6 +16,14 @@ on:
         default: chromium
       sync:
         description: Also run the cloud-sync tests (./scripts/e2e -s)
+        type: boolean
+        default: false
+      sha:
+        description: The commit to test (the Release workflow's); empty for the commit that started the run
+        type: string
+        default: ""
+      bundle:
+        description: Fetch the commit from the Release workflow's release-bundle artifact
         type: boolean
         default: false
   workflow_dispatch:
@@ -36,30 +43,36 @@ permissions:
 
 jobs:
   e2e:
+    name: e2e (${{ matrix.browser }})
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    # The Build workflow passes no inputs, which runs Chromium only, without sync.
+    strategy:
+      # Let the other browsers finish when one fails, to tell a browser-specific failure
+      # from a flake.
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJSON(inputs.browsers == 'all' && '["chromium","firefox","webkit"]' || '["chromium"]') }}
     steps:
+      # The Release workflow passes what it releases: a sha, and for a release the git bundle with
+      # its commits, which are not pushed yet. Otherwise the commit that started the run.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.bundle && github.sha || inputs.sha }}
+          fetch-depth: ${{ inputs.bundle && '0' || '1' }}
 
-      # Resolve the run config from the inputs (empty on a plain push -> defaults):
-      #   install   = browsers to install   e2e_args = ./scripts/e2e flags (-a / -s)   sync = bool
-      - name: Determine config
-        id: cfg
+      - name: Download the release commits
+        if: inputs.bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
+          path: ${{ runner.temp }}/bundle
+
+      - name: Check out the release commit
+        if: inputs.bundle
         run: |
-          browsers="${{ inputs.browsers }}"
-          sync="${{ inputs.sync }}"
-          [ -z "$browsers" ] && browsers=chromium
-          [ "$sync" = "true" ] || sync=false
-          args=""
-          if [ "$browsers" = "all" ]; then
-            echo "install=chromium firefox webkit" >> "$GITHUB_OUTPUT"
-            args="$args -a"
-          else
-            echo "install=chromium" >> "$GITHUB_OUTPUT"
-          fi
-          [ "$sync" = "true" ] && args="$args -s"
-          echo "sync=$sync" >> "$GITHUB_OUTPUT"
-          echo "e2e_args=$args" >> "$GITHUB_OUTPUT"
+          git fetch "$RUNNER_TEMP/bundle/release.bundle" "+refs/heads/*:refs/remotes/release/*"
+          git checkout -q --detach "${{ inputs.sha }}"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -70,7 +83,7 @@ jobs:
       # The cloud-sync API (Api) is a .NET 8 isolated Functions worker, so its runtime is
       # needed (alongside the SDK from global.json) to run the sync tests.
       - name: Setup .NET 8 runtime (sync tests)
-        if: steps.cfg.outputs.sync == 'true'
+        if: inputs.sync
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
@@ -80,11 +93,11 @@ jobs:
         run: dotnet build tests/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj
 
       - name: Install Playwright browsers
-        run: pwsh tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ steps.cfg.outputs.install }}
+        run: pwsh tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ matrix.browser }}
 
       # ./scripts/e2e -s starts the cloud-sync stack itself but needs these tools on the runner.
       - name: Install Azure Functions Core Tools + Azurite (sync tests)
-        if: steps.cfg.outputs.sync == 'true'
+        if: inputs.sync
         run: |
           # Azurite is a pure-Node package — reliable via npm.
           npm install -g azurite
@@ -107,13 +120,13 @@ jobs:
       - name: Run e2e tests
         env:
           E2E_TRACE: "1"
-        run: ./scripts/e2e ${{ steps.cfg.outputs.e2e_args }}
+        run: ./scripts/e2e -b ${{ matrix.browser }}${{ inputs.sync && ' -s' || '' }}
 
       - name: Upload Playwright traces
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-traces
+          name: playwright-traces-${{ matrix.browser }}
           path: tests/Dependinator.E2E.Tests/traces/
           if-no-files-found: ignore
           retention-days: 14
