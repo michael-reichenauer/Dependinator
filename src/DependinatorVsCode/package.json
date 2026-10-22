@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes the structure and dependencies of C#/.NET code and Azure Bicep deployments as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.84.0",
+    "version": "0.85.0",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
