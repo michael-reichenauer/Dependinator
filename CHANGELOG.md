@@ -5,6 +5,8 @@ the previews before it. Releases with nothing users notice are left out.
 
 ## [Unreleased]
 
+## [v0.84.424430] - 2026-10-22
+
 ### New
 
 - Cycles can be reviewed in a dialog: accept a cycle as intended with a reason (shown with it and saved with the model), or mark it to **Fix later**; an accepted cycle is reported again if another node joins it
