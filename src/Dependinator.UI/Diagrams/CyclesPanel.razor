@@ -30,6 +30,10 @@
   var gone = accepted.Where(a => a.IsGone).ToList();
   var toFix = cycleService.GetCyclesToFix();
   var fixedOnes = toFix.Where(r => r.IsGone).ToList();
+  // A picked cycle that was accepted, broken or grown since is no pick any more (an undo must not
+  // bring it back unasked).
+  if (viewOptions.SelectedCycleKey is { } selectedKey && cycleService.GetCycleLineIds(selectedKey) is null)
+    viewOptions.SetSelectedCycle(null);
   <div class="dep-panel dep-toolbar-card" data-testid="cycles-panel">
     <div class="dep-panel__header">
       @* Minimized, the title bar is all that is left; clicking it brings the list back. *@
@@ -104,7 +108,8 @@
               <button type="button" class="dep-panel__row dep-cycles__row @(report.Cycle is { } shown ? SelectedClass(shown) : "")"
                       disabled="@(report.ContainerId is null)"
                       title="@(report.ContainerId is null ? "The container is no longer in the model" : $"Show this cycle in {report.ContainerName}")"
-                      @onclick="() => ShowReportAsync(report)" data-testid="cycles-tofix-show">
+                      @onclick="() => ShowReportAsync(report)" data-testid="cycles-tofix-show"
+                      data-selected="@(report.Cycle is { } picked && IsSelected(picked) ? "true" : "false")">
                 <span class="dep-cycles__container">@report.ContainerName</span>
                 <span class="dep-cycles__members">@Join(report.MemberNames)</span>
                 <span class="dep-cycles__reason" data-testid="cycles-tofix-change">@(report.Accepted.Reason == "" ? "No change planned" : report.Accepted.Reason)</span>

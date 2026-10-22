@@ -99,6 +99,8 @@ class NavigationService(
                 return;
 
             await screenService.CheckResizeAsync();
+            if (!IsLatestShowNodeRequest(requestId))
+                return;
             if (!TryGetNodesPosAndZoom(nodeIds, screenService.SvgRect, out var pos, out var zoom))
                 return;
 
@@ -128,7 +130,10 @@ class NavigationService(
             if (nodes.Count == 0)
                 return false;
 
-            if (nodes.Aggregate(false, (changed, node) => EnsureLayoutForPath(node) || changed))
+            var isLayoutChanged = false;
+            foreach (var node in nodes)
+                isLayoutChanged |= EnsureLayoutForPath(node);
+            if (isLayoutChanged)
                 applicationEvents.TriggerModelChanged();
 
             foreach (var node in nodes)

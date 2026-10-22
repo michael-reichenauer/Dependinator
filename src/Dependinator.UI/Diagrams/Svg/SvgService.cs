@@ -129,12 +129,13 @@ class SvgService : ISvgService
 
         var offset = new Pos(-canvasRect.X / zoom, -canvasRect.Y / zoom);
         var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
-        // Exports never show edit chrome (handles), selection dimming or problem badges, whatever
+        // Exports never show edit chrome (handles), selection or cycle-pick dimming or problem badges, whatever
         // the current state.
         var flags = Flags with
         {
             IsEditing = false,
             DimUnrelated = false,
+            SelectedCycleLines = null,
         };
         var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, flags);
         return RenderRootContent(model, zoom, context);
@@ -176,7 +177,8 @@ class SvgService : ISvgService
     internal static bool IsLineWeighted(Line line, RenderSelection selection) =>
         line.IsFocused || (!selection.IsEmpty && !IsLineDimmed(line, selection));
 
-    static bool IsLineWeighted(Line line, RenderContext context) => IsLineWeighted(line, context.Flags.Selection);
+    static bool IsLineWeighted(Line line, RenderContext context) =>
+        !IsOtherCycleLine(line, context) && IsLineWeighted(line, context.Flags.Selection);
 
     // While a dependency path is shown, everything off the path fades so the chain stands out.
     // While one cycle is picked in the cycles panel, the other cycles' lines fade.
@@ -184,10 +186,16 @@ class SvgService : ISvgService
     {
         if (context.Flags.PathLines is { } pathLines)
             return !pathLines.Contains(line.Id);
-        if (context.Flags.SelectedCycleLines is { } cycleLines && IsLineCyclic(line, context))
-            return !cycleLines.Contains(line.Id);
+        if (IsOtherCycleLine(line, context))
+            return true;
         return context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.Selection);
     }
+
+    // A cyclic line that is not part of the cycle picked in the cycles panel.
+    static bool IsOtherCycleLine(Line line, RenderContext context) =>
+        context.Flags.SelectedCycleLines is { } cycleLines
+        && IsLineCyclic(line, context)
+        && !cycleLines.Contains(line.Id);
 
     static bool IsLineCyclic(Line line, RenderContext context) => context.Flags.CyclicLines?.Contains(line.Id) == true;
 
