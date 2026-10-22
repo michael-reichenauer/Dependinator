@@ -68,14 +68,12 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 ./scripts/e2e -s                                       # also start Azurite + Functions for sync tests
 ./scripts/e2e -t                                       # record Playwright traces into ./tests/Dependinator.E2E.Tests/traces
 ./scripts/trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
-# CI: e2e.yml and unit-tests.yml run on push to feature branches (main/dev excluded);
-# the CI/CD workflow (azure-static-web-apps-*.yml) calls them before deploy, with e2e
-# getting browsers=all + sync=true on push as the full gate. A dev push deploys the
-# pre-release site. Every main push is a release: CI/CD deploys production and then
-# calls vscode-extension.yml to bump the extension's minor version (0.8.x -> 0.9.0) and
-# publish it (that workflow runs its own test gate only on manual workflow_dispatch), so
-# main only moves for a release — ./scripts/release merges dev into main (with changelog
-# bullets) and pushes.
+# CI: build.yml runs unit-tests.yml and e2e.yml (Chromium) on every push and publishes
+# nothing; a PR into dev/main also gets a test site (azure-static-web-apps-*.yml).
+# Previews and releases are made only by hand with release.yml (docs/RELEASING.md, the
+# `release` skill): a preview builds dev and deploys the pre-release site + a GitHub
+# pre-release; a release merges dev into main, deploys production and publishes the
+# extension. Both run the full gate first (all browsers + cloud sync).
 # Dependabot PRs target dev (.github/dependabot.yml); security PRs still target main —
 # merge their branch into dev instead, the main PR closes itself after the next release.
 # Playwright traces are uploaded as an artifact on e2e failure.
@@ -87,7 +85,8 @@ npm run package --prefix ./src/DependinatorVsCode
 npm run install:vsix --prefix ./src/DependinatorVsCode
 ./scripts/build-ext                                    # npm install + version bump + package
 ./scripts/install-ext                                  # ./scripts/build-ext + install the VSIX into VS Code
-./scripts/release [-m "bullet"]...                     # release: merge dev into main + push (bullets -> CHANGELOG); -y no prompt, -n preview
+scripts/changelog unreleased                           # the notes of the next release (CHANGELOG.md's ## [Unreleased])
+gh workflow run release.yml --ref dev -f kind=preview  # preview (or kind=release); see docs/RELEASING.md
 
 # Icons
 ./scripts/import-icons                                 # re-import curated Azure/AWS/Google icons into src/Dependinator.UI/Diagrams/Icons/Library/ (manifests in scripts/cloud-icons/)
@@ -153,8 +152,8 @@ Commit on your own whenever a good logical step is complete and would benefit fr
 separate commit: a working, formatted, tested unit of change (build green, unit tests green,
 e2e where UI changed). A large task or phase may well end up as several commits rather than
 one; the user reviews the commits in git afterwards. Pushing the feature branch is fine. Work on
-the current feature branch, never directly on `main` or `dev`: they move only through merges
-(`.claude/rules/workflow.md`), and a push deploys them (dev the pre-release site, main a release).
+the current feature branch, never directly on `main` or `dev`: `dev` moves only through merged pull
+requests and `main` only through the Release workflow (`.claude/rules/workflow.md`).
 
 ## Commit Style
 

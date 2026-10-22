@@ -1,180 +1,47 @@
 # Change Log
 
-## 0.83.0 (2026-10-19)
+What changed for the people who use Dependinator, in each release, newest first. A release includes
+the previews before it. Releases with nothing users notice are left out.
 
-- Size nodes by their amount of code and how connected they are, so the central parts of a model are drawn larger and small utilities stay small
-- Lay out containers with fewer line crossings and straighter lines
-- Refine large containers' layouts in the background while the app is idle
-- Open larger nodes as containers earlier while zooming in
-- Lay out saved models again with the new layout; containers you arranged yourself are kept
-- Make Reset Children Layout and Reset Descendants undoable; a reset container follows the automatic layout again after a re-parse
-- Keep a node framed by Show node small enough to stay an icon
-- Re-record the demo gif and README images with the new layout
-- Update dependencies and pin patched versions of vulnerable packages
+## [Unreleased]
 
-## 0.82.0 (2026-10-14)
+## [v0.83.0] - 2026-10-19
 
-- Add Azure Bicep support: open a deployment (an entry-point .bicep file and its local modules) as a dependency map, with resources drawn using Azure icons
-- Nest Bicep resources and modules under their deployment scope, such as a resource group; a module takes the icon of its main resource
-- Show Bicep parameters, variables, outputs and auxiliary resources as rows, and hide configuration lines by default (View › Lines)
-- List Bicep deployments as workspace models in VS Code, re-parse when .bicep files change, and reveal the current Bicep file in the diagram
-- Add a Bicep demo to the web app's Models menu, built from a large example deployment (examples/bicep)
-- Add zones: labelled background areas for grouping nodes
-- Add line labels with an optional description, edited from the toolbar, the context menu or by double-clicking a line
-- Add display aliases: show a node under a friendlier name in the diagram and in search
-- Add View › Rows to leave out whole kinds of rows
-- Make hiding nodes undoable
-- Rank the node whose name exactly matches the search query first
-- Point to Settings › Invert Scroll Zoom in the first-run tour's zoom step
-- Show Bicep support in the README, with new screenshots and a re-recorded demo
+### Improved
 
-## 0.81.0 (2026-10-08)
+- Nodes are sized by their amount of code and how connected they are, so the central parts of a model are drawn larger and small utilities stay small
+- Containers are laid out with fewer line crossings and straighter lines, and large containers' layouts are refined in the background while the app is idle
+- Larger nodes open as containers earlier while zooming in
+- Saved models are laid out again with the new layout; containers you arranged yourself are kept
+- **Reset Children Layout** and **Reset Descendants** can be undone, and a reset container follows the automatic layout again after a re-parse
 
-- Limit the CI/CD workflow's GITHUB_TOKEN permissions
-- Strip nested comments when importing cloud icons
+### Fixed
 
-## 0.80.0 (2026-10-08)
+- A node framed by **Show node** stays small enough to be drawn as an icon
 
-- Offer go-to-source/target on dependency explorer lines
-- Place the dependency explorer below the app bar and breadcrumb
-- Move the explorer's node name from the title row into the subtitle
-- Remove the explorer's "show direct line" row button
-- Bump the nuget-minor-patch group with 2 updates
-- Add contributing guide, issue templates and community files
-- Rework the README around users and re-record the demo
-- Add Marketplace links, social preview tags and a /help route
-- Point questions at GitHub Discussions
-- Set the extension version so the next release is 0.80.0
+## [v0.82.0] - 2026-10-14
 
-## 0.10.0 (2026-10-07)
+### New
 
-- Draw lines at one width; widen the selection's lines by link count
-- Make light-mode container backgrounds visible
-- Fade container backgrounds out while zooming in
-- Draw hidden-node lines dash-dotted
-- Move line-split and zoom-to-node actions off the node toolbar
+- Azure Bicep support: a deployment, an entry-point `.bicep` file and its local modules, opens as a dependency map, with resources drawn with Azure icons and nested under their deployment scope, such as a resource group; a module takes the icon of its main resource
+- Bicep parameters, variables, outputs and auxiliary resources are shown as rows, and configuration lines are hidden by default (**View › Lines**)
+- In VS Code, Bicep deployments are listed as workspace models, are re-parsed when a `.bicep` file changes, and the current Bicep file can be revealed in the diagram
+- The web app's **Models** menu has a Bicep demo, a large example deployment
+- Zones: labelled background areas for grouping nodes
+- Line labels with an optional description, edited from the toolbar, the context menu or by double-clicking a line
+- Display aliases show a node under a friendlier name in the diagram and in search
+- **View › Rows** leaves out whole kinds of rows
 
-## 0.9.0 (2026-10-06)
+### Improved
 
-- Bump the extension's minor version on release instead of the patch
+- Hiding nodes can be undone
+- Search ranks the node whose name matches the query exactly first
+- The first-run tour's zoom step points to **Settings › Invert Scroll Zoom**
 
-## 0.8.32 (2026-10-06)
+## [v0.80.0] - 2026-10-08
 
-- Minor fixes and improvements
+### Improved
 
-## 0.8.31 (2026-10-06)
-
-- Add first time usage guide
-- Add support for Theme (dark/light)
-- Add breadcrumb support for selected node name
-- Dim lines unrelated to current selection
-- Add lines filter
-- Add support for legend
-- Add Manage models dialog
-- Add more feedback, like progress and summary
-- Add support for showing active node
-- Add architecture rules
-- Add Mini-map support
-- Add support for multi-selection
-
-## 0.8.30 (2026-10-06)
-
-- Minor fixes and improvements
-
-## 0.8.29 (2026-10-05)
-
-- Minor fixes and improvements
-
-## 0.8.28 (2026-09-29)
-
-- Implement IAssemblyResolver.BeginSnapshot for the in-memory resolver
-
-## 0.8.27 (2026-09-29)
-
-- Adjust dependencies dialog to minimize on outside click
-- Update demo animation
-
-## 0.8.26 (2026-09-28)
-
-- Minor fixes and improvements
-
-## 0.8.25 (2026-09-11)
-
-- Minor fixes and improvements
-
-## 0.8.24 (2026-09-11)
-
-- Add support for optionally parsing test projects
-- Rename Show Notes Sidebar
-- Show error message when parsing fails
-- Add option to invert zoom mouse wheel direction
-
-## 0.8.23 (2026-09-04)
-
-- Fix package version alignment
-
-## 0.8.22 (2026-08-23)
-
-- In VSCode Ext, open the solution
-
-## 0.8.21 (2026-08-23)
-
-- Fix publish issue
-
-## 0.8.20 (2026-07-26)
-
-- Regenerate demo model
-- Regenerate demo recording
-- Optimize rendering
-- Optimize tiles cache, based on size and eviction
-
-## 0.8.19 (2026-07-23)
-
-- Add link to changelog in release notes
-- Adjust release notes to explain vsix files
-- Update info about purpose of dependinator.com
-- Fix issue with error after parse
-
-## 0.8.18 (2026-07-23)
-
-- Update packages
-
-## 0.8.17 (2026-07-23)
-
-- Move CHANGELOG.md to root folder
-
-## 0.8.15 (2026-07-22)
-
-- Fix workflow
-
-## 0.8.14 (2026-07-22)
-
-- Disable ui test for split
-
-## 0.8.13 (2026-07-22)
-
-- Minor fixes and improvements
-
-## 0.8.12 (2026-07-22)
-
-- Unify the CI/CD workflow and extension workflow
-
-## 0.8.11 (2026-07-21)
-
-- Create new release when push to main branch
-
-## 0.8.10 (2026-07-21)
-
-- Minor fixes and improvements
-
-## 0.8.9 (2026-07-21)
-
-- Show Children to other nodes lines
-- Support for split line
-- Make line visible if target or source is visible
-- Fix issue with deep zoom
-
-## 0.8.x
-
-- Initial public release (beta). Features and behavior may still change
-  based on feedback.
+- Lines in the dependency explorer offer go to source and go to target
+- The dependency explorer sits below the app bar and the breadcrumb, with the node's name in its subtitle, and no longer has a row button for showing a direct line
+- The web app has a help page at `/help`

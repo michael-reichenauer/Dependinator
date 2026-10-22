@@ -1,0 +1,29 @@
+name: Build
+
+# Every push gets the unit tests (which build the whole solution and check its formatting) and the
+# e2e tests in Chromium. Nothing is published or deployed from here: a preview or a release is made
+# by hand with the Release workflow (release.yml), so a merge into dev or main only tests. Pull
+# requests get their test site from the Azure Static Web Apps workflow.
+on:
+  # Every branch, so a push always gets tested and a failure always reaches the author, without
+  # needing an open pull request. '**' rather than '*', since branch names here contain slashes.
+  push:
+    branches: ["**"]
+  # A pull request from a fork, whose pushes run no workflow here. One from a branch of this
+  # repository is tested by its push already (the jobs' 'if').
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+# This workflow only builds and tests, so it has no write permission. Nothing here can create a
+# release even if a step is added carelessly later.
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    uses: ./.github/workflows/unit-tests.yml
+  e2e:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    uses: ./.github/workflows/e2e.yml

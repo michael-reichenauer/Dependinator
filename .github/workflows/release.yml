@@ -1,0 +1,574 @@
+name: Release
+
+# Publishes a preview from 'dev' or a release from 'main', and only when run by hand: from the Actions
+# tab (Release, Run workflow), with 'gh workflow run release.yml --ref dev -f kind=preview', or by
+# Claude. A push to any branch only tests (build.yml). The notes are the '## [Unreleased]' section of
+# CHANGELOG.md on dev, written before the run, by hand or by Claude (docs/RELEASING.md).
+#
+# A preview builds dev as it is, makes no commit, deploys the web app to the 'dev' environment (the
+# pre-release site) and publishes a GitHub pre-release with the VS Code extension's packages.
+# A release, on dev: heads the unreleased notes with the version ('Release v<version>'), merges dev
+# into main with --no-ff, and then raises the minor version on dev ('Start v<major>.<minor + 1>'), so
+# that dev's previews are numbered for the release they lead to and nothing needs merging back from
+# main. It tests and builds main's merge, and only then pushes dev and main, deploys the web app to
+# production, publishes the extension to the VS Code Marketplace and publishes the GitHub release.
+#
+# The commits are made in the 'prepare' job and handed to the test and build jobs as a git bundle,
+# so nothing is pushed before everything has passed.
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: "preview (from dev) or release (from main)"
+        type: choice
+        options: [preview, release]
+        default: preview
+      publish:
+        description: "Publish; unticked, it builds, tests and shows what it would release, and changes nothing"
+        type: boolean
+        default: true
+
+# Needed to push the release commits and to create releases. The jobs that only test or build say
+# contents: read for themselves.
+permissions:
+  contents: write
+
+# One release at a time, queued rather than cancelled, since a cancelled run can leave a release half made
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    name: ${{ inputs.kind == 'release' && 'Release' || 'Preview' }}${{ !inputs.publish && ' (dry run)' || '' }}
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      buildNumber: ${{ steps.version.outputs.buildNumber }}
+      buildTime: ${{ steps.version.outputs.buildTime }}
+      latest: ${{ steps.version.outputs.latest }}
+      buildSha: ${{ steps.sha.outputs.buildSha }}
+      mainSha: ${{ steps.release.outputs.mainSha }}
+      devSha: ${{ steps.release.outputs.devSha }}
+    steps:
+      # dev, whatever branch the run was started on, with the whole history and the tags, which the
+      # release merges into main and the preview notes and the prune below compare with
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      # The version the build will have: major.minor from Directory.Build.props, then the minutes
+      # since 2026-01-01 UTC of the build time. The build jobs get the same BuildNumber and BuildTime
+      # and check that what they built carries this version.
+      - name: Version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BUILD_TIME="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          BUILD_NUMBER=$(( ($(date -u -d "$BUILD_TIME" +%s) - $(date -u -d '2026-01-01T00:00:00Z' +%s)) / 60 ))
+          MAJOR="$(sed -n 's|^ *<MajorVersion>\([0-9]*\)</MajorVersion>.*|\1|p' Directory.Build.props)"
+          MINOR="$(sed -n 's|^ *<MinorVersion>\([0-9]*\)</MinorVersion>.*|\1|p' Directory.Build.props)"
+          if [ -z "$MAJOR" ] || [ -z "$MINOR" ]; then
+            echo "Error: no <MajorVersion>/<MinorVersion> in Directory.Build.props"
+            exit 1
+          fi
+          VERSION="$MAJOR.$MINOR.$BUILD_NUMBER"
+          echo "Version: $VERSION, built $BUILD_TIME"
+
+          # A release must be newer in major.minor than the latest one, i.e. dev was raised after it
+          # (or by hand, as to 1.0), or it would release the same minor again. GitHub's latest
+          # release is never a preview, whereas the newest version tag in git can be one.
+          if [ "${{ inputs.kind }}" = "release" ]; then
+            LATEST="$(gh release view --json tagName --jq .tagName)"
+            IFS=. read -r LATEST_MAJOR LATEST_MINOR _ <<< "${LATEST#v}"
+            if ! { [ "$MAJOR" -gt "$LATEST_MAJOR" ] || { [ "$MAJOR" -eq "$LATEST_MAJOR" ] && [ "$MINOR" -gt "$LATEST_MINOR" ]; }; }; then
+              echo "Error: $VERSION is not above the latest release $LATEST in major.minor; raise MinorVersion in Directory.Build.props on dev"
+              exit 1
+            fi
+          else
+            LATEST="$(gh release view --json tagName --jq .tagName || true)"
+          fi
+          echo "Latest release: $LATEST"
+
+          {
+            echo "version=$VERSION"
+            echo "buildNumber=$BUILD_NUMBER"
+            echo "buildTime=$BUILD_TIME"
+            echo "latest=$LATEST"
+            echo "major=$MAJOR"
+            echo "minor=$MINOR"
+          } >> "$GITHUB_OUTPUT"
+
+      # The notes of the next release, as written on dev. A release without any is refused, since its
+      # notes and its section of the change log would be empty. A preview may have none yet.
+      - name: Read the notes
+        run: |
+          mkdir -p "$RUNNER_TEMP/notes"
+          scripts/changelog unreleased > "$RUNNER_TEMP/notes/unreleased.md"
+          if [ ! -s "$RUNNER_TEMP/notes/unreleased.md" ]; then
+            if [ "${{ inputs.kind }}" = "release" ]; then
+              echo "Error: no notes for the release; write them in the '## [Unreleased]' section of CHANGELOG.md on dev (docs/RELEASING.md)"
+              exit 1
+            fi
+            echo "::warning::The '## [Unreleased]' section of CHANGELOG.md has no notes, so the preview has none"
+          fi
+          cat "$RUNNER_TEMP/notes/unreleased.md"
+
+      # On dev: the notes headed with the version, the 'Release v<version>' commit. On main: dev merged,
+      # with the notes as the merge message, which is what is tested, built, tagged and released. Then
+      # on dev again: the next minor, 'Start v<major>.<minor + 1>'. All of it local until the publish
+      # job's push, and handed to the other jobs as a git bundle.
+      - name: Make the release commits
+        id: release
+        if: inputs.kind == 'release'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MAJOR="${{ steps.version.outputs.major }}"
+          MINOR="${{ steps.version.outputs.minor }}"
+          BUILD_TIME="${{ steps.version.outputs.buildTime }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          scripts/changelog stamp "v$VERSION" "${BUILD_TIME%%T*}"
+          git commit -m "Release v$VERSION" -- CHANGELOG.md
+          RELEASE_SHA="$(git rev-parse HEAD)"
+          # Written here, from dev's script and change log, since main's have not got them yet
+          { echo "Merge branch 'dev' for v$VERSION"; echo; scripts/changelog notes "v$VERSION"; } > "$RUNNER_TEMP/merge.txt"
+
+          git checkout -q -B main origin/main
+          # The notes' '### New' headings are kept as they are, not taken for comments ('whitespace')
+          git merge --no-ff --cleanup=whitespace "$RELEASE_SHA" -F "$RUNNER_TEMP/merge.txt"
+          MAIN_SHA="$(git rev-parse HEAD)"
+
+          git checkout -q -B dev "$RELEASE_SHA"
+          NEXT="$MAJOR.$((MINOR + 1))"
+          sed -i "s|<MinorVersion>$MINOR</MinorVersion>|<MinorVersion>$((MINOR + 1))</MinorVersion>|" Directory.Build.props
+          npm version "$NEXT.0" --no-git-tag-version --allow-same-version --prefix src/DependinatorVsCode > /dev/null
+          git commit -m "Start v$NEXT" -- Directory.Build.props src/DependinatorVsCode/package.json src/DependinatorVsCode/package-lock.json
+          DEV_SHA="$(git rev-parse HEAD)"
+
+          git log --graph --oneline -6 "$DEV_SHA" "$MAIN_SHA"
+
+          # Only the new commits; the jobs that use the bundle have origin's history already
+          git branch -f release-main "$MAIN_SHA"
+          git branch -f release-dev "$DEV_SHA"
+          mkdir -p "$RUNNER_TEMP/bundle"
+          git bundle create "$RUNNER_TEMP/bundle/release.bundle" release-main release-dev ^origin/main ^origin/dev
+
+          # The release is built from main's merge
+          git checkout -q "$MAIN_SHA"
+
+          echo "mainSha=$MAIN_SHA" >> "$GITHUB_OUTPUT"
+          echo "devSha=$DEV_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the release commits
+        if: inputs.kind == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle
+          path: ${{ runner.temp }}/bundle/release.bundle
+          if-no-files-found: error
+
+      # What is tested, built and released: main's merge for a release, dev's tip for a preview
+      - name: Build sha
+        id: sha
+        run: |
+          BUILD_SHA="$(git rev-parse HEAD)"
+          echo "Build sha: $BUILD_SHA"
+          echo "buildSha=$BUILD_SHA" >> "$GITHUB_OUTPUT"
+
+      # The notes on GitHub. A release's are its section of the change log, a preview's the notes
+      # written so far for the release it leads to.
+      - name: Write release notes
+        run: |
+          NOTES="$RUNNER_TEMP/notes/notes.md"
+          if [ "${{ inputs.kind }}" = "release" ]; then
+            cp "$RUNNER_TEMP/notes/unreleased.md" "$NOTES"
+          else
+            echo "A preview of the next release, built from \`dev\`. The web app's preview is on the pre-release site; install the extension's preview from a \`.vsix\` below." > "$NOTES"
+            if [ -s "$RUNNER_TEMP/notes/unreleased.md" ]; then
+              printf '\nNew since %s:\n\n' "${{ steps.version.outputs.latest }}" >> "$NOTES"
+              cat "$RUNNER_TEMP/notes/unreleased.md" >> "$NOTES"
+            fi
+          fi
+          {
+            echo ""
+            if [ "${{ inputs.kind }}" = "release" ]; then
+              echo "**Install:** [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)"
+              echo ""
+              echo "**Companion web app:** [dependinator.com](https://dependinator.com) — view your models in any browser, on any device. Enable device sync in both the extension and the web app to keep your models available and up to date everywhere."
+              echo ""
+            fi
+            echo "**Manual install:** the \`.vsix\` assets below are the VS Code extension installation packages, one per platform. Download the one matching your OS/CPU and install it in VS Code via *Extensions → \"...\" → Install from VSIX...* (or \`code --install-extension <file>.vsix\`)."
+            echo ""
+            echo "**Full changelog:** [CHANGELOG.md]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)"
+          } >> "$NOTES"
+          cat "$NOTES"
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: ${{ runner.temp }}/notes/notes.md
+          if-no-files-found: error
+
+  # The full gate, as before a publish: all browsers and the cloud-sync tests, on what is released
+  unit-tests:
+    needs: prepare
+    uses: ./.github/workflows/unit-tests.yml
+    permissions:
+      contents: read
+    with:
+      sha: ${{ needs.prepare.outputs.buildSha }}
+      bundle: ${{ inputs.kind == 'release' }}
+
+  e2e:
+    needs: prepare
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+    with:
+      browsers: all
+      sync: true
+      sha: ${{ needs.prepare.outputs.buildSha }}
+      bundle: ${{ inputs.kind == 'release' }}
+
+  # The web app (Wasm) and the cloud sync API (Functions), as deployed to Azure Static Web Apps
+  build-site:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      BuildNumber: ${{ needs.prepare.outputs.buildNumber }}
+      BuildTime: ${{ needs.prepare.outputs.buildTime }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.kind == 'release' && github.sha || needs.prepare.outputs.buildSha }}
+          fetch-depth: 0
+
+      - name: Download the release commits
+        if: inputs.kind == 'release'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
+          path: ${{ runner.temp }}/bundle
+
+      - name: Check out what is released
+        run: |
+          if [ -f "$RUNNER_TEMP/bundle/release.bundle" ]; then
+            git fetch "$RUNNER_TEMP/bundle/release.bundle" "+refs/heads/*:refs/remotes/release/*"
+          fi
+          git checkout -q --detach "${{ needs.prepare.outputs.buildSha }}"
+          git log --oneline -1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x" # net10.0 runtime; global.json selects the .NET 11 SDK
+          global-json-file: global.json
+
+      - name: Install WASM workload
+        run: dotnet workload restore Dependinator.sln
+
+      - name: Publish Dependinator WASM
+        run: |
+          rm -rf src/Dependinator.Wasm/publish
+          dotnet publish src/Dependinator.Wasm/Dependinator.Wasm.csproj -c Release -o src/Dependinator.Wasm/publish
+          cp src/Dependinator.Wasm/staticwebapp.config.json src/Dependinator.Wasm/publish/wwwroot/staticwebapp.config.json
+
+      - name: Publish API
+        run: |
+          rm -rf src/Api/publish
+          dotnet publish src/Api/Api.csproj -c Release -o src/Api/publish
+
+      # Core's informational version is '<version>+<sha>' (Directory.Build.props)
+      - name: Check the version
+        run: |
+          EXPECTED="${{ needs.prepare.outputs.version }}+${{ needs.prepare.outputs.buildSha }}"
+          if ! grep -rlaF "$EXPECTED" src/Dependinator.Wasm/publish/wwwroot/_framework/ > /dev/null; then
+            echo "Error: the web app was not built as $EXPECTED"
+            exit 1
+          fi
+          echo "Built $EXPECTED"
+
+      # Hidden files too: the Functions publish has a '.azurefunctions' folder
+      - name: Upload the site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: |
+            src/Dependinator.Wasm/publish/wwwroot
+            src/Api/publish
+          include-hidden-files: true
+          if-no-files-found: error
+
+  # The VS Code extension, one package per platform, as published to the Marketplace
+  build-vsix:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      BuildNumber: ${{ needs.prepare.outputs.buildNumber }}
+      BuildTime: ${{ needs.prepare.outputs.buildTime }}
+    strategy:
+      matrix:
+        target:
+          - linux-x64
+          - linux-arm64
+          - win32-x64
+          - win32-arm64
+          - darwin-x64
+          - darwin-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.kind == 'release' && github.sha || needs.prepare.outputs.buildSha }}
+          fetch-depth: 0
+
+      - name: Download the release commits
+        if: inputs.kind == 'release'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
+          path: ${{ runner.temp }}/bundle
+
+      - name: Check out what is released
+        run: |
+          if [ -f "$RUNNER_TEMP/bundle/release.bundle" ]; then
+            git fetch "$RUNNER_TEMP/bundle/release.bundle" "+refs/heads/*:refs/remotes/release/*"
+          fi
+          git checkout -q --detach "${{ needs.prepare.outputs.buildSha }}"
+          git log --oneline -1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x" # net10.0 runtime; global.json selects the .NET 11 SDK
+          global-json-file: global.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install npm dependencies
+        run: npm ci
+        working-directory: src/DependinatorVsCode
+
+      # package.json on dev holds major.minor.0; the package gets the whole version. Not committed.
+      - name: Set the extension's version
+        run: npm version "${{ needs.prepare.outputs.version }}" --no-git-tag-version --allow-same-version
+        working-directory: src/DependinatorVsCode
+
+      - name: Package extension
+        run: npm run package:${{ matrix.target }}
+        working-directory: src/DependinatorVsCode
+
+      # The bundled LSP server is per-RID and is picked at runtime from server/<rid>/,
+      # so a package whose server RID does not match its target has no working server
+      # at all. Fail the build rather than shipping one.
+      - name: Verify bundled server matches target
+        run: |
+          case "${{ matrix.target }}" in
+            linux-x64) rid=linux-x64 ;;
+            linux-arm64) rid=linux-arm64 ;;
+            win32-x64) rid=win-x64 ;;
+            win32-arm64) rid=win-arm64 ;;
+            darwin-x64) rid=osx-x64 ;;
+            darwin-arm64) rid=osx-arm64 ;;
+            *) echo "Unmapped target ${{ matrix.target }}"; exit 1 ;;
+          esac
+          if [ ! -d "server/$rid" ]; then
+            echo "Expected server/$rid, found: $(ls server)"
+            exit 1
+          fi
+          echo "rid=$rid" >> "$GITHUB_ENV"
+        working-directory: src/DependinatorVsCode
+
+      # The package's own version, and Core's informational version '<version>+<sha>' in its server
+      - name: Check the version
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          EXPECTED="$VERSION+${{ needs.prepare.outputs.buildSha }}"
+          VSIX="$(ls ./*.vsix)"
+          PACKAGED="$(unzip -p "$VSIX" extension/package.json | node -p 'JSON.parse(require("fs").readFileSync(0)).version')"
+          if [ "$PACKAGED" != "$VERSION" ]; then
+            echo "Error: $VSIX is version $PACKAGED, not $VERSION"
+            exit 1
+          fi
+          if ! grep -qaF "$EXPECTED" "server/$rid/Dependinator.Core.dll"; then
+            echo "Error: the server in $VSIX was not built as $EXPECTED"
+            exit 1
+          fi
+          echo "Built $VSIX, $EXPECTED"
+        working-directory: src/DependinatorVsCode
+
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependinator-${{ matrix.target }}-vsix
+          path: src/DependinatorVsCode/*.vsix
+          if-no-files-found: error
+
+  # Only when everything above has passed, and not in a dry run. Each step can be run again (Re-run
+  # failed jobs) after a failure: the push of the same commits does nothing, the Marketplace skips
+  # a version it has, and a GitHub release that exists is left as it is.
+  publish:
+    needs: [prepare, unit-tests, e2e, build-site, build-vsix]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    name: ${{ inputs.publish && 'Publish' || 'Show what would be published' }}
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      BUILD_SHA: ${{ needs.prepare.outputs.buildSha }}
+      MAIN_SHA: ${{ needs.prepare.outputs.mainSha }}
+      DEV_SHA: ${{ needs.prepare.outputs.devSha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Download the release commits
+        if: inputs.kind == 'release'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
+          path: ${{ runner.temp }}/bundle
+
+      # Into the workspace, since the Azure deploy action runs in a container that sees only that
+      - name: Download the notes, the site and the packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "{release-notes,site,dependinator-*-vsix}"
+          path: _out
+
+      - name: Show what is published
+        run: |
+          echo "${{ inputs.kind }} v$VERSION, built from $BUILD_SHA"
+          if [ "${{ inputs.kind }}" = "release" ]; then
+            git fetch -q "$RUNNER_TEMP/bundle/release.bundle" "+refs/heads/*:refs/remotes/release/*"
+            echo "Pushes dev $DEV_SHA and main $MAIN_SHA:"
+            git log --graph --oneline -6 "$DEV_SHA" "$MAIN_SHA"
+          fi
+          echo
+          cat "_out/release-notes/notes.md"
+          echo
+          find "_out" -name '*.vsix' -printf '%f\n'
+          if [ "${{ inputs.publish }}" != "true" ]; then
+            echo "::notice::Dry run of the ${{ inputs.kind }} v$VERSION: nothing was pushed, deployed or published"
+          fi
+
+      # Atomic, so dev and main move together or not at all, and plain, so it fails, and nothing is
+      # released, if either has moved since this run started. Pushed with the GITHUB_TOKEN, which
+      # starts no workflow run.
+      - name: Push the release commits
+        if: inputs.publish && inputs.kind == 'release'
+        run: git push --atomic origin "$DEV_SHA:refs/heads/dev" "$MAIN_SHA:refs/heads/main"
+
+      # The Azure deploy action picks the environment from the branch: a preview names the 'dev'
+      # environment (the pre-release site), and a release makes the run's own branch the production
+      # branch, since the run starts from dev but deploys main's merge. Pinned by commit, as a
+      # third party's action that is given the deployment token.
+      - name: Deploy the pre-release site
+        if: inputs.publish && inputs.kind == 'preview'
+        uses: Azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9 # v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_ISLAND_0E6A6EB03 }}
+          action: upload
+          app_location: _out/site/Dependinator.Wasm/publish/wwwroot
+          api_location: _out/site/Api/publish
+          skip_app_build: true
+          skip_api_build: true
+          deployment_environment: dev
+
+      - name: Deploy production
+        if: inputs.publish && inputs.kind == 'release'
+        uses: Azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9 # v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_ISLAND_0E6A6EB03 }}
+          action: upload
+          app_location: _out/site/Dependinator.Wasm/publish/wwwroot
+          api_location: _out/site/Api/publish
+          skip_app_build: true
+          skip_api_build: true
+          production_branch: ${{ github.ref_name }}
+
+      # The packages built above, not re-packaged by vsce (--packagePath reads the target from each)
+      - name: Publish to the Marketplace
+        if: inputs.publish && inputs.kind == 'release'
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          for f in _out/dependinator-*-vsix/*.vsix; do
+            npx --yes @vscode/vsce@3 publish --skip-duplicate --packagePath "$f" -p "$VSCE_PAT"
+          done
+
+      # 'target' is where the new tag is created: main's merge for a release, dev's tip for a preview.
+      # Without it, the tag would go on the tip of the default branch.
+      - name: Create the GitHub release
+        if: inputs.publish
+        run: |
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "The release v$VERSION exists already"
+            exit 0
+          fi
+          # Label each asset so the release page shows what the file is instead
+          # of just the raw vsce file name (gh's "file#label" syntax).
+          assets=()
+          for f in _out/dependinator-*-vsix/*.vsix; do
+            base=$(basename "$f" .vsix)
+            target=${base#dependinator-}
+            target=${target%-"$VERSION"}
+            case "$target" in
+              linux-x64) platform="Linux x64" ;;
+              linux-arm64) platform="Linux ARM64" ;;
+              win32-x64) platform="Windows x64" ;;
+              win32-arm64) platform="Windows ARM64" ;;
+              darwin-x64) platform="macOS Intel" ;;
+              darwin-arm64) platform="macOS Apple Silicon" ;;
+              *) platform="$target" ;;
+            esac
+            assets+=("$f#VS Code extension - $platform (vsix)")
+          done
+          prerelease=()
+          if [ "${{ inputs.kind }}" = "preview" ]; then prerelease=(--prerelease); fi
+          gh release create "v$VERSION" "${prerelease[@]}" \
+            --target "$BUILD_SHA" \
+            --title "v$VERSION" \
+            --notes-file "_out/release-notes/notes.md" \
+            "${assets[@]}"
+          echo "::notice::Published $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/v$VERSION"
+
+      # The Releases page keeps the releases and the latest five previews. A preview's tag goes with
+      # it, unless it is on main's own line or unknown here. Tidying only, so it never fails the run.
+      - name: Prune old previews
+        if: inputs.publish
+        continue-on-error: true
+        run: |
+          MAIN_LINE="$(git rev-list --first-parent origin/main)"
+          gh release list --limit 1000 --exclude-drafts --json tagName,isPrerelease,createdAt \
+            --jq '[.[] | select(.isPrerelease)] | sort_by(.createdAt) | reverse | .[5:] | .[].tagName' |
+            while read -r TAG; do
+              SHA="$(git rev-parse -q --verify "$TAG^{commit}" || true)"
+              if [ -z "$SHA" ] || grep -qx "$SHA" <<< "$MAIN_LINE"; then
+                echo "Deleting the preview $TAG, keeping its tag"
+                gh release delete "$TAG" --yes || true
+              else
+                echo "Deleting the preview $TAG and its tag"
+                gh release delete "$TAG" --yes --cleanup-tag || true
+              fi
+            done

@@ -1,14 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AssemblyVersion>0.5.*</AssemblyVersion>
-        <Deterministic>false</Deterministic>
         <TargetFramework>net10.0</TargetFramework>
         <AssemblyName>Dependinator.Core</AssemblyName>
         <RootNamespace>Dependinator.Core</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <!-- The build time Build.cs shows, set by the Release workflow (Directory.Build.props), else now.
+         Here rather than in Directory.Build.props, so only this project is rebuilt on every build. -->
+        <BuildTime Condition="'$(BuildTime)' == ''">$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"))</BuildTime>
     </PropertyGroup>
+
+    <ItemGroup>
+        <AssemblyMetadata Include="BuildTime" Value="$(BuildTime)" />
+    </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="../Shared/Shared.csproj" />
