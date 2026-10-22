@@ -144,7 +144,7 @@ public class ClaudeServiceTests
         Assert.Equal("""{ "verdict": "Accept" }""", text);
         var request = api.LastRequestBody!;
         Assert.Contains("\"model\":\"claude-opus-5-5\"", request);
-        Assert.Contains("Is this cycle fine?", request);
+        Assert.Contains("""{"role":"user","content":"Is this cycle fine?"}""", request);
         Assert.Contains("\"json_schema\"", request);
         Assert.Contains("\"fallbacks\":\"default\"", request);
     }

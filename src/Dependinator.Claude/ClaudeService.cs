@@ -68,7 +68,7 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
                         Effort = Effort.Medium,
                         Format = new BetaJsonOutputFormat { Schema = schemaProperties },
                     },
-                    Messages = [new() { Role = Role.User, Content = prompt }],
+                    Messages = [new BetaUserMessageParam { Content = prompt }],
                 }
             );
             Log.Info("Claude answered", response.StopReason, response.Usage.InputTokens, response.Usage.OutputTokens);
