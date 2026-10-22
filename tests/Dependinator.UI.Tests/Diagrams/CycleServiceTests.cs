@@ -96,6 +96,40 @@ public class CycleServiceTests
         Assert.DoesNotContain(LineId.From(b.Name, d.Name), lineIds);
     }
 
+    // The panel picks one cycle by its key: its lines stay highlighted, the others are dimmed.
+    [Fact]
+    public void GetCycleLineIds_ShouldReturnTheLinesOfThatCycleOnly()
+    {
+        Node a,
+            b,
+            x,
+            y;
+        using (var model = modelMgr.UseModel())
+        {
+            var first = AddNode(model, "C", model.Root);
+            a = AddNode(model, "C.A", first);
+            b = AddNode(model, "C.B", first);
+            var second = AddNode(model, "E", model.Root);
+            x = AddNode(model, "E.X", second);
+            y = AddNode(model, "E.Y", second);
+            AddLink(model, a, b);
+            AddLink(model, b, a);
+            AddLink(model, x, y);
+            AddLink(model, y, x);
+        }
+
+        var service = NewService();
+        var cycle = service.GetCycles().Single(c => c.ContainerNodeName == "C");
+
+        var lineIds = service.GetCycleLineIds(cycle.Key);
+        Assert.NotNull(lineIds);
+        Assert.Contains(LineId.From(a.Name, b.Name), lineIds);
+        Assert.Contains(LineId.From(b.Name, a.Name), lineIds);
+        Assert.DoesNotContain(LineId.From(x.Name, y.Name), lineIds);
+        Assert.Contains(LineId.From(x.Name, y.Name), service.GetCyclicLineIds());
+        Assert.Null(service.GetCycleLineIds("no such cycle"));
+    }
+
     [Fact]
     public void GetCycles_ShouldCountLinksDeepInsideChildren_ForTheirTopLevelSiblings()
     {

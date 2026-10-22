@@ -29,6 +29,11 @@ interface IViewOptions
     // closing the panel restores it.
     bool IsCyclesMinimized { get; }
 
+    // The cycle (Cycle.Key) the user picked in the cycles panel: its lines stay in the warning
+    // color while the other cycles' lines are dimmed. Null shows all cycles alike; showing or
+    // closing the panel clears it.
+    string? SelectedCycleKey { get; }
+
     // Architecture rules: the rules panel is open and violating lines are drawn highlighted.
     bool IsRulesShown { get; }
 
@@ -46,6 +51,7 @@ interface IViewOptions
     void SetLegendShown(bool shown);
     void SetCyclesShown(bool shown);
     void SetCyclesMinimized(bool minimized);
+    void SetSelectedCycle(string? cycleKey);
     void SetRulesShown(bool shown);
     void SetMinimapShown(bool shown);
     void SetProblemBadgesShown(bool shown);
@@ -97,6 +103,7 @@ class ViewOptions : IViewOptions
     public bool IsLegendShown { get; private set; }
     public bool IsCyclesShown { get; private set; }
     public bool IsCyclesMinimized { get; private set; }
+    public string? SelectedCycleKey { get; private set; }
     public bool IsRulesShown { get; private set; }
     public bool IsMinimapShown { get; private set; }
     public bool IsProblemBadgesShown { get; private set; } = true;
@@ -117,9 +124,12 @@ class ViewOptions : IViewOptions
     {
         IsCyclesShown = shown;
         IsCyclesMinimized = false;
+        SelectedCycleKey = null;
     }
 
     public void SetCyclesMinimized(bool minimized) => IsCyclesMinimized = minimized && IsCyclesShown;
+
+    public void SetSelectedCycle(string? cycleKey) => SelectedCycleKey = IsCyclesShown ? cycleKey : null;
 
     public void SetRulesShown(bool shown) => IsRulesShown = shown;
 

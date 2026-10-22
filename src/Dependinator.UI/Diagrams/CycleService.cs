@@ -18,7 +18,13 @@ record Cycle(
     string ContainerNodeName,
     IReadOnlyList<CycleMember> Members,
     AcceptedCycle? AcceptedBefore = null
-);
+)
+{
+    // Identifies the cycle across recomputations (the records are rebuilt on every model change),
+    // for the cycle selected in the panel.
+    public string Key =>
+        $"{ContainerNodeName}|{string.Join("|", Members.Select(m => m.NodeName).Order(StringComparer.Ordinal))}";
+}
 
 // An accepted cycle, or one to fix later, as the panel shows it: display names where the nodes
 // still exist (the stored names otherwise), and whether a cycle in the model still matches it.
@@ -65,6 +71,13 @@ interface ICycleService
     // directions), for highlighting.
     IReadOnlySet<LineId> GetCyclicLineIds();
 
+    // The highlighted lines of one cycle (by Cycle.Key), or null when no highlighted cycle has
+    // that key (it was accepted, or a change broke it).
+    IReadOnlySet<LineId>? GetCycleLineIds(string cycleKey);
+
+    // The member nodes of one highlighted cycle (by Cycle.Key), or null like GetCycleLineIds.
+    IReadOnlyList<NodeId>? GetCycleMemberIds(string cycleKey);
+
     // Accepts a cycle as intended, with why, replacing the earlier entries it covers (the cycle
     // grew since). Like the other changes below it is undoable and saved with the model.
     void Accept(Cycle cycle, string reason);
@@ -83,6 +96,7 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
     IReadOnlyList<AcceptedCycleReport> acceptedCycles = [];
     IReadOnlyList<AcceptedCycleReport> cyclesToFix = [];
     IReadOnlySet<LineId> cyclicLineIds = new HashSet<LineId>();
+    IReadOnlyDictionary<string, IReadOnlySet<LineId>> lineIdsByCycle = new Dictionary<string, IReadOnlySet<LineId>>();
 
     public IReadOnlyList<Cycle> GetCycles()
     {
@@ -106,6 +120,23 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
     {
         EnsureUpToDate();
         return cyclicLineIds;
+    }
+
+    public IReadOnlySet<LineId>? GetCycleLineIds(string cycleKey)
+    {
+        EnsureUpToDate();
+        return lineIdsByCycle.GetValueOrDefault(cycleKey);
+    }
+
+    public IReadOnlyList<NodeId>? GetCycleMemberIds(string cycleKey)
+    {
+        EnsureUpToDate();
+        if (!lineIdsByCycle.ContainsKey(cycleKey))
+            return null;
+        var cycle =
+            cycles.FirstOrDefault(c => c.Key == cycleKey)
+            ?? cyclesToFix.Select(r => r.Cycle).FirstOrDefault(c => c?.Key == cycleKey);
+        return cycle?.Members.Select(m => m.Id).ToList();
     }
 
     public void Accept(Cycle cycle, string reason) => Decide(cycle, reason, isToFix: false);
@@ -151,7 +182,7 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
         if (key == cachedFor)
             return;
 
-        (cycles, acceptedCycles, cyclesToFix, cyclicLineIds) = Compute(model);
+        (cycles, acceptedCycles, cyclesToFix, cyclicLineIds, lineIdsByCycle) = Compute(model);
         cachedFor = key;
     }
 
@@ -159,7 +190,8 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
         IReadOnlyList<Cycle> Cycles,
         IReadOnlyList<AcceptedCycleReport> Accepted,
         IReadOnlyList<AcceptedCycleReport> ToFix,
-        IReadOnlySet<LineId> LineIds
+        IReadOnlySet<LineId> LineIds,
+        IReadOnlyDictionary<string, IReadOnlySet<LineId>> LineIdsByCycle
     ) Compute(IModel model)
     {
         // Per container: the child graph, from the links whose endpoints sit in different children.
@@ -184,6 +216,7 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
         var joined = new Dictionary<AcceptedCycle, IReadOnlyList<string>>();
         var found = new List<Cycle>();
         var lineIds = new HashSet<LineId>();
+        var lineIdsByCycle = new Dictionary<string, IReadOnlySet<LineId>>();
         foreach (var (container, graph) in graphs)
         {
             foreach (var component in StronglyConnectedComponents(graph))
@@ -224,16 +257,19 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
                     toFixCycles[toFix] = cycle;
 
                 var inComponent = component.ToHashSet();
+                var cycleLineIds = new HashSet<LineId>();
                 foreach (var from in component)
                 {
                     foreach (var to in graph.TryGetValue(from, out var targets) ? targets : [])
                     {
                         if (!inComponent.Contains(to))
                             continue;
-                        lineIds.Add(LineId.From(from.Name, to.Name));
-                        lineIds.Add(LineId.FromInheritance(from.Name, to.Name));
+                        cycleLineIds.Add(LineId.From(from.Name, to.Name));
+                        cycleLineIds.Add(LineId.FromInheritance(from.Name, to.Name));
                     }
                 }
+                lineIds.UnionWith(cycleLineIds);
+                lineIdsByCycle[cycle.Key] = cycleLineIds;
             }
         }
 
@@ -263,7 +299,8 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
             found,
             [.. reports.Where(r => !r.Accepted.IsToFix)],
             [.. reports.Where(r => r.Accepted.IsToFix)],
-            lineIds
+            lineIds,
+            lineIdsByCycle
         );
     }
 
