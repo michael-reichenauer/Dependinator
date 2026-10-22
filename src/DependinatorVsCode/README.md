@@ -51,8 +51,10 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 - A workspace containing a **.NET solution (`.sln`)** with C# projects, or an
   **Azure Bicep deployment** (a `.bicep` entry file and its local modules).
   Dependinator parses it to build the dependency map.
-- No local `dotnet` or `bicep` installation is needed; the extension bundles a
-  self-contained language server with the Bicep compiler.
+- For C#, a [.NET SDK](https://dotnet.microsoft.com/download) that can build the
+  solution, since Roslyn loads the projects with the SDK's MSBuild. Bicep needs no
+  local `dotnet` or `bicep` installation; the extension bundles a self-contained
+  language server with the Bicep compiler.
 
 ## Getting started
 

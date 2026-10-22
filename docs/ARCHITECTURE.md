@@ -70,8 +70,7 @@ for the cloud.
 Points to discuss: the browser and VS Code builds are the same binary, which keeps behavior aligned
 but means UI work is always tested in WebAssembly, the slowest of the three (layout budgets are
 measured there). Parsing C# needs an installed .NET SDK on the user's machine, because Roslyn loads
-projects with the SDK's MSBuild; the README currently says no local `dotnet` is needed, which holds
-for Bicep only.
+projects with the SDK's MSBuild; Bicep needs nothing installed.
 
 ## 3. Code structure view: projects, layers and the rules that guard them
 
@@ -231,8 +230,8 @@ so they need regenerating when the parser or the UI changes visibly.
 
 - **Preview SDK.** The build needs the .NET 11 preview SDK for C# 15 unions; the move to the GA SDK
   is planned in [docs/notes/NET11-UPGRADE.md](notes/NET11-UPGRADE.md).
-- **C# parsing needs a .NET SDK on the user's machine**, while the README says no local `dotnet` is
-  needed; the requirement holds for Bicep only.
+- **C# parsing needs a .NET SDK on the user's machine** (Bicep does not). A user without one gets
+  a clear error, but it is a step to install before the first map.
 - **Clerk free tier.** The 180-day token workaround (view 6) trades some security for convenience.
 - **Concentration in one library.** 70% of the product code is in `Dependinator.UI`.
 - **Inactive code.** `Dependinator.Reflection` is maintained but unused.

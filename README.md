@@ -77,9 +77,10 @@ drag to pan, and press `Ctrl+F` to find a node by name. The **Help** button in
 the app bar opens the [user guide](https://dependinator.com/help) with all
 keyboard and mouse controls.
 
-**Requirements:** a .NET solution (`.sln`) with C# projects, or Azure Bicep files. No local
-`dotnet` or `bicep` installation is needed; the extension bundles a self-contained language
-server with the Bicep compiler.
+**Requirements:** a .NET solution (`.sln`) with C# projects, or Azure Bicep files. Parsing C#
+needs a [.NET SDK](https://dotnet.microsoft.com/download) that can build the solution, since
+Roslyn loads the projects with the SDK's MSBuild. Bicep needs no local `dotnet` or `bicep`
+installation; the extension bundles a self-contained language server with the Bicep compiler.
 
 ### In action
 
