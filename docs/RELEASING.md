@@ -48,9 +48,15 @@ a warning. The Releases page keeps the latest five previews.
    publishes the GitHub release on the merge. If either branch moved meanwhile, the push fails and
    nothing is released; run it again.
 
-So `dev` never needs `main` merged back, and `main` moves only by the workflow. The push is made
-with the workflow's own token, so a branch protection rule on `dev` or `main` that requires pull
-requests needs a bypass for GitHub Actions.
+So `dev` never needs `main` merged back, and `main` moves only by the workflow.
+
+The push needs the `RELEASE_TOKEN` repository secret: a fine-grained personal access token for
+this repository with **Contents** and **Workflows** read and write. GitHub refuses a push by the
+workflow's own token that changes a file under `.github/workflows/`, which a release does whenever
+`dev` changed a workflow since the last one; without the secret such a release fails at the push,
+before anything is published. The token's push runs the Build workflow (tests only) on `dev` and
+`main`. A branch protection rule on `dev` or `main` that requires pull requests needs a bypass for
+the token's owner.
 
 **A dry run:** leave **Publish** unticked. It tests and builds everything, prints the notes, the
 commits it would push and the packages, and changes nothing.

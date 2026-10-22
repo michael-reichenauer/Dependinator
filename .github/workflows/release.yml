@@ -33,7 +33,9 @@ on:
 permissions:
   contents: write
 
-# One release at a time, queued rather than cancelled, since a cancelled run can leave a release half made
+# One release at a time, queued rather than cancelled, since a cancelled run can leave a release half
+# made. GitHub keeps one pending run per group: a third run started meanwhile replaces the pending
+# one, which has not started and so has made nothing.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -436,11 +438,17 @@ jobs:
       DEV_SHA: ${{ needs.prepare.outputs.devSha }}
       GH_TOKEN: ${{ github.token }}
     steps:
+      # The push below is made with this token. A release that merges a change to a workflow file
+      # into main needs one with the Workflows permission, which the GITHUB_TOKEN can never have:
+      # the RELEASE_TOKEN secret, a fine-grained token with Contents and Workflows read and write on
+      # this repository (docs/RELEASING.md). Without it, the GITHUB_TOKEN, which GitHub refuses for
+      # such a push (nothing is released then).
       - name: Checkout dev
         uses: actions/checkout@v4
         with:
           ref: dev
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
 
       - name: Download the release commits
         if: inputs.kind == 'release'
@@ -473,8 +481,8 @@ jobs:
           fi
 
       # Atomic, so dev and main move together or not at all, and plain, so it fails, and nothing is
-      # released, if either has moved since this run started. Pushed with the GITHUB_TOKEN, which
-      # starts no workflow run.
+      # released, if either has moved since this run started. Pushed with the checkout's token: the
+      # RELEASE_TOKEN starts the Build workflow on dev and main, which only tests.
       - name: Push the release commits
         if: inputs.publish && inputs.kind == 'release'
         run: git push --atomic origin "$DEV_SHA:refs/heads/dev" "$MAIN_SHA:refs/heads/main"
