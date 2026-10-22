@@ -3,13 +3,18 @@ name: Unit tests
 # Runs the non-UI test suites (Api / Core / Roslyn / UI). This builds the whole solution
 # (so it also catches build/format breaks in any project) and runs `dotnet test`; the
 # Playwright e2e tests skip themselves unless E2E=1, so no app or browsers are needed here.
-# Runs on push to feature branches (main/dev are excluded since the CI/CD workflow calls
-# this there), and is also called by the CI/CD and extension workflows so deploy/build
-# wait for it.
+# Called by the Build workflow on every push and by the Release workflow on what it releases.
 on:
-  push:
-    branches-ignore: [main, dev]
   workflow_call:
+    inputs:
+      sha:
+        description: The commit to test (the Release workflow's); empty for the commit that started the run
+        type: string
+        default: ""
+      bundle:
+        description: Fetch the commit from the Release workflow's release-bundle artifact
+        type: boolean
+        default: false
   workflow_dispatch:
 
 permissions:
@@ -20,7 +25,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
+      # The Release workflow passes what it releases: a sha, and for a release the git bundle with
+      # its commits, which are not pushed yet. Otherwise the commit that started the run.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.bundle && github.sha || inputs.sha }}
+          fetch-depth: ${{ inputs.bundle && '0' || '1' }}
+
+      - name: Download the release commits
+        if: inputs.bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
+          path: ${{ runner.temp }}/bundle
+
+      - name: Check out the release commit
+        if: inputs.bundle
+        run: |
+          git fetch "$RUNNER_TEMP/bundle/release.bundle" "+refs/heads/*:refs/remotes/release/*"
+          git checkout -q --detach "${{ inputs.sha }}"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
