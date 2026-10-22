@@ -240,7 +240,7 @@ d.edge("ext.b2", "lsp.t", "LSP, stdio", ASYNC, dashed=True, both=True, label_dx=
 d.edge("lsp.b", "ws", "MSBuild, Roslyn,\nBicep compiler", ACCENT, label_dx=6, anchor="start", label_dy=-4)
 d.edge("webview.b", "idb1", None)
 
-d.group(570, 60, 480, 620, "Browser · dependinator.com", "Azure Static Web Apps: main = production, dev = pre-release")
+d.group(570, 60, 480, 620, "Browser · dependinator.com", "Azure Static Web Apps: releases = production, previews = pre-release")
 d.box("browser", 600, 110, 420, 140, "Browser · Blazor WebAssembly", [
     "view and adjust synced models from any device",
     "Dependinator.Wasm + UI + Core: the same UI as in VS Code",
@@ -267,7 +267,7 @@ d.node("funclocal", 1200, 360, "Azure-Functions", "Functions host", "func start,
 d.node("azurite", 1370, 360, "Storage-Account", "Azurite", "local Blob emulator")
 d.box("tools", 1110, 500, 340, 125, "Dev tools (outside the solution)", [
     "Dependinator.DemoGen: regenerates the demo models",
-    "scripts/: build, watch, run, test, e2e, release",
+    "scripts/: build, watch, run, test, e2e, changelog",
     "dev container: .NET 11 preview SDK, Playwright",
     "browsers, Functions Core Tools, Azurite"], icon="Configuration")
 d.port("webhost.b1", 1200, 250)
@@ -521,27 +521,27 @@ d = Diagram(1440, 660, "Dependinator delivery view")
 d.box("feature", 30, 70, 230, 110, "Feature branch", ["mr/<what-the-work-is>, from dev;", "each push: unit tests + e2e", "in Chromium"], icon="Utility")
 d.box("dependabot", 30, 240, 230, 90, "Dependabot", ["package updates as PRs to dev", "(security PRs: merge into dev)"], icon="Security")
 d.box("devb", 330, 70, 240, 260, "dev", [
-    "**the integration branch", "every push runs the full gate:", "· unit tests (dotnet test)", "· e2e in Chromium, Firefox", "  and WebKit", "· cloud sync e2e against", "  Azurite + Functions",
-    "then deploys the pre-release", "site (Static Web Apps)"], icon="Testing", tint=ACCENT)
-d.box("release", 640, 70, 230, 110, "./scripts/release", ["merges dev into main with", "changelog bullets and pushes;", "main only moves for a release"], icon="Configuration")
-d.box("main", 640, 240, 230, 130, "main", ["**every push is a release", "the same full gate, then", "deploys production"], icon="Static-Web-Apps", tint=ACCENT)
-d.node("site", 1000, 305, "Static-Web-Apps", "dependinator.com", "production")
-d.box("vsx", 1100, 220, 310, 175, "vscode-extension.yml", [
-    "bumps the minor version (0.83 → 0.84),", "writes the CHANGELOG, tags v<version>",
-    "builds one .vsix per platform, each with", "its own .NET server: Linux, Windows and", "macOS, x64 and arm64",
-    "publishes them to the Marketplace", "and as a GitHub release"], icon="Files")
-d.node("market", 1255, 500, "Cloud", "VS Code Marketplace", "michaelreichenauer.dependinator")
+    "**the integration branch", "each push: unit tests + e2e", "in Chromium; nothing is", "deployed by a push or a merge",
+    "holds the notes of the next", "release: CHANGELOG.md's", "## [Unreleased]"], icon="Testing", tint=ACCENT)
+d.box("release", 640, 40, 230, 175, "release.yml, run by hand", ["**a preview or a release", "the full gate: unit tests, e2e", "in 3 browsers, cloud sync e2e;",
+    "builds the site and one .vsix", "per platform (Linux, Windows,", "macOS; x64 and arm64)", "then pushes and publishes"], icon="Configuration")
+d.box("main", 640, 270, 230, 100, "main", ["**releases only", "the workflow merges dev into it", "and raises the minor on dev"], icon="Static-Web-Apps", tint=ACCENT)
+d.node("site", 1000, 305, "Static-Web-Apps", "dependinator.com", "previews: the dev site")
+d.box("vsx", 1100, 220, 310, 175, "GitHub release v<version>", [
+    "tagged on what was built:", "main's merge, or dev for a preview", "(a pre-release)",
+    "the .vsix packages as assets", "and the notes from CHANGELOG.md"], icon="Files")
+d.node("market", 1255, 500, "Cloud", "VS Code Marketplace", "releases only")
 d.port("devb.l1", 330, 125); d.port("devb.l2", 330, 285)
 d.edge("feature.r", "devb.l1", "PR, merge", ACCENT, label_dy=-8)
 d.edge("dependabot.r", "devb.l2", "PR", label_dy=-8)
 d.port("devb.r1", 570, 125)
-d.edge("devb.r1", "release.l", "release", ACCENT, label_dy=-8)
-d.edge("release.b", "main.t", None, ACCENT)
+d.edge("devb.r1", "release.l", "run on dev", ACCENT, label_dy=-8)
+d.edge("release.b", "main.t", "release", ACCENT)
 d.edge("main.r", "site", "deploy", ACCENT, label_dy=-8)
 d.port("vsx.l1", 1100, 305)
 d.edge("site", "vsx.l1", "then", ACCENT, label_dy=-8)
 d.edge("vsx.b", "market", None, ACCENT)
 d.note(30, 595, ["**Quality gate",
-                 "About 900 unit tests and a Playwright suite of 4.4k lines run on every push. The CI/CD workflow (azure-static-web-apps-*.yml) calls unit-tests.yml and e2e.yml before it deploys;",
+                 "About 900 unit tests and a Playwright suite of 4.4k lines run on every push (build.yml calls unit-tests.yml and e2e.yml), and the Release workflow runs them all before it publishes;",
                  "Playwright traces are uploaded when an e2e test fails. CSharpier formatting is checked during the build, and the architecture tests guard the layering."], size=11)
-write("7-delivery.svg", d, "Delivery view of Dependinator: feature branches and Dependabot PRs merge into dev, whose pushes run unit tests and e2e in three browsers plus cloud sync tests and deploy a pre-release site; ./scripts/release merges dev into main, whose pushes deploy dependinator.com and then run vscode-extension.yml, which bumps the version, builds a .vsix per platform and publishes it to the VS Code Marketplace and a GitHub release.")
+write("7-delivery.svg", d, "Delivery view of Dependinator: feature branches and Dependabot PRs merge into dev, whose pushes only run the tests; the Release workflow, run by hand on dev, runs the full gate and builds the site and a .vsix per platform, and then a preview deploys the pre-release site and a GitHub pre-release, while a release merges dev into main, deploys dependinator.com and publishes the VS Code Marketplace and a GitHub release.")

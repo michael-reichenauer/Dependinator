@@ -2,29 +2,34 @@
 
 How this project is worked on, beyond CLAUDE.md. Always loaded, in local and cloud sessions alike.
 
-## Merges and releases
+## Branches, merges and releases
 
+- **Branches** are named after the work, with the `mr/` prefix and a short kebab-case description
+  (`mr/release-process`, `mr/fix-diagram-zoom`), branched from `dev`; never generated names.
+- **Work on a feature branch and open a pull request into `dev`**; never commit or push to `dev` or
+  `main` directly (the one exception: the `release` skill's notes commit). Do not merge the PR
+  until the user says so, and link it in the report. After a merge, name the merged branch in the
+  report; the user deletes branches (or GitHub deletes head branches).
 - **Review before merging into `dev`.** Have the commits to be merged (`dev..<branch>`) reviewed
   in a fresh context first: the `code-review` skill on `<branch>` against `dev`, or a new session.
-  Commits that fix review findings count as unreviewed until someone reviews them. Report the
-  findings and get the user's go-ahead before merging. One such review found 15 issues, among
-  them a cache bug that would have shipped.
-- **Merge messages are release notes:** one summary line, then "- " bullets of what changed for
-  the user (not commit subjects or internals).
-  - dev: `git merge --no-ff <branch> -F <file>`; write the message to a file first
-    (`git merge -F -` does not read stdin).
-  - main: `./scripts/release -m "…"` once per bullet, gathered from the dev merge messages since
-    the last release. Without `-m` it lists every commit subject since the last tag; it ignores
-    merge bodies. Preview with `-n`.
-- **The release flow is settled:** every main push is an automatic release, Dependabot targets dev
-  (grouped), `./scripts/release` merges dev into main. Declined, don't re-propose: a
-  version-driven release, a manual-dispatch-only release, gating the production deploy on a
-  release, making dev the default branch.
-- A 401 in the extension's publish step means the `VSCE_PAT` secret (an Azure DevOps PAT,
-  expires around July 2027) needs a new token. `./scripts/build-ext` bumps the patch version
-  locally, which can diverge from CI's bump.
-- CI timing baseline (Oct 2026): a dev push's CI/CD takes ~10.5 min, a release ~15. Per-browser
-  e2e time varies ±30 s run to run (~3.4 s per test), so compare a range of runs, not two.
+  Commits that fix review findings count as unreviewed until someone reviews them. Fix what holds
+  up, report the findings and get the user's go-ahead before merging. One such review found 15
+  issues, among them a cache bug that would have shipped.
+- **Merge messages describe the change** as one summary line, then `- ` lines, for users where it
+  matters. They are raw material for the release notes, not the notes themselves.
+  `git merge --no-ff <branch> -F <file>`; write the message to a file first (`git merge -F -` does
+  not read stdin).
+- **Releases only through the Release workflow, when the user asks** (the `release` skill,
+  `docs/RELEASING.md`): a preview from `dev`, a release from `main`, the notes written in
+  `CHANGELOG.md`'s `## [Unreleased]` beforehand. Nothing is published by a push or a merge. Never
+  merge into `main` or push it by hand, and never merge `main` into `dev`; the workflow makes the
+  release commits. This replaced the earlier flow (every `main` push a release, `./scripts/release`)
+  in Oct 2026.
+- **Whenever you are blocked or waiting on the user**, notify them: they are often not watching.
+- A 401 in the Release workflow's Marketplace step means the `VSCE_PAT` secret (an Azure DevOps
+  PAT, expires around July 2027) needs a new token.
+- CI timing baseline (Oct 2026, before the Release workflow): a full gate took ~10.5 min.
+  Per-browser e2e time varies ±30 s run to run (~3.4 s per test), so compare a range of runs, not two.
 
 ## Changes list
 

@@ -70,7 +70,7 @@ not reference `Dependinator.Core`).
 - [ ] `Directory.Build.props`: remove `<LangVersion>` (C# 15 is the default). Keep `WarningsAsErrors`
       with `CS8509`.
 - [ ] Workflows: remove the `dotnet-version: "10.0.x"` line in `.github/workflows/unit-tests.yml`,
-      `e2e.yml`, `vscode-extension.yml` and `azure-static-web-apps-polite-island-0e6a6eb03.yml` (the
+      `e2e.yml`, `release.yml` and `azure-static-web-apps-polite-island-0e6a6eb03.yml` (the
       11 SDK carries the 11 runtime). In `e2e.yml` change the Playwright path
       `tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1` to `net11.0`.
 - [ ] `.devcontainer/Dockerfile`: `FROM mcr.microsoft.com/dotnet/sdk:11.0`, delete the

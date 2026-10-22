@@ -26,8 +26,8 @@ project works.
   optional test projects. Then the UX review: shortcuts, dark theme, history, breadcrumb, line
   filters, legend, cycles, Manage Models, VS Code commands.
 - **Oct**: the rest of the UX review (path finder, tour, share links, architecture rules, minimap,
-  group and rubber-band selection), new line and container visuals, a release flow through `dev`,
-  a README and community-files rework, the Bicep parser, zones, line labels and aliases,
+  group and rubber-band selection), new line and container visuals, a release flow through `dev`
+  and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
   Claude's suggestions for cycles, C# member naming fixes, and a problem indicator with node badges.
 
@@ -296,6 +296,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   `main` creates a release, and the CI/CD and extension workflows were unified.
 - **Release flow (Oct 6).** Dependabot PRs target `dev`, grouped. `./scripts/release` merges `dev`
   into `main` with changelog bullets. Each release bumps the minor version.
+- **Release workflow (Oct 22).** gmd's process: nothing is published by a push or a merge. A
+  manual Release workflow makes a preview from `dev` (pre-release site, GitHub pre-release) or a
+  release from `main` (it merges `dev` into `main`, raises the minor on `dev`, deploys production,
+  publishes the Marketplace and the GitHub release), after the full gate. The notes are written by
+  hand or by Claude (the `release` skill) in `CHANGELOG.md`'s `## [Unreleased]`, grouped New,
+  Improved, Changed, Fixed. One version `major.minor.<minutes since 2026-01-01>` everywhere
+  (`docs/RELEASING.md`).
 - **Security (Oct 8).** CodeQL alerts fixed and the workflow's `GITHUB_TOKEN` permissions limited.
   Vulnerable transitive packages (MessagePack, System.Security.Cryptography.Pkcs/Xml) pinned to
   patched versions until their parent packages catch up (Oct 19).

@@ -21,7 +21,7 @@ own notes, icons and hand-drawn nodes on top.
 | **Stack** | .NET 10 (built with the .NET 11 preview SDK for C# 15 unions), Blazor WebAssembly and Blazor Server, MudBlazor, StreamJsonRpc, OmniSharp LSP, TypeScript for the extension, Azure Static Web Apps, Azure Functions and Blob Storage, Clerk for sign-in |
 | **Size** | About 41k lines of product code, 70% of it in the shared UI library; about 25k lines of tests |
 | **Tests** | About 900 unit tests, a Playwright UI suite run in Chromium, Firefox and WebKit, and architecture tests that guard the layering |
-| **Releases** | Version 0.83 (beta). Every push to `main` is a release; there have been about 30 since July 2026 |
+| **Releases** | Version 0.83 (beta), about 30 releases since July 2026. Previews and releases are made by hand with the Release workflow (`docs/RELEASING.md`) |
 
 ## 1. Context view: who uses Dependinator, and what it talks to
 
@@ -62,7 +62,7 @@ On **dependinator.com** the same WebAssembly build is served by Azure Static Web
 view and adjust synced models from any device. The site's `/api` routes go to `src/Api`, the
 Functions app for cloud sync. There is no parser in the browser: the two demo models that help a
 new user get started were parsed at build time by `Dependinator.DemoGen` and are downloaded as
-gzipped files. `main` deploys production and `dev` a pre-release site.
+gzipped files. A release deploys production and a preview a pre-release site.
 
 The **Blazor Server** host (`Dependinator.Web`) runs the UI on the server and the parsers in the
 same process, so a contributor gets hot reload and real parsing of this repository with one
@@ -184,20 +184,21 @@ allows longer lifetimes. Both clients send the token in a custom header as well 
 
 ![Delivery view](architecture/7-delivery.svg)
 
-Work happens on `mr/...` feature branches from `dev`; each push runs the unit tests and the e2e
-suite in Chromium. `dev` is the integration branch: every push there runs the full gate (unit
-tests, e2e in Chromium, Firefox and WebKit, and the cloud sync e2e tests against Azurite and a
-local Functions host) and then deploys the pre-release site. Dependabot sends package updates to
-`dev`.
+Work happens on `mr/...` feature branches from `dev`, merged through pull requests; each push runs
+the unit tests and the e2e suite in Chromium, and each pull request gets its own test site. `dev`
+is the integration branch. Dependabot sends package updates to `dev`. Nothing is deployed by a push
+or a merge.
 
-A release is one command: `./scripts/release` merges `dev` into `main` with changelog bullets.
-Every push to `main` runs the same gate, deploys dependinator.com, and then runs the extension
-workflow, which bumps the minor version, tags it, builds one `.vsix` per platform (Linux, Windows
-and macOS, each for x64 and arm64, each with its own self-contained server), and publishes them to
-the VS Code Marketplace and a GitHub release.
+Previews and releases are made by hand with the Release workflow (`docs/RELEASING.md`), from the
+notes written in `CHANGELOG.md`. Both run the full gate (unit tests, e2e in Chromium, Firefox and
+WebKit, and the cloud sync e2e tests against Azurite and a local Functions host) and build the web
+app and one `.vsix` per platform (Linux, Windows and macOS, each for x64 and arm64, each with its
+own self-contained server). A preview builds `dev` and deploys the pre-release site and a GitHub
+pre-release. A release merges `dev` into `main`, raises the minor version on `dev`, and only then
+pushes both, deploys dependinator.com, and publishes the VS Code Marketplace and a GitHub release.
 
-Points to discuss: the full gate runs on every `dev` push, which keeps `main` always releasable at
-the cost of CI time. The demo models and the demo gif are generated from the code and checked in,
+Points to discuss: the full gate runs only when a preview or a release is made, so a `dev` that
+fails in Firefox, WebKit or cloud sync is found then rather than at the merge. The demo models and the demo gif are generated from the code and checked in,
 so they need regenerating when the parser or the UI changes visibly.
 
 ## Key design decisions
