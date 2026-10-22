@@ -1,8 +1,10 @@
 using Dependinator.Bicep;
+using Dependinator.Claude;
 using Dependinator.Core;
 using Dependinator.Core.CloudSync;
 using Dependinator.Core.Rpc;
 using Dependinator.Core.Utils.Logging;
+using Dependinator.Lsp.Claude;
 using Dependinator.Lsp.CloudSync;
 using Dependinator.Roslyn;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,8 @@ internal class Program
                         services.AddDependinatorCoreServices();
                         services.AddDependinatorRoslynServices();
                         services.AddDependinatorBicepServices();
+                        services.AddDependinatorClaudeServices();
+                        services.AddSingleton<IClaudeApiKeyProvider, LspClaudeApiKeyProvider>();
                         services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();
                         services.AddSingleton(new HttpClient());
                         services.AddSingleton<LspCloudSyncContext>();
@@ -56,6 +60,7 @@ internal class Program
                             // Register remote services callable from the WebView WASM UI
                             server.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
                             server.UseJsonRpcClasses(typeof(Program));
+                            server.UseJsonRpcClasses(typeof(DependinatorClaudeServiceCollectionExtensions));
                             server.UseJsonRpc();
                             Log.Info("Initialized JsonRpc");
 

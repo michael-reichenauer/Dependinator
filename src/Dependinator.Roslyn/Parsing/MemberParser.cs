@@ -107,6 +107,7 @@ static class MemberParser
 
     static bool IsSameAsContainingType(INamedTypeSymbol type, ISymbol member)
     {
-        return SymbolEqualityComparer.Default.Equals(type, member.ContainingType);
+        // A generic type's own construction (Result<int> in Result<T>) is the same type too
+        return SymbolEqualityComparer.Default.Equals(type.OriginalDefinition, member.ContainingType);
     }
 }

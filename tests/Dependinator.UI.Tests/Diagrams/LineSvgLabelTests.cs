@@ -85,9 +85,10 @@ public class LineSvgLabelTests
             modelMgr,
             Mock.Of<ITilesMgr>(),
             new ViewOptions(),
-            new CycleService(modelMgr),
+            new CycleService(modelMgr, Mock.Of<Dependinator.UI.Modeling.Commands.ICommandService>()),
             Mock.Of<IPathFinderService>(),
-            Mock.Of<IRuleService>()
+            Mock.Of<IRuleService>(),
+            Mock.Of<IProblemService>()
         );
 
         var svg = service.GetContentSvg(new Rect(0, 0, 2000, 2000), 1.0);

@@ -6,6 +6,7 @@ import {
     startLanguageServer
 } from "./languageServer";
 import * as logger from "./logger";
+import * as claudeApiKey from "./claudeApiKey";
 import type { WebviewMessage } from "./types";
 import {
     createDependinatorWebviewPanel,
@@ -319,6 +320,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         } catch (error) {
             logger.error("Dependinator cloud sync auth failed to initialize", error);
         }
+        claudeApiKey.registerClaudeApiKey(client, context);
     });
 
     // Opens (or reveals) the webview hosting the WASM UI and shows the active editor's node.
@@ -428,6 +430,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 return;
             }
             activePanel.webview.postMessage({ type: "ui/refresh", message: "" });
+        }),
+        vscode.commands.registerCommand(claudeApiKey.setClaudeApiKeyCommandId, async () => {
+            if (await claudeApiKey.askForApiKeyAsync(context))
+                vscode.window.showInformationMessage("Dependinator: The Claude API key is saved.");
         }),
         vscode.commands.registerCommand(searchCommandId, async () => {
             // With the diagram already open the search dialog opens right away; otherwise the

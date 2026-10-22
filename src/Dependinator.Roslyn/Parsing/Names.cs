@@ -13,6 +13,13 @@ static class Names
             | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
     );
 
+    static readonly SymbolDisplayFormat TypeNameFormat = new(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameOnly,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
+            | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+    );
+
     public static string GetSolutionName(string solutionPath)
     {
         return EncodeName(Path.GetFileName(solutionPath));
@@ -62,8 +69,49 @@ static class Names
     public static string GetFullMemberName(ISymbol symbol, string fullTypeName)
     {
         var memberName = symbol.ToDisplayString(MemberFormat).Replace(" ", "");
+        // A static constructor displays like the parameterless instance constructor, "Type()"
+        if (symbol is IMethodSymbol { MethodKind: MethodKind.StaticConstructor })
+            memberName = $"static{memberName}";
+        if (symbol is IMethodSymbol { MethodKind: MethodKind.Conversion } conversion)
+            memberName = WithoutTargetTypeQualifiers(memberName, conversion);
         return $"{fullTypeName}.{memberName}";
     }
+
+    // A conversion operator displays with its target type qualified, "implicitoperatorNs.Result(int)",
+    // and the target's dots would make parent nodes for "implicitoperatorNs" inside the type, so the
+    // target type is named alone: "implicitoperatorResult(int)". When the type also converts to
+    // another type of that name, both keep their qualifiers, with "*" for "." as in module names:
+    // "implicitoperatorNs*Result(int)".
+    static string WithoutTargetTypeQualifiers(string memberName, IMethodSymbol conversion)
+    {
+        string targetType = ToMemberNameText(conversion.ReturnType, MemberFormat);
+        int operatorEnd = memberName.IndexOf("operator", StringComparison.Ordinal) + "operator".Length;
+        int targetIndex = memberName.IndexOf(targetType, operatorEnd, StringComparison.Ordinal);
+        if (targetIndex < 0)
+            return memberName;
+
+        string targetName = HasTargetNameTwin(conversion)
+            ? targetType.Replace('.', '*')
+            : ToMemberNameText(conversion.ReturnType, TypeNameFormat);
+        return memberName[..targetIndex] + targetName + memberName[(targetIndex + targetType.Length)..];
+    }
+
+    // The type converts to another type with the same name the same way, e.g. "explicit operator
+    // A.Item" and "explicit operator B.Item", or Result<A.X> and Result<B.X>.
+    static bool HasTargetNameTwin(IMethodSymbol conversion)
+    {
+        string targetName = ToMemberNameText(conversion.ReturnType, TypeNameFormat);
+        return conversion
+            .ContainingType.GetMembers(conversion.Name)
+            .OfType<IMethodSymbol>()
+            .Any(other =>
+                !SymbolEqualityComparer.Default.Equals(other.ReturnType, conversion.ReturnType)
+                && ToMemberNameText(other.ReturnType, TypeNameFormat) == targetName
+            );
+    }
+
+    static string ToMemberNameText(ITypeSymbol type, SymbolDisplayFormat format) =>
+        type.ToDisplayString(format).Replace(" ", "");
 
     public static string GetFullName(ISymbol symbol)
     {

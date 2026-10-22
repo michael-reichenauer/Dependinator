@@ -22,9 +22,10 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 - `src/Dependinator.Roslyn/` — Roslyn-based parsing (`Parsing/`)
 - `src/Dependinator.Bicep/` — Azure Bicep parsing (`Parsing/`) with the Bicep compiler library `Azure.Bicep.Core` (pinned in `Directory.Packages.props`, ignored by Dependabot); never write `Bicep.Core.*` qualified inside its `Dependinator.Bicep` namespace (see its `Usings.cs`)
 - `src/Dependinator.Reflection/` — reflection-based parsing of compiled assemblies/solutions (`Parsing/`); currently inactive, not referenced by any host
+- `src/Dependinator.Claude/` — asks Claude with the user's own Anthropic API key (official `Anthropic` C# SDK); implements Core's `IClaudeService` RPC for the Web host and the LSP
 - `src/Shared/` — shared DTOs/models between client and API
 
-**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Bicep.Tests/` (parses the sample deployment under its `Samples/`), `tests/Dependinator.Reflection.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
+**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Bicep.Tests/` (parses the sample deployment under its `Samples/`), `tests/Dependinator.Reflection.Tests/`, `tests/Dependinator.Claude.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
 
 The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution folders.
 
@@ -67,14 +68,12 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 ./scripts/e2e -s                                       # also start Azurite + Functions for sync tests
 ./scripts/e2e -t                                       # record Playwright traces into ./tests/Dependinator.E2E.Tests/traces
 ./scripts/trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
-# CI: e2e.yml and unit-tests.yml run on push to feature branches (main/dev excluded);
-# the CI/CD workflow (azure-static-web-apps-*.yml) calls them before deploy, with e2e
-# getting browsers=all + sync=true on push as the full gate. A dev push deploys the
-# pre-release site. Every main push is a release: CI/CD deploys production and then
-# calls vscode-extension.yml to bump the extension's minor version (0.8.x -> 0.9.0) and
-# publish it (that workflow runs its own test gate only on manual workflow_dispatch), so
-# main only moves for a release — ./scripts/release merges dev into main (with changelog
-# bullets) and pushes.
+# CI: build.yml runs unit-tests.yml and e2e.yml (Chromium) on every push and publishes
+# nothing; a PR into dev/main also gets a test site (azure-static-web-apps-*.yml).
+# Previews and releases are made only by hand with release.yml (docs/RELEASING.md, the
+# `release` skill): a preview builds dev and deploys the pre-release site + a GitHub
+# pre-release; a release merges dev into main, deploys production and publishes the
+# extension. Both run the full gate first (all browsers + cloud sync).
 # Dependabot PRs target dev (.github/dependabot.yml); security PRs still target main —
 # merge their branch into dev instead, the main PR closes itself after the next release.
 # Playwright traces are uploaded as an artifact on e2e failure.
@@ -86,7 +85,8 @@ npm run package --prefix ./src/DependinatorVsCode
 npm run install:vsix --prefix ./src/DependinatorVsCode
 ./scripts/build-ext                                    # npm install + version bump + package
 ./scripts/install-ext                                  # ./scripts/build-ext + install the VSIX into VS Code
-./scripts/release [-m "bullet"]...                     # release: merge dev into main + push (bullets -> CHANGELOG); -y no prompt, -n preview
+scripts/changelog unreleased                           # the notes of the next release (CHANGELOG.md's ## [Unreleased])
+gh workflow run release.yml --ref dev -f kind=preview  # preview (or kind=release); see docs/RELEASING.md
 
 # Icons
 ./scripts/import-icons                                 # re-import curated Azure/AWS/Google icons into src/Dependinator.UI/Diagrams/Icons/Library/ (manifests in scripts/cloud-icons/)
@@ -96,7 +96,7 @@ npm run install:vsix --prefix ./src/DependinatorVsCode
 ./scripts/gen-demo bicep                               # regenerate demo-bicep.model from examples/bicep/webshop.bicep (after changing the example)
 
 # Demo gif (VS Code extension README)
-./scripts/record-demo                                  # re-record src/DependinatorVsCode/resources/demo.gif (scenario in scripts/record-demo.mjs; needs ffmpeg + global @playwright/cli)
+./scripts/record-demo                                  # re-record src/DependinatorVsCode/resources/demo.gif (scenario in scripts/record-demo.mjs; needs ffmpeg + global @playwright/cli; it once left demo.model modified: check git status after)
 
 # Packages
 ./scripts/updatepackages -u                            # upgrade non-major packages
@@ -107,21 +107,34 @@ dotnet list Dependinator.sln package --vulnerable
 
 `./scripts/run` requires `func` (Azure Functions Core Tools), `azurite`, and `swa` (SWA CLI) to be installed.
 `./scripts/watch` requires `func` and `azurite` (no SWA CLI needed).
+`./scripts/cloud-setup` installs the whole build and test toolchain (all but `swa`) on a fresh Ubuntu 24.04 machine, such as a cloud session.
 
 ## Tooling & Conventions
 
 - **Package versions:** centrally managed in `Directory.Packages.props`; avoid per-project version overrides.
 - **Formatting:** CSharpier (`.csharpierrc.json`) + `.editorconfig`. Run `dotnet csharpier --check .` to verify; `CSharpier.MsBuild` also enforces formatting during build.
-- **Style:** 4-space indent, explicit types over `var`, PascalCase for types/methods/properties/constants, nullable-aware code, braces preferred.
+- **Style:** 4-space indent, PascalCase for types/methods/properties/constants, nullable-aware code, braces preferred.
 - **Results:** fallible operations return `Result` / `Result<T>` (`src/Dependinator.Core/Utils/Result.cs`), C# 15 unions matched on the case type. Propagate with `if (await X() is Error e) return e;` and `if (result is not T value) return result.Error;`; create errors with `new Error("...")`, `new Error("...", inner)` or `new Error(exception)`; wrap a throwing API with `Result.Catch(...)`; a `switch` over a result is exhaustive with its two arms (CS8509 is a build error). There is no `Try` helper, no typed value accessor and no `union` keyword (CSharpier cannot parse it yet). `NotFoundError` exists only for the cloud pull's 404. Name the exact declared type in a pattern: `Source`, `Item`, `Node` and `Link` exist in more than one namespace, and a pattern on the wrong twin compiles and never matches. Generic code matches `result.Value is T value`. Never use `default(Result)`. Tests assert with `AssertOk(result)` / `AssertError(result)` (`tests/Dependinator.Core.Tests/Utils/ResultAssert.cs`, linked into the other test projects).
 - **.NET 11 GA follow-up:** the checklist for the GA SDK (`LangVersion` 15, no preview) and for a later move to net11.0 is `docs/notes/NET11-UPGRADE.md`.
 - **Tests:** xUnit + Moq + Verify.Xunit. Name tests as `MethodName_ShouldDoX()`. `tests/Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` (at the repo root) dynamically via `tests/Dependinator.Core.Tests/Root.cs` — do not hardcode `/workspaces/...` paths in tests.
-- **UI/e2e tests:** `tests/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./scripts/e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. Keep the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props` in sync with `PLAYWRIGHT_VERSION` in `.devcontainer/post-create.sh`.
+- **UI/e2e tests:** `tests/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./scripts/e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. The browser builds follow the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props`: `.devcontainer/post-create.sh` and `scripts/cloud-setup` read it from there; after a bump, re-run `post-create.sh` (or rebuild the devcontainer) to fetch matching browsers.
 - **Browser checks:** after UI changes, use the `ui-check` skill (`.claude/skills/ui-check/`) to verify behavior with `playwright-cli` and run `./scripts/e2e`.
+- **Project knowledge:** the traps, decisions and parked ideas found while working live in `.claude/rules/`: `workflow.md` is always loaded, the others load with the files they concern (e2e tests, UI, parsing). Record new durable knowledge there, not in a local memory, so every session (cloud ones too) has it.
+
+## Cloud sessions
+
+Claude Code on the web runs in a fresh Ubuntu VM with the repo cloned, without the devcontainer. The SessionStart hook in `.claude/settings.json` runs `./scripts/cloud-setup --hook` when `CLAUDE_CODE_REMOTE=true`. It installs .NET SDK 10 and the `global.json` SDK, Azurite, `func`, the Playwright browsers and playwright-cli, then restores tools and packages, so `./scripts/test`, `./scripts/e2e [-a] [-s]` and the `ui-check` skill work as they do locally. Its one-line result is in the session context and its log in `/tmp/cloud-setup.log`. The environment's own setup script (claude.ai environment settings; its text is in the `scripts/cloud-setup` header) runs the same script before the session starts, so the toolchain is in the cached snapshot and the hook takes ~12 s. Sessions run as root with the repo at `/home/user/Dependinator`.
+
+- If the setup failed with a download error, the environment's network allowlist lacks a host. It needs Custom access: the Trusted defaults plus `builds.dotnet.microsoft.com`, `ci.dot.net`, `aka.ms`, `cdn.playwright.dev`, `playwright.download.prss.microsoft.com`, `crl3.digicert.com` (NuGet signature revocation checks), and for the app pages under test `renewed-hen-98.clerk.accounts.dev` and `fonts.gstatic.com`. Tell the user which host was blocked. The app's Application Insights telemetry hosts (`*.applicationinsights.azure.com`, `*.monitor.azure.com`) can stay blocked.
+- A session started on `dev` or `main` creates its own `mr/<topic>` branch first. The GitHub proxy does not restrict which branches a push updates, so the rule against committing to `dev`/`main` is the only guard. Push the branch at the end of each turn or larger step: an idle VM is reclaimed, and the push is how the user gets the work. Each feature-branch push runs CI (unit tests + chromium e2e), so don't push after every small commit.
 
 ## Architecture Notes
 
+The architecture overview with diagrams is `docs/ARCHITECTURE.md` (diagrams generated by `docs/architecture/generate.py`; update both when the architecture changes).
+
 **Parsing pipeline:** `src/Dependinator.Core/Parsing/` orchestrates via `ParserService`, which dispatches to the first registered `ISourceParser` whose `CanParse(path)` matches (Roslyn for `.sln`, Bicep for `.bicep`, the browser stub for the demo model only). Roslyn-specific logic lives in `src/Dependinator.Roslyn/Parsing/`; Bicep parsing (an entry-point `.bicep` plus its local modules, resources drawn with Azure icons via a parser-supplied `NodeProperties.IconName`) lives in `src/Dependinator.Bicep/Parsing/`. The older reflection/assembly parsing (Mono.Cecil + decompilation, MSBuild solutions, json model files) lives in `src/Dependinator.Reflection/` — inactive; re-activate by referencing the project and calling `AddDependinatorReflectionServices()`.
+
+**AI help (Claude):** the cycle review dialog (`AcceptCycleDialog`) copies a prompt for any AI chat (`CyclePrompt`, with source from `IWorkspaceFileService.ReadSourceFileAsync` in the Web host and VS Code), and its "Ask Claude" sends it through Core's `[Rpc] IClaudeService` (structured output). Like cloud sync, the UI never calls the API itself: the Web host runs `src/Dependinator.Claude` in process with the key from `ANTHROPIC_API_KEY`; in VS Code the LSP runs it and asks the extension for the key (`DependinatorVsCode/src/claudeApiKey.ts`, VS Code secret storage, command "Dependinator: Set Claude API Key"). The standalone Wasm app offers neither source nor Claude. Third-party apps may not use a user's claude.ai subscription, hence the user's own API key.
 
 **Cloud sync auth:** All hosts use Clerk for authentication. The API validates Clerk-issued JWTs via JWKS. Browser hosts (Blazor Server and WASM) use Clerk.js for sign-in and attach Bearer tokens to API requests. The VS Code extension serves a local sign-in page with Clerk.js and stores the JWT in VS Code secrets. All API calls use Bearer tokens via the `Authorization` or `X-Dependinator-Authorization` header.
 
@@ -131,15 +144,16 @@ dotnet list Dependinator.sln package --vulnerable
 
 **VS Code extension:** when editing functionality used by the extension, check `src/DependinatorVsCode/scripts/` for corresponding build steps.
 
-**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`, `Bicep → Core` and `Reflection → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, Bicep, Reflection, hosts, or UI frameworks (MudBlazor/ASP.NET Core), and Shared must not reference other Dependinator projects. Don't add references against this direction.
+**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`, `Bicep → Core`, `Reflection → Core` and `Claude → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, Bicep, Reflection, Claude, hosts, or UI frameworks (MudBlazor/ASP.NET Core), Core and UI must not reference the Anthropic SDK (they ship to the browser), and Shared must not reference other Dependinator projects. Don't add references against this direction.
 
 ## Committing
 
 Commit on your own whenever a good logical step is complete and would benefit from being a
 separate commit: a working, formatted, tested unit of change (build green, unit tests green,
 e2e where UI changed). A large task or phase may well end up as several commits rather than
-one; the user reviews the commits in git afterwards. Do not push unless asked. Work on the
-current feature branch, never directly on `main` or `dev`.
+one; the user reviews the commits in git afterwards. Pushing the feature branch is fine. Work on
+the current feature branch, never directly on `main` or `dev`: `dev` moves only through merged pull
+requests and `main` only through the Release workflow (`.claude/rules/workflow.md`).
 
 ## Commit Style
 

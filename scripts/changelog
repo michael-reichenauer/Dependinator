@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Reads and stamps CHANGELOG.md, whose '## [Unreleased]' section holds the notes of the next release,
+# written by hand or by Claude (docs/RELEASING.md). The release workflow runs it:
+#   scripts/changelog unreleased            The notes of the next release, or nothing when there are none
+#   scripts/changelog notes <version>       The notes of a release made, e.g. v0.84.423503
+#   scripts/changelog stamp <version> <date> Head the unreleased notes with the version and date, and
+#                                            start a new, empty '## [Unreleased]' above them
+# A section ends at the next '## ' heading; its own '### New' and so on are part of it.
+
+cd "$(dirname "$0")/.." || exit 1
+
+FILE="CHANGELOG.md"
+UNRELEASED="## [Unreleased]"
+
+usage() {
+  echo "usage: scripts/changelog unreleased | notes <version> | stamp <version> <date>" >&2
+  exit 1
+}
+
+# The lines under the heading, up to the next '## ', without the blank lines around them
+section() {
+  awk -v heading="$1" '
+    index($0, heading) == 1 { on = 1; next }
+    on && /^## / { exit }
+    on { lines[n++] = $0 }
+    END {
+      first = 0; while (first < n && lines[first] ~ /^[ \t]*$/) first++
+      last = n - 1; while (last >= first && lines[last] ~ /^[ \t]*$/) last--
+      for (i = first; i <= last; i++) print lines[i]
+    }' "$FILE"
+}
+
+# Notes with no item, only their group headings, are no notes
+has_items() { grep -q '^- ' <<< "$1"; }
+
+case "$1" in
+  unreleased)
+    [ $# -eq 1 ] || usage
+    NOTES="$(section "$UNRELEASED")"
+    if has_items "$NOTES"; then echo "$NOTES"; fi
+    ;;
+  notes)
+    [ $# -eq 2 ] || usage
+    section "## [v${2#v}]"
+    ;;
+  stamp)
+    [ $# -eq 3 ] || usage
+    if ! grep -qxF "$UNRELEASED" "$FILE"; then
+      echo "Error: no '$UNRELEASED' heading in $FILE" >&2
+      exit 1
+    fi
+    if ! has_items "$(section "$UNRELEASED")"; then
+      echo "Error: the '$UNRELEASED' section of $FILE has no notes, no '- ' line" >&2
+      exit 1
+    fi
+    awk -v unreleased="$UNRELEASED" -v heading="## [v${2#v}] - $3" '
+      $0 == unreleased && !done { print unreleased; print ""; print heading; done = 1; next }
+      { print }' "$FILE" > "$FILE.tmp" && mv "$FILE.tmp" "$FILE"
+    ;;
+  *)
+    usage
+    ;;
+esac

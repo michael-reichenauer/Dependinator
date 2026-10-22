@@ -57,12 +57,13 @@ time-travel its before/after DOM snapshot, and use the Console/Network/Source ta
 
 ### CI
 
-`.github/workflows/e2e.yml` runs this suite on pull requests (Chromium) and on
-pushes to `main`/`dev`; trigger it manually ("Run workflow") with **all** to also
-cover Firefox + WebKit before a release. It sets `E2E_TRACE=1` and, **on failure**,
-uploads the recorded traces as a `playwright-traces` artifact — download the `.zip`
-and open it at <https://trace.playwright.dev>. Sync (`[SyncFact]`) tests are skipped
-in CI (they need `func` + Azurite); they run locally via `./scripts/e2e -s`.
+`.github/workflows/e2e.yml` runs this suite on Chromium, without the sync tests, on
+feature-branch pushes and pull requests. On pushes to `dev`/`main` the CI/CD workflow
+calls it with all three browsers plus the sync (`[SyncFact]`) tests as the gate before
+deploying; trigger it manually ("Run workflow") to choose browsers and sync yourself.
+Each browser runs as its own parallel job. It sets `E2E_TRACE=1` and, **on failure**,
+uploads the recorded traces as a `playwright-traces-<browser>` artifact — download the
+`.zip` and open it at <https://trace.playwright.dev>.
 
 ### Deterministic model (test mode)
 
@@ -216,10 +217,10 @@ here. Instead:
 
 ## Version pinning
 
-`Microsoft.Playwright.Xunit` (Directory.Packages.props) and `PLAYWRIGHT_VERSION`
-in `.devcontainer/post-create.sh` must stay on the same version so the tests
-find matching browser builds in `~/.cache/ms-playwright`. When bumping the NuGet
-package, update the script and run it once (or rebuild the devcontainer).
+`.devcontainer/post-create.sh` (and `scripts/cloud-setup` in cloud sessions)
+read the `Microsoft.Playwright.Xunit` version from Directory.Packages.props and
+install the matching browser builds into `~/.cache/ms-playwright`. After bumping
+the NuGet package, run the script once (or rebuild the devcontainer).
 
 Signed-in cloud-sync flows are not covered yet — they need a Clerk test-user
 strategy first.

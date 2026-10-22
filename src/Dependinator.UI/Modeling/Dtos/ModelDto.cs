@@ -28,6 +28,23 @@ record ModelDto
 
     // Defaulted, so models saved before rules existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<RuleDto> Rules { get; init; } = [];
+
+    // Defaulted, so models saved before accepted cycles existed still deserialize (no FormatVersion bump).
+    public IReadOnlyList<AcceptedCycleDto> AcceptedCycles { get; init; } = [];
+
+    // The problems the last parse found (compile errors), so the problem indicator shows them
+    // for a model opened from the cache, before (or without) a new parse. Defaulted (no
+    // FormatVersion bump).
+    public IReadOnlyList<ParseProblemDto> ParseProblems { get; init; } = [];
+}
+
+// A problem the last parse found (see Dependinator.Core.Parsing.ParseProblem).
+[Serializable]
+record ParseProblemDto
+{
+    public required string Message { get; init; }
+    public int ErrorCount { get; init; }
+    public string? NodeName { get; init; }
 }
 
 // An architecture rule: "From" must not depend on "To" (node names, see ArchitectureRule).
@@ -36,4 +53,15 @@ record RuleDto
 {
     public required string From { get; init; }
     public required string To { get; init; }
+}
+
+// A circular dependency the user accepted, with why, or marked to fix later, with the planned
+// change (node names, see AcceptedCycle).
+[Serializable]
+record AcceptedCycleDto
+{
+    public required string Container { get; init; }
+    public required IReadOnlyList<string> Members { get; init; }
+    public string Reason { get; init; } = "";
+    public bool IsToFix { get; init; }
 }

@@ -224,6 +224,48 @@ public class BicepParserTests(BicepFixture fixture)
         }
     }
 
+    // Semantic errors leave the model to be built, but can leave parts of it out, so each file
+    // with errors is one brief problem on the deployment's node, for the problem indicator.
+    [Fact]
+    public async Task ParseAsync_ShouldReportErrorsPerFile_AsProblemsOnTheDeployment()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), $"Dependinator-{Guid.NewGuid()}");
+        Directory.CreateDirectory(Path.Combine(folder, "modules"));
+        try
+        {
+            await File.WriteAllTextAsync(
+                Path.Combine(folder, "main.bicep"),
+                """
+                module shared 'modules/shared.bicep' = { name: 'shared' }
+                """
+            );
+            await File.WriteAllTextAsync(
+                Path.Combine(folder, "modules", "shared.bicep"),
+                """
+                output id string = 1
+                output count int = 'many'
+                """
+            );
+
+            var parser = new BicepParser(fixture.CompilerHost);
+            var items = AssertOk(
+                await parser.ParseAsync(Path.Combine(folder, "main.bicep"), SolutionParseOptions.Default)
+            );
+
+            // Not the entry file, though Bicep reports there that the module it uses has errors.
+            var deployment = items.Single(i => i.Node?.Properties.Type == NodeType.Solution).Node!.Name;
+            var problem = Assert.Single(items, i => i.Problem is not null).Problem;
+            Assert.Equal(
+                new ParseProblem($"2 errors in {Path.Combine("modules", "shared.bicep")}", 2, deployment),
+                problem
+            );
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
     [Fact]
     public void ParseAsync_ShouldSuffixOutputs_ThatShareAnIdentifier()
     {

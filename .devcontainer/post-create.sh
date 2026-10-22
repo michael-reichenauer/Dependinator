@@ -4,10 +4,15 @@ set -euo pipefail
 # Playwright setup for browser-based UI testing (Dependinator.E2E.Tests) and
 # agent browser checks (Claude Code via playwright-cli).
 #
-# PLAYWRIGHT_VERSION must match the Microsoft.Playwright version in
+# PLAYWRIGHT_VERSION is the Microsoft.Playwright.Xunit version in
 # Directory.Packages.props, so the .NET tests and the CLI share the same
-# browser builds in ~/.cache/ms-playwright.
-PLAYWRIGHT_VERSION="1.63.0"
+# browser builds in ~/.cache/ms-playwright (scripts/cloud-setup reads it the same way).
+PLAYWRIGHT_VERSION="$(sed -n 's/.*"Microsoft.Playwright.Xunit" Version="\([^"]*\)".*/\1/p' \
+    "$(dirname "$0")/../Directory.Packages.props")"
+if [[ -z "$PLAYWRIGHT_VERSION" ]]; then
+    echo "Could not read the Microsoft.Playwright.Xunit version from Directory.Packages.props." >&2
+    exit 1
+fi
 
 echo "Installing Playwright CLI (agent browser automation)..."
 npm install -g @playwright/cli@latest

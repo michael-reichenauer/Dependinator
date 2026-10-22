@@ -123,5 +123,7 @@
     }
   ],
   "Lines": [],
-  "Rules": []
+  "Rules": [],
+  "AcceptedCycles": [],
+  "ParseProblems": []
 }

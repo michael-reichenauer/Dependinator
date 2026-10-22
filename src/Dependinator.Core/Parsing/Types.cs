@@ -1,6 +1,6 @@
 namespace Dependinator.Core.Parsing;
 
-record Item(Node? Node, Link? Link, LineDescription? LineDescription = null);
+record Item(Node? Node, Link? Link, LineDescription? LineDescription = null, ParseProblem? Problem = null);
 
 // Per-model options controlling what a solution parse includes. Crosses the [Rpc] boundary of
 // IParserService, so keep it JSON-round-trippable: init properties with defaults, so that future
@@ -15,6 +15,13 @@ record SolutionParseOptions
 record Link(string Source, string Target, LinkProperties Properties);
 
 record LineDescription(string Source, string Target, string Text);
+
+// A problem found while parsing that can leave the model incomplete, for the problem indicator:
+// compile errors in a project (Roslyn resolves what it can around them, silently dropping nodes
+// and links) or in a Bicep file. One brief summary per project or file, not each error, which the
+// editor lists. NodeName is the node to show for it (a project's assembly node), if any.
+// Errors only, for now: warnings are common and many never get fixed.
+record ParseProblem(string Message, int ErrorCount, string? NodeName = null);
 
 record Node(string Name, NodeProperties Properties);
 

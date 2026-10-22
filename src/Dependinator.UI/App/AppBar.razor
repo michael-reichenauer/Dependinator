@@ -142,6 +142,13 @@
                     Show Legend
                 </MudMenuItem>
 
+                <MudMenuItem IconColor="Color.Secondary" Icon="@ProblemBadgesIcon" OnClick="ToggleProblemBadgesAsync"
+                             title="Marks the nodes that contain compile errors, cycles or dependencies that break a rule, with how many."
+                             data-checked="@(viewOptions.IsProblemBadgesShown ? "true" : "false")"
+                             data-testid="menu-problem-badges">
+                    Show Problem Badges
+                </MudMenuItem>
+
                 <MudMenuItem IconColor="Color.Secondary" Icon="@CyclesIcon" OnClick="ToggleCycles"
                              title="Lists circular dependencies and draws their lines in red."
                              data-checked="@(viewOptions.IsCyclesShown ? "true" : "false")"
@@ -435,6 +442,8 @@
         </MudTooltip>
     </MudHidden>
 
+    <ProblemIndicator OnShowCycles="ShowCycles" OnShowRules="ShowRules" />
+
 </MudButtonGroup>
 
 <MudMessageBox @ref="deleteLocalModelBox" Title="Delete Current Model" CancelText="Cancel">
@@ -714,6 +723,16 @@
     string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
     string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
+    string ProblemBadgesIcon => CheckIcon(viewOptions.IsProblemBadgesShown);
+
+    async Task ToggleProblemBadgesAsync()
+    {
+        var newValue = !viewOptions.IsProblemBadgesShown;
+        viewOptions.SetProblemBadgesShown(newValue);
+        await configService.SetAsync(config => config.ShowProblemBadges = newValue);
+        modelService.ClearCache(); // The badges are baked into the tiles
+        applicationEvents.TriggerUIStateChanged();
+    }
 
     async Task ToggleMinimapAsync()
     {
@@ -749,6 +768,24 @@
         viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
         modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    // From the problem indicator: opens the panel (unfolded), or leaves it open.
+    void ShowCycles()
+    {
+        if (!viewOptions.IsCyclesShown)
+            ToggleCycles();
+        else if (viewOptions.IsCyclesMinimized)
+        {
+            viewOptions.SetCyclesMinimized(false);
+            applicationEvents.TriggerUIStateChanged();
+        }
+    }
+
+    void ShowRules()
+    {
+        if (!viewOptions.IsRulesShown)
+            ToggleRules();
     }
 
     void ToggleLegend()

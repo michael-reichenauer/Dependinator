@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -10,9 +11,9 @@ public static class Build
     static bool isVsCodeExtLsp = false;
     static bool isTestMode = false;
     static string vsCodeExtensionVersion = "";
-    public static readonly string Version = GetVersion().ToString();
+    public static readonly string Version = GetVersion();
     public static readonly string ProductVersion = GetProductVersion().ToString();
-    public static readonly string Time = GetTime().IsoZone();
+    public static readonly string Time = GetTime().ToLocalTime().IsoZone();
     public static readonly string CommitSid = GetCommitId().Sid();
 
     public static readonly bool IsWasm = RuntimeInformation.ProcessArchitecture == Architecture.Wasm;
@@ -37,7 +38,18 @@ public static class Build
     public static string Info =>
         $"{Version}, {Time}, ({CommitSid}, {RuntimeInformation.RuntimeIdentifier}, {BuildMode})";
 
-    public static Version GetVersion() => typeof(Build).Assembly.GetName().Version!;
+    // major.minor.build, e.g. 0.84.423503, from the informational version (Directory.Build.props),
+    // which SourceLink suffixes with '+<commit sha>'
+    public static string GetVersion()
+    {
+        string? value = typeof(Build)
+            .Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+        if (value is null)
+            return GetProductVersion().ToString();
+        int index = value.IndexOf('+');
+        return index > 0 ? value[..index] : value;
+    }
 
     public static bool IsDebug
     {
@@ -58,27 +70,28 @@ public static class Build
 
     public static string BuildMode => IsDebug ? "IsDebug" : "IsRelease";
 
+    // major.minor, the assembly version (Directory.Build.props)
     public static Version GetProductVersion()
     {
-        var version = GetVersion();
+        Version version = typeof(Build).Assembly.GetName().Version!;
         return new Version(version.Major, version.Minor);
     }
 
+    // The build time in UTC, set by the Release workflow or else at build (Dependinator.Core.csproj)
     public static DateTime GetTime()
     {
-        var assemblyVersion = typeof(Build).Assembly.GetName().Version!;
-
-        // The Build number is the days since 2000-01-01
-        int daysSince2000 = assemblyVersion.Build;
-
-        // The Revision is the number of 2-second intervals since midnight
-        int twoSecondIntervalsSinceMidnight = assemblyVersion.Revision;
-
-        // Construct the build date
-        DateTime buildDate = new DateTime(2000, 1, 1)
-            .AddDays(daysSince2000)
-            .AddSeconds(twoSecondIntervalsSinceMidnight * 2);
-        return buildDate;
+        string? value = typeof(Build)
+            .Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .FirstOrDefault(a => a.Key == "BuildTime")
+            ?.Value;
+        return DateTime.TryParse(
+            value,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
+            out DateTime time
+        )
+            ? time
+            : DateTime.MinValue;
     }
 
     public static string GetCommitId()

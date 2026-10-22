@@ -1,4 +1,5 @@
 using Dependinator.Core.Shared;
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -210,6 +211,7 @@ class ModelService : IModelService, IDisposable
         }
 
         var before = ModelChangeSummary.Capture(modelMgr);
+        var cyclesBefore = CycleChangeSummary.Capture(modelMgr);
         if (await ParseAndUpdateAsync(path, true) is Error e)
             return e;
         using (var model = modelMgr.UseModel())
@@ -222,9 +224,18 @@ class ModelService : IModelService, IDisposable
         TriggerSave();
         applicationEvents.TriggerUIStateChanged();
 
-        // A refresh runs in the background, so say what it changed (nothing: stay quiet).
-        if (ModelChangeSummary.Describe(before, ModelChangeSummary.Capture(modelMgr)) is { } summary)
-            applicationEvents.TriggerInfoReported($"Model refreshed: {summary}.");
+        // A refresh runs in the background, so say what it changed (nothing: stay quiet), and
+        // whether that broke or made a cycle.
+        string[] summaries =
+        [
+            .. new[]
+            {
+                ModelChangeSummary.Describe(before, ModelChangeSummary.Capture(modelMgr)),
+                CycleChangeSummary.Describe(cyclesBefore, CycleChangeSummary.Capture(modelMgr)),
+            }.OfType<string>(),
+        ];
+        if (summaries.Length > 0)
+            applicationEvents.TriggerInfoReported($"Model refreshed: {string.Join("; ", summaries)}.");
         return Result.Ok;
     }
 
@@ -318,6 +329,8 @@ class ModelService : IModelService, IDisposable
             {
                 model.Path = path;
                 model.UpdateStamp = DateTime.UtcNow;
+                // Each parse reports all problems, so it replaces the last parse's.
+                model.SetParseProblems([.. items.Select(i => i.Problem).OfType<Parsing.ParseProblem>()]);
             }
 
             applicationEvents.TriggerModelChanged();

@@ -48,6 +48,27 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(panel).ToHaveCountAsync(0);
     }
 
+    // A broken rule shows in the problem indicator in the app bar, whose row opens the panel again.
+    [E2EFact]
+    public async Task BrokenRule_ShouldShowInTheProblemIndicator_AndOpenTheRulesPanel()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        ILocator indicator = Page.GetByTestId("problems-indicator");
+        ILocator ruleRow = Page.Locator("[data-testid=problems-item][data-kind=RuleViolations]");
+
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        await AddRuleAsync("Demo.UI (dll)", "Demo.Core (dll)");
+        await Expect(Page.GetByTestId("rules-item")).ToHaveCountAsync(1);
+        await Page.GetByTestId("rules-close").ClickAsync();
+        await Expect(Page.GetByTestId("rules-panel")).ToHaveCountAsync(0);
+
+        await App.RepeatUntilVisibleAsync(() => indicator.ClickAsync(), ruleRow);
+        await Expect(ruleRow).ToContainTextAsync("1 broken architecture rule");
+        await ruleRow.ClickAsync();
+        await Expect(Page.GetByTestId("rules-panel")).ToBeVisibleAsync();
+    }
+
     // Picks both nodes through the search dialog in picker mode and adds the rule.
     async Task AddRuleAsync(string from, string to)
     {

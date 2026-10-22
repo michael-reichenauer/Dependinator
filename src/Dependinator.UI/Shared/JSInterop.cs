@@ -19,12 +19,12 @@ public class JSInterop : IJSInterop, IAsyncDisposable
     public JSInterop(IJSRuntime jsRuntime)
     {
         // The version query string busts the browser cache for jsInterop.js. Debug uses ticks so
-        // js edits show up without a rebuild; Release uses the auto-incremented build version
-        // (Core has AssemblyVersion 0.5.*) so browsers can cache the module within a deployment.
+        // js edits show up without a rebuild; Release uses the build time (Core's BuildTime) so
+        // browsers can cache the module within a deployment.
 #if DEBUG
         var version = $"{DateTime.UtcNow.Ticks}";
 #else
-        var version = Core.Build.Version;
+        var version = $"{Core.Build.GetTime().Ticks}";
 #endif
 
         this.moduleTask = new(() => CreateModuleAsync(jsRuntime, version));

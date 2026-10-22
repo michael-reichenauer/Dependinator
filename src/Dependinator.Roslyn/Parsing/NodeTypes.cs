@@ -8,6 +8,8 @@ static class NodeTypes
         member switch
         {
             INamedTypeSymbol => NodeType.Type,
+            IMethodSymbol { MethodKind: MethodKind.Constructor or MethodKind.StaticConstructor } =>
+                NodeType.ConstructorMember,
             IMethodSymbol => NodeType.MethodMember,
             IPropertySymbol => NodeType.PropertyMember,
             IFieldSymbol => NodeType.FieldMember,

@@ -44,6 +44,19 @@ interface IModel : IDisposable
     void AddRule(ArchitectureRule rule);
     void RemoveRule(ArchitectureRule rule);
 
+    // The circular dependencies the user accepted as intended (persisted with the model), with a
+    // change counter like the rules'.
+    IReadOnlyList<AcceptedCycle> AcceptedCycles { get; }
+    int AcceptedCyclesVersion { get; }
+    void AddAcceptedCycle(AcceptedCycle accepted);
+    void RemoveAcceptedCycle(AcceptedCycle accepted);
+
+    // The problems the last parse found (persisted with the model), replaced by each parse, with
+    // a change counter like the rules'.
+    IReadOnlyList<ParseProblem> ParseProblems { get; }
+    int ParseProblemsVersion { get; }
+    void SetParseProblems(IReadOnlyList<ParseProblem> problems);
+
     void TryAddNode(Node node);
     void TryAddLink(Link link);
     void TryAddLine(Line line);
@@ -120,6 +133,34 @@ class Model : IModel
             RulesVersion++;
     }
 
+    readonly List<AcceptedCycle> acceptedCycles = [];
+    public IReadOnlyList<AcceptedCycle> AcceptedCycles => acceptedCycles;
+    public int AcceptedCyclesVersion { get; private set; }
+
+    public void AddAcceptedCycle(AcceptedCycle accepted)
+    {
+        if (acceptedCycles.Contains(accepted))
+            return;
+        acceptedCycles.Add(accepted);
+        AcceptedCyclesVersion++;
+    }
+
+    public void RemoveAcceptedCycle(AcceptedCycle accepted)
+    {
+        if (acceptedCycles.Remove(accepted))
+            AcceptedCyclesVersion++;
+    }
+
+    IReadOnlyList<ParseProblem> parseProblems = [];
+    public IReadOnlyList<ParseProblem> ParseProblems => parseProblems;
+    public int ParseProblemsVersion { get; private set; }
+
+    public void SetParseProblems(IReadOnlyList<ParseProblem> problems)
+    {
+        parseProblems = problems;
+        ParseProblemsVersion++;
+    }
+
     public ModelDto SerializeToDto() =>
         new()
         {
@@ -130,6 +171,25 @@ class Model : IModel
             IncludeTestProjects = IncludeTestProjects,
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
             Rules = [.. rules.Select(r => new RuleDto { From = r.FromName, To = r.ToName })],
+            AcceptedCycles =
+            [
+                .. acceptedCycles.Select(a => new AcceptedCycleDto
+                {
+                    Container = a.ContainerName,
+                    Members = a.MemberNames,
+                    Reason = a.Reason,
+                    IsToFix = a.IsToFix,
+                }),
+            ],
+            ParseProblems =
+            [
+                .. parseProblems.Select(p => new ParseProblemDto
+                {
+                    Message = p.Message,
+                    ErrorCount = p.ErrorCount,
+                    NodeName = p.NodeName,
+                }),
+            ],
             Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
             Links = [.. links.Values.Select(l => l.ToDto())],
             Lines =
@@ -182,6 +242,16 @@ class Model : IModel
         rules.Clear();
         rules.AddRange(modelDto.Rules.Select(r => new ArchitectureRule(r.From, r.To)).Distinct());
         RulesVersion++;
+        acceptedCycles.Clear();
+        acceptedCycles.AddRange(
+            modelDto
+                .AcceptedCycles.Select(a => new AcceptedCycle(a.Container, a.Members, a.Reason ?? "", a.IsToFix))
+                .Distinct()
+        );
+        AcceptedCyclesVersion++;
+        SetParseProblems([
+            .. modelDto.ParseProblems.Select(p => new ParseProblem(p.Message, p.ErrorCount, p.NodeName)),
+        ]);
         // Nodes and links will be set by model service in separate worker thread
     }
 
@@ -227,6 +297,9 @@ class Model : IModel
         IncludeTestProjects = false;
         rules.Clear();
         RulesVersion++;
+        acceptedCycles.Clear();
+        AcceptedCyclesVersion++;
+        SetParseProblems([]);
 
         InitModel();
     }

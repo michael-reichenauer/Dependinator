@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
+using Microsoft.Playwright;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,10 +39,17 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
         await App.CloudButton.ClickAsync();
         await Page.GetByTestId("cloud-sign-in").ClickAsync();
 
-        // Login is async (Functions round-trip). The popover then shows the account and offers
-        // Sign out; Expect retries until it does.
-        await App.CloudButton.ClickAsync();
-        await Expect(Page.GetByTestId("cloud-account")).ToContainTextAsync("Signed in as", new() { Timeout = 30_000 });
+        // Login is async (Functions round-trip) and closes the popover. Reopen it until it shows
+        // the account: a single click can be lost, either ignored while connecting or toggling
+        // the popover shut while the sign-in click is still closing it.
+        ILocator account = Page.GetByTestId("cloud-account");
+        for (int attempt = 0; attempt < 10 && !await account.IsVisibleAsync(); attempt++)
+        {
+            if (!await Page.GetByTestId("cloud-popover").IsVisibleAsync())
+                await App.CloudButton.ClickAsync();
+            await Page.WaitForTimeoutAsync(1000);
+        }
+        await Expect(account).ToContainTextAsync("Signed in as", new() { Timeout = 30_000 });
         await Expect(Page.GetByTestId("cloud-sign-out")).ToBeVisibleAsync();
         await Page.Keyboard.PressAsync("Escape");
 

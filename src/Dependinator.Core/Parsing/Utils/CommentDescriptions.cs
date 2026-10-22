@@ -43,7 +43,7 @@ static class CommentDescriptions
             descriptionLines.Add(trimmedLine);
         }
 
-        var nodeDescription = string.Join(Environment.NewLine, descriptionLines).Trim();
+        var nodeDescription = string.Join("\n", descriptionLines).Trim();
         return new Result(nodeDescription == "" ? null : nodeDescription, lineDescriptions);
     }
 }

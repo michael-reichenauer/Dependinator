@@ -2,50 +2,339 @@
 @inject IViewOptions viewOptions
 @inject ICycleService cycleService
 @inject INavigationService navigationService
+@inject IDialogService dialogService
 @inject Modeling.IModelService modelService
+@inject Modeling.Models.IModelMgr modelMgr
+@inject IClipboardService clipboardService
+@inject ICyclePromptService cyclePromptService
+@inject ICycleSuggestionService cycleSuggestionService
 @implements IDisposable
 
 @* Circular dependencies, one row per cycle: the container and the sibling nodes that depend on
    each other in a circle. While open, the lines of those cycles are drawn in the warning color.
-   Clicking a row navigates to the container. *@
+   Clicking a row frames the cycle's nodes in their opened container and picks the cycle: its
+   lines stay in the warning color while the other cycles' lines are dimmed, until the row is
+   clicked again. Its review button opens the review dialog (an AI
+   prompt to copy, Claude's verdict where the host can ask Claude). A cycle that is intended can be
+   accepted with a reason (saved with the model, undoable): it moves to the collapsed Accepted
+   section and its lines are drawn normally. A cycle Claude suggests breaking can be marked to fix later instead:
+   it moves to the To fix section with the planned change, keeps its red lines, and offers a fix
+   prompt for an AI that can change the code. An entry whose cycle is gone stays, marked, until
+   removed; one whose cycle a node joined says so (the grown cycle is listed as open again). Those
+   entries come first in their section, and the section header counts them. The panel can be
+   folded down to its title bar, and on a narrow screen a click in the diagram does that. *@
 @if (viewOptions.IsCyclesShown)
 {
   var cycles = cycleService.GetCycles();
+  var accepted = cycleService.GetAcceptedCycles();
+  var gone = accepted.Where(a => a.IsGone).ToList();
+  var toFix = cycleService.GetCyclesToFix();
+  var fixedOnes = toFix.Where(r => r.IsGone).ToList();
+  // A picked cycle that was accepted, broken or grown since is no pick any more (an undo must not
+  // bring it back unasked).
+  if (viewOptions.SelectedCycleKey is { } selectedKey && cycleService.GetCycleLineIds(selectedKey) is null)
+    viewOptions.SetSelectedCycle(null);
   <div class="dep-panel dep-toolbar-card" data-testid="cycles-panel">
     <div class="dep-panel__header">
-      <span class="dep-panel__title">Cycles</span>
-      <span class="dep-panel__count">@(cycles.Count == 0 ? "none" : cycles.Count.ToString())</span>
+      @* Minimized, the title bar is all that is left; clicking it brings the list back. *@
+      <div class="dep-cycles__title @(viewOptions.IsCyclesMinimized ? "dep-cycles__title--minimized" : "")"
+           @onclick="() => SetMinimized(false)" data-testid="cycles-header">
+        <span class="dep-panel__title">Cycles</span>
+        <span class="dep-panel__count" data-testid="cycles-count">@(cycles.Count == 0 ? "none" : cycles.Count.ToString())</span>
+      </div>
       <MudSpacer />
+      <MudTooltip Text="@(viewOptions.IsCyclesMinimized ? "Restore" : "Minimize")">
+        <MudIconButton Icon="@(viewOptions.IsCyclesMinimized ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ExpandLess)"
+                       Size="Size.Small" OnClick="() => SetMinimized(!viewOptions.IsCyclesMinimized)"
+                       data-testid="cycles-minimize" />
+      </MudTooltip>
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
                      data-testid="cycles-close" />
     </div>
+    @if (!viewOptions.IsCyclesMinimized)
+    {
     @if (cycles.Count == 0)
     {
-      <div class="dep-panel__empty">No circular dependencies found: no projects, namespaces or types in any container depend on each other in a circle.</div>
+      <div class="dep-panel__empty">
+        @(accepted.Count == 0 && toFix.Count == 0
+          ? "No circular dependencies found: no projects, namespaces or types in any container depend on each other in a circle."
+          : toFix.Count == 0 ? "No circular dependencies besides the accepted ones."
+          : "No other circular dependencies than those below.")
+      </div>
     }
     else
     {
-      <div class="dep-panel__hint">Projects, namespaces or types in one container that depend on each other in a circle. Their lines are drawn red.</div>
-      <div class="dep-panel__list">
-        @foreach (var cycle in cycles)
-        {
-          <button type="button" class="dep-panel__row" title="@($"Show {cycle.ContainerName}")"
-                  @onclick="() => ShowAsync(cycle.ContainerId)" data-testid="cycles-item">
+      <div class="dep-panel__hint">Projects, namespaces or types in one container that depend on each other in a circle. Their lines are drawn red. Review a cycle to accept it as intended, with why, or to ask an AI whether and how to break it.</div>
+    }
+    <div class="dep-panel__list">
+      @foreach (var cycle in cycles)
+      {
+        <div class="dep-cycles__item" data-testid="cycles-item">
+          <button type="button" class="dep-panel__row dep-cycles__row @SelectedClass(cycle)"
+                  title="@(IsSelected(cycle) ? "Show all cycles alike again" : $"Show this cycle in {cycle.ContainerName}")"
+                  @onclick="() => ShowCycleAsync(cycle)" data-testid="cycles-item-show"
+                  data-selected="@(IsSelected(cycle) ? "true" : "false")">
             <span class="dep-cycles__container">@cycle.ContainerName</span>
-            <span class="dep-cycles__members">@string.Join(" ↔ ", cycle.Members.Select(m => m.Name))</span>
+            <span class="dep-cycles__members">@Join(cycle.Members.Select(m => m.Name))</span>
+            @if (cycle.AcceptedBefore is { } before)
+            {
+              <span class="dep-cycles__note" data-testid="cycles-item-grown">@(before.IsToFix ? "Marked to fix" : "Accepted") before; @JoinedSince(cycle, before) joined it since.</span>
+            }
           </button>
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.RateReview" Size="Size.Small" Color="Color.Primary"
+                         title="@ReviewTitle" OnClick="() => ReviewAsync(cycle)" data-testid="cycles-review" />
+        </div>
+      }
+
+      @if (toFix.Count > 0)
+      {
+        <button type="button" class="dep-cycles__accepted-toggle" @onclick="() => isToFixOpen = !isToFixOpen"
+                aria-expanded="@(isToFixOpen ? "true" : "false")" data-testid="cycles-tofix-toggle">
+          <MudIcon Icon="@(isToFixOpen ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ChevronRight)"
+                   Size="Size.Small" />
+          <span>To fix (@toFix.Count)</span>
+          @if (fixedOnes.Count > 0)
+          {
+            <span class="dep-cycles__gone" data-testid="cycles-tofix-gone-count">· @fixedOnes.Count no longer @(fixedOnes.Count == 1 ? "a cycle" : "cycles")</span>
+          }
+          @ChangedCount(toFix)
+        </button>
+        @if (isToFixOpen)
+        {
+          @foreach (var report in toFix)
+          {
+            <div class="dep-cycles__item" data-testid="cycles-tofix-item"
+                 data-still-occurs="@(report.StillOccurs ? "true" : "false")">
+              <button type="button" class="dep-panel__row dep-cycles__row @(report.Cycle is { } shown ? SelectedClass(shown) : "")"
+                      disabled="@(report.ContainerId is null)"
+                      title="@(report.ContainerId is null ? "The container is no longer in the model" : $"Show this cycle in {report.ContainerName}")"
+                      @onclick="() => ShowReportAsync(report)" data-testid="cycles-tofix-show"
+                      data-selected="@(report.Cycle is { } picked && IsSelected(picked) ? "true" : "false")">
+                <span class="dep-cycles__container">@report.ContainerName</span>
+                <span class="dep-cycles__members">@Join(report.MemberNames)</span>
+                <span class="dep-cycles__reason" data-testid="cycles-tofix-change">@(report.Accepted.Reason == "" ? "No change planned" : report.Accepted.Reason)</span>
+                @if (report.HasChanged)
+                {
+                  <span class="dep-cycles__gone" data-testid="cycles-tofix-changed">@ChangedNote(report)</span>
+                }
+                else if (report.IsGone)
+                {
+                  <span class="dep-cycles__gone">No longer a cycle; remove it if it is fixed.</span>
+                }
+              </button>
+              @if (report.Cycle is { } cycle)
+              {
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Size="Size.Small"
+                               title="Copy a prompt that asks an AI that can change the code to make the planned change"
+                               OnClick="() => CopyFixPromptAsync(cycle, report.Accepted.Reason)" data-testid="cycles-tofix-copy-fix" />
+              }
+              <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
+                             title="@(report.StillOccurs ? "Remove: report this cycle as open again" : report.HasChanged ? "Remove: the changed cycle is listed with the open ones" : "Remove: it is fixed")"
+                             OnClick="() => cycleService.Unaccept([report.Accepted])" data-testid="cycles-tofix-remove" />
+            </div>
+          }
+          @if (fixedOnes.Count > 1)
+          {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-cycles__remove-gone"
+                       OnClick="() => cycleService.Unaccept(fixedOnes.Select(r => r.Accepted).ToList())"
+                       data-testid="cycles-tofix-remove-fixed">
+              Remove the @fixedOnes.Count that are no longer cycles
+            </MudButton>
+          }
         }
-      </div>
+      }
+
+      @if (accepted.Count > 0)
+      {
+        <button type="button" class="dep-cycles__accepted-toggle" @onclick="() => isAcceptedOpen = !isAcceptedOpen"
+                aria-expanded="@(isAcceptedOpen ? "true" : "false")" data-testid="cycles-accepted-toggle">
+          <MudIcon Icon="@(isAcceptedOpen ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ChevronRight)"
+                   Size="Size.Small" />
+          <span>Accepted (@accepted.Count)</span>
+          @if (gone.Count > 0)
+          {
+            <span class="dep-cycles__gone" data-testid="cycles-accepted-gone-count">· @gone.Count no longer @(gone.Count == 1 ? "a cycle" : "cycles")</span>
+          }
+          @ChangedCount(accepted)
+        </button>
+        @if (isAcceptedOpen)
+        {
+          @foreach (var report in accepted)
+          {
+            <div class="dep-cycles__item" data-testid="cycles-accepted-item"
+                 data-still-occurs="@(report.StillOccurs ? "true" : "false")">
+              <button type="button" class="dep-panel__row dep-cycles__row" disabled="@(report.ContainerId is null)"
+                      title="@(report.ContainerId is null ? "The container is no longer in the model" : $"Show this cycle in {report.ContainerName}")"
+                      @onclick="() => ShowReportAsync(report)" data-testid="cycles-accepted-show">
+                <span class="dep-cycles__container">@report.ContainerName</span>
+                <span class="dep-cycles__members">@Join(report.MemberNames)</span>
+                <span class="dep-cycles__reason" data-testid="cycles-accepted-reason">@(report.Accepted.Reason == "" ? "No reason given" : report.Accepted.Reason)</span>
+                @if (report.HasChanged)
+                {
+                  <span class="dep-cycles__gone" data-testid="cycles-accepted-changed">@ChangedNote(report)</span>
+                }
+                else if (report.IsGone)
+                {
+                  <span class="dep-cycles__gone">No longer a cycle; remove it if the change is done.</span>
+                }
+              </button>
+              @if (report.StillOccurs)
+              {
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Size="Size.Small" title="Edit the reason"
+                               OnClick="() => EditAsync(report)" data-testid="cycles-accepted-edit" />
+              }
+              <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
+                             title="@(report.StillOccurs ? "Stop accepting: report this cycle again" : report.HasChanged ? "Remove: the changed cycle is listed with the open ones" : "Remove: the cycle is gone")"
+                             OnClick="() => cycleService.Unaccept([report.Accepted])" data-testid="cycles-accepted-remove" />
+            </div>
+          }
+          @if (gone.Count > 1)
+          {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-cycles__remove-gone"
+                       OnClick="() => cycleService.Unaccept(gone.Select(r => r.Accepted).ToList())"
+                       data-testid="cycles-accepted-remove-gone">
+              Remove the @gone.Count that are no longer cycles
+            </MudButton>
+          }
+        }
+      }
+    </div>
     }
   </div>
 }
 
 @code {
+  bool isAcceptedOpen;
+  bool isToFixOpen = true;
+
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
   void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
-  Task ShowAsync(Modeling.Models.NodeId containerId) => navigationService.ShowNodeAsync(containerId);
+  static string Join(IEnumerable<string> names) => string.Join(" ↔ ", names);
+
+  static string ChangedNote(AcceptedCycleReport report) =>
+    $"The cycle changed: {string.Join(", ", report.Joined ?? [])} joined it. It is listed with the open cycles again.";
+
+  // "· 1 changed" in a section header, when an entry's cycle grew.
+  static RenderFragment ChangedCount(IReadOnlyList<AcceptedCycleReport> reports) => builder =>
+  {
+    var changed = reports.Count(r => r.HasChanged);
+    if (changed == 0)
+      return;
+    builder.OpenElement(0, "span");
+    builder.AddAttribute(1, "class", "dep-cycles__gone");
+    builder.AddContent(2, $"· {changed} changed");
+    builder.CloseElement();
+  };
+
+  static string JoinedSince(Cycle cycle, Modeling.Models.AcceptedCycle before) =>
+    string.Join(", ", cycle.Members.Where(m => !before.MemberNames.Contains(m.NodeName)).Select(m => m.Name));
+
+  bool IsSelected(Cycle cycle) => viewOptions.SelectedCycleKey == cycle.Key;
+
+  string SelectedClass(Cycle cycle) => IsSelected(cycle) ? "dep-panel__row--selected" : "";
+
+  // Picks the cycle and frames its nodes; on the picked cycle, shows all cycles alike again.
+  Task ShowCycleAsync(Cycle cycle)
+  {
+    var isSelected = IsSelected(cycle);
+    viewOptions.SetSelectedCycle(isSelected ? null : cycle.Key);
+    modelService.ClearCache(); // The highlighted lines are baked into the tiles
+    applicationEvents.TriggerUIStateChanged();
+    return isSelected ? Task.CompletedTask : ShowNodesAsync(cycle.ContainerId, cycle.Members.Select(m => m.Id));
+  }
+
+  // An entry to fix is still highlighted, so it is picked like an open cycle; an accepted one
+  // (drawn normally) or one that is gone is only framed, as far as its nodes still exist.
+  Task ShowReportAsync(AcceptedCycleReport report)
+  {
+    if (report.Cycle is { } cycle && report.Accepted.IsToFix)
+      return ShowCycleAsync(cycle);
+    return ShowNodesAsync(report.ContainerId!, report.Accepted.MemberNames.Select(Modeling.Models.NodeId.FromName));
+  }
+
+  // The container itself when none of the members are in the model any more.
+  Task ShowNodesAsync(Modeling.Models.NodeId containerId, IEnumerable<Modeling.Models.NodeId> memberIds)
+  {
+    var ids = modelMgr.WithModel(m => memberIds.Where(m.Nodes.ContainsKey).ToList());
+    return ids.Count > 0 ? navigationService.ShowNodesAsync(ids) : navigationService.ShowNodeAsync(containerId);
+  }
+
+  string ReviewTitle => cycleSuggestionService.IsAvailable
+    ? "Review this cycle: accept it as intended, or let Claude suggest whether and how to break it"
+    : "Review this cycle: accept it as intended, with why, or copy a prompt for an AI chat";
+
+  // From the To fix list, where only the planned change is kept.
+  async Task CopyFixPromptAsync(Cycle cycle, string plannedChange)
+  {
+    var prompt = cyclePromptService.GetFixPrompt(cycle, new CycleSuggestion(false, "", "", "", plannedChange));
+    if (!await clipboardService.CopyAsync(prompt))
+    {
+      applicationEvents.TriggerErrorReported("Could not copy the fix prompt to the clipboard.");
+      return;
+    }
+    applicationEvents.TriggerInfoReported(AcceptCycleDialog.FixPromptCopiedNote);
+  }
+
+  async Task ReviewAsync(Cycle cycle)
+  {
+    // A cycle that grew since it was accepted starts from the earlier reason (not from a planned change).
+    var reason = cycle.AcceptedBefore is { IsToFix: false } before ? before.Reason : "";
+    Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest =
+      cycleSuggestionService.IsAvailable ? onStep => cycleSuggestionService.SuggestAsync(cycle, onStep) : null;
+    var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
+      reason, isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s),
+      () => cyclePromptService.GetPromptAsync(cycle));
+    if (result is null)
+      return;
+    if (result.IsFixLater)
+      cycleService.FixLater(cycle, result.Reason);
+    else
+      cycleService.Accept(cycle, result.Reason);
+  }
+
+  async Task EditAsync(AcceptedCycleReport report)
+  {
+    var result = await ShowDialogAsync(report.ContainerName, Join(report.MemberNames), report.Accepted.Reason, isEdit: true);
+    if (result is null)
+      return;
+    if (result.IsUnaccept)
+      cycleService.Unaccept([report.Accepted]);
+    else
+      cycleService.SetReason(report.Accepted, result.Reason);
+  }
+
+  async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit,
+    Func<Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest = null,
+    Func<CycleSuggestion, string>? fixPrompt = null, Func<Task<string>>? copyPrompt = null)
+  {
+    var parameters = new DialogParameters
+    {
+      { nameof(AcceptCycleDialog.ContainerName), containerName },
+      { nameof(AcceptCycleDialog.Members), members },
+      { nameof(AcceptCycleDialog.Reason), reason },
+      { nameof(AcceptCycleDialog.IsEdit), isEdit },
+      { nameof(AcceptCycleDialog.Suggest), suggest },
+      { nameof(AcceptCycleDialog.FixPrompt), fixPrompt },
+      { nameof(AcceptCycleDialog.CopyPrompt), copyPrompt },
+    };
+    // Wider for a review, with its header buttons and Claude's answer, which can run to a paragraph.
+    var maxWidth = isEdit ? MaxWidth.ExtraSmall : MaxWidth.Small;
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = maxWidth, FullWidth = true };
+    var dialog = await dialogService.ShowAsync<AcceptCycleDialog>(null, parameters, options);
+    var result = await dialog.Result;
+    return result is { Canceled: false, Data: AcceptCycleDialogResult data } ? data : null;
+  }
+
+  // Folded down, the panel leaves the diagram it covers free while its lines stay highlighted.
+  void SetMinimized(bool minimized)
+  {
+    if (viewOptions.IsCyclesMinimized == minimized)
+      return;
+    viewOptions.SetCyclesMinimized(minimized);
+    applicationEvents.TriggerUIStateChanged();
+  }
 
   void Close()
   {

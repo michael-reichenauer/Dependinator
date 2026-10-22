@@ -51,8 +51,10 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 - A workspace containing a **.NET solution (`.sln`)** with C# projects, or an
   **Azure Bicep deployment** (a `.bicep` entry file and its local modules).
   Dependinator parses it to build the dependency map.
-- No local `dotnet` or `bicep` installation is needed; the extension bundles a
-  self-contained language server with the Bicep compiler.
+- For C#, a [.NET SDK](https://dotnet.microsoft.com/download) that can build the
+  solution, since Roslyn loads the projects with the SDK's MSBuild. Bicep needs no
+  local `dotnet` or `bicep` installation; the extension bundles a self-contained
+  language server with the Bicep compiler.
 
 ## Getting started
 
@@ -78,6 +80,7 @@ navigation tips, and keyboard/mouse controls.
 | `Dependinator: Reveal Current File in Diagram` | Show the node for the file at the cursor (`Ctrl+Alt+D`, `Cmd+Alt+D` on macOS; also in the editor's right-click menu). |
 | `Dependinator: Search Nodes` | Open the diagram's node search. |
 | `Dependinator: Re-parse Model` | Parse the solution or Bicep deployment again now. |
+| `Dependinator: Set Claude API Key` | Store (or, left empty, remove) your own Anthropic API key, from console.anthropic.com, for "Ask Claude" when reviewing a cycle (you are also asked for it on first use). It is kept in VS Code's secret storage and sent only to Anthropic. |
 | `Dependinator: Install in Dev Container` | Jump to the Extensions view to install the extension inside a dev container. |
 
 ## Settings

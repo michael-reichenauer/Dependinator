@@ -37,6 +37,9 @@ class Config
 
     // The minimap in the corner of the diagram (View › Show Minimap).
     public bool ShowMinimap { get; set; } = false;
+
+    // Badges on the nodes that contain problems (View › Show Problem Badges).
+    public bool ShowProblemBadges { get; set; } = true;
 }
 
 interface IConfigService

@@ -26,9 +26,10 @@ project works.
   optional test projects. Then the UX review: shortcuts, dark theme, history, breadcrumb, line
   filters, legend, cycles, Manage Models, VS Code commands.
 - **Oct**: the rest of the UX review (path finder, tour, share links, architecture rules, minimap,
-  group and rubber-band selection), new line and container visuals, a release flow through `dev`,
-  a README and community-files rework, the Bicep parser, zones, line labels and aliases, and
-  node sizes by code and centrality in the automatic layout.
+  group and rubber-band selection), new line and container visuals, a release flow through `dev`
+  and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
+  node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
+  Claude's suggestions for cycles, C# member naming fixes, and a problem indicator with node badges.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -90,6 +91,23 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 
   It ships with the `examples/bicep` "webshop" deployment and a Bicep demo model.
 
+- **C# member fixes (Oct 21).** The Roslyn parser names and types members as they are written:
+  - constructors are constructor nodes with their own icon, and a static constructor has a node
+    of its own;
+  - a C# 14 extension block is a node named by its receiver, `extension(NodeType)`, with its
+    members inside under their own names (dots in brackets no longer split a node name);
+  - conversion operators are named by their target type alone (`implicitoperatorResult`), so its
+    namespace no longer makes up nodes inside the type (qualified when two targets share a name);
+  - links to a use of a generic (`Result<int>`) or to an extension method call, also the static
+    form `Ext.Twice(x)` of a block member, target the declared node (`Result<T>`,
+    `Ancestors(Node)`) rather than a made-up one;
+  - a namespace with a comment above its declaration in more than one file shows all of them,
+    each after its file and line, so a note about one file that reads as the namespace's
+    description can be seen and moved. The same comment is shown once, a file header with a
+    blank line below it (a license) is none, and a removed comment clears the description;
+  - a cached model's nodes move to their new parents when it is refreshed, and a stray bracket
+    in a design node's name ("Latency < 50ms") no longer joins the parts after it.
+
 ## Viewing, navigation and analysis
 
 - **Search (Jun).** A fuzzy search dialog (Ctrl+F) with go-to-node. Since Oct the node whose name
@@ -126,6 +144,56 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   lines widen by link count. Container backgrounds now show in light mode and fade out while
   zooming in. Lines to hidden nodes are dash-dotted. Line-split and zoom-to-node moved off the
   node toolbar.
+- **Accepted cycles (Oct 19).** A cycle that is intended can be accepted with a reason. It moves
+  to a collapsed Accepted section of the cycles panel and its lines are no longer drawn red. The
+  acceptance is saved with the model and can be undone. The cycle is reported again if a node
+  joins it. An acceptance whose cycle is gone is kept, marked "no longer a cycle", until the user
+  removes it.
+- **AI prompt for a cycle (Oct 19).** A copy button in each cycle's review copies a prompt that asks an AI chat
+  whether the cycle is intended (with a reason to accept it with) or should be broken, and how. It
+  lists the members with their descriptions and the links in each direction, grouped per member or,
+  when there are many, per type. In the web host and VS Code it also shows the source of the
+  directions made by only one or two types, the ones most likely to be broken or explained. The
+  first step towards suggesting reasons with Claude directly.
+- **Ask Claude (Oct 20).** Each cycle has one Review button; its dialog copies the AI prompt and
+  asks Claude for a verdict on the cycle with it: an accepting verdict fills in the reason, a
+  breaking one shows the change to make, and nothing is saved until the user decides. "Ask again"
+  keeps every answer, so the user can pick one when they differ (a borderline cycle), and accepting
+  anyway keeps the suggested fix in the reason. The answer of another AI chat to the copied prompt
+  can be pasted back into the review and is read like Claude's, so the whole review works without an
+  API key, also in the browser app; when asking Claude fails (no key, a key not accepted, no credits
+  left, which now says so plainly), the review offers that route instead. The cycles panel can be
+  folded down to its title bar,
+  like the dependencies explorer (and is, on a narrow screen, by a click in the diagram). It uses the user's own Anthropic API key
+  (VS Code secret storage via a new command, or `ANTHROPIC_API_KEY` for the web host). In VS Code
+  the key is asked for on first use, and again when Claude does not accept it, with the dialog
+  pointing at the input box at the top of the window, since the user is watching the dialog. When
+  Claude suggests breaking the cycle, the main button copies a fix prompt for Claude Code (or another
+  AI that can change the code) instead, and accepting stays possible as "Accept anyway". "Fix later"
+  moves such a cycle to a To fix section with the planned change (saved with the model like an
+  acceptance); its lines stay red, and its fix prompt can be copied from there. A refresh message
+  now also tells what changed about cycles ("1 cycle to fix is gone, 1 new cycle"), and accepted or
+  to-fix entries whose cycle is gone or grew (a node joined) are marked so, and listed first. The request
+  runs in the LSP or the web host through Anthropic's C# SDK (new `Dependinator.Claude` library),
+  never in the browser app.
+- **Problem indicator (Oct 21).** A warning count in the app bar, like the VS Code status bar,
+  shows that the model has open cycles and broken architecture rules without opening their
+  panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one
+  row per kind, each opening its panel. Accepted cycles, cycles to fix later and rules nobody
+  breaks don't count. Since the same day it also counts compile errors, which can silently drop
+  nodes and links: the C# parser reports them per project and the Bicep parser per file, briefly
+  (the editor lists each error), shown as an error count with one row per project that shows its
+  node. They are saved with the model, so a model opened from the cache shows them before its
+  refresh. Compile warnings are left out for now: many projects have warnings nobody fixes. A
+  project that fails to parse is listed too. Showing them exposed 61 false errors in Dependinator
+  itself: the C# parser ran the Functions and Regex source generators a second time.
+  Nodes in the diagram carry a badge with the number of problems in or inside them (red with
+  compile errors, orange otherwise), so the badges lead from the top level down to where the
+  problems are; "Show Problem Badges" in the View menu turns them off.
+- **Cycle navigation (Oct 22).** Clicking a cycle in the cycles panel zooms to the cycle's own
+  nodes inside their opened container, instead of to the container as an icon. It also picks the
+  cycle: its lines stay red while the other cycles' lines fade, and lines not touching its nodes
+  fade as for a selection of them, until the row is clicked again.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design
@@ -222,15 +290,29 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   verify-and-retry page objects and a 15 s expect timeout. There are about 760 unit tests across
   the other test projects.
 - **CI (Jun 20).** Unit-test and e2e workflows run on feature-branch pushes. CI/CD runs them
-  before deploying; the full gate covers all browsers plus sync.
+  before deploying; the full gate covers all browsers plus sync. Since Oct 19 the browsers run
+  as parallel jobs (the serial run had grown to ~15 min of a 20 min gate).
 - **Release automation (Jul 21–23).** `CHANGELOG.md` is generated from commit messages, a push to
   `main` creates a release, and the CI/CD and extension workflows were unified.
 - **Release flow (Oct 6).** Dependabot PRs target `dev`, grouped. `./scripts/release` merges `dev`
   into `main` with changelog bullets. Each release bumps the minor version.
+- **Release workflow (Oct 22).** gmd's process: nothing is published by a push or a merge. A
+  manual Release workflow makes a preview from `dev` (pre-release site, GitHub pre-release) or a
+  release from `main` (it merges `dev` into `main`, raises the minor on `dev`, deploys production,
+  publishes the Marketplace and the GitHub release), after the full gate. The notes are written by
+  hand or by Claude (the `release` skill) in `CHANGELOG.md`'s `## [Unreleased]`, grouped New,
+  Improved, Changed, Fixed. One version `major.minor.<minutes since 2026-01-01>` everywhere
+  (`docs/RELEASING.md`).
 - **Security (Oct 8).** CodeQL alerts fixed and the workflow's `GITHUB_TOKEN` permissions limited.
   Vulnerable transitive packages (MessagePack, System.Security.Cryptography.Pkcs/Xml) pinned to
   patched versions until their parent packages catch up (Oct 19).
 - **Demo recording (Jul).** `./scripts/record-demo` re-records the README demo gif.
+- **Claude Code cloud sessions (Oct 21).** Sessions started from the web or the phone run in a
+  fresh VM without the devcontainer:
+  - `./scripts/cloud-setup` (run by a SessionStart hook) installs the build and test toolchain;
+  - the project knowledge that had lived in local memory moved to `.claude/rules/`, so every
+    session has it;
+  - feature branches may now be pushed without asking.
 
 ## Docs and presentation
 
@@ -242,3 +324,6 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - Bicep in the help page and READMEs with a screenshot, and architecture diagrams of the webshop
   example (Oct 9–11).
 - Internal notes moved to `docs/notes/` (Oct 8).
+- **Architecture overview (Oct 22).** `docs/ARCHITECTURE.md` describes the app for the team and
+  its managers in seven generated diagrams (context, hosts, code structure, runtime, VS Code,
+  cloud sync, delivery), with design decisions, a reading guide and open risks.

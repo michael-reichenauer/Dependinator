@@ -208,6 +208,187 @@
     word-break: break-word;
 }
 
+/* A cycle row with its buttons (accept, or edit/remove for an accepted one) to the right. */
+/* The cycles panel's title and count; minimized, a click on them restores the panel. */
+.dep-cycles__title {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.dep-cycles__title--minimized {
+    cursor: pointer;
+}
+
+/* The row's buttons sit beside its lines, centered. */
+.dep-cycles__item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dep-cycles__row {
+    flex: 1;
+    min-width: 0;
+}
+
+.dep-cycles__row:disabled {
+    cursor: default;
+}
+
+.dep-cycles__row:disabled:hover {
+    background: none;
+}
+
+.dep-cycles__note,
+.dep-cycles__gone {
+    color: var(--mud-palette-warning);
+    font-weight: normal;
+}
+
+.dep-cycles__reason {
+    font-style: italic;
+    word-break: break-word;
+    white-space: pre-line;
+}
+
+.dep-cycles__accepted-toggle {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 6px 0 2px;
+    border: 0;
+    border-top: 1px solid var(--mud-palette-lines-default);
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dep-cycles__remove-gone {
+    align-self: flex-start;
+}
+
+.dep-cycles__dialog-cycle {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* The review dialog's title row, with the copy-prompt and "Ask Claude" buttons on the right. */
+.dep-cycles__dialog-title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
+.dep-cycles__ask-claude .mud-button-icon-start {
+    color: #d97757;
+}
+
+.dep-cycles__ask-claude .dep-cycles__ask-claude-progress {
+    width: 14px !important;
+    height: 14px !important;
+    margin-right: 6px;
+}
+
+/* The note that the prompt is copied, with "Open claude.ai", the next step, beside it. */
+.dep-cycles__copied {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dep-cycles__open-claude {
+    flex-shrink: 0;
+}
+
+/* The box an AI chat's answer to the copied prompt is pasted into. */
+.dep-cycles__paste {
+    margin-top: 10px;
+}
+
+.dep-cycles__paste-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+/* One chip per answer (Claude's, or pasted), when there are several. */
+.dep-cycles__answers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+/* Asking Claude in the review dialog, and Claude's verdict. */
+.dep-cycles__suggest {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.dep-cycles__suggest-note {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.dep-cycles__suggest-error {
+    margin-top: 8px;
+    color: var(--mud-palette-error);
+    font-size: 0.875rem;
+    white-space: pre-line;
+}
+
+.dep-cycles__suggestion {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--mud-palette-primary);
+    background: var(--mud-palette-background-gray);
+    font-size: 0.875rem;
+    word-break: break-word;
+}
+
+/* A long answer scrolls inside its panel, so the reason and the buttons stay in view. */
+.dep-cycles__suggestion {
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+/* While asking: the answer's place, framed like the answer. */
+.dep-cycles__suggestion--pending {
+    border-left-color: var(--mud-palette-lines-default);
+}
+
+.dep-cycles__suggest-pending {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-cycles__suggestion[data-verdict="break"] {
+    border-left-color: var(--mud-palette-warning);
+}
+
+.dep-cycles__suggestion-verdict {
+    font-weight: 600;
+}
+
+.dep-cycles__suggestion-note {
+    color: var(--mud-palette-text-secondary);
+}
+
 /* The search dialog in picker mode (PathPanel.razor): what the chosen node will be used for. */
 .search-dialog__caption {
     display: block;

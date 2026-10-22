@@ -23,6 +23,11 @@ export function createDependinatorWebviewPanel(
             localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, "media")]
         }
     );
+    // Same glyph as the editor toolbar button; the "-dark" file has dark edges for light themes.
+    panel.iconPath = {
+        light: vscode.Uri.joinPath(context.extensionUri, "resources", "icon-tree-dark.svg"),
+        dark: vscode.Uri.joinPath(context.extensionUri, "resources", "icon-tree-light.svg")
+    };
 
     panel.webview.html = getWebviewHtml(
         panel.webview,

@@ -6,4 +6,19 @@
         <!-- A switch over a result that does not handle both of its cases is a bug, not a warning -->
         <WarningsAsErrors>$(WarningsAsErrors);CS8509</WarningsAsErrors>
     </PropertyGroup>
+
+    <!-- The version, major.minor.build, e.g. 0.84.423503 (docs/RELEASING.md). Major and minor are those of
+     the next release: the Release workflow raises MinorVersion on dev after each release. BuildNumber
+     (the minutes since 2026-01-01 UTC of the build) and BuildTime (Dependinator.Core.csproj) are set by
+     the Release workflow, as environment variables; a local build is major.minor.0. The assembly
+     version holds major.minor only, since its parts must stay below 65535; Build.cs reads the whole
+     version from the informational one. -->
+    <PropertyGroup>
+        <MajorVersion>0</MajorVersion>
+        <MinorVersion>84</MinorVersion>
+        <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
+        <Version>$(MajorVersion).$(MinorVersion).$(BuildNumber)</Version>
+        <AssemblyVersion>$(MajorVersion).$(MinorVersion).0.0</AssemblyVersion>
+        <FileVersion>$(MajorVersion).$(MinorVersion).0.0</FileVersion>
+    </PropertyGroup>
 </Project>

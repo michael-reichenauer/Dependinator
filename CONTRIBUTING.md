@@ -17,9 +17,9 @@ requests are all welcome.
 ## Branches and releases
 
 - `dev` is the integration branch: branch from it and target pull requests at it.
-- `main` is release-only. Every push to `main` deploys the web app and publishes
-  the VS Code extension with a bumped minor version; `./scripts/release` merges
-  `dev` into `main` with the changelog bullets.
+- `main` is release-only and moves only by the Release workflow, run by hand,
+  which merges `dev` into `main`, deploys the web app and publishes the VS Code
+  extension. Pushes and merges only run the tests. See `docs/RELEASING.md`.
 - Commit messages: imperative, concise subject under 72 characters (for
   example `Fix parsing of generic constraints`), with the rationale in the body
   when it is not obvious.

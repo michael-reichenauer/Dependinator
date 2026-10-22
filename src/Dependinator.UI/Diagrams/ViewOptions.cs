@@ -25,11 +25,23 @@ interface IViewOptions
     // Circular dependencies: the cycles panel is open and cyclic lines are drawn highlighted.
     bool IsCyclesShown { get; }
 
+    // The cycles panel folded down to its title bar (its lines stay highlighted); showing or
+    // closing the panel restores it.
+    bool IsCyclesMinimized { get; }
+
+    // The cycle (Cycle.Key) the user picked in the cycles panel: its lines stay in the warning
+    // color while the other cycles' lines are dimmed. Null shows all cycles alike; showing or
+    // closing the panel clears it.
+    string? SelectedCycleKey { get; }
+
     // Architecture rules: the rules panel is open and violating lines are drawn highlighted.
     bool IsRulesShown { get; }
 
     // The minimap in the corner (persisted in Config.ShowMinimap).
     bool IsMinimapShown { get; }
+
+    // Badges on the nodes that contain problems (persisted in Config.ShowProblemBadges).
+    bool IsProblemBadgesShown { get; }
 
     void SetShowHiddenNodes(bool show);
     void SetIsEditingEnabled(bool enabled);
@@ -38,8 +50,11 @@ interface IViewOptions
     void SetRowFilter(RowFilter filter);
     void SetLegendShown(bool shown);
     void SetCyclesShown(bool shown);
+    void SetCyclesMinimized(bool minimized);
+    void SetSelectedCycle(string? cycleKey);
     void SetRulesShown(bool shown);
     void SetMinimapShown(bool shown);
+    void SetProblemBadgesShown(bool shown);
 }
 
 // MinLinkCount 1 shows every line; 2 hides the single-link lines, and so on. HideConfiguration
@@ -87,8 +102,11 @@ class ViewOptions : IViewOptions
     public RowFilter RowFilter { get; private set; } = RowFilter.None;
     public bool IsLegendShown { get; private set; }
     public bool IsCyclesShown { get; private set; }
+    public bool IsCyclesMinimized { get; private set; }
+    public string? SelectedCycleKey { get; private set; }
     public bool IsRulesShown { get; private set; }
     public bool IsMinimapShown { get; private set; }
+    public bool IsProblemBadgesShown { get; private set; } = true;
 
     public void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
 
@@ -102,9 +120,20 @@ class ViewOptions : IViewOptions
 
     public void SetLegendShown(bool shown) => IsLegendShown = shown;
 
-    public void SetCyclesShown(bool shown) => IsCyclesShown = shown;
+    public void SetCyclesShown(bool shown)
+    {
+        IsCyclesShown = shown;
+        IsCyclesMinimized = false;
+        SelectedCycleKey = null;
+    }
+
+    public void SetCyclesMinimized(bool minimized) => IsCyclesMinimized = minimized && IsCyclesShown;
+
+    public void SetSelectedCycle(string? cycleKey) => SelectedCycleKey = IsCyclesShown ? cycleKey : null;
 
     public void SetRulesShown(bool shown) => IsRulesShown = shown;
 
     public void SetMinimapShown(bool shown) => IsMinimapShown = shown;
+
+    public void SetProblemBadgesShown(bool shown) => IsProblemBadgesShown = shown;
 }

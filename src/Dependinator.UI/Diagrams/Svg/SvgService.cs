@@ -34,6 +34,8 @@ class SvgService : ISvgService
     readonly ICycleService cycleService;
     readonly IPathFinderService pathFinderService;
     readonly IRuleService ruleService;
+    readonly IProblemService problemService;
+    IReadOnlyDictionary<NodeId, NodeProblems>? tilesNodeProblems;
 
     public SvgService(
         IModelMgr modelMgr,
@@ -41,7 +43,8 @@ class SvgService : ISvgService
         IViewOptions viewOptions,
         ICycleService cycleService,
         IPathFinderService pathFinderService,
-        IRuleService ruleService
+        IRuleService ruleService,
+        IProblemService problemService
     )
     {
         this.modelMgr = modelMgr;
@@ -50,6 +53,7 @@ class SvgService : ISvgService
         this.cycleService = cycleService;
         this.pathFinderService = pathFinderService;
         this.ruleService = ruleService;
+        this.problemService = problemService;
     }
 
     // The user's view toggles that affect what a tile contains; captured per render so the
@@ -60,9 +64,13 @@ class SvgService : ISvgService
             Filter = viewOptions.LineFilter,
             Rows = viewOptions.RowFilter,
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
+            SelectedCycleLines = SelectedCycleKey is { } cycleKey ? cycleService.GetCycleLineIds(cycleKey) : null,
+            SelectedCycleMembers = SelectedCycleKey is { } key ? cycleService.GetCycleMemberIds(key) : null,
             PathLines = pathFinderService.GetPathLineIds(),
             ViolatingLines = viewOptions.IsRulesShown ? ruleService.GetViolatingLineIds() : null,
         };
+
+    string? SelectedCycleKey => viewOptions.IsCyclesShown ? viewOptions.SelectedCycleKey : null;
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
@@ -77,10 +85,21 @@ class SvgService : ISvgService
             model.Zoom = zoom;
         }
 
+        // The badges are baked into the tiles, and the problems can change without a model
+        // change: the counts of a parse are only taken once its progress ends. Read before the
+        // tiles lock, since it takes the model lock.
+        var nodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null;
+
         TileKey tileKey;
         Tile tile;
         using (var tiles = tilesMgr.UseTiles())
         {
+            if (!ReferenceEquals(nodeProblems, tilesNodeProblems))
+            {
+                tiles.ClearCache();
+                tilesNodeProblems = nodeProblems;
+            }
+
             if (tiles.TryGetLastUsed(viewRect, zoom, out tile))
                 return tile; // Same tile as last call
 
@@ -92,7 +111,7 @@ class SvgService : ISvgService
         // Create a new tile and cache it
         using (var model = modelMgr.UseModel())
         {
-            tile = CreateModelTile(model, tileKey);
+            tile = CreateModelTile(model, tileKey, nodeProblems);
         }
         using (var tiles = tilesMgr.UseTiles())
         {
@@ -110,11 +129,13 @@ class SvgService : ISvgService
 
         var offset = new Pos(-canvasRect.X / zoom, -canvasRect.Y / zoom);
         var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
-        // Exports never show edit chrome (handles) or selection dimming, whatever the current state.
+        // Exports never show edit chrome (handles), selection or cycle-pick dimming or problem badges, whatever
+        // the current state.
         var flags = Flags with
         {
             IsEditing = false,
             DimUnrelated = false,
+            SelectedCycleLines = null,
         };
         var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, flags);
         return RenderRootContent(model, zoom, context);
@@ -127,6 +148,21 @@ class SvgService : ISvgService
         var node = nodes.FirstOrDefault();
         var line = node is null ? model.Lines.Values.FirstOrDefault(l => l.IsSelected) : null;
         return new RenderSelection(node, line, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
+    }
+
+    // What dims the lines: the selection, or with nothing selected the nodes of the cycle picked
+    // in the cycles panel, so the lines that do not touch the cycle fade too. Only dimming: the
+    // line widths still follow the real selection (see IsLineWeighted).
+    static RenderSelection FindDimSelection(
+        IModel model,
+        RenderSelection selection,
+        IReadOnlyList<NodeId>? cycleMembers
+    )
+    {
+        if (!selection.IsEmpty || cycleMembers is null)
+            return selection;
+        var nodes = cycleMembers.Select(id => model.Nodes.GetValueOrDefault(id)).OfType<Node>().ToList();
+        return new RenderSelection(nodes.FirstOrDefault(), null, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
     }
 
     // A line is dimmed while something else is selected: for a selected node, every line that
@@ -156,15 +192,25 @@ class SvgService : ISvgService
     internal static bool IsLineWeighted(Line line, RenderSelection selection) =>
         line.IsFocused || (!selection.IsEmpty && !IsLineDimmed(line, selection));
 
-    static bool IsLineWeighted(Line line, RenderContext context) => IsLineWeighted(line, context.Flags.Selection);
+    static bool IsLineWeighted(Line line, RenderContext context) =>
+        !IsOtherCycleLine(line, context) && IsLineWeighted(line, context.Flags.Selection);
 
     // While a dependency path is shown, everything off the path fades so the chain stands out.
+    // While one cycle is picked in the cycles panel, the other cycles' lines fade.
     static bool IsLineDimmed(Line line, RenderContext context)
     {
         if (context.Flags.PathLines is { } pathLines)
             return !pathLines.Contains(line.Id);
-        return context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.Selection);
+        if (IsOtherCycleLine(line, context))
+            return true;
+        return context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.DimSelection);
     }
+
+    // A cyclic line that is not part of the cycle picked in the cycles panel.
+    static bool IsOtherCycleLine(Line line, RenderContext context) =>
+        context.Flags.SelectedCycleLines is { } cycleLines
+        && IsLineCyclic(line, context)
+        && !cycleLines.Contains(line.Id);
 
     static bool IsLineCyclic(Line line, RenderContext context) => context.Flags.CyclicLines?.Contains(line.Id) == true;
 
@@ -199,7 +245,7 @@ class SvgService : ISvgService
     static bool IsExternal(Node node) =>
         node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
 
-    Tile CreateModelTile(IModel model, TileKey tileKey)
+    Tile CreateModelTile(IModel model, TileKey tileKey, IReadOnlyDictionary<NodeId, NodeProblems>? nodeProblems)
     {
         var timing = Timing.Start();
         var tileRect = tileKey.GetTileRect();
@@ -207,7 +253,15 @@ class SvgService : ISvgService
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
-        var flags = Flags with { Selection = FindSelection(model) };
+        // The problems GetTile checked the cache against, so the tile matches them.
+        var viewFlags = Flags;
+        var selection = FindSelection(model);
+        var flags = viewFlags with
+        {
+            Selection = selection,
+            DimSelection = FindDimSelection(model, selection, viewFlags.SelectedCycleMembers),
+            NodeProblems = nodeProblems,
+        };
         var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, flags);
         var rootContentSvg = RenderRootContent(model, tileZoom, rootContext);
 
@@ -325,7 +379,13 @@ class SvgService : ISvgService
             return NoteSvg.GetNoteSvg(node, geometry.CanvasRect, context.Zoom);
 
         if (node.Type.IsMember)
-            return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
+            return NodeSvg.GetMemberNodeSvg(
+                node,
+                geometry.CanvasRect,
+                context.Zoom,
+                context.Flags.IsEditing,
+                ProblemsOf(node, context)
+            );
 
         if (node.IsPassThrough)
         { // An invisible container that covers its parent; render only its children, no chrome
@@ -337,7 +397,13 @@ class SvgService : ISvgService
         }
 
         if (NodeViewPolicy.IsShowIcon(node, context.Zoom))
-            return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
+            return NodeSvg.GetNodeIconSvg(
+                node,
+                geometry.CanvasRect,
+                context.Zoom,
+                context.Flags.IsEditing,
+                ProblemsOf(node, context)
+            );
 
         if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
             return RenderFlattenedNodeContent(node, geometry, context);
@@ -353,9 +419,13 @@ class SvgService : ISvgService
             geometry.CanvasRect,
             context.Zoom,
             childrenContentSvg,
-            context.Flags.IsEditing
+            context.Flags.IsEditing,
+            ProblemsOf(node, context)
         );
     }
+
+    static NodeProblems? ProblemsOf(Node node, RenderContext context) =>
+        context.Flags.NodeProblems?.TryGetValue(node.Id, out var problems) == true ? problems : null;
 
     // At extreme zoom a nested svg viewport would carry offsets of millions of canvas units,
     // which browsers combine in single-precision floats, displacing the subtree far off-screen
@@ -621,17 +691,31 @@ class SvgService : ISvgService
     readonly record struct ViewFlags(bool IsEditing, bool ShowHidden, bool DimUnrelated)
     {
         public RenderSelection Selection { get; init; }
+
+        // The selection, or the picked cycle's nodes while nothing is selected (see FindDimSelection).
+        public RenderSelection DimSelection { get; init; }
         public LineFilter Filter { get; init; } = LineFilter.None;
         public RowFilter Rows { get; init; } = RowFilter.None;
 
         // Sibling lines that are part of a circular dependency; null while cycles are not shown.
         public IReadOnlySet<LineId>? CyclicLines { get; init; }
 
+        // The lines of the cycle picked in the cycles panel; the other cyclic lines are dimmed.
+        // Null while no cycle is picked.
+        public IReadOnlySet<LineId>? SelectedCycleLines { get; init; }
+
+        // The nodes of the cycle picked in the cycles panel, dimming like a selection of them
+        // while nothing else is selected. Null while no cycle is picked.
+        public IReadOnlyList<NodeId>? SelectedCycleMembers { get; init; }
+
         // Lines of the dependency path being shown (View › Find Path); null while no path is shown.
         public IReadOnlySet<LineId>? PathLines { get; init; }
 
         // Lines breaking an architecture rule; null while the rules panel is closed.
         public IReadOnlySet<LineId>? ViolatingLines { get; init; }
+
+        // The problems in or inside each node, for its badge; null while badges are off.
+        public IReadOnlyDictionary<NodeId, NodeProblems>? NodeProblems { get; init; }
     }
 
     readonly record struct RenderContext(

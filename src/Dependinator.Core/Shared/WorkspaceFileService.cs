@@ -8,6 +8,10 @@ interface IWorkspaceFileService
     // The workspace's parseable model files: every .sln, then every .bicep entry point.
     Task<IReadOnlyList<string>> GetModelFilePathsAsync();
     void SetWorkspaceFolders(IReadOnlyList<string> paths);
+
+    // The text of a source file a model node points at; only files inside the workspace folders
+    // are read, since in VS Code the request comes from the webview.
+    Task<Result<string>> ReadSourceFileAsync(string path);
 }
 
 [Singleton]
@@ -19,6 +23,8 @@ class WorkspaceFileService : IWorkspaceFileService
         "node_modules",
         "obj",
     };
+
+    const long MaxSourceFileLength = 2 * 1024 * 1024;
 
     IReadOnlyList<string> rootPaths = [];
 
@@ -48,6 +54,27 @@ class WorkspaceFileService : IWorkspaceFileService
     {
         Log.Info("Set workspace folders ", paths);
         rootPaths = paths;
+    }
+
+    public async Task<Result<string>> ReadSourceFileAsync(string path)
+    {
+        await Task.CompletedTask;
+        var fullPath = Path.GetFullPath(path);
+        if (!rootPaths.Any(root => IsInside(fullPath, root)))
+            return new Error($"Not in the workspace: {path}");
+        var file = new FileInfo(fullPath);
+        if (!file.Exists)
+            return new Error($"No such file: {path}");
+        if (file.Length > MaxSourceFileLength)
+            return new Error($"Too large to read: {path}");
+        return Result.Catch(() => File.ReadAllText(fullPath));
+    }
+
+    static bool IsInside(string fullPath, string root)
+    {
+        var folder = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root)) + Path.DirectorySeparatorChar;
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return fullPath.StartsWith(folder, comparison);
     }
 
     static IEnumerable<string> EnumerateFiles(IReadOnlyList<string> roots, string searchPattern = "*")
