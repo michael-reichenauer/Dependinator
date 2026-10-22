@@ -13,7 +13,7 @@ static class CycleChangeSummary
     public static Snapshot Capture(IModelMgr modelMgr) =>
         modelMgr.WithModel(m =>
         {
-            var (open, accepted, toFix, _) = CycleService.Compute(m);
+            var (open, accepted, toFix, _, _) = CycleService.Compute(m);
             return new Snapshot(open, [.. accepted, .. toFix]);
         });
 

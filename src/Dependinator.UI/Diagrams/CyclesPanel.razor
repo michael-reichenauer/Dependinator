@@ -4,6 +4,7 @@
 @inject INavigationService navigationService
 @inject IDialogService dialogService
 @inject Modeling.IModelService modelService
+@inject Modeling.Models.IModelMgr modelMgr
 @inject IClipboardService clipboardService
 @inject ICyclePromptService cyclePromptService
 @inject ICycleSuggestionService cycleSuggestionService
@@ -11,7 +12,9 @@
 
 @* Circular dependencies, one row per cycle: the container and the sibling nodes that depend on
    each other in a circle. While open, the lines of those cycles are drawn in the warning color.
-   Clicking a row navigates to the container. Its review button opens the review dialog (an AI
+   Clicking a row frames the cycle's nodes in their opened container and picks the cycle: its
+   lines stay in the warning color while the other cycles' lines are dimmed, until the row is
+   clicked again. Its review button opens the review dialog (an AI
    prompt to copy, Claude's verdict where the host can ask Claude). A cycle that is intended can be
    accepted with a reason (saved with the model, undoable): it moves to the collapsed Accepted
    section and its lines are drawn normally. A cycle Claude suggests breaking can be marked to fix later instead:
@@ -63,8 +66,10 @@
       @foreach (var cycle in cycles)
       {
         <div class="dep-cycles__item" data-testid="cycles-item">
-          <button type="button" class="dep-panel__row dep-cycles__row" title="@($"Show {cycle.ContainerName}")"
-                  @onclick="() => ShowAsync(cycle.ContainerId)" data-testid="cycles-item-show">
+          <button type="button" class="dep-panel__row dep-cycles__row @SelectedClass(cycle)"
+                  title="@(IsSelected(cycle) ? "Show all cycles alike again" : $"Show this cycle in {cycle.ContainerName}")"
+                  @onclick="() => ShowCycleAsync(cycle)" data-testid="cycles-item-show"
+                  data-selected="@(IsSelected(cycle) ? "true" : "false")">
             <span class="dep-cycles__container">@cycle.ContainerName</span>
             <span class="dep-cycles__members">@Join(cycle.Members.Select(m => m.Name))</span>
             @if (cycle.AcceptedBefore is { } before)
@@ -96,9 +101,10 @@
           {
             <div class="dep-cycles__item" data-testid="cycles-tofix-item"
                  data-still-occurs="@(report.StillOccurs ? "true" : "false")">
-              <button type="button" class="dep-panel__row dep-cycles__row" disabled="@(report.ContainerId is null)"
-                      title="@(report.ContainerId is null ? "The container is no longer in the model" : $"Show {report.ContainerName}")"
-                      @onclick="() => ShowAsync(report.ContainerId!)" data-testid="cycles-tofix-show">
+              <button type="button" class="dep-panel__row dep-cycles__row @(report.Cycle is { } shown ? SelectedClass(shown) : "")"
+                      disabled="@(report.ContainerId is null)"
+                      title="@(report.ContainerId is null ? "The container is no longer in the model" : $"Show this cycle in {report.ContainerName}")"
+                      @onclick="() => ShowReportAsync(report)" data-testid="cycles-tofix-show">
                 <span class="dep-cycles__container">@report.ContainerName</span>
                 <span class="dep-cycles__members">@Join(report.MemberNames)</span>
                 <span class="dep-cycles__reason" data-testid="cycles-tofix-change">@(report.Accepted.Reason == "" ? "No change planned" : report.Accepted.Reason)</span>
@@ -153,8 +159,8 @@
             <div class="dep-cycles__item" data-testid="cycles-accepted-item"
                  data-still-occurs="@(report.StillOccurs ? "true" : "false")">
               <button type="button" class="dep-panel__row dep-cycles__row" disabled="@(report.ContainerId is null)"
-                      title="@(report.ContainerId is null ? "The container is no longer in the model" : $"Show {report.ContainerName}")"
-                      @onclick="() => ShowAsync(report.ContainerId!)" data-testid="cycles-accepted-show">
+                      title="@(report.ContainerId is null ? "The container is no longer in the model" : $"Show this cycle in {report.ContainerName}")"
+                      @onclick="() => ShowReportAsync(report)" data-testid="cycles-accepted-show">
                 <span class="dep-cycles__container">@report.ContainerName</span>
                 <span class="dep-cycles__members">@Join(report.MemberNames)</span>
                 <span class="dep-cycles__reason" data-testid="cycles-accepted-reason">@(report.Accepted.Reason == "" ? "No reason given" : report.Accepted.Reason)</span>
@@ -220,7 +226,35 @@
   static string JoinedSince(Cycle cycle, Modeling.Models.AcceptedCycle before) =>
     string.Join(", ", cycle.Members.Where(m => !before.MemberNames.Contains(m.NodeName)).Select(m => m.Name));
 
-  Task ShowAsync(Modeling.Models.NodeId containerId) => navigationService.ShowNodeAsync(containerId);
+  bool IsSelected(Cycle cycle) => viewOptions.SelectedCycleKey == cycle.Key;
+
+  string SelectedClass(Cycle cycle) => IsSelected(cycle) ? "dep-panel__row--selected" : "";
+
+  // Picks the cycle and frames its nodes; on the picked cycle, shows all cycles alike again.
+  Task ShowCycleAsync(Cycle cycle)
+  {
+    var isSelected = IsSelected(cycle);
+    viewOptions.SetSelectedCycle(isSelected ? null : cycle.Key);
+    modelService.ClearCache(); // The highlighted lines are baked into the tiles
+    applicationEvents.TriggerUIStateChanged();
+    return isSelected ? Task.CompletedTask : ShowNodesAsync(cycle.ContainerId, cycle.Members.Select(m => m.Id));
+  }
+
+  // An entry to fix is still highlighted, so it is picked like an open cycle; an accepted one
+  // (drawn normally) or one that is gone is only framed, as far as its nodes still exist.
+  Task ShowReportAsync(AcceptedCycleReport report)
+  {
+    if (report.Cycle is { } cycle && report.Accepted.IsToFix)
+      return ShowCycleAsync(cycle);
+    return ShowNodesAsync(report.ContainerId!, report.Accepted.MemberNames.Select(Modeling.Models.NodeId.FromName));
+  }
+
+  // The container itself when none of the members are in the model any more.
+  Task ShowNodesAsync(Modeling.Models.NodeId containerId, IEnumerable<Modeling.Models.NodeId> memberIds)
+  {
+    var ids = modelMgr.WithModel(m => memberIds.Where(m.Nodes.ContainsKey).ToList());
+    return ids.Count > 0 ? navigationService.ShowNodesAsync(ids) : navigationService.ShowNodeAsync(containerId);
+  }
 
   string ReviewTitle => cycleSuggestionService.IsAvailable
     ? "Review this cycle: accept it as intended, or let Claude suggest whether and how to break it"

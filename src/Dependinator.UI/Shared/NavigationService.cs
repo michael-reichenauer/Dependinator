@@ -14,6 +14,11 @@ interface INavigationService
 {
     Task ShowNodeAsync(NodeId nodeId);
     Task ShowNodeAsync(string fileLocation);
+
+    // Frames several nodes together (e.g. the members of a cycle), each at most as large as
+    // "show node" frames one, so they show as icons inside their open container. Nothing is
+    // selected.
+    Task ShowNodesAsync(IReadOnlyList<NodeId> nodeIds);
     Task ShowEditor(NodeId nodeId);
 }
 
@@ -75,6 +80,76 @@ class NavigationService(
         {
             showNodeLock.Release();
         }
+    }
+
+    public async Task ShowNodesAsync(IReadOnlyList<NodeId> nodeIds)
+    {
+        var requestId = Interlocked.Increment(ref showNodeRequestId);
+        await showNodeLock.WaitAsync();
+        try
+        {
+            if (!IsLatestShowNodeRequest(requestId))
+                return;
+
+            Log.Info("ShowNodesAsync for", nodeIds.Count, "nodes");
+            selectionService.Unselect();
+            applicationEvents.TriggerUIStateChanged();
+            await Task.Yield();
+            if (!IsLatestShowNodeRequest(requestId))
+                return;
+
+            await screenService.CheckResizeAsync();
+            if (!TryGetNodesPosAndZoom(nodeIds, screenService.SvgRect, out var pos, out var zoom))
+                return;
+
+            viewHistory.RecordJump();
+            await panZoomService.PanZoomToAsync(pos, zoom);
+        }
+        finally
+        {
+            showNodeLock.Release();
+        }
+    }
+
+    // The center of the nodes' joint bounds, and the zoom that fits those bounds in the view
+    // with some margin, but zoomed out at least as far as "show node" would for the largest of
+    // them (so two neighbors are not blown up to fill the screen).
+    bool TryGetNodesPosAndZoom(IReadOnlyList<NodeId> nodeIds, Rect svgRect, out Pos pos, out double zoom)
+    {
+        const double Margin = 1.25;
+        pos = Pos.None;
+        zoom = 0.0;
+
+        var (x1, y1, x2, y2) = (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
+        var minZoom = 0.0;
+        using (var model = modelMgr.UseModel())
+        {
+            var nodes = nodeIds.Select(id => model.Nodes.GetValueOrDefault(id)).OfType<Modeling.Models.Node>().ToList();
+            if (nodes.Count == 0)
+                return false;
+
+            if (nodes.Aggregate(false, (changed, node) => EnsureLayoutForPath(node) || changed))
+                applicationEvents.TriggerModelChanged();
+
+            foreach (var node in nodes)
+            {
+                var (nodePos, nodeZoom) = node.GetPosAndZoom();
+                x1 = Math.Min(x1, nodePos.X);
+                y1 = Math.Min(y1, nodePos.Y);
+                x2 = Math.Max(x2, nodePos.X + node.Boundary.Width * nodeZoom);
+                y2 = Math.Max(y2, nodePos.Y + node.Boundary.Height * nodeZoom);
+                minZoom = Math.Max(minZoom, nodeZoom * NodeViewPolicy.FramingZoomFactor(node));
+            }
+        }
+
+        pos = new Pos((x1 + x2) / 2, (y1 + y2) / 2);
+        // The model zoom is canvas units per pixel.
+        var fitZoom =
+            svgRect.Width > 0 && svgRect.Height > 0
+                ? Math.Max((x2 - x1) / svgRect.Width, (y2 - y1) / svgRect.Height) * Margin
+                : 0;
+        zoom = Math.Max(fitZoom, minZoom);
+        return zoom > 0 && double.IsFinite(zoom);
     }
 
     private bool TryGetNodePosAndZoom(NodeId nodeId, out Pos pos, out double zoom)

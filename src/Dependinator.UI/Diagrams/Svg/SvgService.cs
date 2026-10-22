@@ -64,6 +64,10 @@ class SvgService : ISvgService
             Filter = viewOptions.LineFilter,
             Rows = viewOptions.RowFilter,
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
+            SelectedCycleLines =
+                viewOptions.IsCyclesShown && viewOptions.SelectedCycleKey is { } cycleKey
+                    ? cycleService.GetCycleLineIds(cycleKey)
+                    : null,
             PathLines = pathFinderService.GetPathLineIds(),
             ViolatingLines = viewOptions.IsRulesShown ? ruleService.GetViolatingLineIds() : null,
         };
@@ -175,10 +179,13 @@ class SvgService : ISvgService
     static bool IsLineWeighted(Line line, RenderContext context) => IsLineWeighted(line, context.Flags.Selection);
 
     // While a dependency path is shown, everything off the path fades so the chain stands out.
+    // While one cycle is picked in the cycles panel, the other cycles' lines fade.
     static bool IsLineDimmed(Line line, RenderContext context)
     {
         if (context.Flags.PathLines is { } pathLines)
             return !pathLines.Contains(line.Id);
+        if (context.Flags.SelectedCycleLines is { } cycleLines && IsLineCyclic(line, context))
+            return !cycleLines.Contains(line.Id);
         return context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.Selection);
     }
 
@@ -663,6 +670,10 @@ class SvgService : ISvgService
 
         // Sibling lines that are part of a circular dependency; null while cycles are not shown.
         public IReadOnlySet<LineId>? CyclicLines { get; init; }
+
+        // The lines of the cycle picked in the cycles panel; the other cyclic lines are dimmed.
+        // Null while no cycle is picked.
+        public IReadOnlySet<LineId>? SelectedCycleLines { get; init; }
 
         // Lines of the dependency path being shown (View › Find Path); null while no path is shown.
         public IReadOnlySet<LineId>? PathLines { get; init; }
