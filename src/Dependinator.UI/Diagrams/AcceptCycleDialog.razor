@@ -59,7 +59,19 @@
     </div>
     @if (copyNote is not null)
     {
-      <div class="dep-cycles__suggest-note mt-2" data-testid="accept-cycle-copied">@copyNote</div>
+      <div class="dep-cycles__copied mt-2">
+        <div class="dep-cycles__suggest-note" data-testid="accept-cycle-copied">@copyNote</div>
+        @if (isPasteOpen)
+        {
+          @* The next step after copying, so next to the note. The prompt is already on the
+             clipboard, so claude.ai opens empty, to paste into: a prompt with code is too long, and
+             too private, to pass in the address. *@
+          <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                     EndIcon="@MudBlazor.Icons.Material.Outlined.OpenInNew" Class="dep-cycles__open-claude"
+                     title="Open claude.ai in the browser, to paste the prompt into"
+                     OnClick="OpenClaudeAsync" data-testid="accept-cycle-open-claude">Open claude.ai</MudButton>
+        }
+      </div>
     }
     @if (isPasteOpen)
     {
@@ -68,11 +80,6 @@
                       Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense"
                       data-testid="accept-cycle-paste-text" />
         <div class="dep-cycles__paste-actions">
-          @* The prompt is already on the clipboard, so claude.ai opens empty, to paste into: a
-             prompt with code is too long, and too private, to pass in the address. *@
-          <MudButton Size="Size.Small" Variant="Variant.Text" EndIcon="@MudBlazor.Icons.Material.Outlined.OpenInNew"
-                     title="Open claude.ai in the browser, to paste the prompt into"
-                     OnClick="OpenClaudeAsync" data-testid="accept-cycle-open-claude">Open claude.ai</MudButton>
           <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@string.IsNullOrWhiteSpace(pastedAnswer)"
                      OnClick="UsePastedAnswer" data-testid="accept-cycle-paste-use">Use answer</MudButton>
         </div>
@@ -295,7 +302,7 @@
     if (CopyPrompt is null)
       return;
     await CopyAsync(await CopyPrompt(),
-      "The prompt is copied. Paste it into an AI chat, such as claude.ai, then paste its answer below.");
+      "The prompt is copied. Paste it into claude.ai, or another AI chat, then paste its answer below.");
     if (copyNote is not null)
     {
       isPasteOpen = true;
