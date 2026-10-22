@@ -310,3 +310,6 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - Bicep in the help page and READMEs with a screenshot, and architecture diagrams of the webshop
   example (Oct 9–11).
 - Internal notes moved to `docs/notes/` (Oct 8).
+- **Architecture overview (Oct 22).** `docs/ARCHITECTURE.md` describes the app for the team and
+  its managers in seven generated diagrams (context, hosts, code structure, runtime, VS Code,
+  cloud sync, delivery), with design decisions, a reading guide and open risks.

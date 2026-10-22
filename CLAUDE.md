@@ -21,12 +21,11 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 - `src/Dependinator.Core/` — core parsing/domain logic/utilities (`Parsing/`, `Models/`, `Utils/`)
 - `src/Dependinator.Roslyn/` — Roslyn-based parsing (`Parsing/`)
 - `src/Dependinator.Bicep/` — Azure Bicep parsing (`Parsing/`) with the Bicep compiler library `Azure.Bicep.Core` (pinned in `Directory.Packages.props`, ignored by Dependabot); never write `Bicep.Core.*` qualified inside its `Dependinator.Bicep` namespace (see its `Usings.cs`)
-- `src/Dependinator.Claude/` — asks Claude (Anthropic SDK, the user's own API key) to review a circular dependency; implements Core's `[Rpc] IClaudeService`, registered by the Lsp and Web hosts
 - `src/Dependinator.Reflection/` — reflection-based parsing of compiled assemblies/solutions (`Parsing/`); currently inactive, not referenced by any host
 - `src/Dependinator.Claude/` — asks Claude with the user's own Anthropic API key (official `Anthropic` C# SDK); implements Core's `IClaudeService` RPC for the Web host and the LSP
 - `src/Shared/` — shared DTOs/models between client and API
 
-**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Bicep.Tests/` (parses the sample deployment under its `Samples/`), `tests/Dependinator.Claude.Tests/`, `tests/Dependinator.Reflection.Tests/`, `tests/Dependinator.Claude.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
+**Test projects:** `tests/Api.Tests/`, `tests/Dependinator.UI.Tests/`, `tests/Dependinator.Core.Tests/`, `tests/Dependinator.Roslyn.Tests/`, `tests/Dependinator.Bicep.Tests/` (parses the sample deployment under its `Samples/`), `tests/Dependinator.Reflection.Tests/`, `tests/Dependinator.Claude.Tests/`, `tests/Dependinator.Lsp.Tests/`, `tests/Dependinator.Architecture.Tests/` (NetArchTest layering guards), `tests/Dependinator.E2E.Tests/` (Playwright UI tests)
 
 The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution folders.
 
