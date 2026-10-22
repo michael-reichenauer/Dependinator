@@ -5,6 +5,34 @@ the previews before it. Releases with nothing users notice are left out.
 
 ## [Unreleased]
 
+### New
+
+- Cycles can be reviewed in a dialog: accept a cycle as intended with a reason (shown with it and saved with the model), or mark it to **Fix later**; an accepted cycle is reported again if another node joins it
+- **Copy AI prompt** in the cycle review copies a prompt with the cycle and the source behind it for any AI chat, whose answer can be pasted back; **Open claude.ai** opens claude.ai to paste it into
+- **Ask Claude** in the cycle review asks Claude, with your own API key, whether a cycle is intended or should be broken, and **Copy fix prompt** copies a prompt for breaking it; in VS Code the key is set with **Dependinator: Set Claude API Key**
+- A problem indicator in the app bar counts open cycles, broken architecture rules and compile errors (one row per C# project or Bicep file), and lists them on a click
+- Nodes show a badge with the number of problems in or inside them, red for compile errors and orange for cycles and broken rules; **View › Show Problem Badges** turns them off
+- A refactor that breaks or changes an accepted cycle is pointed out
+
+### Improved
+
+- C# members are named and typed as they are written: constructors have their own icon, a static constructor has a node of its own, a C# 14 extension block shows as an `extension(Type)` node, and conversion operators and indexers no longer make up extra nodes
+- Links to generic types and to extension methods reach the declared node
+- A namespace commented in several files shows each comment with its file and line, and a license header is no longer taken for a namespace description
+- Picking a cycle frames its nodes and dims the lines and cycles unrelated to it, without thickening its lines
+- The cycles panel can be minimized like the dependencies explorer
+- The VS Code tab of the diagram shows the Dependinator icon
+
+### Changed
+
+- The version is now `major.minor.build`, shown with its build time in the **About** dialog, and previews of the next release are published on GitHub
+
+### Fixed
+
+- Clicking a line selects it reliably in Safari and other WebKit browsers, a click close to a hovered line no longer misses, and a click on a selected line's dashed outline no longer deselects it
+- C# source generators no longer cause false compile errors
+- A design node name with a stray bracket, such as "Latency < 50ms", displays correctly
+
 ## [v0.83.0] - 2026-10-19
 
 ### Improved
