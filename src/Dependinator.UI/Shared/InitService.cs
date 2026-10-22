@@ -64,6 +64,7 @@ class InitService : IInitService
         viewOptions.SetIsEditingEnabled(config.IsEditingEnabled);
         viewOptions.SetDimUnrelatedLines(config.DimUnrelatedLines);
         viewOptions.SetMinimapShown(config.ShowMinimap);
+        viewOptions.SetProblemBadgesShown(config.ShowProblemBadges);
         viewOptions.SetLineFilter(
             new LineFilter(
                 config.HideExternalLines,

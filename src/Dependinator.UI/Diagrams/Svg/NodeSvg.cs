@@ -47,7 +47,13 @@ static partial class NodeSvg
     const double LinkHandleTouchRx = 17; // Invisible touch ellipse, bridges back to the icon edge
     const double LinkHandleTouchRy = 11;
 
-    public static string GetNodeIconSvg(Node node, Rect nodeCanvasRect, double parentZoom, bool isEditing = false)
+    public static string GetNodeIconSvg(
+        Node node,
+        Rect nodeCanvasRect,
+        double parentZoom,
+        bool isEditing = false,
+        NodeProblems? problems = null
+    )
     {
         var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
         var textZoom = TextZoom(parentZoom);
@@ -69,7 +75,8 @@ static partial class NodeSvg
             LinkHandlePos: new Pos(geometry.X + geometry.Width + LinkHandleGap, geometry.Y + geometry.Height / 2)
         );
 
-        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing);
+        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
+            + ProblemBadgeSvg(problems, VisibleIconRect(geometry), textZoom);
     }
 
     public static string GetNodeContainerSvg(
@@ -77,7 +84,8 @@ static partial class NodeSvg
         Rect nodeCanvasRect,
         double parentZoom,
         string childrenContent,
-        bool isEditing = false
+        bool isEditing = false,
+        NodeProblems? problems = null
     )
     {
         var header = CalculateContainerHeader(nodeCanvasRect, parentZoom);
@@ -128,11 +136,56 @@ static partial class NodeSvg
                 header.TextPos.Y + header.FontSize / 2,
                 header.FontSize
             )}
+            {ProblemBadgeSvg(problems, nodeCanvasRect, textZoom)}
             """
         );
     }
 
-    public static string GetMemberNodeSvg(Node node, Rect nodeCanvasRect, double parentZoom, bool isEditing = false)
+    // The icon symbols leave a margin inside their box, so a badge on the box's corner would
+    // float beside the icon; this is about that margin, as a part of the box.
+    const double IconSymbolMargin = 0.12;
+
+    static Rect VisibleIconRect(Rect iconRect) =>
+        new(
+            iconRect.X + iconRect.Width * IconSymbolMargin,
+            iconRect.Y + iconRect.Height * IconSymbolMargin,
+            iconRect.Width * (1 - 2 * IconSymbolMargin),
+            iconRect.Height * (1 - 2 * IconSymbolMargin)
+        );
+
+    const double BadgeMaxRadius = 7; // At text zoom 1; follows the text size like the names
+    const double BadgeMinRadius = 2.5; // Smaller than this it cannot be read, so it is left out
+    const double BadgeWidthFactor = 0.15; // Of the node's width, so it never covers a small node
+
+    // The number of problems in or inside a node, on its top-right corner: red when compile
+    // errors are among them, orange otherwise. It lets pointer events through to the node, so it
+    // never gets in the way of selecting, dragging or hovering it.
+    internal static string ProblemBadgeSvg(NodeProblems? problems, Rect nodeRect, double textZoom)
+    {
+        if (problems is not { } p || p.Errors + p.Warnings == 0)
+            return "";
+        var radius = Math.Min(nodeRect.Width * BadgeWidthFactor, BadgeMaxRadius * textZoom);
+        if (radius < BadgeMinRadius)
+            return "";
+
+        var count = p.Errors + p.Warnings;
+        var text = count > 99 ? "99+" : count.ToString(CultureInfo.InvariantCulture);
+        var fontSize = radius * (text.Length > 2 ? 0.85 : 1.15);
+        var fill = p.Errors > 0 ? DColors.ProblemError : DColors.ProblemWarning;
+        var (cx, cy) = (nodeRect.X + nodeRect.Width, nodeRect.Y);
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<g class="problemBadge" data-errors="{p.Errors}" data-warnings="{p.Warnings}" pointer-events="none"><circle cx="{cx:0.##}" cy="{cy:0.##}" r="{radius:0.##}" fill="{fill}" stroke="{DColors.CanvasBackground}" stroke-width="{radius * 0.15:0.##}"/><text x="{cx:0.##}" y="{cy:0.##}" font-size="{fontSize:0.##}px" fill="#FFFFFF" font-weight="bold" text-anchor="middle" dominant-baseline="central">{text}</text></g>"""
+        );
+    }
+
+    public static string GetMemberNodeSvg(
+        Node node,
+        Rect nodeCanvasRect,
+        double parentZoom,
+        bool isEditing = false,
+        NodeProblems? problems = null
+    )
     {
         var textZoom = TextZoom(parentZoom);
         var fontSize = FontSize * textZoom;
@@ -151,7 +204,8 @@ static partial class NodeSvg
             MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.DisplayName, fontSize), member.Text.Y)
         );
 
-        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing);
+        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
+            + ProblemBadgeSvg(problems, member.Bounds, textZoom);
     }
 
     // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node

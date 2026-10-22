@@ -195,4 +195,80 @@ public class ProblemServiceTests
         modelMgr.WithModel(m => m.SetParseProblems([]));
         Assert.True(service.GetSummary().IsEmpty);
     }
+
+    // A badge leads from the top down: each problem counts at its node and every ancestor.
+    [Fact]
+    public void GetNodeProblems_ShouldCountEachProblemAtItsNode_AndAtEveryAncestor()
+    {
+        Node api;
+        using (var model = modelMgr.UseModel())
+        {
+            var solution = AddNode(model, "Sln", model.Root, NodeType.Solution);
+            var core = AddNode(model, "Sln.Core", solution, NodeType.Assembly);
+            var a = AddNode(model, "Sln.Core.A", core);
+            var b = AddNode(model, "Sln.Core.B", core);
+            AddLink(model, a, b);
+            AddLink(model, b, a); // A cycle in Core
+            api = AddNode(model, "Sln.Api", solution, NodeType.Assembly);
+            var handler = AddNode(model, "Sln.Api.Handler", api);
+            AddLink(model, handler, a);
+            model.AddRule(new ArchitectureRule(api.Name, core.Name)); // Broken by Handler
+            model.SetParseProblems([new("3 compile errors in Api", 3, api.Name)]);
+        }
+
+        var problems = NewService().GetNodeProblems();
+
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("Sln.Core")]);
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("Sln.Api.Handler")]);
+        Assert.Equal(new NodeProblems(3, 1), problems[api.Id]);
+        Assert.Equal(new NodeProblems(3, 2), problems[NodeId.FromName("Sln")]);
+        Assert.False(problems.ContainsKey(NodeId.FromName("Sln.Core.A")));
+        Assert.False(problems.ContainsKey(NodeIdRoot()));
+    }
+
+    // With no container to put it on, a cycle among the top-level nodes marks each of them.
+    [Fact]
+    public void GetNodeProblems_ShouldMarkTheMembers_OfACycleAtTheTopLevel()
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            var a = AddNode(model, "A", model.Root, NodeType.Assembly);
+            var b = AddNode(model, "B", model.Root, NodeType.Assembly);
+            AddLink(model, a, b);
+            AddLink(model, b, a);
+        }
+
+        var problems = NewService().GetNodeProblems();
+
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("A")]);
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("B")]);
+    }
+
+    // Like the indicator, a broken rule counts once per node, not once per dependency; and
+    // problems in hidden nodes are left out.
+    [Fact]
+    public void GetNodeProblems_ShouldCountABrokenRuleOncePerNode_AndSkipHiddenNodes()
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            var ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+            var data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+            var repo = AddNode(model, "Data.Repo", data);
+            AddLink(model, AddNode(model, "UI.View", ui), repo);
+            AddLink(model, AddNode(model, "UI.Form", ui), repo);
+            var hidden = AddNode(model, "Data.Hidden", data);
+            hidden.IsUserSetHidden = true;
+            model.AddRule(new ArchitectureRule(ui.Name, data.Name));
+            model.SetParseProblems([new("2 compile errors in Hidden", 2, hidden.Name)]);
+        }
+
+        var problems = NewService().GetNodeProblems();
+
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("UI")]);
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("UI.View")]);
+        Assert.Equal(new NodeProblems(0, 1), problems[NodeId.FromName("UI.Form")]);
+        Assert.False(problems.ContainsKey(NodeId.FromName("Data")));
+    }
+
+    NodeId NodeIdRoot() => modelMgr.WithModel(m => m.Root.Id);
 }

@@ -29,7 +29,7 @@ project works.
   group and rubber-band selection), new line and container visuals, a release flow through `dev`,
   a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
-  Claude's suggestions for cycles, C# member naming fixes, and a problem indicator.
+  Claude's suggestions for cycles, C# member naming fixes, and a problem indicator with node badges.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -187,6 +187,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   refresh. Compile warnings are left out for now: many projects have warnings nobody fixes. A
   project that fails to parse is listed too. Showing them exposed 61 false errors in Dependinator
   itself: the C# parser ran the Functions and Regex source generators a second time.
+  Nodes in the diagram carry a badge with the number of problems in or inside them (red with
+  compile errors, orange otherwise), so the badges lead from the top level down to where the
+  problems are; "Show Problem Badges" in the View menu turns them off.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design

@@ -34,6 +34,8 @@ class SvgService : ISvgService
     readonly ICycleService cycleService;
     readonly IPathFinderService pathFinderService;
     readonly IRuleService ruleService;
+    readonly IProblemService problemService;
+    IReadOnlyDictionary<NodeId, NodeProblems>? tilesNodeProblems;
 
     public SvgService(
         IModelMgr modelMgr,
@@ -41,7 +43,8 @@ class SvgService : ISvgService
         IViewOptions viewOptions,
         ICycleService cycleService,
         IPathFinderService pathFinderService,
-        IRuleService ruleService
+        IRuleService ruleService,
+        IProblemService problemService
     )
     {
         this.modelMgr = modelMgr;
@@ -50,6 +53,7 @@ class SvgService : ISvgService
         this.cycleService = cycleService;
         this.pathFinderService = pathFinderService;
         this.ruleService = ruleService;
+        this.problemService = problemService;
     }
 
     // The user's view toggles that affect what a tile contains; captured per render so the
@@ -77,10 +81,21 @@ class SvgService : ISvgService
             model.Zoom = zoom;
         }
 
+        // The badges are baked into the tiles, and the problems can change without a model
+        // change: the counts of a parse are only taken once its progress ends. Read before the
+        // tiles lock, since it takes the model lock.
+        var nodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null;
+
         TileKey tileKey;
         Tile tile;
         using (var tiles = tilesMgr.UseTiles())
         {
+            if (!ReferenceEquals(nodeProblems, tilesNodeProblems))
+            {
+                tiles.ClearCache();
+                tilesNodeProblems = nodeProblems;
+            }
+
             if (tiles.TryGetLastUsed(viewRect, zoom, out tile))
                 return tile; // Same tile as last call
 
@@ -92,7 +107,7 @@ class SvgService : ISvgService
         // Create a new tile and cache it
         using (var model = modelMgr.UseModel())
         {
-            tile = CreateModelTile(model, tileKey);
+            tile = CreateModelTile(model, tileKey, nodeProblems);
         }
         using (var tiles = tilesMgr.UseTiles())
         {
@@ -110,7 +125,8 @@ class SvgService : ISvgService
 
         var offset = new Pos(-canvasRect.X / zoom, -canvasRect.Y / zoom);
         var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
-        // Exports never show edit chrome (handles) or selection dimming, whatever the current state.
+        // Exports never show edit chrome (handles), selection dimming or problem badges, whatever
+        // the current state.
         var flags = Flags with
         {
             IsEditing = false,
@@ -199,7 +215,7 @@ class SvgService : ISvgService
     static bool IsExternal(Node node) =>
         node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
 
-    Tile CreateModelTile(IModel model, TileKey tileKey)
+    Tile CreateModelTile(IModel model, TileKey tileKey, IReadOnlyDictionary<NodeId, NodeProblems>? nodeProblems)
     {
         var timing = Timing.Start();
         var tileRect = tileKey.GetTileRect();
@@ -207,7 +223,12 @@ class SvgService : ISvgService
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
-        var flags = Flags with { Selection = FindSelection(model) };
+        // The problems GetTile checked the cache against, so the tile matches them.
+        var flags = Flags with
+        {
+            Selection = FindSelection(model),
+            NodeProblems = nodeProblems,
+        };
         var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, flags);
         var rootContentSvg = RenderRootContent(model, tileZoom, rootContext);
 
@@ -325,7 +346,13 @@ class SvgService : ISvgService
             return NoteSvg.GetNoteSvg(node, geometry.CanvasRect, context.Zoom);
 
         if (node.Type.IsMember)
-            return NodeSvg.GetMemberNodeSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
+            return NodeSvg.GetMemberNodeSvg(
+                node,
+                geometry.CanvasRect,
+                context.Zoom,
+                context.Flags.IsEditing,
+                ProblemsOf(node, context)
+            );
 
         if (node.IsPassThrough)
         { // An invisible container that covers its parent; render only its children, no chrome
@@ -337,7 +364,13 @@ class SvgService : ISvgService
         }
 
         if (NodeViewPolicy.IsShowIcon(node, context.Zoom))
-            return NodeSvg.GetNodeIconSvg(node, geometry.CanvasRect, context.Zoom, context.Flags.IsEditing);
+            return NodeSvg.GetNodeIconSvg(
+                node,
+                geometry.CanvasRect,
+                context.Zoom,
+                context.Flags.IsEditing,
+                ProblemsOf(node, context)
+            );
 
         if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
             return RenderFlattenedNodeContent(node, geometry, context);
@@ -353,9 +386,13 @@ class SvgService : ISvgService
             geometry.CanvasRect,
             context.Zoom,
             childrenContentSvg,
-            context.Flags.IsEditing
+            context.Flags.IsEditing,
+            ProblemsOf(node, context)
         );
     }
+
+    static NodeProblems? ProblemsOf(Node node, RenderContext context) =>
+        context.Flags.NodeProblems?.TryGetValue(node.Id, out var problems) == true ? problems : null;
 
     // At extreme zoom a nested svg viewport would carry offsets of millions of canvas units,
     // which browsers combine in single-precision floats, displacing the subtree far off-screen
@@ -632,6 +669,9 @@ class SvgService : ISvgService
 
         // Lines breaking an architecture rule; null while the rules panel is closed.
         public IReadOnlySet<LineId>? ViolatingLines { get; init; }
+
+        // The problems in or inside each node, for its badge; null while badges are off.
+        public IReadOnlyDictionary<NodeId, NodeProblems>? NodeProblems { get; init; }
     }
 
     readonly record struct RenderContext(
