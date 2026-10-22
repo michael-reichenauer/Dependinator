@@ -141,17 +141,28 @@ class SvgService : ISvgService
         return RenderRootContent(model, zoom, context);
     }
 
-    // The selected node(s) or line, for selection dimming; empty when nothing is selected. With
-    // nothing selected, the nodes of the cycle picked in the cycles panel count as selected, so
-    // the lines that do not touch the cycle fade too.
-    static RenderSelection FindSelection(IModel model, IReadOnlyList<NodeId>? cycleMembers)
+    // The selected node(s) or line, for selection dimming; empty when nothing is selected.
+    static RenderSelection FindSelection(IModel model)
     {
         var nodes = model.Nodes.Values.Where(n => n.IsSelected).ToList();
-        if (nodes.Count == 0 && !model.Lines.Values.Any(l => l.IsSelected) && cycleMembers is not null)
-            nodes = [.. cycleMembers.Select(id => model.Nodes.GetValueOrDefault(id)).OfType<Node>()];
         var node = nodes.FirstOrDefault();
         var line = node is null ? model.Lines.Values.FirstOrDefault(l => l.IsSelected) : null;
         return new RenderSelection(node, line, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
+    }
+
+    // What dims the lines: the selection, or with nothing selected the nodes of the cycle picked
+    // in the cycles panel, so the lines that do not touch the cycle fade too. Only dimming: the
+    // line widths still follow the real selection (see IsLineWeighted).
+    static RenderSelection FindDimSelection(
+        IModel model,
+        RenderSelection selection,
+        IReadOnlyList<NodeId>? cycleMembers
+    )
+    {
+        if (!selection.IsEmpty || cycleMembers is null)
+            return selection;
+        var nodes = cycleMembers.Select(id => model.Nodes.GetValueOrDefault(id)).OfType<Node>().ToList();
+        return new RenderSelection(nodes.FirstOrDefault(), null, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
     }
 
     // A line is dimmed while something else is selected: for a selected node, every line that
@@ -192,7 +203,7 @@ class SvgService : ISvgService
             return !pathLines.Contains(line.Id);
         if (IsOtherCycleLine(line, context))
             return true;
-        return context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.Selection);
+        return context.Flags.DimUnrelated && IsLineDimmed(line, context.Flags.DimSelection);
     }
 
     // A cyclic line that is not part of the cycle picked in the cycles panel.
@@ -244,9 +255,11 @@ class SvgService : ISvgService
 
         // The problems GetTile checked the cache against, so the tile matches them.
         var viewFlags = Flags;
+        var selection = FindSelection(model);
         var flags = viewFlags with
         {
-            Selection = FindSelection(model, viewFlags.SelectedCycleMembers),
+            Selection = selection,
+            DimSelection = FindDimSelection(model, selection, viewFlags.SelectedCycleMembers),
             NodeProblems = nodeProblems,
         };
         var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, flags);
@@ -678,6 +691,9 @@ class SvgService : ISvgService
     readonly record struct ViewFlags(bool IsEditing, bool ShowHidden, bool DimUnrelated)
     {
         public RenderSelection Selection { get; init; }
+
+        // The selection, or the picked cycle's nodes while nothing is selected (see FindDimSelection).
+        public RenderSelection DimSelection { get; init; }
         public LineFilter Filter { get; init; } = LineFilter.None;
         public RowFilter Rows { get; init; } = RowFilter.None;
 
