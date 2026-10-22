@@ -59,7 +59,8 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 
     // Clicking a cycle frames its nodes inside their opened container and picks it: its lines
     // stay red while the other cycles' lines fade (the demo's Core Utils namespace holds two
-    // cycles), and so do the lines that do not touch its nodes, as if they were selected.
+    // cycles), and so do the lines that do not touch its nodes, as if they were selected (but
+    // without the selection's thicker lines).
     // Clicking it again shows all cycles alike.
     [E2EFact]
     public async Task ClickCycle_ShouldShowItsNodes_AndDimTheOtherCycles_UntilClickedAgain()
@@ -79,6 +80,8 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(dimmedCycleLines.First).ToBeAttachedAsync();
         await Expect(brightCycleLines.First).ToBeAttachedAsync();
         await Expect(dimmedOtherLines.First).ToBeAttachedAsync();
+        // Only dimming: the lines keep their plain width, as with nothing selected.
+        await Expect(Page.Locator("#svgcanvas .line-vis > polyline:not([stroke-width='1'])")).ToHaveCountAsync(0);
 
         await row.ClickAsync();
         await Expect(row).ToHaveAttributeAsync("data-selected", "false");
