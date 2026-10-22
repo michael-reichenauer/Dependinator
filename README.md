@@ -111,7 +111,8 @@ for bugs and feature requests, or [start a discussion](https://github.com/michae
 ## Contributing
 
 Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers the
-development setup, the repository layout and the conventions. The repo includes
+development setup, the repository layout and the conventions, and
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains how it is built. The repo includes
 a devcontainer, so you can build, run and test everything without local setup.
 
 ## License
