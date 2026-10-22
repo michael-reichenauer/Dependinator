@@ -75,6 +75,9 @@ interface ICycleService
     // that key (it was accepted, or a change broke it).
     IReadOnlySet<LineId>? GetCycleLineIds(string cycleKey);
 
+    // The member nodes of one highlighted cycle (by Cycle.Key), or null like GetCycleLineIds.
+    IReadOnlyList<NodeId>? GetCycleMemberIds(string cycleKey);
+
     // Accepts a cycle as intended, with why, replacing the earlier entries it covers (the cycle
     // grew since). Like the other changes below it is undoable and saved with the model.
     void Accept(Cycle cycle, string reason);
@@ -123,6 +126,17 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
     {
         EnsureUpToDate();
         return lineIdsByCycle.GetValueOrDefault(cycleKey);
+    }
+
+    public IReadOnlyList<NodeId>? GetCycleMemberIds(string cycleKey)
+    {
+        EnsureUpToDate();
+        if (!lineIdsByCycle.ContainsKey(cycleKey))
+            return null;
+        var cycle =
+            cycles.FirstOrDefault(c => c.Key == cycleKey)
+            ?? cyclesToFix.Select(r => r.Cycle).FirstOrDefault(c => c?.Key == cycleKey);
+        return cycle?.Members.Select(m => m.Id).ToList();
     }
 
     public void Accept(Cycle cycle, string reason) => Decide(cycle, reason, isToFix: false);

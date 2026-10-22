@@ -59,7 +59,8 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 
     // Clicking a cycle frames its nodes inside their opened container and picks it: its lines
     // stay red while the other cycles' lines fade (the demo's Core Utils namespace holds two
-    // cycles). Clicking it again shows all cycles alike.
+    // cycles), and so do the lines that do not touch its nodes, as if they were selected.
+    // Clicking it again shows all cycles alike.
     [E2EFact]
     public async Task ClickCycle_ShouldShowItsNodes_AndDimTheOtherCycles_UntilClickedAgain()
     {
@@ -69,6 +70,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator row = Page.GetByTestId("cycles-item-show").Filter(new() { HasText = "ExceptionHandling" });
         ILocator dimmedCycleLines = Page.Locator("#svgcanvas .line-cycle.line-dim");
         ILocator brightCycleLines = Page.Locator("#svgcanvas .line-cycle:not(.line-dim)");
+        ILocator dimmedOtherLines = Page.Locator("#svgcanvas .line-vis.line-dim:not(.line-cycle)");
 
         await row.ClickAsync();
         await Expect(row).ToHaveAttributeAsync("data-selected", "true");
@@ -76,10 +78,12 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.NodeLabel("ExceptionHandling")).ToBeVisibleAsync();
         await Expect(dimmedCycleLines.First).ToBeAttachedAsync();
         await Expect(brightCycleLines.First).ToBeAttachedAsync();
+        await Expect(dimmedOtherLines.First).ToBeAttachedAsync();
 
         await row.ClickAsync();
         await Expect(row).ToHaveAttributeAsync("data-selected", "false");
         await Expect(dimmedCycleLines).ToHaveCountAsync(0);
+        await Expect(dimmedOtherLines).ToHaveCountAsync(0);
     }
 
     // The cycles are visible without opening the panel: the problem indicator in the app bar

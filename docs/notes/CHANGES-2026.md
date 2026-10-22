@@ -192,7 +192,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   problems are; "Show Problem Badges" in the View menu turns them off.
 - **Cycle navigation (Oct 22).** Clicking a cycle in the cycles panel zooms to the cycle's own
   nodes inside their opened container, instead of to the container as an icon. It also picks the
-  cycle: its lines stay red while the other cycles' lines fade, until the row is clicked again.
+  cycle: its lines stay red while the other cycles' lines fade, and lines not touching its nodes
+  fade as for a selection of them, until the row is clicked again.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design

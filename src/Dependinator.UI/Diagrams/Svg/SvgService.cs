@@ -64,13 +64,13 @@ class SvgService : ISvgService
             Filter = viewOptions.LineFilter,
             Rows = viewOptions.RowFilter,
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
-            SelectedCycleLines =
-                viewOptions.IsCyclesShown && viewOptions.SelectedCycleKey is { } cycleKey
-                    ? cycleService.GetCycleLineIds(cycleKey)
-                    : null,
+            SelectedCycleLines = SelectedCycleKey is { } cycleKey ? cycleService.GetCycleLineIds(cycleKey) : null,
+            SelectedCycleMembers = SelectedCycleKey is { } key ? cycleService.GetCycleMemberIds(key) : null,
             PathLines = pathFinderService.GetPathLineIds(),
             ViolatingLines = viewOptions.IsRulesShown ? ruleService.GetViolatingLineIds() : null,
         };
+
+    string? SelectedCycleKey => viewOptions.IsCyclesShown ? viewOptions.SelectedCycleKey : null;
 
     public Tile GetTile(Rect viewRect, double zoom)
     {
@@ -141,10 +141,14 @@ class SvgService : ISvgService
         return RenderRootContent(model, zoom, context);
     }
 
-    // The selected node(s) or line, for selection dimming; empty when nothing is selected.
-    static RenderSelection FindSelection(IModel model)
+    // The selected node(s) or line, for selection dimming; empty when nothing is selected. With
+    // nothing selected, the nodes of the cycle picked in the cycles panel count as selected, so
+    // the lines that do not touch the cycle fade too.
+    static RenderSelection FindSelection(IModel model, IReadOnlyList<NodeId>? cycleMembers)
     {
         var nodes = model.Nodes.Values.Where(n => n.IsSelected).ToList();
+        if (nodes.Count == 0 && !model.Lines.Values.Any(l => l.IsSelected) && cycleMembers is not null)
+            nodes = [.. cycleMembers.Select(id => model.Nodes.GetValueOrDefault(id)).OfType<Node>()];
         var node = nodes.FirstOrDefault();
         var line = node is null ? model.Lines.Values.FirstOrDefault(l => l.IsSelected) : null;
         return new RenderSelection(node, line, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
@@ -239,9 +243,10 @@ class SvgService : ISvgService
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
         // The problems GetTile checked the cache against, so the tile matches them.
-        var flags = Flags with
+        var viewFlags = Flags;
+        var flags = viewFlags with
         {
-            Selection = FindSelection(model),
+            Selection = FindSelection(model, viewFlags.SelectedCycleMembers),
             NodeProblems = nodeProblems,
         };
         var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, flags);
@@ -682,6 +687,10 @@ class SvgService : ISvgService
         // The lines of the cycle picked in the cycles panel; the other cyclic lines are dimmed.
         // Null while no cycle is picked.
         public IReadOnlySet<LineId>? SelectedCycleLines { get; init; }
+
+        // The nodes of the cycle picked in the cycles panel, dimming like a selection of them
+        // while nothing else is selected. Null while no cycle is picked.
+        public IReadOnlyList<NodeId>? SelectedCycleMembers { get; init; }
 
         // Lines of the dependency path being shown (View › Find Path); null while no path is shown.
         public IReadOnlySet<LineId>? PathLines { get; init; }
