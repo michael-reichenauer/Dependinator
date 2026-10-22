@@ -297,6 +297,17 @@
     margin-right: 6px;
 }
 
+/* The note that the prompt is copied, with "Open claude.ai", the next step, beside it. */
+.dep-cycles__copied {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dep-cycles__open-claude {
+    flex-shrink: 0;
+}
+
 /* The box an AI chat's answer to the copied prompt is pasted into. */
 .dep-cycles__paste {
     margin-top: 10px;

@@ -6,6 +6,10 @@ interface IVsCodeSendService
 {
     Task ShowEditorAsync(FileLocation fileLocation);
     Task OpenHelpAsync();
+
+    // Opens an external site, such as claude.ai: in VS Code through the extension host, in the
+    // user's browser; in browser hosts in a new tab.
+    Task OpenExternalAsync(string url);
     Task NotifyDiagramLoadedAsync();
 
     // Tells the extension what the UI is doing ("parsing" or "idle"), for its status bar item.
@@ -61,18 +65,28 @@ class VsCodeSendService : IVsCodeSendService
     {
         Log.Info("Open help");
 
+        // VS Code opens the hosted help page; browser hosts open the local static page.
+        bool isVsCode = await jSInterop.Call<bool>("isVsCodeWebView");
+        await OpenAsync(isVsCode, isVsCode ? HelpHostedUrl : HelpRelativeUrl);
+    }
+
+    public async Task OpenExternalAsync(string url)
+    {
+        Log.Info("Open external", url);
+        await OpenAsync(await jSInterop.Call<bool>("isVsCodeWebView"), url);
+    }
+
+    async Task OpenAsync(bool isVsCode, string url)
+    {
         // The VS Code webview has a locked-down CSP that blocks window.open, so ask the
-        // extension host to open the hosted help page in the user's external browser.
-        if (await jSInterop.Call<bool>("isVsCodeWebView"))
+        // extension host to open the page in the user's external browser.
+        if (isVsCode)
         {
-            await jSInterop.Call<bool>(
-                "postVsCodeMessage",
-                new { type = "vscode/OpenExternal", message = HelpHostedUrl }
-            );
+            await jSInterop.Call<bool>("postVsCodeMessage", new { type = "vscode/OpenExternal", message = url });
             return;
         }
 
-        // Browser hosts: open the local static page in a new tab.
-        await jSInterop.Call("openUrl", HelpRelativeUrl);
+        // Browser hosts: open the page in a new tab.
+        await jSInterop.Call("openUrl", url);
     }
 }

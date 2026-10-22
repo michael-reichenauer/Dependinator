@@ -296,6 +296,13 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         Assert.Contains(" → ", prompt);
         Assert.Contains("Verdict: Accept or Break", prompt);
 
+        // claude.ai opens in a new tab, to paste the prompt into (window.open is stubbed, so no
+        // real tab is opened).
+        await Page.EvaluateAsync("() => { window.open = url => { window.__openedUrl = url; return null; }; }");
+        await Page.GetByTestId("accept-cycle-open-claude").ClickAsync();
+        IJSHandle openedUrl = await Page.WaitForFunctionAsync("() => window.__openedUrl");
+        Assert.Equal("https://claude.ai/new", await openedUrl.JsonValueAsync<string>());
+
         // The AI chat's answer is pasted back: one without a verdict cannot be read.
         ILocator answerBox = Page.GetByTestId("accept-cycle-paste-text");
         ILocator useAnswer = Page.GetByTestId("accept-cycle-paste-use");
