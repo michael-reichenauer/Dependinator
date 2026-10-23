@@ -303,29 +303,40 @@ public sealed class AppPage
         }
     }
 
-    // Assert a checkbox-style submenu item's state (its data-checked attribute), then close the
-    // menu. The submenu can close again right after it opened (a re-render, e.g. the one a
-    // toggle's re-parse triggers when it completes), and an assertion on the locator that
-    // OpenSubMenuItemAsync returned then polls an item that never comes back ("element(s) not
-    // found"). So each attempt reopens the submenu and reads the state again.
-    public async Task ExpectSubMenuItemCheckedAsync(string parentTestId, string testId, bool isChecked)
+    // Assert on items in a submenu, reopening the submenu on each attempt. The submenu can close
+    // again right after it opened (a re-render, e.g. the one a toggle's re-parse triggers when it
+    // completes, or a menu click whose popover was still fading out when the menu was reopened),
+    // and an assertion on the locator that OpenSubMenuItemAsync returned then polls an item that
+    // never comes back ("element(s) not found"). The assertion gets the per-attempt timeout to
+    // pass to its Expect calls. Leaves the submenu open.
+    public async Task ExpectSubMenuAsync(string parentTestId, string testId, Func<float, Task> assert)
     {
-        string expected = isChecked ? "true" : "false";
-        ILocator item = MenuItem(testId);
         for (int attempt = 1; ; attempt++)
         {
             await OpenSubMenuItemAsync(parentTestId, testId);
             try
             {
-                await Expect(item)
-                    .ToHaveAttributeAsync("data-checked", expected, new() { Timeout = MenuAttemptTimeout });
-                break;
+                await assert(MenuAttemptTimeout);
+                return;
             }
             catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
             {
                 await ResetPopoversAsync();
             }
         }
+    }
+
+    // Assert a checkbox-style submenu item's state (its data-checked attribute), then close the
+    // menu (see ExpectSubMenuAsync for why each attempt reopens the submenu).
+    public async Task ExpectSubMenuItemCheckedAsync(string parentTestId, string testId, bool isChecked)
+    {
+        string expected = isChecked ? "true" : "false";
+        ILocator item = MenuItem(testId);
+        await ExpectSubMenuAsync(
+            parentTestId,
+            testId,
+            timeout => Expect(item).ToHaveAttributeAsync("data-checked", expected, new() { Timeout = timeout })
+        );
 
         await CloseSubMenuAsync(item);
         if (await MenuItem("menu-search").IsVisibleAsync())
