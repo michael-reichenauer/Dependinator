@@ -83,6 +83,7 @@ public class HiddenNodesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await App.MenuItem("hidden-item-show").ClickAsync();
         await Expect(Page.Locator("#svgcanvas g.hiddenBadge")).ToHaveCountAsync(0);
+        await Expect(App.MenuItem("hidden-empty")).ToContainTextAsync("No hidden children left");
     }
 
     async Task ToggleRevealAsync(bool expectChecked)

@@ -379,7 +379,7 @@ else if (HasSelectedLine)
   NodeVisibility SelectedVisibility => selectionService.SelectedNodeVisibility();
   bool IsMultiSelected => selectionService.SelectedNodeCount > 1;
   int SelectedHiddenChildCount =>
-    !IsMultiSelected && TryGetSelectedNodeId(out var nodeId) ? hiddenNodeService.GetHiddenChildCounts().GetValueOrDefault(nodeId) : 0;
+    !IsMultiSelected && !viewOptions.RevealHiddenNodes && TryGetSelectedNodeId(out var nodeId) ? hiddenNodeService.GetHiddenChildCounts().GetValueOrDefault(nodeId) : 0;
 
   void ListHiddenChildren()
   {

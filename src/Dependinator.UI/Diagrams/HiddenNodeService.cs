@@ -36,6 +36,10 @@ interface IHiddenNodeService
     // Opens the panel (listing only the hidden children of parentId when given).
     void OpenPanel(NodeId? parentId = null);
 
+    // The parent the open panel lists the hidden children of, with its name; null for the whole
+    // model. A parent that is gone, or from another model, ends the scope.
+    (NodeId Id, string Name)? GetPanelScope();
+
     // Closes the panel, or opens it on the whole model (also when it lists one parent's).
     void TogglePanel();
 }
@@ -52,6 +56,7 @@ class HiddenNodeService(
     (int Structure, int Nodes, int Visibility) cachedFor = (-1, -1, -1);
     IReadOnlyList<HiddenNode> nodes = [];
     IReadOnlyDictionary<NodeId, int> hiddenChildCounts = new Dictionary<NodeId, int>();
+    string scopeModelPath = ""; // Node ids are names, so the same id can exist in another model
 
     public int Count => GetNodes().Count;
 
@@ -123,18 +128,34 @@ class HiddenNodeService(
             applicationEvents.TriggerModelChanged();
         }
         pathFinderService.Close();
+        scopeModelPath = modelMgr.WithModel(m => m.Path);
         viewOptions.SetHiddenNodesShown(true, parentId);
         applicationEvents.TriggerUIStateChanged();
     }
 
     public void TogglePanel()
     {
-        if (viewOptions.IsHiddenNodesShown && viewOptions.HiddenNodesParentId is null)
+        if (viewOptions.IsHiddenNodesShown && GetPanelScope() is null)
         {
             viewOptions.SetHiddenNodesShown(false);
             applicationEvents.TriggerUIStateChanged();
             return;
         }
         OpenPanel();
+    }
+
+    public (NodeId Id, string Name)? GetPanelScope()
+    {
+        if (viewOptions.HiddenNodesParentId is not { } parentId)
+            return null;
+        var name = modelMgr.WithModel(m =>
+            m.Path == scopeModelPath && m.Nodes.TryGetValue(parentId, out var node) ? node.LongName : null
+        );
+        if (name is null)
+        {
+            viewOptions.SetHiddenNodesShown(viewOptions.IsHiddenNodesShown);
+            return null;
+        }
+        return (parentId, name);
     }
 }

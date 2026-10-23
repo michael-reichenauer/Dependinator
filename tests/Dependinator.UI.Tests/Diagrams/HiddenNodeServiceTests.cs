@@ -156,4 +156,32 @@ public class HiddenNodeServiceTests
         panelService.TogglePanel();
         Assert.False(viewOptions.IsHiddenNodesShown);
     }
+
+    [Fact]
+    public void GetPanelScope_ShouldEnd_WhenTheParentIsGoneOrAnotherModelIsOpen()
+    {
+        var viewOptions = new ViewOptions();
+        var panelService = new HiddenNodeService(
+            modelMgr,
+            commandService,
+            viewOptions,
+            Mock.Of<IPathFinderService>(),
+            Mock.Of<IApplicationEvents>()
+        );
+        var parent = AddNode("P");
+        modelMgr.WithModel(m => m.Path = "a.sln");
+
+        panelService.OpenPanel(parent.Id);
+        Assert.Equal((parent.Id, "P"), panelService.GetPanelScope());
+
+        // Another model with a node of the same name (ids are names) is not the same parent.
+        modelMgr.WithModel(m => m.Path = "b.sln");
+        Assert.Null(panelService.GetPanelScope());
+        Assert.True(viewOptions.IsHiddenNodesShown); // the panel stays, on the whole model
+        Assert.Null(viewOptions.HiddenNodesParentId);
+
+        panelService.OpenPanel(parent.Id);
+        modelMgr.WithModel(m => m.RemoveNode(parent));
+        Assert.Null(panelService.GetPanelScope());
+    }
 }
