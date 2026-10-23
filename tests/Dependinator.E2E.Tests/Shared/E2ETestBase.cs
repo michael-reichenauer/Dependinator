@@ -121,9 +121,11 @@ public class E2ETestBase : PageTest
             route => route.FulfillAsync(new() { ContentType = "text/css", Body = "" })
         );
         await context.RouteAsync("https://fonts.gstatic.com/**", route => route.AbortAsync());
+        // Only when no stub is there yet: Playwright leaves the order of context and page init
+        // scripts open, and the sign-in stub (a page script) must win.
         await context.AddInitScriptAsync(
             """
-            window.Clerk = {
+            window.Clerk ??= {
                 loaded: true,
                 user: null,
                 session: null,
@@ -137,35 +139,31 @@ public class E2ETestBase : PageTest
         );
     }
 
-    private static readonly SemaphoreSlim warmUpLock = new(1, 1);
-    private static bool isAppWarm;
+    private static readonly object warmUpLock = new();
+    private static Task? warmUp;
 
     // The first page load after the app starts compiles and loads everything (8 s on two cores,
     // over 30 s on one with two tests loading at once), so the first tests of a run failed on
-    // their app-ready wait. Load the app once, with time to spare, before any test does.
-    private async Task WarmUpAppAsync()
+    // their app-ready wait. Load the app once, with time to spare, before any test does. A failed
+    // warm-up fails every later test at once instead of each waiting it out again.
+    private Task WarmUpAppAsync()
     {
-        if (isAppWarm)
-            return;
-
-        await warmUpLock.WaitAsync();
-        try
+        lock (warmUpLock)
         {
-            if (isAppWarm)
-                return;
+            return warmUp ??= WarmUpAppAsync(Browser);
+        }
+    }
 
-            await using IBrowserContext context = await Browser.NewContextAsync(new() { BaseURL = BaseUrl });
-            await KeepOffTheInternetAsync(context);
-            IPage page = await context.NewPageAsync();
-            await page.GotoAsync("/");
-            await Expect(page.Locator("body"))
-                .ToHaveAttributeAsync("data-app-ready", "true", new() { Timeout = 120_000 });
-            isAppWarm = true;
-        }
-        finally
-        {
-            warmUpLock.Release();
-        }
+    private static async Task WarmUpAppAsync(IBrowser browser)
+    {
+        const float timeout = 120_000;
+        await using IBrowserContext context = await browser.NewContextAsync(new() { BaseURL = BaseUrl });
+        await KeepOffTheInternetAsync(context);
+        IPage page = await context.NewPageAsync();
+        await page.GotoAsync("/", new() { Timeout = timeout });
+        await Assertions
+            .Expect(page.Locator("body"))
+            .ToHaveAttributeAsync("data-app-ready", "true", new() { Timeout = timeout });
     }
 
     private static async Task EnsureAppIsRunningAsync()

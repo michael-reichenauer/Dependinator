@@ -989,7 +989,7 @@ public sealed class AppPage
         await search.NavigateToAsync(fullName);
     }
 
-    // Stub Clerk sign-in without the real Clerk: block the Clerk CDN and stub window.Clerk
+    // Stub Clerk sign-in without the real Clerk (E2ETestBase keeps it away): stub window.Clerk
     // so that once signed in, clerkGetToken() returns a JWT minted by TestAuthToken, which
     // the local Functions host validates against the test JWKS (see ./scripts/e2e -s). Call this
     // BEFORE GotoAsync. Used by signed-in [SyncFact] UI flows.
@@ -1002,9 +1002,7 @@ public sealed class AppPage
     // whose overlay then blocked the toolbar (flaky timeout).
     public async Task StubClerkSignInAsync(string sub = "e2e-test-user", string email = "e2e@dependinator.test")
     {
-        // The real Clerk CDN script would overwrite our stub, so prevent it from loading.
-        await page.RouteAsync("**/*.clerk.accounts.dev/**", route => route.AbortAsync());
-
+        // The real Clerk CDN script, which would overwrite this stub, is kept away by E2ETestBase.
         string token = TestAuthToken.Create(sub, email);
         await page.AddInitScriptAsync(
             $$"""
