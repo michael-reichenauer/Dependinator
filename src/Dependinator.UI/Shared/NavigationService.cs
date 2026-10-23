@@ -43,7 +43,11 @@ class NavigationService(
     readonly SemaphoreSlim showNodeLock = new(1, 1);
     long showNodeRequestId = 0;
 
-    public async Task ShowNodeAsync(NodeId nodeId)
+    public Task ShowNodeAsync(NodeId nodeId) => ShowNodeAsync(nodeId, isRevealHidden: true);
+
+    // isRevealHidden: the user asked for this node (search, a link, a list), so a hidden one is
+    // revealed; VS Code following the active editor does not turn Reveal on by itself.
+    async Task ShowNodeAsync(NodeId nodeId, bool isRevealHidden)
     {
         var requestId = Interlocked.Increment(ref showNodeRequestId);
         await showNodeLock.WaitAsync();
@@ -53,7 +57,8 @@ class NavigationService(
                 return;
 
             Log.Info("ShowNodeAsync for", nodeId);
-            RevealIfHidden(nodeId);
+            if (isRevealHidden)
+                RevealIfHidden([nodeId]);
             selectionService.Unselect();
             applicationEvents.TriggerUIStateChanged();
             await Task.Yield();
@@ -84,16 +89,17 @@ class NavigationService(
         }
     }
 
-    // A hidden node is not drawn, so going to one (search, a link, the hidden nodes list) would
-    // land on an empty spot: turn on View › Reveal Hidden Nodes first, and say so.
-    void RevealIfHidden(NodeId nodeId)
+    // A hidden node is not drawn, so going to one (search, a link, the hidden nodes list, a
+    // cycle) would land on an empty spot: turn on View › Reveal Hidden Nodes first, and say so.
+    void RevealIfHidden(IReadOnlyList<NodeId> nodeIds)
     {
         if (viewOptions.RevealHiddenNodes)
             return;
         var name = modelMgr.WithModel(m =>
-            m.Nodes.TryGetValue(nodeId, out var node) && node.Visibility == NodeVisibility.Hidden
-                ? node.DisplayName
-                : null
+            nodeIds
+                .Select(id => m.Nodes.TryGetValue(id, out var node) ? node : null)
+                .FirstOrDefault(node => node?.Visibility == NodeVisibility.Hidden)
+                ?.DisplayName
         );
         if (name is null)
             return;
@@ -113,6 +119,7 @@ class NavigationService(
                 return;
 
             Log.Info("ShowNodesAsync for", nodeIds.Count, "nodes");
+            RevealIfHidden(nodeIds);
             selectionService.Unselect();
             applicationEvents.TriggerUIStateChanged();
             await Task.Yield();
@@ -212,7 +219,7 @@ class NavigationService(
             return;
         }
         Log.Info("Found node", nodeId);
-        await ShowNodeAsync(nodeId);
+        await ShowNodeAsync(nodeId, isRevealHidden: false);
     }
 
     public async Task ShowEditor(NodeId nodeId)

@@ -16,8 +16,8 @@ interface IHiddenNodeService
     int Count { get; }
     void SetVisibility(NodeId nodeId, NodeVisibility visibility);
 
-    // Shows every listed node again as one undo step.
-    void ShowAll();
+    // Shows the given listed nodes again as one undo step.
+    void Show(IReadOnlyList<NodeId> nodeIds);
 }
 
 [Scoped]
@@ -30,12 +30,14 @@ class HiddenNodeService(IModelMgr modelMgr, ICommandService commandService) : IH
 
     public IReadOnlyList<HiddenNode> GetNodes()
     {
-        var key = modelMgr.WithModel(m => (m.StructureVersion, m.Nodes.Count, m.VisibilityVersion));
-        if (key == cachedFor)
-            return nodes;
+        return modelMgr.WithModel(m =>
+        {
+            var key = (m.StructureVersion, m.Nodes.Count, m.VisibilityVersion);
+            if (key == cachedFor)
+                return nodes;
 
-        nodes = modelMgr.WithModel(m =>
-            m.Nodes.Values.Where(n => n.UserVisibility != NodeVisibility.Visible && !n.IsRoot)
+            nodes = m
+                .Nodes.Values.Where(n => n.UserVisibility != NodeVisibility.Visible && !n.IsRoot)
                 .OrderBy(n => n.LongName, StringComparer.Ordinal)
                 .Select(n => new HiddenNode(
                     n.Id,
@@ -44,19 +46,23 @@ class HiddenNodeService(IModelMgr modelMgr, ICommandService commandService) : IH
                     n.UserVisibility,
                     !n.Parent.IsVisible
                 ))
-                .ToList()
-        );
-        cachedFor = key;
-        return nodes;
+                .ToList();
+            cachedFor = key;
+            return nodes;
+        });
     }
 
-    public void SetVisibility(NodeId nodeId, NodeVisibility visibility) =>
-        commandService.Do(new SetNodeVisibilityCommand([nodeId], visibility));
-
-    public void ShowAll()
+    // The option already on is a no-op, not an undo step.
+    public void SetVisibility(NodeId nodeId, NodeVisibility visibility)
     {
-        var ids = GetNodes().Select(n => n.Id).ToList();
-        if (ids.Count > 0)
-            commandService.Do(new SetNodeVisibilityCommand(ids, NodeVisibility.Visible));
+        var current = modelMgr.WithModel(m => m.Nodes.TryGetValue(nodeId, out var n) ? n.UserVisibility : visibility);
+        if (current != visibility)
+            commandService.Do(new SetNodeVisibilityCommand([nodeId], visibility));
+    }
+
+    public void Show(IReadOnlyList<NodeId> nodeIds)
+    {
+        if (nodeIds.Count > 0)
+            commandService.Do(new SetNodeVisibilityCommand(nodeIds, NodeVisibility.Visible));
     }
 }

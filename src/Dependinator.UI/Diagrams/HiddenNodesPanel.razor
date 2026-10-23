@@ -3,6 +3,7 @@
 @inject IViewOptions viewOptions
 @inject IHiddenNodeService hiddenNodeService
 @inject INavigationService navigationService
+@inject Interaction.ISelectionService selectionService
 @implements IDisposable
 
 @* The nodes the user dimmed or hid, to find them again: a row per node with its parent, a switch
@@ -27,9 +28,10 @@
       <div class="dep-hidden__tools">
         <input class="dep-hidden__filter" placeholder="Filter by name" @bind="filter" @bind:event="oninput"
                data-testid="hidden-filter" />
-        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="hiddenNodeService.ShowAll"
-                   title="Shows every node in the list again, as one undo step" data-testid="hidden-show-all">
-          Show All
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Disabled="@(shown.Count == 0)"
+                   OnClick="() => hiddenNodeService.Show(shown.Select(n => n.Id).ToList())"
+                   title="Shows every node listed below again, as one undo step" data-testid="hidden-show-all">
+          @(shown.Count == all.Count ? "Show All" : $"Show {shown.Count}")
         </MudButton>
       </div>
     }
@@ -57,7 +59,7 @@
                     @onclick="() => hiddenNodeService.SetVisibility(node.Id, NodeVisibility.Dimmed)"
                     data-testid="hidden-item-dim">Dim</button>
             <button type="button" class="@SwitchClass(node, NodeVisibility.Hidden)" disabled="@node.IsParentNotVisible"
-                    @onclick="() => hiddenNodeService.SetVisibility(node.Id, NodeVisibility.Hidden)"
+                    @onclick="() => Hide(node.Id)"
                     data-testid="hidden-item-hide">Hide</button>
           </div>
           <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Visibility" Size="Size.Small"
@@ -81,15 +83,27 @@
 
   void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
-  IReadOnlyList<HiddenNode> Filtered(IReadOnlyList<HiddenNode> nodes) =>
-    string.IsNullOrWhiteSpace(filter)
+  IReadOnlyList<HiddenNode> Filtered(IReadOnlyList<HiddenNode> nodes)
+  {
+    var text = filter.Trim();
+    return text == ""
       ? nodes
       : nodes
         .Where(n =>
-          n.Name.Contains(filter.Trim(), StringComparison.OrdinalIgnoreCase)
-          || n.ParentName.Contains(filter.Trim(), StringComparison.OrdinalIgnoreCase)
+          n.Name.Contains(text, StringComparison.OrdinalIgnoreCase)
+          || n.ParentName.Contains(text, StringComparison.OrdinalIgnoreCase)
         )
         .ToList();
+  }
+
+  // A node just hidden is no longer drawn, so its selection (and toolbar) goes with it, as when
+  // it is hidden from the node menu.
+  void Hide(Modeling.Models.NodeId nodeId)
+  {
+    hiddenNodeService.SetVisibility(nodeId, NodeVisibility.Hidden);
+    if (!viewOptions.RevealHiddenNodes && selectionService.SelectedNodeIds.Contains(nodeId))
+      selectionService.Unselect();
+  }
 
   static string Summary(IReadOnlyList<HiddenNode> nodes)
   {

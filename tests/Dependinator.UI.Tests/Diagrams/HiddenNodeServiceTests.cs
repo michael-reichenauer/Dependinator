@@ -10,7 +10,8 @@ using Node = Dependinator.UI.Modeling.Models.Node;
 namespace Dependinator.UI.Tests.Diagrams;
 
 // The hidden nodes list: only the nodes the user dimmed or hid themselves, sorted by full name,
-// kept current after each change, and Show All as one undo step.
+// kept current after each change, Show as one undo step, and no undo step for the state a
+// node already has.
 public class HiddenNodeServiceTests
 {
     readonly ModelMgr modelMgr = new(new StateMgr());
@@ -69,14 +70,14 @@ public class HiddenNodeServiceTests
     }
 
     [Fact]
-    public async Task ShowAll_ShouldShowEveryListedNode_AsOneUndoStep()
+    public async Task Show_ShouldShowTheGivenNodes_AsOneUndoStep()
     {
         var a = AddNode("A");
         var b = AddNode("B");
         service.SetVisibility(a.Id, NodeVisibility.Dimmed);
         service.SetVisibility(b.Id, NodeVisibility.Hidden);
 
-        service.ShowAll();
+        service.Show([a.Id, b.Id]);
 
         Assert.True(a.IsVisible && b.IsVisible);
         Assert.Empty(service.GetNodes());
@@ -84,5 +85,18 @@ public class HiddenNodeServiceTests
         await commandService.Undo();
         Assert.Equal(2, service.Count);
         Assert.Equal(NodeVisibility.Hidden, b.Visibility);
+    }
+
+    [Fact]
+    public async Task SetVisibility_ShouldAddNoUndoStep_WhenTheNodeAlreadyHasIt()
+    {
+        var a = AddNode("A");
+        service.SetVisibility(a.Id, NodeVisibility.Hidden);
+
+        service.SetVisibility(a.Id, NodeVisibility.Hidden);
+
+        await commandService.Undo();
+        Assert.True(a.IsVisible);
+        Assert.False(commandService.CanUndo);
     }
 }

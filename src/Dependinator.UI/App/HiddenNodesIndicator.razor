@@ -12,9 +12,9 @@
 }
 @if (count > 0)
 {
-  <MudTooltip Text="@($"{count} dimmed or hidden {(count == 1 ? "node" : "nodes")}: click to list them")">
+  <MudTooltip Text="@($"{Label(count)}: click to list them")">
     <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-hidden-indicator" OnClick="OnToggle"
-               aria-label="@($"{count} dimmed or hidden nodes")" data-testid="hidden-indicator">
+               aria-label="@Label(count)" data-testid="hidden-indicator">
       <MudIcon Icon="@Icons.Material.Outlined.VisibilityOff" Size="Size.Small" Color="Color.Secondary" />
       <span class="dep-hidden-indicator__count" data-testid="hidden-count">@count</span>
     </MudButton>
@@ -29,6 +29,8 @@
 @code {
   [Parameter]
   public EventCallback OnToggle { get; set; }
+
+  static string Label(int count) => $"{count} dimmed or hidden {(count == 1 ? "node" : "nodes")}";
 
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnChanged;
 
