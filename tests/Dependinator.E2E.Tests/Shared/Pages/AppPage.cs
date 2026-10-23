@@ -401,7 +401,7 @@ public sealed class AppPage
         await PressEscapeUntilGoneAsync(ModeBanner);
     }
 
-    async Task PressEscapeUntilGoneAsync(ILocator target)
+    public async Task PressEscapeUntilGoneAsync(ILocator target)
     {
         for (int attempt = 1; ; attempt++)
         {
