@@ -93,7 +93,11 @@ class SvgService : ISvgService
         // change: the counts of a parse are only taken once its progress ends. Read before the
         // tiles lock, since it takes the model lock.
         var nodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null;
-        var hiddenChildCounts = viewOptions.IsHiddenBadgesShown ? hiddenNodeService.GetHiddenChildCounts() : null;
+        // While hidden nodes are revealed they are drawn, so nothing needs a badge.
+        var hiddenChildCounts =
+            viewOptions.IsHiddenBadgesShown && !viewOptions.RevealHiddenNodes
+                ? hiddenNodeService.GetHiddenChildCounts()
+                : null;
 
         TileKey tileKey;
         Tile tile;

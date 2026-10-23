@@ -13,8 +13,13 @@
    from a node's menu it lists only that node's children, until the "in" chip is cleared. *@
 @if (viewOptions.IsHiddenNodesShown)
 {
-  var parentId = viewOptions.HiddenNodesParentId;
-  var all = parentId is null ? hiddenNodeService.GetNodes() : hiddenNodeService.GetNodes().Where(n => n.ParentId == parentId).ToList();
+  // Scoped to a parent (from its node menu): its hidden children, the ones its badge counts. A
+  // parent that is gone (another model, deleted) falls back to the whole model.
+  var parentName = viewOptions.HiddenNodesParentId is { } id ? ParentName(id) : null;
+  var parentId = parentName is null ? null : viewOptions.HiddenNodesParentId;
+  var all = parentId is null
+    ? hiddenNodeService.GetNodes()
+    : hiddenNodeService.GetNodes().Where(n => n.ParentId == parentId && n.Visibility == NodeVisibility.Hidden).ToList();
   var shown = Filtered(all);
   <div class="dep-panel dep-hidden dep-toolbar-card" data-testid="hidden-panel">
     <div class="dep-panel__header">
@@ -28,7 +33,7 @@
     {
       <div class="dep-hidden__parent">
         <span class="dep-panel__count">In</span>
-        <span class="dep-hidden__parent-name" data-testid="hidden-parent">@ParentName(parentId)</span>
+        <span class="dep-hidden__parent-name" data-testid="hidden-parent">@parentName</span>
         <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" title="List the dimmed and hidden nodes of the whole model"
                        OnClick="ShowWholeModel" data-testid="hidden-parent-clear" />
       </div>
@@ -49,7 +54,11 @@
     }
 
     <div class="dep-panel__list">
-      @if (all.Count == 0)
+      @if (all.Count == 0 && parentId is not null)
+      {
+        <div class="dep-panel__empty" data-testid="hidden-empty">No hidden children left here. Clear "In" above to list the whole model.</div>
+      }
+      else if (all.Count == 0)
       {
         <div class="dep-panel__empty" data-testid="hidden-empty">No dimmed or hidden nodes. Use Dim Node or Hide Node in a node's menu to tone down nodes that are rarely interesting, such as utilities or external libraries.</div>
       }
@@ -132,8 +141,8 @@
   static string SwitchClass(HiddenNode node, NodeVisibility visibility) =>
     node.Visibility == visibility ? "dep-hidden__option dep-hidden__option--on" : "dep-hidden__option";
 
-  string ParentName(Modeling.Models.NodeId parentId) =>
-    modelMgr.WithModel(m => m.Nodes.TryGetValue(parentId, out var node) ? node.LongName : "");
+  string? ParentName(Modeling.Models.NodeId parentId) =>
+    modelMgr.WithModel(m => m.Nodes.TryGetValue(parentId, out var node) ? node.LongName : null);
 
   void ShowWholeModel()
   {

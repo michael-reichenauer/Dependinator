@@ -44,7 +44,8 @@ interface IViewOptions
     // The hidden nodes panel (HiddenNodesPanel), top-right like the analysis panels.
     bool IsHiddenNodesShown { get; }
 
-    // While set, the hidden nodes panel lists only this node's children (from its badge).
+    // While set, the hidden nodes panel lists only this node's hidden children (opened from its
+    // node menu, List Hidden Children).
     NodeId? HiddenNodesParentId { get; }
 
     // The badge on a node with children the user hid (persisted in Config.ShowHiddenBadges).

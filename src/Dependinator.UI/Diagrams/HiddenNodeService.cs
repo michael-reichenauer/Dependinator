@@ -33,8 +33,10 @@ interface IHiddenNodeService
     // Shows the given listed nodes again as one undo step.
     void Show(IReadOnlyList<NodeId> nodeIds);
 
-    // Opens the panel (listing only the children of parentId when given), or closes it.
+    // Opens the panel (listing only the hidden children of parentId when given).
     void OpenPanel(NodeId? parentId = null);
+
+    // Closes the panel, or opens it on the whole model (also when it lists one parent's).
     void TogglePanel();
 }
 
@@ -127,7 +129,7 @@ class HiddenNodeService(
 
     public void TogglePanel()
     {
-        if (viewOptions.IsHiddenNodesShown)
+        if (viewOptions.IsHiddenNodesShown && viewOptions.HiddenNodesParentId is null)
         {
             viewOptions.SetHiddenNodesShown(false);
             applicationEvents.TriggerUIStateChanged();

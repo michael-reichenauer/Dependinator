@@ -149,8 +149,11 @@ public class HiddenNodeServiceTests
         Assert.Equal(parent.Id, viewOptions.HiddenNodesParentId);
         Assert.False(viewOptions.IsRulesShown); // Same corner
 
+        // Toggling a parent's list switches to the whole model, and then closes it.
+        panelService.TogglePanel();
+        Assert.True(viewOptions.IsHiddenNodesShown);
+        Assert.Null(viewOptions.HiddenNodesParentId);
         panelService.TogglePanel();
         Assert.False(viewOptions.IsHiddenNodesShown);
-        Assert.Null(viewOptions.HiddenNodesParentId);
     }
 }
