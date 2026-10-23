@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
 using Dependinator.E2E.Tests.Shared.Pages;
 using Microsoft.Playwright;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
@@ -85,6 +86,29 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await Expect(helpPage).ToHaveURLAsync(new Regex("_content/Dependinator\\.UI/help\\.html"));
         await Expect(helpPage).ToHaveTitleAsync(new Regex("Quick Start"));
+    }
+
+    [E2EFact]
+    public async Task AppMenu_ShouldOpenPrefilledBugReport()
+    {
+        // Stub GitHub, so the test needs no network and no sign-in redirect changes the url.
+        await Context.RouteAsync(
+            "https://github.com/**",
+            route => route.FulfillAsync(new() { Body = "<title>New issue</title>", ContentType = "text/html" })
+        );
+        await App.GotoMainPageAsync();
+
+        ILocator bugItem = await App.OpenSubMenuItemAsync("menu-help-group", "menu-report-bug");
+
+        IPage issuePage = await Page.RunAndWaitForPopupAsync(async () => await bugItem.ClickAsync());
+
+        Uri url = new(issuePage.Url);
+        Assert.Equal("/michael-reichenauer/Dependinator/issues/new", url.AbsolutePath);
+        string query = Uri.UnescapeDataString(url.Query);
+        Assert.Contains("template=bug_report.yml", query);
+        Assert.Contains("version=", query);
+        Assert.Contains("Host: Web app", query);
+        Assert.Contains("Browser: ", query);
     }
 
     [E2EFact]

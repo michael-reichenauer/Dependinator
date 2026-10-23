@@ -34,16 +34,17 @@ body:
     id: version
     attributes:
       label: Dependinator version
-      description: Extension version (Extensions view) or the web app's Menu › About.
-      placeholder: "0.80.0"
+      description: Filled in when you use Menu › Help › Report a Bug. Otherwise the extension version (Extensions view) or the web app's Menu › Help › About.
+      placeholder: "0.84.424430"
     validations:
       required: true
-  - type: input
+  - type: textarea
     id: environment
     attributes:
       label: Environment
-      description: VS Code version, operating system and, for the web app, the browser.
-      placeholder: "VS Code 1.95, Windows 11 / Chrome 130"
+      description: Filled in by Menu › Help › Report a Bug. Otherwise the VS Code version, operating system and, for the web app, the browser.
+      placeholder: "VS Code 1.105, Windows 11 / Chrome 141"
+      render: text
   - type: input
     id: solution
     attributes:
