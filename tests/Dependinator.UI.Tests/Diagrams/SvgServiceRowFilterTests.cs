@@ -46,7 +46,8 @@ public class SvgServiceRowFilterTests
             new CycleService(modelMgr, Mock.Of<Dependinator.UI.Modeling.Commands.ICommandService>()),
             Mock.Of<IPathFinderService>(),
             Mock.Of<IRuleService>(),
-            Mock.Of<IProblemService>()
+            Mock.Of<IProblemService>(),
+            Mock.Of<IHiddenNodeService>()
         );
         return service.GetContentSvg(new Rect(0, 0, ViewSize, ViewSize), 1.0);
     }

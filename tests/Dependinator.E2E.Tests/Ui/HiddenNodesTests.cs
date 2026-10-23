@@ -62,6 +62,30 @@ public class HiddenNodesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.MenuItem("hidden-indicator")).ToHaveCountAsync(0);
     }
 
+    [E2EFact]
+    public async Task HidingAChild_ShouldBadgeItsParent_WhoseMenuListsTheHiddenChildren()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.NavigateToNodeAsync(AppPage.InsideMain);
+        await App.WaitForContainerNodeAsync("Main");
+        await App.SelectNodeByVisibleNameAsync("DemoTheme");
+        await App.ClickNodeMenuItemAsync("node-menu-hide");
+
+        // Main, the parent, carries a badge with the count.
+        await Expect(Page.Locator("#svgcanvas g.hiddenBadge[data-count='1']")).ToHaveCountAsync(1);
+
+        await App.SelectContainerNodeAsync("Demo.UI.Main");
+        await App.ClickNodeMenuItemAsync("node-menu-hidden-children");
+        await Expect(App.MenuItem("hidden-parent")).ToContainTextAsync("Main");
+        await Expect(App.MenuItem("hidden-item")).ToHaveCountAsync(1);
+        await Expect(App.MenuItem("hidden-item-name")).ToContainTextAsync("DemoTheme");
+
+        await App.MenuItem("hidden-item-show").ClickAsync();
+        await Expect(Page.Locator("#svgcanvas g.hiddenBadge")).ToHaveCountAsync(0);
+        await Expect(App.MenuItem("hidden-empty")).ToContainTextAsync("No hidden children left");
+    }
+
     async Task ToggleRevealAsync(bool expectChecked)
     {
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-reveal-hidden-nodes")).ClickAsync();

@@ -25,6 +25,7 @@
 @inject IPointerEventService pointerEventService
 @inject Dependinator.UI.Diagrams.IViewOptions viewOptions
 @inject Dependinator.UI.Diagrams.IPathFinderService pathFinderService
+@inject Dependinator.UI.Diagrams.IHiddenNodeService hiddenNodeService
 @inject Dependinator.UI.Diagrams.ICoachService coachService
 @inject IShareLinkService shareLinkService
 @inject IThemeService themeService
@@ -156,6 +157,13 @@
                              data-checked="@(viewOptions.IsProblemBadgesShown ? "true" : "false")"
                              data-testid="menu-problem-badges">
                     Show Problem Badges
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@HiddenBadgesIcon" OnClick="ToggleHiddenBadgesAsync"
+                             title="Marks the nodes with children you hid, with how many."
+                             data-checked="@(viewOptions.IsHiddenBadgesShown ? "true" : "false")"
+                             data-testid="menu-hidden-badges">
+                    Show Hidden Node Badges
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@CyclesIcon" OnClick="ToggleCycles"
@@ -756,6 +764,17 @@
         applicationEvents.TriggerUIStateChanged();
     }
 
+    string HiddenBadgesIcon => CheckIcon(viewOptions.IsHiddenBadgesShown);
+
+    async Task ToggleHiddenBadgesAsync()
+    {
+        var newValue = !viewOptions.IsHiddenBadgesShown;
+        viewOptions.SetHiddenBadgesShown(newValue);
+        await configService.SetAsync(config => config.ShowHiddenBadges = newValue);
+        modelService.ClearCache(); // The badges are baked into the tiles
+        applicationEvents.TriggerUIStateChanged();
+    }
+
     async Task ToggleMinimapAsync()
     {
         var newValue = !viewOptions.IsMinimapShown;
@@ -767,19 +786,7 @@
     string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
     string HiddenNodesListIcon => CheckIcon(viewOptions.IsHiddenNodesShown);
 
-    // The hidden nodes panel shares the top-right corner with the analysis panels.
-    void ToggleHiddenNodes()
-    {
-        if (!viewOptions.IsHiddenNodesShown && (viewOptions.IsCyclesShown || viewOptions.IsRulesShown))
-        {
-            viewOptions.SetCyclesShown(false);
-            viewOptions.SetRulesShown(false);
-            modelService.ClearCache(); // Their highlighted lines are baked into the tiles
-        }
-        pathFinderService.Close();
-        viewOptions.SetHiddenNodesShown(!viewOptions.IsHiddenNodesShown);
-        applicationEvents.TriggerUIStateChanged();
-    }
+    void ToggleHiddenNodes() => hiddenNodeService.TogglePanel();
 
     // The analysis panels (cycles, rules, path) share the top-right corner and all recolor
     // lines, so opening one closes the others.

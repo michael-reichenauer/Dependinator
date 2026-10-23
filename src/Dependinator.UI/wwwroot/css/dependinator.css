@@ -858,3 +858,18 @@
     cursor: default;
     opacity: 0.5;
 }
+
+.dep-hidden__parent {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dep-hidden__parent-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
