@@ -27,9 +27,10 @@ public class E2ETestBase : PageTest
 
     private static bool isAppVerified;
 
-    // When E2E_TRACE=1 (set by `./scripts/e2e -t` and in CI), each test records a Playwright
-    // trace to Dependinator.E2E.Tests/traces/. CI uploads that folder as an artifact on
-    // failure; open a .zip at https://trace.playwright.dev to debug.
+    // When E2E_TRACE=1 (set by `./scripts/e2e -t`, and by `-r` for its re-run of the failed
+    // tests, which CI uses), each test records a Playwright trace to
+    // Dependinator.E2E.Tests/traces/. CI uploads that folder as an artifact on failure; open a
+    // .zip at https://trace.playwright.dev to debug.
     private static readonly bool tracingEnabled = Environment.GetEnvironmentVariable("E2E_TRACE") == "1";
     private static int traceCounter;
     private bool tracingStarted;

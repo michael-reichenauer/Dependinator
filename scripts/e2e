@@ -44,6 +44,10 @@ while getopts "ab:str" opt; do
         *) echo "Usage: ./scripts/e2e [-a] [-b chromium|firefox|webkit] [-s] [-t|-r]"; exit 1 ;;
     esac
 done
+case "$E2E_TRACE" in
+    0 | 1 | failed) ;;
+    *) echo "E2E_TRACE must be 0, 1 or failed (was '$E2E_TRACE')."; exit 1 ;;
+esac
 
 APP_PID=""
 STACK_AZURITE_PID=""
@@ -216,12 +220,17 @@ run_tests() {
         | grep -vE '^\s+Skipped |\[SKIP\]$'
 }
 
-# The fully qualified names of the failed tests in a trx file, one per line (a theory's
-# arguments cut off, so the filter re-runs all its cases).
-failed_tests() {
-    grep -o '<UnitTestResult [^>]*outcome="Failed"' "$1" \
-        | sed -E 's/.* testName="([^"(]*).*/\1/' | sort -u
+# The fully qualified names of the tests with the given outcome in a trx file, one per line
+# (a theory's arguments cut off, so the filter re-runs all its cases).
+tests_with_outcome() {
+    grep -o "<UnitTestResult [^>]*outcome=\"$2\"[^>]*>" "$1" 2>/dev/null \
+        | grep -o ' testName="[^"(]*' | sed 's/^ testName="//' | sort -u
 }
+
+# At most this many failed tests are re-run with tracing: when everything fails, the app is
+# broken, and a traced re-run of the whole suite could push the job past its timeout (a
+# cancelled job uploads no traces).
+MAX_TRACED_RERUNS=10
 
 RESULT=0
 for browser in "${BROWSERS[@]}"; do
@@ -236,29 +245,36 @@ for browser in "${BROWSERS[@]}"; do
     rm -f "$RESULTS_DIR/$trx"
     run_tests "$browser" 0 --logger "trx;LogFileName=$trx" --results-directory "$RESULTS_DIR" && continue
     RESULT=1
-    mapfile -t failed < <(failed_tests "$RESULTS_DIR/$trx" 2>/dev/null)
-    if (( ${#failed[@]} == 0 )); then
+    if [[ ! -f "$RESULTS_DIR/$trx" ]]; then
+        echo "The test run produced no results (see the errors above), so nothing is re-run with tracing."
+        continue
+    fi
+    failed=$(tests_with_outcome "$RESULTS_DIR/$trx" Failed | head -n "$MAX_TRACED_RERUNS")
+    if [[ -z "$failed" ]]; then
         echo "No failed tests in the results to re-run with tracing."
         continue
     fi
 
     echo ""
-    echo "=== Re-running ${#failed[@]} failed test(s) on $browser with tracing ==="
-    filter=$(printf 'FullyQualifiedName=%s|' "${failed[@]}")
+    echo "=== Re-running $(echo "$failed" | wc -l | tr -d ' ') failed test(s) on $browser with tracing (at most $MAX_TRACED_RERUNS) ==="
+    filter=$(echo "$failed" | sed 's/^/FullyQualifiedName=/' | paste -sd '|' -)
     rerun_trx="e2e-$browser-rerun.trx"
     rm -f "$RESULTS_DIR/$rerun_trx"
-    run_tests "$browser" 1 --no-build --filter "${filter%|}" \
+    run_tests "$browser" 1 --no-build --filter "$filter" \
         --logger "trx;LogFileName=$rerun_trx" --results-directory "$RESULTS_DIR"
-    mapfile -t failed_again < <(failed_tests "$RESULTS_DIR/$rerun_trx" 2>/dev/null)
+    passed_again=$(tests_with_outcome "$RESULTS_DIR/$rerun_trx" Passed)
+    failed_again=$(tests_with_outcome "$RESULTS_DIR/$rerun_trx" Failed)
     echo ""
     echo "Failed on $browser (the first run counts, the re-run only records traces):"
-    for test in "${failed[@]}"; do
-        if printf '%s\n' "${failed_again[@]}" | grep -qxF "$test"; then
+    while read -r test; do
+        if grep -qxF "$test" <<<"$failed_again"; then
             echo "  $test: failed again"
-        else
+        elif grep -qxF "$test" <<<"$passed_again"; then
             echo "  $test: passed on the re-run (flaky)"
+        else
+            echo "  $test: not re-run"
         fi
-    done
+    done <<<"$failed"
 done
 
 if [[ "$E2E_TRACE" == "1" || ( "$E2E_TRACE" == "failed" && -d ./tests/Dependinator.E2E.Tests/traces ) ]]; then
