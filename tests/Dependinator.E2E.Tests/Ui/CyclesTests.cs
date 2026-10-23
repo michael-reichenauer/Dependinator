@@ -60,13 +60,15 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     // Clicking a cycle frames its nodes inside their opened container and picks it: its lines
     // stay red while the other cycles' lines fade (the demo's Core Utils namespace holds two
     // cycles), and so do the lines that do not touch its nodes, as if they were selected (but
-    // without the selection's thicker lines).
+    // without the selection's thicker lines, even with View › Line Widths by Link Count on).
     // Clicking it again shows all cycles alike.
     [E2EFact]
     public async Task ClickCycle_ShouldShowItsNodes_AndDimTheOtherCycles_UntilClickedAgain()
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-link-count-widths")).ClickAsync();
+        await App.ExpectSubMenuItemCheckedAsync("menu-view", "menu-link-count-widths", true);
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
         ILocator row = Page.GetByTestId("cycles-item-show").Filter(new() { HasText = "ExceptionHandling" });
         ILocator dimmedCycleLines = Page.Locator("#svgcanvas .line-cycle.line-dim");

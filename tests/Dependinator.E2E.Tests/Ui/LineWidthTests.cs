@@ -43,9 +43,7 @@ public class LineWidthTests(ITestOutputHelper output) : E2ETestBase(output)
         // Turned on (closing the menu presses Escape, which also clears the selection), Main's
         // lines show their link counts (demo-model facts: Main → Shared carries 7 links, Main →
         // Diagrams one); the dimmed lines of the other nodes keep the plain width.
-        await (await OpenWidthsItemAsync()).ClickAsync();
-        await Expect(await OpenWidthsItemAsync()).ToHaveAttributeAsync("data-checked", "true");
-        await App.CloseMenuAsync();
+        await ToggleWidthsAsync(expectOn: true);
         await App.SelectContainerNodeAsync("Demo.UI.Main");
         await Expect(LinePolyline("Demo.UI.Main→Demo.UI.Shared (7)")).ToHaveAttributeAsync("stroke-width", "2.4");
         await Expect(LinePolyline("Demo.UI.Main→Demo.UI.Diagrams (1)"))
@@ -56,9 +54,19 @@ public class LineWidthTests(ITestOutputHelper output) : E2ETestBase(output)
         // Deselected: back to one width for all.
         await App.DeselectAsync();
         await Expect(wideLines).ToHaveCountAsync(0);
+
+        // Saved in the config: still on after a reload, and it turns off again.
+        await App.GotoMainPageAsync();
+        await App.ExpectSubMenuItemCheckedAsync("menu-view", "menu-link-count-widths", true);
+        await ToggleWidthsAsync(expectOn: false);
     }
 
-    Task<ILocator> OpenWidthsItemAsync() => App.OpenSubMenuItemAsync("menu-view", "menu-link-count-widths");
+    // Click the toggle and verify it really flipped (which also closes the menu).
+    async Task ToggleWidthsAsync(bool expectOn)
+    {
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-link-count-widths")).ClickAsync();
+        await App.ExpectSubMenuItemCheckedAsync("menu-view", "menu-link-count-widths", expectOn);
+    }
 
     // The visible polyline of the line with the given hover title ("Source→Target (n)", see
     // AppPage.LineTitle). The Has filter is resolved relative to each line group, so the title
