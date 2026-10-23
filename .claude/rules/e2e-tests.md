@@ -23,8 +23,10 @@ page objects). Each rule below comes from a real CI or local failure.
   dozen times and count failures. Not the cause: the app's memory growth (~1 GB RSS per suite
   run, mostly large tile-SVG strings).
 - To provoke load flakes, run the suite pinned to one core (`taskset -c 0 ./scripts/e2e -t`), with
-  the same tracing setting as the runs you compare: tracing (`-t`, on in CI) doubles the one-core
-  suite time (about 22 min against 11) and is itself load. A clean two-core run proves little.
+  the same tracing setting as the runs you compare: tracing (`-t`) doubles the one-core
+  suite time (about 22 min against 11) and is itself load. That is why CI runs `-r` (untraced, then
+  only the failed tests again with tracing, Oct 23): a CI trace of a flake shows its passing
+  re-run, so reproduce a flake traced and pinned locally. A clean two-core run proves little.
 - A timeout at ~15 s is a real render stall (`E2ETestBase` sets the Expect timeout to 15 s because
   the 5 s default flaked on slow runners): read the trace (`E2E_TRACE=1`, `./scripts/trace`; CI
   uploads `playwright-traces-<browser>`) instead of re-running.
