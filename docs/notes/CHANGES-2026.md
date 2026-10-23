@@ -331,6 +331,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   - the project knowledge that had lived in local memory moved to `.claude/rules/`, so every
     session has it;
   - feature branches may now be pushed without asking.
+- **Automatic issue triage (Oct 23).** A Claude scheduled task triages new issues of every type:
+  labels and a verdict, a comment with its reasoning, and a fix PR into dev for small clear bugs.
+  `issue-triage.yml` starts it through its API trigger as soon as an issue is opened; its own
+  schedule catches anything a fire missed.
 
 ## Docs and presentation
 

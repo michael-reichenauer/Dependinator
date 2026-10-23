@@ -1,0 +1,49 @@
+name: Issue triage
+
+# Starts the "Hourly bug issue triage" scheduled task (claude.ai/code/routines) as soon as an
+# issue is opened or reopened, through the task's API trigger. The task's own schedule stays
+# as a safety net for fires that fail. GitHub runs issue-event workflows from the default
+# branch (main), so a change here takes effect after the next release.
+# Needs the repo secret TRIAGE_FIRE_TOKEN: the task's API token (Edit > API > Generate token).
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions: {}
+
+env:
+  FIRE_URL: https://api.anthropic.com/v1/claude_code/routines/trig_018898f5gqTogbSq2gPWHfqG/fire
+
+jobs:
+  fire:
+    if: github.event.issue.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fire the triage task
+        env:
+          TOKEN: ${{ secrets.TRIAGE_FIRE_TOKEN }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::TRIAGE_FIRE_TOKEN is not set; the scheduled run will triage #$ISSUE"
+            exit 0
+          fi
+          body=$(jq -n --arg text "Issue #$ISSUE was just opened or reopened." '{text: $text}')
+          for delay in 0 5 15 30; do
+            sleep "$delay"
+            status=$(curl -sS -o response.json -w '%{http_code}' -X POST "$FIRE_URL" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "anthropic-beta: experimental-cc-routine-2026-04-01" \
+              -H "anthropic-version: 2023-06-01" \
+              -H "Content-Type: application/json" \
+              -d "$body") || status=000
+            if [ "$status" = 200 ]; then
+              jq -r '"Triage session: " + .claude_code_session_url' response.json
+              exit 0
+            fi
+            echo "Fire returned HTTP $status: $(cat response.json 2>/dev/null)"
+            case "$status" in 401|403|404) break ;; esac
+          done
+          echo "::error::Could not fire the triage task; the scheduled run will triage #$ISSUE"
+          exit 1

@@ -77,6 +77,8 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 # extension. Both run the full gate first (all browsers + cloud sync).
 # Dependabot PRs target dev (.github/dependabot.yml); security PRs still target main —
 # merge their branch into dev instead, the main PR closes itself after the next release.
+# issue-triage.yml fires the Claude issue-triage scheduled task (its API trigger, secret
+# TRIAGE_FIRE_TOKEN) when an issue opens; issue events run main's copy, so edits apply after a release.
 # CI e2e runs untraced and re-runs the failed tests with tracing; their traces are uploaded
 # as an artifact on e2e failure.
 
