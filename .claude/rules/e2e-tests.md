@@ -54,6 +54,9 @@ page objects). Each rule below comes from a real CI or local failure.
   5 s while a submenu is open. Never hover a nested submenu item with a bare `HoverAsync`: use the
   three-argument `OpenSubMenuItemAsync(parent, child, item)`. Check a submenu item's state with
   `ExpectSubMenuItemCheckedAsync` (reopens per attempt); never re-click a toggle to retry it.
+- Before a reload that must find an edit, `App.WaitForSavedAsync()` (the app's
+  `data-save-pending` mark), never a sleep: a model write took 2 s on a loaded one-core runner.
+  Pan, zoom and resize save only the small view record (`<model path>.view`), not the model.
 - Fill inputs with `AppPage.FillReliablyAsync` (a Blazor echo can overwrite a fill). Open search
   only once the model has rendered (`WaitForModelRenderedAsync`), and wait for
   `search.SelectedItem` before pressing Enter (Enter on an empty result list does nothing).
