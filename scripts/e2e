@@ -157,11 +157,17 @@ echo "Starting Dependinator.Web (test mode)..."
 # In Development the app hardcodes Kestrel to 127.0.0.1:5000 (Program.cs).
 # DEPENDINATOR_E2E=1 makes it load the embedded demo model (fast, deterministic)
 # instead of parsing the working solution.
-# Without -s the cloud API (7071) isn't running, so the app's cloud-sync polling logs
-# noisy "connection refused" stack traces. Quiet just that HttpClient category so e2e/CI
-# logs stay focused on real issues (harmless with -s too, where 7071 is up). 'env' is used
-# because the config key contains dots, which a bare VAR=value assignment can't have.
+# Without -s the cloud API (7071) isn't running, so cloud sync is turned off: otherwise every
+# page load probes 7071, fails, and shows a "Connection refused" warning over the top right
+# corner. With -s, quiet the cloud-sync HttpClient category so e2e/CI logs stay focused on real
+# issues. 'env' is used because the config key contains dots, which a bare VAR=value
+# assignment can't have.
+CLOUD_SYNC_ENABLED=false
+if [[ "$E2E_SYNC" == "1" ]]; then
+    CLOUD_SYNC_ENABLED=true
+fi
 env DEPENDINATOR_E2E=1 \
+    "CloudSync__Enabled=$CLOUD_SYNC_ENABLED" \
     "Logging__LogLevel__System.Net.Http.HttpClient.HttpCloudSyncService=Warning" \
     dotnet run --project ./src/Dependinator.Web/Dependinator.Web.csproj &
 APP_PID=$!

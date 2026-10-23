@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
+using Microsoft.Playwright;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
@@ -22,8 +23,7 @@ public class EditTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.EnableEditModeAsync();
 
         // Nothing has been done yet, so undo/redo start disabled.
-        await Expect(await App.OpenSubMenuItemAsync("menu-edit", "menu-undo")).ToHaveClassAsync(Disabled);
-        await Expect(App.MenuItem("menu-redo")).ToHaveClassAsync(Disabled);
+        await ExpectUndoRedoAsync(canUndo: false, canRedo: false);
         await Page.Keyboard.PressAsync("Escape");
 
         // Select the node; its context toolbar exposes the grow/shrink buttons.
@@ -32,12 +32,29 @@ public class EditTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Resizing the node pushes a NodeEditCommand onto the undo stack.
         await App.NodeIncreaseSize.ClickAsync();
-        await Expect(await App.OpenSubMenuItemAsync("menu-edit", "menu-undo")).Not.ToHaveClassAsync(Disabled);
-        await Expect(App.MenuItem("menu-redo")).ToHaveClassAsync(Disabled);
+        await ExpectUndoRedoAsync(canUndo: true, canRedo: false);
 
         // Undo reverts it: undo becomes unavailable, redo becomes available.
         await App.MenuItem("menu-undo").ClickAsync();
-        await Expect(await App.OpenSubMenuItemAsync("menu-edit", "menu-undo")).ToHaveClassAsync(Disabled);
-        await Expect(App.MenuItem("menu-redo")).Not.ToHaveClassAsync(Disabled);
+        await ExpectUndoRedoAsync(canUndo: false, canRedo: true);
     }
+
+    // Open Edit and check the undo/redo items' state, leaving the submenu open. Retried as a
+    // whole: right after the undo click the closing menu can still look open, and the reopened
+    // submenu then vanishes under the assertion.
+    Task ExpectUndoRedoAsync(bool canUndo, bool canRedo) =>
+        App.ExpectSubMenuAsync(
+            "menu-edit",
+            "menu-undo",
+            async timeout =>
+            {
+                await ExpectEnabled(App.MenuItem("menu-undo"), canUndo, timeout);
+                await ExpectEnabled(App.MenuItem("menu-redo"), canRedo, timeout);
+            }
+        );
+
+    Task ExpectEnabled(ILocator item, bool enabled, float timeout) =>
+        enabled
+            ? Expect(item).Not.ToHaveClassAsync(Disabled, new() { Timeout = timeout })
+            : Expect(item).ToHaveClassAsync(Disabled, new() { Timeout = timeout });
 }

@@ -303,29 +303,40 @@ public sealed class AppPage
         }
     }
 
-    // Assert a checkbox-style submenu item's state (its data-checked attribute), then close the
-    // menu. The submenu can close again right after it opened (a re-render, e.g. the one a
-    // toggle's re-parse triggers when it completes), and an assertion on the locator that
-    // OpenSubMenuItemAsync returned then polls an item that never comes back ("element(s) not
-    // found"). So each attempt reopens the submenu and reads the state again.
-    public async Task ExpectSubMenuItemCheckedAsync(string parentTestId, string testId, bool isChecked)
+    // Assert on items in a submenu, reopening the submenu on each attempt. The submenu can close
+    // again right after it opened (a re-render, e.g. the one a toggle's re-parse triggers when it
+    // completes, or a menu click whose popover was still fading out when the menu was reopened),
+    // and an assertion on the locator that OpenSubMenuItemAsync returned then polls an item that
+    // never comes back ("element(s) not found"). The assertion gets the per-attempt timeout to
+    // pass to its Expect calls. Leaves the submenu open.
+    public async Task ExpectSubMenuAsync(string parentTestId, string testId, Func<float, Task> assert)
     {
-        string expected = isChecked ? "true" : "false";
-        ILocator item = MenuItem(testId);
         for (int attempt = 1; ; attempt++)
         {
             await OpenSubMenuItemAsync(parentTestId, testId);
             try
             {
-                await Expect(item)
-                    .ToHaveAttributeAsync("data-checked", expected, new() { Timeout = MenuAttemptTimeout });
-                break;
+                await assert(MenuAttemptTimeout);
+                return;
             }
             catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
             {
                 await ResetPopoversAsync();
             }
         }
+    }
+
+    // Assert a checkbox-style submenu item's state (its data-checked attribute), then close the
+    // menu (see ExpectSubMenuAsync for why each attempt reopens the submenu).
+    public async Task ExpectSubMenuItemCheckedAsync(string parentTestId, string testId, bool isChecked)
+    {
+        string expected = isChecked ? "true" : "false";
+        ILocator item = MenuItem(testId);
+        await ExpectSubMenuAsync(
+            parentTestId,
+            testId,
+            timeout => Expect(item).ToHaveAttributeAsync("data-checked", expected, new() { Timeout = timeout })
+        );
 
         await CloseSubMenuAsync(item);
         if (await MenuItem("menu-search").IsVisibleAsync())
@@ -1005,7 +1016,7 @@ public sealed class AppPage
         await search.NavigateToAsync(fullName);
     }
 
-    // Stub Clerk sign-in without the real Clerk: block the Clerk CDN and stub window.Clerk
+    // Stub Clerk sign-in without the real Clerk (E2ETestBase keeps it away): stub window.Clerk
     // so that once signed in, clerkGetToken() returns a JWT minted by TestAuthToken, which
     // the local Functions host validates against the test JWKS (see ./scripts/e2e -s). Call this
     // BEFORE GotoAsync. Used by signed-in [SyncFact] UI flows.
@@ -1018,9 +1029,7 @@ public sealed class AppPage
     // whose overlay then blocked the toolbar (flaky timeout).
     public async Task StubClerkSignInAsync(string sub = "e2e-test-user", string email = "e2e@dependinator.test")
     {
-        // The real Clerk CDN script would overwrite our stub, so prevent it from loading.
-        await page.RouteAsync("**/*.clerk.accounts.dev/**", route => route.AbortAsync());
-
+        // The real Clerk CDN script, which would overwrite this stub, is kept away by E2ETestBase.
         string token = TestAuthToken.Create(sub, email);
         await page.AddInitScriptAsync(
             $$"""

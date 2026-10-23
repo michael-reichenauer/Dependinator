@@ -11,13 +11,20 @@ page objects). Each rule below comes from a real CI or local failure.
 
 ## Before re-running or debugging
 
-- Several unrelated tests failing at once, with `accounts.clerk.accounts.dev` and a Cloudflare
-  "security verification" page in the trace: environmental, rerun.
+- Tests never reach the internet: `E2ETestBase` routes Clerk and Google Fonts away and gives each
+  context a signed-out Clerk stub (they cost 1-3 s of every page load, and a Clerk CDN hiccup or
+  Cloudflare check failed unrelated tests at once). A test that needs a real third-party script
+  must route it back in itself. Without `-s`, `./scripts/e2e` runs the app with cloud sync off.
+- The first test warms the app up (one load, 2 min allowed): the first load after start took over
+  30 s on one core and failed the first tests of a run on their app-ready wait.
 - A different test failing each run with no code change: suspect parallelism or machine load
   (`maxParallelThreads` is 2 because the default gave ~50% failing runs). Re-measure the baseline
   in the same session before bisecting app commits; before raising the cap, run the suite a
   dozen times and count failures. Not the cause: the app's memory growth (~1 GB RSS per suite
   run, mostly large tile-SVG strings).
+- To provoke load flakes, run the suite pinned to one core (`taskset -c 0 ./scripts/e2e -t`), with
+  the same tracing setting as the runs you compare: tracing (`-t`, on in CI) doubles the one-core
+  suite time (about 22 min against 11) and is itself load. A clean two-core run proves little.
 - A timeout at ~15 s is a real render stall (`E2ETestBase` sets the Expect timeout to 15 s because
   the 5 s default flaked on slow runners): read the trace (`E2E_TRACE=1`, `./scripts/trace`; CI
   uploads `playwright-traces-<browser>`) instead of re-running.
