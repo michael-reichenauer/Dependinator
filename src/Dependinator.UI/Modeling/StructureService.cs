@@ -42,6 +42,7 @@ class StructureService(ILineService linesService) : IStructureService
             // as visible even though the subtree stays dimmed or hidden.
             if (!parent.IsVisible)
                 node.SetParentVisibility(parent.Visibility);
+            model.BumpVisibilityVersion(); // The hidden nodes list shows the parent
 
             return;
         }

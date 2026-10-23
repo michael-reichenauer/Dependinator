@@ -26,6 +26,7 @@ class SetNodeVisibilityCommand(IReadOnlyList<NodeId> nodeIds, NodeVisibility vis
             node.SetUserVisibility(visibility);
         }
         LineVisibility.Update(model);
+        model.BumpVisibilityVersion();
     }
 
     public override void Revert(IModel model)
@@ -36,5 +37,6 @@ class SetNodeVisibilityCommand(IReadOnlyList<NodeId> nodeIds, NodeVisibility vis
                 node.SetUserVisibility(wasVisibility);
         }
         LineVisibility.Update(model);
+        model.BumpVisibilityVersion();
     }
 }

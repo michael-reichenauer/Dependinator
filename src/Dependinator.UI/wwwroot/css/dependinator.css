@@ -793,3 +793,68 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.35; }
 }
+
+/* The hidden nodes panel (HiddenNodesPanel.razor). */
+.dep-hidden__tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.dep-hidden__filter {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 4px;
+    padding: 3px 8px;
+}
+
+.dep-hidden__row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dep-hidden__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.dep-hidden__name > span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dep-hidden__switch {
+    display: flex;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dep-hidden__option {
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+    background: none;
+    border: 0;
+    padding: 2px 8px;
+    cursor: pointer;
+}
+
+.dep-hidden__option--on {
+    color: var(--mud-palette-primary-text);
+    background: var(--mud-palette-primary);
+}
+
+.dep-hidden__option:disabled {
+    cursor: default;
+    opacity: 0.5;
+}

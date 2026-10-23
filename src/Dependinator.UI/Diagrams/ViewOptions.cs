@@ -39,6 +39,9 @@ interface IViewOptions
     // Architecture rules: the rules panel is open and violating lines are drawn highlighted.
     bool IsRulesShown { get; }
 
+    // The hidden nodes panel (HiddenNodesPanel), top-right like the analysis panels.
+    bool IsHiddenNodesShown { get; }
+
     // The minimap in the corner (persisted in Config.ShowMinimap).
     bool IsMinimapShown { get; }
 
@@ -55,6 +58,7 @@ interface IViewOptions
     void SetCyclesMinimized(bool minimized);
     void SetSelectedCycle(string? cycleKey);
     void SetRulesShown(bool shown);
+    void SetHiddenNodesShown(bool shown);
     void SetMinimapShown(bool shown);
     void SetProblemBadgesShown(bool shown);
 }
@@ -107,6 +111,7 @@ class ViewOptions : IViewOptions
     public bool IsCyclesMinimized { get; private set; }
     public string? SelectedCycleKey { get; private set; }
     public bool IsRulesShown { get; private set; }
+    public bool IsHiddenNodesShown { get; private set; }
     public bool IsMinimapShown { get; private set; }
     public bool IsProblemBadgesShown { get; private set; } = true;
 
@@ -134,6 +139,8 @@ class ViewOptions : IViewOptions
     public void SetSelectedCycle(string? cycleKey) => SelectedCycleKey = IsCyclesShown ? cycleKey : null;
 
     public void SetRulesShown(bool shown) => IsRulesShown = shown;
+
+    public void SetHiddenNodesShown(bool shown) => IsHiddenNodesShown = shown;
 
     public void SetMinimapShown(bool shown) => IsMinimapShown = shown;
 

@@ -113,6 +113,7 @@ class PathFinderService(
         IsOpen = true;
         viewOptions.SetCyclesShown(false); // The analysis panels sit top-right and all recolor lines
         viewOptions.SetRulesShown(false);
+        viewOptions.SetHiddenNodesShown(false); // It sits in the same corner
         Notify();
     }
 

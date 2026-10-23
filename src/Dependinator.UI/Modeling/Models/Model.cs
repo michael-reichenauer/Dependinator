@@ -28,6 +28,11 @@ interface IModel : IDisposable
     // direct-line depth changed (RepLineService resolves lines from it).
     void BumpStructureVersion();
 
+    // A counter of the user's dim, hide and show changes (SetNodeVisibilityCommand), so the
+    // list of dimmed and hidden nodes can be cached like structure-derived state.
+    int VisibilityVersion { get; }
+    void BumpVisibilityVersion();
+
     // The dependency explorer's subject while its lines are shown (see DependenciesService and
     // RepLineService); null when no explorer lines are shown. Transient; changes must bump
     // StructureVersion.
@@ -104,6 +109,10 @@ class Model : IModel
     public int StructureVersion { get; private set; }
 
     public void BumpStructureVersion() => StructureVersion++;
+
+    public int VisibilityVersion { get; private set; }
+
+    public void BumpVisibilityVersion() => VisibilityVersion++;
 
     public LineFocus? LineFocus { get; set; }
 
