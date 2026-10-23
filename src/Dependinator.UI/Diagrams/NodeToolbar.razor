@@ -45,8 +45,9 @@ else if (HasSelectedLine)
           Copy Link to Node
         </MudMenuItem>
         @* Dim and Hide leave the node in the model: dimmed nodes are drawn faintly, hidden ones are
-           left out. Show undoes either. A node inside a dimmed or hidden parent follows it. *@
-        @if (SelectedVisibility != NodeVisibility.Visible)
+           left out. Show undoes either. A node inside a dimmed or hidden parent follows it. A group
+           may mix states, so it gets all three. *@
+        @if (IsMultiSelected || SelectedVisibility != NodeVisibility.Visible)
         {
           <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Visibility"
                        OnClick="() => SetVisibility(NodeVisibility.Visible)" Disabled="@IsVisibilityDisabled"
@@ -54,7 +55,7 @@ else if (HasSelectedLine)
             Show Node
           </MudMenuItem>
         }
-        @if (SelectedVisibility != NodeVisibility.Dimmed)
+        @if (IsMultiSelected || SelectedVisibility != NodeVisibility.Dimmed)
         {
           <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Opacity"
                        OnClick="() => SetVisibility(NodeVisibility.Dimmed)" Disabled="@IsVisibilityDisabled"
@@ -62,7 +63,7 @@ else if (HasSelectedLine)
             Dim Node
           </MudMenuItem>
         }
-        @if (SelectedVisibility != NodeVisibility.Hidden)
+        @if (IsMultiSelected || SelectedVisibility != NodeVisibility.Hidden)
         {
           <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
                        OnClick="() => SetVisibility(NodeVisibility.Hidden)" Disabled="@IsVisibilityDisabled"
@@ -364,6 +365,7 @@ else if (HasSelectedLine)
   string? VisibilityTitle =>
     IsVisibilityDisabled ? "The parent node is dimmed or hidden; show the parent first." : null;
   NodeVisibility SelectedVisibility => selectionService.SelectedNodeVisibility();
+  bool IsMultiSelected => selectionService.SelectedNodeCount > 1;
   bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
   bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
   bool IsSelectedNodeZone => SelectedNodeIs(node => node.IsZone);
@@ -468,7 +470,13 @@ else if (HasSelectedLine)
     await navigationService.ShowEditor(nodeId);
   }
 
-  void SetVisibility(NodeVisibility visibility) => selectionService.SetSelectedNodesVisibility(visibility);
+  // A node just hidden is no longer drawn, so the selection (and this toolbar) goes with it.
+  void SetVisibility(NodeVisibility visibility)
+  {
+    selectionService.SetSelectedNodesVisibility(visibility);
+    if (visibility == NodeVisibility.Hidden && !viewOptions.RevealHiddenNodes)
+      selectionService.Unselect();
+  }
 
   int SelectedNodeLineDepth => TryGetSelectedNodeId(out var nodeId) ? lineSplitService.GetDepth(nodeId) : 0;
   bool HasSelectedNodeLineSplits => TryGetSelectedNodeId(out var nodeId) && lineSplitService.HasSplits(nodeId);

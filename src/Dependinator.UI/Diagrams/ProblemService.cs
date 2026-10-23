@@ -147,7 +147,8 @@ class ProblemService(
     // which is never drawn). A cycle belongs to the container its members are in; one among the
     // top-level nodes, whose container is the root, to each of its members instead. A broken rule
     // counts once per node, like in the indicator, however many of its dependencies start there.
-    // Problems in hidden nodes are left out, since there is nothing visible to lead to.
+    // Problems in hidden nodes are left out, since there is nothing visible to lead to (dimmed
+    // nodes are still drawn and keep theirs).
     IReadOnlyDictionary<NodeId, NodeProblems> ComputeNodeProblems()
     {
         var cycles = cycleService.GetCycles();
@@ -160,7 +161,7 @@ class ProblemService(
 
             void Add(NodeId id, NodeProblems problems, ArchitectureRule? rule = null)
             {
-                if (!m.Nodes.TryGetValue(id, out var node) || !node.IsVisible)
+                if (!m.Nodes.TryGetValue(id, out var node) || node.Visibility == NodeVisibility.Hidden)
                     return;
                 for (var n = node; !n.IsRoot; n = n.Parent)
                 {

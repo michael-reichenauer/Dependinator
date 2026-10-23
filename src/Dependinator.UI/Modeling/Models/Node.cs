@@ -141,8 +141,8 @@ class Node : IItem
     public string HtmlLongName { get; private set; } = "";
     public string? HtmlDescription { get; private set; }
 
-    // A dimmed or hidden node takes all its descendants with it: the nearest ancestor that is
-    // not visible, the outermost one, decides (ParentVisibility), else the node's own UserVisibility. A descendant's
+    // A dimmed or hidden node takes all its descendants with it: the outermost ancestor that is
+    // not visible decides (ParentVisibility), else the node's own UserVisibility. A descendant's
     // own state is kept and applies again once the ancestor is shown.
     public NodeVisibility Visibility => ParentVisibility != NodeVisibility.Visible ? ParentVisibility : UserVisibility;
     public bool IsVisible => Visibility == NodeVisibility.Visible;
@@ -151,6 +151,7 @@ class Node : IItem
 
     // The state a hidden node saved before dimming existed gets: set at startup from the old
     // global View › Show Hidden Nodes option (on: dimmed, off: hidden), so models look the same.
+    // Static like NodeLayout's density: the Blazor Server host is a single-user dev host.
     public static NodeVisibility LegacyHiddenVisibility { get; set; } = NodeVisibility.Dimmed;
     public bool IsPassThrough { get; set; }
 
@@ -275,9 +276,13 @@ class Node : IItem
 
     // A model saved before dimming existed has only the hidden flag.
     static NodeVisibility VisibilityFromDto(string? visibility, bool isLegacyHidden) =>
-        visibility is not null ? Enums.To(visibility, NodeVisibility.Visible)
-        : isLegacyHidden ? LegacyHiddenVisibility
-        : NodeVisibility.Visible;
+        visibility is not null
+            ? Enums.ToOrNull<NodeVisibility>(visibility) is { } value && Enum.IsDefined(value)
+                ? value
+                : NodeVisibility.Visible
+            : isLegacyHidden
+                ? LegacyHiddenVisibility
+                : NodeVisibility.Visible;
 
     // The parent's visible viewport expressed in the parent's inner (children) coordinate
     // space; recurses naturally when the parent is itself pass-through.
