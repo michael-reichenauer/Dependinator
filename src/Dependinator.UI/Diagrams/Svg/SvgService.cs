@@ -65,6 +65,7 @@ class SvgService : ISvgService
     ViewFlags Flags =>
         new(viewOptions.IsEditingEnabled, viewOptions.RevealHiddenNodes, viewOptions.DimUnrelatedLines)
         {
+            LinkCountWidths = viewOptions.IsLinkCountWidthsShown,
             Filter = viewOptions.LineFilter,
             Rows = viewOptions.RowFilter,
             CyclicLines = viewOptions.IsCyclesShown ? cycleService.GetCyclicLineIds() : null,
@@ -198,15 +199,17 @@ class SvgService : ISvgService
 
     static bool IsAtOrInside(Node endpoint, Node node) => endpoint == node || endpoint.Ancestors().Contains(node);
 
-    // A line shows its link-count width only while it is what the user is looking at: the lines
-    // of the selection (the ones dimming keeps bright) and explorer focus lines. Without a
-    // selection every line is drawn at the same thin width (see LineSvg), whatever the Dim
-    // Unrelated Lines toggle says, so selecting a node still sets its lines apart with dimming off.
-    internal static bool IsLineWeighted(Line line, RenderSelection selection) =>
-        line.IsFocused || (!selection.IsEmpty && !IsLineDimmed(line, selection));
+    // A line shows its link-count width only when the user asked for the widths (View › Line
+    // Widths by Link Count, off by default) and only while it is what the user is looking at: the
+    // lines of the selection (the ones dimming keeps bright) and explorer focus lines. Otherwise
+    // every line is drawn at the same thin width (see LineSvg), whatever the Dim Unrelated Lines
+    // toggle says, so selecting a node still sets its lines apart with dimming off.
+    internal static bool IsLineWeighted(Line line, RenderSelection selection, bool linkCountWidths) =>
+        linkCountWidths && (line.IsFocused || (!selection.IsEmpty && !IsLineDimmed(line, selection)));
 
     static bool IsLineWeighted(Line line, RenderContext context) =>
-        !IsOtherCycleLine(line, context) && IsLineWeighted(line, context.Flags.Selection);
+        !IsOtherCycleLine(line, context)
+        && IsLineWeighted(line, context.Flags.Selection, context.Flags.LinkCountWidths);
 
     // While a dependency path is shown, everything off the path fades so the chain stands out.
     // While one cycle is picked in the cycles panel, the other cycles' lines fade.
@@ -715,6 +718,9 @@ class SvgService : ISvgService
     readonly record struct ViewFlags(bool IsEditing, bool RevealHidden, bool DimUnrelated)
     {
         public RenderSelection Selection { get; init; }
+
+        // Emphasized lines are drawn at their link-count width (View › Line Widths by Link Count).
+        public bool LinkCountWidths { get; init; }
 
         // The selection, or the picked cycle's nodes while nothing is selected (see FindDimSelection).
         public RenderSelection DimSelection { get; init; }

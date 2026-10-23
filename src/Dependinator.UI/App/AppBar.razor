@@ -193,6 +193,13 @@
                     Dim Unrelated Lines
                 </MudMenuItem>
 
+                <MudMenuItem IconColor="Color.Secondary" Icon="@LinkCountWidthsIcon" OnClick="ToggleLinkCountWidthsAsync"
+                             title="Draw the selected node's or line's lines, and the Dependencies explorer's lines, thicker the more links they carry (off: one thin width)."
+                             data-checked="@(viewOptions.IsLinkCountWidthsShown ? "true" : "false")"
+                             data-testid="menu-link-count-widths">
+                    Line Widths by Link Count
+                </MudMenuItem>
+
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.UnfoldLess"
                              OnClick="lineSplitService.ClearAll" data-testid="menu-hide-direct-lines">
                     Hide All Direct Lines
@@ -751,6 +758,7 @@
 
     string RevealHiddenNodesIcon => CheckIcon(viewOptions.RevealHiddenNodes);
     string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
+    string LinkCountWidthsIcon => CheckIcon(viewOptions.IsLinkCountWidthsShown);
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
     string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
     string ProblemBadgesIcon => CheckIcon(viewOptions.IsProblemBadgesShown);
@@ -912,6 +920,15 @@
         viewOptions.SetDimUnrelatedLines(newValue);
         await configService.SetAsync(config => config.DimUnrelatedLines = newValue);
         modelService.ClearCache(); // Dimming is baked into the cached tiles
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    async Task ToggleLinkCountWidthsAsync()
+    {
+        var newValue = !viewOptions.IsLinkCountWidthsShown;
+        viewOptions.SetLinkCountWidthsShown(newValue);
+        await configService.SetAsync(config => config.ShowLinkCountWidths = newValue);
+        modelService.ClearCache(); // Line widths are baked into the cached tiles
         applicationEvents.TriggerUIStateChanged();
     }
 

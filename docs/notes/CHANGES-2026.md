@@ -143,7 +143,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Line and container visuals (Oct 6).** All lines are drawn at one width, and the selection's
   lines widen by link count. Container backgrounds now show in light mode and fade out while
   zooming in. Lines to hidden nodes are dash-dotted. Line-split and zoom-to-node moved off the
-  node toolbar.
+  node toolbar. Since Oct 23 the link-count widths are off by default and turned on with
+  View › Line Widths by Link Count (explorer lines included): a selected node's thick lines
+  looked heavy when nobody asked.
 - **Accepted cycles (Oct 19).** A cycle that is intended can be accepted with a reason. It moves
   to a collapsed Accepted section of the cycles panel and its lines are no longer drawn red. The
   acceptance is saved with the model and can be undone. The cycle is reported again if a node

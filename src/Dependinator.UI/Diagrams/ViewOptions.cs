@@ -16,6 +16,10 @@ interface IViewOptions
     // selection's own lines stand out (a hovered line shows at full strength).
     bool DimUnrelatedLines { get; }
 
+    // The lines of the selection (and explorer focus lines) drawn at their link-count width;
+    // off, every line has one thin width (persisted in Config.ShowLinkCountWidths).
+    bool IsLinkCountWidthsShown { get; }
+
     // Which lines are left out of the diagram (the explorer's own lines and user-requested
     // direct lines are always drawn).
     LineFilter LineFilter { get; }
@@ -60,6 +64,7 @@ interface IViewOptions
     void SetRevealHiddenNodes(bool reveal);
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
+    void SetLinkCountWidthsShown(bool shown);
     void SetLineFilter(LineFilter filter);
     void SetRowFilter(RowFilter filter);
     void SetLegendShown(bool shown);
@@ -114,6 +119,7 @@ class ViewOptions : IViewOptions
     public bool RevealHiddenNodes { get; private set; }
     public bool IsEditingEnabled { get; private set; } = false;
     public bool DimUnrelatedLines { get; private set; } = true;
+    public bool IsLinkCountWidthsShown { get; private set; }
     public LineFilter LineFilter { get; private set; } = LineFilter.None;
     public RowFilter RowFilter { get; private set; } = RowFilter.None;
     public bool IsLegendShown { get; private set; }
@@ -132,6 +138,8 @@ class ViewOptions : IViewOptions
     public void SetIsEditingEnabled(bool enabled) => IsEditingEnabled = enabled;
 
     public void SetDimUnrelatedLines(bool dim) => DimUnrelatedLines = dim;
+
+    public void SetLinkCountWidthsShown(bool shown) => IsLinkCountWidthsShown = shown;
 
     public void SetLineFilter(LineFilter filter) => LineFilter = filter;
 
