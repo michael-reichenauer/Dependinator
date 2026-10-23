@@ -5,8 +5,9 @@ name: E2E (Playwright)
 # releases with browsers=all + sync=true, so the pre-publish gate covers all browsers and the
 # cloud-sync ([SyncFact]) tests. Can also be run manually. Each browser
 # runs as its own parallel job (one job running all three in turn took ~15 min of the gate).
-# Playwright traces are uploaded as a playwright-traces-<browser> artifact on failure
-# (open the .zip at trace.playwright.dev).
+# The suite runs without tracing (a trace per test doubled the suite time, and the load caused
+# flakes); failed tests are re-run with a trace each, uploaded as a playwright-traces-<browser>
+# artifact (open the .zip at trace.playwright.dev).
 on:
   workflow_call:
     inputs:
@@ -116,11 +117,9 @@ jobs:
           func --version
 
       # ./scripts/e2e starts Dependinator.Web itself (test mode, embedded demo model) and stops it
-      # afterwards. E2E_TRACE=1 records a trace per test for the artifact below.
+      # afterwards. -r re-runs the failed tests with tracing for the artifact below.
       - name: Run e2e tests
-        env:
-          E2E_TRACE: "1"
-        run: ./scripts/e2e -b ${{ matrix.browser }}${{ inputs.sync && ' -s' || '' }}
+        run: ./scripts/e2e -r -b ${{ matrix.browser }}${{ inputs.sync && ' -s' || '' }}
 
       - name: Upload Playwright traces
         if: failure()

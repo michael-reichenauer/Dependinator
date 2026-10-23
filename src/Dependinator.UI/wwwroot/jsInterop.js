@@ -6,12 +6,26 @@ export function waitForAnimationFrame() {
   return new Promise(resolve => requestAnimationFrame(resolve));
 }
 
+// iOS Safari can fire "resize" on a rotation before window.innerWidth/innerHeight hold the new
+// size, and nothing once they settle, so the canvas kept its landscape width in portrait (#100).
+// So also listen to orientationchange and to the page's own size, and check again once the size
+// has settled. The .NET side debounces the calls and acts only when the size has changed.
+const resizeSettleMs = 500;
+
 export function listenToWindowResize(elementId, instance, functionName) {
+  let settleTimer = null;
+
   function resizeEventHandler() {
     instance.invokeMethodAsync(functionName);
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => instance.invokeMethodAsync(functionName), resizeSettleMs);
   }
 
   window.addEventListener("resize", resizeEventHandler);
+  window.addEventListener("orientationchange", resizeEventHandler);
+  if (typeof ResizeObserver !== "undefined") {
+    new ResizeObserver(resizeEventHandler).observe(document.documentElement);
+  }
 }
 
 // The app's keyboard shortcuts, forwarded to KeyboardService as (key, ctrl, shift, alt).
@@ -190,6 +204,12 @@ export function setAppReady(ready) {
   document.body.setAttribute("data-app-ready", ready ? "true" : "false");
 }
 
+// Marks a pending save (debounced or being written) of the model or its view, so UI/e2e tests
+// can wait on [data-save-pending=false] before a reload instead of sleeping.
+export function setSavePending(pending) {
+  document.body.setAttribute("data-save-pending", pending ? "true" : "false");
+}
+
 export function postVsCodeMessage(message) {
   if (window.dependinator && typeof window.dependinator.postMessage === "function") {
     window.dependinator.postMessage(message);
@@ -233,6 +253,25 @@ export function isVsCodeWebView() {
 // The version of the VS Code extension hosting this webview, injected by the extension host.
 export function getVsCodeExtensionVersion() {
   return (window.dependinator && window.dependinator.extensionVersion) || "";
+}
+
+// What the browser (and, in VS Code, the extension host) knows about the environment, as
+// "Name: value" lines for a prefilled issue report (IssueReport.cs).
+export function getEnvironmentInfo() {
+  const lines = [];
+  const host = window.dependinator && window.dependinator.hostInfo;
+  if (host) {
+    lines.push(`VS Code: ${host.appName} ${host.vscodeVersion} (${host.uiKind}, remote: ${host.remoteName || "none"})`);
+    lines.push(`OS: ${host.platform}`);
+  } else {
+    // userAgentData is Chromium only; the user agent below has the OS in other browsers too.
+    const platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform;
+    if (platform) lines.push(`OS: ${platform}`);
+  }
+  lines.push(`Browser: ${navigator.userAgent}`);
+  lines.push(`Language: ${navigator.language}`);
+  lines.push(`Window: ${window.innerWidth}x${window.innerHeight} @${window.devicePixelRatio}x`);
+  return lines.join("\n");
 }
 
 export function listenToVsCodeMessages(instance, functionName) {

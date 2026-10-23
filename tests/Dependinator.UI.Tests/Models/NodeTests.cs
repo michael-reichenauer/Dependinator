@@ -28,7 +28,7 @@ public class NodeTests
     }
 
     [Fact]
-    public void SetHidden_ShouldPropagateParentState()
+    public void SetUserVisibility_ShouldPropagateParentState()
     {
         var root = new ModelNode("", null!) { Type = NodeType.Root };
         var child = new ModelNode("Child", root);
@@ -37,11 +37,11 @@ public class NodeTests
         root.AddChild(child);
         child.AddChild(grandchild);
 
-        child.SetHidden(true, isUserSet: true);
+        child.SetUserVisibility(Dependinator.UI.Modeling.Models.NodeVisibility.Dimmed);
 
-        Assert.True(child.IsUserSetHidden);
-        Assert.True(grandchild.IsParentSetHidden);
-        Assert.True(grandchild.IsHidden);
+        Assert.Equal(Dependinator.UI.Modeling.Models.NodeVisibility.Dimmed, child.UserVisibility);
+        Assert.Equal(Dependinator.UI.Modeling.Models.NodeVisibility.Dimmed, grandchild.ParentVisibility);
+        Assert.Equal(Dependinator.UI.Modeling.Models.NodeVisibility.Dimmed, grandchild.Visibility);
     }
 
     [Fact]
@@ -194,5 +194,42 @@ public class NodeTests
         Assert.Null(node.Alias);
         Assert.Equal("web", node.DisplayName);
         Assert.DoesNotContain("Alias", System.Text.Json.JsonSerializer.Serialize(node.ToDto()));
+    }
+
+    [Fact]
+    public void ToDto_SetFromDto_ShouldRoundTripVisibility_AndKeepTheOldHiddenFlags()
+    {
+        var node = CreateNode();
+        node.SetUserVisibility(Dependinator.UI.Modeling.Models.NodeVisibility.Dimmed);
+        node.SetParentVisibility(Dependinator.UI.Modeling.Models.NodeVisibility.Hidden);
+
+        var dto = node.ToDto();
+        var restored = CreateNode();
+        restored.SetFromDto(dto);
+
+        // An older app reads only the flags, and keeps such a node hidden.
+        Assert.True(dto.IsUserSetHidden && dto.IsParentSetHidden);
+        Assert.Equal(Dependinator.UI.Modeling.Models.NodeVisibility.Dimmed, restored.UserVisibility);
+        Assert.Equal(Dependinator.UI.Modeling.Models.NodeVisibility.Hidden, restored.ParentVisibility);
+        Assert.DoesNotContain("Visibility", System.Text.Json.JsonSerializer.Serialize(CreateNode().ToDto()));
+    }
+
+    [Fact]
+    public void SetFromDto_ShouldGiveANodeHiddenBeforeDimmingExisted_TheLegacyVisibility()
+    {
+        var dto = new Dependinator.UI.Modeling.Dtos.NodeDto
+        {
+            Name = "Model.web",
+            ParentName = "",
+            Type = "Type",
+            Properties = new(),
+            IsUserSetHidden = true,
+        };
+        var restored = CreateNode();
+
+        restored.SetFromDto(dto);
+
+        Assert.Equal(ModelNode.LegacyHiddenVisibility, restored.UserVisibility);
+        Assert.Equal(Dependinator.UI.Modeling.Models.NodeVisibility.Visible, restored.ParentVisibility);
     }
 }

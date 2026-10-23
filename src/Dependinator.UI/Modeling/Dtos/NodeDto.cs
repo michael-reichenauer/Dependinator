@@ -41,6 +41,16 @@ record NodeDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Alias { get; init; }
 
+    // The user's own NodeVisibility (Dimmed or Hidden); omitted when visible.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? Visibility { get; init; }
+
+    // The NodeVisibility inherited from the ancestors; omitted when visible.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? ParentVisibility { get; init; }
+
+    // Before dimming existed: true when Visibility is not visible. Still written so an older app
+    // reading a newer model keeps those nodes hidden.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsUserSetHidden { get; set; }
 

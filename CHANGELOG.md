@@ -5,6 +5,28 @@ the previews before it. Releases with nothing users notice are left out.
 
 ## [Unreleased]
 
+## [v0.85.425921] - 2026-10-23
+
+### New
+
+- Each node can be dimmed or hidden on its own (**Dim Node**, **Hide Node**, **Show Node** in the node menu): a dimmed node and its lines are drawn faintly, a hidden one is left out, and what is inside follows; **View › Reveal Hidden Nodes** shows the hidden nodes for a moment without changing them
+- A count in the toolbar shows how many nodes are dimmed or hidden, and a click (or **View › Show Hidden Nodes List**) lists them, each to dim, hide, show or go to, with a filter and **Show All**; going to a hidden node from the list, search, a link or a cycle reveals hidden nodes
+- A grey badge on a node counts the children hidden in it (**View › Show Hidden Node Badges**), and **List Hidden Children** in the node menu lists just those
+- In VS Code with `dependinator.autoRefresh.enabled` off, a dot on the Re-parse button shows that source files changed since the last parse
+- **Help › Report a Bug** and **Help › Suggest an Improvement** open a new GitHub issue with the version and environment filled in
+
+### Improved
+
+- Panning, zooming and navigating save only the view, not the whole model, so moving around is lighter, and a model opens at the view it was last left at
+
+### Changed
+
+- Selected lines, and the lines in the dependency explorer, stay thin rather than widening with their number of links; **View › Line Widths by Link Count** turns the widths back on
+
+### Fixed
+
+- The diagram fills the window after an iPad is rotated, instead of being cut off on the right
+
 ## [v0.84.424430] - 2026-10-22
 
 ### New

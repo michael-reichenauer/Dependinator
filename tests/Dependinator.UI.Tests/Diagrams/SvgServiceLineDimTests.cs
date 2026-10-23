@@ -98,19 +98,34 @@ public class SvgServiceLineDimTests
 
         // Nothing selected: every line is plain, except an explorer focus line.
         var none = new SvgService.RenderSelection(null, null);
-        Assert.False(SvgService.IsLineWeighted(ab, none));
-        Assert.False(SvgService.IsLineWeighted(bc, none));
-        Assert.True(SvgService.IsLineWeighted(focused, none));
+        Assert.False(SvgService.IsLineWeighted(ab, none, true));
+        Assert.False(SvgService.IsLineWeighted(bc, none, true));
+        Assert.True(SvgService.IsLineWeighted(focused, none, true));
 
         // A selected node weights the lines touching it, i.e. the ones dimming keeps bright.
         var nodeSelection = new SvgService.RenderSelection(a, null);
-        Assert.True(SvgService.IsLineWeighted(ab, nodeSelection));
-        Assert.False(SvgService.IsLineWeighted(bc, nodeSelection));
-        Assert.True(SvgService.IsLineWeighted(focused, nodeSelection));
+        Assert.True(SvgService.IsLineWeighted(ab, nodeSelection, true));
+        Assert.False(SvgService.IsLineWeighted(bc, nodeSelection, true));
+        Assert.True(SvgService.IsLineWeighted(focused, nodeSelection, true));
 
         // A selected line weights only itself.
         var lineSelection = new SvgService.RenderSelection(null, bc);
-        Assert.True(SvgService.IsLineWeighted(bc, lineSelection));
-        Assert.False(SvgService.IsLineWeighted(ab, lineSelection));
+        Assert.True(SvgService.IsLineWeighted(bc, lineSelection, true));
+        Assert.False(SvgService.IsLineWeighted(ab, lineSelection, true));
+    }
+
+    [Fact]
+    public void IsLineWeighted_ShouldWeightNothing_WhenLinkCountWidthsAreOff()
+    {
+        var root = CreateRoot();
+        var a = AddNode(root, "A");
+        var b = AddNode(root, "B");
+        var ab = new Line(a, b);
+        var focused = new Line(a, b) { IsFocused = true };
+
+        var nodeSelection = new SvgService.RenderSelection(a, null);
+        Assert.False(SvgService.IsLineWeighted(ab, nodeSelection, false));
+        Assert.False(SvgService.IsLineWeighted(focused, nodeSelection, false));
+        Assert.False(SvgService.IsLineWeighted(ab, new SvgService.RenderSelection(null, ab), false));
     }
 }

@@ -67,6 +67,7 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 ./scripts/e2e -a                                       # all three browsers (before releases)
 ./scripts/e2e -s                                       # also start Azurite + Functions for sync tests
 ./scripts/e2e -t                                       # record Playwright traces into ./tests/Dependinator.E2E.Tests/traces
+./scripts/e2e -r                                       # untraced, then re-run only the failed tests with tracing (CI does this)
 ./scripts/trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
 # CI: build.yml runs unit-tests.yml and e2e.yml (Chromium) on every push and publishes
 # nothing; a PR into dev/main also gets a test site (azure-static-web-apps-*.yml).
@@ -76,7 +77,10 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 # extension. Both run the full gate first (all browsers + cloud sync).
 # Dependabot PRs target dev (.github/dependabot.yml); security PRs still target main —
 # merge their branch into dev instead, the main PR closes itself after the next release.
-# Playwright traces are uploaded as an artifact on e2e failure.
+# issue-triage.yml fires the Claude issue-triage scheduled task (its API trigger, secret
+# TRIAGE_FIRE_TOKEN) when an issue opens; issue events run main's copy, so edits apply after a release.
+# CI e2e runs untraced and re-runs the failed tests with tracing; their traces are uploaded
+# as an artifact on e2e failure.
 
 # VS Code extension
 npm install --prefix ./src/DependinatorVsCode

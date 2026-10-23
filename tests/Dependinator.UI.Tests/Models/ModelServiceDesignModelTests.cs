@@ -3,6 +3,7 @@ using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
+using Dependinator.UI.Shared.Types;
 using Dependinator.UI.Shared.VsCode;
 
 namespace Dependinator.UI.Tests.Models;
@@ -27,7 +28,8 @@ public class ModelServiceDesignModelTests
             persistenceService.Object,
             applicationEvents.Object,
             progressService.Object,
-            vsCodeSendService.Object
+            vsCodeSendService.Object,
+            Mock.Of<ISaveStatusService>()
         );
 
     [Fact]
@@ -49,6 +51,32 @@ public class ModelServiceDesignModelTests
             p => p.WriteAsync("My Design", It.Is<ModelDto>(dto => dto.Nodes.Count == 1)),
             Times.Once
         );
+    }
+
+    [Fact]
+    public async Task LoadAsync_ShouldOpenAtTheSavedView_WhenTheViewWasSavedAfterTheModel()
+    {
+        persistenceService
+            .Setup(p => p.ReadAsync("My Design"))
+            .ReturnsAsync(
+                new ModelDto
+                {
+                    Name = "My Design",
+                    Zoom = 1,
+                    Nodes = [],
+                    Links = [],
+                }
+            );
+        persistenceService
+            .Setup(p => p.ReadViewAsync("My Design"))
+            .ReturnsAsync(new ViewDto { Zoom = 2.5, Offset = new Pos(10, 20) });
+        using var modelService = CreateModelService();
+
+        var result = await modelService.LoadAsync("My Design");
+
+        var modelInfo = AssertOk(result);
+        Assert.Equal(2.5, modelInfo.Zoom);
+        Assert.Equal(new Pos(10, 20), modelMgr.WithModel(m => m.Offset));
     }
 
     [Fact]

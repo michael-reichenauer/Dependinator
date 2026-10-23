@@ -451,12 +451,12 @@ public class RepLineServiceTests
         var source = AddNode(model, "Source", parentA);
         var target = AddNode(model, "Target", parentB);
         AddLink(model, source, target);
-        target.SetHidden(true, isUserSet: true);
+        target.SetUserVisibility(NodeVisibility.Hidden);
         parentA.LineSplitDepth = 1;
 
         RepLineService.Sync(model, ContainerZoom);
 
-        Assert.True(GetLine(model, "Source", "ParentB").IsHidden);
+        Assert.True(!GetLine(model, "Source", "ParentB").IsVisible);
     }
 
     // --- Explorer focus (Model.LineFocus): the subject's links leave from the subject itself and

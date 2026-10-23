@@ -21,8 +21,8 @@ public class NoteTests(ITestOutputHelper output) : E2ETestBase(output)
         await AddNoteAsync(NoteId, "Guiding note");
         await Expect(NoteText(NoteId)).ToBeVisibleAsync();
 
-        // The debounced save writes to IndexedDB; give it a moment, then reload.
-        await Page.WaitForTimeoutAsync(1500);
+        // Wait for the debounced save, then reload.
+        await App.WaitForSavedAsync();
         await App.GotoMainPageAsync();
 
         // A note is user-drawn (not parsed), so surviving the reload proves it was persisted

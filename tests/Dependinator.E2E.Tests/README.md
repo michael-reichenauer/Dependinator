@@ -11,6 +11,7 @@ with xUnit, testing the app as a user sees it at `http://localhost:5000`.
 ./scripts/e2e -a             # all three browsers (recommended before releases)
 ./scripts/e2e -s             # also start the cloud-sync stack so sync tests run
 ./scripts/e2e -t             # record a Playwright trace per test into ./traces
+./scripts/e2e -r             # untraced, then re-run only the failed tests with tracing (as CI)
 ```
 
 `./scripts/e2e` starts (and stops) `Dependinator.Web` itself in test mode. If an app is
@@ -61,9 +62,13 @@ time-travel its before/after DOM snapshot, and use the Console/Network/Source ta
 feature-branch pushes and pull requests. On pushes to `dev`/`main` the CI/CD workflow
 calls it with all three browsers plus the sync (`[SyncFact]`) tests as the gate before
 deploying; trigger it manually ("Run workflow") to choose browsers and sync yourself.
-Each browser runs as its own parallel job. It sets `E2E_TRACE=1` and, **on failure**,
-uploads the recorded traces as a `playwright-traces-<browser>` artifact — download the
-`.zip` and open it at <https://trace.playwright.dev>.
+Each browser runs as its own parallel job. It runs `./scripts/e2e -r`: the suite runs
+without tracing (a trace per test doubled the suite time), then the failed tests run again
+with tracing; the job fails either way, and the log says which tests failed again and which
+passed on the re-run (flaky). **On failure** it uploads those traces as a
+`playwright-traces-<browser>` artifact — download the `.zip` and open it at
+<https://trace.playwright.dev>. A flaky test's trace shows its passing re-run, so to catch a
+flake in the act, run it traced locally under load (`taskset -c 0 ./scripts/e2e -t`).
 
 ### Deterministic model (test mode)
 

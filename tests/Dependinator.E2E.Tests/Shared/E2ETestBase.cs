@@ -27,9 +27,10 @@ public class E2ETestBase : PageTest
 
     private static bool isAppVerified;
 
-    // When E2E_TRACE=1 (set by `./scripts/e2e -t` and in CI), each test records a Playwright
-    // trace to Dependinator.E2E.Tests/traces/. CI uploads that folder as an artifact on
-    // failure; open a .zip at https://trace.playwright.dev to debug.
+    // When E2E_TRACE=1 (set by `./scripts/e2e -t`, and by `-r` for its re-run of the failed
+    // tests, which CI uses), each test records a Playwright trace to
+    // Dependinator.E2E.Tests/traces/. CI uploads that folder as an artifact on failure; open a
+    // .zip at https://trace.playwright.dev to debug.
     private static readonly bool tracingEnabled = Environment.GetEnvironmentVariable("E2E_TRACE") == "1";
     private static int traceCounter;
     private bool tracingStarted;
@@ -77,6 +78,8 @@ public class E2ETestBase : PageTest
     {
         await EnsureAppIsRunningAsync();
         await base.InitializeAsync();
+        await KeepOffTheInternetAsync(Context);
+        await WarmUpAppAsync();
 
         if (tracingEnabled)
         {
@@ -104,6 +107,64 @@ public class E2ETestBase : PageTest
         }
 
         await base.DisposeAsync();
+    }
+
+    // The page loads Clerk (clerk-js@latest) and Google Fonts from the internet, and the app
+    // waits for Clerk before it signals ready. That cost 1-3 s of every page load and let a slow
+    // or changed CDN fail any test (a 30 s app-ready timeout). Tests never use the real Clerk,
+    // so every context gets a signed-out stub instead (AppPage.StubClerkSignInAsync replaces it
+    // with one that signs in) and the fonts fall back to the browser's.
+    private static async Task KeepOffTheInternetAsync(IBrowserContext context)
+    {
+        await context.RouteAsync("**/*.clerk.accounts.dev/**", route => route.AbortAsync());
+        await context.RouteAsync(
+            "https://fonts.googleapis.com/**",
+            route => route.FulfillAsync(new() { ContentType = "text/css", Body = "" })
+        );
+        await context.RouteAsync("https://fonts.gstatic.com/**", route => route.AbortAsync());
+        // Only when no stub is there yet: Playwright leaves the order of context and page init
+        // scripts open, and the sign-in stub (a page script) must win.
+        await context.AddInitScriptAsync(
+            """
+            window.Clerk ??= {
+                loaded: true,
+                user: null,
+                session: null,
+                load: async () => {},
+                addListener: () => () => {},
+                openSignIn: () => {},
+                closeSignIn: () => {},
+                signOut: async () => {},
+            };
+            """
+        );
+    }
+
+    private static readonly object warmUpLock = new();
+    private static Task? warmUp;
+
+    // The first page load after the app starts compiles and loads everything (8 s on two cores,
+    // over 30 s on one with two tests loading at once), so the first tests of a run failed on
+    // their app-ready wait. Load the app once, with time to spare, before any test does. A failed
+    // warm-up fails every later test at once instead of each waiting it out again.
+    private Task WarmUpAppAsync()
+    {
+        lock (warmUpLock)
+        {
+            return warmUp ??= WarmUpAppAsync(Browser);
+        }
+    }
+
+    private static async Task WarmUpAppAsync(IBrowser browser)
+    {
+        const float timeout = 120_000;
+        await using IBrowserContext context = await browser.NewContextAsync(new() { BaseURL = BaseUrl });
+        await KeepOffTheInternetAsync(context);
+        IPage page = await context.NewPageAsync();
+        await page.GotoAsync("/", new() { Timeout = timeout });
+        await Assertions
+            .Expect(page.Locator("body"))
+            .ToHaveAttributeAsync("data-app-ready", "true", new() { Timeout = timeout });
     }
 
     private static async Task EnsureAppIsRunningAsync()

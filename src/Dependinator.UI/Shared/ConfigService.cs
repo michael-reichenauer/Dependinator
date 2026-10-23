@@ -9,6 +9,9 @@ class Config
     public List<string> RecentPaths { get; set; } = [];
     public NodeLayoutDensity LayoutDensity { get; set; } = NodeLayoutDensity.Balanced;
     public Dictionary<string, CloudSyncModelState> CloudSyncStates { get; set; } = [];
+
+    // The former View › Show Hidden Nodes (on: hidden nodes faint, off: left out). Now only read
+    // to give nodes hidden before dimming existed the look they had (Node.LegacyHiddenVisibility).
     public bool ShowHiddenNodes { get; set; } = true;
     public bool InvertScrollZoom { get; set; } = false;
 
@@ -17,6 +20,10 @@ class Config
     public bool IsEditingEnabled { get; set; } = false;
     public AppTheme Theme { get; set; } = AppTheme.System;
     public bool DimUnrelatedLines { get; set; } = true;
+
+    // The selection's lines drawn at their link-count width (View › Line Widths by Link Count);
+    // off by default, since thick lines on every selection made the diagram look heavy.
+    public bool ShowLinkCountWidths { get; set; } = false;
     public bool HideExternalLines { get; set; } = false;
     public bool HideInheritanceLines { get; set; } = false;
     public bool HideMemberLines { get; set; } = false;
@@ -40,6 +47,9 @@ class Config
 
     // Badges on the nodes that contain problems (View › Show Problem Badges).
     public bool ShowProblemBadges { get; set; } = true;
+
+    // The badge on a node with children the user hid (View › Show Hidden Node Badges).
+    public bool ShowHiddenBadges { get; set; } = true;
 }
 
 interface IConfigService

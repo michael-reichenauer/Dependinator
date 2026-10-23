@@ -19,6 +19,11 @@ interface IModelService
     Task<Result<ModelInfo>> LoadAsync(string path, bool? includeTestProjects = null);
     Task<Result> RefreshAsync();
     Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects);
+
+    // Source files changed since the last successful parse, as reported while automatic refresh
+    // is off (VS Code); the Re-parse button shows a dot until a parse succeeds.
+    bool HasSourceChanges { get; }
+    void MarkSourceChanged();
     void Clear();
     void ClearCache();
     void CheckLineVisibility();
@@ -41,8 +46,24 @@ class ModelService : IModelService, IDisposable
     readonly IApplicationEvents applicationEvents;
     readonly IProgressService progressService;
     readonly IVsCodeSendService vsCodeSendService;
+    readonly ISaveStatusService saveStatusService;
 
     readonly Debouncer saveDebouncer = new();
+    readonly Debouncer viewSaveDebouncer = new();
+
+    // Save requests and the last request each finished save covered, for the save status (a
+    // request after a save captured the model is still pending). Guarded by saveStatusLock, which
+    // also orders the status changes.
+    readonly object saveStatusLock = new();
+    long saveRequests;
+    long savedRequests;
+    long viewSaveRequests;
+    long savedViewRequests;
+
+    // Reported source changes, and how many of them the last successful parse covered (it covers
+    // those reported before it started, so a change saved during the parse keeps the dot).
+    int sourceChanges;
+    int parsedSourceChanges;
 
     public ModelService(
         IModelMgr modelMgr,
@@ -52,10 +73,12 @@ class ModelService : IModelService, IDisposable
         IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
         IProgressService progressService,
-        IVsCodeSendService vsCodeSendService
+        IVsCodeSendService vsCodeSendService,
+        ISaveStatusService saveStatusService
     )
     {
         this.vsCodeSendService = vsCodeSendService;
+        this.saveStatusService = saveStatusService;
         this.modelMgr = modelMgr;
         this.modelListService = modelListService;
         this.parserService = parserService;
@@ -64,12 +87,15 @@ class ModelService : IModelService, IDisposable
         this.applicationEvents = applicationEvents;
         this.progressService = progressService;
         this.applicationEvents.SaveNeeded += TriggerSave;
+        this.applicationEvents.ViewSaveNeeded += TriggerViewSave;
     }
 
     public void Dispose()
     {
         applicationEvents.SaveNeeded -= TriggerSave;
+        applicationEvents.ViewSaveNeeded -= TriggerViewSave;
         saveDebouncer.Dispose();
+        viewSaveDebouncer.Dispose();
     }
 
     public void ClearCache()
@@ -190,9 +216,24 @@ class ModelService : IModelService, IDisposable
         if (modelResult is not ModelDto model)
             return modelResult.Error;
 
+        // Panning and zooming save only the view record, so it can be newer than the model's
+        // view (a missing record is fine: models saved before it existed have none).
+        if (await persistenceService.ReadViewAsync(path) is ViewDto view)
+            model = view.ApplyTo(model);
+
         var modelInfo = await LoadCachedModelDataAsync(path, model);
 
         return modelInfo;
+    }
+
+    public bool HasSourceChanges => sourceChanges != parsedSourceChanges;
+
+    public void MarkSourceChanged()
+    {
+        bool hadSourceChanges = HasSourceChanges;
+        sourceChanges++;
+        if (!hadSourceChanges)
+            applicationEvents.TriggerUIStateChanged();
     }
 
     public async Task<Result> RefreshAsync()
@@ -284,6 +325,7 @@ class ModelService : IModelService, IDisposable
     async Task<Result> ParseAndUpdateAsync(string path, bool isRefresh = false)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
+        int coveredSourceChanges = sourceChanges;
         // Read before any model-lock block is opened; the model lock is thread-affine and must
         // never be held across the parse await.
         var parseOptions = modelMgr.WithModel(m => new Parsing.SolutionParseOptions
@@ -345,6 +387,7 @@ class ModelService : IModelService, IDisposable
             ApplyLineDescriptions(items);
         }
 
+        parsedSourceChanges = coveredSourceChanges;
         CheckLineVisibility();
 
         return Result.Ok;
@@ -368,24 +411,121 @@ class ModelService : IModelService, IDisposable
 
     public void TriggerSave()
     {
+        lock (saveStatusLock)
+        {
+            saveRequests++;
+            UpdateSaveStatus();
+        }
         saveDebouncer.Debounce(SaveDelay, MaxSaveDelay, Save);
     }
 
     void Save()
     {
+        long request;
+        lock (saveStatusLock)
+            request = saveRequests;
+
         ModelDto modelData;
         string modelPath;
         using (var model = modelMgr.UseModel())
         {
             modelPath = model.Path;
             if (modelPath == "")
+            {
+                MarkSaved(ref savedRequests, request);
                 return;
+            }
 
             modelData = model.SerializeToDto();
         }
 
-        persistenceService.WriteAsync(modelPath, modelData).RunInBackground();
+        SaveModelAsync(modelPath, modelData, request).RunInBackground();
     }
+
+    async Task SaveModelAsync(string modelPath, ModelDto modelData, long request)
+    {
+        try
+        {
+            if (await persistenceService.WriteAsync(modelPath, modelData) is Error e)
+                Log.Warn($"Failed to save model '{modelPath}': {e.Message}");
+
+            // The view record overrides the model's view on load, so bring it up to date now
+            // that the model is written: it may be missing (a new model) or older than the view.
+            TriggerViewSave();
+        }
+        finally
+        {
+            MarkSaved(ref savedRequests, request);
+        }
+    }
+
+    // Panning, zooming and resizing write only the small view record: writing the whole model
+    // after every navigation cost a large serialization and transfer each time.
+    void TriggerViewSave()
+    {
+        lock (saveStatusLock)
+        {
+            viewSaveRequests++;
+            UpdateSaveStatus();
+        }
+        viewSaveDebouncer.Debounce(SaveDelay, MaxSaveDelay, SaveView);
+    }
+
+    void SaveView()
+    {
+        long request;
+        lock (saveStatusLock)
+            request = viewSaveRequests;
+
+        ViewDto view;
+        string modelPath;
+        using (var model = modelMgr.UseModel())
+        {
+            modelPath = model.Path;
+            if (modelPath == "")
+            {
+                MarkSaved(ref savedViewRequests, request);
+                return;
+            }
+
+            view = new ViewDto
+            {
+                Zoom = model.Zoom,
+                Offset = model.Offset,
+                ViewRect = model.ViewRect,
+            };
+        }
+
+        SaveViewAsync(modelPath, view, request).RunInBackground();
+    }
+
+    async Task SaveViewAsync(string modelPath, ViewDto view, long request)
+    {
+        try
+        {
+            if (await persistenceService.WriteViewAsync(modelPath, view) is Error e)
+                Log.Warn($"Failed to save the view of '{modelPath}': {e.Message}");
+        }
+        finally
+        {
+            MarkSaved(ref savedViewRequests, request);
+        }
+    }
+
+    // A finished save, written or failed (logged), no longer counts as pending. Saves can finish
+    // out of order, so the latest request covered is kept.
+    void MarkSaved(ref long saved, long request)
+    {
+        lock (saveStatusLock)
+        {
+            saved = Math.Max(saved, request);
+            UpdateSaveStatus();
+        }
+    }
+
+    // Called with saveStatusLock held, so the status changes reach the service in order
+    void UpdateSaveStatus() =>
+        saveStatusService.SetPending(savedRequests < saveRequests || savedViewRequests < viewSaveRequests);
 
     async Task<ModelInfo> LoadCachedModelDataAsync(string path, ModelDto modelDto)
     {

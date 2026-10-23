@@ -41,7 +41,8 @@ public class SvgServiceZoneOrderTests
             new CycleService(modelMgr, Mock.Of<Dependinator.UI.Modeling.Commands.ICommandService>()),
             Mock.Of<IPathFinderService>(),
             Mock.Of<IRuleService>(),
-            Mock.Of<IProblemService>()
+            Mock.Of<IProblemService>(),
+            Mock.Of<IHiddenNodeService>()
         );
         return service.GetContentSvg(new Rect(0, 0, ViewSize, ViewSize), 1.0);
     }
@@ -91,13 +92,12 @@ public class SvgServiceZoneOrderTests
     }
 
     [Fact]
-    public void GetContentSvg_ShouldSkipAHiddenZone_WhenHiddenNodesAreNotShown()
+    public void GetContentSvg_ShouldSkipAHiddenZone_WhenHiddenNodesAreNotRevealed()
     {
         var (modelMgr, zone) = CreateModel();
-        zone.SetHidden(true, isUserSet: true);
+        zone.SetUserVisibility(NodeVisibility.Hidden);
         zone.IsSelected = true;
         var viewOptions = new ViewOptions();
-        viewOptions.SetShowHiddenNodes(false);
 
         var svg = RenderView(modelMgr, viewOptions);
 

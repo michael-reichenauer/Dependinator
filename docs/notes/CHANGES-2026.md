@@ -47,7 +47,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   version bumping.
 - **Live models (Jul).** A source change watcher re-parses when files change, and the diagram
   goes to the current file's node on first open. From Aug the extension opens the workspace
-  solution.
+  solution. Since Oct 23, with `dependinator.autoRefresh.enabled` off, a
+  change only puts a dot on the Re-parse button until the next parse.
 - **VS Code Marketplace (Jul 14).** Published, and auto-published on every push to `main`, with
   an extension README, a demo gif and a publisher logo.
 - **Commands and status (Sep 30).** Reveal Current File in Diagram (Ctrl+Alt+D, also in the
@@ -143,7 +144,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Line and container visuals (Oct 6).** All lines are drawn at one width, and the selection's
   lines widen by link count. Container backgrounds now show in light mode and fade out while
   zooming in. Lines to hidden nodes are dash-dotted. Line-split and zoom-to-node moved off the
-  node toolbar.
+  node toolbar. Since Oct 23 the link-count widths are off by default and turned on with
+  View › Line Widths by Link Count (explorer lines included): a selected node's thick lines
+  looked heavy when nobody asked.
 - **Accepted cycles (Oct 19).** A cycle that is intended can be accepted with a reason. It moves
   to a collapsed Accepted section of the cycles panel and its lines are no longer drawn red. The
   acceptance is saved with the model and can be undone. The cycle is reported again if a node
@@ -194,6 +197,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   nodes inside their opened container, instead of to the container as an icon. It also picks the
   cycle: its lines stay red while the other cycles' lines fade, and lines not touching its nodes
   fade as for a selection of them, until the row is clicked again.
+- **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
+  issue from the repo's issue forms, with the version and environment (host, build, VS Code
+  version and OS or browser, language, window size) filled in. VS Code opens the page through the
+  extension host, like Help; bug reports get the `bug` label from their form.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design
@@ -217,7 +224,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   afterwards (refined in place, never while the view is zoomed into it). Models saved with the
   older layout are laid out again, except containers the user arranged.
 - **Hidden nodes (Mar).** A menu toggle shows or hides hidden nodes. Hiding became undoable on
-  Oct 11.
+  Oct 11. Since Oct 23 each node is dimmed (faint) or hidden (left out) on its own, its
+  descendants following it, and View › Reveal Hidden Nodes shows hidden ones faintly while it is on.
+  A count in the toolbar opens the hidden nodes list (switch dim/hide, go to, show); going to a
+  hidden node reveals hidden nodes. A grey badge on a node counts the children the user hid, and
+  its menu lists them.
 - **Edit mode (Apr).** Edit buttons show only in edit mode. Since Sep 30 the mode is persisted,
   off by default, and required for every model change.
 - **Design features (Jul 5–18).**
@@ -289,6 +300,14 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   The suite now has 74 tests. Sep–Oct went into stabilising it: capped parallelism,
   verify-and-retry page objects and a 15 s expect timeout. There are about 760 unit tests across
   the other test projects.
+- **E2E flake root causes (Oct 23).** A review of the failed CI runs found the flakes came from
+  load, not from single tests, and three app-side sources were removed: tests no longer load
+  Clerk and Google Fonts from the internet (a signed-out Clerk stub per test), runs without sync
+  start the app with cloud sync off, and the first test warms the app up. Panning and zooming
+  save a small view record instead of the whole model, and tests wait for the app's
+  `data-save-pending` mark instead of sleeping before a reload. CI no longer traces every test (that
+  doubled the suite time): it runs untraced and re-runs only the failed tests with tracing
+  (`./scripts/e2e -r`).
 - **CI (Jun 20).** Unit-test and e2e workflows run on feature-branch pushes. CI/CD runs them
   before deploying; the full gate covers all browsers plus sync. Since Oct 19 the browsers run
   as parallel jobs (the serial run had grown to ~15 min of a 20 min gate).
@@ -313,6 +332,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   - the project knowledge that had lived in local memory moved to `.claude/rules/`, so every
     session has it;
   - feature branches may now be pushed without asking.
+- **Automatic issue triage (Oct 23).** A Claude scheduled task triages new issues of every type:
+  labels and a verdict, a comment with its reasoning, and a fix PR into dev for small clear bugs.
+  `issue-triage.yml` starts it through its API trigger as soon as an issue is opened; its own
+  schedule catches anything a fire missed.
 
 ## Docs and presentation
 

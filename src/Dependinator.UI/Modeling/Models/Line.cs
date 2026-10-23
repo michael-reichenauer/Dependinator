@@ -19,7 +19,7 @@ class Line : IItem
     readonly Dictionary<Id, Link> links = new();
     readonly List<Pos> segmentPoints = [];
     double strokeWidth = BaseStrokeWidth;
-    bool isHidden;
+    NodeVisibility visibility;
 
     public Line(Node source, Node target, bool isDirect = false, LineId? id = null, bool isInheritance = false)
     {
@@ -72,7 +72,8 @@ class Line : IItem
     public bool IsConfiguration => links.Count > 0 && links.Values.All(l => l.IsConfiguration);
 
     // The stroke width that encodes the link count; only drawn while the line is emphasized
-    // (the selection's lines, explorer focus lines), otherwise lines share one thin width.
+    // (the selection's lines, explorer focus lines) and View › Line Widths by Link Count is on,
+    // otherwise lines share one thin width.
     public double WeightedStrokeWidth => strokeWidth;
     public bool IsSelected { get; internal set; }
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";
@@ -99,17 +100,21 @@ class Line : IItem
     public string? HtmlLabelDescription { get; private set; }
     public bool HasLabel => Label is not null || LabelDescription is not null;
 
-    public bool IsHidden
+    // Follows the nodes at the ends of its links (LineVisibility): dimmed or hidden lines are
+    // drawn faintly or left out like those nodes.
+    public NodeVisibility Visibility
     {
-        get => isHidden;
+        get => visibility;
         internal set
         {
-            if (isHidden == value)
+            if (visibility == value)
                 return;
-            isHidden = value;
+            visibility = value;
             UpdateStrokeWidth();
         }
     }
+
+    public bool IsVisible => visibility == NodeVisibility.Visible;
 
     public bool Contains(Link link) => links.ContainsKey(link.Id);
 
@@ -160,7 +165,7 @@ class Line : IItem
             strokeWidth = DirectStrokeWidth;
             return;
         }
-        if (isHidden)
+        if (!IsVisible)
         {
             strokeWidth = HiddenStrokeWidth;
             return;

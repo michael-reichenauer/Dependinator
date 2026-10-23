@@ -257,7 +257,7 @@ public class ProblemServiceTests
             AddLink(model, AddNode(model, "UI.View", ui), repo);
             AddLink(model, AddNode(model, "UI.Form", ui), repo);
             var hidden = AddNode(model, "Data.Hidden", data);
-            hidden.IsUserSetHidden = true;
+            hidden.SetUserVisibility(NodeVisibility.Hidden);
             model.AddRule(new ArchitectureRule(ui.Name, data.Name));
             model.SetParseProblems([new("2 compile errors in Hidden", 2, hidden.Name)]);
         }

@@ -39,9 +39,9 @@ public class DesignModelTests(ITestOutputHelper output) : E2ETestBase(output)
         await AddManualNodeAsync(NodeIcon);
         await Expect(App.NodeLabel(NodeIcon)).ToBeVisibleAsync();
 
-        // The debounced save writes to IndexedDB; give it a moment, then reload. In test mode
-        // the app always starts with the demo model, so re-open the design model via the menu.
-        await Page.WaitForTimeoutAsync(1500);
+        // Wait for the debounced save, then reload. In test mode the app always starts with the
+        // demo model, so re-open the design model via the menu.
+        await App.WaitForSavedAsync();
         await App.GotoMainPageAsync();
 
         // Open the Models submenu (anchored on the always-present New Model item, since

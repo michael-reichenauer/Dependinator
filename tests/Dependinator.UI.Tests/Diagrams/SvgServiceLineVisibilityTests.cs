@@ -50,16 +50,23 @@ public class SvgServiceLineVisibilityTests
         return node;
     }
 
-    static string RenderView(IModelMgr modelMgr, double viewX, double viewY, double zoom = DeepZoom)
+    static string RenderView(
+        IModelMgr modelMgr,
+        double viewX,
+        double viewY,
+        double zoom = DeepZoom,
+        ViewOptions? viewOptions = null
+    )
     {
         ISvgService service = new SvgService(
             modelMgr,
             Mock.Of<ITilesMgr>(),
-            new ViewOptions(),
+            viewOptions ?? new ViewOptions(),
             new CycleService(modelMgr, Mock.Of<Dependinator.UI.Modeling.Commands.ICommandService>()),
             Mock.Of<IPathFinderService>(),
             Mock.Of<IRuleService>(),
-            Mock.Of<IProblemService>()
+            Mock.Of<IProblemService>(),
+            Mock.Of<IHiddenNodeService>()
         );
         var canvasRect = new Rect(viewX * zoom, viewY * zoom, ViewSize * zoom, ViewSize * zoom);
         return service.GetContentSvg(canvasRect, zoom);
@@ -196,17 +203,30 @@ public class SvgServiceLineVisibilityTests
     }
 
     [Fact]
-    public void GetContentSvg_ShouldRenderHiddenLineAsHidden_WhenEndpointIsVisible()
+    public void GetContentSvg_ShouldRenderDimmedLineFaint_WhenEndpointIsVisible()
     {
         var modelMgr = CreateModel(out Line line);
-        line.IsHidden = true;
+        line.Visibility = NodeVisibility.Dimmed;
 
-        // ShowHiddenNodes defaults to true, so the line renders in the hidden style: faint and
-        // dash-dotted, so it is told apart from a line merely dimmed by the selection.
+        // A dimmed line renders faint and dash-dotted, so it is told apart from a line merely
+        // dimmed by the selection.
         var svg = RenderView(modelMgr, 0, 0);
 
         Assert.Contains("marker-end=\"url(#arrow-hidden)\" stroke-dasharray=\"6,4,1,4\"", svg);
         Assert.DoesNotContain("marker-end=\"url(#arrow-line)\"", svg);
+    }
+
+    [Fact]
+    public void GetContentSvg_ShouldLeaveOutHiddenLine_UnlessHiddenNodesAreRevealed()
+    {
+        var modelMgr = CreateModel(out Line line);
+        line.Visibility = NodeVisibility.Hidden;
+
+        Assert.DoesNotContain("url(#arrow-hidden)", RenderView(modelMgr, 0, 0));
+
+        var revealed = new ViewOptions();
+        revealed.SetRevealHiddenNodes(true);
+        Assert.Contains("url(#arrow-hidden)", RenderView(modelMgr, 0, 0, viewOptions: revealed));
     }
 
     [Fact]

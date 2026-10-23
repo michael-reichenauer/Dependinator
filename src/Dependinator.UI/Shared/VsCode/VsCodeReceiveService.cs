@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Modeling;
 
 namespace Dependinator.UI.Shared.VsCode;
 
@@ -13,6 +14,7 @@ class VsCodeReceiveService : IVsCodeReceiveService
     readonly INavigationService navigationService;
     readonly ICanvasService canvasService;
     readonly IApplicationEvents applicationEvents;
+    readonly IModelService modelService;
 
     bool isRefreshing;
     bool isRefreshPending;
@@ -20,12 +22,14 @@ class VsCodeReceiveService : IVsCodeReceiveService
     public VsCodeReceiveService(
         INavigationService navigationService,
         ICanvasService canvasService,
-        IApplicationEvents applicationEvents
+        IApplicationEvents applicationEvents,
+        IModelService modelService
     )
     {
         this.navigationService = navigationService;
         this.canvasService = canvasService;
         this.applicationEvents = applicationEvents;
+        this.modelService = modelService;
     }
 
     public async Task ReceivedMessageAsync(string type, string message)
@@ -37,6 +41,9 @@ class VsCodeReceiveService : IVsCodeReceiveService
                 break;
             case "ui/refresh":
                 await RefreshAsync();
+                break;
+            case "ui/sourceChanged": // Source files changed while automatic refresh is off
+                modelService.MarkSourceChanged();
                 break;
             case "ui/search":
                 applicationEvents.TriggerSearchRequested(); // The "Dependinator: Search Nodes" command
