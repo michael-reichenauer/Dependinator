@@ -121,6 +121,10 @@ jobs:
           # archive instead. The .debs fetched so far stay in apt's archive.
           if ! timeout 6m bash -c "$(declare -f install); install"; then
             echo "::warning::The apt mirror is slow, retrying the install from archive.ubuntu.com"
+            # timeout stops pwsh but not the apt-get it started with sudo, which holds apt's lock:
+            # stop it while it still downloads (no dpkg running), else let it finish installing.
+            pgrep -x dpkg >/dev/null || sudo pkill -x apt-get || true
+            while pgrep -x apt-get >/dev/null; do sleep 2; done
             sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' /etc/apt/apt-mirrors.txt \
               /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
             install
