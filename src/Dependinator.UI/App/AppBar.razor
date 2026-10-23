@@ -450,9 +450,12 @@
         </MudTooltip>
         @if (CanParseCurrentModel)
         {
-            <MudTooltip Text="Re-parse the solution">
-                <MudIconButton Icon="@Icons.Material.Outlined.Autorenew" OnClick="canvasService.RefreshAsync"
-                               data-testid="toolbar-parse" />
+            <MudTooltip Text="@(modelService.HasSourceChanges ? "Source files changed, re-parse the solution" : "Re-parse the solution")">
+                <MudBadge Dot="true" Color="Color.Warning" Overlap="true" Visible="modelService.HasSourceChanges"
+                          data-testid="toolbar-parse-changed">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Autorenew" OnClick="canvasService.RefreshAsync"
+                                   data-testid="toolbar-parse" />
+                </MudBadge>
             </MudTooltip>
         }
     </MudHidden>

@@ -10,6 +10,7 @@ the previews before it. Releases with nothing users notice are left out.
 - Each node can be dimmed or hidden on its own (**Dim Node**, **Hide Node**, **Show Node** in the node menu): a dimmed node and its lines are drawn faintly, a hidden one is left out, and what is inside follows; **View › Reveal Hidden Nodes** shows the hidden nodes for a moment without changing them
 - A count in the toolbar shows how many nodes are dimmed or hidden, and a click (or **View › Show Hidden Nodes List**) lists them, each to dim, hide, show or go to, with a filter and **Show All**; going to a hidden node from the list, search, a link or a cycle reveals hidden nodes
 - A grey badge on a node counts the children hidden in it (**View › Show Hidden Node Badges**), and **List Hidden Children** in the node menu lists just those
+- In VS Code with `dependinator.autoRefresh.enabled` off, a dot on the Re-parse button shows that source files changed since the last parse
 - **Help › Report a Bug** and **Help › Suggest an Improvement** open a new GitHub issue with the version and environment filled in
 
 ### Improved

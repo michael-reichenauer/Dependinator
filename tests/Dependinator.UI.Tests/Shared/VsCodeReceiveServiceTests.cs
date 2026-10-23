@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Modeling;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.VsCode;
 
@@ -14,7 +15,7 @@ public class VsCodeReceiveServiceTests
         Mock<INavigationService> navigation = new();
         Mock<ICanvasService> canvas = new();
         canvas.Setup(c => c.RefreshAsync()).Returns(Task.CompletedTask);
-        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object);
+        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object, Mock.Of<IModelService>());
 
         await sut.ReceivedMessageAsync("ui/refresh", "");
 
@@ -28,7 +29,7 @@ public class VsCodeReceiveServiceTests
         Mock<ICanvasService> canvas = new();
         TaskCompletionSource firstRefresh = new();
         canvas.SetupSequence(c => c.RefreshAsync()).Returns(firstRefresh.Task).Returns(Task.CompletedTask);
-        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object);
+        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object, Mock.Of<IModelService>());
 
         Task firstCall = sut.ReceivedMessageAsync("ui/refresh", "");
         await sut.ReceivedMessageAsync("ui/refresh", "");
@@ -46,7 +47,7 @@ public class VsCodeReceiveServiceTests
     {
         Mock<INavigationService> navigation = new();
         Mock<ICanvasService> canvas = new();
-        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object);
+        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object, Mock.Of<IModelService>());
 
         await sut.ReceivedMessageAsync("ui/ShowNode", "some/file.cs@42");
 
@@ -59,7 +60,7 @@ public class VsCodeReceiveServiceTests
     {
         Mock<INavigationService> navigation = new();
         Mock<ICanvasService> canvas = new();
-        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object);
+        VsCodeReceiveService sut = new(navigation.Object, canvas.Object, new Mock<IApplicationEvents>().Object, Mock.Of<IModelService>());
 
         await sut.ReceivedMessageAsync("ui/unknown", "message");
 
@@ -74,11 +75,30 @@ public class VsCodeReceiveServiceTests
         VsCodeReceiveService sut = new(
             new Mock<INavigationService>().Object,
             new Mock<ICanvasService>().Object,
-            events.Object
+            events.Object,
+            Mock.Of<IModelService>()
         );
 
         await sut.ReceivedMessageAsync("ui/search", "");
 
         events.Verify(e => e.TriggerSearchRequested(), Times.Once);
+    }
+
+    [Fact]
+    public async Task ReceivedMessageAsync_ShouldMarkSourceChangedOnUiSourceChanged()
+    {
+        Mock<ICanvasService> canvas = new();
+        Mock<IModelService> model = new();
+        VsCodeReceiveService sut = new(
+            new Mock<INavigationService>().Object,
+            canvas.Object,
+            new Mock<IApplicationEvents>().Object,
+            model.Object
+        );
+
+        await sut.ReceivedMessageAsync("ui/sourceChanged", "");
+
+        model.Verify(m => m.MarkSourceChanged(), Times.Once);
+        canvas.Verify(c => c.RefreshAsync(), Times.Never);
     }
 }
