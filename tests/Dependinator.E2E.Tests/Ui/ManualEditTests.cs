@@ -175,10 +175,12 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.Mouse.UpAsync();
         await Expect(Page.Locator(".link-drag-overlay")).ToBeHiddenAsync();
 
+        // The search field handles Escape and gets focus only after the dialog's first render (and
+        // a fallback focus after its open animation), so an Escape pressed as soon as the field
+        // shows can land nowhere (seen in CI): wait for focus, and press again if it was lost.
         ILocator search = Page.GetByTestId("icon-dialog-search");
-        await Expect(search).ToBeVisibleAsync();
-        await Page.Keyboard.PressAsync("Escape");
-        await Expect(search).ToBeHiddenAsync();
+        await Expect(search).ToBeFocusedAsync();
+        await App.PressEscapeUntilGoneAsync(search);
         ILocator anyLineFromNode = Page.Locator("#svgcanvas g.hoverable")
             .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(DragCancelIcon)}→") });
         await Expect(anyLineFromNode).ToHaveCountAsync(0);

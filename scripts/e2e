@@ -7,7 +7,11 @@
 #   ./scripts/e2e -s            also start the cloud-sync stack (Azurite + Functions on
 #                               7071) so sync tests ([SyncFact]) run; needs func+azurite
 #   ./scripts/e2e -t            record a Playwright trace per test into ./tests/Dependinator.E2E.Tests/traces
-#                               (open a .zip at https://trace.playwright.dev). CI sets this on failure.
+#                               (open a .zip at https://trace.playwright.dev).
+#   ./scripts/e2e -r            run without tracing, then re-run only the failed tests with a
+#                               trace each (what CI does: tracing every test doubles the
+#                               suite time, and the extra load caused flakes). A failure stays
+#                               a failure even when its re-run passes; the summary says which.
 #
 # Starts Dependinator.Web itself in test mode (embedded demo model) and stops it
 # afterwards. If an app is already running at http://localhost:5000 (e.g. ./scripts/watch),
@@ -27,18 +31,23 @@ source ./scripts/_stack.sh
 BASE_URL="${E2E_BASE_URL:-http://127.0.0.1:5000}"
 BROWSERS=("chromium")
 SYNC=0
-# E2E_TRACE may already be set in the environment (e.g. by CI); -t turns it on too.
+# E2E_TRACE may already be set in the environment (1, or "failed" as by CI); -t and -r set it too.
 E2E_TRACE="${E2E_TRACE:-0}"
 
-while getopts "ab:st" opt; do
+while getopts "ab:str" opt; do
     case $opt in
         a) BROWSERS=("chromium" "firefox" "webkit") ;;
         b) BROWSERS=("$OPTARG") ;;
         s) SYNC=1 ;;
         t) E2E_TRACE=1 ;;
-        *) echo "Usage: ./scripts/e2e [-a] [-b chromium|firefox|webkit] [-s] [-t]"; exit 1 ;;
+        r) E2E_TRACE=failed ;;
+        *) echo "Usage: ./scripts/e2e [-a] [-b chromium|firefox|webkit] [-s] [-t|-r]"; exit 1 ;;
     esac
 done
+case "$E2E_TRACE" in
+    0 | 1 | failed) ;;
+    *) echo "E2E_TRACE must be 0, 1 or failed (was '$E2E_TRACE')."; exit 1 ;;
+esac
 
 APP_PID=""
 STACK_AZURITE_PID=""
@@ -192,27 +201,83 @@ fi
 # trace files are numbered per process, so a later run with fewer tests would otherwise
 # leave stale higher-numbered files behind. Only when tracing; done once before the
 # browser loop so -a keeps all browsers' traces from this run.
-if [[ "$E2E_TRACE" == "1" ]]; then
+if [[ "$E2E_TRACE" != "0" ]]; then
     rm -rf ./tests/Dependinator.E2E.Tests/traces
 fi
+RESULTS_DIR=./tests/Dependinator.E2E.Tests/TestResults
+
+# run_tests <browser> <trace 0|1> [dotnet test args...]
+run_tests() {
+    local browser="$1" trace="$2"
+    shift 2
+    # Sync tests skip here by design when -s isn't given; hide the per-test
+    # "Skipped ..."/"[SKIP]" lines so real failures stand out (the "Skipped: N" count
+    # stays in the summary line). Failure output is unaffected; pipefail keeps
+    # dotnet test's exit code through the pipe.
+    E2E=1 E2E_SYNC="$E2E_SYNC" E2E_CLERK_ISSUER="$E2E_CLERK_ISSUER" E2E_TRACE="$trace" \
+        BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
+        dotnet test ./tests/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj "$@" 2>&1 \
+        | grep -vE '^\s+Skipped |\[SKIP\]$'
+}
+
+# The fully qualified names of the tests with the given outcome in a trx file, one per line
+# (a theory's arguments cut off, so the filter re-runs all its cases).
+tests_with_outcome() {
+    grep -o "<UnitTestResult [^>]*outcome=\"$2\"[^>]*>" "$1" 2>/dev/null \
+        | grep -o ' testName="[^"(]*' | sed 's/^ testName="//' | sort -u
+}
+
+# At most this many failed tests are re-run with tracing: when everything fails, the app is
+# broken, and a traced re-run of the whole suite could push the job past its timeout (a
+# cancelled job uploads no traces).
+MAX_TRACED_RERUNS=10
 
 RESULT=0
 for browser in "${BROWSERS[@]}"; do
     echo ""
     echo "=== Running e2e tests on $browser ==="
-    # Sync tests skip here by design when -s isn't given; hide the per-test
-    # "Skipped ..."/"[SKIP]" lines so real failures stand out (the "Skipped: N" count
-    # stays in the summary line). Failure output is unaffected; pipefail keeps
-    # dotnet test's exit code through the pipe.
-    if ! E2E=1 E2E_SYNC="$E2E_SYNC" E2E_CLERK_ISSUER="$E2E_CLERK_ISSUER" E2E_TRACE="$E2E_TRACE" \
-        BROWSER="$browser" E2E_BASE_URL="$BASE_URL" \
-        dotnet test ./tests/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj 2>&1 \
-        | grep -vE '^\s+Skipped |\[SKIP\]$'; then
-        RESULT=1
+    if [[ "$E2E_TRACE" != "failed" ]]; then
+        run_tests "$browser" "$E2E_TRACE" || RESULT=1
+        continue
     fi
+
+    trx="e2e-$browser.trx"
+    rm -f "$RESULTS_DIR/$trx"
+    run_tests "$browser" 0 --logger "trx;LogFileName=$trx" --results-directory "$RESULTS_DIR" && continue
+    RESULT=1
+    if [[ ! -f "$RESULTS_DIR/$trx" ]]; then
+        echo "The test run produced no results (see the errors above), so nothing is re-run with tracing."
+        continue
+    fi
+    failed=$(tests_with_outcome "$RESULTS_DIR/$trx" Failed | head -n "$MAX_TRACED_RERUNS")
+    if [[ -z "$failed" ]]; then
+        echo "No failed tests in the results to re-run with tracing."
+        continue
+    fi
+
+    echo ""
+    echo "=== Re-running $(echo "$failed" | wc -l | tr -d ' ') failed test(s) on $browser with tracing (at most $MAX_TRACED_RERUNS) ==="
+    filter=$(echo "$failed" | sed 's/^/FullyQualifiedName=/' | paste -sd '|' -)
+    rerun_trx="e2e-$browser-rerun.trx"
+    rm -f "$RESULTS_DIR/$rerun_trx"
+    run_tests "$browser" 1 --no-build --filter "$filter" \
+        --logger "trx;LogFileName=$rerun_trx" --results-directory "$RESULTS_DIR"
+    passed_again=$(tests_with_outcome "$RESULTS_DIR/$rerun_trx" Passed)
+    failed_again=$(tests_with_outcome "$RESULTS_DIR/$rerun_trx" Failed)
+    echo ""
+    echo "Failed on $browser (the first run counts, the re-run only records traces):"
+    while read -r test; do
+        if grep -qxF "$test" <<<"$failed_again"; then
+            echo "  $test: failed again"
+        elif grep -qxF "$test" <<<"$passed_again"; then
+            echo "  $test: passed on the re-run (flaky)"
+        else
+            echo "  $test: not re-run"
+        fi
+    done <<<"$failed"
 done
 
-if [[ "$E2E_TRACE" == "1" ]]; then
+if [[ "$E2E_TRACE" == "1" || ( "$E2E_TRACE" == "failed" && -d ./tests/Dependinator.E2E.Tests/traces ) ]]; then
     echo ""
     echo "Traces recorded in ./tests/Dependinator.E2E.Tests/traces — view one with: ./scripts/trace"
 fi
