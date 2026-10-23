@@ -115,7 +115,16 @@ jobs:
           mkdir -p ~/apt-debs
           sudo cp ~/apt-debs/*.deb /var/cache/apt/archives/ 2>/dev/null || true
           echo "Restored $(ls ~/apt-debs | grep -c '\.deb$') cached .debs"
-          pwsh tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ matrix.browser }}
+          install() { pwsh tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ matrix.browser }}; }
+          # On a cache miss (a new runner image or Playwright version) the mirror can still crawl:
+          # a normal install takes about a minute, so after 6 the rest comes from the main Ubuntu
+          # archive instead. The .debs fetched so far stay in apt's archive.
+          if ! timeout 6m bash -c "$(declare -f install); install"; then
+            echo "::warning::The apt mirror is slow, retrying the install from archive.ubuntu.com"
+            sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' /etc/apt/apt-mirrors.txt \
+              /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+            install
+          fi
           # Drop the .debs the archive has replaced with newer versions, so the cache doesn't grow.
           sudo apt-get autoclean -qq
           rm -f ~/apt-debs/*.deb
