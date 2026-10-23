@@ -117,10 +117,11 @@
             </MudMenu>
 
             <MudMenu Label="View" PopoverClass="@MenuClass" data-testid="menu-view">
-                <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes"
-                             data-checked="@(viewOptions.ShowHiddenNodes ? "true" : "false")"
-                             data-testid="menu-show-hidden-nodes">
-                    Show Hidden Nodes
+                <MudMenuItem IconColor="Color.Secondary" Icon="@RevealHiddenNodesIcon" OnClick="ToggleRevealHiddenNodes"
+                             data-checked="@(viewOptions.RevealHiddenNodes ? "true" : "false")"
+                             title="Draws hidden nodes faintly, to find them again (not saved)."
+                             data-testid="menu-reveal-hidden-nodes">
+                    Reveal Hidden Nodes
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
@@ -719,7 +720,7 @@
     static string RadioIcon(bool isOn) =>
         isOn ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Outlined.RadioButtonUnchecked;
 
-    string ShowHiddenNodesIcon => CheckIcon(viewOptions.ShowHiddenNodes);
+    string RevealHiddenNodesIcon => CheckIcon(viewOptions.RevealHiddenNodes);
     string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
     string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
@@ -869,11 +870,9 @@
         applicationEvents.TriggerUIStateChanged();
     }
 
-    async Task ToggleShowHiddenNodes()
+    void ToggleRevealHiddenNodes()
     {
-        var newValue = !viewOptions.ShowHiddenNodes;
-        viewOptions.SetShowHiddenNodes(newValue);
-        await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
+        viewOptions.SetRevealHiddenNodes(!viewOptions.RevealHiddenNodes);
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }

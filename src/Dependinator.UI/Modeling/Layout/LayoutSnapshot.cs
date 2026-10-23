@@ -55,7 +55,7 @@ sealed class LayoutSnapshot
                 if (!indexes.TryGetValue(line.Target, out var target) || target == index)
                     continue;
 
-                edges.Add(new LayoutEdge(index, target, weight, line.IsHidden, line.IsSegmentsUserSet));
+                edges.Add(new LayoutEdge(index, target, weight, !line.IsVisible, line.IsSegmentsUserSet));
                 lines.Add(line);
             }
 
@@ -107,7 +107,7 @@ sealed class LayoutSnapshot
             {
                 hash.Add(line.Target.Name);
                 hash.Add(line.Links.Count);
-                hash.Add(line.IsHidden);
+                hash.Add(!line.IsVisible);
                 hash.Add(line.IsSegmentsUserSet);
                 foreach (var point in line.SegmentPoints)
                     hash.Add(point);

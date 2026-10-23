@@ -91,13 +91,12 @@ public class SvgServiceZoneOrderTests
     }
 
     [Fact]
-    public void GetContentSvg_ShouldSkipAHiddenZone_WhenHiddenNodesAreNotShown()
+    public void GetContentSvg_ShouldSkipAHiddenZone_WhenHiddenNodesAreNotRevealed()
     {
         var (modelMgr, zone) = CreateModel();
-        zone.SetHidden(true, isUserSet: true);
+        zone.SetUserVisibility(NodeVisibility.Hidden);
         zone.IsSelected = true;
         var viewOptions = new ViewOptions();
-        viewOptions.SetShowHiddenNodes(false);
 
         var svg = RenderView(modelMgr, viewOptions);
 

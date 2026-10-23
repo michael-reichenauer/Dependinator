@@ -5,7 +5,9 @@ namespace Dependinator.UI.Diagrams;
 // would otherwise share one user's toggles with every connected user (see the e2e suite).
 interface IViewOptions
 {
-    bool ShowHiddenNodes { get; }
+    // Hidden nodes and their lines drawn faintly, like dimmed ones, to find them again
+    // (View › Reveal Hidden Nodes). Not persisted: a model always opens as the user left it.
+    bool RevealHiddenNodes { get; }
     bool IsEditingEnabled { get; }
 
     // While a node or line is selected, lines not touching it are drawn faded so the
@@ -43,7 +45,7 @@ interface IViewOptions
     // Badges on the nodes that contain problems (persisted in Config.ShowProblemBadges).
     bool IsProblemBadgesShown { get; }
 
-    void SetShowHiddenNodes(bool show);
+    void SetRevealHiddenNodes(bool reveal);
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
     void SetLineFilter(LineFilter filter);
@@ -95,7 +97,7 @@ readonly record struct RowFilter(bool HideParameters, bool HideVariables, bool H
 [Scoped]
 class ViewOptions : IViewOptions
 {
-    public bool ShowHiddenNodes { get; private set; } = true;
+    public bool RevealHiddenNodes { get; private set; }
     public bool IsEditingEnabled { get; private set; } = false;
     public bool DimUnrelatedLines { get; private set; } = true;
     public LineFilter LineFilter { get; private set; } = LineFilter.None;
@@ -108,7 +110,7 @@ class ViewOptions : IViewOptions
     public bool IsMinimapShown { get; private set; }
     public bool IsProblemBadgesShown { get; private set; } = true;
 
-    public void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
+    public void SetRevealHiddenNodes(bool reveal) => RevealHiddenNodes = reveal;
 
     public void SetIsEditingEnabled(bool enabled) => IsEditingEnabled = enabled;
 

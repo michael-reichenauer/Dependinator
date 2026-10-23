@@ -59,7 +59,7 @@ class SvgService : ISvgService
     // The user's view toggles that affect what a tile contains; captured per render so the
     // static render helpers need no service access.
     ViewFlags Flags =>
-        new(viewOptions.IsEditingEnabled, viewOptions.ShowHiddenNodes, viewOptions.DimUnrelatedLines)
+        new(viewOptions.IsEditingEnabled, viewOptions.RevealHiddenNodes, viewOptions.DimUnrelatedLines)
         {
             Filter = viewOptions.LineFilter,
             Rows = viewOptions.RowFilter,
@@ -351,13 +351,13 @@ class SvgService : ISvgService
             ? NodeSvg.SelectedNodeSvg(zone, geometry.CanvasRect, context.Flags.IsEditing)
             : "";
 
-    // Whether the node is drawn at all in this tile: not hidden (unless hidden nodes are shown),
+    // Whether the node is drawn at all in this tile: not hidden (unless hidden nodes are revealed),
     // not a row kind the user left out, overlapping the tile, and at least MinRenderSize in one
     // dimension.
     static bool IsRendered(Node node, RenderContext context, out NodeGeometry geometry)
     {
         geometry = CalculateNodeGeometry(node, context);
-        if (node.IsHidden && !context.Flags.ShowHidden)
+        if (node.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
             return false;
         if (context.Flags.Rows.Hides(node.Type))
             return false;
@@ -528,7 +528,7 @@ class SvgService : ISvgService
         {
             if (!line.IsActiveRep)
                 continue; // Only current representative segments are drawn (see RepLineService)
-            if (line.IsHidden && !context.Flags.ShowHidden)
+            if (line.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
                 continue;
             if (line.Target.IsPassThrough)
                 continue; // The pass-through node covers this parent, so the segment is degenerate
@@ -548,7 +548,7 @@ class SvgService : ISvgService
                     continue; // Only current representative lines are drawn (see RepLineService)
                 if (line.Target.Parent == line.Source)
                     continue;
-                if (line.IsHidden && !context.Flags.ShowHidden)
+                if (line.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
                     continue;
                 if (line.Source.IsPassThrough && line.Target == node)
                     continue; // The pass-through node covers this parent, so the segment is degenerate
@@ -584,7 +584,7 @@ class SvgService : ISvgService
     {
         if (endpoint == node)
             return true;
-        if (endpoint.IsHidden && !context.Flags.ShowHidden)
+        if (endpoint.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
             return false;
         if (context.Flags.Rows.Hides(endpoint.Type))
             return false;
@@ -611,7 +611,7 @@ class SvgService : ISvgService
         {
             if (directLine.IsCousin && !directLine.IsActiveRep)
                 continue; // An inactive cousin line kept only for its user waypoints/description
-            if (directLine.IsHidden && !context.Flags.ShowHidden)
+            if (directLine.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
                 continue;
             if (IsLineFilteredOut(directLine, context.Flags.Filter, context.Flags.Rows))
                 continue;
@@ -659,7 +659,7 @@ class SvgService : ISvgService
     {
         if (endpoint == ancestor)
             return true;
-        if (endpoint.IsHidden && !context.Flags.ShowHidden)
+        if (endpoint.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
             return false;
         if (context.Flags.Rows.Hides(endpoint.Type))
             return false;
@@ -688,7 +688,7 @@ class SvgService : ISvgService
         public bool IsEmpty => Node is null && Line is null;
     }
 
-    readonly record struct ViewFlags(bool IsEditing, bool ShowHidden, bool DimUnrelated)
+    readonly record struct ViewFlags(bool IsEditing, bool RevealHidden, bool DimUnrelated)
     {
         public RenderSelection Selection { get; init; }
 

@@ -9,6 +9,9 @@ class Config
     public List<string> RecentPaths { get; set; } = [];
     public NodeLayoutDensity LayoutDensity { get; set; } = NodeLayoutDensity.Balanced;
     public Dictionary<string, CloudSyncModelState> CloudSyncStates { get; set; } = [];
+
+    // The former View › Show Hidden Nodes (on: hidden nodes faint, off: left out). Now only read
+    // to give nodes hidden before dimming existed the look they had (Node.LegacyHiddenVisibility).
     public bool ShowHiddenNodes { get; set; } = true;
     public bool InvertScrollZoom { get; set; } = false;
 

@@ -37,11 +37,11 @@ class StructureService(ILineService linesService) : IStructureService
             model.TryAddNode(node);
             parent.AddChild(node);
 
-            // A node added after its parent (or an ancestor) was hidden must inherit the hidden
-            // state; otherwise its links make aggregated lines to/inside the hidden subtree
-            // render as visible even though the subtree stays hidden.
-            if (parent.IsHidden)
-                node.SetHidden(true, isUserSet: false);
+            // A node added after its parent (or an ancestor) was dimmed or hidden must inherit
+            // that state; otherwise its links make aggregated lines to/inside the subtree render
+            // as visible even though the subtree stays dimmed or hidden.
+            if (!parent.IsVisible)
+                node.SetParentVisibility(parent.Visibility);
 
             return;
         }
@@ -373,9 +373,9 @@ class StructureService(ILineService linesService) : IStructureService
         node.Parent.RemoveChild(node);
         parent.AddChild(node);
 
-        // Sync inherited hidden state with the new parent: hide when moved into a hidden
-        // subtree, and clear a stale parent-set hidden flag when moved out of one.
-        node.SetHidden(parent.IsHidden, isUserSet: false);
+        // Sync the inherited state with the new parent: dim or hide when moved into such a
+        // subtree, and clear a stale inherited state when moved out of one.
+        node.SetParentVisibility(parent.Visibility);
 
         // Re-add link and lines again
         links.ForEach(l => AddLink(model, l));
