@@ -72,7 +72,8 @@ class Line : IItem
     public bool IsConfiguration => links.Count > 0 && links.Values.All(l => l.IsConfiguration);
 
     // The stroke width that encodes the link count; only drawn while the line is emphasized
-    // (the selection's lines, explorer focus lines), otherwise lines share one thin width.
+    // (the selection's lines, explorer focus lines) and View › Line Widths by Link Count is on,
+    // otherwise lines share one thin width.
     public double WeightedStrokeWidth => strokeWidth;
     public bool IsSelected { get; internal set; }
     public string HtmlShortName => $"{Source.HtmlShortName}→{Target.HtmlShortName}";

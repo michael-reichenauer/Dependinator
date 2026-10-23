@@ -34,8 +34,9 @@ static class LineSvg
     const double PathMinStrokeWidth = 2;
 
     // Every aggregated line is drawn at this one width; a line only shows its link-count width
-    // (Line.WeightedStrokeWidth) while it is emphasized (see SvgService.IsLineWeighted), since
-    // the counts are only readable when comparing the few lines of a selection.
+    // (Line.WeightedStrokeWidth) while it is emphasized and View › Line Widths by Link Count is on
+    // (see SvgService.IsLineWeighted), since the counts are only readable when comparing the few
+    // lines of a selection.
     const double PlainStrokeWidth = 1;
 
     public static string GetLineSvg(
