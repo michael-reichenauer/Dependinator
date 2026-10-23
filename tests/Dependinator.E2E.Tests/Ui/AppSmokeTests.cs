@@ -106,7 +106,8 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
         Assert.Equal("/michael-reichenauer/Dependinator/issues/new", url.AbsolutePath);
         string query = Uri.UnescapeDataString(url.Query);
         Assert.Contains("template=bug_report.yml", query);
-        Assert.Contains("version=", query);
+        Assert.Matches(@"version=\d+\.\d+", query);
+        Assert.Contains("Build: ", query);
         Assert.Contains("Host: Web app", query);
         Assert.Contains("Browser: ", query);
     }

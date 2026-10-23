@@ -243,10 +243,10 @@ export function getEnvironmentInfo() {
   if (host) {
     lines.push(`VS Code: ${host.appName} ${host.vscodeVersion} (${host.uiKind}, remote: ${host.remoteName || "none"})`);
     lines.push(`OS: ${host.platform}`);
-  }
-  const uaData = navigator.userAgentData;
-  if (uaData && uaData.platform && !host) {
-    lines.push(`OS: ${uaData.platform}`);
+  } else {
+    // userAgentData is Chromium only; the user agent below has the OS in other browsers too.
+    const platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform;
+    if (platform) lines.push(`OS: ${platform}`);
   }
   lines.push(`Browser: ${navigator.userAgent}`);
   lines.push(`Language: ${navigator.language}`);

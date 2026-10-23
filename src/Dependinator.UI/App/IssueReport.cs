@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Dependinator.Core;
 using Dependinator.UI.Shared.VsCode;
 
@@ -22,7 +21,17 @@ class IssueReportService(IJSInterop jSInterop, IVsCodeSendService vsCodeSendServ
 {
     public async Task OpenAsync(IssueKind kind)
     {
-        string clientInfo = await jSInterop.Call<string>("getEnvironmentInfo");
+        string clientInfo = "";
+        try
+        {
+            clientInfo = await jSInterop.Call<string>("getEnvironmentInfo");
+        }
+        catch (Exception e)
+        {
+            // Still open the issue page, only without the browser's part of the environment.
+            Log.Exception(e, "Failed to get environment info");
+        }
+
         string url = IssueReport.CreateUrl(kind, IssueReport.Version(), IssueReport.Environment(clientInfo));
         await vsCodeSendService.OpenExternalAsync(url);
     }
@@ -35,7 +44,11 @@ static class IssueReport
     // GitHub prefills an issue form field from the query parameter named after the field's id.
     public static string CreateUrl(IssueKind kind, string version, string environment)
     {
-        string template = kind == IssueKind.Bug ? "bug_report.yml" : "feature_request.yml";
+        string template = kind switch
+        {
+            IssueKind.Bug => "bug_report.yml",
+            IssueKind.Improvement => "feature_request.yml",
+        };
         return $"{NewIssueUrl}?template={template}"
             + $"&version={Uri.EscapeDataString(version)}"
             + $"&environment={Uri.EscapeDataString(environment)}";
@@ -53,13 +66,9 @@ static class IssueReport
         string host =
             Build.IsVsCodeExtWasm ? "VS Code extension"
             : Build.IsStandaloneWasm ? "Web app (WebAssembly)"
-            : $"Web app (Blazor Server, {RuntimeInformation.OSDescription})";
+            : "Web app (Blazor Server)";
 
-        var lines = new List<string>
-        {
-            $"Host: {host}",
-            $"Build: {Build.Version}, commit {Build.CommitSid}, {Build.Time}, {Build.BuildMode}",
-        };
+        var lines = new List<string> { $"Host: {host}", $"Build: {Build.Info}" };
         lines.AddRange(clientInfo.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
         return string.Join('\n', lines);
     }

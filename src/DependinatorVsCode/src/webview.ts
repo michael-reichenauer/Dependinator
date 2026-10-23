@@ -75,7 +75,8 @@ function getHostInfo() {
         vscodeVersion: vscode.version,
         uiKind: vscode.env.uiKind === vscode.UIKind.Web ? "web" : "desktop",
         remoteName: vscode.env.remoteName ?? "",
-        platform: `${process.platform} ${process.arch}`
+        // No `process` in the web extension host (vscode.dev), which bundles this file too.
+        platform: typeof process !== "undefined" ? `${process.platform} ${process.arch}` : "browser"
     };
 }
 

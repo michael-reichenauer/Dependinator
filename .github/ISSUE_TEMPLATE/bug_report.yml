@@ -42,7 +42,7 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Filled in by Menu › Help › Report a Bug. Otherwise the VS Code version, operating system and, for the web app, the browser.
+      description: Filled in by Menu › Help › Report a Bug (remove anything you do not want to share). Otherwise the VS Code version, operating system and, for the web app, the browser.
       placeholder: "VS Code 1.105, Windows 11 / Chrome 141"
       render: text
   - type: input
