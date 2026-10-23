@@ -1,5 +1,6 @@
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.VsCode;
 
 // App-wide shared UI services and helpers used across the diagram and modeling features:
@@ -60,11 +61,12 @@ class InitService : IInitService
         await database.Init([FileService.DBCollectionName]);
         var config = await configService.GetAsync();
         NodeLayout.SetDensity(config.LayoutDensity);
-        viewOptions.SetShowHiddenNodes(config.ShowHiddenNodes);
+        Node.LegacyHiddenVisibility = config.ShowHiddenNodes ? NodeVisibility.Dimmed : NodeVisibility.Hidden;
         viewOptions.SetIsEditingEnabled(config.IsEditingEnabled);
         viewOptions.SetDimUnrelatedLines(config.DimUnrelatedLines);
         viewOptions.SetMinimapShown(config.ShowMinimap);
         viewOptions.SetProblemBadgesShown(config.ShowProblemBadges);
+        viewOptions.SetHiddenBadgesShown(config.ShowHiddenBadges);
         viewOptions.SetLineFilter(
             new LineFilter(
                 config.HideExternalLines,

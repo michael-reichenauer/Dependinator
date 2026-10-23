@@ -35,7 +35,9 @@ class SvgService : ISvgService
     readonly IPathFinderService pathFinderService;
     readonly IRuleService ruleService;
     readonly IProblemService problemService;
+    readonly IHiddenNodeService hiddenNodeService;
     IReadOnlyDictionary<NodeId, NodeProblems>? tilesNodeProblems;
+    IReadOnlyDictionary<NodeId, int>? tilesHiddenChildCounts;
 
     public SvgService(
         IModelMgr modelMgr,
@@ -44,7 +46,8 @@ class SvgService : ISvgService
         ICycleService cycleService,
         IPathFinderService pathFinderService,
         IRuleService ruleService,
-        IProblemService problemService
+        IProblemService problemService,
+        IHiddenNodeService hiddenNodeService
     )
     {
         this.modelMgr = modelMgr;
@@ -54,12 +57,13 @@ class SvgService : ISvgService
         this.pathFinderService = pathFinderService;
         this.ruleService = ruleService;
         this.problemService = problemService;
+        this.hiddenNodeService = hiddenNodeService;
     }
 
     // The user's view toggles that affect what a tile contains; captured per render so the
     // static render helpers need no service access.
     ViewFlags Flags =>
-        new(viewOptions.IsEditingEnabled, viewOptions.ShowHiddenNodes, viewOptions.DimUnrelatedLines)
+        new(viewOptions.IsEditingEnabled, viewOptions.RevealHiddenNodes, viewOptions.DimUnrelatedLines)
         {
             Filter = viewOptions.LineFilter,
             Rows = viewOptions.RowFilter,
@@ -89,15 +93,24 @@ class SvgService : ISvgService
         // change: the counts of a parse are only taken once its progress ends. Read before the
         // tiles lock, since it takes the model lock.
         var nodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null;
+        // While hidden nodes are revealed they are drawn, so nothing needs a badge.
+        var hiddenChildCounts =
+            viewOptions.IsHiddenBadgesShown && !viewOptions.RevealHiddenNodes
+                ? hiddenNodeService.GetHiddenChildCounts()
+                : null;
 
         TileKey tileKey;
         Tile tile;
         using (var tiles = tilesMgr.UseTiles())
         {
-            if (!ReferenceEquals(nodeProblems, tilesNodeProblems))
+            if (
+                !ReferenceEquals(nodeProblems, tilesNodeProblems)
+                || !ReferenceEquals(hiddenChildCounts, tilesHiddenChildCounts)
+            )
             {
                 tiles.ClearCache();
                 tilesNodeProblems = nodeProblems;
+                tilesHiddenChildCounts = hiddenChildCounts;
             }
 
             if (tiles.TryGetLastUsed(viewRect, zoom, out tile))
@@ -111,7 +124,7 @@ class SvgService : ISvgService
         // Create a new tile and cache it
         using (var model = modelMgr.UseModel())
         {
-            tile = CreateModelTile(model, tileKey, nodeProblems);
+            tile = CreateModelTile(model, tileKey, nodeProblems, hiddenChildCounts);
         }
         using (var tiles = tilesMgr.UseTiles())
         {
@@ -245,7 +258,12 @@ class SvgService : ISvgService
     static bool IsExternal(Node node) =>
         node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
 
-    Tile CreateModelTile(IModel model, TileKey tileKey, IReadOnlyDictionary<NodeId, NodeProblems>? nodeProblems)
+    Tile CreateModelTile(
+        IModel model,
+        TileKey tileKey,
+        IReadOnlyDictionary<NodeId, NodeProblems>? nodeProblems,
+        IReadOnlyDictionary<NodeId, int>? hiddenChildCounts
+    )
     {
         var timing = Timing.Start();
         var tileRect = tileKey.GetTileRect();
@@ -261,6 +279,7 @@ class SvgService : ISvgService
             Selection = selection,
             DimSelection = FindDimSelection(model, selection, viewFlags.SelectedCycleMembers),
             NodeProblems = nodeProblems,
+            HiddenChildCounts = hiddenChildCounts,
         };
         var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, flags);
         var rootContentSvg = RenderRootContent(model, tileZoom, rootContext);
@@ -351,13 +370,13 @@ class SvgService : ISvgService
             ? NodeSvg.SelectedNodeSvg(zone, geometry.CanvasRect, context.Flags.IsEditing)
             : "";
 
-    // Whether the node is drawn at all in this tile: not hidden (unless hidden nodes are shown),
+    // Whether the node is drawn at all in this tile: not hidden (unless hidden nodes are revealed),
     // not a row kind the user left out, overlapping the tile, and at least MinRenderSize in one
     // dimension.
     static bool IsRendered(Node node, RenderContext context, out NodeGeometry geometry)
     {
         geometry = CalculateNodeGeometry(node, context);
-        if (node.IsHidden && !context.Flags.ShowHidden)
+        if (node.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
             return false;
         if (context.Flags.Rows.Hides(node.Type))
             return false;
@@ -402,7 +421,8 @@ class SvgService : ISvgService
                 geometry.CanvasRect,
                 context.Zoom,
                 context.Flags.IsEditing,
-                ProblemsOf(node, context)
+                ProblemsOf(node, context),
+                HiddenChildCountOf(node, context)
             );
 
         if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
@@ -420,12 +440,16 @@ class SvgService : ISvgService
             context.Zoom,
             childrenContentSvg,
             context.Flags.IsEditing,
-            ProblemsOf(node, context)
+            ProblemsOf(node, context),
+            HiddenChildCountOf(node, context)
         );
     }
 
     static NodeProblems? ProblemsOf(Node node, RenderContext context) =>
         context.Flags.NodeProblems?.TryGetValue(node.Id, out var problems) == true ? problems : null;
+
+    static int HiddenChildCountOf(Node node, RenderContext context) =>
+        context.Flags.HiddenChildCounts?.TryGetValue(node.Id, out var count) == true ? count : 0;
 
     // At extreme zoom a nested svg viewport would carry offsets of millions of canvas units,
     // which browsers combine in single-precision floats, displacing the subtree far off-screen
@@ -528,7 +552,7 @@ class SvgService : ISvgService
         {
             if (!line.IsActiveRep)
                 continue; // Only current representative segments are drawn (see RepLineService)
-            if (line.IsHidden && !context.Flags.ShowHidden)
+            if (line.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
                 continue;
             if (line.Target.IsPassThrough)
                 continue; // The pass-through node covers this parent, so the segment is degenerate
@@ -548,7 +572,7 @@ class SvgService : ISvgService
                     continue; // Only current representative lines are drawn (see RepLineService)
                 if (line.Target.Parent == line.Source)
                     continue;
-                if (line.IsHidden && !context.Flags.ShowHidden)
+                if (line.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
                     continue;
                 if (line.Source.IsPassThrough && line.Target == node)
                     continue; // The pass-through node covers this parent, so the segment is degenerate
@@ -584,7 +608,7 @@ class SvgService : ISvgService
     {
         if (endpoint == node)
             return true;
-        if (endpoint.IsHidden && !context.Flags.ShowHidden)
+        if (endpoint.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
             return false;
         if (context.Flags.Rows.Hides(endpoint.Type))
             return false;
@@ -611,7 +635,7 @@ class SvgService : ISvgService
         {
             if (directLine.IsCousin && !directLine.IsActiveRep)
                 continue; // An inactive cousin line kept only for its user waypoints/description
-            if (directLine.IsHidden && !context.Flags.ShowHidden)
+            if (directLine.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
                 continue;
             if (IsLineFilteredOut(directLine, context.Flags.Filter, context.Flags.Rows))
                 continue;
@@ -659,7 +683,7 @@ class SvgService : ISvgService
     {
         if (endpoint == ancestor)
             return true;
-        if (endpoint.IsHidden && !context.Flags.ShowHidden)
+        if (endpoint.Visibility == NodeVisibility.Hidden && !context.Flags.RevealHidden)
             return false;
         if (context.Flags.Rows.Hides(endpoint.Type))
             return false;
@@ -688,7 +712,7 @@ class SvgService : ISvgService
         public bool IsEmpty => Node is null && Line is null;
     }
 
-    readonly record struct ViewFlags(bool IsEditing, bool ShowHidden, bool DimUnrelated)
+    readonly record struct ViewFlags(bool IsEditing, bool RevealHidden, bool DimUnrelated)
     {
         public RenderSelection Selection { get; init; }
 
@@ -716,6 +740,9 @@ class SvgService : ISvgService
 
         // The problems in or inside each node, for its badge; null while badges are off.
         public IReadOnlyDictionary<NodeId, NodeProblems>? NodeProblems { get; init; }
+
+        // How many children of each node the user hid, for its badge; null while badges are off.
+        public IReadOnlyDictionary<NodeId, int>? HiddenChildCounts { get; init; }
     }
 
     readonly record struct RenderContext(

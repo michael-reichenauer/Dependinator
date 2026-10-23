@@ -251,7 +251,7 @@ public class LayeredLayoutTests
 
         var skipLine = a.SourceLines.Single(line => line.Target == c);
         skipLine.SetSegmentPoints([new Pos(1, 2)]);
-        skipLine.IsHidden = true;
+        skipLine.Visibility = NodeVisibility.Hidden;
 
         NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
         NodeLayout.AdjustChildren(parent);

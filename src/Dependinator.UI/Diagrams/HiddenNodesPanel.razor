@@ -1,0 +1,160 @@
+@using Dependinator.UI.Modeling.Models
+@inject IApplicationEvents applicationEvents
+@inject IViewOptions viewOptions
+@inject IHiddenNodeService hiddenNodeService
+@inject INavigationService navigationService
+@inject Interaction.ISelectionService selectionService
+@implements IDisposable
+
+@* The nodes the user dimmed or hid, to find them again: a row per node with its parent, a switch
+   between dimmed and hidden, and Show. Clicking the name goes to the node (a hidden one is
+   revealed). Nodes inside a dimmed or hidden node follow it, so their row is read-only. Opened
+   from a node's menu (List Hidden Children) it lists only that node's hidden children, the ones
+   its badge counts, with Show only, until the "In" chip is cleared. *@
+@if (viewOptions.IsHiddenNodesShown)
+{
+  var scope = hiddenNodeService.GetPanelScope();
+  var parentId = scope?.Id;
+  var all = parentId is null
+    ? hiddenNodeService.GetNodes()
+    : hiddenNodeService.GetNodes().Where(n => n.ParentId == parentId && n.Visibility == NodeVisibility.Hidden).ToList();
+  var shown = Filtered(all);
+  <div class="dep-panel dep-hidden dep-toolbar-card" data-testid="hidden-panel">
+    <div class="dep-panel__header">
+      <span class="dep-panel__title">Hidden Nodes</span>
+      <span class="dep-panel__count" data-testid="hidden-summary">@Summary(all)</span>
+      <MudSpacer />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
+                     data-testid="hidden-close" />
+    </div>
+    @if (parentId is not null)
+    {
+      <div class="dep-hidden__parent">
+        <span class="dep-panel__count">In</span>
+        <span class="dep-hidden__parent-name" data-testid="hidden-parent">@scope?.Name</span>
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" title="List all dimmed and hidden nodes of the model"
+                       OnClick="ShowWholeModel" data-testid="hidden-parent-clear" />
+      </div>
+    }
+    <div class="dep-panel__hint">Dimmed nodes are drawn faintly, hidden ones are left out; everything inside them follows. Click a name to go to the node.</div>
+
+    @if (all.Count > 0)
+    {
+      <div class="dep-hidden__tools">
+        <input class="dep-hidden__filter" placeholder="Filter by name" @bind="filter" @bind:event="oninput"
+               data-testid="hidden-filter" />
+        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Disabled="@(shown.Count == 0)"
+                   OnClick="() => hiddenNodeService.Show(shown.Select(n => n.Id).ToList())"
+                   title="Shows every node listed below again, as one undo step" data-testid="hidden-show-all">
+          @(shown.Count == all.Count ? "Show All" : $"Show {shown.Count}")
+        </MudButton>
+      </div>
+    }
+
+    <div class="dep-panel__list">
+      @if (all.Count == 0 && parentId is not null)
+      {
+        <div class="dep-panel__empty" data-testid="hidden-empty">No hidden children left here. Clear "In" above to list the whole model.</div>
+      }
+      else if (all.Count == 0)
+      {
+        <div class="dep-panel__empty" data-testid="hidden-empty">No dimmed or hidden nodes. Use Dim Node or Hide Node in a node's menu to tone down nodes that are rarely interesting, such as utilities or external libraries.</div>
+      }
+      @foreach (var node in shown)
+      {
+        var title = node.IsParentNotVisible ? "Inside a dimmed or hidden node, which it follows; show that one first." : null;
+        <div class="dep-hidden__row" data-testid="hidden-item" data-visibility="@node.Visibility">
+          <MudIcon Icon="@VisibilityIcon(node.Visibility)" Size="Size.Small" Color="Color.Secondary" />
+          <button type="button" class="dep-panel__row dep-hidden__name" title="@($"Go to {node.Name}")"
+                  @onclick="() => navigationService.ShowNodeAsync(node.Id)" data-testid="hidden-item-name">
+            <span>@node.Name</span>
+            @if (node.ParentName != "")
+            {
+              <span class="dep-panel__count">@node.ParentName</span>
+            }
+          </button>
+          @if (parentId is null)
+          {
+            <div class="dep-hidden__switch" title="@title">
+              <button type="button" class="@SwitchClass(node, NodeVisibility.Dimmed)" disabled="@node.IsParentNotVisible"
+                      @onclick="() => hiddenNodeService.SetVisibility(node.Id, NodeVisibility.Dimmed)"
+                      data-testid="hidden-item-dim">Dim</button>
+              <button type="button" class="@SwitchClass(node, NodeVisibility.Hidden)" disabled="@node.IsParentNotVisible"
+                      @onclick="() => Hide(node.Id)"
+                      data-testid="hidden-item-hide">Hide</button>
+            </div>
+          }
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Visibility" Size="Size.Small"
+                         Disabled="@node.IsParentNotVisible" title="@(title ?? "Show the node again")"
+                         OnClick="() => hiddenNodeService.SetVisibility(node.Id, NodeVisibility.Visible)"
+                         data-testid="hidden-item-show" />
+        </div>
+      }
+      @if (all.Count > 0 && shown.Count == 0)
+      {
+        <div class="dep-panel__empty">No node matches the filter.</div>
+      }
+    </div>
+  </div>
+}
+
+@code {
+  string filter = "";
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  IReadOnlyList<HiddenNode> Filtered(IReadOnlyList<HiddenNode> nodes)
+  {
+    var text = filter.Trim();
+    return text == ""
+      ? nodes
+      : nodes
+        .Where(n =>
+          n.Name.Contains(text, StringComparison.OrdinalIgnoreCase)
+          || n.ParentName.Contains(text, StringComparison.OrdinalIgnoreCase)
+        )
+        .ToList();
+  }
+
+  // A node just hidden is no longer drawn, so its selection (and toolbar) goes with it, as when
+  // it is hidden from the node menu.
+  void Hide(Modeling.Models.NodeId nodeId)
+  {
+    hiddenNodeService.SetVisibility(nodeId, NodeVisibility.Hidden);
+    if (!viewOptions.RevealHiddenNodes && selectionService.SelectedNodeIds.Contains(nodeId))
+      selectionService.Unselect();
+  }
+
+  static string Summary(IReadOnlyList<HiddenNode> nodes)
+  {
+    var hidden = nodes.Count(n => n.Visibility == NodeVisibility.Hidden);
+    var dimmed = nodes.Count - hidden;
+    return nodes.Count == 0 ? ""
+      : dimmed == 0 ? $"{hidden} hidden"
+      : $"{hidden} hidden, {dimmed} dimmed";
+  }
+
+  static string VisibilityIcon(NodeVisibility visibility) =>
+    visibility == NodeVisibility.Hidden
+      ? MudBlazor.Icons.Material.Outlined.VisibilityOff
+      : MudBlazor.Icons.Material.Outlined.Opacity;
+
+  static string SwitchClass(HiddenNode node, NodeVisibility visibility) =>
+    node.Visibility == visibility ? "dep-hidden__option dep-hidden__option--on" : "dep-hidden__option";
+
+  void ShowWholeModel()
+  {
+    viewOptions.SetHiddenNodesShown(true);
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  void Close()
+  {
+    viewOptions.SetHiddenNodesShown(false);
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

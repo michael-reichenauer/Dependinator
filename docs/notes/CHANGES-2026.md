@@ -194,6 +194,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   nodes inside their opened container, instead of to the container as an icon. It also picks the
   cycle: its lines stay red while the other cycles' lines fade, and lines not touching its nodes
   fade as for a selection of them, until the row is clicked again.
+- **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
+  issue from the repo's issue forms, with the version and environment (host, build, VS Code
+  version and OS or browser, language, window size) filled in. VS Code opens the page through the
+  extension host, like Help; bug reports get the `bug` label from their form.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design
@@ -217,7 +221,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   afterwards (refined in place, never while the view is zoomed into it). Models saved with the
   older layout are laid out again, except containers the user arranged.
 - **Hidden nodes (Mar).** A menu toggle shows or hides hidden nodes. Hiding became undoable on
-  Oct 11.
+  Oct 11. Since Oct 23 each node is dimmed (faint) or hidden (left out) on its own, its
+  descendants following it, and View › Reveal Hidden Nodes shows hidden ones faintly while it is on.
+  A count in the toolbar opens the hidden nodes list (switch dim/hide, go to, show); going to a
+  hidden node reveals hidden nodes. A grey badge on a node counts the children the user hid, and
+  its menu lists them.
 - **Edit mode (Apr).** Edit buttons show only in edit mode. Since Sep 30 the mode is persisted,
   off by default, and required for every model change.
 - **Design features (Jul 5–18).**
@@ -289,6 +297,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   The suite now has 74 tests. Sep–Oct went into stabilising it: capped parallelism,
   verify-and-retry page objects and a 15 s expect timeout. There are about 760 unit tests across
   the other test projects.
+- **E2E flake root causes (Oct 23).** A review of the failed CI runs found the flakes came from
+  load, not from single tests, and three app-side sources were removed: tests no longer load
+  Clerk and Google Fonts from the internet (a signed-out Clerk stub per test), runs without sync
+  start the app with cloud sync off, and the first test warms the app up. Panning and zooming
+  save a small view record instead of the whole model, and tests wait for the app's
+  `data-save-pending` mark instead of sleeping before a reload.
 - **CI (Jun 20).** Unit-test and e2e workflows run on feature-branch pushes. CI/CD runs them
   before deploying; the full gate covers all browsers plus sync. Since Oct 19 the browsers run
   as parallel jobs (the serial run had grown to ~15 min of a 20 min gate).

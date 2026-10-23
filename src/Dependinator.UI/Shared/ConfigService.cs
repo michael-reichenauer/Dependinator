@@ -9,6 +9,9 @@ class Config
     public List<string> RecentPaths { get; set; } = [];
     public NodeLayoutDensity LayoutDensity { get; set; } = NodeLayoutDensity.Balanced;
     public Dictionary<string, CloudSyncModelState> CloudSyncStates { get; set; } = [];
+
+    // The former View › Show Hidden Nodes (on: hidden nodes faint, off: left out). Now only read
+    // to give nodes hidden before dimming existed the look they had (Node.LegacyHiddenVisibility).
     public bool ShowHiddenNodes { get; set; } = true;
     public bool InvertScrollZoom { get; set; } = false;
 
@@ -40,6 +43,9 @@ class Config
 
     // Badges on the nodes that contain problems (View › Show Problem Badges).
     public bool ShowProblemBadges { get; set; } = true;
+
+    // The badge on a node with children the user hid (View › Show Hidden Node Badges).
+    public bool ShowHiddenBadges { get; set; } = true;
 }
 
 interface IConfigService

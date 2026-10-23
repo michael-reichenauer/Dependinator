@@ -352,7 +352,7 @@ static class RepLineService
             link.AddLine(line);
         }
 
-        UpdateHidden(line);
+        LineVisibility.Update(line);
     }
 
     // Brings a reactivated cousin line's link set up to date. The fast path (same links as
@@ -361,7 +361,7 @@ static class RepLineService
     {
         if (line.Links.Count == links.Count && links.All(line.Contains))
         {
-            UpdateHidden(line);
+            LineVisibility.Update(line);
             return;
         }
 
@@ -378,12 +378,8 @@ static class RepLineService
             link.AddLine(line);
         }
 
-        UpdateHidden(line);
+        LineVisibility.Update(line);
     }
-
-    // Same visibility rule as ModelService.CheckLineVisibility.
-    static void UpdateHidden(Line line) =>
-        line.IsHidden = line.Links.All(link => link.Source.IsHidden || link.Target.IsHidden);
 
     // Inactive cousin lines are deliberately NOT pruned: they are invisible (!IsActiveRep),
     // their count is bounded by the distinct rep pairs of the zoom levels, split depths and

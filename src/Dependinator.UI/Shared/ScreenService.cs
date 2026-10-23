@@ -104,7 +104,7 @@ class ScreenService : IScreenService, IDisposable
         if (isChanged)
         {
             applicationEvents.TriggerUIStateChanged();
-            applicationEvents.TriggerSaveNeeded();
+            applicationEvents.TriggerViewSaveNeeded();
         }
     }
 

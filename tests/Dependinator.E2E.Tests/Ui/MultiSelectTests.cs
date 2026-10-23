@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises group selection: Shift+click adds a node to the selection (the toolbar shows the
-// count), hiding applies to every selected node, and Escape clears the whole selection.
+// count), dimming applies to every selected node, and Escape clears the whole selection.
 public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -61,7 +61,7 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
-    public async Task ShiftClick_ShouldSelectSeveral_HideThemTogether_UndoInOneStep_AndEscapeClearsAll()
+    public async Task ShiftClick_ShouldSelectSeveral_DimThemTogether_UndoInOneStep_AndEscapeClearsAll()
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
@@ -79,11 +79,11 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
         );
         await Expect(App.NodeSelectionCount).ToContainTextAsync("2 selected");
 
-        // Hiding applies to both: hidden nodes render faded (opacity attributes), so at least
+        // Dimming applies to both: dimmed nodes render faded (opacity attributes), so at least
         // two more faded groups appear.
         ILocator faded = Page.Locator("#svgcanvas [opacity='0.3']");
         int before = await faded.CountAsync();
-        await (await App.OpenNodeMenuItemAsync("node-menu-toggle-hide")).ClickAsync();
+        await (await App.OpenNodeMenuItemAsync("node-menu-dim")).ClickAsync();
         int after = before;
         for (int attempt = 0; attempt < 50 && after < before + 2; attempt++)
         {
@@ -92,12 +92,12 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
         }
         Assert.True(after >= before + 2, $"Expected at least two more faded nodes, had {before}, now {after}.");
 
-        // Hiding the group is one undoable step: Ctrl+Z brings both back. Shortcuts are ignored
+        // Dimming the group is one undoable step: Ctrl+Z brings both back. Shortcuts are ignored
         // while the menu popover is still closing, so wait for it to be gone and press again if
         // the undo button is still enabled.
         ILocator undo = App.MenuItem("toolbar-undo");
         await Expect(undo).ToBeEnabledAsync();
-        await Expect(App.MenuItem("node-menu-toggle-hide")).ToHaveCountAsync(0);
+        await Expect(App.MenuItem("node-menu-dim")).ToHaveCountAsync(0);
         for (int attempt = 0; attempt < 5 && await undo.IsEnabledAsync(); attempt++)
         {
             await Page.Keyboard.PressAsync("Control+z");

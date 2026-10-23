@@ -140,9 +140,19 @@ class Node : IItem
     public string HtmlShortName { get; private set; } = "";
     public string HtmlLongName { get; private set; } = "";
     public string? HtmlDescription { get; private set; }
-    public bool IsHidden => IsUserSetHidden || IsParentSetHidden;
-    public bool IsUserSetHidden { get; set; }
-    public bool IsParentSetHidden { get; set; }
+
+    // A dimmed or hidden node takes all its descendants with it: the outermost ancestor that is
+    // not visible decides (ParentVisibility), else the node's own UserVisibility. A descendant's
+    // own state is kept and applies again once the ancestor is shown.
+    public NodeVisibility Visibility => ParentVisibility != NodeVisibility.Visible ? ParentVisibility : UserVisibility;
+    public bool IsVisible => Visibility == NodeVisibility.Visible;
+    public NodeVisibility UserVisibility { get; set; }
+    public NodeVisibility ParentVisibility { get; set; }
+
+    // The state a hidden node saved before dimming existed gets: set at startup from the old
+    // global View › Show Hidden Nodes option (on: dimmed, off: hidden), so models look the same.
+    // Static like NodeLayout's density: the Blazor Server host is a single-user dev host.
+    public static NodeVisibility LegacyHiddenVisibility { get; set; } = NodeVisibility.Dimmed;
     public bool IsPassThrough { get; set; }
 
     // Direct-line depth (see RepLineService): this node's aggregated line bundles are split that
@@ -200,8 +210,10 @@ class Node : IItem
             Alias = Alias,
             IconName = CustomIconName,
             IconColor = CustomIconColor,
-            IsUserSetHidden = IsUserSetHidden,
-            IsParentSetHidden = IsParentSetHidden,
+            Visibility = UserVisibility != NodeVisibility.Visible ? UserVisibility.ToString() : null,
+            ParentVisibility = ParentVisibility != NodeVisibility.Visible ? ParentVisibility.ToString() : null,
+            IsUserSetHidden = UserVisibility != NodeVisibility.Visible,
+            IsParentSetHidden = ParentVisibility != NodeVisibility.Visible,
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
             IsChildrenLayoutRequired = IsChildrenLayoutRequired,
             IsManual = IsManual,
@@ -227,8 +239,8 @@ class Node : IItem
         SetAlias(dto.Alias);
         CustomIconName = dto.IconName;
         CustomIconColor = dto.IconColor;
-        IsUserSetHidden = dto.IsUserSetHidden;
-        IsParentSetHidden = dto.IsParentSetHidden;
+        UserVisibility = VisibilityFromDto(dto.Visibility, dto.IsUserSetHidden);
+        ParentVisibility = VisibilityFromDto(dto.ParentVisibility, dto.IsParentSetHidden);
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
         IsChildrenLayoutRequired = dto.IsChildrenLayoutRequired;
         IsManual = dto.IsManual;
@@ -248,21 +260,29 @@ class Node : IItem
         IconName = node.Properties.IconName == NoValue.String ? null : node.Properties.IconName ?? IconName;
     }
 
-    public void SetHidden(bool hidden, bool isUserSet)
+    // Sets the user's own state and passes the resulting state down to the descendants.
+    public void SetUserVisibility(NodeVisibility visibility)
     {
-        if (isUserSet)
-        {
-            IsUserSetHidden = hidden;
-            Children.ForEach(child => child.SetHidden(hidden, false));
-            return;
-        }
-
-        // Set by parent
-        IsParentSetHidden = hidden;
-        if (IsUserSetHidden)
-            return;
-        Children.ForEach(child => child.SetHidden(hidden, false));
+        UserVisibility = visibility;
+        Children.ForEach(child => child.SetParentVisibility(Visibility));
     }
+
+    // Sets the state inherited from the ancestors (the parent's Visibility) through the subtree.
+    public void SetParentVisibility(NodeVisibility visibility)
+    {
+        ParentVisibility = visibility;
+        Children.ForEach(child => child.SetParentVisibility(Visibility));
+    }
+
+    // A model saved before dimming existed has only the hidden flag.
+    static NodeVisibility VisibilityFromDto(string? visibility, bool isLegacyHidden) =>
+        visibility is not null
+            ? Enums.ToOrNull<NodeVisibility>(visibility) is { } value && Enum.IsDefined(value)
+                ? value
+                : NodeVisibility.Visible
+            : isLegacyHidden
+                ? LegacyHiddenVisibility
+                : NodeVisibility.Visible;
 
     // The parent's visible viewport expressed in the parent's inner (children) coordinate
     // space; recurses naturally when the parent is itself pass-through.

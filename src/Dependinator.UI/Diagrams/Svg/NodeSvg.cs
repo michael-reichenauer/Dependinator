@@ -52,7 +52,8 @@ static partial class NodeSvg
         Rect nodeCanvasRect,
         double parentZoom,
         bool isEditing = false,
-        NodeProblems? problems = null
+        NodeProblems? problems = null,
+        int hiddenChildCount = 0
     )
     {
         var geometry = CalculateIconGeometry(node, nodeCanvasRect, parentZoom);
@@ -76,7 +77,8 @@ static partial class NodeSvg
         );
 
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
-            + ProblemBadgeSvg(problems, VisibleIconRect(geometry), textZoom);
+            + ProblemBadgeSvg(problems, VisibleIconRect(geometry), textZoom)
+            + HiddenBadgeSvg(hiddenChildCount, VisibleIconRect(geometry), textZoom);
     }
 
     public static string GetNodeContainerSvg(
@@ -85,7 +87,8 @@ static partial class NodeSvg
         double parentZoom,
         string childrenContent,
         bool isEditing = false,
-        NodeProblems? problems = null
+        NodeProblems? problems = null,
+        int hiddenChildCount = 0
     )
     {
         var header = CalculateContainerHeader(nodeCanvasRect, parentZoom);
@@ -137,6 +140,7 @@ static partial class NodeSvg
                 header.FontSize
             )}
             {ProblemBadgeSvg(problems, nodeCanvasRect, textZoom)}
+            {HiddenBadgeSvg(hiddenChildCount, nodeCanvasRect, textZoom)}
             """
         );
     }
@@ -176,6 +180,26 @@ static partial class NodeSvg
         return string.Create(
             CultureInfo.InvariantCulture,
             $"""<g class="problemBadge" data-errors="{p.Errors}" data-warnings="{p.Warnings}" pointer-events="none"><circle cx="{cx:0.##}" cy="{cy:0.##}" r="{radius:0.##}" fill="{fill}" stroke="{DColors.CanvasBackground}" stroke-width="{radius * 0.15:0.##}"/><text x="{cx:0.##}" y="{cy:0.##}" font-size="{fontSize:0.##}px" fill="#FFFFFF" font-weight="bold" text-anchor="middle" dominant-baseline="central">{text}</text></g>"""
+        );
+    }
+
+    // How many children the user hid, on the node's top-left corner (the problem badge has the
+    // top-right): a grey circle with the count, so the hidden nodes are not forgotten. Like the
+    // problem badge it lets pointer events through to the node.
+    internal static string HiddenBadgeSvg(int count, Rect nodeRect, double textZoom)
+    {
+        if (count == 0)
+            return "";
+        var radius = Math.Min(nodeRect.Width * BadgeWidthFactor, BadgeMaxRadius * textZoom);
+        if (radius < BadgeMinRadius)
+            return "";
+
+        var text = count > 99 ? "99+" : count.ToString(CultureInfo.InvariantCulture);
+        var fontSize = radius * (text.Length > 2 ? 0.85 : 1.15);
+        var (cx, cy) = (nodeRect.X, nodeRect.Y);
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<g class="hiddenBadge" data-count="{count}" pointer-events="none"><circle cx="{cx:0.##}" cy="{cy:0.##}" r="{radius:0.##}" fill="{DColors.HiddenBadge}" stroke="{DColors.CanvasBackground}" stroke-width="{radius * 0.15:0.##}"/><text x="{cx:0.##}" y="{cy:0.##}" font-size="{fontSize:0.##}px" fill="#FFFFFF" font-weight="bold" text-anchor="middle" dominant-baseline="central">{text}</text></g>"""
         );
     }
 
@@ -336,7 +360,7 @@ static partial class NodeSvg
         textZoom <= 0 ? maxLines : (int)(maxLines * parentZoom / textZoom);
 
     internal static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
-        node.IsHidden ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
+        !node.IsVisible ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
 
     // A small pencil glyph placed just after the node's name label, marking a manually added
     // (user-drawn) node so it reads as "hand-drawn/editable" (not a status). Empty for parsed

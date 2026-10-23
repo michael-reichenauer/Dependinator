@@ -46,6 +46,7 @@ class FileService : IBrowserFileService, IFileService
     {
         var binPath = BinPath(path);
         await database.DeleteAsync(DBCollectionName, binPath);
+        await database.DeleteAsync(DBCollectionName, ModelPaths.ViewPath(path));
         return await database.DeleteAsync(DBCollectionName, path);
     }
 

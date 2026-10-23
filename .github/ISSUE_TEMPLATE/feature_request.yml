@@ -22,3 +22,14 @@ body:
     attributes:
       label: Workarounds or alternatives
       description: Anything you do today instead, or other ways this could be solved.
+  - type: input
+    id: version
+    attributes:
+      label: Dependinator version
+      description: Filled in by Menu › Help › Suggest an Improvement.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Filled in by Menu › Help › Suggest an Improvement. Remove anything you do not want to share.
+      render: text

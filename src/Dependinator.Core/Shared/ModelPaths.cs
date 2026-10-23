@@ -13,6 +13,9 @@ static class ModelPaths
 
     public static bool IsDesignModel(string path) => !IsParseable(path);
 
+    // Where the view of a model (pan and zoom) is stored, beside the cached model at its path.
+    public static string ViewPath(string modelPath) => $"{modelPath}.view";
+
     // The kind of model a path refers to, for titles and subtitles ("solution", "Bicep deployment",
     // "design model").
     public static string KindName(string path) =>

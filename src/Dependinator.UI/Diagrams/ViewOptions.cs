@@ -1,3 +1,5 @@
+using Dependinator.UI.Modeling.Models;
+
 namespace Dependinator.UI.Diagrams;
 
 // User-toggled diagram view options, shared by the SVG renderers and the interaction/UI
@@ -5,7 +7,9 @@ namespace Dependinator.UI.Diagrams;
 // would otherwise share one user's toggles with every connected user (see the e2e suite).
 interface IViewOptions
 {
-    bool ShowHiddenNodes { get; }
+    // Hidden nodes and their lines drawn faintly, like dimmed ones, to find them again
+    // (View › Reveal Hidden Nodes). Not persisted: a model always opens as the user left it.
+    bool RevealHiddenNodes { get; }
     bool IsEditingEnabled { get; }
 
     // While a node or line is selected, lines not touching it are drawn faded so the
@@ -37,13 +41,23 @@ interface IViewOptions
     // Architecture rules: the rules panel is open and violating lines are drawn highlighted.
     bool IsRulesShown { get; }
 
+    // The hidden nodes panel (HiddenNodesPanel), top-right like the analysis panels.
+    bool IsHiddenNodesShown { get; }
+
+    // While set, the hidden nodes panel lists only this node's hidden children (opened from its
+    // node menu, List Hidden Children).
+    NodeId? HiddenNodesParentId { get; }
+
+    // The badge on a node with children the user hid (persisted in Config.ShowHiddenBadges).
+    bool IsHiddenBadgesShown { get; }
+
     // The minimap in the corner (persisted in Config.ShowMinimap).
     bool IsMinimapShown { get; }
 
     // Badges on the nodes that contain problems (persisted in Config.ShowProblemBadges).
     bool IsProblemBadgesShown { get; }
 
-    void SetShowHiddenNodes(bool show);
+    void SetRevealHiddenNodes(bool reveal);
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
     void SetLineFilter(LineFilter filter);
@@ -53,6 +67,8 @@ interface IViewOptions
     void SetCyclesMinimized(bool minimized);
     void SetSelectedCycle(string? cycleKey);
     void SetRulesShown(bool shown);
+    void SetHiddenNodesShown(bool shown, NodeId? parentId = null);
+    void SetHiddenBadgesShown(bool shown);
     void SetMinimapShown(bool shown);
     void SetProblemBadgesShown(bool shown);
 }
@@ -95,7 +111,7 @@ readonly record struct RowFilter(bool HideParameters, bool HideVariables, bool H
 [Scoped]
 class ViewOptions : IViewOptions
 {
-    public bool ShowHiddenNodes { get; private set; } = true;
+    public bool RevealHiddenNodes { get; private set; }
     public bool IsEditingEnabled { get; private set; } = false;
     public bool DimUnrelatedLines { get; private set; } = true;
     public LineFilter LineFilter { get; private set; } = LineFilter.None;
@@ -105,10 +121,13 @@ class ViewOptions : IViewOptions
     public bool IsCyclesMinimized { get; private set; }
     public string? SelectedCycleKey { get; private set; }
     public bool IsRulesShown { get; private set; }
+    public bool IsHiddenNodesShown { get; private set; }
+    public NodeId? HiddenNodesParentId { get; private set; }
+    public bool IsHiddenBadgesShown { get; private set; } = true;
     public bool IsMinimapShown { get; private set; }
     public bool IsProblemBadgesShown { get; private set; } = true;
 
-    public void SetShowHiddenNodes(bool show) => ShowHiddenNodes = show;
+    public void SetRevealHiddenNodes(bool reveal) => RevealHiddenNodes = reveal;
 
     public void SetIsEditingEnabled(bool enabled) => IsEditingEnabled = enabled;
 
@@ -132,6 +151,14 @@ class ViewOptions : IViewOptions
     public void SetSelectedCycle(string? cycleKey) => SelectedCycleKey = IsCyclesShown ? cycleKey : null;
 
     public void SetRulesShown(bool shown) => IsRulesShown = shown;
+
+    public void SetHiddenNodesShown(bool shown, NodeId? parentId = null)
+    {
+        IsHiddenNodesShown = shown;
+        HiddenNodesParentId = shown ? parentId : null;
+    }
+
+    public void SetHiddenBadgesShown(bool shown) => IsHiddenBadgesShown = shown;
 
     public void SetMinimapShown(bool shown) => IsMinimapShown = shown;
 

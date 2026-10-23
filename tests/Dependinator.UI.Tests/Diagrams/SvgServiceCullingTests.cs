@@ -44,7 +44,8 @@ public class SvgServiceCullingTests
             new CycleService(modelMgr, Mock.Of<Dependinator.UI.Modeling.Commands.ICommandService>()),
             Mock.Of<IPathFinderService>(),
             Mock.Of<IRuleService>(),
-            Mock.Of<IProblemService>()
+            Mock.Of<IProblemService>(),
+            Mock.Of<IHiddenNodeService>()
         );
         var canvasRect = new Rect(viewX * zoom, viewY * zoom, ViewSize * zoom, ViewSize * zoom);
         return service.GetContentSvg(canvasRect, zoom);

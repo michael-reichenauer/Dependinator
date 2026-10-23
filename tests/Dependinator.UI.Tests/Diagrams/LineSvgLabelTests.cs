@@ -53,7 +53,7 @@ public class LineSvgLabelTests
         var target = new Node("b", root) { Boundary = new Rect(300, 0, 100, 100), Type = NodeType.ClassType };
         root.AddChild(source);
         root.AddChild(target);
-        var line = new Line(source, target) { IsHidden = true };
+        var line = new Line(source, target) { Visibility = NodeVisibility.Dimmed };
         line.SetLabel("uses");
 
         var svg = LineSvg.GetLineSvg(line, new Pos(0, 0), 1);
@@ -88,7 +88,8 @@ public class LineSvgLabelTests
             new CycleService(modelMgr, Mock.Of<Dependinator.UI.Modeling.Commands.ICommandService>()),
             Mock.Of<IPathFinderService>(),
             Mock.Of<IRuleService>(),
-            Mock.Of<IProblemService>()
+            Mock.Of<IProblemService>(),
+            Mock.Of<IHiddenNodeService>()
         );
 
         var svg = service.GetContentSvg(new Rect(0, 0, 2000, 2000), 1.0);

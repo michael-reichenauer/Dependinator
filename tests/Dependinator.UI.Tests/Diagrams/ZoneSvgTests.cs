@@ -63,7 +63,7 @@ public class ZoneSvgTests
     public void GetZoneSvg_ShouldOmitTheSubtitle_WhenThereIsNone_AndFadeWhenHidden()
     {
         var zone = CreateZone();
-        zone.SetHidden(true, isUserSet: true);
+        zone.SetUserVisibility(Dependinator.UI.Modeling.Models.NodeVisibility.Dimmed);
 
         var svg = ZoneSvg.GetZoneSvg(zone, new Rect(0, 0, 320, 200), 2);
 

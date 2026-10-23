@@ -7,6 +7,8 @@ interface IPersistenceService
 {
     Task<Result> WriteAsync(string modelPath, ModelDto model);
     Task<Result<ModelDto>> ReadAsync(string path);
+    Task<Result> WriteViewAsync(string modelPath, ViewDto view);
+    Task<Result<ViewDto>> ReadViewAsync(string modelPath);
 }
 
 [Transient]
@@ -17,11 +19,15 @@ class PersistenceService(IFileService fileService) : IPersistenceService
         return Task.Run(async () =>
         {
             using var _ = Timing.Start($"Wrote model '{modelPath}'");
-            await fileService.WriteAsync(modelPath, model);
-
-            return Result.Ok;
+            return await fileService.WriteAsync(modelPath, model);
         });
     }
+
+    public Task<Result> WriteViewAsync(string modelPath, ViewDto view) =>
+        fileService.WriteAsync(ModelPaths.ViewPath(modelPath), view);
+
+    public Task<Result<ViewDto>> ReadViewAsync(string modelPath) =>
+        fileService.ReadAsync<ViewDto>(ModelPaths.ViewPath(modelPath));
 
     public Task<Result<ModelDto>> ReadAsync(string modelPath)
     {

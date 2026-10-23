@@ -24,8 +24,8 @@ public class AliasTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.NodeLabel("Third parties")).ToBeVisibleAsync();
         await Expect(App.Node("Externals")).ToBeVisibleAsync(); // the real name heads the tooltip
 
-        // The debounced save writes to IndexedDB; give it a moment, then reload.
-        await Page.WaitForTimeoutAsync(1500);
+        // Wait for the debounced save, then reload.
+        await App.WaitForSavedAsync();
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 

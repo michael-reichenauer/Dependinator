@@ -16,6 +16,7 @@
 @inject IDialogService dialogService
 @inject IJSInterop jsInterop
 @inject IVsCodeSendService vsCodeSendService
+@inject IIssueReportService issueReportService
 @inject Dependinator.UI.Diagrams.Interaction.INoteService noteService
 @inject Dependinator.UI.Diagrams.Interaction.IZoneService zoneService
 @inject Dependinator.UI.Diagrams.Interaction.IManualEditService manualEditService
@@ -24,6 +25,7 @@
 @inject IPointerEventService pointerEventService
 @inject Dependinator.UI.Diagrams.IViewOptions viewOptions
 @inject Dependinator.UI.Diagrams.IPathFinderService pathFinderService
+@inject Dependinator.UI.Diagrams.IHiddenNodeService hiddenNodeService
 @inject Dependinator.UI.Diagrams.ICoachService coachService
 @inject IShareLinkService shareLinkService
 @inject IThemeService themeService
@@ -117,10 +119,18 @@
             </MudMenu>
 
             <MudMenu Label="View" PopoverClass="@MenuClass" data-testid="menu-view">
-                <MudMenuItem IconColor="Color.Secondary" Icon="@ShowHiddenNodesIcon" OnClick="ToggleShowHiddenNodes"
-                             data-checked="@(viewOptions.ShowHiddenNodes ? "true" : "false")"
-                             data-testid="menu-show-hidden-nodes">
-                    Show Hidden Nodes
+                <MudMenuItem IconColor="Color.Secondary" Icon="@RevealHiddenNodesIcon" OnClick="ToggleRevealHiddenNodes"
+                             data-checked="@(viewOptions.RevealHiddenNodes ? "true" : "false")"
+                             title="Draws hidden nodes faintly, to find them again (not saved)."
+                             data-testid="menu-reveal-hidden-nodes">
+                    Reveal Hidden Nodes
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@HiddenNodesListIcon" OnClick="ToggleHiddenNodes"
+                             title="Lists the nodes you dimmed or hid, to change them or show them again."
+                             data-checked="@(viewOptions.IsHiddenNodesShown ? "true" : "false")"
+                             data-testid="menu-hidden-nodes">
+                    Show Hidden Nodes List
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
@@ -147,6 +157,13 @@
                              data-checked="@(viewOptions.IsProblemBadgesShown ? "true" : "false")"
                              data-testid="menu-problem-badges">
                     Show Problem Badges
+                </MudMenuItem>
+
+                <MudMenuItem IconColor="Color.Secondary" Icon="@HiddenBadgesIcon" OnClick="ToggleHiddenBadgesAsync"
+                             title="Marks the nodes with children you hid, with how many."
+                             data-checked="@(viewOptions.IsHiddenBadgesShown ? "true" : "false")"
+                             data-testid="menu-hidden-badges">
+                    Show Hidden Node Badges
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@CyclesIcon" OnClick="ToggleCycles"
@@ -353,6 +370,18 @@
                              data-testid="menu-tips">
                     Show Tips
                 </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.BugReport"
+                             OnClick="() => issueReportService.OpenAsync(IssueKind.Bug)"
+                             title="Opens a new GitHub issue with the app version and environment filled in."
+                             data-testid="menu-report-bug">
+                    Report a Bug
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Lightbulb"
+                             OnClick="() => issueReportService.OpenAsync(IssueKind.Improvement)"
+                             title="Opens a new GitHub issue for an idea or improvement."
+                             data-testid="menu-suggest-improvement">
+                    Suggest an Improvement
+                </MudMenuItem>
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout"
                              data-testid="menu-about">
                     About
@@ -443,6 +472,7 @@
     </MudHidden>
 
     <ProblemIndicator OnShowCycles="ShowCycles" OnShowRules="ShowRules" />
+    <HiddenNodesIndicator OnToggle="ToggleHiddenNodes" />
 
 </MudButtonGroup>
 
@@ -719,7 +749,7 @@
     static string RadioIcon(bool isOn) =>
         isOn ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Outlined.RadioButtonUnchecked;
 
-    string ShowHiddenNodesIcon => CheckIcon(viewOptions.ShowHiddenNodes);
+    string RevealHiddenNodesIcon => CheckIcon(viewOptions.RevealHiddenNodes);
     string DimUnrelatedLinesIcon => CheckIcon(viewOptions.DimUnrelatedLines);
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
     string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
@@ -734,6 +764,17 @@
         applicationEvents.TriggerUIStateChanged();
     }
 
+    string HiddenBadgesIcon => CheckIcon(viewOptions.IsHiddenBadgesShown);
+
+    async Task ToggleHiddenBadgesAsync()
+    {
+        var newValue = !viewOptions.IsHiddenBadgesShown;
+        viewOptions.SetHiddenBadgesShown(newValue);
+        await configService.SetAsync(config => config.ShowHiddenBadges = newValue);
+        modelService.ClearCache(); // The badges are baked into the tiles
+        applicationEvents.TriggerUIStateChanged();
+    }
+
     async Task ToggleMinimapAsync()
     {
         var newValue = !viewOptions.IsMinimapShown;
@@ -743,6 +784,9 @@
     }
     string CyclesIcon => CheckIcon(viewOptions.IsCyclesShown);
     string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
+    string HiddenNodesListIcon => CheckIcon(viewOptions.IsHiddenNodesShown);
+
+    void ToggleHiddenNodes() => hiddenNodeService.TogglePanel();
 
     // The analysis panels (cycles, rules, path) share the top-right corner and all recolor
     // lines, so opening one closes the others.
@@ -751,6 +795,7 @@
         if (!viewOptions.IsRulesShown)
         {
             viewOptions.SetCyclesShown(false);
+            viewOptions.SetHiddenNodesShown(false);
             pathFinderService.Close();
         }
         viewOptions.SetRulesShown(!viewOptions.IsRulesShown);
@@ -764,6 +809,7 @@
         {
             pathFinderService.Close(); // The analysis panels sit top-right and all recolor lines
             viewOptions.SetRulesShown(false);
+            viewOptions.SetHiddenNodesShown(false);
         }
         viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
         modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
@@ -869,11 +915,9 @@
         applicationEvents.TriggerUIStateChanged();
     }
 
-    async Task ToggleShowHiddenNodes()
+    void ToggleRevealHiddenNodes()
     {
-        var newValue = !viewOptions.ShowHiddenNodes;
-        viewOptions.SetShowHiddenNodes(newValue);
-        await configService.SetAsync(config => config.ShowHiddenNodes = newValue);
+        viewOptions.SetRevealHiddenNodes(!viewOptions.RevealHiddenNodes);
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }
