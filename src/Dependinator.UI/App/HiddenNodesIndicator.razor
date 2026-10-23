@@ -1,0 +1,38 @@
+@using Dependinator.UI.Diagrams
+
+@inject IHiddenNodeService hiddenNodeService
+@inject IApplicationEvents applicationEvents
+@implements IDisposable
+
+@* How many nodes the user dimmed or hid, next to the problem indicator, so they are not
+   forgotten; a click opens (or closes) the list of them. Absent while there are none. *@
+@{
+  // Cached per model and visibility version, so cheap on every render.
+  var count = hiddenNodeService.Count;
+}
+@if (count > 0)
+{
+  <MudTooltip Text="@($"{count} dimmed or hidden {(count == 1 ? "node" : "nodes")}: click to list them")">
+    <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-hidden-indicator" OnClick="OnToggle"
+               aria-label="@($"{count} dimmed or hidden nodes")" data-testid="hidden-indicator">
+      <MudIcon Icon="@Icons.Material.Outlined.VisibilityOff" Size="Size.Small" Color="Color.Secondary" />
+      <span class="dep-hidden-indicator__count" data-testid="hidden-count">@count</span>
+    </MudButton>
+  </MudTooltip>
+}
+
+<style>
+  .dep-hidden-indicator { min-width: 0; padding-left: 6px; padding-right: 6px; gap: 2px; text-transform: none; }
+  .dep-hidden-indicator__count { margin-right: 4px; font-weight: 500; }
+</style>
+
+@code {
+  [Parameter]
+  public EventCallback OnToggle { get; set; }
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnChanged;
+
+  void OnChanged() => _ = InvokeAsync(StateHasChanged);
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnChanged;
+}

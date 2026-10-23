@@ -124,6 +124,13 @@
                     Reveal Hidden Nodes
                 </MudMenuItem>
 
+                <MudMenuItem IconColor="Color.Secondary" Icon="@HiddenNodesListIcon" OnClick="ToggleHiddenNodes"
+                             title="Lists the nodes you dimmed or hid, to change them or show them again."
+                             data-checked="@(viewOptions.IsHiddenNodesShown ? "true" : "false")"
+                             data-testid="menu-hidden-nodes">
+                    Show Hidden Nodes List
+                </MudMenuItem>
+
                 <MudMenuItem IconColor="Color.Secondary" Icon="@NotesSidebarIcon" OnClick="noteService.ToggleSidebar"
                              data-checked="@(noteService.IsShowSidebar ? "true" : "false")"
                              data-testid="menu-notes-sidebar">
@@ -444,6 +451,7 @@
     </MudHidden>
 
     <ProblemIndicator OnShowCycles="ShowCycles" OnShowRules="ShowRules" />
+    <HiddenNodesIndicator OnToggle="ToggleHiddenNodes" />
 
 </MudButtonGroup>
 
@@ -744,6 +752,21 @@
     }
     string CyclesIcon => CheckIcon(viewOptions.IsCyclesShown);
     string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
+    string HiddenNodesListIcon => CheckIcon(viewOptions.IsHiddenNodesShown);
+
+    // The hidden nodes panel shares the top-right corner with the analysis panels.
+    void ToggleHiddenNodes()
+    {
+        if (!viewOptions.IsHiddenNodesShown && (viewOptions.IsCyclesShown || viewOptions.IsRulesShown))
+        {
+            viewOptions.SetCyclesShown(false);
+            viewOptions.SetRulesShown(false);
+            modelService.ClearCache(); // Their highlighted lines are baked into the tiles
+        }
+        pathFinderService.Close();
+        viewOptions.SetHiddenNodesShown(!viewOptions.IsHiddenNodesShown);
+        applicationEvents.TriggerUIStateChanged();
+    }
 
     // The analysis panels (cycles, rules, path) share the top-right corner and all recolor
     // lines, so opening one closes the others.
@@ -752,6 +775,7 @@
         if (!viewOptions.IsRulesShown)
         {
             viewOptions.SetCyclesShown(false);
+            viewOptions.SetHiddenNodesShown(false);
             pathFinderService.Close();
         }
         viewOptions.SetRulesShown(!viewOptions.IsRulesShown);
@@ -765,6 +789,7 @@
         {
             pathFinderService.Close(); // The analysis panels sit top-right and all recolor lines
             viewOptions.SetRulesShown(false);
+            viewOptions.SetHiddenNodesShown(false);
         }
         viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
         modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles

@@ -30,7 +30,8 @@ class NavigationService(
     ISelectionService selectionService,
     IScreenService screenService,
     IVsCodeSendService vsCodeSendService,
-    IViewHistoryService viewHistory
+    IViewHistoryService viewHistory,
+    IViewOptions viewOptions
 ) : INavigationService
 {
     static readonly string RazorGeneratorName = "Razor.SourceGenerators.RazorSourceGenerator";
@@ -52,6 +53,7 @@ class NavigationService(
                 return;
 
             Log.Info("ShowNodeAsync for", nodeId);
+            RevealIfHidden(nodeId);
             selectionService.Unselect();
             applicationEvents.TriggerUIStateChanged();
             await Task.Yield();
@@ -80,6 +82,25 @@ class NavigationService(
         {
             showNodeLock.Release();
         }
+    }
+
+    // A hidden node is not drawn, so going to one (search, a link, the hidden nodes list) would
+    // land on an empty spot: turn on View › Reveal Hidden Nodes first, and say so.
+    void RevealIfHidden(NodeId nodeId)
+    {
+        if (viewOptions.RevealHiddenNodes)
+            return;
+        var name = modelMgr.WithModel(m =>
+            m.Nodes.TryGetValue(nodeId, out var node) && node.Visibility == NodeVisibility.Hidden
+                ? node.DisplayName
+                : null
+        );
+        if (name is null)
+            return;
+
+        viewOptions.SetRevealHiddenNodes(true);
+        applicationEvents.TriggerModelChanged(); // Hidden nodes are left out of the cached tiles
+        applicationEvents.TriggerInfoReported($"{name} is hidden: hidden nodes are revealed (View menu).");
     }
 
     public async Task ShowNodesAsync(IReadOnlyList<NodeId> nodeIds)

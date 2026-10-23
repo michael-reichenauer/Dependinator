@@ -83,8 +83,9 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   `Invoke`) as problems, unresolved rules (info, list only).
 - **Hidden nodes, next:** phase 1 (Oct 23) made dim/hide per node (`NodeVisibility`, the outermost
   dimmed or hidden ancestor decides for its whole subtree, View › Reveal Hidden Nodes is a
-  temporary peek). Decided with the user: phase 2 a "Hidden nodes" panel (rows of the nodes the
-  user dimmed or hid: Dim/Hide toggle, Show, zoom to) opened from an app-bar count; phase 3 an
+  temporary peek). Phase 2 (Oct 23): `HiddenNodesPanel` lists the user-set nodes
+  (`HiddenNodeService`, cached on `Model.VisibilityVersion`), opened from `HiddenNodesIndicator` in
+  the app bar; going to a hidden node turns Reveal on. Decided with the user for phase 3: an
   eye-off badge with a count only on the direct parent of user-hidden nodes (not every ancestor,
   for now). Hide rules (by pattern) wait until these have been lived with.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
