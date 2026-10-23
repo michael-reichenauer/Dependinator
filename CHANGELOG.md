@@ -5,6 +5,8 @@ the previews before it. Releases with nothing users notice are left out.
 
 ## [Unreleased]
 
+## [v0.85.425921] - 2026-10-23
+
 ### New
 
 - Each node can be dimmed or hidden on its own (**Dim Node**, **Hide Node**, **Show Node** in the node menu): a dimmed node and its lines are drawn faintly, a hidden one is left out, and what is inside follows; **View › Reveal Hidden Nodes** shows the hidden nodes for a moment without changing them
