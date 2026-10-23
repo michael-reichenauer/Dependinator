@@ -190,6 +190,12 @@ export function setAppReady(ready) {
   document.body.setAttribute("data-app-ready", ready ? "true" : "false");
 }
 
+// Marks a pending save (debounced or being written) of the model or its view, so UI/e2e tests
+// can wait on [data-save-pending=false] before a reload instead of sleeping.
+export function setSavePending(pending) {
+  document.body.setAttribute("data-save-pending", pending ? "true" : "false");
+}
+
 export function postVsCodeMessage(message) {
   if (window.dependinator && typeof window.dependinator.postMessage === "function") {
     window.dependinator.postMessage(message);

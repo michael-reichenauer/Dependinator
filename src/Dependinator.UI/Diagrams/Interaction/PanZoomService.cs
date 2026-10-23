@@ -103,7 +103,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         applicationEvents.TriggerViewChanged();
         applicationEvents.TriggerUIStateChanged();
         if (isSaveNeeded)
-            applicationEvents.TriggerSaveNeeded();
+            applicationEvents.TriggerViewSaveNeeded();
     }
 
     public void ZoomBy(double factor)
@@ -226,7 +226,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
 
         var (endPos, endZoom) = GetPosAndZoom(animationRect);
         Log.Info($"EndPos:  {endPos},  EndZoom:  {endZoom}");
-        applicationEvents.TriggerSaveNeeded();
+        applicationEvents.TriggerViewSaveNeeded();
         return true;
     }
 

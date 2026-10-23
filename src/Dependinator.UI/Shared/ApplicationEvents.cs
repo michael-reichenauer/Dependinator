@@ -16,6 +16,10 @@ interface IApplicationEvents
 {
     event Action? UIStateChanged;
     event Action? SaveNeeded;
+
+    // Raised when only the view (pan offset, zoom, canvas size) needs saving: the small view
+    // record is written instead of the whole model (see ModelService).
+    event Action? ViewSaveNeeded;
     event Action? UndoneRedone;
     event Action? ModelChanged;
 
@@ -39,6 +43,7 @@ interface IApplicationEvents
 
     void TriggerUIStateChanged();
     void TriggerSaveNeeded();
+    void TriggerViewSaveNeeded();
     void TriggerUndoneRedone();
     void TriggerModelChanged();
     void TriggerViewChanged();
@@ -58,6 +63,7 @@ class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
 {
     public event Action? UIStateChanged;
     public event Action? SaveNeeded;
+    public event Action? ViewSaveNeeded;
     public event Action? UndoneRedone;
     public event Action? ModelChanged;
     public event Action? ViewChanged;
@@ -68,6 +74,8 @@ class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
     public void TriggerUIStateChanged() => UIStateChanged?.Invoke();
 
     public void TriggerSaveNeeded() => SaveNeeded?.Invoke();
+
+    public void TriggerViewSaveNeeded() => ViewSaveNeeded?.Invoke();
 
     public void TriggerUndoneRedone() => UndoneRedone?.Invoke();
 

@@ -23,8 +23,8 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(LineLabel("uses")).ToBeVisibleAsync();
         await Expect(LineDescription("framework and packages")).ToBeVisibleAsync();
 
-        // The debounced save writes to IndexedDB; give it a moment, then reload.
-        await Page.WaitForTimeoutAsync(1500);
+        // Wait for the debounced save, then reload.
+        await App.WaitForSavedAsync();
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 

@@ -7,6 +7,8 @@ interface IPersistenceService
 {
     Task<Result> WriteAsync(string modelPath, ModelDto model);
     Task<Result<ModelDto>> ReadAsync(string path);
+    Task<Result> WriteViewAsync(string modelPath, ViewDto view);
+    Task<Result<ViewDto>> ReadViewAsync(string modelPath);
 }
 
 [Transient]
@@ -18,10 +20,27 @@ class PersistenceService(IFileService fileService) : IPersistenceService
         {
             using var _ = Timing.Start($"Wrote model '{modelPath}'");
             await fileService.WriteAsync(modelPath, model);
+            // Keep the view record in step with the model, since it overrides the model's view
+            // on load
+            await WriteViewAsync(
+                modelPath,
+                new ViewDto
+                {
+                    Zoom = model.Zoom,
+                    Offset = model.Offset,
+                    ViewRect = model.ViewRect,
+                }
+            );
 
             return Result.Ok;
         });
     }
+
+    public Task<Result> WriteViewAsync(string modelPath, ViewDto view) =>
+        fileService.WriteAsync(ModelPaths.ViewPath(modelPath), view);
+
+    public Task<Result<ViewDto>> ReadViewAsync(string modelPath) =>
+        fileService.ReadAsync<ViewDto>(ModelPaths.ViewPath(modelPath));
 
     public Task<Result<ModelDto>> ReadAsync(string modelPath)
     {

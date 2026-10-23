@@ -41,8 +41,17 @@ class ModelService : IModelService, IDisposable
     readonly IApplicationEvents applicationEvents;
     readonly IProgressService progressService;
     readonly IVsCodeSendService vsCodeSendService;
+    readonly ISaveStatusService saveStatusService;
 
     readonly Debouncer saveDebouncer = new();
+    readonly Debouncer viewSaveDebouncer = new();
+
+    // Save requests and the last request each save covered, for the save status (a request
+    // after a save captured the model is still pending)
+    long saveRequests;
+    long savedRequests;
+    long viewSaveRequests;
+    long savedViewRequests;
 
     public ModelService(
         IModelMgr modelMgr,
@@ -52,10 +61,12 @@ class ModelService : IModelService, IDisposable
         IPersistenceService persistenceService,
         IApplicationEvents applicationEvents,
         IProgressService progressService,
-        IVsCodeSendService vsCodeSendService
+        IVsCodeSendService vsCodeSendService,
+        ISaveStatusService saveStatusService
     )
     {
         this.vsCodeSendService = vsCodeSendService;
+        this.saveStatusService = saveStatusService;
         this.modelMgr = modelMgr;
         this.modelListService = modelListService;
         this.parserService = parserService;
@@ -64,12 +75,15 @@ class ModelService : IModelService, IDisposable
         this.applicationEvents = applicationEvents;
         this.progressService = progressService;
         this.applicationEvents.SaveNeeded += TriggerSave;
+        this.applicationEvents.ViewSaveNeeded += TriggerViewSave;
     }
 
     public void Dispose()
     {
         applicationEvents.SaveNeeded -= TriggerSave;
+        applicationEvents.ViewSaveNeeded -= TriggerViewSave;
         saveDebouncer.Dispose();
+        viewSaveDebouncer.Dispose();
     }
 
     public void ClearCache()
@@ -189,6 +203,11 @@ class ModelService : IModelService, IDisposable
         var modelResult = await persistenceService.ReadAsync(path);
         if (modelResult is not ModelDto model)
             return modelResult.Error;
+
+        // Panning and zooming save only the view record, so it can be newer than the model's
+        // view (a missing record is fine: models saved before it existed have none).
+        if (await persistenceService.ReadViewAsync(path) is ViewDto view)
+            model = model with { Zoom = view.Zoom, Offset = view.Offset, ViewRect = view.ViewRect };
 
         var modelInfo = await LoadCachedModelDataAsync(path, model);
 
@@ -368,24 +387,102 @@ class ModelService : IModelService, IDisposable
 
     public void TriggerSave()
     {
+        Interlocked.Increment(ref saveRequests);
+        UpdateSaveStatus();
         saveDebouncer.Debounce(SaveDelay, MaxSaveDelay, Save);
     }
 
     void Save()
     {
+        var request = Interlocked.Read(ref saveRequests);
         ModelDto modelData;
         string modelPath;
         using (var model = modelMgr.UseModel())
         {
             modelPath = model.Path;
             if (modelPath == "")
+            {
+                MarkSaved(ref savedRequests, request);
                 return;
+            }
 
             modelData = model.SerializeToDto();
         }
 
-        persistenceService.WriteAsync(modelPath, modelData).RunInBackground();
+        WriteAsync(
+                () => persistenceService.WriteAsync(modelPath, modelData),
+                () => MarkSaved(ref savedRequests, request)
+            )
+            .RunInBackground();
     }
+
+    // Panning, zooming and resizing write only the small view record: writing the whole model
+    // after every navigation cost a large serialization and transfer each time.
+    void TriggerViewSave()
+    {
+        Interlocked.Increment(ref viewSaveRequests);
+        UpdateSaveStatus();
+        viewSaveDebouncer.Debounce(SaveDelay, MaxSaveDelay, SaveView);
+    }
+
+    void SaveView()
+    {
+        var request = Interlocked.Read(ref viewSaveRequests);
+        ViewDto view;
+        string modelPath;
+        using (var model = modelMgr.UseModel())
+        {
+            modelPath = model.Path;
+            if (modelPath == "")
+            {
+                MarkSaved(ref savedViewRequests, request);
+                return;
+            }
+
+            view = new ViewDto
+            {
+                Zoom = model.Zoom,
+                Offset = model.Offset,
+                ViewRect = model.ViewRect,
+            };
+        }
+
+        WriteAsync(
+                () => persistenceService.WriteViewAsync(modelPath, view),
+                () => MarkSaved(ref savedViewRequests, request)
+            )
+            .RunInBackground();
+    }
+
+    static async Task<Result> WriteAsync(Func<Task<Result>> write, Action onWritten)
+    {
+        try
+        {
+            return await write();
+        }
+        finally
+        {
+            onWritten();
+        }
+    }
+
+    void MarkSaved(ref long saved, long request)
+    {
+        // Saves can finish out of order: keep the latest request covered
+        long current;
+        while ((current = Interlocked.Read(ref saved)) < request)
+        {
+            if (Interlocked.CompareExchange(ref saved, request, current) == current)
+                break;
+        }
+        UpdateSaveStatus();
+    }
+
+    void UpdateSaveStatus() =>
+        saveStatusService.SetPending(
+            Interlocked.Read(ref savedRequests) < Interlocked.Read(ref saveRequests)
+                || Interlocked.Read(ref savedViewRequests) < Interlocked.Read(ref viewSaveRequests)
+        );
 
     async Task<ModelInfo> LoadCachedModelDataAsync(string path, ModelDto modelDto)
     {

@@ -29,7 +29,8 @@ public class ModelServiceIncludeTestProjectsTests
             persistenceService.Object,
             applicationEvents.Object,
             progressService.Object,
-            vsCodeSendService.Object
+            vsCodeSendService.Object,
+            Mock.Of<ISaveStatusService>()
         );
 
     [Fact]
