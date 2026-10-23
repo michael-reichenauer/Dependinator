@@ -47,7 +47,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   version bumping.
 - **Live models (Jul).** A source change watcher re-parses when files change, and the diagram
   goes to the current file's node on first open. From Aug the extension opens the workspace
-  solution.
+  solution. Since Oct 23, with `dependinator.autoRefresh.enabled` off, a
+  change only puts a dot on the Re-parse button until the next parse.
 - **VS Code Marketplace (Jul 14).** Published, and auto-published on every push to `main`, with
   an extension README, a demo gif and a publisher logo.
 - **Commands and status (Sep 30).** Reveal Current File in Diagram (Ctrl+Alt+D, also in the
