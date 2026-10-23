@@ -4,14 +4,17 @@
 @inject IHiddenNodeService hiddenNodeService
 @inject INavigationService navigationService
 @inject Interaction.ISelectionService selectionService
+@inject IModelMgr modelMgr
 @implements IDisposable
 
 @* The nodes the user dimmed or hid, to find them again: a row per node with its parent, a switch
    between dimmed and hidden, and Show. Clicking the name goes to the node (a hidden one is
-   revealed). Nodes inside a dimmed or hidden node follow it, so their row is read-only. *@
+   revealed). Nodes inside a dimmed or hidden node follow it, so their row is read-only. Opened
+   from a node's menu it lists only that node's children, until the "in" chip is cleared. *@
 @if (viewOptions.IsHiddenNodesShown)
 {
-  var all = hiddenNodeService.GetNodes();
+  var parentId = viewOptions.HiddenNodesParentId;
+  var all = parentId is null ? hiddenNodeService.GetNodes() : hiddenNodeService.GetNodes().Where(n => n.ParentId == parentId).ToList();
   var shown = Filtered(all);
   <div class="dep-panel dep-hidden dep-toolbar-card" data-testid="hidden-panel">
     <div class="dep-panel__header">
@@ -21,6 +24,15 @@
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
                      data-testid="hidden-close" />
     </div>
+    @if (parentId is not null)
+    {
+      <div class="dep-hidden__parent">
+        <span class="dep-panel__count">In</span>
+        <span class="dep-hidden__parent-name" data-testid="hidden-parent">@ParentName(parentId)</span>
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" title="List the dimmed and hidden nodes of the whole model"
+                       OnClick="ShowWholeModel" data-testid="hidden-parent-clear" />
+      </div>
+    }
     <div class="dep-panel__hint">Dimmed nodes are drawn faintly, hidden ones are left out; everything inside them follows. Click a name to go to the node.</div>
 
     @if (all.Count > 0)
@@ -119,6 +131,15 @@
 
   static string SwitchClass(HiddenNode node, NodeVisibility visibility) =>
     node.Visibility == visibility ? "dep-hidden__option dep-hidden__option--on" : "dep-hidden__option";
+
+  string ParentName(Modeling.Models.NodeId parentId) =>
+    modelMgr.WithModel(m => m.Nodes.TryGetValue(parentId, out var node) ? node.LongName : "");
+
+  void ShowWholeModel()
+  {
+    viewOptions.SetHiddenNodesShown(true);
+    applicationEvents.TriggerUIStateChanged();
+  }
 
   void Close()
   {

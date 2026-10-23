@@ -220,7 +220,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   Oct 11. Since Oct 23 each node is dimmed (faint) or hidden (left out) on its own, its
   descendants following it, and View › Reveal Hidden Nodes shows hidden ones faintly while it is on.
   A count in the toolbar opens the hidden nodes list (switch dim/hide, go to, show); going to a
-  hidden node reveals hidden nodes.
+  hidden node reveals hidden nodes. A grey badge on a node counts the children the user hid, and
+  its menu lists them.
 - **Edit mode (Apr).** Edit buttons show only in edit mode. Since Sep 30 the mode is persisted,
   off by default, and required for every model change.
 - **Design features (Jul 5–18).**

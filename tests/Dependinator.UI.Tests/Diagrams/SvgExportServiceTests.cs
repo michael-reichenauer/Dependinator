@@ -35,7 +35,8 @@ public class SvgExportServiceTests
                 new CycleService(modelMgr, Mock.Of<Dependinator.UI.Modeling.Commands.ICommandService>()),
                 Mock.Of<IPathFinderService>(),
                 Mock.Of<IRuleService>(),
-                Mock.Of<IProblemService>()
+                Mock.Of<IProblemService>(),
+                Mock.Of<IHiddenNodeService>()
             )
         );
 

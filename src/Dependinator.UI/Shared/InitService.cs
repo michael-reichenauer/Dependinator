@@ -66,6 +66,7 @@ class InitService : IInitService
         viewOptions.SetDimUnrelatedLines(config.DimUnrelatedLines);
         viewOptions.SetMinimapShown(config.ShowMinimap);
         viewOptions.SetProblemBadgesShown(config.ShowProblemBadges);
+        viewOptions.SetHiddenBadgesShown(config.ShowHiddenBadges);
         viewOptions.SetLineFilter(
             new LineFilter(
                 config.HideExternalLines,

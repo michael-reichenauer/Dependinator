@@ -35,7 +35,9 @@ class SvgService : ISvgService
     readonly IPathFinderService pathFinderService;
     readonly IRuleService ruleService;
     readonly IProblemService problemService;
+    readonly IHiddenNodeService hiddenNodeService;
     IReadOnlyDictionary<NodeId, NodeProblems>? tilesNodeProblems;
+    IReadOnlyDictionary<NodeId, int>? tilesHiddenChildCounts;
 
     public SvgService(
         IModelMgr modelMgr,
@@ -44,7 +46,8 @@ class SvgService : ISvgService
         ICycleService cycleService,
         IPathFinderService pathFinderService,
         IRuleService ruleService,
-        IProblemService problemService
+        IProblemService problemService,
+        IHiddenNodeService hiddenNodeService
     )
     {
         this.modelMgr = modelMgr;
@@ -54,6 +57,7 @@ class SvgService : ISvgService
         this.pathFinderService = pathFinderService;
         this.ruleService = ruleService;
         this.problemService = problemService;
+        this.hiddenNodeService = hiddenNodeService;
     }
 
     // The user's view toggles that affect what a tile contains; captured per render so the
@@ -89,15 +93,20 @@ class SvgService : ISvgService
         // change: the counts of a parse are only taken once its progress ends. Read before the
         // tiles lock, since it takes the model lock.
         var nodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null;
+        var hiddenChildCounts = viewOptions.IsHiddenBadgesShown ? hiddenNodeService.GetHiddenChildCounts() : null;
 
         TileKey tileKey;
         Tile tile;
         using (var tiles = tilesMgr.UseTiles())
         {
-            if (!ReferenceEquals(nodeProblems, tilesNodeProblems))
+            if (
+                !ReferenceEquals(nodeProblems, tilesNodeProblems)
+                || !ReferenceEquals(hiddenChildCounts, tilesHiddenChildCounts)
+            )
             {
                 tiles.ClearCache();
                 tilesNodeProblems = nodeProblems;
+                tilesHiddenChildCounts = hiddenChildCounts;
             }
 
             if (tiles.TryGetLastUsed(viewRect, zoom, out tile))
@@ -111,7 +120,7 @@ class SvgService : ISvgService
         // Create a new tile and cache it
         using (var model = modelMgr.UseModel())
         {
-            tile = CreateModelTile(model, tileKey, nodeProblems);
+            tile = CreateModelTile(model, tileKey, nodeProblems, hiddenChildCounts);
         }
         using (var tiles = tilesMgr.UseTiles())
         {
@@ -245,7 +254,12 @@ class SvgService : ISvgService
     static bool IsExternal(Node node) =>
         node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
 
-    Tile CreateModelTile(IModel model, TileKey tileKey, IReadOnlyDictionary<NodeId, NodeProblems>? nodeProblems)
+    Tile CreateModelTile(
+        IModel model,
+        TileKey tileKey,
+        IReadOnlyDictionary<NodeId, NodeProblems>? nodeProblems,
+        IReadOnlyDictionary<NodeId, int>? hiddenChildCounts
+    )
     {
         var timing = Timing.Start();
         var tileRect = tileKey.GetTileRect();
@@ -261,6 +275,7 @@ class SvgService : ISvgService
             Selection = selection,
             DimSelection = FindDimSelection(model, selection, viewFlags.SelectedCycleMembers),
             NodeProblems = nodeProblems,
+            HiddenChildCounts = hiddenChildCounts,
         };
         var rootContext = new RenderContext(tileOffset, 1 / tileZoom, tileWithMargin, Pos.None, flags);
         var rootContentSvg = RenderRootContent(model, tileZoom, rootContext);
@@ -402,7 +417,8 @@ class SvgService : ISvgService
                 geometry.CanvasRect,
                 context.Zoom,
                 context.Flags.IsEditing,
-                ProblemsOf(node, context)
+                ProblemsOf(node, context),
+                HiddenChildCountOf(node, context)
             );
 
         if (NodeViewPolicy.IsRenderedFlat(context.Zoom))
@@ -420,12 +436,16 @@ class SvgService : ISvgService
             context.Zoom,
             childrenContentSvg,
             context.Flags.IsEditing,
-            ProblemsOf(node, context)
+            ProblemsOf(node, context),
+            HiddenChildCountOf(node, context)
         );
     }
 
     static NodeProblems? ProblemsOf(Node node, RenderContext context) =>
         context.Flags.NodeProblems?.TryGetValue(node.Id, out var problems) == true ? problems : null;
+
+    static int HiddenChildCountOf(Node node, RenderContext context) =>
+        context.Flags.HiddenChildCounts?.TryGetValue(node.Id, out var count) == true ? count : 0;
 
     // At extreme zoom a nested svg viewport would carry offsets of millions of canvas units,
     // which browsers combine in single-precision floats, displacing the subtree far off-screen
@@ -716,6 +736,9 @@ class SvgService : ISvgService
 
         // The problems in or inside each node, for its badge; null while badges are off.
         public IReadOnlyDictionary<NodeId, NodeProblems>? NodeProblems { get; init; }
+
+        // How many children of each node the user hid, for its badge; null while badges are off.
+        public IReadOnlyDictionary<NodeId, int>? HiddenChildCounts { get; init; }
     }
 
     readonly record struct RenderContext(

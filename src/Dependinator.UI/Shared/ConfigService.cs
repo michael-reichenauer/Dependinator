@@ -43,6 +43,9 @@ class Config
 
     // Badges on the nodes that contain problems (View › Show Problem Badges).
     public bool ShowProblemBadges { get; set; } = true;
+
+    // The badge on a node with children the user hid (View › Show Hidden Node Badges).
+    public bool ShowHiddenBadges { get; set; } = true;
 }
 
 interface IConfigService

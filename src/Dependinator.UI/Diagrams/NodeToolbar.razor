@@ -73,6 +73,15 @@ else if (HasSelectedLine)
           </MudMenuItem>
         }
 
+        @if (SelectedHiddenChildCount > 0)
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.VisibilityOff"
+                       OnClick="ListHiddenChildren" title="Lists the children of this node you hid, to show them again."
+                       data-testid="node-menu-hidden-children">
+            List Hidden Children (@SelectedHiddenChildCount)
+          </MudMenuItem>
+        }
+
         @* Direct lines are view state, not an edit, so they are offered in both modes. They live
            in the menu only (no toolbar buttons) while the feature settles. *@
         @if (SelectedNodeHasChildren)
@@ -359,6 +368,9 @@ else if (HasSelectedLine)
   [Inject]
   IKeyboardService keyboardService { get; set; } = null!;
 
+  [Inject]
+  IHiddenNodeService hiddenNodeService { get; set; } = null!;
+
   string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
 
   bool IsVisibilityDisabled => selectionService.IsSelectedNodeParentNotVisible();
@@ -366,6 +378,14 @@ else if (HasSelectedLine)
     IsVisibilityDisabled ? "The parent node is dimmed or hidden; show the parent first." : null;
   NodeVisibility SelectedVisibility => selectionService.SelectedNodeVisibility();
   bool IsMultiSelected => selectionService.SelectedNodeCount > 1;
+  int SelectedHiddenChildCount =>
+    TryGetSelectedNodeId(out var nodeId) ? hiddenNodeService.GetHiddenChildCounts().GetValueOrDefault(nodeId) : 0;
+
+  void ListHiddenChildren()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      hiddenNodeService.OpenPanel(nodeId);
+  }
   bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
   bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
   bool IsSelectedNodeZone => SelectedNodeIs(node => node.IsZone);

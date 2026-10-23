@@ -21,7 +21,13 @@ public class HiddenNodeServiceTests
     public HiddenNodeServiceTests()
     {
         commandService = new CommandService(Mock.Of<IApplicationEvents>(), modelMgr);
-        service = new HiddenNodeService(modelMgr, commandService);
+        service = new HiddenNodeService(
+            modelMgr,
+            commandService,
+            new ViewOptions(),
+            Mock.Of<IPathFinderService>(),
+            Mock.Of<IApplicationEvents>()
+        );
     }
 
     Node AddNode(string name, Node? parent = null) =>
@@ -98,5 +104,53 @@ public class HiddenNodeServiceTests
         await commandService.Undo();
         Assert.True(a.IsVisible);
         Assert.False(commandService.CanUndo);
+    }
+
+    [Fact]
+    public void GetHiddenChildCounts_ShouldCountTheHiddenChildrenOfEachParent_AndKeepTheInstanceWhileUnchanged()
+    {
+        var parent = AddNode("P");
+        var x = AddNode("P.X", parent);
+        var y = AddNode("P.Y", parent);
+        var z = AddNode("P.Z", parent);
+        service.SetVisibility(x.Id, NodeVisibility.Hidden);
+        service.SetVisibility(y.Id, NodeVisibility.Hidden);
+        service.SetVisibility(z.Id, NodeVisibility.Dimmed); // still drawn, not counted
+
+        var counts = service.GetHiddenChildCounts();
+        Assert.Equal(2, counts[parent.Id]);
+        Assert.Single(counts);
+
+        // A change that leaves the counts as they were keeps the instance (tiles stay cached).
+        service.SetVisibility(z.Id, NodeVisibility.Visible);
+        Assert.Same(counts, service.GetHiddenChildCounts());
+
+        service.SetVisibility(x.Id, NodeVisibility.Visible);
+        Assert.Equal(1, service.GetHiddenChildCounts()[parent.Id]);
+    }
+
+    [Fact]
+    public void OpenPanel_ShouldListTheGivenParent_AndTogglePanelClose()
+    {
+        var viewOptions = new ViewOptions();
+        var panelService = new HiddenNodeService(
+            modelMgr,
+            commandService,
+            viewOptions,
+            Mock.Of<IPathFinderService>(),
+            Mock.Of<IApplicationEvents>()
+        );
+        var parent = AddNode("P");
+        viewOptions.SetRulesShown(true);
+
+        panelService.OpenPanel(parent.Id);
+
+        Assert.True(viewOptions.IsHiddenNodesShown);
+        Assert.Equal(parent.Id, viewOptions.HiddenNodesParentId);
+        Assert.False(viewOptions.IsRulesShown); // Same corner
+
+        panelService.TogglePanel();
+        Assert.False(viewOptions.IsHiddenNodesShown);
+        Assert.Null(viewOptions.HiddenNodesParentId);
     }
 }
