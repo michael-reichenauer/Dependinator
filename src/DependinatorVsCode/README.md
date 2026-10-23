@@ -88,7 +88,7 @@ navigation tips, and keyboard/mouse controls.
 | Setting | Description |
 | --- | --- |
 | `dependinator.followActiveEditor` | Show the node for the file you switch to, so the diagram follows your work (default: `true`). |
-| `dependinator.autoRefresh.enabled` | Automatically refresh the diagram when workspace source files change (default: `true`). |
+| `dependinator.autoRefresh.enabled` | Automatically refresh the diagram when workspace source files change (default: `true`). When off, a dot on the Re-parse button shows that the source has changed. |
 | `dependinator.autoRefresh.delaySeconds` | Delay after the last source file change before the diagram is refreshed (default: `3`). |
 
 ## Device sync and the web app

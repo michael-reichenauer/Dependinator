@@ -150,7 +150,8 @@ function isAutoRefreshRelevant(uri: vscode.Uri): boolean {
 
 /**
  * Watches workspace source files and asks the webview UI to refresh (same as the
- * Refresh toolbar button) a few seconds after the last change. Returns the
+ * Refresh toolbar button) a few seconds after the last change, or, with auto refresh
+ * off, to show that the source has changed. Returns the
  * disposables owning the watcher and its pending debounce timer.
  */
 function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
@@ -163,8 +164,11 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
 
         // Read config at event time so toggling the setting needs no reload.
         const config = vscode.workspace.getConfiguration("dependinator.autoRefresh");
-        if (!config.get<boolean>("enabled", true))
+        if (!config.get<boolean>("enabled", true)) {
+            // Manual mode: only mark the diagram as out of date (a badge on the Re-parse button).
+            panel.webview.postMessage({ type: "ui/sourceChanged", message: "" });
             return;
+        }
 
         const delaySeconds = Math.max(1, config.get<number>("delaySeconds", 3));
         if (pendingTimer)

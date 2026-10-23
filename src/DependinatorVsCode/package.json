@@ -104,7 +104,7 @@
                 "dependinator.autoRefresh.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Automatically refresh the diagram when workspace source files change.",
+                    "description": "Automatically refresh the diagram when workspace source files change. When off, a badge on the Re-parse button shows that the source has changed.",
                     "order": 2
                 },
                 "dependinator.autoRefresh.delaySeconds": {

@@ -38,6 +38,9 @@ class VsCodeReceiveService : IVsCodeReceiveService
             case "ui/refresh":
                 await RefreshAsync();
                 break;
+            case "ui/sourceChanged": // Source files changed while automatic refresh is off
+                canvasService.MarkSourceChanged();
+                break;
             case "ui/search":
                 applicationEvents.TriggerSearchRequested(); // The "Dependinator: Search Nodes" command
                 break;

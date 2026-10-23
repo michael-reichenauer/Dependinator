@@ -81,4 +81,20 @@ public class VsCodeReceiveServiceTests
 
         events.Verify(e => e.TriggerSearchRequested(), Times.Once);
     }
+
+    [Fact]
+    public async Task ReceivedMessageAsync_ShouldMarkSourceChangedOnUiSourceChanged()
+    {
+        Mock<ICanvasService> canvas = new();
+        VsCodeReceiveService sut = new(
+            new Mock<INavigationService>().Object,
+            canvas.Object,
+            new Mock<IApplicationEvents>().Object
+        );
+
+        await sut.ReceivedMessageAsync("ui/sourceChanged", "");
+
+        canvas.Verify(c => c.MarkSourceChanged(), Times.Once);
+        canvas.Verify(c => c.RefreshAsync(), Times.Never);
+    }
 }
