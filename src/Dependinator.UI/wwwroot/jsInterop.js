@@ -6,12 +6,26 @@ export function waitForAnimationFrame() {
   return new Promise(resolve => requestAnimationFrame(resolve));
 }
 
+// iOS Safari can fire "resize" on a rotation before window.innerWidth/innerHeight hold the new
+// size, and nothing once they settle, so the canvas kept its landscape width in portrait (#100).
+// So also listen to orientationchange and to the page's own size, and check again once the size
+// has settled. The .NET side debounces the calls and acts only when the size has changed.
+const resizeSettleMs = 500;
+
 export function listenToWindowResize(elementId, instance, functionName) {
+  let settleTimer = null;
+
   function resizeEventHandler() {
     instance.invokeMethodAsync(functionName);
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => instance.invokeMethodAsync(functionName), resizeSettleMs);
   }
 
   window.addEventListener("resize", resizeEventHandler);
+  window.addEventListener("orientationchange", resizeEventHandler);
+  if (typeof ResizeObserver !== "undefined") {
+    new ResizeObserver(resizeEventHandler).observe(document.documentElement);
+  }
 }
 
 // The app's keyboard shortcuts, forwarded to KeyboardService as (key, ctrl, shift, alt).
