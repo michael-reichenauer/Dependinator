@@ -297,6 +297,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   The suite now has 74 tests. Sep–Oct went into stabilising it: capped parallelism,
   verify-and-retry page objects and a 15 s expect timeout. There are about 760 unit tests across
   the other test projects.
+- **E2E flake root causes (Oct 23).** A review of the failed CI runs found the flakes came from
+  load, not from single tests, and three app-side sources were removed: tests no longer load
+  Clerk and Google Fonts from the internet (a signed-out Clerk stub per test), runs without sync
+  start the app with cloud sync off, and the first test warms the app up. Panning and zooming
+  save a small view record instead of the whole model, and tests wait for the app's
+  `data-save-pending` mark instead of sleeping before a reload.
 - **CI (Jun 20).** Unit-test and e2e workflows run on feature-branch pushes. CI/CD runs them
   before deploying; the full gate covers all browsers plus sync. Since Oct 19 the browsers run
   as parallel jobs (the serial run had grown to ~15 min of a 20 min gate).

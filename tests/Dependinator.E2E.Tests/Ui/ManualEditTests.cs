@@ -56,8 +56,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await AddManualNodeAsync(NodeIcon);
         await Expect(App.NodeLabel(NodeIcon)).ToBeVisibleAsync();
 
-        // The debounced save writes to IndexedDB; give it a moment, then reload.
-        await Page.WaitForTimeoutAsync(1500);
+        // Wait for the debounced save, then reload.
+        await App.WaitForSavedAsync();
         await App.GotoMainPageAsync();
 
         // A manual node is not produced by parsing, so surviving the reload proves it was
