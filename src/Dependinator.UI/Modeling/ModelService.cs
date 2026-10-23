@@ -46,8 +46,10 @@ class ModelService : IModelService, IDisposable
     readonly Debouncer saveDebouncer = new();
     readonly Debouncer viewSaveDebouncer = new();
 
-    // Save requests and the last request each save covered, for the save status (a request
-    // after a save captured the model is still pending)
+    // Save requests and the last request each finished save covered, for the save status (a
+    // request after a save captured the model is still pending). Guarded by saveStatusLock, which
+    // also orders the status changes.
+    readonly object saveStatusLock = new();
     long saveRequests;
     long savedRequests;
     long viewSaveRequests;
@@ -207,7 +209,7 @@ class ModelService : IModelService, IDisposable
         // Panning and zooming save only the view record, so it can be newer than the model's
         // view (a missing record is fine: models saved before it existed have none).
         if (await persistenceService.ReadViewAsync(path) is ViewDto view)
-            model = model with { Zoom = view.Zoom, Offset = view.Offset, ViewRect = view.ViewRect };
+            model = view.ApplyTo(model);
 
         var modelInfo = await LoadCachedModelDataAsync(path, model);
 
@@ -387,14 +389,20 @@ class ModelService : IModelService, IDisposable
 
     public void TriggerSave()
     {
-        Interlocked.Increment(ref saveRequests);
-        UpdateSaveStatus();
+        lock (saveStatusLock)
+        {
+            saveRequests++;
+            UpdateSaveStatus();
+        }
         saveDebouncer.Debounce(SaveDelay, MaxSaveDelay, Save);
     }
 
     void Save()
     {
-        var request = Interlocked.Read(ref saveRequests);
+        long request;
+        lock (saveStatusLock)
+            request = saveRequests;
+
         ModelDto modelData;
         string modelPath;
         using (var model = modelMgr.UseModel())
@@ -409,25 +417,44 @@ class ModelService : IModelService, IDisposable
             modelData = model.SerializeToDto();
         }
 
-        WriteAsync(
-                () => persistenceService.WriteAsync(modelPath, modelData),
-                () => MarkSaved(ref savedRequests, request)
-            )
-            .RunInBackground();
+        SaveModelAsync(modelPath, modelData, request).RunInBackground();
+    }
+
+    async Task SaveModelAsync(string modelPath, ModelDto modelData, long request)
+    {
+        try
+        {
+            if (await persistenceService.WriteAsync(modelPath, modelData) is Error e)
+                Log.Warn($"Failed to save model '{modelPath}': {e.Message}");
+
+            // The view record overrides the model's view on load, so bring it up to date now
+            // that the model is written: it may be missing (a new model) or older than the view.
+            TriggerViewSave();
+        }
+        finally
+        {
+            MarkSaved(ref savedRequests, request);
+        }
     }
 
     // Panning, zooming and resizing write only the small view record: writing the whole model
     // after every navigation cost a large serialization and transfer each time.
     void TriggerViewSave()
     {
-        Interlocked.Increment(ref viewSaveRequests);
-        UpdateSaveStatus();
+        lock (saveStatusLock)
+        {
+            viewSaveRequests++;
+            UpdateSaveStatus();
+        }
         viewSaveDebouncer.Debounce(SaveDelay, MaxSaveDelay, SaveView);
     }
 
     void SaveView()
     {
-        var request = Interlocked.Read(ref viewSaveRequests);
+        long request;
+        lock (saveStatusLock)
+            request = viewSaveRequests;
+
         ViewDto view;
         string modelPath;
         using (var model = modelMgr.UseModel())
@@ -447,42 +474,36 @@ class ModelService : IModelService, IDisposable
             };
         }
 
-        WriteAsync(
-                () => persistenceService.WriteViewAsync(modelPath, view),
-                () => MarkSaved(ref savedViewRequests, request)
-            )
-            .RunInBackground();
+        SaveViewAsync(modelPath, view, request).RunInBackground();
     }
 
-    static async Task<Result> WriteAsync(Func<Task<Result>> write, Action onWritten)
+    async Task SaveViewAsync(string modelPath, ViewDto view, long request)
     {
         try
         {
-            return await write();
+            if (await persistenceService.WriteViewAsync(modelPath, view) is Error e)
+                Log.Warn($"Failed to save the view of '{modelPath}': {e.Message}");
         }
         finally
         {
-            onWritten();
+            MarkSaved(ref savedViewRequests, request);
         }
     }
 
+    // A finished save, written or failed (logged), no longer counts as pending. Saves can finish
+    // out of order, so the latest request covered is kept.
     void MarkSaved(ref long saved, long request)
     {
-        // Saves can finish out of order: keep the latest request covered
-        long current;
-        while ((current = Interlocked.Read(ref saved)) < request)
+        lock (saveStatusLock)
         {
-            if (Interlocked.CompareExchange(ref saved, request, current) == current)
-                break;
+            saved = Math.Max(saved, request);
+            UpdateSaveStatus();
         }
-        UpdateSaveStatus();
     }
 
+    // Called with saveStatusLock held, so the status changes reach the service in order
     void UpdateSaveStatus() =>
-        saveStatusService.SetPending(
-            Interlocked.Read(ref savedRequests) < Interlocked.Read(ref saveRequests)
-                || Interlocked.Read(ref savedViewRequests) < Interlocked.Read(ref viewSaveRequests)
-        );
+        saveStatusService.SetPending(savedRequests < saveRequests || savedViewRequests < viewSaveRequests);
 
     async Task<ModelInfo> LoadCachedModelDataAsync(string path, ModelDto modelDto)
     {

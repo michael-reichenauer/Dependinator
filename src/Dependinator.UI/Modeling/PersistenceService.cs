@@ -19,20 +19,7 @@ class PersistenceService(IFileService fileService) : IPersistenceService
         return Task.Run(async () =>
         {
             using var _ = Timing.Start($"Wrote model '{modelPath}'");
-            await fileService.WriteAsync(modelPath, model);
-            // Keep the view record in step with the model, since it overrides the model's view
-            // on load
-            await WriteViewAsync(
-                modelPath,
-                new ViewDto
-                {
-                    Zoom = model.Zoom,
-                    Offset = model.Offset,
-                    ViewRect = model.ViewRect,
-                }
-            );
-
-            return Result.Ok;
+            return await fileService.WriteAsync(modelPath, model);
         });
     }
 

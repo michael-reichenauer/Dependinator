@@ -89,7 +89,8 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     }
 
     // Applies a new view and tells the UI: repaint, refresh toolbars (ViewChanged) and save the
-    // view with the model. Animation steps skip the save; the final step saves once.
+    // view record (not the model, see ModelService). Animation steps skip the save; the final
+    // step saves once.
     void SetView(Pos? offset, double? zoom, bool isSaveNeeded = true)
     {
         using (var model = modelMgr.UseModel())

@@ -13,16 +13,16 @@ interface ISaveStatusService
 class SaveStatusService(IJSInterop jsInterop) : ISaveStatusService
 {
     readonly object syncRoot = new();
-    bool isPending;
+    bool? shownPending; // null when the browser's state is unknown (a call failed)
     Task lastCall = Task.CompletedTask;
 
     public void SetPending(bool isPending)
     {
         lock (syncRoot)
         {
-            if (isPending == this.isPending)
+            if (isPending == shownPending)
                 return;
-            this.isPending = isPending;
+            shownPending = isPending;
             // Chained, so the browser sees the changes in the order they happened
             lastCall = CallAfterAsync(lastCall, isPending);
         }
@@ -38,6 +38,9 @@ class SaveStatusService(IJSInterop jsInterop) : ISaveStatusService
         catch (Exception e)
         {
             Log.Warn($"Failed to set save pending: {e.Message}");
+            // Resend on the next change rather than leave the browser showing a stale state
+            lock (syncRoot)
+                shownPending = null;
         }
     }
 }

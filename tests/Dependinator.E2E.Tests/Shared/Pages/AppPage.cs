@@ -918,14 +918,14 @@ public sealed class AppPage
     // Wait until the model and its view are stored (e.g. before a reload). The app marks
     // <body data-save-pending> while a save is debounced (0.5 s) or being written; a fixed sleep
     // was too short on a loaded runner, where writing the model took 2 s. The mark can reach the
-    // browser just after the change it saves, so give it a moment to turn on first: if it never
-    // does within that, the save already finished.
+    // browser just after the change it saves, so give it a moment to turn on first: a save
+    // waits 0.5 s before it writes, so if the mark never shows within 2 s, it already finished.
     public async Task WaitForSavedAsync()
     {
         ILocator body = page.Locator("body");
         try
         {
-            await Expect(body).ToHaveAttributeAsync("data-save-pending", "true", new() { Timeout = 1_000 });
+            await Expect(body).ToHaveAttributeAsync("data-save-pending", "true", new() { Timeout = 2_000 });
         }
         catch (PlaywrightException) { }
         await Expect(body).Not.ToHaveAttributeAsync("data-save-pending", "true", new() { Timeout = 30_000 });

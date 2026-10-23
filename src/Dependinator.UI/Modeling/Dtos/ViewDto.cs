@@ -11,4 +11,6 @@ record ViewDto
     public double Zoom { get; init; }
     public Pos Offset { get; init; } = Pos.None;
     public Rect ViewRect { get; init; } = Rect.None;
+
+    public ModelDto ApplyTo(ModelDto model) => model with { Zoom = Zoom, Offset = Offset, ViewRect = ViewRect };
 }
