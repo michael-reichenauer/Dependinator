@@ -235,6 +235,25 @@ export function getVsCodeExtensionVersion() {
   return (window.dependinator && window.dependinator.extensionVersion) || "";
 }
 
+// What the browser (and, in VS Code, the extension host) knows about the environment, as
+// "Name: value" lines for a prefilled issue report (IssueReport.cs).
+export function getEnvironmentInfo() {
+  const lines = [];
+  const host = window.dependinator && window.dependinator.hostInfo;
+  if (host) {
+    lines.push(`VS Code: ${host.appName} ${host.vscodeVersion} (${host.uiKind}, remote: ${host.remoteName || "none"})`);
+    lines.push(`OS: ${host.platform}`);
+  } else {
+    // userAgentData is Chromium only; the user agent below has the OS in other browsers too.
+    const platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform;
+    if (platform) lines.push(`OS: ${platform}`);
+  }
+  lines.push(`Browser: ${navigator.userAgent}`);
+  lines.push(`Language: ${navigator.language}`);
+  lines.push(`Window: ${window.innerWidth}x${window.innerHeight} @${window.devicePixelRatio}x`);
+  return lines.join("\n");
+}
+
 export function listenToVsCodeMessages(instance, functionName) {
   window.addEventListener("message", (event) => {
     if (!event || !event.data || !event.data.type) {

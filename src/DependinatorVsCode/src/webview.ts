@@ -67,6 +67,19 @@ export function registerWebviewMessageHandler(
     });
 }
 
+// The editor and OS the extension runs in, for prefilled issue reports (getEnvironmentInfo
+// in jsInterop.js).
+function getHostInfo() {
+    return {
+        appName: vscode.env.appName,
+        vscodeVersion: vscode.version,
+        uiKind: vscode.env.uiKind === vscode.UIKind.Web ? "web" : "desktop",
+        remoteName: vscode.env.remoteName ?? "",
+        // No `process` in the web extension host (vscode.dev), which bundles this file too.
+        platform: typeof process !== "undefined" ? `${process.platform} ${process.arch}` : "browser"
+    };
+}
+
 function getWebviewHtml(
     webview: vscode.Webview,
     extensionUri: vscode.Uri,
@@ -129,7 +142,8 @@ function getWebviewHtml(
         window.dependinator = {
             getBaseUri: () => dependinatorBaseUri,
             postMessage: (message) => vscode.postMessage(message),
-            extensionVersion: "${extensionVersion}"
+            extensionVersion: "${extensionVersion}",
+            hostInfo: ${JSON.stringify(getHostInfo()).replace(/</g, "\\u003c")}
         };
 
         // Replace setTimeout/setInterval with Web Worker-backed versions.

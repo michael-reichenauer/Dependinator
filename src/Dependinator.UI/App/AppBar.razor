@@ -16,6 +16,7 @@
 @inject IDialogService dialogService
 @inject IJSInterop jsInterop
 @inject IVsCodeSendService vsCodeSendService
+@inject IIssueReportService issueReportService
 @inject Dependinator.UI.Diagrams.Interaction.INoteService noteService
 @inject Dependinator.UI.Diagrams.Interaction.IZoneService zoneService
 @inject Dependinator.UI.Diagrams.Interaction.IManualEditService manualEditService
@@ -353,6 +354,18 @@
                              title="Replays the short tour of the basics shown on the first start."
                              data-testid="menu-tips">
                     Show Tips
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.BugReport"
+                             OnClick="() => issueReportService.OpenAsync(IssueKind.Bug)"
+                             title="Opens a new GitHub issue with the app version and environment filled in."
+                             data-testid="menu-report-bug">
+                    Report a Bug
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Lightbulb"
+                             OnClick="() => issueReportService.OpenAsync(IssueKind.Improvement)"
+                             title="Opens a new GitHub issue for an idea or improvement."
+                             data-testid="menu-suggest-improvement">
+                    Suggest an Improvement
                 </MudMenuItem>
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Info" OnClick="ShowAbout"
                              data-testid="menu-about">

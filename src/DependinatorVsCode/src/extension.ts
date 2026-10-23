@@ -373,8 +373,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             if (message.type === "vscode/OpenExternal") {
                 const url = String(message.message ?? "");
+                // Pass the string itself: openExternal accepts one at runtime and opens it
+                // verbatim, while Uri.parse(url).toString() decodes and re-encodes the query,
+                // which turns an escaped '+', '&' or '=' in a prefilled issue url into a
+                // separator or space.
                 if (url)
-                    await vscode.env.openExternal(vscode.Uri.parse(url));
+                    await vscode.env.openExternal(url as unknown as vscode.Uri);
                 return;
             }
 

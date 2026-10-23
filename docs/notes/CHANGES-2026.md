@@ -194,6 +194,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   nodes inside their opened container, instead of to the container as an icon. It also picks the
   cycle: its lines stay red while the other cycles' lines fade, and lines not touching its nodes
   fade as for a selection of them, until the row is clicked again.
+- **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
+  issue from the repo's issue forms, with the version and environment (host, build, VS Code
+  version and OS or browser, language, window size) filled in. VS Code opens the page through the
+  extension host, like Help; bug reports get the `bug` label from their form.
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design
