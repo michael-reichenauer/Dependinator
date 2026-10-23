@@ -149,36 +149,49 @@ function isAutoRefreshRelevant(uri: vscode.Uri): boolean {
 }
 
 /**
- * Watches workspace source files and asks the webview UI to refresh (same as the
- * Refresh toolbar button) a few seconds after the last change, or, with auto refresh
- * off, to show that the source has changed. Returns the
- * disposables owning the watcher and its pending debounce timer.
+ * Watches workspace source files and, a few seconds after the last change, asks the webview UI
+ * to refresh (same as the Refresh toolbar button), or, with auto refresh off, to show that the
+ * source has changed. Switching auto refresh back on refreshes changes seen while it was off.
+ * Returns the disposables owning the watcher, its pending debounce timer and the config listener.
  */
 function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
     const watcher = vscode.workspace.createFileSystemWatcher("**/*.{cs,csproj,sln,bicep,bicepparam}");
     let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+    let hasUnrefreshedChanges = false;
+
+    // Read config at use time so toggling the setting needs no reload.
+    const config = () => vscode.workspace.getConfiguration("dependinator.autoRefresh");
+
+    const refresh = (): void => {
+        hasUnrefreshedChanges = false;
+        logger.log("Source files changed, refreshing diagram");
+        panel.webview.postMessage({ type: "ui/refresh", message: "" });
+    };
 
     const onFileEvent = (uri: vscode.Uri): void => {
         if (!isAutoRefreshRelevant(uri))
             return;
 
-        // Read config at event time so toggling the setting needs no reload.
-        const config = vscode.workspace.getConfiguration("dependinator.autoRefresh");
-        if (!config.get<boolean>("enabled", true)) {
-            // Manual mode: only mark the diagram as out of date (a badge on the Re-parse button).
-            panel.webview.postMessage({ type: "ui/sourceChanged", message: "" });
-            return;
-        }
-
-        const delaySeconds = Math.max(1, config.get<number>("delaySeconds", 3));
+        const delaySeconds = Math.max(1, config().get<number>("delaySeconds", 3));
         if (pendingTimer)
             clearTimeout(pendingTimer);
         pendingTimer = setTimeout(() => {
             pendingTimer = undefined;
-            logger.log("Source files changed, refreshing diagram");
-            panel.webview.postMessage({ type: "ui/refresh", message: "" });
+            if (config().get<boolean>("enabled", true)) {
+                refresh();
+                return;
+            }
+            // Manual mode: only mark the diagram as out of date (a dot on the Re-parse button).
+            hasUnrefreshedChanges = true;
+            panel.webview.postMessage({ type: "ui/sourceChanged", message: "" });
         }, delaySeconds * 1000);
     };
+
+    const configListener = vscode.workspace.onDidChangeConfiguration(e => {
+        if (e.affectsConfiguration("dependinator.autoRefresh.enabled")
+            && hasUnrefreshedChanges && config().get<boolean>("enabled", true))
+            refresh();
+    });
 
     watcher.onDidCreate(onFileEvent);
     watcher.onDidChange(onFileEvent);
@@ -187,6 +200,7 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
     return new vscode.Disposable(() => {
         if (pendingTimer)
             clearTimeout(pendingTimer);
+        configListener.dispose();
         watcher.dispose();
     });
 }

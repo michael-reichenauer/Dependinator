@@ -24,12 +24,7 @@ interface ICanvasService
     string SvgViewBox { get; }
     string Cursor { get; }
 
-    // Source files changed since the last parse, while automatic refresh is off (VS Code reports
-    // it); the Re-parse button shows a badge until the next parse.
-    bool HasSourceChanges { get; }
-
     Task InitAsync();
-    void MarkSourceChanged();
     Task RemoveAsync();
     Task RefreshAsync();
     void PanZoomToFit();
@@ -65,7 +60,6 @@ class CanvasService(
 
     public string SvgContent => GetSvgContent();
     public string Cursor => interactionService.Cursor;
-    public bool HasSourceChanges { get; private set; }
 
     public Rect SvgRect => screenService.SvgRect;
     Pos Offset => modelMgr.WithModel(m => m.Offset);
@@ -139,7 +133,6 @@ class CanvasService(
 
     public async Task LoadAsync(string modelPath, bool? includeTestProjects = null)
     {
-        HasSourceChanges = false; // Loading a parseable model re-parses it
         applicationEvents.TriggerUIStateChanged();
         await Task.Yield();
 
@@ -202,18 +195,8 @@ class CanvasService(
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public void MarkSourceChanged()
-    {
-        if (HasSourceChanges)
-            return;
-        HasSourceChanges = true;
-        applicationEvents.TriggerUIStateChanged();
-    }
-
     public async Task RefreshAsync()
     {
-        // Cleared before parsing, so a change saved during the parse marks the model again.
-        HasSourceChanges = false;
         await modelService.RefreshAsync();
         applicationEvents.TriggerUIStateChanged();
     }

@@ -19,6 +19,11 @@ interface IModelService
     Task<Result<ModelInfo>> LoadAsync(string path, bool? includeTestProjects = null);
     Task<Result> RefreshAsync();
     Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects);
+
+    // Source files changed since the last successful parse, as reported while automatic refresh
+    // is off (VS Code); the Re-parse button shows a dot until a parse succeeds.
+    bool HasSourceChanges { get; }
+    void MarkSourceChanged();
     void Clear();
     void ClearCache();
     void CheckLineVisibility();
@@ -54,6 +59,11 @@ class ModelService : IModelService, IDisposable
     long savedRequests;
     long viewSaveRequests;
     long savedViewRequests;
+
+    // Reported source changes, and how many of them the last successful parse covered (it covers
+    // those reported before it started, so a change saved during the parse keeps the dot).
+    int sourceChanges;
+    int parsedSourceChanges;
 
     public ModelService(
         IModelMgr modelMgr,
@@ -216,6 +226,16 @@ class ModelService : IModelService, IDisposable
         return modelInfo;
     }
 
+    public bool HasSourceChanges => sourceChanges != parsedSourceChanges;
+
+    public void MarkSourceChanged()
+    {
+        bool hadSourceChanges = HasSourceChanges;
+        sourceChanges++;
+        if (!hadSourceChanges)
+            applicationEvents.TriggerUIStateChanged();
+    }
+
     public async Task<Result> RefreshAsync()
     {
         var path = modelMgr.ModelPath;
@@ -305,6 +325,7 @@ class ModelService : IModelService, IDisposable
     async Task<Result> ParseAndUpdateAsync(string path, bool isRefresh = false)
     {
         using var _ = Timing.Start($"Parsed and added model items {path}");
+        int coveredSourceChanges = sourceChanges;
         // Read before any model-lock block is opened; the model lock is thread-affine and must
         // never be held across the parse await.
         var parseOptions = modelMgr.WithModel(m => new Parsing.SolutionParseOptions
@@ -366,6 +387,7 @@ class ModelService : IModelService, IDisposable
             ApplyLineDescriptions(items);
         }
 
+        parsedSourceChanges = coveredSourceChanges;
         CheckLineVisibility();
 
         return Result.Ok;
