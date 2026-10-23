@@ -713,7 +713,7 @@ class InteractionService(
                     model.Root,
                     band,
                     node => NodeViewPolicy.IsChildrenShown(node, zoom),
-                    node => !node.IsHidden || viewOptions.ShowHiddenNodes
+                    node => node.Visibility != NodeVisibility.Hidden || viewOptions.RevealHiddenNodes
                 )
                 .Select(node => node.Id)
                 .ToList();

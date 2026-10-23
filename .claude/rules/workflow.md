@@ -81,6 +81,12 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   are baked into tiles, so `SvgService` clears the tiles when that dictionary's instance changes.
   Still open: a namespace commented in several files and links to missing targets (delegate
   `Invoke`) as problems, unresolved rules (info, list only).
+- **Hidden nodes, next:** phase 1 (Oct 23) made dim/hide per node (`NodeVisibility`, the outermost
+  dimmed or hidden ancestor decides for its whole subtree, View › Reveal Hidden Nodes is a
+  temporary peek). Decided with the user: phase 2 a "Hidden nodes" panel (rows of the nodes the
+  user dimmed or hid: Dim/Hide toggle, Show, zoom to) opened from an app-bar count; phase 3 an
+  eye-off badge with a count only on the direct parent of user-hidden nodes (not every ancestor,
+  for now). Hide rules (by pattern) wait until these have been lived with.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

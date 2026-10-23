@@ -95,7 +95,7 @@ public class SelectionServiceTests
     }
 
     [Fact]
-    public async Task ToggleNodeHide_ShouldHideTheWholeGroup_AndShowItAgain()
+    public async Task SetSelectedNodesVisibility_ShouldHideTheWholeGroup_AndShowItAgain()
     {
         Node a,
             b;
@@ -108,17 +108,18 @@ public class SelectionServiceTests
         await service.Select(a.Id);
         await service.ToggleInSelectionAsync(PointerId.FromNode(b.Id), ShiftClick);
 
-        service.ToggleNodeHide();
-        Assert.True(a.IsHidden && b.IsHidden);
+        service.SetSelectedNodesVisibility(NodeVisibility.Hidden);
+        Assert.True(!a.IsVisible && !b.IsVisible);
+        Assert.Equal(NodeVisibility.Hidden, service.SelectedNodeVisibility());
 
-        service.ToggleNodeHide();
-        Assert.False(a.IsHidden || b.IsHidden);
+        service.SetSelectedNodesVisibility(NodeVisibility.Visible);
+        Assert.True(a.IsVisible && b.IsVisible);
 
-        // Each toggle is one undo step.
+        // Each change is one undo step.
         await commandService.Undo();
-        Assert.True(a.IsHidden && b.IsHidden);
+        Assert.True(!a.IsVisible && !b.IsVisible);
         await commandService.Undo();
-        Assert.False(a.IsHidden || b.IsHidden);
+        Assert.True(a.IsVisible && b.IsVisible);
         Assert.False(commandService.CanUndo);
     }
 

@@ -137,21 +137,21 @@ static class LineSvg
             : isViolation ? DColors.RuleLine
             : isAccent ? DColors.DirectLine
             : isCyclic ? DColors.CycleLine
-            : line.IsHidden ? DColors.LineHidden
+            : !line.IsVisible ? DColors.LineHidden
             : line.IsCousin ? DColors.CousinLine
             : DColors.Line;
 
         // The hollow inheritance arrow head is only drawn where the line enters the real
         // inheritance target (the supertype); hidden/accent/cycle/path styling takes precedence.
         var isInheritanceHead =
-            !isPath && !isViolation && !isAccent && !isCyclic && !line.IsHidden && line.HasInheritanceTargetEnd;
+            !isPath && !isViolation && !isAccent && !isCyclic && line.IsVisible && line.HasInheritanceTargetEnd;
 
         var markerId =
             isPath ? "arrow-path"
             : isViolation ? "arrow-rule"
             : isAccent ? "arrow-direct"
             : isCyclic ? "arrow-cycle"
-            : line.IsHidden ? "arrow-hidden"
+            : !line.IsVisible ? "arrow-hidden"
             : isInheritanceHead ? "arrow-inheritance"
             : line.IsCousin ? "arrow-cousin"
             : "arrow-line";
@@ -163,7 +163,7 @@ static class LineSvg
         var dashArray =
             line.IsDirect ? " stroke-dasharray=\"6,6\""
             : line.IsFocused ? " stroke-dasharray=\"2,4\""
-            : line.IsHidden ? " stroke-dasharray=\"6,4,1,4\""
+            : !line.IsVisible ? " stroke-dasharray=\"6,4,1,4\""
             : "";
 
         // The hollow marker starts at the polyline end (refX=0) and extends forward, so the
@@ -229,7 +229,7 @@ static class LineSvg
         var textZoom = NodeSvg.TextZoom(childrenZoom);
         var fontSize = NodeSvg.FontSize * textZoom;
         var descriptionFontSize = NodeSvg.DescriptionFontSize * textZoom;
-        var opacity = line.IsHidden ? " opacity=\"0.3\"" : "";
+        var opacity = !line.IsVisible ? " opacity=\"0.3\"" : "";
 
         // With both texts the pair is centered on the line: the label just above, the
         // description just below; a single text sits on the line itself.

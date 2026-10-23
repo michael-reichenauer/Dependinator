@@ -66,7 +66,7 @@ public class StructureServiceTests
         var service = new StructureService(new Mock<ILineService>().Object);
 
         var parent = AddNode(model, "Parent", model.Root);
-        parent.SetHidden(true, isUserSet: true);
+        parent.SetUserVisibility(NodeVisibility.Hidden);
 
         var parsedNode = new ParsingNode(
             "Parent.Child",
@@ -75,9 +75,9 @@ public class StructureServiceTests
         service.AddOrUpdateNode(model, parsedNode);
 
         Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Parent.Child"), out var child));
-        Assert.True(child.IsHidden);
-        Assert.True(child.IsParentSetHidden);
-        Assert.False(child.IsUserSetHidden);
+        Assert.Equal(NodeVisibility.Hidden, child.Visibility);
+        Assert.Equal(NodeVisibility.Hidden, child.ParentVisibility);
+        Assert.Equal(NodeVisibility.Visible, child.UserVisibility);
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public class StructureServiceTests
         var service = new StructureService(new Mock<ILineService>().Object);
 
         var externals = AddNode(model, "Externals", model.Root);
-        externals.SetHidden(true, isUserSet: true);
+        externals.SetUserVisibility(NodeVisibility.Hidden);
 
         // The intermediate parent "Externals.Assembly" does not exist yet and is created on
         // demand; both it and the new node must inherit the hidden state
@@ -100,8 +100,8 @@ public class StructureServiceTests
 
         Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Externals.Assembly"), out var assembly));
         Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Externals.Assembly.Type"), out var type));
-        Assert.True(assembly.IsHidden);
-        Assert.True(type.IsHidden);
+        Assert.Equal(NodeVisibility.Hidden, assembly.Visibility);
+        Assert.Equal(NodeVisibility.Hidden, type.Visibility);
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class StructureServiceTests
 
         var visibleParent = AddNode(model, "ParentA", model.Root);
         var hiddenParent = AddNode(model, "ParentB", model.Root);
-        hiddenParent.SetHidden(true, isUserSet: true);
+        hiddenParent.SetUserVisibility(NodeVisibility.Hidden);
         var child = AddNode(model, "Child", visibleParent);
 
         // Move into the hidden parent: the child becomes parent-set hidden
@@ -122,8 +122,8 @@ public class StructureServiceTests
             new ParsingNode("Child", new Dependinator.Core.Parsing.NodeProperties { Parent = "ParentB" })
         );
         Assert.Equal("ParentB", child.Parent.Name);
-        Assert.True(child.IsHidden);
-        Assert.True(child.IsParentSetHidden);
+        Assert.Equal(NodeVisibility.Hidden, child.Visibility);
+        Assert.Equal(NodeVisibility.Hidden, child.ParentVisibility);
 
         // Move back to the visible parent: the stale parent-set hidden flag is cleared
         service.AddOrUpdateNode(
@@ -131,8 +131,8 @@ public class StructureServiceTests
             new ParsingNode("Child", new Dependinator.Core.Parsing.NodeProperties { Parent = "ParentA" })
         );
         Assert.Equal("ParentA", child.Parent.Name);
-        Assert.False(child.IsHidden);
-        Assert.False(child.IsParentSetHidden);
+        Assert.True(child.IsVisible);
+        Assert.Equal(NodeVisibility.Visible, child.ParentVisibility);
     }
 
     [Fact]
@@ -188,7 +188,7 @@ public class StructureServiceTests
         var service = new StructureService(new Mock<ILineService>().Object);
 
         var externals = AddNode(model, "Externals", model.Root);
-        externals.SetHidden(true, isUserSet: true);
+        externals.SetUserVisibility(NodeVisibility.Hidden);
         AddNode(model, "Source", model.Root);
 
         // A link to a not-yet-existing node under a hidden parent creates that node on demand;
@@ -201,7 +201,7 @@ public class StructureServiceTests
         service.AddOrUpdateLink(model, parsedLink);
 
         Assert.True(model.Nodes.TryGetValue(NodeId.FromName("Externals.NewAssembly"), out var target));
-        Assert.True(target.IsHidden);
+        Assert.Equal(NodeVisibility.Hidden, target.Visibility);
     }
 
     [Fact]

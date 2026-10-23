@@ -63,7 +63,10 @@ class ViewContextService(
     {
         foreach (var child in node.Children)
         {
-            if (NodeViewPolicy.IsAnnotation(child) || (child.IsHidden && !viewOptions.ShowHiddenNodes))
+            if (
+                NodeViewPolicy.IsAnnotation(child)
+                || (child.Visibility == NodeVisibility.Hidden && !viewOptions.RevealHiddenNodes)
+            )
                 continue;
             if (!NodeViewPolicy.IsChildrenShown(child, modelZoom))
                 continue;

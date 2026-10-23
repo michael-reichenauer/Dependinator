@@ -217,7 +217,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   afterwards (refined in place, never while the view is zoomed into it). Models saved with the
   older layout are laid out again, except containers the user arranged.
 - **Hidden nodes (Mar).** A menu toggle shows or hides hidden nodes. Hiding became undoable on
-  Oct 11.
+  Oct 11. Since Oct 23 each node is dimmed (faint) or hidden (left out) on its own, its
+  descendants following it, and View › Reveal Hidden Nodes shows hidden ones faintly for a while.
 - **Edit mode (Apr).** Edit buttons show only in edit mode. Since Sep 30 the mode is persisted,
   off by default, and required for every model change.
 - **Design features (Jul 5–18).**

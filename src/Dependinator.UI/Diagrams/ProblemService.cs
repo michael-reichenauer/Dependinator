@@ -160,7 +160,7 @@ class ProblemService(
 
             void Add(NodeId id, NodeProblems problems, ArchitectureRule? rule = null)
             {
-                if (!m.Nodes.TryGetValue(id, out var node) || node.IsHidden)
+                if (!m.Nodes.TryGetValue(id, out var node) || !node.IsVisible)
                     return;
                 for (var n = node; !n.IsRoot; n = n.Parent)
                 {

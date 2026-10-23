@@ -24,8 +24,8 @@ interface ISelectionService
     Task UpdateSelectedPositionAsync();
     void HideSelectedPosition();
     bool IsSelectedNodeMovable(double zoom);
-    bool IsSelectedNodeHidden();
-    bool IsSelectedNodeParentHidden();
+    NodeVisibility SelectedNodeVisibility();
+    bool IsSelectedNodeParentNotVisible();
     Task Select(PointerId pointerId, PointerEvent e);
     Task Select(NodeId nodeId);
 
@@ -38,7 +38,7 @@ interface ISelectionService
     Task AddToSelectionAsync(IReadOnlyList<NodeId> nodeIds);
     void SetEditMode(bool isEditMode);
     void Unselect();
-    void ToggleNodeHide();
+    void SetSelectedNodesVisibility(NodeVisibility visibility);
 }
 
 [Scoped]
@@ -358,14 +358,29 @@ class SelectionService(
         if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
             return false;
 
-        if (node.IsHidden && node.Parent.IsHidden)
+        if (!node.IsVisible && !node.Parent.IsVisible)
             return false;
         // A zone is drawn around a group and usually fills much of the screen; the user selected
         // it on purpose, so dragging it moves it (and the nodes inside) rather than panning.
         return node.IsZone || IsNodeMovable(node, zoom);
     }
 
-    public bool IsSelectedNodeHidden()
+    // The selected node's own state as the user sees it (inherited from a dimmed or hidden
+    // ancestor included).
+    public NodeVisibility SelectedNodeVisibility()
+    {
+        if (!IsSelected)
+            return NodeVisibility.Visible;
+
+        using var model = modelMgr.UseModel();
+        if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
+            return NodeVisibility.Visible;
+        return node.Visibility;
+    }
+
+    // A node inside a dimmed or hidden ancestor follows that ancestor and cannot be changed on
+    // its own.
+    public bool IsSelectedNodeParentNotVisible()
     {
         if (!IsSelected)
             return false;
@@ -373,37 +388,16 @@ class SelectionService(
         using var model = modelMgr.UseModel();
         if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
             return false;
-        return node.IsHidden;
+        return !node.Parent.IsVisible;
     }
 
-    public bool IsSelectedNodeParentHidden()
-    {
-        if (!IsSelected)
-            return false;
-
-        using var model = modelMgr.UseModel();
-        if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
-            return false;
-        return node.Parent.IsHidden;
-    }
-
-    // Hides (or shows) every selected node; the primary node's state decides the direction, so
-    // a mixed group ends up uniform.
-    // Hides the selection (the whole group follows the primary node's new state), or shows it
-    // again, as one undoable step like every other edit.
-    public void ToggleNodeHide()
+    // Dims, hides or shows every selected node as one undoable step like every other edit.
+    public void SetSelectedNodesVisibility(NodeVisibility visibility)
     {
         if (!IsSelected)
             return;
-        bool hidden;
-        using (var model = modelMgr.UseModel())
-        {
-            if (!model.Nodes.TryGetValue(selectedId.NodeId, out var node))
-                return;
-            hidden = !node.IsHidden;
-        }
 
-        commandService.Do(new HideNodesCommand([.. SelectedNodeIds], hidden));
+        commandService.Do(new SetNodeVisibilityCommand([.. SelectedNodeIds], visibility));
     }
 
     // A node is movable while it reads as an object on screen rather than as the screen itself:

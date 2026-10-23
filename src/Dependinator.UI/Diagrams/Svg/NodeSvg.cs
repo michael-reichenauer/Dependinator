@@ -336,7 +336,7 @@ static partial class NodeSvg
         textZoom <= 0 ? maxLines : (int)(maxLines * parentZoom / textZoom);
 
     internal static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
-        node.IsHidden ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
+        !node.IsVisible ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
 
     // A small pencil glyph placed just after the node's name label, marking a manually added
     // (user-drawn) node so it reads as "hand-drawn/editable" (not a status). Empty for parsed

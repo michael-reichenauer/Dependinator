@@ -55,7 +55,7 @@ public class LineStrokeWidthTests
         Assert.Equal(2, CreateLine(16, isDirect: true).WeightedStrokeWidth);
 
         var hidden = CreateLine(16);
-        hidden.IsHidden = true;
+        hidden.Visibility = NodeVisibility.Dimmed;
         Assert.Equal(1, hidden.WeightedStrokeWidth);
     }
 
