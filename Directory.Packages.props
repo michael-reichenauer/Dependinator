@@ -22,7 +22,7 @@
         <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
         <!-- .devcontainer/post-create.sh and scripts/cloud-setup install the browsers for this version -->
-        <PackageVersion Include="Microsoft.Playwright.Xunit" Version="1.64.0" />
+        <PackageVersion Include="Microsoft.Playwright.Xunit" Version="1.64.1" />
         <PackageVersion Include="OmniSharp.Extensions.LanguageServer" Version="0.19.11" />
         <PackageVersion Include="Moq" Version="4.21.0" />
         <PackageVersion Include="StreamJsonRpc" Version="2.26.150" />
@@ -37,10 +37,10 @@
              Dependabot (.github/dependabot.yml): bump it deliberately and build. -->
         <PackageVersion Include="Azure.Bicep.Core" Version="0.48.1" />
         <!-- Anthropic's official C# SDK, for asking Claude with the user's own API key (src/Dependinator.Claude). -->
-        <PackageVersion Include="Anthropic" Version="13.1.0" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.6.0" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.6.0" />
+        <PackageVersion Include="Anthropic" Version="13.3.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.9.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.9.0" />
         <!-- Microsoft.Build, .Framework and Microsoft.NET.StringTools stay on 18.9.x until the target framework is
              net11.0 (NET11-UPGRADE.md, phase B): 18.10+ ships lib/net11.0 only and every net10.0 build then warns
              "doesn't support net10.0". Dependabot ignores 18.10+ for the three; ./scripts/updatepackages -u does not. -->
