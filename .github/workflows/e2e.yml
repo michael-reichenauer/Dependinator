@@ -93,8 +93,56 @@ jobs:
       - name: Build e2e test project
         run: dotnet build tests/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj
 
+      # --with-deps apt-installs the browser's OS packages (WebKit's are ~150 packages). The runners'
+      # Ubuntu mirror sometimes serves them at ~40 kB/s, which turned a 1-minute step into 10-40
+      # minutes (WebKit hit the 40-minute job timeout on Oct 22 and 23). So the downloaded .debs are
+      # cached per browser and apt only fetches the packages updated since. A cache saved on a
+      # feature branch is seen only there; dev (the Release runs) and main (the default branch,
+      # seen by every branch) keep theirs.
+      - name: Restore the browser's apt packages
+        id: apt-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/apt-debs
+          # Never an exact hit: the newest cache with the prefix is restored.
+          key: playwright-apt-${{ matrix.browser }}-restore
+          restore-keys: playwright-apt-${{ matrix.browser }}-
+
       - name: Install Playwright browsers
-        run: pwsh tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ matrix.browser }}
+        id: install
+        run: |
+          echo 'APT::Keep-Downloaded-Packages "true";' | sudo tee /etc/apt/apt.conf.d/99keep-debs >/dev/null
+          mkdir -p ~/apt-debs
+          sudo cp ~/apt-debs/*.deb /var/cache/apt/archives/ 2>/dev/null || true
+          echo "Restored $(ls ~/apt-debs | grep -c '\.deb$') cached .debs"
+          install() { pwsh tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ matrix.browser }}; }
+          # On a cache miss (a new runner image or Playwright version) the mirror can still crawl:
+          # a normal install takes about a minute, so after 6 the rest comes from the main Ubuntu
+          # archive instead. The .debs fetched so far stay in apt's archive.
+          if ! timeout 6m bash -c "$(declare -f install); install"; then
+            echo "::warning::The apt mirror is slow, retrying the install from archive.ubuntu.com"
+            # timeout stops pwsh but not the apt-get it started with sudo, which holds apt's lock:
+            # stop it while it still downloads (no dpkg running), else let it finish installing.
+            pgrep -x dpkg >/dev/null || sudo pkill -x apt-get || true
+            while pgrep -x apt-get >/dev/null; do sleep 2; done
+            sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' /etc/apt/apt-mirrors.txt \
+              /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+            install
+          fi
+          # Drop the .debs the archive has replaced with newer versions, so the cache doesn't grow.
+          sudo apt-get autoclean -qq
+          rm -f ~/apt-debs/*.deb
+          cp /var/cache/apt/archives/*.deb ~/apt-debs/ 2>/dev/null || true
+          echo "key=playwright-apt-${{ matrix.browser }}-$(ls ~/apt-debs | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+      # Saved right away (not at the end of the job), so a test failure doesn't lose it, and only
+      # when the set of .debs changed.
+      - name: Save the browser's apt packages
+        if: steps.install.outputs.key != steps.apt-cache.outputs.cache-matched-key
+        uses: actions/cache/save@v4
+        with:
+          path: ~/apt-debs
+          key: ${{ steps.install.outputs.key }}
 
       # ./scripts/e2e -s starts the cloud-sync stack itself but needs these tools on the runner.
       - name: Install Azure Functions Core Tools + Azurite (sync tests)
