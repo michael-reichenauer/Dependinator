@@ -348,7 +348,11 @@ public sealed class AppPage
         // app menu's own close below does not spend a lost-Escape timeout per open level.
         await CloseSubMenuAsync(item);
         for (int level = parentTestIds.Length - 1; level > 0; level--)
-            await CloseSubMenuAsync(MenuItem(parentTestIds[level]));
+        {
+            // An Escape with no menu open reaches the canvas and clears its selection.
+            if (await MenuItem(parentTestIds[level]).IsVisibleAsync())
+                await CloseSubMenuAsync(MenuItem(parentTestIds[level]));
+        }
         if (await MenuItem("menu-search").IsVisibleAsync())
             await CloseMenuAsync();
     }
@@ -356,11 +360,8 @@ public sealed class AppPage
     // Click a checkbox-style submenu item and verify its new state, leaving the menu closed. A
     // handled click closes the menu, and reopening it while the old popover still fades out finds
     // the fading item: the state check then polls an item that vanishes, under a menu that never
-    // reopens. So the menu is let close first and the state read on a reopened submenu. A handled
-    // click is never repeated (a second one would flip the toggle back); only a swallowed one is,
-    // recognized by the menu still open with the item in its old state. That check waits the full
-    // 15 s Expect timeout, not a menu attempt's 5 s: a handled click whose server roundtrip is
-    // merely slow (a loaded runner) must not be taken for a swallowed one and clicked again.
+    // reopens. So the menu is let close first and the state read on a reopened submenu. The click
+    // is not retried: clicking a toggle twice would flip it back.
     public Task ToggleSubMenuItemAsync(string parentTestId, string testId, bool expectChecked) =>
         ToggleSubMenuItemAsync([parentTestId], testId, expectChecked);
 
@@ -368,27 +369,10 @@ public sealed class AppPage
     public Task ToggleSubMenuItemAsync(string parentTestId, string childTestId, string testId, bool expectChecked) =>
         ToggleSubMenuItemAsync([parentTestId, childTestId], testId, expectChecked);
 
-    const float SwallowedClickTimeout = 15_000;
-
     async Task ToggleSubMenuItemAsync(string[] parentTestIds, string testId, bool expectChecked)
     {
-        ILocator item = await OpenSubMenuItemAsync(parentTestIds, testId);
-        string before = expectChecked ? "false" : "true";
-        for (int attempt = 1; ; attempt++)
-        {
-            await item.ClickAsync(new() { Timeout = MenuAttemptTimeout });
-            try
-            {
-                await MenuItem("menu-search")
-                    .WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = SwallowedClickTimeout });
-                break;
-            }
-            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
-            {
-                if (!await item.IsVisibleAsync() || await item.GetAttributeAsync("data-checked") != before)
-                    throw;
-            }
-        }
+        await (await OpenSubMenuItemAsync(parentTestIds, testId)).ClickAsync();
+        await Expect(MenuItem("menu-search")).ToBeHiddenAsync();
         await ExpectSubMenuItemCheckedAsync(parentTestIds, testId, expectChecked);
     }
 
