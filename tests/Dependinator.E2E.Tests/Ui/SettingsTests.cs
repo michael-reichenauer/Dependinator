@@ -53,23 +53,14 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await ExpectWheelDownToZoomAsync(zoomIn: false);
     }
 
-    Task<ILocator> OpenInvertScrollZoomAsync() => App.OpenSubMenuItemAsync("menu-settings", "menu-invert-scroll-zoom");
-
     // Assert the toggle state via the menu (which is closed again, so the canvas is free for
     // wheel gestures: an open menu's overlay would swallow them).
     Task ExpectInvertScrollZoomAsync(bool isOn) =>
         App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-invert-scroll-zoom", isOn);
 
-    // Click the toggle and verify it really flipped: a click landing while the popover
-    // re-renders is swallowed silently, so the state is read back before moving on. A handled
-    // click closes the menu; let it finish fading out before reopening it (see
-    // ToggleIncludeTestProjectsAsync).
-    async Task ToggleInvertScrollZoomAsync(bool expectOn)
-    {
-        await (await OpenInvertScrollZoomAsync()).ClickAsync();
-        await Expect(App.MenuItem("menu-search")).ToBeHiddenAsync();
-        await ExpectInvertScrollZoomAsync(expectOn);
-    }
+    // Click the toggle and verify it really flipped (AppPage.ToggleSubMenuItemAsync).
+    Task ToggleInvertScrollZoomAsync(bool expectOn) =>
+        App.ToggleSubMenuItemAsync("menu-settings", "menu-invert-scroll-zoom", expectOn);
 
     // Scroll the wheel down over empty canvas and assert which way the root node changes size.
     // A wheel landing while the canvas re-renders is swallowed silently, so the gesture is

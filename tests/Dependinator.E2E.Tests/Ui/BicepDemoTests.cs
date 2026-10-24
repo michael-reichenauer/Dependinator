@@ -98,25 +98,10 @@ public class BicepDemoTests(ITestOutputHelper output) : E2ETestBase(output)
         await search.NavigateToAsync(fullName);
     }
 
-    // The Lines submenu is nested under View: open View, hover Lines, then the item.
-    Task<ILocator> OpenConfigurationItemAsync() =>
-        App.OpenSubMenuItemAsync("menu-view", "menu-lines", "menu-lines-configuration");
+    // View › Lines and View › Rows toggles; the menu is left closed.
+    Task ToggleConfigurationAsync(bool expectHidden) =>
+        App.ToggleSubMenuItemAsync("menu-view", "menu-lines", "menu-lines-configuration", expectHidden);
 
-    async Task ToggleConfigurationAsync(bool expectHidden)
-    {
-        await (await OpenConfigurationItemAsync()).ClickAsync();
-        await Expect(await OpenConfigurationItemAsync())
-            .ToHaveAttributeAsync("data-checked", expectHidden ? "true" : "false");
-        await App.CloseMenuAsync();
-    }
-
-    Task<ILocator> OpenRowsItemAsync(string testId) => App.OpenSubMenuItemAsync("menu-view", "menu-rows", testId);
-
-    async Task ToggleRowsAsync(string testId, bool expectHidden)
-    {
-        await (await OpenRowsItemAsync(testId)).ClickAsync();
-        await Expect(await OpenRowsItemAsync(testId))
-            .ToHaveAttributeAsync("data-checked", expectHidden ? "true" : "false");
-        await App.CloseMenuAsync();
-    }
+    Task ToggleRowsAsync(string testId, bool expectHidden) =>
+        App.ToggleSubMenuItemAsync("menu-view", "menu-rows", testId, expectHidden);
 }

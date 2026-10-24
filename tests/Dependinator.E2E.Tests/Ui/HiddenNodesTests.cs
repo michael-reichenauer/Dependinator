@@ -52,9 +52,7 @@ public class HiddenNodesTests(ITestOutputHelper output) : E2ETestBase(output)
         // Going to a hidden node reveals hidden nodes, so it can be seen.
         await item.GetByTestId("hidden-item-name").ClickAsync();
         await Expect(App.NodeLabel("DemoTheme")).ToBeVisibleAsync();
-        await Expect(await App.OpenSubMenuItemAsync("menu-view", "menu-reveal-hidden-nodes"))
-            .ToHaveAttributeAsync("data-checked", "true");
-        await App.CloseMenuAsync();
+        await App.ExpectSubMenuItemCheckedAsync("menu-view", "menu-reveal-hidden-nodes", true);
 
         // Show takes it off the list, and the count goes away.
         await item.GetByTestId("hidden-item-show").ClickAsync();
@@ -86,11 +84,6 @@ public class HiddenNodesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.MenuItem("hidden-empty")).ToContainTextAsync("No hidden children left");
     }
 
-    async Task ToggleRevealAsync(bool expectChecked)
-    {
-        await (await App.OpenSubMenuItemAsync("menu-view", "menu-reveal-hidden-nodes")).ClickAsync();
-        await Expect(await App.OpenSubMenuItemAsync("menu-view", "menu-reveal-hidden-nodes"))
-            .ToHaveAttributeAsync("data-checked", expectChecked ? "true" : "false");
-        await App.CloseMenuAsync();
-    }
+    Task ToggleRevealAsync(bool expectChecked) =>
+        App.ToggleSubMenuItemAsync("menu-view", "menu-reveal-hidden-nodes", expectChecked);
 }
