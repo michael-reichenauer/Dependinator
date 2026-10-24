@@ -37,14 +37,7 @@ public class LineDimTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(dimmed).ToHaveCountAsync(0);
     }
 
-    Task<ILocator> OpenDimItemAsync() => App.OpenSubMenuItemAsync("menu-view", "menu-dim-unrelated-lines");
-
-    // Click the toggle and verify it really flipped (a click landing while the popover
-    // re-renders is swallowed silently), then close the menu so the canvas is free again.
-    async Task ToggleDimAsync(bool expectOn)
-    {
-        await (await OpenDimItemAsync()).ClickAsync();
-        await Expect(await OpenDimItemAsync()).ToHaveAttributeAsync("data-checked", expectOn ? "true" : "false");
-        await App.CloseMenuAsync();
-    }
+    // Click the toggle and verify it really flipped; the menu is left closed, so the canvas is
+    // free again.
+    Task ToggleDimAsync(bool expectOn) => App.ToggleSubMenuItemAsync("menu-view", "menu-dim-unrelated-lines", expectOn);
 }

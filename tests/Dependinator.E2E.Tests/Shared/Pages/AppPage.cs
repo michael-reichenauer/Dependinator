@@ -309,11 +309,14 @@ public sealed class AppPage
     // and an assertion on the locator that OpenSubMenuItemAsync returned then polls an item that
     // never comes back ("element(s) not found"). The assertion gets the per-attempt timeout to
     // pass to its Expect calls. Leaves the submenu open.
-    public async Task ExpectSubMenuAsync(string parentTestId, string testId, Func<float, Task> assert)
+    public Task ExpectSubMenuAsync(string parentTestId, string testId, Func<float, Task> assert) =>
+        ExpectSubMenuAsync([parentTestId], testId, assert);
+
+    async Task ExpectSubMenuAsync(string[] parentTestIds, string testId, Func<float, Task> assert)
     {
         for (int attempt = 1; ; attempt++)
         {
-            await OpenSubMenuItemAsync(parentTestId, testId);
+            await OpenSubMenuItemAsync(parentTestIds, testId);
             try
             {
                 await assert(MenuAttemptTimeout);
@@ -328,12 +331,15 @@ public sealed class AppPage
 
     // Assert a checkbox-style submenu item's state (its data-checked attribute), then close the
     // menu (see ExpectSubMenuAsync for why each attempt reopens the submenu).
-    public async Task ExpectSubMenuItemCheckedAsync(string parentTestId, string testId, bool isChecked)
+    public Task ExpectSubMenuItemCheckedAsync(string parentTestId, string testId, bool isChecked) =>
+        ExpectSubMenuItemCheckedAsync([parentTestId], testId, isChecked);
+
+    async Task ExpectSubMenuItemCheckedAsync(string[] parentTestIds, string testId, bool isChecked)
     {
         string expected = isChecked ? "true" : "false";
         ILocator item = MenuItem(testId);
         await ExpectSubMenuAsync(
-            parentTestId,
+            parentTestIds,
             testId,
             timeout => Expect(item).ToHaveAttributeAsync("data-checked", expected, new() { Timeout = timeout })
         );
@@ -341,6 +347,25 @@ public sealed class AppPage
         await CloseSubMenuAsync(item);
         if (await MenuItem("menu-search").IsVisibleAsync())
             await CloseMenuAsync();
+    }
+
+    // Click a checkbox-style submenu item and verify its new state, leaving the menu closed. A
+    // handled click closes the menu, and reopening it while the old popover still fades out finds
+    // the fading item: the state check then polls an item that vanishes, under a menu that never
+    // reopens. So the menu is let close first and the state read on a reopened submenu. The click
+    // is not retried: clicking a toggle twice would flip it back.
+    public Task ToggleSubMenuItemAsync(string parentTestId, string testId, bool expectChecked) =>
+        ToggleSubMenuItemAsync([parentTestId], testId, expectChecked);
+
+    // Same for an item two levels down (e.g. View › Lines › External).
+    public Task ToggleSubMenuItemAsync(string parentTestId, string childTestId, string testId, bool expectChecked) =>
+        ToggleSubMenuItemAsync([parentTestId, childTestId], testId, expectChecked);
+
+    async Task ToggleSubMenuItemAsync(string[] parentTestIds, string testId, bool expectChecked)
+    {
+        await (await OpenSubMenuItemAsync(parentTestIds, testId)).ClickAsync();
+        await Expect(MenuItem("menu-search")).ToBeHiddenAsync();
+        await ExpectSubMenuItemCheckedAsync(parentTestIds, testId, expectChecked);
     }
 
     // Close an open submenu with Escape, repeated until the given item in it is gone. The first

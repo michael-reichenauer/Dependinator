@@ -62,11 +62,8 @@ public class LineWidthTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     // Click the toggle and verify it really flipped (which also closes the menu).
-    async Task ToggleWidthsAsync(bool expectOn)
-    {
-        await (await App.OpenSubMenuItemAsync("menu-view", "menu-link-count-widths")).ClickAsync();
-        await App.ExpectSubMenuItemCheckedAsync("menu-view", "menu-link-count-widths", expectOn);
-    }
+    Task ToggleWidthsAsync(bool expectOn) =>
+        App.ToggleSubMenuItemAsync("menu-view", "menu-link-count-widths", expectOn);
 
     // The visible polyline of the line with the given hover title ("Source→Target (n)", see
     // AppPage.LineTitle). The Has filter is resolved relative to each line group, so the title

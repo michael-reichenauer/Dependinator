@@ -67,8 +67,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
-        await (await App.OpenSubMenuItemAsync("menu-view", "menu-link-count-widths")).ClickAsync();
-        await App.ExpectSubMenuItemCheckedAsync("menu-view", "menu-link-count-widths", true);
+        await App.ToggleSubMenuItemAsync("menu-view", "menu-link-count-widths", true);
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
         ILocator row = Page.GetByTestId("cycles-item-show").Filter(new() { HasText = "ExceptionHandling" });
         ILocator dimmedCycleLines = Page.Locator("#svgcanvas .line-cycle.line-dim");
