@@ -98,7 +98,7 @@ public class BicepDemoTests(ITestOutputHelper output) : E2ETestBase(output)
         await search.NavigateToAsync(fullName);
     }
 
-    // The Lines and Rows submenus are nested under View: open View, hover the submenu, then the item.
+    // View › Lines and View › Rows toggles; the menu is left closed.
     Task ToggleConfigurationAsync(bool expectHidden) =>
         App.ToggleSubMenuItemAsync("menu-view", "menu-lines", "menu-lines-configuration", expectHidden);
 
