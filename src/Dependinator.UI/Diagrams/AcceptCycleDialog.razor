@@ -3,91 +3,152 @@
 @inject IVsCodeSendService vsCodeSendService
 
 @* Reviews a circular dependency (or edits an acceptance): accept it as intended, with why, shown
-   in the cycles panel; editing also offers to stop accepting it. The header copies a prompt for
-   any AI chat, whose answer can be pasted back, and, where the host can ask Claude, "Ask Claude"
-   asks for a verdict. Pasted answers and Claude's are alike. Each answer is
-   kept while the dialog is open (answers can differ for a borderline cycle, and the dialog says so
-   then), and the selected one drives the rest: accepting fills in the reason, breaking shows the
-   change to make, with a prompt for an AI that can change the code as the main action, and fixing
-   later or accepting anyway as the alternatives. A reason the dialog filled in follows the
-   selected answer until the user edits it. Nothing is saved until the user decides. In VS Code
-   the API key is entered in an input box at the top of the window, which is easy to miss while
-   watching this dialog, so the dialog points there while it waits. *@
+   in the cycles panel; editing also offers to stop accepting it. Under the cycle, "Get an AI
+   opinion" offers two routes to the same kind of answer, side by side so they read as one choice:
+   "Ask Claude", where the host can ask Claude (the user's API key, a few cents), and "Use your AI
+   chat" (free), which copies a prompt and then shows the rest of that route as steps (open
+   claude.ai, paste the answer back). A pasted answer is read once the pasting stops, without a
+   button. Pasted answers and Claude's are alike, and each is labeled by where it came from. Each
+   answer is kept while the dialog is open (answers can differ for a borderline cycle, and the
+   dialog says so then, and offers the other route as a second opinion), and the selected one
+   drives the rest: accepting fills in the reason, breaking shows the change to make, with a prompt
+   for an AI that can change the code as the main action, and fixing later or accepting anyway as
+   the alternatives. A reason the dialog filled in follows the selected answer until the user edits
+   it. Nothing is saved until the user decides. In VS Code the API key is entered in an input box at
+   the top of the window, which is easy to miss while watching this dialog, so the dialog points
+   there while it waits. *@
 <MudDialog>
   <TitleContent>
-    <div class="dep-cycles__dialog-title">
-      <MudText Typo="Typo.h6">@(IsEdit ? "Accepted cycle" : "Review cycle")</MudText>
-      <MudSpacer />
-      @if (CopyPrompt is not null)
-      {
-        @if (Suggest is null)
-        {
-          <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Size="Size.Small" Variant="Variant.Outlined"
-                     OnClick="CopyPromptAsync" data-testid="accept-cycle-copy-prompt">Copy AI prompt</MudButton>
-        }
-        else
-        {
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Size="Size.Small"
-                         title="Copy a prompt that asks any AI chat about this cycle"
-                         OnClick="CopyPromptAsync" data-testid="accept-cycle-copy-prompt" />
-        }
-      }
-      @if (Suggest is not null)
-      {
-        <MudButton StartIcon="@(isSuggesting ? null : MudBlazor.Icons.Material.Outlined.AutoAwesome)" Size="Size.Small"
-                   Variant="@(HasClaudeAnswered ? Variant.Text : Variant.Outlined)" Disabled="isSuggesting"
-                   Class="dep-cycles__ask-claude"
-                   title="Ask Claude whether this cycle is intended or should be broken, with your own API key"
-                   OnClick="SuggestAsync" data-testid="accept-cycle-suggest">
-          @if (isSuggesting)
-          {
-            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="dep-cycles__ask-claude-progress" />
-            <span>Asking ...</span>
-          }
-          else
-          {
-            @(HasClaudeAnswered ? "Ask again" : "Ask Claude")
-          }
-        </MudButton>
-      }
-    </div>
+    <MudText Typo="Typo.h6">@(IsEdit ? "Accepted cycle" : "Review cycle")</MudText>
   </TitleContent>
   <DialogContent>
     <div class="dep-cycles__dialog-cycle" data-testid="accept-cycle-text">
       <span class="dep-cycles__container">@ContainerName</span>
       <span class="dep-cycles__members">@Members</span>
     </div>
-    @if (copyNote is not null)
+    @if (isChatOpen)
     {
-      <div class="dep-cycles__copied mt-2">
-        <div class="dep-cycles__suggest-note" data-testid="accept-cycle-copied">@copyNote</div>
-        @if (isPasteOpen)
+      @* The chat route's steps, all in view at once, each ticked off when done. *@
+      <div class="dep-cycles__ai" data-testid="accept-cycle-chat-steps">
+        <div class="dep-cycles__ai-header">
+          <span class="dep-cycles__ai-title">Use your AI chat</span>
+          <MudSpacer />
+          <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="CloseChat"
+                     data-testid="accept-cycle-chat-close">Back</MudButton>
+        </div>
+        <div class="dep-cycles__steps">
+          <div class="dep-cycles__step @(isPromptCopied ? "dep-cycles__step--done" : "")">
+            <span class="dep-cycles__step-number">@(isPromptCopied ? "✓" : "1")</span>
+            <div class="dep-cycles__step-body">
+              @if (isPromptCopied)
+              {
+                <div data-testid="accept-cycle-prompt-copied">The prompt is copied, with the cycle, its links and the code behind them.</div>
+                <div>
+                  <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="CopyPromptAsync"
+                             data-testid="accept-cycle-copy-again">Copy again</MudButton>
+                </div>
+              }
+              else
+              {
+                <div>Copy the prompt</div>
+                <div>
+                  <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+                             OnClick="CopyPromptAsync" data-testid="accept-cycle-copy-again">Copy prompt</MudButton>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="dep-cycles__step">
+            <span class="dep-cycles__step-number">2</span>
+            <div class="dep-cycles__step-body">
+              <div>Paste it into claude.ai, or another AI chat</div>
+              @* claude.ai opens empty, to paste into: a prompt with code is too long, and too
+                 private, to pass in the address. *@
+              <div>
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                           EndIcon="@MudBlazor.Icons.Material.Outlined.OpenInNew"
+                           title="Open claude.ai in the browser, to paste the prompt into"
+                           OnClick="OpenClaudeAsync" data-testid="accept-cycle-open-claude">Open claude.ai</MudButton>
+              </div>
+            </div>
+          </div>
+          <div class="dep-cycles__step">
+            <span class="dep-cycles__step-number">3</span>
+            <div class="dep-cycles__step-body" data-testid="accept-cycle-paste">
+              <div>Paste the whole answer here</div>
+              <MudTextField T="string" Value="pastedAnswer" ValueChanged="ReadPastedAnswer" DebounceInterval="500"
+                            Lines="4" Variant="Variant.Outlined" Margin="Margin.Dense"
+                            Placeholder="It is read as soon as it is pasted"
+                            data-testid="accept-cycle-paste-text" />
+              @if (pasteError is not null)
+              {
+                <div class="dep-cycles__suggest-error" data-testid="accept-cycle-paste-error">@pasteError</div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+    else if (HasAiHelp && answers.Count == 0)
+    {
+      @* Before any answer: the two routes, each saying what happens and what it costs. *@
+      <div class="dep-cycles__ai" data-testid="accept-cycle-ai">
+        <div class="dep-cycles__ai-title">Get an AI opinion (optional)</div>
+        <div class="dep-cycles__routes">
+          @if (Suggest is not null)
+          {
+            <div class="dep-cycles__route">
+              <div class="dep-cycles__route-name">
+                <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" Size="Size.Small" Class="dep-cycles__claude-icon" />
+                Ask Claude
+              </div>
+              <div class="dep-cycles__route-text">Claude reads the cycle and its code and answers here.</div>
+              <div class="dep-cycles__route-meta">Your Anthropic API key, a few cents per answer</div>
+              <div>@AskButton</div>
+            </div>
+          }
+          @if (CopyPrompt is not null)
+          {
+            <div class="dep-cycles__route">
+              <div class="dep-cycles__route-name">
+                <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.Forum" Size="Size.Small" />
+                Use your AI chat
+              </div>
+              <div class="dep-cycles__route-text">
+                Copy a prompt into claude.ai or any AI chat, then paste its answer back here.
+              </div>
+              <div class="dep-cycles__route-meta">Free, works with any chat</div>
+              <div>
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+                           title="Copy a prompt with the cycle, its links and the code behind them"
+                           OnClick="StartChatAsync" data-testid="accept-cycle-copy-prompt">Copy prompt</MudButton>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+    else if (HasAiHelp)
+    {
+      @* With an answer: one line, offering another opinion from either route. *@
+      <div class="dep-cycles__ai-header dep-cycles__ai" data-testid="accept-cycle-ai">
+        <span class="dep-cycles__ai-title">@(answers.Count > 1 ? "AI opinions" : "AI opinion")</span>
+        <MudSpacer />
+        @if (Suggest is not null)
         {
-          @* The next step after copying, so next to the note. The prompt is already on the
-             clipboard, so claude.ai opens empty, to paste into: a prompt with code is too long, and
-             too private, to pass in the address. *@
-          <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
-                     EndIcon="@MudBlazor.Icons.Material.Outlined.OpenInNew" Class="dep-cycles__open-claude"
-                     title="Open claude.ai in the browser, to paste the prompt into"
-                     OnClick="OpenClaudeAsync" data-testid="accept-cycle-open-claude">Open claude.ai</MudButton>
+          @AskButton
+        }
+        @if (CopyPrompt is not null)
+        {
+          <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.Forum"
+                     title="Copy the prompt again, for another answer from an AI chat"
+                     OnClick="StartChatAsync" data-testid="accept-cycle-copy-prompt">Use your AI chat</MudButton>
         }
       </div>
     }
-    @if (isPasteOpen)
+    @if (copyNote is not null)
     {
-      <div class="dep-cycles__paste" data-testid="accept-cycle-paste">
-        <MudTextField T="string" @bind-Value="pastedAnswer" Label="Paste the AI's answer here" Lines="4"
-                      Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense"
-                      data-testid="accept-cycle-paste-text" />
-        <div class="dep-cycles__paste-actions">
-          <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@string.IsNullOrWhiteSpace(pastedAnswer)"
-                     OnClick="UsePastedAnswer" data-testid="accept-cycle-paste-use">Use answer</MudButton>
-        </div>
-        @if (pasteError is not null)
-        {
-          <div class="dep-cycles__suggest-error" data-testid="accept-cycle-paste-error">@pasteError</div>
-        }
-      </div>
+      <div class="dep-cycles__suggest-note mt-2" data-testid="accept-cycle-copied">@copyNote</div>
     }
     @if (step is SuggestStep.EnteringApiKey or SuggestStep.EnteringNewApiKey)
     {
@@ -99,12 +160,12 @@
     @if (suggestError is not null)
     {
       <div class="dep-cycles__suggest-error" data-testid="accept-cycle-suggest-error">@suggestError</div>
-      @* Asking Claude failed (no key, a key not accepted, no credits, no network): the prompt for
-         any AI chat, whose answer can be pasted back, is always a way on. *@
-      @if (isAskError && CopyPrompt is not null)
+      @* Asking Claude failed (no key, a key not accepted, no credits, no network): the AI chat
+         route, whose answer can be pasted back, is always a way on. *@
+      @if (isAskError && CopyPrompt is not null && !isChatOpen)
       {
-        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
-                   Class="mt-1" OnClick="CopyPromptAsync" data-testid="accept-cycle-copy-instead">Copy prompt instead</MudButton>
+        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.Forum"
+                   Class="mt-1" OnClick="StartChatAsync" data-testid="accept-cycle-copy-instead">Use your AI chat instead</MudButton>
       }
     }
     @if (answers.Count > 1)
@@ -116,7 +177,7 @@
           <MudButton Size="Size.Small" Variant="@(index == selected ? Variant.Filled : Variant.Outlined)"
                      Color="@(index == selected ? Color.Primary : Color.Default)" OnClick="() => Select(index)"
                      data-testid="accept-cycle-answer" data-selected="@(index == selected ? "true" : "false")">
-            @($"{index + 1} · {(answers[index].IsAccept ? "Accept" : "Break")}{(answers[index].IsPasted ? " (pasted)" : "")}")
+            @AnswerLabel(index)
           </MudButton>
         }
       </div>
@@ -230,11 +291,40 @@
 
   bool HasClaudeAnswered => answers.Any(a => !a.IsPasted);
 
-  bool isPasteOpen;
+  bool HasAiHelp => Suggest is not null || CopyPrompt is not null;
+
+  bool isChatOpen;
+  bool isPromptCopied;
   string pastedAnswer = "";
   string? pasteError;
 
-  static string Source(CycleSuggestion answer) => answer.IsPasted ? "The AI" : "Claude";
+  static string Source(CycleSuggestion answer) => answer.IsPasted ? "Your AI chat" : "Claude";
+
+  // Where the answer came from, and its verdict; numbered when one route answered more than once.
+  string AnswerLabel(int index)
+  {
+    var answer = answers[index];
+    var sameSource = answers.Where(a => a.IsPasted == answer.IsPasted).ToList();
+    var number = sameSource.Count > 1 ? $" {sameSource.IndexOf(answer) + 1}" : "";
+    return $"{(answer.IsPasted ? "Chat" : "Claude")}{number} · {(answer.IsAccept ? "Accept" : "Break")}";
+  }
+
+  RenderFragment AskButton =>
+    @<MudButton StartIcon="@(isSuggesting ? null : MudBlazor.Icons.Material.Outlined.AutoAwesome)" Size="Size.Small"
+                Variant="@(HasClaudeAnswered ? Variant.Text : Variant.Outlined)" Disabled="isSuggesting"
+                Class="dep-cycles__ask-claude"
+                title="Ask Claude whether this cycle is intended or should be broken, with your own API key"
+                OnClick="SuggestAsync" data-testid="accept-cycle-suggest">
+      @if (isSuggesting)
+      {
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="dep-cycles__ask-claude-progress" />
+        <span>Asking ...</span>
+      }
+      else
+      {
+        @(HasClaudeAnswered ? "Ask again" : "Ask Claude")
+      }
+    </MudButton>;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -251,7 +341,7 @@
     suggestError = null;
     isAskError = false;
     copyNote = null;
-    RefreshTitle();
+    isChatOpen = false;
     var result = await Suggest(next =>
     {
       step = next;
@@ -259,7 +349,6 @@
     });
     isSuggesting = false;
     step = null;
-    RefreshTitle();
     if (result is not CycleSuggestion s)
     {
       suggestError = result.Error.Message;
@@ -268,12 +357,7 @@
     }
     answers.Add(s);
     Select(answers.Count - 1);
-    RefreshTitle();
   }
-
-  // The title row (with "Ask Claude") is rendered by the dialog instance, which does not render
-  // again with this component, so it is told to.
-  void RefreshTitle() => MudDialog.StateHasChanged();
 
   // The reason field follows the selected answer while it holds what the dialog filled in (or is
   // empty); a reason the user wrote is kept, and an accepting answer's reason offered next to it.
@@ -297,38 +381,55 @@
     : answer.Change == "" ? $"Accepted anyway, though {(answer.IsPasted ? "an AI" : "Claude")} suggested breaking it."
     : $"Accepted anyway; suggested fix: {answer.Change}";
 
+  // The AI chat route: copies the prompt, its first step, and shows the steps.
+  async Task StartChatAsync()
+  {
+    isChatOpen = true;
+    isPromptCopied = false;
+    pastedAnswer = "";
+    pasteError = null;
+    suggestError = null;
+    isAskError = false;
+    copyNote = null;
+    await CopyPromptAsync();
+  }
+
   async Task CopyPromptAsync()
   {
     if (CopyPrompt is null)
       return;
-    await CopyAsync(await CopyPrompt(),
-      "The prompt is copied. Paste it into claude.ai, or another AI chat, then paste its answer below.");
-    if (copyNote is not null)
-    {
-      isPasteOpen = true;
-      pasteError = null;
-    }
+    isPromptCopied = await clipboardService.CopyAsync(await CopyPrompt());
+    suggestError = isPromptCopied ? null : "Could not copy to the clipboard.";
+  }
+
+  void CloseChat()
+  {
+    isChatOpen = false;
+    pasteError = null;
   }
 
   const string ClaudeUrl = "https://claude.ai/new";
 
   Task OpenClaudeAsync() => vsCodeSendService.OpenExternalAsync(ClaudeUrl);
 
-  // A pasted answer joins Claude's, selected; one that cannot be read stays in the box, to fix.
-  void UsePastedAnswer()
+  // Read once the pasting (or typing) stops: an answer joins Claude's, selected, and the steps
+  // close; one that cannot be read stays in the box, to fix.
+  void ReadPastedAnswer(string text)
   {
+    pastedAnswer = text ?? "";
+    pasteError = null;
+    if (string.IsNullOrWhiteSpace(pastedAnswer))
+      return;
     var answer = CycleSuggestion.ParseText(pastedAnswer);
     if (answer is not CycleSuggestion s)
     {
       pasteError = answer.Error.Message;
       return;
     }
-    isPasteOpen = false;
+    isChatOpen = false;
     pastedAnswer = "";
-    pasteError = null;
     answers.Add(s);
     Select(answers.Count - 1);
-    RefreshTitle();
   }
 
   async Task CopyFixPromptAsync()

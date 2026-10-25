@@ -279,15 +279,67 @@
     gap: 2px;
 }
 
-/* The review dialog's title row, with the copy-prompt and "Ask Claude" buttons on the right. */
-.dep-cycles__dialog-title {
+/* The review dialog's "Get an AI opinion" section: the two routes side by side, then one line
+   once there is an answer, or the AI chat route's steps. */
+.dep-cycles__ai {
+    margin-top: 12px;
+}
+
+.dep-cycles__ai-header {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 4px;
 }
 
+.dep-cycles__ai-title {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.dep-cycles__routes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.dep-cycles__route {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 6px;
+}
+
+.dep-cycles__route > :last-child {
+    margin-top: auto;
+    padding-top: 4px;
+}
+
+.dep-cycles__route-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.dep-cycles__route-text {
+    font-size: 0.8125rem;
+}
+
+.dep-cycles__route-meta {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
 /* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
-.dep-cycles__ask-claude .mud-button-icon-start {
+.dep-cycles__ask-claude .mud-button-icon-start,
+.dep-cycles__claude-icon {
     color: #d97757;
 }
 
@@ -297,29 +349,50 @@
     margin-right: 6px;
 }
 
-/* The note that the prompt is copied, with "Open claude.ai", the next step, beside it. */
-.dep-cycles__copied {
+/* The AI chat route's numbered steps, ticked off as they are done. */
+.dep-cycles__steps {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 6px;
 }
 
-.dep-cycles__open-claude {
-    flex-shrink: 0;
+.dep-cycles__step {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
 }
 
-/* The box an AI chat's answer to the copied prompt is pasted into. */
-.dep-cycles__paste {
-    margin-top: 10px;
+.dep-cycles__step-number {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--mud-palette-lines-inputs);
+    border-radius: 50%;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.6875rem;
 }
 
-.dep-cycles__paste-actions {
+.dep-cycles__step--done .dep-cycles__step-number {
+    border-color: var(--mud-palette-success);
+    background: var(--mud-palette-success);
+    color: var(--mud-palette-success-text);
+}
+
+.dep-cycles__step-body {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 4px;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    font-size: 0.875rem;
 }
 
-/* One chip per answer (Claude's, or pasted), when there are several. */
+/* One chip per answer, named by where it came from (Claude or the AI chat), when there are several. */
 .dep-cycles__answers {
     display: flex;
     flex-wrap: wrap;

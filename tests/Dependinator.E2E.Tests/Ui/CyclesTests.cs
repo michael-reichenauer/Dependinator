@@ -188,6 +188,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await ask.ClickAsync();
         ILocator answers = Page.GetByTestId("accept-cycle-answer");
         await Expect(answers).ToHaveCountAsync(2);
+        await Expect(answers.First).ToHaveTextAsync("Claude 1 · Accept");
         await Expect(Page.GetByTestId("accept-cycle-answers-differ")).ToBeVisibleAsync();
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
         await Expect(field)
@@ -287,9 +288,13 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator cycle = Page.GetByTestId("cycles-item").First;
         string member = (await cycle.Locator(".dep-cycles__members").InnerTextAsync()).Split(" ↔ ")[0];
         await cycle.GetByTestId("cycles-review").ClickAsync();
+        // Both routes are offered side by side before any answer.
+        await Expect(Page.GetByTestId("accept-cycle-suggest")).ToHaveTextAsync("Ask Claude");
         ILocator copy = Page.GetByTestId("accept-cycle-copy-prompt");
         await copy.ClickAsync();
-        await Expect(Page.GetByTestId("accept-cycle-copied")).ToContainTextAsync("prompt is copied");
+        // Copying shows the rest of the AI chat route as steps, the first one done.
+        await Expect(Page.GetByTestId("accept-cycle-chat-steps")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("accept-cycle-prompt-copied")).ToContainTextAsync("prompt is copied");
 
         string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
         Assert.Contains("## The cycle", prompt);
@@ -304,31 +309,27 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         IJSHandle openedUrl = await Page.WaitForFunctionAsync("() => window.__openedUrl");
         Assert.Equal("https://claude.ai/new", await openedUrl.JsonValueAsync<string>());
 
-        // The AI chat's answer is pasted back: one without a verdict cannot be read.
+        // The AI chat's answer is pasted back and read without a button: one without a verdict
+        // cannot be read. (A readable one closes the steps, so it is filled once, not reliably.)
         ILocator answerBox = Page.GetByTestId("accept-cycle-paste-text");
-        ILocator useAnswer = Page.GetByTestId("accept-cycle-paste-use");
         await App.FillReliablyAsync(answerBox, "Looks fine to me.");
-        await useAnswer.ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-paste-error")).ToContainTextAsync("could not be read");
 
-        await App.FillReliablyAsync(
-            answerBox,
-            "**Verdict:** Break\n**Why:** One misplaced class.\n**Change:** Move it."
-        );
-        await useAnswer.ClickAsync();
+        await answerBox.FillAsync("**Verdict:** Break\n**Why:** One misplaced class.\n**Change:** Move it.");
         ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
-        await Expect(verdict).ToContainTextAsync("The AI suggests breaking it");
+        await Expect(verdict).ToContainTextAsync("Your AI chat suggests breaking it");
+        await Expect(Page.GetByTestId("accept-cycle-chat-steps")).ToHaveCountAsync(0);
         await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept anyway");
         await Expect(Page.GetByTestId("accept-cycle-reason"))
             .ToHaveValueAsync("Accepted anyway; suggested fix: Move it.");
 
-        // A second pasted answer joins the first, as with Claude's answers.
+        // A second pasted answer joins the first, as with Claude's answers, each named by its source.
+        await Expect(copy).ToHaveTextAsync("Use your AI chat");
         await copy.ClickAsync();
-        await App.FillReliablyAsync(answerBox, "Verdict: Accept\nReason to store: One concept.");
-        await useAnswer.ClickAsync();
+        await answerBox.FillAsync("Verdict: Accept\nReason to store: One concept.");
         await Expect(Page.GetByTestId("accept-cycle-answer")).ToHaveCountAsync(2);
-        await Expect(Page.GetByTestId("accept-cycle-answer").Last).ToHaveTextAsync("2 · Accept (pasted)");
+        await Expect(Page.GetByTestId("accept-cycle-answer").Last).ToHaveTextAsync("Chat 2 · Accept");
         await Expect(Page.GetByTestId("accept-cycle-answers-differ")).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("accept-cycle-reason")).ToHaveValueAsync("One concept.");
     }

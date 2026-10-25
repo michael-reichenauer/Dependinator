@@ -179,6 +179,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   to-fix entries whose cycle is gone or grew (a node joined) are marked so, and listed first. The request
   runs in the LSP or the web host through Anthropic's C# SDK (new `Dependinator.Claude` library),
   never in the browser app.
+  On Oct 25 the review dialog's two AI routes became one "Get an AI opinion" section: "Ask Claude"
+  (API key, a few cents) and "Use your AI chat" (free) side by side, each saying what happens, since
+  a bare copy icon next to "Ask Claude" read as a rival feature. The chat route shows its steps at
+  once (copy, open claude.ai, paste back), a pasted answer is read without a button, and answers
+  are labeled by source ("Claude · Break", "Chat · Accept"), so the other route reads as a second
+  opinion.
 - **Problem indicator (Oct 21).** A warning count in the app bar, like the VS Code status bar,
   shows that the model has open cycles and broken architecture rules without opening their
   panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one
