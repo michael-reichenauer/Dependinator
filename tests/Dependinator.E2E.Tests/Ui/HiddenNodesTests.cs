@@ -1,6 +1,7 @@
 using Dependinator.E2E.Tests.Shared;
 using Dependinator.E2E.Tests.Shared.Pages;
 using Microsoft.Playwright;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
@@ -43,6 +44,8 @@ public class HiddenNodesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // The app bar counts it; a click lists it.
         await Expect(App.MenuItem("hidden-count")).ToHaveTextAsync("1");
+        // A reminder, not a problem: drawn in the app bar's own color, not an alarm color (#114).
+        Assert.Equal(await IconColorAsync("toolbar-search"), await IconColorAsync("hidden-indicator"));
         await App.MenuItem("hidden-indicator").ClickAsync();
         ILocator item = App.MenuItem("hidden-item");
         await Expect(item).ToHaveCountAsync(1);
@@ -83,6 +86,9 @@ public class HiddenNodesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.Locator("#svgcanvas g.hiddenBadge")).ToHaveCountAsync(0);
         await Expect(App.MenuItem("hidden-empty")).ToContainTextAsync("No hidden children left");
     }
+
+    Task<string> IconColorAsync(string testId) =>
+        App.MenuItem(testId).Locator("svg").First.EvaluateAsync<string>("e => getComputedStyle(e).color");
 
     Task ToggleRevealAsync(bool expectChecked) =>
         App.ToggleSubMenuItemAsync("menu-view", "menu-reveal-hidden-nodes", expectChecked);
