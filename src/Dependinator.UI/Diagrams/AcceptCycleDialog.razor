@@ -37,10 +37,17 @@
                      data-testid="accept-cycle-chat-close">Back</MudButton>
         </div>
         <div class="dep-cycles__steps">
-          <div class="dep-cycles__step @(isPromptCopied ? "dep-cycles__step--done" : "")">
-            <span class="dep-cycles__step-number">@(isPromptCopied ? "✓" : "1")</span>
+          <div class="dep-cycles__step @(isPromptCopied && !isCopyingPrompt ? "dep-cycles__step--done" : "")">
+            <span class="dep-cycles__step-number">@(isPromptCopied && !isCopyingPrompt ? "✓" : "1")</span>
             <div class="dep-cycles__step-body">
-              @if (isPromptCopied)
+              @if (isCopyingPrompt)
+              {
+                <div class="dep-cycles__suggest-pending">
+                  <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="dep-cycles__ask-claude-progress" />
+                  <span>Copying the prompt ...</span>
+                </div>
+              }
+              else if (isPromptCopied)
               {
                 <div data-testid="accept-cycle-prompt-copied">The prompt is copied, with the cycle, its links and the code behind them.</div>
                 <div>
@@ -76,10 +83,17 @@
             <span class="dep-cycles__step-number">3</span>
             <div class="dep-cycles__step-body" data-testid="accept-cycle-paste">
               <div>Paste the whole answer here</div>
-              <MudTextField T="string" Value="pastedAnswer" ValueChanged="ReadPastedAnswer" DebounceInterval="500"
+              <MudTextField T="string" Value="pastedAnswer" ValueChanged="OnPasteTextChanged" Immediate="true"
                             Lines="4" Variant="Variant.Outlined" Margin="Margin.Dense"
                             Placeholder="It is read as soon as it is pasted"
                             data-testid="accept-cycle-paste-text" />
+              @if (!string.IsNullOrWhiteSpace(pastedAnswer))
+              {
+                <div class="dep-cycles__paste-actions">
+                  <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="UsePastedAnswer"
+                             data-testid="accept-cycle-paste-use">Use answer</MudButton>
+                </div>
+              }
               @if (pasteError is not null)
               {
                 <div class="dep-cycles__suggest-error" data-testid="accept-cycle-paste-error">@pasteError</div>
@@ -121,7 +135,7 @@
               <div>
                 <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
                            title="Copy a prompt with the cycle, its links and the code behind them"
-                           OnClick="StartChatAsync" data-testid="accept-cycle-copy-prompt">Copy prompt</MudButton>
+                           Disabled="isSuggesting" OnClick="StartChatAsync" data-testid="accept-cycle-copy-prompt">Copy prompt</MudButton>
               </div>
             </div>
           }
@@ -142,7 +156,7 @@
         {
           <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.Forum"
                      title="Copy the prompt again, for another answer from an AI chat"
-                     OnClick="StartChatAsync" data-testid="accept-cycle-copy-prompt">Use your AI chat</MudButton>
+                     Disabled="isSuggesting" OnClick="StartChatAsync" data-testid="accept-cycle-copy-prompt">Use your AI chat</MudButton>
         }
       </div>
     }
@@ -295,6 +309,7 @@
 
   bool isChatOpen;
   bool isPromptCopied;
+  bool isCopyingPrompt;
   string pastedAnswer = "";
   string? pasteError;
 
@@ -304,8 +319,8 @@
   string AnswerLabel(int index)
   {
     var answer = answers[index];
-    var sameSource = answers.Where(a => a.IsPasted == answer.IsPasted).ToList();
-    var number = sameSource.Count > 1 ? $" {sameSource.IndexOf(answer) + 1}" : "";
+    var isNumbered = answers.Count(a => a.IsPasted == answer.IsPasted) > 1;
+    var number = isNumbered ? $" {answers.Take(index).Count(a => a.IsPasted == answer.IsPasted) + 1}" : "";
     return $"{(answer.IsPasted ? "Chat" : "Claude")}{number} · {(answer.IsAccept ? "Accept" : "Break")}";
   }
 
@@ -394,30 +409,47 @@
     await CopyPromptAsync();
   }
 
+  // Building the prompt can take a moment (in VS Code the source is read over the LSP), so step 1
+  // says so meanwhile; a result that arrives after Back is dropped.
   async Task CopyPromptAsync()
   {
-    if (CopyPrompt is null)
+    if (CopyPrompt is null || isCopyingPrompt)
       return;
-    isPromptCopied = await clipboardService.CopyAsync(await CopyPrompt());
-    suggestError = isPromptCopied ? null : "Could not copy to the clipboard.";
+    isCopyingPrompt = true;
+    var prompt = await CopyPrompt();
+    var isCopied = isChatOpen && await CopyAsync(prompt, null);
+    isCopyingPrompt = false;
+    isPromptCopied = isCopied;
   }
 
   void CloseChat()
   {
     isChatOpen = false;
     pasteError = null;
+    suggestError = null;
   }
 
   const string ClaudeUrl = "https://claude.ai/new";
 
   Task OpenClaudeAsync() => vsCodeSendService.OpenExternalAsync(ClaudeUrl);
 
-  // Read once the pasting (or typing) stops: an answer joins Claude's, selected, and the steps
-  // close; one that cannot be read stays in the box, to fix.
-  void ReadPastedAnswer(string text)
+  // A paste (much text at once) is read right away; typed or edited text waits for "Use answer",
+  // so an answer is not taken while it is still being written.
+  void OnPasteTextChanged(string text)
   {
+    var isPaste = (text ?? "").Length - pastedAnswer.Length >= MinPastedLength;
     pastedAnswer = text ?? "";
     pasteError = null;
+    if (isPaste)
+      UsePastedAnswer();
+  }
+
+  const int MinPastedLength = 10;
+
+  // An answer joins Claude's, selected, and the steps close; one that cannot be read stays in the
+  // box, to fix.
+  void UsePastedAnswer()
+  {
     if (string.IsNullOrWhiteSpace(pastedAnswer))
       return;
     var answer = CycleSuggestion.ParseText(pastedAnswer);
@@ -439,12 +471,13 @@
     await CopyAsync(FixPrompt(s), FixPromptCopiedNote + " Or choose Fix later to keep the cycle on the list until then.");
   }
 
-  async Task CopyAsync(string text, string note)
+  async Task<bool> CopyAsync(string text, string? note)
   {
     var isCopied = await clipboardService.CopyAsync(text);
     copyNote = isCopied ? note : null;
     suggestError = isCopied ? null : "Could not copy to the clipboard.";
     isAskError = false;
+    return isCopied;
   }
 
   // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.

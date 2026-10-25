@@ -309,8 +309,9 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         IJSHandle openedUrl = await Page.WaitForFunctionAsync("() => window.__openedUrl");
         Assert.Equal("https://claude.ai/new", await openedUrl.JsonValueAsync<string>());
 
-        // The AI chat's answer is pasted back and read without a button: one without a verdict
-        // cannot be read. (A readable one closes the steps, so it is filled once, not reliably.)
+        // The AI chat's answer is pasted back and read without a button (a fill is one paste):
+        // one without a verdict cannot be read. (A readable one closes the steps, so it is filled
+        // once, not reliably.)
         ILocator answerBox = Page.GetByTestId("accept-cycle-paste-text");
         await App.FillReliablyAsync(answerBox, "Looks fine to me.");
         await Expect(Page.GetByTestId("accept-cycle-paste-error")).ToContainTextAsync("could not be read");

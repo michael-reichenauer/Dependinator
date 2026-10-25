@@ -392,6 +392,12 @@
     font-size: 0.875rem;
 }
 
+/* "Use answer", for an answer typed or edited in the paste box rather than pasted. */
+.dep-cycles__paste-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
 /* One chip per answer, named by where it came from (Claude or the AI chat), when there are several. */
 .dep-cycles__answers {
     display: flex;
