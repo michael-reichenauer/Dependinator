@@ -114,6 +114,37 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
     // Runs Claude Code; tests replace it.
     internal Func<string, string, string?, Task<Result<string>>>? AskClaudeCode { get; init; }
 
+    CancellationTokenSource? runningFix;
+
+    public async Task<Result<string>> FixWithClaudeCodeAsync(string prompt, string jsonSchema, string codeFolder)
+    {
+        using var stop = new CancellationTokenSource();
+        if (Interlocked.CompareExchange(ref runningFix, stop, null) is not null)
+            return new Error("Claude Code is already fixing something. Wait for it, or stop it first.");
+        try
+        {
+            return await (FixWithClaudeCode ?? ClaudeCodeRunner.FixAsync)(prompt, jsonSchema, codeFolder, stop.Token);
+        }
+        finally
+        {
+            runningFix = null;
+        }
+    }
+
+    public Task<bool> StopClaudeCodeFixAsync()
+    {
+        if (runningFix is not { } fix)
+            return Task.FromResult(false);
+        Result.Catch(fix.Cancel);
+        return Task.FromResult(true);
+    }
+
+    // Runs Claude Code to fix; tests replace it.
+    internal Func<string, string, string, CancellationToken, Task<Result<string>>>? FixWithClaudeCode { get; init; }
+
+    public Task<Result<int>> CountUncommittedChangesAsync(string codeFolder) =>
+        GitStatus.CountUncommittedChangesAsync(codeFolder);
+
     // Anthropic's own sentence from an error's body ({"error": {"message": ...}}), which the SDK
     // puts after the status code in its message; the whole message when there is none.
     static string ApiMessage(AnthropicApiException e)

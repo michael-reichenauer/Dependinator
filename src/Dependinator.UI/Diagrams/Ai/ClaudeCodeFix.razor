@@ -1,0 +1,161 @@
+@using MudBlazor
+@implements IDisposable
+@inject IAiService aiService
+@inject IDialogService dialogService
+@inject ICanvasService canvasService
+
+@* "Fix with Claude Code" in a review dialog whose answer suggests a change (breaking a cycle,
+   fixing a rule): Claude Code changes the code in the model's folder as the fix prompt asks,
+   allowed to edit files there but not to run commands. The dialog's button calls StartAsync; this
+   shows the run (time and a Stop button) and Claude Code's report with the files it changed, then
+   re-parses. It warns first when the folder has uncommitted changes (Claude Code's edits would mix
+   with them) or is not in git (nothing to review them with). Closing the dialog stops a run. *@
+@if (isRunning)
+{
+  <div class="dep-ai__suggestion dep-ai__suggestion--pending" data-testid="@Id("fixing")">
+    <div class="dep-ai__suggest-pending">
+      <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+      <span>Claude Code is changing the code… @Elapsed</span>
+      <MudSpacer />
+      <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="StopAsync" data-testid="@Id("fix-stop")">Stop</MudButton>
+    </div>
+    <div class="dep-ai__suggestion-note">It may take a few minutes. It edits files in the model's folder only, and runs no commands.</div>
+  </div>
+}
+else if (report is not null)
+{
+  <div class="dep-ai__suggestion" data-testid="@Id("fix-report")">
+    <div class="dep-ai__suggestion-verdict">
+      @(report.ChangedFiles.Count == 0 ? "Claude Code changed nothing" : $"Claude Code changed {Files(report.ChangedFiles.Count)}")
+    </div>
+    <div>@report.Summary</div>
+    @if (report.ChangedFiles.Count > 0)
+    {
+      <ul class="dep-ai__fix-files" data-testid="@Id("fix-files")">
+        @foreach (var file in report.ChangedFiles)
+        {
+          <li>@file</li>
+        }
+      </ul>
+      <div class="dep-ai__suggestion-note">
+        Review the changes in git before you commit them, then build and run the tests: Claude Code could do neither.
+        @(isReparsed ? "The model is re-parsed." : "")
+      </div>
+    }
+  </div>
+}
+@if (error is not null)
+{
+  <div class="dep-ai__suggest-error" data-testid="@Id("fix-error")">@error</div>
+}
+
+@code {
+  // The prefix of the data-testid values, as in AiOpinion.
+  [Parameter] public string TestId { get; set; } = "ai";
+
+  // The prompt that asks Claude Code to make the suggested change.
+  [Parameter] public Func<string>? GetFixPrompt { get; set; }
+
+  // Tells the dialog when a run starts or ends, so it can update its buttons.
+  [Parameter] public EventCallback OnStateChanged { get; set; }
+
+  public bool IsRunning => isRunning;
+
+  bool isRunning;
+  bool isReparsed;
+  ClaudeCodeFixReport? report;
+  string? error;
+  DateTime startTime;
+  Timer? ticker;
+
+  string Id(string name) => $"{TestId}-{name}";
+
+  string Elapsed
+  {
+    get
+    {
+      var elapsed = DateTime.UtcNow - startTime;
+      return $"{(int)elapsed.TotalMinutes}:{elapsed.Seconds:00}";
+    }
+  }
+
+  static string Files(int count) => count == 1 ? "1 file" : $"{count} files";
+
+  public async Task StartAsync()
+  {
+    if (isRunning || GetFixPrompt is null)
+      return;
+    error = null;
+    if (!await ConfirmStartAsync())
+      return;
+
+    report = null;
+    isReparsed = false;
+    isRunning = true;
+    startTime = DateTime.UtcNow;
+    ticker = new Timer(_ => InvokeAsync(StateHasChanged), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+    await OnStateChanged.InvokeAsync();
+    try
+    {
+      var result = await aiService.FixWithClaudeCodeAsync(GetFixPrompt());
+      if (result is ClaudeCodeFixReport fixReport)
+      {
+        report = fixReport;
+        if (fixReport.ChangedFiles.Count > 0)
+        {
+          await canvasService.RefreshAsync();
+          isReparsed = true;
+        }
+      }
+      else
+      {
+        error = result.Error.Message;
+      }
+    }
+    finally
+    {
+      isRunning = false;
+      ticker?.Dispose();
+      ticker = null;
+      await OnStateChanged.InvokeAsync();
+      StateHasChanged();
+    }
+  }
+
+  // Claude Code's edits are best reviewed alone, as git's uncommitted changes.
+  async Task<bool> ConfirmStartAsync()
+  {
+    var changes = await aiService.CountUncommittedChangesAsync();
+    string? warning = changes switch
+    {
+      int count when count > 0 =>
+        $"{Files(count)} in the model's folder have uncommitted changes. Claude Code's edits will mix with them, "
+        + "so commit or stash them first to review its changes on their own.",
+      int => null,
+      _ =>
+        "The model's folder is not in a git repository, so Claude Code's changes cannot be reviewed or undone "
+        + "with git afterwards.",
+    };
+    if (warning is null)
+      return true;
+    var answer = await dialogService.ShowMessageBoxAsync(
+      new MessageBoxOptions
+      {
+        Title = "Fix with Claude Code?",
+        Message = warning,
+        YesText = "Fix anyway",
+        CancelText = "Cancel",
+      }
+    );
+    return answer == true;
+  }
+
+  async Task StopAsync() => await aiService.StopClaudeCodeFixAsync();
+
+  public void Dispose()
+  {
+    ticker?.Dispose();
+    if (isRunning)
+      _ = aiService.StopClaudeCodeFixAsync();
+  }
+}

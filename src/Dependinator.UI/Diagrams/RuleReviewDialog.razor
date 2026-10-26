@@ -1,12 +1,14 @@
 @using MudBlazor
 @inject IClipboardService clipboardService
+@inject IAiService aiService
 
 @* Reviews a dependency that breaks an architecture rule (or edits one that is allowed): allow it as
    an exception, with why, listed under its rule in the rules panel; editing also offers to stop
    allowing it. "Get an AI opinion" (AiOpinion) asks Claude, Claude Code or the user's AI chat
    whether to fix the code or allow the dependency, and the selected answer drives the rest:
    allowing fills in the reason, fixing shows the change to make, with a prompt for an AI that can
-   change the code as the main action and allowing anyway as the alternative. A reason the dialog
+   change the code as the main action, "Fix with Claude Code" (ClaudeCodeFix, where the experimental
+   route is on) to make the change right away, and allowing anyway as the alternative. A reason the dialog
    filled in follows the selected answer until the user edits it. Nothing is saved until the user
    decides. *@
 <MudDialog>
@@ -58,6 +60,10 @@
     {
       <div class="dep-ai__suggest-error" data-testid="rule-review-copy-error">@copyError</div>
     }
+    @if (CanFix)
+    {
+      <ClaudeCodeFix @ref="fixPanel" TestId="rule-review" GetFixPrompt="FixPromptText" OnStateChanged="StateHasChanged" />
+    }
     <MudTextField @ref="reasonField" T="string" @bind-Value="Reason"
                   Label="@(IsFixSuggested ? "Why allow it anyway?" : "Why is this dependency fine?")" Lines="3"
                   Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
@@ -75,6 +81,13 @@
     @if (IsFixSuggested)
     {
       <MudButton Variant="Variant.Text" OnClick="Save" data-testid="rule-review-save">Allow anyway</MudButton>
+      @if (CanFix)
+      {
+        <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
+                   Disabled="@(fixPanel?.IsRunning == true)" OnClick="() => fixPanel!.StartAsync()"
+                   title="Claude Code makes the change in the model's folder now (experimental)"
+                   data-testid="rule-review-fix-claude-code">Fix with Claude Code</MudButton>
+      }
       <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
                  OnClick="CopyFixPromptAsync" data-testid="rule-review-copy-fix">Copy fix prompt</MudButton>
     }
@@ -107,6 +120,8 @@
   [Parameter] public Func<RuleSuggestion, string>? FixPrompt { get; set; }
 
   MudTextField<string> reasonField = null!;
+  ClaudeCodeFix? fixPanel;
+  bool canFixWithClaudeCode;
   RuleSuggestion? selected;
   string? prefilledReason;
   string? copyNote;
@@ -114,6 +129,14 @@
 
   // An AI suggests fixing it: copying the fix prompt is the main action, allowing it the override.
   bool IsFixSuggested => selected is { IsFix: true } && FixPrompt is not null;
+
+  // Claude Code can make the suggested change itself, where the experimental route is on.
+  bool CanFix => IsFixSuggested && canFixWithClaudeCode;
+
+  string FixPromptText() => selected is { } s && FixPrompt is not null ? FixPrompt(s) : "";
+
+  protected override async Task OnInitializedAsync() =>
+    canFixWithClaudeCode = await aiService.CanFixWithClaudeCodeAsync();
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {

@@ -34,7 +34,7 @@ public class ClaudeCodeTests
     [Fact]
     public void Arguments_ShouldAllowOnlyReadingTools_InTheCodesFolder()
     {
-        var arguments = ClaudeCodeRunner.Arguments("{}", canReadCode: true);
+        var arguments = ClaudeCodeRunner.Arguments("{}", ClaudeCodeRunner.Mode.ReadCode);
 
         Assert.Equal(
             [
@@ -60,12 +60,56 @@ public class ClaudeCodeTests
     [Fact]
     public void Arguments_ShouldAskForOneStructuredAnswer_WithoutToolsOrASavedSession()
     {
-        var arguments = ClaudeCodeRunner.Arguments("{}", canReadCode: false);
+        var arguments = ClaudeCodeRunner.Arguments("{}", ClaudeCodeRunner.Mode.NoTools);
 
         Assert.Equal(
             ["-p", "--output-format", "json", "--json-schema", "{}", "--tools", "", "--no-session-persistence"],
             arguments
         );
+    }
+
+    [Fact]
+    public void Arguments_ShouldAllowEditsButNoCommands_WhenFixing()
+    {
+        var arguments = ClaudeCodeRunner.Arguments("{}", ClaudeCodeRunner.Mode.FixCode);
+
+        Assert.Equal("Read,Grep,Glob,Edit,Write", arguments[arguments.ToList().IndexOf("--tools") + 1]);
+        Assert.Equal("acceptEdits", arguments[arguments.ToList().IndexOf("--permission-mode") + 1]);
+        Assert.Equal("user", arguments[arguments.ToList().IndexOf("--setting-sources") + 1]);
+        Assert.Contains("--strict-mcp-config", arguments);
+        Assert.Contains("not run commands", arguments[arguments.ToList().IndexOf("--append-system-prompt") + 1]);
+        Assert.DoesNotContain(arguments, a => a.Contains("Bash") || a.Contains("bypassPermissions"));
+    }
+
+    [Fact]
+    public async Task FixWithClaudeCodeAsync_ShouldRefuseASecondFix_AndStopTheRunningOne()
+    {
+        var started = new TaskCompletionSource();
+        var service = new ClaudeService(keys.Object)
+        {
+            FixWithClaudeCode = async (_, _, _, ct) =>
+            {
+                started.SetResult();
+                await Task.Delay(Timeout.Infinite, ct).ContinueWith(_ => { });
+                return new Error("Claude Code was stopped.");
+            },
+        };
+
+        var first = service.FixWithClaudeCodeAsync("Fix it", Schema, "/repo");
+        await started.Task;
+        var second = AssertError(await service.FixWithClaudeCodeAsync("Fix it too", Schema, "/repo"));
+        Assert.True(await service.StopClaudeCodeFixAsync());
+
+        Assert.StartsWith("Claude Code is already fixing", second.Message);
+        Assert.Equal("Claude Code was stopped.", AssertError(await first).Message);
+        Assert.False(await service.StopClaudeCodeFixAsync());
+    }
+
+    [Fact]
+    public void CountLines_ShouldCountTheChangedFiles()
+    {
+        Assert.Equal(2, GitStatus.CountLines(" M src/A.cs\n?? src/B.cs\n"));
+        Assert.Equal(0, GitStatus.CountLines(""));
     }
 
     [Fact]

@@ -10,7 +10,8 @@ namespace Dependinator.E2E.Tests.Ui;
 // there are none) and closes again from its button; a cycle accepted with a reason in the review
 // dialog moves to the Accepted section, its reason can be edited, and removing the acceptance
 // brings it back; the dialog copies a cycle's AI prompt and reads the answer pasted back, and
-// answers (Claude's or pasted) suggest the reason, or a fix prompt to copy and a To fix entry.
+// answers (Claude's or pasted) suggest the reason, or a fix prompt to copy and a To fix entry;
+// with Settings › Use Claude Code on, a break answer can be fixed by Claude Code right away.
 public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -349,5 +350,43 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.FillReliablyAsync(field, reason);
         await Page.GetByTestId("accept-cycle-save").ClickAsync();
         await Expect(field).ToHaveCountAsync(0);
+    }
+
+    // In test mode the app answers for Claude Code (no command runs): a report after a moment,
+    // or an error when stopped first.
+    [E2EFact]
+    public async Task FixWithClaudeCode_ShouldReportTheChangedFiles_AndCanBeStopped()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-use-claude-code")).ClickAsync();
+        await Page.GetByTestId("use-claude-code-confirm").ClickAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
+        ILocator pair = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "Result<T>" });
+        await pair.GetByTestId("cycles-review").ClickAsync();
+
+        // Not offered before an answer suggests breaking the cycle (a pair is accepted first).
+        ILocator fix = Page.GetByTestId("accept-cycle-fix-claude-code");
+        ILocator ask = Page.GetByTestId("accept-cycle-suggest-code");
+        ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
+        await ask.ClickAsync();
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
+        await Expect(fix).ToHaveCountAsync(0);
+        await ask.ClickAsync();
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
+
+        // Stopped while it runs: an error, and it can be started again.
+        await fix.ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fixing")).ToBeVisibleAsync();
+        await Expect(fix).ToBeDisabledAsync();
+        await Page.GetByTestId("accept-cycle-fix-stop").ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fix-error")).ToHaveTextAsync("Claude Code was stopped.");
+        await Expect(Page.GetByTestId("accept-cycle-fixing")).ToHaveCountAsync(0);
+
+        await fix.ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fix-report")).ToContainTextAsync("Claude Code changed 1 file");
+        await Expect(Page.GetByTestId("accept-cycle-fix-files")).ToHaveTextAsync("src/Test.cs");
+        await Expect(Page.GetByTestId("accept-cycle-fix-error")).ToHaveCountAsync(0);
+        await Expect(fix).ToBeEnabledAsync();
     }
 }

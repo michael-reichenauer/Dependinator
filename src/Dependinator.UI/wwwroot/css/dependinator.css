@@ -1011,3 +1011,11 @@
     white-space: nowrap;
     font-weight: 600;
 }
+
+/* The files Claude Code changed, in its report after "Fix with Claude Code". */
+.dep-ai__fix-files {
+    margin: 0;
+    padding-left: 20px;
+    font-family: monospace;
+    font-size: 0.8125rem;
+}

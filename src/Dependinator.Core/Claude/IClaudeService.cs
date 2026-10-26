@@ -27,6 +27,18 @@ interface IClaudeService
     // (the model's folder), but not change them or run commands; without a folder it has no tools.
     // An error when the command is missing or not signed in.
     Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema, string? codeFolder);
+
+    // Lets Claude Code change the code in codeFolder as the prompt asks: it may also edit and
+    // create files there, still without running commands (so it cannot build or run tests). The
+    // answer is its report, JSON that matches the schema. Can take minutes; an error when stopped.
+    Task<Result<string>> FixWithClaudeCodeAsync(string prompt, string jsonSchema, string codeFolder);
+
+    // Stops a running FixWithClaudeCodeAsync, which then returns an error; false when none runs.
+    Task<bool> StopClaudeCodeFixAsync();
+
+    // The number of files with uncommitted changes in codeFolder's git repository, to warn before
+    // a fix; an error when the folder is not in a git repository (or git is missing).
+    Task<Result<int>> CountUncommittedChangesAsync(string codeFolder);
 }
 
 enum ClaudeApiKeyState

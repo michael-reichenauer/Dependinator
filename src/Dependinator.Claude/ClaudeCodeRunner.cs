@@ -12,10 +12,13 @@ namespace Dependinator.Claude;
 // reads outside the folder need a permission that print mode cannot ask for, so they are denied.
 // Only the user's own Claude settings load (not the folder's, whose hooks could run commands), and
 // no MCP servers. Without a folder (the demo model, say) it gets no tools and a new private
-// temporary folder, so nothing planted in a shared temp folder is loaded.
+// temporary folder, so nothing planted in a shared temp folder is loaded. FixAsync also lets it
+// edit and create files in the folder (Edit, Write, accepted without asking), still with no
+// command tools, so it cannot build or run tests; edits outside the folder are denied too.
 static class ClaudeCodeRunner
 {
-    static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
+    static readonly TimeSpan AskTimeout = TimeSpan.FromMinutes(5);
+    static readonly TimeSpan FixTimeout = TimeSpan.FromMinutes(15);
 
     // The tools Claude Code may use in the code's folder: reading and searching only.
     const string ReadTools = "Read,Grep,Glob";
@@ -27,21 +30,45 @@ static class ClaudeCodeRunner
         + "Grep and Glob tools. Before you answer, read the files behind the types and links the prompt names, to "
         + "check what the excerpts leave out. You cannot change files or run commands; that is intended.";
 
+    // The tools for a fix: reading and searching, and editing and creating files in the folder.
+    const string FixTools = "Read,Grep,Glob,Edit,Write";
+
+    // The fix prompt asks to build and run the tests, which needs commands this route leaves out.
+    const string FixCodeInstruction =
+        "The code the prompt is about is in the working directory. You can read, search, edit and create files "
+        + "there (Read, Grep, Glob, Edit, Write), but not run commands, so you cannot build or run the tests: skip "
+        + "those steps, and say in your summary what the user should build and test. Change only what the task "
+        + "needs, and nothing outside the working directory. If an assumption does not hold and you cannot make "
+        + "the change safely, change nothing and say why. List every file you changed or created.";
+
+    public enum Mode
+    {
+        NoTools,
+        ReadCode,
+        FixCode,
+    }
+
     public static async Task<Result<string>> AskAsync(string prompt, string jsonSchema, string? codeFolder)
     {
         var schema = Result.Catch(() => JsonDocument.Parse(jsonSchema).RootElement.GetRawText());
         if (schema is not string compactSchema)
             return new Error("The answer schema is not valid JSON.", schema.Error);
 
-        if (codeFolder is { Length: > 0 } && Path.IsPathFullyQualified(codeFolder) && Directory.Exists(codeFolder))
-            return await RunAsync(prompt, Arguments(compactSchema, canReadCode: true), codeFolder);
+        if (IsFolder(codeFolder))
+            return await RunAsync(prompt, Arguments(compactSchema, Mode.ReadCode), codeFolder!, AskTimeout, default);
 
         var folder = Result.Catch(() => Directory.CreateTempSubdirectory("dependinator-claude-"));
         if (folder is not DirectoryInfo workingFolder)
             return new Error("Could not create a folder for Claude Code.", folder.Error);
         try
         {
-            return await RunAsync(prompt, Arguments(compactSchema, canReadCode: false), workingFolder.FullName);
+            return await RunAsync(
+                prompt,
+                Arguments(compactSchema, Mode.NoTools),
+                workingFolder.FullName,
+                AskTimeout,
+                default
+            );
         }
         finally
         {
@@ -49,14 +76,40 @@ static class ClaudeCodeRunner
         }
     }
 
-    static async Task<Result<string>> RunAsync(string prompt, IReadOnlyList<string> arguments, string workingFolder)
+    // Lets Claude Code change the code in codeFolder as the prompt asks; cancelled by ct (the user).
+    public static async Task<Result<string>> FixAsync(
+        string prompt,
+        string jsonSchema,
+        string codeFolder,
+        CancellationToken ct
+    )
+    {
+        var schema = Result.Catch(() => JsonDocument.Parse(jsonSchema).RootElement.GetRawText());
+        if (schema is not string compactSchema)
+            return new Error("The answer schema is not valid JSON.", schema.Error);
+        if (!IsFolder(codeFolder))
+            return new Error($"The code's folder was not found: {codeFolder}");
+        return await RunAsync(prompt, Arguments(compactSchema, Mode.FixCode), codeFolder, FixTimeout, ct);
+    }
+
+    static bool IsFolder(string? path) =>
+        path is { Length: > 0 } && Path.IsPathFullyQualified(path) && Directory.Exists(path);
+
+    static async Task<Result<string>> RunAsync(
+        string prompt,
+        IReadOnlyList<string> arguments,
+        string workingFolder,
+        TimeSpan timeLimit,
+        CancellationToken ct
+    )
     {
         var started = Start(arguments, workingFolder);
         if (started is not Process process)
             return started.Error;
         using (process)
         {
-            using var timeout = new CancellationTokenSource(Timeout);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(timeLimit);
             try
             {
                 var output = process.StandardOutput.ReadToEndAsync(timeout.Token);
@@ -79,7 +132,9 @@ static class ClaudeCodeRunner
             catch (OperationCanceledException)
             {
                 Result.Catch(() => process.Kill(entireProcessTree: true));
-                return new Error("Claude Code did not answer within 5 minutes.");
+                return ct.IsCancellationRequested
+                    ? new Error("Claude Code was stopped.")
+                    : new Error($"Claude Code did not answer within {timeLimit.TotalMinutes:0} minutes.");
             }
             catch (IOException e)
             {
@@ -123,9 +178,21 @@ static class ClaudeCodeRunner
         );
     }
 
-    internal static IReadOnlyList<string> Arguments(string schema, bool canReadCode) =>
-        canReadCode
-            ?
+    internal static IReadOnlyList<string> Arguments(string schema, Mode mode) =>
+        mode switch
+        {
+            Mode.NoTools =>
+            [
+                "-p",
+                "--output-format",
+                "json",
+                "--json-schema",
+                schema,
+                "--tools",
+                "",
+                "--no-session-persistence",
+            ],
+            Mode.ReadCode =>
             [
                 "-p",
                 "--output-format",
@@ -140,8 +207,26 @@ static class ClaudeCodeRunner
                 "--append-system-prompt",
                 ReadCodeInstruction,
                 "--no-session-persistence",
-            ]
-            : ["-p", "--output-format", "json", "--json-schema", schema, "--tools", "", "--no-session-persistence"];
+            ],
+            _ =>
+            [
+                "-p",
+                "--output-format",
+                "json",
+                "--json-schema",
+                schema,
+                "--tools",
+                FixTools,
+                "--permission-mode",
+                "acceptEdits",
+                "--setting-sources",
+                "user",
+                "--strict-mcp-config",
+                "--append-system-prompt",
+                FixCodeInstruction,
+                "--no-session-persistence",
+            ],
+        };
 
     static IEnumerable<string> Commands()
     {
