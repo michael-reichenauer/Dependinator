@@ -27,10 +27,19 @@ carries the version the run computed. Nothing is pushed, deployed or published b
 has passed.
 
 **A preview** builds `dev` as it is and makes no commit. It deploys the web app to the `dev`
-environment of Azure Static Web Apps (the pre-release site) and publishes a GitHub pre-release
-tagged `v<version>` with the extension's packages, its notes the `Unreleased` section so far. It
-is not published to the VS Code Marketplace. A preview with no notes yet is allowed, and says so in
-a warning. The Releases page keeps the latest five previews.
+environment of Azure Static Web Apps (the pre-release site), publishes the extension to the VS Code
+Marketplace's pre-release track, and publishes a GitHub pre-release tagged `v<version>` with the
+extension's packages, its notes the `Unreleased` section so far. A preview with no notes yet is
+allowed, and says so in a warning. The Releases page keeps the latest five previews; the
+Marketplace keeps every version.
+
+The Marketplace's pre-release track is opt-in: a user gets the previews after **Switch to
+Pre-Release Version** on the extension's page in VS Code, and everyone else only the releases. A
+preview's packages are built with `vsce package --pre-release`, which marks them as pre-release,
+the GitHub pre-release's `.vsix` files too. VS Code updates to the highest version of the track a
+user is on, so a pre-release user gets each release as well (it is newer than the previews before
+it) and then the next preview. That is why the versions need no odd/even minor, the Marketplace's
+usual convention for a pre-release built apart from the release: ours grow across both.
 
 **A release**:
 
@@ -80,7 +89,8 @@ A version is `major.minor.build`, e.g. `0.84.423503`: `MajorVersion` and `MinorV
 everywhere: the tag, the GitHub release, the Marketplace and the app's **About** dialog, which also
 shows the build time and the commit. The workflow sets the build number and time
 (`BuildNumber`, `BuildTime`) for every build it makes; a local build is `major.minor.0`. Every
-release is newer than the previews before it, and the Marketplace takes only three-part versions.
+release is newer than the previews before it, the previews after it are newer than the release, and
+the Marketplace takes only three-part versions, unique across releases and pre-releases.
 `dev` always holds the major.minor of the next release; a new major is set by hand on `dev`, e.g.
 `MajorVersion` 1 and `MinorVersion` 0, with the extension's `package.json` at `1.0.0`.
 
