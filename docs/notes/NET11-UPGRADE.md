@@ -13,6 +13,7 @@ Required as soon as the GA SDK is out; nothing else in the repo changes.
       `"rollForward": "latestFeature"`.
 - [ ] `Directory.Build.props`: `<LangVersion>preview</LangVersion>` → `<LangVersion>15</LangVersion>`.
       Keep `CS8509` in `WarningsAsErrors`.
+- [ ] `Directory.Build.props`: remove `<SuppressNETCoreSdkPreviewMessage>` (the GA SDK prints no NETSDK1057).
 - [ ] `.devcontainer/Dockerfile` (the `dotnet-install.sh` RUN line) and `scripts/installdevtools`
       (the same line): drop `--quality preview`; `--channel 11.0` then resolves to GA. Rebuild the
       devcontainer, or run the line once in an existing one.
