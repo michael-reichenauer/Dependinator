@@ -2,20 +2,18 @@ using Dependinator.Core.Claude;
 
 namespace Dependinator.Claude.Tests;
 
-// The experimental local route: ClaudeService asks Claude Code only when the host has it turned on
-// and the user confirmed, and ClaudeCodeRunner reads the answer out of `claude -p`'s JSON result.
+// The experimental local route: ClaudeService runs Claude Code without an API key (the UI offers
+// it only when turned on in Settings), and ClaudeCodeRunner reads the answer out of `claude -p`'s
+// JSON result.
 public class ClaudeCodeTests
 {
     const string Schema = """{ "type": "object", "properties": {}, "additionalProperties": false }""";
 
     readonly Mock<IClaudeApiKeyProvider> keys = new();
-    readonly Mock<IClaudeCodeSettings> settings = new();
     readonly List<string> asked = [];
 
-    public ClaudeCodeTests() => settings.Setup(s => s.EnableHint).Returns("Turn it on.");
-
     ClaudeService Service() =>
-        new(keys.Object, settings.Object)
+        new(keys.Object)
         {
             AskClaudeCode = (prompt, _) =>
             {
@@ -25,34 +23,8 @@ public class ClaudeCodeTests
         };
 
     [Fact]
-    public async Task AskClaudeCodeAsync_ShouldFail_WhenTheRouteIsOff()
+    public async Task AskClaudeCodeAsync_ShouldAsk_WithoutAnApiKey()
     {
-        settings.Setup(s => s.IsEnabledAsync()).ReturnsAsync(false);
-
-        var error = AssertError(await Service().AskClaudeCodeAsync("Hello", Schema));
-
-        Assert.Equal("Asking Claude Code on this computer is off. Turn it on.", error.Message);
-        Assert.Empty(asked);
-    }
-
-    [Fact]
-    public async Task AskClaudeCodeAsync_ShouldNotAsk_WhenTheUserDeclinesTheConfirmation()
-    {
-        settings.Setup(s => s.IsEnabledAsync()).ReturnsAsync(true);
-        settings.Setup(s => s.ConfirmUseAsync()).ReturnsAsync((Result)new Error("Not confirmed."));
-
-        var error = AssertError(await Service().AskClaudeCodeAsync("Hello", Schema));
-
-        Assert.Equal("Not confirmed.", error.Message);
-        Assert.Empty(asked);
-    }
-
-    [Fact]
-    public async Task AskClaudeCodeAsync_ShouldAsk_WhenOnAndConfirmed()
-    {
-        settings.Setup(s => s.IsEnabledAsync()).ReturnsAsync(true);
-        settings.Setup(s => s.ConfirmUseAsync()).ReturnsAsync(Result.Ok);
-
         var answer = AssertOk(await Service().AskClaudeCodeAsync("Hello", Schema));
 
         Assert.Equal("""{"verdict":"Accept"}""", answer);

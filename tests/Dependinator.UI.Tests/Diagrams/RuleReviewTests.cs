@@ -175,7 +175,11 @@ public class RuleReviewTests
                 (Result<string>)
                     """{ "verdict": "Allow", "why": "Fine.", "assumptions": "None", "reasonToStore": "Ok", "change": "" }"""
             );
-        var service = new RuleReviewService(modelMgr, Mock.Of<IWorkspaceFileService>(), new AiService(claude.Object));
+        var service = new RuleReviewService(
+            modelMgr,
+            Mock.Of<IWorkspaceFileService>(),
+            new AiService(claude.Object, Mock.Of<IConfigService>())
+        );
         List<SuggestStep> steps = [];
 
         var suggestion = AssertOk(await service.SuggestAsync(rule, violation, AiSource.Claude, steps.Add));

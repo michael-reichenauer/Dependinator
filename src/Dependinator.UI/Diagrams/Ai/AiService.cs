@@ -17,7 +17,7 @@ interface IAiService
     // Whether this host can ask Claude: the web host and VS Code, not the standalone browser app.
     bool IsAvailable { get; }
 
-    // Whether the user turned on the experimental Claude Code route in this host.
+    // Whether the user turned on the experimental Claude Code route (Settings › Use Claude Code).
     Task<bool> IsClaudeCodeEnabledAsync();
 
     // Asks Claude (with the API key) or Claude Code for an answer matching the schema. Without a
@@ -33,7 +33,7 @@ interface IAiService
 
 // The AI routes the review dialogs share, over Core's IClaudeService (the LSP or the web host).
 [Scoped]
-class AiService(IClaudeService claudeService) : IAiService
+class AiService(IClaudeService claudeService, IConfigService configService) : IAiService
 {
     public bool IsAvailable => Dependinator.Core.Build.IsWeb || Dependinator.Core.Build.IsVsCodeExtWasm;
 
@@ -42,21 +42,7 @@ class AiService(IClaudeService claudeService) : IAiService
     public const string EmptyPromptError =
         "There is no prompt: what it is about is no longer in the model. Close the dialog and review it again.";
 
-    public async Task<bool> IsClaudeCodeEnabledAsync()
-    {
-        if (!IsAvailable)
-            return false;
-        try
-        {
-            return await claudeService.IsClaudeCodeEnabledAsync();
-        }
-        catch (Exception e) when (e.IsNotFatal())
-        {
-            // An older language server without the route, say: the route is just not offered.
-            Log.Info("Could not tell whether Claude Code is enabled", e.Message);
-            return false;
-        }
-    }
+    public async Task<bool> IsClaudeCodeEnabledAsync() => IsAvailable && (await configService.GetAsync()).UseClaudeCode;
 
     public async Task<Result<string>> AskAsync(
         AiSource route,

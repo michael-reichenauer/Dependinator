@@ -13,9 +13,9 @@ namespace Dependinator.Claude;
 // classifier declines is retried server-side on the model Anthropic recommends for that case
 // (fallbacks "default"), so a false positive does not end in a refusal. A key Claude did not
 // accept is remembered, so the UI can ask for a new one rather than send it again. The experimental
-// local route runs Claude Code instead (ClaudeCodeRunner), where the user turned it on.
+// local route runs Claude Code instead (ClaudeCodeRunner).
 [Singleton]
-class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IClaudeCodeSettings claudeCodeSettings) : IClaudeService
+class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
 {
     const string Model = "claude-opus-5-5";
     const int MaxTokens = 16000;
@@ -108,16 +108,8 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IClaudeCodeSettings cl
         }
     }
 
-    public Task<bool> IsClaudeCodeEnabledAsync() => claudeCodeSettings.IsEnabledAsync();
-
-    public async Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema)
-    {
-        if (!await claudeCodeSettings.IsEnabledAsync())
-            return new Error($"Asking Claude Code on this computer is off. {claudeCodeSettings.EnableHint}");
-        if (await claudeCodeSettings.ConfirmUseAsync() is Error e)
-            return e;
-        return await (AskClaudeCode ?? ClaudeCodeRunner.AskAsync)(prompt, jsonSchema);
-    }
+    public Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema) =>
+        (AskClaudeCode ?? ClaudeCodeRunner.AskAsync)(prompt, jsonSchema);
 
     // Runs Claude Code; tests replace it.
     internal Func<string, string, Task<Result<string>>>? AskClaudeCode { get; init; }

@@ -50,6 +50,10 @@ class Config
 
     // The badge on a node with children the user hid (View › Show Hidden Node Badges).
     public bool ShowHiddenBadges { get; set; } = true;
+
+    // The experimental "Ask Claude Code" route in the AI review dialogs (Settings › Use Claude
+    // Code), turned on after a warning: `claude -p` with the user's own Claude login.
+    public bool UseClaudeCode { get; set; } = false;
 }
 
 interface IConfigService

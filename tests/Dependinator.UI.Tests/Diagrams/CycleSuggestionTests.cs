@@ -2,6 +2,7 @@ using Dependinator.Core.Claude;
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling.Models;
+using Dependinator.UI.Shared;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
@@ -134,7 +135,10 @@ public class CycleSuggestionTests
     public CycleSuggestionTests() => prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
 
     Task<Result<CycleSuggestion>> SuggestAsync(AiSource route = AiSource.Claude) =>
-        new CycleSuggestionService(prompts.Object, new AiService(claude.Object)).SuggestAsync(Cycle, route, steps.Add);
+        new CycleSuggestionService(
+            prompts.Object,
+            new AiService(claude.Object, Mock.Of<IConfigService>())
+        ).SuggestAsync(Cycle, route, steps.Add);
 
     [Fact]
     public async Task SuggestAsync_ShouldAskClaudeCode_WithoutAnApiKey_WhenThatRouteIsChosen()

@@ -50,7 +50,6 @@ public class Program
         builder.Services.AddDependinatorBicepServices();
         builder.Services.AddDependinatorClaudeServices();
         builder.Services.AddSingleton<IClaudeApiKeyProvider, EnvironmentClaudeApiKeyProvider>();
-        builder.Services.AddSingleton<IClaudeCodeSettings, EnvironmentClaudeCodeSettings>();
 
         // Cloud sync — registered after AddDependinatorServices so the explicit
         // ICloudSyncService binding overrides Scrutor's assembly-scanned defaults.

@@ -10,14 +10,13 @@ public class ClaudeServiceTests
     const string Schema = """{ "type": "object", "properties": {}, "additionalProperties": false }""";
 
     readonly Mock<IClaudeApiKeyProvider> keys = new();
-    readonly Mock<IClaudeCodeSettings> claudeCode = new();
 
     public ClaudeServiceTests() => keys.Setup(k => k.SetKeyHint).Returns("Set a new one.");
 
     [Fact]
     public async Task GetApiKeyStateAsync_ShouldTellAMissingKeyFromAStoredOne()
     {
-        var service = new ClaudeService(keys.Object, claudeCode.Object);
+        var service = new ClaudeService(keys.Object);
 
         keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync((string?)null);
         Assert.Equal(ClaudeApiKeyState.Missing, await service.GetApiKeyStateAsync());
@@ -29,7 +28,7 @@ public class ClaudeServiceTests
     [Fact]
     public async Task AskUserForApiKeyAsync_ShouldPassOnWhetherTheUserGaveOne()
     {
-        var service = new ClaudeService(keys.Object, claudeCode.Object);
+        var service = new ClaudeService(keys.Object);
 
         keys.Setup(k => k.AskUserForApiKeyAsync()).ReturnsAsync((Result<string>)"sk-ant-test");
         AssertOk(await service.AskUserForApiKeyAsync());
@@ -42,7 +41,7 @@ public class ClaudeServiceTests
     public async Task AskAsync_ShouldFail_WithoutAKey_AndLeaveAskingTheUserToTheCaller()
     {
         keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync((string?)null);
-        var service = new ClaudeService(keys.Object, claudeCode.Object);
+        var service = new ClaudeService(keys.Object);
 
         var error = AssertError(await service.AskAsync("Hello", Schema));
 
@@ -54,7 +53,7 @@ public class ClaudeServiceTests
     public async Task AskAsync_ShouldRefuseASchemaThatIsNotJson()
     {
         keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync("sk-ant-test");
-        var service = new ClaudeService(keys.Object, claudeCode.Object);
+        var service = new ClaudeService(keys.Object);
 
         var error = AssertError(await service.AskAsync("Hello", "not json"));
 
@@ -69,7 +68,7 @@ public class ClaudeServiceTests
             """{ "type": "error", "error": { "type": "authentication_error", "message": "invalid x-api-key" } }"""
         );
         keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync("sk-ant-wrong");
-        var service = new ClaudeService(keys.Object, claudeCode.Object) { BaseUrl = api.Url };
+        var service = new ClaudeService(keys.Object) { BaseUrl = api.Url };
 
         var error = AssertError(await service.AskAsync("Hello", Schema));
 
@@ -98,7 +97,7 @@ public class ClaudeServiceTests
             """
         );
         keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync("sk-ant-test");
-        var service = new ClaudeService(keys.Object, claudeCode.Object) { BaseUrl = api.Url };
+        var service = new ClaudeService(keys.Object) { BaseUrl = api.Url };
 
         var error = AssertError(await service.AskAsync("Hello", Schema));
 
@@ -116,7 +115,7 @@ public class ClaudeServiceTests
             """{ "type": "error", "error": { "type": "invalid_request_error", "message": "prompt is too long" } }"""
         );
         keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync("sk-ant-test");
-        var service = new ClaudeService(keys.Object, claudeCode.Object) { BaseUrl = api.Url };
+        var service = new ClaudeService(keys.Object) { BaseUrl = api.Url };
 
         var error = AssertError(await service.AskAsync("Hello", Schema));
 
@@ -138,7 +137,7 @@ public class ClaudeServiceTests
             """
         );
         keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync("sk-ant-test");
-        var service = new ClaudeService(keys.Object, claudeCode.Object) { BaseUrl = api.Url };
+        var service = new ClaudeService(keys.Object) { BaseUrl = api.Url };
 
         var text = AssertOk(await service.AskAsync("Is this cycle fine?", Schema));
 

@@ -9,7 +9,8 @@ namespace Dependinator.E2E.Tests.Ui;
 // checkbox-style toggle whose state is stored per model. The demo model is pre-parsed and
 // embedded, so the triggered re-parse short-circuits and the node set does not change --
 // this asserts the toggle state itself, which is what the menu owns. "Invert Scroll Zoom"
-// is an app-wide toggle stored in the config that flips the mouse wheel zoom direction.
+// is an app-wide toggle stored in the config that flips the mouse wheel zoom direction, and
+// "Use Claude Code" turns on the experimental Claude Code route in the AI review dialogs.
 public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -24,6 +25,61 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // And back off again.
         await ToggleIncludeTestProjectsAsync(expectOn: false);
+    }
+
+    // The experimental Claude Code route: off by default, turned on only through a warning that
+    // can be cancelled, and then offered as "Ask Claude Code" in the review dialogs (answered by
+    // the app itself in test mode).
+    [E2EFact]
+    public async Task UseClaudeCode_ShouldAskFirst_AndOfferClaudeCodeInTheReviewDialogs()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-use-claude-code", isChecked: false);
+        await ExpectClaudeCodeOfferedAsync(isOffered: false);
+
+        // Cancelling the warning leaves it off.
+        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-use-claude-code")).ClickAsync();
+        ILocator confirm = Page.GetByTestId("use-claude-code-confirm");
+        await Expect(confirm).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Cancel" }).ClickAsync();
+        await Expect(confirm).ToHaveCountAsync(0);
+        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-use-claude-code", isChecked: false);
+
+        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-use-claude-code")).ClickAsync();
+        await confirm.ClickAsync();
+        await Expect(confirm).ToHaveCountAsync(0);
+        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-use-claude-code", isChecked: true);
+        await ExpectClaudeCodeOfferedAsync(isOffered: true);
+
+        // Turning it off needs no confirmation.
+        await App.ToggleSubMenuItemAsync("menu-settings", "menu-use-claude-code", expectChecked: false);
+        await ExpectClaudeCodeOfferedAsync(isOffered: false);
+    }
+
+    // Opens a cycle's review dialog, checks for the Claude Code route (asking it when offered),
+    // and closes the dialog again.
+    async Task ExpectClaudeCodeOfferedAsync(bool isOffered)
+    {
+        ILocator pair = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "Result<T>" });
+        // The panel stays open after the first time.
+        if (!await pair.IsVisibleAsync())
+            await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
+        await pair.GetByTestId("cycles-review").ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-suggest")).ToHaveTextAsync("Ask Claude");
+        ILocator askCode = Page.GetByTestId("accept-cycle-suggest-code");
+        if (isOffered)
+        {
+            await askCode.ClickAsync();
+            ILocator suggestion = Page.GetByTestId("accept-cycle-suggestion");
+            await Expect(suggestion).ToContainTextAsync("Claude Code");
+        }
+        else
+        {
+            await Expect(askCode).ToHaveCountAsync(0);
+        }
+        await Page.GetByTestId("accept-cycle-cancel").ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-cancel")).ToHaveCountAsync(0);
     }
 
     // Only wheel-down (a positive delta) is used to probe the zoom direction: headless

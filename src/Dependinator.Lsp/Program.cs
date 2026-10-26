@@ -33,7 +33,6 @@ internal class Program
                         services.AddDependinatorBicepServices();
                         services.AddDependinatorClaudeServices();
                         services.AddSingleton<IClaudeApiKeyProvider, LspClaudeApiKeyProvider>();
-                        services.AddSingleton<IClaudeCodeSettings, LspClaudeCodeSettings>();
                         services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();
                         services.AddSingleton(new HttpClient());
                         services.AddSingleton<LspCloudSyncContext>();

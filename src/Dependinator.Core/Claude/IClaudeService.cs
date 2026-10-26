@@ -21,15 +21,9 @@ interface IClaudeService
     // without a key, or when Claude does not accept it (the state is then Rejected).
     Task<Result<string>> AskAsync(string prompt, string jsonSchema);
 
-    // Whether the user turned on the experimental local route: Claude Code (the claude command) on
-    // this computer, with the user's own Claude login instead of an API key. Off unless enabled
-    // by hand (VS Code: a setting that is not listed, then a confirmation; the web host: an
-    // environment variable), since it is unclear whether Anthropic allows a third-party tool to
-    // use a Claude subscription this way.
-    Task<bool> IsClaudeCodeEnabledAsync();
-
-    // Like AskAsync, through `claude -p` on this computer. An error when the route is off, the
-    // command is missing or not signed in, or the user declines the confirmation.
+    // Like AskAsync, through the experimental local route: `claude -p` (Claude Code) on this
+    // computer, with the user's own Claude login instead of an API key. The UI offers it only when
+    // the user turned it on in Settings. An error when the command is missing or not signed in.
     Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema);
 }
 

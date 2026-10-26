@@ -193,8 +193,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   the rule takes it along. "Show prompt" in both reviews shows the prompt every route uses before
   it is sent or copied. A hidden, experimental third route asks Claude Code (`claude -p`) on the
   user's computer with their own Claude login instead of an API key: it is unclear whether
-  Anthropic allows that for a third-party tool, so it needs an unlisted VS Code setting and a
-  one-time confirmation (an environment variable in the dev host).
+  Anthropic allows that for a third-party tool, so it is off until turned on under Settings › Use
+  Claude Code (Experimental), after a warning. (First built behind an unlisted VS Code setting and
+  an environment variable; moved to the Settings menu the same day, while Michael is the only user.)
 - **Problem indicator (Oct 21).** A warning count in the app bar, like the VS Code status bar,
   shows that the model has open cycles and broken architecture rules without opening their
   panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one
