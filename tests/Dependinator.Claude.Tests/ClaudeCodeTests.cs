@@ -15,7 +15,7 @@ public class ClaudeCodeTests
     ClaudeService Service() =>
         new(keys.Object)
         {
-            AskClaudeCode = (prompt, _) =>
+            AskClaudeCode = (prompt, _, _) =>
             {
                 asked.Add(prompt);
                 return Task.FromResult<Result<string>>("""{"verdict":"Accept"}""");
@@ -25,16 +25,42 @@ public class ClaudeCodeTests
     [Fact]
     public async Task AskClaudeCodeAsync_ShouldAsk_WithoutAnApiKey()
     {
-        var answer = AssertOk(await Service().AskClaudeCodeAsync("Hello", Schema));
+        var answer = AssertOk(await Service().AskClaudeCodeAsync("Hello", Schema, null));
 
         Assert.Equal("""{"verdict":"Accept"}""", answer);
         Assert.Equal(["Hello"], asked);
     }
 
     [Fact]
+    public void Arguments_ShouldAllowOnlyReadingTools_InTheCodesFolder()
+    {
+        var arguments = ClaudeCodeRunner.Arguments("{}", canReadCode: true);
+
+        Assert.Equal(
+            [
+                "-p",
+                "--output-format",
+                "json",
+                "--json-schema",
+                "{}",
+                "--tools",
+                "Read,Grep,Glob",
+                "--setting-sources",
+                "user",
+                "--strict-mcp-config",
+                "--append-system-prompt",
+                arguments[11],
+                "--no-session-persistence",
+            ],
+            arguments
+        );
+        Assert.Contains("read and search it", arguments[11]);
+    }
+
+    [Fact]
     public void Arguments_ShouldAskForOneStructuredAnswer_WithoutToolsOrASavedSession()
     {
-        var arguments = ClaudeCodeRunner.Arguments("{}");
+        var arguments = ClaudeCodeRunner.Arguments("{}", canReadCode: false);
 
         Assert.Equal(
             ["-p", "--output-format", "json", "--json-schema", "{}", "--tools", "", "--no-session-persistence"],

@@ -23,8 +23,10 @@ interface IClaudeService
 
     // Like AskAsync, through the experimental local route: `claude -p` (Claude Code) on this
     // computer, with the user's own Claude login instead of an API key. The UI offers it only when
-    // the user turned it on in Settings. An error when the command is missing or not signed in.
-    Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema);
+    // the user turned it on in Settings. Claude Code may read and search the files in codeFolder
+    // (the model's folder), but not change them or run commands; without a folder it has no tools.
+    // An error when the command is missing or not signed in.
+    Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema, string? codeFolder);
 }
 
 enum ClaudeApiKeyState

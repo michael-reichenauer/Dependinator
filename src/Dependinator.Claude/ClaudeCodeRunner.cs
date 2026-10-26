@@ -6,25 +6,42 @@ namespace Dependinator.Claude;
 
 // Runs Claude Code in print mode (`claude -p`) for one structured answer: the prompt goes in on
 // stdin, the schema as --json-schema, and the answer comes back in the JSON result's
-// structured_output. No tools (the prompt carries the code it needs), no saved session, and a
-// new private temporary working folder, so neither the workspace's Claude settings, hooks and
-// CLAUDE.md nor any planted in a shared temp folder are loaded. It runs with the user's Claude login and their default model.
+// structured_output. It runs with the user's Claude login and their default model, and saves no
+// session. In the code's folder it may read and search the files there (Read, Grep, Glob), to
+// check what the prompt's excerpts leave out: no tool that changes files or runs commands, and
+// reads outside the folder need a permission that print mode cannot ask for, so they are denied.
+// Only the user's own Claude settings load (not the folder's, whose hooks could run commands), and
+// no MCP servers. Without a folder (the demo model, say) it gets no tools and a new private
+// temporary folder, so nothing planted in a shared temp folder is loaded.
 static class ClaudeCodeRunner
 {
     static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
 
-    public static async Task<Result<string>> AskAsync(string prompt, string jsonSchema)
+    // The tools Claude Code may use in the code's folder: reading and searching only.
+    const string ReadTools = "Read,Grep,Glob";
+
+    // Without this, Claude Code tends to answer from the prompt's excerpts alone ("I did not read
+    // the code"), although the point of this route is that it can check them.
+    const string ReadCodeInstruction =
+        "The code the prompt is about is in the working directory, and you can read and search it with the Read, "
+        + "Grep and Glob tools. Before you answer, read the files behind the types and links the prompt names, to "
+        + "check what the excerpts leave out. You cannot change files or run commands; that is intended.";
+
+    public static async Task<Result<string>> AskAsync(string prompt, string jsonSchema, string? codeFolder)
     {
         var schema = Result.Catch(() => JsonDocument.Parse(jsonSchema).RootElement.GetRawText());
         if (schema is not string compactSchema)
             return new Error("The answer schema is not valid JSON.", schema.Error);
+
+        if (codeFolder is { Length: > 0 } && Path.IsPathFullyQualified(codeFolder) && Directory.Exists(codeFolder))
+            return await RunAsync(prompt, Arguments(compactSchema, canReadCode: true), codeFolder);
 
         var folder = Result.Catch(() => Directory.CreateTempSubdirectory("dependinator-claude-"));
         if (folder is not DirectoryInfo workingFolder)
             return new Error("Could not create a folder for Claude Code.", folder.Error);
         try
         {
-            return await RunAsync(prompt, compactSchema, workingFolder.FullName);
+            return await RunAsync(prompt, Arguments(compactSchema, canReadCode: false), workingFolder.FullName);
         }
         finally
         {
@@ -32,9 +49,9 @@ static class ClaudeCodeRunner
         }
     }
 
-    static async Task<Result<string>> RunAsync(string prompt, string schema, string workingFolder)
+    static async Task<Result<string>> RunAsync(string prompt, IReadOnlyList<string> arguments, string workingFolder)
     {
-        var started = Start(schema, workingFolder);
+        var started = Start(arguments, workingFolder);
         if (started is not Process process)
             return started.Error;
         using (process)
@@ -56,7 +73,7 @@ static class ClaudeCodeRunner
                 }
                 await process.WaitForExitAsync(timeout.Token);
                 var result = ParseOutput(await output, await errors, process.ExitCode);
-                Log.Info("Claude Code answered", result is string);
+                Log.Info($"Claude Code answered {result is string} in {workingFolder}");
                 return result;
             }
             catch (OperationCanceledException)
@@ -73,7 +90,7 @@ static class ClaudeCodeRunner
 
     // The command where the PATH has it, else where Anthropic's installers put it: VS Code started
     // from the dock (macOS) or a desktop launcher often has a shorter PATH than a terminal.
-    static Result<Process> Start(string schema, string workingFolder)
+    static Result<Process> Start(IReadOnlyList<string> arguments, string workingFolder)
     {
         Exception? notFound = null;
         foreach (var command in Commands())
@@ -87,7 +104,7 @@ static class ClaudeCodeRunner
                 CreateNoWindow = true,
                 WorkingDirectory = workingFolder,
             };
-            foreach (var argument in Arguments(schema))
+            foreach (var argument in arguments)
                 info.ArgumentList.Add(argument);
             try
             {
@@ -106,8 +123,25 @@ static class ClaudeCodeRunner
         );
     }
 
-    internal static IReadOnlyList<string> Arguments(string schema) =>
-        ["-p", "--output-format", "json", "--json-schema", schema, "--tools", "", "--no-session-persistence"];
+    internal static IReadOnlyList<string> Arguments(string schema, bool canReadCode) =>
+        canReadCode
+            ?
+            [
+                "-p",
+                "--output-format",
+                "json",
+                "--json-schema",
+                schema,
+                "--tools",
+                ReadTools,
+                "--setting-sources",
+                "user",
+                "--strict-mcp-config",
+                "--append-system-prompt",
+                ReadCodeInstruction,
+                "--no-session-persistence",
+            ]
+            : ["-p", "--output-format", "json", "--json-schema", schema, "--tools", "", "--no-session-persistence"];
 
     static IEnumerable<string> Commands()
     {
