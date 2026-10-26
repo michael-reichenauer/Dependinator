@@ -72,8 +72,8 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 # CI: build.yml runs unit-tests.yml and e2e.yml (Chromium) on every push and publishes
 # nothing; a PR into dev/main also gets a test site (azure-static-web-apps-*.yml).
 # Previews and releases are made only by hand with release.yml (docs/RELEASING.md, the
-# `release` skill): a preview builds dev and deploys the pre-release site + a GitHub
-# pre-release; a release merges dev into main, deploys production and publishes the
+# `release` skill): a preview builds dev and deploys the pre-release site, the Marketplace's
+# pre-release track and a GitHub pre-release; a release merges dev into main, deploys production and publishes the
 # extension. Both run the full gate first (all browsers + cloud sync).
 # Dependabot PRs target dev (.github/dependabot.yml); security PRs still target main —
 # merge their branch into dev instead, the main PR closes itself after the next release.

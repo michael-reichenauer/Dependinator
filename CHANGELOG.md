@@ -5,6 +5,10 @@ the previews before it. Releases with nothing users notice are left out.
 
 ## [Unreleased]
 
+### New
+
+- Previews of the VS Code extension can be installed from the Marketplace: **Switch to Pre-Release Version** on the extension's page in VS Code gets each preview as it comes out, and **Switch to Release Version** goes back
+
 ## [v0.86.429455] - 2026-10-26
 
 ### Improved

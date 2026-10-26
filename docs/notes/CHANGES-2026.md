@@ -339,6 +339,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   hand or by Claude (the `release` skill) in `CHANGELOG.md`'s `## [Unreleased]`, grouped New,
   Improved, Changed, Fixed. One version `major.minor.<minutes since 2026-01-01>` everywhere
   (`docs/RELEASING.md`).
+- **Marketplace pre-releases (Oct 26).** Previews are also published to the VS Code Marketplace's
+  pre-release track, which users opt into with **Switch to Pre-Release Version**. The version
+  grows across previews and releases, so no odd/even minor is needed.
 - **Security (Oct 8).** CodeQL alerts fixed and the workflow's `GITHUB_TOKEN` permissions limited.
   Vulnerable transitive packages (MessagePack, System.Security.Cryptography.Pkcs/Xml) pinned to
   patched versions until their parent packages catch up (Oct 19).

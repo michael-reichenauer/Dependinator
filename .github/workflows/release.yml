@@ -6,7 +6,8 @@ name: Release
 # CHANGELOG.md on dev, written before the run, by hand or by Claude (docs/RELEASING.md).
 #
 # A preview builds dev as it is, makes no commit, deploys the web app to the 'dev' environment (the
-# pre-release site) and publishes a GitHub pre-release with the VS Code extension's packages.
+# pre-release site), publishes the VS Code extension to the Marketplace's pre-release track and
+# publishes a GitHub pre-release with the extension's packages.
 # A release, on dev: heads the unreleased notes with the version ('Release v<version>'), merges dev
 # into main with --no-ff, and then raises the minor version on dev ('Start v<major>.<minor + 1>'), so
 # that dev's previews are numbered for the release they lead to and nothing needs merging back from
@@ -191,7 +192,7 @@ jobs:
           if [ "${{ inputs.kind }}" = "release" ]; then
             cp "$RUNNER_TEMP/notes/unreleased.md" "$NOTES"
           else
-            echo "A preview of the next release, built from \`dev\`. The web app's preview is on the pre-release site; install the extension's preview from a \`.vsix\` below." > "$NOTES"
+            echo "A preview of the next release, built from \`dev\`. The web app's preview is on the pre-release site. In VS Code, get the extension's previews with **Switch to Pre-Release Version** on its page in the Extensions view, or install one from a \`.vsix\` below." > "$NOTES"
             if [ -s "$RUNNER_TEMP/notes/unreleased.md" ]; then
               printf '\nNew since %s:\n\n' "${{ steps.version.outputs.latest }}" >> "$NOTES"
               cat "$RUNNER_TEMP/notes/unreleased.md" >> "$NOTES"
@@ -373,8 +374,9 @@ jobs:
         run: npm version "${{ needs.prepare.outputs.version }}" --no-git-tag-version --allow-same-version
         working-directory: src/DependinatorVsCode
 
+      # A preview's packages are marked pre-release, which the Marketplace's pre-release track needs
       - name: Package extension
-        run: npm run package:${{ matrix.target }}
+        run: npm run package:${{ matrix.target }}${{ inputs.kind == 'preview' && ' -- --pre-release' || '' }}
         working-directory: src/DependinatorVsCode
 
       # The bundled LSP server is per-RID and is picked at runtime from server/<rid>/,
@@ -407,6 +409,15 @@ jobs:
           PACKAGED="$(unzip -p "$VSIX" extension/package.json | node -p 'JSON.parse(require("fs").readFileSync(0)).version')"
           if [ "$PACKAGED" != "$VERSION" ]; then
             echo "Error: $VSIX is version $PACKAGED, not $VERSION"
+            exit 1
+          fi
+          if unzip -p "$VSIX" extension.vsixmanifest | grep -qF 'Microsoft.VisualStudio.Code.PreRelease'; then
+            PRE_RELEASE=true
+          else
+            PRE_RELEASE=false
+          fi
+          if [ "$PRE_RELEASE" != "${{ inputs.kind == 'preview' }}" ]; then
+            echo "Error: $VSIX is pre-release: $PRE_RELEASE, for a ${{ inputs.kind }}"
             exit 1
           fi
           if ! grep -qaF "$EXPECTED" "server/$rid/Dependinator.Core.dll"; then
@@ -515,14 +526,17 @@ jobs:
           skip_api_build: true
           production_branch: ${{ github.ref_name }}
 
-      # The packages built above, not re-packaged by vsce (--packagePath reads the target from each)
+      # The packages built above, not re-packaged by vsce (--packagePath reads the target from each).
+      # A preview goes to the pre-release track, which users opt into per extension. VS Code updates
+      # to the highest version of the track, and the versions grow across previews and releases.
       - name: Publish to the Marketplace
-        if: inputs.publish && inputs.kind == 'release'
+        if: inputs.publish
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          PRE_RELEASE: ${{ inputs.kind == 'preview' && '--pre-release' || '' }}
         run: |
           for f in _out/dependinator-*-vsix/*.vsix; do
-            npx --yes @vscode/vsce@3 publish --skip-duplicate --packagePath "$f" -p "$VSCE_PAT"
+            npx --yes @vscode/vsce@3 publish $PRE_RELEASE --skip-duplicate --packagePath "$f" -p "$VSCE_PAT"
           done
 
       # 'target' is where the new tag is created: main's merge for a release, dev's tip for a preview.

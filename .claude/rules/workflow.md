@@ -25,6 +25,10 @@ How this project is worked on, beyond CLAUDE.md. Always loaded, in local and clo
   merge into `main` or push it by hand, and never merge `main` into `dev`; the workflow makes the
   release commits. This replaced the earlier flow (every `main` push a release, `./scripts/release`)
   in Oct 2026.
+- **Previews go to the Marketplace's pre-release track too** (decided with the user Oct 26, 2026;
+  the Oct 22 plan had kept them on GitHub only, a preference, not a blocker). The minutes-based
+  build number grows across previews and releases, so never introduce the odd/even minor
+  convention, and never publish a version lower than one already on the Marketplace.
 - **Whenever you are blocked or waiting on the user**, notify them: they are often not watching.
 - A 401 in the Release workflow's Marketplace step means the `VSCE_PAT` secret (an Azure DevOps
   PAT, expires around July 2027) needs a new token.
