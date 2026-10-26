@@ -108,11 +108,11 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
         }
     }
 
-    public Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema) =>
-        (AskClaudeCode ?? ClaudeCodeRunner.AskAsync)(prompt, jsonSchema);
+    public Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema, string? codeFolder) =>
+        (AskClaudeCode ?? ClaudeCodeRunner.AskAsync)(prompt, jsonSchema, codeFolder);
 
     // Runs Claude Code; tests replace it.
-    internal Func<string, string, Task<Result<string>>>? AskClaudeCode { get; init; }
+    internal Func<string, string, string?, Task<Result<string>>>? AskClaudeCode { get; init; }
 
     // Anthropic's own sentence from an error's body ({"error": {"message": ...}}), which the SDK
     // puts after the status code in its message; the whole message when there is none.

@@ -1,4 +1,5 @@
 using Dependinator.Core.Claude;
+using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Diagrams.Ai;
 
@@ -33,7 +34,7 @@ interface IAiService
 
 // The AI routes the review dialogs share, over Core's IClaudeService (the LSP or the web host).
 [Scoped]
-class AiService(IClaudeService claudeService, IConfigService configService) : IAiService
+class AiService(IClaudeService claudeService, IConfigService configService, IModelMgr modelMgr) : IAiService
 {
     public bool IsAvailable => Dependinator.Core.Build.IsWeb || Dependinator.Core.Build.IsVsCodeExtWasm;
 
@@ -59,7 +60,7 @@ class AiService(IClaudeService claudeService, IConfigService configService) : IA
                 return new Error(EmptyPromptError);
             try
             {
-                return await claudeService.AskClaudeCodeAsync(codePrompt, jsonSchema);
+                return await claudeService.AskClaudeCodeAsync(codePrompt, jsonSchema, CodeFolder());
             }
             catch (Exception e) when (e.IsNotFatal())
             {
@@ -91,5 +92,13 @@ class AiService(IClaudeService claudeService, IConfigService configService) : IA
             if (hasAskedForKey || await claudeService.GetApiKeyStateAsync() is not ClaudeApiKeyState.Rejected)
                 return answer.Error;
         }
+    }
+
+    // The model's folder (the solution's or the Bicep file's), where Claude Code may read the
+    // code; none for a model without a file, such as the demo.
+    string? CodeFolder()
+    {
+        var path = modelMgr.WithModel(m => m.Path);
+        return Path.IsPathFullyQualified(path) ? Path.GetDirectoryName(path) : null;
     }
 }

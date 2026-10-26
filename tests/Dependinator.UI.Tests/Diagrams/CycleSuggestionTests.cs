@@ -130,21 +130,31 @@ public class CycleSuggestionTests
 
     readonly Mock<ICyclePromptService> prompts = new();
     readonly Mock<IClaudeService> claude = new();
+    readonly Mock<IModelMgr> modelMgr = new();
     readonly List<SuggestStep> steps = [];
 
-    public CycleSuggestionTests() => prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
+    public CycleSuggestionTests()
+    {
+        prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
+        modelMgr.Setup(m => m.WithModel(It.IsAny<Func<IModel, string>>())).Returns(ModelPath);
+    }
+
+    // Claude Code may read the code in the model's folder.
+    static readonly string ModelPath = Path.Combine(Path.GetTempPath(), "repo", "App.sln");
 
     Task<Result<CycleSuggestion>> SuggestAsync(AiSource route = AiSource.Claude) =>
         new CycleSuggestionService(
             prompts.Object,
-            new AiService(claude.Object, Mock.Of<IConfigService>())
+            new AiService(claude.Object, Mock.Of<IConfigService>(), modelMgr.Object)
         ).SuggestAsync(Cycle, route, steps.Add);
 
     [Fact]
     public async Task SuggestAsync_ShouldAskClaudeCode_WithoutAnApiKey_WhenThatRouteIsChosen()
     {
         claude
-            .Setup(c => c.AskClaudeCodeAsync("the prompt", CycleSuggestion.JsonSchema))
+            .Setup(c =>
+                c.AskClaudeCodeAsync("the prompt", CycleSuggestion.JsonSchema, Path.GetDirectoryName(ModelPath))
+            )
             .ReturnsAsync((Result<string>)AcceptAnswer);
 
         var suggestion = AssertOk(await SuggestAsync(AiSource.ClaudeCode));
