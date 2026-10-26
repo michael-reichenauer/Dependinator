@@ -53,6 +53,10 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
 - An incremental build can leave stale binaries (CSharpier.MsBuild touches sources; a running
   `dotnet watch` hot-reloads in process only). When a failure contradicts the source, check the
   dll's timestamp, delete the project's `obj/` and `bin/`, and rebuild.
+- `./scripts/watch` restarted the app on every page load when a project's generated
+  `obj/.../AssemblyInfo.cs` changed during a parse: the Roslyn parser's design-time build of this
+  solution rewrote Core's `BuildTime` metadata, and dotnet watch restarts on any Compile item change.
+  Core now skips AssemblyInfo in design-time builds; keep build-time-varying values out of them.
 - `./scripts/watch` can die on hot reload (Roslyn `EmitHelpers.EmitDifference` exception) and
   leave Azurite/func holding ports 10000/7071. Check :5000 after edits.
 
