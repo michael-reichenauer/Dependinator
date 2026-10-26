@@ -7,6 +7,7 @@ import {
 } from "./languageServer";
 import * as logger from "./logger";
 import * as claudeApiKey from "./claudeApiKey";
+import * as claudeCode from "./claudeCode";
 import type { WebviewMessage } from "./types";
 import {
     createDependinatorWebviewPanel,
@@ -339,6 +340,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             logger.error("Dependinator cloud sync auth failed to initialize", error);
         }
         claudeApiKey.registerClaudeApiKey(client, context);
+        claudeCode.registerClaudeCode(client, context);
     });
 
     // Opens (or reveals) the webview hosting the WASM UI and shows the active editor's node.

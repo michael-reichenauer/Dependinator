@@ -12,9 +12,10 @@ namespace Dependinator.Claude;
 // effort: an answer takes seconds to a minute and costs a few cents. A request a safety
 // classifier declines is retried server-side on the model Anthropic recommends for that case
 // (fallbacks "default"), so a false positive does not end in a refusal. A key Claude did not
-// accept is remembered, so the UI can ask for a new one rather than send it again.
+// accept is remembered, so the UI can ask for a new one rather than send it again. The experimental
+// local route runs Claude Code instead (ClaudeCodeRunner), where the user turned it on.
 [Singleton]
-class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
+class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IClaudeCodeSettings claudeCodeSettings) : IClaudeService
 {
     const string Model = "claude-opus-5-5";
     const int MaxTokens = 16000;
@@ -106,6 +107,20 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
             return new Error("Could not reach Claude. Check the network connection.", e);
         }
     }
+
+    public Task<bool> IsClaudeCodeEnabledAsync() => claudeCodeSettings.IsEnabledAsync();
+
+    public async Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema)
+    {
+        if (!await claudeCodeSettings.IsEnabledAsync())
+            return new Error($"Asking Claude Code on this computer is off. {claudeCodeSettings.EnableHint}");
+        if (await claudeCodeSettings.ConfirmUseAsync() is Error e)
+            return e;
+        return await (AskClaudeCode ?? ClaudeCodeRunner.AskAsync)(prompt, jsonSchema);
+    }
+
+    // Runs Claude Code; tests replace it.
+    internal Func<string, string, Task<Result<string>>>? AskClaudeCode { get; init; }
 
     // Anthropic's own sentence from an error's body ({"error": {"message": ...}}), which the SDK
     // puts after the status code in its message; the whole message when there is none.
