@@ -225,7 +225,10 @@ public class SourceParserTests(RoslynFixture fixture)
         var problem = Assert.Single(problems);
         Assert.Equal(errors, problem.ErrorCount);
         Assert.Equal($"{errors} compile errors in Sample", problem.Message);
-        Assert.Contains(items, i => i.Node?.Name == problem.NodeName && i.Node.Properties.Type == NodeType.Assembly);
+        Assert.Contains(
+            items,
+            i => i.Node is { } node && node.Name == problem.NodeName && node.Properties.Type == NodeType.Assembly
+        );
     }
 
     // A solution without loadable projects must be an error, not an empty (0 node) model.
