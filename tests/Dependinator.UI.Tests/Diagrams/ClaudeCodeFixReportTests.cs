@@ -40,3 +40,18 @@ public class ClaudeCodeFixReportTests
         AssertError(ClaudeCodeFixReport.Parse("Done!", Folder));
     }
 }
+
+// The model's folder, cut from its path in the browser, where System.IO.Path reads a Windows path
+// by Unix rules.
+public class CodeFolderTests
+{
+    [Theory]
+    [InlineData("/home/me/repo/App.sln", "/home/me/repo")]
+    [InlineData(@"C:\src\repo\App.sln", @"C:\src\repo")]
+    [InlineData("C:/src/repo/app.bicep", "C:/src/repo")]
+    [InlineData("demo.model", null)]
+    [InlineData("", null)]
+    [InlineData("/App.sln", null)]
+    public void FolderOf_ShouldCutTheFileName_OfAFullPath(string path, string? folder) =>
+        Assert.Equal(folder, AiService.FolderOf(path));
+}

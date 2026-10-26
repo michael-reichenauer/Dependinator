@@ -208,7 +208,7 @@ static class ClaudeCodeRunner
                 ReadCodeInstruction,
                 "--no-session-persistence",
             ],
-            _ =>
+            Mode.FixCode =>
             [
                 "-p",
                 "--output-format",
@@ -226,6 +226,7 @@ static class ClaudeCodeRunner
                 FixCodeInstruction,
                 "--no-session-persistence",
             ],
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unknown Claude Code mode"),
         };
 
     static IEnumerable<string> Commands()

@@ -3,8 +3,9 @@ using System.Diagnostics;
 
 namespace Dependinator.Claude;
 
-// How many files have uncommitted changes in a folder's git repository (`git status --porcelain`),
-// so the UI can warn before Claude Code's edits mix with the user's own.
+// How many files have uncommitted changes in a folder's git repository (`git status --porcelain`,
+// the whole repository, since Claude Code's edits are reviewed there), so the UI can warn before
+// they mix with the user's own.
 static class GitStatus
 {
     static readonly TimeSpan Timeout = TimeSpan.FromSeconds(15);
@@ -31,7 +32,7 @@ static class GitStatus
         }
         catch (Win32Exception e)
         {
-            return new Error("git was not found.", e);
+            return new Error("git was not found, so uncommitted changes could not be checked.", e);
         }
         using (process)
         {
@@ -42,7 +43,12 @@ static class GitStatus
                 var errors = process.StandardError.ReadToEndAsync(timeout.Token);
                 await process.WaitForExitAsync(timeout.Token);
                 if (process.ExitCode != 0)
-                    return new Error($"Not a git repository: {(await errors).Trim()}");
+                {
+                    var message = (await errors).Trim();
+                    return message.Contains("not a git repository", StringComparison.OrdinalIgnoreCase)
+                        ? new Error("The model's folder is not in a git repository.")
+                        : new Error($"git status failed: {FirstLine(message)}");
+                }
                 return CountLines(await output);
             }
             catch (OperationCanceledException)
@@ -52,6 +58,8 @@ static class GitStatus
             }
         }
     }
+
+    static string FirstLine(string text) => text.Split('\n', 2)[0].Trim();
 
     internal static int CountLines(string porcelain) =>
         porcelain.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length;

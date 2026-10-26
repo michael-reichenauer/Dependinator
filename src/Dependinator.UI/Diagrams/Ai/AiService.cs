@@ -181,10 +181,16 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
     }
 
     // The model's folder (the solution's or the Bicep file's), where Claude Code may read the
-    // code; none for a model without a file, such as the demo.
-    string? CodeFolder()
+    // code; none for a model without a file, such as the demo. The UI runs in the browser, so
+    // System.IO.Path would read a Windows path by Unix rules: both separators are cut by hand,
+    // and the host checks that the folder is there.
+    string? CodeFolder() => FolderOf(modelMgr.WithModel(m => m.Path));
+
+    internal static string? FolderOf(string path)
     {
-        var path = modelMgr.WithModel(m => m.Path);
-        return Path.IsPathFullyQualified(path) ? Path.GetDirectoryName(path) : null;
+        if (path == "" || !(path.StartsWith('/') || (path.Length > 2 && path[1] == ':')))
+            return null;
+        var cut = path.TrimEnd('/', '\\').LastIndexOfAny(['/', '\\']);
+        return cut > 0 ? path[..cut] : null;
     }
 }

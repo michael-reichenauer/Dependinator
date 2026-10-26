@@ -380,7 +380,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("accept-cycle-fixing")).ToBeVisibleAsync();
         await Expect(fix).ToBeDisabledAsync();
         await Page.GetByTestId("accept-cycle-fix-stop").ClickAsync();
-        await Expect(Page.GetByTestId("accept-cycle-fix-error")).ToHaveTextAsync("Claude Code was stopped.");
+        await Expect(Page.GetByTestId("accept-cycle-fix-error")).ToContainTextAsync("Claude Code was stopped.");
         await Expect(Page.GetByTestId("accept-cycle-fixing")).ToHaveCountAsync(0);
 
         await fix.ClickAsync();

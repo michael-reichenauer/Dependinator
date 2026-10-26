@@ -59,7 +59,7 @@
     {
       <div class="dep-ai__suggest-error" data-testid="accept-cycle-copy-error">@copyError</div>
     }
-    @if (CanFix)
+    @if (canFixWithClaudeCode)
     {
       <ClaudeCodeFix @ref="fixPanel" TestId="accept-cycle" GetFixPrompt="FixPromptText" OnStateChanged="StateHasChanged" />
     }

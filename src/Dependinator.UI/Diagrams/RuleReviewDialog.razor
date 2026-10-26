@@ -60,7 +60,7 @@
     {
       <div class="dep-ai__suggest-error" data-testid="rule-review-copy-error">@copyError</div>
     }
-    @if (CanFix)
+    @if (canFixWithClaudeCode)
     {
       <ClaudeCodeFix @ref="fixPanel" TestId="rule-review" GetFixPrompt="FixPromptText" OnStateChanged="StateHasChanged" />
     }

@@ -1,15 +1,19 @@
 @using MudBlazor
+@using Dependinator.UI.Modeling
 @implements IDisposable
 @inject IAiService aiService
 @inject IDialogService dialogService
-@inject ICanvasService canvasService
+@inject IModelService modelService
+@inject IApplicationEvents applicationEvents
 
 @* "Fix with Claude Code" in a review dialog whose answer suggests a change (breaking a cycle,
    fixing a rule): Claude Code changes the code in the model's folder as the fix prompt asks,
    allowed to edit files there but not to run commands. The dialog's button calls StartAsync; this
    shows the run (time and a Stop button) and Claude Code's report with the files it changed, then
-   re-parses. It warns first when the folder has uncommitted changes (Claude Code's edits would mix
-   with them) or is not in git (nothing to review them with). Closing the dialog stops a run. *@
+   re-parses (VS Code re-parses on its own when files change). It warns first when the repository
+   has uncommitted changes (Claude Code's edits would mix with them) or is not in git (nothing to
+   review them with). Closing the dialog stops a run, so the dialog keeps this rendered while the
+   route is on, whatever answer is selected. *@
 @if (isRunning)
 {
   <div class="dep-ai__suggestion dep-ai__suggestion--pending" data-testid="@Id("fixing")">
@@ -39,7 +43,7 @@ else if (report is not null)
       </ul>
       <div class="dep-ai__suggestion-note">
         Review the changes in git before you commit them, then build and run the tests: Claude Code could do neither.
-        @(isReparsed ? "The model is re-parsed." : "")
+        @reparseNote
       </div>
     }
   </div>
@@ -59,10 +63,12 @@ else if (report is not null)
   // Tells the dialog when a run starts or ends, so it can update its buttons.
   [Parameter] public EventCallback OnStateChanged { get; set; }
 
-  public bool IsRunning => isRunning;
+  // From the click on, through the warning, until the run ends: the dialog disables its button.
+  public bool IsRunning => isBusy;
 
+  bool isBusy;
   bool isRunning;
-  bool isReparsed;
+  string reparseNote = "";
   ClaudeCodeFixReport? report;
   string? error;
   DateTime startTime;
@@ -83,33 +89,46 @@ else if (report is not null)
 
   public async Task StartAsync()
   {
-    if (isRunning || GetFixPrompt is null)
+    if (isBusy || GetFixPrompt is null)
       return;
+    isBusy = true;
     error = null;
-    if (!await ConfirmStartAsync())
-      return;
-
-    report = null;
-    isReparsed = false;
-    isRunning = true;
-    startTime = DateTime.UtcNow;
-    ticker = new Timer(_ => InvokeAsync(StateHasChanged), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
     await OnStateChanged.InvokeAsync();
     try
     {
-      var result = await aiService.FixWithClaudeCodeAsync(GetFixPrompt());
+      if (!await ConfirmStartAsync())
+        return;
+      await RunAsync(GetFixPrompt());
+    }
+    finally
+    {
+      isBusy = false;
+      await OnStateChanged.InvokeAsync();
+      StateHasChanged();
+    }
+  }
+
+  async Task RunAsync(string fixPrompt)
+  {
+    report = null;
+    reparseNote = "";
+    isRunning = true;
+    startTime = DateTime.UtcNow;
+    ticker = new Timer(_ => InvokeAsync(StateHasChanged), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+    StateHasChanged();
+    try
+    {
+      var result = await aiService.FixWithClaudeCodeAsync(fixPrompt);
       if (result is ClaudeCodeFixReport fixReport)
       {
         report = fixReport;
         if (fixReport.ChangedFiles.Count > 0)
-        {
-          await canvasService.RefreshAsync();
-          isReparsed = true;
-        }
+          reparseNote = await ReparseAsync();
       }
       else
       {
-        error = result.Error.Message;
+        // Stopped, timed out or failed, it may have changed files before that.
+        error = $"{result.Error.Message} It may have changed files before that: check git before you try again.";
       }
     }
     finally
@@ -117,8 +136,24 @@ else if (report is not null)
       isRunning = false;
       ticker?.Dispose();
       ticker = null;
-      await OnStateChanged.InvokeAsync();
-      StateHasChanged();
+    }
+  }
+
+  // In VS Code the extension re-parses when files change (or offers to), and a second parse at the
+  // same time could clash with it.
+  async Task<string> ReparseAsync()
+  {
+    if (Dependinator.Core.Build.IsVsCodeExtWasm)
+      return "";
+    try
+    {
+      var result = await modelService.RefreshAsync();
+      applicationEvents.TriggerUIStateChanged();
+      return result is Error e ? $"Re-parsing failed: {e.Message}" : "The model is re-parsed.";
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      return $"Re-parsing failed: {e.Message}";
     }
   }
 
@@ -129,12 +164,12 @@ else if (report is not null)
     string? warning = changes switch
     {
       int count when count > 0 =>
-        $"{Files(count)} in the model's folder have uncommitted changes. Claude Code's edits will mix with them, "
+        $"{Files(count)} in the repository have uncommitted changes. Claude Code's edits will mix with them, "
         + "so commit or stash them first to review its changes on their own.",
       int => null,
       _ =>
-        "The model's folder is not in a git repository, so Claude Code's changes cannot be reviewed or undone "
-        + "with git afterwards.",
+        $"{changes.Error.Message} Without git, Claude Code's changes cannot be reviewed or undone with git "
+        + "afterwards.",
     };
     if (warning is null)
       return true;
