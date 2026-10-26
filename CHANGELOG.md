@@ -3,6 +3,10 @@
 What changed for the people who use Dependinator, in each release, newest first. A release includes
 the previews before it. Releases with nothing users notice are left out.
 
+**Unreleased** lists what is not yet in an official release: changes already out in a preview
+(pre-release) and changes still waiting for the next preview. They move under a version heading
+with the next official release.
+
 ## [Unreleased]
 
 ### New
