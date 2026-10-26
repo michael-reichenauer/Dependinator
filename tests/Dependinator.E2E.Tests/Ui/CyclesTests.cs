@@ -290,6 +290,12 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await cycle.GetByTestId("cycles-review").ClickAsync();
         // Both routes are offered side by side before any answer.
         await Expect(Page.GetByTestId("accept-cycle-suggest")).ToHaveTextAsync("Ask Claude");
+        // The prompt every route uses can be read first, without copying it.
+        await Page.GetByTestId("accept-cycle-show-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("## The cycle");
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync(member);
+        await Page.GetByTestId("prompt-dialog-close").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToHaveCountAsync(0);
         ILocator copy = Page.GetByTestId("accept-cycle-copy-prompt");
         await copy.ClickAsync();
         // Copying shows the rest of the AI chat route as steps, the first one done.

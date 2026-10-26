@@ -1,5 +1,6 @@
 using Dependinator.Core.Claude;
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Tests.Diagrams;
@@ -124,8 +125,24 @@ public class CycleSuggestionTests
 
     public CycleSuggestionTests() => prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
 
-    Task<Result<CycleSuggestion>> SuggestAsync() =>
-        new CycleSuggestionService(prompts.Object, claude.Object).SuggestAsync(Cycle, steps.Add);
+    Task<Result<CycleSuggestion>> SuggestAsync(AiSource route = AiSource.Claude) =>
+        new CycleSuggestionService(prompts.Object, new AiService(claude.Object)).SuggestAsync(Cycle, route, steps.Add);
+
+    [Fact]
+    public async Task SuggestAsync_ShouldAskClaudeCode_WithoutAnApiKey_WhenThatRouteIsChosen()
+    {
+        claude
+            .Setup(c => c.AskClaudeCodeAsync("the prompt", CycleSuggestion.JsonSchema))
+            .ReturnsAsync((Result<string>)AcceptAnswer);
+
+        var suggestion = AssertOk(await SuggestAsync(AiSource.ClaudeCode));
+
+        Assert.True(suggestion.IsAccept);
+        Assert.Equal(AiSource.ClaudeCode, suggestion.Source);
+        Assert.Equal([SuggestStep.AskingClaudeCode], steps);
+        claude.Verify(c => c.GetApiKeyStateAsync(), Times.Never);
+        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
 
     [Fact]
     public async Task SuggestAsync_ShouldAskClaudeWithTheCyclePromptAndTheAnswerSchema()

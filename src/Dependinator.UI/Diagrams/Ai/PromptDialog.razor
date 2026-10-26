@@ -1,0 +1,56 @@
+@using MudBlazor
+@inject IClipboardService clipboardService
+
+@* The prompt a review sends to Claude or Claude Code, or copies for an AI chat, to read before
+   using a route: what it asks, and which code it shares. It can be copied from here too. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">Prompt</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-prompt__meta" data-testid="prompt-dialog-size">@Size</div>
+    <pre class="dep-prompt__text" data-testid="prompt-dialog-text">@Prompt</pre>
+  </DialogContent>
+  <DialogActions>
+    @if (copyNote is not null)
+    {
+      <span class="dep-prompt__note" data-testid="prompt-dialog-copied">@copyNote</span>
+    }
+    <MudSpacer />
+    <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy" OnClick="CopyAsync"
+               data-testid="prompt-dialog-copy">Copy</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="prompt-dialog-close">Close</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public string Prompt { get; set; } = "";
+
+  string? copyNote;
+
+  public static async Task ShowAsync(IDialogService dialogService, string prompt)
+  {
+    var parameters = new DialogParameters<PromptDialog> { { d => d.Prompt, prompt } };
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+    var dialog = await dialogService.ShowAsync<PromptDialog>(null, parameters, options);
+    await dialog.Result;
+  }
+
+  // Tokens are roughly a quarter of the characters, enough to tell a short prompt from a long one.
+  string Size
+  {
+    get
+    {
+      var lines = Prompt.Split('\n').Length;
+      return $"{lines:N0} lines, {Prompt.Length:N0} characters (about {Prompt.Length / 4:N0} tokens). "
+        + "The same prompt goes to Claude, to Claude Code, or into your AI chat.";
+    }
+  }
+
+  async Task CopyAsync() =>
+    copyNote = await clipboardService.CopyAsync(Prompt) ? "Copied" : "Could not copy to the clipboard.";
+
+  void Close() => MudDialog.Close();
+}

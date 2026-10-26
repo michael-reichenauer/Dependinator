@@ -1,0 +1,92 @@
+using Dependinator.Core.Claude;
+
+namespace Dependinator.UI.Diagrams.Ai;
+
+// What a review dialog says while an answer is on its way. In VS Code the key is entered in an
+// input box at the top of the window, outside the UI the user is watching, so the dialog says so.
+public enum SuggestStep
+{
+    EnteringApiKey,
+    EnteringNewApiKey,
+    AskingClaude,
+    AskingClaudeCode,
+}
+
+interface IAiService
+{
+    // Whether this host can ask Claude: the web host and VS Code, not the standalone browser app.
+    bool IsAvailable { get; }
+
+    // Whether the user turned on the experimental Claude Code route in this host.
+    Task<bool> IsClaudeCodeEnabledAsync();
+
+    // Asks Claude (with the API key) or Claude Code for an answer matching the schema. Without a
+    // key, or with one Claude did not accept, the user is asked for a key first (once per call);
+    // onStep tells the dialog what is going on. The prompt is built only once it is needed.
+    Task<Result<string>> AskAsync(
+        AiSource route,
+        Func<Task<string>> getPrompt,
+        string jsonSchema,
+        Action<SuggestStep> onStep
+    );
+}
+
+// The AI routes the review dialogs share, over Core's IClaudeService (the LSP or the web host).
+[Scoped]
+class AiService(IClaudeService claudeService) : IAiService
+{
+    public bool IsAvailable => Dependinator.Core.Build.IsWeb || Dependinator.Core.Build.IsVsCodeExtWasm;
+
+    public async Task<bool> IsClaudeCodeEnabledAsync()
+    {
+        if (!IsAvailable || Dependinator.Core.Build.IsTestMode)
+            return false;
+        try
+        {
+            return await claudeService.IsClaudeCodeEnabledAsync();
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            // An older language server without the route, say: the route is just not offered.
+            Log.Info("Could not tell whether Claude Code is enabled", e.Message);
+            return false;
+        }
+    }
+
+    public async Task<Result<string>> AskAsync(
+        AiSource route,
+        Func<Task<string>> getPrompt,
+        string jsonSchema,
+        Action<SuggestStep> onStep
+    )
+    {
+        if (route is AiSource.ClaudeCode)
+        {
+            onStep(SuggestStep.AskingClaudeCode);
+            return await claudeService.AskClaudeCodeAsync(await getPrompt(), jsonSchema);
+        }
+
+        var hasAskedForKey = false;
+        string? prompt = null;
+        while (true)
+        {
+            var state = await claudeService.GetApiKeyStateAsync();
+            if (state is not ClaudeApiKeyState.Set)
+            {
+                onStep(state is ClaudeApiKeyState.Missing ? SuggestStep.EnteringApiKey : SuggestStep.EnteringNewApiKey);
+                if (await claudeService.AskUserForApiKeyAsync() is Error e)
+                    return e;
+                hasAskedForKey = true;
+            }
+
+            onStep(SuggestStep.AskingClaude);
+            prompt ??= await getPrompt();
+            var answer = await claudeService.AskAsync(prompt, jsonSchema);
+            if (answer is string)
+                return answer;
+            // A key Claude did not accept: ask for a new one, once.
+            if (hasAskedForKey || await claudeService.GetApiKeyStateAsync() is not ClaudeApiKeyState.Rejected)
+                return answer.Error;
+        }
+    }
+}
