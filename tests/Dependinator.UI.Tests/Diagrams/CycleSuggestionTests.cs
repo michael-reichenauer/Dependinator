@@ -110,6 +110,14 @@ public class CycleSuggestionTests
     }
 
     [Fact]
+    public void ParseText_ShouldTakeTheVerdictWordThatComesFirst()
+    {
+        var suggestion = AssertOk(CycleSuggestion.ParseText("Verdict: Break (do not accept it)\nChange: Move it."));
+
+        Assert.False(suggestion.IsAccept);
+    }
+
+    [Fact]
     public void ParseText_ShouldFail_WithoutAVerdict()
     {
         var error = AssertError(

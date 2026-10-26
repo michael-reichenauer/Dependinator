@@ -36,19 +36,22 @@ public record CycleSuggestion(bool IsAccept, string Why, string Assumptions, str
         var parsed = Result.Catch(() => Json.Deserialize<Answer>(json) ?? throw new JsonException("No answer"));
         if (parsed is not Answer answer)
             return new Error($"{source.Name()}'s answer could not be read.", parsed.Error);
+        if (answer.Verdict is not ("Accept" or "Break"))
+            return new Error($"{source.Name()}'s answer has no verdict.");
         return new CycleSuggestion(
             answer.Verdict == "Accept",
-            answer.Why.Trim(),
-            answer.Assumptions.Trim(),
-            answer.ReasonToStore.Trim(),
-            answer.Change.Trim()
+            (answer.Why ?? "").Trim(),
+            (answer.Assumptions ?? "").Trim(),
+            (answer.ReasonToStore ?? "").Trim(),
+            (answer.Change ?? "").Trim()
         )
         {
             Source = source,
         };
     }
 
-    record Answer(string Verdict, string Why, string Assumptions, string ReasonToStore, string Change);
+    // Fields may be missing from an answer that did not come through structured output.
+    record Answer(string? Verdict, string? Why, string? Assumptions, string? ReasonToStore, string? Change);
 
     static readonly string[] Labels = ["verdict", "why", "assumptions", "reason to store", "reason", "change"];
 

@@ -7,8 +7,8 @@ namespace Dependinator.Claude;
 // Runs Claude Code in print mode (`claude -p`) for one structured answer: the prompt goes in on
 // stdin, the schema as --json-schema, and the answer comes back in the JSON result's
 // structured_output. No tools (the prompt carries the code it needs), no saved session, and a
-// temporary working folder, so the workspace's own Claude settings, hooks and CLAUDE.md are not
-// loaded. It runs with the user's Claude login and their default model.
+// new private temporary working folder, so neither the workspace's Claude settings, hooks and
+// CLAUDE.md nor any planted in a shared temp folder are loaded. It runs with the user's Claude login and their default model.
 static class ClaudeCodeRunner
 {
     static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
@@ -19,7 +19,22 @@ static class ClaudeCodeRunner
         if (schema is not string compactSchema)
             return new Error("The answer schema is not valid JSON.", schema.Error);
 
-        var started = Start(compactSchema);
+        var folder = Result.Catch(() => Directory.CreateTempSubdirectory("dependinator-claude-"));
+        if (folder is not DirectoryInfo workingFolder)
+            return new Error("Could not create a folder for Claude Code.", folder.Error);
+        try
+        {
+            return await RunAsync(prompt, compactSchema, workingFolder.FullName);
+        }
+        finally
+        {
+            Result.Catch(() => workingFolder.Delete(recursive: true));
+        }
+    }
+
+    static async Task<Result<string>> RunAsync(string prompt, string schema, string workingFolder)
+    {
+        var started = Start(schema, workingFolder);
         if (started is not Process process)
             return started.Error;
         using (process)
@@ -29,8 +44,16 @@ static class ClaudeCodeRunner
             {
                 var output = process.StandardOutput.ReadToEndAsync(timeout.Token);
                 var errors = process.StandardError.ReadToEndAsync(timeout.Token);
-                await process.StandardInput.WriteAsync(prompt.AsMemory(), timeout.Token);
-                process.StandardInput.Close();
+                try
+                {
+                    await process.StandardInput.WriteAsync(prompt.AsMemory(), timeout.Token);
+                    process.StandardInput.Close();
+                }
+                catch (IOException)
+                {
+                    // Claude Code exited before it read the prompt (not signed in, say): what it
+                    // printed says why.
+                }
                 await process.WaitForExitAsync(timeout.Token);
                 var result = ParseOutput(await output, await errors, process.ExitCode);
                 Log.Info("Claude Code answered", result is string);
@@ -50,7 +73,7 @@ static class ClaudeCodeRunner
 
     // The command where the PATH has it, else where Anthropic's installers put it: VS Code started
     // from the dock (macOS) or a desktop launcher often has a shorter PATH than a terminal.
-    static Result<Process> Start(string schema)
+    static Result<Process> Start(string schema, string workingFolder)
     {
         Exception? notFound = null;
         foreach (var command in Commands())
@@ -62,7 +85,7 @@ static class ClaudeCodeRunner
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                WorkingDirectory = Path.GetTempPath(),
+                WorkingDirectory = workingFolder,
             };
             foreach (var argument in Arguments(schema))
                 info.ArgumentList.Add(argument);
@@ -76,8 +99,9 @@ static class ClaudeCodeRunner
             }
         }
         return new Error(
-            "Claude Code (the claude command) was not found. Install it from claude.com/claude-code and sign in "
-                + "with \"claude\" in a terminal once.",
+            "Claude Code (the claude command) was not found. Install it from claude.com/claude-code (on Windows the "
+                + "native installer, whose claude.exe can be started directly) and sign in with \"claude\" in a "
+                + "terminal once.",
             notFound!
         );
     }

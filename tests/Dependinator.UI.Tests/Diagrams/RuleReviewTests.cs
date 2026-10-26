@@ -126,6 +126,33 @@ public class RuleReviewTests
     }
 
     [Fact]
+    public void ParseText_ShouldTakeTheVerdictWordThatComesFirst()
+    {
+        var suggestion = AssertOk(RuleSuggestion.ParseText("Verdict: Allow, no need to fix it\nWhy: Fine."));
+
+        Assert.False(suggestion.IsFix);
+    }
+
+    [Fact]
+    public void Parse_ShouldReadAnAnswerWithMissingFields_AndFailWithoutAVerdict()
+    {
+        var suggestion = AssertOk(RuleSuggestion.Parse("""{ "verdict": "Fix", "why": "Layering." }"""));
+        Assert.Equal(("", ""), (suggestion.Assumptions, suggestion.Change));
+
+        AssertError(RuleSuggestion.Parse("""{ "why": "Layering." }"""));
+    }
+
+    [Fact]
+    public void AddAllowedViolation_ShouldKeepOneEntryPerDependency()
+    {
+        using var model = modelMgr.UseModel();
+        model.AddAllowedViolation(new AllowedViolation("A", "B", "A.X", "B.Y", "First"));
+        model.AddAllowedViolation(new AllowedViolation("A", "B", "A.X", "B.Y", "Second"));
+
+        Assert.Equal("Second", Assert.Single(model.AllowedViolations).Reason);
+    }
+
+    [Fact]
     public void ParseText_ShouldFail_WithoutAVerdict()
     {
         var error = AssertError(RuleSuggestion.ParseText("Verdict: Accept"));

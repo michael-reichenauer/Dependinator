@@ -37,6 +37,11 @@ class AiService(IClaudeService claudeService) : IAiService
 {
     public bool IsAvailable => Dependinator.Core.Build.IsWeb || Dependinator.Core.Build.IsVsCodeExtWasm;
 
+    // A prompt builder returns nothing when what it is about is gone (a re-parse while the dialog
+    // is open); nothing is sent then.
+    public const string EmptyPromptError =
+        "There is no prompt: what it is about is no longer in the model. Close the dialog and review it again.";
+
     public async Task<bool> IsClaudeCodeEnabledAsync()
     {
         if (!IsAvailable)
@@ -63,7 +68,17 @@ class AiService(IClaudeService claudeService) : IAiService
         if (route is AiSource.ClaudeCode)
         {
             onStep(SuggestStep.AskingClaudeCode);
-            return await claudeService.AskClaudeCodeAsync(await getPrompt(), jsonSchema);
+            var codePrompt = await getPrompt();
+            if (codePrompt == "")
+                return new Error(EmptyPromptError);
+            try
+            {
+                return await claudeService.AskClaudeCodeAsync(codePrompt, jsonSchema);
+            }
+            catch (Exception e) when (e.IsNotFatal())
+            {
+                return new Error($"Could not ask Claude Code: {e.Message}", e);
+            }
         }
 
         var hasAskedForKey = false;
@@ -81,6 +96,8 @@ class AiService(IClaudeService claudeService) : IAiService
 
             onStep(SuggestStep.AskingClaude);
             prompt ??= await getPrompt();
+            if (prompt == "")
+                return new Error(EmptyPromptError);
             var answer = await claudeService.AskAsync(prompt, jsonSchema);
             if (answer is string)
                 return answer;

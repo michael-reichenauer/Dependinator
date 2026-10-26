@@ -1,5 +1,6 @@
 using Dependinator.Claude;
 using Dependinator.Core.Utils;
+using Dependinator.Core.Utils.Logging;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 
 namespace Dependinator.Lsp.Claude;
@@ -27,12 +28,24 @@ class LspClaudeCodeSettings(ILanguageServerFacade server) : IClaudeCodeSettings
     public string EnableHint =>
         "Set \"dependinator.experimental.localClaudeCode\": true in the VS Code settings (settings.json).";
 
+    // An extension that does not answer (an older one, say) leaves the route off.
+    static readonly TimeSpan enabledTimeout = TimeSpan.FromSeconds(10);
+
     public async Task<bool> IsEnabledAsync()
     {
-        var result = await server
-            .SendRequest(ClaudeCodeEnabledParams.Method, new ClaudeCodeEnabledParams())
-            .Returning<ClaudeCodeResult>(CancellationToken.None);
-        return result.IsEnabled;
+        try
+        {
+            using CancellationTokenSource cts = new(enabledTimeout);
+            var result = await server
+                .SendRequest(ClaudeCodeEnabledParams.Method, new ClaudeCodeEnabledParams())
+                .Returning<ClaudeCodeResult>(cts.Token);
+            return result.IsEnabled;
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            Log.Info("Could not tell whether Claude Code is enabled", e.Message);
+            return false;
+        }
     }
 
     public async Task<Result> ConfirmUseAsync()

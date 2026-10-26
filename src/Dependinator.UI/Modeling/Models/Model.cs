@@ -150,10 +150,12 @@ class Model : IModel
     readonly List<AllowedViolation> allowedViolations = [];
     public IReadOnlyList<AllowedViolation> AllowedViolations => allowedViolations;
 
+    // One entry per dependency: a new reason replaces the old one.
     public void AddAllowedViolation(AllowedViolation allowed)
     {
         if (allowedViolations.Contains(allowed))
             return;
+        allowedViolations.RemoveAll(a => a.IsSameDependency(allowed));
         allowedViolations.Add(allowed);
         RulesVersion++;
     }
@@ -287,7 +289,7 @@ class Model : IModel
         allowedViolations.AddRange(
             modelDto
                 .AllowedViolations.Select(a => new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? ""))
-                .Distinct()
+                .DistinctBy(a => (a.FromName, a.ToName, a.SourceName, a.TargetName))
         );
         RulesVersion++;
         acceptedCycles.Clear();

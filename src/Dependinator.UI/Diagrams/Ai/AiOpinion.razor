@@ -332,13 +332,25 @@ else if (Selected is { } s && AnswerContent is not null)
     askError = null;
     isAskError = false;
     isChatOpen = false;
-    var result = await Ask(route, next =>
+    Result<TAnswer> result;
+    try
     {
-      step = next;
-      _ = InvokeAsync(StateHasChanged);
-    });
-    isSuggesting = false;
-    step = null;
+      result = await Ask(route, next =>
+      {
+        step = next;
+        _ = InvokeAsync(StateHasChanged);
+      });
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Asking for an AI opinion failed", e.Message);
+      result = new Error($"Could not ask: {e.Message}", e);
+    }
+    finally
+    {
+      isSuggesting = false;
+      step = null;
+    }
     if (result.Value is not TAnswer answer)
     {
       askError = result.Error.Message;
@@ -361,10 +373,11 @@ else if (Selected is { } s && AnswerContent is not null)
     if (GetPrompt is null || isShowingPrompt)
       return;
     isShowingPrompt = true;
-    var prompt = await GetPrompt();
+    var prompt = await TryGetPromptAsync();
     isShowingPrompt = false;
     StateHasChanged();
-    await PromptDialog.ShowAsync(dialogService, prompt);
+    if (prompt is not null)
+      await PromptDialog.ShowAsync(dialogService, prompt);
   }
 
   // The AI chat route: copies the prompt, its first step, and shows the steps.
@@ -385,13 +398,33 @@ else if (Selected is { } s && AnswerContent is not null)
     if (GetPrompt is null || isCopyingPrompt)
       return;
     isCopyingPrompt = true;
-    var prompt = await GetPrompt();
-    var isCopied = isChatOpen && await clipboardService.CopyAsync(prompt);
-    if (isChatOpen && !isCopied)
+    var prompt = await TryGetPromptAsync();
+    var isCopied = isChatOpen && prompt is not null && await clipboardService.CopyAsync(prompt);
+    if (isChatOpen && prompt is not null && !isCopied)
       askError = "Could not copy to the clipboard.";
     isCopyingPrompt = false;
     isPromptCopied = isCopied;
   }
+
+  // The prompt, or null with the error shown: building it failed (reading the source over the
+  // LSP, say), or what it is about is no longer in the model (a re-parse while the dialog is open).
+  async Task<string?> TryGetPromptAsync()
+  {
+    try
+    {
+      var prompt = await GetPrompt!();
+      if (prompt != "")
+        return prompt;
+      askError = AiService.EmptyPromptError;
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Building the AI prompt failed", e.Message);
+      askError = $"Could not build the prompt: {e.Message}";
+    }
+    return null;
+  }
+
 
   void CloseChat()
   {

@@ -65,9 +65,17 @@ public static class AiAnswerText
         return fields;
     }
 
-    // The first of the verdict words in a field, as written in words (case as given), or null.
-    public static string? Verdict(string field, IReadOnlyList<string> words) =>
-        words.FirstOrDefault(w => Regex.IsMatch(field, $@"\b{Regex.Escape(w)}\b", RegexOptions.IgnoreCase));
+    // The verdict word that comes first in a field ("Break (do not accept it)" is Break), as
+    // written in words (case as given), or null.
+    public static string? Verdict(string field, IReadOnlyList<string> words)
+    {
+        var match = Regex.Match(
+            field,
+            @"\b(" + string.Join("|", words.Select(Regex.Escape)) + @")\b",
+            RegexOptions.IgnoreCase
+        );
+        return match.Success ? words.First(w => w.Equals(match.Value, StringComparison.OrdinalIgnoreCase)) : null;
+    }
 
     // A field's text without the format's "(only if Accept)" note, emphasis marks or quotes
     // around it; "N/A" or a dash for a field that does not apply is empty.

@@ -36,20 +36,23 @@ public record RuleSuggestion(bool IsFix, string Why, string Assumptions, string 
         var parsed = Result.Catch(() => Json.Deserialize<Answer>(json) ?? throw new JsonException("No answer"));
         if (parsed is not Answer answer)
             return new Error($"{source.Name()}'s answer could not be read.", parsed.Error);
+        if (answer.Verdict is not ("Fix" or "Allow"))
+            return new Error($"{source.Name()}'s answer has no verdict.");
         var isFix = answer.Verdict == "Fix";
         return new RuleSuggestion(
             isFix,
-            answer.Why.Trim(),
-            answer.Assumptions.Trim(),
-            isFix ? "" : answer.ReasonToStore.Trim(),
-            isFix ? answer.Change.Trim() : ""
+            (answer.Why ?? "").Trim(),
+            (answer.Assumptions ?? "").Trim(),
+            isFix ? "" : (answer.ReasonToStore ?? "").Trim(),
+            isFix ? (answer.Change ?? "").Trim() : ""
         )
         {
             Source = source,
         };
     }
 
-    record Answer(string Verdict, string Why, string Assumptions, string ReasonToStore, string Change);
+    // Fields may be missing from an answer that did not come through structured output.
+    record Answer(string? Verdict, string? Why, string? Assumptions, string? ReasonToStore, string? Change);
 
     static readonly string[] Labels = ["verdict", "why", "assumptions", "reason to store", "reason", "change"];
 
