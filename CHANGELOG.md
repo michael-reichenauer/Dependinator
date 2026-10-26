@@ -13,7 +13,8 @@ with the next official release.
 
 - Previews of the VS Code extension can be installed from the Marketplace: **Switch to Pre-Release Version** on the extension's page in VS Code gets each preview as it comes out, and **Switch to Release Version** goes back
 - A dependency that breaks an architecture rule can be reviewed like a cycle: ask Claude, Claude Code or your own AI chat whether to fix it or allow it; fixing gives a prompt for an AI that can change the code, and allowing keeps the dependency with a reason under its rule, where it is no longer counted as a problem
-- **Settings › Use Claude Code (Experimental)** adds **Ask Claude Code** to the cycle and rule reviews, which asks Claude Code on this computer with your own Claude login instead of an API key
+- **Settings › Use Claude Code (Experimental)** adds **Ask Claude Code** to the cycle and rule reviews, which asks Claude Code on this computer with your own Claude login instead of an API key; it reads the code in the model's folder to check its answer
+- **Fix with Claude Code** in the cycle and rule reviews lets Claude Code make the suggested change in the model's folder (edits only, no commands), after a warning about uncommitted changes; it shows the running time with **Stop**, then a summary and the changed files, and re-parses
 
 ### Improved
 
