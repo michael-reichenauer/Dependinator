@@ -257,15 +257,17 @@
                 button on a row opens the cycle's review.
                 A cycle that is intended can be <b>accepted</b> with a reason: it moves to the Accepted section and its
                 lines are drawn normally. It is reported again if another node joins it. Accepting is saved with the model
-                and can be undone. Not sure? The copy button in the review copies a prompt for an AI chat (such as
+                and can be undone. Not sure? <b>Get an AI opinion</b> in the review offers two routes to the same kind of
+                answer. <b>Use your AI chat</b> is free: <b>Copy prompt</b> copies a prompt for an AI chat (such as
                 claude.ai) that asks whether the cycle is intended, or how to break it; in VS Code and the local web app it
-                includes the source code behind the cycle's thinnest dependencies. Paste the AI's answer back into the box
-                that opens, and it is used like Claude's. There, <b>Ask Claude</b> asks Claude
-                directly, with your own Anthropic API key (VS Code asks for it the first time, in a box at the top of the
-                window, and the dialog says so; the command "Dependinator: Set Claude API Key" changes it). If asking
-                fails (no key, a key not accepted, no credits left), <b>Copy prompt instead</b> takes the AI chat route. <b>Ask
-                again</b> for a second opinion: each answer is kept, and when they differ you pick the one that convinces
-                you. An accepting answer fills in the reason. A breaking one shows the change and offers <b>Copy fix
+                includes the source code behind the cycle's thinnest dependencies. The steps that follow offer
+                <b>Open claude.ai</b> to paste it into, and a box to paste the AI's answer back into, which is read as soon as
+                it is pasted. In VS Code and the local web app, <b>Ask Claude</b> asks Claude
+                directly, with your own Anthropic API key, a few cents per answer (VS Code asks for it the first time, in a
+                box at the top of the window, and the dialog says so; the command "Dependinator: Set Claude API Key" changes
+                it). If asking fails (no key, a key not accepted, no credits left), <b>Use your AI chat instead</b> takes the
+                other route. For a second opinion, ask again or use the other route: each answer is kept, labeled by where it
+                came from, and when they differ you pick the one that convinces you. An accepting answer fills in the reason. A breaking one shows the change and offers <b>Copy fix
                 prompt</b>, a prompt for Claude Code (or another AI that can change the code) to make it; <b>Fix
                 later</b>, which moves the cycle to the <b>To fix</b> section with the planned change (its lines stay red,
                 and its fix prompt can be copied from there); or <b>Accept anyway</b>, with the suggested fix kept in the

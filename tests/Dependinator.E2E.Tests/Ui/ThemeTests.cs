@@ -36,13 +36,6 @@ public class ThemeTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(html).ToHaveAttributeAsync("data-theme", "light");
     }
 
-    // Click the theme item and verify it really took: a click landing while the popover
-    // re-renders is swallowed silently, so the state is read back before moving on.
-    async Task SetThemeAsync(string itemTestId)
-    {
-        await (await App.OpenSubMenuItemAsync("menu-view", itemTestId)).ClickAsync();
-        await Expect(await App.OpenSubMenuItemAsync("menu-view", itemTestId))
-            .ToHaveAttributeAsync("data-checked", "true");
-        await App.CloseMenuAsync();
-    }
+    // Click the theme item and verify it is the checked one.
+    Task SetThemeAsync(string itemTestId) => App.ToggleSubMenuItemAsync("menu-view", itemTestId, expectChecked: true);
 }

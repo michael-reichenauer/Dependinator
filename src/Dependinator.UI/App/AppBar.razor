@@ -475,14 +475,15 @@
         </MudTooltip>
     }
 
+    <ProblemIndicator OnShowCycles="ShowCycles" OnShowRules="ShowRules" />
+    <HiddenNodesIndicator OnToggle="ToggleHiddenNodes" />
+
+    @* Help is the last button, where it is easy to find; the indicators come and go before it. *@
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         <MudTooltip Text="Help">
             <MudIconButton Icon="@Icons.Material.Outlined.Help" OnClick="ShowHelpAsync" data-testid="toolbar-help" />
         </MudTooltip>
     </MudHidden>
-
-    <ProblemIndicator OnShowCycles="ShowCycles" OnShowRules="ShowRules" />
-    <HiddenNodesIndicator OnToggle="ToggleHiddenNodes" />
 
 </MudButtonGroup>
 

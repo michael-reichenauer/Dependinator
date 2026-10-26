@@ -27,6 +27,23 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.SearchButton).ToBeVisibleAsync();
     }
 
+    // Help is the last app bar button, after the problem indicator (the demo model has cycles),
+    // so it is easy to find (#115).
+    [E2EFact]
+    public async Task HelpButton_ShouldBeLastInTheAppBar()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        ILocator help = App.MenuItem("toolbar-help");
+        ILocator problems = App.MenuItem("problems-indicator");
+        await Expect(help).ToBeVisibleAsync();
+        await Expect(problems).ToBeVisibleAsync();
+
+        LocatorBoundingBoxResult helpBox = (await help.BoundingBoxAsync())!;
+        LocatorBoundingBoxResult problemsBox = (await problems.BoundingBoxAsync())!;
+        Assert.True(helpBox.X > problemsBox.X, $"Help at x={helpBox.X}, problems at x={problemsBox.X}");
+    }
+
     [E2EFact]
     public async Task AppMenu_ShouldOpenSearchDialog_ViaMenuItem()
     {

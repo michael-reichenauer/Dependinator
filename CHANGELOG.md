@@ -5,6 +5,17 @@ the previews before it. Releases with nothing users notice are left out.
 
 ## [Unreleased]
 
+## [v0.86.429455] - 2026-10-26
+
+### Improved
+
+- The cycle review offers its two AI routes side by side under **Get an AI opinion**: **Ask Claude** (your own API key, a few cents) and **Use your AI chat** (free), each saying what happens; the AI chat route is laid out as steps, a pasted answer is read at once, and answers show where they came from ("Claude · Break", "Chat · Accept"); a failed ask offers the AI chat route instead
+- **Help** is the last button in the app bar, after the problem and hidden nodes indicators
+
+### Fixed
+
+- The hidden nodes count in the app bar is drawn in the app bar's color like the other icons, instead of in red
+
 ## [v0.85.425921] - 2026-10-23
 
 ### New
