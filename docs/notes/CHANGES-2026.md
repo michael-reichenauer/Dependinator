@@ -196,6 +196,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   Anthropic allows that for a third-party tool, so it is off until turned on under Settings › Use
   Claude Code (Experimental), after a warning. (First built behind an unlisted VS Code setting and
   an environment variable; moved to the Settings menu the same day, while Michael is the only user.)
+  The same day Claude Code got read-only tools in the model's folder, to check the excerpts
+  against the code, and "Fix with Claude Code": when an answer suggests breaking a cycle or fixing a
+  rule, Claude Code makes the change in the model's folder (it may edit files there, not run
+  commands), after a warning when the folder has uncommitted changes; the dialog shows its report
+  and the changed files, and re-parses.
 - **Problem indicator (Oct 21).** A warning count in the app bar, like the VS Code status bar,
   shows that the model has open cycles and broken architecture rules without opening their
   panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one

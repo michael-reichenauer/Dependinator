@@ -1011,3 +1011,21 @@
     white-space: nowrap;
     font-weight: 600;
 }
+
+/* The files Claude Code changed, in its report after "Fix with Claude Code". */
+.dep-ai__fix-files {
+    margin: 0;
+    padding-left: 20px;
+    font-family: monospace;
+    font-size: 0.8125rem;
+}
+
+/* The review dialogs' buttons wrap to a second row rather than squeezing their labels. */
+.dep-ai__actions {
+    flex-wrap: wrap;
+    row-gap: 8px;
+}
+
+.dep-ai__actions .mud-button-root {
+    white-space: nowrap;
+}

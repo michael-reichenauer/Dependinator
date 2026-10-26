@@ -30,6 +30,18 @@ interface IAiService
         string jsonSchema,
         Action<SuggestStep> onStep
     );
+
+    // Whether "Fix with Claude Code" can run: the route is on and the model has a folder on disk.
+    Task<bool> CanFixWithClaudeCodeAsync();
+
+    // The number of files with uncommitted changes in the model's git repository; an error when
+    // the folder is not in one.
+    Task<Result<int>> CountUncommittedChangesAsync();
+
+    // Lets Claude Code change the code in the model's folder as the fix prompt asks (no commands).
+    Task<Result<ClaudeCodeFixReport>> FixWithClaudeCodeAsync(string fixPrompt);
+
+    Task StopClaudeCodeFixAsync();
 }
 
 // The AI routes the review dialogs share, over Core's IClaudeService (the LSP or the web host).
@@ -94,11 +106,91 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
         }
     }
 
-    // The model's folder (the solution's or the Bicep file's), where Claude Code may read the
-    // code; none for a model without a file, such as the demo.
-    string? CodeFolder()
+    public async Task<bool> CanFixWithClaudeCodeAsync() =>
+        await IsClaudeCodeEnabledAsync() && (CodeFolder() is not null || Dependinator.Core.Build.IsTestMode);
+
+    public async Task<Result<int>> CountUncommittedChangesAsync()
     {
-        var path = modelMgr.WithModel(m => m.Path);
-        return Path.IsPathFullyQualified(path) ? Path.GetDirectoryName(path) : null;
+        if (Dependinator.Core.Build.IsTestMode)
+            return 0;
+        if (CodeFolder() is not { } folder)
+            return new Error("The model has no folder on disk.");
+        try
+        {
+            return await claudeService.CountUncommittedChangesAsync(folder);
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            return new Error($"Could not check for uncommitted changes: {e.Message}", e);
+        }
+    }
+
+    public async Task<Result<ClaudeCodeFixReport>> FixWithClaudeCodeAsync(string fixPrompt)
+    {
+        // The e2e tests exercise the dialog without Claude Code: a canned report after a moment.
+        if (Dependinator.Core.Build.IsTestMode)
+        {
+            using var stop = testModeStop = new();
+            try
+            {
+                await Task.Delay(TestModeFixDelay, stop.Token);
+                return new ClaudeCodeFixReport("Test mode: Claude Code was not run.", ["src/Test.cs"]);
+            }
+            catch (OperationCanceledException)
+            {
+                return new Error("Claude Code was stopped.");
+            }
+            finally
+            {
+                testModeStop = null;
+            }
+        }
+        if (fixPrompt == "")
+            return new Error(EmptyPromptError);
+        if (CodeFolder() is not { } folder)
+            return new Error("The model has no folder on disk for Claude Code to change.");
+        try
+        {
+            var report = await claudeService.FixWithClaudeCodeAsync(fixPrompt, ClaudeCodeFixReport.JsonSchema, folder);
+            return report is string json ? ClaudeCodeFixReport.Parse(json, folder) : report.Error;
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            return new Error($"Could not run Claude Code: {e.Message}", e);
+        }
+    }
+
+    static readonly TimeSpan TestModeFixDelay = TimeSpan.FromMilliseconds(2500);
+    CancellationTokenSource? testModeStop;
+
+    public async Task StopClaudeCodeFixAsync()
+    {
+        if (Dependinator.Core.Build.IsTestMode)
+        {
+            Result.Catch(() => testModeStop?.Cancel());
+            return;
+        }
+        try
+        {
+            await claudeService.StopClaudeCodeFixAsync();
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            Log.Info("Could not stop Claude Code", e.Message);
+        }
+    }
+
+    // The model's folder (the solution's or the Bicep file's), where Claude Code may read the
+    // code; none for a model without a file, such as the demo. The UI runs in the browser, so
+    // System.IO.Path would read a Windows path by Unix rules: both separators are cut by hand,
+    // and the host checks that the folder is there.
+    string? CodeFolder() => FolderOf(modelMgr.WithModel(m => m.Path));
+
+    internal static string? FolderOf(string path)
+    {
+        if (path == "" || !(path.StartsWith('/') || (path.Length > 2 && path[1] == ':')))
+            return null;
+        var cut = path.TrimEnd('/', '\\').LastIndexOfAny(['/', '\\']);
+        return cut > 0 ? path[..cut] : null;
     }
 }
