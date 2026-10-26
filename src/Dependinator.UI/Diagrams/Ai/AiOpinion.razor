@@ -297,7 +297,7 @@ else if (Selected is { } s && AnswerContent is not null)
     var hasAnswered = answers.Any(a => a.Source == route);
     var isCode = route is AiSource.ClaudeCode;
     var isAsking = isSuggesting && (step is SuggestStep.AskingClaudeCode) == isCode;
-    var label = isCode ? (hasAnswered ? "Ask Claude Code again" : "Ask Claude Code")
+    var label = isCode ? (hasAnswered ? "Claude Code again" : "Ask Claude Code")
       : hasAnswered ? "Ask again" : "Ask Claude";
     var title = isCode ? $"{AskTitle}, through Claude Code on this computer (experimental)" : $"{AskTitle}, with your own API key";
     return @<MudButton StartIcon="@(isAsking ? null : isCode ? MudBlazor.Icons.Material.Outlined.Terminal : MudBlazor.Icons.Material.Outlined.AutoAwesome)"

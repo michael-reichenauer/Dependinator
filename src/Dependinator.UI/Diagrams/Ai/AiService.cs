@@ -39,7 +39,7 @@ class AiService(IClaudeService claudeService) : IAiService
 
     public async Task<bool> IsClaudeCodeEnabledAsync()
     {
-        if (!IsAvailable || Dependinator.Core.Build.IsTestMode)
+        if (!IsAvailable)
             return false;
         try
         {

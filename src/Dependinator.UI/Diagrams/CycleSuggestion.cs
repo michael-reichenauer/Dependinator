@@ -98,7 +98,7 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IAiService 
         // A short wait lets them see the dialog while it asks.
         if (Dependinator.Core.Build.IsTestMode)
         {
-            onStep(SuggestStep.AskingClaude);
+            onStep(route is AiSource.ClaudeCode ? SuggestStep.AskingClaudeCode : SuggestStep.AskingClaude);
             await Task.Delay(TestModeAnswerDelay);
             var answer = cycle.Members.Count == 2 && testModeAsks++ % 2 == 0 ? TestModeAccept : TestModeBreak;
             return answer with { Source = route };

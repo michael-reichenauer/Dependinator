@@ -29,7 +29,7 @@ project works.
   group and rubber-band selection), new line and container visuals, a release flow through `dev`
   and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
-  Claude's suggestions for cycles, C# member naming fixes, and a problem indicator with node badges.
+  Claude's suggestions for cycles and broken rules, C# member naming fixes, and a problem indicator with node badges.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -185,6 +185,16 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   once (copy, open claude.ai, paste back), a pasted answer is read without a button, and answers
   are labeled by source ("Claude · Break", "Chat · Accept"), so the other route reads as a second
   opinion.
+- **AI review of broken rules, Show prompt and Claude Code (Oct 26).** Each dependency that
+  breaks an architecture rule has a Review button, with the same AI opinion section as a cycle:
+  Claude (or an AI chat's pasted answer) suggests fixing it, with a fix prompt for Claude Code, or
+  allowing it, with a reason. An allowed dependency moves to the rule's collapsed Allowed list,
+  is no longer drawn or counted as a violation, and is saved with the model (undoable); removing
+  the rule takes it along. "Show prompt" in both reviews shows the prompt every route uses before
+  it is sent or copied. A hidden, experimental third route asks Claude Code (`claude -p`) on the
+  user's computer with their own Claude login instead of an API key: it is unclear whether
+  Anthropic allows that for a third-party tool, so it needs an unlisted VS Code setting and a
+  one-time confirmation (an environment variable in the dev host).
 - **Problem indicator (Oct 21).** A warning count in the app bar, like the VS Code status bar,
   shows that the model has open cycles and broken architecture rules without opening their
   panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one
