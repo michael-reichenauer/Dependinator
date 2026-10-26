@@ -37,12 +37,12 @@ this repository and is also the app the e2e tests drive.
 
 Only three external services are involved, and all are optional for the core use: **Clerk** signs
 users in for cloud sync, the small **cloud sync API** (our own Azure Functions over Blob Storage)
-stores the synced models, and the **Anthropic Claude API** reviews a circular dependency when the
-user asks, with the user's own API key. Claude is called from the VS Code extension's language
+stores the synced models, and the **Anthropic Claude API** reviews a circular dependency or a
+dependency that breaks a rule when the user asks, with the user's own API key. Claude is called from the VS Code extension's language
 server and from the dev host, never from the browser app.
 
 Points to discuss: source code never leaves the machine through sync, only the drawn model does,
-but the Claude review sends code excerpts of the cycle it asks about. The web app cannot parse
+but the Claude review sends code excerpts of the cycle or dependency it asks about. The web app cannot parse
 code: what it shows comes from VS Code through sync, or from the demo models.
 
 ## 2. Hosts view: one UI, three hosts

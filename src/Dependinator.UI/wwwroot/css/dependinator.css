@@ -281,18 +281,18 @@
 
 /* The review dialog's "Get an AI opinion" section: the two routes side by side, then one line
    once there is an answer, or the AI chat route's steps. */
-.dep-cycles__ai {
+.dep-ai {
     margin-top: 12px;
 }
 
-.dep-cycles__ai-header {
+.dep-ai__header {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 4px;
 }
 
-.dep-cycles__ai-title {
+.dep-ai__title {
     color: var(--mud-palette-text-secondary);
     font-size: 0.75rem;
     font-weight: 500;
@@ -300,14 +300,14 @@
     text-transform: uppercase;
 }
 
-.dep-cycles__routes {
+.dep-ai__routes {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 10px;
     margin-top: 6px;
 }
 
-.dep-cycles__route {
+.dep-ai__route {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -316,41 +316,41 @@
     border-radius: 6px;
 }
 
-.dep-cycles__route > :last-child {
+.dep-ai__route > :last-child {
     margin-top: auto;
     padding-top: 4px;
 }
 
-.dep-cycles__route-name {
+.dep-ai__route-name {
     display: flex;
     align-items: center;
     gap: 6px;
     font-weight: 500;
 }
 
-.dep-cycles__route-text {
+.dep-ai__route-text {
     font-size: 0.8125rem;
 }
 
-.dep-cycles__route-meta {
+.dep-ai__route-meta {
     color: var(--mud-palette-text-secondary);
     font-size: 0.75rem;
 }
 
 /* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
-.dep-cycles__ask-claude .mud-button-icon-start,
-.dep-cycles__claude-icon {
+.dep-ai__ask-claude .mud-button-icon-start,
+.dep-ai__claude-icon {
     color: #d97757;
 }
 
-.dep-cycles__ask-claude .dep-cycles__ask-claude-progress {
+.dep-ai__ask-claude .dep-ai__ask-claude-progress {
     width: 14px !important;
     height: 14px !important;
     margin-right: 6px;
 }
 
 /* The AI chat route's numbered steps, ticked off as they are done. */
-.dep-cycles__steps {
+.dep-ai__steps {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -360,14 +360,14 @@
     border-radius: 6px;
 }
 
-.dep-cycles__step {
+.dep-ai__step {
     display: grid;
     grid-template-columns: 22px minmax(0, 1fr);
     gap: 8px;
     align-items: start;
 }
 
-.dep-cycles__step-number {
+.dep-ai__step-number {
     display: grid;
     place-items: center;
     width: 20px;
@@ -378,13 +378,13 @@
     font-size: 0.6875rem;
 }
 
-.dep-cycles__step--done .dep-cycles__step-number {
+.dep-ai__step--done .dep-ai__step-number {
     border-color: var(--mud-palette-success);
     background: var(--mud-palette-success);
     color: var(--mud-palette-success-text);
 }
 
-.dep-cycles__step-body {
+.dep-ai__step-body {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -393,13 +393,13 @@
 }
 
 /* "Use answer", for an answer typed or edited in the paste box rather than pasted. */
-.dep-cycles__paste-actions {
+.dep-ai__paste-actions {
     display: flex;
     justify-content: flex-end;
 }
 
 /* One chip per answer, named by where it came from (Claude or the AI chat), when there are several. */
-.dep-cycles__answers {
+.dep-ai__answers {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -407,26 +407,26 @@
 }
 
 /* Asking Claude in the review dialog, and Claude's verdict. */
-.dep-cycles__suggest {
+.dep-ai__suggest {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-top: 12px;
 }
 
-.dep-cycles__suggest-note {
+.dep-ai__suggest-note {
     color: var(--mud-palette-text-secondary);
     font-size: 0.8125rem;
 }
 
-.dep-cycles__suggest-error {
+.dep-ai__suggest-error {
     margin-top: 8px;
     color: var(--mud-palette-error);
     font-size: 0.875rem;
     white-space: pre-line;
 }
 
-.dep-cycles__suggestion {
+.dep-ai__suggestion {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -439,33 +439,61 @@
 }
 
 /* A long answer scrolls inside its panel, so the reason and the buttons stay in view. */
-.dep-cycles__suggestion {
+.dep-ai__suggestion {
     max-height: 40vh;
     overflow-y: auto;
 }
 
 /* While asking: the answer's place, framed like the answer. */
-.dep-cycles__suggestion--pending {
+.dep-ai__suggestion--pending {
     border-left-color: var(--mud-palette-lines-default);
 }
 
-.dep-cycles__suggest-pending {
+.dep-ai__suggest-pending {
     display: flex;
     align-items: center;
     gap: 8px;
     color: var(--mud-palette-text-secondary);
 }
 
-.dep-cycles__suggestion[data-verdict="break"] {
+.dep-ai__suggestion[data-verdict="break"] {
     border-left-color: var(--mud-palette-warning);
 }
 
-.dep-cycles__suggestion-verdict {
+.dep-ai__suggestion-verdict {
     font-weight: 600;
 }
 
-.dep-cycles__suggestion-note {
+.dep-ai__suggestion-note {
     color: var(--mud-palette-text-secondary);
+}
+
+/* "Show prompt" beside the section's title: a quiet text button. */
+.dep-ai__show-prompt {
+    text-transform: none;
+    font-size: 0.75rem;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* The prompt dialog (PromptDialog.razor): the prompt as it is sent, scrolling inside the dialog. */
+.dep-prompt__meta,
+.dep-prompt__note {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.dep-prompt__text {
+    max-height: 65vh;
+    overflow: auto;
+    margin: 8px 0 0;
+    padding: 10px 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 6px;
+    background: var(--mud-palette-background-gray);
+    font-size: 0.8125rem;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 /* The search dialog in picker mode (PathPanel.razor): what the chosen node will be used for. */
@@ -773,6 +801,37 @@
     align-items: baseline;
     gap: 2px 6px;
     padding: 2px 6px;
+}
+
+.dep-rules__item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dep-rules__item > .dep-rules__violation {
+    flex: 1;
+    min-width: 0;
+}
+
+.dep-rules__reason {
+    flex-basis: 100%;
+    font-size: 0.8125rem;
+}
+
+/* A rule's collapsed list of allowed dependencies. */
+.dep-rules__allowed-toggle {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-text-secondary);
+    text-align: left;
+    cursor: pointer;
 }
 
 .dep-rules__add {

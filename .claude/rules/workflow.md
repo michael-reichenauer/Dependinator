@@ -68,9 +68,11 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   is the sanctioned split.
 - Pass-through namespaces are view-level (`Node.IsPassThrough`). Renaming nodes at parse time was
   rejected: it churns node identity and breaks references and search.
-- AI help: a `claude -p` subprocess on the user's subscription was postponed (the policy for a
-  published extension is unclear); the copy-prompt and copy-fix-prompt buttons are the accepted
-  in-between.
+- AI help: a `claude -p` route on the user's subscription was postponed (the policy for a
+  published extension is unclear), then built on Oct 26 at Michael's request as an experimental
+  opt-in. First hidden (unlisted VS Code setting, env var), then moved the same day to Settings ›
+  Use Claude Code (Experimental) with a warning, since Michael is the only user for now; he plans
+  to hide it again later. Keep it out of the README and the tour.
 - Line anchors stay centered edge midpoints; spreading them was tried and rejected.
 
 ## Ideas waiting for a session

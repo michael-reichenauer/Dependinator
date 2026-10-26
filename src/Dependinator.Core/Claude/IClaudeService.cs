@@ -20,6 +20,11 @@ interface IClaudeService
     // Claude's answer to the prompt: JSON that matches the schema (structured output). An error
     // without a key, or when Claude does not accept it (the state is then Rejected).
     Task<Result<string>> AskAsync(string prompt, string jsonSchema);
+
+    // Like AskAsync, through the experimental local route: `claude -p` (Claude Code) on this
+    // computer, with the user's own Claude login instead of an API key. The UI offers it only when
+    // the user turned it on in Settings. An error when the command is missing or not signed in.
+    Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema);
 }
 
 enum ClaudeApiKeyState
