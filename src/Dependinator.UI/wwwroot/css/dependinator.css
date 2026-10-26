@@ -803,6 +803,37 @@
     padding: 2px 6px;
 }
 
+.dep-rules__item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dep-rules__item > .dep-rules__violation {
+    flex: 1;
+    min-width: 0;
+}
+
+.dep-rules__reason {
+    flex-basis: 100%;
+    font-size: 0.8125rem;
+}
+
+/* A rule's collapsed list of allowed dependencies. */
+.dep-rules__allowed-toggle {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-text-secondary);
+    text-align: left;
+    cursor: pointer;
+}
+
 .dep-rules__add {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;

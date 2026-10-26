@@ -1,0 +1,173 @@
+@using MudBlazor
+@inject IClipboardService clipboardService
+
+@* Reviews a dependency that breaks an architecture rule (or edits one that is allowed): allow it as
+   an exception, with why, listed under its rule in the rules panel; editing also offers to stop
+   allowing it. "Get an AI opinion" (AiOpinion) asks Claude, Claude Code or the user's AI chat
+   whether to fix the code or allow the dependency, and the selected answer drives the rest:
+   allowing fills in the reason, fixing shows the change to make, with a prompt for an AI that can
+   change the code as the main action and allowing anyway as the alternative. A reason the dialog
+   filled in follows the selected answer until the user edits it. Nothing is saved until the user
+   decides. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">@(IsEdit ? "Allowed dependency" : "Review dependency")</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-cycles__dialog-cycle" data-testid="rule-review-text">
+      <span class="dep-cycles__container">@SourceName → @TargetName</span>
+      <span class="dep-cycles__members">breaks the rule "@FromName must not use @ToName"</span>
+    </div>
+    <AiOpinion TAnswer="RuleSuggestion" TestId="rule-review" GetPrompt="CopyPrompt" Ask="Suggest"
+               ParsePasted="RuleSuggestion.ParseText" OnAnswerSelected="Select"
+               RouteText="Claude reads the rule, the dependency and its code and answers here."
+               AskTitle="Ask Claude whether to fix this dependency or allow it"
+               CopyTitle="Copy a prompt with the rule, the dependency and the code behind it"
+               PromptCopiedText="The prompt is copied, with the rule, the dependency and the code behind it.">
+      <AnswerContent Context="s">
+        <div class="dep-ai__suggestion" data-testid="rule-review-suggestion"
+             data-verdict="@(s.IsFix ? "fix" : "allow")">
+          <div class="dep-ai__suggestion-verdict">
+            @($"{s.Source.Name()} suggests {(s.IsFix ? "fixing" : "allowing")} it")
+          </div>
+          <div>@s.Why</div>
+          @if (s.IsFix && s.Change != "")
+          {
+            <div><b>Change:</b> @s.Change</div>
+          }
+          @if (s.Assumptions is not ("" or "None" or "None."))
+          {
+            <div class="dep-ai__suggestion-note"><b>Assumptions:</b> @s.Assumptions</div>
+          }
+          @if (!s.IsFix && s.Reason != "" && s.Reason != Reason)
+          {
+            <div class="dep-ai__suggestion-note">
+              <b>Suggested reason:</b> @s.Reason
+              <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => UseReason(s.Reason)"
+                         data-testid="rule-review-use-reason">Use it</MudButton>
+            </div>
+          }
+        </div>
+      </AnswerContent>
+    </AiOpinion>
+    @if (copyNote is not null)
+    {
+      <div class="dep-ai__suggest-note mt-2" data-testid="rule-review-copied">@copyNote</div>
+    }
+    @if (copyError is not null)
+    {
+      <div class="dep-ai__suggest-error" data-testid="rule-review-copy-error">@copyError</div>
+    }
+    <MudTextField @ref="reasonField" T="string" @bind-Value="Reason"
+                  Label="@(IsFixSuggested ? "Why allow it anyway?" : "Why is this dependency fine?")" Lines="3"
+                  Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
+                  HelperText="Shown with the allowed dependency under its rule, which no longer reports it."
+                  data-testid="rule-review-reason" />
+  </DialogContent>
+  <DialogActions>
+    @if (IsEdit)
+    {
+      <MudButton Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Outlined.Delete" OnClick="Disallow"
+                 data-testid="rule-review-disallow">Stop allowing</MudButton>
+    }
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="rule-review-cancel">Cancel</MudButton>
+    @if (IsFixSuggested)
+    {
+      <MudButton Variant="Variant.Text" OnClick="Save" data-testid="rule-review-save">Allow anyway</MudButton>
+      <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+                 OnClick="CopyFixPromptAsync" data-testid="rule-review-copy-fix">Copy fix prompt</MudButton>
+    }
+    else
+    {
+      <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="rule-review-save">
+        @(IsEdit ? "Save" : "Allow")
+      </MudButton>
+    }
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public string FromName { get; set; } = "";
+  [Parameter] public string ToName { get; set; } = "";
+  [Parameter] public string SourceName { get; set; } = "";
+  [Parameter] public string TargetName { get; set; } = "";
+  [Parameter] public string Reason { get; set; } = "";
+  [Parameter] public bool IsEdit { get; set; }
+
+  // The prompt that asks any AI about the dependency, to copy or show.
+  [Parameter] public Func<Task<string>>? CopyPrompt { get; set; }
+
+  // Asks Claude (or Claude Code) for a verdict, telling each step; null where the host cannot ask.
+  [Parameter] public Func<AiSource, Action<SuggestStep>, Task<Result<RuleSuggestion>>>? Suggest { get; set; }
+
+  // The prompt that asks an AI that can change the code to remove the dependency as suggested.
+  [Parameter] public Func<RuleSuggestion, string>? FixPrompt { get; set; }
+
+  MudTextField<string> reasonField = null!;
+  RuleSuggestion? selected;
+  string? prefilledReason;
+  string? copyNote;
+  string? copyError;
+
+  // An AI suggests fixing it: copying the fix prompt is the main action, allowing it the override.
+  bool IsFixSuggested => selected is { IsFix: true } && FixPrompt is not null;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender && reasonField is not null)
+      await reasonField.FocusAsync();
+  }
+
+  // The reason field follows the selected answer while it holds what the dialog filled in (or is
+  // empty); a reason the user wrote is kept, and an allowing answer's reason offered next to it.
+  void Select(RuleSuggestion answer)
+  {
+    selected = answer;
+    copyNote = null;
+    copyError = null;
+    if (string.IsNullOrWhiteSpace(Reason) || Reason == prefilledReason)
+      UseReason(ReasonFrom(answer));
+  }
+
+  void UseReason(string reason)
+  {
+    Reason = reason;
+    prefilledReason = reason;
+  }
+
+  // Allowing anyway keeps the suggested fix with the allowed dependency, for whoever looks later.
+  static string ReasonFrom(RuleSuggestion answer) =>
+    !answer.IsFix ? answer.Reason
+    : answer.Change == "" ? $"Allowed anyway, though {(answer.Source is AiSource.Chat ? "an AI" : answer.Source.Name())} suggested fixing it."
+    : $"Allowed anyway; suggested fix: {answer.Change}";
+
+  async Task CopyFixPromptAsync()
+  {
+    if (selected is not { } s || FixPrompt is null)
+      return;
+    var isCopied = await clipboardService.CopyAsync(FixPrompt(s));
+    copyNote = isCopied ? FixPromptCopiedNote : null;
+    copyError = isCopied ? null : "Could not copy to the clipboard.";
+  }
+
+  // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
+  public const string FixPromptCopiedNote =
+    "The fix prompt is copied. Paste it into Claude Code, or another AI that can change the code. When the change "
+    + "is made, re-parse: the dependency should be gone from the rule's list.";
+
+  // Enter starts a new line in the reason; Ctrl+Enter (Cmd+Enter) saves.
+  void OnKeyDown(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter" && (e.CtrlKey || e.MetaKey))
+      Save();
+  }
+
+  void Save() => MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult((Reason ?? "").Trim(), false)));
+
+  void Disallow() => MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult("", true)));
+
+  void Cancel() => MudDialog.Cancel();
+}

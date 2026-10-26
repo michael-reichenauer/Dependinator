@@ -49,6 +49,11 @@ interface IModel : IDisposable
     void AddRule(ArchitectureRule rule);
     void RemoveRule(ArchitectureRule rule);
 
+    // Dependencies that break a rule but are allowed, with why; a change bumps RulesVersion.
+    IReadOnlyList<AllowedViolation> AllowedViolations { get; }
+    void AddAllowedViolation(AllowedViolation allowed);
+    void RemoveAllowedViolation(AllowedViolation allowed);
+
     // The circular dependencies the user accepted as intended (persisted with the model), with a
     // change counter like the rules'.
     IReadOnlyList<AcceptedCycle> AcceptedCycles { get; }
@@ -142,6 +147,23 @@ class Model : IModel
             RulesVersion++;
     }
 
+    readonly List<AllowedViolation> allowedViolations = [];
+    public IReadOnlyList<AllowedViolation> AllowedViolations => allowedViolations;
+
+    public void AddAllowedViolation(AllowedViolation allowed)
+    {
+        if (allowedViolations.Contains(allowed))
+            return;
+        allowedViolations.Add(allowed);
+        RulesVersion++;
+    }
+
+    public void RemoveAllowedViolation(AllowedViolation allowed)
+    {
+        if (allowedViolations.Remove(allowed))
+            RulesVersion++;
+    }
+
     readonly List<AcceptedCycle> acceptedCycles = [];
     public IReadOnlyList<AcceptedCycle> AcceptedCycles => acceptedCycles;
     public int AcceptedCyclesVersion { get; private set; }
@@ -180,6 +202,17 @@ class Model : IModel
             IncludeTestProjects = IncludeTestProjects,
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
             Rules = [.. rules.Select(r => new RuleDto { From = r.FromName, To = r.ToName })],
+            AllowedViolations =
+            [
+                .. allowedViolations.Select(a => new AllowedViolationDto
+                {
+                    From = a.FromName,
+                    To = a.ToName,
+                    Source = a.SourceName,
+                    Target = a.TargetName,
+                    Reason = a.Reason,
+                }),
+            ],
             AcceptedCycles =
             [
                 .. acceptedCycles.Select(a => new AcceptedCycleDto
@@ -250,6 +283,12 @@ class Model : IModel
         IncludeTestProjects = modelDto.IncludeTestProjects;
         rules.Clear();
         rules.AddRange(modelDto.Rules.Select(r => new ArchitectureRule(r.From, r.To)).Distinct());
+        allowedViolations.Clear();
+        allowedViolations.AddRange(
+            modelDto
+                .AllowedViolations.Select(a => new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? ""))
+                .Distinct()
+        );
         RulesVersion++;
         acceptedCycles.Clear();
         acceptedCycles.AddRange(
@@ -305,6 +344,7 @@ class Model : IModel
         // happens before SetFromDto, so a stale value would leak into the next model's parse.
         IncludeTestProjects = false;
         rules.Clear();
+        allowedViolations.Clear();
         RulesVersion++;
         acceptedCycles.Clear();
         AcceptedCyclesVersion++;

@@ -155,4 +155,107 @@ public class RuleServiceTests
         model.SetFromDto("path", dto);
         Assert.Equal([new ArchitectureRule("A", "B")], model.Rules);
     }
+
+    [Fact]
+    public void Compute_ShouldLeaveOutAnAllowedDependency_AndListItUnderTheRuleWithItsLinkCount()
+    {
+        using var model = modelMgr.UseModel();
+        var ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+        var data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+        var view = AddNode(model, "UI.View", ui);
+        var page = AddNode(model, "UI.Page", ui);
+        var repo = AddNode(model, "Data.Repo", data);
+        var viewMethod = AddNode(model, "UI.View.Load()", view, NodeType.MethodMember);
+        AddLink(model, viewMethod, repo);
+        AddLink(model, view, repo);
+        AddLink(model, page, repo);
+        var rule = new ArchitectureRule(ui.Name, data.Name);
+        model.AddRule(rule);
+        model.AddAllowedViolation(
+            new AllowedViolation(ui.Name, data.Name, view.Name, repo.Name, "Reads settings only")
+        );
+        model.AddAllowedViolation(new AllowedViolation(ui.Name, data.Name, "UI.Gone", repo.Name, ""));
+
+        var (reports, lineIds) = RuleService.Compute(model);
+
+        var report = Assert.Single(reports);
+        var violation = Assert.Single(report.Violations);
+        Assert.Equal(page.Id, violation.SourceId);
+        Assert.Equal((page.Name, repo.Name), (violation.SourceNodeName, violation.TargetNodeName));
+        Assert.Equal(2, report.Allowed.Count);
+        var allowed = report.Allowed.Single(a => a.Allowed.SourceName == view.Name);
+        Assert.Equal(2, allowed.LinkCount);
+        Assert.Equal(view.Id, allowed.SourceId);
+        Assert.Equal("Reads settings only", allowed.Allowed.Reason);
+        var gone = report.Allowed.Single(a => a.Allowed.SourceName == "UI.Gone");
+        Assert.True(gone.IsGone);
+        Assert.Null(gone.SourceId);
+        Assert.NotEmpty(lineIds);
+
+        // With every dependency allowed, nothing is drawn as breaking the rule.
+        model.AddAllowedViolation(new AllowedViolation(ui.Name, data.Name, page.Name, repo.Name, ""));
+        var (allAllowed, noLineIds) = RuleService.Compute(model);
+        Assert.Empty(Assert.Single(allAllowed).Violations);
+        Assert.Empty(noLineIds);
+    }
+
+    [Fact]
+    public async Task AllowAndDisallow_ShouldGoThroughTheCommandStack_AndRemovingTheRuleTakesItsAllowedAlong()
+    {
+        Node ui,
+            data,
+            view,
+            repo;
+        using (var model = modelMgr.UseModel())
+        {
+            ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+            data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+            view = AddNode(model, "UI.View", ui);
+            repo = AddNode(model, "Data.Repo", data);
+            AddLink(model, view, repo);
+            model.AddRule(new ArchitectureRule(ui.Name, data.Name));
+        }
+        var commands = new CommandService(Mock.Of<IApplicationEvents>(), modelMgr);
+        var service = new RuleService(modelMgr, commands);
+        var report = Assert.Single(service.GetReports());
+
+        service.Allow(report.Rule, Assert.Single(report.Violations), " Reads settings only ");
+
+        report = Assert.Single(service.GetReports());
+        Assert.Empty(report.Violations);
+        var allowed = Assert.Single(report.Allowed).Allowed;
+        Assert.Equal(new AllowedViolation(ui.Name, data.Name, view.Name, repo.Name, "Reads settings only"), allowed);
+        Assert.Equal(0, service.ViolationCount);
+
+        service.SetAllowedReason(allowed, "Settings only");
+        Assert.Equal("Settings only", Assert.Single(Assert.Single(service.GetReports()).Allowed).Allowed.Reason);
+
+        service.RemoveRule(report.Rule);
+        Assert.Empty(modelMgr.WithModel(m => m.AllowedViolations));
+        await commands.Undo();
+        Assert.Equal("Settings only", Assert.Single(modelMgr.WithModel(m => m.AllowedViolations)).Reason);
+
+        service.Disallow(Assert.Single(modelMgr.WithModel(m => m.AllowedViolations)));
+        Assert.Single(Assert.Single(service.GetReports()).Violations);
+    }
+
+    [Fact]
+    public void Model_ShouldRoundTripAllowedViolationsThroughTheDto_AndDropThemOnClear()
+    {
+        using var model = modelMgr.UseModel();
+        var allowed = new AllowedViolation("A", "B", "A.X", "B.Y", "Because");
+        model.AddAllowedViolation(allowed);
+        var dto = model.SerializeToDto();
+
+        var saved = Assert.Single(dto.AllowedViolations);
+        Assert.Equal(
+            ("A", "B", "A.X", "B.Y", "Because"),
+            (saved.From, saved.To, saved.Source, saved.Target, saved.Reason)
+        );
+
+        model.Clear();
+        Assert.Empty(model.AllowedViolations);
+        model.SetFromDto("path", dto);
+        Assert.Equal([allowed], model.AllowedViolations);
+    }
 }

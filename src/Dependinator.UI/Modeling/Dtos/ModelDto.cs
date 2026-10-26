@@ -29,6 +29,9 @@ record ModelDto
     // Defaulted, so models saved before rules existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<RuleDto> Rules { get; init; } = [];
 
+    // Defaulted, so models saved before allowed violations existed still deserialize (no FormatVersion bump).
+    public IReadOnlyList<AllowedViolationDto> AllowedViolations { get; init; } = [];
+
     // Defaulted, so models saved before accepted cycles existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<AcceptedCycleDto> AcceptedCycles { get; init; } = [];
 
@@ -53,6 +56,18 @@ record RuleDto
 {
     public required string From { get; init; }
     public required string To { get; init; }
+}
+
+// A dependency that breaks the rule "From must not use To" and that the user allowed, with why:
+// the units at both ends (node names, see AllowedViolation).
+[Serializable]
+record AllowedViolationDto
+{
+    public required string From { get; init; }
+    public required string To { get; init; }
+    public required string Source { get; init; }
+    public required string Target { get; init; }
+    public string Reason { get; init; } = "";
 }
 
 // A circular dependency the user accepted, with why, or marked to fix later, with the planned

@@ -1,5 +1,6 @@
 using Dependinator.E2E.Tests.Shared;
 using Microsoft.Playwright;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
@@ -67,6 +68,62 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(ruleRow).ToContainTextAsync("1 broken architecture rule");
         await ruleRow.ClickAsync();
         await Expect(Page.GetByTestId("rules-panel")).ToBeVisibleAsync();
+    }
+
+    // A dependency that breaks a rule is reviewed like a cycle: the prompt can be read first, an AI
+    // suggests fixing it (with a fix prompt) or allowing it (with a reason), and an allowed one moves
+    // to the rule's Allowed list until the user stops allowing it.
+    [E2EFact]
+    public async Task ReviewViolation_ShouldOfferAFixPrompt_AndAllowItWithAReason()
+    {
+        // Playwright can grant clipboard permissions on Chromium only, so the clipboard is stubbed.
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+        );
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        await AddRuleAsync("Demo.UI (dll)", "Demo.Core (dll)");
+        ILocator violations = Page.GetByTestId("rules-violation-item");
+        await Expect(violations.First).ToBeVisibleAsync();
+        int count = await violations.CountAsync();
+
+        await violations.First.GetByTestId("rules-review").ClickAsync();
+        await Expect(Page.GetByTestId("rule-review-text")).ToContainTextAsync("must not use");
+        await Page.GetByTestId("rule-review-show-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("## The dependency that breaks it");
+        await Page.GetByTestId("prompt-dialog-close").ClickAsync();
+
+        // In test mode the app answers for Claude: first fix it, then allow it.
+        await Page.GetByTestId("rule-review-suggest").ClickAsync();
+        ILocator verdict = Page.GetByTestId("rule-review-suggestion");
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "fix");
+        await Expect(Page.GetByTestId("rule-review-save")).ToHaveTextAsync("Allow anyway");
+        await Page.GetByTestId("rule-review-copy-fix").ClickAsync();
+        await Expect(Page.GetByTestId("rule-review-copied")).ToContainTextAsync("fix prompt is copied");
+        string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
+        Assert.StartsWith("Please remove a dependency that breaks an architecture rule", prompt);
+
+        await Page.GetByTestId("rule-review-suggest").ClickAsync();
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "allow");
+        await Expect(Page.GetByTestId("rule-review-answers-differ")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("rule-review-reason")).ToHaveValueAsync("Allowed in test mode");
+        await Page.GetByTestId("rule-review-save").ClickAsync();
+
+        await Expect(violations).ToHaveCountAsync(count - 1);
+        ILocator allowed = Page.GetByTestId("rules-allowed-item");
+        await Expect(allowed).ToHaveCountAsync(1);
+        await Expect(allowed.GetByTestId("rules-allowed-reason")).ToHaveTextAsync("Allowed in test mode");
+
+        // Collapsed, the list keeps its count; stopping to allow it reports it again.
+        await Page.GetByTestId("rules-allowed-toggle").ClickAsync();
+        await Expect(allowed).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("rules-allowed-toggle")).ToContainTextAsync("Allowed (1)");
+        await Page.GetByTestId("rules-allowed-toggle").ClickAsync();
+        await allowed.GetByTestId("rules-allowed-remove").ClickAsync();
+        await Expect(violations).ToHaveCountAsync(count);
+        await Expect(Page.GetByTestId("rules-allowed-toggle")).ToHaveCountAsync(0);
     }
 
     // Picks both nodes through the search dialog in picker mode and adds the rule.
