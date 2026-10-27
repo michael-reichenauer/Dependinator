@@ -11,7 +11,8 @@
    allowed to edit files there but not to run commands. The dialog's button calls StartAsync; this
    shows the run (time and a Stop button) and Claude Code's report with the files it changed, then
    re-parses (VS Code re-parses on its own when files change), and says whether what it was to fix
-   is gone (IsResolved), when the dialog is done (IsFixed). It warns first when the repository
+   is gone (IsResolved): changed files make the dialog offer Done (HasChanged), a re-parse then shows
+   it fixed (IsFixed) or still there (IsStillThere, the dialog's choices are back). It warns first when the repository
    has uncommitted changes (Claude Code's edits would mix with them) or is not in git (nothing to
    review them with). Closing the dialog stops a run, so the dialog keeps this rendered while the
    route is on, whatever answer is selected. *@
@@ -54,11 +55,16 @@ else if (report is not null)
       @ResolvedText
     </MudAlert>
   }
-  else if (isReparsed && IsResolved is not null)
+  else if (IsStillThere)
   {
     <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2" data-testid="@Id("not-fixed")">
       @StillThereText
     </MudAlert>
+  }
+  else if (HasChanged && IsResolved is not null)
+  {
+    @* Until a re-parse shows the result: here right away, in VS Code when it re-parses. *@
+    <div class="dep-ai__suggest-note mt-2" data-testid="@Id("fix-checking")">@CheckingText</div>
   }
 }
 @if (error is not null)
@@ -82,9 +88,16 @@ else if (report is not null)
   [Parameter] public Func<bool>? IsResolved { get; set; }
   [Parameter] public string ResolvedText { get; set; } = "The problem is gone.";
   [Parameter] public string StillThereText { get; set; } = "The problem is still there after the re-parse.";
+  [Parameter] public string CheckingText { get; set; } = "Once the model is re-parsed, this shows whether the problem is gone.";
 
-  // Claude Code changed files and what it was asked to fix is gone: the dialog then only closes.
-  public bool IsFixed => report is { ChangedFiles.Count: > 0 } && IsResolved?.Invoke() == true;
+  // Claude Code changed files: the dialog offers Done, unless a re-parse shows the problem is still there.
+  public bool HasChanged => report is { ChangedFiles.Count: > 0 };
+
+  // What Claude Code was asked to fix is gone from the model.
+  public bool IsFixed => HasChanged && IsResolved?.Invoke() == true;
+
+  // This dialog re-parsed after the fix and the problem is still there: the dialog's choices are back.
+  public bool IsStillThere => HasChanged && isReparsed && IsResolved?.Invoke() == false;
 
   // From the click on, through the warning, until the run ends: the dialog disables its button.
   public bool IsRunning => isBusy;

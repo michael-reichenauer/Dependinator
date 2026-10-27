@@ -10,7 +10,8 @@
    where the experimental route is on) to make the change right away, both under the answer, and
    fixing later or accepting anyway as the dialog's alternatives, plain buttons on one row. A reason
    the dialog filled in follows the selected answer until the user edits it. Nothing is saved until
-   the user decides. Once Claude Code's fix removed the cycle, only "Done" is left. *@
+   the user decides. Once Claude Code changed the code, only "Done" is left, unless a re-parse shows
+   the cycle still there. *@
 <MudDialog ActionsClass="dep-ai__actions">
   <TitleContent>
     <MudText Typo="Typo.h6">@(IsEdit ? "Accepted cycle" : "Review cycle")</MudText>
@@ -52,7 +53,7 @@
         </div>
       </AnswerContent>
     </AiOpinion>
-    @if (IsBreakSuggested && !IsFixed)
+    @if (IsBreakSuggested && !IsDone)
     {
       @* The fix, under the change it makes: copying its prompt is the main action. *@
       <div class="dep-ai__fix-actions">
@@ -80,9 +81,10 @@
     {
       <ClaudeCodeFix @ref="fixPanel" TestId="accept-cycle" GetFixPrompt="FixPromptText" OnStateChanged="StateHasChanged"
                      IsResolved="IsCycleGone" ResolvedText="The cycle is gone: nothing is left to decide."
-                     StillThereText="The cycle is still there after the re-parse. Ask again, fix it yourself, or decide below." />
+                     StillThereText="The cycle is still there after the re-parse. Ask again, fix it yourself, or decide below."
+                     CheckingText="Once the model is re-parsed, this shows whether the cycle is gone." />
     }
-    @if (!IsFixed)
+    @if (!IsDone)
     {
       <MudTextField @ref="reasonField" T="string" @bind-Value="Reason"
                     Label="@(IsBreakSuggested ? "Why accept it anyway?" : "Why is this cycle fine?")" Lines="3"
@@ -98,9 +100,9 @@
                  data-testid="accept-cycle-unaccept">Stop accepting</MudButton>
     }
     <MudSpacer />
-    @if (IsFixed)
+    @if (IsDone)
     {
-      @* Claude Code broke the cycle: nothing is left to decide. *@
+      @* Claude Code changed the code: nothing is left to decide. *@
       <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Cancel" data-testid="accept-cycle-done">Done</MudButton>
     }
     else
@@ -154,8 +156,8 @@
   // An AI suggests breaking the cycle: fixing it is the main action, accepting it the override.
   bool IsBreakSuggested => Selected is { IsAccept: false } && FixPrompt is not null;
 
-  // Claude Code changed the code and the cycle is gone: the dialog only closes.
-  bool IsFixed => fixPanel?.IsFixed == true;
+  // Claude Code changed the code: the dialog only closes, unless a re-parse shows the cycle is still there.
+  bool IsDone => fixPanel is { HasChanged: true, IsStillThere: false };
 
   // Claude Code can make the suggested change itself, where the experimental route is on.
   bool CanFix => IsBreakSuggested && canFixWithClaudeCode;
