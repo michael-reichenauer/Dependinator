@@ -69,7 +69,8 @@ public class Program
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
         builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Core.RootClass));
         // AI agents ask about the open diagram's model at /mcp (e.g. claude mcp add --transport http
-        // dependinator http://localhost:5000/mcp); this is the local dev host, so it has no token.
+        // dependinator http://localhost:5000/mcp); this is the local dev host, so it takes requests from
+        // this computer only, without a token.
         builder.Services.AddDependinatorMcp();
 
         var app = builder.Build();

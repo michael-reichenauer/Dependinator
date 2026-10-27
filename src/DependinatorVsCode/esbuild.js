@@ -47,7 +47,7 @@ const webConfig = {
     outfile: "dist/web/extension.js",
     // vscode is provided by the host; the Node-only modules below are only
     // dynamically imported on the desktop host and never executed on web.
-    external: ["vscode", "node:http", "node:crypto", "node:child_process", "vscode-languageclient/node"],
+    external: ["vscode", "node:http", "node:crypto", "node:child_process", "node:os", "node:path", "vscode-languageclient/node"],
 };
 
 async function main() {

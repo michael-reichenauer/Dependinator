@@ -48,7 +48,9 @@ sealed class TimeLimitedModelQueries(IModelQueryService inner, TimeSpan timeLimi
         }
         catch (Exception e)
         {
-            return new Error(NoAnswerMessage, e);
+            // The diagram is there but the call failed: the cause helps more than "open it".
+            Log.Warn($"Model query failed: {e}");
+            return new Error($"The Dependinator diagram could not answer: {e.Message}", e);
         }
     }
 }

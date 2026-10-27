@@ -22,17 +22,13 @@ sealed class McpHttpServer : IAsyncDisposable
 {
     readonly WebApplication app;
 
-    McpHttpServer(WebApplication app, string url, string token)
+    McpHttpServer(WebApplication app, string url)
     {
         this.app = app;
         Url = url;
-        Token = token;
     }
 
     public string Url { get; }
-    public string Token { get; }
-
-    public static string NewToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
 
     public static async Task<Result<McpHttpServer>> StartAsync(
         IModelQueryService queries,
@@ -49,7 +45,12 @@ sealed class McpHttpServer : IAsyncDisposable
 
     static async Task<Result<McpHttpServer>> TryStartAsync(IModelQueryService queries, string token, int port)
     {
-        var builder = WebApplication.CreateSlimBuilder();
+        // The LSP runs in the user's workspace folder: no content root, appsettings.json or
+        // ASPNETCORE_ variables of theirs may add endpoints or file watchers here.
+        var builder = WebApplication.CreateSlimBuilder(
+            new WebApplicationOptions { ContentRootPath = AppContext.BaseDirectory }
+        );
+        builder.Configuration.Sources.Clear();
         builder.Logging.ClearProviders(); // The LSP's stdout is its protocol stream
         // The host process decides about Ctrl+C and termination, not this server.
         builder.Services.AddSingleton<IHostLifetime, HostProcessLifetime>();
@@ -73,7 +74,7 @@ sealed class McpHttpServer : IAsyncDisposable
             .Services.GetRequiredService<IServer>()
             .Features.Get<IServerAddressesFeature>()!
             .Addresses.First();
-        return new McpHttpServer(app, address.TrimEnd('/') + DependinatorMcpExtensions.Path, token);
+        return new McpHttpServer(app, address.TrimEnd('/') + DependinatorMcpExtensions.Path);
     }
 
     static Func<HttpContext, RequestDelegate, Task> RequireToken(string token)

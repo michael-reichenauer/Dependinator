@@ -14,7 +14,7 @@ public sealed class McpHttpServerTests
     [Fact]
     public async Task Start_ShouldRequireTheToken()
     {
-        var token = McpHttpServer.NewToken();
+        var token = Guid.NewGuid().ToString("N");
         await using var server = Assert.IsType<McpHttpServer>(
             (await McpHttpServer.StartAsync(queries.Object, token, 0)).Value
         );
@@ -76,6 +76,51 @@ public sealed class McpHttpServerTests
 
         Assert.Equal(TimeLimitedModelQueries.NoAnswerMessage, Assert.IsType<Error>(result.Value).Message);
         queries.Verify(q => q.GetModelAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task Start_ShouldRefuseRequestsForAnotherHost()
+    {
+        var token = Guid.NewGuid().ToString("N");
+        await using var server = Assert.IsType<McpHttpServer>(
+            (await McpHttpServer.StartAsync(queries.Object, token, 0)).Value
+        );
+        using var http = new HttpClient();
+
+        // A page whose host name was rebound to 127.0.0.1 sends its own name as Host.
+        var request = new HttpRequestMessage(HttpMethod.Post, server.Url) { Content = new StringContent("{}") };
+        request.Headers.Host = "evil.example";
+        request.Headers.Authorization = new("Bearer", token);
+        var response = await http.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("localhost:5000", null, true)]
+    [InlineData("127.0.0.1:5000", "http://localhost:6274", true)]
+    [InlineData("[::1]:5000", null, true)]
+    [InlineData("evil.example", null, false)]
+    [InlineData("localhost:5000", "https://evil.example", false)]
+    public void IsLocalRequest_ShouldAcceptOnlyThisComputer(string host, string? origin, bool isLocal)
+    {
+        var context = new Microsoft.AspNetCore.Http.DefaultHttpContext();
+        context.Request.Host = new(host);
+        if (origin is not null)
+            context.Request.Headers.Origin = origin;
+
+        Assert.Equal(isLocal, DependinatorMcpExtensions.IsLocalRequest(context.Request));
+    }
+
+    [Fact]
+    public async Task TimeLimitedQueries_ShouldReturnTheCause_WhenTheCallFails()
+    {
+        queries.Setup(q => q.GetModelAsync()).ThrowsAsync(new InvalidOperationException("Broken"));
+        var limited = new TimeLimitedModelQueries(queries.Object, TimeSpan.FromMinutes(1));
+
+        var result = await limited.GetModelAsync();
+
+        Assert.Contains("Broken", Assert.IsType<Error>(result.Value).Message);
     }
 
     static int FreePort()

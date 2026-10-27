@@ -21,9 +21,27 @@ static class LspMcpServer
     // Long enough for a question on a large model, short enough for an agent waiting on a closed webview.
     static readonly TimeSpan TimeLimit = TimeSpan.FromSeconds(20);
 
-    static McpHttpServer? running;
+    // A tool call skips the connection check this long after one succeeded: agents ask in bursts.
+    static readonly TimeSpan ConnectedRecently = TimeSpan.FromSeconds(30);
 
+    // Runs as long as the LSP process does.
+    static McpHttpServer? running;
+    static DateTime lastConnected = DateTime.MinValue;
+
+    // Never throws: the MCP server is optional, and a failed background task stops the LSP.
     public static async Task StartAsync(ILanguageServer server, object? initializationOptions)
+    {
+        try
+        {
+            await TryStartAsync(server, initializationOptions);
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"Could not start the MCP server: {e}");
+        }
+    }
+
+    static async Task TryStartAsync(ILanguageServer server, object? initializationOptions)
     {
         var options = (initializationOptions as JToken)?["mcp"];
         var token = options?.Value<string>("token");
@@ -54,9 +72,12 @@ static class LspMcpServer
     // The webview answers the RPC connection check within moments while it is open.
     static async Task<bool> IsWebviewConnectedAsync(IJsonRpcService jsonRpc)
     {
+        if (DateTime.UtcNow - lastConnected < ConnectedRecently)
+            return true;
         try
         {
             await jsonRpc.CheckConnectionAsync(TimeSpan.FromSeconds(2));
+            lastConnected = DateTime.UtcNow;
             return true;
         }
         catch (TimeoutException)

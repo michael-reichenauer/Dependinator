@@ -1,5 +1,7 @@
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { homedir } from "node:os";
+import * as path from "node:path";
 import * as vscode from "vscode";
 import type { LanguageClient } from "vscode-languageclient/node";
 import * as logger from "./logger";
@@ -36,8 +38,11 @@ export async function getMcpInitializationOptions(
     return { mcp: { token, port: context.workspaceState.get<number>(portStateKey) ?? 0 } };
 }
 
-/** Follows the LSP's server, registers it with VS Code, and keeps Claude Code's entry current. */
-export function registerMcpServer(client: LanguageClient, context: vscode.ExtensionContext): void {
+/**
+ * Follows the LSP's server and keeps Claude Code's entry current. Called before the client
+ * starts, so the server's one notification cannot arrive before its handler.
+ */
+export function followMcpServer(client: LanguageClient, context: vscode.ExtensionContext): void {
     client.onNotification(startedNotificationMethod, async params => {
         const url: string | undefined = params?.Url ?? params?.url;
         const token = await context.secrets.get(tokenSecretName);
@@ -53,7 +58,13 @@ export function registerMcpServer(client: LanguageClient, context: vscode.Extens
         if (connectedUrl && connectedUrl !== url)
             await connectClaudeCode(context, false);
     });
+}
 
+/**
+ * Registers the server with VS Code's agents. Called while activating, since VS Code may activate
+ * the extension just to ask for it; the list stays empty until the LSP's server has started.
+ */
+export function registerMcpServerProvider(context: vscode.ExtensionContext): void {
     // VS Code 1.101 and later: Copilot's agent mode lists the server under MCP servers.
     const lm = vscode.lm as Partial<typeof vscode.lm> | undefined;
     if (lm?.registerMcpServerDefinitionProvider) {
@@ -126,20 +137,48 @@ export async function connectClaudeCode(context: vscode.ExtensionContext, isUser
         );
 }
 
-function runClaude(
-    args: string[],
-    cwd: string
-): Promise<{ error: boolean; isMissing: boolean; output: string }> {
+type ClaudeResult = { error: boolean; isMissing: boolean; output: string };
+
+// Where the installers put claude, as in Dependinator.Claude's ClaudeCodeRunner: VS Code started
+// from the Dock or a desktop menu may lack them on its PATH.
+function claudeCommands(): string[] {
+    const home = homedir();
+    if (process.platform === "win32")
+        return ["claude", path.join(home, ".local", "bin", "claude.exe")];
+    return [
+        "claude",
+        path.join(home, ".local", "bin", "claude"),
+        path.join(home, ".claude", "local", "claude"),
+        "/opt/homebrew/bin/claude",
+        "/usr/local/bin/claude"
+    ];
+}
+
+async function runClaude(args: string[], cwd: string): Promise<ClaudeResult> {
+    let result: ClaudeResult = { error: true, isMissing: true, output: "" };
+    for (const command of claudeCommands()) {
+        result = await runCommand(command, args, cwd);
+        if (!result.isMissing)
+            return result;
+    }
+    return result;
+}
+
+function runCommand(command: string, args: string[], cwd: string): Promise<ClaudeResult> {
     return new Promise(resolve => {
-        // On Windows, claude is a .cmd script, which only a shell runs; the shell needs the quotes.
-        const isWindows = process.platform === "win32";
-        const shellArgs = isWindows ? args.map(arg => (arg.includes(" ") ? `"${arg}"` : arg)) : args;
-        execFile("claude", shellArgs, { cwd, shell: isWindows, timeout: 30_000 }, (error, stdout, stderr) =>
+        // On Windows, a claude on the PATH may be a .cmd script, which only a shell runs; the shell
+        // needs the quotes, and says "not recognized" when there is no claude.
+        const useShell = process.platform === "win32" && command === "claude";
+        const commandArgs = useShell ? args.map(arg => (arg.includes(" ") ? `"${arg}"` : arg)) : args;
+        execFile(command, commandArgs, { cwd, shell: useShell, timeout: 30_000 }, (error, stdout, stderr) => {
+            const output = `${stdout}${stderr}`.trim();
             resolve({
                 error: !!error,
-                isMissing: (error as NodeJS.ErrnoException | null)?.code === "ENOENT",
-                output: `${stdout}${stderr}`.trim()
-            })
-        );
+                isMissing:
+                    (error as NodeJS.ErrnoException | null)?.code === "ENOENT" ||
+                    (useShell && !!error && output.includes("not recognized")),
+                output
+            });
+        });
     });
 }

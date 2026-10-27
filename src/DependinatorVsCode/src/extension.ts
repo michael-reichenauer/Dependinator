@@ -310,6 +310,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Web extensions can't start a .NET process, so skip the server there.
     const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
+
+    // The MCP server runs in the LSP; its module runs claude, so it is node-only like cloud sync auth.
+    if (!isWeb) {
+        try {
+            const mcpServer = await import("./mcpServer");
+            mcpServer.registerMcpServerProvider(context);
+        } catch (error) {
+            logger.error("Dependinator MCP server registration failed", error);
+        }
+    }
     languageClientPromise = isWeb
         ? Promise.resolve(undefined)
         : startLanguageServer(context).catch(error => {
@@ -339,14 +349,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             logger.error("Dependinator cloud sync auth failed to initialize", error);
         }
         claudeApiKey.registerClaudeApiKey(client, context);
-
-        // The MCP server's registration runs claude, so it is node-only like cloud sync auth.
-        try {
-            const mcpServer = await import("./mcpServer");
-            mcpServer.registerMcpServer(client, context);
-        } catch (error) {
-            logger.error("Dependinator MCP server registration failed", error);
-        }
     });
 
     // Opens (or reveals) the webview hosting the WASM UI and shows the active editor's node.

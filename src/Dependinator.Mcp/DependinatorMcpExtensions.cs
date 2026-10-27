@@ -1,5 +1,7 @@
+using System.Net;
 using Dependinator.Core;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
@@ -37,6 +39,36 @@ public static class DependinatorMcpExtensions
         return services;
     }
 
-    public static IEndpointConventionBuilder MapDependinatorMcp(this IEndpointRouteBuilder endpoints) =>
-        endpoints.MapMcp(Path);
+    // Maps the endpoint, behind a check that the request comes from this computer.
+    public static IEndpointConventionBuilder MapDependinatorMcp(this WebApplication app)
+    {
+        app.UseWhen(
+            context => context.Request.Path.StartsWithSegments(Path),
+            local =>
+                local.Use(
+                    (context, next) =>
+                    {
+                        if (IsLocalRequest(context.Request))
+                            return next(context);
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
+                    }
+                )
+        );
+        return app.MapMcp(Path);
+    }
+
+    // The server is for agents on this computer. A web page can reach localhost too, through DNS
+    // rebinding (its own host name resolving to 127.0.0.1), so the Host must name the loopback
+    // address, and a browser's Origin, when sent, must be a page on this computer.
+    internal static bool IsLocalRequest(HttpRequest request) =>
+        IsLoopbackHost(request.Host.Host)
+        && (
+            string.IsNullOrEmpty(request.Headers.Origin)
+            || Uri.TryCreate(request.Headers.Origin, UriKind.Absolute, out var origin) && IsLoopbackHost(origin.Host)
+        );
+
+    static bool IsLoopbackHost(string host) =>
+        host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+        || IPAddress.TryParse(host.Trim('[', ']'), out var address) && IPAddress.IsLoopback(address);
 }
