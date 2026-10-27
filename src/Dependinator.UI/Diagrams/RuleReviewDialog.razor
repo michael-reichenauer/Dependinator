@@ -9,9 +9,9 @@
    allowing fills in the reason, fixing shows the change to make, with a prompt for an AI that can
    change the code as the main action and "Fix with Claude Code" (ClaudeCodeFix, where the experimental
    route is on) to make the change right away, both under the answer, and allowing anyway as the
-   dialog's alternative. A reason the dialog
-   filled in follows the selected answer until the user edits it. Nothing is saved until the user
-   decides. *@
+   dialog's alternative. A reason the dialog filled in follows the selected answer until the user
+   edits it. Nothing is saved until the user decides. Once Claude Code changed the code, only "Done" is left, unless a re-parse shows the
+   dependency still there. *@
 <MudDialog ActionsClass="dep-ai__actions">
   <TitleContent>
     <MudText Typo="Typo.h6">@(IsEdit ? "Allowed dependency" : "Review dependency")</MudText>
@@ -53,7 +53,7 @@
         </div>
       </AnswerContent>
     </AiOpinion>
-    @if (IsFixSuggested)
+    @if (IsFixSuggested && !IsDone)
     {
       @* The fix, under the change it makes: copying its prompt is the main action. *@
       <div class="dep-ai__fix-actions">
@@ -79,13 +79,19 @@
     }
     @if (canFixWithClaudeCode)
     {
-      <ClaudeCodeFix @ref="fixPanel" TestId="rule-review" GetFixPrompt="FixPromptText" OnStateChanged="StateHasChanged" />
+      <ClaudeCodeFix @ref="fixPanel" TestId="rule-review" GetFixPrompt="FixPromptText" OnStateChanged="StateHasChanged"
+                     IsResolved="IsViolationGone" ResolvedText="The dependency is gone: nothing is left to decide."
+                     StillThereText="The dependency is still there after the re-parse. Ask again, fix it yourself, or decide below."
+                     CheckingText="Once the model is re-parsed, this shows whether the dependency is gone." />
     }
-    <MudTextField @ref="reasonField" T="string" @bind-Value="Reason"
-                  Label="@(IsFixSuggested ? "Why allow it anyway?" : "Why is this dependency fine?")" Lines="3"
-                  Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
-                  HelperText="Shown with the allowed dependency under its rule, which no longer reports it."
-                  data-testid="rule-review-reason" />
+    @if (!IsDone)
+    {
+      <MudTextField @ref="reasonField" T="string" @bind-Value="Reason"
+                    Label="@(IsFixSuggested ? "Why allow it anyway?" : "Why is this dependency fine?")" Lines="3"
+                    Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
+                    HelperText="Shown with the allowed dependency under its rule, which no longer reports it."
+                    data-testid="rule-review-reason" />
+    }
   </DialogContent>
   <DialogActions>
     @if (IsEdit)
@@ -94,16 +100,24 @@
                  data-testid="rule-review-disallow">Stop allowing</MudButton>
     }
     <MudSpacer />
-    <MudButton OnClick="Cancel" data-testid="rule-review-cancel">Cancel</MudButton>
-    @if (IsFixSuggested)
+    @if (IsDone)
     {
-      <MudButton Variant="Variant.Text" OnClick="Save" data-testid="rule-review-save">Allow anyway</MudButton>
+      @* Claude Code changed the code: nothing is left to decide. *@
+      <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Cancel" data-testid="rule-review-done">Done</MudButton>
     }
     else
     {
-      <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="rule-review-save">
-        @(IsEdit ? "Save" : "Allow")
-      </MudButton>
+      <MudButton OnClick="Cancel" data-testid="rule-review-cancel">Cancel</MudButton>
+      @if (IsFixSuggested)
+      {
+        <MudButton Variant="Variant.Text" OnClick="Save" data-testid="rule-review-save">Allow anyway</MudButton>
+      }
+      else
+      {
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="rule-review-save">
+          @(IsEdit ? "Save" : "Allow")
+        </MudButton>
+      }
     }
   </DialogActions>
 </MudDialog>
@@ -127,6 +141,9 @@
   // The prompt that asks an AI that can change the code to remove the dependency as suggested.
   [Parameter] public Func<RuleSuggestion, string>? FixPrompt { get; set; }
 
+  // Whether the dependency is gone from the model, after "Fix with Claude Code".
+  [Parameter] public Func<bool>? IsViolationGone { get; set; }
+
   MudTextField<string> reasonField = null!;
   ClaudeCodeFix? fixPanel;
   bool canFixWithClaudeCode;
@@ -137,6 +154,9 @@
 
   // An AI suggests fixing it: copying the fix prompt is the main action, allowing it the override.
   bool IsFixSuggested => selected is { IsFix: true } && FixPrompt is not null;
+
+  // Claude Code changed the code: the dialog only closes, unless a re-parse shows the dependency is still there.
+  bool IsDone => fixPanel is { HasChanged: true, IsStillThere: false };
 
   // Claude Code can make the suggested change itself, where the experimental route is on.
   bool CanFix => IsFixSuggested && canFixWithClaudeCode;

@@ -10,7 +10,9 @@
    fixing a rule): Claude Code changes the code in the model's folder as the fix prompt asks,
    allowed to edit files there but not to run commands. The dialog's button calls StartAsync; this
    shows the run (time and a Stop button) and Claude Code's report with the files it changed, then
-   re-parses (VS Code re-parses on its own when files change). It warns first when the repository
+   re-parses (VS Code re-parses on its own when files change), and says whether what it was to fix
+   is gone (IsResolved): changed files make the dialog offer Done (HasChanged), a re-parse then shows
+   it fixed (IsFixed) or still there (IsStillThere, the dialog's choices are back). It warns first when the repository
    has uncommitted changes (Claude Code's edits would mix with them) or is not in git (nothing to
    review them with). Closing the dialog stops a run, so the dialog keeps this rendered while the
    route is on, whatever answer is selected. *@
@@ -32,7 +34,7 @@ else if (report is not null)
     <div class="dep-ai__suggestion-verdict">
       @(report.ChangedFiles.Count == 0 ? "Claude Code changed nothing" : $"Claude Code changed {Files(report.ChangedFiles.Count)}")
     </div>
-    <div>@report.Summary</div>
+    <div class="dep-ai__markdown">@((MarkupString)SimpleMarkdown.ToHtml(report.Summary))</div>
     @if (report.ChangedFiles.Count > 0)
     {
       <ul class="dep-ai__fix-files" data-testid="@Id("fix-files")">
@@ -47,6 +49,23 @@ else if (report is not null)
       </div>
     }
   </div>
+  @if (IsFixed)
+  {
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mt-2" data-testid="@Id("fixed")">
+      @ResolvedText
+    </MudAlert>
+  }
+  else if (IsStillThere)
+  {
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2" data-testid="@Id("not-fixed")">
+      @StillThereText
+    </MudAlert>
+  }
+  else if (HasChanged && IsResolved is not null)
+  {
+    @* Until a re-parse shows the result: here right away, in VS Code when it re-parses. *@
+    <div class="dep-ai__suggest-note mt-2" data-testid="@Id("fix-checking")">@CheckingText</div>
+  }
 }
 @if (error is not null)
 {
@@ -60,14 +79,32 @@ else if (report is not null)
   // The prompt that asks Claude Code to make the suggested change.
   [Parameter] public Func<string>? GetFixPrompt { get; set; }
 
-  // Tells the dialog when a run starts or ends, so it can update its buttons.
+  // Tells the dialog when a run starts or ends, or the model changes after a fix, so it can update
+  // its buttons.
   [Parameter] public EventCallback OnStateChanged { get; set; }
+
+  // Whether what the fix was for (the cycle, the dependency) is gone from the model, checked once
+  // Claude Code changed files and on every model change after that: VS Code re-parses on its own.
+  [Parameter] public Func<bool>? IsResolved { get; set; }
+  [Parameter] public string ResolvedText { get; set; } = "The problem is gone.";
+  [Parameter] public string StillThereText { get; set; } = "The problem is still there after the re-parse.";
+  [Parameter] public string CheckingText { get; set; } = "Once the model is re-parsed, this shows whether the problem is gone.";
+
+  // Claude Code changed files: the dialog offers Done, unless a re-parse shows the problem is still there.
+  public bool HasChanged => report is { ChangedFiles.Count: > 0 };
+
+  // What Claude Code was asked to fix is gone from the model.
+  public bool IsFixed => HasChanged && IsResolved?.Invoke() == true;
+
+  // This dialog re-parsed after the fix and the problem is still there: the dialog's choices are back.
+  public bool IsStillThere => HasChanged && isReparsed && IsResolved?.Invoke() == false;
 
   // From the click on, through the warning, until the run ends: the dialog disables its button.
   public bool IsRunning => isBusy;
 
   bool isBusy;
   bool isRunning;
+  bool isReparsed;
   string reparseNote = "";
   ClaudeCodeFixReport? report;
   string? error;
@@ -75,6 +112,20 @@ else if (report is not null)
   Timer? ticker;
 
   string Id(string name) => $"{TestId}-{name}";
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  // After a fix the model changes (re-parsed here, or by VS Code), which may resolve the problem.
+  void OnUiStateChanged()
+  {
+    if (report is not { ChangedFiles.Count: > 0 })
+      return;
+    _ = InvokeAsync(async () =>
+    {
+      StateHasChanged();
+      await OnStateChanged.InvokeAsync();
+    });
+  }
 
   string Elapsed
   {
@@ -112,6 +163,7 @@ else if (report is not null)
   {
     report = null;
     reparseNote = "";
+    isReparsed = false;
     isRunning = true;
     startTime = DateTime.UtcNow;
     ticker = new Timer(_ => InvokeAsync(StateHasChanged), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
@@ -149,7 +201,10 @@ else if (report is not null)
     {
       var result = await modelService.RefreshAsync();
       applicationEvents.TriggerUIStateChanged();
-      return result is Error e ? $"Re-parsing failed: {e.Message}" : "The model is re-parsed.";
+      if (result is Error e)
+        return $"Re-parsing failed: {e.Message}";
+      isReparsed = true;
+      return "The model is re-parsed.";
     }
     catch (Exception e) when (e.IsNotFatal())
     {
@@ -189,6 +244,7 @@ else if (report is not null)
 
   public void Dispose()
   {
+    applicationEvents.UIStateChanged -= OnUiStateChanged;
     ticker?.Dispose();
     if (isRunning)
       _ = aiService.StopClaudeCodeFixAsync();
