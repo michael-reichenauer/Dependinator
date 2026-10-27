@@ -106,6 +106,23 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task AppMenu_ShouldOpenChangeLogFromWhatsNew()
+    {
+        // Stub GitHub, so the test needs no network.
+        await Context.RouteAsync(
+            "https://github.com/**",
+            route => route.FulfillAsync(new() { Body = "<title>Change Log</title>", ContentType = "text/html" })
+        );
+        await App.GotoMainPageAsync();
+
+        ILocator whatsNewItem = await App.OpenSubMenuItemAsync("menu-help-group", "menu-whats-new");
+
+        IPage changeLogPage = await Page.RunAndWaitForPopupAsync(async () => await whatsNewItem.ClickAsync());
+
+        Assert.Equal("https://github.com/michael-reichenauer/Dependinator/blob/main/CHANGELOG.md", changeLogPage.Url);
+    }
+
+    [E2EFact]
     public async Task AppMenu_ShouldOpenPrefilledBugReport()
     {
         // Stub GitHub, so the test needs no network and no sign-in redirect changes the url.
