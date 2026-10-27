@@ -12,7 +12,7 @@ namespace Dependinator.Claude;
 // check what the prompt's excerpts leave out: no tool that changes files or runs commands, and
 // reads outside the folder need a permission that print mode cannot ask for, so they are denied.
 // Only the user's own Claude settings load (not the folder's, whose hooks could run commands), and
-// no MCP servers. Without a folder (the demo model, say) it gets no tools and a new private
+// no MCP servers of the user's. Without a folder (the demo model, say) it gets no tools and a new private
 // temporary folder, so nothing planted in a shared temp folder is loaded. FixAsync also lets it
 // edit and create files in the folder (Edit, Write, accepted without asking), still with no
 // command tools, so it cannot build or run tests; edits outside the folder are denied too. Given
@@ -36,6 +36,12 @@ static class ClaudeCodeRunner
         "The code the prompt is about is in the working directory, and you can read and search it with the Read, "
         + "Grep and Glob tools. Before you answer, read the files behind the types and links the prompt names, to "
         + "check what the excerpts leave out. You cannot change files or run commands; that is intended.";
+
+    // With the model tools the prompt is about the model, and the code is there to look things up
+    // in, not to check excerpts against.
+    const string BrowseCodeInstruction =
+        "The code is in the working directory, and you can read and search it with the Read, Grep and Glob tools "
+        + "where the prompt leaves something open. You cannot change files or run commands; that is intended.";
 
     // The tools for a fix: reading and searching, and editing and creating files in the folder.
     const string FixTools = "Read,Grep,Glob,Edit,Write";
@@ -75,6 +81,10 @@ static class ClaudeCodeRunner
         if (schema is not string compactSchema)
             return new Error("The answer schema is not valid JSON.", schema.Error);
 
+        var hasCodeFolder = IsFolder(codeFolder);
+        if (hasCodeFolder && modelTools is null)
+            return await RunAsync(prompt, Arguments(compactSchema, Mode.ReadCode), codeFolder!, AskTimeout, default);
+
         // A private folder for the MCP config, and the working folder when there is no code folder.
         var folder = Result.Catch(() => Directory.CreateTempSubdirectory("dependinator-claude-"));
         if (folder is not DirectoryInfo privateFolder)
@@ -85,10 +95,11 @@ static class ClaudeCodeRunner
             if (modelTools is not null)
             {
                 mcpConfig = Path.Combine(privateFolder.FullName, "mcp.json");
-                await File.WriteAllTextAsync(mcpConfig, McpConfig(modelTools));
+                if (Result.Catch(() => File.WriteAllText(mcpConfig, McpConfig(modelTools))) is Error e)
+                    return new Error("Could not write Claude Code's MCP config.", e);
             }
 
-            return IsFolder(codeFolder)
+            return hasCodeFolder
                 ? await RunAsync(
                     prompt,
                     Arguments(compactSchema, Mode.ReadCode, mcpConfig),
@@ -103,10 +114,6 @@ static class ClaudeCodeRunner
                     AskTimeout,
                     default
                 );
-        }
-        catch (IOException e)
-        {
-            return new Error("Could not write Claude Code's MCP config.", e);
         }
         finally
         {
@@ -231,76 +238,50 @@ static class ClaudeCodeRunner
     }
 
     // With an MCP config (only for an ask), the model tools come on top: that server alone, its
-    // tools allowed without asking, and a word on them in the system prompt.
+    // tools allowed without asking, and a word on them in the system prompt. Every run loads only
+    // the MCP servers it is given, none of the user's own.
     internal static IReadOnlyList<string> Arguments(string schema, Mode mode, string? mcpConfig = null)
     {
-        var arguments = BaseArguments(schema, mode);
-        if (mcpConfig is null || mode is Mode.FixCode)
-            return arguments;
-
-        List<string> withTools = [.. arguments.Where(a => a != "--strict-mcp-config")];
-        var promptIndex = withTools.IndexOf("--append-system-prompt");
-        if (promptIndex >= 0)
-            withTools[promptIndex + 1] += " " + ModelToolsInstruction;
-        else
-            withTools.InsertRange(withTools.Count - 1, ["--append-system-prompt", ModelToolsInstruction]);
-        withTools.InsertRange(
-            withTools.Count - 1,
-            ["--mcp-config", mcpConfig, "--strict-mcp-config", "--allowedTools", $"mcp__{ModelToolsServerName}"]
-        );
-        return withTools;
-    }
-
-    static IReadOnlyList<string> BaseArguments(string schema, Mode mode) =>
-        mode switch
+        var withModelTools = mcpConfig is not null && mode is not Mode.FixCode;
+        List<string> arguments = ["-p", "--output-format", "json", "--json-schema", schema];
+        switch (mode)
         {
-            Mode.NoTools =>
-            [
-                "-p",
-                "--output-format",
-                "json",
-                "--json-schema",
-                schema,
-                "--tools",
-                "",
-                "--no-session-persistence",
-            ],
-            Mode.ReadCode =>
-            [
-                "-p",
-                "--output-format",
-                "json",
-                "--json-schema",
-                schema,
-                "--tools",
-                ReadTools,
-                "--setting-sources",
-                "user",
-                "--strict-mcp-config",
-                "--append-system-prompt",
-                ReadCodeInstruction,
-                "--no-session-persistence",
-            ],
-            Mode.FixCode =>
-            [
-                "-p",
-                "--output-format",
-                "json",
-                "--json-schema",
-                schema,
-                "--tools",
-                FixTools,
-                "--permission-mode",
-                "acceptEdits",
-                "--setting-sources",
-                "user",
-                "--strict-mcp-config",
-                "--append-system-prompt",
-                FixCodeInstruction,
-                "--no-session-persistence",
-            ],
-            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unknown Claude Code mode"),
+            case Mode.NoTools:
+                arguments.AddRange(["--tools", ""]);
+                break;
+            case Mode.ReadCode:
+                arguments.AddRange(["--tools", ReadTools, "--setting-sources", "user"]);
+                break;
+            case Mode.FixCode:
+                arguments.AddRange([
+                    "--tools",
+                    FixTools,
+                    "--permission-mode",
+                    "acceptEdits",
+                    "--setting-sources",
+                    "user",
+                ]);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unknown Claude Code mode");
+        }
+        if (withModelTools)
+            arguments.AddRange(["--mcp-config", mcpConfig!, "--allowedTools", $"mcp__{ModelToolsServerName}"]);
+        arguments.Add("--strict-mcp-config");
+
+        string[] instructions = (mode, withModelTools) switch
+        {
+            (Mode.ReadCode, false) => [ReadCodeInstruction],
+            (Mode.ReadCode, true) => [BrowseCodeInstruction, ModelToolsInstruction],
+            (Mode.FixCode, _) => [FixCodeInstruction],
+            (_, true) => [ModelToolsInstruction],
+            _ => [],
         };
+        if (instructions.Length > 0)
+            arguments.AddRange(["--append-system-prompt", string.Join(" ", instructions)]);
+        arguments.Add("--no-session-persistence");
+        return arguments;
+    }
 
     static IEnumerable<string> Commands()
     {

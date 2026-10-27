@@ -135,9 +135,10 @@ static class SuggestRulesPrompt
 
     public static string Build(IModel model)
     {
-        var listed = ListedNodes(model);
+        var (listed, leftOut) = ListContainers(model);
         if (listed.Count == 0)
             return "";
+        var typeCounts = TypeCounts(model);
 
         var text = new StringBuilder();
         text.AppendLine("# Suggest architecture rules").AppendLine();
@@ -155,11 +156,14 @@ static class SuggestRulesPrompt
         foreach (var node in listed)
         {
             var indent = new string(' ', depth[node] * 2);
-            var types = TypeCount(node);
+            var types = typeCounts[node];
             text.AppendLine(
                 $"{indent}- `{node.Name}` ({Kind(node.Type)}, {types} {(types == 1 ? "type" : "types")}){Titled(node)}{Described(node)}"
             );
         }
+
+        if (leftOut > 0)
+            text.AppendLine($"- … and {leftOut} more top-level containers, left out with their dependencies");
 
         AppendDependencies(text, listed);
         AppendRules(text, model);
@@ -179,21 +183,34 @@ static class SuggestRulesPrompt
 
         """;
 
-    // The containers, level by level, as many whole levels as fit (at least the first).
-    internal static List<Node> ListedNodes(IModel model)
+    // The containers, level by level, as many whole levels as fit (at least the first, cut at the
+    // limit), each right after its parent so the indented list reads as a tree.
+    internal static List<Node> ListedNodes(IModel model) => ListContainers(model).Listed;
+
+    static (List<Node> Listed, int LeftOut) ListContainers(IModel model)
     {
-        List<Node> listed = [];
+        HashSet<Node> included = [];
         var level = Containers(model.Root).ToList();
+        var leftOut = Math.Max(0, level.Count - MaxListedNodes);
         while (level.Count > 0)
         {
-            if (listed.Count > 0 && listed.Count + level.Count > MaxListedNodes)
+            if (included.Count > 0 && included.Count + level.Count > MaxListedNodes)
                 break;
-            listed.AddRange(level.Take(MaxListedNodes));
-            level = [.. level.SelectMany(Containers)];
+            included.UnionWith(level.Take(MaxListedNodes));
+            level = [.. level.Take(MaxListedNodes).SelectMany(Containers)];
         }
-        // Each container right after its parent, so the indented list reads as a tree.
-        var included = listed.ToHashSet();
-        return [.. model.Root.DescendantsAndSelfPreOrder().Where(included.Contains)];
+
+        List<Node> listed = [];
+        void Walk(Node parent)
+        {
+            foreach (var child in Containers(parent).Where(included.Contains))
+            {
+                listed.Add(child);
+                Walk(child);
+            }
+        }
+        Walk(model.Root);
+        return (listed, leftOut);
     }
 
     static IEnumerable<Node> Containers(Node node) =>
@@ -203,7 +220,21 @@ static class SuggestRulesPrompt
             )
             .OrderBy(c => c.Name, StringComparer.Ordinal);
 
-    static int TypeCount(Node node) => node.DescendantsAndSelfPreOrder().Count(n => n.Type.IsType);
+    // The number of types at or inside each node, in one pass over the model.
+    static Dictionary<Node, int> TypeCounts(IModel model)
+    {
+        Dictionary<Node, int> counts = [];
+        int Count(Node node)
+        {
+            var count = node.Type.IsType ? 1 : 0;
+            foreach (var child in node.Children)
+                count += Count(child);
+            counts[node] = count;
+            return count;
+        }
+        Count(model.Root);
+        return counts;
+    }
 
     static string Titled(Node node) => node.LongName != node.Name ? $", titled \"{node.LongName}\"" : "";
 
@@ -316,16 +347,18 @@ class SuggestRulesService(
         if (await dialog.Result is not { Canceled: false, Data: IReadOnlyList<SuggestedRule> chosen })
             return;
 
-        var added = 0;
-        foreach (var rule in chosen)
-        {
-            if (
-                ruleService.AddRule(NodeId.FromName(rule.Check.FromName), NodeId.FromName(rule.Check.ToName))
-                is not Error
-            )
-                added++;
-        }
-        applicationEvents.TriggerInfoReported(added == 1 ? "Added 1 rule." : $"Added {added} rules.");
+        // Checked names, so two suggestions that name one rule differently add it once; a node
+        // gone in a re-parse while the dialog was open leaves its rule out.
+        List<ArchitectureRule> rules = [.. chosen.Select(r => new ArchitectureRule(r.Check.FromName, r.Check.ToName))];
+        var added = ruleService.AddRules(rules);
+        var left = rules.Distinct().Count() - added;
+        var message = added == 1 ? "Added 1 rule." : $"Added {added} rules.";
+        if (left > 0)
+            message +=
+                left == 1
+                    ? " 1 was left out: it is a rule already, or its nodes are no longer in the model."
+                    : $" {left} were left out: they are rules already, or their nodes are no longer in the model.";
+        applicationEvents.TriggerInfoReported(message);
     }
 
     Result<RuleSuggestions> ParsePasted(string text)

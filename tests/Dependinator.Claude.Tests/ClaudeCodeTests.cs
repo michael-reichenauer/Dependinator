@@ -88,7 +88,9 @@ public class ClaudeCodeTests
         Assert.Single(arguments, a => a == "--strict-mcp-config");
         Assert.Equal("mcp__dependinator", arguments[arguments.IndexOf("--allowedTools") + 1]);
         Assert.Equal("Read,Grep,Glob", arguments[arguments.IndexOf("--tools") + 1]);
-        Assert.Contains("check_rule", arguments[arguments.IndexOf("--append-system-prompt") + 1]);
+        var instruction = arguments[arguments.IndexOf("--append-system-prompt") + 1];
+        Assert.Contains("check_rule", instruction);
+        Assert.DoesNotContain("Before you answer, read the files", instruction);
         Assert.Equal("--no-session-persistence", arguments[^1]);
     }
 
@@ -119,7 +121,17 @@ public class ClaudeCodeTests
         var arguments = ClaudeCodeRunner.Arguments("{}", ClaudeCodeRunner.Mode.NoTools);
 
         Assert.Equal(
-            ["-p", "--output-format", "json", "--json-schema", "{}", "--tools", "", "--no-session-persistence"],
+            [
+                "-p",
+                "--output-format",
+                "json",
+                "--json-schema",
+                "{}",
+                "--tools",
+                "",
+                "--strict-mcp-config",
+                "--no-session-persistence",
+            ],
             arguments
         );
     }

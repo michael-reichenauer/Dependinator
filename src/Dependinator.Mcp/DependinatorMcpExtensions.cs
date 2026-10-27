@@ -60,14 +60,15 @@ public static class DependinatorMcpExtensions
     }
 
     // Tells IModelToolsServer where the endpoint is once the host listens, so the Claude Code runs
-    // the app starts can use the tools: the first address, by a loopback name.
+    // the app starts can use the tools: the first address, a wildcard one by the loopback name.
     public static void PublishModelToolsAddress(this WebApplication app) =>
         app.Lifetime.ApplicationStarted.Register(() =>
         {
             var address = app.Urls.FirstOrDefault(u => u.StartsWith("http://", StringComparison.Ordinal));
             if (address is null || !Uri.TryCreate(address, UriKind.Absolute, out var uri))
                 return;
-            var url = new UriBuilder(uri) { Host = "localhost", Path = Path }.Uri.ToString();
+            var host = uri.Host is "0.0.0.0" or "[::]" or "+" or "*" ? "localhost" : uri.Host;
+            var url = new UriBuilder(uri) { Host = host, Path = Path }.Uri.ToString();
             app.Services.GetRequiredService<IModelToolsServer>().SetAddress(new ModelToolsAddress(url, null));
         });
 

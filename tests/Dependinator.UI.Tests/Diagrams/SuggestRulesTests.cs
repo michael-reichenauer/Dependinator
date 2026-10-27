@@ -104,6 +104,23 @@ public class SuggestRulesTests
     }
 
     [Fact]
+    public void AddRules_ShouldAddTheNewRules_AsOneUndoStep()
+    {
+        var commands = new Mock<ICommandService>();
+        var ruleService = new RuleService(modelMgr, commands.Object);
+
+        var added = ruleService.AddRules([
+            new ArchitectureRule("UI", "Data"),
+            new ArchitectureRule("Data", "UI"),
+            new ArchitectureRule("UI", "Data"), // Named twice
+            new ArchitectureRule("Gone", "Data"), // Not in the model
+        ]);
+
+        Assert.Equal(2, added);
+        commands.Verify(c => c.Do(It.Is<CompositeCommand>(cc => cc.Commands.Count == 2)), Times.Once);
+    }
+
+    [Fact]
     public void Parse_ShouldReadTheStructuredAnswer()
     {
         var json = """{"rules":[{"from":"`UI`","to":"Data","why":"Layering."},{"from":"","to":"X","why":""}]}""";
