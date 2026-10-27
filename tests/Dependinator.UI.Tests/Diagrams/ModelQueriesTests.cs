@@ -3,6 +3,7 @@ using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
@@ -32,7 +33,7 @@ public class ModelQueriesTests
 
     public ModelQueriesTests()
     {
-        queries = new ModelQueries(modelMgr, new NodeSearchService(modelMgr), service);
+        queries = Create(modelMgr);
         using var model = modelMgr.UseModel();
         ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
         views = AddNode(model, "UI.Views", ui, NodeType.Namespace);
@@ -49,6 +50,15 @@ public class ModelQueriesTests
         AddLink(model, view, item);
         AddLink(model, load, view); // Inside the subject: never a dependency
     }
+
+    ModelQueries Create(ModelMgr mgr) =>
+        new(
+            mgr,
+            new NodeSearchService(mgr),
+            new CycleService(mgr, Mock.Of<ICommandService>()),
+            new RuleService(mgr, Mock.Of<ICommandService>()),
+            service
+        );
 
     static Node AddNode(IModel model, string name, Node parent, NodeType type = NodeType.ClassType)
     {
@@ -168,12 +178,12 @@ public class ModelQueriesTests
         Assert.Equal(2, list.Count);
         var (open, accepted) = (list.Cycles[0], list.Cycles[1]);
         Assert.Equal(("Open", ui.Name, null, 2), (open.Status, open.Container, open.Reason, open.MemberCount));
-        Assert.Equal([models.Name, views.Name], open.Members.Order(StringComparer.Ordinal));
+        Assert.Equal([models.Name, views.Name], open.Members);
         Assert.Equal(("Accepted", false), (accepted.Status, accepted.StillOccurs));
     }
 
     [Fact]
-    public void ListCycles_ShouldSayADecisionWasOutgrown_WhenANodeJoinedItsCycle()
+    public void ListCycles_ShouldMarkADecisionOutgrown_WhenANodeJoinedItsCycle()
     {
         modelMgr.WithModel(m =>
         {
@@ -186,7 +196,8 @@ public class ModelQueriesTests
 
         var list = AssertOk(queries.ListCycles());
 
-        Assert.Equal(["Open", "Outgrown"], list.Cycles.Select(c => c.Status));
+        Assert.Equal(["Open", "Accepted"], list.Cycles.Select(c => c.Status));
+        Assert.Equal([false, true], list.Cycles.Select(c => c.IsOutgrown));
         Assert.Equal(3, list.Cycles[0].MemberCount);
     }
 
@@ -204,7 +215,7 @@ public class ModelQueriesTests
     public void GetModel_ShouldSummarize_AndFailWithoutAModel()
     {
         var summary = AssertOk(queries.GetModel());
-        var empty = new ModelQueries(new ModelMgr(new StateMgr()), Mock.Of<INodeSearchService>(), service);
+        var empty = Create(new ModelMgr(new StateMgr()));
 
         Assert.Equal(10, summary.NodeCount);
         Assert.Equal(4, summary.LinkCount);
@@ -215,7 +226,7 @@ public class ModelQueriesTests
     [Fact]
     public async Task Service_ShouldAnswerOnTheLatestOpenScope()
     {
-        var other = new ModelQueries(new ModelMgr(new StateMgr()), Mock.Of<INodeSearchService>(), service);
+        var other = Create(new ModelMgr(new StateMgr()));
 
         AssertError(await service.GetModelAsync());
         queries.Activate();

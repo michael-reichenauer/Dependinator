@@ -11,8 +11,8 @@ namespace Dependinator.Core.ModelQueries;
 // this interface resolves to the RPC proxy, so in-app features use the UI's IModelQueries.)
 //
 // Nodes are named by QueryNode.Name, the key every method takes. A method also accepts a node's
-// Title, or the Alias the user gave it, when no other node has the same one. Answers are kept small for a model's context: lists
-// are capped, and the totals say how much was left out.
+// Title, or else the Alias the user gave it, when no other node has the same one. Answers are kept
+// small for a model's context: lists are capped, and the totals say how much was left out.
 [Rpc]
 interface IModelQueryService
 {
@@ -79,16 +79,17 @@ record NodeDependencies(QueryNode Node, bool IsIncoming, IReadOnlyList<Dependenc
 record PathsResult(string Status, IReadOnlyList<IReadOnlyList<string>> Paths);
 
 // Status is Open, Accepted (intended, Reason says why) or ToFix (Reason is the planned change).
-// A decision is Outgrown when nodes joined its cycle (the larger cycle is listed as Open), and is
-// kept with StillOccurs false when its cycle no longer occurs. Members may be capped: MemberCount
-// says how many there are.
+// A decision IsOutgrown when nodes joined its cycle (the larger cycle is listed as Open), and is
+// kept with StillOccurs false when its cycle no longer occurs. Members are sorted and may be
+// capped: MemberCount says how many there are.
 record CycleResult(
     string Container,
     IReadOnlyList<string> Members,
     int MemberCount,
     string Status,
     string? Reason,
-    bool StillOccurs
+    bool StillOccurs,
+    bool IsOutgrown = false
 );
 
 // Open cycles first, then those to fix, then the accepted ones; Count is how many there are in all.
