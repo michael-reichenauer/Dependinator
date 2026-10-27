@@ -339,6 +339,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             logger.error("Dependinator cloud sync auth failed to initialize", error);
         }
         claudeApiKey.registerClaudeApiKey(client, context);
+
+        // The MCP server's registration runs claude, so it is node-only like cloud sync auth.
+        try {
+            const mcpServer = await import("./mcpServer");
+            mcpServer.registerMcpServer(client, context);
+        } catch (error) {
+            logger.error("Dependinator MCP server registration failed", error);
+        }
     });
 
     // Opens (or reveals) the webview hosting the WASM UI and shows the active editor's node.
@@ -456,6 +464,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.commands.registerCommand(claudeApiKey.setClaudeApiKeyCommandId, async () => {
             if (await claudeApiKey.askForApiKeyAsync(context))
                 vscode.window.showInformationMessage("Dependinator: The Claude API key is saved.");
+        }),
+        // The id is mcpServer.connectClaudeCodeCommandId, written out: the web bundle cannot load that module.
+        vscode.commands.registerCommand("dependinator.connectClaudeCode", async () => {
+            if (isWeb) {
+                vscode.window.showInformationMessage("Dependinator: Claude Code needs VS Code on the desktop.");
+                return;
+            }
+            const mcpServer = await import("./mcpServer");
+            await mcpServer.connectClaudeCode(context);
         }),
         vscode.commands.registerCommand(searchCommandId, async () => {
             // With the diagram already open the search dialog opens right away; otherwise the

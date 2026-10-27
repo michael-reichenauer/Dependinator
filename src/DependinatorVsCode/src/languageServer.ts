@@ -148,9 +148,13 @@ export async function startLanguageServer(
     // Hand the LSP its cloud-sync config and the stored access token at launch
     // (node-only module, loaded dynamically like the language client itself).
     const { getCloudSyncInitializationOptions } = await import("./cloudSyncAuth");
+    const { getMcpInitializationOptions } = await import("./mcpServer");
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{ scheme: "file", language: "csharp" }],
-        initializationOptions: await getCloudSyncInitializationOptions(context)
+        initializationOptions: {
+            ...(await getCloudSyncInitializationOptions(context)),
+            ...(await getMcpInitializationOptions(context))
+        }
     };
 
     const client = new LanguageClient(

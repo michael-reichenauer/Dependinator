@@ -293,10 +293,11 @@ d.box("u-model", 640, 285, 230, 110, "Modeling/", ["Model (nodes, links, lines),
 d.box("u-shared", 890, 285, 230, 110, "Shared/", ["IndexedDB, cloud sync, VS Code", "bridge, navigation, share links,", "events, themes, keyboard"])
 
 d.group(30, 440, 1110, 140, "Parsers and integrations", "each plugs into Core")
-d.box("p-roslyn", 60, 480, 240, 85, "Dependinator.Roslyn", ["C# solutions: MSBuildWorkspace", "1.8k lines"], icon="Parsing")
-d.box("p-bicep", 320, 480, 240, 85, "Dependinator.Bicep", ["Bicep deployments: Azure.Bicep.Core", "1.0k lines"], icon="Parsing")
-d.box("p-claude", 580, 480, 240, 85, "Dependinator.Claude", ["Anthropic SDK: cycle suggestions", "0.2k lines"], icon="Api")
-d.box("p-refl", 840, 480, 280, 85, "Dependinator.Reflection", ["compiled assemblies (Mono.Cecil)", "2.5k lines · inactive, no host uses it"], dashed=True)
+d.box("p-roslyn", 60, 480, 190, 85, "Dependinator.Roslyn", ["C# solutions: MSBuildWorkspace", "1.8k lines"], icon="Parsing")
+d.box("p-bicep", 270, 480, 190, 85, "Dependinator.Bicep", ["Bicep: Azure.Bicep.Core", "1.0k lines"], icon="Parsing")
+d.box("p-claude", 480, 480, 190, 85, "Dependinator.Claude", ["Anthropic SDK: AI reviews", "0.6k lines"], icon="Api")
+d.box("p-mcp", 690, 480, 190, 85, "Dependinator.Mcp", ["MCP server: model tools", "0.3k lines"], icon="Api")
+d.box("p-refl", 900, 480, 220, 85, "Dependinator.Reflection", ["assemblies (Mono.Cecil), 2.5k", "inactive, no host uses it"], dashed=True)
 
 d.group(30, 610, 1110, 150, "Dependinator.Core · 3.5k lines", "no UI framework, no parser library")
 d.box("c-parse", 60, 655, 200, 90, "Parsing/", ["IParserService [Rpc],", "ISourceParser, Item types"], tint=ACCENT)
@@ -314,18 +315,18 @@ d.port("wasm-down", 365, 190); d.port("diag-top", 365, 285)
 d.edge("wasm-down", "diag-top", None)
 d.port("lsp-down", 630, 190); d.port("claude-top", 630, 480)
 d.edge("lsp-down", "claude-top", "Lsp: Core + parsers", label_at=0.81, label_dx=6, anchor="start", label_dy=4)
-d.port("model-down", 830, 395); d.port("cshared-top", 830, 655)
-d.edge("model-down", "cshared-top", "UI → Core", label_at=0.12, label_dx=6, anchor="start", label_dy=4)
+d.port("model-down", 850, 395); d.port("cshared-top", 890, 655)
+d.edge("model-down", "cshared-top", "UI → Core", via=[(850, 422), (890, 422)], label_at=0.5, label_dx=6, anchor="start", label_dy=-6)
 d.edge("h-api.b", "s-dto.r", "Api: Shared only", via=[(785, 225), (1160, 225), (1160, 835)], label_at=0.652, label_dx=-6, anchor="end", label_dy=4)
-for x in (252, 440, 660):
+for x in (155, 365, 575, 785):
     d.port(f"p{x}a", x, 565); d.port(f"p{x}b", x, 655)
     d.edge(f"p{x}a", f"p{x}b", None)
-d.note(258, 600, ["parsers → Core"], size=10.5)
-d.port("refl-a", 980, 565); d.port("refl-b", 980, 655)
+d.note(161, 600, ["parsers → Core"], size=10.5)
+d.port("refl-a", 1020, 565); d.port("refl-b", 1020, 655)
 d.edge("refl-a", "refl-b", None, dashed=True)
-d.port("core-a", 1020, 745); d.port("core-b", 1020, 812)
+d.port("core-a", 1060, 745); d.port("core-b", 1060, 812)
 d.edge("core-a", "core-b", None)
-d.note(1026, 784, ["Core → Shared"], size=10.5)
+d.note(1066, 784, ["Core → Shared"], size=10.5)
 
 d.group(1180, 60, 240, 815, "Tests · 25k lines", "tests/, xUnit + Moq + Verify")
 d.note(1194, 120, ["**Unit tests (dotnet test)",
@@ -337,6 +338,7 @@ d.note(1194, 120, ["**Unit tests (dotnet test)",
                    "Reflection.Tests · 0.5k",
                    "Lsp.Tests · 0.4k",
                    "Claude.Tests · 0.2k",
+                   "Mcp.Tests · 0.2k",
                    "",
                    "**UI tests (./scripts/e2e)",
                    "E2E.Tests · 4.4k",
@@ -356,8 +358,10 @@ d.note(1194, 120, ["**Unit tests (dotnet test)",
                    "  and not each other",
                    "· only Dependinator.Claude",
                    "  touches the Anthropic SDK",
+                   "· the MCP SDK stays out of",
+                   "  Core and UI",
                    "· Shared uses nothing of ours"], size=11)
-write("3-code-structure.svg", d, "Code structure view of Dependinator: thin hosts (Web, Wasm, Lsp, Api, and the TypeScript extension) on top of Dependinator.UI, which holds the App, Diagrams, Modeling and Shared areas; the Roslyn, Bicep and Claude libraries plug into Dependinator.Core, which holds parsing contracts, RPC, cloud sync client, shared services and utilities; Shared holds the DTOs the API also uses. Architecture tests enforce that references only point down.")
+write("3-code-structure.svg", d, "Code structure view of Dependinator: thin hosts (Web, Wasm, Lsp, Api, and the TypeScript extension) on top of Dependinator.UI, which holds the App, Diagrams, Modeling and Shared areas; the Roslyn, Bicep, Claude and Mcp libraries plug into Dependinator.Core, which holds parsing contracts, RPC, cloud sync client, shared services and utilities; Shared holds the DTOs the API also uses. Architecture tests enforce that references only point down.")
 
 # ------------------------------------------------------------------------------------------
 # 4. Runtime view: from source code to a picture on the screen

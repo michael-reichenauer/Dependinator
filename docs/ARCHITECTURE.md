@@ -39,7 +39,8 @@ Only three external services are involved, and all are optional for the core use
 users in for cloud sync, the small **cloud sync API** (our own Azure Functions over Blob Storage)
 stores the synced models, and the **Anthropic Claude API** reviews a circular dependency or a
 dependency that breaks a rule when the user asks, with the user's own API key. Claude is called from the VS Code extension's language
-server and from the dev host, never from the browser app.
+server and from the dev host, never from the browser app. The other way round, AI agents (Copilot or
+Claude Code) can ask Dependinator about the open model through its **MCP server** on localhost.
 
 Points to discuss: source code never leaves the machine through sync, only the drawn model does,
 but the Claude review sends code excerpts of the cycle or dependency it asks about. The web app cannot parse
@@ -79,7 +80,7 @@ projects with the SDK's MSBuild; Bicep needs nothing installed.
 ![Code structure view](architecture/3-code-structure.svg)
 
 References point one way: **hosts → UI → Core → Shared**, with the parser libraries (**Roslyn**,
-**Bicep**) and the **Claude** integration plugging into Core. Hosts are thin (a few hundred lines
+**Bicep**) and the **Claude** and **Mcp** integrations plugging into Core. Hosts are thin (a few hundred lines
 each): they register services and start. `Dependinator.Core` is host-agnostic: the parsing
 contracts (`IParserService`, `ISourceParser`, the `Item` types), the JSON-RPC transport, the cloud
 sync HTTP client, workspace and model-path services, and the `Result`/`Error` types every fallible
@@ -152,6 +153,14 @@ editor at a node's source, show the node for the file the user switched to, refr
 files changed, open search, report parsing status for the status bar. Secrets stay in the
 extension: the Clerk token and the Claude key live in VS Code's secret storage, and the server asks
 for them per request.
+
+The language server also runs the **MCP server** (`Dependinator.Mcp`, Streamable HTTP on a
+loopback port, a bearer token from the extension's secret storage). Its tools ask the open diagram
+through the same tunnel, in the other direction: `IModelQueryService` is an `[Rpc]` interface the
+UI implements, so the answers come from the model the user sees, with its layout, cycles and
+rules. The extension registers the server with VS Code for Copilot and, with *Dependinator: Connect
+Claude Code*, with Claude Code for the folder. While the diagram is closed the tools answer with an
+error that asks to open it. The dev host serves the same tools at `/mcp`, without a token.
 
 Points to discuss: the same `[Rpc]` interface works in process (dev host, browser) and across the
 tunnel, which keeps one code path, but anything a parser reads from statics or configuration does
