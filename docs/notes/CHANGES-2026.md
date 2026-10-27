@@ -29,7 +29,7 @@ project works.
   group and rubber-band selection), new line and container visuals, a release flow through `dev`
   and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
-  Claude's suggestions for cycles and broken rules, About Node with a question for an AI, C# member naming fixes, and a problem indicator with node badges.
+  Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, C# member naming fixes, and a problem indicator with node badges.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -209,6 +209,14 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   source or a container's files. The answer is shown, not saved, and can be copied. Claude answers
   on Claude Sonnet 5.5 here (`IClaudeService.AskQuicklyAsync`), faster and cheaper than the Opus
   used for verdicts.
+- **Improve Comments (Oct 27).** "Improve Comments …" in the node menu (one or several selected
+  nodes) and in the About dialog has Claude Code add or rewrite the comments of namespaces and types,
+  of the nodes alone or of everything inside them, which the diagram shows as descriptions. The
+  prompt (`CommentsPrompt`) lists each one with where its comment goes, its comment now and what it
+  uses and is used by, and says what a good comment says and where the parser reads it (a namespace
+  comment in one file only). It runs like Fix with Claude Code, on the current branch (edits, no
+  commands), with a warning above 150 namespaces and types; without the Claude Code route the prompt
+  is copied for any coding agent. Claude Code's run limit went from 15 to 30 minutes for it.
 - **Problem indicator (Oct 21).** A warning count in the app bar, like the VS Code status bar,
   shows that the model has open cycles and broken architecture rules without opening their
   panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one

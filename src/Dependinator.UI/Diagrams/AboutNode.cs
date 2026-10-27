@@ -71,6 +71,7 @@ class AboutNodeService(
     IModelMgr modelMgr,
     IWorkspaceFileService workspaceFileService,
     IAiService aiService,
+    IImproveCommentsService improveCommentsService,
     IDialogService dialogService
 ) : IAboutNodeService
 {
@@ -99,7 +100,9 @@ class AboutNodeService(
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
         };
-        await dialogService.ShowAsync<AboutNodeDialog>(null, parameters, options);
+        var dialog = await dialogService.ShowAsync<AboutNodeDialog>(null, parameters, options);
+        if (await dialog.Result is { Canceled: false, Data: AboutNodeDialog.ImproveCommentsResult })
+            await improveCommentsService.ShowAsync([nodeId]);
     }
 
     public async Task<string> GetPromptAsync(NodeId nodeId, string question)

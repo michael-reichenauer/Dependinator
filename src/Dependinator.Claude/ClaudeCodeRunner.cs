@@ -18,7 +18,9 @@ namespace Dependinator.Claude;
 static class ClaudeCodeRunner
 {
     static readonly TimeSpan AskTimeout = TimeSpan.FromMinutes(5);
-    static readonly TimeSpan FixTimeout = TimeSpan.FromMinutes(15);
+
+    // Improving the comments of a namespace or two can take long; the user can stop it any time.
+    static readonly TimeSpan FixTimeout = TimeSpan.FromMinutes(30);
 
     // The tools Claude Code may use in the code's folder: reading and searching only.
     const string ReadTools = "Read,Grep,Glob";
