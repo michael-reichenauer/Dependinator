@@ -108,7 +108,7 @@ static class NodePrompt
         if (node.Parent is { IsRoot: false } parent)
             text.AppendLine($"It is in {Kind(parent.Type)} {parent.LongName}{Described(parent)}");
         if (node.FileSpan is { } span)
-            text.AppendLine($"Declared in {DisplayPath(model, span.Path)}, line {span.StartLine}");
+            text.AppendLine($"Declared in {DisplayPath(model, span.Path)}, line {span.StartLine + 1}");
     }
 
     static void AppendChildren(StringBuilder text, Node node)
