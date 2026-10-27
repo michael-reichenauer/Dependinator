@@ -38,6 +38,7 @@ public class ModelQueriesTests
         views = AddNode(model, "UI.Views", ui, NodeType.Namespace);
         view = AddNode(model, "UI.Views.View", views);
         var load = AddNode(model, "UI.Views.View.Load()", view, NodeType.MethodMember);
+        AddNode(model, "UI.Views.View.Save()", view, NodeType.MethodMember);
         models = AddNode(model, "UI.Models", ui, NodeType.Namespace);
         item = AddNode(model, "UI.Models.Item", models);
         data = AddNode(model, "Data", model.Root, NodeType.Assembly);
@@ -128,6 +129,7 @@ public class ModelQueriesTests
     {
         AssertError(queries.CheckRule(ui.Name, view.Name));
         AssertError(queries.CheckRule(view.Name, view.Name));
+        AssertError(queries.CheckRule(view.Name + ".Load()", view.Name + ".Save()")); // One type
     }
 
     [Fact]
@@ -138,6 +140,8 @@ public class ModelQueriesTests
         Assert.Equal(view, AssertOk(ModelQueries.FindNode(model, view.LongName.ToUpperInvariant())));
         var error = AssertError(ModelQueries.FindNode(model, "Nothing.Like.This"));
         Assert.Contains("search", error.Message);
+        view.SetAlias("Main Screen");
+        Assert.Equal(view, AssertOk(ModelQueries.FindNode(model, "main screen")));
     }
 
     [Fact]
@@ -159,14 +163,31 @@ public class ModelQueriesTests
             m.AddAcceptedCycle(new AcceptedCycle(ui.Name, [ui.Name, data.Name], "Gone"));
         });
 
-        var cycles = AssertOk(queries.ListCycles());
+        var list = AssertOk(queries.ListCycles());
 
-        Assert.Equal(2, cycles.Count);
-        var open = cycles[0];
-        Assert.Equal(("Open", ui.Name, null), (open.Status, open.Container, open.Reason));
+        Assert.Equal(2, list.Count);
+        var (open, accepted) = (list.Cycles[0], list.Cycles[1]);
+        Assert.Equal(("Open", ui.Name, null, 2), (open.Status, open.Container, open.Reason, open.MemberCount));
         Assert.Equal([models.Name, views.Name], open.Members.Order(StringComparer.Ordinal));
-        Assert.Equal("Accepted", cycles[1].Status);
-        Assert.False(cycles[1].StillOccurs);
+        Assert.Equal(("Accepted", false), (accepted.Status, accepted.StillOccurs));
+    }
+
+    [Fact]
+    public void ListCycles_ShouldSayADecisionWasOutgrown_WhenANodeJoinedItsCycle()
+    {
+        modelMgr.WithModel(m =>
+        {
+            var shared = AddNode(m, "UI.Shared", ui, NodeType.Namespace);
+            var helper = AddNode(m, "UI.Shared.Helper", shared);
+            AddLink(m, item, helper);
+            AddLink(m, helper, view); // Views, Models and Shared in a cycle
+            m.AddAcceptedCycle(new AcceptedCycle(ui.Name, [views.Name, models.Name], "Intended"));
+        });
+
+        var list = AssertOk(queries.ListCycles());
+
+        Assert.Equal(["Open", "Outgrown"], list.Cycles.Select(c => c.Status));
+        Assert.Equal(3, list.Cycles[0].MemberCount);
     }
 
     [Fact]
@@ -185,14 +206,14 @@ public class ModelQueriesTests
         var summary = AssertOk(queries.GetModel());
         var empty = new ModelQueries(new ModelMgr(new StateMgr()), Mock.Of<INodeSearchService>(), service);
 
-        Assert.Equal(9, summary.NodeCount);
+        Assert.Equal(10, summary.NodeCount);
         Assert.Equal(4, summary.LinkCount);
         Assert.Equal(2, summary.TopLevel.Count);
         AssertError(empty.GetModel());
     }
 
     [Fact]
-    public async Task Service_ShouldAnswerOnTheLatestScope_UntilItCloses()
+    public async Task Service_ShouldAnswerOnTheLatestOpenScope()
     {
         var other = new ModelQueries(new ModelMgr(new StateMgr()), Mock.Of<INodeSearchService>(), service);
 
@@ -201,8 +222,9 @@ public class ModelQueriesTests
         AssertOk(await service.GetModelAsync());
         other.Activate();
         AssertError(await service.GetModelAsync()); // The other scope has no model
-        queries.Dispose(); // Not the current one: nothing changes
-        other.Dispose();
+        other.Dispose(); // Back to the one opened before
+        AssertOk(await service.GetModelAsync());
+        queries.Dispose();
         var error = AssertError(await service.GetModelAsync());
 
         Assert.Contains("No Dependinator diagram is open", error.Message);

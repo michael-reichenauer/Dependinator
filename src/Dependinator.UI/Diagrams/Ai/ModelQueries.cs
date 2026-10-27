@@ -7,6 +7,7 @@ namespace Dependinator.UI.Diagrams.Ai;
 // Answers IModelQueryService's questions on this scope's model (a browser tab, or the VS Code
 // webview). The answers are computed afresh under the model lock rather than read from the
 // panels' cached services, since the questions come from another thread in the web host.
+// In-app features call this directly: IModelQueryService resolves to the RPC proxy in the UI.
 interface IModelQueries
 {
     Result<ModelSummary> GetModel();
@@ -14,7 +15,7 @@ interface IModelQueries
     Result<IReadOnlyList<QueryNode>> SearchNodes(string query);
     Result<NodeDependencies> GetDependencies(string nodeName, bool isIncoming);
     Result<PathsResult> FindPaths(string fromName, string toName);
-    Result<IReadOnlyList<CycleResult>> ListCycles();
+    Result<CycleList> ListCycles();
     Result<IReadOnlyList<RuleResult>> ListRules();
     Result<RuleResult> CheckRule(string fromName, string toName);
 }
@@ -30,27 +31,30 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
     internal const int MaxGroups = 50;
     internal const int MaxExamples = 3;
     internal const int MaxPaths = 5;
+    internal const int MaxCycles = 50;
+    internal const int MaxCycleMembers = 20;
     internal const int MaxViolations = 25;
+    internal const int MaxAllowed = 25;
     const int MaxDescriptionLength = 200;
 
     // Makes this scope's model the one the queries answer on (the latest one opened).
-    public void Activate() => host.SetCurrent(this);
+    public void Activate() => host.Add(this);
 
-    public void Dispose() => host.ClearCurrent(this);
+    public void Dispose() => host.Remove(this);
 
     public Result<ModelSummary> GetModel()
     {
         using var model = modelMgr.UseModel();
         if (CheckHasModel(model) is Error e)
             return e;
-        var rules = RuleService.Compute(model).Reports;
         return new ModelSummary(
             model.Path,
             model.Nodes.Count - 1, // Not the root
             model.Links.Count,
-            rules.Count,
+            model.Rules.Count,
             CycleService.Compute(model).Cycles.Count,
-            [.. Sorted(model.Root.Children).Take(MaxChildren).Select(ToQueryNode)]
+            [.. Sorted(model.Root.Children).Take(MaxChildren).Select(ToQueryNode)],
+            model.Root.Children.Count
         );
     }
 
@@ -76,12 +80,13 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
 
     public Result<IReadOnlyList<QueryNode>> SearchNodes(string query)
     {
+        // The search snapshots the nodes under the lock and scores them outside it.
+        var results = nodeSearchService.Search(query);
         using var model = modelMgr.UseModel();
         if (CheckHasModel(model) is Error e)
             return e;
         return new Result<IReadOnlyList<QueryNode>>([
-            .. nodeSearchService
-                .Search(query)
+            .. results
                 .Select(r => model.Nodes.GetValueOrDefault(r.Id))
                 .OfType<Node>()
                 .Take(MaxSearchResults)
@@ -94,22 +99,23 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
         using var model = modelMgr.UseModel();
         if (CheckHasModel(model) is Error e)
             return e;
-        var foundSubject = FindNode(model, nodeName);
-        if (foundSubject is not Node subject)
-            return foundSubject.Error;
+        var found = FindNode(model, nodeName);
+        if (found is not Node subject)
+            return found.Error;
 
-        // Per group (the other side's node at the level where both sides meet), the links, and
-        // per unit pair inside it, how many.
+        // Per group (the other side's node at the level where both sides meet), the links per
+        // unit pair inside it.
+        var subjectAncestors = subject.AncestorsAndSelf().ToHashSet();
         var groups = new Dictionary<Node, Dictionary<(Node, Node), int>>();
         foreach (var link in model.Links.Values)
         {
             var (inside, outside) = isIncoming ? (link.Target, link.Source) : (link.Source, link.Target);
-            if (!IsAtOrInside(inside, subject) || IsAtOrInside(outside, subject))
+            if (!inside.IsAtOrInside(subject) || outside.IsAtOrInside(subject))
                 continue;
             var pair = (UnitGraph.UnitOf(link.Source), UnitGraph.UnitOf(link.Target));
             if (pair.Item1 == pair.Item2)
                 continue; // A member of a type using a sibling member
-            var group = MeetingLevel(subject, outside);
+            var group = MeetingLevel(subjectAncestors, outside);
             if (!groups.TryGetValue(group, out var pairs))
                 groups[group] = pairs = [];
             pairs[pair] = pairs.GetValueOrDefault(pair) + 1;
@@ -156,23 +162,21 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
         return new PathsResult(result.Status.ToString(), paths);
     }
 
-    public Result<IReadOnlyList<CycleResult>> ListCycles()
+    public Result<CycleList> ListCycles()
     {
         using var model = modelMgr.UseModel();
         if (CheckHasModel(model) is Error e)
             return e;
         var computed = CycleService.Compute(model);
-        return new Result<IReadOnlyList<CycleResult>>([
-            .. computed.Cycles.Select(c => new CycleResult(
-                c.ContainerNodeName,
-                [.. c.Members.Select(m => m.NodeName)],
-                "Open",
-                null,
-                true
-            )),
+        List<CycleResult> cycles =
+        [
+            .. computed.Cycles.Select(c =>
+                ToCycleResult(c.ContainerNodeName, [.. c.Members.Select(m => m.NodeName)], "Open", null, true)
+            ),
             .. computed.ToFix.Select(r => ToCycleResult(r, "ToFix")),
             .. computed.Accepted.Select(r => ToCycleResult(r, "Accepted")),
-        ]);
+        ];
+        return new CycleList([.. cycles.Take(MaxCycles)], cycles.Count);
     }
 
     public Result<IReadOnlyList<RuleResult>> ListRules()
@@ -196,7 +200,8 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
         var foundTo = FindNode(model, toName);
         if (foundTo is not Node to)
             return foundTo.Error;
-        if (from == to || from.Ancestors().Contains(to) || to.Ancestors().Contains(from))
+        // Two members of one type are the type depending on itself, as nested as a node and its child.
+        if (from.IsAtOrInside(to) || to.IsAtOrInside(from) || UnitGraph.UnitOf(from) == UnitGraph.UnitOf(to))
             return new Error("A rule needs two nodes where neither contains the other.");
 
         var rule = new ArchitectureRule(from.Name, to.Name);
@@ -207,24 +212,26 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
     static Result CheckHasModel(IModel model) =>
         model.Root.Children.Count > 0 ? Result.Ok : new Error("The diagram has no model loaded yet.");
 
-    // A node by its name, or by its title when only one node has it.
+    // A node by its name, or by its title or alias when only one node has it.
     internal static Result<Node> FindNode(IModel model, string name)
     {
         name = name.Trim();
-        var byName = model.Nodes.Values.FirstOrDefault(n => n.Name == name && !n.IsRoot);
-        if (byName is not null)
+        if (model.Nodes.TryGetValue(NodeId.FromName(name), out var byName) && !byName.IsRoot)
             return byName;
         foreach (var comparison in (StringComparison[])[StringComparison.Ordinal, StringComparison.OrdinalIgnoreCase])
         {
-            var byTitle = model
-                .Nodes.Values.Where(n => !n.IsRoot && string.Equals(n.LongName, name, comparison))
+            var matches = model
+                .Nodes.Values.Where(n =>
+                    !n.IsRoot
+                    && (string.Equals(n.LongName, name, comparison) || string.Equals(n.Alias, name, comparison))
+                )
                 .ToList();
-            if (byTitle.Count == 1)
-                return byTitle[0];
-            if (byTitle.Count > 1)
+            if (matches.Count == 1)
+                return matches[0];
+            if (matches.Count > 1)
                 return new Error(
                     $"Several nodes are titled \"{name}\"; use one of their names: "
-                        + string.Join(", ", byTitle.Select(n => n.Name).Order(StringComparer.Ordinal).Take(5))
+                        + string.Join(", ", matches.Select(n => n.Name).Order(StringComparer.Ordinal).Take(5))
                 );
         }
         return new Error($"No node is named \"{name}\"; search for it to find its name.");
@@ -232,16 +239,13 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
 
     // The other side's node where the two sides meet: the child of their nearest common ancestor
     // on the other side's way up.
-    static Node MeetingLevel(Node subject, Node other)
+    static Node MeetingLevel(IReadOnlySet<Node> subjectAncestors, Node other)
     {
-        var subjectAncestors = subject.AncestorsAndSelf().ToHashSet();
         var node = other;
         while (node.Parent is not null && !subjectAncestors.Contains(node.Parent))
             node = node.Parent;
         return node;
     }
-
-    static bool IsAtOrInside(Node node, Node container) => node == container || node.Ancestors().Contains(container);
 
     static IEnumerable<Node> Sorted(IEnumerable<Node> nodes) => nodes.OrderBy(n => n.Name, StringComparer.Ordinal);
 
@@ -253,7 +257,8 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
                 node.LongName,
                 node.Type.ToString(),
                 node.Children.Count,
-                Shorten(node.Description)
+                Shorten(node.Description),
+                node.Alias
             );
 
     static string? Shorten(string? text)
@@ -265,13 +270,21 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
     }
 
     static CycleResult ToCycleResult(AcceptedCycleReport report, string status) =>
-        new(
+        ToCycleResult(
             report.Accepted.ContainerName,
             report.Accepted.MemberNames,
-            status,
+            report.HasChanged ? "Outgrown" : status,
             report.Accepted.Reason,
             report.StillOccurs
         );
+
+    static CycleResult ToCycleResult(
+        string container,
+        IReadOnlyList<string> members,
+        string status,
+        string? reason,
+        bool stillOccurs
+    ) => new(container, [.. members.Take(MaxCycleMembers)], members.Count, status, reason, stillOccurs);
 
     static RuleResult ToRuleResult(RuleReport report, bool isRule) =>
         new(
@@ -288,12 +301,15 @@ sealed class ModelQueries(IModelMgr modelMgr, INodeSearchService nodeSearchServi
                     .Select(v => new UnitDependency(v.SourceNodeName, v.TargetNodeName, v.LinkCount)),
             ],
             [
-                .. report.Allowed.Select(a => new AllowedDependency(
-                    a.Allowed.SourceName,
-                    a.Allowed.TargetName,
-                    a.Allowed.Reason,
-                    a.LinkCount
-                )),
-            ]
+                .. report
+                    .Allowed.Take(MaxAllowed)
+                    .Select(a => new AllowedDependency(
+                        a.Allowed.SourceName,
+                        a.Allowed.TargetName,
+                        a.Allowed.Reason,
+                        a.LinkCount
+                    )),
+            ],
+            report.Allowed.Count
         );
 }

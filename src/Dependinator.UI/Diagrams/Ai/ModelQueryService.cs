@@ -5,26 +5,26 @@ namespace Dependinator.UI.Diagrams.Ai;
 // The UI's side of IModelQueryService, the local RPC target the hosts ask (the LSP over the
 // tunnel to the VS Code webview, the web host in process). It is one per process, while models
 // live per scope (each browser tab of the web host is a scope with its own model), so it answers
-// on the scope that opened most recently, until that scope closes.
+// on the scope that opened most recently, and when that one closes, on the one before.
 [Singleton]
 sealed class ModelQueryService : IModelQueryService
 {
     readonly object syncRoot = new();
-    IModelQueries? current;
+    readonly List<IModelQueries> scopes = [];
 
-    public void SetCurrent(IModelQueries queries)
-    {
-        lock (syncRoot)
-            current = queries;
-    }
-
-    public void ClearCurrent(IModelQueries queries)
+    public void Add(IModelQueries queries)
     {
         lock (syncRoot)
         {
-            if (current == queries)
-                current = null;
+            scopes.Remove(queries);
+            scopes.Add(queries);
         }
+    }
+
+    public void Remove(IModelQueries queries)
+    {
+        lock (syncRoot)
+            scopes.Remove(queries);
     }
 
     public Task<Result<ModelSummary>> GetModelAsync() => Ask(q => q.GetModel());
@@ -39,7 +39,7 @@ sealed class ModelQueryService : IModelQueryService
     public Task<Result<PathsResult>> FindPathsAsync(string fromName, string toName) =>
         Ask(q => q.FindPaths(fromName, toName));
 
-    public Task<Result<IReadOnlyList<CycleResult>>> ListCyclesAsync() => Ask(q => q.ListCycles());
+    public Task<Result<CycleList>> ListCyclesAsync() => Ask(q => q.ListCycles());
 
     public Task<Result<IReadOnlyList<RuleResult>>> ListRulesAsync() => Ask(q => q.ListRules());
 
@@ -51,7 +51,7 @@ sealed class ModelQueryService : IModelQueryService
     {
         IModelQueries? queries;
         lock (syncRoot)
-            queries = current;
+            queries = scopes.LastOrDefault();
         if (queries is null)
             return Task.FromResult<Result<T>>(
                 new Error("No Dependinator diagram is open. Open the diagram and try again.")

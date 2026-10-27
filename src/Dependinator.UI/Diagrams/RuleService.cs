@@ -196,7 +196,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                 var (_, from, to) = resolved[i];
                 if (from is null || to is null)
                     continue;
-                if (!IsAtOrInside(link.Source, from) || !IsAtOrInside(link.Target, to))
+                if (!link.Source.IsAtOrInside(from) || !link.Target.IsAtOrInside(to))
                     continue;
                 var pair = (UnitGraph.UnitOf(link.Source), UnitGraph.UnitOf(link.Target));
                 var names = (pair.Item1.Name, pair.Item2.Name);
@@ -265,8 +265,6 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         }
         return (reports, lineIds);
     }
-
-    static bool IsAtOrInside(Node node, Node container) => node == container || node.Ancestors().Contains(container);
 }
 
 // What the rule review dialog decided: allow the dependency with the reason, or (editing an
