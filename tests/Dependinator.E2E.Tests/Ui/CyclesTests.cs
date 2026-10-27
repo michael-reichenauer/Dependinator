@@ -173,6 +173,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(field).ToBeVisibleAsync();
         ILocator ask = Page.GetByTestId("accept-cycle-suggest");
         ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
 
         // In test mode the app answers for Claude (no key or network): a pair is accepted, and
         // broken when asked again.
@@ -219,6 +220,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         // In test mode the app answers for Claude: a cycle of more than two is to be broken.
         ILocator cycle = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "TaskExtensions" });
         await cycle.GetByTestId("cycles-review").ClickAsync();
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
         await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToHaveAttributeAsync("data-verdict", "break");
         await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept anyway");
@@ -252,6 +254,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // In test mode a cycle of more than two is to be broken (see the test above).
         await open.Filter(new() { HasTextString = "TaskExtensions" }).GetByTestId("cycles-review").ClickAsync();
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
         await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToHaveAttributeAsync("data-verdict", "break");
         await Page.GetByTestId("accept-cycle-fix-later").ClickAsync();
@@ -289,7 +292,11 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator cycle = Page.GetByTestId("cycles-item").First;
         string member = (await cycle.Locator(".dep-cycles__members").InnerTextAsync()).Split(" ↔ ")[0];
         await cycle.GetByTestId("cycles-review").ClickAsync();
-        // Both routes are offered side by side before any answer.
+        // The routes wait behind "Get an AI opinion", then are offered side by side before any answer.
+        ILocator expand = Page.GetByTestId("accept-cycle-expand");
+        await Expect(expand).ToHaveAttributeAsync("aria-expanded", "false");
+        await Expect(Page.GetByTestId("accept-cycle-suggest")).ToHaveCountAsync(0);
+        await expand.ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-suggest")).ToHaveTextAsync("Ask Claude");
         // The prompt every route uses can be read first, without copying it.
         await Page.GetByTestId("accept-cycle-show-prompt").ClickAsync();
@@ -369,6 +376,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator fix = Page.GetByTestId("accept-cycle-fix-claude-code");
         ILocator ask = Page.GetByTestId("accept-cycle-suggest-code");
         ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
         await ask.ClickAsync();
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
         await Expect(fix).ToHaveCountAsync(0);

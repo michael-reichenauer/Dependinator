@@ -91,6 +91,7 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await violations.First.GetByTestId("rules-review").ClickAsync();
         await Expect(Page.GetByTestId("rule-review-text")).ToContainTextAsync("must not use");
+        await Page.GetByTestId("rule-review-expand").ClickAsync();
         await Page.GetByTestId("rule-review-show-prompt").ClickAsync();
         await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("## The dependency that breaks it");
         await Page.GetByTestId("prompt-dialog-close").ClickAsync();
