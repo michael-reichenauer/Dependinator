@@ -180,12 +180,19 @@
       { d => d.Suggest, suggest },
       { d => d.FixPrompt, s => ruleReviewService.GetFixPrompt(rule, violation, s) },
       { d => d.CopyPrompt, () => ruleReviewService.GetPromptAsync(rule, violation) },
+      { d => d.IsViolationGone, () => !IsViolated(rule, violation) },
     };
     if (await ShowReviewAsync(parameters, MaxWidth.Small) is not { } result)
       return;
     ruleService.Allow(rule, violation, result.Reason);
     openAllowed.Add(rule);
   }
+
+  // Whether the rule still reports this dependency, say after Claude Code's fix and a re-parse.
+  bool IsViolated(Modeling.Models.ArchitectureRule rule, RuleViolation violation) =>
+    ruleService.GetReports()
+      .Any(r => r.Rule == rule
+        && r.Violations.Any(v => v.SourceId == violation.SourceId && v.TargetId == violation.TargetId));
 
   async Task EditAllowedAsync(RuleReport report, AllowedReport allowed)
   {

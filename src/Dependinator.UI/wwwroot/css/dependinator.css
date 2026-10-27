@@ -1028,6 +1028,21 @@
     font-weight: 600;
 }
 
+/* Claude Code's report, its markdown rendered (SimpleMarkdown). */
+.dep-ai__markdown p,
+.dep-ai__markdown ul {
+    margin: 0 0 6px;
+}
+
+.dep-ai__markdown ul {
+    padding-left: 20px;
+}
+
+.dep-ai__markdown code {
+    font-family: monospace;
+    font-size: 0.8125rem;
+}
+
 /* The files Claude Code changed, in its report after "Fix with Claude Code". */
 .dep-ai__fix-files {
     margin: 0;

@@ -395,6 +395,9 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("accept-cycle-fix-report")).ToContainTextAsync("Claude Code changed 1 file");
         await Expect(Page.GetByTestId("accept-cycle-fix-files")).ToHaveTextAsync("src/Test.cs");
         await Expect(Page.GetByTestId("accept-cycle-fix-error")).ToHaveCountAsync(0);
+        // Test mode changes no code, so the re-parsed model still has the cycle: the choices stay.
+        await Expect(Page.GetByTestId("accept-cycle-not-fixed")).ToContainTextAsync("still there");
+        await Expect(Page.GetByTestId("accept-cycle-done")).ToHaveCountAsync(0);
         await Expect(fix).ToBeEnabledAsync();
     }
 }

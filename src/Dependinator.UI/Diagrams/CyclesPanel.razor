@@ -286,7 +286,7 @@
       : null;
     var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
       reason, isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s),
-      () => cyclePromptService.GetPromptAsync(cycle));
+      () => cyclePromptService.GetPromptAsync(cycle), () => cycleService.GetCycles().All(c => c.Key != cycle.Key));
     if (result is null)
       return;
     if (result.IsFixLater)
@@ -308,7 +308,7 @@
 
   async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit,
     Func<AiSource, Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest = null,
-    Func<CycleSuggestion, string>? fixPrompt = null, Func<Task<string>>? copyPrompt = null)
+    Func<CycleSuggestion, string>? fixPrompt = null, Func<Task<string>>? copyPrompt = null, Func<bool>? isCycleGone = null)
   {
     var parameters = new DialogParameters
     {
@@ -319,6 +319,7 @@
       { nameof(AcceptCycleDialog.Suggest), suggest },
       { nameof(AcceptCycleDialog.FixPrompt), fixPrompt },
       { nameof(AcceptCycleDialog.CopyPrompt), copyPrompt },
+      { nameof(AcceptCycleDialog.IsCycleGone), isCycleGone },
     };
     // Wider for a review, with its header buttons and Claude's answer, which can run to a paragraph.
     var maxWidth = isEdit ? MaxWidth.ExtraSmall : MaxWidth.Small;
