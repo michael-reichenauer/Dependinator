@@ -197,7 +197,7 @@ static class NodePrompt
         [
             .. ends.Where(n => !IsInside(n, node))
                 .GroupBy(Unit)
-                .Where(g => !IsInside(g.Key, node) && !IsInside(node, g.Key))
+                .Where(g => IsOutside(g.Key, node))
                 .Select(g => (Unit: g.Key, Links: g.Count()))
                 .OrderByDescending(u => u.Links)
                 .ThenBy(u => u.Unit.LongName, StringComparer.Ordinal),
@@ -209,11 +209,14 @@ static class NodePrompt
         HashSet<Node> units = [];
         foreach (var end in node.DescendantsAndSelfPreOrder().SelectMany(ends))
         {
-            if (!IsInside(end, node) && Unit(end) is var unit && !IsInside(unit, node) && !IsInside(node, unit))
+            if (!IsInside(end, node) && Unit(end) is var unit && IsOutside(unit, node))
                 units.Add(unit);
         }
         return units.Count;
     }
+
+    // A type at a link's far end that is neither inside the node nor around it.
+    static bool IsOutside(Node unit, Node node) => !IsInside(unit, node) && !IsInside(node, unit);
 
     static bool IsInside(Node other, Node node) => other == node || other.Ancestors().Contains(node);
 

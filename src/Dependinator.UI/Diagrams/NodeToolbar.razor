@@ -43,7 +43,7 @@ else if (HasSelectedLine)
             About Node …
           </MudMenuItem>
         }
-        @if (!IsSelectedNodeZone)
+        @if (!IsSelectedNodeZone && CanImproveComments)
         {
           <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.EditNote"
                        OnClick="ImproveComments"
@@ -585,6 +585,8 @@ else if (HasSelectedLine)
     if (TryGetSelectedNodeId(out var nodeId))
       aboutNodeService.ShowAsync(nodeId).RunInBackground();
   }
+
+  bool CanImproveComments => improveCommentsService.CanImprove([.. selectionService.SelectedNodeIds]);
 
   void ImproveComments()
   {

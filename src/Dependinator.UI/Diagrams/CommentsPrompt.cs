@@ -42,18 +42,24 @@ static class CommentsPrompt
         if (targets.Count == 0)
             return "";
 
+        var isBicep = targets.Any(IsBicep);
+        var isCSharp = targets.Any(t => !IsBicep(t));
+        var parts =
+            isCSharp && isBicep ? "namespaces, types, modules and resources"
+            : isBicep ? "modules and resources"
+            : "namespaces and types";
+
         var text = new StringBuilder();
         text.AppendLine(
-            "Please add or improve the code comments of the namespaces and types listed below. Dependinator, a tool "
-                + "that maps the structure and dependencies of this codebase as a diagram, shows these comments as their "
+            $"Please add or improve the code comments of the {parts} listed below. Dependinator, a tool that maps "
+                + "the structure and dependencies of this codebase as a diagram, shows these comments as their "
                 + "descriptions, so that a developer can see what each part is for without opening the code."
         );
-        if (targets.Count > 0 && Codebase(targets[0]) is { } codebase)
+        if (Codebase(targets[0]) is { } codebase)
             text.AppendLine().AppendLine(codebase);
 
-        text.AppendLine().Append(GoodComment);
-        var isBicep = targets.Any(t => t.Type is NodeType.Module or NodeType.Resource);
-        var isCSharp = targets.Any(t => t.Type is not (NodeType.Module or NodeType.Resource));
+        text.AppendLine()
+            .Append(isCSharp ? GoodComment : GoodComment.Replace("namespace or type", "module or resource"));
         text.AppendLine().AppendLine("## Where a comment goes").AppendLine();
         if (isCSharp)
             text.Append(CSharpPlaces);
@@ -61,7 +67,7 @@ static class CommentsPrompt
             text.Append(BicepPlaces);
         text.AppendLine().Append(Rules);
 
-        text.AppendLine().AppendLine($"## The {Count(targets.Count)}").AppendLine();
+        text.AppendLine().AppendLine($"## The {(targets.Count == 1 ? "one" : targets.Count)} to comment").AppendLine();
         foreach (var target in targets.Take(MaxTargets))
             AppendTarget(text, model, target);
         if (targets.Count > MaxTargets)
@@ -95,7 +101,7 @@ static class CommentsPrompt
     const string Rules = """
         ## Rules
 
-        - Change comments only: no code, no formatting, no renames, and no comments on members, unless the list below names them.
+        - Change comments only: no code, no formatting, no renames, and no comments on members.
         - Lines like `-> Some.Target: text` in a comment describe a dependency line in the diagram: keep them, below the description.
         - Leave a comment that is already good as it is.
         - If you cannot tell what something is for, write what you can tell from the code, and say in your summary which ones need a closer look.
@@ -133,5 +139,5 @@ static class CommentsPrompt
         return units.Count > MaxLinkedUnits ? $"{names} and {units.Count - MaxLinkedUnits} more" : names;
     }
 
-    static string Count(int count) => count == 1 ? "namespace or type" : $"{count} namespaces and types";
+    static bool IsBicep(Node node) => node.Type is NodeType.Module or NodeType.Resource;
 }

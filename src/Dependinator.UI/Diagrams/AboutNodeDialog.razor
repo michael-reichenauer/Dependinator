@@ -59,9 +59,12 @@
     </AiOpinion>
   </DialogContent>
   <DialogActions>
-    <MudButton Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.EditNote" OnClick="ImproveComments"
-               title="Have Claude Code add or rewrite the comments of this node, or of everything inside it"
-               data-testid="about-node-improve-comments">Improve comments …</MudButton>
+    @if (CanImproveComments)
+    {
+      <MudButton Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.EditNote" OnClick="ImproveComments"
+                 title="Have Claude Code add or rewrite the comments of this node, or of everything inside it"
+                 data-testid="about-node-improve-comments">Improve comments …</MudButton>
+    }
     <MudSpacer />
     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="about-node-close">Close</MudButton>
   </DialogActions>
@@ -77,6 +80,9 @@
 
   // Asks Claude (or Claude Code) the question, telling each step; null where the host cannot ask.
   [Parameter] public Func<string, AiSource, Action<SuggestStep>, Task<Result<NodeAnswer>>>? Ask { get; set; }
+
+  // The node, or something inside it, has a comment the parser reads.
+  [Parameter] public bool CanImproveComments { get; set; }
 
   string Question { get; set; } = NodePrompt.DefaultQuestion;
   string? copyNote;

@@ -93,6 +93,7 @@ class AboutNodeService(
             { d => d.Facts, facts },
             { d => d.GetPrompt, question => GetPromptAsync(nodeId, question) },
             { d => d.Ask, ask },
+            { d => d.CanImproveComments, improveCommentsService.CanImprove([nodeId]) },
         };
         var options = new DialogOptions
         {

@@ -75,7 +75,8 @@ public class CommentsPromptTests
             .Build(model, CommentsPrompt.Targets([parsing], isBelow: true))
             .ReplaceLineEndings("\n");
 
-        Assert.Contains("## The 3 namespaces and types\n", prompt);
+        Assert.Contains("## The 3 to comment\n", prompt);
+        Assert.StartsWith("Please add or improve the code comments of the namespaces and types listed below.", prompt);
         Assert.Contains(
             "### namespace Parsing\nIts comment goes in /repo/src/Parsing.cs, line 3\nComment now: none\n",
             prompt

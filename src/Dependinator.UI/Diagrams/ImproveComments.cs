@@ -19,6 +19,9 @@ interface IImproveCommentsService
 {
     Task ShowAsync(IReadOnlyList<NodeId> nodeIds);
 
+    // Whether the nodes, or anything inside them, have a comment the parser reads.
+    bool CanImprove(IReadOnlyList<NodeId> nodeIds);
+
     CommentsScope GetScope(IReadOnlyList<NodeId> nodeIds, bool isBelow);
 
     // The prompt for Claude Code; empty when nothing in the scope can have a comment.
@@ -32,20 +35,23 @@ class ImproveCommentsService(IModelMgr modelMgr, IAiService aiService, IDialogSe
     public async Task ShowAsync(IReadOnlyList<NodeId> nodeIds)
     {
         string name;
+        bool isSeveral;
         bool hasChildren;
         using (var model = modelMgr.UseModel())
         {
             var nodes = Nodes(model, nodeIds);
             if (nodes.Count == 0)
                 return;
-            name = nodes.Count == 1 ? nodes[0].LongName : $"the {nodes.Count} selected nodes";
-            hasChildren = nodes.Any(n => n.Children.Count > 0);
+            isSeveral = nodes.Count > 1;
+            name = isSeveral ? $"the {nodes.Count} selected nodes" : nodes[0].LongName;
+            // Members are children too, but have no comment to improve here.
+            hasChildren = nodes.Any(n => n.DescendantsAndSelfPreOrder().Skip(1).Any(CommentsPrompt.IsCommentable));
         }
 
         var parameters = new DialogParameters<ImproveCommentsDialog>
         {
             { d => d.Name, name },
-            { d => d.IsSeveral, nodeIds.Count > 1 },
+            { d => d.IsSeveral, isSeveral },
             { d => d.HasChildren, hasChildren },
             { d => d.CanRun, await aiService.CanFixWithClaudeCodeAsync() },
             { d => d.GetScope, isBelow => GetScope(nodeIds, isBelow) },
@@ -58,6 +64,12 @@ class ImproveCommentsService(IModelMgr modelMgr, IAiService aiService, IDialogSe
             FullWidth = true,
         };
         await dialogService.ShowAsync<ImproveCommentsDialog>(null, parameters, options);
+    }
+
+    public bool CanImprove(IReadOnlyList<NodeId> nodeIds)
+    {
+        using var model = modelMgr.UseModel();
+        return Nodes(model, nodeIds).Any(n => n.DescendantsAndSelfPreOrder().Any(CommentsPrompt.IsCommentable));
     }
 
     public CommentsScope GetScope(IReadOnlyList<NodeId> nodeIds, bool isBelow)
