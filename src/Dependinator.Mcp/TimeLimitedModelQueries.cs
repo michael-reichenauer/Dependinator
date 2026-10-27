@@ -38,7 +38,7 @@ sealed class TimeLimitedModelQueries(IModelQueryService inner, TimeSpan timeLimi
         using var cts = new CancellationTokenSource(timeLimit);
         try
         {
-            if (isConnected is not null && !await isConnected())
+            if (isConnected is not null && !await isConnected().WithCancellation(cts.Token))
                 return new Error(NoAnswerMessage);
             return await question().WithCancellation(cts.Token);
         }
