@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.VsCode;
@@ -27,6 +28,7 @@ class InitService : IInitService
     readonly IThemeService themeService;
     readonly IKeyboardService keyboardService;
     readonly ILayoutRefineService layoutRefineService;
+    readonly ModelQueries modelQueries;
 
     public InitService(
         IScreenService screenService,
@@ -39,7 +41,8 @@ class InitService : IInitService
         IViewOptions viewOptions,
         IThemeService themeService,
         IKeyboardService keyboardService,
-        ILayoutRefineService layoutRefineService
+        ILayoutRefineService layoutRefineService,
+        ModelQueries modelQueries
     )
     {
         this.screenService = screenService;
@@ -53,6 +56,7 @@ class InitService : IInitService
         this.themeService = themeService;
         this.keyboardService = keyboardService;
         this.layoutRefineService = layoutRefineService;
+        this.modelQueries = modelQueries;
     }
 
     public async Task InitAsync(IUIComponent component)
@@ -95,5 +99,7 @@ class InitService : IInitService
         await modelListService.InitAsync();
         await canvasService.InitAsync();
         layoutRefineService.Start();
+        // AI agents' questions (Dependinator's MCP server) are answered on this tab's model.
+        modelQueries.Activate();
     }
 }
