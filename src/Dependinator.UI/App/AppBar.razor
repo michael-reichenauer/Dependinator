@@ -390,6 +390,11 @@
                              data-testid="menu-tips">
                     Show Tips
                 </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.NewReleases" OnClick="ShowWhatsNewAsync"
+                             title="Opens the change log: what is new in each release, and what is coming in the next one."
+                             data-testid="menu-whats-new">
+                    What's New
+                </MudMenuItem>
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.BugReport"
                              OnClick="() => issueReportService.OpenAsync(IssueKind.Bug)"
                              title="Opens a new GitHub issue with the app version and environment filled in."
@@ -787,6 +792,11 @@
     Task ShowAbout() => aboutBox.ShowAsync();
 
     Task ShowHelpAsync() => vsCodeSendService.OpenHelpAsync();
+
+    // The change log on main, as of the latest release (the release workflow merges dev into main).
+    const string ChangeLogUrl = "https://github.com/michael-reichenauer/Dependinator/blob/main/CHANGELOG.md";
+
+    Task ShowWhatsNewAsync() => vsCodeSendService.OpenExternalAsync(ChangeLogUrl);
 
     void OnUiStateChanged() => _ = InvokeAsync(StateHasChanged);
 

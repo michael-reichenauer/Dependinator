@@ -223,6 +223,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the
   extension host, like Help; bug reports get the `bug` label from their form.
+- **What's New (Oct 27).** A Help menu item opens `CHANGELOG.md` on GitHub (main, so the
+  latest release's notes plus what is unreleased at that point).
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design
