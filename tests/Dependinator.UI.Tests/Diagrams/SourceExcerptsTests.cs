@@ -18,7 +18,7 @@ public class SourceExcerptsTests
     {
         var text = Lines(["// Why this lives here", "namespace N;", "", "class A", "{", "}"]);
 
-        var excerpts = SourceExcerpts.Cut(new SourceUnit(new FileSpan(Path, 4, 6), []), text);
+        var excerpts = SourceExcerpts.Cut(new SourceUnit(new FileSpan(Path, 3, 5), []), text);
 
         var excerpt = Assert.Single(excerpts);
         Assert.Equal((1, 6), (excerpt.StartLine, excerpt.EndLine));
@@ -36,7 +36,7 @@ public class SourceExcerptsTests
             Filler(100, "int y;")
         );
 
-        var excerpts = SourceExcerpts.Cut(new SourceUnit(new FileSpan(Path, 104, 109), []), text);
+        var excerpts = SourceExcerpts.Cut(new SourceUnit(new FileSpan(Path, 103, 108), []), text);
 
         var excerpt = Assert.Single(excerpts);
         Assert.Equal((101, 109), (excerpt.StartLine, excerpt.EndLine));
@@ -59,7 +59,7 @@ public class SourceExcerptsTests
             ["}"]
         );
 
-        var excerpts = SourceExcerpts.Cut(new SourceUnit(new FileSpan(Path, 1, 300), [101, 51, 103]), text);
+        var excerpts = SourceExcerpts.Cut(new SourceUnit(new FileSpan(Path, 0, 299), [100, 50, 102]), text);
 
         Assert.Equal([(51, 54), (100, 103)], excerpts.Select(e => (e.StartLine, e.EndLine)));
         Assert.Equal("    }", excerpts[0].Lines[^1]);

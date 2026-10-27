@@ -1078,6 +1078,11 @@
     word-break: break-word;
 }
 
+/* The Improve comments dialog's introduction. */
+.dep-about__text {
+    font-size: 0.875rem;
+}
+
 .dep-about__comment--none,
 .dep-about__facts {
     color: var(--mud-palette-text-secondary);

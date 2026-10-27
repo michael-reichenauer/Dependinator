@@ -3,7 +3,8 @@ using FileSpan = Dependinator.Core.Parsing.FileSpan;
 namespace Dependinator.UI.Diagrams;
 
 // A type (or module, resource) whose source to show: where it is, and the declaration lines of
-// the members that matter (the model knows a member's first line only).
+// the members that matter (the model knows a member's first line only). Lines are 0-based, as the
+// parsers give them.
 record SourceUnit(FileSpan Span, IReadOnlyList<int> MemberLines);
 
 // Consecutive lines of a source file, from StartLine (1-based).
@@ -28,13 +29,14 @@ static class SourceExcerpts
         if (lines.Length <= MaxWholeFileLines)
             return [new(path, 1, lines)];
 
-        var typeStart = CommentsStart(lines, Math.Min(unit.Span.StartLine, lines.Length));
-        var typeEnd = Math.Min(unit.Span.EndLine, lines.Length);
+        var typeStart = CommentsStart(lines, Math.Min(unit.Span.StartLine + 1, lines.Length));
+        var typeEnd = Math.Min(unit.Span.EndLine + 1, lines.Length);
         if (typeEnd - typeStart + 1 <= MaxTypeLines)
             return [Excerpt(path, lines, typeStart, typeEnd)];
 
         var ranges = unit
-            .MemberLines.Where(line => line >= 1 && line <= lines.Length)
+            .MemberLines.Select(line => line + 1)
+            .Where(line => line >= 1 && line <= lines.Length)
             .Order()
             .Select(line => (Start: CommentsStart(lines, line), End: MemberEnd(lines, line)));
         return [.. Merge(ranges).Select(r => Excerpt(path, lines, r.Start, r.End))];

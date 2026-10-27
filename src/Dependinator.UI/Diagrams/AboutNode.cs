@@ -71,6 +71,7 @@ class AboutNodeService(
     IModelMgr modelMgr,
     IWorkspaceFileService workspaceFileService,
     IAiService aiService,
+    IImproveCommentsService improveCommentsService,
     IDialogService dialogService
 ) : IAboutNodeService
 {
@@ -92,6 +93,7 @@ class AboutNodeService(
             { d => d.Facts, facts },
             { d => d.GetPrompt, question => GetPromptAsync(nodeId, question) },
             { d => d.Ask, ask },
+            { d => d.CanImproveComments, improveCommentsService.CanImprove([nodeId]) },
         };
         var options = new DialogOptions
         {
@@ -99,7 +101,9 @@ class AboutNodeService(
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
         };
-        await dialogService.ShowAsync<AboutNodeDialog>(null, parameters, options);
+        var dialog = await dialogService.ShowAsync<AboutNodeDialog>(null, parameters, options);
+        if (await dialog.Result is { Canceled: false, Data: AboutNodeDialog.ImproveCommentsResult })
+            await improveCommentsService.ShowAsync([nodeId]);
     }
 
     public async Task<string> GetPromptAsync(NodeId nodeId, string question)

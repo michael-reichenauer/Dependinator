@@ -7,7 +7,7 @@
    why is it here?" until the user writes another, for Claude, Claude Code or the user's AI chat
    (AiOpinion, open at once since asking is what the dialog is for). The answer is shown, not
    saved: it can be copied. Each answer is kept while the dialog is open, so questions can be
-   compared. *@
+   compared. "Improve comments" closes it for the Improve comments dialog (ImproveCommentsService). *@
 <MudDialog>
   <TitleContent>
     <MudText Typo="Typo.h6">About @Facts.Kind</MudText>
@@ -59,6 +59,13 @@
     </AiOpinion>
   </DialogContent>
   <DialogActions>
+    @if (CanImproveComments)
+    {
+      <MudButton Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.EditNote" OnClick="ImproveComments"
+                 title="Have Claude Code add or rewrite the comments of this node, or of everything inside it"
+                 data-testid="about-node-improve-comments">Improve comments …</MudButton>
+    }
+    <MudSpacer />
     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="about-node-close">Close</MudButton>
   </DialogActions>
 </MudDialog>
@@ -73,6 +80,9 @@
 
   // Asks Claude (or Claude Code) the question, telling each step; null where the host cannot ask.
   [Parameter] public Func<string, AiSource, Action<SuggestStep>, Task<Result<NodeAnswer>>>? Ask { get; set; }
+
+  // The node, or something inside it, has a comment the parser reads.
+  [Parameter] public bool CanImproveComments { get; set; }
 
   string Question { get; set; } = NodePrompt.DefaultQuestion;
   string? copyNote;
@@ -99,4 +109,9 @@
   }
 
   void Close() => MudDialog.Close();
+
+  // The service opens the Improve comments dialog once this one is closed.
+  void ImproveComments() => MudDialog.Close(DialogResult.Ok(ImproveCommentsResult));
+
+  public const string ImproveCommentsResult = "improve-comments";
 }

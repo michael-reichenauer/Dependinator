@@ -1,0 +1,143 @@
+@using Dependinator.UI.Diagrams.Ai
+@using MudBlazor
+@inject IClipboardService clipboardService
+@inject IDialogService dialogService
+
+@* Improve Comments (ImproveCommentsService): Claude Code adds or rewrites the comments of a node's
+   namespaces and types, or of everything inside it, which the diagram shows as their
+   descriptions. The scope shows how many that is and in how many files, with a warning when one
+   run may not finish in time. "Improve with Claude Code" (ClaudeCodeFix, where the experimental
+   route is on) runs it on the code as it is, on the current branch; "Copy prompt" is for any AI
+   that can change the code. Once Claude Code changed files, only "Done" is left. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">Improve comments</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-about__text">
+      Claude Code adds or rewrites the comments of namespaces and types, which the diagram shows as their
+      descriptions. It reads the code and the dependencies first, changes comments only, and runs no commands.
+    </div>
+    @if (HasChildren)
+    {
+      <MudRadioGroup T="bool" Value="isBelow" ValueChanged="SetBelow" Disabled="@IsLocked" Class="mt-2"
+                     data-testid="improve-comments-scope">
+        <MudRadio T="bool" Value="false" Dense="true" data-testid="improve-comments-only">
+          @(IsSeveral ? "Only the selected nodes" : $"Only {Name}")
+        </MudRadio>
+        <MudRadio T="bool" Value="true" Dense="true" data-testid="improve-comments-below">
+          @(IsSeveral ? "The selected nodes and everything inside them" : $"{Name} and everything inside it")
+        </MudRadio>
+      </MudRadioGroup>
+    }
+    else
+    {
+      <div class="dep-cycles__dialog-cycle mt-2"><span class="dep-cycles__container">@Name</span></div>
+    }
+    <div class="dep-about__facts" data-testid="improve-comments-count">@CountText</div>
+    @if (scope.Targets > CommentsPrompt.ManyTargets)
+    {
+      <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2" data-testid="improve-comments-many">
+        That is a lot for one run: Claude Code may not finish in time. A smaller part, a namespace say, works better.
+      </MudAlert>
+    }
+    @if (!CanRun && scope.Targets > 0)
+    {
+      <div class="dep-ai__suggest-note mt-2" data-testid="improve-comments-no-claude-code">
+        Copy the prompt into Claude Code, or another AI that can change the code. Turn on Settings › Use Claude Code
+        (in VS Code) to run it from here.
+      </div>
+    }
+    @if (copyNote is not null)
+    {
+      <div class="dep-ai__suggest-note mt-2" data-testid="improve-comments-copied">@copyNote</div>
+    }
+    @if (CanRun)
+    {
+      <ClaudeCodeFix @ref="fixPanel" TestId="improve-comments" GetFixPrompt="Prompt" OnStateChanged="StateHasChanged"
+                     RunningText="Claude Code is improving the comments…" ConfirmTitle="Improve comments with Claude Code?"
+                     ConfirmYesText="Improve anyway" />
+    }
+  </DialogContent>
+  <DialogActions>
+    <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="@(scope.Targets == 0)" OnClick="ShowPromptAsync"
+               data-testid="improve-comments-show-prompt">Show prompt</MudButton>
+    <MudSpacer />
+    @if (IsDone)
+    {
+      <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="improve-comments-done">Done</MudButton>
+    }
+    else
+    {
+      <MudButton OnClick="Close" data-testid="improve-comments-cancel">Cancel</MudButton>
+      <MudButton Variant="@(CanRun ? Variant.Text : Variant.Filled)" Color="@(CanRun ? Color.Default : Color.Primary)"
+                 StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Disabled="@(scope.Targets == 0)"
+                 OnClick="CopyPromptAsync" data-testid="improve-comments-copy">Copy prompt</MudButton>
+      @if (CanRun)
+      {
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
+                   Disabled="@(scope.Targets == 0 || IsLocked)" OnClick="() => fixPanel!.StartAsync()"
+                   data-testid="improve-comments-run">Improve with Claude Code</MudButton>
+      }
+    }
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  // The node's long name, or "the N selected nodes".
+  [Parameter] public string Name { get; set; } = "";
+  [Parameter] public bool IsSeveral { get; set; }
+  [Parameter] public bool HasChildren { get; set; }
+
+  // Whether "Improve with Claude Code" can run here: the route is on and the model has a folder.
+  [Parameter] public bool CanRun { get; set; }
+
+  [Parameter, EditorRequired] public Func<bool, CommentsScope> GetScope { get; set; } = null!;
+  [Parameter, EditorRequired] public Func<bool, string> GetPrompt { get; set; } = null!;
+
+  ClaudeCodeFix? fixPanel;
+  bool isBelow;
+  CommentsScope scope = new(0, 0);
+  string? copyNote;
+
+  // Claude Code runs or ran: the scope stays as it was asked.
+  bool IsLocked => fixPanel is { IsRunning: true } or { HasChanged: true };
+
+  bool IsDone => fixPanel is { HasChanged: true };
+
+  string CountText =>
+    scope.Targets == 0
+      ? "Nothing here has a comment Dependinator reads: only namespaces and types (Bicep modules and resources) do."
+      : $"{Count(scope.Targets, "namespace or type", "namespaces and types")} in {Count(scope.Files, "file", "files")}";
+
+  // A node with children starts with everything inside it: commenting a namespace alone is rarely the point.
+  protected override void OnInitialized()
+  {
+    isBelow = HasChildren;
+    scope = GetScope(isBelow);
+  }
+
+  void SetBelow(bool value)
+  {
+    isBelow = value;
+    scope = GetScope(isBelow);
+    copyNote = null;
+  }
+
+  string Prompt() => GetPrompt(isBelow);
+
+  async Task CopyPromptAsync()
+  {
+    copyNote = await clipboardService.CopyAsync(Prompt())
+      ? "The prompt is copied. Paste it into Claude Code, or another AI that can change the code, then re-parse to see the comments."
+      : "Could not copy to the clipboard.";
+  }
+
+  Task ShowPromptAsync() => PromptDialog.ShowAsync(dialogService, Prompt());
+
+  static string Count(int count, string one, string many) => count == 1 ? $"1 {one}" : $"{count:N0} {many}";
+
+  void Close() => MudDialog.Close();
+}

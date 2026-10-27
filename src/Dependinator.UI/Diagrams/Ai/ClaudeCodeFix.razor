@@ -21,7 +21,7 @@
   <div class="dep-ai__suggestion dep-ai__suggestion--pending" data-testid="@Id("fixing")">
     <div class="dep-ai__suggest-pending">
       <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-      <span>Claude Code is changing the code… @Elapsed</span>
+      <span>@RunningText @Elapsed</span>
       <MudSpacer />
       <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="StopAsync" data-testid="@Id("fix-stop")">Stop</MudButton>
     </div>
@@ -89,6 +89,11 @@ else if (report is not null)
   [Parameter] public string ResolvedText { get; set; } = "The problem is gone.";
   [Parameter] public string StillThereText { get; set; } = "The problem is still there after the re-parse.";
   [Parameter] public string CheckingText { get; set; } = "Once the model is re-parsed, this shows whether the problem is gone.";
+
+  // The texts that name the change: while it runs, and in the warning before it.
+  [Parameter] public string RunningText { get; set; } = "Claude Code is changing the code…";
+  [Parameter] public string ConfirmTitle { get; set; } = "Fix with Claude Code?";
+  [Parameter] public string ConfirmYesText { get; set; } = "Fix anyway";
 
   // Claude Code changed files: the dialog offers Done, unless a re-parse shows the problem is still there.
   public bool HasChanged => report is { ChangedFiles.Count: > 0 };
@@ -231,9 +236,9 @@ else if (report is not null)
     var answer = await dialogService.ShowMessageBoxAsync(
       new MessageBoxOptions
       {
-        Title = "Fix with Claude Code?",
+        Title = ConfirmTitle,
         Message = warning,
-        YesText = "Fix anyway",
+        YesText = ConfirmYesText,
         CancelText = "Cancel",
       }
     );
