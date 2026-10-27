@@ -4,6 +4,7 @@ using Anthropic.Exceptions;
 using Anthropic.Models.Beta;
 using Anthropic.Models.Beta.Messages;
 using Dependinator.Core.Claude;
+using Dependinator.Core.ModelQueries;
 
 namespace Dependinator.Claude;
 
@@ -16,7 +17,7 @@ namespace Dependinator.Claude;
 // accept is remembered, so the UI can ask for a new one rather than send it again. The experimental
 // local route runs Claude Code instead (ClaudeCodeRunner).
 [Singleton]
-class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
+class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? modelToolsServer = null) : IClaudeService
 {
     const string Model = "claude-opus-5-5";
     const string QuickModel = "claude-sonnet-5-5";
@@ -121,11 +122,22 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
         }
     }
 
-    public Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema, string? codeFolder) =>
-        (AskClaudeCode ?? ClaudeCodeRunner.AskAsync)(prompt, jsonSchema, codeFolder);
+    // Without a server for the model tools (yet), Claude Code answers from the prompt alone.
+    public Task<Result<string>> AskClaudeCodeAsync(
+        string prompt,
+        string jsonSchema,
+        string? codeFolder,
+        bool withModelTools
+    ) =>
+        (AskClaudeCode ?? ClaudeCodeRunner.AskAsync)(
+            prompt,
+            jsonSchema,
+            codeFolder,
+            withModelTools ? modelToolsServer?.Address : null
+        );
 
     // Runs Claude Code; tests replace it.
-    internal Func<string, string, string?, Task<Result<string>>>? AskClaudeCode { get; init; }
+    internal Func<string, string, string?, ModelToolsAddress?, Task<Result<string>>>? AskClaudeCode { get; init; }
 
     CancellationTokenSource? runningFix;
 

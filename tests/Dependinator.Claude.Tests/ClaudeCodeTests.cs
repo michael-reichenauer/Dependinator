@@ -1,4 +1,5 @@
 using Dependinator.Core.Claude;
+using Dependinator.Core.ModelQueries;
 
 namespace Dependinator.Claude.Tests;
 
@@ -15,7 +16,7 @@ public class ClaudeCodeTests
     ClaudeService Service() =>
         new(keys.Object)
         {
-            AskClaudeCode = (prompt, _, _) =>
+            AskClaudeCode = (prompt, _, _, _) =>
             {
                 asked.Add(prompt);
                 return Task.FromResult<Result<string>>("""{"verdict":"Accept"}""");
@@ -25,7 +26,7 @@ public class ClaudeCodeTests
     [Fact]
     public async Task AskClaudeCodeAsync_ShouldAsk_WithoutAnApiKey()
     {
-        var answer = AssertOk(await Service().AskClaudeCodeAsync("Hello", Schema, null));
+        var answer = AssertOk(await Service().AskClaudeCodeAsync("Hello", Schema, null, false));
 
         Assert.Equal("""{"verdict":"Accept"}""", answer);
         Assert.Equal(["Hello"], asked);
@@ -55,6 +56,61 @@ public class ClaudeCodeTests
             arguments
         );
         Assert.Contains("read and search it", arguments[11]);
+    }
+
+    [Fact]
+    public async Task AskClaudeCodeAsync_ShouldPassTheModelToolsServer_WhenAskedWithThem()
+    {
+        var modelTools = new Mock<IModelToolsServer>();
+        modelTools.Setup(m => m.Address).Returns(new ModelToolsAddress("http://127.0.0.1:1234/mcp", "secret"));
+        List<ModelToolsAddress?> passed = [];
+        var service = new ClaudeService(keys.Object, modelTools.Object)
+        {
+            AskClaudeCode = (_, _, _, address) =>
+            {
+                passed.Add(address);
+                return Task.FromResult<Result<string>>("{}");
+            },
+        };
+
+        AssertOk(await service.AskClaudeCodeAsync("Hello", Schema, null, true));
+        AssertOk(await service.AskClaudeCodeAsync("Hello", Schema, null, false));
+
+        Assert.Equal([new ModelToolsAddress("http://127.0.0.1:1234/mcp", "secret"), null], passed);
+    }
+
+    [Fact]
+    public void Arguments_ShouldAddTheModelToolsServerAlone_WhenGivenItsConfig()
+    {
+        var arguments = ClaudeCodeRunner.Arguments("{}", ClaudeCodeRunner.Mode.ReadCode, "/tmp/x/mcp.json").ToList();
+
+        Assert.Equal("/tmp/x/mcp.json", arguments[arguments.IndexOf("--mcp-config") + 1]);
+        Assert.Single(arguments, a => a == "--strict-mcp-config");
+        Assert.Equal("mcp__dependinator", arguments[arguments.IndexOf("--allowedTools") + 1]);
+        Assert.Equal("Read,Grep,Glob", arguments[arguments.IndexOf("--tools") + 1]);
+        Assert.Contains("check_rule", arguments[arguments.IndexOf("--append-system-prompt") + 1]);
+        Assert.Equal("--no-session-persistence", arguments[^1]);
+    }
+
+    [Fact]
+    public void Arguments_ShouldGiveTheModelTools_WithoutACodeFolder()
+    {
+        var arguments = ClaudeCodeRunner.Arguments("{}", ClaudeCodeRunner.Mode.NoTools, "/tmp/x/mcp.json").ToList();
+
+        Assert.Equal("", arguments[arguments.IndexOf("--tools") + 1]);
+        Assert.Contains("--mcp-config", arguments);
+        Assert.Contains("check_rule", arguments[arguments.IndexOf("--append-system-prompt") + 1]);
+    }
+
+    [Fact]
+    public void McpConfig_ShouldNameTheServer_WithItsToken()
+    {
+        var config = ClaudeCodeRunner.McpConfig(new ModelToolsAddress("http://127.0.0.1:1234/mcp", "secret"));
+
+        Assert.Equal(
+            """{"mcpServers":{"dependinator":{"type":"http","url":"http://127.0.0.1:1234/mcp","headers":{"Authorization":"Bearer secret"}}}}""",
+            config
+        );
     }
 
     [Fact]

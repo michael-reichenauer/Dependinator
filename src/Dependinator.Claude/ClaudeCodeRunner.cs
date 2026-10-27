@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json;
+using Dependinator.Core.ModelQueries;
 
 namespace Dependinator.Claude;
 
@@ -14,7 +15,11 @@ namespace Dependinator.Claude;
 // no MCP servers. Without a folder (the demo model, say) it gets no tools and a new private
 // temporary folder, so nothing planted in a shared temp folder is loaded. FixAsync also lets it
 // edit and create files in the folder (Edit, Write, accepted without asking), still with no
-// command tools, so it cannot build or run tests; edits outside the folder are denied too.
+// command tools, so it cannot build or run tests; edits outside the folder are denied too. Given
+// the address of Dependinator's own MCP server (model tools), an ask may also use its read-only
+// tools on the open diagram's model: that server only, from a config file in a private folder,
+// since its token would show in the process list on the command line.
+
 static class ClaudeCodeRunner
 {
     static readonly TimeSpan AskTimeout = TimeSpan.FromMinutes(5);
@@ -43,6 +48,15 @@ static class ClaudeCodeRunner
         + "needs, and nothing outside the working directory. If an assumption does not hold and you cannot make "
         + "the change safely, change nothing and say why. List every file you changed or created.";
 
+    // The MCP server's name in the config, which names its tools: mcp__dependinator__list_rules.
+    const string ModelToolsServerName = "dependinator";
+
+    const string ModelToolsInstruction =
+        "You can also ask Dependinator, which shows this code as a dependency model, through its tools "
+        + "(mcp__dependinator__...): get_model, list_children, search_nodes, get_dependencies, find_paths, "
+        + "list_cycles, list_rules and check_rule. They answer on the model the user has open, so use them for "
+        + "what the prompt leaves out.";
+
     public enum Mode
     {
         NoTools,
@@ -50,32 +64,68 @@ static class ClaudeCodeRunner
         FixCode,
     }
 
-    public static async Task<Result<string>> AskAsync(string prompt, string jsonSchema, string? codeFolder)
+    public static async Task<Result<string>> AskAsync(
+        string prompt,
+        string jsonSchema,
+        string? codeFolder,
+        ModelToolsAddress? modelTools = null
+    )
     {
         var schema = Result.Catch(() => JsonDocument.Parse(jsonSchema).RootElement.GetRawText());
         if (schema is not string compactSchema)
             return new Error("The answer schema is not valid JSON.", schema.Error);
 
-        if (IsFolder(codeFolder))
-            return await RunAsync(prompt, Arguments(compactSchema, Mode.ReadCode), codeFolder!, AskTimeout, default);
-
+        // A private folder for the MCP config, and the working folder when there is no code folder.
         var folder = Result.Catch(() => Directory.CreateTempSubdirectory("dependinator-claude-"));
-        if (folder is not DirectoryInfo workingFolder)
+        if (folder is not DirectoryInfo privateFolder)
             return new Error("Could not create a folder for Claude Code.", folder.Error);
         try
         {
-            return await RunAsync(
-                prompt,
-                Arguments(compactSchema, Mode.NoTools),
-                workingFolder.FullName,
-                AskTimeout,
-                default
-            );
+            string? mcpConfig = null;
+            if (modelTools is not null)
+            {
+                mcpConfig = Path.Combine(privateFolder.FullName, "mcp.json");
+                await File.WriteAllTextAsync(mcpConfig, McpConfig(modelTools));
+            }
+
+            return IsFolder(codeFolder)
+                ? await RunAsync(
+                    prompt,
+                    Arguments(compactSchema, Mode.ReadCode, mcpConfig),
+                    codeFolder!,
+                    AskTimeout,
+                    default
+                )
+                : await RunAsync(
+                    prompt,
+                    Arguments(compactSchema, Mode.NoTools, mcpConfig),
+                    privateFolder.FullName,
+                    AskTimeout,
+                    default
+                );
+        }
+        catch (IOException e)
+        {
+            return new Error("Could not write Claude Code's MCP config.", e);
         }
         finally
         {
-            Result.Catch(() => workingFolder.Delete(recursive: true));
+            Result.Catch(() => privateFolder.Delete(recursive: true));
         }
+    }
+
+    // Claude Code's MCP config with Dependinator's server only.
+    internal static string McpConfig(ModelToolsAddress modelTools)
+    {
+        var server = new Dictionary<string, object> { ["type"] = "http", ["url"] = modelTools.Url };
+        if (modelTools.Token is { Length: > 0 } token)
+            server["headers"] = new Dictionary<string, string> { ["Authorization"] = $"Bearer {token}" };
+        return JsonSerializer.Serialize(
+            new Dictionary<string, object>
+            {
+                ["mcpServers"] = new Dictionary<string, object> { [ModelToolsServerName] = server },
+            }
+        );
     }
 
     // Lets Claude Code change the code in codeFolder as the prompt asks; cancelled by ct (the user).
@@ -180,7 +230,28 @@ static class ClaudeCodeRunner
         );
     }
 
-    internal static IReadOnlyList<string> Arguments(string schema, Mode mode) =>
+    // With an MCP config (only for an ask), the model tools come on top: that server alone, its
+    // tools allowed without asking, and a word on them in the system prompt.
+    internal static IReadOnlyList<string> Arguments(string schema, Mode mode, string? mcpConfig = null)
+    {
+        var arguments = BaseArguments(schema, mode);
+        if (mcpConfig is null || mode is Mode.FixCode)
+            return arguments;
+
+        List<string> withTools = [.. arguments.Where(a => a != "--strict-mcp-config")];
+        var promptIndex = withTools.IndexOf("--append-system-prompt");
+        if (promptIndex >= 0)
+            withTools[promptIndex + 1] += " " + ModelToolsInstruction;
+        else
+            withTools.InsertRange(withTools.Count - 1, ["--append-system-prompt", ModelToolsInstruction]);
+        withTools.InsertRange(
+            withTools.Count - 1,
+            ["--mcp-config", mcpConfig, "--strict-mcp-config", "--allowedTools", $"mcp__{ModelToolsServerName}"]
+        );
+        return withTools;
+    }
+
+    static IReadOnlyList<string> BaseArguments(string schema, Mode mode) =>
         mode switch
         {
             Mode.NoTools =>

@@ -1,5 +1,6 @@
 using System.Net;
 using Dependinator.Core;
+using Dependinator.Core.ModelQueries;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -57,6 +58,18 @@ public static class DependinatorMcpExtensions
         );
         return app.MapMcp(Path);
     }
+
+    // Tells IModelToolsServer where the endpoint is once the host listens, so the Claude Code runs
+    // the app starts can use the tools: the first address, by a loopback name.
+    public static void PublishModelToolsAddress(this WebApplication app) =>
+        app.Lifetime.ApplicationStarted.Register(() =>
+        {
+            var address = app.Urls.FirstOrDefault(u => u.StartsWith("http://", StringComparison.Ordinal));
+            if (address is null || !Uri.TryCreate(address, UriKind.Absolute, out var uri))
+                return;
+            var url = new UriBuilder(uri) { Host = "localhost", Path = Path }.Uri.ToString();
+            app.Services.GetRequiredService<IModelToolsServer>().SetAddress(new ModelToolsAddress(url, null));
+        });
 
     // The server is for agents on this computer: the connection must come from the loopback
     // address (the dev host may listen on others too). A web page can reach localhost as well,

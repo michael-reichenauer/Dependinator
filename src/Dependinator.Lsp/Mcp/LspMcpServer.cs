@@ -66,6 +66,7 @@ static class LspMcpServer
         }
 
         running = mcp;
+        server.Services.GetRequiredService<IModelToolsServer>().SetAddress(new ModelToolsAddress(mcp.Url, token));
         Log.Info("MCP server at", mcp.Url);
         server.SendNotification(StartedMethod, new McpServerStarted(mcp.Url));
     }

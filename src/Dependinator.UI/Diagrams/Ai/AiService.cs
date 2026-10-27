@@ -25,12 +25,14 @@ interface IAiService
     // key, or with one Claude did not accept, the user is asked for a key first (once per call);
     // onStep tells the dialog what is going on. The prompt is built only once it is needed. A
     // quick question goes to Claude's faster, cheaper model (Claude Code uses the user's own).
+    // withModelTools lets Claude Code ask the open model through Dependinator's MCP tools too.
     Task<Result<string>> AskAsync(
         AiSource route,
         Func<Task<string>> getPrompt,
         string jsonSchema,
         Action<SuggestStep> onStep,
-        bool isQuick = false
+        bool isQuick = false,
+        bool withModelTools = false
     );
 
     // Whether "Fix with Claude Code" can run: the route is on and the model has a folder on disk.
@@ -64,7 +66,8 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
         Func<Task<string>> getPrompt,
         string jsonSchema,
         Action<SuggestStep> onStep,
-        bool isQuick = false
+        bool isQuick = false,
+        bool withModelTools = false
     )
     {
         if (route is AiSource.ClaudeCode)
@@ -75,7 +78,7 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
                 return new Error(EmptyPromptError);
             try
             {
-                return await claudeService.AskClaudeCodeAsync(codePrompt, jsonSchema, CodeFolder());
+                return await claudeService.AskClaudeCodeAsync(codePrompt, jsonSchema, CodeFolder(), withModelTools);
             }
             catch (Exception e) when (e.IsNotFatal())
             {

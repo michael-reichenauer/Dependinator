@@ -774,6 +774,31 @@
     }
 }
 
+/* Suggested rules (SuggestRulesDialog.razor): one row per rule, with Dependinator's check. */
+.dep-suggest-rules__rule {
+    padding: 4px 0;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-suggest-rules__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+}
+
+.dep-suggest-rules__head .dep-rules__names {
+    white-space: normal;
+}
+
+.dep-suggest-rules__rule .dep-ai__suggestion-note {
+    margin-left: 30px;
+}
+
+.dep-suggest-rules__error {
+    color: var(--mud-palette-warning-darken);
+}
+
 /* The architecture rules panel (RulesPanel.razor): rule rows with their violations, add form. */
 .dep-rules__rule {
     padding: 4px 0;
@@ -858,6 +883,10 @@
     margin-top: 8px;
     padding-top: 6px;
     border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-rules__suggest {
+    margin-top: 2px;
 }
 
 /* The first-run tour's callout (CoachCallout.razor), bottom-center over the diagram. */

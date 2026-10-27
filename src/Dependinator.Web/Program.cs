@@ -101,6 +101,7 @@ public class Program
         app.UseRouting();
         app.MapBlazorHub();
         app.MapDependinatorMcp();
+        app.PublishModelToolsAddress();
         app.MapFallbackToPage("/_Host");
 
         app.Run();

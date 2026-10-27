@@ -29,8 +29,10 @@ interface IClaudeService
     // computer, with the user's own Claude login instead of an API key. The UI offers it only when
     // the user turned it on in Settings. Claude Code may read and search the files in codeFolder
     // (the model's folder), but not change them or run commands; without a folder it has no tools.
-    // An error when the command is missing or not signed in.
-    Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema, string? codeFolder);
+    // With withModelTools it may also ask the open diagram's model through Dependinator's MCP
+    // tools, where the host serves them (IModelToolsServer). An error when the command is missing
+    // or not signed in.
+    Task<Result<string>> AskClaudeCodeAsync(string prompt, string jsonSchema, string? codeFolder, bool withModelTools);
 
     // Lets Claude Code change the code in codeFolder as the prompt asks: it may also edit and
     // create files there, still without running commands (so it cannot build or run tests). The

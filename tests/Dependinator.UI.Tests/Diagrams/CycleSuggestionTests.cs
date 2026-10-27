@@ -153,7 +153,7 @@ public class CycleSuggestionTests
     {
         claude
             .Setup(c =>
-                c.AskClaudeCodeAsync("the prompt", CycleSuggestion.JsonSchema, Path.GetDirectoryName(ModelPath))
+                c.AskClaudeCodeAsync("the prompt", CycleSuggestion.JsonSchema, Path.GetDirectoryName(ModelPath), false)
             )
             .ReturnsAsync((Result<string>)AcceptAnswer);
 
