@@ -86,6 +86,18 @@ public sealed class McpHttpServerTests
         Assert.Equal(isLocal, DependinatorMcpExtensions.IsLocalRequest(context.Request));
     }
 
+    [Theory]
+    [InlineData("http://localhost:5000", "http://localhost:5000/mcp")]
+    [InlineData("http://127.0.0.1:5000", "http://127.0.0.1:5000/mcp")]
+    [InlineData("http://0.0.0.0:5000", "http://127.0.0.1:5000/mcp")]
+    [InlineData("http://[::]:5000", "http://[::1]:5000/mcp")]
+    [InlineData("http://192.168.1.10:5000", null)]
+    [InlineData("https://localhost:5001", null)]
+    public void LoopbackMcpUrl_ShouldNameThisComputer(string address, string? url)
+    {
+        Assert.Equal(url, DependinatorMcpExtensions.LoopbackMcpUrl(address));
+    }
+
     [Fact]
     public void IsLocalRequest_ShouldRefuseAnotherComputer()
     {

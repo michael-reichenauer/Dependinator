@@ -58,8 +58,8 @@ interface IRuleService
     // Adds "from must not use to"; an error says why a pair is not a rule (same node, exists).
     Result AddRule(NodeId fromId, NodeId toId);
 
-    // Adds the rules whose nodes are in the model and that are not rules yet, as one undo step;
-    // the number added.
+    // Adds the rules whose nodes are in the model, neither inside the other, and that are not
+    // rules yet, as one undo step; the number added.
     int AddRules(IReadOnlyList<ArchitectureRule> rules);
 
     void RemoveRule(ArchitectureRule rule);
@@ -129,9 +129,10 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             foreach (var rule in rules)
             {
                 if (
-                    rule.FromName != rule.ToName
-                    && model.Nodes.ContainsKey(NodeId.FromName(rule.FromName))
-                    && model.Nodes.ContainsKey(NodeId.FromName(rule.ToName))
+                    model.Nodes.TryGetValue(NodeId.FromName(rule.FromName), out var from)
+                    && model.Nodes.TryGetValue(NodeId.FromName(rule.ToName), out var to)
+                    && !from.IsAtOrInside(to)
+                    && !to.IsAtOrInside(from)
                     && added.Add(rule)
                 )
                     commands.Add(new AddRuleCommand(rule));

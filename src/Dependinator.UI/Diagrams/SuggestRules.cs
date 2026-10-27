@@ -220,14 +220,15 @@ static class SuggestRulesPrompt
             )
             .OrderBy(c => c.Name, StringComparer.Ordinal);
 
-    // The number of types at or inside each node, in one pass over the model.
+    // The number of types at or inside each node, in one pass over the model down to the types
+    // (members hold none).
     static Dictionary<Node, int> TypeCounts(IModel model)
     {
         Dictionary<Node, int> counts = [];
         int Count(Node node)
         {
             var count = node.Type.IsType ? 1 : 0;
-            foreach (var child in node.Children)
+            foreach (var child in node.Children.Where(c => !c.Type.IsMember))
                 count += Count(child);
             counts[node] = count;
             return count;
