@@ -32,7 +32,7 @@
     <MudTextField T="string" @bind-Value="Question" Label="Your question" Immediate="true" Class="mt-3 mb-1"
                   data-testid="about-node-question" />
     <AiOpinion TAnswer="NodeAnswer" TestId="about-node" GetPrompt="PromptAsync" Ask="AskOrNull"
-               ParsePasted="NodeAnswer.ParseText" IsExpandedAtStart="true" ExpandText="Ask AI about it"
+               ParsePasted="ParsePasted" IsExpandedAtStart="true" ExpandText="Ask AI about it"
                AnswerTitle="AI answer"
                RouteText="Claude reads the node, its links and its code and answers here."
                AskTitle="Ask Claude the question about this node"
@@ -41,6 +41,10 @@
       <AnswerContent Context="a">
         <div class="dep-ai__suggestion" data-testid="about-node-answer">
           <div class="dep-ai__suggestion-verdict">@($"{a.Source.Name()} answers")</div>
+          @if (a.Question != "")
+          {
+            <div class="dep-ai__suggestion-note" data-testid="about-node-answered-question">@a.Question</div>
+          }
           <div class="dep-ai__markdown">@((MarkupString)SimpleMarkdown.ToHtml(a.Text))</div>
           <div>
             <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
@@ -79,6 +83,13 @@
   string QuestionText => string.IsNullOrWhiteSpace(Question) ? NodePrompt.DefaultQuestion : Question.Trim();
 
   Task<string> PromptAsync() => GetPrompt(QuestionText);
+
+  // A pasted answer answers the question in the field, which the copied prompt asked.
+  Result<NodeAnswer> ParsePasted(string text)
+  {
+    var parsed = NodeAnswer.ParseText(text);
+    return parsed is NodeAnswer answer ? answer with { Question = QuestionText } : parsed.Error;
+  }
 
   static string TypesText(int count) => count == 1 ? "1 type" : $"{count} types";
 

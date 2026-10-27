@@ -9,10 +9,13 @@ using static Dependinator.UI.Diagrams.PromptParts;
 namespace Dependinator.UI.Diagrams;
 
 // An AI's answer to a question about a node, as the About dialog shows it: plain text with a
-// little markdown (SimpleMarkdown). There is no verdict to weigh, so every answer reads "Answer".
+// little markdown (SimpleMarkdown), and the question it answers, since the user can ask several.
+// There is no verdict to weigh, so every answer reads "Answer".
 public record NodeAnswer(string Text) : IAiAnswer
 {
     public AiSource Source { get; init; } = AiSource.Claude;
+
+    public string Question { get; init; } = "";
 
     public string Verdict => "Answer";
 
@@ -132,7 +135,11 @@ class AboutNodeService(
         {
             onStep(route is AiSource.ClaudeCode ? SuggestStep.AskingClaudeCode : SuggestStep.AskingClaude);
             await Task.Delay(TestModeAnswerDelay);
-            return new NodeAnswer($"Test mode: Claude was not asked \"{question}\".") { Source = route };
+            return new NodeAnswer($"Test mode: Claude was not asked \"{question}\".")
+            {
+                Source = route,
+                Question = question,
+            };
         }
 
         var json = await aiService.AskAsync(
@@ -142,7 +149,10 @@ class AboutNodeService(
             onStep,
             isQuick: true
         );
-        return json is string text ? NodeAnswer.Parse(text, route) : json.Error;
+        if (json is not string text)
+            return json.Error;
+        var parsed = NodeAnswer.Parse(text, route);
+        return parsed is NodeAnswer answer ? answer with { Question = question } : parsed.Error;
     }
 
     static readonly TimeSpan TestModeAnswerDelay = TimeSpan.FromMilliseconds(800);

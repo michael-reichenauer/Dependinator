@@ -73,6 +73,19 @@ public class AboutNodeTests
     }
 
     [Fact]
+    public void Facts_ShouldNameAMembersKind_AndLeaveOutLinksWithinItsOwnType()
+    {
+        using var model = modelMgr.UseModel();
+        Setup(model);
+
+        var facts = NodePrompt.Facts(model.Nodes[NodeId.FromName("Parsing.Parser.Parse()")]);
+
+        Assert.Equal("method", facts.Kind);
+        Assert.Equal(1, facts.UsesCount); // Model.Node; Read() is in its own type
+        Assert.Equal(1, facts.UsedByCount);
+    }
+
+    [Fact]
     public void Build_ShouldDescribeTheNode_ItsContents_ItsLinksOutside_AndTheQuestion()
     {
         using var model = modelMgr.UseModel();

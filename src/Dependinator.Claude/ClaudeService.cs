@@ -46,12 +46,12 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
             : e;
     }
 
-    public Task<Result<string>> AskAsync(string prompt, string jsonSchema) => AskAsync(prompt, jsonSchema, Model);
+    public Task<Result<string>> AskAsync(string prompt, string jsonSchema) => SendAsync(prompt, jsonSchema, Model);
 
     public Task<Result<string>> AskQuicklyAsync(string prompt, string jsonSchema) =>
-        AskAsync(prompt, jsonSchema, QuickModel);
+        SendAsync(prompt, jsonSchema, QuickModel);
 
-    async Task<Result<string>> AskAsync(string prompt, string jsonSchema, string model)
+    async Task<Result<string>> SendAsync(string prompt, string jsonSchema, string model)
     {
         if (await apiKeyProvider.GetApiKeyAsync() is not { Length: > 0 } key)
             return new Error($"No Claude API key. {apiKeyProvider.SetKeyHint}");

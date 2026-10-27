@@ -34,25 +34,50 @@ static class NodePrompt
     public static NodeFacts Facts(Node node)
     {
         var descendants = node.DescendantsAndSelfPreOrder().Skip(1).ToList();
-        var types = descendants.Count(n => n.Type.IsType || n.Type is NodeType.Module or NodeType.Resource);
-        var namespaces = descendants.Count(n => n.Type == NodeType.Namespace);
-        var members = descendants.Count(n => n.Type.IsMember && n.Parent == node);
         List<string> parts = [];
-        if (namespaces > 0)
-            parts.Add(Count(namespaces, "namespace"));
-        if (types > 0)
-            parts.Add(Count(types, node.Type is NodeType.Module ? "resource" : "type"));
-        if (members > 0)
-            parts.Add(Count(members, "member"));
+        AddCount(parts, descendants.Count(n => n.Type == NodeType.Namespace), "namespace");
+        AddCount(parts, descendants.Count(n => n.Type.IsType), "type");
+        AddCount(parts, descendants.Count(n => n.Type == NodeType.Module), "module");
+        AddCount(parts, descendants.Count(n => n.Type == NodeType.Resource), "resource");
+        AddCount(parts, descendants.Count(n => n.Type.IsMember && n.Parent == node), "member");
         if (parts.Count == 0 && node.Children.Count > 0)
             parts.Add(Count(node.Children.Count, "child", "children"));
         var contents = parts.Count > 0 ? $"Contains {string.Join(", ", parts)}" : "Contains nothing parsed";
-        return new(Kind(node.Type), node.LongName, node.Description, contents, Uses(node).Count, UsedBy(node).Count);
+        return new(
+            NodeKind(node.Type),
+            node.LongName,
+            node.Description,
+            contents,
+            UnitCount(node, n => n.SourceLinks.Select(l => l.Target)),
+            UnitCount(node, n => n.TargetLinks.Select(l => l.Source))
+        );
     }
 
-    // The code to show with the prompt: a type's own source; a container's is too large.
-    public static IReadOnlyList<SourceRequest> GetSourceRequests(Node node) =>
-        HasSource(node) ? [new SourceRequest(node.LongName, [new SourceUnit(node.FileSpan!, [])])] : [];
+    static void AddCount(List<string> parts, int count, string noun)
+    {
+        if (count > 0)
+            parts.Add(Count(count, noun));
+    }
+
+    // The code to show with the prompt: a type's own source, with the lines of its members for a
+    // long one, or a member's type with that member's line; a container's is too large.
+    public static IReadOnlyList<SourceRequest> GetSourceRequests(Node node)
+    {
+        if (HasSource(node))
+        {
+            var span = node.FileSpan!;
+            List<int> memberLines =
+            [
+                .. node
+                    .Children.Where(c => c.Type.IsMember && c.FileSpan?.Path == span.Path)
+                    .Select(c => c.FileSpan!.StartLine),
+            ];
+            return [new SourceRequest(node.LongName, [new SourceUnit(span, memberLines)])];
+        }
+        if (node.Type.IsMember && node.FileSpan is { } memberSpan && Unit(node) is var unit && HasSource(unit))
+            return [new SourceRequest(node.LongName, [new SourceUnit(unit.FileSpan!, [memberSpan.StartLine])])];
+        return [];
+    }
 
     public static string Build(IModel model, Node node, string question, IReadOnlyList<SourceSection>? sources = null)
     {
@@ -99,7 +124,7 @@ static class NodePrompt
     static void AppendNode(StringBuilder text, IModel model, Node node)
     {
         text.AppendLine().AppendLine("## The node").AppendLine();
-        text.AppendLine($"{Kind(node.Type)} {node.LongName}");
+        text.AppendLine($"{NodeKind(node.Type)} {node.LongName}");
         text.AppendLine(
             node.Description is { } description
                 ? $"Its comment in the code: \"{Clip(description)}\""
@@ -120,7 +145,7 @@ static class NodePrompt
         foreach (var child in children.OrderBy(c => c.ShortName, StringComparer.Ordinal).Take(MaxChildren))
         {
             var name = child.Type.IsMember ? MemberLabel(child) : Name(child, node);
-            var kind = ChildKind(child.Type);
+            var kind = NodeKind(child.Type);
             var label = name == kind ? name : $"{kind} {name}";
             text.AppendLine($"- {label}{Described(child)}");
         }
@@ -166,18 +191,33 @@ static class NodePrompt
     internal static IReadOnlyList<(Node Unit, int Links)> UsedBy(Node node) =>
         Grouped(node.DescendantsAndSelfPreOrder().SelectMany(n => n.TargetLinks).Select(l => l.Source), node);
 
+    // By the type at each far end, leaving out the node itself, what is inside it, and what it is
+    // inside: a method's call to another method of its type is no link to a type outside it.
     static IReadOnlyList<(Node Unit, int Links)> Grouped(IEnumerable<Node> ends, Node node) =>
         [
             .. ends.Where(n => !IsInside(n, node))
                 .GroupBy(Unit)
+                .Where(g => !IsInside(g.Key, node) && !IsInside(node, g.Key))
                 .Select(g => (Unit: g.Key, Links: g.Count()))
                 .OrderByDescending(u => u.Links)
                 .ThenBy(u => u.Unit.LongName, StringComparer.Ordinal),
         ];
 
+    // The number of types outside the node at the far ends of its links (as Grouped, unsorted).
+    static int UnitCount(Node node, Func<Node, IEnumerable<Node>> ends)
+    {
+        HashSet<Node> units = [];
+        foreach (var end in node.DescendantsAndSelfPreOrder().SelectMany(ends))
+        {
+            if (!IsInside(end, node) && Unit(end) is var unit && !IsInside(unit, node) && !IsInside(node, unit))
+                units.Add(unit);
+        }
+        return units.Count;
+    }
+
     static bool IsInside(Node other, Node node) => other == node || other.Ancestors().Contains(node);
 
-    static string ChildKind(NodeType type) =>
+    static string NodeKind(NodeType type) =>
         type switch
         {
             NodeType.FieldMember => "field",
