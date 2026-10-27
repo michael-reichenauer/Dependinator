@@ -35,11 +35,11 @@ sealed class TimeLimitedModelQueries(IModelQueryService inner, TimeSpan timeLimi
     async Task<Result<T>> Ask<T>(Func<Task<Result<T>>> question)
         where T : notnull
     {
-        if (isConnected is not null && !await isConnected())
-            return new Error(NoAnswerMessage);
         using var cts = new CancellationTokenSource(timeLimit);
         try
         {
+            if (isConnected is not null && !await isConnected())
+                return new Error(NoAnswerMessage);
             return await question().WithCancellation(cts.Token);
         }
         catch (OperationCanceledException)
@@ -50,7 +50,8 @@ sealed class TimeLimitedModelQueries(IModelQueryService inner, TimeSpan timeLimi
         {
             // The diagram is there but the call failed: the cause helps more than "open it".
             Log.Warn($"Model query failed: {e}");
-            return new Error($"The Dependinator diagram could not answer: {e.Message}", e);
+            var cause = e.Message.Split('\n', 2)[0].Trim();
+            return new Error($"The Dependinator diagram could not answer: {cause}", e);
         }
     }
 }

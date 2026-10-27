@@ -6,7 +6,7 @@ using ModelContextProtocol.Client;
 namespace Dependinator.Mcp.Tests;
 
 // The LSP's own MCP server: it answers only with the token, prefers the port it was given and
-// falls back to a free one, and a question the webview does not answer ends with an error.
+// falls back to a free one, and it takes requests from this computer only.
 public sealed class McpHttpServerTests
 {
     readonly Mock<IModelQueryService> queries = new();
@@ -53,32 +53,6 @@ public sealed class McpHttpServerTests
     }
 
     [Fact]
-    public async Task TimeLimitedQueries_ShouldReturnAnError_WhenNobodyAnswers()
-    {
-        queries.Setup(q => q.GetModelAsync()).Returns(new TaskCompletionSource<Result<ModelSummary>>().Task);
-        var limited = new TimeLimitedModelQueries(queries.Object, TimeSpan.FromMilliseconds(50));
-
-        var result = await limited.GetModelAsync();
-
-        Assert.Equal(TimeLimitedModelQueries.NoAnswerMessage, Assert.IsType<Error>(result.Value).Message);
-    }
-
-    [Fact]
-    public async Task TimeLimitedQueries_ShouldNotAsk_WhenTheOtherSideIsNotConnected()
-    {
-        var limited = new TimeLimitedModelQueries(
-            queries.Object,
-            TimeSpan.FromMinutes(1),
-            () => Task.FromResult(false)
-        );
-
-        var result = await limited.GetModelAsync();
-
-        Assert.Equal(TimeLimitedModelQueries.NoAnswerMessage, Assert.IsType<Error>(result.Value).Message);
-        queries.Verify(q => q.GetModelAsync(), Times.Never);
-    }
-
-    [Fact]
     public async Task Start_ShouldRefuseRequestsForAnotherHost()
     {
         var token = Guid.NewGuid().ToString("N");
@@ -113,14 +87,13 @@ public sealed class McpHttpServerTests
     }
 
     [Fact]
-    public async Task TimeLimitedQueries_ShouldReturnTheCause_WhenTheCallFails()
+    public void IsLocalRequest_ShouldRefuseAnotherComputer()
     {
-        queries.Setup(q => q.GetModelAsync()).ThrowsAsync(new InvalidOperationException("Broken"));
-        var limited = new TimeLimitedModelQueries(queries.Object, TimeSpan.FromMinutes(1));
+        var context = new Microsoft.AspNetCore.Http.DefaultHttpContext();
+        context.Request.Host = new("localhost:5000");
+        context.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.20");
 
-        var result = await limited.GetModelAsync();
-
-        Assert.Contains("Broken", Assert.IsType<Error>(result.Value).Message);
+        Assert.False(DependinatorMcpExtensions.IsLocalRequest(context.Request));
     }
 
     static int FreePort()

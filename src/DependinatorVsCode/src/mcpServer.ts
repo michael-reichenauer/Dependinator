@@ -167,7 +167,7 @@ async function runClaude(args: string[], cwd: string): Promise<ClaudeResult> {
 function runCommand(command: string, args: string[], cwd: string): Promise<ClaudeResult> {
     return new Promise(resolve => {
         // On Windows, a claude on the PATH may be a .cmd script, which only a shell runs; the shell
-        // needs the quotes, and says "not recognized" when there is no claude.
+        // needs the quotes, and exits with 9009 when there is no claude.
         const useShell = process.platform === "win32" && command === "claude";
         const commandArgs = useShell ? args.map(arg => (arg.includes(" ") ? `"${arg}"` : arg)) : args;
         execFile(command, commandArgs, { cwd, shell: useShell, timeout: 30_000 }, (error, stdout, stderr) => {
@@ -176,7 +176,7 @@ function runCommand(command: string, args: string[], cwd: string): Promise<Claud
                 error: !!error,
                 isMissing:
                     (error as NodeJS.ErrnoException | null)?.code === "ENOENT" ||
-                    (useShell && !!error && output.includes("not recognized")),
+                    (useShell && (error as { code?: unknown } | null)?.code === 9009),
                 output
             });
         });

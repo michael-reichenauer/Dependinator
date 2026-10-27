@@ -21,8 +21,9 @@ static class LspMcpServer
     // Long enough for a question on a large model, short enough for an agent waiting on a closed webview.
     static readonly TimeSpan TimeLimit = TimeSpan.FromSeconds(20);
 
-    // A tool call skips the connection check this long after one succeeded: agents ask in bursts.
-    static readonly TimeSpan ConnectedRecently = TimeSpan.FromSeconds(30);
+    // A tool call skips the connection check this soon after one succeeded, as agents ask in
+    // bursts; kept short, since a call after the webview closed waits out the whole time limit.
+    static readonly TimeSpan ConnectedRecently = TimeSpan.FromSeconds(5);
 
     // Runs as long as the LSP process does.
     static McpHttpServer? running;

@@ -58,11 +58,13 @@ public static class DependinatorMcpExtensions
         return app.MapMcp(Path);
     }
 
-    // The server is for agents on this computer. A web page can reach localhost too, through DNS
-    // rebinding (its own host name resolving to 127.0.0.1), so the Host must name the loopback
-    // address, and a browser's Origin, when sent, must be a page on this computer.
+    // The server is for agents on this computer: the connection must come from the loopback
+    // address (the dev host may listen on others too). A web page can reach localhost as well,
+    // through DNS rebinding (its own host name resolving to 127.0.0.1), so the Host must name the
+    // loopback address, and a browser's Origin, when sent, must be a page on this computer.
     internal static bool IsLocalRequest(HttpRequest request) =>
-        IsLoopbackHost(request.Host.Host)
+        (request.HttpContext.Connection.RemoteIpAddress is not IPAddress remote || IPAddress.IsLoopback(remote))
+        && IsLoopbackHost(request.Host.Host)
         && (
             string.IsNullOrEmpty(request.Headers.Origin)
             || Uri.TryCreate(request.Headers.Origin, UriKind.Absolute, out var origin) && IsLoopbackHost(origin.Host)

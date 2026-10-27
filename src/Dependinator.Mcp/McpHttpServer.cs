@@ -48,7 +48,12 @@ sealed class McpHttpServer : IAsyncDisposable
         // The LSP runs in the user's workspace folder: no content root, appsettings.json or
         // ASPNETCORE_ variables of theirs may add endpoints or file watchers here.
         var builder = WebApplication.CreateSlimBuilder(
-            new WebApplicationOptions { ContentRootPath = AppContext.BaseDirectory }
+            new WebApplicationOptions
+            {
+                Args = [],
+                ContentRootPath = AppContext.BaseDirectory,
+                EnvironmentName = Environments.Production,
+            }
         );
         builder.Configuration.Sources.Clear();
         builder.Logging.ClearProviders(); // The LSP's stdout is its protocol stream
