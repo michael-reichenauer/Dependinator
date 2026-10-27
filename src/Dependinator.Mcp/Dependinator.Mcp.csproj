@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Dependinator.Mcp</AssemblyName>
+        <RootNamespace>Dependinator.Mcp</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ModelContextProtocol.AspNetCore" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Dependinator.Core/Dependinator.Core.csproj" />
+    </ItemGroup>
+</Project>

@@ -23,6 +23,7 @@
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
         <!-- .devcontainer/post-create.sh and scripts/cloud-setup install the browsers for this version -->
         <PackageVersion Include="Microsoft.Playwright.Xunit" Version="1.64.1" />
+        <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.3.0" />
         <PackageVersion Include="OmniSharp.Extensions.LanguageServer" Version="0.19.11" />
         <PackageVersion Include="Moq" Version="4.21.0" />
         <PackageVersion Include="StreamJsonRpc" Version="2.26.150" />
