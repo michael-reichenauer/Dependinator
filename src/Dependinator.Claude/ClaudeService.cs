@@ -9,7 +9,8 @@ namespace Dependinator.Claude;
 
 // Sends a prompt to Claude with the user's own API key and returns the answer as JSON matching a
 // schema (structured output, so the caller can rely on its shape). Claude Opus 5.5 at medium
-// effort: an answer takes seconds to a minute and costs a few cents. A request a safety
+// effort: an answer takes seconds to a minute and costs a few cents; a plain question
+// (AskQuicklyAsync) goes to Claude Sonnet 5.5, at half the price and faster. A request a safety
 // classifier declines is retried server-side on the model Anthropic recommends for that case
 // (fallbacks "default"), so a false positive does not end in a refusal. A key Claude did not
 // accept is remembered, so the UI can ask for a new one rather than send it again. The experimental
@@ -18,6 +19,7 @@ namespace Dependinator.Claude;
 class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
 {
     const string Model = "claude-opus-5-5";
+    const string QuickModel = "claude-sonnet-5-5";
     const int MaxTokens = 16000;
 
     string? rejectedApiKey;
@@ -44,7 +46,12 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
             : e;
     }
 
-    public async Task<Result<string>> AskAsync(string prompt, string jsonSchema)
+    public Task<Result<string>> AskAsync(string prompt, string jsonSchema) => AskAsync(prompt, jsonSchema, Model);
+
+    public Task<Result<string>> AskQuicklyAsync(string prompt, string jsonSchema) =>
+        AskAsync(prompt, jsonSchema, QuickModel);
+
+    async Task<Result<string>> AskAsync(string prompt, string jsonSchema, string model)
     {
         if (await apiKeyProvider.GetApiKeyAsync() is not { Length: > 0 } key)
             return new Error($"No Claude API key. {apiKeyProvider.SetKeyHint}");
@@ -60,7 +67,7 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
             var response = await client.Beta.Messages.Create(
                 new MessageCreateParams
                 {
-                    Model = Model,
+                    Model = model,
                     MaxTokens = MaxTokens,
                     Betas = [AnthropicBeta.ServerSideFallback2026_07_01],
                     Fallbacks = new Default(),
@@ -72,7 +79,13 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider) : IClaudeService
                     Messages = [new BetaUserMessageParam { Content = prompt }],
                 }
             );
-            Log.Info("Claude answered", response.StopReason, response.Usage.InputTokens, response.Usage.OutputTokens);
+            Log.Info(
+                "Claude answered",
+                model,
+                response.StopReason,
+                response.Usage.InputTokens,
+                response.Usage.OutputTokens
+            );
 
             if (response.StopReason == "refusal")
                 return new Error("Claude declined to answer this request.");

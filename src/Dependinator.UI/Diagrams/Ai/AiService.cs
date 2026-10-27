@@ -23,12 +23,14 @@ interface IAiService
 
     // Asks Claude (with the API key) or Claude Code for an answer matching the schema. Without a
     // key, or with one Claude did not accept, the user is asked for a key first (once per call);
-    // onStep tells the dialog what is going on. The prompt is built only once it is needed.
+    // onStep tells the dialog what is going on. The prompt is built only once it is needed. A
+    // quick question goes to Claude's faster, cheaper model (Claude Code uses the user's own).
     Task<Result<string>> AskAsync(
         AiSource route,
         Func<Task<string>> getPrompt,
         string jsonSchema,
-        Action<SuggestStep> onStep
+        Action<SuggestStep> onStep,
+        bool isQuick = false
     );
 
     // Whether "Fix with Claude Code" can run: the route is on and the model has a folder on disk.
@@ -61,7 +63,8 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
         AiSource route,
         Func<Task<string>> getPrompt,
         string jsonSchema,
-        Action<SuggestStep> onStep
+        Action<SuggestStep> onStep,
+        bool isQuick = false
     )
     {
         if (route is AiSource.ClaudeCode)
@@ -97,7 +100,9 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
             prompt ??= await getPrompt();
             if (prompt == "")
                 return new Error(EmptyPromptError);
-            var answer = await claudeService.AskAsync(prompt, jsonSchema);
+            var answer = isQuick
+                ? await claudeService.AskQuicklyAsync(prompt, jsonSchema)
+                : await claudeService.AskAsync(prompt, jsonSchema);
             if (answer is string)
                 return answer;
             // A key Claude did not accept: ask for a new one, once.

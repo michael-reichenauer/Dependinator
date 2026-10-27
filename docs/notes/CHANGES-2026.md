@@ -29,7 +29,7 @@ project works.
   group and rubber-band selection), new line and container visuals, a release flow through `dev`
   and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
-  Claude's suggestions for cycles and broken rules, C# member naming fixes, and a problem indicator with node badges.
+  Claude's suggestions for cycles and broken rules, About Node with a question for an AI, C# member naming fixes, and a problem indicator with node badges.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -201,6 +201,14 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   rule, Claude Code makes the change in the model's folder (it may edit files there, not run
   commands), after a warning when the folder has uncommitted changes; the dialog shows its report
   and the changed files, and re-parses.
+- **About Node (Oct 27).** "About Node …" in the node menu and the right-click menu opens a dialog
+  with the node's comment from the code, what it contains, and how many types outside it it uses
+  and are used by it, plus a question about it ("What is this and why is it here?" until the user
+  writes another) for Claude, Claude Code or an AI chat. The prompt has the node and its parent with
+  their comments, its children, the types it uses and that use it (most links first), and a type's
+  source or a container's files. The answer is shown, not saved, and can be copied. Claude answers
+  on Claude Sonnet 5.5 here (`IClaudeService.AskQuicklyAsync`), faster and cheaper than the Opus
+  used for verdicts.
 - **Problem indicator (Oct 21).** A warning count in the app bar, like the VS Code status bar,
   shows that the model has open cycles and broken architecture rules without opening their
   panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one

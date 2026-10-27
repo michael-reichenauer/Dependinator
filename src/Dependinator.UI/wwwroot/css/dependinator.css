@@ -1069,3 +1069,21 @@
 .dep-ai__actions .mud-button-root {
     white-space: nowrap;
 }
+
+/* The About node dialog (AboutNodeDialog.razor): the node's comment from the code, and what it contains and links to. */
+.dep-about__comment {
+    margin-top: 8px;
+    font-size: 0.875rem;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+.dep-about__comment--none,
+.dep-about__facts {
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-about__facts {
+    margin-top: 6px;
+    font-size: 0.8125rem;
+}
