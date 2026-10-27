@@ -37,6 +37,7 @@ interface IContextMenuService
     void AddZoneHere();
 
     // Node and line: analysis and navigation on the right-clicked item.
+    Task ShowAboutAsync();
     Task ShowReferencesAsync();
     Task ShowDependenciesAsync();
     Task ZoomToAsync();
@@ -66,6 +67,7 @@ class ContextMenuService(
     IDependenciesService dependenciesService,
     INavigationService navigationService,
     IShareLinkService shareLinkService,
+    IAboutNodeService aboutNodeService,
     IModelMgr modelMgr,
     IApplicationEvents applicationEvents
 ) : IContextMenuService
@@ -147,6 +149,14 @@ class ContextMenuService(
     {
         Close();
         _ = zoneService.PlaceZoneAtAsync(pendingEvent);
+    }
+
+    public async Task ShowAboutAsync()
+    {
+        Close();
+        if (Target != ContextMenuTarget.Node)
+            return;
+        await aboutNodeService.ShowAsync(targetId.NodeId);
     }
 
     public async Task ShowReferencesAsync()

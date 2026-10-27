@@ -1,0 +1,102 @@
+@using Dependinator.UI.Diagrams.Ai
+@using MudBlazor
+@inject IClipboardService clipboardService
+
+@* About a node (AboutNodeService): what the model knows of it (its comment, what it contains, how
+   many types outside it it uses and are used by it), and a question about it, "What is this and
+   why is it here?" until the user writes another, for Claude, Claude Code or the user's AI chat
+   (AiOpinion, open at once since asking is what the dialog is for). The answer is shown, not
+   saved: it can be copied. Each answer is kept while the dialog is open, so questions can be
+   compared. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">About @Facts.Kind</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-cycles__dialog-cycle" data-testid="about-node-name">
+      <span class="dep-cycles__container">@Facts.LongName</span>
+    </div>
+    @if (Facts.Description is { } description)
+    {
+      <div class="dep-about__comment" data-testid="about-node-comment">@description</div>
+    }
+    else
+    {
+      <div class="dep-about__comment dep-about__comment--none" data-testid="about-node-comment">
+        No comment in the code.
+      </div>
+    }
+    <div class="dep-about__facts" data-testid="about-node-facts">
+      @Facts.Contents · uses @TypesText(Facts.UsesCount) · used by @TypesText(Facts.UsedByCount)
+    </div>
+    <MudTextField T="string" @bind-Value="Question" Label="Your question" Immediate="true" Class="mt-3 mb-1"
+                  data-testid="about-node-question" />
+    <AiOpinion TAnswer="NodeAnswer" TestId="about-node" GetPrompt="PromptAsync" Ask="AskOrNull"
+               ParsePasted="ParsePasted" IsExpandedAtStart="true" ExpandText="Ask AI about it"
+               AnswerTitle="AI answer"
+               RouteText="Claude reads the node, its links and its code and answers here."
+               AskTitle="Ask Claude the question about this node"
+               CopyTitle="Copy a prompt with the question, the node, its links and its code"
+               PromptCopiedText="The prompt is copied, with the question, the node, its links and its code.">
+      <AnswerContent Context="a">
+        <div class="dep-ai__suggestion" data-testid="about-node-answer">
+          <div class="dep-ai__suggestion-verdict">@($"{a.Source.Name()} answers")</div>
+          @if (a.Question != "")
+          {
+            <div class="dep-ai__suggestion-note" data-testid="about-node-answered-question">@a.Question</div>
+          }
+          <div class="dep-ai__markdown">@((MarkupString)SimpleMarkdown.ToHtml(a.Text))</div>
+          <div>
+            <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+                       OnClick="() => CopyAnswerAsync(a)" data-testid="about-node-copy-answer">Copy answer</MudButton>
+            @if (copyNote is not null)
+            {
+              <span class="dep-ai__suggest-note" data-testid="about-node-copied">@copyNote</span>
+            }
+          </div>
+        </div>
+      </AnswerContent>
+    </AiOpinion>
+  </DialogContent>
+  <DialogActions>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="about-node-close">Close</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter, EditorRequired] public NodeFacts Facts { get; set; } = null!;
+
+  // The prompt that asks any AI the question, to copy or show.
+  [Parameter, EditorRequired] public Func<string, Task<string>> GetPrompt { get; set; } = null!;
+
+  // Asks Claude (or Claude Code) the question, telling each step; null where the host cannot ask.
+  [Parameter] public Func<string, AiSource, Action<SuggestStep>, Task<Result<NodeAnswer>>>? Ask { get; set; }
+
+  string Question { get; set; } = NodePrompt.DefaultQuestion;
+  string? copyNote;
+
+  Func<AiSource, Action<SuggestStep>, Task<Result<NodeAnswer>>>? AskOrNull =>
+    Ask is null ? null : (route, onStep) => Ask(QuestionText, route, onStep);
+
+  string QuestionText => string.IsNullOrWhiteSpace(Question) ? NodePrompt.DefaultQuestion : Question.Trim();
+
+  Task<string> PromptAsync() => GetPrompt(QuestionText);
+
+  // A pasted answer answers the question in the field, which the copied prompt asked.
+  Result<NodeAnswer> ParsePasted(string text)
+  {
+    var parsed = NodeAnswer.ParseText(text);
+    return parsed is NodeAnswer answer ? answer with { Question = QuestionText } : parsed.Error;
+  }
+
+  static string TypesText(int count) => count == 1 ? "1 type" : $"{count} types";
+
+  async Task CopyAnswerAsync(NodeAnswer answer)
+  {
+    copyNote = await clipboardService.CopyAsync(answer.Text) ? "Copied." : "Could not copy to the clipboard.";
+  }
+
+  void Close() => MudDialog.Close();
+}

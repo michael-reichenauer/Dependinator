@@ -21,6 +21,10 @@
             <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" Style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
               @contextMenuService.TargetName
             </MudText>
+            <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.Info" IconColor="Color.Secondary"
+                         OnClick="contextMenuService.ShowAboutAsync" data-testid="context-menu-about">
+              About Node …
+            </MudListItem>
             <MudListItem T="string" Icon="@Icons.Icon.ReferencesIcon" IconColor="Color.Secondary"
                          OnClick="contextMenuService.ShowReferencesAsync" data-testid="context-menu-references">
               Show References

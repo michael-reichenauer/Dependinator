@@ -104,7 +104,7 @@ else if (HasAiHelp && answers.Count == 0)
                  StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome"
                  EndIcon="@(isExpanded ? MudBlazor.Icons.Material.Filled.ExpandLess : MudBlazor.Icons.Material.Filled.ExpandMore)"
                  aria-expanded="@(isExpanded ? "true" : "false")" OnClick="() => isExpanded = !isExpanded"
-                 data-testid="@Id("expand")">Get an AI opinion</MudButton>
+                 data-testid="@Id("expand")">@ExpandText</MudButton>
       @if (isExpanded)
       {
         @ShowPromptLink
@@ -167,7 +167,7 @@ else if (HasAiHelp)
 {
   @* With an answer: one line, offering another opinion from any route. *@
   <div class="dep-ai__header dep-ai" data-testid="@Id("ai")">
-    <span class="dep-ai__title">@(answers.Count > 1 ? "AI opinions" : "AI opinion")</span>
+    <span class="dep-ai__title">@(answers.Count > 1 ? $"{AnswerTitle}s" : AnswerTitle)</span>
     @ShowPromptLink
     <MudSpacer />
     @if (Ask is not null)
@@ -268,6 +268,11 @@ else if (Selected is { } s && AnswerContent is not null)
   [Parameter] public string AskTitle { get; set; } = "Ask Claude for an opinion";
   [Parameter] public string CopyTitle { get; set; } = "Copy a prompt for an AI chat";
   [Parameter] public string PromptCopiedText { get; set; } = "The prompt is copied.";
+  [Parameter] public string ExpandText { get; set; } = "Get an AI opinion";
+  [Parameter] public string AnswerTitle { get; set; } = "AI opinion";
+
+  // Opens the routes at once, where asking is what the dialog is for.
+  [Parameter] public bool IsExpandedAtStart { get; set; }
 
   public TAnswer? Selected => selected >= 0 ? answers[selected] : null;
 
@@ -311,6 +316,7 @@ else if (Selected is { } s && AnswerContent is not null)
 
   protected override async Task OnInitializedAsync()
   {
+    isExpanded = IsExpandedAtStart;
     if (Ask is not null)
       isClaudeCodeEnabled = await aiService.IsClaudeCodeEnabledAsync();
   }
