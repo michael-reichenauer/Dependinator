@@ -66,6 +66,7 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         if (!await pair.IsVisibleAsync())
             await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
         await pair.GetByTestId("cycles-review").ClickAsync();
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-suggest")).ToHaveTextAsync("Ask Claude");
         ILocator askCode = Page.GetByTestId("accept-cycle-suggest-code");
         if (isOffered)

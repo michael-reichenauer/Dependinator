@@ -5,7 +5,8 @@
 @inject IDialogService dialogService
 
 @* "Get an AI opinion" in a review dialog (a cycle, a dependency that breaks a rule): up to three
-   routes to the same kind of answer, side by side so they read as one choice. "Ask Claude", where
+   routes to the same kind of answer, side by side so they read as one choice, behind one row
+   ("Get an AI opinion", naming the routes) that opens them, so they wait until wanted. "Ask Claude", where
    the host can ask Claude (the user's API key, a few cents); "Ask Claude Code", the experimental
    local route, only where the user turned it on; and "Use your AI chat" (free), which copies the
    prompt and then shows the rest of that route as steps (open claude.ai, paste the answer back).
@@ -96,56 +97,70 @@
 }
 else if (HasAiHelp && answers.Count == 0)
 {
-  @* Before any answer: the routes, each saying what happens and what it costs. *@
+  @* Before any answer: one row, opened to the routes, each saying what happens and what it costs. *@
   <div class="dep-ai" data-testid="@Id("ai")">
     <div class="dep-ai__header">
-      <span class="dep-ai__title">Get an AI opinion (optional)</span>
-      @ShowPromptLink
-    </div>
-    <div class="dep-ai__routes">
-      @if (Ask is not null)
+      <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai__expand"
+                 StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome"
+                 EndIcon="@(isExpanded ? MudBlazor.Icons.Material.Filled.ExpandLess : MudBlazor.Icons.Material.Filled.ExpandMore)"
+                 aria-expanded="@(isExpanded ? "true" : "false")" OnClick="() => isExpanded = !isExpanded"
+                 data-testid="@Id("expand")">Get an AI opinion</MudButton>
+      @if (isExpanded)
       {
-        <div class="dep-ai__route">
-          <div class="dep-ai__route-name">
-            <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" Size="Size.Small" Class="dep-ai__claude-icon" />
-            Ask Claude
-          </div>
-          <div class="dep-ai__route-text">@RouteText</div>
-          <div class="dep-ai__route-meta">Your Anthropic API key, a few cents per answer</div>
-          <div>@AskButton(AiSource.Claude)</div>
-        </div>
+        @ShowPromptLink
       }
-      @if (Ask is not null && isClaudeCodeEnabled)
+      else
       {
-        <div class="dep-ai__route" data-testid="@Id("route-code")">
-          <div class="dep-ai__route-name">
-            <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.Terminal" Size="Size.Small" Class="dep-ai__claude-icon" />
-            Claude Code
-          </div>
-          <div class="dep-ai__route-text">Claude Code on this computer reads the prompt and answers here.</div>
-          <div class="dep-ai__route-meta">Your Claude login, experimental</div>
-          <div>@AskButton(AiSource.ClaudeCode)</div>
-        </div>
-      }
-      @if (GetPrompt is not null)
-      {
-        <div class="dep-ai__route">
-          <div class="dep-ai__route-name">
-            <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.Forum" Size="Size.Small" />
-            Use your AI chat
-          </div>
-          <div class="dep-ai__route-text">
-            Copy a prompt into claude.ai or any AI chat, then paste its answer back here.
-          </div>
-          <div class="dep-ai__route-meta">Free, works with any chat</div>
-          <div>
-            <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
-                       title="@CopyTitle" Disabled="isSuggesting" OnClick="StartChatAsync"
-                       data-testid="@Id("copy-prompt")">Copy prompt</MudButton>
-          </div>
-        </div>
+        <span class="dep-ai__expand-hint">@RouteNames (optional)</span>
       }
     </div>
+    @if (isExpanded)
+    {
+      <div class="dep-ai__routes">
+        @if (Ask is not null)
+        {
+          <div class="dep-ai__route">
+            <div class="dep-ai__route-name">
+              <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" Size="Size.Small" Class="dep-ai__claude-icon" />
+              Ask Claude
+            </div>
+            <div class="dep-ai__route-text">@RouteText</div>
+            <div class="dep-ai__route-meta">Your Anthropic API key, a few cents per answer</div>
+            <div>@AskButton(AiSource.Claude)</div>
+          </div>
+        }
+        @if (Ask is not null && isClaudeCodeEnabled)
+        {
+          <div class="dep-ai__route" data-testid="@Id("route-code")">
+            <div class="dep-ai__route-name">
+              <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.Terminal" Size="Size.Small" Class="dep-ai__claude-icon" />
+              Claude Code
+            </div>
+            <div class="dep-ai__route-text">Claude Code on this computer reads the prompt and answers here.</div>
+            <div class="dep-ai__route-meta">Your Claude login, experimental</div>
+            <div>@AskButton(AiSource.ClaudeCode)</div>
+          </div>
+        }
+        @if (GetPrompt is not null)
+        {
+          <div class="dep-ai__route">
+            <div class="dep-ai__route-name">
+              <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.Forum" Size="Size.Small" />
+              Use your AI chat
+            </div>
+            <div class="dep-ai__route-text">
+              Copy a prompt into claude.ai or any AI chat, then paste its answer back here.
+            </div>
+            <div class="dep-ai__route-meta">Free, works with any chat</div>
+            <div>
+              <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+                         title="@CopyTitle" Disabled="isSuggesting" OnClick="StartChatAsync"
+                         data-testid="@Id("copy-prompt")">Copy prompt</MudButton>
+            </div>
+          </div>
+        }
+      </div>
+    }
   </div>
 }
 else if (HasAiHelp)
@@ -263,6 +278,7 @@ else if (Selected is { } s && AnswerContent is not null)
   string? askError;
   bool isAskError;
   bool isClaudeCodeEnabled;
+  bool isExpanded;
 
   bool isChatOpen;
   bool isPromptCopied;
@@ -272,6 +288,22 @@ else if (Selected is { } s && AnswerContent is not null)
   string? pasteError;
 
   bool HasAiHelp => Ask is not null || GetPrompt is not null;
+
+  // The routes the closed row names: "Claude, Claude Code or your AI chat".
+  string RouteNames
+  {
+    get
+    {
+      List<string> names = [];
+      if (Ask is not null)
+        names.Add("Claude");
+      if (Ask is not null && isClaudeCodeEnabled)
+        names.Add("Claude Code");
+      if (GetPrompt is not null)
+        names.Add("your AI chat");
+      return names.Count == 1 ? names[0] : $"{string.Join(", ", names[..^1])} or {names[^1]}";
+    }
+  }
 
   bool AnswersDiffer => answers.Select(a => a.Verdict).Distinct().Count() > 1;
 

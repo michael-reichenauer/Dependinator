@@ -279,8 +279,8 @@
     gap: 2px;
 }
 
-/* The review dialog's "Get an AI opinion" section: the two routes side by side, then one line
-   once there is an answer, or the AI chat route's steps. */
+/* The review dialog's "Get an AI opinion" section: one row that opens to the routes side by side,
+   then one line once there is an answer, or the AI chat route's steps. */
 .dep-ai {
     margin-top: 12px;
 }
@@ -298,6 +298,22 @@
     font-weight: 500;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+}
+
+/* "Get an AI opinion": a disclosure row, its sparkle in Claude's coral, and the routes it hides. */
+.dep-ai__expand {
+    margin-left: -6px;
+    text-transform: none;
+    font-weight: 500;
+}
+
+.dep-ai__expand .mud-button-icon-start {
+    color: #d97757;
+}
+
+.dep-ai__expand-hint {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
 }
 
 .dep-ai__routes {
@@ -1018,6 +1034,15 @@
     padding-left: 20px;
     font-family: monospace;
     font-size: 0.8125rem;
+}
+
+/* The fix actions of an answer that suggests a change, under it, so the dialog's own buttons
+   (Cancel, accepting anyway, Fix later) stay on one row. */
+.dep-ai__fix-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
 }
 
 /* The review dialogs' buttons wrap to a second row rather than squeezing their labels. */
