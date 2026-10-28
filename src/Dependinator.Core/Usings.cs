@@ -12,6 +12,8 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Dependinator.Bicep.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Claude")]
 [assembly: InternalsVisibleTo("Dependinator.Claude.Tests")]
+[assembly: InternalsVisibleTo("Dependinator.Mcp")]
+[assembly: InternalsVisibleTo("Dependinator.Mcp.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Reflection")]
 [assembly: InternalsVisibleTo("Dependinator.Reflection.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Web")]

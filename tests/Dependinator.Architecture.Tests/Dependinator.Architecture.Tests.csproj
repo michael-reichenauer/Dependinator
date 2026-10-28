@@ -35,6 +35,7 @@
         <ProjectReference Include="..\..\src\Dependinator.Bicep\Dependinator.Bicep.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Reflection\Dependinator.Reflection.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Claude\Dependinator.Claude.csproj" />
+        <ProjectReference Include="..\..\src\Dependinator.Mcp\Dependinator.Mcp.csproj" />
         <ProjectReference Include="..\..\src\Shared\Shared.csproj" />
     </ItemGroup>
 </Project>

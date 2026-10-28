@@ -7,8 +7,8 @@
 //   dist/node/extension.js  - desktop host (Node), used via package.json "main"
 //   dist/web/extension.js   - web host (browser), used via package.json "browser"
 //
-// languageServer.ts and cloudSyncAuth.ts use Node-only APIs (node:http,
-// node:crypto, vscode-languageclient/node). They are only reached behind the
+// languageServer.ts, cloudSyncAuth.ts and mcpServer.ts use Node-only APIs (node:http,
+// node:crypto, node:child_process, vscode-languageclient/node). They are only reached behind the
 // `isWeb` guard via dynamic import(), so for the web bundle they are marked
 // external (never executed there); for the node bundle they bundle normally.
 
@@ -47,7 +47,7 @@ const webConfig = {
     outfile: "dist/web/extension.js",
     // vscode is provided by the host; the Node-only modules below are only
     // dynamically imported on the desktop host and never executed on web.
-    external: ["vscode", "node:http", "node:crypto", "vscode-languageclient/node"],
+    external: ["vscode", "node:http", "node:crypto", "node:child_process", "node:os", "node:path", "vscode-languageclient/node"],
 };
 
 async function main() {

@@ -18,5 +18,6 @@
         <ProjectReference Include="../Dependinator.Roslyn/Dependinator.Roslyn.csproj" />
         <ProjectReference Include="../Dependinator.Bicep/Dependinator.Bicep.csproj" />
         <ProjectReference Include="../Dependinator.Claude/Dependinator.Claude.csproj" />
+        <ProjectReference Include="../Dependinator.Mcp/Dependinator.Mcp.csproj" />
     </ItemGroup>
 </Project>

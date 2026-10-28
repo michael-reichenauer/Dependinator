@@ -15,6 +15,7 @@ with the next official release.
 - A dependency that breaks an architecture rule can be reviewed like a cycle: ask Claude, Claude Code or your own AI chat whether to fix it or allow it; fixing gives a prompt for an AI that can change the code, and allowing keeps the dependency with a reason under its rule, where it is no longer counted as a problem
 - **Settings › Use Claude Code (Experimental)** adds **Ask Claude Code** to the cycle and rule reviews, which asks Claude Code on this computer with your own Claude login instead of an API key; it reads the code in the model's folder to check its answer
 - **Fix with Claude Code** in the cycle and rule reviews lets Claude Code make the suggested change in the model's folder (edits only, no commands), after a warning about uncommitted changes; it shows the running time with **Stop**, then a summary and the changed files, and re-parses
+- **AI agents can ask about the diagram**: the extension runs an MCP server that Copilot's agent mode lists as "Dependinator", and **Dependinator: Connect Claude Code** adds it to Claude Code for the folder; its tools find nodes and look up their dependencies, paths between them, cycles and architecture rules, and check a rule before it is added, while the diagram is open
 - **Help › What's New** opens this change log
 
 ### Improved

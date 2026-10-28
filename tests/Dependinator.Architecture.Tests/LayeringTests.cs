@@ -4,7 +4,7 @@ using NetArchTest.Rules;
 namespace Dependinator.Architecture.Tests;
 
 // Guards the solution's layering direction against future drift. The dependency direction is
-// Hosts -> UI -> Core -> Shared (with Roslyn -> Core, Bicep -> Core, Reflection -> Core and Claude -> Core). Today the project references already make
+// Hosts -> UI -> Core -> Shared (with Roslyn -> Core, Bicep -> Core, Reflection -> Core, Claude -> Core and Mcp -> Core). Today the project references already make
 // upward dependencies impossible to compile, but these tests fail loudly if someone later adds
 // such a reference (e.g. Core taking a dependency on UI for a "quick fix").
 public class LayeringTests
@@ -16,6 +16,7 @@ public class LayeringTests
     static readonly Assembly ReflectionAssembly = Assembly.Load("Dependinator.Reflection");
     static readonly Assembly BicepAssembly = Assembly.Load("Dependinator.Bicep");
     static readonly Assembly ClaudeAssembly = Assembly.Load("Dependinator.Claude");
+    static readonly Assembly McpAssembly = Assembly.Load("Dependinator.Mcp");
 
     static readonly string[] HostAssemblies = ["Dependinator.Web", "Dependinator.Wasm", "Dependinator.Lsp", "Api"];
 
@@ -30,6 +31,7 @@ public class LayeringTests
                 "Dependinator.Bicep",
                 "Dependinator.Reflection",
                 "Dependinator.Claude",
+                "Dependinator.Mcp",
                 .. HostAssemblies,
             ]
         );
@@ -77,6 +79,24 @@ public class LayeringTests
         AssertNoDependencyOn(UiAssembly, ["Dependinator.Claude", "Anthropic"]);
     }
 
+    // The MCP server asks the UI through Core's IModelQueryService over RPC, like the hosts do.
+    [Fact]
+    public void Mcp_ShouldNotDependOnUiOrParsersOrHosts()
+    {
+        AssertNoDependencyOn(
+            McpAssembly,
+            ["Dependinator.UI", "Dependinator.Roslyn", "Dependinator.Bicep", "Dependinator.Claude", .. HostAssemblies]
+        );
+    }
+
+    // Core and UI run in the browser (the Wasm host), so the MCP server's SDK stays out of them.
+    [Fact]
+    public void CoreAndUi_ShouldNotDependOnTheMcpSdk()
+    {
+        AssertNoDependencyOn(CoreAssembly, ["Dependinator.Mcp", "ModelContextProtocol"]);
+        AssertNoDependencyOn(UiAssembly, ["Dependinator.Mcp", "ModelContextProtocol"]);
+    }
+
     [Fact]
     public void Reflection_ShouldNotDependOnUiOrHosts()
     {
@@ -95,6 +115,7 @@ public class LayeringTests
                 "Dependinator.Bicep",
                 "Dependinator.Reflection",
                 "Dependinator.Claude",
+                "Dependinator.Mcp",
                 .. HostAssemblies,
             ]
         );
