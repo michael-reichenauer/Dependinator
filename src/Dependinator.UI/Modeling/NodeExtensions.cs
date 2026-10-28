@@ -13,6 +13,9 @@ static class NodeExtensions
         }
     }
 
+    public static bool IsAtOrInside(this Node node, Node container) =>
+        node == container || node.Ancestors().Contains(container);
+
     public static IEnumerable<Node> AncestorsAndSelf(this Node node)
     {
         yield return node;

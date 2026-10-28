@@ -40,6 +40,7 @@ internal class Program
 
         var app = builder.Build();
         app.Services.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
+        app.Services.UseJsonRpcClasses(typeof(DependinatorServiceCollectionExtensions)); // The model queries
         app.Services.UseJsonRpc();
 
         await app.RunAsync();

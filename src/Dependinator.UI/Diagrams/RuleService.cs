@@ -149,9 +149,17 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         cachedFor = key;
     }
 
-    internal static (IReadOnlyList<RuleReport> Reports, IReadOnlySet<LineId> LineIds) Compute(IModel model)
+    internal static (IReadOnlyList<RuleReport> Reports, IReadOnlySet<LineId> LineIds) Compute(IModel model) =>
+        Compute(model, model.Rules);
+
+    // Evaluates the given rules, whether the model has them or not (checking a rule before adding
+    // it); allowed dependencies apply to the rules they were allowed under.
+    internal static (IReadOnlyList<RuleReport> Reports, IReadOnlySet<LineId> LineIds) Compute(
+        IModel model,
+        IReadOnlyList<ArchitectureRule> rules
+    )
     {
-        if (model.Rules.Count == 0)
+        if (rules.Count == 0)
             return ([], new HashSet<LineId>());
 
         var nodesByName = new Dictionary<string, Node>(StringComparer.Ordinal);
@@ -159,7 +167,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             nodesByName.TryAdd(node.Name, node);
 
         var resolved = new List<(ArchitectureRule Rule, Node? From, Node? To)>();
-        foreach (var rule in model.Rules)
+        foreach (var rule in rules)
         {
             nodesByName.TryGetValue(rule.FromName, out var from);
             nodesByName.TryGetValue(rule.ToName, out var to);
@@ -188,7 +196,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                 var (_, from, to) = resolved[i];
                 if (from is null || to is null)
                     continue;
-                if (!IsAtOrInside(link.Source, from) || !IsAtOrInside(link.Target, to))
+                if (!link.Source.IsAtOrInside(from) || !link.Target.IsAtOrInside(to))
                     continue;
                 var pair = (UnitGraph.UnitOf(link.Source), UnitGraph.UnitOf(link.Target));
                 var names = (pair.Item1.Name, pair.Item2.Name);
@@ -257,8 +265,6 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         }
         return (reports, lineIds);
     }
-
-    static bool IsAtOrInside(Node node, Node container) => node == container || node.Ancestors().Contains(container);
 }
 
 // What the rule review dialog decided: allow the dependency with the reason, or (editing an

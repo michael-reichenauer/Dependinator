@@ -190,14 +190,12 @@ class SvgService : ISvgService
             return line != selectedLine;
         if (selection.Node is not { } node)
             return false;
-        if (IsAtOrInside(line.Source, node) || IsAtOrInside(line.Target, node))
+        if (line.Source.IsAtOrInside(node) || line.Target.IsAtOrInside(node))
             return false;
         // With several nodes selected, a line touching any of them stays bright.
         return selection.OtherNodes is not { } others
-            || !others.Any(other => IsAtOrInside(line.Source, other) || IsAtOrInside(line.Target, other));
+            || !others.Any(other => line.Source.IsAtOrInside(other) || line.Target.IsAtOrInside(other));
     }
-
-    static bool IsAtOrInside(Node endpoint, Node node) => endpoint == node || endpoint.Ancestors().Contains(node);
 
     // A line shows its link-count width only when the user asked for the widths (View › Line
     // Widths by Link Count, off by default) and only while it is what the user is looking at: the

@@ -70,6 +70,7 @@ public class Program
 
         var app = builder.Build();
         app.Services.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
+        app.Services.UseJsonRpcClasses(typeof(DependinatorServiceCollectionExtensions)); // The model queries
         app.Services.UseJsonRpcClasses(typeof(DependinatorClaudeServiceCollectionExtensions));
         app.Services.UseJsonRpc();
         // The dev host lists this repository's models (the working solution and the sample Bicep
