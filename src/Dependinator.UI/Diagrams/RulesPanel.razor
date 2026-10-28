@@ -6,14 +6,15 @@
 @inject Modeling.IModelService modelService
 @inject Modeling.Models.IModelMgr modelMgr
 @inject IRuleReviewService ruleReviewService
+@inject ISuggestRulesService suggestRulesService
 @implements IDisposable
 
 @* Architecture rules: "X must not depend on Y", declared by picking two nodes. Each rule lists
    the dependencies that break it (per class pair, with link counts); while the panel is open those
    lines are drawn in the rule color. Each dependency can be reviewed (RuleReviewDialog, with an AI
    opinion): fixed with a prompt for an AI that changes the code, or allowed with why, which moves
-   it to the rule's collapsed Allowed list. Rules and allowed dependencies are saved with the model
-   and undoable. *@
+   it to the rule's collapsed Allowed list. "Suggest rules" lets an AI suggest rules to add
+   (SuggestRulesDialog). Rules and allowed dependencies are saved with the model and undoable. *@
 @if (viewOptions.IsRulesShown)
 {
   var reports = ruleService.GetReports();
@@ -31,7 +32,7 @@
     <div class="dep-panel__list">
       @if (reports.Count == 0)
       {
-        <div class="dep-panel__empty" data-testid="rules-empty">No rules yet. Add one below, for example "UI must not depend on Data".</div>
+        <div class="dep-panel__empty" data-testid="rules-empty">No rules yet. Add one below, for example "UI must not depend on Data", or let an AI suggest some.</div>
       }
       @foreach (var report in reports)
       {
@@ -121,6 +122,13 @@
       <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(fromId is null || toId is null)"
                  OnClick="Add" data-testid="rules-add">
         Add
+      </MudButton>
+    </div>
+    <div class="dep-rules__suggest">
+      <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome"
+                 title="Let an AI suggest rules from the model's structure and dependencies; you choose which to add"
+                 OnClick="suggestRulesService.ShowAsync" data-testid="rules-suggest">
+        Suggest rules …
       </MudButton>
     </div>
   </div>

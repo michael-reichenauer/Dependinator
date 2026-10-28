@@ -7,7 +7,7 @@ namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises architecture rules: the panel opens empty, a rule picked from two nodes lists the
 // dependencies that break it and draws them highlighted, a rule nobody breaks is marked kept, and
-// removing a rule takes it away again.
+// removing a rule takes it away again. An AI can suggest rules, which Dependinator checks.
 public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -125,6 +125,35 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await allowed.GetByTestId("rules-allowed-remove").ClickAsync();
         await Expect(violations).ToHaveCountAsync(count);
         await Expect(Page.GetByTestId("rules-allowed-toggle")).ToHaveCountAsync(0);
+    }
+
+    // An AI suggests rules (in test mode the app answers for Claude): the prompt holds the model's
+    // structure and dependencies, Dependinator checks each rule, one on a node that is not in the
+    // model cannot be added, and the ticked ones are added.
+    [E2EFact]
+    public async Task SuggestRules_ShouldCheckEachRule_AndAddTheChosenOnes()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        await Page.GetByTestId("rules-suggest").ClickAsync();
+
+        await Page.GetByTestId("suggest-rules-show-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("Dependencies between them");
+        await Page.GetByTestId("prompt-dialog-close").ClickAsync();
+
+        await Page.GetByTestId("suggest-rules-suggest").ClickAsync();
+        ILocator items = Page.GetByTestId("suggest-rules-item");
+        await Expect(items).ToHaveCountAsync(3);
+        await Expect(items.Nth(2)).ToHaveAttributeAsync("data-can-add", "no");
+        await Expect(items.Nth(2).GetByTestId("suggest-rules-error")).ToContainTextAsync("No node is named");
+        ILocator add = Page.GetByTestId("suggest-rules-add");
+        await Expect(add).ToHaveTextAsync("Add 2 rules");
+
+        await items.Nth(0).GetByTestId("suggest-rules-choose").ClickAsync();
+        await Expect(add).ToHaveTextAsync("Add 1 rule");
+        await add.ClickAsync();
+        await Expect(Page.GetByTestId("rules-item")).ToHaveCountAsync(1);
     }
 
     // Picks both nodes through the search dialog in picker mode and adds the rule.

@@ -1,5 +1,6 @@
 using System.Net;
 using Dependinator.Core;
+using Dependinator.Core.ModelQueries;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -56,6 +57,31 @@ public static class DependinatorMcpExtensions
                 )
         );
         return app.MapMcp(Path);
+    }
+
+    // Tells IModelToolsServer where the endpoint is once the host listens, so the Claude Code runs
+    // the app starts can use the tools: the first address on this computer, a wildcard one by the
+    // loopback address of its family (IsLocalRequest refuses other host names).
+    public static void PublishModelToolsAddress(this WebApplication app) =>
+        app.Lifetime.ApplicationStarted.Register(() =>
+        {
+            var url = app.Urls.Select(LoopbackMcpUrl).FirstOrDefault(u => u is not null);
+            if (url is not null)
+                app.Services.GetRequiredService<IModelToolsServer>().SetAddress(new ModelToolsAddress(url, null));
+        });
+
+    internal static string? LoopbackMcpUrl(string address)
+    {
+        if (!Uri.TryCreate(address, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttp)
+            return null;
+        var host = uri.Host switch
+        {
+            "0.0.0.0" => "127.0.0.1",
+            "[::]" => "[::1]",
+            var name when IsLoopbackHost(name) => name,
+            _ => null,
+        };
+        return host is null ? null : new UriBuilder(uri) { Host = host, Path = Path }.Uri.ToString();
     }
 
     // The server is for agents on this computer: the connection must come from the loopback

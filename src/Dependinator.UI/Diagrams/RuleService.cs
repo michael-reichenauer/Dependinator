@@ -57,6 +57,11 @@ interface IRuleService
 
     // Adds "from must not use to"; an error says why a pair is not a rule (same node, exists).
     Result AddRule(NodeId fromId, NodeId toId);
+
+    // Adds the rules whose nodes are in the model, neither inside the other, and that are not
+    // rules yet, as one undo step; the number added.
+    int AddRules(IReadOnlyList<ArchitectureRule> rules);
+
     void RemoveRule(ArchitectureRule rule);
 
     // Allows a dependency that breaks the rule, with why: it is no longer reported.
@@ -113,6 +118,29 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         }
         commandService.Do(new AddRuleCommand(rule));
         return Result.Ok;
+    }
+
+    public int AddRules(IReadOnlyList<ArchitectureRule> rules)
+    {
+        List<Command> commands = [];
+        using (var model = modelMgr.UseModel())
+        {
+            var added = new HashSet<ArchitectureRule>(model.Rules);
+            foreach (var rule in rules)
+            {
+                if (
+                    model.Nodes.TryGetValue(NodeId.FromName(rule.FromName), out var from)
+                    && model.Nodes.TryGetValue(NodeId.FromName(rule.ToName), out var to)
+                    && !from.IsAtOrInside(to)
+                    && !to.IsAtOrInside(from)
+                    && added.Add(rule)
+                )
+                    commands.Add(new AddRuleCommand(rule));
+            }
+        }
+        if (commands.Count > 0)
+            commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+        return commands.Count;
     }
 
     public void RemoveRule(ArchitectureRule rule) => commandService.Do(new RemoveRuleCommand(rule));

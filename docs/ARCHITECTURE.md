@@ -160,7 +160,9 @@ through the same tunnel, in the other direction: `IModelQueryService` is an `[Rp
 UI implements, so the answers come from the model the user sees, with its layout, cycles and
 rules. The extension registers the server with VS Code for Copilot and, with *Dependinator: Connect
 Claude Code*, with Claude Code for the folder. While the diagram is closed the tools answer with an
-error that asks to open it. The dev host serves the same tools at `/mcp`, without a token.
+error that asks to open it. The dev host serves the same tools at `/mcp`, without a token. The
+app's own Claude Code runs use them too: Suggest rules passes the server to `claude -p`, so Claude
+Code can check a rule on the model before it suggests it.
 
 Points to discuss: the same `[Rpc]` interface works in process (dev host, browser) and across the
 tunnel, which keeps one code path, but anything a parser reads from statics or configuration does
