@@ -56,20 +56,14 @@ async function waitForModel(page) {
   throw new Error("The model did not finish loading");
 }
 
-async function setUseClaudeCode(page, on) {
+// Settings live in the browser's storage, and Playwright's browser starts with none, so this
+// never changes the setting in the user's own browser.
+async function turnOnClaudeCode(page) {
   await page.getByTestId("appbar-menu").click();
   await page.getByTestId("menu-settings").hover();
-  const item = page.getByTestId("menu-use-claude-code");
-  await item.waitFor();
-  const isOn = (await item.getAttribute("data-checked")) === "true";
-  if (isOn === on) {
-    await page.keyboard.press("Escape");
-    return isOn;
-  }
-  await item.click();
-  if (on) await page.getByTestId("use-claude-code-confirm").click();
+  await page.getByTestId("menu-use-claude-code").click();
+  await page.getByTestId("use-claude-code-confirm").click();
   await page.waitForTimeout(1000); // The setting is saved after the click returns.
-  return isOn;
 }
 
 async function ask(page, question) {
@@ -94,14 +88,15 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
 await page.goto(baseUrl);
 const counts = await waitForModel(page);
-const wasClaudeCodeOn = route === "code" ? await setUseClaudeCode(page, true) : null;
+if (route === "code") await turnOnClaudeCode(page);
 console.log(`Asking ${cases.length} cases on the ${route === "code" ? "Claude Code" : "Claude API"} route (model ${counts} nodes/links)\n`);
 
 const results = [];
 try {
   for (const testCase of cases) {
-    // A new page per case: a new conversation.
+    // A new page per case: a new conversation, on the model the new page loads again.
     await page.goto(baseUrl);
+    await waitForModel(page);
     await page.getByTestId("toolbar-ask").click();
     if (route === "code") await page.getByTestId("ask-route-code").click();
     for (const question of testCase.questions) {
@@ -114,13 +109,14 @@ try {
     }
   }
 } finally {
-  if (wasClaudeCodeOn === false) await setUseClaudeCode(page, false);
   await browser.close();
 }
 
 const passed = results.filter((r) => r.passed).length;
 const seconds = results.reduce((sum, r) => sum + r.seconds, 0);
-const cents = results.reduce((sum, r) => sum + Number(r.meta?.match(/([\d.]+)¢/)?.[1] ?? 0), 0);
+// The panel shows "1.2¢", or "$1.20" from a dollar on.
+const centsOf = (meta) => Number(meta?.match(/([\d.]+)¢/)?.[1] ?? 100 * (meta?.match(/\$([\d.]+)/)?.[1] ?? 0));
+const cents = results.reduce((sum, r) => sum + centsOf(r.meta), 0);
 console.log(`\n${passed}/${results.length} answers passed · ${seconds} s${cents > 0 ? ` · ${cents.toFixed(1)}¢` : ""}`);
 const folder = join(repoRoot, "tests", "ask-eval-results");
 mkdirSync(folder, { recursive: true });

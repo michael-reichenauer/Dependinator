@@ -273,7 +273,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   earlier ones: the prompt carries the last three questions and answers until the conversation is
   cleared. A new `read_source` model tool reads a node's code with line numbers (through
   `IWorkspaceFileService`, so in VS Code over the tunnel), for the API route, Copilot and Claude
-  Code alike. `./scripts/ask-eval` asks a set of questions about this repository
+  Code alike. A name an answer writes partly (`PromptParts.ReadSourcesAsync`) links too when only
+  one node ends so. `./scripts/ask-eval` asks a set of questions about this repository
   (`scripts/ask-eval.json`) in the dev host and scores the answers (phase 3).
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code

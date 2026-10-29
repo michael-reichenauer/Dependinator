@@ -10,7 +10,7 @@
       "questions": [
         {
           "question": "Which class parses C# solutions, and where does it get the compilation from?",
-          "nodes": ["Dependinator.Roslyn.Parsing.SourceParser|SolutionReader|ProjectParser"]
+          "nodes": ["Dependinator.Roslyn.Parsing.SourceParser|Dependinator.Roslyn.Parsing.Compiler"]
         }
       ]
     },

@@ -99,11 +99,12 @@ public record AnswerNode(string Name, string Why);
 // UI.App.AppBar"), so the panel shows the node's short name in the text and its long one in lists.
 public record NodeLink(NodeId Id, string ShortName, string LongName);
 
+// An earlier question in the panel's conversation and its answer's text.
+record AskExchange(string Question, string Answer);
+
 // The prompt that asks an AI a question about the model open in the diagram. It holds only an
 // overview (the model's size and top level); the AI finds the rest with Dependinator's tools,
 // which answer on the model as it is now, and reads the code where it can.
-// An earlier question in the panel's conversation and its answer's text.
-record AskExchange(string Question, string Answer);
 
 static class AskModelPrompt
 {
@@ -315,11 +316,33 @@ class AskModelService(
         Dictionary<string, NodeLink> links = [];
         foreach (var name in answer.Names())
         {
-            if (ModelQueries.FindNode(model, name) is Node node)
+            if (FindLinkedNode(model, name) is { } node)
                 links[name] = new NodeLink(node.Id, node.ShortName, node.LongName);
         }
         return answer with { Links = links };
     }
+
+    // A node the answer names: by its name or title as the tools give them, or else by the end of
+    // its title ("PromptParts.ReadSourcesAsync", "ReadSourcesAsync()"), as answers often write it,
+    // when only one node (or one method's overloads) ends so.
+    internal static Node? FindLinkedNode(IModel model, string name)
+    {
+        if (ModelQueries.FindNode(model, name) is Node node)
+            return node;
+        var tail = WithoutParameters(name.Trim());
+        if (tail.Length < 3 || tail.Any(char.IsWhiteSpace))
+            return null;
+        var matches = model
+            .Nodes.Values.Where(n => !n.IsRoot)
+            .Select(n => (Node: n, Title: WithoutParameters(n.LongName)))
+            .Where(n => n.Title == tail || n.Title.EndsWith("." + tail, StringComparison.Ordinal))
+            .ToList();
+        return matches.Count > 0 && matches.All(m => m.Title == matches[0].Title)
+            ? matches.MinBy(m => m.Node.Name, StringComparer.Ordinal).Node
+            : null;
+    }
+
+    static string WithoutParameters(string name) => name.Split('(')[0];
 
     public void Toggle()
     {

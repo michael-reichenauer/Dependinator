@@ -247,32 +247,30 @@ public class ModelQueriesTests
     }
 
     [Fact]
-    public async Task ReadSourceAsync_ShouldNumberTheNodesLines_WithThePathFromTheModelsFolder()
+    public async Task ReadSourceAsync_ShouldNumberTheLinesOfAShortFile_WithThePathFromTheModelsFolder()
     {
-        SetSource(repo, "/repo/src/Repo.cs", 2, 3);
-        workspace.Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs")).ReturnsAsync((Result<string>)"a\r\nb\nc\nd");
+        SetSource(repo, "/repo/src/Repo.cs", 1, 2); // 0-based, as the parsers give them
+        workspace.Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs")).ReturnsAsync((Result<string>)"a\r\nb\nc\n");
 
         var source = AssertOk(await queries.ReadSourceAsync("Data.Repo"));
 
         Assert.Equal("Data.Repo", source.Node.Name);
-        Assert.Equal("src/Repo.cs", source.Path);
-        Assert.Equal((2, 3, false), (source.StartLine, source.EndLine, source.IsCut));
-        Assert.Equal("    2  b\n    3  c", source.Text);
+        Assert.Equal("src/Repo.cs, lines 1-3:\n    1  a\n    2  b\n    3  c", source.Text);
     }
 
     [Fact]
-    public async Task ReadSourceAsync_ShouldCutLongCode()
+    public async Task ReadSourceAsync_ShouldShowATypeInALongFile_WithTheCommentAboveIt()
     {
-        var lineCount = ModelQueries.MaxSourceLines + 50;
-        SetSource(repo, "/repo/src/Repo.cs", 1, lineCount);
-        var file = string.Join("\n", Enumerable.Range(1, lineCount).Select(n => $"line {n}"));
-        workspace.Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs")).ReturnsAsync((Result<string>)file);
+        SetSource(repo, "/repo/src/Repo.cs", 200, 209);
+        var lines = Enumerable.Range(1, 400).Select(n => n == 200 ? "// The repository" : $"line {n}");
+        workspace
+            .Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs"))
+            .ReturnsAsync((Result<string>)string.Join("\n", lines));
 
         var source = AssertOk(await queries.ReadSourceAsync("Data.Repo"));
 
-        Assert.True(source.IsCut);
-        Assert.Equal(lineCount, source.EndLine);
-        Assert.Equal(ModelQueries.MaxSourceLines, source.Text.Split('\n').Length);
+        Assert.StartsWith("src/Repo.cs, lines 200-210:\n  200  // The repository\n  201  line 201\n", source.Text);
+        Assert.EndsWith("  210  line 210", source.Text);
     }
 
     [Fact]

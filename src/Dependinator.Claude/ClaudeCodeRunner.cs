@@ -60,7 +60,7 @@ static class ClaudeCodeRunner
     const string ModelToolsInstruction =
         "You can also ask Dependinator, which shows this code as a dependency model, through its tools "
         + "(mcp__dependinator__...): get_model, list_children, search_nodes, get_dependencies, find_paths, "
-        + "list_cycles, list_rules and check_rule. They answer on the model the user has open, so use them for "
+        + "list_cycles, list_rules, check_rule and read_source. They answer on the model the user has open, so use them for "
         + "what the prompt leaves out.";
 
     public enum Mode

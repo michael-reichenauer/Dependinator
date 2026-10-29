@@ -128,7 +128,7 @@ public sealed class ModelToolsTests : IAsyncLifetime
         var node = new QueryNode("Core.Repo", "Repo", "ClassType", 0);
         queries
             .Setup(q => q.ReadSourceAsync("Core.Repo"))
-            .ReturnsAsync(new NodeSource(node, "src/Repo.cs", 2, 40, "    2  class Repo\n    3  {", true));
+            .ReturnsAsync(new NodeSource(node, "src/Repo.cs, lines 2-3:\n    2  class Repo\n    3  {"));
 
         var result = await Client.CallToolAsync(
             "read_source",
@@ -136,10 +136,7 @@ public sealed class ModelToolsTests : IAsyncLifetime
         );
 
         Assert.NotEqual(true, result.IsError);
-        Assert.Equal(
-            "Core.Repo (ClassType) in src/Repo.cs, lines 2-40:\n\n    2  class Repo\n    3  {\n… cut here; the code goes on to line 40.",
-            Text(result)
-        );
+        Assert.Equal("Core.Repo (ClassType):\n\nsrc/Repo.cs, lines 2-3:\n    2  class Repo\n    3  {", Text(result));
     }
 
     static string Text(CallToolResult result) => Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;

@@ -89,6 +89,23 @@ public class AskModelTests
         AssertError(ModelAnswer.Parse("not json"));
     }
 
+    [Fact]
+    public void FindLinkedNode_ShouldFindANodeByTheEndOfItsTitle_WhenOnlyOneEndsSo()
+    {
+        using var model = modelMgr.UseModel();
+        var parser = AddNode(model, "Lib*dll.Lib.Parsing.Parser", model.Root);
+        AddNode(model, "Lib*dll.Lib.Parsing.Parser.Read(string)", parser, NodeType.MethodMember);
+        var readNumber = AddNode(model, "Lib*dll.Lib.Parsing.Parser.Read(int)", parser, NodeType.MethodMember);
+        AddNode(model, "Lib*dll.Lib.Other.Read()", model.Root, NodeType.MethodMember);
+
+        Assert.Equal(parser, AskModelService.FindLinkedNode(model, "Parsing.Parser"));
+        Assert.Equal(parser, AskModelService.FindLinkedNode(model, "Parser"));
+        Assert.Equal(readNumber, AskModelService.FindLinkedNode(model, "Parser.Read()")); // Overloads: the first by name
+        Assert.Null(AskModelService.FindLinkedNode(model, "Read")); // Two methods end so
+        Assert.Null(AskModelService.FindLinkedNode(model, "ser")); // Not at a dot
+        Assert.Null(AskModelService.FindLinkedNode(model, "new Parser()"));
+    }
+
     static Node AddNode(IModel model, string name, Node parent, NodeType type = NodeType.ClassType)
     {
         var node = new Node(name, parent) { Boundary = new Rect(0, 0, 100, 100), Type = type };

@@ -2,7 +2,6 @@ using Dependinator.Core.ModelQueries;
 using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
-using FileSpan = Dependinator.Core.Parsing.FileSpan;
 
 namespace Dependinator.UI.Diagrams.Ai;
 
@@ -49,7 +48,6 @@ sealed class ModelQueries(
     internal const int MaxCycleMembers = 20;
     internal const int MaxViolations = 25;
     internal const int MaxAllowed = 25;
-    internal const int MaxSourceLines = 300;
     const int MaxDescriptionLength = 200;
 
     public event Action<string>? Asked;
@@ -230,12 +228,14 @@ sealed class ModelQueries(
         return ToRuleResult(report, model.Rules.Contains(rule));
     }
 
+    // The code About Node shows: a short file whole, a type with the comments above it (a long one
+    // cut to its members), a member within its type.
     public async Task<Result<NodeSource>> ReadSourceAsync(string nodeName)
     {
         if (!PromptParts.CanReadSource)
             return new Error("This Dependinator app has no access to the source files.");
         QueryNode node;
-        FileSpan span;
+        IReadOnlyList<SourceRequest> requests;
         string modelPath;
         using (var model = modelMgr.UseModel())
         {
@@ -244,39 +244,27 @@ sealed class ModelQueries(
             var found = FindNode(model, nodeName);
             if (found is not Node n)
                 return found.Error;
-            if (n.FileSpan is not { } fileSpan)
+            requests = NodePrompt.GetSourceRequests(n);
+            if (requests.Count == 0)
                 return new Error(
                     $"{n.Name} has no code of its own (a {PromptParts.Kind(n.Type)}): read the types in it."
                 );
-            (node, span, modelPath) = (ToQueryNode(n), fileSpan, model.Path);
+            (node, modelPath) = (ToQueryNode(n), model.Path);
         }
 
-        // Read outside the model lock: in VS Code the file comes over the RPC tunnel.
-        var read = await workspaceFileService.ReadSourceFileAsync(span.Path);
-        if (read is not string fileText)
-            return new Error($"Could not read the code of {node.Name}: {read.Error.Message}", read.Error);
-        var lines = fileText.Replace("\r\n", "\n").Split('\n');
-        var start = Math.Clamp(span.StartLine, 1, lines.Length);
-        var end = Math.Clamp(span.EndLine < start ? start : span.EndLine, start, lines.Length);
-        var shownEnd = Math.Min(end, start + MaxSourceLines - 1);
+        // Read outside the model lock: in VS Code the files come over the RPC tunnel.
+        var sections = await PromptParts.ReadSourcesAsync(workspaceFileService, requests);
+        var excerpts = sections.SelectMany(s => s.Excerpts).ToList();
+        if (excerpts.Count == 0)
+            return new Error($"Could not read the code of {node.Name}: its file is not in the workspace.");
         var text = string.Join(
-            "\n",
-            Enumerable.Range(start, shownEnd - start + 1).Select(n => $"{n, 5}  {lines[n - 1]}")
+            "\n\n",
+            excerpts.Select(x =>
+                $"{PromptParts.DisplayPath(modelPath, x.Path)}, lines {x.StartLine}-{x.EndLine}:\n"
+                + string.Join("\n", x.Lines.Select((line, i) => $"{x.StartLine + i, 5}  {line}"))
+            )
         );
-        return new NodeSource(node, RelativePath(span.Path, modelPath), start, end, text, shownEnd < end);
-    }
-
-    // A path in the model's folder, from there: shorter, and the same on every computer.
-    static string RelativePath(string path, string modelPath)
-    {
-        var folderLength = modelPath.LastIndexOfAny(['/', '\\']);
-        return
-            folderLength > 0
-            && path.Length > folderLength + 1
-            && path.StartsWith(modelPath[..folderLength], StringComparison.OrdinalIgnoreCase)
-            && path[folderLength] is '/' or '\\'
-            ? path[(folderLength + 1)..]
-            : path;
+        return new NodeSource(node, text);
     }
 
     static Result CheckHasModel(IModel model) =>

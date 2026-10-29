@@ -92,8 +92,8 @@ sealed class ModelTools(IModelQueryService queries)
 
     [McpServerTool(Name = "read_source", ReadOnly = true, Idempotent = true)]
     [Description(
-        "Reads a node's code from the workspace (a type, a member, a Bicep resource), with line numbers; long "
-            + "code is cut. Projects and namespaces have no code of their own: read their types. Use it when the "
+        "Reads a node's code from the workspace (a type, a member, a Bicep resource), with line numbers: a short "
+            + "file whole, a long type cut to its members. Projects and namespaces have no code of their own: read their types. Use it when the "
             + "names and dependencies do not answer the question, such as what a type does or why it uses another."
     )]
     public async Task<CallToolResult> ReadSource([Description("The node's name.")] string nodeName)
@@ -103,13 +103,7 @@ sealed class ModelTools(IModelQueryService queries)
     }
 
     // Code reads best as itself, not as a JSON string with its quotes and line breaks escaped.
-    static string SourceText(NodeSource source)
-    {
-        var cut = source.IsCut ? $"\n… cut here; the code goes on to line {source.EndLine}." : "";
-        return $"{source.Node.Name} ({source.Node.Type}) in {source.Path}, lines {source.StartLine}-{source.EndLine}:\n\n"
-            + source.Text
-            + cut;
-    }
+    static string SourceText(NodeSource source) => $"{source.Node.Name} ({source.Node.Type}):\n\n{source.Text}";
 
     // An error is a result, not an exception, so an expected answer such as "no diagram is open"
     // is not logged as a failure.
