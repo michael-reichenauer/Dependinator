@@ -35,6 +35,14 @@ interface IAiService
         bool withModelTools = false
     );
 
+    // Asks Claude with the API key, letting it look things up first with Dependinator's model tools
+    // (IClaudeService.AskWithModelToolsAsync); the key is handled as for AskAsync.
+    Task<Result<ToolsAnswer>> AskWithModelToolsAsync(
+        Func<Task<string>> getPrompt,
+        string jsonSchema,
+        Action<SuggestStep> onStep
+    );
+
     // Whether "Fix with Claude Code" can run: the route is on and the model has a folder on disk.
     Task<bool> CanFixWithClaudeCodeAsync();
 
@@ -86,6 +94,28 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
             }
         }
 
+        return await WithApiKeyAsync(
+            getPrompt,
+            onStep,
+            prompt =>
+                isQuick ? claudeService.AskQuicklyAsync(prompt, jsonSchema) : claudeService.AskAsync(prompt, jsonSchema)
+        );
+    }
+
+    public Task<Result<ToolsAnswer>> AskWithModelToolsAsync(
+        Func<Task<string>> getPrompt,
+        string jsonSchema,
+        Action<SuggestStep> onStep
+    ) => WithApiKeyAsync(getPrompt, onStep, prompt => claudeService.AskWithModelToolsAsync(prompt, jsonSchema));
+
+    // Without a key, or with one Claude did not accept, the user is asked for a key first (once).
+    async Task<Result<T>> WithApiKeyAsync<T>(
+        Func<Task<string>> getPrompt,
+        Action<SuggestStep> onStep,
+        Func<string, Task<Result<T>>> ask
+    )
+        where T : notnull
+    {
         var hasAskedForKey = false;
         string? prompt = null;
         while (true)
@@ -103,10 +133,8 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
             prompt ??= await getPrompt();
             if (prompt == "")
                 return new Error(EmptyPromptError);
-            var answer = isQuick
-                ? await claudeService.AskQuicklyAsync(prompt, jsonSchema)
-                : await claudeService.AskAsync(prompt, jsonSchema);
-            if (answer is string)
+            var answer = await ask(prompt);
+            if (answer.Value is T)
                 return answer;
             // A key Claude did not accept: ask for a new one, once.
             if (hasAskedForKey || await claudeService.GetApiKeyStateAsync() is not ClaudeApiKeyState.Rejected)

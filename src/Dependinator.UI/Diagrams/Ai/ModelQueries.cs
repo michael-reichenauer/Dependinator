@@ -18,6 +18,12 @@ interface IModelQueries
     Result<CycleList> ListCycles();
     Result<IReadOnlyList<RuleResult>> ListRules();
     Result<RuleResult> CheckRule(string fromName, string toName);
+
+    // An agent asked a question through the RPC (the MCP tools), in words: "Searched for "Clerk"".
+    // In-app features that call the methods directly are not told.
+    event Action<string>? Asked;
+
+    void ReportAsked(string what);
 }
 
 [Scoped]
@@ -40,6 +46,10 @@ sealed class ModelQueries(
     internal const int MaxViolations = 25;
     internal const int MaxAllowed = 25;
     const int MaxDescriptionLength = 200;
+
+    public event Action<string>? Asked;
+
+    public void ReportAsked(string what) => Asked?.Invoke(what);
 
     // Makes this scope's model the one the queries answer on (the latest one opened).
     public void Activate() => host.Add(this);

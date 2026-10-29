@@ -7,12 +7,15 @@
 @inject IDialogService dialogService
 @inject Modeling.Models.IModelMgr modelMgr
 @inject IJSInterop jsInterop
+@inject IModelQueries modelQueries
 @implements IDisposable
 
 @* Ask (AskModelService): questions about the open model for an AI, on the right like the other
-   panels so the diagram stays in view. Claude Code finds the answer with Dependinator's model tools
-   and writes node names in backticks; each name that is a node becomes a link that goes to it, and
-   the answer lists the nodes it is about. The questions and answers stay while the panel is closed,
+   panels so the diagram stays in view. Claude (the user's API key) or Claude Code finds the answer
+   with Dependinator's model tools and writes node names in backticks; each name that is a node
+   becomes a link that goes to it, and the answer lists the nodes it is about. While it works, each
+   lookup it makes shows as a line (IModelQueries.Asked), kept behind a toggle with the answer, which
+   also says what Claude's answer cost. The questions and answers stay while the panel is closed,
    so an answer that takes a while still arrives, until another model is opened. *@
 @if (modelPath is not null)
 {
@@ -35,8 +38,8 @@
       {
         <div class="dep-panel__hint" data-testid="ask-intro">
           Ask anything about the model: where something is handled, what depends on what, what a change would
-          touch. Claude Code looks it up with Dependinator's tools and reads the code, and the nodes in its answer
-          are links to the diagram.
+          touch. Claude looks it up with Dependinator's tools, and the nodes in its answer are links to the
+          diagram.
         </div>
         <div class="dep-ask__examples">
           @foreach (var example in Examples)
@@ -75,6 +78,18 @@
                   }
                 </div>
               }
+              <div class="dep-ask__answer-meta" data-testid="ask-answer-meta">
+                @AnswerMeta(answer)
+                @if (entry.Steps.Count > 0)
+                {
+                  <button type="button" class="dep-ask__steps-toggle" @onclick="() => entry.IsStepsShown = !entry.IsStepsShown"
+                          data-testid="ask-steps-toggle">@(entry.IsStepsShown ? "Hide lookups" : Lookups(entry.Steps.Count))</button>
+                }
+              </div>
+              @if (entry.IsStepsShown)
+              {
+                @Steps(entry, isAll: true)
+              }
               <div class="dep-ask__actions">
                 @if (answer.Links.Count > 1)
                 {
@@ -100,37 +115,40 @@
             <div class="dep-ai__suggestion dep-ai__suggestion--pending" data-testid="ask-asking">
               <div class="dep-ai__suggest-pending">
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                <span>Asking Claude Code on this computer, this can take a minute or two.</span>
+                <span>@PendingText(entry)</span>
               </div>
+              @Steps(entry, isAll: false)
             </div>
           }
         </div>
       }
     </div>
 
-    @if (canAsk)
+    @if (routes.Count > 0)
     {
       <div class="dep-ask__input">
         <MudTextField T="string" @bind-Value="question" Immediate="true" Placeholder="Ask a question about the model"
                       Variant="Variant.Outlined" Margin="Margin.Dense"
                       OnKeyDown="OnKeyDownAsync" Disabled="IsAsking" data-testid="ask-question" />
         <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Send" Color="Color.Primary" Size="Size.Small"
-                       title="Ask Claude Code (Enter)" Disabled="@(IsAsking || string.IsNullOrWhiteSpace(question))"
+                       title="@($"Ask {route.Name()} (Enter)")" Disabled="@(IsAsking || string.IsNullOrWhiteSpace(question))"
                        OnClick="AskAsync" data-testid="ask-send" />
       </div>
       <div class="dep-ask__meta">
-        <span>Claude Code on this computer, your Claude login</span>
+        @if (routes.Count > 1)
+        {
+          @foreach (var r in routes)
+          {
+            <button type="button" class="@RouteClass(r)" title="@RouteTitle(r)" @onclick="() => route = r"
+                    data-testid="@(r is AiSource.ClaudeCode ? "ask-route-code" : "ask-route-claude")">@r.ShortName()</button>
+          }
+        }
+        <span class="dep-ask__route-text">@RouteTitle(route)</span>
         <MudSpacer />
         <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai__show-prompt"
                    Disabled="@string.IsNullOrWhiteSpace(question)"
-                   title="Show the prompt that is sent to Claude Code for this question"
+                   title="Show the prompt that is sent for this question"
                    OnClick="ShowPromptAsync" data-testid="ask-show-prompt">Show prompt</MudButton>
-      </div>
-    }
-    else
-    {
-      <div class="dep-panel__hint dep-ask__off" data-testid="ask-needs-claude-code">
-        Asking needs Claude Code on this computer: turn on Menu › Settings › Use Claude Code (Experimental).
       </div>
     }
   </div>
@@ -150,7 +168,16 @@
 
     public string? Error { get; set; }
     public string? CopyNote { get; set; }
+
+    public required AiSource Route { get; init; }
+
+    // What the AI looked up so far, in words; the step the ask is at (entering a key, say).
+    public List<string> Steps { get; } = [];
+    public SuggestStep? Step { get; set; }
+    public bool IsStepsShown { get; set; }
   }
+
+  const int MaxPendingSteps = 6;
 
   static readonly string[] Examples =
   [
@@ -161,13 +188,14 @@
 
   readonly List<Entry> entries = [];
   string question = "";
-  bool canAsk;
+  IReadOnlyList<AiSource> routes = [];
+  AiSource route = AiSource.Claude;
   bool wasShown;
 
   // The model the questions are about ("" until a model is loaded), null before the panel opened.
   string? modelPath;
 
-  // Claude Code is running; one question at a time, also when its entry was cleared meanwhile.
+  // An AI is working on a question; one at a time, also when its entry was cleared meanwhile.
   bool isAsking;
 
   bool IsAsking => isAsking;
@@ -183,9 +211,13 @@
       modelPath ??= modelMgr.WithModel(m => m.Path);
     if (modelPath is not null)
       ForgetAnswersForAnotherModel();
-    // Settings › Use Claude Code may be turned on while the panel is open or closed.
-    if (viewOptions.IsAskShown && !canAsk)
-      canAsk = await askModelService.CanAskAsync();
+    // Settings › Use Claude Code may be turned on or off while the panel is open or closed.
+    if (viewOptions.IsAskShown && !wasShown || viewOptions.IsAskShown && routes.Count < 2)
+    {
+      routes = await askModelService.GetRoutesAsync();
+      if (!routes.Contains(route))
+        route = AiSource.Claude;
+    }
     if (viewOptions.IsAskShown || wasShown)
       StateHasChanged();
     wasShown = viewOptions.IsAskShown;
@@ -214,16 +246,26 @@
     var text = question.Trim();
     if (text == "" || IsAsking)
       return;
-    var entry = new Entry(text);
+    var entry = new Entry(text) { Route = route };
     entries.Add(entry);
     question = "";
     isAsking = true;
     var askedPath = modelMgr.WithModel(m => m.Path);
     await ScrollToEndAsync();
+    void OnAsked(string what) => _ = InvokeAsync(() =>
+    {
+      entry.Steps.Add(what);
+      StateHasChanged();
+    });
+    modelQueries.Asked += OnAsked;
     Result<ModelAnswer> result;
     try
     {
-      result = await askModelService.AskAsync(text, step => _ = InvokeAsync(StateHasChanged));
+      result = await askModelService.AskAsync(text, entry.Route, step => _ = InvokeAsync(() =>
+      {
+        entry.Step = step;
+        StateHasChanged();
+      }));
     }
     catch (Exception e) when (e.IsNotFatal())
     {
@@ -232,6 +274,7 @@
     }
     finally
     {
+      modelQueries.Asked -= OnAsked;
       isAsking = false;
     }
     // The answer is dropped when the questions were cleared, or another model opened, meanwhile
@@ -279,6 +322,52 @@
     if (prompt != "")
       await PromptDialog.ShowAsync(dialogService, prompt);
   }
+
+  string PendingText(Entry entry) =>
+    entry.Step switch
+    {
+      SuggestStep.EnteringApiKey when Dependinator.Core.Build.IsVsCodeExtWasm =>
+        "Asking Claude uses your own Anthropic API key, from console.anthropic.com (billed to your account). "
+          + "Enter it in the box at the top of the VS Code window.",
+      SuggestStep.EnteringNewApiKey when Dependinator.Core.Build.IsVsCodeExtWasm =>
+        "Claude did not accept the stored API key. Enter a new one in the box at the top of the VS Code window.",
+      SuggestStep.EnteringApiKey or SuggestStep.EnteringNewApiKey => "Checking the Claude API key ...",
+      _ when entry.Route is AiSource.ClaudeCode => "Asking Claude Code on this computer, this can take a minute or two.",
+      _ => "Asking Claude, it looks things up in the model first. This can take a minute.",
+    };
+
+  // The lookups so far: the latest few while asking, all of them on the answer.
+  RenderFragment Steps(Entry entry, bool isAll)
+  {
+    var shown = isAll ? entry.Steps : entry.Steps.TakeLast(MaxPendingSteps).ToList();
+    var left = entry.Steps.Count - shown.Count;
+    return @<div class="dep-ask__steps" data-testid="ask-steps">
+      @if (left > 0)
+      {
+        <div class="dep-ask__step">@($"… {left} earlier")</div>
+      }
+      @foreach (var step in shown)
+      {
+        <div class="dep-ask__step" data-testid="ask-step">@step</div>
+      }
+    </div>;
+  }
+
+  static string Lookups(int count) => count == 1 ? "1 lookup" : $"{count} lookups";
+
+  // "Claude · 0.6¢": what the answer cost, where Claude was asked with the API key.
+  static string AnswerMeta(ModelAnswer answer) =>
+    answer.CostUsd is { } cost ? $"{answer.Source.Name()} · {Cost(cost)}" : answer.Source.Name();
+
+  static string Cost(decimal usd) =>
+    usd < 1m
+      ? $"{(usd * 100m).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}¢"
+      : usd.ToString("$0.00", System.Globalization.CultureInfo.InvariantCulture);
+
+  string RouteClass(AiSource r) => r == route ? "dep-ask__route dep-ask__route--on" : "dep-ask__route";
+
+  static string RouteTitle(AiSource r) =>
+    r is AiSource.ClaudeCode ? "Claude Code on this computer, your Claude login" : "Your Anthropic API key, a few cents";
 
   // A paragraph (its lines joined by breaks), or a list; a code span that names a node is a link.
   RenderFragment Block(ModelAnswer answer, MarkdownBlock block) =>

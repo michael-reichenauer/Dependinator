@@ -1252,3 +1252,52 @@ button.dep-rules__node:hover {
     color: var(--mud-palette-text-secondary);
     font-size: 0.75rem;
 }
+
+.dep-ask__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-ask__step::before {
+    content: "· ";
+}
+
+.dep-ask__answer-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-ask__steps-toggle,
+.dep-ask__route {
+    padding: 0 6px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+}
+
+.dep-ask__steps-toggle:hover,
+.dep-ask__route:hover {
+    color: var(--mud-palette-primary);
+}
+
+.dep-ask__route--on {
+    background: var(--mud-palette-action-default-hover);
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-ask__route-text {
+    margin-left: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

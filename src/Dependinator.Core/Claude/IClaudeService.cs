@@ -25,6 +25,11 @@ interface IClaudeService
     // rather than a verdict to weigh.
     Task<Result<string>> AskQuicklyAsync(string prompt, string jsonSchema);
 
+    // Like AskQuicklyAsync, but Claude may first look things up with Dependinator's model tools
+    // (the MCP tools the host serves, see IModelToolsServer), as many times as it needs up to a
+    // limit, before it answers. The answer says how many tool calls it took and what it cost.
+    Task<Result<ToolsAnswer>> AskWithModelToolsAsync(string prompt, string jsonSchema);
+
     // Like AskAsync, through the experimental local route: `claude -p` (Claude Code) on this
     // computer, with the user's own Claude login instead of an API key. The UI offers it only when
     // the user turned it on in Settings. Claude Code may read and search the files in codeFolder
@@ -46,6 +51,10 @@ interface IClaudeService
     // a fix; an error when the folder is not in a git repository (or git is missing).
     Task<Result<int>> CountUncommittedChangesAsync(string codeFolder);
 }
+
+// Claude's answer after it used the model tools: JSON that matches the schema, the number of tool
+// calls it made, and the request's cost in US dollars at the API's list prices.
+record ToolsAnswer(string Json, int ToolCalls, decimal CostUsd);
 
 enum ClaudeApiKeyState
 {
