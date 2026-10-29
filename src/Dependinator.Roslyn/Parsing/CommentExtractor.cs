@@ -19,7 +19,7 @@ static class CommentExtractor
             if (!TryGetDeclarationNode(syntaxRef.GetSyntax(), out var declarationNode))
                 continue;
 
-            var lineSpan = declarationNode.GetLocation().GetLineSpan();
+            var lineSpan = Locations.GetSourceSpan(declarationNode.GetLocation());
             if (!IsMatchingFileSpan(lineSpan, fileSpan))
                 continue;
 

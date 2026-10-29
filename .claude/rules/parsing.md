@@ -31,6 +31,10 @@ paths:
   Functions SDK, Regex); `Compiler.RunUnloadableSourceGenerators` runs only the rest (Razor).
   Running a loadable one again defines its types twice: that gave 49 false compile errors in Api
   and 12 in UI until Oct 21, found once the problem indicator showed them.
+- **Razor locations:** a component's types live in generated trees whose paths are not on disk.
+  Take spans with `Locations.GetSourceSpan` (never `GetLineSpan()`): it follows `#line` to the
+  `.razor` line for `@code` members, and maps the class itself to the whole `.razor` file named by
+  the generated file's `#pragma checksum`. Without it Show Source Code did nothing (Oct 29).
 - **Parse problems:** a parser reports what can leave the model incomplete as a `ParseProblem`
   item (`Types.cs`), one brief summary per project or file, never per error. DemoGen leaves them
   out of the demo models.

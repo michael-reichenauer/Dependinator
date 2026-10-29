@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Dependinator.Roslyn.Parsing;
@@ -28,12 +29,45 @@ static class Locations
         return new FileSpan(span.Path, span.StartLinePosition.Line, span.EndLinePosition.Line);
     }
 
+    // The span in the file the user wrote. Razor components are C# generated from .razor
+    // files, in syntax trees whose paths do not exist on disk: #line directives map the
+    // @code members to their .razor lines, and the rest (the class itself, BuildRenderTree)
+    // maps to the whole .razor file named by the generated file's #pragma checksum.
+    public static FileLinePositionSpan GetSourceSpan(Location location)
+    {
+        var mapped = location.GetMappedLineSpan();
+        if (mapped.HasMappedPath)
+            return mapped;
+
+        if (GetRazorFileSpan(location.SourceTree) is { } razorSpan)
+            return razorSpan;
+
+        return location.GetLineSpan();
+    }
+
+    static FileLinePositionSpan? GetRazorFileSpan(SyntaxTree? tree)
+    {
+        if (tree is null || File.Exists(tree.FilePath))
+            return null;
+        if (tree.GetRoot() is not CSharpSyntaxNode root)
+            return null;
+        if (root.GetFirstDirective() is not PragmaChecksumDirectiveTriviaSyntax checksum)
+            return null;
+
+        var path = checksum.File.ValueText;
+        if (!path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase) || !File.Exists(path))
+            return null;
+
+        var lastLine = Math.Max(0, File.ReadLines(path).Count() - 1);
+        return new FileLinePositionSpan(path, new(0, 0), new(lastLine, 0));
+    }
+
     static IEnumerable<FileLinePositionSpan> GetDeclarationSpans(ISymbol symbol)
     {
         foreach (var syntaxRef in symbol.DeclaringSyntaxReferences)
         {
             if (syntaxRef.GetSyntax() is BaseTypeDeclarationSyntax typeDecl)
-                yield return typeDecl.GetLocation().GetLineSpan();
+                yield return GetSourceSpan(typeDecl.GetLocation());
         }
     }
 
@@ -41,7 +75,7 @@ static class Locations
     {
         foreach (var location in symbol.Locations.Where(l => l.IsInSource))
         {
-            yield return location.GetLineSpan();
+            yield return GetSourceSpan(location);
         }
     }
 }
