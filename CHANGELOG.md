@@ -17,11 +17,17 @@ with the next official release.
 - **Fix with Claude Code** in the cycle and rule reviews lets Claude Code make the suggested change in the model's folder (edits only, no commands), after a warning about uncommitted changes; it shows the running time with **Stop**, then a summary and the changed files, and re-parses
 - **AI agents can ask about the diagram**: the extension runs an MCP server that Copilot's agent mode lists as "Dependinator", and **Dependinator: Connect Claude Code** adds it to Claude Code for the folder; its tools find nodes and look up their dependencies, paths between them, cycles and architecture rules, and check a rule before it is added, while the diagram is open
 - **Suggest rules …** in the Rules panel asks Claude, Claude Code or your own AI chat to suggest architecture rules for the model; Dependinator checks each one and shows what it would break today, and you tick the ones to add (Claude Code can check its own candidates through Dependinator's MCP server first)
+- **About Node …** in the node menu shows a node's comment, what it contains and how many types it uses and is used by, with a question about the node ("What is this and why is it here?" by default) for Claude, Claude Code or your own AI chat
+- **Improve Comments …** in the node menu and the **About Node** dialog lets Claude Code add or rewrite the comments of namespaces and types, of one or several nodes or of everything inside them, which the diagram shows as descriptions; without Claude Code the prompt is copied for any coding agent
 - **Help › What's New** opens this change log
 
 ### Improved
 
 - **Show prompt** in the cycle and rule reviews shows the prompt before it is sent or copied
+
+### Fixed
+
+- Code excerpts in AI prompts no longer start a line early or drop the type's closing line
 
 ## [v0.86.429455] - 2026-10-26
 
