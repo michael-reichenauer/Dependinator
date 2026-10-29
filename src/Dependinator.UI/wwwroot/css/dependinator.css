@@ -1282,6 +1282,8 @@ button.dep-rules__node:hover {
     font: inherit;
     font-size: 0.75rem;
     color: var(--mud-palette-text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
     cursor: pointer;
 }
 
@@ -1290,12 +1292,18 @@ button.dep-rules__node:hover {
     color: var(--mud-palette-primary);
 }
 
+.dep-ask__meta .dep-ai__show-prompt {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 .dep-ask__route--on {
     background: var(--mud-palette-action-default-hover);
     color: var(--mud-palette-text-primary);
 }
 
 .dep-ask__route-text {
+    min-width: 0;
     margin-left: 4px;
     overflow: hidden;
     white-space: nowrap;
