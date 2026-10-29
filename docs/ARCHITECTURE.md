@@ -161,8 +161,11 @@ UI implements, so the answers come from the model the user sees, with its layout
 rules. The extension registers the server with VS Code for Copilot and, with *Dependinator: Connect
 Claude Code*, with Claude Code for the folder. While the diagram is closed the tools answer with an
 error that asks to open it. The dev host serves the same tools at `/mcp`, without a token. The
-app's own Claude Code runs use them too: Suggest rules passes the server to `claude -p`, so Claude
-Code can check a rule on the model before it suggests it.
+app's own AI features use them too: Suggest rules and Ask about the model pass the server to
+`claude -p`, so Claude Code can check a rule or look things up on the model, and Ask's API key route
+(`ModelToolsAgent` in `Dependinator.Claude`) runs its own tool-use loop as an MCP client of the
+same server, so the tools are defined once. Each query reports itself to the UI scope it asks
+(`IModelQueries.Asked`), which the Ask panel shows as lookup lines.
 
 Points to discuss: the same `[Rpc]` interface works in process (dev host, browser) and across the
 tunnel, which keeps one code path, but anything a parser reads from statics or configuration does

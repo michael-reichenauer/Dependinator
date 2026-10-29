@@ -102,9 +102,9 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   pattern), once these have been lived with.
 - **Ask your model (roadmap idea 5), next:** phase 1 (Oct 29) is the Ask panel (`AskPanel.razor`,
   `AskModel.cs`) on the Claude Code route with the MCP model tools; node names in backticks become
-  links (short name in the text). Phase 2: the API key route with a hand-written tool-use loop in
-  `Dependinator.Claude` reusing the `ModelTools` definitions over `IModelQueryService` (progress
-  lines, turn cap ~15, Sonnet, running cost). Phase 3: follow-up questions, a `read_source` tool,
+  links (short name in the text). Phase 2 (Oct 29): the API key route, `ModelToolsAgent`'s own
+  tool-use loop (Sonnet, 15 turns) over the app's MCP server as a client (`McpAgentTools`), live
+  lookup lines from `IModelQueries.Asked`, the cost per answer. Phase 3: follow-up questions, a `read_source` tool,
   a small eval set of questions. No paste route (decided with the user: multi-turn tools).
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the

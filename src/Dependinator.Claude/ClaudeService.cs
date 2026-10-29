@@ -60,40 +60,81 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
         if (schema is not Dictionary<string, JsonElement> schemaProperties)
             return new Error("The answer schema is not valid JSON.", schema.Error);
 
+        return await CallClaudeAsync<string>(
+            key,
+            async client =>
+            {
+                var response = await client.Beta.Messages.Create(
+                    new MessageCreateParams
+                    {
+                        Model = model,
+                        MaxTokens = MaxTokens,
+                        Betas = [AnthropicBeta.ServerSideFallback2026_07_01],
+                        Fallbacks = new Default(),
+                        OutputConfig = new BetaOutputConfig
+                        {
+                            Effort = Effort.Medium,
+                            Format = new BetaJsonOutputFormat { Schema = schemaProperties },
+                        },
+                        Messages = [new BetaUserMessageParam { Content = prompt }],
+                    }
+                );
+                Log.Info(
+                    "Claude answered",
+                    model,
+                    response.StopReason,
+                    response.Usage.InputTokens,
+                    response.Usage.OutputTokens
+                );
+
+                if (response.StopReason == "refusal")
+                    return new Error("Claude declined to answer this request.");
+                if (response.StopReason == "max_tokens")
+                    return new Error("Claude's answer was cut off. Please try again.");
+                var text = string.Concat(
+                    response.Content.Select(b => b.Value).OfType<BetaTextBlock>().Select(t => t.Text)
+                );
+                return text.Trim() == "" ? new Error("Claude gave an empty answer. Please try again.") : text;
+            }
+        );
+    }
+
+    public async Task<Result<ToolsAnswer>> AskWithModelToolsAsync(string prompt, string jsonSchema)
+    {
+        if (await apiKeyProvider.GetApiKeyAsync() is not { Length: > 0 } key)
+            return new Error($"No Claude API key. {apiKeyProvider.SetKeyHint}");
+        var schema = Result.Catch(() => JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonSchema)!);
+        if (schema is not Dictionary<string, JsonElement> schemaProperties)
+            return new Error("The answer schema is not valid JSON.", schema.Error);
+
+        var connected = await (ConnectTools ?? ConnectModelToolsAsync)();
+        if (connected is not IAgentTools tools)
+            return connected.Error;
+        await using (tools)
+            return await CallClaudeAsync(
+                key,
+                client => ModelToolsAgent.AskAsync(client, prompt, schemaProperties, tools)
+            );
+    }
+
+    // The model tools of an ask; tests replace them.
+    internal Func<Task<Result<IAgentTools>>>? ConnectTools { get; init; }
+
+    async Task<Result<IAgentTools>> ConnectModelToolsAsync() =>
+        modelToolsServer?.Address is { } address
+            ? await McpAgentTools.ConnectAsync(address)
+            : new Error("This host serves no model tools for Claude to look things up with.");
+
+    // Runs requests to Claude with the key, and turns the API's errors into what the user can do.
+    async Task<Result<T>> CallClaudeAsync<T>(string key, Func<AnthropicClient, Task<Result<T>>> call)
+        where T : notnull
+    {
         try
         {
             AnthropicClient client = BaseUrl is null
                 ? new() { ApiKey = key }
                 : new() { ApiKey = key, BaseUrl = BaseUrl };
-            var response = await client.Beta.Messages.Create(
-                new MessageCreateParams
-                {
-                    Model = model,
-                    MaxTokens = MaxTokens,
-                    Betas = [AnthropicBeta.ServerSideFallback2026_07_01],
-                    Fallbacks = new Default(),
-                    OutputConfig = new BetaOutputConfig
-                    {
-                        Effort = Effort.Medium,
-                        Format = new BetaJsonOutputFormat { Schema = schemaProperties },
-                    },
-                    Messages = [new BetaUserMessageParam { Content = prompt }],
-                }
-            );
-            Log.Info(
-                "Claude answered",
-                model,
-                response.StopReason,
-                response.Usage.InputTokens,
-                response.Usage.OutputTokens
-            );
-
-            if (response.StopReason == "refusal")
-                return new Error("Claude declined to answer this request.");
-            if (response.StopReason == "max_tokens")
-                return new Error("Claude's answer was cut off. Please try again.");
-            var text = string.Concat(response.Content.Select(b => b.Value).OfType<BetaTextBlock>().Select(t => t.Text));
-            return text.Trim() == "" ? new Error("Claude gave an empty answer. Please try again.") : text;
+            return await call(client);
         }
         catch (AnthropicUnauthorizedException)
         {

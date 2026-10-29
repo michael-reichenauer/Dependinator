@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Dependinator.Core.Claude;
 using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling;
@@ -22,6 +23,10 @@ public record ModelAnswer(string Text, IReadOnlyList<AnswerNode> Nodes) : IAiAns
     public string Verdict => "Answer";
 
     public IReadOnlyDictionary<string, NodeLink> Links { get; init; } = new Dictionary<string, NodeLink>();
+
+    // For Claude with the API key: the tool calls the answer took, and its cost in US dollars.
+    public int? ToolCalls { get; init; }
+    public decimal? CostUsd { get; init; }
 
     // The fields of AskModelPrompt's answer format; structured output makes the JSON match it.
     public const string JsonSchema = """
@@ -152,20 +157,23 @@ static class AskModelPrompt
 
 // "Ask" (AskPanel): a question about the open model for an AI, which finds the answer with
 // Dependinator's model tools and names the nodes it is about, as links in the panel. Asked through
-// Claude Code on this computer (Settings › Use Claude Code), which gets the tools through the
-// app's MCP server. The panel sits top-right with the analysis panels, so opening it closes them.
+// Claude with the user's API key (the host runs the tool-use loop, IClaudeService.
+// AskWithModelToolsAsync), or Claude Code on this computer (Settings › Use Claude Code); both get
+// the tools through the app's MCP server. The panel sits top-right with the analysis panels, so
+// opening it closes them.
 interface IAskModelService
 {
     // Whether this host can ask an AI: the web host and VS Code, not the standalone browser app.
     bool IsAvailable { get; }
 
-    // Whether asking works now: the Claude Code route is turned on (always in test mode).
-    Task<bool> CanAskAsync();
+    // The routes the user can ask through now: Claude, and Claude Code where it is turned on
+    // (always in test mode).
+    Task<IReadOnlyList<AiSource>> GetRoutesAsync();
 
     // The prompt for the question; empty when there is no model.
     string GetPrompt(string question);
 
-    Task<Result<ModelAnswer>> AskAsync(string question, Action<SuggestStep> onStep);
+    Task<Result<ModelAnswer>> AskAsync(string question, AiSource route, Action<SuggestStep> onStep);
 
     void Toggle();
 
@@ -179,13 +187,17 @@ class AskModelService(
     IAiService aiService,
     IViewOptions viewOptions,
     IPathFinderService pathFinderService,
-    IApplicationEvents applicationEvents
+    IApplicationEvents applicationEvents,
+    IModelQueries modelQueries
 ) : IAskModelService
 {
     public bool IsAvailable => aiService.IsAvailable;
 
-    public async Task<bool> CanAskAsync() =>
-        IsAvailable && (Dependinator.Core.Build.IsTestMode || await aiService.IsClaudeCodeEnabledAsync());
+    public async Task<IReadOnlyList<AiSource>> GetRoutesAsync() =>
+        !IsAvailable ? []
+        : Dependinator.Core.Build.IsTestMode || await aiService.IsClaudeCodeEnabledAsync()
+            ? [AiSource.Claude, AiSource.ClaudeCode]
+        : [AiSource.Claude];
 
     public string GetPrompt(string question)
     {
@@ -193,30 +205,65 @@ class AskModelService(
         return AskModelPrompt.Build(model, question);
     }
 
-    public async Task<Result<ModelAnswer>> AskAsync(string question, Action<SuggestStep> onStep)
+    public async Task<Result<ModelAnswer>> AskAsync(string question, AiSource route, Action<SuggestStep> onStep)
     {
-        // The e2e tests exercise the panel without Claude Code.
+        // The e2e tests exercise the panel without a key or Claude Code: two lookups, as an agent
+        // would make them through the tools, and a canned answer.
         if (Dependinator.Core.Build.IsTestMode)
         {
-            onStep(SuggestStep.AskingClaudeCode);
+            onStep(route is AiSource.ClaudeCode ? SuggestStep.AskingClaudeCode : SuggestStep.AskingClaude);
+            var lookups = new ScopeModelQueries(modelQueries);
+            await lookups.GetModelAsync();
+            await lookups.SearchNodesAsync(question);
             await Task.Delay(TestModeAnswerDelay);
-            return WithLinks(TestModeAnswer() with { Question = question });
+            return WithLinks(TestModeAnswer(route) with { Question = question });
         }
 
         // AiService's own error for an empty prompt is about a review dialog.
         var prompt = GetPrompt(question);
         if (prompt == "")
             return new Error("There is no model to ask about yet: open or parse one first.");
-        var json = await aiService.AskAsync(
-            AiSource.ClaudeCode,
-            () => Task.FromResult(prompt),
-            ModelAnswer.JsonSchema,
-            onStep,
-            withModelTools: true
-        );
-        if (json is not string text)
-            return json.Error;
-        var parsed = ModelAnswer.Parse(text, AiSource.ClaudeCode);
+        Task<string> GetPromptAsync() => Task.FromResult(prompt);
+
+        if (route is AiSource.ClaudeCode)
+        {
+            // The setting may have been turned off since the panel offered the route.
+            if (!await aiService.IsClaudeCodeEnabledAsync())
+                return new Error("Claude Code is turned off. Turn it on in Settings › Use Claude Code (Experimental).");
+            var json = await aiService.AskAsync(
+                route,
+                GetPromptAsync,
+                ModelAnswer.JsonSchema,
+                onStep,
+                withModelTools: true
+            );
+            return json is string text ? Read(text, route, question) : json.Error;
+        }
+
+        Result<ToolsAnswer> answered;
+        try
+        {
+            answered = await aiService.AskWithModelToolsAsync(GetPromptAsync, ModelAnswer.JsonSchema, onStep);
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            return new Error($"Could not ask Claude: {e.Message}", e);
+        }
+        if (answered is not ToolsAnswer toolsAnswer)
+            return answered.Error;
+        var read = Read(toolsAnswer.Json, route, question);
+        return read is ModelAnswer answer
+            ? answer with
+            {
+                ToolCalls = toolsAnswer.ToolCalls,
+                CostUsd = toolsAnswer.CostUsd,
+            }
+            : read.Error;
+    }
+
+    Result<ModelAnswer> Read(string json, AiSource route, string question)
+    {
+        var parsed = ModelAnswer.Parse(json, route);
         return parsed is ModelAnswer answer ? WithLinks(answer with { Question = question }) : parsed.Error;
     }
 
@@ -263,7 +310,7 @@ class AskModelService(
 
     // Names the first two top-level nodes, one twice (in the text and in the nodes), and a node
     // that is not in the model, which stays plain code.
-    ModelAnswer TestModeAnswer()
+    ModelAnswer TestModeAnswer(AiSource route)
     {
         List<Node> top;
         using (var model = modelMgr.UseModel())
@@ -271,13 +318,15 @@ class AskModelService(
         var names = top.Select(n => n.Name).ToList();
         var text = names.Count switch
         {
-            0 => "Test mode: Claude Code was not asked. The model is empty.",
+            0 => $"Test mode: {route.Name()} was not asked. The model is empty.",
             _ =>
-                $"Test mode: Claude Code was not asked.\n\n- {string.Join("\n- ", names.Select(n => $"`{n}` is at the top level"))}\n- `No.Such.Node` is not in the model",
+                $"Test mode: {route.Name()} was not asked.\n\n- {string.Join("\n- ", names.Select(n => $"`{n}` is at the top level"))}\n- `No.Such.Node` is not in the model",
         };
         return new ModelAnswer(text, [.. names.Select(n => new AnswerNode(n, "Test mode"))])
         {
-            Source = AiSource.ClaudeCode,
+            Source = route,
+            ToolCalls = route is AiSource.Claude ? 2 : null,
+            CostUsd = route is AiSource.Claude ? 0.0123m : null,
         };
     }
 

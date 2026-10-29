@@ -262,8 +262,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   and reads the code, and every node name in its answer is a link that goes to the node, with the
   nodes it is about listed below and "Show all" framing them. The prompt (`AskModelPrompt`) holds
   only the model's top level and the question; the tools fetch the rest. Answers stay while the
-  panel is closed, until another model opens. Claude Code route only for now (roadmap idea 5,
-  phase 1; the API key route with its own tool loop is next).
+  panel is closed, until another model opens (roadmap idea 5, phase 1).
+- **Ask with the API key (Oct 29).** The Ask panel's first route is now Claude with the user's
+  own API key: `ModelToolsAgent` in `Dependinator.Claude` runs the tool-use loop itself (Sonnet
+  5.5, at most 15 turns, the last without tools) and gets the very same tools as an MCP client of
+  the app's own server (`McpAgentTools`), so nothing is defined twice. Both routes show the
+  lookups live ("Searched for …", reported by `ModelQueryService`), and an API answer shows what
+  it cost (phase 2).
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the
