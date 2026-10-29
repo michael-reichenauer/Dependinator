@@ -50,4 +50,33 @@ public class SimpleMarkdownTests
         Assert.Equal(MarkdownBlockKind.NumberedList, blocks[2].Kind);
         Assert.Equal(["first", "second"], blocks[2].Lines.Select(l => l[0].Text));
     }
+
+    [Fact]
+    public void Parse_ShouldKeepANumberedList_AcrossBlankLines()
+    {
+        var blocks = SimpleMarkdown.Parse("3. one\n\n4. two\n\nAfter.");
+
+        Assert.Equal(2, blocks.Count);
+        Assert.Equal(MarkdownBlockKind.NumberedList, blocks[0].Kind);
+        Assert.Equal(3, blocks[0].Start);
+        Assert.Equal(2, blocks[0].Lines.Count);
+        Assert.Equal(MarkdownBlockKind.Paragraph, blocks[1].Kind);
+    }
+
+    [Fact]
+    public void Parse_ShouldKeepStarsInCode_AndAnUnmatchedPairAsText()
+    {
+        var spans = SimpleMarkdown.Parse("Use `a ** b` or `c ** d` **")[0].Lines[0];
+
+        Assert.Equal(
+            [
+                new MarkdownSpan("Use ", false, false),
+                new MarkdownSpan("a ** b", false, true),
+                new MarkdownSpan(" or ", false, false),
+                new MarkdownSpan("c ** d", false, true),
+                new MarkdownSpan(" **", false, false),
+            ],
+            spans
+        );
+    }
 }

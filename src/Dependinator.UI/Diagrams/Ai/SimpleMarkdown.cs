@@ -63,24 +63,28 @@ public static partial class SimpleMarkdown
     private static partial Regex BoldRegex();
 
     // The text as paragraphs and lists, each a list of lines (a list's items) made of spans. Also
-    // reads "1. " items as a numbered list and "# " headings as a bold line.
+    // reads "1. " items as a numbered list (blank lines between its items, as AIs often write, do
+    // not end it; it starts at its first item's number) and "# " headings as a bold line.
     public static IReadOnlyList<MarkdownBlock> Parse(string text)
     {
         List<MarkdownBlock> blocks = [];
         List<IReadOnlyList<MarkdownSpan>> lines = [];
         var kind = MarkdownBlockKind.Paragraph;
+        var start = 1;
 
         void Flush()
         {
             if (lines.Count > 0)
-                blocks.Add(new MarkdownBlock(kind, [.. lines]));
+                blocks.Add(new MarkdownBlock(kind, [.. lines], start));
             lines.Clear();
         }
 
-        void Add(MarkdownBlockKind lineKind, IReadOnlyList<MarkdownSpan> spans)
+        void Add(MarkdownBlockKind lineKind, IReadOnlyList<MarkdownSpan> spans, int number = 1)
         {
             if (lineKind != kind)
                 Flush();
+            if (lines.Count == 0)
+                start = number;
             kind = lineKind;
             lines.Add(spans);
         }
@@ -89,11 +93,14 @@ public static partial class SimpleMarkdown
         {
             var line = rawLine.Trim();
             if (line == "")
-                Flush();
+            {
+                if (kind != MarkdownBlockKind.NumberedList)
+                    Flush();
+            }
             else if (line.StartsWith("- ") || line.StartsWith("* "))
                 Add(MarkdownBlockKind.List, Spans(line[2..].Trim()));
             else if (NumberedItemRegex().Match(line) is { Success: true } item)
-                Add(MarkdownBlockKind.NumberedList, Spans(line[item.Length..].Trim()));
+                Add(MarkdownBlockKind.NumberedList, Spans(line[item.Length..].Trim()), int.Parse(item.Groups[1].Value));
             else if (HeadingRegex().Match(line) is { Success: true } heading)
                 Add(
                     MarkdownBlockKind.Paragraph,
@@ -106,36 +113,37 @@ public static partial class SimpleMarkdown
         return blocks;
     }
 
-    // A line's text, bold and code spans, in order; a bold span may hold code.
+    // A line's text, bold and code spans, in order: code first, so "**" inside code stays code;
+    // a "**" outside code turns bold on (when another follows) or off, so bold may hold code.
     static IReadOnlyList<MarkdownSpan> Spans(string line)
     {
         List<MarkdownSpan> spans = [];
+        var isBold = false;
         var at = 0;
-        foreach (Match bold in BoldRegex().Matches(line))
+        var tokens = SpanTokenRegex().Matches(line).ToList();
+        for (var i = 0; i < tokens.Count; i++)
         {
-            AddCodeSpans(spans, line[at..bold.Index], isBold: false);
-            AddCodeSpans(spans, bold.Groups[1].Value, isBold: true);
-            at = bold.Index + bold.Length;
+            var token = tokens[i];
+            var isCode = token.Value.StartsWith('`');
+            if (!isCode && !isBold && !tokens.Skip(i + 1).Any(t => t.Value == "**"))
+                continue; // An unmatched "**" is text.
+            if (token.Index > at)
+                spans.Add(new MarkdownSpan(line[at..token.Index], isBold, IsCode: false));
+            if (isCode)
+                spans.Add(new MarkdownSpan(token.Groups[1].Value, isBold, IsCode: true));
+            else
+                isBold = !isBold;
+            at = token.Index + token.Length;
         }
-        AddCodeSpans(spans, line[at..], isBold: false);
+        if (at < line.Length)
+            spans.Add(new MarkdownSpan(line[at..], isBold, IsCode: false));
         return spans;
     }
 
-    static void AddCodeSpans(List<MarkdownSpan> spans, string text, bool isBold)
-    {
-        var at = 0;
-        foreach (Match code in CodeRegex().Matches(text))
-        {
-            if (code.Index > at)
-                spans.Add(new MarkdownSpan(text[at..code.Index], isBold, IsCode: false));
-            spans.Add(new MarkdownSpan(code.Groups[1].Value, isBold, IsCode: true));
-            at = code.Index + code.Length;
-        }
-        if (at < text.Length)
-            spans.Add(new MarkdownSpan(text[at..], isBold, IsCode: false));
-    }
+    [GeneratedRegex(@"`([^`]+)`|\*\*")]
+    private static partial Regex SpanTokenRegex();
 
-    [GeneratedRegex(@"^\d{1,3}[.)]\s+")]
+    [GeneratedRegex(@"^(\d{1,3})[.)]\s+")]
     private static partial Regex NumberedItemRegex();
 
     [GeneratedRegex(@"^#{1,6}\s+")]
@@ -149,8 +157,8 @@ public enum MarkdownBlockKind
     NumberedList,
 }
 
-// A paragraph's lines, or a list's items.
-public record MarkdownBlock(MarkdownBlockKind Kind, IReadOnlyList<IReadOnlyList<MarkdownSpan>> Lines);
+// A paragraph's lines, or a list's items; Start is a numbered list's first number.
+public record MarkdownBlock(MarkdownBlockKind Kind, IReadOnlyList<IReadOnlyList<MarkdownSpan>> Lines, int Start = 1);
 
 // Plain text, not encoded: Razor encodes it when it renders.
 public record MarkdownSpan(string Text, bool IsBold, bool IsCode);

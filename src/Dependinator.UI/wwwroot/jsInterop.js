@@ -836,3 +836,9 @@ export function initializeFileDropZone(dropZoneElement, inputFileElement) {
   dropZoneElement.addEventListener("drop", onDrop);
   dropZoneElement.addEventListener('paste', onPaste);
 }
+
+// Scrolls an element's content to its end (the Ask panel's newest question and answer).
+export function scrollToEnd(elementId) {
+  const element = document.getElementById(elementId);
+  if (element) element.scrollTop = element.scrollHeight;
+}

@@ -203,9 +203,13 @@ class AskModelService(
             return WithLinks(TestModeAnswer() with { Question = question });
         }
 
+        // AiService's own error for an empty prompt is about a review dialog.
+        var prompt = GetPrompt(question);
+        if (prompt == "")
+            return new Error("There is no model to ask about yet: open or parse one first.");
         var json = await aiService.AskAsync(
             AiSource.ClaudeCode,
-            () => Task.FromResult(GetPrompt(question)),
+            () => Task.FromResult(prompt),
             ModelAnswer.JsonSchema,
             onStep,
             withModelTools: true

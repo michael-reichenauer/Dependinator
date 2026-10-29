@@ -6,6 +6,7 @@
 @inject IClipboardService clipboardService
 @inject IDialogService dialogService
 @inject Modeling.Models.IModelMgr modelMgr
+@inject IJSInterop jsInterop
 @implements IDisposable
 
 @* Ask (AskModelService): questions about the open model for an AI, on the right like the other
@@ -29,7 +30,7 @@
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="askModelService.Close"
                      data-testid="ask-close" />
     </div>
-    <div class="dep-panel__list dep-ask__list">
+    <div class="dep-panel__list dep-ask__list" id="@ListId">
       @if (entries.Count == 0)
       {
         <div class="dep-panel__hint" data-testid="ask-intro">
@@ -53,7 +54,7 @@
           {
             <div class="dep-ai__suggestion dep-ask__answer" data-testid="ask-answer">
               <div class="dep-ai__markdown" data-testid="ask-answer-text">
-                @foreach (var block in SimpleMarkdown.Parse(answer.Text))
+                @foreach (var block in entry.Blocks)
                 {
                   @Block(answer, block)
                 }
@@ -140,7 +141,13 @@
   sealed class Entry(string question)
   {
     public string Question { get; } = question;
-    public ModelAnswer? Answer { get; set; }
+    public ModelAnswer? Answer { get; private set; }
+
+    // The answer's text, parsed once.
+    public IReadOnlyList<MarkdownBlock> Blocks { get; private set; } = [];
+
+    public void SetAnswer(ModelAnswer answer) => (Answer, Blocks) = (answer, SimpleMarkdown.Parse(answer.Text));
+
     public string? Error { get; set; }
     public string? CopyNote { get; set; }
   }
@@ -160,22 +167,28 @@
   // The model the questions are about ("" until a model is loaded), null before the panel opened.
   string? modelPath;
 
-  bool IsAsking => entries.Any(e => e.Answer is null && e.Error is null);
+  // Claude Code is running; one question at a time, also when its entry was cleared meanwhile.
+  bool isAsking;
+
+  bool IsAsking => isAsking;
+
+  const string ListId = "ask-list";
 
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
+  // The panel renders only while it is shown, or as it closes: the UI state changes on every click.
   void OnUiStateChanged() => InvokeAsync(async () =>
   {
     if (viewOptions.IsAskShown)
-    {
       modelPath ??= modelMgr.WithModel(m => m.Path);
+    if (modelPath is not null)
       ForgetAnswersForAnotherModel();
-      // The setting may have changed while the panel was closed.
-      if (!wasShown)
-        canAsk = await askModelService.CanAskAsync();
-    }
+    // Settings › Use Claude Code may be turned on while the panel is open or closed.
+    if (viewOptions.IsAskShown && !canAsk)
+      canAsk = await askModelService.CanAskAsync();
+    if (viewOptions.IsAskShown || wasShown)
+      StateHasChanged();
     wasShown = viewOptions.IsAskShown;
-    StateHasChanged();
   });
 
   // Answers about another model would name its nodes, so a newly opened model starts over. The path
@@ -204,6 +217,9 @@
     var entry = new Entry(text);
     entries.Add(entry);
     question = "";
+    isAsking = true;
+    var askedPath = modelMgr.WithModel(m => m.Path);
+    await ScrollToEndAsync();
     Result<ModelAnswer> result;
     try
     {
@@ -214,13 +230,37 @@
       Log.Warn("Asking about the model failed", e.Message);
       result = new Error($"Could not ask: {e.Message}", e);
     }
-    // The answer is dropped when the questions were cleared, or another model opened, meanwhile.
-    if (!entries.Contains(entry))
+    finally
+    {
+      isAsking = false;
+    }
+    // The answer is dropped when the questions were cleared, or another model opened, meanwhile
+    // (its links would point into the other model).
+    if (!entries.Contains(entry) || modelMgr.WithModel(m => m.Path) != askedPath)
+    {
+      entries.Remove(entry);
       return;
+    }
     if (result.Value is ModelAnswer answer)
-      entry.Answer = answer;
+      entry.SetAnswer(answer);
     else
       entry.Error = result.Error.Message;
+    StateHasChanged();
+    await ScrollToEndAsync();
+  }
+
+  // Shows the newest question and its answer, below the earlier ones.
+  async Task ScrollToEndAsync()
+  {
+    await Task.Yield(); // Rendered first
+    try
+    {
+      await jsInterop.Call("scrollToEnd", ListId);
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Info("Could not scroll the Ask panel", e.Message);
+    }
   }
 
   void Clear()
@@ -245,7 +285,7 @@
     block.Kind switch
     {
       MarkdownBlockKind.List => @<ul>@foreach (var line in block.Lines) { <li>@Line(answer, line)</li> }</ul>,
-      MarkdownBlockKind.NumberedList => @<ol>@foreach (var line in block.Lines) { <li>@Line(answer, line)</li> }</ol>,
+      MarkdownBlockKind.NumberedList => @<ol start="@block.Start">@foreach (var line in block.Lines) { <li>@Line(answer, line)</li> }</ol>,
       _ => @<p>@for (var i = 0; i < block.Lines.Count; i++) { if (i > 0) { <br /> } @Line(answer, block.Lines[i]) }</p>,
     };
 
