@@ -30,10 +30,14 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator violation = Page.GetByTestId("rules-violation").First;
         await Expect(violation).ToBeVisibleAsync();
 
-        // At the initial view only the solution's own lines are drawn; a violation row navigates
-        // to the offending class, where its lines show up in the rule color.
+        // At the initial view only the solution's own lines are drawn; a violation row frames
+        // both classes, where the lines between them show up in the rule color.
         await violation.ClickAsync();
         await Expect(ruleLines.First).ToBeAttachedAsync();
+
+        // A rule's node name goes to that node and selects it.
+        await rule.GetByTestId("rules-item-to").ClickAsync();
+        await Expect(Page.GetByTestId("node-toolbar")).ToBeVisibleAsync();
 
         // The other way round nobody breaks it.
         await AddRuleAsync("Demo.Core (dll)", "Demo.UI (dll)");

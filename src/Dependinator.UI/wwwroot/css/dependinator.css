@@ -787,10 +787,6 @@
     gap: 4px 6px;
 }
 
-.dep-suggest-rules__head .dep-rules__names {
-    white-space: normal;
-}
-
 .dep-suggest-rules__rule .dep-ai__suggestion-note {
     margin-left: 30px;
 }
@@ -815,12 +811,30 @@
     gap: 6px;
 }
 
+/* Long names wrap rather than clip: both names are links, the "to" one must stay clickable. */
 .dep-rules__names {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+}
+
+/* A rule's node names go to their node (RulesPanel NodeName); a missing node is plain bold. */
+.dep-rules__node {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 700;
+    color: inherit;
+}
+
+button.dep-rules__node {
+    cursor: pointer;
+}
+
+button.dep-rules__node:hover {
+    color: var(--mud-palette-primary);
+    text-decoration: underline;
 }
 
 .dep-rules__arrow {
