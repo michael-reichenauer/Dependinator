@@ -1,0 +1,266 @@
+@using Dependinator.UI.Diagrams.Ai
+@inject IAskModelService askModelService
+@inject IViewOptions viewOptions
+@inject IApplicationEvents applicationEvents
+@inject INavigationService navigationService
+@inject IClipboardService clipboardService
+@inject IDialogService dialogService
+@inject Modeling.Models.IModelMgr modelMgr
+@implements IDisposable
+
+@* Ask (AskModelService): questions about the open model for an AI, on the right like the other
+   panels so the diagram stays in view. Claude Code finds the answer with Dependinator's model tools
+   and writes node names in backticks; each name that is a node becomes a link that goes to it, and
+   the answer lists the nodes it is about. The questions and answers stay while the panel is closed,
+   so an answer that takes a while still arrives, until another model is opened. *@
+@if (modelPath is not null)
+{
+  <div class="dep-panel dep-ask dep-toolbar-card" style="@(viewOptions.IsAskShown ? "" : "display: none")"
+       data-testid="ask-panel">
+    <div class="dep-panel__header">
+      <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.QuestionAnswer" Size="Size.Small" />
+      <span class="dep-panel__title">Ask About the Model</span>
+      <MudSpacer />
+      @if (entries.Count > 0 && !IsAsking)
+      {
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.DeleteSweep" Size="Size.Small" title="Clear the questions and answers"
+                       OnClick="Clear" data-testid="ask-clear" />
+      }
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="askModelService.Close"
+                     data-testid="ask-close" />
+    </div>
+    <div class="dep-panel__list dep-ask__list">
+      @if (entries.Count == 0)
+      {
+        <div class="dep-panel__hint" data-testid="ask-intro">
+          Ask anything about the model: where something is handled, what depends on what, what a change would
+          touch. Claude Code looks it up with Dependinator's tools and reads the code, and the nodes in its answer
+          are links to the diagram.
+        </div>
+        <div class="dep-ask__examples">
+          @foreach (var example in Examples)
+          {
+            <button type="button" class="dep-ask__example" @onclick="() => question = example"
+                    data-testid="ask-example">@example</button>
+          }
+        </div>
+      }
+      @foreach (var entry in entries)
+      {
+        <div class="dep-ask__entry" data-testid="ask-entry">
+          <div class="dep-ask__question" data-testid="ask-entry-question">@entry.Question</div>
+          @if (entry.Answer is { } answer)
+          {
+            <div class="dep-ai__suggestion dep-ask__answer" data-testid="ask-answer">
+              <div class="dep-ai__markdown" data-testid="ask-answer-text">
+                @foreach (var block in SimpleMarkdown.Parse(answer.Text))
+                {
+                  @Block(answer, block)
+                }
+              </div>
+              @if (answer.Nodes.Count > 0)
+              {
+                <div class="dep-ask__nodes" data-testid="ask-answer-nodes">
+                  @foreach (var node in answer.Nodes)
+                  {
+                    <div class="dep-ask__node-row" data-testid="ask-answer-node">
+                      <RuleNodeLink Id="answer.LinkOf(node.Name)?.Id" Display="@(answer.LinkOf(node.Name)?.LongName ?? node.Name)"
+                                    TestId="ask-answer-node-name" />
+                      @if (node.Why != "")
+                      {
+                        <span class="dep-ai__suggestion-note"> · @node.Why</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+              <div class="dep-ask__actions">
+                @if (answer.Links.Count > 1)
+                {
+                  <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.CenterFocusStrong"
+                             title="Zoom the diagram to show all the nodes the answer names"
+                             OnClick="() => ShowAllAsync(answer)" data-testid="ask-show-all">Show all</MudButton>
+                }
+                <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+                           OnClick="() => CopyAsync(entry, answer)" data-testid="ask-copy">Copy</MudButton>
+                @if (entry.CopyNote is { } note)
+                {
+                  <span class="dep-ai__suggest-note">@note</span>
+                }
+              </div>
+            </div>
+          }
+          else if (entry.Error is { } error)
+          {
+            <div class="dep-ai__suggest-error" data-testid="ask-error">@error</div>
+          }
+          else
+          {
+            <div class="dep-ai__suggestion dep-ai__suggestion--pending" data-testid="ask-asking">
+              <div class="dep-ai__suggest-pending">
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                <span>Asking Claude Code on this computer, this can take a minute or two.</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (canAsk)
+    {
+      <div class="dep-ask__input">
+        <MudTextField T="string" @bind-Value="question" Immediate="true" Placeholder="Ask a question about the model"
+                      Variant="Variant.Outlined" Margin="Margin.Dense"
+                      OnKeyDown="OnKeyDownAsync" Disabled="IsAsking" data-testid="ask-question" />
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Send" Color="Color.Primary" Size="Size.Small"
+                       title="Ask Claude Code (Enter)" Disabled="@(IsAsking || string.IsNullOrWhiteSpace(question))"
+                       OnClick="AskAsync" data-testid="ask-send" />
+      </div>
+      <div class="dep-ask__meta">
+        <span>Claude Code on this computer, your Claude login</span>
+        <MudSpacer />
+        <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai__show-prompt"
+                   Disabled="@string.IsNullOrWhiteSpace(question)"
+                   title="Show the prompt that is sent to Claude Code for this question"
+                   OnClick="ShowPromptAsync" data-testid="ask-show-prompt">Show prompt</MudButton>
+      </div>
+    }
+    else
+    {
+      <div class="dep-panel__hint dep-ask__off" data-testid="ask-needs-claude-code">
+        Asking needs Claude Code on this computer: turn on Menu › Settings › Use Claude Code (Experimental).
+      </div>
+    }
+  </div>
+}
+
+@code {
+  // One question, and its answer or error once it arrives.
+  sealed class Entry(string question)
+  {
+    public string Question { get; } = question;
+    public ModelAnswer? Answer { get; set; }
+    public string? Error { get; set; }
+    public string? CopyNote { get; set; }
+  }
+
+  static readonly string[] Examples =
+  [
+    "What are the main parts of this codebase, and how do they depend on each other?",
+    "Which parts are the most central, used by the most others?",
+    "What would be affected if I changed the most used type?",
+  ];
+
+  readonly List<Entry> entries = [];
+  string question = "";
+  bool canAsk;
+  bool wasShown;
+
+  // The model the questions are about ("" until a model is loaded), null before the panel opened.
+  string? modelPath;
+
+  bool IsAsking => entries.Any(e => e.Answer is null && e.Error is null);
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  void OnUiStateChanged() => InvokeAsync(async () =>
+  {
+    if (viewOptions.IsAskShown)
+    {
+      modelPath ??= modelMgr.WithModel(m => m.Path);
+      ForgetAnswersForAnotherModel();
+      // The setting may have changed while the panel was closed.
+      if (!wasShown)
+        canAsk = await askModelService.CanAskAsync();
+    }
+    wasShown = viewOptions.IsAskShown;
+    StateHasChanged();
+  });
+
+  // Answers about another model would name its nodes, so a newly opened model starts over. The path
+  // is "" while a model loads, which is not another model (the same one may be reloading).
+  void ForgetAnswersForAnotherModel()
+  {
+    var path = modelMgr.WithModel(m => m.Path);
+    if (path == "" || path == modelPath)
+      return;
+    if (modelPath != "")
+      entries.Clear();
+    modelPath = path;
+  }
+
+  async Task OnKeyDownAsync(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter" && !e.ShiftKey)
+      await AskAsync();
+  }
+
+  async Task AskAsync()
+  {
+    var text = question.Trim();
+    if (text == "" || IsAsking)
+      return;
+    var entry = new Entry(text);
+    entries.Add(entry);
+    question = "";
+    Result<ModelAnswer> result;
+    try
+    {
+      result = await askModelService.AskAsync(text, step => _ = InvokeAsync(StateHasChanged));
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Asking about the model failed", e.Message);
+      result = new Error($"Could not ask: {e.Message}", e);
+    }
+    // The answer is dropped when the questions were cleared, or another model opened, meanwhile.
+    if (!entries.Contains(entry))
+      return;
+    if (result.Value is ModelAnswer answer)
+      entry.Answer = answer;
+    else
+      entry.Error = result.Error.Message;
+  }
+
+  void Clear()
+  {
+    entries.Clear();
+  }
+
+  Task ShowAllAsync(ModelAnswer answer) => navigationService.ShowNodesAsync([.. answer.Links.Values.Select(l => l.Id).Distinct()]);
+
+  async Task CopyAsync(Entry entry, ModelAnswer answer) =>
+    entry.CopyNote = await clipboardService.CopyAsync(answer.Text) ? "Copied." : "Could not copy to the clipboard.";
+
+  async Task ShowPromptAsync()
+  {
+    var prompt = askModelService.GetPrompt(question.Trim());
+    if (prompt != "")
+      await PromptDialog.ShowAsync(dialogService, prompt);
+  }
+
+  // A paragraph (its lines joined by breaks), or a list; a code span that names a node is a link.
+  RenderFragment Block(ModelAnswer answer, MarkdownBlock block) =>
+    block.Kind switch
+    {
+      MarkdownBlockKind.List => @<ul>@foreach (var line in block.Lines) { <li>@Line(answer, line)</li> }</ul>,
+      MarkdownBlockKind.NumberedList => @<ol>@foreach (var line in block.Lines) { <li>@Line(answer, line)</li> }</ol>,
+      _ => @<p>@for (var i = 0; i < block.Lines.Count; i++) { if (i > 0) { <br /> } @Line(answer, block.Lines[i]) }</p>,
+    };
+
+  RenderFragment Line(ModelAnswer answer, IReadOnlyList<MarkdownSpan> spans) =>
+    @<text>@foreach (var span in spans) { @Span(answer, span) }</text>;
+
+  RenderFragment Span(ModelAnswer answer, MarkdownSpan span)
+  {
+    if (span.IsCode && answer.LinkOf(span.Text) is { } link)
+      return @<button type="button" class="dep-ask__node" title="@($"Go to {link.LongName}")"
+                      @onclick="() => navigationService.ShowNodeAsync(link.Id)" data-testid="ask-node-link">@link.ShortName</button>;
+    if (span.IsCode)
+      return span.IsBold ? @<b><code>@span.Text</code></b> : @<code>@span.Text</code>;
+    return span.IsBold ? @<b>@span.Text</b> : @<text>@span.Text</text>;
+  }
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

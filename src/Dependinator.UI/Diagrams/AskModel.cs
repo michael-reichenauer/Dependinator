@@ -1,0 +1,281 @@
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Dependinator.Core.Shared;
+using Dependinator.UI.Diagrams.Ai;
+using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Models;
+using static Dependinator.UI.Diagrams.PromptParts;
+
+namespace Dependinator.UI.Diagrams;
+
+// An AI's answer to a question about the whole model (the Ask panel): text with a little markdown,
+// where node names are in backticks, and the nodes the answer is about, each with its part in it.
+// Links maps each name the answer gives (in backticks or in Nodes) that is in the model to its
+// node and display names, so the panel can show it as a link; it is filled when the answer arrives.
+public record ModelAnswer(string Text, IReadOnlyList<AnswerNode> Nodes) : IAiAnswer
+{
+    public AiSource Source { get; init; } = AiSource.Claude;
+
+    public string Question { get; init; } = "";
+
+    public string Verdict => "Answer";
+
+    public IReadOnlyDictionary<string, NodeLink> Links { get; init; } = new Dictionary<string, NodeLink>();
+
+    // The fields of AskModelPrompt's answer format; structured output makes the JSON match it.
+    public const string JsonSchema = """
+        {
+          "type": "object",
+          "properties": {
+            "answer": {
+              "type": "string",
+              "description": "The answer, as plain text with a little markdown; node names in backticks, exactly as the tools give them."
+            },
+            "nodes": {
+              "type": "array",
+              "description": "The nodes the answer is about, the most important first.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "description": "The node's name, exactly as the tools give it." },
+                  "why": { "type": "string", "description": "A few words on its part in the answer." }
+                },
+                "required": ["name", "why"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["answer", "nodes"],
+          "additionalProperties": false
+        }
+        """;
+
+    public static Result<ModelAnswer> Parse(string json, AiSource source = AiSource.Claude)
+    {
+        var parsed = Result.Catch(() => Json.Deserialize<Answer>(json) ?? throw new JsonException("No answer"));
+        if (parsed is not Answer answer)
+            return new Error($"{source.Name()}'s answer could not be read.", parsed.Error);
+        if (string.IsNullOrWhiteSpace(answer.Text))
+            return new Error($"{source.Name()} gave an empty answer.");
+        List<AnswerNode> nodes =
+        [
+            .. (answer.Nodes ?? [])
+                .Where(n => !string.IsNullOrWhiteSpace(n.Name))
+                .Select(n => new AnswerNode(n.Name!.Trim().Trim('`'), (n.Why ?? "").Trim()))
+                .DistinctBy(n => n.Name)
+                .Take(AskModelPrompt.MaxNodes),
+        ];
+        return new ModelAnswer(answer.Text.Trim(), nodes) { Source = source };
+    }
+
+    // The names the answer gives: its code spans (which may name a node), and its nodes.
+    public IEnumerable<string> Names() =>
+        SimpleMarkdown
+            .Parse(Text)
+            .SelectMany(b => b.Lines)
+            .SelectMany(l => l)
+            .Where(s => s.IsCode)
+            .Select(s => s.Text.Trim())
+            .Concat(Nodes.Select(n => n.Name))
+            .Where(n => n != "")
+            .Distinct();
+
+    public NodeLink? LinkOf(string name) => Links.GetValueOrDefault(name.Trim());
+
+    record Answer([property: JsonPropertyName("answer")] string? Text, List<AnswerItem>? Nodes);
+
+    record AnswerItem(string? Name, string? Why);
+}
+
+public record AnswerNode(string Name, string Why);
+
+// A node an answer names: the full names the tools give are long ("Dependinator*UI*dll.Dependinator.
+// UI.App.AppBar"), so the panel shows the node's short name in the text and its long one in lists.
+public record NodeLink(NodeId Id, string ShortName, string LongName);
+
+// The prompt that asks an AI a question about the model open in the diagram. It holds only an
+// overview (the model's size and top level); the AI finds the rest with Dependinator's tools,
+// which answer on the model as it is now, and reads the code where it can.
+static class AskModelPrompt
+{
+    internal const int MaxNodes = 12;
+    const int MaxTopLevel = 40;
+
+    public static string Build(IModel model, string question)
+    {
+        var topLevel = model
+            .Root.Children.Where(n => !NodeViewPolicy.IsAnnotation(n))
+            .OrderBy(n => n.Name, StringComparer.Ordinal)
+            .ToList();
+        if (topLevel.Count == 0)
+            return "";
+
+        var text = new StringBuilder();
+        text.AppendLine("# A question about a dependency model").AppendLine();
+        text.AppendLine(
+            "Dependinator shows a codebase as a dependency model: containers (solutions, projects, namespaces, "
+                + "modules), the types and resources in them, their members, and the links between them. The user "
+                + "has a model open and asks a question about it."
+        );
+
+        var name = model.Path != "" ? $": {DisplayPath(model, model.Path)}" : "";
+        text.AppendLine().AppendLine($"## The model{name}").AppendLine();
+        text.AppendLine(
+            $"{model.Nodes.Count - 1} nodes, {model.Links.Count} links, {model.Rules.Count} architecture rules. "
+                + "The top level:"
+        );
+        text.AppendLine();
+        foreach (var node in topLevel.Take(MaxTopLevel))
+        {
+            var title = node.LongName != node.Name ? $", titled \"{node.LongName}\"" : "";
+            text.AppendLine($"- `{node.Name}` ({Kind(node.Type)}{title}){Described(node)}");
+        }
+        if (topLevel.Count > MaxTopLevel)
+            text.AppendLine($"- … and {topLevel.Count - MaxTopLevel} more");
+
+        text.AppendLine().AppendLine("## The question").AppendLine();
+        text.AppendLine(question.Trim());
+        text.AppendLine().Append(TaskSection);
+        return text.ToString();
+    }
+
+    static readonly string TaskSection = $"""
+        ## How to answer
+
+        Find out with Dependinator's tools before you answer: search_nodes to find the nodes the question is about, get_dependencies for what a node uses and what uses it, find_paths for why one part depends on another, list_children to go into a node, list_cycles and list_rules for its problems. Read the code where you can and it helps. Use only as many calls as the question needs.
+
+        Answer the question directly, in a few short paragraphs or a list: the answer is shown in a narrow panel beside the diagram. Write every node you mention in backticks, by its name exactly as the tools give it (such as `Dependinator.Core.Parsing.ParserService`), so the user can click it to go to the node. Under nodes, list the nodes the answer is about, at most {MaxNodes}, the most important first. If the model cannot answer the question, say so, and what would.
+
+        """;
+}
+
+// "Ask" (AskPanel): a question about the open model for an AI, which finds the answer with
+// Dependinator's model tools and names the nodes it is about, as links in the panel. Asked through
+// Claude Code on this computer (Settings › Use Claude Code), which gets the tools through the
+// app's MCP server. The panel sits top-right with the analysis panels, so opening it closes them.
+interface IAskModelService
+{
+    // Whether this host can ask an AI: the web host and VS Code, not the standalone browser app.
+    bool IsAvailable { get; }
+
+    // Whether asking works now: the Claude Code route is turned on (always in test mode).
+    Task<bool> CanAskAsync();
+
+    // The prompt for the question; empty when there is no model.
+    string GetPrompt(string question);
+
+    Task<Result<ModelAnswer>> AskAsync(string question, Action<SuggestStep> onStep);
+
+    void Toggle();
+
+    void Close();
+}
+
+[Scoped]
+class AskModelService(
+    IModelMgr modelMgr,
+    IModelService modelService,
+    IAiService aiService,
+    IViewOptions viewOptions,
+    IPathFinderService pathFinderService,
+    IApplicationEvents applicationEvents
+) : IAskModelService
+{
+    public bool IsAvailable => aiService.IsAvailable;
+
+    public async Task<bool> CanAskAsync() =>
+        IsAvailable && (Dependinator.Core.Build.IsTestMode || await aiService.IsClaudeCodeEnabledAsync());
+
+    public string GetPrompt(string question)
+    {
+        using var model = modelMgr.UseModel();
+        return AskModelPrompt.Build(model, question);
+    }
+
+    public async Task<Result<ModelAnswer>> AskAsync(string question, Action<SuggestStep> onStep)
+    {
+        // The e2e tests exercise the panel without Claude Code.
+        if (Dependinator.Core.Build.IsTestMode)
+        {
+            onStep(SuggestStep.AskingClaudeCode);
+            await Task.Delay(TestModeAnswerDelay);
+            return WithLinks(TestModeAnswer() with { Question = question });
+        }
+
+        var json = await aiService.AskAsync(
+            AiSource.ClaudeCode,
+            () => Task.FromResult(GetPrompt(question)),
+            ModelAnswer.JsonSchema,
+            onStep,
+            withModelTools: true
+        );
+        if (json is not string text)
+            return json.Error;
+        var parsed = ModelAnswer.Parse(text, AiSource.ClaudeCode);
+        return parsed is ModelAnswer answer ? WithLinks(answer with { Question = question }) : parsed.Error;
+    }
+
+    // The names in the answer that are nodes, as the tools take them (a name, or a unique title or
+    // alias): those become links.
+    ModelAnswer WithLinks(ModelAnswer answer)
+    {
+        using var model = modelMgr.UseModel();
+        Dictionary<string, NodeLink> links = [];
+        foreach (var name in answer.Names())
+        {
+            if (ModelQueries.FindNode(model, name) is Node node)
+                links[name] = new NodeLink(node.Id, node.ShortName, node.LongName);
+        }
+        return answer with { Links = links };
+    }
+
+    public void Toggle()
+    {
+        if (viewOptions.IsAskShown)
+        {
+            Close();
+            return;
+        }
+        // The analysis panels share the top-right corner; their highlighted lines are baked into
+        // the tiles.
+        if (viewOptions.IsCyclesShown || viewOptions.IsRulesShown)
+        {
+            viewOptions.SetCyclesShown(false);
+            viewOptions.SetRulesShown(false);
+            modelService.ClearCache();
+        }
+        viewOptions.SetHiddenNodesShown(false);
+        pathFinderService.Close();
+        viewOptions.SetAskShown(true);
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public void Close()
+    {
+        viewOptions.SetAskShown(false);
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Names the first two top-level nodes, one twice (in the text and in the nodes), and a node
+    // that is not in the model, which stays plain code.
+    ModelAnswer TestModeAnswer()
+    {
+        List<Node> top;
+        using (var model = modelMgr.UseModel())
+            top = [.. model.Root.Children.Where(n => !NodeViewPolicy.IsAnnotation(n)).OrderBy(n => n.Name).Take(2)];
+        var names = top.Select(n => n.Name).ToList();
+        var text = names.Count switch
+        {
+            0 => "Test mode: Claude Code was not asked. The model is empty.",
+            _ =>
+                $"Test mode: Claude Code was not asked.\n\n- {string.Join("\n- ", names.Select(n => $"`{n}` is at the top level"))}\n- `No.Such.Node` is not in the model",
+        };
+        return new ModelAnswer(text, [.. names.Select(n => new AnswerNode(n, "Test mode"))])
+        {
+            Source = AiSource.ClaudeCode,
+        };
+    }
+
+    static readonly TimeSpan TestModeAnswerDelay = TimeSpan.FromMilliseconds(800);
+}

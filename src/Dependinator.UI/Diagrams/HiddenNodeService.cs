@@ -128,6 +128,7 @@ class HiddenNodeService(
             applicationEvents.TriggerModelChanged();
         }
         pathFinderService.Close();
+        viewOptions.SetAskShown(false);
         scopeModelPath = modelMgr.WithModel(m => m.Path);
         viewOptions.SetHiddenNodesShown(true, parentId);
         applicationEvents.TriggerUIStateChanged();
