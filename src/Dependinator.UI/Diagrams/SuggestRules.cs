@@ -323,7 +323,8 @@ interface ISuggestRulesService
     // A key that changes whenever a check could give another result (a re-parse, a rule added).
     object CheckVersion { get; }
 
-    // Adds the rules, as one undo step, and says how many were added.
+    // Adds the rules, as one undo step, and tells the user how many were added (not for one rule
+    // added as asked: its row shows it).
     void Add(IReadOnlyList<SuggestedRule> chosen);
 }
 
@@ -338,8 +339,7 @@ class SuggestRulesService(
 {
     public bool IsAvailable => aiService.IsAvailable;
 
-    public object CheckVersion =>
-        modelMgr.WithModel(m => (m.Path, m.StructureVersion, m.Nodes.Count, m.Links.Count, m.RulesVersion));
+    public object CheckVersion => modelMgr.WithModel(m => (m.StructureVersion, m.RulesVersion));
 
     public void Add(IReadOnlyList<SuggestedRule> chosen)
     {
@@ -348,8 +348,8 @@ class SuggestRulesService(
         List<ArchitectureRule> rules = [.. chosen.Select(r => new ArchitectureRule(r.Check.FromName, r.Check.ToName))];
         var added = ruleService.AddRules(rules);
         var left = rules.Distinct().Count() - added;
-        if (added == 1 && left == 0)
-            return; // The row itself shows it, as "already a rule".
+        if (chosen.Count == 1 && added == 1)
+            return;
         var message = added == 1 ? "Added 1 rule." : $"Added {added} rules.";
         if (left > 0)
             message +=

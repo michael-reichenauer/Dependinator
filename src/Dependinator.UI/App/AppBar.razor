@@ -891,6 +891,11 @@
     {
         if (!viewOptions.IsRulesShown)
             ToggleRules();
+        else if (viewOptions.IsRuleSuggestionsShown)
+        {
+            viewOptions.SetRuleSuggestionsShown(false);
+            applicationEvents.TriggerUIStateChanged();
+        }
     }
 
     void ToggleLegend()

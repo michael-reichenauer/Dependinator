@@ -14,10 +14,11 @@
    frames both of its classes with the lines between them. Each dependency can be reviewed
    (RuleReviewDialog, with an AI opinion): fixed with a prompt for an AI that changes the code, or
    allowed with why, which moves it to the rule's collapsed Allowed list. "Suggest rules" switches
-   the panel to SuggestRulesView, where an AI suggests rules to add; that view stays alive once
-   started (hidden while the rules show or the panel is closed) until another model is opened.
+   the panel to SuggestRulesView (IViewOptions.IsRuleSuggestionsShown), where an AI suggests rules
+   to add; that view stays alive once started (hidden while the rules show or the panel is closed,
+   and reopening the panel shows the rules) until another model is opened.
    Rules and allowed dependencies are saved with the model and undoable. *@
-@if (viewOptions.IsRulesShown && !isSuggestView)
+@if (viewOptions.IsRulesShown && !viewOptions.IsRuleSuggestionsShown)
 {
   var reports = ruleService.GetReports();
   var violationCount = reports.Sum(r => r.Violations.Count);
@@ -139,8 +140,7 @@
 }
 @if (suggestModelPath is not null)
 {
-  <SuggestRulesView IsShown="@(viewOptions.IsRulesShown && isSuggestView)" OnBack="() => isSuggestView = false"
-                    OnClose="Close" />
+  <SuggestRulesView IsShown="viewOptions.IsRuleSuggestionsShown" OnBack="ShowRuleList" OnClose="Close" />
 }
 
 @code {
@@ -150,26 +150,41 @@
   string? fromName;
   string? toName;
 
-  // The model the suggestions view was started for, null before; the view shows instead of the
-  // rules while isSuggestView.
+  // The model the suggestions view was started for ("" until a model is loaded), null before.
   string? suggestModelPath;
-  bool isSuggestView;
 
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
-  void OnUiStateChanged()
+  void OnUiStateChanged() => InvokeAsync(() =>
   {
-    // Suggestions for another model would name its nodes, so a newly opened model starts over.
-    if (suggestModelPath is not null && suggestModelPath != modelMgr.WithModel(m => m.Path))
-      (suggestModelPath, isSuggestView) = (null, false);
-    InvokeAsync(StateHasChanged);
+    if (suggestModelPath is not null)
+      ForgetSuggestionsForAnotherModel();
+    StateHasChanged();
+  });
+
+  // Suggestions for another model would name its nodes, so a newly opened model starts over. The
+  // path is "" while a model loads, which is not another model (the same one may be reloading).
+  void ForgetSuggestionsForAnotherModel()
+  {
+    var path = modelMgr.WithModel(m => m.Path);
+    if (path == "" || path == suggestModelPath)
+      return;
+    if (suggestModelPath == "")
+      suggestModelPath = path;
+    else
+    {
+      suggestModelPath = null;
+      viewOptions.SetRuleSuggestionsShown(false);
+    }
   }
 
   void ShowSuggestions()
   {
-    suggestModelPath = modelMgr.WithModel(m => m.Path);
-    isSuggestView = true;
+    suggestModelPath ??= modelMgr.WithModel(m => m.Path);
+    viewOptions.SetRuleSuggestionsShown(true);
   }
+
+  void ShowRuleList() => viewOptions.SetRuleSuggestionsShown(false);
 
   static string Summary(int rules, int violations) =>
     rules == 0 ? "" : violations == 0 ? "all kept" : violations == 1 ? "1 violation" : $"{violations} violations";

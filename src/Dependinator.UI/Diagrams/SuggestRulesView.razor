@@ -1,7 +1,5 @@
 @using Dependinator.UI.Diagrams.Ai
 @inject ISuggestRulesService suggestRulesService
-@inject IApplicationEvents applicationEvents
-@implements IDisposable
 
 @* Suggest rules (SuggestRulesService), the view the Rules panel switches to, on the right like the
    other panels so the diagram stays in view: an AI suggests architecture rules from the model's
@@ -99,21 +97,20 @@
 
   [Parameter] public EventCallback OnClose { get; set; }
 
-  // Each answer checked on the model as it is now, cached until a check could change.
+  // Each answer checked on the model as it is now, cached until a check could change; not
+  // re-checked while hidden (a re-parse would check it again and again).
   readonly Dictionary<RuleSuggestions, RuleSuggestions> checkedAnswers = [];
   object? checkedFor;
 
   Func<AiSource, Action<SuggestStep>, Task<Result<RuleSuggestions>>>? Ask =>
     suggestRulesService.IsAvailable ? suggestRulesService.AskAsync : null;
 
-  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
-
-  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
-
   Task<string> GetPrompt() => Task.FromResult(suggestRulesService.GetPrompt());
 
   RuleSuggestions Checked(RuleSuggestions answer)
   {
+    if (!IsShown)
+      return checkedAnswers.GetValueOrDefault(answer, answer);
     var version = suggestRulesService.CheckVersion;
     if (!version.Equals(checkedFor))
     {
@@ -145,6 +142,4 @@
     };
 
   static string Links(int count) => count == 1 ? "1 link" : $"{count} links";
-
-  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
 }

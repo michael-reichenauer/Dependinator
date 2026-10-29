@@ -835,7 +835,7 @@
     overflow-wrap: break-word;
 }
 
-/* A rule's node names go to their node (RulesPanel NodeName); a missing node is plain bold. */
+/* A rule's node names go to their node (RuleNodeLink.razor); a missing node is plain bold. */
 .dep-rules__node {
     padding: 0;
     border: 0;
