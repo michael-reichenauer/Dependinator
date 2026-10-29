@@ -811,11 +811,12 @@
     gap: 6px;
 }
 
-/* Long names wrap rather than clip: both names are links, the "to" one must stay clickable. */
+/* Long names wrap (after their dots) rather than clip: both names are links, the "to" one must
+   stay clickable. */
 .dep-rules__names {
     flex: 1;
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 /* A rule's node names go to their node (RulesPanel NodeName); a missing node is plain bold. */
@@ -826,6 +827,7 @@
     font: inherit;
     font-weight: 700;
     color: inherit;
+    text-align: inherit;
 }
 
 button.dep-rules__node {

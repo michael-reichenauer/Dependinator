@@ -249,6 +249,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   nodes inside their opened container, instead of to the container as an icon. It also picks the
   cycle: its lines stay red while the other cycles' lines fade, and lines not touching its nodes
   fade as for a selection of them, until the row is clicked again.
+- **Rule navigation (Oct 29).** A rule's two node names in the Rules panel are links that go to
+  and select the node, and a broken dependency frames both of its classes, with the orange line
+  between them (before, it went to the source class only).
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

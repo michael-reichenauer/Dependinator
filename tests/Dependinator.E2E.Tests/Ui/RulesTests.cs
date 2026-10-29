@@ -35,9 +35,11 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await violation.ClickAsync();
         await Expect(ruleLines.First).ToBeAttachedAsync();
 
-        // A rule's node name goes to that node and selects it.
+        // A rule's node names go to that node and select it (the breadcrumb ends with it).
         await rule.GetByTestId("rules-item-to").ClickAsync();
-        await Expect(Page.GetByTestId("node-toolbar")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("breadcrumb")).ToContainTextAsync("Demo.Core");
+        await rule.GetByTestId("rules-item-from").ClickAsync();
+        await Expect(Page.GetByTestId("breadcrumb")).ToContainTextAsync("Demo.UI");
 
         // The other way round nobody breaks it.
         await AddRuleAsync("Demo.Core (dll)", "Demo.UI (dll)");
