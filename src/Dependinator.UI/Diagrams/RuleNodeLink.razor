@@ -1,0 +1,24 @@
+@inject INavigationService navigationService
+
+@* A rule's node name (RulesPanel, SuggestRulesView) as a link that goes to and selects the node;
+   plain bold text when the node is not in the model. Long names may break after their dots. *@
+@if (Id is { } nodeId)
+{
+  <button type="button" class="dep-rules__node" title="@($"Go to {Display}")"
+          @onclick="() => navigationService.ShowNodeAsync(nodeId)" data-testid="@TestId">@BreakAfterDots(Display)</button>
+}
+else
+{
+  <b class="dep-rules__node" data-testid="@TestId">@BreakAfterDots(Display)</b>
+}
+
+@code {
+  [Parameter] public Modeling.Models.NodeId? Id { get; set; }
+
+  [Parameter, EditorRequired] public string Display { get; set; } = "";
+
+  [Parameter] public string? TestId { get; set; }
+
+  static MarkupString BreakAfterDots(string name) =>
+    new(string.Join(".<wbr>", name.Split('.').Select(System.Net.WebUtility.HtmlEncode)));
+}

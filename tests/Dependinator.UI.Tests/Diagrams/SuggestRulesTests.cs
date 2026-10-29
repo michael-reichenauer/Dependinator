@@ -6,7 +6,6 @@ using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
-using MudBlazor;
 using Link = Dependinator.UI.Modeling.Models.Link;
 using Node = Dependinator.UI.Modeling.Models.Node;
 
@@ -36,8 +35,7 @@ public class SuggestRulesTests
             queries,
             ruleService,
             Mock.Of<IAiService>(),
-            Mock.Of<IApplicationEvents>(),
-            Mock.Of<IDialogService>()
+            Mock.Of<IApplicationEvents>()
         );
 
         using var model = modelMgr.UseModel();
@@ -74,8 +72,7 @@ public class SuggestRulesTests
             Mock.Of<IModelQueries>(),
             Mock.Of<IRuleService>(),
             Mock.Of<IAiService>(),
-            Mock.Of<IApplicationEvents>(),
-            Mock.Of<IDialogService>()
+            Mock.Of<IApplicationEvents>()
         );
 
         Assert.Equal("", empty.GetPrompt());
