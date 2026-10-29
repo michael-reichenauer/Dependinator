@@ -774,7 +774,19 @@
     }
 }
 
-/* Suggested rules (SuggestRulesDialog.razor): one row per rule, with Dependinator's check. */
+/* Suggested rules (SuggestRulesView.razor), the view the Rules panel switches to: a bit wider,
+   so the AI routes fit side by side; one row per rule, with Dependinator's check. */
+.dep-suggest-rules {
+    width: min(440px, calc(100vw - 30px));
+}
+
+.dep-suggest-rules__verdict {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
 .dep-suggest-rules__rule {
     padding: 4px 0;
     border-top: 1px solid var(--mud-palette-lines-default);
@@ -783,12 +795,16 @@
 .dep-suggest-rules__head {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
     gap: 4px 6px;
 }
 
-.dep-suggest-rules__rule .dep-ai__suggestion-note {
-    margin-left: 30px;
+.dep-suggest-rules__head .dep-panel__count {
+    white-space: nowrap;
+}
+
+.dep-suggest-rules__add.mud-button-root {
+    min-width: 0;
+    padding: 0 8px;
 }
 
 .dep-suggest-rules__error {

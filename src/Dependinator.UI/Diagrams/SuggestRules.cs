@@ -303,18 +303,28 @@ static class SuggestRulesPrompt
 // "Suggest rules" in the Rules panel: an AI (Claude, Claude Code with Dependinator's MCP tools, or
 // the user's AI chat) suggests architecture rules from the model's structure and dependencies,
 // Dependinator checks each one on the model (SuggestedRule.Check), and the user adds the ones
-// they want (SuggestRulesDialog).
+// they want (SuggestRulesView, which the Rules panel switches to).
 interface ISuggestRulesService
 {
-    Task ShowAsync();
+    // Whether this host can ask Claude: the web host and VS Code, not the standalone browser app.
+    bool IsAvailable { get; }
 
     // The prompt for any AI; empty when there is no model.
     string GetPrompt();
 
     Task<Result<RuleSuggestions>> AskAsync(AiSource route, Action<SuggestStep> onStep);
 
+    // Reads an AI chat's answer, pasted back, and checks its rules.
+    Result<RuleSuggestions> ParsePasted(string text);
+
     // Checks each suggested rule on the model as it is now.
     RuleSuggestions Check(RuleSuggestions suggestions);
+
+    // A key that changes whenever a check could give another result (a re-parse, a rule added).
+    object CheckVersion { get; }
+
+    // Adds the rules, as one undo step, and says how many were added.
+    void Add(IReadOnlyList<SuggestedRule> chosen);
 }
 
 [Scoped]
@@ -323,36 +333,23 @@ class SuggestRulesService(
     IModelQueries modelQueries,
     IRuleService ruleService,
     IAiService aiService,
-    IApplicationEvents applicationEvents,
-    IDialogService dialogService
+    IApplicationEvents applicationEvents
 ) : ISuggestRulesService
 {
-    public async Task ShowAsync()
-    {
-        Func<AiSource, Action<SuggestStep>, Task<Result<RuleSuggestions>>>? ask = aiService.IsAvailable
-            ? AskAsync
-            : null;
-        var parameters = new DialogParameters<SuggestRulesDialog>
-        {
-            { d => d.GetPrompt, () => Task.FromResult(GetPrompt()) },
-            { d => d.Ask, ask },
-            { d => d.ParsePasted, ParsePasted },
-        };
-        var options = new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true,
-        };
-        var dialog = await dialogService.ShowAsync<SuggestRulesDialog>(null, parameters, options);
-        if (await dialog.Result is not { Canceled: false, Data: IReadOnlyList<SuggestedRule> chosen })
-            return;
+    public bool IsAvailable => aiService.IsAvailable;
 
+    public object CheckVersion =>
+        modelMgr.WithModel(m => (m.Path, m.StructureVersion, m.Nodes.Count, m.Links.Count, m.RulesVersion));
+
+    public void Add(IReadOnlyList<SuggestedRule> chosen)
+    {
         // Checked names, so two suggestions that name one rule differently add it once; a node
-        // gone in a re-parse while the dialog was open leaves its rule out.
+        // gone in a re-parse since the check leaves its rule out.
         List<ArchitectureRule> rules = [.. chosen.Select(r => new ArchitectureRule(r.Check.FromName, r.Check.ToName))];
         var added = ruleService.AddRules(rules);
         var left = rules.Distinct().Count() - added;
+        if (added == 1 && left == 0)
+            return; // The row itself shows it, as "already a rule".
         var message = added == 1 ? "Added 1 rule." : $"Added {added} rules.";
         if (left > 0)
             message +=
@@ -362,7 +359,7 @@ class SuggestRulesService(
         applicationEvents.TriggerInfoReported(message);
     }
 
-    Result<RuleSuggestions> ParsePasted(string text)
+    public Result<RuleSuggestions> ParsePasted(string text)
     {
         var parsed = RuleSuggestions.ParseText(text);
         return parsed is RuleSuggestions suggestions ? Check(suggestions) : parsed.Error;

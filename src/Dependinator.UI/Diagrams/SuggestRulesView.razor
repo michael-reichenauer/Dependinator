@@ -1,0 +1,150 @@
+@using Dependinator.UI.Diagrams.Ai
+@inject ISuggestRulesService suggestRulesService
+@inject IApplicationEvents applicationEvents
+@implements IDisposable
+
+@* Suggest rules (SuggestRulesService), the view the Rules panel switches to, on the right like the
+   other panels so the diagram stays in view: an AI suggests architecture rules from the model's
+   structure and dependencies (AiOpinion, open at once since asking is what the view is for).
+   Dependinator checks each suggested rule itself and shows what it would break today, or why it
+   cannot be added, again whenever the model or its rules change; the node names go to their node,
+   and each rule is added on its own or with the others. The Rules panel keeps this view alive
+   while it is hidden (back to the rules, or the panel closed), so an answer that takes a while
+   still arrives, and the answers are there to come back to. *@
+<div class="dep-panel dep-rules dep-suggest-rules dep-toolbar-card" style="@(IsShown ? "" : "display: none")"
+     data-testid="suggest-rules-panel">
+  <div class="dep-panel__header">
+    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.ArrowBack" Size="Size.Small" title="Back to the rules"
+                   OnClick="OnBack" data-testid="suggest-rules-back" />
+    <span class="dep-panel__title">Suggest Rules</span>
+    <MudSpacer />
+    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="OnClose"
+                   data-testid="suggest-rules-close" />
+  </div>
+  <div class="dep-panel__list">
+    <div class="dep-panel__hint" data-testid="suggest-rules-intro">
+      An AI reads the model's structure and dependencies and suggests rules that guard its architecture.
+      Dependinator checks each rule on the model before you add it.
+    </div>
+    <AiOpinion TAnswer="RuleSuggestions" TestId="suggest-rules" GetPrompt="GetPrompt" Ask="Ask"
+               ParsePasted="suggestRulesService.ParsePasted" IsExpandedAtStart="true"
+               ExpandText="Ask AI for rules" AnswerTitle="Suggested rules"
+               RouteText="Claude reads the model's structure and dependencies and suggests rules here."
+               AskTitle="Ask Claude to suggest rules for this model"
+               CopyTitle="Copy a prompt with the model's structure and dependencies"
+               PromptCopiedText="The prompt is copied, with the model's structure and dependencies.">
+      <AnswerContent Context="answer">
+        @{
+          var shown = Checked(answer);
+          var addable = shown.Rules.Where(r => r.CanAdd).ToList();
+        }
+        <div class="dep-ai__suggestion" data-testid="suggest-rules-answer">
+          <div class="dep-suggest-rules__verdict">
+            <span class="dep-ai__suggestion-verdict">@($"{shown.Source.Name()} suggests {shown.Verdict}")</span>
+            <MudSpacer />
+            @if (addable.Count > 1)
+            {
+              <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                         title="Add every suggested rule that can be added" OnClick="() => Add(addable)"
+                         data-testid="suggest-rules-add-all">@($"Add all {addable.Count}")</MudButton>
+            }
+          </div>
+          @foreach (var rule in shown.Rules)
+          {
+            <div class="dep-suggest-rules__rule" data-testid="suggest-rules-item" data-can-add="@(rule.CanAdd ? "yes" : "no")">
+              <div class="dep-suggest-rules__head">
+                <span class="dep-rules__names">
+                  <RuleNodeLink Id="NodeIdOf(rule, rule.Check.FromName)" Display="@Title(rule.Check.FromTitle, rule.From)"
+                                TestId="suggest-rules-from" />
+                  <span class="dep-rules__arrow">must not use</span>
+                  <RuleNodeLink Id="NodeIdOf(rule, rule.Check.ToName)" Display="@Title(rule.Check.ToTitle, rule.To)"
+                                TestId="suggest-rules-to" />
+                </span>
+                <span class="dep-panel__count" data-testid="suggest-rules-status">@Status(rule)</span>
+                @if (rule.CanAdd)
+                {
+                  <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="dep-suggest-rules__add"
+                             title="Add this rule" OnClick="() => Add([rule])" data-testid="suggest-rules-add">Add</MudButton>
+                }
+                else if (rule.Check.IsRule)
+                {
+                  <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.CheckCircle" Size="Size.Small" Color="Color.Success" />
+                }
+                else
+                {
+                  <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.Block" Size="Size.Small" Color="Color.Default" />
+                }
+              </div>
+              @if (rule.Check.Error is { } error)
+              {
+                <div class="dep-ai__suggestion-note dep-suggest-rules__error" data-testid="suggest-rules-error">@error</div>
+              }
+              @if (rule.Why != "")
+              {
+                <div class="dep-ai__suggestion-note">@rule.Why</div>
+              }
+            </div>
+          }
+        </div>
+      </AnswerContent>
+    </AiOpinion>
+  </div>
+</div>
+
+@code {
+  // Hidden rather than removed, so a pending answer and the earlier ones are kept.
+  [Parameter] public bool IsShown { get; set; }
+
+  [Parameter] public EventCallback OnBack { get; set; }
+
+  [Parameter] public EventCallback OnClose { get; set; }
+
+  // Each answer checked on the model as it is now, cached until a check could change.
+  readonly Dictionary<RuleSuggestions, RuleSuggestions> checkedAnswers = [];
+  object? checkedFor;
+
+  Func<AiSource, Action<SuggestStep>, Task<Result<RuleSuggestions>>>? Ask =>
+    suggestRulesService.IsAvailable ? suggestRulesService.AskAsync : null;
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  Task<string> GetPrompt() => Task.FromResult(suggestRulesService.GetPrompt());
+
+  RuleSuggestions Checked(RuleSuggestions answer)
+  {
+    var version = suggestRulesService.CheckVersion;
+    if (!version.Equals(checkedFor))
+    {
+      checkedAnswers.Clear();
+      checkedFor = version;
+    }
+    if (!checkedAnswers.TryGetValue(answer, out var shown))
+      checkedAnswers[answer] = shown = suggestRulesService.Check(answer);
+    return shown;
+  }
+
+  // The node of a checked name; none where the check found no rule (a node not in the model).
+  static Modeling.Models.NodeId? NodeIdOf(SuggestedRule rule, string name) =>
+    rule.Check.Error is null && name != "" ? Modeling.Models.NodeId.FromName(name) : null;
+
+  // An added rule shows as "already a rule" once the model's rules change.
+  void Add(IReadOnlyList<SuggestedRule> rules) => suggestRulesService.Add(rules);
+
+  static string Title(string title, string name) => title != "" ? title : name;
+
+  static string Status(SuggestedRule rule) =>
+    rule.Check switch
+    {
+      { Error: not null } => "cannot be added",
+      { IsRule: true } => "already a rule",
+      { ViolationCount: 0 } => "kept today",
+      { ViolationCount: 1, LinkCount: var links } => $"1 broken ({Links(links)})",
+      { ViolationCount: var count, LinkCount: var links } => $"{count} broken ({Links(links)})",
+    };
+
+  static string Links(int count) => count == 1 ? "1 link" : $"{count} links";
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

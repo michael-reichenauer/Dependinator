@@ -133,9 +133,10 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("rules-allowed-toggle")).ToHaveCountAsync(0);
     }
 
-    // An AI suggests rules (in test mode the app answers for Claude): the prompt holds the model's
-    // structure and dependencies, Dependinator checks each rule, one on a node that is not in the
-    // model cannot be added, and the ticked ones are added.
+    // An AI suggests rules (in test mode the app answers for Claude) in a view the Rules panel
+    // switches to: the prompt holds the model's structure and dependencies, Dependinator checks
+    // each rule, one on a node that is not in the model cannot be added, a rule's node name goes to
+    // its node, and an added rule shows as one, both here and back in the rules list.
     [E2EFact]
     public async Task SuggestRules_ShouldCheckEachRule_AndAddTheChosenOnes()
     {
@@ -143,6 +144,8 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.WaitForModelRenderedAsync();
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
         await Page.GetByTestId("rules-suggest").ClickAsync();
+        await Expect(Page.GetByTestId("suggest-rules-panel")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("rules-panel")).ToHaveCountAsync(0);
 
         await Page.GetByTestId("suggest-rules-show-prompt").ClickAsync();
         await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("Dependencies between them");
@@ -153,13 +156,24 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(items).ToHaveCountAsync(3);
         await Expect(items.Nth(2)).ToHaveAttributeAsync("data-can-add", "no");
         await Expect(items.Nth(2).GetByTestId("suggest-rules-error")).ToContainTextAsync("No node is named");
-        ILocator add = Page.GetByTestId("suggest-rules-add");
-        await Expect(add).ToHaveTextAsync("Add 2 rules");
+        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveTextAsync("Add all 2");
 
-        await items.Nth(0).GetByTestId("suggest-rules-choose").ClickAsync();
-        await Expect(add).ToHaveTextAsync("Add 1 rule");
-        await add.ClickAsync();
+        // The node names go to their node, with the view still open beside the diagram.
+        var toName = await items.Nth(0).GetByTestId("suggest-rules-to").InnerTextAsync();
+        await items.Nth(0).GetByTestId("suggest-rules-to").ClickAsync();
+        await Expect(Page.GetByTestId("breadcrumb")).ToContainTextAsync(toName.Split(' ')[0]);
+        await Expect(Page.GetByTestId("suggest-rules-panel")).ToBeVisibleAsync();
+
+        await items.Nth(0).GetByTestId("suggest-rules-add").ClickAsync();
+        await Expect(items.Nth(0)).ToHaveAttributeAsync("data-can-add", "no");
+        await Expect(items.Nth(0).GetByTestId("suggest-rules-status")).ToHaveTextAsync("already a rule");
+        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveCountAsync(0);
+
+        // Back to the rules, which list the added one; the answer is still there on return.
+        await Page.GetByTestId("suggest-rules-back").ClickAsync();
         await Expect(Page.GetByTestId("rules-item")).ToHaveCountAsync(1);
+        await Page.GetByTestId("rules-suggest").ClickAsync();
+        await Expect(items).ToHaveCountAsync(3);
     }
 
     // Picks both nodes through the search dialog in picker mode and adds the rule.

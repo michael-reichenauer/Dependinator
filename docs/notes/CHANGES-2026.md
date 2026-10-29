@@ -252,6 +252,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Rule navigation (Oct 29).** A rule's two node names in the Rules panel are links that go to
   and select the node, and a broken dependency frames both of its classes, with the orange line
   between them (before, it went to the source class only).
+- **Suggest rules beside the diagram (Oct 29).** Suggest rules moved from a dialog over the
+  diagram into the Rules panel, which switches to a suggestions view with a back arrow. Its node
+  names go to their node, each rule has its own Add button (plus "Add all"), and the checks follow
+  the model as rules are added or it is re-parsed. The view stays alive while hidden, so an answer
+  that takes a while still arrives after going back to the rules or closing the panel.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

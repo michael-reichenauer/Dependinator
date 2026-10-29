@@ -6,7 +6,6 @@
 @inject Modeling.IModelService modelService
 @inject Modeling.Models.IModelMgr modelMgr
 @inject IRuleReviewService ruleReviewService
-@inject ISuggestRulesService suggestRulesService
 @implements IDisposable
 
 @* Architecture rules: "X must not depend on Y", declared by picking two nodes. Each rule lists
@@ -14,10 +13,11 @@
    lines are drawn in the rule color. A rule's node names go to their node, and a dependency row
    frames both of its classes with the lines between them. Each dependency can be reviewed
    (RuleReviewDialog, with an AI opinion): fixed with a prompt for an AI that changes the code, or
-   allowed with why, which moves it to the rule's collapsed Allowed list. "Suggest rules" lets an
-   AI suggest rules to add (SuggestRulesDialog). Rules and allowed dependencies are saved with the
-   model and undoable. *@
-@if (viewOptions.IsRulesShown)
+   allowed with why, which moves it to the rule's collapsed Allowed list. "Suggest rules" switches
+   the panel to SuggestRulesView, where an AI suggests rules to add; that view stays alive once
+   started (hidden while the rules show or the panel is closed) until another model is opened.
+   Rules and allowed dependencies are saved with the model and undoable. *@
+@if (viewOptions.IsRulesShown && !isSuggestView)
 {
   var reports = ruleService.GetReports();
   var violationCount = reports.Sum(r => r.Violations.Count);
@@ -42,9 +42,9 @@
           <div class="dep-rules__head">
             <MudIcon Icon="@StatusIcon(report)" Size="Size.Small" Color="@StatusColor(report)" />
             <span class="dep-rules__names" title="@($"{report.FromDisplay} must not depend on {report.ToDisplay}")">
-              @NodeName(report.FromId, report.FromDisplay, "rules-item-from")
+              <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
               <span class="dep-rules__arrow">must not use</span>
-              @NodeName(report.ToId, report.ToDisplay, "rules-item-to")
+              <RuleNodeLink Id="report.ToId" Display="@report.ToDisplay" TestId="rules-item-to" />
             </span>
             <span class="dep-panel__count" data-testid="rules-item-count">@StatusText(report)</span>
             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small" title="Remove this rule"
@@ -131,11 +131,16 @@
     <div class="dep-rules__suggest">
       <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome"
                  title="Let an AI suggest rules from the model's structure and dependencies; you choose which to add"
-                 OnClick="suggestRulesService.ShowAsync" data-testid="rules-suggest">
+                 OnClick="ShowSuggestions" data-testid="rules-suggest">
         Suggest rules …
       </MudButton>
     </div>
   </div>
+}
+@if (suggestModelPath is not null)
+{
+  <SuggestRulesView IsShown="@(viewOptions.IsRulesShown && isSuggestView)" OnBack="() => isSuggestView = false"
+                    OnClose="Close" />
 }
 
 @code {
@@ -145,9 +150,26 @@
   string? fromName;
   string? toName;
 
+  // The model the suggestions view was started for, null before; the view shows instead of the
+  // rules while isSuggestView.
+  string? suggestModelPath;
+  bool isSuggestView;
+
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
-  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+  void OnUiStateChanged()
+  {
+    // Suggestions for another model would name its nodes, so a newly opened model starts over.
+    if (suggestModelPath is not null && suggestModelPath != modelMgr.WithModel(m => m.Path))
+      (suggestModelPath, isSuggestView) = (null, false);
+    InvokeAsync(StateHasChanged);
+  }
+
+  void ShowSuggestions()
+  {
+    suggestModelPath = modelMgr.WithModel(m => m.Path);
+    isSuggestView = true;
+  }
 
   static string Summary(int rules, int violations) =>
     rules == 0 ? "" : violations == 0 ? "all kept" : violations == 1 ? "1 violation" : $"{violations} violations";
@@ -164,24 +186,6 @@
     !report.IsResolved ? "node not in model" : report.Violations.Count == 0 ? "kept" : $"{report.Violations.Count} broken";
 
   static string PickClass(string? name) => name is null ? "dep-path__pick dep-path__pick--empty" : "dep-path__pick";
-
-  // A rule's node name as a link to the node; plain text when the node is not in the model. Long
-  // names may break after their dots.
-  RenderFragment NodeName(Modeling.Models.NodeId? id, string display, string testId) =>
-    @<text>
-      @if (id is { } nodeId)
-      {
-        <button type="button" class="dep-rules__node" title="@($"Go to {display}")"
-                @onclick="() => navigationService.ShowNodeAsync(nodeId)" data-testid="@testId">@BreakAfterDots(display)</button>
-      }
-      else
-      {
-        <b class="dep-rules__node" data-testid="@testId">@BreakAfterDots(display)</b>
-      }
-    </text>;
-
-  static MarkupString BreakAfterDots(string name) =>
-    new(string.Join(".<wbr>", name.Split('.').Select(System.Net.WebUtility.HtmlEncode)));
 
   // Frames both classes, so the line between them is in view. Nothing is selected: classes in
   // different projects are too small at that zoom to show a selection or its toolbar.
