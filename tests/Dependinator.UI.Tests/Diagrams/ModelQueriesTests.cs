@@ -1,5 +1,6 @@
 using Dependinator.Core.ModelQueries;
 using Dependinator.Core.Parsing;
+using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling;
@@ -7,8 +8,10 @@ using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
+using FileSpan = Dependinator.Core.Parsing.FileSpan;
 using Link = Dependinator.UI.Modeling.Models.Link;
 using Node = Dependinator.UI.Modeling.Models.Node;
+using ParsedNode = Dependinator.Core.Parsing.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
@@ -19,6 +22,7 @@ public class ModelQueriesTests
 {
     readonly ModelMgr modelMgr = new(new StateMgr());
     readonly ModelQueryService service = new();
+    readonly Mock<IWorkspaceFileService> workspace = new();
     readonly ModelQueries queries;
 
     // UI (assembly): UI.Views.View (with Load()) and UI.Models.Item; Data (assembly): Data.Repo
@@ -57,6 +61,7 @@ public class ModelQueriesTests
             new NodeSearchService(mgr),
             new CycleService(mgr, Mock.Of<ICommandService>()),
             new RuleService(mgr, Mock.Of<ICommandService>()),
+            workspace.Object,
             service
         );
 
@@ -239,5 +244,50 @@ public class ModelQueriesTests
         var error = AssertError(await service.GetModelAsync());
 
         Assert.Contains("No Dependinator diagram is open", error.Message);
+    }
+
+    [Fact]
+    public async Task ReadSourceAsync_ShouldNumberTheNodesLines_WithThePathFromTheModelsFolder()
+    {
+        SetSource(repo, "/repo/src/Repo.cs", 2, 3);
+        workspace.Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs")).ReturnsAsync((Result<string>)"a\r\nb\nc\nd");
+
+        var source = AssertOk(await queries.ReadSourceAsync("Data.Repo"));
+
+        Assert.Equal("Data.Repo", source.Node.Name);
+        Assert.Equal("src/Repo.cs", source.Path);
+        Assert.Equal((2, 3, false), (source.StartLine, source.EndLine, source.IsCut));
+        Assert.Equal("    2  b\n    3  c", source.Text);
+    }
+
+    [Fact]
+    public async Task ReadSourceAsync_ShouldCutLongCode()
+    {
+        var lineCount = ModelQueries.MaxSourceLines + 50;
+        SetSource(repo, "/repo/src/Repo.cs", 1, lineCount);
+        var file = string.Join("\n", Enumerable.Range(1, lineCount).Select(n => $"line {n}"));
+        workspace.Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs")).ReturnsAsync((Result<string>)file);
+
+        var source = AssertOk(await queries.ReadSourceAsync("Data.Repo"));
+
+        Assert.True(source.IsCut);
+        Assert.Equal(lineCount, source.EndLine);
+        Assert.Equal(ModelQueries.MaxSourceLines, source.Text.Split('\n').Length);
+    }
+
+    [Fact]
+    public async Task ReadSourceAsync_ShouldFail_ForANodeWithoutCodeOfItsOwn()
+    {
+        var error = AssertError(await queries.ReadSourceAsync("UI.Views"));
+
+        Assert.Equal("UI.Views has no code of its own (a namespace): read the types in it.", error.Message);
+        workspace.Verify(w => w.ReadSourceFileAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    void SetSource(Node node, string path, int startLine, int endLine)
+    {
+        using var model = modelMgr.UseModel();
+        model.Path = "/repo/Demo.sln";
+        node.Update(new ParsedNode(node.Name, new() { FileSpan = new FileSpan(path, startLine, endLine) }));
     }
 }

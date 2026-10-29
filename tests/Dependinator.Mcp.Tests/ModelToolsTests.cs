@@ -62,6 +62,7 @@ public sealed class ModelToolsTests : IAsyncLifetime
                 "list_children",
                 "list_cycles",
                 "list_rules",
+                "read_source",
                 "search_nodes",
             ],
             tools.Select(t => t.Name).Order(StringComparer.Ordinal)
@@ -119,6 +120,26 @@ public sealed class ModelToolsTests : IAsyncLifetime
 
         Assert.True(result.IsError);
         Assert.Equal("No Dependinator diagram is open. Open the diagram and try again.", Text(result));
+    }
+
+    [Fact]
+    public async Task ReadSource_ShouldAnswerWithTheCodeAsPlainText()
+    {
+        var node = new QueryNode("Core.Repo", "Repo", "ClassType", 0);
+        queries
+            .Setup(q => q.ReadSourceAsync("Core.Repo"))
+            .ReturnsAsync(new NodeSource(node, "src/Repo.cs", 2, 40, "    2  class Repo\n    3  {", true));
+
+        var result = await Client.CallToolAsync(
+            "read_source",
+            new Dictionary<string, object?> { ["nodeName"] = "Core.Repo" }
+        );
+
+        Assert.NotEqual(true, result.IsError);
+        Assert.Equal(
+            "Core.Repo (ClassType) in src/Repo.cs, lines 2-40:\n\n    2  class Repo\n    3  {\n… cut here; the code goes on to line 40.",
+            Text(result)
+        );
     }
 
     static string Text(CallToolResult result) => Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;

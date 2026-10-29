@@ -41,6 +41,10 @@ interface IModelQueryService
 
     // Evaluates "from must not use to" without adding it: the violations it would report today.
     Task<Result<RuleResult>> CheckRuleAsync(string fromName, string toName);
+
+    // The node's code (a type, a member, a Bicep resource), read from the workspace; an error for a
+    // node without code of its own (a project, a namespace) or where the host has no source.
+    Task<Result<NodeSource>> ReadSourceAsync(string nodeName);
 }
 
 // A node as the answers show it: Name is the key to pass back, Title the readable name, Type the
@@ -111,3 +115,8 @@ record RuleResult(
     IReadOnlyList<AllowedDependency> Allowed,
     int AllowedCount
 );
+
+// Lines StartLine to EndLine of the file at Path (relative to the model's folder where it is in
+// it), each with its number. Long code is cut after MaxLines: IsCut says so, EndLine is the node's
+// last line.
+record NodeSource(QueryNode Node, string Path, int StartLine, int EndLine, string Text, bool IsCut);

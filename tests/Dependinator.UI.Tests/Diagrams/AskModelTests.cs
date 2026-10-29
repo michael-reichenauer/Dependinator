@@ -28,12 +28,34 @@ public class AskModelTests
     {
         using var model = modelMgr.UseModel();
 
-        var prompt = AskModelPrompt.Build(model, "  Where is the view?  ");
+        var prompt = AskModelPrompt.Build(model, "  Where is the view?  ", []);
 
         Assert.Contains("- `Data` (project, titled \"Data (dll)\")", prompt);
         Assert.Contains("- `UI` (project", prompt);
         Assert.Contains("## The question\n\nWhere is the view?\n", prompt.Replace("\r", ""));
         Assert.Contains("search_nodes", prompt);
+        Assert.DoesNotContain("Earlier in this conversation", prompt);
+    }
+
+    [Fact]
+    public void Build_ShouldGiveAFollowUpTheLastExchanges_WithLongAnswersCut()
+    {
+        using var model = modelMgr.UseModel();
+        List<AskExchange> earlier =
+        [
+            new("First?", "One."),
+            new("Second?", "Two."),
+            new("Third?", "Three."),
+            new("Fourth?", new string('x', AskModelPrompt.MaxEarlierAnswerLength + 10)),
+        ];
+
+        var prompt = AskModelPrompt.Build(model, "And then?", earlier).Replace("\r", "");
+
+        Assert.Contains("## Earlier in this conversation\n\n(1 earlier question left out.)", prompt);
+        Assert.DoesNotContain("First?", prompt);
+        Assert.Contains("**Question:** Second?\n\n**Answer:** Two.", prompt);
+        Assert.Contains(new string('x', AskModelPrompt.MaxEarlierAnswerLength) + " … (cut)", prompt);
+        Assert.Contains("## The question (it may follow up on the conversation above)\n\nAnd then?\n", prompt);
     }
 
     [Fact]
@@ -41,7 +63,7 @@ public class AskModelTests
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();
 
-        Assert.Equal("", AskModelPrompt.Build(model, "Anything?"));
+        Assert.Equal("", AskModelPrompt.Build(model, "Anything?", []));
     }
 
     [Fact]

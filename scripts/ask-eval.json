@@ -1,0 +1,86 @@
+{
+  "about": "Questions for ./scripts/ask-eval, about this repository's own model (Dependinator.sln, as the dev host opens it). Each case is one conversation: its questions are asked in turn, later ones as follow-ups. An answer passes when every 'nodes' entry names a node the answer lists or links (alternatives split by |, matched on the name's last parts) and 'text' (a case-insensitive regex) matches its text. Keep the expectations to facts that stay true as the code changes, and update them when a name moves.",
+  "cases": [
+    {
+      "name": "bicep-parser",
+      "questions": [{ "question": "Which class parses Azure Bicep files?", "nodes": ["BicepParser"] }]
+    },
+    {
+      "name": "csharp-parser",
+      "questions": [
+        {
+          "question": "Which class parses C# solutions, and where does it get the compilation from?",
+          "nodes": ["Dependinator.Roslyn.Parsing.SourceParser|SolutionReader|ProjectParser"]
+        }
+      ]
+    },
+    {
+      "name": "parser-dispatch",
+      "questions": [
+        {
+          "question": "How does the app decide which parser to use for a file?",
+          "nodes": ["ParserService", "ISourceParser"]
+        }
+      ]
+    },
+    {
+      "name": "tool-loop",
+      "questions": [
+        {
+          "question": "Where is the tool-use loop that asks Claude with the user's API key?",
+          "nodes": ["ModelToolsAgent"]
+        }
+      ]
+    },
+    {
+      "name": "model-queries",
+      "questions": [
+        {
+          "question": "What implements IModelQueryService, and how do the MCP tools reach it in VS Code?",
+          "nodes": ["ModelQueryService", "TimeLimitedModelQueries|LspMcpServer"]
+        }
+      ]
+    },
+    {
+      "name": "claude-code-runner",
+      "questions": [
+        { "question": "Which class runs the claude command line?", "nodes": ["ClaudeCodeRunner"] },
+        { "question": "And what calls it?", "nodes": ["ClaudeService"] }
+      ]
+    },
+    {
+      "name": "web-api-key",
+      "questions": [
+        {
+          "question": "Where does the web host get the Claude API key from?",
+          "nodes": ["EnvironmentClaudeApiKeyProvider"],
+          "text": "ANTHROPIC_API_KEY"
+        }
+      ]
+    },
+    {
+      "name": "quick-model",
+      "questions": [
+        {
+          "question": "Which Claude model answers the quick questions, such as About Node?",
+          "text": "sonnet[- ]5[.-]5"
+        }
+      ]
+    },
+    {
+      "name": "rule-violations",
+      "questions": [
+        { "question": "Where are the violations of architecture rules computed?", "nodes": ["RuleService"] }
+      ]
+    },
+    {
+      "name": "cycle-prompt",
+      "questions": [
+        {
+          "question": "Which class builds the prompt for a cycle review, and where does it get the code excerpts from?",
+          "nodes": ["CyclePrompt|CyclePromptService", "IWorkspaceFileService|WorkspaceFileService|SourceExcerpts"]
+        }
+      ]
+    }
+  ]
+}

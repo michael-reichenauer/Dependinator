@@ -28,6 +28,7 @@ public class SuggestRulesTests
             new NodeSearchService(modelMgr),
             new CycleService(modelMgr, Mock.Of<ICommandService>()),
             ruleService,
+            Mock.Of<Dependinator.Core.Shared.IWorkspaceFileService>(),
             new ModelQueryService()
         );
         service = new SuggestRulesService(

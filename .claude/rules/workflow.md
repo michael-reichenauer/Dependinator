@@ -104,8 +104,10 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   `AskModel.cs`) on the Claude Code route with the MCP model tools; node names in backticks become
   links (short name in the text). Phase 2 (Oct 29): the API key route, `ModelToolsAgent`'s own
   tool-use loop (Sonnet, 15 turns) over the app's MCP server as a client (`McpAgentTools`), live
-  lookup lines from `IModelQueries.Asked`, the cost per answer. Phase 3: follow-up questions, a `read_source` tool,
-  a small eval set of questions. No paste route (decided with the user: multi-turn tools).
+  lookup lines from `IModelQueries.Asked`, the cost per answer. Phase 3 (Oct 29): follow-ups (the
+  last 3 exchanges in the prompt), the `read_source` tool, `./scripts/ask-eval` (run it after a
+  prompt or tool change). Still open: tool results carried across follow-ups, more eval cases
+  from real questions. No paste route (decided with the user: multi-turn tools).
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.
