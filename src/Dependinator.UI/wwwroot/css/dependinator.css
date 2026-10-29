@@ -1153,3 +1153,102 @@ button.dep-rules__node:hover {
     margin-top: 6px;
     font-size: 0.8125rem;
 }
+
+/* The Ask panel (AskPanel.razor): questions and answers about the model, the newest at the
+   bottom above the question box; node names in an answer are links to the diagram. */
+.dep-ask {
+    width: min(440px, calc(100vw - 30px));
+}
+
+.dep-ask__list {
+    gap: 10px;
+    padding-bottom: 4px;
+}
+
+.dep-ask__examples {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.dep-ask__example {
+    padding: 3px 8px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dep-ask__example:hover {
+    border-color: var(--mud-palette-primary);
+}
+
+.dep-ask__question {
+    font-weight: 600;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+/* The answer scrolls with the panel's list, not on its own. */
+.dep-ask__answer.dep-ai__suggestion {
+    max-height: none;
+    overflow-y: visible;
+    margin-top: 4px;
+}
+
+.dep-ask__answer ol {
+    margin: 0 0 6px;
+    padding-left: 20px;
+}
+
+.dep-ask__node {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: monospace;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-primary);
+    text-align: inherit;
+    cursor: pointer;
+}
+
+.dep-ask__node:hover {
+    text-decoration: underline;
+}
+
+.dep-ask__nodes {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 6px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-ask__node-row {
+    overflow-wrap: break-word;
+}
+
+.dep-ask__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dep-ask__input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.dep-ask__meta {
+    display: flex;
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}

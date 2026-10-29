@@ -52,6 +52,10 @@ interface IViewOptions
     // The hidden nodes panel (HiddenNodesPanel), top-right like the analysis panels.
     bool IsHiddenNodesShown { get; }
 
+    // The Ask panel (AskPanel), questions about the model for an AI, top-right like the analysis
+    // panels (IAskModelService opens and closes it).
+    bool IsAskShown { get; }
+
     // While set, the hidden nodes panel lists only this node's hidden children (opened from its
     // node menu, List Hidden Children).
     NodeId? HiddenNodesParentId { get; }
@@ -78,6 +82,7 @@ interface IViewOptions
     void SetRulesShown(bool shown);
     void SetRuleSuggestionsShown(bool shown);
     void SetHiddenNodesShown(bool shown, NodeId? parentId = null);
+    void SetAskShown(bool shown);
     void SetHiddenBadgesShown(bool shown);
     void SetMinimapShown(bool shown);
     void SetProblemBadgesShown(bool shown);
@@ -134,6 +139,7 @@ class ViewOptions : IViewOptions
     public bool IsRulesShown { get; private set; }
     public bool IsRuleSuggestionsShown { get; private set; }
     public bool IsHiddenNodesShown { get; private set; }
+    public bool IsAskShown { get; private set; }
     public NodeId? HiddenNodesParentId { get; private set; }
     public bool IsHiddenBadgesShown { get; private set; } = true;
     public bool IsMinimapShown { get; private set; }
@@ -177,6 +183,8 @@ class ViewOptions : IViewOptions
         IsHiddenNodesShown = shown;
         HiddenNodesParentId = shown ? parentId : null;
     }
+
+    public void SetAskShown(bool shown) => IsAskShown = shown;
 
     public void SetHiddenBadgesShown(bool shown) => IsHiddenBadgesShown = shown;
 

@@ -29,7 +29,7 @@ project works.
   group and rubber-band selection), new line and container visuals, a release flow through `dev`
   and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
-  Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, an MCP server for AI agents and AI-suggested rules, C# member naming fixes, and a problem indicator with node badges.
+  Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, an MCP server for AI agents, AI-suggested rules and questions about the model, C# member naming fixes, and a problem indicator with node badges.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -257,6 +257,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   names go to their node, each rule has its own Add button (plus "Add all"), and the checks follow
   the model as rules are added or it is re-parsed. The view stays alive while hidden, so an answer
   that takes a while still arrives after going back to the rules or closing the panel.
+- **Ask about the model (Oct 29).** A question box in a panel beside the diagram (app bar button,
+  View › Ask About the Model): Claude Code looks the answer up with the app's own MCP model tools
+  and reads the code, and every node name in its answer is a link that goes to the node, with the
+  nodes it is about listed below and "Show all" framing them. The prompt (`AskModelPrompt`) holds
+  only the model's top level and the question; the tools fetch the rest. Answers stay while the
+  panel is closed, until another model opens. Claude Code route only for now (roadmap idea 5,
+  phase 1; the API key route with its own tool loop is next).
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

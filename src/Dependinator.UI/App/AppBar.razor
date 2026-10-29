@@ -32,6 +32,7 @@
 @inject IKeyboardService keyboardService
 @inject Dependinator.UI.Diagrams.Interaction.IViewHistoryService viewHistory
 @inject Dependinator.UI.Diagrams.Ai.IAiService aiService
+@inject Dependinator.UI.Diagrams.IAskModelService askModelService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-toolbar-card"
@@ -180,6 +181,16 @@
                              data-testid="menu-rules">
                     Show Architecture Rules
                 </MudMenuItem>
+
+                @if (askModelService.IsAvailable)
+                {
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@AskIcon" OnClick="askModelService.Toggle"
+                                 title="Ask an AI a question about the model; the nodes in its answer link to the diagram."
+                                 data-checked="@(viewOptions.IsAskShown ? "true" : "false")"
+                                 data-testid="menu-ask">
+                        Ask About the Model
+                    </MudMenuItem>
+                }
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AltRoute" OnClick="pathFinderService.Open"
                              title="Shows why one node depends on another: the shortest chain of dependencies between two nodes you choose."
@@ -490,6 +501,15 @@
         <MudTooltip Text="View mode: click to enable editing">
             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" Color="@Color.Tertiary"
                            OnClick="ToggleEditMode" data-checked="false" data-testid="toolbar-edit" />
+        </MudTooltip>
+    }
+
+    @if (askModelService.IsAvailable)
+    {
+        <MudTooltip Text="Ask about the model">
+            <MudIconButton Icon="@Icons.Material.Outlined.QuestionAnswer" OnClick="askModelService.Toggle"
+                           Color="@(viewOptions.IsAskShown ? Color.Primary : Color.Tertiary)"
+                           data-checked="@(viewOptions.IsAskShown ? "true" : "false")" data-testid="toolbar-ask" />
         </MudTooltip>
     }
 
@@ -843,6 +863,7 @@
     }
     string CyclesIcon => CheckIcon(viewOptions.IsCyclesShown);
     string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
+    string AskIcon => CheckIcon(viewOptions.IsAskShown);
     string HiddenNodesListIcon => CheckIcon(viewOptions.IsHiddenNodesShown);
 
     void ToggleHiddenNodes() => hiddenNodeService.TogglePanel();
@@ -855,6 +876,7 @@
         {
             viewOptions.SetCyclesShown(false);
             viewOptions.SetHiddenNodesShown(false);
+            viewOptions.SetAskShown(false);
             pathFinderService.Close();
         }
         viewOptions.SetRulesShown(!viewOptions.IsRulesShown);
@@ -869,6 +891,7 @@
             pathFinderService.Close(); // The analysis panels sit top-right and all recolor lines
             viewOptions.SetRulesShown(false);
             viewOptions.SetHiddenNodesShown(false);
+            viewOptions.SetAskShown(false);
         }
         viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
         modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
