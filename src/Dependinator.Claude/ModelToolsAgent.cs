@@ -27,8 +27,9 @@ interface IAgentTools : IAsyncDisposable
 // a tool, or after MaxTurns requests: the last one allows no tool calls (tool_choice "none"), so
 // Claude answers with what it found. The answer is structured output, so the final text is JSON
 // that matches the schema. Claude Sonnet 5.5 at medium effort: a few tool calls a turn, cents an
-// ask. The tool definitions are marked for prompt caching, so later turns read them (and the turns
-// before) from the cache at a tenth of the price.
+// ask. Requests use automatic prompt caching (the cache mark moves to the latest message), so each
+// turn reads the tools and the turns before from the cache at a tenth of the price. A turn a
+// server-side fallback answered on another model has other prices, so then the cost is unknown.
 static class ModelToolsAgent
 {
     internal const string Model = "claude-sonnet-5-5";
@@ -52,13 +53,10 @@ static class ModelToolsAgent
         IAgentTools tools
     )
     {
-        List<BetaToolUnion> toolDefinitions =
-        [
-            .. tools.Tools.Select((t, i) => ToolDefinition(t, i == tools.Tools.Count - 1)),
-        ];
+        List<BetaToolUnion> toolDefinitions = [.. tools.Tools.Select(ToolDefinition)];
         List<BetaMessageParam> messages = [new BetaUserMessageParam { Content = prompt }];
         var toolCalls = 0;
-        decimal cost = 0;
+        decimal? cost = 0;
 
         for (var turn = 1; turn <= MaxTurns; turn++)
         {
@@ -70,6 +68,7 @@ static class ModelToolsAgent
                     MaxTokens = MaxTokens,
                     Betas = [AnthropicBeta.ServerSideFallback2026_07_01],
                     Fallbacks = new Default(),
+                    CacheControl = new BetaCacheControlEphemeral(),
                     OutputConfig = new BetaOutputConfig
                     {
                         Effort = Effort.Medium,
@@ -80,7 +79,8 @@ static class ModelToolsAgent
                     Messages = messages,
                 }
             );
-            cost += Cost(response.Usage);
+            string servedModel = response.Model;
+            cost = servedModel.StartsWith(Model, StringComparison.Ordinal) ? cost + Cost(response.Usage) : null;
             Log.Info(
                 "Claude answered with tools",
                 $"turn {turn}",
@@ -102,8 +102,11 @@ static class ModelToolsAgent
                 );
                 return text.Trim() == ""
                     ? new Error("Claude gave an empty answer. Please try again.")
-                    : new ToolsAnswer(text, toolCalls, decimal.Round(cost, 4));
+                    : new ToolsAnswer(text, toolCalls, cost is { } total ? decimal.Round(total, 4) : null);
             }
+            // tool_choice "none" allows no calls; should Claude make some anyway, nothing can use them.
+            if (isLastTurn)
+                break;
 
             // Claude's turn goes back as it was (thinking blocks with their signatures too), then
             // one result per call, all in one message.
@@ -143,8 +146,7 @@ static class ModelToolsAgent
         }
     }
 
-    // The definitions are the same on every turn; the cache mark on the last one caches them all.
-    static BetaToolUnion ToolDefinition(AgentTool tool, bool isLast)
+    static BetaToolUnion ToolDefinition(AgentTool tool)
     {
         var schema = tool.InputSchema;
         var properties =
@@ -160,7 +162,6 @@ static class ModelToolsAgent
             Name = tool.Name,
             Description = tool.Description,
             InputSchema = new() { Properties = properties, Required = required },
-            CacheControl = isLast ? new BetaCacheControlEphemeral() : null,
         };
     }
 

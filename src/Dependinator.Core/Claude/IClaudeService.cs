@@ -53,8 +53,9 @@ interface IClaudeService
 }
 
 // Claude's answer after it used the model tools: JSON that matches the schema, the number of tool
-// calls it made, and the request's cost in US dollars at the API's list prices.
-record ToolsAnswer(string Json, int ToolCalls, decimal CostUsd);
+// calls it made, and the requests' cost in US dollars at the API's list prices (null when unknown:
+// another model answered a turn).
+record ToolsAnswer(string Json, int ToolCalls, decimal? CostUsd);
 
 enum ClaudeApiKeyState
 {

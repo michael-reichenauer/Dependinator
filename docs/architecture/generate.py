@@ -295,7 +295,7 @@ d.box("u-shared", 890, 285, 230, 110, "Shared/", ["IndexedDB, cloud sync, VS Cod
 d.group(30, 440, 1110, 140, "Parsers and integrations", "each plugs into Core")
 d.box("p-roslyn", 60, 480, 190, 85, "Dependinator.Roslyn", ["C# solutions: MSBuildWorkspace", "1.8k lines"], icon="Parsing")
 d.box("p-bicep", 270, 480, 190, 85, "Dependinator.Bicep", ["Bicep: Azure.Bicep.Core", "1.0k lines"], icon="Parsing")
-d.box("p-claude", 480, 480, 190, 85, "Dependinator.Claude", ["Anthropic SDK: AI reviews", "0.6k lines"], icon="Api")
+d.box("p-claude", 480, 480, 190, 85, "Dependinator.Claude", ["Anthropic SDK: reviews, Ask", "0.9k lines"], icon="Api")
 d.box("p-mcp", 690, 480, 190, 85, "Dependinator.Mcp", ["MCP server: model tools", "0.3k lines"], icon="Api")
 d.box("p-refl", 900, 480, 220, 85, "Dependinator.Reflection", ["assemblies (Mono.Cecil), 2.5k", "inactive, no host uses it"], dashed=True)
 

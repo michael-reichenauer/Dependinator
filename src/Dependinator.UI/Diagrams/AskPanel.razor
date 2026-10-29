@@ -211,13 +211,10 @@
       modelPath ??= modelMgr.WithModel(m => m.Path);
     if (modelPath is not null)
       ForgetAnswersForAnotherModel();
-    // Settings › Use Claude Code may be turned on or off while the panel is open or closed.
-    if (viewOptions.IsAskShown && !wasShown || viewOptions.IsAskShown && routes.Count < 2)
-    {
-      routes = await askModelService.GetRoutesAsync();
-      if (!routes.Contains(route))
-        route = AiSource.Claude;
-    }
+    // Settings › Use Claude Code may change while the panel is closed (or open: then it shows on
+    // the next ask), and reading it reads the config file, too much on every click.
+    if (viewOptions.IsAskShown && !wasShown)
+      await RefreshRoutesAsync();
     if (viewOptions.IsAskShown || wasShown)
       StateHasChanged();
     wasShown = viewOptions.IsAskShown;
@@ -235,6 +232,13 @@
     modelPath = path;
   }
 
+  async Task RefreshRoutesAsync()
+  {
+    routes = await askModelService.GetRoutesAsync();
+    if (!routes.Contains(route))
+      route = AiSource.Claude;
+  }
+
   async Task OnKeyDownAsync(KeyboardEventArgs e)
   {
     if (e.Key == "Enter" && !e.ShiftKey)
@@ -246,10 +250,11 @@
     var text = question.Trim();
     if (text == "" || IsAsking)
       return;
+    isAsking = true;
+    await RefreshRoutesAsync();
     var entry = new Entry(text) { Route = route };
     entries.Add(entry);
     question = "";
-    isAsking = true;
     var askedPath = modelMgr.WithModel(m => m.Path);
     await ScrollToEndAsync();
     void OnAsked(string what) => _ = InvokeAsync(() =>

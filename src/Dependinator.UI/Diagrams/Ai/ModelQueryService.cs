@@ -7,7 +7,7 @@ namespace Dependinator.UI.Diagrams.Ai;
 // live per scope (each browser tab of the web host is a scope with its own model), so it answers
 // on the scope that opened most recently, and when that one closes, on the one before.
 [Singleton]
-sealed class ModelQueryService : IModelQueryService
+sealed class ModelQueryService : ModelQueryAnswers, IModelQueryService
 {
     readonly object syncRoot = new();
     readonly List<IModelQueries> scopes = [];
@@ -26,6 +26,27 @@ sealed class ModelQueryService : IModelQueryService
         lock (syncRoot)
             scopes.Remove(queries);
     }
+
+    protected override IModelQueries? Scope()
+    {
+        lock (syncRoot)
+            return scopes.LastOrDefault();
+    }
+}
+
+// The questions on one scope's queries (ScopeModelQueries: the e2e test mode's stand-in agent asks
+// its own scope, which a parallel test's newer scope must not take over).
+sealed class ScopeModelQueries(IModelQueries queries) : ModelQueryAnswers
+{
+    protected override IModelQueries? Scope() => queries;
+}
+
+// IModelQueryService's questions, each told to the scope first, in words ("Searched for …"), for a
+// panel that shows an agent's progress. Only ModelQueryService declares the interface: the RPC
+// setup serves every class that does, and ScopeModelQueries is no service.
+abstract class ModelQueryAnswers
+{
+    protected abstract IModelQueries? Scope();
 
     public Task<Result<ModelSummary>> GetModelAsync() => Ask("Looked at the model", q => q.GetModel());
 
@@ -62,15 +83,10 @@ sealed class ModelQueryService : IModelQueryService
         return cut >= 0 && cut < withoutParameters.Length - 1 ? name[(cut + 1)..] : name;
     }
 
-    // Each question is told to the scope first (what was asked, in words), for a panel that shows
-    // an agent's progress.
     Task<Result<T>> Ask<T>(string what, Func<IModelQueries, Result<T>> question)
         where T : notnull
     {
-        IModelQueries? queries;
-        lock (syncRoot)
-            queries = scopes.LastOrDefault();
-        if (queries is null)
+        if (Scope() is not { } queries)
             return Task.FromResult<Result<T>>(
                 new Error("No Dependinator diagram is open. Open the diagram and try again.")
             );

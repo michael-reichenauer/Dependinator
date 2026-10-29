@@ -104,6 +104,21 @@ public class ModelToolsAgentTests
         Assert.Contains("\"tool_choice\":{\"type\":\"none\"", requests[^1]);
         Assert.Contains("You have used all your tool calls.", requests[^1]);
         Assert.DoesNotContain("You have used all your tool calls.", requests[^2]);
+        // The calls of the last turn are not run: nothing could use their results.
+        Assert.Equal(ModelToolsAgent.MaxTurns - 1, tools.Calls.Count);
+    }
+
+    [Fact]
+    public async Task AskWithModelToolsAsync_ShouldLeaveTheCostUnknown_WhenAnotherModelAnsweredATurn()
+    {
+        using var api = new FakeAnthropicApi(
+            ToolCallResponse,
+            AnswerResponse.Replace("\"model\": \"claude-sonnet-5-5\"", "\"model\": \"claude-opus-5-5\"")
+        );
+
+        var answer = AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema));
+
+        Assert.Null(answer.CostUsd);
     }
 
     [Fact]

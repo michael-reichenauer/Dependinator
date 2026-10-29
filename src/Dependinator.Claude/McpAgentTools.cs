@@ -14,12 +14,13 @@ sealed class McpAgentTools(McpClient client, IReadOnlyList<AgentTool> tools) : I
 
     public static async Task<Result<IAgentTools>> ConnectAsync(ModelToolsAddress address)
     {
+        McpClient? client = null;
         try
         {
             var options = new HttpClientTransportOptions { Endpoint = new Uri(address.Url), Name = "dependinator" };
             if (address.Token is { Length: > 0 } token)
                 options.AdditionalHeaders = new Dictionary<string, string> { ["Authorization"] = $"Bearer {token}" };
-            var client = await McpClient.CreateAsync(new HttpClientTransport(options));
+            client = await McpClient.CreateAsync(new HttpClientTransport(options));
             var listed = await client.ListToolsAsync();
             List<AgentTool> tools =
             [
@@ -29,6 +30,8 @@ sealed class McpAgentTools(McpClient client, IReadOnlyList<AgentTool> tools) : I
         }
         catch (Exception e) when (e.IsNotFatal())
         {
+            if (client is not null)
+                await client.DisposeAsync();
             return new Error($"Could not reach Dependinator's model tools: {e.Message}", e);
         }
     }

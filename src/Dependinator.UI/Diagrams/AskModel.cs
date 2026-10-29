@@ -188,7 +188,7 @@ class AskModelService(
     IViewOptions viewOptions,
     IPathFinderService pathFinderService,
     IApplicationEvents applicationEvents,
-    ModelQueryService modelQueryService
+    IModelQueries modelQueries
 ) : IAskModelService
 {
     public bool IsAvailable => aiService.IsAvailable;
@@ -212,8 +212,9 @@ class AskModelService(
         if (Dependinator.Core.Build.IsTestMode)
         {
             onStep(route is AiSource.ClaudeCode ? SuggestStep.AskingClaudeCode : SuggestStep.AskingClaude);
-            await modelQueryService.GetModelAsync();
-            await modelQueryService.SearchNodesAsync(question);
+            var lookups = new ScopeModelQueries(modelQueries);
+            await lookups.GetModelAsync();
+            await lookups.SearchNodesAsync(question);
             await Task.Delay(TestModeAnswerDelay);
             return WithLinks(TestModeAnswer(route) with { Question = question });
         }
@@ -226,6 +227,9 @@ class AskModelService(
 
         if (route is AiSource.ClaudeCode)
         {
+            // The setting may have been turned off since the panel offered the route.
+            if (!await aiService.IsClaudeCodeEnabledAsync())
+                return new Error("Claude Code is turned off. Turn it on in Settings › Use Claude Code (Experimental).");
             var json = await aiService.AskAsync(
                 route,
                 GetPromptAsync,
