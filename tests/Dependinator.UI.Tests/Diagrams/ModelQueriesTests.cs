@@ -274,12 +274,54 @@ public class ModelQueriesTests
     }
 
     [Fact]
+    public async Task ReadSourceAsync_ShouldCutLongCode()
+    {
+        SetSource(repo, "/repo/src/Repo.cs", 0, 999);
+        workspace
+            .Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs"))
+            .ReturnsAsync((Result<string>)string.Join("\n", Enumerable.Range(1, 1000).Select(n => $"line {n}")));
+        AddMember("Data.Repo.Get()", 10);
+        for (var n = 1; n <= 30; n++)
+            AddMember($"Data.Repo.M{n}()", 30 * n + 20);
+
+        var source = AssertOk(await queries.ReadSourceAsync("Data.Repo"));
+
+        var numbered = source.Text.Split('\n').Count(l => l.StartsWith("  ", StringComparison.Ordinal));
+        Assert.Equal(ModelQueries.MaxSourceLines, numbered);
+        Assert.EndsWith("(The rest of the code is left out.)", source.Text);
+    }
+
+    [Fact]
+    public async Task ReadSourceAsync_ShouldReadAMemberOfAPartialType_FromItsOwnFile()
+    {
+        SetSource(repo, "/repo/src/Repo.cs", 0, 9);
+        var get = AddMember("Data.Repo.Get()", 2, "/repo/src/Repo.Get.cs");
+        workspace
+            .Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.Get.cs"))
+            .ReturnsAsync((Result<string>)"partial class Repo\n{\n    void Get() { }\n}");
+
+        var source = AssertOk(await queries.ReadSourceAsync(get.Name));
+
+        Assert.StartsWith("src/Repo.Get.cs, lines 1-4:", source.Text);
+        workspace.Verify(w => w.ReadSourceFileAsync("/repo/src/Repo.cs"), Times.Never);
+    }
+
+    [Fact]
     public async Task ReadSourceAsync_ShouldFail_ForANodeWithoutCodeOfItsOwn()
     {
         var error = AssertError(await queries.ReadSourceAsync("UI.Views"));
 
         Assert.Equal("UI.Views has no code of its own (a namespace): read the types in it.", error.Message);
         workspace.Verify(w => w.ReadSourceFileAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    Node AddMember(string name, int line, string path = "/repo/src/Repo.cs")
+    {
+        using var model = modelMgr.UseModel();
+        var member =
+            model.Nodes.GetValueOrDefault(NodeId.FromName(name)) ?? AddNode(model, name, repo, NodeType.MethodMember);
+        member.Update(new ParsedNode(name, new() { FileSpan = new FileSpan(path, line, line) }));
+        return member;
     }
 
     void SetSource(Node node, string path, int startLine, int endLine)

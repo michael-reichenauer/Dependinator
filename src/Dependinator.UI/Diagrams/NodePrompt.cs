@@ -75,7 +75,13 @@ static class NodePrompt
             return [new SourceRequest(node.LongName, [new SourceUnit(span, memberLines)])];
         }
         if (node.Type.IsMember && node.FileSpan is { } memberSpan && Unit(node) is var unit && HasSource(unit))
-            return [new SourceRequest(node.LongName, [new SourceUnit(unit.FileSpan!, [memberSpan.StartLine])])];
+        {
+            // A member of a partial type can be in another file than the type's span: then that
+            // file, cut as a long type would be, to the member.
+            var span =
+                unit.FileSpan!.Path == memberSpan.Path ? unit.FileSpan : memberSpan with { EndLine = int.MaxValue / 2 };
+            return [new SourceRequest(node.LongName, [new SourceUnit(span, [memberSpan.StartLine])])];
+        }
         return [];
     }
 

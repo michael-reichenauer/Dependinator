@@ -104,6 +104,11 @@ public class AskModelTests
         Assert.Null(AskModelService.FindLinkedNode(model, "Read")); // Two methods end so
         Assert.Null(AskModelService.FindLinkedNode(model, "ser")); // Not at a dot
         Assert.Null(AskModelService.FindLinkedNode(model, "new Parser()"));
+
+        // Two namespaces with one title (a project and its tests): no guess.
+        AddNode(model, "Lib*dll.Lib.Shared", model.Root, NodeType.Namespace);
+        AddNode(model, "LibTests*dll.Lib.Shared", model.Root, NodeType.Namespace);
+        Assert.Null(AskModelService.FindLinkedNode(model, "Lib.Shared"));
     }
 
     static Node AddNode(IModel model, string name, Node parent, NodeType type = NodeType.ClassType)

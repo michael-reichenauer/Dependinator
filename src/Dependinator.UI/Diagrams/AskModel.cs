@@ -105,7 +105,6 @@ record AskExchange(string Question, string Answer);
 // The prompt that asks an AI a question about the model open in the diagram. It holds only an
 // overview (the model's size and top level); the AI finds the rest with Dependinator's tools,
 // which answer on the model as it is now, and reads the code where it can.
-
 static class AskModelPrompt
 {
     internal const int MaxNodes = 12;
@@ -337,12 +336,17 @@ class AskModelService(
             .Select(n => (Node: n, Title: WithoutParameters(n.LongName)))
             .Where(n => n.Title == tail || n.Title.EndsWith("." + tail, StringComparison.Ordinal))
             .ToList();
-        return matches.Count > 0 && matches.All(m => m.Title == matches[0].Title)
-            ? matches.MinBy(m => m.Node.Name, StringComparer.Ordinal).Node
-            : null;
+        if (matches.Count == 1)
+            return matches[0].Node;
+        var isOverloads =
+            matches.Count > 1
+            && matches.All(m =>
+                m.Node.Type.IsMember && m.Title == matches[0].Title && m.Node.Parent == matches[0].Node.Parent
+            );
+        return isOverloads ? matches.MinBy(m => m.Node.Name, StringComparer.Ordinal).Node : null;
     }
 
-    static string WithoutParameters(string name) => name.Split('(')[0];
+    static string WithoutParameters(string name) => name.IndexOf('(') is var at and >= 0 ? name[..at] : name;
 
     public void Toggle()
     {

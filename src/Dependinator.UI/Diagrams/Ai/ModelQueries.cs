@@ -48,6 +48,7 @@ sealed class ModelQueries(
     internal const int MaxCycleMembers = 20;
     internal const int MaxViolations = 25;
     internal const int MaxAllowed = 25;
+    internal const int MaxSourceLines = 400;
     const int MaxDescriptionLength = 200;
 
     public event Action<string>? Asked;
@@ -256,15 +257,34 @@ sealed class ModelQueries(
         var sections = await PromptParts.ReadSourcesAsync(workspaceFileService, requests);
         var excerpts = sections.SelectMany(s => s.Excerpts).ToList();
         if (excerpts.Count == 0)
-            return new Error($"Could not read the code of {node.Name}: its file is not in the workspace.");
-        var text = string.Join(
-            "\n\n",
-            excerpts.Select(x =>
-                $"{PromptParts.DisplayPath(modelPath, x.Path)}, lines {x.StartLine}-{x.EndLine}:\n"
-                + string.Join("\n", x.Lines.Select((line, i) => $"{x.StartLine + i, 5}  {line}"))
-            )
-        );
-        return new NodeSource(node, text);
+            return new Error(
+                $"Could not read the code of {node.Name}: its file could not be read (it may be outside the workspace)."
+            );
+
+        // A long type is cut to its members, which can still be many: the first ones, up to a cap.
+        List<string> parts = [];
+        var shownLines = 0;
+        foreach (var x in excerpts)
+        {
+            var lines = x.Lines.Take(MaxSourceLines - shownLines).ToList();
+            if (lines.Count == 0)
+            {
+                parts.Add("(The rest of the code is left out.)");
+                break;
+            }
+            shownLines += lines.Count;
+            var endLine = x.StartLine + lines.Count - 1;
+            parts.Add(
+                $"{PromptParts.DisplayPath(modelPath, x.Path)}, lines {x.StartLine}-{endLine}:\n"
+                    + string.Join("\n", lines.Select((line, i) => $"{x.StartLine + i, 5}  {line}"))
+            );
+            if (lines.Count < x.Lines.Count)
+            {
+                parts.Add("(The rest of the code is left out.)");
+                break;
+            }
+        }
+        return new NodeSource(node, string.Join("\n\n", parts));
     }
 
     static Result CheckHasModel(IModel model) =>

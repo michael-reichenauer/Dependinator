@@ -61,7 +61,13 @@ async function waitForModel(page) {
 async function turnOnClaudeCode(page) {
   await page.getByTestId("appbar-menu").click();
   await page.getByTestId("menu-settings").hover();
-  await page.getByTestId("menu-use-claude-code").click();
+  const item = page.getByTestId("menu-use-claude-code");
+  await item.waitFor();
+  if ((await item.getAttribute("data-checked")) === "true") {
+    await page.keyboard.press("Escape");
+    return;
+  }
+  await item.click();
   await page.getByTestId("use-claude-code-confirm").click();
   await page.waitForTimeout(1000); // The setting is saved after the click returns.
 }
