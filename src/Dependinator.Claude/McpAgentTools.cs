@@ -31,8 +31,21 @@ sealed class McpAgentTools(McpClient client, IReadOnlyList<AgentTool> tools) : I
         catch (Exception e) when (e.IsNotFatal())
         {
             if (client is not null)
-                await client.DisposeAsync();
+                await DisposeQuietlyAsync(client);
             return new Error($"Could not reach Dependinator's model tools: {e.Message}", e);
+        }
+    }
+
+    // A connection that failed may fail to close too; the error to report is the first one.
+    static async Task DisposeQuietlyAsync(McpClient client)
+    {
+        try
+        {
+            await client.DisposeAsync();
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            Log.Debug("Closing the model tools connection failed", e.Message);
         }
     }
 

@@ -211,8 +211,8 @@
       modelPath ??= modelMgr.WithModel(m => m.Path);
     if (modelPath is not null)
       ForgetAnswersForAnotherModel();
-    // Settings › Use Claude Code may change while the panel is closed (or open: then it shows on
-    // the next ask), and reading it reads the config file, too much on every click.
+    // Settings › Use Claude Code may change while the panel is closed (or open: then it shows
+    // after the next ask), and reading it reads the config file, too much on every click.
     if (viewOptions.IsAskShown && !wasShown)
       await RefreshRoutesAsync();
     if (viewOptions.IsAskShown || wasShown)
@@ -250,11 +250,10 @@
     var text = question.Trim();
     if (text == "" || IsAsking)
       return;
-    isAsking = true;
-    await RefreshRoutesAsync();
     var entry = new Entry(text) { Route = route };
     entries.Add(entry);
     question = "";
+    isAsking = true;
     var askedPath = modelMgr.WithModel(m => m.Path);
     await ScrollToEndAsync();
     void OnAsked(string what) => _ = InvokeAsync(() =>
@@ -281,6 +280,16 @@
     {
       modelQueries.Asked -= OnAsked;
       isAsking = false;
+    }
+    // A route turned off meanwhile is refused (never switched silently to another route), and
+    // the next question goes to a route that is offered.
+    try
+    {
+      await RefreshRoutesAsync();
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Reading the Ask routes failed", e.Message);
     }
     // The answer is dropped when the questions were cleared, or another model opened, meanwhile
     // (its links would point into the other model).

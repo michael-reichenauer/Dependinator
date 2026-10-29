@@ -109,6 +109,25 @@ public class ModelToolsAgentTests
     }
 
     [Fact]
+    public async Task AskWithModelToolsAsync_ShouldKeepTheLastTurnsText_WhenItAlsoCallsATool()
+    {
+        var lastTurn = ToolCallResponse.Replace(
+            "{ \"type\": \"thinking\", \"thinking\": \"Search first.\", \"signature\": \"sig-1\" },",
+            "{ \"type\": \"text\", \"text\": \"{ \\\"answer\\\": \\\"Partly.\\\" }\" },"
+        );
+        Assert.NotEqual(ToolCallResponse, lastTurn);
+        using var api = new FakeAnthropicApi([
+            .. Enumerable.Repeat(ToolCallResponse, ModelToolsAgent.MaxTurns - 1),
+            lastTurn,
+        ]);
+
+        var answer = AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema));
+
+        Assert.Equal("{ \"answer\": \"Partly.\" }", answer.Json);
+        Assert.Equal(ModelToolsAgent.MaxTurns - 1, answer.ToolCalls);
+    }
+
+    [Fact]
     public async Task AskWithModelToolsAsync_ShouldLeaveTheCostUnknown_WhenAnotherModelAnsweredATurn()
     {
         using var api = new FakeAnthropicApi(

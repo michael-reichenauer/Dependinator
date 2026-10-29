@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Anthropic;
 using Anthropic.Models.Beta;
@@ -83,7 +84,7 @@ static class ModelToolsAgent
             cost = servedModel.StartsWith(Model, StringComparison.Ordinal) ? cost + Cost(response.Usage) : null;
             Log.Info(
                 "Claude answered with tools",
-                $"turn {turn}",
+                $"turn {turn} on {servedModel}",
                 response.StopReason,
                 response.Usage.InputTokens + (response.Usage.CacheReadInputTokens ?? 0),
                 response.Usage.OutputTokens
@@ -94,19 +95,20 @@ static class ModelToolsAgent
             if (response.StopReason == "max_tokens")
                 return new Error("Claude's answer was cut off. Please try again.");
 
+            // tool_choice "none" allows no calls on the last turn; should Claude make some anyway,
+            // nothing could use their results, so its text is the answer.
             var calls = response.Content.Select(b => b.Value).OfType<BetaToolUseBlock>().ToList();
-            if (response.StopReason != "tool_use" || calls.Count == 0)
+            if (response.StopReason != "tool_use" || calls.Count == 0 || isLastTurn)
             {
                 var text = string.Concat(
                     response.Content.Select(b => b.Value).OfType<BetaTextBlock>().Select(t => t.Text)
                 );
-                return text.Trim() == ""
-                    ? new Error("Claude gave an empty answer. Please try again.")
-                    : new ToolsAnswer(text, toolCalls, cost is { } total ? decimal.Round(total, 4) : null);
+                if (text.Trim() != "")
+                    return new ToolsAnswer(text, toolCalls, cost is { } total ? decimal.Round(total, 4) : null);
+                return calls.Count > 0
+                    ? new Error("Claude did not answer within the limit of tool calls. Please try again.")
+                    : new Error("Claude gave an empty answer. Please try again.");
             }
-            // tool_choice "none" allows no calls; should Claude make some anyway, nothing can use them.
-            if (isLastTurn)
-                break;
 
             // Claude's turn goes back as it was (thinking blocks with their signatures too), then
             // one result per call, all in one message.
@@ -130,7 +132,7 @@ static class ModelToolsAgent
                 results.Add(new BetaTextBlockParam { Text = LastTurnNote });
             messages.Add(new BetaUserMessageParam { Content = results });
         }
-        return new Error("Claude did not answer within the limit of tool calls. Please try again.");
+        throw new UnreachableException("The last turn always returns.");
     }
 
     // A tool that fails gives Claude the error, as it would get any other result.
