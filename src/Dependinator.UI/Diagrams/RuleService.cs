@@ -40,6 +40,10 @@ record RuleReport(
 )
 {
     public IReadOnlyList<AllowedReport> Allowed { get; init; } = [];
+
+    // The rule's nodes, null for one that is not in the model.
+    public NodeId? FromId { get; init; }
+    public NodeId? ToId { get; init; }
 }
 
 // Evaluates the model's architecture rules ("X must not depend on Y"): every link from inside
@@ -288,6 +292,8 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                 )
                 {
                     Allowed = allowedList,
+                    FromId = from?.Id,
+                    ToId = to?.Id,
                 }
             );
         }

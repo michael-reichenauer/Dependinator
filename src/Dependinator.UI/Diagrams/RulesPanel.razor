@@ -11,10 +11,12 @@
 
 @* Architecture rules: "X must not depend on Y", declared by picking two nodes. Each rule lists
    the dependencies that break it (per class pair, with link counts); while the panel is open those
-   lines are drawn in the rule color. Each dependency can be reviewed (RuleReviewDialog, with an AI
-   opinion): fixed with a prompt for an AI that changes the code, or allowed with why, which moves
-   it to the rule's collapsed Allowed list. "Suggest rules" lets an AI suggest rules to add
-   (SuggestRulesDialog). Rules and allowed dependencies are saved with the model and undoable. *@
+   lines are drawn in the rule color. A rule's node names go to their node, and a dependency row
+   frames both of its classes with the lines between them. Each dependency can be reviewed
+   (RuleReviewDialog, with an AI opinion): fixed with a prompt for an AI that changes the code, or
+   allowed with why, which moves it to the rule's collapsed Allowed list. "Suggest rules" lets an
+   AI suggest rules to add (SuggestRulesDialog). Rules and allowed dependencies are saved with the
+   model and undoable. *@
 @if (viewOptions.IsRulesShown)
 {
   var reports = ruleService.GetReports();
@@ -40,7 +42,9 @@
           <div class="dep-rules__head">
             <MudIcon Icon="@StatusIcon(report)" Size="Size.Small" Color="@StatusColor(report)" />
             <span class="dep-rules__names" title="@($"{report.FromDisplay} must not depend on {report.ToDisplay}")">
-              <b>@report.FromDisplay</b> <span class="dep-rules__arrow">must not use</span> <b>@report.ToDisplay</b>
+              @NodeName(report.FromId, report.FromDisplay, "rules-item-from")
+              <span class="dep-rules__arrow">must not use</span>
+              @NodeName(report.ToId, report.ToDisplay, "rules-item-to")
             </span>
             <span class="dep-panel__count" data-testid="rules-item-count">@StatusText(report)</span>
             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small" title="Remove this rule"
@@ -53,8 +57,8 @@
               {
                 <div class="dep-rules__item" data-testid="rules-violation-item">
                   <button type="button" class="dep-panel__row dep-rules__violation"
-                          title="@($"{violation.SourceLongName} → {violation.TargetLongName}: click to go to {violation.SourceName}")"
-                          @onclick="() => ShowAsync(violation.SourceId)" data-testid="rules-violation">
+                          title="@($"{violation.SourceLongName} → {violation.TargetLongName}: click to show both")"
+                          @onclick="() => ShowViolationAsync(violation)" data-testid="rules-violation">
                     <span>@violation.SourceName</span>
                     <span class="dep-rules__arrow">→</span>
                     <span>@violation.TargetName</span>
@@ -161,7 +165,28 @@
 
   static string PickClass(string? name) => name is null ? "dep-path__pick dep-path__pick--empty" : "dep-path__pick";
 
-  Task ShowAsync(Modeling.Models.NodeId nodeId) => navigationService.ShowNodeAsync(nodeId);
+  // A rule's node name as a link to the node; plain text when the node is not in the model. Long
+  // names may break after their dots.
+  RenderFragment NodeName(Modeling.Models.NodeId? id, string display, string testId) =>
+    @<text>
+      @if (id is { } nodeId)
+      {
+        <button type="button" class="dep-rules__node" title="@($"Go to {display}")"
+                @onclick="() => navigationService.ShowNodeAsync(nodeId)" data-testid="@testId">@BreakAfterDots(display)</button>
+      }
+      else
+      {
+        <b class="dep-rules__node" data-testid="@testId">@BreakAfterDots(display)</b>
+      }
+    </text>;
+
+  static MarkupString BreakAfterDots(string name) =>
+    new(string.Join(".<wbr>", name.Split('.').Select(System.Net.WebUtility.HtmlEncode)));
+
+  // Frames both classes, so the line between them is in view. Nothing is selected: classes in
+  // different projects are too small at that zoom to show a selection or its toolbar.
+  Task ShowViolationAsync(RuleViolation violation) =>
+    navigationService.ShowNodesAsync([violation.SourceId, violation.TargetId]);
 
   string ReviewTitle => ruleReviewService.IsAvailable
     ? "Review this dependency: allow it with why, or let Claude suggest whether and how to fix it"
