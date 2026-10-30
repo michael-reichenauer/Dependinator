@@ -376,11 +376,6 @@
     border-bottom-left-radius: 0;
 }
 
-.dep-ai__asking {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
 
 /* The menu's rows: the provider, "default" beside the default, and what it uses and costs. */
 .dep-ai-menu__item {

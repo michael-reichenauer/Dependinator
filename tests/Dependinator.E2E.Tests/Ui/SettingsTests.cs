@@ -52,7 +52,7 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // On, and the default: the dialog's one button asks Claude Code.
         await App.SetAiSettingsAsync(useClaudeCode: true, defaultProvider: "code");
-        await OpenCycleReviewAsync();
+        await OpenCycleReviewAsync(isChoosing: false);
         ILocator ask = Page.GetByTestId("accept-cycle-ask");
         await Expect(ask).ToHaveAttributeAsync("data-provider", "code");
         await Expect(ask).ToHaveTextAsync("Ask Claude Code");
@@ -77,21 +77,26 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("ai-settings-no-default")).ToBeVisibleAsync();
         await Page.GetByTestId("ai-settings-close").ClickAsync();
         await Expect(useCode).ToHaveCountAsync(0);
-        await OpenCycleReviewAsync();
+        await OpenCycleReviewAsync(isChoosing: true);
         await Expect(Page.GetByTestId("accept-cycle-route-claude")).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("accept-cycle-route-code")).ToHaveCountAsync(0);
         await CloseCycleReviewAsync();
     }
 
-    // Opens the review dialog of a cycle, its AI section open.
-    async Task OpenCycleReviewAsync()
+    // Opens the review dialog of a cycle, its AI section open: without a default the providers wait
+    // behind a row that opens them, with one the default's button shows at once.
+    async Task OpenCycleReviewAsync(bool isChoosing)
     {
         ILocator pair = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "Result<T>" });
         // The panel stays open after the first time.
         if (!await pair.IsVisibleAsync())
             await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
         await pair.GetByTestId("cycles-review").ClickAsync();
-        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
+        ILocator expand = Page.GetByTestId("accept-cycle-expand");
+        if (isChoosing)
+            await expand.ClickAsync();
+        else
+            await Expect(expand).ToHaveCountAsync(0);
     }
 
     async Task CloseCycleReviewAsync()

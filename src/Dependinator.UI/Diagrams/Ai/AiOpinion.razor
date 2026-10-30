@@ -8,13 +8,13 @@
    providers that give the same kind of answer (AiChoice: Claude with the user's API key, a few
    cents; Claude Code, the experimental local route, only where the user turned it on; and "Use
    your AI chat", free, which copies the prompt and then shows the rest of that route as steps:
-   open claude.ai, paste the answer back), behind one row ("Get an AI opinion", naming them) that
-   opens them, so they wait until wanted. Until the user has a default (Settings › AI), they are
-   cards side by side, each saying what it does and costs, and the one picked becomes the default;
-   after that one button asks the default, and the menu beside it (AiProviderMenu) asks another
-   provider once. A pasted answer is read once the pasting stops, without a button. "Show prompt"
-   shows the prompt every provider gets, before it is sent or copied. Each answer is kept while the
-   dialog is open, labeled by where it came from (answers can differ for a borderline case, and
+   open claude.ai, paste the answer back). Until the user has a default (Settings › AI), they wait
+   behind one row ("Get an AI opinion", naming them) that opens them as cards side by side, each
+   saying what it does and costs, and the one picked becomes the default. After that the
+   default's button shows at once, with the menu beside it (AiProviderMenu) to ask another
+   provider once; while it asks, only the answer's place shows progress. A pasted answer is read
+   once the pasting stops, without a button. "Show prompt" shows the prompt every provider gets,
+   before it is sent or copied. Each answer is kept while the dialog is open, labeled by where it came from (answers can differ for a borderline case, and
    the section says so then), and the selected one is shown by the dialog (AnswerContent) and
    passed to it (OnAnswerSelected), which decides what it means. In VS Code the API key is entered
    in an input box at the top of the window, which is easy to miss while watching the dialog, so
@@ -98,9 +98,18 @@
     </div>
   </div>
 }
+else if (HasAiHelp && answers.Count == 0 && !IsChoosing)
+{
+  @* With a default: its button at once, nothing to open first. *@
+  <div class="dep-ai__header dep-ai" data-testid="@Id("ai")">
+    @AskSplit
+    @ShowPromptLink
+  </div>
+}
 else if (HasAiHelp && answers.Count == 0)
 {
-  @* Before any answer: one row, opened to the routes, each saying what happens and what it costs. *@
+  @* No default yet: one row, opened to the providers side by side, each saying what happens and
+     what it costs; the one the user picks becomes the default. *@
   <div class="dep-ai" data-testid="@Id("ai")">
     <div class="dep-ai__header">
       <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai__expand"
@@ -117,10 +126,8 @@ else if (HasAiHelp && answers.Count == 0)
         <span class="dep-ai__expand-hint">@RouteNames (optional)</span>
       }
     </div>
-    @if (isExpanded && IsChoosing)
+    @if (isExpanded)
     {
-      @* No default yet: the routes side by side, each saying what happens and what it costs; the
-         one the user picks becomes the default. *@
       <div class="dep-ai__routes">
         @foreach (var provider in choice.Providers)
         {
@@ -138,10 +145,6 @@ else if (HasAiHelp && answers.Count == 0)
       <div class="dep-ai__route-meta mt-1" data-testid="@Id("choose-note")">
         The one you pick is used from now on. Change it in Settings › AI, or ask another AI from the ▾ menu.
       </div>
-    }
-    else if (isExpanded)
-    {
-      <div class="dep-ai__header mt-1">@AskSplit</div>
     }
   </div>
 }
@@ -248,7 +251,6 @@ else if (Selected is { } s && AnswerContent is not null)
   readonly List<TAnswer> answers = [];
   int selected = -1;
   bool isSuggesting;
-  AiSource? askingSource;
   SuggestStep? step;
   string? askError;
   bool isAskError;
@@ -309,7 +311,7 @@ else if (Selected is { } s && AnswerContent is not null)
   // The default's button, and the menu next to it that asks another provider once.
   RenderFragment? AskSplit => Primary is not { } primary ? null :
     @<span class="dep-ai__ask-split">
-      <MudButton StartIcon="@(IsAskingWith(primary) ? null : primary.Icon)" Size="Size.Small"
+      <MudButton StartIcon="@primary.Icon" Size="Size.Small"
                  Variant="@(answers.Count > 0 ? Variant.Text : Variant.Outlined)" Disabled="isSuggesting"
                  Class="@(primary == AiProvider.Claude ? "dep-ai__ask-claude" : "")" title="@AskTitleOf(primary)"
                  OnClick="() => RunAsync(primary)" data-testid="@Id("ask")" data-provider="@primary.Id">
@@ -324,7 +326,7 @@ else if (Selected is { } s && AnswerContent is not null)
 
   // A card's button, before there is a default: picking it makes it the default.
   RenderFragment CardButton(AiProvider provider) =>
-    @<MudButton StartIcon="@(IsAskingWith(provider) ? null : provider.Source is AiSource.Chat ? MudBlazor.Icons.Material.Outlined.ContentCopy : provider.Icon)"
+    @<MudButton StartIcon="@(provider.Source is AiSource.Chat ? MudBlazor.Icons.Material.Outlined.ContentCopy : provider.Icon)"
                 Size="Size.Small" Variant="Variant.Outlined" Disabled="isSuggesting"
                 Class="@(provider == AiProvider.Claude ? "dep-ai__ask-claude" : "")" title="@AskTitleOf(provider)"
                 OnClick="() => ChooseAsync(provider)" data-testid="@Id(CardButtonId(provider))">
@@ -363,12 +365,9 @@ else if (Selected is { } s && AnswerContent is not null)
       _ => provider.Detail,
     };
 
-  bool IsAskingWith(AiProvider provider) => isSuggesting && askingSource == provider.Source;
-
+  // The progress shows where the answer will appear, so the button only names what it asks.
   RenderFragment AskLabel(AiProvider provider) =>
-    IsAskingWith(provider)
-      ? @<span class="dep-ai__asking"><MudProgressCircular Size="Size.Small" Indeterminate="true" Class="dep-ai__ask-claude-progress" /><span>Asking ...</span></span>
-      : @<text>@provider.AskText(answers.Any(a => a.Source == provider.Source))</text>;
+    @<text>@provider.AskText(answers.Any(a => a.Source == provider.Source))</text>;
 
   string AskTitleOf(AiProvider provider) =>
     provider.Source switch
@@ -407,7 +406,6 @@ else if (Selected is { } s && AnswerContent is not null)
     if (Ask is null)
       return;
     isSuggesting = true;
-    askingSource = route;
     askError = null;
     isAskError = false;
     isChatOpen = false;

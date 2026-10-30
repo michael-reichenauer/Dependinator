@@ -380,8 +380,11 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator fix = Page.GetByTestId("accept-cycle-fix-claude-code");
         ILocator ask = Page.GetByTestId("accept-cycle-ask");
         ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
-        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
+        // With a default, its button shows at once, and only the answer's place shows progress.
+        await Expect(Page.GetByTestId("accept-cycle-expand")).ToHaveCountAsync(0);
         await ask.ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-asking")).ToBeVisibleAsync();
+        await Expect(ask).ToHaveTextAsync("Ask Claude Code");
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
         await Expect(fix).ToHaveCountAsync(0);
         await ask.ClickAsync();
