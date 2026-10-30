@@ -26,10 +26,12 @@ with the next official release.
 ### Improved
 
 - **Show prompt** in the cycle and rule reviews shows the prompt before it is sent or copied
+- The two node names of a rule in the Rules panel go to and select their node, a broken dependency frames both of its classes with the line between them, and long rule names wrap instead of being clipped
 
 ### Fixed
 
 - Code excerpts in AI prompts no longer start a line early or drop the type's closing line
+- **Show Source Code** on a Razor component opens its `.razor` file, and its `@code` members open at their own line (re-parse to pick this up)
 
 ## [v0.86.429455] - 2026-10-26
 
