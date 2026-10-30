@@ -76,7 +76,7 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   published extension is unclear), then built on Oct 26 at Michael's request as an experimental
   opt-in. First hidden (unlisted VS Code setting, env var), then moved the same day to Settings ›
   Use Claude Code (Experimental) with a warning, since Michael is the only user for now; he plans
-  to hide it again later. Keep it out of the README and the tour.
+  to hide it again later. Since Oct 30 the switch is in Settings › AI, with the default provider. Keep it out of the README and the tour.
 - Line anchors stay centered edge midpoints; spreading them was tried and rejected.
 
 ## Ideas waiting for a session

@@ -1,5 +1,6 @@
 @using Dependinator.UI.Diagrams.Ai
 @inject IAskModelService askModelService
+@inject IAiService aiService
 @inject IViewOptions viewOptions
 @inject IApplicationEvents applicationEvents
 @inject INavigationService navigationService
@@ -124,31 +125,24 @@
       }
     </div>
 
-    @if (routes.Count > 0)
+    @if (route is not null)
     {
       <div class="dep-ask__input">
         <MudTextField T="string" @bind-Value="question" Immediate="true" Placeholder="Ask a question about the model"
                       Variant="Variant.Outlined" Margin="Margin.Dense"
                       OnKeyDown="OnKeyDownAsync" Disabled="IsAsking" data-testid="ask-question" />
         <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Send" Color="Color.Primary" Size="Size.Small"
-                       title="@($"Ask {route.Name()} (Enter)")" Disabled="@(IsAsking || string.IsNullOrWhiteSpace(question))"
+                       title="@($"Ask {route.Name} (Enter)")" Disabled="@(IsAsking || string.IsNullOrWhiteSpace(question))"
                        OnClick="AskAsync" data-testid="ask-send" />
       </div>
+      @* One chip names the AI that answers; its menu (AiProviderMenu) switches to another for the
+         next questions, shows the prompt, and opens Settings › AI. *@
       <div class="dep-ask__meta">
-        @if (routes.Count > 1)
-        {
-          @foreach (var r in routes)
-          {
-            <button type="button" class="@RouteClass(r)" title="@RouteTitle(r)" @onclick="() => route = r"
-                    data-testid="@(r is AiSource.ClaudeCode ? "ask-route-code" : "ask-route-claude")">@r.ShortName()</button>
-          }
-        }
-        <span class="dep-ask__route-text">@RouteTitle(route)</span>
-        <MudSpacer />
-        <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai__show-prompt"
-                   Disabled="@string.IsNullOrWhiteSpace(question)"
-                   title="Show the prompt that is sent for this question"
-                   OnClick="ShowPromptAsync" data-testid="ask-show-prompt">Show prompt</MudButton>
+        <AiProviderMenu Choice="choice" Current="route" IsChip="true" Need="AiCapability.ModelTools"
+                        UnableText="Cannot look things up in the model, which questions need"
+                        TestId="ask" OnChoose="p => route = p" OnShowPrompt="ShowPromptAsync"
+                        IsShowPromptDisabled="@string.IsNullOrWhiteSpace(question)"
+                        OnSettingsChanged="OnSettingsChangedAsync" />
       </div>
     }
   </div>
@@ -192,8 +186,10 @@
 
   readonly List<Entry> entries = [];
   string question = "";
-  IReadOnlyList<AiSource> routes = [];
-  AiSource route = AiSource.Claude;
+  AiChoice choice = NoChoice;
+  AiProvider? route;
+
+  static readonly AiChoice NoChoice = new([], null);
   bool wasShown;
 
   // The model the questions are about ("" until a model is loaded), null before the panel opened.
@@ -206,7 +202,23 @@
 
   const string ListId = "ask-list";
 
-  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+  protected override void OnInitialized()
+  {
+    applicationEvents.UIStateChanged += OnUiStateChanged;
+    aiService.ChoiceChanged += OnChoiceChanged;
+  }
+
+  // Settings › AI changed (from the chip's menu or the app menu): a new default is followed at once.
+  void OnChoiceChanged() => InvokeAsync(OnSettingsChangedAsync);
+
+  async Task OnSettingsChangedAsync()
+  {
+    var oldDefault = choice.Default;
+    await RefreshRoutesAsync();
+    if (choice.Default != oldDefault)
+      route = choice.DefaultFor(AiCapability.ModelTools);
+    StateHasChanged();
+  }
 
   // The panel renders only while it is shown, or as it closes: the UI state changes on every click.
   void OnUiStateChanged() => InvokeAsync(async () =>
@@ -215,7 +227,7 @@
       modelPath ??= modelMgr.WithModel(m => m.Path);
     if (modelPath is not null)
       ForgetAnswersForAnotherModel();
-    // Settings › Use Claude Code may change while the panel is closed (or open: then it shows
+    // Settings › AI may change while the panel is closed (or open: then it shows
     // after the next ask), and reading it reads the config file, too much on every click.
     if (viewOptions.IsAskShown && !wasShown)
       await RefreshRoutesAsync();
@@ -236,11 +248,12 @@
     modelPath = path;
   }
 
+  // The panel keeps the provider the user switched to while it is still offered.
   async Task RefreshRoutesAsync()
   {
-    routes = await askModelService.GetRoutesAsync();
-    if (!routes.Contains(route))
-      route = AiSource.Claude;
+    choice = askModelService.IsAvailable ? await aiService.GetChoiceAsync() : NoChoice;
+    if (route is null || !choice.Providers.Contains(route))
+      route = choice.DefaultFor(AiCapability.ModelTools);
   }
 
   async Task OnKeyDownAsync(KeyboardEventArgs e)
@@ -252,10 +265,10 @@
   async Task AskAsync()
   {
     var text = question.Trim();
-    if (text == "" || IsAsking)
+    if (text == "" || IsAsking || route is null)
       return;
     var earlier = Conversation();
-    var entry = new Entry(text) { Route = route };
+    var entry = new Entry(text) { Route = route.Source };
     entries.Add(entry);
     question = "";
     isAsking = true;
@@ -383,11 +396,6 @@
       ? $"{(usd * 100m).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}¢"
       : usd.ToString("$0.00", System.Globalization.CultureInfo.InvariantCulture);
 
-  string RouteClass(AiSource r) => r == route ? "dep-ask__route dep-ask__route--on" : "dep-ask__route";
-
-  static string RouteTitle(AiSource r) =>
-    r is AiSource.ClaudeCode ? "Claude Code on this computer, your Claude login" : "Your Anthropic API key, a few cents";
-
   // A paragraph (its lines joined by breaks), or a list; a code span that names a node is a link.
   RenderFragment Block(ModelAnswer answer, MarkdownBlock block) =>
     block.Kind switch
@@ -410,5 +418,9 @@
     return span.IsBold ? @<b>@span.Text</b> : @<text>@span.Text</text>;
   }
 
-  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+  public void Dispose()
+  {
+    applicationEvents.UIStateChanged -= OnUiStateChanged;
+    aiService.ChoiceChanged -= OnChoiceChanged;
+  }
 }

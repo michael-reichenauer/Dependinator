@@ -8,8 +8,8 @@ namespace Dependinator.E2E.Tests.Ui;
 // Ask about the model (in test mode the app answers for Claude and Claude Code, after two lookups
 // through the model queries): the panel opens from the toolbar beside the diagram, closes the other
 // analysis panels, answers a question with node names that go to their node, leaves a name that is
-// not a node as plain code, shows what the answer cost and the lookups it made, asks on the route
-// picked below the question, and keeps the answers while it is closed.
+// not a node as plain code, shows what the answer cost and the lookups it made, asks the provider
+// picked from the chip below the question, and keeps the answers while it is closed.
 public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -17,6 +17,7 @@ public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
+        await App.SetAiSettingsAsync(useClaudeCode: true);
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
         await Expect(Page.GetByTestId("rules-panel")).ToBeVisibleAsync();
 
@@ -29,6 +30,7 @@ public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.GetByTestId("ask-example").First.ClickAsync();
         await Expect(Page.GetByTestId("ask-question"))
             .ToHaveValueAsync(new System.Text.RegularExpressions.Regex("main parts"));
+        await Page.GetByTestId("ask-menu").ClickAsync();
         await Page.GetByTestId("ask-show-prompt").ClickAsync();
         await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("main parts");
         await Page.GetByTestId("prompt-dialog-close").ClickAsync();
@@ -64,7 +66,11 @@ public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Asked on the Claude Code route, the answer has no cost; the question follows up on the
         // first one.
-        await Page.GetByTestId("ask-route-code").ClickAsync();
+        ILocator chip = Page.GetByTestId("ask-menu");
+        await Expect(chip).ToHaveAttributeAsync("data-provider", "claude");
+        await chip.ClickAsync();
+        await Page.GetByTestId("ask-with-code").ClickAsync();
+        await Expect(chip).ToHaveAttributeAsync("data-provider", "code");
         await Page.GetByTestId("ask-question").FillAsync("What uses the parser?");
         await Page.GetByTestId("ask-send").ClickAsync();
         await Expect(Page.GetByTestId("ask-answer")).ToHaveCountAsync(2);

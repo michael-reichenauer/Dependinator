@@ -29,7 +29,7 @@ project works.
   group and rubber-band selection), new line and container visuals, a release flow through `dev`
   and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
-  Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, an MCP server for AI agents, AI-suggested rules and questions about the model, C# member naming fixes, and a problem indicator with node badges.
+  Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, an MCP server for AI agents, AI-suggested rules and questions about the model, one default AI for all of them, C# member naming fixes, and a problem indicator with node badges.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -276,6 +276,15 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   Code alike. A name an answer writes partly (`PromptParts.ReadSourcesAsync`) links too when only
   one node ends so. `./scripts/ask-eval` asks a set of questions about this repository
   (`scripts/ask-eval.json`) in the dev host and scores the answers (phase 3).
+- **One default AI, Settings › AI (Oct 30).** The places that ask an AI share one provider choice:
+  `AiProvider` lists the providers (Claude, Claude Code, the AI chat) with what each can do (an
+  answer, model lookups, code changes), and Settings › AI picks the default and turns on the
+  experimental Claude Code route (it replaced the "Use Claude Code" menu toggle). The review dialogs
+  show the providers side by side only until one is picked, which becomes the default; after that
+  one button asks it, and the menu next to it (`AiProviderMenu`) asks another once. The Ask panel's
+  route buttons, cost line and Show prompt became one chip naming the provider, with the same menu.
+  Another provider (Copilot, Codex, Gemini) is now one more `AiProvider` entry plus its route in
+  `IAiService`.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the
