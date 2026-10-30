@@ -142,7 +142,7 @@
                         UnableText="Cannot look things up in the model, which questions need"
                         TestId="ask" OnChoose="p => route = p" OnShowPrompt="ShowPromptAsync"
                         IsShowPromptDisabled="@string.IsNullOrWhiteSpace(question)"
-                        OnSettingsChanged="() => RefreshRoutesAsync(toDefault: true)" />
+                        OnSettingsChanged="OnSettingsChangedAsync" />
       </div>
     }
   </div>
@@ -202,7 +202,23 @@
 
   const string ListId = "ask-list";
 
-  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+  protected override void OnInitialized()
+  {
+    applicationEvents.UIStateChanged += OnUiStateChanged;
+    aiService.ChoiceChanged += OnChoiceChanged;
+  }
+
+  // Settings › AI changed (from the chip's menu or the app menu): a new default is followed at once.
+  void OnChoiceChanged() => InvokeAsync(OnSettingsChangedAsync);
+
+  async Task OnSettingsChangedAsync()
+  {
+    var oldDefault = choice.Default;
+    await RefreshRoutesAsync();
+    if (choice.Default != oldDefault)
+      route = choice.DefaultFor(AiCapability.ModelTools);
+    StateHasChanged();
+  }
 
   // The panel renders only while it is shown, or as it closes: the UI state changes on every click.
   void OnUiStateChanged() => InvokeAsync(async () =>
@@ -232,12 +248,11 @@
     modelPath = path;
   }
 
-  // The panel keeps the provider the user switched to while it is still offered; a changed
-  // default (Settings › AI from the chip's menu) is followed at once.
-  async Task RefreshRoutesAsync(bool toDefault = false)
+  // The panel keeps the provider the user switched to while it is still offered.
+  async Task RefreshRoutesAsync()
   {
     choice = askModelService.IsAvailable ? await aiService.GetChoiceAsync() : NoChoice;
-    if (toDefault || route is null || !choice.Providers.Contains(route))
+    if (route is null || !choice.Providers.Contains(route))
       route = choice.DefaultFor(AiCapability.ModelTools);
   }
 
@@ -403,5 +418,9 @@
     return span.IsBold ? @<b>@span.Text</b> : @<text>@span.Text</text>;
   }
 
-  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+  public void Dispose()
+  {
+    applicationEvents.UIStateChanged -= OnUiStateChanged;
+    aiService.ChoiceChanged -= OnChoiceChanged;
+  }
 }

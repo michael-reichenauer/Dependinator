@@ -61,15 +61,15 @@ async function waitForModel(page) {
 async function turnOnClaudeCode(page) {
   await page.getByTestId("appbar-menu").click();
   await page.getByTestId("menu-settings").hover();
-  const item = page.getByTestId("menu-use-claude-code");
+  await page.getByTestId("menu-ai-settings").click();
+  const item = page.getByTestId("ai-settings-use-claude-code");
   await item.waitFor();
-  if ((await item.getAttribute("data-checked")) === "true") {
-    await page.keyboard.press("Escape");
-    return;
+  if ((await item.getAttribute("data-checked")) !== "true") {
+    await item.click();
+    await page.getByTestId("use-claude-code-confirm").click();
+    await page.waitForTimeout(1000); // The setting is saved after the click returns.
   }
-  await item.click();
-  await page.getByTestId("use-claude-code-confirm").click();
-  await page.waitForTimeout(1000); // The setting is saved after the click returns.
+  await page.getByTestId("ai-settings-close").click();
 }
 
 async function ask(page, question) {
@@ -104,7 +104,10 @@ try {
     await page.goto(baseUrl);
     await waitForModel(page);
     await page.getByTestId("toolbar-ask").click();
-    if (route === "code") await page.getByTestId("ask-route-code").click();
+    if (route === "code") {
+      await page.getByTestId("ask-menu").click();
+      await page.getByTestId("ask-with-code").click();
+    }
     for (const question of testCase.questions) {
       const answer = await ask(page, question.question);
       const missing = answer.error ? [`error: ${answer.error}`] : score(question, answer);

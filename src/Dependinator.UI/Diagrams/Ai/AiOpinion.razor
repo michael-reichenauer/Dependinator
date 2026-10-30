@@ -126,7 +126,7 @@ else if (HasAiHelp && answers.Count == 0)
         {
           <div class="dep-ai__route" data-testid="@Id($"route-{provider.Id}")">
             <div class="dep-ai__route-name">
-              <MudIcon Icon="@provider.Icon" Size="Size.Small" Class="@IconClass(provider)" />
+              <MudIcon Icon="@provider.Icon" Size="Size.Small" Class="@provider.IconClass" />
               @(provider.Source is AiSource.Chat ? provider.AskText(false) : provider.Name)
             </div>
             <div class="dep-ai__route-text">@CardText(provider)</div>
@@ -248,6 +248,7 @@ else if (Selected is { } s && AnswerContent is not null)
   readonly List<TAnswer> answers = [];
   int selected = -1;
   bool isSuggesting;
+  AiSource? askingSource;
   SuggestStep? step;
   string? askError;
   bool isAskError;
@@ -353,19 +354,16 @@ else if (Selected is { } s && AnswerContent is not null)
       _ => "Copy a prompt into claude.ai or any AI chat, then paste its answer back here.",
     };
 
+  // Shorter than the provider's Detail where the card's text already says what it does.
   static string CardMeta(AiProvider provider) =>
     provider.Source switch
     {
-      AiSource.Claude => "Your Anthropic API key, a few cents per answer",
       AiSource.ClaudeCode => "Your Claude login, experimental",
-      _ => "Free, works with any chat",
+      AiSource.Chat => "Free, works with any chat",
+      _ => provider.Detail,
     };
 
-  static string IconClass(AiProvider provider) => provider == AiProvider.Claude ? "dep-ai__claude-icon" : "";
-
-  bool IsAskingWith(AiProvider provider) =>
-    isSuggesting && provider.Source is not AiSource.Chat
-    && (step is SuggestStep.AskingClaudeCode) == (provider.Source is AiSource.ClaudeCode);
+  bool IsAskingWith(AiProvider provider) => isSuggesting && askingSource == provider.Source;
 
   RenderFragment AskLabel(AiProvider provider) =>
     IsAskingWith(provider)
@@ -384,10 +382,11 @@ else if (Selected is { } s && AnswerContent is not null)
   Task RunAsync(AiProvider provider) =>
     provider.Source is AiSource.Chat ? StartChatAsync() : AskAsync(provider.Source);
 
-  // The first pick, before there is a default, becomes the default.
+  // The first pick, before there is a default, becomes the default; one this place cannot use (an
+  // AI chat where there is no prompt to copy) stays the default elsewhere.
   async Task ChooseAsync(AiProvider provider)
   {
-    if (choice.Default is null && aiService.IsAvailable)
+    if (aiService.IsAvailable && (await aiService.GetChoiceAsync()).Default is null)
     {
       await aiService.SetDefaultAsync(provider.Source);
       await RefreshChoiceAsync();
@@ -408,6 +407,7 @@ else if (Selected is { } s && AnswerContent is not null)
     if (Ask is null)
       return;
     isSuggesting = true;
+    askingSource = route;
     askError = null;
     isAskError = false;
     isChatOpen = false;

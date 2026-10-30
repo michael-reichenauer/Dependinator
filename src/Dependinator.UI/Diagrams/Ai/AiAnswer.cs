@@ -4,11 +4,12 @@ namespace Dependinator.UI.Diagrams.Ai;
 
 // Where an AI answer in a review came from: Claude with the user's API key, Claude Code on this
 // computer (the experimental local route), or another AI chat, pasted back by the user.
+// The numbers are stored (Config.DefaultAiProvider): a new provider gets a new number.
 public enum AiSource
 {
-    Claude,
-    ClaudeCode,
-    Chat,
+    Claude = 0,
+    ClaudeCode = 1,
+    Chat = 2,
 }
 
 // An answer a review dialog shows (AiOpinion): where it came from, and its verdict, one of a few

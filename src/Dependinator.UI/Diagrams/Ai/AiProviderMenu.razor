@@ -19,7 +19,7 @@
               data-provider="@Current?.Id">
         @if (Current is not null)
         {
-          <MudIcon Icon="@Current.Icon" Size="Size.Small" Class="@IconClass(Current)" />
+          <MudIcon Icon="@Current.Icon" Size="Size.Small" Class="@Current.IconClass" />
           <span>@Current.Name</span>
         }
         <MudIcon Icon="@MudBlazor.Icons.Material.Filled.ArrowDropDown" Size="Size.Small" />
@@ -101,8 +101,6 @@
   [Parameter] public EventCallback OnSettingsChanged { get; set; }
 
   string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
-
-  static string IconClass(AiProvider provider) => provider == AiProvider.Claude ? "dep-ai__claude-icon" : "";
 
   async Task ShowSettingsAsync()
   {

@@ -43,9 +43,10 @@ public sealed record AiProvider(AiSource Source, string Id, string Icon, string 
     // In the order the menus list them.
     public static readonly IReadOnlyList<AiProvider> All = [Claude, ClaudeCode, Chat];
 
-    public static AiProvider Of(AiSource source) => All.First(p => p.Source == source);
-
     public string Name => Source.Name();
+
+    // Claude's sparkle in its coral, as on the other Claude buttons.
+    public string IconClass => Source is AiSource.Claude ? "dep-ai__claude-icon" : "";
 
     public bool Can(AiCapability need) => (Capabilities & need) == need;
 

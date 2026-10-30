@@ -11,7 +11,7 @@ namespace Dependinator.E2E.Tests.Ui;
 // dialog moves to the Accepted section, its reason can be edited, and removing the acceptance
 // brings it back; the dialog copies a cycle's AI prompt and reads the answer pasted back, and
 // answers (Claude's or pasted) suggest the reason, or a fix prompt to copy and a To fix entry;
-// with Settings › Use Claude Code on, a break answer can be fixed by Claude Code right away.
+// with Claude Code on in Settings › AI, a break answer can be fixed by Claude Code right away.
 public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]

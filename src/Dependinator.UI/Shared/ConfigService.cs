@@ -52,12 +52,12 @@ class Config
     // The badge on a node with children the user hid (View › Show Hidden Node Badges).
     public bool ShowHiddenBadges { get; set; } = true;
 
-    // The experimental "Ask Claude Code" route in the AI review dialogs (Settings › Use Claude
-    // Code), turned on after a warning: `claude -p` with the user's own Claude login.
+    // The experimental Claude Code provider (Settings › AI), turned on after a warning: `claude -p`
+    // with the user's own Claude login.
     public bool UseClaudeCode { get; set; } = false;
 
     // The AI the app asks by default (Settings › AI); none until the user picks one, the first
-    // time they ask or in Settings.
+    // time they ask or in Settings. Stored as the AiSource number, so its values never change.
     public AiSource? DefaultAiProvider { get; set; }
 }
 
