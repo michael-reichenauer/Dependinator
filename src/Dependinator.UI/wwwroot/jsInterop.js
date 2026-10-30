@@ -89,7 +89,7 @@ export function watchSystemTheme(instance, functionName) {
 // paint the right background before Blazor boots (see index.html / _Host.cshtml).
 export function applyTheme(isDark) {
   document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-  document.body.style.backgroundColor = isDark ? "#0D0F11" : "#FAFAFA";
+  document.body.style.backgroundColor = isDark ? "#1E1F22" : "#FAFAFA";
   try { localStorage.setItem("dep-theme", isDark ? "dark" : "light"); } catch (_) { }
 }
 
